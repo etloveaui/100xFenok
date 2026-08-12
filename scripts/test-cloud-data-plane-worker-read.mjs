@@ -68,8 +68,9 @@ const encoder = new TextEncoder();
     assert.ok(prefix.startsWith("/") && prefix.endsWith("/"), `${prefix} is a bounded /.../ prefix`);
   }
 
-  // The contract counts: every explicit FAMILIES file is exact (605 total,
-  // fred-macro included), and EDGAR is the only tree prefix.
+  // The contract counts: every explicit FAMILIES file is exact (610 total,
+  // fred-macro and the computed-signals pilot included), and EDGAR is the only
+  // tree prefix.
   const expectedExact = publicFamilies.reduce((n, [, f]) => n + (f.files ? f.files.length : 0), 0);
   assert.equal(ENROLLED_PATHS.size, expectedExact, `exact entries match FAMILIES (${expectedExact})`);
   assert.equal(ENROLLED_PREFIXES.length, 1, "exactly one tree prefix is enrolled");
@@ -182,6 +183,9 @@ try {
   assert.equal(familyForPath("/data/slickcharts/stocks/AAPL.json"), "slickcharts-history");
   assert.equal(isEnrolledPath("/data/slickcharts/stocks-evil/AAPL.json"), false, "stocks sibling not enrolled");
   assert.equal(familyForPath("/data/slickcharts/gainers.json"), "slickcharts-daily", "per-lane exact wins");
+  assert.equal(isEnrolledPath("/data/computed/signals.json"), true, "computed-signals pilot exact file enrolled");
+  assert.equal(familyForPath("/data/computed/signals.json"), "computed-signals");
+  assert.equal(isEnrolledPath("/data/computed/other.json"), false, "unrelated computed path remains unenrolled");
 
   assert.equal(
     await handleCloudDataPlaneAsset(get("https://100xfenok.test/data/edgar-korean-summaries-evil/index.json"), env),
@@ -207,6 +211,11 @@ try {
     await handleCloudDataPlaneAsset(get("https://100xfenok.test/data/edgar-korean-summaries/index.json/"), env),
     null,
     "trailing slash declines",
+  );
+  assert.equal(
+    await handleCloudDataPlaneAsset(get("https://100xfenok.test/data/computed/signals.json"), env),
+    null,
+    "computed-signals falls through before its family is published",
   );
 
   // --- publish the enrolled asset ------------------------------------------
@@ -328,6 +337,60 @@ try {
     fredAgain.headers.get("x-data-plane-generation"),
     "fred-macro-read-1",
     "fred-macro still resolves through its own pointer",
+  );
+
+  // --- computed-signals exact path serves from its own family pointer --------
+  const computedText = "{\"source_as_of\":\"2026-07-29\",\"signals\":{}}\n";
+  const computedPayload = encoder.encode(computedText);
+  const computedSha = sha256Bytes(computedPayload);
+  const computedManifestPath = "public/data/computed/signals.json";
+  const computedManifest = {
+    schema_version: GENERATION_MANIFEST_SCHEMA,
+    generation_id: "computed-signals-read-1",
+    source_sha: SOURCE_SHA,
+    created_at: NOW,
+    assets: [{
+      path: computedManifestPath,
+      object_key: `objects/sha256/${computedSha}`,
+      sha256: computedSha,
+      bytes: computedPayload.byteLength,
+      content_type: "application/json",
+      source_as_of: "2026-07-29",
+      privacy_class: "public",
+    }],
+  };
+  const computedPlane = createCloudflareCloudDataPlane({
+    r2Bucket: DATA_PLANE_BUCKET,
+    coordinatorNamespace: CLOUD_DATA_PLANE_COORDINATOR,
+    coordinatorName: "computed-signals",
+  });
+  await publishGeneration({
+    manifest: computedManifest,
+    payloads: new Map([[computedManifestPath, computedPayload]]),
+    expectedPointerSequence: 0,
+    objectStore: computedPlane.objectStore,
+    ledger: computedPlane.ledger,
+    pointerStore: computedPlane.pointerStore,
+    policy: {
+      max_assets: 4,
+      max_total_bytes: 30_000,
+      validate_freshness: () => true,
+      validate_public_payload: () => true,
+    },
+  });
+  const computedServed = await handleCloudDataPlaneAsset(
+    get("https://100xfenok.test/data/computed/signals.json"),
+    env,
+  );
+  assert.ok(computedServed, "computed-signals exact path serves from the plane");
+  assert.equal(computedServed.status, 200);
+  assert.equal(computedServed.headers.get("x-data-plane-generation"), "computed-signals-read-1");
+  assert.equal(computedServed.headers.get("x-data-plane-source-as-of"), "2026-07-29");
+  assert.equal(await computedServed.text(), computedText);
+  assert.equal(
+    await handleCloudDataPlaneAsset(get("https://100xfenok.test/data/computed/other.json"), env),
+    null,
+    "unrelated computed path never reaches the plane",
   );
 
   assert.equal(

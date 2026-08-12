@@ -12,10 +12,9 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 concurrency:
-  group: fenok-data-writer-defillama-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 
@@ -109,7 +108,10 @@ jobs:
               continue
             fi
             if git push; then
-              gh workflow run update-manifest.yml --ref main
+              # Decoupled: a successful completion of this workflow runs the
+              # coordinate-computed-signals workflow_run (serialized rebuild +
+              # plane publish); the scheduled update-manifest.yml remains the
+              # reconciliation fallback for shared projections.
               exit 0
             fi
             echo "git push race on attempt ${attempt}; retrying after rebase"

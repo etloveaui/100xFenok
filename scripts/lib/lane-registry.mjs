@@ -118,6 +118,21 @@ const attemptShard = (laneId) => `${ATTEMPT_ROOT}/${laneId}.json`;
 const PUBLISH_OUTCOME_ROOT = "data/admin/data-supply-state/publish-outcomes";
 const publishOutcomeShard = (family) => `${PUBLISH_OUTCOME_ROOT}/${family}.json`;
 
+// One authority for the six acquisition lanes that feed the computed-signals
+// coordinator. The manifest builder derives their Update Manifest exclusions
+// from the lane records below, while workflow contract tests derive owner file,
+// display name and publish family from this registry module and the workflow
+// YAML. Keep this deliberately small: it is selection metadata, not another
+// coordinator implementation or generated rule layer.
+export const COMPUTED_SIGNALS_SOURCE_LANE_IDS = Object.freeze([
+  "fred_macro",
+  "treasury_tga",
+  "defillama_stablecoins",
+  "fred_banking",
+  "fdic_tier1",
+  "sentiment",
+]);
+
 // Plane publisher family names are intentionally kept separate from lane ids:
 // the publisher CLI uses hyphenated family names while the registry uses
 // underscore ids, and SlickCharts has one composite lane with five callers.
@@ -143,6 +158,10 @@ export const PLANE_PUBLISH_OUTCOME_BINDINGS = Object.freeze({
   "finra-short-volume": { lane_id: "finra_short_volume", workflow: ".github/workflows/fenok-edge-daily.yml" },
   "finra-ats-weekly": { lane_id: "finra_ats_weekly", workflow: ".github/workflows/fetch-finra-ats-weekly.yml" },
   "gdelt-news-tone": { lane_id: "gdelt_news_tone", workflow: ".github/workflows/fetch-fenok-news-tone.yml" },
+  // One-asset computed-signals pilot coordinator: owns no acquisition lane and
+  // commits ONLY the publish-outcome shard (no signals Git commit); the
+  // coordinator workflow is a declared platform_publisher, not a lane record.
+  "computed-signals": { lane_id: "computed_signals", workflow: ".github/workflows/coordinate-computed-signals.yml" },
 });
 
 const providers = [
@@ -1250,6 +1269,11 @@ const workflow_classes = {
     reason: "platform-owned failure alarm state publisher; always/continue-on-error semantics are load-bearing",
     owner: "platform",
   },
+  ".github/workflows/coordinate-computed-signals.yml": {
+    class: "platform_publisher",
+    reason: "one-asset computed-signals coordinator: workflow_run-driven rebuild + plane publish; commits only the computed-signals publish-outcome shard, never signal files, and never dispatches Update Manifest or Deploy Worker",
+    owner: "platform",
+  },
 };
 
 // Structured workflow-scoped staging policy. This is the registry SSOT for the
@@ -1487,7 +1511,10 @@ workflow_policies[".github/workflows/fetch-yf-finance.yml"] = policy(["yahoo_bat
     commitSpec("data/admin/yahoo-batch-quote-history", "directory", true),
     commitSpec("data/yf/estimates-archive", "directory", true),
   ],
-}, [commitSpec("data/yf/finance/_summary.json", "file")]);
+}, [
+  commitSpec("data/yf/finance/_summary.json", "file"),
+  commitSpec("data/yf/estimates-archive/_summary.json", "file"),
+]);
 workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_etf_fallback", "stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"], {
   always_if_exists: [
     commitSpec("data/stockanalysis", "directory", true),
@@ -1590,6 +1617,16 @@ workflow_policies[".github/workflows/pipeline-failure-alarm.yml"] = policy([], {
 });
 workflow_policies[".github/workflows/update-manifest.yml"] = policy([], {
   always_if_exists: [],
+});
+// The computed-signals coordinator is a platform publisher with exactly one
+// owned commit path: the per-family publish-outcome shard. The exporter's
+// canonical/public signal files are deliberately NOT staged here — Update
+// Manifest reconciliation owns the git copies; the coordinator only publishes
+// them to the cloud data plane and cleans them from its ephemeral checkout.
+workflow_policies[".github/workflows/coordinate-computed-signals.yml"] = policy([], {
+  always_if_exists: [
+    commitSpec(publishOutcomeShard("computed-signals"), "file"),
+  ],
 });
 
 // --- Validation (fail-closed, mirrors the detection config's loader) ---------

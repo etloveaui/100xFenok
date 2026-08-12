@@ -168,7 +168,71 @@ async function assertRejectsCode(promise, code) {
   });
   await assertRejectsCode(deadBucket.get("objects/sha256/dd"), "R2_REST_NETWORK");
   assert.equal(networkCalls, 3);
-  console.log("r2-rest shim: 404/200/5xx-retry/4xx-no-retry/network-retry ok");
+
+  // A hung fetch is aborted per attempt: the deadline is enforced, the attempt
+  // is retried exactly like a network error, and the final failure keeps the
+  // existing network error code with a timeout-specific message.
+  let hungCalls = 0;
+  const hungBucket = createR2RestBucket({
+    accountId: "acct",
+    bucket: "bucket",
+    token: "token",
+    timeoutMs: 60,
+    fetchImpl: (_url, init) => {
+      hungCalls += 1;
+      return new Promise((_resolve, reject) => {
+        init.signal?.addEventListener("abort", () => reject(init.signal.reason ?? new Error("aborted")));
+      });
+    },
+  });
+  const hungStarted = Date.now();
+  await assert.rejects(hungBucket.get("objects/sha256/ee"), (error) => {
+    assert.equal(error.code, "R2_REST_NETWORK");
+    assert.match(error.message, /timed out after/);
+    return true;
+  });
+  const hungElapsed = Date.now() - hungStarted;
+  assert.equal(hungCalls, 3);
+  assert.ok(hungElapsed < 5_000, `hung r2-rest fetch escaped its deadline: ${hungElapsed}ms`);
+  console.log("r2-rest shim: 404/200/5xx-retry/4xx-no-retry/network-retry/timeout-abort ok");
+}
+
+// --- remote coordinator timeout, offline via an injected fetch --------------
+
+{
+  let coordinatorCalls = 0;
+  const replayBodies = [];
+  const hungNamespace = createRemoteCoordinatorNamespace({
+    endpoint: "https://coordinator.stub",
+    key: "k",
+    timeoutMs: 60,
+    fetchImpl: (_url, init) => {
+      coordinatorCalls += 1;
+      replayBodies.push(init.body);
+      return new Promise((_resolve, reject) => {
+        init.signal?.addEventListener("abort", () => reject(init.signal.reason ?? new Error("aborted")));
+      });
+    },
+  });
+  const casBody = JSON.stringify({ expected_sequence: 1, pointer: { sequence: 2 } });
+  const started = Date.now();
+  await assert.rejects(
+    hungNamespace.get("id").fetch("https://coordinator.stub/pointer/compare-and-swap", { body: casBody }),
+    (error) => {
+      assert.equal(error.code, "REMOTE_COORDINATOR_NETWORK");
+      assert.match(error.message, /timed out after/);
+      return true;
+    },
+  );
+  const elapsed = Date.now() - started;
+  assert.equal(coordinatorCalls, 3);
+  assert.ok(elapsed < 5_000, `hung coordinator POST escaped its deadline: ${elapsed}ms`);
+  // A timed-out mutating POST is retried with a byte-identical CAS payload,
+  // exactly like the existing network-error retry contract; the worker's 409
+  // STALE_WRITER guard (asserted below, never retried) is what makes replay
+  // safe against a server that may have committed before the timeout.
+  assert.ok(replayBodies.every((body) => body === casBody), "CAS payload must be identical on every attempt");
+  console.log("remote-coordinator timeout: per-attempt abort, bounded retries, identical CAS replay ok");
 }
 
 // --- fixture tree + manifest build ------------------------------------------
@@ -221,6 +285,82 @@ assert.ok(sortedPaths.every((assetPath) => assetPath.startsWith("data/")));
 assert.ok(manifest.assets.every((asset) => asset.privacy_class === "private"));
 assert.equal(new Set(manifest.assets.map((asset) => asset.object_key)).size, 3);
 console.log("manifest build from fixture tree ok (4 assets, 3 unique objects, private, sorted)");
+
+// --- putIfAbsent readback reduction contract --------------------------------
+{
+  const immutableObjectCount = new Set(manifest.assets.map((asset) => asset.object_key)).size + 1;
+  const parityReadCount = manifest.assets.length + 1; // manifest + every asset
+
+  function createHarness(objectPlane = createMemoryCloudDataPlane(), corruptKey = null) {
+    const coordinatorPlane = createMemoryCloudDataPlane();
+    const calls = { gets: 0, writes: 0 };
+    return {
+      calls,
+      objectStore: {
+        async get(key) {
+          calls.gets += 1;
+          const stored = await objectPlane.objectStore.get(key);
+          if (key !== corruptKey || stored === null) return stored;
+          const corrupted = new Uint8Array(stored);
+          corrupted[0] ^= 0xff;
+          return corrupted;
+        },
+        async putIfAbsent(key, bytes) {
+          const outcome = await objectPlane.objectStore.putIfAbsent(key, bytes);
+          if (outcome?.written) calls.writes += 1;
+          return outcome;
+        },
+      },
+      ledger: coordinatorPlane.ledger,
+      pointerStore: coordinatorPlane.pointerStore,
+    };
+  }
+
+  function publish(harness, now = NOW_1) {
+    return publishGeneration({
+      manifest,
+      payloads,
+      expectedPointerSequence: 0,
+      objectStore: harness.objectStore,
+      ledger: harness.ledger,
+      pointerStore: harness.pointerStore,
+      policy: POLICY,
+      now: () => now,
+    });
+  }
+
+  const fresh = createHarness();
+  await publish(fresh);
+  assert.deepEqual(fresh.calls, { gets: immutableObjectCount, writes: immutableObjectCount });
+  const freshGetsBeforeParity = fresh.calls.gets;
+  await verifyGenerationParity({ pointerStore: fresh.pointerStore, objectStore: fresh.objectStore, payloads });
+  assert.equal(fresh.calls.gets - freshGetsBeforeParity, parityReadCount);
+
+  const corrupt = createHarness(undefined, manifest.assets[0].object_key);
+  await assertRejectsCode(publish(corrupt, NOW_2), "OBJECT_READBACK_INVALID");
+  assert.equal(corrupt.calls.gets, 1);
+
+  const seededObjects = createMemoryCloudDataPlane();
+  await publishGeneration({
+    manifest,
+    payloads,
+    expectedPointerSequence: 0,
+    objectStore: seededObjects.objectStore,
+    ledger: seededObjects.ledger,
+    pointerStore: seededObjects.pointerStore,
+    policy: POLICY,
+    now: () => NOW_1,
+  });
+  const reused = createHarness(seededObjects);
+  await publish(reused, NOW_2);
+  assert.deepEqual(reused.calls, { gets: 0, writes: 0 });
+  await verifyGenerationParity({ pointerStore: reused.pointerStore, objectStore: reused.objectStore, payloads });
+  assert.equal(reused.calls.gets, parityReadCount);
+
+  console.log(
+    "putIfAbsent readback reduction ok (write readback kept + corruption detected; already-present skips only the immediate readback; pointer/asset parity kept)",
+  );
+}
 
 // --- coordinator endpoint stub over node:http --------------------------------
 //
@@ -890,6 +1030,78 @@ try {
   assert.equal(served.published_at, fredBuild.manifest.created_at);
   console.log("fred-macro family ok (single file, split root/prefix, public class served)");
 
+  // --- computed-signals pilot: one canonical file, exact public path --------
+  // The exporter lane owns the source_as_of field. Keep this publisher test
+  // independent of its uncommitted mirror by adding that field to a temporary
+  // copy of the current payload, then prove the family resolver consumes it.
+  {
+    const computedFamily = FAMILIES["computed-signals"];
+    assert.equal(computedFamily.root, "data/computed");
+    assert.equal(computedFamily.manifest_prefix, "public/data/computed");
+    assert.deepEqual(computedFamily.files, ["signals.json"]);
+    assert.equal(computedFamily.source_as_of.key, "source_as_of");
+    assert.equal(computedFamily.policy.max_assets, 4);
+    assert.equal(computedFamily.policy.max_total_bytes, 30_000);
+    const currentSignalsPath = path.join(REPO_ROOT, "data/computed/signals.json");
+    const currentSignalsBytes = statSync(currentSignalsPath).size;
+    assert.ok(currentSignalsBytes > 0, "current pilot payload is non-empty (measured baseline: 12,680 bytes)");
+    assert.ok(currentSignalsBytes <= computedFamily.policy.max_total_bytes);
+
+    const computedFixtureRoot = await mkdtemp(path.join(os.tmpdir(), "cloud-data-plane-computed-signals-"));
+    try {
+      const computedPayload = {
+        ...JSON.parse(await readFile(currentSignalsPath, "utf8")),
+        source_as_of: "2026-07-29",
+      };
+      const fixturePath = path.join(computedFixtureRoot, "signals.json");
+      await writeFile(fixturePath, JSON.stringify(computedPayload));
+      const computedBuild = await buildFamilyManifest({
+        familyName: "computed-signals",
+        absRoot: computedFixtureRoot,
+        relRoot: "public/data/computed",
+        now: () => NOW_1,
+      });
+      validateGenerationManifest(computedBuild.manifest);
+      assert.equal(computedBuild.manifest.assets.length, 1);
+      const computedAsset = computedBuild.manifest.assets[0];
+      assert.equal(computedAsset.path, "public/data/computed/signals.json");
+      assert.equal(computedAsset.source_as_of, "2026-07-29");
+      assert.equal(computedBuild.sourceAsOf.origin, "payload");
+      assert.ok(computedAsset.bytes <= computedFamily.policy.max_total_bytes);
+      assert.equal(computedAsset.content_type, "application/json");
+      assert.equal(computedAsset.privacy_class, "public");
+      assert.equal(computedFamily.validate_public_payload({ bytes: computedBuild.payloads.get(computedAsset.path) }), true);
+
+      const computedPlane = createMemoryCloudDataPlane();
+      const computedPublished = await publishGeneration({
+        manifest: computedBuild.manifest,
+        payloads: computedBuild.payloads,
+        expectedPointerSequence: 0,
+        objectStore: computedPlane.objectStore,
+        ledger: computedPlane.ledger,
+        pointerStore: computedPlane.pointerStore,
+        policy: {
+          ...POLICY,
+          max_assets: computedFamily.policy.max_assets,
+          max_total_bytes: computedFamily.policy.max_total_bytes,
+          validate_public_payload: computedFamily.validate_public_payload,
+        },
+        now: () => NOW_1,
+      });
+      assert.equal(computedPublished.pointer.active.generation_id, computedBuild.manifest.generation_id);
+      const computedServed = await resolvePublicAsset({
+        publicPath: "public/data/computed/signals.json",
+        pointerStore: computedPlane.pointerStore,
+        objectStore: computedPlane.objectStore,
+      });
+      assert.equal(computedServed.kind, "ok");
+      assert.deepEqual(computedServed.bytes, computedBuild.payloads.get(computedAsset.path));
+      console.log("computed-signals family ok (one asset, exact public path, payload source_as_of, 30,000-byte bound)");
+    } finally {
+      await rm(computedFixtureRoot, { recursive: true, force: true });
+    }
+  }
+
   // --- per-family coordinators: two families publish and resolve ----------
   // independently, each against its OWN coordinator instance over the SHARED
   // object store. Acceptance gate for the per-family pointer fix: publishing
@@ -1489,9 +1701,9 @@ try {
       },
       async putIfAbsent(key, bytes) {
         const prior = await semanticPlane.objectStore.get(key);
-        if (prior !== null) return;
+        if (prior !== null) return { written: false, alreadyPresent: true };
         writeCount.puts += 1;
-        await semanticPlane.objectStore.putIfAbsent(key, bytes);
+        return semanticPlane.objectStore.putIfAbsent(key, bytes);
       },
     };
     const semanticPolicy = {
@@ -1675,9 +1887,9 @@ try {
       },
       async putIfAbsent(key, bytes) {
         const prior = await fallbackPlane.objectStore.get(key);
-        if (prior !== null) return;
+        if (prior !== null) return { written: false, alreadyPresent: true };
         fallbackCount.puts += 1;
-        await fallbackPlane.objectStore.putIfAbsent(key, bytes);
+        return fallbackPlane.objectStore.putIfAbsent(key, bytes);
       },
     };
     const fallbackResolved1 = await resolveExpectedPointerSequence({

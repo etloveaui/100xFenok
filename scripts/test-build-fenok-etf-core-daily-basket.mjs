@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import fs from "node:fs";
 
 import {
   ETF_CORE_DAILY_BASKET_CONFIG,
@@ -9,6 +10,13 @@ import {
   validateEtfCoreDailyBasket,
 } from "./build-fenok-etf-core-daily-basket.mjs";
 import { classifyEtfCoreReadiness } from "../100xfenok-next/scripts/check-fenok-etf-core-daily-basket.mjs";
+
+const producerSource = fs.readFileSync(new URL("./build-fenok-etf-core-daily-basket.mjs", import.meta.url), "utf8");
+const writeBlock = producerSource.match(/if \(!args\.noWrite && validation\.ok\) \{([\s\S]*?)\n  \}/)?.[1];
+assert.ok(writeBlock, "producer write block must remain explicit");
+assert.match(writeBlock, /writeJson\(ADMIN_REL, payload\.admin\)/, "producer must write the canonical admin artifact");
+assert.match(writeBlock, /writeJson\(SUMMARY_REL, payload\.summary\)/, "producer must write the canonical summary");
+assert.doesNotMatch(writeBlock, /PUBLIC_SUMMARY_REL/, "producer must not mutate the public summary destination");
 
 function fixtureCandidates(count, { status, scoreBase, prefix }) {
   const candidates = [];

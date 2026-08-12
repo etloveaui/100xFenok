@@ -441,7 +441,6 @@ function controlledFailureKey(value, eventName) {
 export async function runTreasuryTga({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(repoRoot, "data", "macro", "tga.json"),
-  publicPath = path.join(repoRoot, "100xfenok-next", "public", "data", "macro", "tga.json"),
   attemptShardPath = path.join(repoRoot, "data", "admin", "data-supply-state", "detection-attempts", "treasury_tga.json"),
   request = requestBytes,
   observedAt = new Date().toISOString(),
@@ -611,7 +610,6 @@ export async function runTreasuryTga({
     };
   }
   atomicWrite(canonicalPath, serialized);
-  atomicWrite(publicPath, serialized);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items[LKG_KEY]?.recovered_at === observedAt;
   return { ok: true, reason: "ok", updated: true, attempt: row, points: output.series.length, recovered };

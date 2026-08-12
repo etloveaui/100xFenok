@@ -28,7 +28,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, "..");
 const DATA_ROOT = path.join(REPO_ROOT, "data");
-const PUBLIC_DATA_ROOT = path.join(REPO_ROOT, "100xfenok-next", "public", "data");
 
 const SCHEMA_VERSION = "nasdaq_giw_sox_constituents.v1";
 const DEFAULT_OUTPUT = "indices/nasdaq-giw-sox-constituents.json";
@@ -57,7 +56,6 @@ function parseArgs(argv) {
     lookbackDays: 10,
     output: DEFAULT_OUTPUT,
     write: true,
-    publicMirror: true,
     check: false,
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -72,7 +70,10 @@ function parseArgs(argv) {
       args.check = true;
       args.write = false;
     } else if (arg === "--no-write") args.write = false;
-    else if (arg === "--no-public-mirror") args.publicMirror = false;
+    else if (arg === "--no-public-mirror") {
+      // Accepted for CI command compatibility; this producer is canonical-only
+      // (the public mirror is boundary-owned, #377 batch 3).
+    }
     else throw new Error(`Unknown argument: ${arg}`);
   }
   if (!Number.isFinite(args.lookbackDays) || args.lookbackDays < 0 || args.lookbackDays > 30) {
@@ -328,7 +329,6 @@ function controlledFailure(controlledFailureKey, eventName) {
 export async function runNasdaqGiwSox({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", DEFAULT_OUTPUT),
-  publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", DEFAULT_OUTPUT),
   attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", `${LANE_ID}.json`),
   dates = candidateDates(null, 10),
   request = requestWeightingData,
@@ -339,7 +339,6 @@ export async function runNasdaqGiwSox({
   eventName = process.env.GITHUB_EVENT_NAME || "local",
   controlledFailureKey = process.env.INPUT_CONTROLLED_FAILURE_KEY || "",
   write = true,
-  publicMirror = false,
 } = {}) {
   if (!Array.isArray(dates) || dates.length === 0 || dates.some((date) => !validDate(date))) {
     throw new Error("SOX candidate dates must be a non-empty YYYY-MM-DD array");
@@ -493,7 +492,6 @@ export async function runNasdaqGiwSox({
     };
   }
   atomicWrite(canonicalPath, serialized);
-  if (publicMirror) atomicWrite(publicPath, serialized);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items[LKG_KEY]?.recovered_at === observedAt;
   const history = rotateSoxSnapshotHistory({ repoRoot, payload, generatedAt: observedAt });
@@ -514,13 +512,10 @@ export async function runNasdaqGiwSox({
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const canonicalPath = path.join(DATA_ROOT, args.output);
-  const publicPath = path.join(PUBLIC_DATA_ROOT, args.output);
   const result = await runNasdaqGiwSox({
     canonicalPath,
-    publicPath,
     dates: candidateDates(args.date, args.lookbackDays),
     write: args.write,
-    publicMirror: args.publicMirror,
   });
   if (!result.ok) {
     const prefix = result.degraded ? "[degraded]" : "[corrupt]";
@@ -535,16 +530,10 @@ async function main() {
     if (!current || JSON.stringify(stableComparable(current)) !== JSON.stringify(stableComparable(result.payload))) {
       throw new Error(`${path.join("data", args.output)} is not up to date with Nasdaq GIW SOX constituents`);
     }
-    if (args.publicMirror) {
-      const mirror = fs.existsSync(publicPath) ? JSON.parse(fs.readFileSync(publicPath, "utf8")) : null;
-      if (!mirror || JSON.stringify(stableComparable(mirror)) !== JSON.stringify(stableComparable(result.payload))) {
-        throw new Error(`${path.join("100xfenok-next/public/data", args.output)} is not up to date with Nasdaq GIW SOX constituents`);
-      }
-    }
   }
   console.log(JSON.stringify({
     ok: true,
-    wrote: args.write ? [path.join("data", args.output), ...(args.publicMirror ? [path.join("100xfenok-next/public/data", args.output)] : [])] : [],
+    wrote: args.write ? [path.join("data", args.output)] : [],
     as_of: result.asOf,
     row_count: result.rowCount,
     symbols: result.symbols ?? result.payload?.symbols,

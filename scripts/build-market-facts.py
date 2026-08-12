@@ -29,7 +29,6 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 OUT = DATA / "computed" / "market_facts"
-PUBLIC_OUT = ROOT / "100xfenok-next" / "public" / "data" / "computed" / "market_facts"
 SCHEMA_VERSION = "market-facts/v1"
 MARKET_FACT_FIELDS = {
     "price",
@@ -1079,14 +1078,14 @@ def parse_args(argv=None) -> argparse.Namespace:
     parser.add_argument(
         "--no-public-mirror",
         action="store_true",
-        help="Write only data/computed/market_facts; skip the Next public mirror.",
+        help="Retained for CI command compatibility; builds are canonical-only "
+        "(the public mirror is boundary-owned, #377 batch 3).",
     )
     return parser.parse_args(argv)
 
 
 def main(argv=None) -> None:
     args = parse_args([] if argv is None else argv)
-    mirror_public = not args.no_public_mirror
     target_tickers = parse_ticker_list(args.tickers)
     if args.tickers is not None and not target_tickers:
         raise SystemExit("--tickers requires at least one ticker")
@@ -1180,8 +1179,6 @@ def main(argv=None) -> None:
         payload = carry_forward_stable_payload(load_json(OUT / rel), payload)
         assert_market_facts_payload(payload, ticker=ticker)
         write_json(OUT / rel, payload)
-        if mirror_public:
-            write_json(PUBLIC_OUT / rel, payload)
         row = {
             "ticker": ticker,
             "asset_type": payload["asset_type"],
@@ -1221,10 +1218,7 @@ def main(argv=None) -> None:
         "rows": rows,
     }
     write_json(OUT / "index.json", index)
-    if mirror_public:
-        write_json(PUBLIC_OUT / "index.json", index)
-    mirror_status = "public_mirror=on" if mirror_public else "public_mirror=off"
-    print(f"[build-market-facts] count={len(rows)} etf={index['coverage']['etf']} stock={index['coverage']['stock']} {mirror_status}")
+    print(f"[build-market-facts] count={len(rows)} etf={index['coverage']['etf']} stock={index['coverage']['stock']}")
 
 
 if __name__ == "__main__":

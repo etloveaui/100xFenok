@@ -9,6 +9,8 @@
 //  4. deploy-worker.yml has the check-then-start race re-check step.
 //  5. update-manifest.yml dispatch step is gated on the recovery-gate output.
 //  6. slickcharts-history.yml keeps actions: write (commits + fetches).
+//  7. the recovery writer lock is workflow-scoped so queued parent runs are visible.
+//  8. recovery checkout retains history needed to validate the artifact base.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -30,6 +32,23 @@ function check(name, fn) {
   passed++;
   console.log(`ok ${passed} - ${name}`);
 }
+
+check("recovery writer concurrency is workflow-scoped", () => {
+  assert.equal((recoveryYml.match(/^concurrency:\n/gm) ?? []).length, 1);
+  assert.match(
+    recoveryYml,
+    /^concurrency:\n  group: fenok-data-writer-refs\/heads\/main\n  cancel-in-progress: false\n  queue: max/m,
+  );
+  assert.doesNotMatch(recoveryYml, /^ {4}concurrency:/m, "the recovery writer lock must not remain job-scoped");
+});
+
+check("recovery checkout includes the artifact base history", () => {
+  assert.match(
+    recoveryYml,
+    /uses: actions\/checkout@v4[\s\S]*?fetch-depth: 0/,
+    "recovery cannot validate an older acquisition base from a depth-1 checkout",
+  );
+});
 
 check("recovery workflow dispatches update-manifest", () => {
   assert.match(recoveryYml, /gh workflow run update-manifest\.yml --ref main/);

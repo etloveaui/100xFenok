@@ -355,6 +355,13 @@ try {
   assert.equal(await emptyTree.text(), "assets fallback");
   assert.equal(emptyTree.headers.get("x-data-plane-published-at"), null, "fallback gains no plane heartbeat");
 
+  // The computed-signals pilot is exact-path enrolled, but an empty family
+  // pointer still falls through to the bundled copy.
+  const computedFallback = await readGet("/data/computed/signals.json");
+  assert.equal(computedFallback.status, 200);
+  assert.equal(await computedFallback.text(), "assets fallback");
+  assert.equal(computedFallback.headers.get("x-data-plane-published-at"), null, "computed fallback gains no plane heartbeat");
+
   // Never enrolled: the application handler owns it.
   const unenrolled = await readGet("/data/macro/other.json");
   assert.equal(unenrolled.status, 200);
@@ -413,6 +420,32 @@ try {
   assert.equal(served.headers.get("x-data-plane-generation"), "read-proof-1");
   assert.equal(served.headers.get("x-data-plane-published-at"), NOW);
   assert.equal(await served.text(), "{\"series\":{\"DGS10\":[1,2,3]}}\n");
+
+  const computedValues = { "public/data/computed/signals.json": "{\"source_as_of\":\"2026-07-29\",\"signals\":{}}\n" };
+  const computedManifest = buildManifest(
+    "computed-route-1",
+    Object.entries(computedValues).map(([path, text]) => ({ path, text })),
+  );
+  const computedPlane = createCloudflareCloudDataPlane({
+    r2Bucket,
+    coordinatorNamespace: createRouteCoordinatorNamespace(worker, WRITE_KEY, "computed-signals"),
+  });
+  await publishGeneration({
+    manifest: computedManifest,
+    payloads: new Map(Object.entries(computedValues).map(([p, t]) => [p, encoder.encode(t)])),
+    expectedPointerSequence: 0,
+    objectStore: computedPlane.objectStore,
+    ledger: computedPlane.ledger,
+    pointerStore: computedPlane.pointerStore,
+    policy: POLICY,
+  });
+  const computedServed = await readGet("/data/computed/signals.json");
+  assert.equal(computedServed.status, 200);
+  assert.equal(computedServed.headers.get("x-data-plane-generation"), "computed-route-1");
+  assert.equal(await computedServed.text(), computedValues["public/data/computed/signals.json"]);
+  const computedUnenrolled = await readGet("/data/computed/other.json");
+  assert.equal(computedUnenrolled.status, 200);
+  assert.equal(await computedUnenrolled.text(), "application handler");
 
   const servedHead = await worker.dispatchFetch("https://worker.test/data/macro/fred-macro.json", {
     method: "HEAD",

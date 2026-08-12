@@ -9,7 +9,7 @@
  * shown rather than a guessed one.
  *
  * Run: FRED_API_KEY=... node scripts/build-calendar-prev.mjs
- * Output: data/calendar/prev-values.json (+ public mirror)
+ * Output: data/calendar/prev-values.json
  */
 
 import fs from "node:fs";
@@ -19,7 +19,6 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const OUT = path.join(ROOT, "data/calendar/prev-values.json");
-const PUBLIC_OUT = path.join(ROOT, "100xfenok-next/public/data/calendar/prev-values.json");
 const ACTIVITY_IN = path.join(ROOT, "data/macro/activity-surveys.json");
 
 const API_KEY = process.env.FRED_API_KEY;
@@ -213,8 +212,6 @@ const doc = {
   values,
 };
 
-for (const out of [OUT, PUBLIC_OUT]) {
-  fs.mkdirSync(path.dirname(out), { recursive: true });
-  fs.writeFileSync(out, `${JSON.stringify(doc, null, 2)}\n`);
-}
+fs.mkdirSync(path.dirname(OUT), { recursive: true });
+fs.writeFileSync(OUT, `${JSON.stringify(doc, null, 2)}\n`);
 console.log(`done: ${Object.keys(values).length} values, ${failed} skipped -> ${OUT}`);

@@ -79,6 +79,34 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             finally:
                 self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR = original_out, original_public
 
+    def test_default_cli_writes_canonical_only_never_public_mirror(self) -> None:
+        original_argv = sys.argv
+        original_dirs = self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "stockanalysis"
+            sys.argv = [
+                "fetch-stockanalysis.py",
+                "--coverage-only",
+                "--stocks-only",
+                "--event-name",
+                "workflow_dispatch",
+            ]
+            try:
+                self.fetcher.main()
+            finally:
+                self.fetcher.OUT_DIR, self.fetcher.PUBLIC_DIR = original_dirs
+                sys.argv = original_argv
+            self.assertTrue(
+                (root / "data" / "stockanalysis" / "coverage" / "etf_detail.json").is_file(),
+                "default CLI run must write the canonical coverage proof",
+            )
+            self.assertFalse(
+                (root / "public").exists(),
+                "default CLI run must never create the public mirror",
+            )
+
     def test_stock_financial_detection_requires_exact_natural_schedule_and_basket(self) -> None:
         def args(**overrides):
             values = {

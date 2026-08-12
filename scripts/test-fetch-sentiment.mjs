@@ -143,7 +143,7 @@ function sourceDescriptors(date, overrides = {}) {
 function makePaths(root) {
   return {
     repoRoot: root,
-    outputDirs: [path.join(root, "data", "sentiment"), path.join(root, "public", "data", "sentiment")],
+    outputDir: path.join(root, "data", "sentiment"),
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "sentiment.json"),
   };
 }
@@ -238,7 +238,7 @@ async function runCase(root, {
   assert.equal(failed.exitCode, 0);
   assert.deepEqual(failed.retrySet, ["vix"]);
   assert.equal(fs.readFileSync(canonicalVix, "utf8"), before);
-  assert.equal(fs.readFileSync(publicVix, "utf8"), before);
+  assert.equal(fs.existsSync(publicVix), false, "sentiment producer must not create the public mirror file");
 
   const statePath = path.join(root, "data", "admin", "sentiment", "index.json");
   const lkgPath = path.join(root, "data", "admin", "sentiment", "lkg", "vix.json");
@@ -291,10 +291,9 @@ async function runCase(root, {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sentiment-state-write-rollback-"));
   await runCase(root);
   const paths = makePaths(root);
-  const canonicalVix = path.join(paths.outputDirs[0], "vix.json");
-  const publicVix = path.join(paths.outputDirs[1], "vix.json");
+  const canonicalVix = path.join(paths.outputDir, "vix.json");
   const currentVix = path.join(root, "data", "admin", "sentiment", "current", "vix.json");
-  const before = Object.fromEntries([canonicalVix, publicVix, currentVix].map((filePath) => [
+  const before = Object.fromEntries([canonicalVix, currentVix].map((filePath) => [
     filePath,
     fs.readFileSync(filePath),
   ]));
@@ -347,6 +346,7 @@ async function runCase(root, {
   const foreignRows = [...readJson(canonicalVix), { date: "2026-07-16", value: 99 }];
   const foreignBytes = `${JSON.stringify(foreignRows, null, 2)}\n`;
   fs.writeFileSync(canonicalVix, foreignBytes);
+  fs.mkdirSync(path.dirname(publicVix), { recursive: true });
   fs.writeFileSync(publicVix, foreignBytes);
 
   const conflict = await runCase(root, {

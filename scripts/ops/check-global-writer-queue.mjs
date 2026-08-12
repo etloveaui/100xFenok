@@ -1,11 +1,29 @@
-import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import {
+  assertWriterSurfaceContracts,
+  scanWriterInventory,
+} from "../check-lane-commit-manifest-inventory.mjs";
+
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const DEFAULT_POLICY_PATH = path.join(HERE, "global-writer-queue-policy.v1.json");
+const REPO_ROOT = path.resolve(HERE, "../..");
 const ALERT_EXIT = 2;
 const UNKNOWN_EXIT = 3;
+const PARENT_RUN_STATUSES = Object.freeze(["queued", "requested", "waiting", "pending", "in_progress"]);
+const CANDIDATE_STATUSES = Object.freeze(["queued", "waiting", "pending"]);
+const DEFAULT_CANDIDATE_STATUSES = Object.freeze(["queued", "requested", "waiting", "pending"]);
+const DEFAULT_API = Object.freeze({
+  base_url: "https://api.github.com",
+  runs_per_page: 100,
+  max_pages: 2,
+  max_runs: 200,
+  jobs_per_page: 100,
+  max_job_pages: 1,
+  max_jobs_per_run: 100,
+  max_job_runs: 20,
+});
+const DEFAULT_THRESHOLDS = Object.freeze({ max_depth: 3, max_age_minutes: 30 });
 
 function asPositiveInteger(value, name, { zero = false } = {}) {
   const parsed = Number(value);
@@ -16,95 +34,48 @@ function asPositiveInteger(value, name, { zero = false } = {}) {
   return parsed;
 }
 
-function assertPlainObject(value, name) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`${name} must be an object`);
+export function deriveWriterJobTargets(inventory) {
+  const derived = {};
+  for (const entry of inventory) {
+    if (entry.groupScope !== "job" || entry.needs.length === 0) continue;
+    const workflow = path.basename(entry.workflow);
+    const target = {
+      job_name: entry.job,
+      eligibility_predecessor: entry.needs[0],
+      parent_run_statuses: [...PARENT_RUN_STATUSES],
+      candidate_statuses: [...CANDIDATE_STATUSES],
+    };
+    if (derived[workflow] && JSON.stringify(derived[workflow]) !== JSON.stringify(target)) {
+      throw new Error(`writer inventory has conflicting job targets for ${workflow}`);
+    }
+    derived[workflow] = target;
   }
+  return derived;
 }
 
-export function loadPolicy(policyPath = DEFAULT_POLICY_PATH) {
-  const policy = JSON.parse(fs.readFileSync(policyPath, "utf8"));
-  assertPlainObject(policy, "policy");
-  if (policy.version !== 1) throw new Error("queue policy version must be 1");
-  if (policy.metric !== "global-writer candidate queued runs") {
-    throw new Error("queue policy metric must be global-writer candidate queued runs");
-  }
-  if (policy.concurrency_group !== "fenok-data-writer-refs/heads/main") {
-    throw new Error("queue policy concurrency group is not the canonical global writer group");
-  }
-  if (policy.queue_mode !== "max") {
-    throw new Error("queue policy queue_mode must be max");
-  }
-  if (policy.canonical_branch !== "main") {
-    throw new Error("queue policy canonical_branch must be main");
-  }
-  if (policy.default_observation_mode !== "workflow_run") {
-    throw new Error("queue policy default_observation_mode must be workflow_run");
-  }
-  if (!Array.isArray(policy.workflows) || policy.workflows.length === 0) {
-    throw new Error("queue policy workflows must be a non-empty array");
-  }
-  const workflowSet = new Set();
-  for (const workflow of policy.workflows) {
-    if (typeof workflow !== "string" || !/^[^/]+\.ya?ml$/.test(workflow)) {
-      throw new Error(`queue policy workflow is not a filename: ${workflow}`);
-    }
-    if (workflowSet.has(workflow)) throw new Error(`queue policy workflow is duplicated: ${workflow}`);
-    workflowSet.add(workflow);
-  }
-  assertPlainObject(policy.job_level_targets, "policy.job_level_targets");
-  for (const [workflow, target] of Object.entries(policy.job_level_targets)) {
-    if (!workflowSet.has(workflow)) throw new Error(`job-level target is not a listed workflow: ${workflow}`);
-    assertPlainObject(target, `policy.job_level_targets.${workflow}`);
-    if (typeof target.job_name !== "string" || target.job_name.length === 0) {
-      throw new Error(`job-level target job_name is missing: ${workflow}`);
-    }
-    if (typeof target.eligibility_predecessor !== "string" || target.eligibility_predecessor.length === 0) {
-      throw new Error(`job-level target eligibility_predecessor is missing: ${workflow}`);
-    }
-    if (target.eligibility_predecessor === target.job_name) {
-      throw new Error(`job-level target cannot be its own eligibility predecessor: ${workflow}`);
-    }
-    if (!Array.isArray(target.parent_run_statuses) || target.parent_run_statuses.length === 0) {
-      throw new Error(`job-level target parent_run_statuses is missing: ${workflow}`);
-    }
-    if (!Array.isArray(target.candidate_statuses) || target.candidate_statuses.length === 0) {
-      throw new Error(`job-level target candidate_statuses is missing: ${workflow}`);
-    }
-  }
-  assertPlainObject(policy.api, "policy.api");
-  asPositiveInteger(policy.api.runs_per_page, "policy.api.runs_per_page");
-  if (policy.api.runs_per_page > 100) throw new Error("policy.api.runs_per_page must be <= 100");
-  asPositiveInteger(policy.api.max_pages, "policy.api.max_pages");
-  asPositiveInteger(policy.api.max_runs, "policy.api.max_runs");
-  if (policy.api.max_runs > policy.api.runs_per_page * policy.api.max_pages) {
-    throw new Error("policy.api.max_runs exceeds its page/depth bound");
-  }
-  asPositiveInteger(policy.api.jobs_per_page, "policy.api.jobs_per_page");
-  if (policy.api.jobs_per_page > 100) throw new Error("policy.api.jobs_per_page must be <= 100");
-  asPositiveInteger(policy.api.max_job_pages, "policy.api.max_job_pages");
-  asPositiveInteger(policy.api.max_jobs_per_run, "policy.api.max_jobs_per_run");
-  if (policy.api.max_jobs_per_run > policy.api.jobs_per_page * policy.api.max_job_pages) {
-    throw new Error("policy.api.max_jobs_per_run exceeds its page/depth bound");
-  }
-  asPositiveInteger(policy.api.max_job_runs, "policy.api.max_job_runs");
-  if (typeof policy.api.base_url !== "string" || !/^https:\/\//.test(policy.api.base_url)) {
-    throw new Error("policy.api.base_url must be an HTTPS URL");
-  }
-  assertPlainObject(policy.thresholds, "policy.thresholds");
-  asPositiveInteger(policy.thresholds.max_depth, "policy.thresholds.max_depth", { zero: true });
-  asPositiveInteger(policy.thresholds.max_age_minutes, "policy.thresholds.max_age_minutes", { zero: true });
-  if (!Array.isArray(policy.candidate_statuses) || policy.candidate_statuses.length === 0) {
-    throw new Error("queue policy candidate_statuses must be a non-empty array");
-  }
-  assertPlainObject(policy.alert, "policy.alert");
-  if (policy.alert.output !== "workflow-failure-and-json") {
-    throw new Error("queue policy alert output must be workflow-failure-and-json");
-  }
-  if (policy.alert.exit_code !== ALERT_EXIT || policy.alert.unknown_exit_code !== UNKNOWN_EXIT) {
-    throw new Error("queue policy alert exit codes must be alarm=2 and unknown=3");
-  }
-  return policy;
+export function loadPolicy({ repoRoot = REPO_ROOT } = {}) {
+  // Scan once. The workflow set, canonical group, and job-level writer targets
+  // all come from the same validated structural inventory.
+  const inventory = assertWriterSurfaceContracts(scanWriterInventory({ repoRoot }));
+  const workflows = [...new Set(inventory.map((entry) => path.basename(entry.workflow)))].sort();
+  return {
+    version: 1,
+    metric: "global-writer candidate queued runs",
+    concurrency_group: inventory[0].group,
+    queue_mode: "max",
+    canonical_branch: "main",
+    default_observation_mode: "workflow_run",
+    workflows,
+    job_level_targets: deriveWriterJobTargets(inventory),
+    candidate_statuses: [...DEFAULT_CANDIDATE_STATUSES],
+    api: { ...DEFAULT_API },
+    thresholds: { ...DEFAULT_THRESHOLDS },
+    alert: {
+      output: "workflow-failure-and-json",
+      exit_code: ALERT_EXIT,
+      unknown_exit_code: UNKNOWN_EXIT,
+    },
+  };
 }
 
 export function buildApiUrl({ baseUrl, owner, repo, workflow, page, perPage, branch = "main" }) {
@@ -356,8 +327,7 @@ export async function main({ fetchImpl = fetch } = {}) {
   const [owner, repo] = repository.split("/");
   let result;
   try {
-    const policyPath = process.env.QUEUE_OBSERVABILITY_POLICY || DEFAULT_POLICY_PATH;
-    const policy = loadPolicy(policyPath);
+    const policy = loadPolicy();
     const maxDepth = thresholdFromEnv("QUEUE_OBSERVABILITY_MAX_DEPTH", policy.thresholds.max_depth);
     const maxAgeMinutes = thresholdFromEnv("QUEUE_OBSERVABILITY_MAX_AGE_MINUTES", policy.thresholds.max_age_minutes);
     if (!owner || !repo) {
@@ -380,7 +350,7 @@ export async function main({ fetchImpl = fetch } = {}) {
     result = {
       policyVersion: null,
       metric: "global-writer candidate queued runs",
-      concurrencyGroup: "fenok-data-writer-refs/heads/main",
+      concurrencyGroup: null,
       attribution: "[not verified]",
       repository,
       checkedAtUtc,

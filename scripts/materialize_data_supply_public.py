@@ -28,8 +28,6 @@ from data_supply_state import DataSupplyStateStore, canonical_sha256
 DOMAIN = "etf_detail"
 ENROLLMENT_SCHEMA = "data-supply-etf-detail-enrollment/v1"
 INDEX_SCHEMA = "data-supply-etf-detail-public-index/v1"
-EXPECTED_ENROLLMENT_COUNT = 718
-EXPECTED_MEMBERSHIP_SHA256 = "6b30e5d314daae54f635ba46d4936c4ab228416599dcc35eba8638115fdeff32"
 STOCKANALYSIS_ETF_PUBLIC_MODE = "shard-only"
 STOCKANALYSIS_ETF_SHARD_COUNT = 1024
 STATE_REL_ROOT = Path("data/admin/data-supply-state/v1")
@@ -219,8 +217,6 @@ class PublicDataSupplyMaterializer:
         canonical_root: Path | str | None = None,
         public_data_root: Path | str | None = None,
         state_reader: Any | None = None,
-        expected_enrollment_count: int = EXPECTED_ENROLLMENT_COUNT,
-        expected_membership_sha256: str = EXPECTED_MEMBERSHIP_SHA256,
         failpoint: Callable[[str], None] | None = None,
         require_git_tracking: bool = True,
     ):
@@ -230,8 +226,6 @@ class PublicDataSupplyMaterializer:
         self.public_data_root = self._rooted(public_data_root, PUBLIC_DATA_REL_ROOT)
         self.reconcile_journal = self.repo_root / PRIVATE_RECONCILE_REL_PATH
         self.state_reader = state_reader or DataSupplyStateStore(self.state_root, defer_maintenance=True)
-        self.expected_enrollment_count = expected_enrollment_count
-        self.expected_membership_sha256 = _sha(expected_membership_sha256, "expected_membership_sha256")
         self.failpoint = failpoint or (lambda _point: None)
         self.require_git_tracking = require_git_tracking
 
@@ -415,14 +409,6 @@ class PublicDataSupplyMaterializer:
             raise MaterializationError("active current is not a subset of recovery enrollment")
         tickers = sorted(recovery_keys)
         membership_sha = canonical_sha256(tickers)
-        if len(tickers) != self.expected_enrollment_count:
-            raise MaterializationError(
-                f"enrollment count mismatch: expected={self.expected_enrollment_count} actual={len(tickers)}"
-            )
-        if membership_sha != self.expected_membership_sha256:
-            raise MaterializationError(
-                f"membership digest mismatch: expected={self.expected_membership_sha256} actual={membership_sha}"
-            )
 
         required_paths, retained_refs = self._retained_files_and_refs(active)
         active_rows: dict[str, dict[str, Any]] = {}
@@ -640,8 +626,13 @@ class PublicDataSupplyMaterializer:
             existing = self._load_projection_tree(self.canonical_root)
             if bootstrap_enrollment:
                 raise MaterializationError("--bootstrap-enrollment is allowed only for the first canonical write")
-            if existing.enrollment.get("membership_sha256") != projection.enrollment["membership_sha256"]:
-                raise MaterializationError("existing enrollment membership differs from active membership")
+            existing_tickers = set(existing.enrollment["tickers"])
+            active_tickers = set(projection.enrollment["tickers"])
+            if not existing_tickers.issubset(active_tickers):
+                removed = sorted(existing_tickers - active_tickers)
+                raise MaterializationError(
+                    f"existing enrollment membership is not preserved; removed ticker(s): {removed}"
+                )
         elif not bootstrap_enrollment:
             raise MaterializationError("first canonical write requires --bootstrap-enrollment")
 

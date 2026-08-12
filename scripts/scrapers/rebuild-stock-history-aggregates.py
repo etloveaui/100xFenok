@@ -18,6 +18,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from scraper_utils import preserve_updated
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = REPO_ROOT / "data" / "slickcharts"
@@ -185,7 +187,13 @@ def main() -> None:
     }
 
     for filename, payload in outputs.items():
-        write_payload(data_dir / filename, payload, pretty=args.pretty)
+        output = data_dir / filename
+        try:
+            existing = load_json(output)
+        except (FileNotFoundError, RuntimeError):
+            existing = {}
+        preserve_updated(payload, existing)
+        write_payload(output, payload, pretty=args.pretty)
 
     print(
         "Rebuilt SlickCharts aggregates: "

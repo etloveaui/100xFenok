@@ -39,7 +39,6 @@ const PLANE_PUBLISH_SUCCESS_RESULTS = new Set(["published", "resumed"]);
 // inclusion becomes scheduled (and therefore no longer needs special policy).
 export const SCHEDULED_WORKFLOW_EXCLUSIONS = Object.freeze({
   "pipeline-failure-alarm.yml": "self-monitoring would create a recursive alarm loop",
-  "data-plane-serving-probe.yml": "observer that fails its own run on alarm; watching it would page twice for one incident",
 });
 
 export const NON_SCHEDULED_WORKFLOW_INCLUSIONS = Object.freeze({

@@ -57,11 +57,14 @@ function validDocument({ sourceDate = "2026-07-11", observedAt = OBSERVED_AT } =
 function makePaths(root) {
   return {
     canonicalPath: path.join(root, "data", "macro", "tga.json"),
-    publicPath: path.join(root, "100xfenok-next", "public", "data", "macro", "tga.json"),
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "treasury_tga.json"),
     statePath: path.join(root, "data", "admin", "treasury_tga", "index.json"),
     lkgPath: path.join(root, "data", "admin", "treasury_tga", "lkg", "tga.json"),
   };
+}
+
+function publicPathFor(root) {
+  return path.join(root, "100xfenok-next", "public", "data", "macro", "tga.json");
 }
 
 function readJson(filePath) {
@@ -118,7 +121,7 @@ function assertShardShape(shard) {
 
 {
   let calls = 0;
-  const { paths, result, shard } = await runCase(async (_url, accountType) => {
+  const { root, paths, result, shard } = await runCase(async (_url, accountType) => {
     const index = ACCOUNT_TYPES.indexOf(accountType);
     calls += 1;
     return response(200, rowsFor(accountType, index));
@@ -127,7 +130,7 @@ function assertShardShape(shard) {
   assert.equal(result.ok, true);
   assert.equal(result.reason, "ok");
   assert.equal(result.updated, true);
-  assert.deepEqual(fs.readFileSync(paths.canonicalPath), fs.readFileSync(paths.publicPath));
+  assert.equal(fs.existsSync(publicPathFor(root)), false, "a successful run must not create the public mirror file");
   const output = readJson(paths.canonicalPath);
   assert.equal(output.source, "Treasury FiscalData");
   assert.equal(output.series.length, 1);
@@ -158,7 +161,7 @@ function assertShardShape(shard) {
 }
 
 async function assertFailureCase({ failingResponse, expected, failingIndex = 1 }) {
-  const { paths, result, shard } = await runCase(async (_url, accountType) => {
+  const { root, paths, result, shard } = await runCase(async (_url, accountType) => {
     const index = ACCOUNT_TYPES.indexOf(accountType);
     if (index === failingIndex) {
       if (failingResponse instanceof Error) throw failingResponse;
@@ -175,7 +178,7 @@ async function assertFailureCase({ failingResponse, expected, failingIndex = 1 }
     assert(result.failure_detail.length <= 320, "Treasury failure detail must stay bounded");
   }
   assert.equal(fs.existsSync(paths.canonicalPath), false);
-  assert.equal(fs.existsSync(paths.publicPath), false);
+  assert.equal(fs.existsSync(publicPathFor(root)), false);
   const row = assertShardShape(shard);
   for (const [key, value] of Object.entries(expected.row)) assert.deepEqual(row[key], value, key);
 }
@@ -296,11 +299,12 @@ await assertFailureCase({
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-tga-lkg-test-"));
   const paths = makePaths(root);
+  const publicPath = publicPathFor(root);
   fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
+  fs.mkdirSync(path.dirname(publicPath), { recursive: true });
   const lkg = `${JSON.stringify(validDocument(), null, 2)}\n`;
   fs.writeFileSync(paths.canonicalPath, lkg);
-  fs.writeFileSync(paths.publicPath, lkg);
+  fs.writeFileSync(publicPath, lkg);
   let controlledCalls = 0;
   const result = await runTreasuryTga({
     ...paths,
@@ -323,7 +327,7 @@ await assertFailureCase({
   assert.equal(result.exitCode, 0);
   assert.equal(controlledCalls, 2);
   assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), lkg);
-  assert.equal(fs.readFileSync(paths.publicPath, "utf8"), lkg);
+  assert.equal(fs.readFileSync(publicPath, "utf8"), lkg);
   assert.equal(fs.readFileSync(paths.lkgPath, "utf8"), lkg);
   const retainedState = readJson(paths.statePath);
   assert.deepEqual(retainedState.retry_set, ["tga"]);
@@ -400,11 +404,12 @@ async function seededFailure({
 }) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-tga-seeded-failure-"));
   const paths = makePaths(root);
+  const publicPath = publicPathFor(root);
   fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
+  fs.mkdirSync(path.dirname(publicPath), { recursive: true });
   const bytes = `${JSON.stringify(validDocument({ sourceDate }), null, 2)}\n`;
   fs.writeFileSync(paths.canonicalPath, bytes);
-  fs.writeFileSync(paths.publicPath, bytes);
+  fs.writeFileSync(publicPath, bytes);
   const result = await runTreasuryTga({
     ...paths,
     repoRoot: root,
@@ -501,8 +506,9 @@ async function seededFailure({
 {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-tga-source-guard-"));
   const paths = makePaths(root);
+  const publicPath = publicPathFor(root);
   fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
+  fs.mkdirSync(path.dirname(publicPath), { recursive: true });
   const currentBytes = `${JSON.stringify(validDocument({ sourceDate: "2026-07-11" }), null, 2)}\n`;
   await runTreasuryTga({
     ...paths,
@@ -517,7 +523,7 @@ async function seededFailure({
   // Reproduce origin/main after the producer code landed: state is already
   // fresh_primary for this source, while canonical/public bytes are legacy.
   fs.writeFileSync(paths.canonicalPath, currentBytes);
-  fs.writeFileSync(paths.publicPath, currentBytes);
+  fs.writeFileSync(publicPath, currentBytes);
   // Production-shaped migration: the natural workflow may observe the same
   // provider source date as the tracked legacy payload.  Same-source must not
   // short-circuit until the bounded-persistence envelope has been emitted.
@@ -536,7 +542,7 @@ async function seededFailure({
   const migrated = readJson(paths.canonicalPath);
   assert.deepEqual(migrated.persistence_policy, TGA_PERSISTENCE_POLICY);
   assert.equal(migrated.persistence_state.retained_series_days, 1);
-  assert.deepEqual(readJson(paths.publicPath), migrated);
+  assert.equal(fs.readFileSync(publicPath, "utf8"), currentBytes, "the boundary-owned mirror file must remain untouched by the producer");
   assert.equal(readJson(paths.statePath).items.tga.current.source_as_of, "2026-07-11");
   const migratedBytes = fs.readFileSync(paths.canonicalPath, "utf8");
 

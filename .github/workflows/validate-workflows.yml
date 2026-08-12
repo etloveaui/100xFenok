@@ -18,11 +18,51 @@ on:
       - 'scripts/ops/emit-alarm-state.mjs'
       - 'scripts/ops/test-check-pipeline-job-health.mjs'
       - 'scripts/ops/test-emit-alarm-state.mjs'
+      - 'scripts/check-lane-commit-manifest-inventory.mjs'
+      - 'scripts/ops/check-global-writer-queue.mjs'
+      - 'scripts/ops/test-check-global-writer-queue.mjs'
+      - 'scripts/fetch-sentiment.mjs'
+      - 'scripts/fetch-fred-banking.mjs'
+      - 'scripts/fetch-treasury-tga.mjs'
+      - 'scripts/fetch-yahoo-ticker.mjs'
+      - 'scripts/test-fetch-producers-public-write-fence.mjs'
+      - 'scripts/test-build-producers-public-write-fence.mjs'
+      - 'scripts/test-build-stocks-analyzer-manifest.mjs'
+      - 'scripts/build-stocks-analyzer.mjs'
+      - 'scripts/build-13f-enrichment-backfill.mjs'
+      - 'scripts/build-13f-integrity-indexes.mjs'
+      - 'scripts/build-13f-trades.mjs'
+      - 'scripts/build-13f-portfolio-views.mjs'
+      - 'scripts/build-guru-holders-index.mjs'
+      - 'scripts/build-revision-movers.mjs'
+      - 'scripts/build-industry-benchmarks.mjs'
+      - 'scripts/build-calendar-prev.mjs'
+      - 'scripts/materialize-update-manifest-routes.mjs'
+      - 'scripts/stage-update-manifest-central.mjs'
+      - 'scripts/test-update-manifest-central-staging.mjs'
+      - 'scripts/test-lane-commit-manifest-parity.mjs'
+      - 'scripts/test-build-data-supply-detection-floor.mjs'
+      - 'scripts/fixtures/data_supply/detection_floor/**'
+      - 'scripts/fetch-nasdaq-giw-sox-constituents.mjs'
+      - 'scripts/test-fetch-nasdaq-giw-sox-constituents.mjs'
+      - 'scripts/build-market-facts.py'
+      - 'scripts/test_build_market_facts.py'
+      - 'scripts/fetch-stockanalysis.py'
+      - 'scripts/test_fetch_stockanalysis_fixtures.py'
+      - 'scripts/export-computed-signals.mjs'
+      - 'scripts/test-export-computed-signals.mjs'
+      - 'scripts/test-coordinate-computed-signals-workflow.mjs'
       - 'scripts/stage-lane-manifest.sh'
       - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
       - 'scripts/test-global-writer-queue-manifest.mjs'
       - 'scripts/test-stage-lane-manifest.mjs'
       - 'scripts/test-update-manifest-*.mjs'
+      - 'scripts/update-manifest-projections.sh'
+      - 'scripts/lib/lane-registry.mjs'
+      - 'scripts/build-lane-commit-manifest.mjs'
+      - 'data/admin/lane-commit-manifest.json'
+      - 'scripts/persist-cloud-publish-outcome.mjs'
+      - 'scripts/lib/publish-outcome-shard.mjs'
       - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - '100xfenok-next/package.json'
   pull_request:
@@ -36,11 +76,51 @@ on:
       - 'scripts/ops/emit-alarm-state.mjs'
       - 'scripts/ops/test-check-pipeline-job-health.mjs'
       - 'scripts/ops/test-emit-alarm-state.mjs'
+      - 'scripts/check-lane-commit-manifest-inventory.mjs'
+      - 'scripts/ops/check-global-writer-queue.mjs'
+      - 'scripts/ops/test-check-global-writer-queue.mjs'
+      - 'scripts/fetch-sentiment.mjs'
+      - 'scripts/fetch-fred-banking.mjs'
+      - 'scripts/fetch-treasury-tga.mjs'
+      - 'scripts/fetch-yahoo-ticker.mjs'
+      - 'scripts/test-fetch-producers-public-write-fence.mjs'
+      - 'scripts/test-build-producers-public-write-fence.mjs'
+      - 'scripts/test-build-stocks-analyzer-manifest.mjs'
+      - 'scripts/build-stocks-analyzer.mjs'
+      - 'scripts/build-13f-enrichment-backfill.mjs'
+      - 'scripts/build-13f-integrity-indexes.mjs'
+      - 'scripts/build-13f-trades.mjs'
+      - 'scripts/build-13f-portfolio-views.mjs'
+      - 'scripts/build-guru-holders-index.mjs'
+      - 'scripts/build-revision-movers.mjs'
+      - 'scripts/build-industry-benchmarks.mjs'
+      - 'scripts/build-calendar-prev.mjs'
+      - 'scripts/materialize-update-manifest-routes.mjs'
+      - 'scripts/stage-update-manifest-central.mjs'
+      - 'scripts/test-update-manifest-central-staging.mjs'
+      - 'scripts/test-lane-commit-manifest-parity.mjs'
+      - 'scripts/test-build-data-supply-detection-floor.mjs'
+      - 'scripts/fixtures/data_supply/detection_floor/**'
+      - 'scripts/fetch-nasdaq-giw-sox-constituents.mjs'
+      - 'scripts/test-fetch-nasdaq-giw-sox-constituents.mjs'
+      - 'scripts/build-market-facts.py'
+      - 'scripts/test_build_market_facts.py'
+      - 'scripts/fetch-stockanalysis.py'
+      - 'scripts/test_fetch_stockanalysis_fixtures.py'
+      - 'scripts/export-computed-signals.mjs'
+      - 'scripts/test-export-computed-signals.mjs'
+      - 'scripts/test-coordinate-computed-signals-workflow.mjs'
       - 'scripts/stage-lane-manifest.sh'
       - 'scripts/test-pipeline-failure-alarm-manifest.mjs'
       - 'scripts/test-global-writer-queue-manifest.mjs'
       - 'scripts/test-stage-lane-manifest.mjs'
       - 'scripts/test-update-manifest-*.mjs'
+      - 'scripts/update-manifest-projections.sh'
+      - 'scripts/lib/lane-registry.mjs'
+      - 'scripts/build-lane-commit-manifest.mjs'
+      - 'data/admin/lane-commit-manifest.json'
+      - 'scripts/persist-cloud-publish-outcome.mjs'
+      - 'scripts/lib/publish-outcome-shard.mjs'
       - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - '100xfenok-next/package.json'
   workflow_dispatch:
@@ -82,14 +162,34 @@ jobs:
       - name: Validate public-mirror coverage (frozen-mirror gate)
         run: node scripts/check-public-mirror-coverage.mjs
 
+      - name: Validate producer public-write fence (canonical-only batch)
+        run: |
+          node scripts/test-fetch-producers-public-write-fence.mjs
+          node scripts/test-build-producers-public-write-fence.mjs
+          node scripts/test-build-stocks-analyzer-manifest.mjs
+          node scripts/test-fetch-nasdaq-giw-sox-constituents.mjs
+          python3 -m unittest scripts/test_build_market_facts.py
+          python3 -m unittest scripts.test_fetch_stockanalysis_fixtures.StockanalysisFetcherFixtureTest.test_default_cli_writes_canonical_only_never_public_mirror
+
       - name: Validate alarm workflow contracts
         run: npm --prefix 100xfenok-next run qa:alarm-state
 
       - name: Validate Update Manifest policy
         run: |
+          node scripts/test-update-manifest-runner.mjs
+          node scripts/test-update-manifest-workflow.mjs
+          node scripts/test-update-manifest-materializations.mjs
+          node scripts/test-update-manifest-central-staging.mjs
+          node scripts/test-lane-commit-manifest-parity.mjs
+          node scripts/test-build-data-supply-detection-floor.mjs
           node scripts/test-update-manifest-rebuild-policy.mjs
           node scripts/test-update-manifest-dispatch-decoupling.mjs
           node scripts/test-sync-update-manifest-trigger-paths.mjs
+
+      - name: Validate computed-signals coordinator and exporter contracts
+        run: |
+          node scripts/test-export-computed-signals.mjs
+          node scripts/test-coordinate-computed-signals-workflow.mjs
 
       - name: Install pinned actionlint
         env:

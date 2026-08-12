@@ -18,8 +18,6 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 
-const PUBLIC_MIRROR = path.join(ROOT, "100xfenok-next/public/data/global-scouter/core");
-
 const PATHS = {
   stocksIndex: path.join(ROOT, "data/global-scouter/core/stocks_index.json"),
   companyMaster: path.join(ROOT, "data/global-scouter/raw/company_master_m_company.json"),
@@ -35,12 +33,6 @@ const PATHS = {
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-}
-
-function writeBoth(rootPath, data) {
-  writeJson(rootPath, data);
-  const mirrorPath = path.join(PUBLIC_MIRROR, path.basename(rootPath));
-  writeJson(mirrorPath, data);
 }
 
 function toFiniteNumber(value) {
@@ -377,8 +369,8 @@ const output = {
   data: merged,
 };
 
-writeBoth(PATHS.output, output);
-console.log(`[build-stocks-analyzer] Written ${merged.length} stocks to ${PATHS.output} + mirror`);
+writeJson(PATHS.output, output);
+console.log(`[build-stocks-analyzer] Written ${merged.length} stocks to ${PATHS.output}`);
 
 /* ── 8. per_bands_index.json ── */
 const perBandsOutput = {
@@ -389,8 +381,8 @@ const perBandsOutput = {
   count: Object.keys(perBands).length,
   data: perBands,
 };
-writeBoth(PATHS.perBandsOutput, perBandsOutput);
-console.log(`[build-stocks-analyzer] Written ${perBandsOutput.count} per-band records to ${PATHS.perBandsOutput} + mirror`);
+writeJson(PATHS.perBandsOutput, perBandsOutput);
+console.log(`[build-stocks-analyzer] Written ${perBandsOutput.count} per-band records to ${PATHS.perBandsOutput}`);
 
 /* ── 9. slick_index.json ── */
 const slickIndex = {};
@@ -416,8 +408,8 @@ const slickOutput = {
   count: Object.keys(slickIndex).length,
   data: slickIndex,
 };
-writeBoth(PATHS.slickOutput, slickOutput);
-console.log(`[build-stocks-analyzer] Written ${slickOutput.count} slick records to ${PATHS.slickOutput} + mirror`);
+writeJson(PATHS.slickOutput, slickOutput);
+console.log(`[build-stocks-analyzer] Written ${slickOutput.count} slick records to ${PATHS.slickOutput}`);
 
 /* ── 10. Smoke check ── */
 const samples = ["AAPL", "NVDA", "MSFT"];

@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// Regression test for the Update Manifest dispatch decoupling lane: the three
-// proven-safe acquisition workflows must never dispatch update-manifest.yml
-// per run, while the remaining dispatch sites that carry real consumers stay
-// in place.
+// Regression test for the Update Manifest dispatch decoupling lane: the six
+// computed-signals source workflows must never dispatch update-manifest.yml
+// per run (their successful completions now drive the serialized
+// coordinate-computed-signals workflow_run instead), the three earlier
+// proven-safe decoupled workflows stay dispatch-free, and the remaining
+// dispatch sites that carry real consumers stay in place.
 //
 // Context: update-manifest.yml reconciles shared derived/public projections
 // twice daily on schedule (UTC 02:30 / 09:30). The three decoupled workflows
@@ -13,6 +15,11 @@
 // slickcharts-history keeps its membership dispatch: it fires only when an
 // operator explicitly selects scraper=membership, so it is a manual
 // projection path, not a per-run amplification path.
+//
+// The six coordinator sources changed from explicit dispatch to a workflow_run
+// trigger: coordinate-computed-signals.yml rebuilds and plane-publishes
+// data/computed/signals.json on any successful source completion, and the
+// scheduled reconciliation remains the shared-projection fallback.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -32,10 +39,17 @@ function readWorkflow(name) {
   return fs.readFileSync(path.join(workflowsDir, name), "utf8");
 }
 
-// The three decoupled workflows must never dispatch update-manifest.yml per
-// run, and each must document the residual scheduled-reconciliation fallback
-// so the removal reads as intentional.
+// The six coordinator-source workflows plus the three earlier decoupled
+// workflows must never dispatch update-manifest.yml per run, and each must
+// document the residual scheduled-reconciliation fallback so the removal reads
+// as intentional.
 for (const name of [
+  "fetch-fred-macro.yml",
+  "fetch-treasury-tga.yml",
+  "fetch-defillama.yml",
+  "fetch-fred-banking.yml",
+  "fetch-fdic.yml",
+  "fetch-sentiment.yml",
   "fetch-fred-yardeni.yml",
   "fetch-oecd-cli.yml",
   "fetch-finra-ats-weekly.yml",
@@ -72,11 +86,9 @@ for (const name of [
 }
 
 // Representative callers with real projection consumers keep their dispatch:
-// the fenok-edge envelope (authoritative) and projection-dependent families.
+// the fenok-edge envelope (authoritative).
 for (const name of [
   "fenok-edge-daily.yml",
-  "fetch-fred-macro.yml",
-  "fetch-defillama.yml",
 ]) {
   const source = readWorkflow(name);
   assert.ok(
@@ -101,4 +113,4 @@ for (const name of [
   );
 }
 
-console.log("update-manifest dispatch decoupling: 3 removed, required callers pinned");
+console.log("update-manifest dispatch decoupling: 9 removed, required callers pinned");

@@ -735,6 +735,35 @@ def build_standard_payload(
     return payload
 
 
+def preserve_updated(payload: Dict[str, Any], existing: Any) -> None:
+    """
+    Reuse the prior top-level updated when the semantic payload is unchanged.
+
+    The semantic payload is the full output object excluding only the
+    top-level "updated" key. The prior stamp must also be a parseable ISO date
+    or date-time accepted by the cloud publisher's source_as_of contract.
+    Mutates payload in place.
+    """
+    if not isinstance(payload, dict) or "updated" not in payload:
+        return
+    if not isinstance(existing, dict):
+        return
+    prior = existing.get("updated")
+    if not isinstance(prior, str):
+        return
+    candidate = prior.strip()
+    if not re.match(r"^\d{4}-\d{2}-\d{2}(?:$|[T ])", candidate):
+        return
+    try:
+        datetime.fromisoformat(candidate.replace("Z", "+00:00"))
+    except ValueError:
+        return
+    new_semantic = {key: value for key, value in payload.items() if key != "updated"}
+    old_semantic = {key: value for key, value in existing.items() if key != "updated"}
+    if new_semantic == old_semantic:
+        payload["updated"] = prior
+
+
 def write_output(
     payload: Dict[str, Any],
     output: Optional[Path],

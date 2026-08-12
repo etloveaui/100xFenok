@@ -710,7 +710,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   if (!args.noWrite && validation.ok) {
     writeJson(ADMIN_REL, payload.admin);
     writeJson(SUMMARY_REL, payload.summary);
-    writeJson(PUBLIC_SUMMARY_REL, payload.summary);
   }
 
   const result = {

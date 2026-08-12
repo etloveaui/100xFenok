@@ -15,6 +15,11 @@ on:
         description: 'Exact retained GitHub artifact digest'
         required: true
 
+concurrency:
+  group: fenok-data-writer-refs/heads/main
+  cancel-in-progress: false
+  queue: max
+
 jobs:
   publish-stockanalysis-artifact:
     runs-on: ubuntu-latest
@@ -22,15 +27,13 @@ jobs:
     permissions:
       contents: write
       actions: write
-    concurrency:
-      group: fenok-data-writer-refs/heads/main
-      cancel-in-progress: false
-      queue: max
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          # Recovery validates the artifact's acquisition base against current
+          # main, so the ancestor commit must be available locally.
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5

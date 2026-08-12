@@ -8,6 +8,7 @@ import {
   buildPublishOutcomeRecord,
   PUBLISH_OUTCOME_SHARD_SCHEMA,
 } from "../lib/publish-outcome-shard.mjs";
+import { LANE_REGISTRY } from "../lib/lane-registry.mjs";
 import {
   NON_SCHEDULED_WORKFLOW_INCLUSIONS,
   SCHEDULED_WORKFLOW_EXCLUSIONS,
@@ -49,34 +50,32 @@ function writeWorkflow(root, file, source) {
   fs.writeFileSync(path.join(root, file), source);
 }
 
-// Plane publication family names deliberately differ from registry lane ids;
-// SlickCharts has five family shards and EDGAR publishes through edgar_filings.
-assert.deepEqual(
-  Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS).map(([family, binding]) => [family, binding.lane_id, binding.workflow]),
-  [
-    ["oecd-cli", "oecd_cli", ".github/workflows/fetch-oecd-cli.yml"],
-    ["fred-macro", "fred_macro", ".github/workflows/fetch-fred-macro.yml"],
-    ["defillama-stablecoins", "defillama_stablecoins", ".github/workflows/fetch-defillama.yml"],
-    ["fdic-tier1", "fdic_tier1", ".github/workflows/fetch-fdic.yml"],
-    ["treasury-tga", "treasury_tga", ".github/workflows/fetch-treasury-tga.yml"],
-    ["fred-banking", "fred_banking", ".github/workflows/fetch-fred-banking.yml"],
-    ["fred-yardeni", "fred_yardeni", ".github/workflows/fetch-fred-yardeni.yml"],
-    ["damodaran", "damodaran", ".github/workflows/fetch-damodaran-shadow.yml"],
-    ["sentiment", "sentiment", ".github/workflows/fetch-sentiment.yml"],
-    ["yahoo-ticker-macro", "yahoo_ticker_macro", ".github/workflows/fetch-yahoo-ticker.yml"],
-    ["nasdaq-giw-sox", "nasdaq_giw_sox", ".github/workflows/fetch-nasdaq-giw-sox.yml"],
-    ["slickcharts-daily", "slickcharts", ".github/workflows/slickcharts-daily.yml"],
-    ["slickcharts-weekly", "slickcharts", ".github/workflows/slickcharts-weekly.yml"],
-    ["slickcharts-monthly", "slickcharts", ".github/workflows/slickcharts-monthly.yml"],
-    ["slickcharts-history", "slickcharts", ".github/workflows/slickcharts-history.yml"],
-    ["slickcharts-symbols", "slickcharts", ".github/workflows/slickcharts-symbols.yml"],
-    ["edgar-korean-summaries", "edgar_filings", ".github/workflows/fetch-edgar-filings.yml"],
-    ["us-indices-daily", "us_indices_daily", ".github/workflows/fetch-us-indices-daily.yml"],
-    ["finra-short-volume", "finra_short_volume", ".github/workflows/fenok-edge-daily.yml"],
-    ["finra-ats-weekly", "finra_ats_weekly", ".github/workflows/fetch-finra-ats-weekly.yml"],
-    ["gdelt-news-tone", "gdelt_news_tone", ".github/workflows/fetch-fenok-news-tone.yml"],
-  ],
-);
+// The registry binding map is authoritative; alarm QA validates each binding
+// against the same registry workflow policy instead of maintaining a second
+// 20+ row copy that can omit a new publisher. Lane-owned publishers must name
+// a real lane. A lane-less publisher must be explicitly declared as a platform
+// publisher (the computed-signals coordinator case).
+assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 22);
+for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
+  assert.ok(LANE_REGISTRY.workflow_policies[binding.workflow], `${family} workflow policy must be declared`);
+  assert.ok(
+    LANE_REGISTRY.workflow_policies[binding.workflow].stages.always_if_exists.some(
+      (spec) => spec.path === `data/admin/data-supply-state/publish-outcomes/${family}.json`,
+    ),
+    `${family} workflow must authorize its exact outcome shard`,
+  );
+  const lane = LANE_REGISTRY.lanes.find((candidate) => candidate.id === binding.lane_id);
+  if (lane) continue;
+  assert.equal(
+    LANE_REGISTRY.workflow_classes[binding.workflow]?.class,
+    "platform_publisher",
+    `${family} binding without a lane must be an explicit platform publisher`,
+  );
+}
+assert.deepEqual(PLANE_PUBLISH_OUTCOME_BINDINGS["computed-signals"], {
+  lane_id: "computed_signals",
+  workflow: ".github/workflows/coordinate-computed-signals.yml",
+});
 
 const outcomeShard = (family, records) => ({
   schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
@@ -601,10 +600,11 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
 
 // Real-repository contract: at least 31 scheduled workflows are discovered. The
 // alarm itself is the sole declared exclusion, while the non-scheduled workflow
-// syntax gate is an explicit inclusion. Operational observer/alarm workflows
-// remain watched: their own repeated failure is also an outage worth paging.
-// The floor catches accidental parser shrinkage without making future scheduled
-// workflows wait for a hand-edited exact count.
+// syntax gate is an explicit inclusion. The serving probe is watched, not
+// excluded: its own run turns red only on machinery failure (issue/API), so a
+// genuine probe failure is an outage worth paging, and a stale exclusion would
+// hide it. The floor catches accidental parser shrinkage without making future
+// scheduled workflows wait for a hand-edited exact count.
 {
   const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
   const policy = deriveWorkflowWatchPolicy({
@@ -618,10 +618,6 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
     "every scheduled workflow must be watched or explicitly excluded",
   );
   assert.deepEqual(policy.excluded, [{
-    file: "data-plane-serving-probe.yml",
-    label: "Data Plane Serving Probe",
-    reason: SCHEDULED_WORKFLOW_EXCLUSIONS["data-plane-serving-probe.yml"],
-  }, {
     file: "pipeline-failure-alarm.yml",
     label: "Pipeline Failure Alarm",
     reason: SCHEDULED_WORKFLOW_EXCLUSIONS["pipeline-failure-alarm.yml"],
@@ -652,6 +648,7 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
   );
   for (const file of [
     "build-stocks-analyzer.yml",
+    "data-plane-serving-probe.yml",
     "fetch-us-indices-daily.yml",
     "global-writer-queue-observer.yml",
     "update-manifest.yml",
@@ -660,6 +657,11 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
   ]) {
     assert.ok(policy.watched.some((row) => row.file === file), `${file} must be watched`);
   }
+  assert.deepEqual(
+    policy.watched.find((row) => row.file === "data-plane-serving-probe.yml")?.events,
+    ["schedule"],
+    "the probe contributes its scheduled cadence only; manual dispatch stays excluded",
+  );
   const calendars = JSON.parse(fs.readFileSync(path.join(repoRoot, "scripts", "lib", "data-supply-detection-calendars.json"), "utf8"));
   const initialCadence = deriveWorkflowCadenceProjection({
     watched: policy.watched,
@@ -1181,8 +1183,8 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   assert.match(workflow, /steps\.pipeline\.outcome == 'failure'/);
   assert.equal(
     (workflow.match(/if: steps\.pipeline\.outcome == 'failure'/g) || []).length,
-    3,
-    "healthy workflow_run completions remain quiet: issue preparation, mutation, and final failure are alarm-only",
+    2,
+    "healthy workflow_run completions remain quiet: issue preparation and issue update are alarm-only, and the run concludes green when reporting succeeded",
   );
   assert.doesNotMatch(workflow, /\$\{\{\s*runner\./, "must not reference the runner context in expressions (#357)");
 }

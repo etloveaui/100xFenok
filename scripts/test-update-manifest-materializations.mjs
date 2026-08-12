@@ -11,43 +11,136 @@ import { orderMaterializations, validateMaterializationRoutes } from "./material
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workflow = fs.readFileSync(path.join(root, ".github/workflows/update-manifest.yml"), "utf8");
+const runner = fs.readFileSync(path.join(root, "scripts/update-manifest-projections.sh"), "utf8");
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "data/admin/lane-commit-manifest.json"), "utf8"));
 const helperCall = "node scripts/materialize-update-manifest-routes.mjs";
+// Independent oracle: never derive this map from the manifest generator. A
+// corrupt generator and regenerated artifact must fail here even if they drift
+// together. The map deliberately owns the exact source/destination pairing and
+// materialization semantics for all 24 routes.
 const EXPECTED_ROUTES = [
-  { source: "data/slickcharts", destination: "100xfenok-next/public/data/slickcharts", mode: "rsync_tree", delete: true, excludes: [], required: true, trailing_slash: true },
-  { source: "data/yf/finance", destination: "100xfenok-next/public/data/yf/finance", mode: "rsync_tree", delete: true, excludes: [], required: true, trailing_slash: true },
-  { source: "data/stockanalysis", destination: "100xfenok-next/public/data/stockanalysis", mode: "rsync_tree", delete: true, excludes: ["etfs"], required: true, trailing_slash: true },
-  { source: "data/indices/nasdaq-giw-sox-constituents.json", destination: "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json", mode: "cp_file", delete: false, excludes: [], required: true, trailing_slash: false },
-  { source: "data/admin/fenok-edge-korea-krx-daily-index.json", destination: "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json", mode: "cp_file", delete: false, excludes: [], required: true, trailing_slash: false },
-  { source: "data/computed/fenok-edge-korea-krx-bridge-history.json", destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json", mode: "cp_file", delete: false, excludes: [], required: false, trailing_slash: false },
-  { source: "data/computed/fenok_occ_options_availability.json", destination: "100xfenok-next/public/data/computed/fenok_occ_options_availability.json", mode: "cp_file", delete: false, excludes: [], required: true, trailing_slash: false },
-  { source: "data/computed/market_facts/index.json", destination: "100xfenok-next/public/data/computed/market_facts/index.json", mode: "cp_file", delete: false, excludes: [], required: true, trailing_slash: false },
+  { source: "data/slickcharts", destination: "100xfenok-next/public/data/slickcharts", mode: "rsync_tree", delete: true, excludes: [] },
+  { source: "data/yf/finance", destination: "100xfenok-next/public/data/yf/finance", mode: "rsync_tree", delete: true, excludes: [] },
+  { source: "data/stockanalysis", destination: "100xfenok-next/public/data/stockanalysis", mode: "rsync_tree", delete: true, excludes: ["etfs"] },
+  { source: "data/indices/nasdaq-giw-sox-constituents.json", destination: "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/admin/fenok-edge-korea-krx-daily-index.json", destination: "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/computed/fenok-edge-korea-krx-bridge-history.json", destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/computed/fenok_occ_options_availability.json", destination: "100xfenok-next/public/data/computed/fenok_occ_options_availability.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/computed/market_facts/index.json", destination: "100xfenok-next/public/data/computed/market_facts/index.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/computed/fenok_etf_core_daily_basket_summary.json", destination: "100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/global-scouter/core/stocks_analyzer.json", destination: "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/global-scouter/core/per_bands_index.json", destination: "100xfenok-next/public/data/global-scouter/core/per_bands_index.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/global-scouter/core/slick_index.json", destination: "100xfenok-next/public/data/global-scouter/core/slick_index.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/global-scouter/core/revision_movers.json", destination: "100xfenok-next/public/data/global-scouter/core/revision_movers.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/summary.json", destination: "100xfenok-next/public/data/sec-13f/summary.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/by_sector.json", destination: "100xfenok-next/public/data/sec-13f/by_sector.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/by_ticker.json", destination: "100xfenok-next/public/data/sec-13f/by_ticker.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/consensus.json", destination: "100xfenok-next/public/data/sec-13f/analytics/consensus.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/ticker_aliases.json", destination: "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/trades_ranking.json", destination: "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/portfolio_views.json", destination: "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/guru_holders_index.json", destination: "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/damodaran/industry_benchmarks.json", destination: "100xfenok-next/public/data/damodaran/industry_benchmarks.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/calendar/prev-values.json", destination: "100xfenok-next/public/data/calendar/prev-values.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/investors", destination: "100xfenok-next/public/data/sec-13f/investors", mode: "rsync_tree", delete: true, excludes: ["griffin.json"] },
 ];
 
-assert.deepEqual(manifest.update_manifest.materializations, EXPECTED_ROUTES);
-assert.equal((workflow.match(/node scripts\/materialize-update-manifest-routes\.mjs/g) ?? []).length, 3);
-const initialProjection = workflow.slice(
-  workflow.indexOf("- name: Project manifest-owned public mirrors"),
-  workflow.indexOf("- name: Export computed signals"),
-);
-assert.match(initialProjection, /materialize-update-manifest-routes\.mjs --all[\s\S]*?sync-public-data\.mjs --write --etf-shards-only[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts/);
-assert.ok(workflow.indexOf("- name: Build shared market and stock promotion state") < workflow.indexOf("- name: Project manifest-owned public mirrors"));
-assert.ok(workflow.indexOf("- name: Project manifest-owned public mirrors") < workflow.indexOf("- name: Build phase2 closeout indexes"));
+function routeOracleFields(route) {
+  return {
+    source: route.source,
+    destination: route.destination,
+    mode: route.mode,
+    delete: route.delete,
+    excludes: route.excludes,
+  };
+}
+
+assert.equal(EXPECTED_ROUTES.length, 24, "route oracle must contain exactly 24 routes");
+assert.equal(manifest.update_manifest.materializations.length, 24, "manifest must contain exactly 24 routes");
+assert.deepEqual(manifest.update_manifest.materializations.map(routeOracleFields), EXPECTED_ROUTES);
+for (const route of EXPECTED_ROUTES) {
+  assert.ok(
+    manifest.update_manifest.central_commit_paths.includes(route.destination),
+    `materialization destination must be centrally committed: ${route.destination}`,
+  );
+}
+// Projection materialization is owned by the shared runner; the workflow keeps
+// only the retry-hygiene invocation. The initial path reaches the SAME runner.
+assert.equal((workflow.match(/node scripts\/materialize-update-manifest-routes\.mjs/g) ?? []).length, 1,
+  "workflow must keep only the retry-hygiene materialize invocation");
+assert.equal((runner.match(/node scripts\/materialize-update-manifest-routes\.mjs/g) ?? []).length, 2,
+  "runner must own one full and one bounded projection materialize invocation");
+assert.ok(workflow.indexOf("run: bash scripts/update-manifest-projections.sh") < workflow.indexOf("- name: Check if manifest changed"),
+  "initial path must run the shared runner before the change probe");
+// Mirror projection order, once, in the shared runner (initial and retry alike).
+assert.match(runner, /materialize-update-manifest-routes\.mjs --all[\s\S]*?sync-public-data\.mjs --write --etf-shards-only[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts/);
 const retry = workflow.slice(workflow.indexOf("for attempt in 1 2 3; do"));
 assert.match(retry, /git reset --hard origin\/main[\s\S]*?materialize-update-manifest-routes\.mjs --all --validate-only --assert-no-untracked/);
-assert.match(retry, /write-fenok-s1-stock-public-promotion-dry-run\.mjs --check[\s\S]*?materialize-update-manifest-routes\.mjs --all[\s\S]*?sync-public-data\.mjs --write --etf-shards-only[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts[\s\S]*?export-computed-signals\.mjs[\s\S]*?build-phase2-closeout-indexes\.mjs/);
-assert.match(retry, /git reset --hard origin\/main[\s\S]*?node scripts\/test-update-manifest-materializations\.mjs[\s\S]*?materialize-update-manifest-routes\.mjs --all --validate-only/);
-assert.equal((workflow.match(/materialize-update-manifest-routes\.mjs --all(?! --validate-only)/g) ?? []).length, 2);
-assert.equal((workflow.match(/sync-public-data\.mjs --write --etf-shards-only/g) ?? []).length, 2);
-assert.doesNotMatch(workflow, /--route-source/);
-assert.doesNotMatch(workflow, /rsync -a --checksum --delete (?:data\/slickcharts|data\/yf\/finance|data\/stockanalysis)/);
-assert.doesNotMatch(workflow, /cp data\/(?:indices\/nasdaq-giw-sox-constituents|admin\/fenok-edge-korea-krx-daily-index|computed\/fenok_occ_options_availability|computed\/market_facts\/index)\.json/);
+// Current retry contract: reset hygiene, then the shared runner, then the
+// change probe / stage / commit / push. The workflow does not re-run the
+// projection stack inline and does not invoke this test suite itself.
+assert.match(retry, /materialize-update-manifest-routes\.mjs --all --validate-only --assert-no-untracked[\s\S]*?update-manifest-projections\.sh[\s\S]*?stage-update-manifest-central\.mjs --check/);
+assert.equal((workflow.match(/node scripts\/test-update-manifest-materializations\.mjs/g) ?? []).length, 0,
+  "workflow must not re-run the materializations suite inside the retry loop");
+assert.equal((workflow.match(/materialize-update-manifest-routes\.mjs --all(?! --validate-only)/g) ?? []).length, 0,
+  "workflow must not carry the projection --all invocation (runner owns it)");
+assert.equal((runner.match(/materialize-update-manifest-routes\.mjs --all(?! --validate-only)/g) ?? []).length, 1,
+  "runner must carry the projection --all invocation exactly once");
+const basketRouteSource = "data/computed/fenok_etf_core_daily_basket_summary.json";
+const boundedBasketMaterialization = [
+  "node scripts/materialize-update-manifest-routes.mjs \\",
+  `  --route-source ${basketRouteSource}`,
+].join("\n");
+assert.equal((workflow.match(/--route-source/g) ?? []).length, 0,
+  "workflow must not duplicate bounded route materialization");
+assert.equal(runner.split(boundedBasketMaterialization).length - 1, 1,
+  "runner must materialize the exact basket route once");
+assert.ok(
+  runner.indexOf("node scripts/build-fenok-etf-core-daily-basket.mjs --check")
+    < runner.indexOf(boundedBasketMaterialization)
+    && runner.indexOf(boundedBasketMaterialization) < runner.indexOf("# --- S8:"),
+  "bounded basket materialization must run after its S7 producer and before S8",
+);
+assert.equal((workflow.match(/sync-public-data\.mjs --write --etf-shards-only/g) ?? []).length, 0,
+  "workflow must not embed the public mirror sync (runner owns it)");
+assert.equal((runner.match(/sync-public-data\.mjs --write --etf-shards-only/g) ?? []).length, 1,
+  "runner must carry the public mirror sync exactly once");
+for (const source of [workflow, runner]) {
+  assert.doesNotMatch(source, /rsync -a --checksum --delete (?:data\/slickcharts|data\/yf\/finance|data\/stockanalysis)/);
+  assert.doesNotMatch(source, /cp data\/(?:indices\/nasdaq-giw-sox-constituents|admin\/fenok-edge-korea-krx-daily-index|computed\/fenok_occ_options_availability|computed\/market_facts\/index)\.json/);
+}
 assert.equal(fs.existsSync(path.join(root, "scripts/materialize-update-manifest-routes.mjs")), true, `${helperCall} must exist`);
 
 const helperPath = path.join(root, "scripts/materialize-update-manifest-routes.mjs");
 const routes = manifest.update_manifest.materializations;
+const BATCH2_ROUTES = EXPECTED_ROUTES.slice(9);
+const relevantPublicIgnoreRules = fs.readFileSync(path.join(root, ".gitignore"), "utf8")
+  .split(/\r?\n/u)
+  .map((line) => line.trim())
+  .filter((line) => line && !line.startsWith("#") && line.startsWith("100xfenok-next/public/data/"))
+  .filter((ignoreRule) => BATCH2_ROUTES.some((route) => (
+    ignoreRule === route.destination || ignoreRule.startsWith(`${route.destination}/`)
+  )));
+assert.deepEqual(
+  relevantPublicIgnoreRules,
+  ["100xfenok-next/public/data/sec-13f/investors/griffin.json"],
+  "batch-2 routes must account for every overlapping public-data ignore rule",
+);
+for (const ignoreRule of relevantPublicIgnoreRules) {
+  const coveringRoute = BATCH2_ROUTES.find((route) => ignoreRule.startsWith(`${route.destination}/`));
+  assert.ok(coveringRoute, `ignored public path must have a batch-2 route: ${ignoreRule}`);
+  assert.ok(
+    coveringRoute.excludes.includes(path.posix.relative(coveringRoute.destination, ignoreRule)),
+    `ignored public path must be excluded by its route: ${ignoreRule}`,
+  );
+}
 const orderedModes = orderMaterializations(routes).map((route) => route.mode);
-assert.deepEqual(orderedModes, ["cp_file", "cp_file", "cp_file", "cp_file", "cp_file", "rsync_tree", "rsync_tree", "rsync_tree"]);
+assert.deepEqual(
+  orderedModes,
+  [...routes].filter((route) => route.mode === "cp_file").map((route) => route.mode)
+    .concat([...routes].filter((route) => route.mode === "rsync_tree").map((route) => route.mode)),
+  "cp_file routes must materialize before rsync_tree routes",
+);
 
 function write(target, contents) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -77,6 +170,9 @@ function makeFixture() {
           '{"compatibility_mode":"shard-only"}\n',
         );
       }
+      if (route.source === "data/sec-13f/investors") {
+        write(path.join(source, "griffin.json"), '{"investor":"griffin"}\n');
+      }
     } else write(source, `${route.source}\n`);
   }
   execFileSync("git", ["add", "-A"], { cwd: repoRoot });
@@ -98,12 +194,19 @@ function runHelper(fixture, args) {
   }
   const result = runHelper(fixture, ["--all"]);
   assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
-  assert.match(result.stdout, /selected=8 materialized=8/);
+  assert.match(result.stdout, new RegExp(`selected=${routes.length} materialized=${routes.length}`));
   for (const route of routes) {
     const source = path.join(fixture.repoRoot, route.source);
     const destination = path.join(fixture.repoRoot, route.destination);
     if (route.mode === "rsync_tree") {
-      assert.equal(fs.existsSync(path.join(destination, "stale.json")), false);
+      if (route.delete) {
+        assert.equal(fs.existsSync(path.join(destination, "stale.json")), false);
+      } else {
+        // delete:false contract: destination-only content must survive the
+        // materialization untouched (public-only/admin/private/archive bytes
+        // can never be removed by the boundary).
+        assert.equal(fs.readFileSync(path.join(destination, "stale.json"), "utf8"), "stale\n");
+      }
       assert.equal(fs.readFileSync(path.join(destination, "keep.json"), "utf8"), fs.readFileSync(path.join(source, "keep.json"), "utf8"));
       assert.equal(fs.readFileSync(path.join(destination, "nested/deep.json"), "utf8"), "deep\n");
       assert.equal(fs.statSync(path.join(destination, "empty")).isDirectory(), true);
@@ -128,6 +231,50 @@ function runHelper(fixture, args) {
     ),
     '{"nested":true}\n',
   );
+  assert.equal(
+    fs.existsSync(path.join(fixture.repoRoot, "100xfenok-next/public/data/sec-13f/investors/griffin.json")),
+    false,
+    "canonical griffin.json must remain intentionally absent from the public destination",
+  );
+}
+
+// Materialization is idempotent: a second --all run leaves every covered
+// canonical/public pair byte-identical and cannot fail.
+{
+  const fixture = makeFixture();
+  const investorsRoute = routes.find((route) => route.source === "data/sec-13f/investors");
+  assert.ok(investorsRoute);
+  const investorDestination = path.join(fixture.repoRoot, investorsRoute.destination);
+  const destinationOnly = path.join(investorDestination, "stale-public-only.json");
+  const excludedGriffin = path.join(investorDestination, "griffin.json");
+  write(destinationOnly, "destination-only\n");
+  write(excludedGriffin, "public-excluded\n");
+  const first = runHelper(fixture, ["--all"]);
+  assert.equal(first.status, 0, `${first.stderr}\n${first.stdout}`);
+  assert.equal(fs.existsSync(destinationOnly), false, "exact investor mirror must remove destination-only content");
+  assert.equal(fs.readFileSync(excludedGriffin, "utf8"), "public-excluded\n");
+  const second = runHelper(fixture, ["--all"]);
+  assert.equal(second.status, 0, `${second.stderr}\n${second.stdout}`);
+  assert.equal(
+    fs.existsSync(destinationOnly),
+    false,
+    "second exact investor mirror run must keep destination-only content removed",
+  );
+  assert.equal(
+    fs.readFileSync(excludedGriffin, "utf8"),
+    "public-excluded\n",
+    "second run must preserve excluded griffin.json content",
+  );
+  for (const route of routes) {
+    const source = path.join(fixture.repoRoot, route.source);
+    const destination = path.join(fixture.repoRoot, route.destination);
+    if (route.mode === "cp_file") {
+      assert.equal(fs.readFileSync(destination, "utf8"), fs.readFileSync(source, "utf8"));
+    } else {
+      assert.equal(fs.readFileSync(path.join(destination, "keep.json"), "utf8"), fs.readFileSync(path.join(source, "keep.json"), "utf8"));
+      assert.equal(fs.readFileSync(path.join(destination, "nested/deep.json"), "utf8"), "deep\n");
+    }
+  }
 }
 
 // A missing optional source removes an existing public mirror so stale bytes
@@ -142,7 +289,7 @@ function runHelper(fixture, args) {
   fs.rmSync(source);
   const result = runHelper(fixture, ["--all"]);
   assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
-  assert.match(result.stdout, /selected=8 materialized=8/);
+  assert.match(result.stdout, new RegExp(`selected=${routes.length} materialized=${routes.length}`));
   assert.equal(fs.existsSync(destination), false);
 }
 
@@ -155,16 +302,18 @@ function runHelper(fixture, args) {
   fs.rmSync(path.join(fixture.repoRoot, optionalRoute.source));
   const result = runHelper(fixture, ["--all"]);
   assert.equal(result.status, 0, `${result.stderr}\n${result.stdout}`);
-  assert.match(result.stdout, /selected=8 materialized=7/);
+  assert.match(result.stdout, new RegExp(`selected=${routes.length} materialized=${routes.length - 1}`));
   assert.equal(fs.existsSync(path.join(fixture.repoRoot, optionalRoute.destination)), false);
 }
 
 // Every selected route is preflighted before the first destructive rsync.
 {
   const fixture = makeFixture();
-  const stale = path.join(fixture.repoRoot, routes[0].destination, "stale.json");
+  const investorsRoute = routes.find((route) => route.source === "data/sec-13f/investors");
+  assert.ok(investorsRoute);
+  const stale = path.join(fixture.repoRoot, investorsRoute.destination, "stale.json");
   write(stale, "must survive failed preflight\n");
-  fs.rmSync(path.join(fixture.repoRoot, routes[0].source), { recursive: true });
+  fs.rmSync(path.join(fixture.repoRoot, investorsRoute.source), { recursive: true });
   const result = runHelper(fixture, ["--all"]);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /required source is missing/);
@@ -265,23 +414,23 @@ for (const target of ["source", "destination"]) {
   wrongType[0] = { ...wrongType[0], mode: "cp_file", delete: false, trailing_slash: false };
   assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: wrongType }), /cp_file source is not a file/);
   const wrongRsyncType = structuredClone(routes);
-  wrongRsyncType[0].source = routes.at(-1).source;
+  wrongRsyncType[0].source = routes.find((route) => route.mode === "cp_file").source;
   assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: wrongRsyncType }), /rsync_tree source is not a directory/);
   const trailingSlashDrift = structuredClone(routes);
   trailingSlashDrift[0].trailing_slash = false;
   assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: trailingSlashDrift }), /rsync_tree flags are invalid/);
   const cpDeleteDrift = structuredClone(routes);
-  cpDeleteDrift.at(-1).delete = true;
+  cpDeleteDrift[routes.findIndex((route) => route.mode === "cp_file")].delete = true;
   assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: cpDeleteDrift }), /cp_file flags are invalid/);
   const unsafeExclude = structuredClone(routes);
   unsafeExclude[0].excludes = ["../outside"];
   assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: unsafeExclude }), /excludes\[0\] is unsafe/);
   const globExclude = structuredClone(routes);
   globExclude[0].excludes = ["etf*"];
-  assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: globExclude }), /exact relative subtree/);
+  assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: globExclude }), /exact relative path/);
   const cpExclude = structuredClone(routes);
-  cpExclude.at(-1).excludes = ["nested"];
-  assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: cpExclude }), /cp_file cannot exclude subtrees/);
+  cpExclude[routes.findIndex((route) => route.mode === "cp_file")].excludes = ["nested"];
+  assert.throws(() => validateMaterializationRoutes({ repoRoot: fixture.repoRoot, routes: cpExclude }), /cp_file cannot exclude paths/);
 }
 
 console.log("test-update-manifest-materializations: ok");

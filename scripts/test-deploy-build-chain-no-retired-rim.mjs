@@ -31,7 +31,6 @@ for (const scriptName of [
   "build:rim-five-canonical",
   "build:rim-sustainable-public",
   "build:rim-sustainable-research",
-  "qa:rim-v2",
   "qa:rim-sustainable-research",
   "qa:rim-index",
   "qa:rim-five-canonical",

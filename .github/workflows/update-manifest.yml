@@ -40,6 +40,21 @@ on:
       - '!data/admin/lane-registry-projection.json'
       - '!data/admin/lane-commit-manifest.json'
       - '!data/admin/alarm-state.json'
+      - '!data/macro/fred-macro.json'
+      - '!data/macro/tga.json'
+      - '!data/macro/stablecoins.json'
+      - '!data/macro/fred-banking-daily.json'
+      - '!data/macro/fred-banking-weekly.json'
+      - '!data/macro/fred-banking-monthly.json'
+      - '!data/macro/fred-banking-quarterly.json'
+      - '!data/macro/fdic-tier1.json'
+      - '!data/sentiment/**'
+      - '!data/admin/fred_macro/**'
+      - '!data/admin/treasury_tga/**'
+      - '!data/admin/defillama_stablecoins/**'
+      - '!data/admin/fred_banking/**'
+      - '!data/admin/fdic_tier1/**'
+      - '!data/admin/sentiment/**'
       - '!data/stockanalysis/**'
       - '!data/slickcharts/discovery-summary.json'
       - '!data/slickcharts/membership-changes.json'
@@ -143,118 +158,15 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Rebuild and verify SlickCharts canonical source
+      - name: Rebuild and project shared derived state
+        # S1-S14 of the projection stack live in one runner shared with the
+        # push-retry loop below, so the two call sites cannot drift.
         env:
           REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-        run: |
-          if [ "$REBUILD_SLICKCHARTS" = "true" ]; then
-            python scripts/scrapers/membership-tracker.py --quiet
-            node scripts/build-slickcharts-discovery.mjs
-          fi
-          python3 scripts/validate-slickcharts-integrity.py --skip-public
-
-      - name: Build shared market and stock promotion state
-        run: |
-          python3 scripts/rebuild-yf-finance-summary.py
-          python3 scripts/build-market-facts.py --no-public-mirror
-          python3 scripts/build-market-source-parity.py
-          python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
-          node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
-
-      - name: Project manifest-owned public mirrors
-        run: |
-          node scripts/materialize-update-manifest-routes.mjs --all
-          node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only
-          python3 scripts/validate-slickcharts-integrity.py
-          diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
-          # The surfaces mirror sat two producer cycles behind its source without
-          # anything noticing: the producer's own run of the surface contract
-          # overrides the comparison target with a copy of the source, so its
-          # byte-equality assertion cannot fail there. Prove the mirror where it is
-          # actually produced, exactly as SlickCharts already does above. Scoped to
-          # surfaces because `etfs/` is deliberately shard-only and excluded from
-          # this mirror.
-          diff -qr data/stockanalysis/surfaces 100xfenok-next/public/data/stockanalysis/surfaces
-
-      - name: Export computed signals
-        run: node scripts/export-computed-signals.mjs
-
-      - name: Build phase2 closeout indexes
-        run: node scripts/build-phase2-closeout-indexes.mjs
-
-      - name: Build Fenok stock signals
-        run: node scripts/build-fenok-signals.mjs
-
-      - name: Build ETF projections
-        run: |
-          node scripts/build-fenok-etf-signals.mjs
-          npm --prefix 100xfenok-next run build:history-gap-daily1y
-          node scripts/build-fenok-etf-action-index.mjs
-          node scripts/build-fenok-etf-core-daily-basket.mjs --check
-
-      - name: Build Fenok edge projections
-        run: |
-          node scripts/build-fenok-edge-coverage-index.mjs
-          node scripts/audit-fenok-s0-source-gaps.mjs --check --write-ledger
-          node scripts/write-fenok-etf-daily1y-readiness.mjs --check
-          npm --prefix 100xfenok-next run build:fenok-etf-daily1y-dispatch-plan
-
-      - name: Run update-manifest.py
-        # Exit code 1 = warnings only (orphan files / missing folders)
-        # These are non-fatal — the manifest update still proceeds
-        # BEFORE_SHA: covers ALL commits in the push (not just HEAD~1)
-        # Scheduled/manual runs infer the last manifest refresh commit.
-        env:
+          VALIDATE_SLICKCHARTS_SKIP_PUBLIC: 'true'
+          RESET_ETF_SNAPSHOTS: 'false'
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'AUTO' }}
-        run: |
-          set +e
-          python3 scripts/update-manifest.py
-          status=$?
-          if [ "$status" -eq 1 ]; then
-            exit 0
-          fi
-          exit "$status"
-
-      - name: Build data entity graph after manifest refresh
-        run: npm --prefix 100xfenok-next run build:data-entity-graph
-
-      - name: Build product surface coverage
-        run: node scripts/generate-product-surface-coverage.mjs
-
-      - name: Sync static overrides
-        run: (cd 100xfenok-next && node sync-static-overrides.mjs)
-
-      - name: Build data supply detection floor
-        run: |
-          set -euo pipefail
-
-          repo_root="$(pwd -P)"
-          shard_root="$repo_root/data/admin/data-supply-state/detection-attempts"
-          output_root="$(mktemp -d "/tmp/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
-          report_path="$output_root/data-supply-detection-floor.json"
-          installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
-          trap 'rm -rf "$output_root"' EXIT
-
-          mkdir -p "$shard_root"
-          chmod 0700 "$output_root"
-          now="$(node -e 'process.stdout.write(new Date().toISOString())')"
-
-          node scripts/build-data-supply-detection-floor.mjs \
-            --artifact-root "$repo_root" \
-            --attempt-shard-root "$shard_root" \
-            --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
-            --now "$now" \
-            --output-root "$output_root"
-          node scripts/build-data-supply-detection-floor.mjs --verify-report "$report_path"
-
-          install -m 0644 "$report_path" "$installed_path"
-
-      - name: Build data health KPI
-        run: |
-          npm --prefix 100xfenok-next run build:fenok-data-health-kpi
-          npm --prefix 100xfenok-next run build:lane-registry-projection
-          node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
-          npm --prefix 100xfenok-next run build:static-route-manifest
+        run: bash scripts/update-manifest-projections.sh
 
       - name: Check if manifest changed
         id: check
@@ -275,6 +187,8 @@ jobs:
         env:
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'AUTO' }}
           REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+          VALIDATE_SLICKCHARTS_SKIP_PUBLIC: 'false'
+          RESET_ETF_SNAPSHOTS: 'true'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -285,83 +199,7 @@ jobs:
             node scripts/stage-update-manifest-central.mjs --clean-untracked-after-reset
             node scripts/stage-update-manifest-central.mjs --assert-clean-after-reset
             node scripts/materialize-update-manifest-routes.mjs --all --validate-only --assert-no-untracked
-
-            if [ "$REBUILD_SLICKCHARTS" = "true" ]; then
-              python scripts/scrapers/membership-tracker.py --quiet
-              node scripts/build-slickcharts-discovery.mjs
-            fi
-
-            python3 scripts/rebuild-yf-finance-summary.py
-            python3 scripts/build-market-facts.py --no-public-mirror
-            python3 scripts/build-market-source-parity.py
-            python3 scripts/audit-market-data.py --output data/computed/market_data_audit.json --mirror-public
-            node scripts/write-fenok-s1-stock-public-promotion-dry-run.mjs --check
-            node scripts/materialize-update-manifest-routes.mjs --all
-            # Run 30689758451 died at the immutable-snapshot guard: this attempt
-            # re-projected on top of the snapshot directory an earlier projection
-            # had already written into the working tree, and the guard compares
-            # bytes rather than replacing. A content-addressed directory may be
-            # replaced, never compared against a stale sibling, so every attempt
-            # starts from an empty snapshot root. `git reset --hard` above already
-            # restored the tracked snapshot, and the projector rewrites it, so an
-            # unchanged source produces an identical tree and no diff.
-            rm -rf 100xfenok-next/public/data/stockanalysis/etfs/shards/snapshots
-            node 100xfenok-next/scripts/sync-public-data.mjs --write --etf-shards-only
-            python3 scripts/validate-slickcharts-integrity.py
-            diff -qr data/slickcharts 100xfenok-next/public/data/slickcharts
-            # Same mirror proof as the initial path; a retry that republishes must
-            # be held to the identical contract. Scoped to surfaces: `etfs/` is
-            # shard-only and excluded from this mirror by design.
-            diff -qr data/stockanalysis/surfaces 100xfenok-next/public/data/stockanalysis/surfaces
-            node scripts/export-computed-signals.mjs
-            node scripts/build-phase2-closeout-indexes.mjs
-            node scripts/build-fenok-signals.mjs
-            node scripts/build-fenok-etf-signals.mjs
-            npm --prefix 100xfenok-next run build:history-gap-daily1y
-            node scripts/build-fenok-etf-action-index.mjs
-            node scripts/build-fenok-etf-core-daily-basket.mjs --check
-            node scripts/build-fenok-edge-coverage-index.mjs
-            node scripts/audit-fenok-s0-source-gaps.mjs --check --write-ledger
-            node scripts/write-fenok-etf-daily1y-readiness.mjs --check
-            npm --prefix 100xfenok-next run build:fenok-etf-daily1y-dispatch-plan
-
-            status=0
-            BEFORE_SHA="${BEFORE_SHA}" python3 scripts/update-manifest.py || status=$?
-            if [ "$status" -ne 0 ] && [ "$status" -ne 1 ]; then
-              echo "update-manifest.py exited with $status on attempt $attempt"
-              exit "$status"
-            fi
-            npm --prefix 100xfenok-next run build:data-entity-graph
-            node scripts/generate-product-surface-coverage.mjs
-            (cd 100xfenok-next && node sync-static-overrides.mjs)
-            (
-              set -euo pipefail
-
-              repo_root="$(pwd -P)"
-              shard_root="$repo_root/data/admin/data-supply-state/detection-attempts"
-              output_root="$(mktemp -d "/tmp/fenok-data-supply-detection-floor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-XXXXXX")"
-              report_path="$output_root/data-supply-detection-floor.json"
-              installed_path="$repo_root/data/admin/data-supply-detection-floor.json"
-              trap 'rm -rf "$output_root"' EXIT
-
-              mkdir -p "$shard_root"
-              chmod 0700 "$output_root"
-              now="$(node -e 'process.stdout.write(new Date().toISOString())')"
-
-              node scripts/build-data-supply-detection-floor.mjs \
-                --artifact-root "$repo_root" \
-                --attempt-shard-root "$shard_root" \
-                --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
-                --now "$now" \
-                --output-root "$output_root"
-              node scripts/build-data-supply-detection-floor.mjs --verify-report "$report_path"
-
-              install -m 0644 "$report_path" "$installed_path"
-            )
-            npm --prefix 100xfenok-next run build:fenok-data-health-kpi
-            npm --prefix 100xfenok-next run build:lane-registry-projection
-            node 100xfenok-next/scripts/check-fenok-public-mirror-guard.mjs
-            npm --prefix 100xfenok-next run build:static-route-manifest
+            bash scripts/update-manifest-projections.sh
 
             set +e
             node scripts/stage-update-manifest-central.mjs --check

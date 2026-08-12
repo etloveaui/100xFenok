@@ -6,7 +6,9 @@
 // Port mapping (architect's decision):
 // - objectStore -> Workers R2 bucket binding. putIfAbsent heads/gets the
 //   existing key and byte-compares before writing; content addressing makes a
-//   mismatch unreachable in practice, but the guard stays.
+//   mismatch unreachable in practice, but the guard stays. putIfAbsent
+//   resolves { written, alreadyPresent } so the caller skips the redundant
+//   immediate readback only when the object already existed byte-identically.
 // - ledger + pointerStore -> CloudDataPlaneCoordinator Durable Object via stub
 //   fetch, so compareAndSwap is real CAS inside a storage transaction.
 
@@ -62,9 +64,10 @@ export function createCloudflareCloudDataPlane({ r2Bucket, coordinatorNamespace,
         if (prior !== null) {
           const priorBytes = new Uint8Array(await prior.arrayBuffer());
           if (!bytesEqual(priorBytes, bytes)) fail("IMMUTABILITY_VIOLATION", key);
-          return;
+          return { written: false, alreadyPresent: true };
         }
         await r2Bucket.put(key, bytes);
+        return { written: true, alreadyPresent: false };
       },
       async get(key) {
         const object = await r2Bucket.get(key);

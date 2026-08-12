@@ -96,6 +96,9 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
         projection_workflow = (
             ROOT / ".github" / "workflows" / "update-manifest.yml"
         ).read_text(encoding="utf-8")
+        projection_runner = (
+            ROOT / "scripts" / "update-manifest-projections.sh"
+        ).read_text(encoding="utf-8")
         lane_manifest = json.loads(
             (ROOT / "data" / "admin" / "lane-commit-manifest.json").read_text(encoding="utf-8")
         )
@@ -120,10 +123,14 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
         retry_block = projection_workflow.split("          for attempt in 1 2 3; do", 1)[1]
         initial_lines = [line.strip() for line in initial_block.splitlines()]
         retry_lines = [line.strip() for line in retry_block.splitlines()]
-        self.assertEqual(initial_lines.count(materialize), 1)
-        self.assertEqual(retry_lines.count(materialize), 1)
+        runner_call = "bash scripts/update-manifest-projections.sh"
+        initial_runner_call = f"run: {runner_call}"
+        runner_lines = [line.strip() for line in projection_runner.splitlines()]
+        self.assertEqual(initial_lines.count(initial_runner_call), 1)
+        self.assertEqual(retry_lines.count(runner_call), 1)
+        self.assertEqual(runner_lines.count(materialize), 1)
         self.assertEqual(retry_lines.count(validate_only), 1)
-        self.assertLess(retry_lines.index(validate_only), retry_lines.index(materialize))
+        self.assertLess(retry_lines.index(validate_only), retry_lines.index(runner_call))
         self.assertNotIn(
             "rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/",
             projection_workflow,
@@ -138,15 +145,15 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
         snapshot_reset = (
             "rm -rf 100xfenok-next/public/data/stockanalysis/etfs/shards/snapshots"
         )
-        self.assertEqual(retry_lines.count(shard_projection), 1)
+        self.assertEqual(runner_lines.count(shard_projection), 1)
         self.assertEqual(
-            retry_lines.count(snapshot_reset),
+            runner_lines.count(snapshot_reset),
             1,
             "the retry attempt must clear the ETF shard snapshot root exactly once",
         )
         self.assertLess(
-            retry_lines.index(snapshot_reset),
-            retry_lines.index(shard_projection),
+            runner_lines.index(snapshot_reset),
+            runner_lines.index(shard_projection),
             "the snapshot root must be cleared BEFORE the shard projection re-runs",
         )
 
@@ -161,18 +168,16 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
             "diff -qr data/stockanalysis/surfaces "
             "100xfenok-next/public/data/stockanalysis/surfaces"
         )
-        for label, lines in (("initial", initial_lines), ("retry", retry_lines)):
-            with self.subTest(path=label):
-                self.assertEqual(
-                    lines.count(surfaces_diff),
-                    1,
-                    f"the {label} path must verify the surfaces mirror exactly once",
-                )
-                self.assertLess(
-                    lines.index(materialize),
-                    lines.index(surfaces_diff),
-                    f"the {label} surfaces check must run AFTER the projection it verifies",
-                )
+        self.assertEqual(
+            runner_lines.count(surfaces_diff),
+            1,
+            "the shared runner must verify the surfaces mirror exactly once",
+        )
+        self.assertLess(
+            runner_lines.index(materialize),
+            runner_lines.index(surfaces_diff),
+            "the surfaces check must run AFTER the projection it verifies",
+        )
         self.assertNotIn(
             "diff -qr data/stockanalysis 100xfenok-next/public/data/stockanalysis",
             projection_workflow,

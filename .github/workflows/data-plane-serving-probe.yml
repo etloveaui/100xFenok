@@ -1,6 +1,6 @@
 name: Data Plane Serving Probe
 
-# Hourly proof that every enrolled data-plane asset is served from a published
+# Six-hour proof that every enrolled data-plane asset is served from a published
 # generation with a fresh source date. Born 2026-08-03: the enrolled URL
 # silently served the deploy-time bundled copy (valid 200, stale bytes, no
 # generation header) and only a manual probe noticed. Fallback is a designed
@@ -9,7 +9,10 @@ name: Data Plane Serving Probe
 
 on:
   schedule:
-    - cron: '41 * * * *'
+    # Full 610-path sweep: publication already verifies byte parity for every
+    # object. A six-hour serving check preserves bounded incident detection
+    # without re-reading the immutable fleet 24 times per day.
+    - cron: '41 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -51,14 +54,23 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           title="100xFenok data-plane serving probe alarm"
+          # Keep the full 610-path report in the run log, but persist only the
+          # failing rows and their reasons in the incident. Repeating every OK
+          # row made one issue exceed a megabyte without adding new evidence.
+          awk '
+            /^- FAIL / { emit=1; print; next }
+            /^- / { emit=0 }
+            emit && /^  - / { print }
+          ' probe-report.md > probe-failures.md
+          test -s probe-failures.md
           {
             printf '%s\n\n' '[alert] An enrolled data-plane asset is not healthy on the live Worker.'
-            cat probe-report.md
+            cat probe-failures.md
             printf '\n%s\n' "Observed by: $RUN_URL"
           } > probe-issue.md
           existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
           if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body-file probe-issue.md
+            gh issue edit "$existing" --body-file probe-issue.md
           else
             gh issue create --title "$title" --body-file probe-issue.md
           fi
@@ -68,7 +80,6 @@ jobs:
       # comment-sink issue is the counterexample this avoids).
       - name: Close probe issue on recovery
         if: steps.probe.outcome == 'success'
-        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -79,6 +90,8 @@ jobs:
           gh issue comment "$existing" --body "[all-clear] Every enrolled asset is served from a published generation with a fresh source date. Observed by: $RUN_URL"
           gh issue close "$existing" --reason completed
 
-      - name: Fail on alarm
-        if: steps.probe.outcome == 'failure'
-        run: exit 1
+      # The run's conclusion is probe-machinery health, not incident state: an
+      # unhealthy asset is reported through the OPS issue above, and this run
+      # stays green as long as incident or recovery reporting succeeded. Red is
+      # reserved for a genuine issue comment/create/close API failure. No
+      # incident-conditioned exit 1 exists.

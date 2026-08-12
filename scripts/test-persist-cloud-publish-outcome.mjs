@@ -20,6 +20,12 @@ import {
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const MANIFEST_PATH = path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json");
 const OUTCOME_ROOT = "data/admin/data-supply-state/publish-outcomes";
+const COORDINATOR_WORKFLOW = ".github/workflows/coordinate-computed-signals.yml";
+const TRACKED_SIGNAL_PATHS = [
+  "data/computed/signals.json",
+  "100xfenok-next/public/data/computed/signals.json",
+];
+const SEED_SIGNAL_TEXT = "{\"generated_at\":\"2026-08-10T00:00:00.000Z\"}\n";
 
 function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8" });
@@ -32,16 +38,26 @@ function run(command, args, cwd) {
 // is immediately followed by a non-blocking always() persistence step.
 {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
-  assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 21);
+  assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 22);
   for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
     const workflowText = fs.readFileSync(path.join(REPO_ROOT, binding.workflow), "utf8");
     const publishCommand = `node scripts/publish-cloud-data-generation.mjs --family=${family} --tolerate-gate-block --json`;
     assert.equal(workflowText.split(publishCommand).length - 1, 1, `${family} must have exactly one publisher`);
     const publishIndex = workflowText.indexOf(publishCommand);
     const publishStepStart = workflowText.lastIndexOf("\n      - name:", publishIndex);
-    const persistenceStepStart = workflowText.indexOf("\n      - name:", publishIndex);
-    assert.ok(publishStepStart >= 0 && persistenceStepStart > publishIndex, `${family} step boundaries are missing`);
-    const publishStep = workflowText.slice(publishStepStart, persistenceStepStart);
+    const publishStepEnd = workflowText.indexOf("\n      - name:", publishIndex);
+    const isCoordinator = binding.workflow === COORDINATOR_WORKFLOW;
+    const persistenceStepStart = isCoordinator || family === "slickcharts-history"
+      ? workflowText.lastIndexOf(
+        "\n      - name:",
+        workflowText.indexOf(`persist-cloud-publish-outcome.mjs --family=${family} --workflow=${binding.workflow}`),
+      )
+      : workflowText.indexOf("\n      - name:", publishIndex);
+    assert.ok(
+      publishStepStart >= 0 && publishStepEnd > publishIndex && persistenceStepStart >= publishStepEnd,
+      `${family} step boundaries are missing`,
+    );
+    const publishStep = workflowText.slice(publishStepStart, publishStepEnd);
     const nextStepEnd = workflowText.indexOf("\n      - name:", persistenceStepStart + 1);
     const persistenceStep = workflowText.slice(
       persistenceStepStart,
@@ -55,9 +71,20 @@ function run(command, args, cwd) {
     assert.match(persistenceStep, /if: \$\{\{ always\(\) \}\}/);
     assert.doesNotMatch(persistenceStep, /continue-on-error:/, `${family} evidence failure must fail the workflow`);
 
-    const previousStepStart = workflowText.lastIndexOf("\n      - name:", publishStepStart - 1);
-    const previousStep = workflowText.slice(previousStepStart, publishStepStart);
-    assert.match(previousStep, /- name: Commit/, `${family} must publish only after its canonical commit/push step`);
+    if (isCoordinator) {
+      // Coordinator contract: there is no Commit step anywhere; the publisher
+      // follows the exporter, and the cleanup + persistence steps follow the
+      // publisher (no signals Git commit exists to publish "after").
+      assert.equal((workflowText.match(/- name: Commit/g) ?? []).length, 0,
+        "coordinator must have no Commit step");
+      const exportStepStart = workflowText.indexOf("- name: Export computed signals");
+      assert.ok(exportStepStart >= 0 && exportStepStart < publishStepStart,
+        "coordinator publisher must follow the exporter step");
+    } else {
+      const previousStepStart = workflowText.lastIndexOf("\n      - name:", publishStepStart - 1);
+      const previousStep = workflowText.slice(previousStepStart, publishStepStart);
+      assert.match(previousStep, /- name: Commit/, `${family} must publish only after its canonical commit/push step`);
+    }
 
     const shardPath = `${OUTCOME_ROOT}/${family}.json`;
     const stageSpecs = manifest.workflows[binding.workflow].stages.always_if_exists;
@@ -70,7 +97,24 @@ function run(command, args, cwd) {
       assert.match(workflowText, /data\/admin\/data-supply-state\/publish-outcomes/);
     }
   }
-  console.log("publish-outcome workflow contract: 21/21 ordered, always-persisted, exact-owned");
+
+  const slickchartsHistory = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/slickcharts-history.yml"), "utf8");
+  const finalizeStart = slickchartsHistory.indexOf("- name: Finalize SlickCharts composite recovery");
+  const returnsTarget = slickchartsHistory.indexOf("artifacts/attempt-returns-*");
+  const cleanupStart = slickchartsHistory.lastIndexOf("\n      - name:", returnsTarget);
+  const cleanupEnd = slickchartsHistory.indexOf("\n      - name:", cleanupStart + 1);
+  const persistStart = slickchartsHistory.indexOf("- name: Persist slickcharts-history publish outcome");
+  assert.ok(finalizeStart >= 0 && finalizeStart < cleanupStart && cleanupStart < persistStart,
+    "slickcharts-history cleanup must run after finalize and before outcome persistence");
+  const cleanupStep = slickchartsHistory.slice(cleanupStart, cleanupEnd);
+  assert.match(cleanupStep, /artifacts\/attempt-returns-\*/);
+  assert.match(cleanupStep, /artifacts\/attempt-dividends-\*/);
+  assert.deepEqual(
+    [...cleanupStep.matchAll(/^\s*rm\s+(.+)$/gmu)].map((match) => match[1]).sort(),
+    ["-rf artifacts/attempt-dividends-*", "-rf artifacts/attempt-returns-*"],
+    "slickcharts-history cleanup must not remove broader runner paths",
+  );
+  console.log("publish-outcome workflow contract: 22/22 ordered, always-persisted, exact-owned");
 }
 
 // Real local-git integration: one helper invocation lands the shard on main;
@@ -85,6 +129,7 @@ function run(command, args, cwd) {
     const workerB = path.join(temp, "worker-b");
     const workerFailure = path.join(temp, "worker-failure");
     const workerPushFail = path.join(temp, "worker-push-fail");
+    const workerCoordinator = path.join(temp, "worker-coordinator");
     const verify = path.join(temp, "verify");
     run("git", ["init", "--bare", origin], temp);
     run("git", ["init", seed], temp);
@@ -114,7 +159,11 @@ function run(command, args, cwd) {
       family: "sentiment",
       records: [sentiment],
     }, null, 2)}\n`);
-    run("git", ["add", "--", OUTCOME_ROOT], seed);
+    for (const signalPath of TRACKED_SIGNAL_PATHS) {
+      await mkdir(path.dirname(path.join(seed, signalPath)), { recursive: true });
+      await writeFile(path.join(seed, signalPath), SEED_SIGNAL_TEXT);
+    }
+    run("git", ["add", "--", OUTCOME_ROOT, ...TRACKED_SIGNAL_PATHS], seed);
     run("git", ["commit", "-m", "seed outcomes"], seed);
     run("git", ["branch", "-M", "main"], seed);
     run("git", ["remote", "add", "origin", origin], seed);
@@ -302,6 +351,68 @@ function run(command, args, cwd) {
         log: () => {},
       }),
       /push failed after 1 attempts/,
+    );
+    // The push-exhaustion case installs a rejecting pre-receive hook; remove
+    // it before the coordinator case so later pushes reach the origin.
+    await rm(rejectHook, { force: true });
+
+    // Coordinator authorization: only the owned outcome shard may commit.
+    // Exercise the real tracked-file states the exporter/cleanup can produce:
+    // one modified canonical file and one deleted public mirror. Persistence
+    // must refuse both until `git restore --source=HEAD --worktree` restores
+    // the exact checked-out bytes.
+    run("git", ["clone", origin, workerCoordinator], temp);
+    await appendPublishOutcome({
+      outcomesRoot: path.join(workerCoordinator, OUTCOME_ROOT),
+      family: "computed-signals",
+      record: buildPublishOutcomeRecord({
+        family: "computed-signals",
+        result: "published",
+        generationId: "generation-coordinator",
+        observedAt: "2026-08-11T00:00:00.000Z",
+      }),
+    });
+    const canonicalSignalsPath = path.join(workerCoordinator, TRACKED_SIGNAL_PATHS[0]);
+    const publicSignalsPath = path.join(workerCoordinator, TRACKED_SIGNAL_PATHS[1]);
+    await writeFile(canonicalSignalsPath, "{\"generated_at\":\"2026-08-11T00:00:00.000Z\"}\n");
+    await rm(publicSignalsPath);
+    const dirtySignalStatus = run("git", ["diff", "--name-status", "--", ...TRACKED_SIGNAL_PATHS], workerCoordinator);
+    assert.match(dirtySignalStatus, /^M\s+data\/computed\/signals\.json$/m,
+      "coordinator fixture must contain a real tracked modification");
+    assert.match(dirtySignalStatus, /^D\s+100xfenok-next\/public\/data\/computed\/signals\.json$/m,
+      "coordinator fixture must contain a real tracked deletion");
+    assert.throws(
+      () => persistPublishOutcome({
+        family: "computed-signals",
+        workflow: COORDINATOR_WORKFLOW,
+        publisherOutcome: "success",
+        repoRoot: workerCoordinator,
+        manifestPath: MANIFEST_PATH,
+        log: () => {},
+      }),
+      /refusing dirty paths outside owned shard/,
+      "generated signal files must be cleaned before outcome persistence",
+    );
+    run("git", ["restore", "--source=HEAD", "--worktree", "--", ...TRACKED_SIGNAL_PATHS], workerCoordinator);
+    for (const signalPath of TRACKED_SIGNAL_PATHS) {
+      assert.equal(await readFile(path.join(workerCoordinator, signalPath), "utf8"), SEED_SIGNAL_TEXT,
+        `${signalPath} must be restored to its tracked HEAD bytes`);
+    }
+    assert.equal(run("git", ["status", "--short", "--", ...TRACKED_SIGNAL_PATHS], workerCoordinator), "",
+      "tracked signal files must be clean before outcome persistence");
+    const coordinatorPersisted = persistPublishOutcome({
+      family: "computed-signals",
+      workflow: COORDINATOR_WORKFLOW,
+      publisherOutcome: "success",
+      repoRoot: workerCoordinator,
+      manifestPath: MANIFEST_PATH,
+      log: () => {},
+    });
+    assert.equal(coordinatorPersisted.persisted, true, "coordinator outcome must persist once the tree is clean");
+    assert.deepEqual(
+      run("git", ["diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"], workerCoordinator).split("\n"),
+      [`${OUTCOME_ROOT}/computed-signals.json`],
+      "coordinator persistence commit must contain only the owned outcome shard",
     );
     console.log("publish-outcome persistence helper: run/skip contract, concurrent merge, failure evidence, push exhaustion ok");
   } finally {

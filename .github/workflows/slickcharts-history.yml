@@ -59,7 +59,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: fenok-data-writer-slickcharts-history-${{ github.ref }}
+  group: fenok-data-writer-refs/heads/main
   cancel-in-progress: false
   queue: max
 
@@ -452,6 +452,12 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=slickcharts-history --tolerate-gate-block --json
+
+      - name: Clean up downloaded attempt artifacts
+        if: ${{ always() }}
+        run: |
+          rm -rf artifacts/attempt-returns-*
+          rm -rf artifacts/attempt-dividends-*
 
       - name: Persist slickcharts-history publish outcome
         if: ${{ always() }}

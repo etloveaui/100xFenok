@@ -13,8 +13,12 @@ import {
   validateLaneRegistry,
 } from "./lib/lane-registry.mjs";
 import {
+  CENTRAL_COMMIT_PATHS,
   COMMIT_MANIFEST_SCHEMA,
+  UPDATE_MANIFEST_MATERIALIZATIONS,
   buildLaneCommitManifest,
+  centralCommitPathKind,
+  deriveCentralCommitPaths,
   emitLaneCommitManifest,
   validateLaneCommitManifest,
 } from "./build-lane-commit-manifest.mjs";
@@ -241,6 +245,7 @@ assert.deepEqual(yfFinance.stages.always_if_exists, [
 assert.deepEqual(yfFinance.stages.success_if_exists, []);
 assert.deepEqual(yfFinance.exclude, [
   { kind: "file", path: "data/yf/finance/_summary.json", required: false },
+  { kind: "file", path: "data/yf/estimates-archive/_summary.json", required: false },
 ]);
 
 const stockanalysis = manifest.workflows[".github/workflows/fetch-stockanalysis.yml"];
@@ -436,6 +441,20 @@ assert.deepEqual(pipelineFailureAlarm.stages.always_if_exists, [
 assert.deepEqual(pipelineFailureAlarm.stages.success_if_exists, []);
 assert.deepEqual(pipelineFailureAlarm.exclude, []);
 
+const coordinator = manifest.workflows[".github/workflows/coordinate-computed-signals.yml"];
+assert.deepEqual(coordinator.lanes, []);
+assert.deepEqual(coordinator.stages.always_if_exists, [
+  {
+    kind: "file",
+    path: "data/admin/data-supply-state/publish-outcomes/computed-signals.json",
+    required: false,
+  },
+]);
+assert.deepEqual(coordinator.stages.success_if_exists, []);
+assert.deepEqual(coordinator.stages.success_verify_not_plan_if_exists, []);
+assert.deepEqual(coordinator.stages.required_on_success, []);
+assert.deepEqual(coordinator.exclude, []);
+
 // Missing, stale, unsafe, duplicate, and undeclared workflow entries fail closed.
 for (const [label, mutate] of [
   ["missing workflow", (draft) => { delete draft.workflows[".github/workflows/fetch-defillama.yml"]; }],
@@ -466,13 +485,84 @@ for (const [label, mutate] of [
   );
 }
 
-// The emitter is deterministic and --check style validation catches a stale artifact.
+// Central commit paths are derived from the route table rather than
+// hand-copied, so the rebuilt projection is compared against the committed
+// artifact semantically: the same 77-path set and count, with byte equality
+// everywhere else once the derived central ordering is normalized.
 const rebuilt = buildLaneCommitManifest(LANE_REGISTRY);
-assert.deepEqual(rebuilt, manifest, "committed manifest must be a deterministic registry projection");
+const rebuiltCentral = rebuilt.update_manifest.central_commit_paths;
+const committedCentral = manifest.update_manifest.central_commit_paths;
+assert.equal(rebuiltCentral.length, committedCentral.length, "derived central list must keep the committed path count");
+assert.deepEqual(
+  [...rebuiltCentral].sort(),
+  [...committedCentral].sort(),
+  "derived central list must be semantically identical to the committed path set",
+);
+function withSortedCentral(artifact) {
+  const draft = structuredClone(artifact);
+  draft.update_manifest.central_commit_paths = [...draft.update_manifest.central_commit_paths].sort();
+  const workflow = draft.workflows[".github/workflows/update-manifest.yml"];
+  workflow.stages.always_if_exists = workflow.stages.always_if_exists
+    .map((spec) => ({ ...spec }))
+    .sort((left, right) => left.path.localeCompare(right.path));
+  return draft;
+}
+assert.deepEqual(
+  withSortedCentral(rebuilt),
+  withSortedCentral(manifest),
+  "projection must match the committed manifest once the derived central ordering is normalized",
+);
+
+// Derivation, not a copied oracle: every route destination is carried into
+// the final central list, and the hand-maintained base never repeats one.
+const derived = deriveCentralCommitPaths();
+assert.deepEqual(derived, rebuiltCentral, "generator must publish exactly the derived central list");
+assert.equal(derived.length, CENTRAL_COMMIT_PATHS.length + UPDATE_MANIFEST_MATERIALIZATIONS.length);
+const derivedSet = new Set(derived);
+for (const route of UPDATE_MANIFEST_MATERIALIZATIONS) {
+  assert.equal(derivedSet.has(route.destination), true, `derived central list must carry route destination: ${route.destination}`);
+  assert.equal(CENTRAL_COMMIT_PATHS.includes(route.destination), false, `hand-maintained base must not repeat route destination: ${route.destination}`);
+}
+// Adding a route appends its destination in route-table order without any
+// base edit, and keeps every pre-existing entry at its exact position.
+const probeRoute = {
+  source: "data/computed/fenok_route_probe.json",
+  destination: "100xfenok-next/public/data/computed/fenok_route_probe.json",
+  mode: "cp_file",
+  delete: false,
+  excludes: [],
+  required: true,
+  trailing_slash: false,
+};
+const probed = deriveCentralCommitPaths([...UPDATE_MANIFEST_MATERIALIZATIONS, probeRoute]);
+assert.deepEqual(probed.slice(0, derived.length), derived, "pre-existing central entries must keep their exact positions");
+assert.deepEqual(probed.slice(-1), [probeRoute.destination], "the new route destination must be appended in route-table order");
+assert.equal(new Set(probed).size, probed.length, "derived central list must stay unique after a route addition");
+// Duplicate or base-colliding destinations fail closed at derivation time.
+assert.throws(
+  () => deriveCentralCommitPaths([UPDATE_MANIFEST_MATERIALIZATIONS[0], UPDATE_MANIFEST_MATERIALIZATIONS[0]]),
+  /lane-commit-manifest/,
+  "duplicate materialization destinations must be rejected",
+);
+assert.throws(
+  () => deriveCentralCommitPaths([{ ...probeRoute, destination: CENTRAL_COMMIT_PATHS[0] }]),
+  /lane-commit-manifest/,
+  "a route destination colliding with the central base must be rejected",
+);
+
+// The emitter is deterministic and --check style validation catches a stale artifact.
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "lane-commit-manifest-"));
 const tempPath = path.join(tempRoot, "manifest.json");
 emitLaneCommitManifest({ registry: LANE_REGISTRY, outputPath: tempPath });
-assert.deepEqual(JSON.parse(fs.readFileSync(tempPath, "utf8")), manifest);
+assert.deepEqual(JSON.parse(fs.readFileSync(tempPath, "utf8")), rebuilt, "emitted manifest must be byte-identical to the built projection");
+
+// The kind classifier itself is exercised on representatives of both classes:
+// a known JSON central path is a file and a known materialization route
+// directory is a directory. Parity and central-staging tests consume the same
+// exported authority, so the emission rule cannot drift from the rule they
+// verify without failing here.
+assert.equal(centralCommitPathKind("data/computed/signals.json"), "file", "a known JSON central path must classify as file");
+assert.equal(centralCommitPathKind("100xfenok-next/public/data/slickcharts"), "directory", "a known route directory must classify as directory");
 
 // A value-changing registry edit must change the projection and digest.
 const changedRegistry = structuredClone(LANE_REGISTRY);

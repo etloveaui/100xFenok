@@ -61,7 +61,11 @@ function loadPolicy(options) {
   const builtPaths = buildLaneCommitManifest().update_manifest.central_commit_paths;
   const paths = manifest.update_manifest.central_commit_paths;
   if (canonicalJson(paths) !== canonicalJson(builtPaths)) fail("central_commit_paths are stale");
-  if (paths.length !== 62 || new Set(paths).size !== paths.length) fail("central_commit_paths must contain exactly 62 unique paths");
+  // The exact count is derived from the generator (single source of truth)
+  // rather than hand-bumped per boundary addition.
+  if (paths.length !== builtPaths.length || new Set(paths).size !== paths.length) {
+    fail(`central_commit_paths must contain exactly ${builtPaths.length} unique paths`);
+  }
   const specs = manifest.workflows[WORKFLOW]?.stages?.[STAGE];
   if (!Array.isArray(specs) || canonicalJson(specs.map((spec) => spec.path)) !== canonicalJson(paths)) fail("workflow central stage is stale");
   for (const [index, spec] of specs.entries()) {

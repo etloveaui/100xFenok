@@ -487,6 +487,25 @@ export const FAMILIES = {
     plan: { class_a: 10, bytes: 15_000 },
     policy: { max_assets: 4, max_total_bytes: 30_000 },
   },
+  "computed-signals": {
+    root: "data/computed",
+    manifest_prefix: "public/data/computed",
+    files: ["signals.json"],
+    privacy_class: "public",
+    // The exporter owns this source clock: source_as_of is the conservative
+    // minimum of the actual component dates, never generated_at or the
+    // publication time.
+    source_as_of: { key: "source_as_of" },
+    // The current payload is 12,680 bytes. Reuse the existing small computed
+    // family bounds with headroom for the one enrolled asset; no new quota
+    // mechanism is introduced here.
+    plan: { class_a: 10, bytes: 30_000 },
+    policy: { max_assets: 4, max_total_bytes: 30_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
+    },
+  },
 };
 
 const CONTENT_TYPES = {

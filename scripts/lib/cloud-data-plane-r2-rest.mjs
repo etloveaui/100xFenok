@@ -16,10 +16,15 @@
 //
 // Retry policy: never retry 4xx (a semantic answer, not a transient one);
 // network errors and 5xx get at most 3 attempts with exponential backoff.
+// Every attempt carries a bounded deadline (default 60s; override with the
+// timeoutMs option). A deadline hit is a network-class failure: it is retried
+// like any other transport error and finally fails as R2_REST_NETWORK with a
+// timeout-specific message.
 
 const API_BASE = "https://api.cloudflare.com/client/v4/accounts";
 const MAX_ATTEMPTS = 3;
 const BACKOFF_BASE_MS = 200;
+const DEFAULT_FETCH_TIMEOUT_MS = 60_000;
 
 function fail(code, detail) {
   const error = new Error(`${code}:${detail}`);
@@ -31,6 +36,22 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function fetchWithTimeout(fetchImpl, url, init, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    // The deadline wins over any caller-supplied signal; no caller passes one.
+    return await fetchImpl(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error(`r2-rest fetch timed out after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function readErrorBody(response) {
   try {
     return (await response.text()).slice(0, 500);
@@ -39,13 +60,14 @@ async function readErrorBody(response) {
   }
 }
 
-export function createR2RestBucket({ accountId, bucket, token, fetchImpl = fetch }) {
+export function createR2RestBucket({ accountId, bucket, token, fetchImpl = fetch, timeoutMs = DEFAULT_FETCH_TIMEOUT_MS }) {
   if (!accountId || !bucket || !token) {
     fail("R2_REST_CONFIG_INVALID", "accountId, bucket and token are required");
   }
   if (typeof fetchImpl !== "function") {
     fail("R2_REST_CONFIG_INVALID", "fetchImpl must be a function");
   }
+  const effectiveTimeoutMs = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : DEFAULT_FETCH_TIMEOUT_MS;
   const objectsUrl = `${API_BASE}/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucket)}/objects`;
   const authHeaders = { Authorization: `Bearer ${token}` };
 
@@ -56,7 +78,7 @@ export function createR2RestBucket({ accountId, bucket, token, fetchImpl = fetch
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
       let response;
       try {
-        response = await fetchImpl(url, init);
+        response = await fetchWithTimeout(fetchImpl, url, init, effectiveTimeoutMs);
       } catch (error) {
         lastError = error;
         if (attempt < MAX_ATTEMPTS) await sleep(BACKOFF_BASE_MS * 2 ** (attempt - 1));

@@ -7,7 +7,7 @@
  * Plus a cohort-aggregated "total" treemap for the latest global quarter.
  *
  * Run: node scripts/build-13f-portfolio-views.mjs
- * Output: data/sec-13f/analytics/portfolio_views.json (+ public mirror)
+ * Output: data/sec-13f/analytics/portfolio_views.json
  */
 
 import fs from "node:fs";
@@ -25,10 +25,6 @@ const ROOT = path.resolve(__dirname, "..");
 
 const INVESTORS_DIR = path.join(ROOT, "data/sec-13f/investors");
 const OUTPUT = path.join(ROOT, "data/sec-13f/analytics/portfolio_views.json");
-const PUBLIC_MIRROR_DIR = path.join(
-  ROOT,
-  "100xfenok-next/public/data/sec-13f/analytics",
-);
 const SECTOR_MAP_PATH = path.join(
   ROOT,
   "100xfenok-next/src/lib/design/sector-map.json",
@@ -44,11 +40,6 @@ const TOTAL_TREEMAP_TOP_N = 100;
 function writeJson(filePath, data) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, JSON.stringify(data));
-}
-
-function writeBoth(rootPath, data) {
-  writeJson(rootPath, data);
-  writeJson(path.join(PUBLIC_MIRROR_DIR, path.basename(rootPath)), data);
 }
 
 const round4 = (x) => Math.round(x * 10000) / 10000;
@@ -372,11 +363,10 @@ const output = {
   investors,
 };
 
-writeBoth(OUTPUT, output);
+writeJson(OUTPUT, output);
 
 const size = fs.statSync(OUTPUT).size;
 console.log(
   `portfolio_views: quarter=${globalQuarter} cohort=${cohortCount} investors=${Object.keys(investors).length} size=${(size / 1024).toFixed(0)}KB`,
 );
 console.log(`written: ${OUTPUT}`);
-console.log(`mirror:  ${path.join(PUBLIC_MIRROR_DIR, path.basename(OUTPUT))}`);

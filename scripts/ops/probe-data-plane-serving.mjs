@@ -1,4 +1,4 @@
-// Hourly proof that every enrolled data-plane asset is actually served from a
+// Six-hour proof that every enrolled data-plane asset is actually served from a
 // published generation, with data young enough to trust. Born 2026-08-03: the
 // enrolled URL silently served the deploy-time bundled copy (valid 200, no
 // generation header, stale bytes) and nothing noticed until a human probed it.
@@ -21,6 +21,10 @@
 // A URL that never answers becomes a strict FAIL for exactly that path — never
 // a fallback pass. Once the total deadline is reached, every unvisited path is
 // also recorded as strict FAIL without starting another network request.
+//
+// Each successful response is judged against a fresh wall-clock read taken
+// immediately after its fetch, so a generation promoted mid-sweep cannot be
+// mistaken for a future publication (issue #90).
 
 import { ENROLLED_PATHS, ENROLLED_PREFIXES } from "../lib/cloud-data-plane-worker-read.mjs";
 import { performance } from "node:perf_hooks";
@@ -36,7 +40,7 @@ export const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 // remaining total probe deadline, whichever is shorter.
 export const DEFAULT_ABORT_CLEANUP_GRACE_MS = 250;
 // Milliseconds the complete sequential sweep may run. Ten minutes is safely
-// below the hourly schedule while leaving room for report/issue handling.
+// below the six-hour schedule while leaving room for report/issue handling.
 // Overrides can only tighten this immutable ceiling.
 export const DEFAULT_TOTAL_PROBE_DEADLINE_MS = 10 * 60_000;
 // Calendar days of source-date age tolerated before the probe alarms. Macro
@@ -61,6 +65,13 @@ export const PATH_SOURCE_AGE_DAYS = Object.freeze({
   "/data/macro/fred-banking-monthly.json": 100,
   "/data/macro/fred-banking-quarterly.json": 180,
 });
+// The computed-signals source_as_of is the minimum of heterogeneous raw
+// contributor dates. Its source-age authority remains in the producer-family
+// gates, so the serving probe validates presence, parseability, and chronology
+// but applies no aggregate source-age ceiling. Null is an explicit policy
+// value, not a claim that the source is fresh.
+export const SOURCE_AGE_UNBOUNDED_FAMILIES = Object.freeze(["computed-signals"]);
+const SOURCE_AGE_UNBOUNDED_FAMILY_SET = new Set(SOURCE_AGE_UNBOUNDED_FAMILIES);
 export const FAMILY_SOURCE_AGE_DAYS = Object.freeze({
   "fred-yardeni": 14,
   "slickcharts-monthly": 40,
@@ -75,6 +86,7 @@ export const FAMILY_PUBLISHED_AGE_DAYS = Object.freeze({
 });
 
 export function resolveSourceAgeDays({ path, family }) {
+  if (SOURCE_AGE_UNBOUNDED_FAMILY_SET.has(family)) return null;
   return PATH_SOURCE_AGE_DAYS[path] ?? FAMILY_SOURCE_AGE_DAYS[family] ?? DEFAULT_MAX_SOURCE_AGE_DAYS;
 }
 
@@ -83,9 +95,18 @@ export function resolvePublishedAgeDays({ path, family }) {
 }
 
 function tightenPolicyLimit(policyLimit, override) {
+  if (policyLimit === null) return null;
   return Number.isFinite(override) && override > 0
     ? Math.min(policyLimit, override)
     : policyLimit;
+}
+
+function parseRealIsoDay(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value
+    ? parsed.getTime()
+    : null;
 }
 
 export function parseLegacySourceAgeCap(value) {
@@ -115,7 +136,6 @@ export function parseTotalProbeDeadlineMs(value) {
 // mode until they are published; the probe observes it instead of alarming on
 // it. Any family not listed here is strict, and stays fail-closed.
 export const FALLBACK_ALLOWED_FAMILIES = Object.freeze([
-  "slickcharts-history",
   "slickcharts-symbols",
   "edgar-korean-summaries",
 ]);
@@ -144,6 +164,13 @@ const FALLBACK_ALLOWED_FAMILY_SET = new Set(FALLBACK_ALLOWED_FAMILIES);
     }
   }
   for (const family of [...Object.keys(FAMILY_SOURCE_AGE_DAYS), ...Object.keys(FAMILY_PUBLISHED_AGE_DAYS)]) {
+    if (!enrolledFamilies.has(family)) {
+      throw new Error(
+        `A freshness policy names family "${family}", which is not declared in ENROLLED_PATHS or ENROLLED_PREFIXES`,
+      );
+    }
+  }
+  for (const family of SOURCE_AGE_UNBOUNDED_FAMILIES) {
     if (!enrolledFamilies.has(family)) {
       throw new Error(
         `A freshness policy names family "${family}", which is not declared in ENROLLED_PATHS or ENROLLED_PREFIXES`,
@@ -179,15 +206,19 @@ export function evaluateProbeResponse({ path, family, status, generationHeader, 
   }
   const effectiveSourceAgeDays = tightenPolicyLimit(resolveSourceAgeDays({ path, family }), maxAgeDays);
   const effectivePublishedAgeDays = tightenPolicyLimit(resolvePublishedAgeDays({ path, family }), maxPublishedAgeDays);
-  const sourceMs = Date.parse(sourceAsOfHeader ?? "");
-  if (!Number.isFinite(sourceMs)) {
-    failures.push(`x-data-plane-source-as-of is ${sourceAsOfHeader == null ? "absent" : `unparseable ("${sourceAsOfHeader}")`}`);
+  const sourceMs = parseRealIsoDay(sourceAsOfHeader);
+  if (sourceMs === null) {
+    failures.push(
+      `x-data-plane-source-as-of is ${sourceAsOfHeader == null
+        ? "absent"
+        : `invalid ("${sourceAsOfHeader}"; expected a real YYYY-MM-DD calendar day)`}`,
+    );
   } else if (nowIsValid) {
     if (sourceMs > nowMs) {
       failures.push(`source date ${sourceAsOfHeader} is in the future relative to now ${nowIso}`);
     } else {
       const ageDays = (nowMs - sourceMs) / 86400000;
-      if (ageDays > effectiveSourceAgeDays) {
+      if (effectiveSourceAgeDays !== null && ageDays > effectiveSourceAgeDays) {
         failures.push(`source date ${sourceAsOfHeader} is ${ageDays.toFixed(1)} days old (limit ${effectiveSourceAgeDays})`);
       }
     }
@@ -275,6 +306,7 @@ export async function probeAll({
   baseUrl,
   fetchFn,
   nowIso,
+  wallClockNowFn = () => new Date().toISOString(),
   maxAgeDays,
   requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   totalDeadlineMs = DEFAULT_TOTAL_PROBE_DEADLINE_MS,
@@ -324,6 +356,13 @@ export async function probeAll({
       }
       continue;
     }
+    // Judge against the instant the response actually arrived: a generation
+    // promoted while this request was in flight (issue #90) must not look like
+    // a future publication against the run-start time. An explicit nowIso
+    // still pins every evaluation for deterministic callers; only its absence
+    // reads the wall clock fresh here, and an explicit invalid value stays
+    // invalid instead of silently falling back.
+    const evaluationNowIso = nowIso === undefined ? wallClockNowFn() : nowIso;
     results.push(evaluateProbeResponse({
       path,
       family,
@@ -331,7 +370,7 @@ export async function probeAll({
       generationHeader: response.headers.get("x-data-plane-generation"),
       sourceAsOfHeader: response.headers.get("x-data-plane-source-as-of"),
       publishedAtHeader: response.headers.get("x-data-plane-published-at"),
-      nowIso,
+      nowIso: evaluationNowIso,
       maxAgeDays,
     }));
   }
@@ -364,7 +403,6 @@ async function main() {
   const results = await probeAll({
     baseUrl,
     fetchFn: fetch,
-    nowIso: new Date().toISOString(),
     maxAgeDays,
     requestTimeoutMs,
     totalDeadlineMs,
