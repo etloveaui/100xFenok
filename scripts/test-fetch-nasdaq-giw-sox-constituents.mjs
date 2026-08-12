@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { isEligibleRecoveryRun } from "./lib/data-supply-lkg-store.mjs";
 import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
 import { runNasdaqGiwSox, rotateSoxSnapshotHistory, retainLatestSnapshotDates, soxHistoryPathFor, validSoxHistory, SOX_PERSISTENCE_POLICY } from "./fetch-nasdaq-giw-sox-constituents.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
@@ -339,6 +340,86 @@ for (const failureCase of [
   assert.equal(state.items.constituents.recovered_from_run_id, "sox-recovery-failure-run");
   assert.equal(state.items.constituents.recovery_run_id, "sox-natural-recovery-run");
   assert.equal(state.items.constituents.recovery_event_name, "schedule");
+}
+
+// SOX-only opt-in: a first-attempt workflow_dispatch with a structured
+// GitHub run may promote recovery when the source advances, while retry
+// attempts and local/unbound manual dispatches stay blocked.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-sox-bound-dispatch-recovery-"));
+  const paths = makePaths(root);
+  await seedBaseline(paths, { asOf: "2026-07-15", runId: "bound-dispatch-baseline" });
+  const boundFailure = await runNasdaqGiwSox({
+    ...paths,
+    dates: ["2026-07-15"],
+    request: async () => response(503, { error: "upstream" }),
+    observedAt: "2026-07-16T03:10:00.000Z",
+    attemptId: "sox-bound-failure-attempt",
+    runId: "31551148251",
+    eventName: "workflow_dispatch",
+    publicMirror: false,
+  });
+  assert.equal(boundFailure.ok, false);
+  assert.equal(boundFailure.reason, "http_error");
+  assert.deepEqual(boundFailure.retrySet, ["constituents"]);
+  const canonicalBeforeBoundRecovery = fs.readFileSync(paths.canonicalPath);
+
+  const boundRetryBlocked = await runNasdaqGiwSox({
+    ...paths,
+    dates: ["2026-07-16"],
+    request: async () => response(200, weightingPayload("RETRY")),
+    observedAt: "2026-07-16T03:15:00.000Z",
+    runId: "31551148252",
+    runAttempt: 2,
+    eventName: "workflow_dispatch",
+    publicMirror: false,
+  });
+  assert.equal(boundRetryBlocked.reason, "recovery_requires_schedule", "a retry attempt must stay blocked");
+  assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBeforeBoundRecovery);
+
+  const localManualBlocked = await runNasdaqGiwSox({
+    ...paths,
+    dates: ["2026-07-16"],
+    request: async () => response(200, weightingPayload("LOCAL")),
+    observedAt: "2026-07-16T03:20:00.000Z",
+    runId: "local",
+    eventName: "workflow_dispatch",
+    publicMirror: false,
+  });
+  assert.equal(localManualBlocked.reason, "recovery_requires_schedule", "local/unbound manual dispatch must stay blocked");
+  assert.deepEqual(fs.readFileSync(paths.canonicalPath), canonicalBeforeBoundRecovery);
+
+  const boundRecovered = await runNasdaqGiwSox({
+    ...paths,
+    dates: ["2026-07-16"],
+    request: async () => response(200, weightingPayload("NEW")),
+    observedAt: "2026-07-16T03:30:00.000Z",
+    runId: "31551148253",
+    eventName: "workflow_dispatch",
+    publicMirror: false,
+  });
+  assert.equal(boundRecovered.ok, true, "authentic first-attempt workflow_dispatch may recover when the source advances");
+  assert.equal(boundRecovered.recovered, true);
+  const boundState = readJson(path.join(root, "data", "admin", "nasdaq_giw_sox", "index.json"));
+  assert.deepEqual(boundState.retry_set, []);
+  assert.equal(boundState.items.constituents.recovery_run_id, "31551148253");
+  assert.equal(boundState.items.constituents.recovery_event_name, "workflow_dispatch");
+  const boundAttempt = assertValidShard(paths.attemptShardPath);
+  assert.equal(boundAttempt.attempt_id, "nasdaq-giw-sox-run-31551148253-attempt-1", "attempt shard id is run-bound for an authentic run context");
+  assert.equal(
+    isEligibleRecoveryRun({ runId: "31551148253", runAttempt: 1, eventName: "workflow_dispatch" }, true),
+    true,
+  );
+  assert.equal(
+    isEligibleRecoveryRun({ runId: "31551148253", runAttempt: 2, eventName: "workflow_dispatch" }, true),
+    false,
+    "retry attempts are never eligible",
+  );
+  assert.equal(
+    isEligibleRecoveryRun({ runId: "local", runAttempt: 1, eventName: "workflow_dispatch" }, true),
+    false,
+    "unbound local dispatch is never eligible",
+  );
 }
 
 await assert.rejects(() => runNasdaqGiwSox({

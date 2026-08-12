@@ -19,7 +19,8 @@ import {
   PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2,
   buildProviderObservationV2,
   classifyLkgFailure,
-  isNaturalScheduleRun,
+  hasStructuredGithubRunBinding,
+  isEligibleRecoveryRun,
   systemicLkgFailureReason,
 } from "./lib/data-supply-lkg-store.mjs";
 import { boundedDiagnosticDetail, diagnosticSuffix } from "./lib/diagnostic-detail.mjs";
@@ -333,7 +334,7 @@ export async function runNasdaqGiwSox({
   dates = candidateDates(null, 10),
   request = requestWeightingData,
   observedAt = new Date().toISOString(),
-  attemptId = defaultAttemptId("nasdaq-giw-sox", observedAt),
+  attemptId,
   runId = process.env.GITHUB_RUN_ID || "local",
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
@@ -345,7 +346,19 @@ export async function runNasdaqGiwSox({
   }
   const controlled = controlledFailure(controlledFailureKey, eventName);
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
-  const lkgStore = new LaneLkgStore({ repoRoot, laneId: LANE_ID });
+  const resolvedAttemptId = attemptId ?? (
+    hasStructuredGithubRunBinding(run)
+      ? `nasdaq-giw-sox-run-${run.runId}-attempt-${run.runAttempt}`
+      : defaultAttemptId("nasdaq-giw-sox", observedAt)
+  );
+  // SOX opts into recovery promotion for authentic first-attempt
+  // workflow_dispatch runs only; every other LaneLkgStore caller keeps the
+  // natural-schedule-only default.
+  const lkgStore = new LaneLkgStore({
+    repoRoot,
+    laneId: LANE_ID,
+    allowBoundWorkflowDispatchRecovery: true,
+  });
   const lkgArtifacts = [{
     key: LKG_KEY,
     canonicalPath,
@@ -363,7 +376,7 @@ export async function runNasdaqGiwSox({
     }
   }
   const folded = selected ?? worstRequestResult(requestResults);
-  const attempt = write ? writeAttemptShard({ laneId: LANE_ID, attemptShardPath, observedAt, attemptId, result: folded }) : null;
+  const attempt = write ? writeAttemptShard({ laneId: LANE_ID, attemptShardPath, observedAt, attemptId: resolvedAttemptId, result: folded }) : null;
 
   if (selected === null) {
     const failureReason = systemicLkgFailureReason(requestResults.map((row) => row.reason))
@@ -420,7 +433,7 @@ export async function runNasdaqGiwSox({
   if (!write) return { ok: true, reason: "ok", updated: false, attempt, payload, asOf: payload.as_of, rowCount: payload.row_count };
 
   const recoveryState = lkgStore.stateSnapshot();
-  if (recoveryState.items[LKG_KEY]?.retry === true && !isNaturalScheduleRun(run)) {
+  if (recoveryState.items[LKG_KEY]?.retry === true && !isEligibleRecoveryRun(run, true)) {
     return {
       ok: false,
       reason: "recovery_requires_schedule",

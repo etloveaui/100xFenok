@@ -83,6 +83,26 @@ export function isNaturalScheduleRun(run) {
   return run?.eventName === "schedule" && Number(run?.runAttempt ?? 1) === 1;
 }
 
+// A structurally bound GitHub Actions run is a numeric nonzero GITHUB_RUN_ID
+// on a first workflow_dispatch attempt. Synthetic/local identifiers ("local",
+// "sox-manual-recovery-run", ...) are rejected by shape; this is not a
+// cryptographic provenance proof.
+export function hasStructuredGithubRunBinding(run) {
+  if (run?.eventName !== "workflow_dispatch" || Number(run?.runAttempt ?? 0) !== 1) return false;
+  if (typeof run?.runId !== "string" || run.runId.length === 0) return false;
+  const numeric = Number(run.runId);
+  return Number.isInteger(numeric) && numeric > 0 && String(numeric) === run.runId.trim();
+}
+
+// Single eligibility predicate shared by evaluatePromotionCandidates and
+// recordSuccess. Natural schedule first attempts are always eligible; a
+// first-attempt workflow_dispatch is eligible only when the store instance
+// opts in AND carries an authentic GitHub Actions run binding.
+export function isEligibleRecoveryRun(run, allowBoundWorkflowDispatchRecovery = false) {
+  if (isNaturalScheduleRun(run)) return true;
+  return allowBoundWorkflowDispatchRecovery === true && hasStructuredGithubRunBinding(run);
+}
+
 function validateArtifactDescriptor(artifact) {
   if (!artifact || typeof artifact !== "object" || !IDENTIFIER_RE.test(artifact.key)) {
     throw new Error("artifact key is invalid");
@@ -187,11 +207,15 @@ export function classifyLkgFailure({ reason, hasCompleteLkg, systemic = false })
 }
 
 export class LaneLkgStore {
-  constructor({ repoRoot, laneId }) {
+  constructor({ repoRoot, laneId, allowBoundWorkflowDispatchRecovery = false }) {
     if (typeof repoRoot !== "string" || repoRoot.length === 0) throw new Error("repoRoot is required");
     if (!IDENTIFIER_RE.test(laneId)) throw new Error("laneId is invalid");
+    if (typeof allowBoundWorkflowDispatchRecovery !== "boolean") {
+      throw new Error("allowBoundWorkflowDispatchRecovery must be a boolean");
+    }
     this.repoRoot = path.resolve(repoRoot);
     this.laneId = laneId;
+    this.allowBoundWorkflowDispatchRecovery = allowBoundWorkflowDispatchRecovery;
     this.adminRoot = path.join(this.repoRoot, "data", "admin", laneId);
     this.lkgRoot = path.join(this.adminRoot, "lkg");
     this.statePath = path.join(this.adminRoot, "index.json");
@@ -376,7 +400,7 @@ export class LaneLkgStore {
       seen.add(artifact.key);
       const item = state.items[artifact.key];
       if (item?.retry !== true) return { key: artifact.key, eligible: true, reason: "ok", artifact };
-      if (!isNaturalScheduleRun(run)) {
+      if (!isEligibleRecoveryRun(run, this.allowBoundWorkflowDispatchRecovery)) {
         return { key: artifact.key, eligible: false, reason: "recovery_requires_schedule", artifact };
       }
       if (item?.resolution_state !== "lkg_primary") {
@@ -449,8 +473,8 @@ export class LaneLkgStore {
     validateRun(run);
     const priorState = this._loadState();
     const recovering = artifacts.some((artifact) => priorState.items[artifact?.key]?.retry === true);
-    if (recovering && !isNaturalScheduleRun(run)) {
-      throw new Error(`recovery promotion requires a natural schedule run for ${this.laneId}`);
+    if (recovering && !isEligibleRecoveryRun(run, this.allowBoundWorkflowDispatchRecovery)) {
+      throw new Error(`recovery promotion requires an eligible recovery run for ${this.laneId}`);
     }
     const decisions = this.evaluatePromotionCandidates(artifacts, run);
     const rejected = decisions.find((decision) => !decision.eligible);
