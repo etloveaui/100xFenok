@@ -1,4 +1,4 @@
-// Hourly proof that every enrolled data-plane asset is actually served from a
+// Six-hour proof that every enrolled data-plane asset is actually served from a
 // published generation, with data young enough to trust. Born 2026-08-03: the
 // enrolled URL silently served the deploy-time bundled copy (valid 200, no
 // generation header, stale bytes) and nothing noticed until a human probed it.
@@ -40,7 +40,7 @@ export const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 // remaining total probe deadline, whichever is shorter.
 export const DEFAULT_ABORT_CLEANUP_GRACE_MS = 250;
 // Milliseconds the complete sequential sweep may run. Ten minutes is safely
-// below the hourly schedule while leaving room for report/issue handling.
+// below the six-hour schedule while leaving room for report/issue handling.
 // Overrides can only tighten this immutable ceiling.
 export const DEFAULT_TOTAL_PROBE_DEADLINE_MS = 10 * 60_000;
 // Calendar days of source-date age tolerated before the probe alarms. Macro
@@ -136,7 +136,6 @@ export function parseTotalProbeDeadlineMs(value) {
 // mode until they are published; the probe observes it instead of alarming on
 // it. Any family not listed here is strict, and stays fail-closed.
 export const FALLBACK_ALLOWED_FAMILIES = Object.freeze([
-  "slickcharts-history",
   "slickcharts-symbols",
   "edgar-korean-summaries",
 ]);

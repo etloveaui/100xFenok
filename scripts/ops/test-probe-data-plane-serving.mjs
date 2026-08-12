@@ -397,8 +397,8 @@ const sourceDateForPolicy = ({ path, family }) => {
 {
   const r = evaluateProbeResponse({
     ...base,
-    path: "/data/slickcharts/stocks/AAPL.json",
-    family: "slickcharts-history",
+    path: "/data/slickcharts/symbols.json",
+    family: "slickcharts-symbols",
     generationHeader: null,
     sourceAsOfHeader: null,
   });
@@ -411,9 +411,9 @@ const sourceDateForPolicy = ({ path, family }) => {
 {
   const r = evaluateProbeResponse({
     ...base,
-    path: "/data/slickcharts/stocks/AAPL.json",
-    family: "slickcharts-history",
-    generationHeader: "slickcharts-history-abc123",
+    path: "/data/slickcharts/symbols.json",
+    family: "slickcharts-symbols",
+    generationHeader: "slickcharts-symbols-abc123",
     sourceAsOfHeader: "2026-08-03",
     publishedAtHeader: hoursAgo(1),
   });
@@ -728,8 +728,8 @@ const sourceDateForPolicy = ({ path, family }) => {
   assert.match(invalidNow.failures[0], /nowIso is unparseable \("not-a-time"\)/);
 
   const invalidFallbackNow = evaluateProbeResponse({
-    path: "/data/slickcharts/stocks/AAPL.json",
-    family: "slickcharts-history",
+    path: "/data/slickcharts/symbols.json",
+    family: "slickcharts-symbols",
     status: 200,
     nowIso: "not-a-time",
     generationHeader: null,
@@ -832,8 +832,8 @@ const sourceDateForPolicy = ({ path, family }) => {
 {
   const allAbsent = evaluateProbeResponse({
     ...base,
-    path: "/data/slickcharts/stocks/AAPL.json",
-    family: "slickcharts-history",
+    path: "/data/slickcharts/symbols.json",
+    family: "slickcharts-symbols",
     generationHeader: null,
     sourceAsOfHeader: null,
     publishedAtHeader: null,
@@ -1049,12 +1049,12 @@ const sourceDateForPolicy = ({ path, family }) => {
 // Report labels fallback success FALLBACK-ALLOWED, never OK.
 {
   const report = buildReport([
-    { path: "/data/slickcharts/stocks/AAPL.json", family: "slickcharts-history", ok: true, mode: "fallback-allowed", failures: [] },
+    { path: "/data/slickcharts/symbols.json", family: "slickcharts-symbols", ok: true, mode: "fallback-allowed", failures: [] },
     { path: "/data/macro/fred-macro.json", family: "fred-macro", ok: true, mode: "strict", failures: [] },
   ]);
   assert.equal(report.ok, true);
   assert.equal(report.failingCount, 0);
-  assert.match(report.body, /- FALLBACK-ALLOWED \/data\/slickcharts\/stocks\/AAPL\.json \(slickcharts-history\)/);
+  assert.match(report.body, /- FALLBACK-ALLOWED \/data\/slickcharts\/symbols\.json \(slickcharts-symbols\)/);
   assert.match(report.body, /- OK \/data\/macro\/fred-macro\.json \(fred-macro\)/);
   assert.doesNotMatch(report.body, /FALLBACK-ALLOWED .*\(fred-macro\)/);
 }
