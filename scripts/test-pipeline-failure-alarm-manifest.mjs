@@ -64,6 +64,7 @@ const workflows = Object.fromEntries(Object.entries(files).map(([key, file]) => 
 const INCIDENT_IF =
   "steps.pipeline.outcome == 'failure' && steps.alarm_state.outputs.incident_changed != 'false'";
 const ISSUE_COMMANDS = [/gh issue comment/, /gh issue create/];
+const PROBE_ISSUE_COMMANDS = [/gh issue edit/, /gh issue create/, /probe-failures\.md/, /test -s probe-failures\.md/];
 const STEP_CONTRACTS = [
   {
     workflow: "pipeline", job: "check", name: "Record alarm-state base fingerprint", bestEffort: false,
@@ -120,7 +121,7 @@ const STEP_CONTRACTS = [
   { workflow: "probe", name: "Probe enrolled assets", id: "probe", bestEffort: true },
   {
     workflow: "probe", name: "Open or update probe issue", bestEffort: false,
-    condition: "steps.probe.outcome == 'failure'", contains: ISSUE_COMMANDS,
+    condition: "steps.probe.outcome == 'failure'", contains: PROBE_ISSUE_COMMANDS,
   },
   {
     workflow: "probe", name: "Close probe issue on recovery", bestEffort: false,
