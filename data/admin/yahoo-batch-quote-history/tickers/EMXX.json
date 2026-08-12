@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 667,
-      "natural": true,
-      "observed_at": "2026-07-14T00:11:54Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 507,
       "natural": true,
       "observed_at": "2026-07-15T00:10:40Z",
@@ -188,6 +175,20 @@
       "run_id": "31567478446",
       "schedule": "7 4 * * 0-5",
       "shard": "38/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1252,
+      "natural": true,
+      "observed_at": "2026-08-12T07:59:44Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31575211549",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
     }
   ],
   "current": {
@@ -203,17 +204,17 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: source timestamp regression for EMXX: quote_as_of 2026-06-24T16:07:21Z < 2026-08-10T13:46:03Z",
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 442,
+    "latency_ms": 1252,
     "natural": true,
-    "observed_at": "2026-08-12T05:45:23Z",
+    "observed_at": "2026-08-12T07:59:44Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31567478446",
-    "schedule": "7 4 * * 0-5",
-    "shard": "38/72"
+    "run_id": "31575211549",
+    "schedule": "7 6 * * 0-5",
+    "shard": "39/72"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -226,6 +227,15 @@
     "observed_at": "2026-08-12T05:45:23Z",
     "run_attempt": 1,
     "run_id": "31567478446"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T07:59:44Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-06-24T16:07:21Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31575211549"
   },
   "lkg": {
     "fetched_at": "2026-08-10T17:04:58Z",
@@ -261,5 +271,5 @@
     "source_as_of": "2026-06-24T16:07:21Z"
   },
   "ticker": "EMXX",
-  "updated_at": "2026-08-12T05:45:23Z"
+  "updated_at": "2026-08-12T07:59:44Z"
 }

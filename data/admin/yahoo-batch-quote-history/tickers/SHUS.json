@@ -136,6 +136,20 @@
       "run_id": "31562660637",
       "schedule": "7 2 * * 0-5",
       "shard": "37/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 593,
+      "natural": true,
+      "observed_at": "2026-08-12T07:59:44Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31575211549",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
     }
   ],
   "current": {
@@ -151,16 +165,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 503,
+    "latency_ms": 593,
     "natural": true,
-    "observed_at": "2026-08-12T04:17:21Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T07:59:44Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31562660637",
-    "schedule": "7 2 * * 0-5",
-    "shard": "37/72"
+    "run_id": "31575211549",
+    "schedule": "7 6 * * 0-5",
+    "shard": "39/72"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-12T07:59:44Z",
+    "provider_history_as_of": "2026-08-10",
+    "provider_quote_as_of": "2026-06-04T18:12:01Z",
+    "reason": "foreign_writer_conflict",
+    "run_attempt": 1,
+    "run_id": "31575211549"
   },
   "lkg": {
     "fetched_at": "2026-08-12T04:18:39Z",
@@ -196,5 +220,5 @@
     "source_as_of": "2026-06-04T18:12:01Z"
   },
   "ticker": "SHUS",
-  "updated_at": "2026-08-12T05:45:23Z"
+  "updated_at": "2026-08-12T07:59:44Z"
 }

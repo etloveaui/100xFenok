@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 564,
-      "natural": true,
-      "observed_at": "2026-07-28T00:14:11Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30316637722",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 498,
       "natural": true,
       "observed_at": "2026-07-30T00:35:13Z",
@@ -183,6 +170,20 @@
       "run_id": "31567478446",
       "schedule": "7 4 * * 0-5",
       "shard": "38/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 906,
+      "natural": true,
+      "observed_at": "2026-08-12T07:59:44Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31575211549",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
     }
   ],
   "current": {
@@ -203,14 +204,14 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 825,
+    "latency_ms": 906,
     "natural": true,
-    "observed_at": "2026-08-12T05:45:23Z",
+    "observed_at": "2026-08-12T07:59:44Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31567478446",
-    "schedule": "7 4 * * 0-5",
-    "shard": "38/72"
+    "run_id": "31575211549",
+    "schedule": "7 6 * * 0-5",
+    "shard": "39/72"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,9 +233,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-08-12T05:45:23Z",
+    "observed_at": "2026-08-12T07:59:44Z",
     "run_attempt": 1,
-    "run_id": "31567478446"
+    "run_id": "31575211549"
   },
   "lkg": {
     "fetched_at": "2026-08-11T00:06:56Z",
@@ -265,5 +266,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AAPL",
-  "updated_at": "2026-08-12T05:45:23Z"
+  "updated_at": "2026-08-12T07:59:44Z"
 }

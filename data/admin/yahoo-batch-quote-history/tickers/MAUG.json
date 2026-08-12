@@ -120,12 +120,26 @@
       "run_id": "31401948552",
       "schedule": "7 14 * * 0-5",
       "shard": "19/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: source timestamp regression for MAUG: quote_as_of 2026-07-07T19:38:13Z < 2026-08-10T13:46:05Z",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 595,
+      "natural": true,
+      "observed_at": "2026-08-12T07:59:44Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31575211549",
+      "schedule": "7 6 * * 0-5",
+      "shard": "39/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-10T15:11:01Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/MAUG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MAUG.json",
     "payload_sha256": "0398812c53c2f1fa446a1569fb25466a4858cd4b15582745d75c25c38cdee056",
     "quote_as_of": "2026-08-10T13:46:05Z",
     "source_as_of": "2026-08-10"
@@ -135,24 +149,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: source timestamp regression for MAUG: quote_as_of 2026-07-07T19:38:13Z < 2026-08-10T13:46:05Z",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 411,
+    "latency_ms": 595,
     "natural": true,
-    "observed_at": "2026-08-10T15:10:15Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T07:59:44Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31401948552",
-    "schedule": "7 14 * * 0-5",
-    "shard": "19/72"
+    "run_id": "31575211549",
+    "schedule": "7 6 * * 0-5",
+    "shard": "39/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: source timestamp regression for MAUG: quote_as_of 2026-07-07T19:38:13Z < 2026-08-10T13:46:05Z",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T07:59:44Z",
+    "run_attempt": 1,
+    "run_id": "31575211549"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T07:10:14Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T15:11:01Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MAUG.json",
-    "payload_sha256": "b42c137b827eec2bb87e5f8be186ad9d50a8f73419e36544224b18d74385b0ea",
-    "quote_as_of": "2026-07-07T19:38:13Z",
-    "source_as_of": "2026-07-07T19:38:13Z"
+    "payload_sha256": "0398812c53c2f1fa446a1569fb25466a4858cd4b15582745d75c25c38cdee056",
+    "quote_as_of": "2026-08-10T13:46:05Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -166,8 +193,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 23,
@@ -180,5 +207,5 @@
     "source_as_of": "2026-07-07T19:38:13Z"
   },
   "ticker": "MAUG",
-  "updated_at": "2026-08-10T15:10:15Z"
+  "updated_at": "2026-08-12T07:59:44Z"
 }
