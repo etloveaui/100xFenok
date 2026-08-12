@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-08-12T01:17:01.439Z",
+  "generated_at": "2026-08-12T01:41:29.736Z",
   "status": "degraded",
   "status_label": "저하",
   "status_message": "17 required lane(s) are not ready; healthy lanes may still publish.",
@@ -20,394 +20,25 @@
     "blockers": []
   },
   "runtime": {
-    "producer_context": {
-      "built_at": "2026-08-11T12:01:02.501Z",
-      "duration_ms": 408,
-      "run_id": "31487989433",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "workflow": "Update Manifest",
-      "sha": "936bd15e404771e4860adaa64084700b863617f1",
-      "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-11T10:30Z",
-      "origin": {
-        "source_workflow": "fenok-edge-krx-daily.yml",
-        "source_run_id": "31486199426",
-        "source_run_attempt": 1,
-        "original_event": "schedule",
-        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-11T10:30Z"
-      }
-    },
-    "last_rebuild_context": {
-      "built_at": "2026-08-12T01:17:01.439Z",
-      "run_id": "31551463757",
-      "workflow": "Update Manifest",
-      "event_name": "workflow_dispatch",
-      "sha": "5130395bd3da003ed9d6247711de735035e8b8d3"
-    },
-    "cadence": {
-      "crons_utc": [
-        "30 2 * * *",
-        "30 9 * * *"
-      ],
-      "slot_grace_minutes": 360,
-      "hard_max_age_hours": 26,
-      "slot_retention_days": 14,
-      "v2_activated_at": "2026-07-10T00:37:00.289Z",
-      "calendar_version": "market-calendar/v1-2026"
-    },
-    "slots": {
-      "satisfied_slot_keys": [
-        "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-30T00:30Z",
-        "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-31T00:30Z",
-        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-01T00:30Z",
-        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-04T00:30Z",
-        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-05T00:30Z",
-        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-07-29T10:30Z",
-        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-07-31T10:30Z",
-        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-03T10:30Z",
-        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-04T10:30Z",
-        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-05T10:30Z",
-        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-10T10:30Z",
-        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-11T10:30Z",
-        "update-manifest.yml:30 2 * * *@2026-07-29T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-07-30T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-01T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-02T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-03T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-04T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-05T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-09T02:30Z",
-        "update-manifest.yml:30 9 * * *@2026-07-29T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-07-30T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-07-31T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-08-01T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-08-02T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-08-03T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-08-04T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-08-05T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-08-08T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-08-10T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-08-11T09:30Z"
-      ],
-      "last_satisfied_slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-11T10:30Z",
-      "missed_slot_keys": [
-        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-06T00:30Z",
-        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-07T00:30Z",
-        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-08T00:30Z",
-        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-11T00:30Z",
-        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-07-30T10:30Z",
-        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-06T10:30Z",
-        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-07T10:30Z",
-        "update-manifest.yml:30 2 * * *@2026-07-31T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-06T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-07T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-08T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-10T02:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-11T02:30Z",
-        "update-manifest.yml:30 9 * * *@2026-08-06T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-08-07T09:30Z",
-        "update-manifest.yml:30 9 * * *@2026-08-09T09:30Z"
-      ],
-      "cron_deferrals": []
-    },
-    "successful_snapshot_history": [
-      {
-        "built_at": "2026-07-29T04:25:23.700Z",
-        "slot_key": "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-29T00:30Z",
-        "run_id": "30421655300",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 319
-      },
-      {
-        "built_at": "2026-07-29T05:49:48.107Z",
-        "slot_key": "update-manifest.yml:30 2 * * *@2026-07-29T02:30Z",
-        "run_id": "30425462797",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 380
-      },
-      {
-        "built_at": "2026-07-29T11:52:55.340Z",
-        "slot_key": "update-manifest.yml:30 9 * * *@2026-07-29T09:30Z",
-        "run_id": "30448261657",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 382
-      },
-      {
-        "built_at": "2026-07-29T12:55:30.250Z",
-        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-07-29T10:30Z",
-        "run_id": "30452535069",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 374
-      },
-      {
-        "built_at": "2026-07-30T04:17:05.995Z",
-        "slot_key": "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-30T00:30Z",
-        "run_id": "30512724233",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 395
-      },
-      {
-        "built_at": "2026-07-30T05:34:19.178Z",
-        "slot_key": "update-manifest.yml:30 2 * * *@2026-07-30T02:30Z",
-        "run_id": "30516373581",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 308
-      },
-      {
-        "built_at": "2026-07-30T11:44:01.796Z",
-        "slot_key": "update-manifest.yml:30 9 * * *@2026-07-30T09:30Z",
-        "run_id": "30538522700",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 380
-      },
-      {
-        "built_at": "2026-07-31T04:47:36.065Z",
-        "slot_key": "fenok-edge-daily.yml:30 0 * * 2-6@2026-07-31T00:30Z",
-        "run_id": "30603766147",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 389
-      },
-      {
-        "built_at": "2026-07-31T12:11:57.277Z",
-        "slot_key": "update-manifest.yml:30 9 * * *@2026-07-31T09:30Z",
-        "run_id": "30627634415",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 405
-      },
-      {
-        "built_at": "2026-07-31T12:45:59.955Z",
-        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-07-31T10:30Z",
-        "run_id": "30630710177",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 384
-      },
-      {
-        "built_at": "2026-08-01T04:46:21.031Z",
-        "slot_key": "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-01T00:30Z",
-        "run_id": "30684025810",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 360
-      },
-      {
-        "built_at": "2026-08-01T05:56:53.949Z",
-        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-01T02:30Z",
-        "run_id": "30686214796",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 398
-      },
-      {
-        "built_at": "2026-08-01T11:44:25.697Z",
-        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-01T09:30Z",
-        "run_id": "30696600969",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 388
-      },
-      {
-        "built_at": "2026-08-02T05:50:49.872Z",
-        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-02T02:30Z",
-        "run_id": "30734490174",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 318
-      },
-      {
-        "built_at": "2026-08-02T11:05:39.785Z",
-        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-02T09:30Z",
-        "run_id": "30744683166",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 410
-      },
-      {
-        "built_at": "2026-08-03T06:16:57.878Z",
-        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-03T02:30Z",
-        "run_id": "30788491461",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 425
-      },
-      {
-        "built_at": "2026-08-03T13:59:20.452Z",
-        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-03T09:30Z",
-        "run_id": "30814511375",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 388
-      },
-      {
-        "built_at": "2026-08-03T14:26:45.256Z",
-        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-03T10:30Z",
-        "run_id": "30821856135",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 407
-      },
-      {
-        "built_at": "2026-08-04T04:27:05.898Z",
-        "slot_key": "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-04T00:30Z",
-        "run_id": "30877185812",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 398
-      },
-      {
-        "built_at": "2026-08-04T05:38:01.211Z",
-        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-04T02:30Z",
-        "run_id": "30880749835",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 403
-      },
-      {
-        "built_at": "2026-08-04T11:46:53.298Z",
-        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-04T09:30Z",
-        "run_id": "30905491442",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 403
-      },
-      {
-        "built_at": "2026-08-04T12:50:20.854Z",
-        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-04T10:30Z",
-        "run_id": "30910088272",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 389
-      },
-      {
-        "built_at": "2026-08-05T04:12:58.819Z",
-        "slot_key": "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-05T00:30Z",
-        "run_id": "30973976385",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 399
-      },
-      {
-        "built_at": "2026-08-05T05:37:49.864Z",
-        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-05T02:30Z",
-        "run_id": "30978132828",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 403
-      },
-      {
-        "built_at": "2026-08-05T11:44:39.515Z",
-        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-05T09:30Z",
-        "run_id": "31001963181",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 396
-      },
-      {
-        "built_at": "2026-08-05T12:59:46.890Z",
-        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-05T10:30Z",
-        "run_id": "31007314904",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 398
-      },
-      {
-        "built_at": "2026-08-08T10:24:35.853Z",
-        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-08T09:30Z",
-        "run_id": "31251795712",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 310
-      },
-      {
-        "built_at": "2026-08-09T04:07:05.166Z",
-        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-09T02:30Z",
-        "run_id": "31293467652",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 410
-      },
-      {
-        "built_at": "2026-08-10T11:00:33.096Z",
-        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-10T09:30Z",
-        "run_id": "31380122961",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 419
-      },
-      {
-        "built_at": "2026-08-10T11:50:32.238Z",
-        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-10T10:30Z",
-        "run_id": "31384465842",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 403
-      },
-      {
-        "built_at": "2026-08-11T10:49:12.443Z",
-        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-11T09:30Z",
-        "run_id": "31481849444",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 413
-      },
-      {
-        "built_at": "2026-08-11T12:01:02.501Z",
-        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-11T10:30Z",
-        "run_id": "31487989433",
-        "run_attempt": 1,
-        "workflow": "Update Manifest",
-        "status": "ready",
-        "duration_ms": 408
-      }
-    ],
-    "authoritative_context": {
-      "authoritative": false,
-      "reason": "non_authoritative_context"
-    },
+    "projection": "kpi_runtime_projection.v2",
+    "built_at": "2026-08-11T12:01:02.501Z",
+    "evaluated_at": "2026-08-12T01:41:29.736Z",
+    "verdict": "degraded",
+    "slot_status": "degraded",
+    "status_message": "4 retained missed slot(s) remain lane-local degradation for incremental/owner-gated workflow(s); deployment_blocking:false. 12 other retained miss(es) recovered. Recovery evidence: dispatch_snapshot:1, scheduled_slot:11.",
+    "publication_halted": false,
+    "deployment_blocking": false,
+    "fresh": true,
+    "missed_slot_count": 16,
+    "recovered_missed_slot_count": 12,
+    "unrecovered_missed_slot_count": 4,
+    "blocking_unrecovered_missed_slot_count": 0,
+    "lane_local_unrecovered_missed_slot_count": 4,
+    "hard_age_ok": true,
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-08-12T01:16:59.350Z",
+      "evaluated_at": "2026-08-12T01:41:27.581Z",
       "status": "warning",
       "deployment_blocking": false,
       "counts": {
@@ -417,601 +48,15 @@
         "suspected_skips": 14,
         "attempt_gaps": 2
       },
-      "pre_activation_members": [],
-      "rows": [
-        {
-          "lane_id": "fred_macro",
-          "member_id": "fred_macro",
-          "workflow": ".github/workflows/fetch-fred-macro.yml",
-          "schedule_id": "daily_0800_utc",
-          "cron": "0 8 * * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T08:00:00.000Z",
-          "observed_at": "2026-08-11T08:48:51.827Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "fred_banking",
-          "member_id": "fred_banking",
-          "workflow": ".github/workflows/fetch-fred-banking.yml",
-          "schedule_id": "daily_0700_utc",
-          "cron": "0 7 * * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T07:00:00.000Z",
-          "observed_at": "2026-08-11T08:06:24.640Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "fred_yardeni",
-          "member_id": "fred_yardeni",
-          "workflow": ".github/workflows/fetch-fred-yardeni.yml",
-          "schedule_id": "weekly_1000_sat_utc",
-          "cron": "0 10 * * 6",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-08T10:00:00.000Z",
-          "observed_at": "2026-08-10T16:28:54.960Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "fdic_tier1",
-          "member_id": "fdic_tier1",
-          "workflow": ".github/workflows/fetch-fdic.yml",
-          "schedule_id": "monthly_first_monday_federal",
-          "cron": "0 6 1-7 * 1",
-          "calendar_id": "us_federal_business",
-          "expected_at": "2026-08-04T06:00:00.000Z",
-          "observed_at": "2026-08-10T08:44:53.496Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "treasury_tga",
-          "member_id": "treasury_tga",
-          "workflow": ".github/workflows/fetch-treasury-tga.yml",
-          "schedule_id": "six_hourly",
-          "cron": "0 */6 * * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T18:00:00.000Z",
-          "observed_at": "2026-08-11T18:48:30.945Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "defillama_stablecoins",
-          "member_id": "defillama_stablecoins",
-          "workflow": ".github/workflows/fetch-defillama.yml",
-          "schedule_id": "hourly_at_12",
-          "cron": "12 * * * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T19:12:00.000Z",
-          "observed_at": "2026-08-12T00:25:44.134Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "yahoo_etf_fallback",
-          "member_id": "yahoo_etf_fallback",
-          "workflow": ".github/workflows/fetch-stockanalysis.yml",
-          "schedule_id": "weekday_2250_utc",
-          "cron": "50 22 * * 1-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T22:50:00.000Z",
-          "observed_at": "2026-08-11T22:10:57Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "yahoo_etf_fallback",
-          "member_id": "yahoo_etf_fallback",
-          "workflow": ".github/workflows/fetch-stockanalysis.yml",
-          "schedule_id": "weekday_2350_utc",
-          "cron": "50 23 * * 1-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T23:50:00.000Z",
-          "observed_at": "2026-08-11T22:10:57Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "yahoo_etf_fallback",
-          "member_id": "yahoo_etf_fallback",
-          "workflow": ".github/workflows/fetch-stockanalysis.yml",
-          "schedule_id": "weekly_2320_sun_utc",
-          "cron": "20 23 * * 0",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-09T23:20:00.000Z",
-          "observed_at": "2026-08-11T22:10:57Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "stockanalysis_etf_universe",
-          "member_id": "stockanalysis_etf_universe",
-          "workflow": ".github/workflows/fetch-stockanalysis.yml",
-          "schedule_id": "weekly_2320_sun_utc",
-          "cron": "20 23 * * 0",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-09T23:20:00.000Z",
-          "observed_at": "2026-07-20T01:06:37Z",
-          "state": "attempt_gap",
-          "producer_status": "stale",
-          "producer_reason": "stale"
-        },
-        {
-          "lane_id": "stockanalysis_stock_financial",
-          "member_id": "stockanalysis_stock_financial",
-          "workflow": ".github/workflows/fetch-stockanalysis.yml",
-          "schedule_id": "daily_2120_utc",
-          "cron": "20 21 * * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T21:20:00.000Z",
-          "observed_at": "2026-08-11T22:10:57Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "stockanalysis_surfaces",
-          "member_id": "stockanalysis_surfaces",
-          "workflow": ".github/workflows/fetch-stockanalysis.yml",
-          "schedule_id": "weekday_2350_utc",
-          "cron": "50 23 * * 1-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T23:50:00.000Z",
-          "observed_at": "2026-08-11T14:39:29Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "stockanalysis_surfaces",
-          "member_id": "stockanalysis_surfaces",
-          "workflow": ".github/workflows/fetch-stockanalysis.yml",
-          "schedule_id": "weekly_2320_sun_utc",
-          "cron": "20 23 * * 0",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-09T23:20:00.000Z",
-          "observed_at": "2026-08-11T14:39:29Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "yahoo_ticker_macro",
-          "member_id": "yahoo_ticker_macro",
-          "workflow": ".github/workflows/fetch-yahoo-ticker.yml",
-          "schedule_id": "hourly_at_05",
-          "cron": "5 * * * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T19:05:00.000Z",
-          "observed_at": "2026-08-12T00:25:03.213Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "sentiment",
-          "member_id": "sentiment",
-          "workflow": ".github/workflows/fetch-sentiment.yml",
-          "schedule_id": "weekday_2200_us",
-          "cron": "0 22 * * 1-5",
-          "calendar_id": "us_trading",
-          "expected_at": "2026-08-10T22:00:00.000Z",
-          "observed_at": "2026-08-11T22:56:06.076Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "nasdaq_giw_sox",
-          "member_id": "nasdaq_giw_sox",
-          "workflow": ".github/workflows/fetch-nasdaq-giw-sox.yml",
-          "schedule_id": "weekday_2350_us",
-          "cron": "50 23 * * 1-5",
-          "calendar_id": "us_trading",
-          "expected_at": "2026-08-10T23:50:00.000Z",
-          "observed_at": "2026-08-12T01:04:55.071Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "us_indices_daily",
-          "member_id": "us_indices_daily",
-          "workflow": ".github/workflows/fetch-us-indices-daily.yml",
-          "schedule_id": "weekday_2200_us",
-          "cron": "0 22 * * 1-5",
-          "calendar_id": "us_trading",
-          "expected_at": "2026-08-10T22:00:00.000Z",
-          "observed_at": "2026-08-11T22:57:16.371Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "oecd_cli",
-          "member_id": "oecd_cli",
-          "workflow": ".github/workflows/fetch-oecd-cli.yml",
-          "schedule_id": "monthly_0800_utc",
-          "cron": "0 8 1 * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-01T08:00:00.000Z",
-          "observed_at": "2026-08-03T05:49:00.170Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "krx",
-          "member_id": "krx",
-          "workflow": ".github/workflows/fenok-edge-krx-daily.yml",
-          "schedule_id": "weekday_1030_utc",
-          "cron": "30 10 * * 1-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T10:30:00.000Z",
-          "observed_at": "2026-08-11T11:44:36.000Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "slickcharts",
-          "member_id": "daily",
-          "workflow": ".github/workflows/slickcharts-daily.yml",
-          "schedule_id": "daily_0600_utc",
-          "cron": "0 6 * * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T06:00:00.000Z",
-          "observed_at": "2026-08-11T07:14:44.121Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "slickcharts",
-          "member_id": "weekly",
-          "workflow": ".github/workflows/slickcharts-weekly.yml",
-          "schedule_id": "weekly_0700_sun_utc",
-          "cron": "0 7 * * 0",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-09T07:00:00.000Z",
-          "observed_at": "2026-08-10T15:34:44.334Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "slickcharts",
-          "member_id": "monthly",
-          "workflow": ".github/workflows/slickcharts-monthly.yml",
-          "schedule_id": "monthly_0800_utc",
-          "cron": "0 8 1 * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-01T08:00:00.000Z",
-          "observed_at": "2026-08-10T15:35:43.707Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "slickcharts",
-          "member_id": "history",
-          "workflow": ".github/workflows/slickcharts-history.yml",
-          "schedule_id": "monthly_0900_utc",
-          "cron": "0 9 1 * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-01T09:00:00.000Z",
-          "observed_at": "2026-08-11T22:25:41.725Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "slickcharts",
-          "member_id": "symbols",
-          "workflow": ".github/workflows/slickcharts-symbols.yml",
-          "schedule_id": "weekly_0730_sun_utc",
-          "cron": "30 7 * * 0",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-09T07:30:00.000Z",
-          "observed_at": "2026-08-09T08:16:26.983Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "edgar_filings",
-          "member_id": "edgar_filings",
-          "workflow": ".github/workflows/fetch-edgar-filings.yml",
-          "schedule_id": "weekly_0040_mon_federal",
-          "cron": "40 0 * * 1",
-          "calendar_id": "us_federal_business",
-          "expected_at": "2026-08-10T00:40:00.000Z",
-          "observed_at": "2026-08-03T07:22:48.849Z",
-          "state": "suspected_skip",
-          "producer_status": "stale",
-          "producer_reason": "stale"
-        },
-        {
-          "lane_id": "damodaran",
-          "member_id": "damodaran",
-          "workflow": ".github/workflows/fetch-damodaran-shadow.yml",
-          "schedule_id": "weekly_1117_sat_utc",
-          "cron": "17 11 * * 6",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-08T11:17:00.000Z",
-          "observed_at": "2026-08-10T17:38:06.831Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "finra_short_volume",
-          "member_id": "finra_short_volume",
-          "workflow": ".github/workflows/fenok-edge-daily.yml",
-          "schedule_id": "weekday_0030_us",
-          "cron": "30 0 * * 2-6",
-          "calendar_id": "us_trading",
-          "expected_at": "2026-08-11T00:30:00.000Z",
-          "observed_at": "2026-08-11T02:35:37.206Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "finra_ats_weekly",
-          "member_id": "finra_ats_weekly",
-          "workflow": ".github/workflows/fetch-finra-ats-weekly.yml",
-          "schedule_id": "weekly_1117_wed_utc",
-          "cron": "17 11 * * 3",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-05T11:17:00.000Z",
-          "observed_at": "2026-08-05T13:03:45.116Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "occ_options_volume",
-          "member_id": "occ_options_volume",
-          "workflow": ".github/workflows/fenok-edge-daily.yml",
-          "schedule_id": "weekday_0030_us",
-          "cron": "30 0 * * 2-6",
-          "calendar_id": "us_trading",
-          "expected_at": "2026-08-11T00:30:00.000Z",
-          "observed_at": null,
-          "state": "attempt_gap",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_private_options",
-          "member_id": "yahoo_private_options",
-          "workflow": ".github/workflows/fetch-fenok-private-options.yml",
-          "schedule_id": "weekday_0110_us",
-          "cron": "10 1 * * 2-6",
-          "calendar_id": "us_trading",
-          "expected_at": "2026-08-11T01:10:00.000Z",
-          "observed_at": "2026-08-11T03:10:54.991Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "apewisdom_attention",
-          "member_id": "apewisdom_attention",
-          "workflow": ".github/workflows/fetch-fenok-apewisdom.yml",
-          "schedule_id": "daily_1317_utc",
-          "cron": "17 13 * * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T13:17:00.000Z",
-          "observed_at": "2026-08-11T14:31:41.417Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "gdelt_news_tone",
-          "member_id": "gdelt_news_tone",
-          "workflow": ".github/workflows/fetch-fenok-news-tone.yml",
-          "schedule_id": "daily_1443_utc",
-          "cron": "43 14 * * *",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T14:43:00.000Z",
-          "observed_at": "2026-08-11T15:36:20.463Z",
-          "state": "observed",
-          "producer_status": "drift",
-          "producer_reason": "schema_drift"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "weekday_2320_utc",
-          "cron": "20 23 * * 1-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T23:20:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_0000_utc",
-          "cron": "7 0 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T00:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_0200_utc",
-          "cron": "7 2 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T02:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_0400_utc",
-          "cron": "7 4 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T04:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_0600_utc",
-          "cron": "7 6 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T06:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_0800_utc",
-          "cron": "7 8 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T08:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_1000_utc",
-          "cron": "7 10 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T10:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_1200_utc",
-          "cron": "7 12 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T12:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_1400_utc",
-          "cron": "7 14 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T14:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_1600_utc",
-          "cron": "7 16 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T16:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_1800_utc",
-          "cron": "7 18 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T18:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_2000_utc",
-          "cron": "7 20 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-11T20:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_2200_utc",
-          "cron": "7 22 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-10T22:07:00.000Z",
-          "observed_at": null,
-          "state": "suspected_skip",
-          "producer_status": "unobserved",
-          "producer_reason": "workflow_unobserved"
-        }
+      "pre_activation_lane_ids": [],
+      "suspected_skip_lane_ids": [
+        "edgar_filings",
+        "yahoo_batch_quote_history"
+      ],
+      "attempt_gap_lane_ids": [
+        "occ_options_volume",
+        "stockanalysis_etf_universe"
       ]
-    },
-    "publication_gate": {
-      "status": "open",
-      "publication_halted": false,
-      "deployment_blocking": false,
-      "blocking_unrecovered_missed_slot_keys": [],
-      "status_message": "Publication open: no unrecovered full-snapshot missed slots. Recovery evidence includes dispatch_snapshot (1)."
     }
   },
   "source_sla": [
@@ -1085,7 +130,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:28Z",
+                "collected_at": "2026-08-12T00:45:23Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1093,7 +138,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:29Z",
+                "collected_at": "2026-08-12T00:45:24Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1101,7 +146,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:33Z",
+                "collected_at": "2026-08-12T00:45:30Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1109,7 +154,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:25Z",
+                "collected_at": "2026-08-12T00:45:17Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1117,7 +162,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:26Z",
+                "collected_at": "2026-08-12T00:45:18Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1125,7 +170,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:24Z",
+                "collected_at": "2026-08-12T00:45:16Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1133,7 +178,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:35Z",
+                "collected_at": "2026-08-12T00:45:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1141,7 +186,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:27Z",
+                "collected_at": "2026-08-12T00:45:21Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1149,7 +194,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:28Z",
+                "collected_at": "2026-08-12T00:45:21Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1157,7 +202,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:26Z",
+                "collected_at": "2026-08-12T00:45:19Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1165,7 +210,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:27Z",
+                "collected_at": "2026-08-12T00:45:20Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1173,7 +218,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:28Z",
+                "collected_at": "2026-08-12T00:45:22Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1181,7 +226,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:26Z",
+                "collected_at": "2026-08-12T00:45:19Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1189,7 +234,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:30Z",
+                "collected_at": "2026-08-12T00:45:26Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1197,7 +242,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:31Z",
+                "collected_at": "2026-08-12T00:45:27Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1205,7 +250,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:29Z",
+                "collected_at": "2026-08-12T00:45:24Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1213,7 +258,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:32Z",
+                "collected_at": "2026-08-12T00:45:29Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1221,7 +266,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:32Z",
+                "collected_at": "2026-08-12T00:45:28Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1229,7 +274,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:30Z",
+                "collected_at": "2026-08-12T00:45:25Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1237,7 +282,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:32Z",
+                "collected_at": "2026-08-12T00:45:30Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1245,7 +290,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:31Z",
+                "collected_at": "2026-08-12T00:45:27Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1253,7 +298,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:13Z",
+                "collected_at": "2026-08-12T00:45:04Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1261,7 +306,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:35Z",
+                "collected_at": "2026-08-12T00:45:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
@@ -1276,8 +321,8 @@
               "required_count": 23,
               "collection_fresh_count": 23,
               "stale_count": 0,
-              "collected_at_floor": "2026-08-11T14:29:13Z",
-              "collection_age_hours": 10.797,
+              "collected_at_floor": "2026-08-12T00:45:04Z",
+              "collection_age_hours": 0.94,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -1340,7 +385,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:28Z",
+                "collected_at": "2026-08-12T00:45:23Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1348,7 +393,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:29Z",
+                "collected_at": "2026-08-12T00:45:24Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1356,7 +401,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:33Z",
+                "collected_at": "2026-08-12T00:45:30Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1364,7 +409,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:27Z",
+                "collected_at": "2026-08-12T00:45:21Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1372,7 +417,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:28Z",
+                "collected_at": "2026-08-12T00:45:21Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1380,7 +425,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:26Z",
+                "collected_at": "2026-08-12T00:45:19Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1388,7 +433,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:27Z",
+                "collected_at": "2026-08-12T00:45:20Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1396,7 +441,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:28Z",
+                "collected_at": "2026-08-12T00:45:22Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1404,7 +449,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:30Z",
+                "collected_at": "2026-08-12T00:45:26Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1412,7 +457,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:31Z",
+                "collected_at": "2026-08-12T00:45:27Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1420,7 +465,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:29Z",
+                "collected_at": "2026-08-12T00:45:24Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1428,7 +473,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:32Z",
+                "collected_at": "2026-08-12T00:45:29Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1436,7 +481,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:32Z",
+                "collected_at": "2026-08-12T00:45:28Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1444,7 +489,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:30Z",
+                "collected_at": "2026-08-12T00:45:25Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1452,7 +497,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:32Z",
+                "collected_at": "2026-08-12T00:45:30Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1460,7 +505,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:31Z",
+                "collected_at": "2026-08-12T00:45:27Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
@@ -1475,8 +520,8 @@
               "required_count": 16,
               "collection_fresh_count": 16,
               "stale_count": 0,
-              "collected_at_floor": "2026-08-11T14:29:26Z",
-              "collection_age_hours": 10.793,
+              "collected_at_floor": "2026-08-12T00:45:19Z",
+              "collection_age_hours": 0.936,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -1501,7 +546,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:34Z",
+                "collected_at": "2026-08-12T00:45:32Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1509,7 +554,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:35Z",
+                "collected_at": "2026-08-12T00:45:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1517,7 +562,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:35Z",
+                "collected_at": "2026-08-12T00:45:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
@@ -1532,8 +577,8 @@
               "required_count": 3,
               "collection_fresh_count": 3,
               "stale_count": 0,
-              "collected_at_floor": "2026-08-11T14:29:34Z",
-              "collection_age_hours": 10.791,
+              "collected_at_floor": "2026-08-12T00:45:32Z",
+              "collection_age_hours": 0.933,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -1571,7 +616,7 @@
               {
                 "id": "etf_detail:AAPR",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-06-29"
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:AAPW",
@@ -1619,6 +664,11 @@
                 "source_as_of": "2026-06-29"
               },
               {
+                "id": "etf_detail:AGG",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:AIOO",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-06-29"
@@ -1637,6 +687,11 @@
                 "id": "etf_detail:AKAF",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-06-29"
+              },
+              {
+                "id": "etf_detail:AKAL",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:AMDW",
@@ -1672,6 +727,11 @@
                 "id": "etf_detail:AMZW",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-06-29"
+              },
+              {
+                "id": "etf_detail:ANGU",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:AOA",
@@ -1739,6 +799,16 @@
                 "source_as_of": "2026-06-29"
               },
               {
+                "id": "etf_detail:ARCP",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:ARIA",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:ARKB",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-06-29"
@@ -1764,6 +834,11 @@
                 "source_as_of": "2026-07-08"
               },
               {
+                "id": "etf_detail:ARMS",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:ARMW",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-07-09"
@@ -1787,6 +862,11 @@
                 "id": "etf_detail:ATMP",
                 "stamp_class": "date_bearing",
                 "source_as_of": null
+              },
+              {
+                "id": "etf_detail:AUGC",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:AUGU",
@@ -2019,6 +1099,11 @@
                 "source_as_of": "2026-06-29"
               },
               {
+                "id": "etf_detail:BND",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:BNDW",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-06-29"
@@ -2134,6 +1219,11 @@
                 "source_as_of": "2026-07-09"
               },
               {
+                "id": "etf_detail:CAUG",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:CBIL",
                 "stamp_class": "date_bearing",
                 "source_as_of": null
@@ -2217,6 +1307,11 @@
                 "id": "etf_detail:CEW",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-07-31"
+              },
+              {
+                "id": "etf_detail:CHDG",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:CHNL",
@@ -2434,6 +1529,11 @@
                 "source_as_of": null
               },
               {
+                "id": "etf_detail:CTAU",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:CTJL",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-07-09"
@@ -2457,6 +1557,16 @@
                 "id": "etf_detail:CXRN",
                 "stamp_class": "date_bearing",
                 "source_as_of": null
+              },
+              {
+                "id": "etf_detail:DDFG",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:DDM",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:DDSQ",
@@ -2522,6 +1632,11 @@
                 "id": "etf_detail:DHSB",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-06-29"
+              },
+              {
+                "id": "etf_detail:DIA",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:DISV",
@@ -2961,7 +2076,7 @@
               {
                 "id": "etf_detail:GLD",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-06-29"
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:GLDI",
@@ -3244,6 +2359,11 @@
                 "source_as_of": "2026-08-11"
               },
               {
+                "id": "etf_detail:IEMG",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:IEUR",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-08-11"
@@ -3272,6 +2392,11 @@
                 "id": "etf_detail:IJAN",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-06-29"
+              },
+              {
+                "id": "etf_detail:IJH",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:IJUL",
@@ -3354,6 +2479,11 @@
                 "source_as_of": "2026-08-11"
               },
               {
+                "id": "etf_detail:IVV",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:IVVW",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-06-29"
@@ -3367,6 +2497,11 @@
                 "id": "etf_detail:IWDL",
                 "stamp_class": "date_bearing",
                 "source_as_of": null
+              },
+              {
+                "id": "etf_detail:IWF",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:IWFL",
@@ -3719,6 +2854,21 @@
                 "source_as_of": "2026-07-09"
               },
               {
+                "id": "etf_detail:MAGC",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:MAGG",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:MAGS",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:MAGX",
                 "stamp_class": "date_bearing",
                 "source_as_of": null
@@ -3727,6 +2877,36 @@
                 "id": "etf_detail:MAGY",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-06-30"
+              },
+              {
+                "id": "etf_detail:MAKX",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:MAMB",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:MANI",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:MAPP",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:MARM",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:MARO",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:MARU",
@@ -4284,6 +3464,11 @@
                 "source_as_of": "2026-07-09"
               },
               {
+                "id": "etf_detail:QQQ",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:QSOL",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-07-09"
@@ -4504,6 +3689,11 @@
                 "source_as_of": "2026-08-11"
               },
               {
+                "id": "etf_detail:SMH",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:SMHB",
                 "stamp_class": "date_bearing",
                 "source_as_of": null
@@ -4547,6 +3737,11 @@
                 "id": "etf_detail:SOLC",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-07-09"
+              },
+              {
+                "id": "etf_detail:SOXX",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:SPAX",
@@ -4624,9 +3819,24 @@
                 "source_as_of": "2026-06-30"
               },
               {
+                "id": "etf_detail:SPY",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:SPYM",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:SPYU",
                 "stamp_class": "date_bearing",
                 "source_as_of": null
+              },
+              {
+                "id": "etf_detail:SSO",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
               },
               {
                 "id": "etf_detail:STLU",
@@ -5139,6 +4349,11 @@
                 "source_as_of": "2026-08-11"
               },
               {
+                "id": "etf_detail:VGT",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
                 "id": "etf_detail:VGUS",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-08-11"
@@ -5180,6 +4395,11 @@
               },
               {
                 "id": "etf_detail:VONV",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:VOO",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-08-11"
               },
@@ -5235,6 +4455,11 @@
               },
               {
                 "id": "etf_detail:VTWV",
+                "stamp_class": "date_bearing",
+                "source_as_of": "2026-08-11"
+              },
+              {
+                "id": "etf_detail:VUG",
                 "stamp_class": "date_bearing",
                 "source_as_of": "2026-08-11"
               },
@@ -5643,7 +4868,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:25Z",
+                "collected_at": "2026-08-12T00:45:17Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -5651,7 +4876,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:26Z",
+                "collected_at": "2026-08-12T00:45:18Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -5659,7 +4884,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:24Z",
+                "collected_at": "2026-08-12T00:45:16Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -5667,7 +4892,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:26Z",
+                "collected_at": "2026-08-12T00:45:19Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -5675,23 +4900,23 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-11T14:29:13Z",
+                "collected_at": "2026-08-12T00:45:04Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
             "date_bearing": {
-              "required_count": 818,
-              "stamped_count": 612,
+              "required_count": 854,
+              "stamped_count": 648,
               "missing_count": 206,
-              "coverage_ratio": 0.748166,
+              "coverage_ratio": 0.758782,
               "source_floor_as_of": "2026-06-29"
             },
             "dateless_by_provider": {
               "required_count": 5,
               "collection_fresh_count": 5,
               "stale_count": 0,
-              "collected_at_floor": "2026-08-11T14:29:13Z",
-              "collection_age_hours": 10.797,
+              "collected_at_floor": "2026-08-12T00:45:04Z",
+              "collection_age_hours": 0.94,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -5754,7 +4979,7 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-08-12T01:16:31.667Z",
+      "source_date": "2026-08-12T01:40:54.552Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
@@ -5770,7 +4995,7 @@
       "calendar": "us_market",
       "max_staleness": 30,
       "required": true,
-      "age": 18.04,
+      "age": 18.45,
       "status": "ready"
     },
     {
@@ -5781,7 +5006,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 33.71,
+      "age": 34.12,
       "status": "ready"
     },
     {
@@ -5792,7 +5017,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 65.01,
+      "age": 65.42,
       "status": "ready"
     },
     {
@@ -5803,7 +5028,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 33.7,
+      "age": 34.11,
       "status": "ready"
     },
     {
@@ -5814,14 +5039,14 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 4.47,
+      "age": 4.88,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-08-12T01:16:19.507Z",
+      "generated_at": "2026-08-12T01:40:41.979Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -5833,25 +5058,25 @@
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-08-12T01:16:51.656Z",
+      "generated_at": "2026-08-12T01:41:20.266Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-08-12T01:16:31.598Z",
+      "generated_at": "2026-08-12T01:40:54.485Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-08-12T01:16:31.667Z",
+      "generated_at": "2026-08-12T01:40:54.552Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-08-12T01:16:10.132Z",
+      "generated_at": "2026-08-12T01:40:32.223Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -5863,7 +5088,7 @@
     },
     {
       "id": "stockanalysis_recovery_state",
-      "generated_at": "2026-08-11T22:10:34Z",
+      "generated_at": "2026-08-12T00:45:01Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -5875,7 +5100,7 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-08-12T01:16:59.350Z",
+      "generated_at": "2026-08-12T01:41:27.581Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -5911,7 +5136,7 @@
       "status_message": "S0 active stocks daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC; daily ready: all active stock source lanes fresh; gated ready: gate blockers empty; blockers: 1 blockers; occ_full_us_source_ready: 691 / 691 · 2026-08-06. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-12T01:16:19.507Z",
+      "as_of": "2026-08-12T01:40:41.979Z",
       "counts": {
         "active_total": 1181,
         "by_market": [
@@ -6069,7 +5294,7 @@
       "status_message": "S1 candidate promotion gate is not ready: PUBLIC+DAILY+GATED with blocked ledger: NORMALIZED; gate blockers: 2 blockers. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-12T01:15:08.351Z",
+      "as_of": "2026-08-12T01:39:32.130Z",
       "counts": {
         "denominator": 1188,
         "current_public_stock": 1181,
@@ -6082,8 +5307,8 @@
       "details": {
         "stockanalysis_recovery": {
           "state_present": true,
-          "generated_at": "2026-08-11T22:10:34Z",
-          "current_attempt_ref": "31541105495",
+          "generated_at": "2026-08-12T00:45:01Z",
+          "current_attempt_ref": "31551158168",
           "current_attempt_number": 1,
           "current_failed_count": 0,
           "tracked_kinds": [
@@ -6481,7 +5706,7 @@
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-12T01:15:08.351Z",
+          "detail": "2026-08-12T01:39:32.130Z",
           "platform_blocking": false
         },
         {
@@ -6521,7 +5746,7 @@
           "label": "StockAnalysis stock/financial recovery state",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-11T22:10:34Z",
+          "detail": "2026-08-12T00:45:01Z",
           "platform_blocking": false,
           "required": false,
           "service_gate": false
@@ -6546,12 +5771,12 @@
       "status_message": "ETF public scoring and daily gate is not ready: PUBLIC+DAILY+GATED: SCORED; coverage-index ETF gate: not_ready. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-12T01:16:31.667Z",
+      "as_of": "2026-08-12T01:40:54.552Z",
       "counts": {
         "eligible_etf_count": 4462,
         "scored_public_etf": 4462,
-        "fetchable_daily_1y_gap": 89,
-        "inception_limited_daily_1y_gap": 727,
+        "fetchable_daily_1y_gap": 80,
+        "inception_limited_daily_1y_gap": 735,
         "terminal_limited_daily_1y_gap": 12,
         "core_selected_count": 100,
         "core_fresh_selected_count": 100,
@@ -6562,8 +5787,8 @@
         "exact_plan_batch_count": 1,
         "stockanalysis_recovery": {
           "state_present": true,
-          "generated_at": "2026-08-11T22:10:34Z",
-          "current_attempt_ref": "31541105495",
+          "generated_at": "2026-08-12T00:45:01Z",
+          "current_attempt_ref": "31551158168",
           "current_attempt_number": 1,
           "current_failed_count": 0,
           "tracked_kinds": [
@@ -6571,15 +5796,6 @@
           ],
           "requested_kinds_present": true,
           "degraded": [
-            {
-              "artifact_kind": "etf",
-              "entity": "AAPR",
-              "resolution_state": "lkg_primary",
-              "payload_sha256": "16cb00b6ee0a063105801a10ee713b99a719acff5440d47a66abed569270b38c",
-              "source_as_of": "2026-07-10T00:00:00Z",
-              "failure_attempt_ref": "30504504470",
-              "data_loss": false
-            },
             {
               "artifact_kind": "etf",
               "entity": "AAPW",
@@ -6930,11 +6146,28 @@
               "source_as_of": null,
               "failure_attempt_ref": "30504504470",
               "data_loss": false
+            },
+            {
+              "artifact_kind": "etf",
+              "entity": "CPNJ",
+              "resolution_state": "lkg_primary",
+              "payload_sha256": "727e4d5f7579cbedcae38cc8ca2f051092e7220ec5654d526859711c45cac8d6",
+              "source_as_of": "2026-04-30T00:00:00Z",
+              "failure_attempt_ref": "30504504470",
+              "data_loss": false
             }
           ],
-          "recovered": [],
+          "recovered": [
+            {
+              "artifact_kind": "etf",
+              "entity": "AAPR",
+              "payload_sha256": "dbb4d6d1be60e33bfe4871f370bfc5ee0b890b1925b6da1468986488eba659d9",
+              "source_as_of": "2026-08-11T20:00:00Z",
+              "recovered_from_attempt_ref": "30504504470",
+              "recovered_at": "2026-08-12T00:45:01Z"
+            }
+          ],
           "degraded_entities": [
-            "AAPR",
             "AAPW",
             "AAPX",
             "AETH",
@@ -6973,9 +6206,12 @@
             "CERY",
             "COIW",
             "CPAG",
-            "CPHY"
+            "CPHY",
+            "CPNJ"
           ],
-          "recovered_entities": [],
+          "recovered_entities": [
+            "AAPR"
+          ],
           "promotion_deferrals": []
         },
         "last_attempt": null,
@@ -7003,7 +6239,7 @@
           "label": "full scored-ETF daily 1Y diagnostic",
           "status": "warning",
           "status_label": "주의",
-          "detail": "89 fetchable",
+          "detail": "80 fetchable",
           "platform_blocking": false,
           "required": false,
           "service_gate": false
@@ -7013,7 +6249,7 @@
           "label": "full scored-ETF exact fetchable plan",
           "status": "warning",
           "status_label": "주의",
-          "detail": "89 fetchable",
+          "detail": "80 fetchable",
           "platform_blocking": false,
           "required": false,
           "service_gate": false
@@ -7039,7 +6275,7 @@
           "label": "StockAnalysis ETF primary recovery state",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-11T22:10:34Z",
+          "detail": "2026-08-12T00:45:01Z",
           "platform_blocking": false,
           "required": false,
           "service_gate": false
@@ -7049,7 +6285,7 @@
           "label": "StockAnalysis ETF primary retry set",
           "status": "warning",
           "status_label": "주의",
-          "detail": "40 deferred: AAPR, AAPW, AAPX, AETH, AIOO, AJAN, AJUL, AKAF, AMDW, AMZW, APOC, ARKB, ARLU, AUGU, AVGW, BBB, BCCC, BETE, BETH, BHYP, BITB, BLST, BLTD, BNDY, BRKW, BRRR, BTC, BTCO, BTCW, BTRN, CBOJ, CBOY, CBTJ, CBTY, CBXY, CEGX, CERY, COIW, CPAG, CPHY",
+          "detail": "40 deferred: AAPW, AAPX, AETH, AIOO, AJAN, AJUL, AKAF, AMDW, AMZW, APOC, ARKB, ARLU, AUGU, AVGW, BBB, BCCC, BETE, BETH, BHYP, BITB, BLST, BLTD, BNDY, BRKW, BRRR, BTC, BTCO, BTCW, BTRN, CBOJ, CBOY, CBTJ, CBTY, CBXY, CEGX, CERY, COIW, CPAG, CPHY, CPNJ",
           "platform_blocking": false,
           "required": false,
           "service_gate": false
@@ -8521,7 +7757,7 @@
       "status_message": "Product surface freshness is not ready: stale surfaces: 4 stale; product surface true-date/collection taxonomy v2: etf_center:pending_true_date. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-12T01:16:51.656Z",
+      "as_of": "2026-08-12T01:41:20.266Z",
       "counts": {
         "surfaces": 7,
         "ready": 1,
@@ -8536,8 +7772,8 @@
       "details": {
         "stockanalysis_recovery": {
           "state_present": true,
-          "generated_at": "2026-08-11T22:10:34Z",
-          "current_attempt_ref": "31541105495",
+          "generated_at": "2026-08-12T00:45:01Z",
+          "current_attempt_ref": "31551158168",
           "current_attempt_number": 1,
           "current_failed_count": 0,
           "tracked_kinds": [
@@ -8585,7 +7821,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-12T01:16:51.656Z",
+          "detail": "2026-08-12T01:41:20.266Z",
           "platform_blocking": false
         },
         {
@@ -8625,7 +7861,7 @@
           "label": "StockAnalysis surface recovery state",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-11T22:10:34Z",
+          "detail": "2026-08-12T00:45:01Z",
           "platform_blocking": false,
           "required": false,
           "service_gate": false
@@ -8650,7 +7886,7 @@
       "status_message": "FINRA/OCC source gate is not ready: OCC current delivery: OCC target 2026-08-10 is unavailable (0 usable rows); no fallback in the allowed window was usable. Current run has an unavailable non-empty batch.. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-12T01:16:31.598Z",
+      "as_of": "2026-08-12T01:40:54.485Z",
       "counts": {
         "active_us_total": 752,
         "plain_us_finra_denominator": 691,
@@ -8662,10 +7898,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-08-12T01:15:35.382Z",
+          "signals_generated_at": "2026-08-12T01:39:56.840Z",
           "finra_source_date": "20260810",
           "occ_source_date": "20260806",
-          "coverage_index_generated_at": "2026-08-12T01:16:19.507Z",
+          "coverage_index_generated_at": "2026-08-12T01:40:41.979Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -8705,7 +7941,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-12T01:16:31.598Z",
+          "detail": "2026-08-12T01:40:54.485Z",
           "platform_blocking": false
         },
         {
@@ -8758,7 +7994,7 @@
       "status_message": "Daily automation and deploy gates is not ready: manifest reconciliation: update-manifest rebuild path. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-12T01:17:01.844Z",
+      "as_of": "2026-08-12T01:41:30.127Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -9150,7 +8386,7 @@
       "status_message": "US Treasury TGA is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-07",
+      "as_of": "2026-08-10",
       "counts": {},
       "details": {
         "recovery_retry_set": [],
@@ -9165,12 +8401,12 @@
             "recovery_event_name": "schedule",
             "recovered_at": "2026-07-21T02:20:06.242Z",
             "lkg_source_as_of": "2026-07-16",
-            "source_as_of": "2026-08-07"
+            "source_as_of": "2026-08-10"
           }
         ],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-11T18:48:30.945Z",
+          "observed_at": "2026-08-12T01:29:08.632Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -9182,7 +8418,7 @@
           "label": "Detection floor status",
           "status": "ready",
           "status_label": "정상",
-          "detail": "ok; source_as_of 2026-08-07",
+          "detail": "ok; source_as_of 2026-08-10",
           "platform_blocking": false
         },
         {
@@ -9196,7 +8432,7 @@
       ],
       "reason": "ok",
       "artifact": {
-        "source_as_of": "2026-08-07"
+        "source_as_of": "2026-08-10"
       }
     },
     {
@@ -9284,7 +8520,7 @@
         ],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-11T22:10:57Z",
+          "observed_at": "2026-08-12T00:57:53Z",
           "outcome": "provider_wait",
           "failure_class": "provider_unsupported"
         },
@@ -9432,37 +8668,10 @@
             "recovered": 0
           },
           "retry_keys": [],
-          "lkg_details": [],
-          "recovery_details": [
-            {
-              "key": "TQQQ.json",
-              "recovered_from_run_id": "29417720099",
-              "recovery_run_id": "29421917838",
-              "recovery_run_attempt": 1,
-              "recovery_event_name": "schedule",
-              "recovered_at": "2026-07-15T14:04:52.506Z",
-              "source_as_of": "2026-08-11T20:00:00.000Z"
-            },
-            {
-              "key": "SOXL.json",
-              "recovered_from_run_id": "29417720099",
-              "recovery_run_id": "29421917838",
-              "recovery_run_attempt": 1,
-              "recovery_event_name": "schedule",
-              "recovered_at": "2026-07-15T14:04:52.506Z",
-              "source_as_of": "2026-08-11T20:00:00.000Z"
-            }
-          ],
           "promotion_deferral_details": [],
           "current_attempt": {
-            "run_id": "31548152534",
-            "run_attempt": 1,
             "event_name": "schedule",
             "observed_at": "2026-08-12T00:25:03.213Z",
-            "attempted": 2,
-            "successes": 2,
-            "failed": 0,
-            "failed_keys": [],
             "promotion_deferrals": 0,
             "promotion_deferral_keys": []
           }
@@ -9716,37 +8925,10 @@
             "recovered": 0
           },
           "retry_keys": [],
-          "lkg_details": [],
-          "recovery_details": [
-            {
-              "key": "sp500.json",
-              "recovered_from_run_id": "30246526864",
-              "recovery_run_id": "30312327287",
-              "recovery_run_attempt": 1,
-              "recovery_event_name": "schedule",
-              "recovered_at": "2026-07-27T22:55:09.730Z",
-              "source_as_of": "2026-08-11"
-            },
-            {
-              "key": "nasdaq.json",
-              "recovered_from_run_id": "30246526864",
-              "recovery_run_id": "30312327287",
-              "recovery_run_attempt": 1,
-              "recovery_event_name": "schedule",
-              "recovered_at": "2026-07-27T22:55:09.730Z",
-              "source_as_of": "2026-08-11"
-            }
-          ],
           "promotion_deferral_details": [],
           "current_attempt": {
-            "run_id": "31542911240",
-            "run_attempt": 1,
             "event_name": "schedule",
             "observed_at": "2026-08-11T22:57:16.371Z",
-            "attempted": 4,
-            "successes": 4,
-            "failed": 0,
-            "failed_keys": [],
             "promotion_deferrals": 0,
             "promotion_deferral_keys": []
           }
@@ -9932,49 +9114,54 @@
           "lane_id": "slickcharts",
           "generated_at": "2026-08-11T22:25:43.905Z",
           "composite_state": "ready",
-          "active_generation_id": "c35dd259ea26640391374481a8cececfda4bbe75f8fa7e732b7cee7ae26912ff",
-          "retained_generation_id": null,
           "members": {
             "daily": {
               "resolution_state": "fresh_primary",
               "retry": false,
               "file_count": 5,
-              "last_recovery": null
+              "recovered_at": null,
+              "recovery_run_attempt": null,
+              "recovery_event_name": null
             },
             "weekly": {
               "resolution_state": "fresh_primary",
               "retry": false,
               "file_count": 4,
-              "last_recovery": null
+              "recovered_at": null,
+              "recovery_run_attempt": null,
+              "recovery_event_name": null
             },
             "monthly": {
               "resolution_state": "fresh_primary",
               "retry": false,
               "file_count": 21,
-              "last_recovery": null
+              "recovered_at": null,
+              "recovery_run_attempt": null,
+              "recovery_event_name": null
             },
             "history": {
               "resolution_state": "fresh_primary",
               "retry": false,
               "file_count": 542,
-              "last_recovery": null
+              "recovered_at": null,
+              "recovery_run_attempt": null,
+              "recovery_event_name": null
             },
             "symbols": {
               "resolution_state": "fresh_primary",
               "retry": false,
               "file_count": 2,
-              "last_recovery": null
+              "recovered_at": null,
+              "recovery_run_attempt": null,
+              "recovery_event_name": null
             }
           },
           "retry_members": [],
           "current_attempt": {
-            "run_id": "31539589359",
-            "run_attempt": 1,
             "event_name": "workflow_dispatch",
             "observed_at": "2026-08-11T22:25:41.812Z",
             "member_id": "history",
-            "decision": "candidate_promoted",
-            "base_member_state_sha256": "c2427ad73234ecfd86f6b27b7a06a98c3c6053029371fcfb4b0c67d486517ef3"
+            "decision": "candidate_promoted"
           }
         },
         "last_attempt": {
@@ -10507,7 +9694,7 @@
       "check_id": "fetchable_daily_1y_gap_zero",
       "status": "warning",
       "label": "full scored-ETF daily 1Y diagnostic",
-      "detail": "89 fetchable",
+      "detail": "80 fetchable",
       "required": false
     },
     {
@@ -10515,7 +9702,7 @@
       "check_id": "fetchable_plan_empty",
       "status": "warning",
       "label": "full scored-ETF exact fetchable plan",
-      "detail": "89 fetchable",
+      "detail": "80 fetchable",
       "required": false
     },
     {
@@ -10523,7 +9710,7 @@
       "check_id": "stockanalysis_retry_empty",
       "status": "warning",
       "label": "StockAnalysis ETF primary retry set",
-      "detail": "40 deferred: AAPR, AAPW, AAPX, AETH, AIOO, AJAN, AJUL, AKAF, AMDW, AMZW, APOC, ARKB, ARLU, AUGU, AVGW, BBB, BCCC, BETE, BETH, BHYP, BITB, BLST, BLTD, BNDY, BRKW, BRRR, BTC, BTCO, BTCW, BTRN, CBOJ, CBOY, CBTJ, CBTY, CBXY, CEGX, CERY, COIW, CPAG, CPHY",
+      "detail": "40 deferred: AAPW, AAPX, AETH, AIOO, AJAN, AJUL, AKAF, AMDW, AMZW, APOC, ARKB, ARLU, AUGU, AVGW, BBB, BCCC, BETE, BETH, BHYP, BITB, BLST, BLTD, BNDY, BRKW, BRRR, BTC, BTCO, BTCW, BTRN, CBOJ, CBOY, CBTJ, CBTY, CBXY, CEGX, CERY, COIW, CPAG, CPHY, CPNJ",
       "required": false
     },
     {
