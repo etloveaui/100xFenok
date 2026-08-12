@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 361,
-      "natural": true,
-      "observed_at": "2026-07-17T00:15:36Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29544227703",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 731,
       "natural": true,
       "observed_at": "2026-08-03T22:58:08Z",
@@ -191,6 +178,20 @@
       "run_id": "31590557839",
       "schedule": "7 10 * * 0-5",
       "shard": "41/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 712,
+      "natural": true,
+      "observed_at": "2026-08-12T13:41:31Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31602424796",
+      "schedule": "7 12 * * 0-5",
+      "shard": "42/72"
     }
   ],
   "current": {
@@ -209,14 +210,14 @@
     "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 833,
+    "latency_ms": 712,
     "natural": true,
-    "observed_at": "2026-08-12T11:11:11Z",
+    "observed_at": "2026-08-12T13:41:31Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31590557839",
-    "schedule": "7 10 * * 0-5",
-    "shard": "41/72"
+    "run_id": "31602424796",
+    "schedule": "7 12 * * 0-5",
+    "shard": "42/72"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -232,12 +233,12 @@
   },
   "latest_promotion_deferral": {
     "event_name": "schedule",
-    "observed_at": "2026-08-12T11:11:11Z",
-    "provider_history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T13:41:31Z",
+    "provider_history_as_of": "2026-08-10",
     "provider_quote_as_of": "2026-06-24T16:07:21Z",
     "reason": "foreign_writer_conflict",
     "run_attempt": 1,
-    "run_id": "31590557839"
+    "run_id": "31602424796"
   },
   "lkg": {
     "fetched_at": "2026-08-10T17:04:58Z",
@@ -273,5 +274,5 @@
     "source_as_of": "2026-06-24T16:07:21Z"
   },
   "ticker": "EMXX",
-  "updated_at": "2026-08-12T11:11:11Z"
+  "updated_at": "2026-08-12T13:41:31Z"
 }

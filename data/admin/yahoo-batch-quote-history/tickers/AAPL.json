@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1024,
-      "natural": true,
-      "observed_at": "2026-08-01T00:39:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30674982988",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 649,
@@ -186,15 +173,28 @@
       "run_id": "31590557839",
       "schedule": "7 10 * * 0-5",
       "shard": "41/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1070,
+      "natural": true,
+      "observed_at": "2026-08-12T13:41:31Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31602424796",
+      "schedule": "7 12 * * 0-5",
+      "shard": "42/72"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T00:06:56Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AAPL.json",
-    "payload_sha256": "d01ae0f8be7a8196b6fc5e84f113e9f8fda18c295bc9d57d1e8c13d8c8bd3a30",
-    "quote_as_of": "2026-08-10T20:00:02Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-08-12T13:42:26Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/yf/finance/AAPL.json",
+    "payload_sha256": "9cb969898aff10b21d2115dff6da0940308b0bf9795a488c66a353763d70ff01",
+    "quote_as_of": "2026-08-12T13:42:24Z",
+    "source_as_of": "2026-08-12"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -203,31 +203,18 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1072,
+    "latency_ms": 1070,
     "natural": true,
-    "observed_at": "2026-08-12T11:11:11Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-12T13:41:31Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31590557839",
-    "schedule": "7 10 * * 0-5",
-    "shard": "41/72"
+    "run_id": "31602424796",
+    "schedule": "7 12 * * 0-5",
+    "shard": "42/72"
   },
   "last_recovered_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "StockDetailValidationError: Yahoo previous close must be a finite number",
-    "failure_kind": "unexpected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-07-23T00:49:28Z",
-    "run_attempt": 1,
-    "run_id": "29968542251"
-  },
-  "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -250,23 +237,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T00:05:28Z",
-    "payload_sha256": "1aea588979d8ff266182208c22cc5dc8662673c70ec3dee1436d31712dfd6725",
-    "quote_as_of": "2026-08-10T20:00:02Z",
+    "history_as_of": "2026-08-12",
+    "observed_at": "2026-08-12T13:41:31Z",
+    "payload_sha256": "1d36a31f31e37559fa14a6f58d5793ca9339168b1879af1eb97a4e10c6fe29f5",
+    "quote_as_of": "2026-08-12T13:42:24Z",
     "run_attempt": 1,
-    "run_id": "31444023136",
+    "run_id": "31602424796",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-12"
   },
-  "recovered_at": "2026-07-24T00:27:41Z",
-  "recovered_from_run_id": "29968542251",
+  "recovered_at": "2026-08-12T13:41:31Z",
+  "recovered_from_run_id": "31590557839",
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
-  "recovery_run_id": "30055546565",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovery_run_id": "31602424796",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AAPL",
-  "updated_at": "2026-08-12T11:11:11Z"
+  "updated_at": "2026-08-12T13:41:31Z"
 }

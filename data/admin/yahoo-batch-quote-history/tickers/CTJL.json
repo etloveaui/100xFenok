@@ -412,6 +412,51 @@
       "run_id": "31590557839",
       "schedule": "7 10 * * 0-5",
       "shard": "41/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "foreign_writer_conflict",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: CTJL: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1063,
+      "natural": true,
+      "observed_at": "2026-08-12T13:41:31Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31602424796",
+      "schedule": "7 12 * * 0-5",
+      "shard": "42/72"
     }
   ],
   "current": {
@@ -427,7 +472,7 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
+    "error": "foreign_writer_conflict",
     "event_name": "schedule",
     "failures": [
       {
@@ -461,23 +506,23 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 1044,
+    "latency_ms": 1063,
     "natural": true,
-    "observed_at": "2026-08-12T11:11:11Z",
+    "observed_at": "2026-08-12T13:41:31Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31590557839",
-    "schedule": "7 10 * * 0-5",
-    "shard": "41/72"
+    "run_id": "31602424796",
+    "schedule": "7 12 * * 0-5",
+    "shard": "42/72"
   },
   "latest_promotion_deferral": {
     "event_name": "schedule",
-    "observed_at": "2026-08-12T11:11:11Z",
-    "provider_history_as_of": "2026-08-11",
+    "observed_at": "2026-08-12T13:41:31Z",
+    "provider_history_as_of": "2026-08-10",
     "provider_quote_as_of": "2026-08-03T14:36:32Z",
-    "reason": "recovery_not_advanced_by_provider",
+    "reason": "foreign_writer_conflict",
     "run_attempt": 1,
-    "run_id": "31590557839"
+    "run_id": "31602424796"
   },
   "lkg": {
     "fetched_at": "2026-08-12T04:18:02Z",
@@ -513,5 +558,5 @@
     "source_as_of": "2026-08-03T14:36:32Z"
   },
   "ticker": "CTJL",
-  "updated_at": "2026-08-12T11:11:11Z"
+  "updated_at": "2026-08-12T13:41:31Z"
 }
