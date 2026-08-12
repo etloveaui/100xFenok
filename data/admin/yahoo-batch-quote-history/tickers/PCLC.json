@@ -39,12 +39,26 @@
       "run_id": "31200268852",
       "schedule": "7 16 * * 0-5",
       "shard": "68/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: source timestamp regression for PCLC: quote_as_of 2026-07-24T14:39:02Z < 2026-08-07T13:46:08Z",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 870,
+      "natural": true,
+      "observed_at": "2026-08-12T11:11:11Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31590557839",
+      "schedule": "7 10 * * 0-5",
+      "shard": "41/72"
     }
   ],
   "current": {
     "fetched_at": "2026-08-07T17:02:59Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/PCLC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PCLC.json",
     "payload_sha256": "536aef3f4308bc0b914f860fbb211bf90428e1d14bb9a3a5b924b8822065b33f",
     "quote_as_of": "2026-08-07T13:46:08Z",
     "source_as_of": "2026-08-07"
@@ -54,24 +68,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: source timestamp regression for PCLC: quote_as_of 2026-07-24T14:39:02Z < 2026-08-07T13:46:08Z",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 590,
+    "latency_ms": 870,
     "natural": true,
-    "observed_at": "2026-08-07T17:02:12Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-12T11:11:11Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31200268852",
-    "schedule": "7 16 * * 0-5",
-    "shard": "68/72"
+    "run_id": "31590557839",
+    "schedule": "7 10 * * 0-5",
+    "shard": "41/72"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: source timestamp regression for PCLC: quote_as_of 2026-07-24T14:39:02Z < 2026-08-07T13:46:08Z",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-12T11:11:11Z",
+    "run_attempt": 1,
+    "run_id": "31590557839"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T09:23:24Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-08-07T17:02:59Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PCLC.json",
-    "payload_sha256": "37a0ba4c4c2eca2ad136010c8773379a8a58d8e780816933ed0df5b090b11f4b",
-    "quote_as_of": "2026-07-08T14:27:11Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "536aef3f4308bc0b914f860fbb211bf90428e1d14bb9a3a5b924b8822065b33f",
+    "quote_as_of": "2026-08-07T13:46:08Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -85,8 +112,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -99,5 +126,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "PCLC",
-  "updated_at": "2026-08-07T17:02:12Z"
+  "updated_at": "2026-08-12T11:11:11Z"
 }
