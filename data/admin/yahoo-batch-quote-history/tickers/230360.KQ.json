@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 736,
-      "natural": true,
-      "observed_at": "2026-08-11T13:36:55Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31496919771",
-      "schedule": "7 12 * * 0-5",
-      "shard": "30/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 462,
       "natural": true,
       "observed_at": "2026-08-11T15:09:25Z",
@@ -212,6 +198,26 @@
       "run_id": "31620820614",
       "schedule": "7 16 * * 0-5",
       "shard": "44/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1574,
+      "natural": true,
+      "observed_at": "2026-08-12T19:14:55Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31631524598",
+      "schedule": "7 18 * * 0-5",
+      "shard": "45/72"
     }
   ],
   "current": {
@@ -227,51 +233,41 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: provider source timestamp is unavailable for 230360.KQ",
+    "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
     "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "KeyError=[redacted]",
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 1018,
+    "latency_ms": 1574,
     "natural": true,
-    "observed_at": "2026-08-12T17:16:04Z",
+    "observed_at": "2026-08-12T19:14:55Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31620820614",
-    "schedule": "7 16 * * 0-5",
-    "shard": "44/72"
+    "run_id": "31631524598",
+    "schedule": "7 18 * * 0-5",
+    "shard": "45/72"
   },
   "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: provider source timestamp is unavailable for 230360.KQ",
+    "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
     "failure_kind": "transient_provider_miss",
     "failures": [
       {
         "attempt": 1,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "KeyError=[redacted]",
+        "error": "AttributeError: 'Index' object has no attribute 'date'",
         "source": "provider_safe_call"
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-12T17:16:04Z",
+    "observed_at": "2026-08-12T19:14:55Z",
     "run_attempt": 1,
-    "run_id": "31620820614"
+    "run_id": "31631524598"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:17Z",
@@ -295,5 +291,5 @@
     "source_as_of": "2026-06-10T06:30:30Z"
   },
   "ticker": "230360.KQ",
-  "updated_at": "2026-08-12T17:16:04Z"
+  "updated_at": "2026-08-12T19:14:55Z"
 }
