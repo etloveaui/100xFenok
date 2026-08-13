@@ -4,6 +4,7 @@
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
     "central_commit_paths": [
+      "data/metadata",
       "data/computed/signals.json",
       "data/computed/stock_action_index.json",
       "data/computed/stock_action_summary.json",
@@ -455,7 +456,10 @@
       }
     ],
     "trigger_paths": [
+      "100x/data/metadata/**",
+      "alpha-scout/data/metadata/**",
       "data/**",
+      "!data/metadata/**",
       "!data/yf/**",
       "!data/admin/yahoo-batch-quote-history/**",
       "!data/manifest.json",
@@ -496,6 +500,7 @@
       "!data/slickcharts/membership-changes.json",
       "!data/slickcharts/universe.json",
       "scripts/update-manifest.py",
+      "scripts/materialize-site-metadata.mjs",
       "scripts/export-computed-signals.mjs",
       "scripts/build-phase2-closeout-indexes.mjs",
       "scripts/build-fenok-signals.mjs",
@@ -2014,6 +2019,11 @@
       "lanes": [],
       "stages": {
         "always_if_exists": [
+          {
+            "kind": "directory",
+            "path": "data/metadata",
+            "required": false
+          },
           {
             "kind": "file",
             "path": "data/computed/signals.json",

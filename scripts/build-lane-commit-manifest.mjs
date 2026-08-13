@@ -44,7 +44,10 @@ function computedSignalsSourceTriggerExclusions(registry = LANE_REGISTRY) {
 }
 
 const UPDATE_MANIFEST_TRIGGER_PATHS = [
+  "100x/data/metadata/**",
+  "alpha-scout/data/metadata/**",
   "data/**",
+  "!data/metadata/**",
   "!data/yf/**",
   "!data/admin/yahoo-batch-quote-history/**",
   "!data/manifest.json",
@@ -75,6 +78,7 @@ const UPDATE_MANIFEST_TRIGGER_PATHS = [
   "!data/slickcharts/membership-changes.json",
   "!data/slickcharts/universe.json",
   "scripts/update-manifest.py",
+  "scripts/materialize-site-metadata.mjs",
   "scripts/export-computed-signals.mjs",
   "scripts/build-phase2-closeout-indexes.mjs",
   "scripts/build-fenok-signals.mjs",
@@ -467,6 +471,7 @@ export const UPDATE_MANIFEST_MATERIALIZATIONS = [
 // the central staging policy. The base keeps its stable relative order and
 // must never repeat a route destination.
 export const CENTRAL_COMMIT_PATHS = [
+  "data/metadata",
   "data/computed/signals.json",
   "data/computed/stock_action_index.json",
   "data/computed/stock_action_summary.json",

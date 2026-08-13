@@ -24,6 +24,7 @@ const SEC13F_CONVERTER_ANALYTICS = Object.freeze([
   "turnover.json",
 ]);
 const PRODUCERS = Object.freeze([
+  ["scripts/materialize-site-metadata.mjs", "data/metadata"],
   ["scripts/build-stocks-analyzer.mjs", "data/global-scouter/core/stocks_analyzer.json"],
   ["scripts/build-13f-enrichment-backfill.mjs", "data/sec-13f/summary.json"],
   ["scripts/build-13f-integrity-indexes.mjs", "data/sec-13f/analytics/consensus.json"],
@@ -132,6 +133,7 @@ for (const analytic of SEC13F_CONVERTER_ANALYTICS) {
 }
 
 assert.match(sources["scripts/build-stocks-analyzer.mjs"], /writeJson\(PATHS\.output, output\)/u);
+assert.doesNotMatch(sources["scripts/materialize-site-metadata.mjs"], /100xfenok-next|public[\\/]+data/u);
 assert.match(sources["scripts/build-stocks-analyzer.mjs"], /writeJson\(PATHS\.perBandsOutput, perBandsOutput\)/u);
 assert.match(sources["scripts/build-stocks-analyzer.mjs"], /writeJson\(PATHS\.slickOutput, slickOutput\)/u);
 assert.match(sources["scripts/build-13f-enrichment-backfill.mjs"], /writeJson\(SUMMARY_PATH, summary\)/u);
@@ -198,4 +200,4 @@ for (const [relativePath, removedOutputs] of Object.entries(REMOVED_TREE_MIRROR_
   }
 }
 
-console.log("build-producers public-write fence: ok (11 canonical-only APIs)");
+console.log("build-producers public-write fence: ok (12 canonical-only APIs)");

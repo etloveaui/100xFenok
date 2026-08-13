@@ -58,6 +58,13 @@ on:
       - 'scripts/test-stage-lane-manifest.mjs'
       - 'scripts/test-update-manifest-*.mjs'
       - 'scripts/update-manifest-projections.sh'
+      - 'scripts/materialize-site-metadata.mjs'
+      - 'scripts/test-materialize-site-metadata.mjs'
+      - 'scripts/test-site-metadata-canonical-only.mjs'
+      - '100x/data/metadata/**'
+      - 'alpha-scout/data/metadata/**'
+      - 'data/metadata/**'
+      - '100xfenok-next/public/data/metadata/**'
       - 'scripts/lib/lane-registry.mjs'
       - 'scripts/build-lane-commit-manifest.mjs'
       - 'data/admin/lane-commit-manifest.json'
@@ -116,6 +123,13 @@ on:
       - 'scripts/test-stage-lane-manifest.mjs'
       - 'scripts/test-update-manifest-*.mjs'
       - 'scripts/update-manifest-projections.sh'
+      - 'scripts/materialize-site-metadata.mjs'
+      - 'scripts/test-materialize-site-metadata.mjs'
+      - 'scripts/test-site-metadata-canonical-only.mjs'
+      - '100x/data/metadata/**'
+      - 'alpha-scout/data/metadata/**'
+      - 'data/metadata/**'
+      - '100xfenok-next/public/data/metadata/**'
       - 'scripts/lib/lane-registry.mjs'
       - 'scripts/build-lane-commit-manifest.mjs'
       - 'data/admin/lane-commit-manifest.json'
@@ -160,7 +174,10 @@ jobs:
         run: npm --prefix 100xfenok-next run qa:lane-manifest-staging
 
       - name: Validate public-mirror coverage (frozen-mirror gate)
-        run: node scripts/check-public-mirror-coverage.mjs
+        run: |
+          node scripts/test-materialize-site-metadata.mjs
+          node scripts/test-site-metadata-canonical-only.mjs
+          node scripts/check-public-mirror-coverage.mjs
 
       - name: Validate producer public-write fence (canonical-only batch)
         run: |
