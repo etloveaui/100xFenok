@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-08-12",
+  "last_updated": "2026-08-13",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -9,7 +9,7 @@
       "updated": null,
       "update_frequency": "hourly",
       "source": "GitHub repository tree",
-      "file_count": 13554,
+      "file_count": 13665,
       "schema": false,
       "description": "Hourly folder listing cache for notification-control-panel-web.html",
       "updated_reason": "internal listing cache has a build time but no upstream source date"
@@ -43,7 +43,7 @@
     },
     "indices": {
       "version": "2.0.0",
-      "updated": "2026-08-11",
+      "updated": "2026-08-12",
       "update_frequency": "daily",
       "source": "Google Sheets (Apps Script)",
       "file_count": 5,
@@ -101,7 +101,7 @@
       "updated": "2026-01-09",
       "update_frequency": "after source data refresh",
       "source": "Macro Monitor computed signal export",
-      "file_count": 7703,
+      "file_count": 7752,
       "schema": false,
       "description": "Deterministic computed signals and normalized market facts derived from macro, sentiment, Yahoo, StockAnalysis, and SlickCharts data."
     },
@@ -120,17 +120,17 @@
       "updated": null,
       "update_frequency": "weekly / on-demand",
       "source": "Yahoo Finance via yfinance",
-      "file_count": 7312,
+      "file_count": 7317,
       "schema": false,
       "description": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces.",
-      "updated_reason": "source date unavailable for required Yahoo finance histories: finance/DAY.json"
+      "updated_reason": "source date unavailable for required Yahoo finance histories: finance/DACL.json, finance/DAY.json"
     },
     "stockanalysis": {
       "version": "1.2.0",
       "updated": null,
       "update_frequency": "weekly / on-demand",
       "source": "StockAnalysis public JSON, Svelte/devalue payloads, and HTML tables",
-      "file_count": 5739,
+      "file_count": 5748,
       "schema": true,
       "description": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces.",
       "updated_reason": "provider publishes no aggregate source date"
@@ -795,13 +795,13 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-08-12T13:58:51Z",
+  "generatedAt": "2026-08-13T06:20:47Z",
   "categories": [
     {
       "name": "computed",
       "path": "/data/computed/",
       "schemaVersion": "1.0.0",
-      "fileCount": 7703,
+      "fileCount": 7752,
       "lastUpdated": "2026-01-09",
       "lastUpdatedReason": null,
       "notes": "Deterministic computed signals and normalized market facts derived from macro, sentiment, Yahoo, StockAnalysis, and SlickCharts data."
@@ -837,7 +837,7 @@
       "name": "stockanalysis",
       "path": "/data/stockanalysis/",
       "schemaVersion": "1.2.0",
-      "fileCount": 5739,
+      "fileCount": 5748,
       "lastUpdated": null,
       "lastUpdatedReason": "provider publishes no aggregate source date",
       "notes": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces."
@@ -846,9 +846,9 @@
       "name": "yf",
       "path": "/data/yf/",
       "schemaVersion": "1.0.0",
-      "fileCount": 7312,
+      "fileCount": 7317,
       "lastUpdated": null,
-      "lastUpdatedReason": "source date unavailable for required Yahoo finance histories: finance/DAY.json",
+      "lastUpdatedReason": "source date unavailable for required Yahoo finance histories: finance/DACL.json, finance/DAY.json",
       "notes": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces."
     },
     {
@@ -883,7 +883,7 @@
       "path": "/data/indices/",
       "schemaVersion": "2.0.0",
       "fileCount": 5,
-      "lastUpdated": "2026-08-11",
+      "lastUpdated": "2026-08-12",
       "lastUpdatedReason": null,
       "notes": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
     },
