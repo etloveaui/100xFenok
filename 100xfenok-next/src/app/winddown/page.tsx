@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { Fraunces } from "next/font/google";
 import AdminAccessGate from "@/components/AdminAccessGate";
 import WindDownHabitHomeClient from "@/features/winddown/habit/ui/WindDownHabitHomeClient";
 import {
@@ -8,12 +7,8 @@ import {
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
 
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-wd-serif",
-});
+// --font-wd-serif is defined with the other self-hosted faces in
+// ../fonts/fonts.css; next/font/google was removed repo-wide.
 
 export const metadata: Metadata = {
   title: "Wind-Down",
@@ -38,14 +33,14 @@ export default async function WindDownPage() {
 
   if (!authenticated) {
     return (
-      <div data-immersive-route="winddown" className={fraunces.variable}>
+      <div data-immersive-route="winddown">
         <AdminAccessGate />
       </div>
     );
   }
 
   return (
-    <div data-immersive-route="winddown" className={fraunces.variable}>
+    <div data-immersive-route="winddown">
       <WindDownHabitHomeClient />
     </div>
   );

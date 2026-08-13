@@ -1,31 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Noto_Sans_KR, Orbitron } from "next/font/google";
 import "./globals.css";
 import DesignVersionToggle from "@/components/design/DesignVersionToggle";
 import { siteOrigin } from "@/lib/site-url";
 import { Suspense } from "react";
 
-const notoSansKr = Noto_Sans_KR({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-  preload: false,
-  variable: "--font-noto-sans-kr",
-});
-
-const orbitron = Orbitron({
-  subsets: ["latin"],
-  weight: ["600", "800", "900"],
-  display: "swap",
-  variable: "--font-orbitron-face",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-  variable: "--font-jetbrains-mono",
-});
+// Font faces are self-hosted in ./fonts/fonts.css, which also defines
+// --font-noto-sans-kr, --font-orbitron-face and --font-jetbrains-mono.
+// next/font/google was removed: its build-time fetch is a hard build failure
+// surface we do not control.
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
@@ -95,7 +77,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" data-theme="light" style={{ colorScheme: "light" }}>
-      <body className={`${notoSansKr.variable} ${orbitron.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-background text-foreground overflow-x-hidden`}>
+      <body className={`antialiased min-h-screen bg-background text-foreground overflow-x-hidden`}>
         <a href="#main-content" className="skip-link">
           본문으로 건너뛰기
         </a>
