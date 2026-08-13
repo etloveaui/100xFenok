@@ -106,7 +106,7 @@
   "current": {
     "fetched_at": "2026-08-09T02:27:13Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/VOXP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VOXP.json",
     "payload_sha256": "91b623d74514dcf266ae852f69ec64edbdade2301bb7bde7b1ccef38e10f37a8",
     "quote_as_of": "2026-08-04T15:40:26Z",
     "source_as_of": "2026-08-04T15:40:26Z"
@@ -159,12 +159,12 @@
     "shard": "0/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:21:16Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-08-09T02:27:13Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/VOXP.json",
-    "payload_sha256": "46171a4877b28f0ed7af8173b156d79d52928cf0819c0ba0651bd2af9eaf22e9",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "91b623d74514dcf266ae852f69ec64edbdade2301bb7bde7b1ccef38e10f37a8",
+    "quote_as_of": "2026-08-04T15:40:26Z",
+    "source_as_of": "2026-08-04T15:40:26Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -178,19 +178,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-04T15:40:26Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-13T00:06:17Z",
+    "classified_run_id": "31652949582",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "VOXP holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "VOXP holds LKG because Yahoo source date 2026-08-04T15:40:26Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-08-04T15:40:26Z"
   },
   "ticker": "VOXP",
-  "updated_at": "2026-08-09T02:25:42Z"
+  "updated_at": "2026-08-13T00:06:17Z"
 }

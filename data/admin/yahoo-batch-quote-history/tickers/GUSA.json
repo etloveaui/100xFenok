@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-09T10:54:33Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/GUSA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GUSA.json",
     "payload_sha256": "679eb1a15913aa33d45584c8c3dc34b92dc81f3fbec051e41d566b42ce30a35a",
     "quote_as_of": "2026-08-04T16:04:21Z",
     "source_as_of": "2026-08-04T16:04:21Z"
@@ -38,6 +38,14 @@
     "schedule": "7 10 * * 0-5",
     "shard": "5/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-09T10:54:33Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GUSA.json",
+    "payload_sha256": "679eb1a15913aa33d45584c8c3dc34b92dc81f3fbec051e41d566b42ce30a35a",
+    "quote_as_of": "2026-08-04T16:04:21Z",
+    "source_as_of": "2026-08-04T16:04:21Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-04T16:04:21Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-13T00:06:17Z",
+    "classified_run_id": "31652949582",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "GUSA holds LKG because Yahoo source date 2026-08-04T16:04:21Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-04T16:04:21Z"
+  },
   "ticker": "GUSA",
-  "updated_at": "2026-08-09T10:51:07Z"
+  "updated_at": "2026-08-13T00:06:17Z"
 }

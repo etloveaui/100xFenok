@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-04T23:09:04Z",
     "history_as_of": "2026-08-04",
-    "path": "data/yf/finance/FSZ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FSZ.json",
     "payload_sha256": "02c1296a03c015fc912317b509f49515f8b352f34e95819bc2bd43d8a197908b",
     "quote_as_of": "2026-08-04T20:00:00Z",
     "source_as_of": "2026-08-04"
@@ -38,6 +38,14 @@
     "schedule": "0 22 * * 2",
     "shard": "2/6"
   },
+  "lkg": {
+    "fetched_at": "2026-08-04T23:09:04Z",
+    "history_as_of": "2026-08-04",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FSZ.json",
+    "payload_sha256": "02c1296a03c015fc912317b509f49515f8b352f34e95819bc2bd43d8a197908b",
+    "quote_as_of": "2026-08-04T20:00:00Z",
+    "source_as_of": "2026-08-04"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-04"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-13T00:06:17Z",
+    "classified_run_id": "31652949582",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "FSZ holds LKG because Yahoo source date 2026-08-04 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-04"
+  },
   "ticker": "FSZ",
-  "updated_at": "2026-08-04T23:07:26Z"
+  "updated_at": "2026-08-13T00:06:17Z"
 }

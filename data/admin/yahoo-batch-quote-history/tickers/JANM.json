@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-07T04:35:08Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/JANM.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/JANM.json",
     "payload_sha256": "2ae5a1a1289b79e7dab01759a330c52b67ba388c65066bb8f5494c888e88f09f",
     "quote_as_of": "2026-08-04T15:52:17Z",
     "source_as_of": "2026-08-04T15:52:17Z"
@@ -38,6 +38,14 @@
     "schedule": "7 2 * * 0-5",
     "shard": "61/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-07T04:35:08Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/JANM.json",
+    "payload_sha256": "2ae5a1a1289b79e7dab01759a330c52b67ba388c65066bb8f5494c888e88f09f",
+    "quote_as_of": "2026-08-04T15:52:17Z",
+    "source_as_of": "2026-08-04T15:52:17Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-04T15:52:17Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-13T00:06:17Z",
+    "classified_run_id": "31652949582",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "JANM holds LKG because Yahoo source date 2026-08-04T15:52:17Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-04T15:52:17Z"
+  },
   "ticker": "JANM",
-  "updated_at": "2026-08-07T04:33:03Z"
+  "updated_at": "2026-08-13T00:06:17Z"
 }

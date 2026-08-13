@@ -121,7 +121,7 @@
   "current": {
     "fetched_at": "2026-08-04T23:11:18Z",
     "history_as_of": "2026-08-04",
-    "path": "data/yf/finance/CSEX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CSEX.json",
     "payload_sha256": "1fb06a7372d57dbac158b6fd1b7702db659ee9fc1f9f1eb9d20a60564688563a",
     "quote_as_of": "2026-08-04T19:59:17Z",
     "source_as_of": "2026-08-04"
@@ -143,12 +143,12 @@
     "shard": "2/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T11:53:48Z",
-    "history_as_of": "2026-06-17",
+    "fetched_at": "2026-08-04T23:11:18Z",
+    "history_as_of": "2026-08-04",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CSEX.json",
-    "payload_sha256": "9206e1ea8b143a9f8a6cec9ecdfdb04972873bacc0dea0987dbe34ea6bb4ade7",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-17"
+    "payload_sha256": "1fb06a7372d57dbac158b6fd1b7702db659ee9fc1f9f1eb9d20a60564688563a",
+    "quote_as_of": "2026-08-04T19:59:17Z",
+    "source_as_of": "2026-08-04"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -162,19 +162,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-04"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 16,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-13T00:06:17Z",
+    "classified_run_id": "31652949582",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CSEX holds LKG because Yahoo source date 2026-06-17 is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CSEX holds LKG because Yahoo source date 2026-08-04 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-17"
+    "source_as_of": "2026-08-04"
   },
   "ticker": "CSEX",
-  "updated_at": "2026-08-04T23:07:26Z"
+  "updated_at": "2026-08-13T00:06:17Z"
 }

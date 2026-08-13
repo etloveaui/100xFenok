@@ -4,32 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 544,
-      "natural": true,
-      "observed_at": "2026-07-30T00:46:27Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30502016705",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 502,
-      "natural": true,
-      "observed_at": "2026-07-31T01:04:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30593079919",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 872,
       "natural": true,
       "observed_at": "2026-08-01T00:55:56Z",
@@ -188,14 +162,40 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1176,
+      "natural": true,
+      "observed_at": "2026-08-13T00:06:17Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31652949582",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-13T00:15:42Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31652949582",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T00:39:58Z",
+    "fetched_at": "2026-08-13T00:06:37Z",
     "history_as_of": "2026-08-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/000240.KS.json",
-    "payload_sha256": "83556c51c89a8e865a7ecb5a82673b4a3d6a9d9ccb4d789f199054b47d5275ab",
-    "quote_as_of": "2026-08-12T00:19:51Z",
+    "path": "data/yf/finance/000240.KS.json",
+    "payload_sha256": "263f6f0d539f03b7b52156c5a4e8e6c7587ee71bc916a67b507926f7171fae3f",
+    "quote_as_of": "2026-08-12T06:30:27Z",
     "source_as_of": "2026-08-12"
   },
   "discovered_from": [
@@ -203,68 +203,19 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for 000240.KS despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 632,
+    "failures": [],
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-13T00:15:42Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "31652949582",
+    "schedule": "20 23 * * 1-5",
+    "shard": "3/5"
   },
   "last_recovered_failure": {
-    "attempts_used": 2,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "empty payload",
-    "failure_kind": "systemic_rate_limit",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
-        "error": "empty payload"
-      },
-      {
-        "attempt": 2,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 2,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "lkg_status": "retained",
-    "observed_at": "2026-07-17T00:28:16Z",
-    "run_attempt": 1,
-    "run_id": "29544227703"
-  },
-  "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -294,22 +245,22 @@
   "provider_observation": {
     "event_name": "schedule",
     "history_as_of": "2026-08-12",
-    "observed_at": "2026-08-12T00:39:41Z",
-    "payload_sha256": "5f7c58d97e2f205c57b90ffc02e1f0112193be87f95b2995e704073fcf298f7f",
-    "quote_as_of": "2026-08-12T00:19:51Z",
+    "observed_at": "2026-08-13T00:06:17Z",
+    "payload_sha256": "4ffdf52dc3b8ae64a44ea88bee4695f282ac0e1745de3a993b9481964dd97b41",
+    "quote_as_of": "2026-08-12T06:30:27Z",
     "run_attempt": 1,
-    "run_id": "31548744038",
+    "run_id": "31652949582",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-12"
   },
-  "recovered_at": "2026-07-18T00:37:10Z",
-  "recovered_from_run_id": "29544227703",
+  "recovered_at": "2026-08-13T00:06:17Z",
+  "recovered_from_run_id": "31648785047",
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
-  "recovery_run_id": "29622560422",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovery_run_id": "31652949582",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "000240.KS",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-08-13T00:15:42Z"
 }

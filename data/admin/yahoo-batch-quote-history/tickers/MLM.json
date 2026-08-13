@@ -1,32 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 589,
-      "natural": true,
-      "observed_at": "2026-07-28T00:14:11Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30316637722",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 478,
-      "natural": true,
-      "observed_at": "2026-07-30T00:35:13Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30502016705",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -188,41 +162,60 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 918,
+      "natural": true,
+      "observed_at": "2026-08-13T00:06:17Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31652949582",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-13T00:13:23Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31652949582",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T00:42:23Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MLM.json",
-    "payload_sha256": "950454e72b6e66b661ba1c2fcdf84c93a02b09efa2a5d2e75f8252a3408e7e61",
-    "quote_as_of": "2026-08-11T20:00:02Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-08-13T00:07:09Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/yf/finance/MLM.json",
+    "payload_sha256": "39dc67790a46696609af454918d284875b1ab6e39266565fe9227b43f6ff8ee1",
+    "quote_as_of": "2026-08-12T20:00:02Z",
+    "source_as_of": "2026-08-12"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for MLM despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 818,
+    "failures": [],
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-13T00:13:23Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "31652949582",
+    "schedule": "20 23 * * 1-5",
+    "shard": "2/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -251,18 +244,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T00:39:41Z",
-    "payload_sha256": "2356488e9bf5240faa20d939bafb79eb3737e0a1f8ffa68f90c0e5c7d53f6fe4",
-    "quote_as_of": "2026-08-11T20:00:02Z",
+    "history_as_of": "2026-08-12",
+    "observed_at": "2026-08-13T00:06:17Z",
+    "payload_sha256": "76d62bed675c056414fa6ad9e54f65dc4142084e808500343cbb3febee3e4a50",
+    "quote_as_of": "2026-08-12T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "31548744038",
+    "run_id": "31652949582",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-08-12"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-13T00:06:17Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "31652949582",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MLM",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-08-13T00:13:23Z"
 }

@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-06T06:44:16Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/PIFI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PIFI.json",
     "payload_sha256": "579d8ee451dd5b961fe4b33becb7192b66ec6addf4de3c36a02b8966066b7abf",
     "quote_as_of": "2026-08-04T19:12:58Z",
     "source_as_of": "2026-08-04T19:12:58Z"
@@ -38,6 +38,14 @@
     "schedule": "7 4 * * 0-5",
     "shard": "50/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-06T06:44:16Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PIFI.json",
+    "payload_sha256": "579d8ee451dd5b961fe4b33becb7192b66ec6addf4de3c36a02b8966066b7abf",
+    "quote_as_of": "2026-08-04T19:12:58Z",
+    "source_as_of": "2026-08-04T19:12:58Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-04T19:12:58Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-13T00:06:17Z",
+    "classified_run_id": "31652949582",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "PIFI holds LKG because Yahoo source date 2026-08-04T19:12:58Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-04T19:12:58Z"
+  },
   "ticker": "PIFI",
-  "updated_at": "2026-08-06T06:42:20Z"
+  "updated_at": "2026-08-13T00:06:17Z"
 }

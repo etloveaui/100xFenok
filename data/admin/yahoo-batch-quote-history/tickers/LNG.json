@@ -4,32 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 461,
-      "natural": true,
-      "observed_at": "2026-07-25T00:27:58Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30135937225",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 444,
-      "natural": true,
-      "observed_at": "2026-07-28T00:18:14Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30316637722",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 499,
       "natural": true,
       "observed_at": "2026-07-31T00:55:40Z",
@@ -188,41 +162,60 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 466,
+      "natural": true,
+      "observed_at": "2026-08-13T00:06:17Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31652949582",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-13T00:15:42Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "31652949582",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T00:46:00Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LNG.json",
-    "payload_sha256": "dc38c125ead7f3b68b4d13be18eca9d0b9e01f91c0cae483b26ce7cce707d503",
-    "quote_as_of": "2026-08-11T20:00:02Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-08-13T00:07:07Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/yf/finance/LNG.json",
+    "payload_sha256": "c9f2cbe6064c036781ccc515c5caefe18002f525bb6eb00eae1b7f557d92b4ce",
+    "quote_as_of": "2026-08-12T20:00:02Z",
+    "source_as_of": "2026-08-12"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for LNG despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 582,
+    "failures": [],
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-13T00:15:42Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "31652949582",
+    "schedule": "20 23 * * 1-5",
+    "shard": "3/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -251,18 +244,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T00:43:18Z",
-    "payload_sha256": "bb1b5db94a0344d1579584f2af8424bc05aa5975b1e2429a4dad946c7f4b317b",
-    "quote_as_of": "2026-08-11T20:00:02Z",
+    "history_as_of": "2026-08-12",
+    "observed_at": "2026-08-13T00:06:17Z",
+    "payload_sha256": "652a39c85277c3a2fabb671307f033b09dbfaee634536e7f9a9c85b81803e9b3",
+    "quote_as_of": "2026-08-12T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "31548744038",
+    "run_id": "31652949582",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-08-12"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-13T00:06:17Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "31652949582",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "LNG",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-08-13T00:15:42Z"
 }

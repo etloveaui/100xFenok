@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-09T09:02:25Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/MAYZ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MAYZ.json",
     "payload_sha256": "5afda7ec3c9fd04a9c6432eec2d634d04948a9f1d53bc6364e0796ed8956ee48",
     "quote_as_of": "2026-08-04T18:41:32Z",
     "source_as_of": "2026-08-04T18:41:32Z"
@@ -38,6 +38,14 @@
     "schedule": "7 8 * * 0-5",
     "shard": "4/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-09T09:02:25Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MAYZ.json",
+    "payload_sha256": "5afda7ec3c9fd04a9c6432eec2d634d04948a9f1d53bc6364e0796ed8956ee48",
+    "quote_as_of": "2026-08-04T18:41:32Z",
+    "source_as_of": "2026-08-04T18:41:32Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-04T18:41:32Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-13T00:06:17Z",
+    "classified_run_id": "31652949582",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "MAYZ holds LKG because Yahoo source date 2026-08-04T18:41:32Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-04T18:41:32Z"
+  },
   "ticker": "MAYZ",
-  "updated_at": "2026-08-09T08:59:39Z"
+  "updated_at": "2026-08-13T00:06:17Z"
 }
