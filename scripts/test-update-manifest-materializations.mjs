@@ -17,7 +17,7 @@ const helperCall = "node scripts/materialize-update-manifest-routes.mjs";
 // Independent oracle: never derive this map from the manifest generator. A
 // corrupt generator and regenerated artifact must fail here even if they drift
 // together. The map deliberately owns the exact source/destination pairing and
-// materialization semantics for all 30 routes.
+// materialization semantics for all 39 routes.
 const EXPECTED_ROUTES = [
   { source: "data/slickcharts", destination: "100xfenok-next/public/data/slickcharts", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/yf/finance", destination: "100xfenok-next/public/data/yf/finance", mode: "rsync_tree", delete: true, excludes: [] },
@@ -41,11 +41,20 @@ const EXPECTED_ROUTES = [
   { source: "data/sec-13f/summary.json", destination: "100xfenok-next/public/data/sec-13f/summary.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/by_sector.json", destination: "100xfenok-next/public/data/sec-13f/by_sector.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/by_ticker.json", destination: "100xfenok-next/public/data/sec-13f/by_ticker.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/buying_pressure.json", destination: "100xfenok-next/public/data/sec-13f/analytics/buying_pressure.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/consensus.json", destination: "100xfenok-next/public/data/sec-13f/analytics/consensus.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/conviction.json", destination: "100xfenok-next/public/data/sec-13f/analytics/conviction.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/conviction_entries.json", destination: "100xfenok-next/public/data/sec-13f/analytics/conviction_entries.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/enhanced_consensus.json", destination: "100xfenok-next/public/data/sec-13f/analytics/enhanced_consensus.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/hhi.json", destination: "100xfenok-next/public/data/sec-13f/analytics/hhi.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/multi_quarter_trends.json", destination: "100xfenok-next/public/data/sec-13f/analytics/multi_quarter_trends.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/new_positions.json", destination: "100xfenok-next/public/data/sec-13f/analytics/new_positions.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/options_hedge.json", destination: "100xfenok-next/public/data/sec-13f/analytics/options_hedge.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/ticker_aliases.json", destination: "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/trades_ranking.json", destination: "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/portfolio_views.json", destination: "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/guru_holders_index.json", destination: "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/turnover.json", destination: "100xfenok-next/public/data/sec-13f/analytics/turnover.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/damodaran", destination: "100xfenok-next/public/data/damodaran", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/calendar/prev-values.json", destination: "100xfenok-next/public/data/calendar/prev-values.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/investors", destination: "100xfenok-next/public/data/sec-13f/investors", mode: "rsync_tree", delete: true, excludes: ["griffin.json"] },
@@ -61,8 +70,8 @@ function routeOracleFields(route) {
   };
 }
 
-assert.equal(EXPECTED_ROUTES.length, 30, "route oracle must contain exactly 30 routes");
-assert.equal(manifest.update_manifest.materializations.length, 30, "manifest must contain exactly 30 routes");
+assert.equal(EXPECTED_ROUTES.length, 39, "route oracle must contain exactly 39 routes");
+assert.equal(manifest.update_manifest.materializations.length, 39, "manifest must contain exactly 39 routes");
 assert.deepEqual(manifest.update_manifest.materializations.map(routeOracleFields), EXPECTED_ROUTES);
 for (const route of EXPECTED_ROUTES) {
   assert.ok(
@@ -139,11 +148,20 @@ assert.deepEqual(
     "100xfenok-next/public/data/sec-13f/summary.json",
     "100xfenok-next/public/data/sec-13f/by_sector.json",
     "100xfenok-next/public/data/sec-13f/by_ticker.json",
+    "100xfenok-next/public/data/sec-13f/analytics/buying_pressure.json",
     "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
+    "100xfenok-next/public/data/sec-13f/analytics/conviction.json",
+    "100xfenok-next/public/data/sec-13f/analytics/conviction_entries.json",
+    "100xfenok-next/public/data/sec-13f/analytics/enhanced_consensus.json",
+    "100xfenok-next/public/data/sec-13f/analytics/hhi.json",
+    "100xfenok-next/public/data/sec-13f/analytics/multi_quarter_trends.json",
+    "100xfenok-next/public/data/sec-13f/analytics/new_positions.json",
+    "100xfenok-next/public/data/sec-13f/analytics/options_hedge.json",
     "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
     "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
     "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
     "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
+    "100xfenok-next/public/data/sec-13f/analytics/turnover.json",
     "100xfenok-next/public/data/sec-13f/investors/",
   ],
   "batch-2 routes must account for every overlapping public-data ignore rule",

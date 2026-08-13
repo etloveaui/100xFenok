@@ -79,11 +79,20 @@
       "100xfenok-next/public/data/sec-13f/summary.json",
       "100xfenok-next/public/data/sec-13f/by_sector.json",
       "100xfenok-next/public/data/sec-13f/by_ticker.json",
+      "100xfenok-next/public/data/sec-13f/analytics/buying_pressure.json",
       "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
+      "100xfenok-next/public/data/sec-13f/analytics/conviction.json",
+      "100xfenok-next/public/data/sec-13f/analytics/conviction_entries.json",
+      "100xfenok-next/public/data/sec-13f/analytics/enhanced_consensus.json",
+      "100xfenok-next/public/data/sec-13f/analytics/hhi.json",
+      "100xfenok-next/public/data/sec-13f/analytics/multi_quarter_trends.json",
+      "100xfenok-next/public/data/sec-13f/analytics/new_positions.json",
+      "100xfenok-next/public/data/sec-13f/analytics/options_hedge.json",
       "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
       "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
       "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
       "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
+      "100xfenok-next/public/data/sec-13f/analytics/turnover.json",
       "100xfenok-next/public/data/damodaran",
       "100xfenok-next/public/data/calendar/prev-values.json",
       "100xfenok-next/public/data/sec-13f/investors"
@@ -291,11 +300,83 @@
       },
       {
         "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/analytics/buying_pressure.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/analytics/buying_pressure.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
         "destination": "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
         "excludes": [],
         "mode": "cp_file",
         "required": true,
         "source": "data/sec-13f/analytics/consensus.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/analytics/conviction.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/analytics/conviction.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/analytics/conviction_entries.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/analytics/conviction_entries.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/analytics/enhanced_consensus.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/analytics/enhanced_consensus.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/analytics/hhi.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/analytics/hhi.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/analytics/multi_quarter_trends.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/analytics/multi_quarter_trends.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/analytics/new_positions.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/analytics/new_positions.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/analytics/options_hedge.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/analytics/options_hedge.json",
         "trailing_slash": false
       },
       {
@@ -332,6 +413,15 @@
         "mode": "cp_file",
         "required": true,
         "source": "data/sec-13f/analytics/guru_holders_index.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/analytics/turnover.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/analytics/turnover.json",
         "trailing_slash": false
       },
       {
@@ -2301,7 +2391,47 @@
           },
           {
             "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/buying_pressure.json",
+            "required": false
+          },
+          {
+            "kind": "file",
             "path": "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/conviction.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/conviction_entries.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/enhanced_consensus.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/hhi.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/multi_quarter_trends.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/new_positions.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/options_hedge.json",
             "required": false
           },
           {
@@ -2322,6 +2452,11 @@
           {
             "kind": "file",
             "path": "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/turnover.json",
             "required": false
           },
           {

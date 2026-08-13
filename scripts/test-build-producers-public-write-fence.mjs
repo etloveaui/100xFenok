@@ -12,6 +12,17 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const SEC13F_CONVERTER_ANALYTICS = Object.freeze([
+  "buying_pressure.json",
+  "conviction.json",
+  "conviction_entries.json",
+  "enhanced_consensus.json",
+  "hhi.json",
+  "multi_quarter_trends.json",
+  "new_positions.json",
+  "options_hedge.json",
+  "turnover.json",
+]);
 const PRODUCERS = Object.freeze([
   ["scripts/build-stocks-analyzer.mjs", "data/global-scouter/core/stocks_analyzer.json"],
   ["scripts/build-13f-enrichment-backfill.mjs", "data/sec-13f/summary.json"],
@@ -106,6 +117,18 @@ for (const [relativePath, source] of Object.entries(sources)) {
 for (const [relativePath, canonicalPath] of PRODUCERS) {
   assert.match(sources[relativePath], new RegExp(canonicalPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "u"),
     `${relativePath} lost its canonical output path`);
+}
+
+// The frozen converter emits these analytics only into a caller-selected
+// staging directory. It must continue rejecting both committed canonical and
+// public trees so Update Manifest remains the sole public projection boundary.
+const sec13fGenerator = fs.readFileSync(path.join(REPO_ROOT, "scripts/sec13f/generator.py"), "utf8");
+assert.match(sec13fGenerator, /ROOT \/ "data" \/ "sec-13f"/u);
+assert.match(sec13fGenerator, /ROOT \/ "100xfenok-next" \/ "public" \/ "data" \/ "sec-13f"/u);
+assert.match(sec13fGenerator, /output_root overlaps protected data tree/u);
+for (const analytic of SEC13F_CONVERTER_ANALYTICS) {
+  assert.match(sec13fGenerator, new RegExp(`"${analytic.replaceAll(".", "\\.")}"`, "u"),
+    `frozen SEC 13F generator lost converter analytic: ${analytic}`);
 }
 
 assert.match(sources["scripts/build-stocks-analyzer.mjs"], /writeJson\(PATHS\.output, output\)/u);
