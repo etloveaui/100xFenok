@@ -195,12 +195,31 @@ data/factset-earnings-insight/archives/*.pdf
 
 # R1 raw EDGAR/Yahoo caches: re-fetchable via scripts/feno-rim-recovery/r1-fetch-*.mjs;
 # only the derived panel + validation artifacts and receipts are committed.
-data/edgar/r1-panel/
-data/edgar/r2-panel/
-data/edgar/r3-panel/
+# Directory-form exclusion made the committed receipts unreachable, contradicting
+# the line above: Git cannot re-include a file whose parent directory is excluded.
+# Content-form plus an explicit negation keeps the caches out and the receipts in.
+data/edgar/r1-panel/**
+!data/edgar/r1-panel/*-receipt.json
+data/edgar/r2-panel/**
+!data/edgar/r2-panel/*-receipt.json
+data/edgar/r3-panel/**
+!data/edgar/r3-panel/*-receipt.json
 
 # Third-party published papers: method sources, never redistributable.
 # This repository is PUBLIC, so a tracked copy is a public copy.
 # Originals live on the SSD with a receipt at
 # data/computed/feno-rim-recovery/fetch-receipts/literature-preservation-receipt.json
 data/edgar/literature/
+
+# Public mirror of the same re-fetchable EDGAR caches and third-party FactSet PDFs.
+# Canonical is deliberately untracked and the bytes are reproducible from the
+# committed receipts, so the public copies are not carried either. Receipts stay
+# trackable on both sides. A blanket `git add -- 100xfenok-next/public/data` in a
+# lane workflow must not silently re-track these.
+100xfenok-next/public/data/edgar/r1-panel/**
+!100xfenok-next/public/data/edgar/r1-panel/*-receipt.json
+100xfenok-next/public/data/edgar/r2-panel/**
+!100xfenok-next/public/data/edgar/r2-panel/*-receipt.json
+100xfenok-next/public/data/edgar/r3-panel/**
+!100xfenok-next/public/data/edgar/r3-panel/*-receipt.json
+100xfenok-next/public/data/factset-earnings-insight/archives/*.pdf
