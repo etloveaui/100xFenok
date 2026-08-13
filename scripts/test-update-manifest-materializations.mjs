@@ -132,13 +132,19 @@ assert.deepEqual(
   [
     "100xfenok-next/public/data/sec-13f/investors/griffin.json",
     "100xfenok-next/public/data/damodaran/",
+    "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
+    "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
+    "100xfenok-next/public/data/global-scouter/core/slick_index.json",
+    "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
   ],
   "batch-2 routes must account for every overlapping public-data ignore rule",
 );
 for (const ignoreRule of relevantPublicIgnoreRules) {
   const isDirectoryRule = ignoreRule.endsWith("/");
   const ignorePath = isDirectoryRule ? ignoreRule.slice(0, -1) : ignoreRule;
-  const coveringRoute = BATCH2_ROUTES.find((route) => ignorePath.startsWith(`${route.destination}/`));
+  const coveringRoute = BATCH2_ROUTES.find((route) => (
+    ignorePath === route.destination || ignorePath.startsWith(`${route.destination}/`)
+  ));
   if (isDirectoryRule) {
     // A directory ignore is valid only when an explicit exclude covers it via
     // a broader route (griffin behavior) or one rsync_tree route owns that
