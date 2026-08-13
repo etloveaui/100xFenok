@@ -16,6 +16,7 @@ import {
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const helperPath = path.join(root, "scripts/stage-update-manifest-central.mjs");
+const helperSource = fs.readFileSync(helperPath, "utf8");
 const workflow = fs.readFileSync(path.join(root, ".github/workflows/update-manifest.yml"), "utf8");
 // The staging contract is generated, not hand-copied: expected central policy
 // comes from the builder, so adding a materialization route flows into this
@@ -52,6 +53,8 @@ assert.equal(
 );
 assert.equal(centralSpecs.every((spec) => spec.required === false), true);
 assert.equal(fs.existsSync(helperPath), true);
+assert.match(helperSource, /[\"']-fdX[\"']/);
+assert.doesNotMatch(helperSource, /[\"']-fdx[\"']/);
 assert.equal((workflow.match(/node scripts\/stage-update-manifest-central\.mjs/g) ?? []).length, 5);
 assert.equal((workflow.match(/node scripts\/test-update-manifest-central-staging\.mjs/g) ?? []).length, 0);
 assert.match(workflow, /- name: Check if manifest changed[\s\S]*?stage-update-manifest-central\.mjs --check[\s\S]*?3\) echo "changed=false"/);
@@ -103,6 +106,11 @@ function runHelper(fixture, mode) {
     cwd: fixture.repoRoot,
     encoding: "utf8",
   });
+}
+
+function resetToOriginMain(fixture) {
+  git(fixture.repoRoot, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+  git(fixture.repoRoot, ["reset", "--hard", "origin/main"]);
 }
 
 // A Git/validation error remains fatal and cannot be reported as "changed".
@@ -175,7 +183,7 @@ for (const relative of [fileSample, directorySample]) {
   for (const target of residue) write(target, "untracked residue\n");
   const unrelated = path.join(fixture.repoRoot, "unrelated-residue.txt");
   write(unrelated, "outside central policy\n");
-  git(fixture.repoRoot, ["reset", "--hard", "HEAD"]);
+  resetToOriginMain(fixture);
   assert.equal(fs.readFileSync(tracked, "utf8"), "baseline signals\n");
   assert.equal(residue.every((target) => fs.existsSync(target)), true);
   const dirty = runHelper(fixture, "--assert-clean-after-reset");
@@ -183,6 +191,8 @@ for (const relative of [fileSample, directorySample]) {
   assert.match(dirty.stderr, /reset left central state: cached=0 changed=100 ignored=0/);
   const cleaned = runHelper(fixture, "--clean-untracked-after-reset");
   assert.equal(cleaned.status, 0, `${cleaned.stderr}\n${cleaned.stdout}`);
+  assert.match(cleaned.stdout, /kind=ordinary count=100 paths=\[".*pre-reset-000\.json"/);
+  assert.match(cleaned.stdout, /kind=ignored count=0 paths=\[\]/);
   assert.equal(residue.some((target) => fs.existsSync(target)), false);
   assert.equal(fs.existsSync(unrelated), true);
   assert.equal(runHelper(fixture, "--assert-clean-after-reset").status, 0);
@@ -198,16 +208,21 @@ for (const relative of [fileSample, directorySample]) {
 
 {
   const fixture = makeFixture();
-  write(path.join(fixture.repoRoot, ".gitignore"), `${treeDestination}/ignored.json\n`);
+  const ignored = path.posix.join(treeDestination, "ignored.json");
+  const outsideIgnored = "outside-ignored.json";
+  write(path.join(fixture.repoRoot, ".gitignore"), `${ignored}\n${outsideIgnored}\n`);
   git(fixture.repoRoot, ["add", ".gitignore"]);
   git(fixture.repoRoot, ["commit", "-qm", "ignore fixture"]);
-  write(path.join(fixture.repoRoot, treeDestination, "ignored.json"), "ignored residue\n");
-  git(fixture.repoRoot, ["reset", "--hard", "HEAD"]);
+  write(path.join(fixture.repoRoot, ignored), "ignored residue\n");
+  write(path.join(fixture.repoRoot, outsideIgnored), "outside ignored residue\n");
+  resetToOriginMain(fixture);
   assert.notEqual(runHelper(fixture, "--assert-clean-after-reset").status, 0);
   const cleanup = runHelper(fixture, "--clean-untracked-after-reset");
-  assert.notEqual(cleanup.status, 0);
-  assert.match(cleanup.stderr, /reset left central state: cached=0 changed=0 ignored=1/);
-  assert.equal(fs.existsSync(path.join(fixture.repoRoot, treeDestination, "ignored.json")), true);
+  assert.equal(cleanup.status, 0, `${cleanup.stderr}\n${cleanup.stdout}`);
+  assert.equal(cleanup.stdout.includes(`kind=ignored count=1 paths=${JSON.stringify([ignored])}`), true);
+  assert.equal(fs.existsSync(path.join(fixture.repoRoot, ignored)), false);
+  assert.equal(fs.existsSync(path.join(fixture.repoRoot, outsideIgnored)), true);
+  assert.equal(runHelper(fixture, "--assert-clean-after-reset").status, 0);
 }
 
 // Cleanup is permitted only after reset has restored every tracked central path.
@@ -215,12 +230,36 @@ for (const relative of [fileSample, directorySample]) {
   const fixture = makeFixture();
   const tracked = path.join(fixture.repoRoot, fileSample);
   const untracked = path.join(fixture.repoRoot, treeDestination, "residue.json");
+  const ignored = path.join(fixture.repoRoot, treeDestination, "ignored-residue.json");
+  write(path.join(fixture.repoRoot, ".gitignore"), `${path.posix.join(treeDestination, "ignored-residue.json")}\n`);
+  git(fixture.repoRoot, ["add", ".gitignore"]);
+  git(fixture.repoRoot, ["commit", "-qm", "tracked refusal fixture"]);
   write(tracked, "tracked mutation\n");
   write(untracked, "untracked residue\n");
+  write(ignored, "ignored residue\n");
   const cleanup = runHelper(fixture, "--clean-untracked-after-reset");
   assert.notEqual(cleanup.status, 0);
   assert.match(cleanup.stderr, /cleanup requires clean tracked state: cached=0 changed=1/);
   assert.equal(fs.existsSync(untracked), true);
+  assert.equal(fs.existsSync(ignored), true);
+}
+
+// Cleanup refuses out-of-policy staged work before deleting either ordinary or
+// ignored central residue.
+{
+  const fixture = makeFixture();
+  const ignored = path.posix.join(treeDestination, "staged-guard-ignored.json");
+  write(path.join(fixture.repoRoot, ".gitignore"), `${ignored}\n`);
+  git(fixture.repoRoot, ["add", ".gitignore"]);
+  git(fixture.repoRoot, ["commit", "-qm", "staged guard fixture"]);
+  write(path.join(fixture.repoRoot, "unrelated.txt"), "pre-staged unrelated\n");
+  git(fixture.repoRoot, ["add", "unrelated.txt"]);
+  write(path.join(fixture.repoRoot, ignored), "ignored residue\n");
+  const result = runHelper(fixture, "--clean-untracked-after-reset");
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /out-of-policy staged paths: unrelated\.txt/);
+  assert.equal(fs.existsSync(path.join(fixture.repoRoot, ignored)), true);
+  assert.deepEqual(cached(fixture.repoRoot), ["unrelated.txt"]);
 }
 
 {
