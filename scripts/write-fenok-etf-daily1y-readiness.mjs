@@ -34,6 +34,7 @@ const DAILY_1Y_MIN_ROWS = 200;
 const STOCKANALYSIS_DETAIL_DIR_REL = "data/stockanalysis/etfs";
 const YF_FINANCE_DIR_REL = "data/yf/finance";
 const PENDING_LEDGER_REL = "data/stockanalysis/backfill/pending_ledger.json";
+const CORE_BASKET_REL_PATH = "data/admin/fenok-etf-core-daily-basket.json";
 const MONTH_NAME_TO_INDEX = new Map([
   ["jan", 0],
   ["january", 0],
@@ -412,6 +413,7 @@ function requireDate(value, label) {
 
 export function buildScoredEtfDaily1yFetchablePlan({
   signalSummary,
+  coreBasket = null,
   historyGap,
   coverageIndex,
   generatedAt = new Date(),
@@ -426,6 +428,22 @@ export function buildScoredEtfDaily1yFetchablePlan({
   const classificationIso = classificationDate.toISOString();
   const summaryRows = asArray(signalSummary?.rows);
   const summaryTickers = [...new Set(summaryRows.map((row) => normalizeTicker(row?.ticker)).filter(Boolean))].sort();
+  const basket = coreBasket ?? readJson(CORE_BASKET_REL_PATH, rootDir);
+  const basketTickers = [...new Set(asArray(basket?.daily_refresh_universe?.tickers)
+    .map((ticker) => normalizeTicker(ticker))
+    .filter(Boolean))].sort();
+  if (basketTickers.length === 0) {
+    throw new Error("core daily basket is empty or missing daily_refresh_universe.tickers");
+  }
+  const summaryTickerSet = new Set(summaryTickers);
+  const coreMissingFromSummary = basketTickers.filter((ticker) => !summaryTickerSet.has(ticker));
+  if (coreMissingFromSummary.length > 0) {
+    throw new Error(`core daily basket tickers absent from scored signal summary: ${coreMissingFromSummary.join(",")}`);
+  }
+  // Managed universe: auto-managed core daily basket (daily_refresh_universe.tickers)
+  // intersected with full scored signal-summary rows. The fail-fast above guarantees
+  // the intersection equals the full core basket, so the core denominator is exact.
+  const managedTickers = basketTickers.filter((ticker) => summaryTickerSet.has(ticker));
   const scored = historyGap?.daily_1y_gap?.scored_etfs ?? {};
   const s3Track = findTrack(coverageIndex, "etf_scoring_lane");
   const readiness = s3Track?.evidence_based_readiness ?? coverageIndex?.etf_universe?.evidence_based_readiness ?? null;
@@ -448,7 +466,7 @@ export function buildScoredEtfDaily1yFetchablePlan({
     missing: 0,
   };
 
-  for (const ticker of summaryTickers) {
+  for (const ticker of managedTickers) {
     const yfHistory = yfHistoryRows(ticker, rootDir);
     const yfRowsCount = Array.isArray(yfHistory) ? yfHistory.length : null;
     const pendingEntry = asObject(pendingEntries[ticker]);
@@ -566,7 +584,8 @@ export function buildScoredEtfDaily1yFetchablePlan({
     }
   }
 
-  const denominator = summaryTickers.length;
+  const denominator = managedTickers.length;
+  const scoredUniverseTotal = summaryTickers.length;
   const classificationProjection = daily1yClassificationProjection({
     complete: completeRows,
     fetchable: fetchableRows,
@@ -581,38 +600,39 @@ export function buildScoredEtfDaily1yFetchablePlan({
     .filter((row) => row.classification_as_of)
     .sort((left, right) => left.ticker.localeCompare(right.ticker));
   const historyGapProjection = scored.classification_projection;
+  const historyGapReportEquationOk = asNumber(scored.scored_etf_count)
+    === asNumber(scored.complete) + asNumber(scored.fetchable) + asNumber(scored.inception_limited) + asNumber(scored.terminal_limited);
   const historyGapProjectionOk = Boolean(
     historyGapProjection
-      && historyGapProjection.row_count === classificationProjection.row_count
-      && historyGapProjection.sha256 === classificationProjection.sha256
-      && JSON.stringify(historyGapProjection.reason_counts) === JSON.stringify(classificationProjection.reason_counts)
+    && historyGapProjection.row_count === asNumber(scored.scored_etf_count)
   );
   const equationOk = completeRows.length + fetchableRows.length + inceptionLimitedRows.length + terminalLimitedRows.length === denominator;
   const historyGapClockOk = historyGap?.classification_as_of === classificationIso;
   const coverageClockOk = !readiness || readiness.classification_as_of === classificationIso;
   const dailyCheckClockOk = !generatedDailyCheck || generatedDailyCheck.classification_as_of === classificationIso;
+  // Full-scored source consistency evidence: the history-gap report and the
+  // coverage index describe the FULL scored universe, so their counts are never
+  // compared directly to the core-subset loop. The report's own count equation and
+  // classification projection are the full-scored consistency evidence, and the
+  // coverage index is checked against that full report, not against the core loop.
+  const historyGapReportConsistent = historyGapClockOk && historyGapReportEquationOk && historyGapProjectionOk;
   const historyGapCountOk = (
-    historyGapClockOk
-    && asNumber(scored.scored_etf_count) === denominator
-    && asNumber(scored.complete) === completeRows.length
-    && asNumber(scored.fetchable) === fetchableRows.length
-    && asNumber(scored.inception_limited) === inceptionLimitedRows.length
-    && asNumber(scored.terminal_limited) === terminalLimitedRows.length
-    && historyGapProjectionOk
+    historyGapReportConsistent
   );
   const coverageCountOk = !readiness?.counts || (
     coverageClockOk
-    && asNumber(readiness.counts.scored_public_etf) === denominator
-    && asNumber(readiness.counts.fetchable_daily_1y_gap) === fetchableRows.length
-    && asNumber(readiness.counts.inception_limited_daily_1y_gap) === inceptionLimitedRows.length
-    && asNumber(readiness.counts.terminal_limited_daily_1y_gap) === terminalLimitedRows.length
+    && asNumber(readiness.counts.scored_public_etf) === asNumber(scored.scored_etf_count)
+    && asNumber(readiness.counts.fetchable_daily_1y_gap) === asNumber(scored.fetchable)
+    && asNumber(readiness.counts.inception_limited_daily_1y_gap) === asNumber(scored.inception_limited)
+    && asNumber(readiness.counts.terminal_limited_daily_1y_gap) === asNumber(scored.terminal_limited)
   );
   const dailyCheckCountOk = !generatedDailyCheck || (
     dailyCheckClockOk
-    && asNumber(generatedDailyCheck.fetchable_daily_1y_gap) === fetchableRows.length
-    && asNumber(generatedDailyCheck.inception_limited_daily_1y_gap) === inceptionLimitedRows.length
-    && asNumber(generatedDailyCheck.terminal_limited_daily_1y_gap) === terminalLimitedRows.length
+    && asNumber(generatedDailyCheck.fetchable_daily_1y_gap) === asNumber(scored.fetchable)
+    && asNumber(generatedDailyCheck.inception_limited_daily_1y_gap) === asNumber(scored.inception_limited)
+    && asNumber(generatedDailyCheck.terminal_limited_daily_1y_gap) === asNumber(scored.terminal_limited)
   );
+  const coreBasketOk = basketTickers.length > 0 && coreMissingFromSummary.length === 0;
   const yfGapCount = yfRows.fetchable_or_missing.length;
   const batchSize = 120;
   const tickers = fetchableRows.map((row) => row.ticker);
@@ -621,9 +641,10 @@ export function buildScoredEtfDaily1yFetchablePlan({
     schema_version: "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
     generated_at: generatedAtDate.toISOString(),
     classification_as_of: classificationIso,
-    purpose: "Admin-only no-fetch selector for exact scored ETF daily 1Y fetchable gaps.",
+    purpose: "Admin-only no-fetch selector for exact auto-managed core daily basket ETF daily 1Y fetchable gaps.",
     source_files: {
       etf_signal_summary: "data/computed/fenok_etf_signals_summary.json",
+      core_daily_basket: CORE_BASKET_REL_PATH,
       stockanalysis_detail_dir: STOCKANALYSIS_DETAIL_DIR_REL,
       data_supply_active: "data/admin/data-supply-state/v1/domains/etf_detail/active.json",
       yf_finance_dir: YF_FINANCE_DIR_REL,
@@ -635,17 +656,23 @@ export function buildScoredEtfDaily1yFetchablePlan({
       network: "none",
       writes_raw: false,
       min_daily_1y_rows: DAILY_1Y_MIN_ROWS,
-      universe: "scored ETFs from fenok_etf_signals_summary.json",
+      universe: "auto_managed_core_daily_basket (ETF Core Daily Basket daily_refresh_universe.tickers ∩ scored signal summary rows)",
       dispatch_target: "fetch-stockanalysis.yml",
       dispatch_inputs: {
         history_gaps_only: "true",
         required_history_periods: "daily_1y",
         incremental_etf_limit: String(batchSize),
       },
-      caveat: "The exact readiness blocker is effective ETF detail daily_1y continuity: true StockAnalysis primary first, then the verified R2 active selection. Raw local YF is cross-check-only and is never treated as selected authority.",
+      caveat: "Scope is the auto-managed core daily basket only: the exact readiness blocker is effective ETF detail daily_1y continuity for managed core tickers (true StockAnalysis primary first, then the verified R2 active selection). Raw local YF is cross-check-only and is never treated as selected authority.",
     },
     counts: {
+      managed_etf_count: denominator,
+      scored_universe_total: scoredUniverseTotal,
+      // Compatibility alias for legacy consumers: under the core basket scope it
+      // always equals managed_etf_count (the intersection is fail-fast enforced).
       scored_etf_count: denominator,
+      core_basket_ticker_count: basketTickers.length,
+      core_tickers_missing_from_summary: coreMissingFromSummary.length,
       complete: completeRows.length,
       fetchable: fetchableRows.length,
       inception_limited: inceptionLimitedRows.length,
@@ -663,6 +690,7 @@ export function buildScoredEtfDaily1yFetchablePlan({
       fetchable_breakdown: summarizeFetchableBreakdown(fetchableRows).counts,
       terminal_limited_breakdown: summarizeFetchableBreakdown(terminalLimitedRows).counts,
       effective_detail_resolution: effectiveResolutionCounts,
+      full_scored_report_consistent: historyGapReportConsistent,
     },
     yf_local_crosscheck: {
       complete: yfRows.complete.length,
@@ -673,11 +701,20 @@ export function buildScoredEtfDaily1yFetchablePlan({
       caveat: "Do not use the raw local YF-only count as the ETF readiness blocker; it is not R2-selected authority and over-selects versus the exact effective-detail continuity check.",
     },
     bounded_batches: {
-      can_drive_bounded_ticker_batches: historyGapCountOk && coverageCountOk && dailyCheckCountOk && equationOk,
+      // Gate is core subset/equation plus source classification clocks only;
+      // full-scored count equality is separate evidence and never gates batches.
+      can_drive_bounded_ticker_batches: coreBasketOk && equationOk && historyGapClockOk && coverageClockOk && dailyCheckClockOk,
       default_batch_size: batchSize,
       batch_count: Math.ceil(tickers.length / batchSize),
       command_template: "fetch-stockanalysis.yml history_gaps_only=true required_history_periods=daily_1y incremental_etf_limit=120",
       first_batch_tickers: tickers.slice(0, batchSize),
+      gate_evidence: {
+        core_basket_ok: coreBasketOk,
+        core_equation_ok: equationOk,
+        history_gap_classification_clock_match: historyGapClockOk,
+        coverage_index_classification_clock_match: coverageClockOk,
+        coverage_index_daily_check_classification_clock_match: dailyCheckClockOk,
+      },
     },
     classification_evidence: {
       schema_version: "fenok-edge-etf-daily1y-classification-evidence/v1",
@@ -718,7 +755,8 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
   });
 
   const scored = historyGap?.daily_1y_gap?.scored_etfs ?? {};
-  const denominator = asNumber(fetchablePlan.counts.scored_etf_count);
+  const denominator = asNumber(fetchablePlan.counts.managed_etf_count);
+  const scoredUniverseTotal = asNumber(fetchablePlan.counts.scored_universe_total);
   const daily1yComplete = asNumber(fetchablePlan.counts.complete);
   const daily1yFetchable = asNumber(fetchablePlan.counts.fetchable);
   const inceptionLimited = asNumber(fetchablePlan.counts.inception_limited);
@@ -729,18 +767,12 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
     && equationTotal === denominator
     && daily1yMissing === daily1yFetchable + inceptionLimited + terminalLimited;
   const summaryRows = asArray(signalSummary?.rows).length;
-  const summaryCountOk = summaryRows === denominator;
-  const coverageCountOk = !readiness?.counts || (
-    asNumber(readiness.counts.scored_public_etf) === denominator
-    && asNumber(readiness.counts.fetchable_daily_1y_gap) === daily1yFetchable
-    && asNumber(readiness.counts.inception_limited_daily_1y_gap) === inceptionLimited
-    && asNumber(readiness.counts.terminal_limited_daily_1y_gap) === terminalLimited
-  );
-  const dailyCheckCountOk = !generatedDailyCheck || (
-    asNumber(generatedDailyCheck.fetchable_daily_1y_gap) === daily1yFetchable
-    && asNumber(generatedDailyCheck.inception_limited_daily_1y_gap) === inceptionLimited
-    && asNumber(generatedDailyCheck.terminal_limited_daily_1y_gap) === terminalLimited
-  );
+  const summaryCountOk = summaryRows === scoredUniverseTotal && scoredUniverseTotal >= denominator;
+  // Coverage/daily-check consistency is full-scored evidence only (see plan counts):
+  // it compares the coverage index against the full scored report, never against
+  // the managed core subset, and only classification clocks gate the core batches.
+  const coverageCountOk = fetchablePlan.counts.matches_coverage_index === true;
+  const dailyCheckCountOk = fetchablePlan.counts.matches_coverage_index_daily_check === true;
   const noFetchableDaily1yGap = daily1yFetchable === 0;
   const publicDoneClaimAllowed = Boolean(
     readiness?.public_ready
@@ -762,19 +794,19 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
   if (!summaryCountOk) {
     errors.push({
       id: "etf_signal_summary_row_count",
-      detail: `summary_rows=${summaryRows}, denominator=${denominator}`,
+      detail: `summary_rows=${summaryRows}, scored_universe_total=${scoredUniverseTotal}, managed_etf_count=${denominator}`,
     });
   }
   if (!coverageCountOk) {
     errors.push({
       id: "coverage_index_etf_daily1y_count_match",
-      detail: "coverage index readiness counts differ from history-gap scored ETF counts",
+      detail: "coverage index readiness counts or classification clock differ from the full scored history-gap report (full-scored evidence only; never compared to the managed core subset)",
     });
   }
   if (!dailyCheckCountOk) {
     errors.push({
       id: "coverage_index_daily_check_count_match",
-      detail: "coverage index etf_no_fetchable_daily_1y_gap check differs from history-gap scored ETF counts",
+      detail: "coverage index etf_no_fetchable_daily_1y_gap check differs from the full scored history-gap report (full-scored evidence only; never compared to the managed core subset)",
     });
   }
   if (!fetchablePlan.counts.equation_ok) {
@@ -786,13 +818,13 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
   if (!fetchablePlan.counts.matches_history_gap_report) {
     errors.push({
       id: "fetchable_plan_history_gap_report_match",
-      detail: "fetchable plan counts or classification clock differ from the history-gap report",
+      detail: "full scored history-gap report is internally inconsistent or its classification clock differs from this classification_as_of",
     });
   }
   if (!fetchablePlan.counts.matches_coverage_index || !fetchablePlan.counts.matches_coverage_index_daily_check) {
     errors.push({
       id: "fetchable_plan_coverage_index_match",
-      detail: "fetchable plan counts differ from coverage-index ETF daily readiness counts",
+      detail: "coverage-index full-scored evidence differs from the full scored history-gap report",
     });
   }
 
@@ -801,7 +833,7 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
     schema_version: "fenok-edge-etf-daily1y-readiness-admin/v0.1",
     generated_at: generatedAt.toISOString(),
     classification_as_of: classificationAsOf.toISOString(),
-    purpose: "Admin-only generated S3 ETF daily 1Y readiness evidence. Separates scored ETF public surface from DAILY/GATED readiness.",
+    purpose: "Admin-only generated S3 ETF daily 1Y readiness evidence for the auto-managed core daily basket. Separates the managed core ETF surface from DAILY/GATED readiness.",
     asset_type: "etf",
     stage: s3Track?.stage ?? null,
     readiness_status: publicDoneClaimAllowed ? "ready" : "not_ready",
@@ -816,12 +848,15 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
     },
     source_files: {
       etf_signal_summary: "data/computed/fenok_etf_signals_summary.json",
+      core_daily_basket: CORE_BASKET_REL_PATH,
       history_gap_report: "data/stockanalysis/backfill/history_gap_report_latest.json",
       coverage_index: "data/admin/fenok-edge-coverage-index.json",
       output: OUT_REL_PATH,
       fetchable_plan_output: FETCHABLE_PLAN_REL_PATH,
     },
     daily_1y_readiness: {
+      managed_etf_count: denominator,
+      scored_universe_total: scoredUniverseTotal,
       denominator,
       daily_1y_complete: daily1yComplete,
       daily_1y_missing: daily1yMissing,
@@ -840,12 +875,16 @@ export function buildEtfDaily1yReadiness({ rootDir = REPO_ROOT, now = new Date()
         ...(noFetchableDaily1yGap ? [] : ["etf_no_fetchable_daily_1y_gap"]),
         ...(readiness?.gated_ready ? [] : ["gated_ready"]),
       ],
-      claim_scope: "full_scored_etf_universe_diagnostic",
+      claim_scope: "auto_managed_core_daily_basket",
       service_gate: false,
-      caveat: "Only immediately fetchable daily 1Y gaps block the full scored-ETF diagnostic lane. ETF Core Daily Basket is the service daily/gated target; inception-limited and recent provider-terminal gaps are tracked but do not block by themselves.",
+      caveat: "Only immediately fetchable daily 1Y gaps for auto-managed core daily basket tickers block the managed-core diagnostic lane. ETF Core Daily Basket is the service daily/gated target; inception-limited and recent provider-terminal gaps are tracked but do not block by themselves. Full scored-universe counts are preserved as separate source consistency evidence and are never compared directly to the core subset.",
     },
     generated_count_checks: {
       summary_rows: summaryRows,
+      managed_etf_count: denominator,
+      scored_universe_total: scoredUniverseTotal,
+      core_basket_ticker_count: asNumber(fetchablePlan.counts.core_basket_ticker_count),
+      core_tickers_missing_from_summary: asNumber(fetchablePlan.counts.core_tickers_missing_from_summary),
       summary_count_ok: summaryCountOk,
       coverage_index_count_ok: coverageCountOk,
       coverage_index_daily_check_count_ok: dailyCheckCountOk,

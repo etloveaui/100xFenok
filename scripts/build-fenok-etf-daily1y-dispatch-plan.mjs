@@ -19,7 +19,7 @@ const REPO_ROOT = path.resolve(__dirname, "..");
 const SOURCE_PLAN_REL = "data/admin/fenok-edge-etf-daily1y-fetchable-plan.json";
 const OUTPUT_REL = "_private/admin/fenok-etf-daily1y-dispatch-plan.json";
 const CONTRACT_DOC = "docs/planning/CONTRACT_fenok_etf_signals_v0_1_20260629.md";
-const FORMULA_VERSION = "fenok-etf-daily1y-dispatch-plan-v0.2";
+const FORMULA_VERSION = "fenok-etf-daily1y-dispatch-plan-v0.3";
 const SHARD_SIZE = 120;
 
 function parseArgs(argv) {
@@ -104,7 +104,7 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
   }));
 
   return {
-    schema_version: "fenok-etf-daily1y-dispatch-plan/v0.2",
+    schema_version: "fenok-etf-daily1y-dispatch-plan/v0.3",
     generated_at: generatedAt.toISOString(),
     source_file: SOURCE_PLAN_REL,
     source_generated_at: plan.generated_at ?? null,
@@ -117,7 +117,7 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
     status: "pending_owner_approval",
     network: "none",
     service_gate: false,
-    claim_scope: "full_scored_etf_universe_diagnostic_backfill",
+    claim_scope: "auto_managed_core_daily_basket",
     workflow: "fetch-stockanalysis.yml",
     inputs: {
       history_gaps_only: "true",
@@ -125,6 +125,9 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
       incremental_etf_limit: String(SHARD_SIZE),
     },
     counts: {
+      // managed_etf_count is the core-scoped denominator; legacy scored_etf_count
+      // is the fallback when the source plan predates the managed-core scope.
+      managed_etf_count: plan.counts?.managed_etf_count ?? plan.counts?.scored_etf_count ?? null,
       scored_etf_count: plan.counts?.scored_etf_count ?? null,
       complete: plan.counts?.complete ?? null,
       fetchable: tickers.length,
@@ -146,7 +149,7 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
       first_batch: shards[0]?.tickers?.slice(0, 12) ?? [],
       source_fetchable: Array.isArray(plan.samples?.fetchable) ? plan.samples.fetchable : [],
     },
-    caveat: "External StockAnalysis backfill dispatch is owner-gated. This plan only selects exact full scored-ETF daily_1y diagnostic gaps, never flips daily/gated readiness, and must not be used as the ETF Core Daily Basket service gate.",
+    caveat: "External StockAnalysis backfill dispatch is owner-gated. This plan only selects exact auto-managed core daily basket daily_1y diagnostic gaps, never flips daily/gated readiness, and must not be used as the ETF Core Daily Basket service gate.",
   };
 }
 

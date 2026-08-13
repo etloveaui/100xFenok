@@ -32,6 +32,21 @@ const report = {
 const payload = buildEtfDaily1yDispatchPlan({ sourcePlan, historyGapReport: report, generatedAt: new Date("2026-07-10T00:01:00.000Z") });
 assert.equal(validateEtfDaily1yDispatchPlan(payload, sourcePlan, report).ok, true);
 assert.equal(payload.source_classification_as_of, report.classification_as_of);
+assert.equal(payload.claim_scope, "auto_managed_core_daily_basket");
+// managed_etf_count falls back to legacy scored_etf_count when absent.
+assert.equal(payload.counts.managed_etf_count, null);
+const legacyCountPlan = buildEtfDaily1yDispatchPlan({
+  sourcePlan: { ...sourcePlan, counts: { ...sourcePlan.counts, scored_etf_count: 7 } },
+  historyGapReport: report,
+  generatedAt: new Date("2026-07-10T00:01:00.000Z"),
+});
+assert.equal(legacyCountPlan.counts.managed_etf_count, 7);
+const managedCountPlan = buildEtfDaily1yDispatchPlan({
+  sourcePlan: { ...sourcePlan, counts: { ...sourcePlan.counts, managed_etf_count: 9, scored_etf_count: 7 } },
+  historyGapReport: report,
+  generatedAt: new Date("2026-07-10T00:01:00.000Z"),
+});
+assert.equal(managedCountPlan.counts.managed_etf_count, 9);
 
 const staleReport = { ...report, generated_at: "2026-07-09T00:00:00.000Z" };
 const staleResult = validateEtfDaily1yDispatchPlan(payload, sourcePlan, staleReport);

@@ -75,6 +75,7 @@ STOCK_UNIVERSE_DIR = ROOT / "data" / "global-scouter" / "stocks" / "detail"
 ETF_INDEX = ROOT / "data" / "global-scouter" / "etfs" / "index.json"
 STOCKANALYSIS_ETF_UNIVERSE = ROOT / "data" / "stockanalysis" / "etf_universe.json"
 STOCKANALYSIS_ETF_SCREENER = ROOT / "data" / "stockanalysis" / "surfaces" / "etf_screener.json"
+ETF_CORE_DAILY_BASKET = ROOT / "data" / "admin" / "fenok-etf-core-daily-basket.json"
 MARKET_FACTS_INDEX = ROOT / "data" / "computed" / "market_facts" / "index.json"
 SOX_GIW_CONSTITUENTS = ROOT / "data" / "indices" / "nasdaq-giw-sox-constituents.json"
 DASHBOARD_CONSTANTS = ROOT / "100xfenok-next" / "src" / "lib" / "dashboard" / "constants.ts"
@@ -104,11 +105,11 @@ LEVERAGED_AND_FOCUS_ETFS = {
 NON_YAHOO_ETF_LABELS = {"HSCEI", "KOSPI", "NASDAQ", "SHANGHAI", "TOPIX"}
 
 # The index trackers whose distribution yield is the payout operand of the RIM
-# residual-value engine. The ETF universe is ~6,700 names fetched 140 a day
-# across six shards, so an ordinary member comes round about every seven weeks.
-# These six cannot wait that long: a stale yield closes the corresponding index
+# residual-value engine. They are part of the scheduled ETF lane's bounded
+# union (core daily basket + configured major/focus sets), so the scheduled
+# lane keeps their yields fresh; a stale yield closes the corresponding index
 # row. They are pinned ahead of the shard page and are exempt from the daily
-# limit, which costs six tickers a run.
+# limit.
 RIM_TRACKER_ETFS = {"SPY", "QQQ", "ONEQ", "SOXX", "IWM", "EWY"}
 TRACKER_UNADJUSTED_SCHEMA_VERSION = "yahoo_finance_tracker_unadjusted.v1"
 
@@ -1190,6 +1191,44 @@ def load_stockanalysis_etfs():
     return symbols
 
 
+def load_core_daily_basket():
+    """The core daily ETF basket SSOT: daily_refresh_universe.tickers."""
+    try:
+        payload = json.loads(ETF_CORE_DAILY_BASKET.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return set()
+    tickers = payload.get("daily_refresh_universe", {}).get("tickers")
+    if not isinstance(tickers, list):
+        return set()
+    symbols = set()
+    for ticker in tickers:
+        symbol = str(ticker or "").strip().upper()
+        if SYMBOL_RE.match(symbol):
+            symbols.add(symbol)
+    return symbols
+
+
+def load_core_daily_basket_sources():
+    """Labeled candidate sources for the scheduled ETF lane.
+
+    The bounded union is the core daily basket SSOT plus the three configured
+    ETF sets (major, leveraged/focus, RIM trackers). The full StockAnalysis
+    universe/screener is intentionally absent.
+    """
+    sources = {}
+
+    def add(symbols, source):
+        for symbol in symbols:
+            if SYMBOL_RE.match(symbol):
+                sources.setdefault(symbol, set()).add(source)
+
+    add(load_core_daily_basket(), "core_daily_basket")
+    add(MAJOR_ETFS, "major_etf_configuration")
+    add(RIM_TRACKER_ETFS, "rim_tracker_configuration")
+    add(LEVERAGED_AND_FOCUS_ETFS, "focus_etf_configuration")
+    return {ticker: sorted(values) for ticker, values in sorted(sources.items())}
+
+
 def load_stockanalysis_etf_priority():
     priority = {}
     for path in (STOCKANALYSIS_ETF_UNIVERSE, STOCKANALYSIS_ETF_SCREENER):
@@ -1841,6 +1880,7 @@ def write_empty_summary(profile, args, candidate_count, reason):
         "include_options": args.include_options,
         "include_shares_full": args.include_shares_full,
         "stockanalysis_etfs": args.stockanalysis_etfs,
+        "core_daily_basket": args.core_daily_basket,
         "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
         "history_gaps_only": args.history_gaps_only,
         "history_min_rows": args.history_min_rows,
@@ -1862,6 +1902,7 @@ def plan_summary(args, tickers, candidate_count):
         "candidate_count_before_filters": candidate_count,
         "profile": args.profile,
         "stockanalysis_etfs": args.stockanalysis_etfs,
+        "core_daily_basket": args.core_daily_basket,
         "priority": "stockanalysis_etf_aum" if args.stockanalysis_etfs else "ticker",
         "history_gaps_only": args.history_gaps_only,
         "history_min_rows": args.history_min_rows,
@@ -1946,6 +1987,7 @@ def main():
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
     parser.add_argument("--stocks-only", action="store_true", help="stock universe only: global-scouter stock detail plus market_facts stock candidates")
     parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
+    parser.add_argument("--core-daily-basket", action="store_true", help="scheduled ETF lane: bounded union of the core daily ETF basket and the configured major/focus/RIM tracker sets (plus any explicit --tickers); no StockAnalysis universe/screener expansion")
     parser.add_argument("--scheduled-slot", type=int, default=None, help="slot index within the weekly shard cycle for lanes that run several slots a day")
     parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
     parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")
@@ -2028,14 +2070,30 @@ def main():
         print(stable_json({"tracker_unadjusted": results}, indent=2))
         return
 
-    selection_sources = load_universe_sources(
-        stocks_only=args.stocks_only,
-        stockanalysis_etfs=args.stockanalysis_etfs,
-    )
+    if args.core_daily_basket:
+        # Scheduled ETF lane: the candidate universe is the bounded union of
+        # the core daily basket SSOT (fenok-etf-core-daily-basket.json) and
+        # the configured major/focus/RIM tracker ETF sets, labeled truthfully
+        # per source. The ~5,512-name StockAnalysis universe/screener is never
+        # loaded or expanded here.
+        selection_sources = load_core_daily_basket_sources()
+    else:
+        selection_sources = load_universe_sources(
+            stocks_only=args.stocks_only,
+            stockanalysis_etfs=args.stockanalysis_etfs,
+        )
+    # Only the bounded core ETF lane narrows batch-state ownership to its real
+    # candidates. Other stateful lanes retain their historical StockAnalysis
+    # active-universe contract; in particular, the stock lane must not lose
+    # existing ETF state merely because its current fetch selection is stocks.
     universe_sources = (
-        load_universe_sources(stocks_only=False, stockanalysis_etfs=True)
-        if args.record_batch_state
-        else selection_sources
+        selection_sources
+        if args.core_daily_basket
+        else (
+            load_universe_sources(stocks_only=False, stockanalysis_etfs=True)
+            if args.record_batch_state
+            else selection_sources
+        )
     )
     active_universe = set(universe_sources)
     if args.tickers:
@@ -2043,6 +2101,8 @@ def main():
         for ticker in tickers:
             active_universe.add(ticker)
             universe_sources.setdefault(ticker, ["workflow_dispatch"])
+    elif args.core_daily_basket:
+        tickers = list(selection_sources)
     else:
         tickers = sort_universe(selection_sources, stockanalysis_etfs=args.stockanalysis_etfs)
 

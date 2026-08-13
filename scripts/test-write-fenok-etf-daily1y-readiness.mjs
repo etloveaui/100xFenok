@@ -267,6 +267,11 @@ function activeSelection(rootDir, ticker) {
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-etf-daily1y-readiness-"));
 const fixtureGeneratedAt = "2026-07-09T00:00:00.000Z";
 writeFixture(fixtureRoot, "data/computed/fenok_etf_signals_summary.json", { rows: [{ ticker: "AAA" }] });
+writeFixture(fixtureRoot, "data/admin/fenok-etf-core-daily-basket.json", {
+  schema_version: "fenok-etf-core-daily-basket/v1",
+  generated_at: fixtureGeneratedAt,
+  daily_refresh_universe: { source: "core", count: 1, tickers: ["AAA"], workflow: "daily" },
+});
 writeFixture(fixtureRoot, "data/stockanalysis/backfill/history_gap_report_latest.json", {
   generated_at: fixtureGeneratedAt,
   classification_as_of: fixtureGeneratedAt,
@@ -705,6 +710,12 @@ assert.equal(payload.exact_fetchable_plan.can_drive_bounded_ticker_batches, true
 assert.equal(payload.exact_fetchable_plan.batch_count, Math.ceil(readiness.daily_1y_fetchable / 120));
 
 assert.equal(plan.counts.scored_etf_count, readiness.denominator);
+assert.equal(plan.counts.managed_etf_count, readiness.denominator);
+assert.equal(plan.counts.scored_universe_total, readiness.denominator);
+// Compatibility alias stays equal to the managed core denominator.
+assert.equal(plan.counts.scored_etf_count, plan.counts.managed_etf_count);
+assert.equal(plan.counts.core_basket_ticker_count, 1);
+assert.equal(plan.counts.core_tickers_missing_from_summary, 0);
 assert.equal(plan.counts.complete, readiness.daily_1y_complete);
 assert.equal(plan.counts.fetchable, readiness.daily_1y_fetchable);
 assert.equal(plan.counts.inception_limited, readiness.inception_limited_daily_1y_gap);
@@ -723,6 +734,8 @@ assert.deepEqual(plan.tickers, [...plan.tickers].sort());
 assert.equal(planBreakdownTotal, readiness.daily_1y_fetchable);
 
 assert.equal(plan.bounded_batches.can_drive_bounded_ticker_batches, true);
+assert.equal(plan.bounded_batches.gate_evidence.core_basket_ok, true);
+assert.equal(plan.bounded_batches.gate_evidence.core_equation_ok, true);
 assert.equal(plan.bounded_batches.default_batch_size, 120);
 assert.equal(plan.bounded_batches.batch_count, Math.ceil(readiness.daily_1y_fetchable / 120));
 assert.equal(plan.bounded_batches.first_batch_tickers.length, Math.min(120, readiness.daily_1y_fetchable));
@@ -753,6 +766,29 @@ assert.equal(historyCountMismatch.public_done_claim_allowed, false);
 assert.equal(historyCountMismatch.readiness_status, "not_ready");
 assert.equal(historyCountMismatch.fetchable_plan.counts.matches_history_gap_report, false);
 assert.ok(historyCountMismatch.errors.some((error) => error.id === "fetchable_plan_history_gap_report_match"));
+
+assert.throws(
+  () => buildScoredEtfDaily1yFetchablePlan({
+    signalSummary: { rows: [{ ticker: "AAA" }] },
+    coreBasket: { daily_refresh_universe: { tickers: [] } },
+    historyGap: { classification_as_of: fixtureGeneratedAt, daily_1y_gap: { scored_etfs: {} } },
+    coverageIndex: null,
+    generatedAt: currentNow,
+    classificationAsOf: fixtureGeneratedAt,
+  }),
+  /core daily basket is empty/,
+);
+assert.throws(
+  () => buildScoredEtfDaily1yFetchablePlan({
+    signalSummary: { rows: [{ ticker: "AAA" }] },
+    coreBasket: { daily_refresh_universe: { tickers: ["AAA", "ZZZ"] } },
+    historyGap: { classification_as_of: fixtureGeneratedAt, daily_1y_gap: { scored_etfs: {} } },
+    coverageIndex: null,
+    generatedAt: currentNow,
+    classificationAsOf: fixtureGeneratedAt,
+  }),
+  /absent from scored signal summary/,
+);
 
 fs.rmSync(fixtureRoot, { recursive: true, force: true });
 
@@ -812,6 +848,11 @@ for (const [caseName, mutateObject, expectedPattern] of [
 
 writeFixture(effectiveRoot, "data/computed/fenok_etf_signals_summary.json", {
   rows: ["FBC", "FBI", "PRI", "UNAV"].map((ticker) => ({ ticker })),
+});
+writeFixture(effectiveRoot, "data/admin/fenok-etf-core-daily-basket.json", {
+  schema_version: "fenok-etf-core-daily-basket/v1",
+  generated_at: "2026-07-11T00:00:00.000Z",
+  daily_refresh_universe: { source: "core", count: 4, tickers: ["FBC", "FBI", "PRI", "UNAV"], workflow: "daily" },
 });
 const effectiveNextRoot = path.join(effectiveRoot, "100xfenok-next");
 fs.mkdirSync(effectiveNextRoot, { recursive: true });

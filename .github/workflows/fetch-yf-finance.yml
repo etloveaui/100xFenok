@@ -1,5 +1,5 @@
 # yf Finance Engine v2 — bounded Yahoo Finance depth for the stock lens.
-# Daily measured-stock refresh + bounded six-day ETF shard cycle.
+# Daily measured-stock refresh + bounded ETF refresh from the core daily basket union.
 # Output: owned canonical Yahoo data. Update Manifest owns shared/public projections.
 
 name: Fetch YF Finance Data
@@ -11,25 +11,15 @@ on:
     # Seven minutes past, not on the hour: GitHub warns that hour-start
     # schedules may be delayed or dropped under load, and three consecutive
     # :00 slots did not fire at all.
-    # Sunday-Friday, every two hours: twelve ETF slots a day, seventy-two a
-    # week. The universe is ~6,700 names, so a 72-shard cycle puts ~94 regular
-    # tickers in each slot, inside the existing regular=100 budget without
-    # matrix concurrency. The hour comes from the cron string and is immune to
-    # start drift; the weekday is read from the clock, so a slot delayed past
-    # midnight lands in the next day's cycle. That mis-slots at most one slot
-    # of seventy-two and self-corrects on the next pass.
+    # Sunday-Friday, one ETF slot a day at 00:07 UTC: six runs a week on a
+    # six-shard cycle. The scheduled ETF lane selects the bounded union of the
+    # core daily basket (100 names, the fenok-etf-core-daily-basket.json admin
+    # manifest) and the configured major/focus/RIM tracker ETF sets (155 names
+    # total), so a six-way split averages about 26 regular tickers per slot.
+    # The weekday is read from the clock and maps directly to the shard index
+    # of that cycle, so a slot delayed past midnight lands in the next day's
+    # cycle and self-corrects on the next pass.
     - cron: '7 0 * * 0-5'
-    - cron: '7 2 * * 0-5'
-    - cron: '7 4 * * 0-5'
-    - cron: '7 6 * * 0-5'
-    - cron: '7 8 * * 0-5'
-    - cron: '7 10 * * 0-5'
-    - cron: '7 12 * * 0-5'
-    - cron: '7 14 * * 0-5'
-    - cron: '7 16 * * 0-5'
-    - cron: '7 18 * * 0-5'
-    - cron: '7 20 * * 0-5'
-    - cron: '7 22 * * 0-5'
   workflow_dispatch:
     inputs:
       limit:
@@ -186,6 +176,7 @@ jobs:
           INPUT_PROFILE: ${{ github.event.inputs.profile || 'full' }}
           INPUT_MAX_AGE_HOURS: ${{ github.event.inputs.max_age_hours || '0' }}
           INPUT_INCLUDE_SHARES_FULL: ${{ github.event.inputs.include_shares_full || 'false' }}
+          INPUT_CORE_DAILY_BASKET: 'false'
           INPUT_STOCKANALYSIS_ETFS: ${{ github.event.inputs.stockanalysis_etfs || 'false' }}
           INPUT_STOCKS_ONLY: ${{ github.event.inputs.stocks_only || 'false' }}
           INPUT_HISTORY_GAPS_ONLY: ${{ github.event.inputs.history_gaps_only || 'false' }}
@@ -241,34 +232,32 @@ jobs:
               INPUT_STOCKS_ONLY="true"
             else
               case "$EVENT_SCHEDULE" in
-                '7 '*' * * 0-5')
-                  SLOT_HOUR="${EVENT_SCHEDULE#7 }"
-                  SLOT_HOUR="${SLOT_HOUR%% *}"
-                  ;;
+                '7 0 * * 0-5') : ;;
                 *) echo "::error::unrecognized scheduled ETF slot: $EVENT_SCHEDULE" >&2; exit 2 ;;
-              esac
-              case "$SLOT_HOUR" in
-                0|2|4|6|8|10|12|14|16|18|20|22) : ;;
-                *) echo "::error::ETF slot hour must be even and below 24: $SLOT_HOUR" >&2; exit 2 ;;
               esac
               SLOT_WEEKDAY="$(date -u +%w)"
               if [ "$SLOT_WEEKDAY" -gt 5 ]; then SLOT_WEEKDAY=5; fi
-              DAILY_INDEX=$(( SLOT_WEEKDAY * 12 + SLOT_HOUR / 2 ))
-              DAILY_SHARDS=72
-              echo "ETF slot: weekday=$SLOT_WEEKDAY hour=$SLOT_HOUR shard=$DAILY_INDEX/$DAILY_SHARDS"
-              # Hash-stable 72-shard split of ~6,700 names runs 73~122 per
-              # shard, so a 100 regular cap would truncate 21 of them and leave
-              # their tails permanently uncollected. 140 clears the observed
-              # maximum with headroom for new ETFs; the outer limit also has to
-              # cover retries and the pinned RIM trackers.
+              # One slot a day, Sunday-Friday: the weekday is the shard index
+              # of the six-shard weekly cycle, so no hour or slot arithmetic
+              # is needed and the scheduled slot stays coherent with the
+              # shard.
+              DAILY_INDEX="$SLOT_WEEKDAY"
+              DAILY_SHARDS=6
+              echo "ETF slot: weekday=$SLOT_WEEKDAY shard=$DAILY_INDEX/$DAILY_SHARDS"
+              # The scheduled lane selects the core daily basket plus the
+              # configured major/focus/RIM tracker sets (155 names), not the
+              # StockAnalysis universe. A six-shard split averages about 26
+              # tickers per slot, so the regular cap is not binding; the outer
+              # limit still has to cover the retry budget and any explicit
+              # manual tickers.
               INPUT_LIMIT="${YF_WEEKLY_ETF_LIMIT:-200}"
               INPUT_RETRY_LIMIT="${YF_WEEKLY_ETF_RETRY_LIMIT:-40}"
               INPUT_REGULAR_LIMIT="${YF_WEEKLY_ETF_REGULAR_LIMIT:-140}"
               INPUT_UNTRACKED_LIMIT="${YF_WEEKLY_ETF_UNTRACKED_LIMIT:-80}"
               INPUT_SHARD_CYCLE_INDEX="${YF_WEEKLY_ETF_SHARD_CYCLE_INDEX:-}"
               # The weekday stays the real weekday, because the weekly cycle
-              # index is derived from the calendar occurrence. The slot says
-              # which of the day's twelve runs this is.
+              # index is derived from the calendar occurrence. With one slot
+              # a day the slot index is the weekday itself.
               INPUT_SCHEDULED_WEEKDAY="$SLOT_WEEKDAY"
               INPUT_SCHEDULED_SLOT="$DAILY_INDEX"
               INPUT_STABLE_SHARDS="true"
@@ -286,7 +275,11 @@ jobs:
               INPUT_HISTORY_GAPS_ONLY="${YF_WEEKLY_ETF_HISTORY_GAPS_ONLY:-false}"
               INPUT_HISTORY_MIN_ROWS="${YF_WEEKLY_ETF_HISTORY_MIN_ROWS:-200}"
               INPUT_UNTRACKED_ONLY="${YF_WEEKLY_ETF_UNTRACKED_ONLY:-false}"
-              INPUT_STOCKANALYSIS_ETFS="${YF_WEEKLY_ETF_STOCKANALYSIS_ETFS:-true}"
+              # The full StockAnalysis universe/screener stays off the
+              # scheduled lane; only an explicit operator repo-variable opt-in
+              # can re-enable it. Manual dispatches keep the input default.
+              INPUT_STOCKANALYSIS_ETFS="${YF_WEEKLY_ETF_STOCKANALYSIS_ETFS:-false}"
+              INPUT_CORE_DAILY_BASKET="${YF_WEEKLY_ETF_CORE_DAILY_BASKET:-true}"
               INPUT_STOCKS_ONLY="false"
             fi
             INPUT_INCLUDE_SHARES_FULL="false"
@@ -319,6 +312,7 @@ jobs:
           if [ -n "$INPUT_CONTROLLED_FAILURE_TICKERS" ]; then ARGS="$ARGS --controlled-failure-tickers $INPUT_CONTROLLED_FAILURE_TICKERS"; fi
           if [ "$INPUT_STOCKS_ONLY" = "true" ]; then ARGS="$ARGS --stocks-only"; fi
           if [ "$INPUT_INCLUDE_SHARES_FULL" = "true" ]; then ARGS="$ARGS --include-shares-full"; fi
+          if [ "$INPUT_CORE_DAILY_BASKET" = "true" ]; then ARGS="$ARGS --core-daily-basket"; fi
           if [ "$INPUT_STOCKANALYSIS_ETFS" = "true" ]; then ARGS="$ARGS --stockanalysis-etfs"; fi
           if [ "$INPUT_HISTORY_GAPS_ONLY" = "true" ]; then ARGS="$ARGS --history-gaps-only --history-min-rows ${INPUT_HISTORY_MIN_ROWS:-200}"; fi
           if [ "$INPUT_UNTRACKED_ONLY" = "true" ]; then ARGS="$ARGS --untracked-only"; fi

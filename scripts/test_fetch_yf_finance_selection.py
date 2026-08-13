@@ -55,6 +55,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.fetcher.STOCKANALYSIS_ETF_UNIVERSE = self.root / "stockanalysis" / "etf_universe.json"
         self.fetcher.STOCKANALYSIS_ETF_SCREENER = self.root / "stockanalysis" / "surfaces" / "etf_screener.json"
+        self.fetcher.ETF_CORE_DAILY_BASKET = self.root / "admin" / "fenok-etf-core-daily-basket.json"
         self.fetcher.STOCK_UNIVERSE_DIR = self.root / "global-scouter" / "stocks" / "detail"
         self.fetcher.ETF_INDEX = self.root / "global-scouter" / "etfs" / "index.json"
         self.fetcher.MARKET_FACTS_INDEX = self.root / "computed" / "market_facts" / "index.json"
@@ -635,6 +636,82 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
             self.fetcher.sort_universe({"AAA", "BND", "VOO", "ZZZ"}, stockanalysis_etfs=True),
             ["BND", "VOO", "AAA", "ZZZ"],
         )
+
+    def test_load_core_daily_basket_validates_daily_refresh_universe_tickers(self) -> None:
+        self.assertEqual(self.fetcher.load_core_daily_basket(), set())
+        write_json(
+            self.fetcher.ETF_CORE_DAILY_BASKET,
+            {
+                "daily_refresh_universe": {
+                    "tickers": ["SPY", "qqq", "VTI ", "INVALID SYMBOL", "BAD_SYMBOL", ""],
+                }
+            },
+        )
+
+        self.assertEqual(
+            self.fetcher.load_core_daily_basket(),
+            {"SPY", "QQQ", "VTI"},
+        )
+
+        # The scheduled lane's labeled union is the basket plus the three
+        # configured ETF sets, never the StockAnalysis universe/screener.
+        sources = self.fetcher.load_core_daily_basket_sources()
+        self.assertEqual(
+            sources["SPY"],
+            ["core_daily_basket", "major_etf_configuration", "rim_tracker_configuration"],
+        )
+        self.assertEqual(sources["QQQ"], ["core_daily_basket", "major_etf_configuration", "rim_tracker_configuration"])
+        self.assertEqual(sources["VTI"], ["core_daily_basket", "major_etf_configuration"])
+        self.assertEqual(sources["TQQQ"], ["focus_etf_configuration"])
+        self.assertEqual(sources["ONEQ"], ["rim_tracker_configuration"])
+        self.assertEqual(len(sources), 56)
+        self.assertEqual(list(sources), sorted(sources))
+
+    def test_core_daily_basket_mode_selects_bounded_union_plus_explicit_tickers(self) -> None:
+        write_json(self.fetcher.ETF_CORE_DAILY_BASKET, {"daily_refresh_universe": {"tickers": ["SMALL", "BIG"]}})
+        # The StockAnalysis universe/screener must not enter the candidate set.
+        write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "ZZSA", "aum": "9B"}]})
+        write_json(self.fetcher.STOCKANALYSIS_ETF_SCREENER, {"records": [{"s": "YYSA", "aum": "8B"}]})
+        expected_union = (
+            {"BIG", "SMALL"}
+            | self.fetcher.MAJOR_ETFS
+            | self.fetcher.LEVERAGED_AND_FOCUS_ETFS
+            | self.fetcher.RIM_TRACKER_ETFS
+        )
+        self.fetcher.fetch_with_retry = lambda *args, **kwargs: None
+        original_argv, original_stdout = sys.argv, sys.stdout
+        buffer = io.StringIO()
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--core-daily-basket", "--plan-only", "--plan-sample-size", "10",
+            ]
+            sys.stdout = buffer
+            self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        payload = json.loads(buffer.getvalue())
+        self.assertEqual(payload["candidate_count_before_filters"], len(expected_union))
+        self.assertEqual(payload["sample"], sorted(expected_union)[:10])
+        self.assertEqual(payload["priority"], "ticker")
+        self.assertTrue(payload["core_daily_basket"])
+
+        # Manual explicit tickers still work and are the whole plan.
+        buffer = io.StringIO()
+        try:
+            sys.argv = [
+                "fetch-yf-finance.py", "--core-daily-basket", "--tickers", "ZZZ,SMALL",
+                "--plan-only", "--plan-sample-size", "10",
+            ]
+            sys.stdout = buffer
+            self.fetcher.main()
+        finally:
+            sys.argv, sys.stdout = original_argv, original_stdout
+
+        payload = json.loads(buffer.getvalue())
+        self.assertEqual(payload["candidate_count_before_filters"], 2)
+        self.assertEqual(payload["sample"], ["ZZZ", "SMALL"])
+        self.assertTrue(payload["tickers_override"])
 
     def test_load_universe_keeps_stockanalysis_etfs_aum_first_for_limited_backfills(self) -> None:
         write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "SMALL", "aum": "1M"}]})
@@ -2101,10 +2178,13 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         # The unit check above still passes when the flag never reaches the
         # parser, which is exactly how the shipped lane broke: the workflow was
         # text-asserted only, and every scheduled slot exited 2 before
-        # fetching. Drive the real entry point.
+        # fetching. Drive the real entry point with the shipped scheduled ETF
+        # lane shape: one slot a day on the six-shard cycle, core daily basket
+        # union selection, natural retries, stable shards, and the scheduled
+        # slot/limit budget.
         script = Path(__file__).resolve().parent / "fetch-yf-finance.py"
         base = [
-            sys.executable, str(script), "--plan-only", "--stockanalysis-etfs",
+            sys.executable, str(script), "--plan-only", "--core-daily-basket",
             "--natural-run", "--stable-shards", "--limit", "200",
             "--regular-limit", "140", "--retry-limit", "40",
         ]
@@ -2115,16 +2195,36 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                 argv += ["--scheduled-slot", str(slot)]
             return subprocess.run(argv, capture_output=True, text=True, cwd=script.parent.parent)
 
-        for shard, weekday, slot in (("0/72", 0, 0), ("12/72", 1, 12), ("71/72", 5, 71)):
-            result = run(shard, weekday, slot)
-            self.assertEqual(result.returncode, 0, f"{shard} slot {slot} must plan, got: {result.stderr[-400:]}")
+        for shard in range(6):
+            result = run(f"{shard}/6", shard, shard)
+            self.assertEqual(result.returncode, 0, f"{shard}/6 must plan, got: {result.stderr[-400:]}")
 
-        mismatched = run("12/72", 0, 12)
+        mismatched = run("1/6", 0, 1)
         self.assertEqual(mismatched.returncode, 2)
         self.assertIn("belongs to weekday 1", mismatched.stderr)
 
-        overloaded = run("12/72", 12, None)
+        overloaded = run("5/6", 6, None)
         self.assertEqual(overloaded.returncode, 2, "the overloaded-weekday form must stay rejected")
+
+    def test_scheduled_etf_lane_defaults_to_core_basket_not_stockanalysis_universe(self) -> None:
+        workflow = YF_WORKFLOW_PATH.read_text(encoding="utf-8")
+        fetcher_source = FETCH_PATH.read_text(encoding="utf-8")
+        run_step = workflow[
+            workflow.index("      - name: Run batch fetch"):workflow.index("      - name: Refresh owned Yahoo quarter-close source")
+        ]
+        # Scheduled ETF slots select the core daily basket union; the
+        # StockAnalysis universe/screener stays off by default and may only be
+        # re-enabled through an explicit repo-variable override.
+        self.assertIn('INPUT_STOCKANALYSIS_ETFS="${YF_WEEKLY_ETF_STOCKANALYSIS_ETFS:-false}"', run_step)
+        self.assertNotIn('INPUT_STOCKANALYSIS_ETFS="${YF_WEEKLY_ETF_STOCKANALYSIS_ETFS:-true}"', run_step)
+        self.assertIn('INPUT_CORE_DAILY_BASKET="${YF_WEEKLY_ETF_CORE_DAILY_BASKET:-true}"', run_step)
+        self.assertIn("--core-daily-basket", run_step)
+        self.assertIn("INPUT_CORE_DAILY_BASKET: 'false'", run_step)
+        self.assertIn("if args.core_daily_basket", fetcher_source)
+        self.assertIn(
+            "load_universe_sources(stocks_only=False, stockanalysis_etfs=True)",
+            fetcher_source,
+        )
 
     def test_weekly_budget_reserves_retry_and_regular_capacity(self) -> None:
         retries = [f"RETRY{i:04d}" for i in range(200)]
@@ -2792,21 +2892,24 @@ assert callable(namespace["load_universe"])
         self.assertIn("--run-id", run_step)
         self.assertIn("--natural-run", run_step)
         self.assertIn("--all-shards-run", run_step)
-        # Twelve two-hourly ETF slots, Sunday-Friday, resolved to one of
-        # seventy-two stable shards. The hour comes from the cron string so a
-        # late start cannot move a slot; only the weekday reads the clock.
-        # Seven minutes past, not on the hour: GitHub warns hour-start
-        # schedules may be delayed or dropped, and three consecutive :00 slots
-        # did not fire.
-        for hour in range(0, 24, 2):
-            self.assertIn(f"7 {hour} * * 0-5", workflow)
+        # One scheduled ETF slot a day, Sunday-Friday at 00:07 UTC: six runs a
+        # week on the six-shard cycle. The weekday is read from the clock and
+        # maps directly to the shard index; the daily stock cron stays
+        # untouched. Seven minutes past, not on the hour: GitHub warns
+        # hour-start schedules may be delayed or dropped, and three
+        # consecutive :00 slots did not fire.
+        self.assertIn("- cron: '20 23 * * 1-5'", workflow)
+        self.assertIn("- cron: '7 0 * * 0-5'", workflow)
+        for hour in range(2, 24, 2):
+            self.assertNotIn(f"- cron: '7 {hour} * * 0-5'", workflow)
         self.assertNotIn("- cron: '0 0 * * 0-5'", workflow)
-        self.assertIn("SLOT_HOUR=", run_step)
-        self.assertIn("DAILY_SHARDS=72", run_step)
-        self.assertIn("SLOT_WEEKDAY * 12 + SLOT_HOUR / 2", run_step)
+        self.assertNotIn("SLOT_HOUR=", run_step)
+        self.assertNotIn("SLOT_WEEKDAY * 12", run_step)
+        self.assertIn("DAILY_SHARDS=6", run_step)
+        self.assertIn('DAILY_INDEX="$SLOT_WEEKDAY"', run_step)
         self.assertIn("date -u +%w", run_step)
         # The weekday field must carry the real weekday and the slot must be
-        # declared separately, or the runtime validator rejects the run.
+        # coherent with the shard, or the runtime validator rejects the run.
         self.assertIn('INPUT_SCHEDULED_WEEKDAY="$SLOT_WEEKDAY"', run_step)
         self.assertIn('INPUT_SCHEDULED_SLOT="$DAILY_INDEX"', run_step)
         self.assertIn("--scheduled-slot", run_step)
@@ -2824,7 +2927,7 @@ assert callable(namespace["load_universe"])
         self.assertIn("--scheduled-weekday", run_step)
         self.assertIn('INPUT_RETRY_LIMIT="${YF_DAILY_STOCK_RETRY_LIMIT:-40}"', run_step)
         self.assertIn("YF_WEEKLY_ETF_RETRY_LIMIT:-40", run_step)
-        # The regular cap must clear the largest 72-way shard, or that shard's
+        # The regular cap must clear the largest 6-way shard, or that shard's
         # tail is never collected.
         self.assertIn("YF_WEEKLY_ETF_REGULAR_LIMIT:-140", run_step)
         self.assertIn("YF_WEEKLY_ETF_LIMIT:-200", run_step)

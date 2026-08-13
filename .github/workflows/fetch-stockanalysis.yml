@@ -7,9 +7,7 @@ on:
   schedule:
     # Daily bounded stock overview + financial pair refresh (KST 06:20).
     - cron: '20 21 * * *'
-    # Weekday scored-ETF daily 1Y continuity catch-up (KST Tue-Sat 07:50).
-    - cron: '50 22 * * 1-5'
-    # Weekday bounded ETF/surface catch-up after US close (KST Tue-Sat 08:50).
+    # Weekday core-basket ETF + surface refresh after US close (KST Tue-Sat 08:50).
     - cron: '50 23 * * 1-5'
     # 매주 일요일 23:20 UTC (한국 월요일 08:20) — Yahoo weekly refresh afterglow
     - cron: '20 23 * * 0'
@@ -34,7 +32,7 @@ on:
       discover_universe:
         description: 'Refresh the full StockAnalysis ETF universe list'
         required: false
-        default: 'true'
+        default: 'false'
       universe_backfill:
         description: 'Deep-fetch ETF payloads from the universe list (manual chunked runs only)'
         required: false
@@ -42,7 +40,7 @@ on:
       incremental_etf_backfill:
         description: 'Auto-fetch new/missing/stale ETF details without a full universe run'
         required: false
-        default: 'true'
+        default: 'false'
       incremental_etf_limit:
         description: 'Maximum incremental ETF detail retries per run'
         required: false
@@ -203,7 +201,7 @@ jobs:
             INPUT_FETCH_FINANCIALS="false"
             INPUT_DISCOVER_UNIVERSE="false"
             INPUT_UNIVERSE_BACKFILL="false"
-            INPUT_INCREMENTAL_ETF_BACKFILL="true"
+            INPUT_INCREMENTAL_ETF_BACKFILL="false"
             INPUT_YF_ETF_FALLBACK="true"
             INPUT_SLEEP="${STOCKANALYSIS_DAILY_SLEEP:-0.5}"
             INPUT_MAX_UNIVERSE_PAGES="${STOCKANALYSIS_DAILY_MAX_UNIVERSE_PAGES:-5}"
@@ -224,25 +222,9 @@ jobs:
               INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="true"
               INPUT_ISOLATED_STOCK_SCHEDULE="true"
               NATURAL_RECOVERY_KINDS="stock,financial"
-            elif [ "$EVENT_SCHEDULE" = "50 22 * * 1-5" ]; then
-              INPUT_HISTORY_GAPS_ONLY="true"
-              INPUT_REQUIRED_HISTORY_PERIODS="daily_1y"
-              INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY1Y_INCREMENTAL_LIMIT:-120}"
-              INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="${STOCKANALYSIS_DAILY1Y_MAX_AGE_HOURS:-168}"
-              INPUT_FETCH_SURFACES="false"
-              INPUT_SURFACE_SET=""
-              INPUT_CORE_BASKET_REFRESH="false"
-              NATURAL_RECOVERY_KINDS="none"
-              if [ -n "${STOCKANALYSIS_DAILY1Y_OFFSET:-}" ]; then
-                INPUT_OFFSET="$STOCKANALYSIS_DAILY1Y_OFFSET"
-              else
-                INPUT_OFFSET="$(node scripts/select-stockanalysis-daily1y-offset.mjs)"
-              fi
             elif [ "$EVENT_SCHEDULE" = "50 23 * * 1-5" ] || [ "$EVENT_SCHEDULE" = "20 23 * * 0" ]; then
               INPUT_HISTORY_GAPS_ONLY="false"
               INPUT_REQUIRED_HISTORY_PERIODS=""
-              INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY_INCREMENTAL_LIMIT:-40}"
-              INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS="${STOCKANALYSIS_DAILY_MAX_AGE_HOURS:-168}"
               INPUT_FETCH_SURFACES="true"
               INPUT_SURFACE_SET="${STOCKANALYSIS_DAILY_SURFACE_SET:-core}"
               INPUT_CORE_BASKET_REFRESH="${STOCKANALYSIS_DAILY_CORE_BASKET_REFRESH:-true}"
@@ -332,7 +314,6 @@ jobs:
           elif [ "${INPUT_HISTORY_GAP_PLAN:-false}" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --incremental-etf-backfill --incremental-etf-only --history-gaps-only --plan-only"
             PLAN_LIMIT="${INPUT_INCREMENTAL_ETF_LIMIT:-0}"
-            if [ "$PLAN_LIMIT" = "120" ]; then PLAN_LIMIT="0"; fi
             ARGS="$ARGS --incremental-etf-limit $PLAN_LIMIT"
             if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
             if [ -n "$INPUT_REQUIRED_HISTORY_PERIODS" ]; then ARGS="$ARGS --required-history-periods $INPUT_REQUIRED_HISTORY_PERIODS"; fi
@@ -352,9 +333,9 @@ jobs:
             else
               ARGS="--sleep ${INPUT_SLEEP:-0.25} --endpoint-canary --classify-etf-catalogs"
             fi
-            if [ "${INPUT_DISCOVER_UNIVERSE:-true}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi
+            if [ "${INPUT_DISCOVER_UNIVERSE:-false}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi
             if [ "${INPUT_UNIVERSE_BACKFILL:-false}" = "true" ]; then ARGS="$ARGS --universe-backfill"; fi
-            if [ "${INPUT_INCREMENTAL_ETF_BACKFILL:-true}" = "true" ]; then ARGS="$ARGS --incremental-etf-backfill"; fi
+            if [ "${INPUT_INCREMENTAL_ETF_BACKFILL:-false}" = "true" ]; then ARGS="$ARGS --incremental-etf-backfill"; fi
             if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then ARGS="$ARGS --yf-etf-fallback"; fi
             if [ -n "$INPUT_INCREMENTAL_ETF_LIMIT" ]; then ARGS="$ARGS --incremental-etf-limit $INPUT_INCREMENTAL_ETF_LIMIT"; fi
             if [ -n "$INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS" ]; then ARGS="$ARGS --incremental-etf-max-age-hours $INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS"; fi
@@ -395,7 +376,7 @@ jobs:
             | sort -u > "$PRIMARY_FETCHED_TICKERS"
 
       - name: Refresh history-gap plan after live backfill
-        if: ${{ github.event.inputs.history_gaps_only == 'true' || github.event.schedule == '50 22 * * 1-5' }}
+        if: ${{ github.event.inputs.history_gaps_only == 'true' }}
         env:
           INPUT_REQUIRED_HISTORY_PERIODS: ${{ github.event.inputs.required_history_periods }}
           INPUT_INCREMENTAL_ETF_MAX_AGE_HOURS: ${{ github.event.inputs.incremental_etf_max_age_hours }}
@@ -445,8 +426,9 @@ jobs:
     runs-on: ubuntu-latest
     # Semantic validation must follow fresh-main apply while the writer lock is
     # held; cap the fail-closed critical section instead of validating a stale
-    # pre-lock checkout. 45m: the Sunday full-universe publish measured 20m+ with
-    # the #377 broad mirror commit (ab50c4c24e) and previously timed out at 20m.
+    # pre-lock checkout. 45m: the measured Sunday publish (core basket + surfaces
+    # + universe list) ran 20m+ with the #377 broad mirror commit (ab50c4c24e)
+    # and previously timed out at 20m.
     timeout-minutes: 45
     permissions:
       contents: write

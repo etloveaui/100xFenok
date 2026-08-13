@@ -116,7 +116,6 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
     def test_each_known_schedule_has_an_exact_recovery_scope_and_unknown_fails_closed(self) -> None:
         for schedule, scope in (
             ("20 21 * * *", "stock,financial"),
-            ("50 22 * * 1-5", "none"),
             ("50 23 * * 1-5", "etf,surface"),
             ("20 23 * * 0", "etf,surface,universe"),
         ):
@@ -128,6 +127,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
                 ),
                 f"schedule {schedule} must select recovery scope {scope}",
             )
+        self.assertNotIn("- cron: '50 22 * * 1-5'", self.text)
+        self.assertNotIn('"50 22 * * 1-5"', self.text)
         self.assertIn('echo "unknown StockAnalysis schedule: $EVENT_SCHEDULE" >&2', self.text)
         self.assertIn("exit 64", self.text)
         self.assertIn('--natural-recovery-kinds $NATURAL_RECOVERY_KINDS', self.text)
@@ -239,12 +240,36 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             r"limit_etfs:\n(?P<body>(?:\s+.*\n){1,5})",
             self.text,
         )
+        discover_input = re.search(
+            r"discover_universe:\n(?P<body>(?:\s+.*\n){1,5})",
+            self.text,
+        )
+        backfill_input = re.search(
+            r"incremental_etf_backfill:\n(?P<body>(?:\s+.*\n){1,5})",
+            self.text,
+        )
         self.assertIn("default: '0'", incremental_input.group("body"))
         self.assertIn("default: '100'", limit_input.group("body"))
         self.assertIn("default: '100'", reconcile_input.group("body"))
+        self.assertIn("default: 'false'", discover_input.group("body"))
+        self.assertIn("default: 'false'", backfill_input.group("body"))
         self.assertIn('--event-name "$EVENT_NAME"', self.text)
-        self.assertIn('INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY1Y_INCREMENTAL_LIMIT:-120}"', self.text)
-        self.assertIn('INPUT_INCREMENTAL_ETF_LIMIT="${STOCKANALYSIS_DAILY_INCREMENTAL_LIMIT:-40}"', self.text)
+        self.assertNotIn("STOCKANALYSIS_DAILY1Y_INCREMENTAL_LIMIT", self.text)
+        self.assertNotIn("STOCKANALYSIS_DAILY_INCREMENTAL_LIMIT", self.text)
+        self.assertIn(
+            'if [ "${INPUT_DISCOVER_UNIVERSE:-false}" = "true" ]; then ARGS="$ARGS --discover-etf-universe"; fi',
+            self.text,
+        )
+        self.assertIn(
+            'if [ "${INPUT_INCREMENTAL_ETF_BACKFILL:-false}" = "true" ]; then ARGS="$ARGS --incremental-etf-backfill"; fi',
+            self.text,
+        )
+        natural_start = self.text.index('if [ "$EVENT_NAME" = "schedule" ]; then')
+        natural_end = self.text.index('if [ "$EVENT_NAME" = "workflow_dispatch" ]; then')
+        natural_body = self.text[natural_start:natural_end]
+        self.assertIn('INPUT_INCREMENTAL_ETF_BACKFILL="false"', natural_body)
+        self.assertNotIn('INPUT_INCREMENTAL_ETF_BACKFILL="true"', natural_body)
+        self.assertIn('INPUT_MAX_UNIVERSE_PAGES="100"', natural_body)
 
     def test_manual_preflight_precedes_candidate_seed_and_provider_fetch(self) -> None:
         preflight = self.text.index("--preflight-only")
