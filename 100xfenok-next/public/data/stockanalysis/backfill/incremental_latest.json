@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_backfill_select",
-  "generated_at": "2026-08-12T00:45:48Z",
+  "generated_at": "2026-08-13T00:47:33Z",
   "policy": {
     "limit": 39,
     "max_age_hours": 168.0,
@@ -13,24 +13,24 @@
     "selection": "scheduled natural non-history 40-name quota across new listings, owner/default leveraged focus, market-liquid or holdings-stale ETFs outside core, and a deterministic rotating tail"
   },
   "counts": {
-    "candidates": 5466,
+    "candidates": 5432,
     "selected": 39,
-    "missing": 42,
-    "invalid": 440,
+    "missing": 38,
+    "invalid": 436,
     "fallback_retry": 0,
     "history_gap": 0,
     "inception_limited_history_gap": 0,
     "terminal_limited_history_gap": 0,
     "total_history_gap": 0,
-    "stale": 4984,
+    "stale": 4958,
     "cooldown_skipped": 0,
-    "prior_failed_candidates": 444,
+    "prior_failed_candidates": 440,
     "ledger_tracked": 484,
-    "ledger_cooldown": 0
+    "ledger_cooldown": 1
   },
   "selected": [
     {
-      "ticker": "AKAL",
+      "ticker": "DACL",
       "source": "new_etfs",
       "reason": "missing",
       "age_hours": null,
@@ -41,7 +41,7 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "ANGU",
+      "ticker": "DDTG",
       "source": "new_etfs",
       "reason": "missing",
       "age_hours": null,
@@ -52,7 +52,7 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "ARCP",
+      "ticker": "DLCU",
       "source": "new_etfs",
       "reason": "missing",
       "age_hours": null,
@@ -63,7 +63,7 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "ARIA",
+      "ticker": "ELOL",
       "source": "new_etfs",
       "reason": "missing",
       "age_hours": null,
@@ -74,7 +74,7 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "ARMS",
+      "ticker": "EMAU",
       "source": "new_etfs",
       "reason": "missing",
       "age_hours": null,
@@ -85,7 +85,7 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "AUGC",
+      "ticker": "FIZY",
       "source": "new_etfs",
       "reason": "missing",
       "age_hours": null,
@@ -96,7 +96,7 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "CAUG",
+      "ticker": "GCPB",
       "source": "new_etfs",
       "reason": "missing",
       "age_hours": null,
@@ -107,7 +107,7 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "CHDG",
+      "ticker": "GINC",
       "source": "new_etfs",
       "reason": "missing",
       "age_hours": null,
@@ -118,7 +118,7 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "CTAU",
+      "ticker": "HAUG",
       "source": "new_etfs",
       "reason": "missing",
       "age_hours": null,
@@ -129,7 +129,7 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "DDFG",
+      "ticker": "IDAU",
       "source": "new_etfs",
       "reason": "missing",
       "age_hours": null,
@@ -140,32 +140,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "ETHT",
-      "source": "etf_universe",
-      "reason": "invalid",
-      "age_hours": 580.28,
-      "prior_failures": 1,
-      "priority": 1,
-      "reason_priority": 0,
-      "selection_bucket": "owner_default_leveraged_focus",
-      "selection_reason": "scheduled_quota"
-    },
-    {
-      "ticker": "APPX",
-      "source": "etf_universe",
-      "reason": "invalid",
-      "age_hours": 658.14,
-      "prior_failures": 2,
-      "priority": 1,
-      "reason_priority": 0,
-      "selection_bucket": "owner_default_leveraged_focus",
-      "selection_reason": "scheduled_quota"
-    },
-    {
-      "ticker": "SPY",
+      "ticker": "QLD",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 618.34,
+      "age_hours": 642.32,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -173,10 +151,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "DIA",
+      "ticker": "ROM",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 618.33,
+      "age_hours": 642.31,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -184,10 +162,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "QQQ",
+      "ticker": "UPRO",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 618.33,
+      "age_hours": 642.31,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -195,10 +173,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "VOO",
+      "ticker": "SOXL",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 618.32,
+      "age_hours": 642.29,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -206,10 +184,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "SMH",
+      "ticker": "TNA",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 618.31,
+      "age_hours": 642.29,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -217,10 +195,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "SOXX",
+      "ticker": "USD",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 618.3,
+      "age_hours": 642.28,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -228,10 +206,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "SSO",
+      "ticker": "UWM",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 618.3,
+      "age_hours": 642.28,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -239,10 +217,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "DDM",
+      "ticker": "FNGU",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 618.29,
+      "age_hours": 642.27,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -250,10 +228,32 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "IVV",
+      "ticker": "KORU",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.51,
+      "age_hours": 642.26,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3,
+      "selection_bucket": "owner_default_leveraged_focus",
+      "selection_reason": "scheduled_quota"
+    },
+    {
+      "ticker": "UTSL",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 642.26,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3,
+      "selection_bucket": "owner_default_leveraged_focus",
+      "selection_reason": "scheduled_quota"
+    },
+    {
+      "ticker": "VWO",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 1042.29,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -261,10 +261,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "VUG",
+      "ticker": "XLK",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1286.75,
+      "age_hours": 1310.74,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -272,10 +272,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "BND",
+      "ticker": "VIG",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1288.02,
+      "age_hours": 1310.81,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -283,10 +283,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "SPYM",
+      "ticker": "IJR",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1286.94,
+      "age_hours": 281.72,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -294,10 +294,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "IEMG",
+      "ticker": "VO",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 257.68,
+      "age_hours": 1310.8,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -305,10 +305,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "VGT",
+      "ticker": "ITOT",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1286.78,
+      "age_hours": 1311.54,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -316,10 +316,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "AGG",
+      "ticker": "RSP",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 503.44,
+      "age_hours": 1311.1,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -327,21 +327,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "GLD",
-      "source": "etf_universe",
-      "reason": "invalid",
-      "age_hours": 580.1,
-      "prior_failures": 3,
-      "priority": 1,
-      "reason_priority": 0,
-      "selection_bucket": "market_liquid_or_holdings_stale",
-      "selection_reason": "scheduled_quota"
-    },
-    {
-      "ticker": "IWF",
+      "ticker": "QQQM",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.51,
+      "age_hours": 1311.15,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -349,10 +338,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "IJH",
+      "ticker": "BNDX",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.54,
+      "age_hours": 1312.05,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -360,10 +349,21 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "MAGC",
+      "ticker": "VB",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.43,
+      "age_hours": 1310.83,
+      "prior_failures": 0,
+      "priority": 1,
+      "reason_priority": 3,
+      "selection_bucket": "market_liquid_or_holdings_stale",
+      "selection_reason": "scheduled_quota"
+    },
+    {
+      "ticker": "AFIF",
+      "source": "etf_universe",
+      "reason": "stale",
+      "age_hours": 527.48,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -371,10 +371,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "MAGG",
+      "ticker": "AFIX",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.43,
+      "age_hours": 527.48,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -382,10 +382,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "MAGS",
+      "ticker": "AFK",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.43,
+      "age_hours": 527.47,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -393,10 +393,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "MAKX",
+      "ticker": "AFLG",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.43,
+      "age_hours": 527.47,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -404,10 +404,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "MAMB",
+      "ticker": "AFMC",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.43,
+      "age_hours": 527.47,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -415,10 +415,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "MANI",
+      "ticker": "AFOS",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.43,
+      "age_hours": 527.47,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -426,10 +426,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "MAPP",
+      "ticker": "AFSC",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.43,
+      "age_hours": 527.47,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -437,10 +437,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "MARM",
+      "ticker": "AFSM",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.43,
+      "age_hours": 527.47,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -448,10 +448,10 @@
       "selection_reason": "scheduled_quota"
     },
     {
-      "ticker": "MARO",
+      "ticker": "AGEM",
       "source": "etf_universe",
       "reason": "stale",
-      "age_hours": 1287.43,
+      "age_hours": 527.47,
       "prior_failures": 0,
       "priority": 1,
       "reason_priority": 3,
@@ -474,12 +474,12 @@
       "fallback_fill": "remaining eligible candidates in deterministic sibling order"
     },
     "eligible_counts": {
-      "new_listings": 100,
-      "owner_default_leveraged_focus": 799,
+      "new_listings": 90,
+      "owner_default_leveraged_focus": 793,
       "market_liquid_or_holdings_stale": 10,
-      "rotating_tail": 4557,
-      "market_ranked_candidates": 4566,
-      "total": 5466
+      "rotating_tail": 4539,
+      "market_ranked_candidates": 4548,
+      "total": 5432
     },
     "selected_counts": {
       "new_listings": 10,
@@ -490,22 +490,22 @@
     },
     "cursor": {
       "strategy": "utc_day_ordinal_times_reserved_window_modulo_tail_count",
-      "date": "2026-08-12",
-      "ordinal": 739840,
-      "eligible_count": 4557,
+      "date": "2026-08-13",
+      "ordinal": 739841,
+      "eligible_count": 4539,
       "reserved_window_count": 10,
-      "start_index": 2389
+      "start_index": 4379
     }
   },
   "pending_ledger": {
     "path": "backfill/pending_ledger.json",
-    "generated_at": "2026-08-12T00:57:23Z",
+    "generated_at": "2026-08-13T01:01:20Z",
     "counts": {
       "tracked": 484,
-      "cooldown": 0,
-      "provider_coverage_gaps": 2,
-      "updated": 0,
-      "cleared": 4
+      "cooldown": 1,
+      "provider_coverage_gaps": 3,
+      "updated": 1,
+      "cleared": 1
     }
   }
 }

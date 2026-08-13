@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-08-12T22:08:44Z",
+  "generated_at": "2026-08-13T01:01:28Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,112 +17,121 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5567,
+    "candidate_total": 5573,
     "source_breakdown": {
       "etf_universe": 5512,
-      "etf_screener": 5567,
+      "etf_screener": 5573,
       "new_etfs": 100
     },
-    "detail_files": 5596,
-    "covered_detail_files": 5535,
-    "missing_detail_files": 32,
+    "detail_files": 5605,
+    "covered_detail_files": 5544,
+    "missing_detail_files": 29,
     "extra_detail_files": 61,
-    "stockanalysis_detail_files": 5596,
+    "stockanalysis_detail_files": 5605,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 99.43,
-    "primary_stockanalysis_pct": 99.43,
+    "coverage_pct": 99.48,
+    "primary_stockanalysis_pct": 99.48,
     "missing_by_source": {
-      "etf_universe": 31,
-      "etf_screener": 32,
-      "new_etfs": 30
+      "etf_universe": 23,
+      "etf_screener": 29,
+      "new_etfs": 27
     },
     "missing_status_breakdown": {
-      "untracked": 32
+      "provider_gap_cooldown": 1,
+      "untracked": 28
     },
     "missing_failure_breakdown": {
-      "untracked": 32
+      "provider_coverage_gap": 1,
+      "untracked": 28
     },
     "missing_availability_breakdown": {
-      "unprobed": 32
+      "provider_absent": 1,
+      "unprobed": 28
     },
     "pending_tracked": 484,
-    "pending_cooldown": 0,
-    "pending_tracked_missing": 0,
-    "provider_coverage_gaps": 2
+    "pending_cooldown": 1,
+    "pending_tracked_missing": 1,
+    "provider_coverage_gaps": 3
   },
   "missing_reason_summary": {
-    "untracked": 32
+    "provider_coverage_gap": 1,
+    "untracked": 28
   },
   "missing_status_summary": {
-    "untracked": 32
+    "provider_gap_cooldown": 1,
+    "untracked": 28
   },
   "missing_availability_summary": {
-    "unprobed": 32
+    "provider_absent": 1,
+    "unprobed": 28
   },
   "missing_reason_samples": {
+    "provider_coverage_gap": [
+      "DACL"
+    ],
     "untracked": [
-      "DDTG",
-      "DLCU",
-      "ELOL",
-      "EMAU",
-      "FIZY",
       "FTPA",
-      "GCPB",
-      "GINC",
-      "HAUG",
-      "IDAU",
       "JLVP",
-      "KEO"
+      "KEO",
+      "LITG",
+      "LOFD",
+      "LYTE",
+      "MPDB",
+      "MXLL",
+      "NCLD",
+      "OCNL",
+      "OPPG",
+      "PENU"
     ]
   },
   "missing_status_samples": {
+    "provider_gap_cooldown": [
+      "DACL"
+    ],
     "untracked": [
-      "DDTG",
-      "DLCU",
-      "ELOL",
-      "EMAU",
-      "FIZY",
       "FTPA",
-      "GCPB",
-      "GINC",
-      "HAUG",
-      "IDAU",
       "JLVP",
-      "KEO"
+      "KEO",
+      "LITG",
+      "LOFD",
+      "LYTE",
+      "MPDB",
+      "MXLL",
+      "NCLD",
+      "OCNL",
+      "OPPG",
+      "PENU"
     ]
   },
   "missing_availability_samples": {
+    "provider_absent": [
+      "DACL"
+    ],
     "unprobed": [
-      "DDTG",
-      "DLCU",
-      "ELOL",
-      "EMAU",
-      "FIZY",
       "FTPA",
-      "GCPB",
-      "GINC",
-      "HAUG",
-      "IDAU",
       "JLVP",
-      "KEO"
+      "KEO",
+      "LITG",
+      "LOFD",
+      "LYTE",
+      "MPDB",
+      "MXLL",
+      "NCLD",
+      "OCNL",
+      "OPPG",
+      "PENU"
     ]
   },
   "missing_tickers": [
-    "DDTG",
-    "DLCU",
-    "ELOL",
-    "EMAU",
-    "FIZY",
+    "DACL",
     "FTPA",
-    "GCPB",
-    "GINC",
-    "HAUG",
-    "IDAU",
     "JLVP",
     "KEO",
+    "LITG",
     "LOFD",
     "LYTE",
+    "MPDB",
     "MXLL",
     "NCLD",
     "OCNL",
@@ -135,14 +144,19 @@
     "RJCA",
     "SCAU",
     "SDUR",
+    "SITX",
     "SKHA",
     "SKHN",
     "STLL",
     "TIH",
     "TSIB",
-    "WSMD"
+    "UMCU",
+    "WSMD",
+    "YLDY"
   ],
-  "provider_absent_tickers": [],
+  "provider_absent_tickers": [
+    "DACL"
+  ],
   "yahoo_fallback_tickers": [],
   "invalid_detail_tickers": [],
   "extra_detail_tickers": [
@@ -210,20 +224,14 @@
   ],
   "samples": {
     "missing": [
-      "DDTG",
-      "DLCU",
-      "ELOL",
-      "EMAU",
-      "FIZY",
+      "DACL",
       "FTPA",
-      "GCPB",
-      "GINC",
-      "HAUG",
-      "IDAU",
       "JLVP",
       "KEO",
+      "LITG",
       "LOFD",
       "LYTE",
+      "MPDB",
       "MXLL",
       "NCLD",
       "OCNL",
@@ -236,26 +244,35 @@
       "RJCA",
       "SCAU",
       "SDUR",
+      "SITX",
       "SKHA",
       "SKHN",
       "STLL",
       "TIH",
       "TSIB",
-      "WSMD"
+      "UMCU",
+      "WSMD",
+      "YLDY"
+    ],
+    "missing_provider_gap_cooldown": [
+      "DACL"
     ],
     "missing_untracked": [
-      "DDTG",
-      "DLCU",
-      "ELOL",
-      "EMAU",
-      "FIZY",
       "FTPA",
-      "GCPB",
-      "GINC",
-      "HAUG",
-      "IDAU",
       "JLVP",
-      "KEO"
+      "KEO",
+      "LITG",
+      "LOFD",
+      "LYTE",
+      "MPDB",
+      "MXLL",
+      "NCLD",
+      "OCNL",
+      "OPPG",
+      "PENU"
+    ],
+    "missing_provider_coverage_gap": [
+      "DACL"
     ],
     "yahoo_fallback": [],
     "extra": [

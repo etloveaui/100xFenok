@@ -1,14 +1,14 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-08-12T22:08:21Z",
+  "generated_at": "2026-08-13T00:46:42Z",
   "counts": {
-    "tracked": 205,
-    "fresh": 88,
-    "lkg": 117,
-    "unavailable": 0,
+    "tracked": 206,
+    "fresh": 89,
+    "lkg": 116,
+    "unavailable": 1,
     "retry": 117,
-    "failed": 0,
-    "recovered": 0,
+    "failed": 1,
+    "recovered": 1,
     "promotion_deferred": 0
   },
   "counts_by_kind": {
@@ -27,10 +27,10 @@
       "retry": 0
     },
     "etf": {
-      "tracked": 87,
-      "fresh": 2,
-      "lkg": 85,
-      "unavailable": 0,
+      "tracked": 88,
+      "fresh": 3,
+      "lkg": 84,
+      "unavailable": 1,
       "retry": 85
     },
     "surface": {
@@ -176,10 +176,6 @@
     {
       "artifact_kind": "stock",
       "entity": "XOM"
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "AAPW"
     },
     {
       "artifact_kind": "etf",
@@ -408,6 +404,10 @@
     {
       "artifact_kind": "etf",
       "entity": "CPSU"
+    },
+    {
+      "artifact_kind": "etf",
+      "entity": "DACL"
     },
     {
       "artifact_kind": "etf",
@@ -837,16 +837,6 @@
       "source_as_of": "2026-08-11T14:38:15Z",
       "failure_run_id": "31501591748",
       "failure_observed_at": "2026-08-11T14:28:54Z",
-      "data_loss": false
-    },
-    {
-      "artifact_kind": "etf",
-      "entity": "AAPW",
-      "resolution_state": "lkg_primary",
-      "payload_sha256": "a9f653f969cfc253220462c1245e3ec86d2b8697c30787c093044d04ab372f33",
-      "source_as_of": "2026-07-14T00:00:00Z",
-      "failure_run_id": "30413281647",
-      "failure_observed_at": "2026-07-29T01:11:03Z",
       "data_loss": false
     },
     {
@@ -1421,6 +1411,16 @@
     },
     {
       "artifact_kind": "etf",
+      "entity": "DACL",
+      "resolution_state": "unavailable",
+      "payload_sha256": null,
+      "source_as_of": null,
+      "failure_run_id": "31655447501",
+      "failure_observed_at": "2026-08-13T00:46:42Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "etf",
       "entity": "EDGQ",
       "resolution_state": "lkg_primary",
       "payload_sha256": "db544d780f49c66f814c27bdff9bb7495ac234cdb3015e430e53b90d4ae67327",
@@ -1727,7 +1727,6 @@
   "degraded_surfaces": [],
   "degraded_universes": [],
   "degraded_etfs": [
-    "AAPW",
     "AAPX",
     "AETH",
     "AIOO",
@@ -1785,6 +1784,7 @@
     "CPSR",
     "CPST",
     "CPSU",
+    "DACL",
     "EDGQ",
     "EDGX",
     "ESUM",
@@ -1813,103 +1813,175 @@
     "WTIB",
     "XLII"
   ],
-  "recovered_details": [],
+  "recovered_details": [
+    {
+      "artifact_kind": "etf",
+      "entity": "AAPW",
+      "payload_sha256": "efee2a36941301d292502b025e3fb3b26f53dc586f7add16c24a1011f1624a76",
+      "source_as_of": "2026-08-12T20:00:00Z",
+      "recovered_from_run_id": "30413281647",
+      "recovery_run_id": "31655447501",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-08-13T00:46:42Z"
+    }
+  ],
   "recovered_tickers": [],
   "recovered_surfaces": [],
   "recovered_universes": [],
-  "recovered_etfs": [],
+  "recovered_etfs": [
+    "AAPW"
+  ],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "31645509023",
+    "run_id": "31655447501",
     "run_attempt": 1,
     "event_name": "schedule",
-    "schedule": "20 21 * * *",
+    "schedule": "50 23 * * 1-5",
     "natural": true,
-    "attempted": 16,
-    "successes": 16,
-    "failed": 0,
-    "recovered": 0,
+    "attempted": 27,
+    "successes": 26,
+    "failed": 1,
+    "recovered": 1,
     "promotion_deferred": 0,
-    "errors": [],
+    "errors": [
+      {
+        "artifact_kind": "etf",
+        "entity": "DACL",
+        "error": "HTTPError: HTTP Error 404: Not Found",
+        "controlled": false,
+        "data_loss": false
+      }
+    ],
     "success_rows": [
       {
-        "artifact_kind": "stock",
-        "entity": "AAPL",
+        "artifact_kind": "etf",
+        "entity": "AAPW",
+        "outcome": "recovered"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "actions_recent",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "stock",
-        "entity": "AMZN",
+        "artifact_kind": "surface",
+        "entity": "actions_splits",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "stock",
-        "entity": "GOOGL",
+        "artifact_kind": "surface",
+        "entity": "earnings_calendar",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "stock",
-        "entity": "JPM",
+        "artifact_kind": "surface",
+        "entity": "etf_provider_blackrock",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "stock",
-        "entity": "META",
+        "artifact_kind": "surface",
+        "entity": "etf_provider_proshares",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "stock",
-        "entity": "MSFT",
+        "artifact_kind": "surface",
+        "entity": "etf_screener",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "stock",
-        "entity": "NVDA",
+        "artifact_kind": "surface",
+        "entity": "industries",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "stock",
-        "entity": "TSLA",
+        "artifact_kind": "surface",
+        "entity": "industries_all",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "financial",
-        "entity": "AAPL",
+        "artifact_kind": "surface",
+        "entity": "industry_semiconductors",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "financial",
-        "entity": "AMZN",
+        "artifact_kind": "surface",
+        "entity": "ipos_calendar",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "financial",
-        "entity": "GOOGL",
+        "artifact_kind": "surface",
+        "entity": "ipos_filings",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "financial",
-        "entity": "JPM",
+        "artifact_kind": "surface",
+        "entity": "ipos_recent",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "financial",
-        "entity": "META",
+        "artifact_kind": "surface",
+        "entity": "ipos_statistics",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "financial",
-        "entity": "MSFT",
+        "artifact_kind": "surface",
+        "entity": "ipos_withdrawn",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "financial",
-        "entity": "NVDA",
+        "artifact_kind": "surface",
+        "entity": "list_bitcoin_etfs",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "financial",
-        "entity": "TSLA",
+        "artifact_kind": "surface",
+        "entity": "market_active",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_afterhours",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers_month",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_gainers_week",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_losers",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_losers_ytd",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "market_premarket",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "new_etfs",
+        "outcome": "fresh"
+      },
+      {
+        "artifact_kind": "surface",
+        "entity": "sector_technology",
         "outcome": "fresh"
       }
     ],

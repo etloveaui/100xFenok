@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "operation": "incremental_etf_pending_ledger",
-  "generated_at": "2026-08-12T00:57:23Z",
+  "generated_at": "2026-08-13T01:01:20Z",
   "policy": {
     "cooldown_days": 7,
     "failure_threshold": 3,
@@ -10,17 +10,16 @@
   },
   "counts": {
     "tracked": 484,
-    "cooldown": 0,
-    "provider_coverage_gaps": 2,
-    "updated": 0,
-    "cleared": 4
+    "cooldown": 1,
+    "provider_coverage_gaps": 3,
+    "updated": 1,
+    "cleared": 1
   },
-  "updated": [],
+  "updated": [
+    "DACL"
+  ],
   "cleared": [
-    "AAPR",
-    "APPX",
-    "ETHT",
-    "GLD"
+    "AAPW"
   ],
   "entries": {
     "AAAU": {
@@ -40,16 +39,6 @@
       "failure_class": "hard_error",
       "consecutive_failures": 3,
       "next_attempt_after_utc": "2026-08-01T16:46:22Z",
-      "last_status": "fallback_observed_primary_preserved",
-      "last_provider": "yahoo_finance"
-    },
-    "AAPW": {
-      "ticker": "AAPW",
-      "last_attempt_utc": "2026-07-29T01:22:16Z",
-      "failure_reason": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
-      "failure_class": "hard_error",
-      "consecutive_failures": 2,
-      "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
     },
@@ -1352,6 +1341,21 @@
       "next_attempt_after_utc": null,
       "last_status": "fallback_observed_primary_preserved",
       "last_provider": "yahoo_finance"
+    },
+    "DACL": {
+      "ticker": "DACL",
+      "last_attempt_utc": "2026-08-13T01:01:20Z",
+      "availability_status": "provider_absent",
+      "availability_reason": "provider_coverage_gap",
+      "provider_response": "HTTP 404",
+      "failure_reason": null,
+      "failure_class": "provider_coverage_gap",
+      "consecutive_failures": 0,
+      "next_probe_after_utc": "2026-08-20T01:01:20Z",
+      "next_attempt_after_utc": "2026-08-20T01:01:20Z",
+      "last_status": "provider_coverage_gap",
+      "last_provider": "stockanalysis",
+      "fallback_provider": null
     },
     "DDFY": {
       "ticker": "DDFY",
