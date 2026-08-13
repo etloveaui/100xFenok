@@ -1195,16 +1195,33 @@ def load_core_daily_basket():
     """The core daily ETF basket SSOT: daily_refresh_universe.tickers."""
     try:
         payload = json.loads(ETF_CORE_DAILY_BASKET.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError):
-        return set()
-    tickers = payload.get("daily_refresh_universe", {}).get("tickers")
+    except (FileNotFoundError, json.JSONDecodeError) as error:
+        raise ValueError(f"core daily basket is unreadable: {error}") from error
+    universe = payload.get("daily_refresh_universe")
+    if not isinstance(universe, dict):
+        raise ValueError("core daily basket daily_refresh_universe must be an object")
+    tickers = universe.get("tickers")
     if not isinstance(tickers, list):
-        return set()
+        raise ValueError("core daily basket tickers must be a list")
     symbols = set()
+    invalid = []
     for ticker in tickers:
         symbol = str(ticker or "").strip().upper()
-        if SYMBOL_RE.match(symbol):
-            symbols.add(symbol)
+        if not SYMBOL_RE.fullmatch(symbol):
+            invalid.append(ticker)
+            continue
+        symbols.add(symbol)
+    if invalid:
+        raise ValueError(f"core daily basket has invalid tickers: {invalid}")
+    if not symbols:
+        raise ValueError("core daily basket is empty")
+    declared_count = universe.get("count")
+    if not isinstance(declared_count, int) or isinstance(declared_count, bool):
+        raise ValueError("core daily basket count must be an integer")
+    if declared_count != len(symbols):
+        raise ValueError(
+            f"core daily basket count mismatch: declared {declared_count}, normalized {len(symbols)}"
+        )
     return symbols
 
 
@@ -1432,6 +1449,7 @@ def select_ticker_plan(
     stable_shards=False,
     regular_limit=None,
     shard_cycle_index=0,
+    pin_rim_trackers=True,
 ):
     ticker_set = set(tickers)
     retry_order = (
@@ -1459,10 +1477,15 @@ def select_ticker_plan(
         retry = retry[:retry_limit]
     regular = select_bounded_cycle_page(regular, regular_limit, shard_cycle_index)
     selected = [*(retry if claim_retry else []), *regular]
-    # Pin the RIM trackers ahead of the page so neither the shard split nor the
-    # daily limit can defer them into the next rotation.
+    # Historical broad/manual lanes pin RIM trackers ahead of the page. The
+    # core daily basket lane disables this because its stable six-shard union
+    # already owns every tracker exactly once per cycle.
     seen = set(selected)
-    pinned = [t for t in sorted(RIM_TRACKER_ETFS) if t in ticker_set and t not in seen]
+    pinned = (
+        [t for t in sorted(RIM_TRACKER_ETFS) if t in ticker_set and t not in seen]
+        if pin_rim_trackers
+        else []
+    )
     return [*pinned, *selected]
 
 
@@ -1480,6 +1503,7 @@ def select_campaign_or_rotation_plan(
     regular_limit,
     untracked_limit,
     shard_cycle_index,
+    pin_rim_trackers=True,
 ):
     retry_set = set(retry_queue)
 
@@ -1508,6 +1532,7 @@ def select_campaign_or_rotation_plan(
             stable_shards=stable_shards,
             regular_limit=page_limit,
             shard_cycle_index=cycle_index,
+            pin_rim_trackers=pin_rim_trackers,
         )
 
     campaign = select(untracked_regular, 0, untracked_limit)
@@ -1987,7 +2012,7 @@ def main():
     parser.add_argument("--tickers", type=str, default="", help="comma-separated override")
     parser.add_argument("--stocks-only", action="store_true", help="stock universe only: global-scouter stock detail plus market_facts stock candidates")
     parser.add_argument("--stockanalysis-etfs", action="store_true", help="include the full StockAnalysis ETF universe/screener in the Yahoo candidate set")
-    parser.add_argument("--core-daily-basket", action="store_true", help="scheduled ETF lane: bounded union of the core daily ETF basket and the configured major/focus/RIM tracker sets (plus any explicit --tickers); no StockAnalysis universe/screener expansion")
+    parser.add_argument("--core-daily-basket", action="store_true", help="scheduled ETF lane: bounded union of the core daily ETF basket and configured major/focus/RIM tracker sets; explicit --tickers overrides this selection; no StockAnalysis universe/screener expansion")
     parser.add_argument("--scheduled-slot", type=int, default=None, help="slot index within the weekly shard cycle for lanes that run several slots a day")
     parser.add_argument("--history-gaps-only", action="store_true", help="fetch only tickers whose local payload lacks enough 1Y daily history for return facts")
     parser.add_argument("--history-min-rows", type=int, default=200, help="minimum history_1y rows needed to skip a ticker under --history-gaps-only")
@@ -2166,12 +2191,13 @@ def main():
             selected_universe,
             shard=args.shard,
             natural=args.natural_run,
-            all_shards=args.all_shards_run,
+            all_shards=args.all_shards_run or args.core_daily_basket,
             retry_limit=args.retry_limit,
             stable_shards=args.stable_shards,
             regular_limit=args.regular_limit,
             untracked_limit=args.untracked_limit,
             shard_cycle_index=args.shard_cycle_index,
+            pin_rim_trackers=not args.core_daily_basket,
         )
     else:
         planned_tickers = [*[ticker for ticker in retry_queue if ticker in selected_universe], *regular_tickers]
@@ -2180,11 +2206,12 @@ def main():
             retry_queue,
             shard=args.shard,
             natural=args.natural_run,
-            all_shards=args.all_shards_run,
+            all_shards=args.all_shards_run or args.core_daily_basket,
             retry_limit=args.retry_limit,
             stable_shards=args.stable_shards,
             regular_limit=args.regular_limit,
             shard_cycle_index=args.shard_cycle_index,
+            pin_rim_trackers=not args.core_daily_basket,
         )
     if args.limit:
         tickers = tickers[: args.limit]

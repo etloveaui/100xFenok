@@ -12,6 +12,7 @@ import {
   selectExplicitTaiwanRows,
   selectTaiwanTickerAnomalies,
 } from "./lib/taiwan-universe.mjs";
+import fs from "node:fs";
 
 let failures = 0;
 function assert(condition, message) {
@@ -107,6 +108,38 @@ assert(fresh.denominator === 1177, "already-current denominator stays 1177");
 
 // Null-safe.
 assert(reconcileTaiwanCurrentUniverseDenominator(null, 1177, pct) === null, "null row is a no-op");
+
+// ETF exact-plan compatibility remains full-scored: the coverage index must
+// compare its full history-gap denominator to scored_etf_count, never to the
+// managed-core dispatch denominator.
+const coverageBuilder = fs.readFileSync(new URL("./build-fenok-edge-coverage-index.mjs", import.meta.url), "utf8");
+assert(
+  coverageBuilder.includes("const exactPlanScoredCount = Number(etfDaily1yExactPlan.counts?.scored_etf_count) || 0;"),
+  "coverage index reads the full-scored exact-plan compatibility denominator",
+);
+assert(
+  coverageBuilder.includes("Number(scoredDaily1yGap.scored_etf_count) === Number(etfDaily1yExactPlan.counts?.scored_etf_count)"),
+  "coverage index compares full-scored history-gap and exact-plan denominators",
+);
+assert(
+  !coverageBuilder.includes("Number(scoredDaily1yGap.scored_etf_count) === Number(etfDaily1yExactPlan.counts?.managed_etf_count)"),
+  "coverage index never compares the full-scored history gap to the managed-core denominator",
+);
+for (const field of [
+  "scored_complete",
+  "scored_fetchable",
+  "scored_inception_limited",
+  "scored_terminal_limited",
+  "scored_equation_ok",
+]) {
+  assert(coverageBuilder.includes(`counts?.${field}`), `coverage index consumes full-scored ${field}`);
+}
+for (const field of ["complete", "fetchable", "inception_limited", "terminal_limited", "equation_ok"]) {
+  assert(
+    !coverageBuilder.includes(`etfDaily1yExactPlan.counts?.${field})`),
+    `coverage index never substitutes managed-core ${field} for full-scored evidence`,
+  );
+}
 
 if (failures > 0) {
   console.error(`\n${failures} assertion(s) failed`);

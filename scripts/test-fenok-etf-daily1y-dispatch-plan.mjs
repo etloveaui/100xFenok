@@ -11,6 +11,7 @@ const sourcePlan = {
   tickers: ["GOLI"],
   source_files: {},
   counts: {
+    managed_etf_count: 1,
     equation_ok: true,
     matches_history_gap_report: true,
     matches_coverage_index: true,
@@ -33,20 +34,29 @@ const payload = buildEtfDaily1yDispatchPlan({ sourcePlan, historyGapReport: repo
 assert.equal(validateEtfDaily1yDispatchPlan(payload, sourcePlan, report).ok, true);
 assert.equal(payload.source_classification_as_of, report.classification_as_of);
 assert.equal(payload.claim_scope, "auto_managed_core_daily_basket");
-// managed_etf_count falls back to legacy scored_etf_count when absent.
-assert.equal(payload.counts.managed_etf_count, null);
-const legacyCountPlan = buildEtfDaily1yDispatchPlan({
-  sourcePlan: { ...sourcePlan, counts: { ...sourcePlan.counts, scored_etf_count: 7 } },
-  historyGapReport: report,
-  generatedAt: new Date("2026-07-10T00:01:00.000Z"),
-});
-assert.equal(legacyCountPlan.counts.managed_etf_count, 7);
+assert.equal(payload.counts.managed_etf_count, 1);
+// A full-scored compatibility count cannot become the managed-core dispatch denominator.
+assert.throws(
+  () => buildEtfDaily1yDispatchPlan({
+    sourcePlan: { ...sourcePlan, counts: { ...sourcePlan.counts, managed_etf_count: undefined, scored_etf_count: 7 } },
+    historyGapReport: report,
+    generatedAt: new Date("2026-07-10T00:01:00.000Z"),
+  }),
+  /managed_etf_count must be a positive integer/,
+);
 const managedCountPlan = buildEtfDaily1yDispatchPlan({
   sourcePlan: { ...sourcePlan, counts: { ...sourcePlan.counts, managed_etf_count: 9, scored_etf_count: 7 } },
   historyGapReport: report,
   generatedAt: new Date("2026-07-10T00:01:00.000Z"),
 });
 assert.equal(managedCountPlan.counts.managed_etf_count, 9);
+assert.equal(managedCountPlan.counts.scored_etf_count, 7);
+const wrongManagedCount = structuredClone(managedCountPlan);
+wrongManagedCount.counts.managed_etf_count = 8;
+assert.ok(validateEtfDaily1yDispatchPlan(wrongManagedCount, {
+  ...sourcePlan,
+  counts: { ...sourcePlan.counts, managed_etf_count: 9, scored_etf_count: 7 },
+}, report).errors.includes("managed_etf_count must match the source core denominator"));
 
 const staleReport = { ...report, generated_at: "2026-07-09T00:00:00.000Z" };
 const staleResult = validateEtfDaily1yDispatchPlan(payload, sourcePlan, staleReport);

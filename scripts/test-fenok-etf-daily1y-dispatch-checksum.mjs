@@ -7,6 +7,7 @@ const sourcePlan = {
   classification_as_of: "2026-07-09T23:59:59.000Z",
   tickers: ["bbb", "AAA"],
   counts: {
+    managed_etf_count: 2,
     scored_etf_count: 3,
     complete: 0,
     inception_limited: 0,
@@ -33,6 +34,8 @@ const plan = buildEtfDaily1yDispatchPlan({ sourcePlan, historyGapReport, generat
 assert.equal(plan.source_hash_algo, "sha256");
 assert.match(plan.source_hash, /^[a-f0-9]{64}$/);
 assert.equal(validateEtfDaily1yDispatchPlan(plan, sourcePlan, historyGapReport).ok, true);
+assert.equal(plan.counts.managed_etf_count, 2);
+assert.equal(plan.counts.scored_etf_count, 3);
 const changed = { ...historyGapReport, daily_1y_gap: { samples: { fetchable: [{ ticker: "AAA" }] } } };
 assert.equal(validateEtfDaily1yDispatchPlan(plan, sourcePlan, changed).ok, false);
 const clockChanged = {

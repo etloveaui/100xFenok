@@ -645,10 +645,10 @@ function computeEtfReadinessEvidence() {
   const terminalLimitedGap = Number(etfHistoryGap.terminal_limited_required_history) || 0;
   const daily1yGap = asObject(etfHistoryGap.daily_1y_gap);
   const scoredDaily1yGap = asObject(daily1yGap.scored_etfs);
-  const completeDaily1y = Number(etfDaily1yExactPlan.counts?.complete) || 0;
-  const fetchableDaily1yGap = Number(etfDaily1yExactPlan.counts?.fetchable) || 0;
-  const inceptionLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.inception_limited) || 0;
-  const terminalLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.terminal_limited) || 0;
+  const completeDaily1y = Number(etfDaily1yExactPlan.counts?.scored_complete) || 0;
+  const fetchableDaily1yGap = Number(etfDaily1yExactPlan.counts?.scored_fetchable) || 0;
+  const inceptionLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.scored_inception_limited) || 0;
+  const terminalLimitedDaily1yGap = Number(etfDaily1yExactPlan.counts?.scored_terminal_limited) || 0;
   const exactPlanScoredCount = Number(etfDaily1yExactPlan.counts?.scored_etf_count) || 0;
   const historyGapDaily1yMatches = (
     etfDaily1yExactPlan.classification_as_of === etfHistoryGap.classification_as_of
@@ -673,7 +673,7 @@ function computeEtfReadinessEvidence() {
     scoredFetchableDaily1yGap: fetchableDaily1yGap,
     scoredInceptionLimitedDaily1yGap: inceptionLimitedDaily1yGap,
     scoredTerminalLimitedDaily1yGap: terminalLimitedDaily1yGap,
-    exactPlanCountEquationOk: etfDaily1yExactPlan.counts?.equation_ok === true,
+    exactPlanCountEquationOk: etfDaily1yExactPlan.counts?.scored_equation_ok === true,
     historyGapDaily1yMatches,
     fullPrimaryFetchableRequiredHistory: fetchableGap,
     fullPrimaryMissingRequiredHistory: missingGap,

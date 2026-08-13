@@ -94,6 +94,10 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
   if (plan.classification_as_of !== report.classification_as_of) {
     throw new Error("fetchable plan classification_as_of must match the history gap report");
   }
+  const managedEtfCount = plan.counts?.managed_etf_count;
+  if (!Number.isInteger(managedEtfCount) || managedEtfCount <= 0) {
+    throw new Error("fetchable plan counts.managed_etf_count must be a positive integer");
+  }
   const tickers = Array.isArray(plan.tickers)
     ? [...new Set(plan.tickers.map((ticker) => String(ticker).trim().toUpperCase()).filter(Boolean))].sort()
     : [];
@@ -125,9 +129,9 @@ export function buildEtfDaily1yDispatchPlan({ sourcePlan = null, historyGapRepor
       incremental_etf_limit: String(SHARD_SIZE),
     },
     counts: {
-      // managed_etf_count is the core-scoped denominator; legacy scored_etf_count
-      // is the fallback when the source plan predates the managed-core scope.
-      managed_etf_count: plan.counts?.managed_etf_count ?? plan.counts?.scored_etf_count ?? null,
+      // Dispatch is core-scoped and must never infer its denominator from the
+      // full-scored compatibility field.
+      managed_etf_count: managedEtfCount,
       scored_etf_count: plan.counts?.scored_etf_count ?? null,
       complete: plan.counts?.complete ?? null,
       fetchable: tickers.length,
@@ -177,6 +181,7 @@ export function validateEtfDaily1yDispatchPlan(payload, sourcePlan = null, histo
   }
   if (totalPlanned !== tickers.length) errors.push(`planned tickers ${totalPlanned} != source tickers ${tickers.length}`);
   if (payload?.counts?.fetchable !== tickers.length) errors.push(`counts.fetchable ${payload?.counts?.fetchable} != source tickers ${tickers.length}`);
+  if (payload?.counts?.managed_etf_count !== source.counts?.managed_etf_count) errors.push("managed_etf_count must match the source core denominator");
   if (payload?.counts?.shard_count !== shards.length) errors.push("counts.shard_count must equal shard length");
   for (const shard of shards) {
     if (!Array.isArray(shard.tickers)) errors.push(`shard ${shard.shard ?? "?"} missing tickers`);

@@ -21,6 +21,7 @@ FETCH_PATH = ROOT / "scripts" / "fetch-yf-finance.py"
 YAHOO_BATCH_STATE_PATH = ROOT / "scripts" / "yahoo_batch_state.py"
 YF_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "fetch-yf-finance.yml"
 MANIFEST_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "update-manifest.yml"
+MANIFEST_RUNNER_PATH = ROOT / "scripts" / "update-manifest-projections.sh"
 
 
 def load_fetch_module():
@@ -638,12 +639,14 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         )
 
     def test_load_core_daily_basket_validates_daily_refresh_universe_tickers(self) -> None:
-        self.assertEqual(self.fetcher.load_core_daily_basket(), set())
+        with self.assertRaisesRegex(ValueError, "core daily basket is unreadable"):
+            self.fetcher.load_core_daily_basket()
         write_json(
             self.fetcher.ETF_CORE_DAILY_BASKET,
             {
                 "daily_refresh_universe": {
-                    "tickers": ["SPY", "qqq", "VTI ", "INVALID SYMBOL", "BAD_SYMBOL", ""],
+                    "count": 3,
+                    "tickers": ["SPY", "qqq", "VTI "],
                 }
             },
         )
@@ -667,8 +670,19 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(len(sources), 56)
         self.assertEqual(list(sources), sorted(sources))
 
+        for payload, pattern in [
+            ({"daily_refresh_universe": {"count": 0, "tickers": []}}, "core daily basket is empty"),
+            ({"daily_refresh_universe": {"count": 1, "tickers": ["BAD_SYMBOL"]}}, "invalid tickers"),
+            ({"daily_refresh_universe": {"count": 2, "tickers": ["SPY"]}}, "count mismatch"),
+            ({"daily_refresh_universe": {"tickers": ["SPY"]}}, "count must be an integer"),
+        ]:
+            with self.subTest(pattern=pattern):
+                write_json(self.fetcher.ETF_CORE_DAILY_BASKET, payload)
+                with self.assertRaisesRegex(ValueError, pattern):
+                    self.fetcher.load_core_daily_basket()
+
     def test_core_daily_basket_mode_selects_bounded_union_plus_explicit_tickers(self) -> None:
-        write_json(self.fetcher.ETF_CORE_DAILY_BASKET, {"daily_refresh_universe": {"tickers": ["SMALL", "BIG"]}})
+        write_json(self.fetcher.ETF_CORE_DAILY_BASKET, {"daily_refresh_universe": {"count": 2, "tickers": ["SMALL", "BIG"]}})
         # The StockAnalysis universe/screener must not enter the candidate set.
         write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "ZZSA", "aum": "9B"}]})
         write_json(self.fetcher.STOCKANALYSIS_ETF_SCREENER, {"records": [{"s": "YYSA", "aum": "8B"}]})
@@ -712,6 +726,31 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(payload["candidate_count_before_filters"], 2)
         self.assertEqual(payload["sample"], ["ZZZ", "SMALL"])
         self.assertTrue(payload["tickers_override"])
+
+    def test_core_daily_basket_six_stable_shards_attempt_each_ticker_once(self) -> None:
+        canonical = json.loads((ROOT / "data/admin/fenok-etf-core-daily-basket.json").read_text(encoding="utf-8"))
+        universe = canonical["daily_refresh_universe"]
+        core = set(universe["tickers"])
+        self.assertEqual(universe["count"], len(core))
+        self.assertEqual(len(core), 100)
+        bounded_union = core | self.fetcher.MAJOR_ETFS | self.fetcher.LEVERAGED_AND_FOCUS_ETFS | self.fetcher.RIM_TRACKER_ETFS
+        retry = sorted(bounded_union)[:7]
+        plans = [
+            self.fetcher.select_ticker_plan(
+                sorted(bounded_union),
+                retry,
+                shard=f"{shard_index}/6",
+                natural=True,
+                all_shards=True,
+                stable_shards=True,
+                pin_rim_trackers=False,
+            )
+            for shard_index in range(6)
+        ]
+        attempted = [ticker for plan in plans for ticker in plan]
+        self.assertEqual(set(attempted), bounded_union)
+        self.assertEqual(len(attempted), len(bounded_union))
+        self.assertEqual(len(attempted), 155)
 
     def test_load_universe_keeps_stockanalysis_etfs_aum_first_for_limited_backfills(self) -> None:
         write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "SMALL", "aum": "1M"}]})
@@ -2212,12 +2251,12 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         run_step = workflow[
             workflow.index("      - name: Run batch fetch"):workflow.index("      - name: Refresh owned Yahoo quarter-close source")
         ]
-        # Scheduled ETF slots select the core daily basket union; the
-        # StockAnalysis universe/screener stays off by default and may only be
-        # re-enabled through an explicit repo-variable override.
-        self.assertIn('INPUT_STOCKANALYSIS_ETFS="${YF_WEEKLY_ETF_STOCKANALYSIS_ETFS:-false}"', run_step)
-        self.assertNotIn('INPUT_STOCKANALYSIS_ETFS="${YF_WEEKLY_ETF_STOCKANALYSIS_ETFS:-true}"', run_step)
-        self.assertIn('INPUT_CORE_DAILY_BASKET="${YF_WEEKLY_ETF_CORE_DAILY_BASKET:-true}"', run_step)
+        # Scheduled ETF slots always stay on the bounded core union; broad
+        # acquisition remains a manual-dispatch opt-in.
+        self.assertIn('INPUT_STOCKANALYSIS_ETFS="false"', run_step)
+        self.assertNotIn("YF_WEEKLY_ETF_STOCKANALYSIS_ETFS", run_step)
+        self.assertIn('INPUT_CORE_DAILY_BASKET="true"', run_step)
+        self.assertNotIn("YF_WEEKLY_ETF_CORE_DAILY_BASKET", run_step)
         self.assertIn("--core-daily-basket", run_step)
         self.assertIn("INPUT_CORE_DAILY_BASKET: 'false'", run_step)
         self.assertIn("if args.core_daily_basket", fetcher_source)
@@ -2964,10 +3003,12 @@ assert callable(namespace["load_universe"])
         self.assertIn("python3 scripts/build-quarter-closes.py", workflow[quarter_start:candidate_start])
 
         manifest_workflow = MANIFEST_WORKFLOW_PATH.read_text(encoding="utf-8")
+        manifest_runner = MANIFEST_RUNNER_PATH.read_text(encoding="utf-8")
         self.assertIn("      - '!data/yf/**'", manifest_workflow)
         self.assertIn("      - '!data/admin/yahoo-batch-quote-history/**'", manifest_workflow)
-        self.assertIn("python3 scripts/rebuild-yf-finance-summary.py", manifest_workflow)
-        self.assertIn("python3 scripts/build-market-facts.py --no-public-mirror", manifest_workflow)
+        self.assertIn("run: bash scripts/update-manifest-projections.sh", manifest_workflow)
+        self.assertIn("python3 scripts/rebuild-yf-finance-summary.py", manifest_runner)
+        self.assertIn("python3 scripts/build-market-facts.py --no-public-mirror", manifest_runner)
         for command in (
             "node scripts/build-rim-index.mjs",
             "node scripts/build-rim-index-five-canonical.mjs",
