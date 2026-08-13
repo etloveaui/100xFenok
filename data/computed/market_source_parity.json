@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-08-13T22:08:03Z",
+  "generated_at": "2026-08-13T22:28:49Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6802,
@@ -9,15 +9,15 @@
     "divergence_rows": 57323,
     "percent_scale_warnings": 199,
     "diagnosis_counts": {
-      "agreement": 11059,
+      "agreement": 11046,
       "scale_mismatch": 199,
-      "sign_divergence": 3045,
+      "sign_divergence": 3057,
       "stale": 31750,
-      "value_drift": 11270
+      "value_drift": 11271
     },
     "stale_rows": 31750,
     "scale_mismatch_rows": 199,
-    "sign_divergence_rows": 3045
+    "sign_divergence_rows": 3057
   },
   "by_field": {
     "beta": {
@@ -11223,43 +11223,6 @@
       }
     },
     {
-      "ticker": "AAPL",
-      "asset_type": "stock",
-      "field": "return_3m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 197.728684,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 2.9905875473311285
-        },
-        {
-          "source": "stockanalysis.detail.history",
-          "value": -3.0600918960180397
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 197.728684,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.detail.history"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.history": 9.0
-      }
-    },
-    {
       "ticker": "QCLR",
       "asset_type": "etf",
       "field": "change_pct",
@@ -12092,6 +12055,43 @@
       ],
       "diagnosis": "stale",
       "spread_pct": 196.620691,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.quote"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 48.0,
+        "yf": 0.0
+      }
+    },
+    {
+      "ticker": "MINN",
+      "asset_type": "etf",
+      "field": "change",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 196.616024,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": -0.02
+        },
+        {
+          "source": "yf",
+          "value": 0.0207005
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 196.616024,
       "fresh_spread_pct": null,
       "stale_sources": [
         "stockanalysis.quote"
