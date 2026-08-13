@@ -1197,6 +1197,8 @@ def load_core_daily_basket():
         payload = json.loads(ETF_CORE_DAILY_BASKET.read_text(encoding="utf-8"))
     except (FileNotFoundError, json.JSONDecodeError) as error:
         raise ValueError(f"core daily basket is unreadable: {error}") from error
+    if not isinstance(payload, dict):
+        raise ValueError("core daily basket must be an object")
     universe = payload.get("daily_refresh_universe")
     if not isinstance(universe, dict):
         raise ValueError("core daily basket daily_refresh_universe must be an object")
@@ -1450,6 +1452,7 @@ def select_ticker_plan(
     regular_limit=None,
     shard_cycle_index=0,
     pin_rim_trackers=True,
+    return_retry_overflow_to_regular=False,
 ):
     ticker_set = set(tickers)
     retry_order = (
@@ -1457,8 +1460,15 @@ def select_ticker_plan(
         if isinstance(retry_tickers, (set, frozenset))
         else list(dict.fromkeys(retry_tickers))
     )
-    retry = [ticker for ticker in retry_order if ticker in ticker_set] if natural else []
-    retry_set = set(retry)
+    all_retry = [ticker for ticker in retry_order if ticker in ticker_set] if natural else []
+    retry = all_retry
+    if retry_limit is not None:
+        if retry_limit < 0:
+            raise ValueError("retry limit must be non-negative")
+        retry = retry[:retry_limit]
+    # The bounded core lane returns retry overflow to stable-shard ownership;
+    # broad/manual lanes preserve their historical full retry-set exclusion.
+    retry_set = set(retry if return_retry_overflow_to_regular else all_retry)
     regular = [ticker for ticker in tickers if ticker not in retry_set]
     shard_index = None
     if shard:
@@ -1471,10 +1481,6 @@ def select_ticker_plan(
             else regular[shard_index::shard_count]
         )
     claim_retry = natural and (not all_shards or shard_index in {None, 0})
-    if retry_limit is not None:
-        if retry_limit < 0:
-            raise ValueError("retry limit must be non-negative")
-        retry = retry[:retry_limit]
     regular = select_bounded_cycle_page(regular, regular_limit, shard_cycle_index)
     selected = [*(retry if claim_retry else []), *regular]
     # Historical broad/manual lanes pin RIM trackers ahead of the page. The
@@ -1504,6 +1510,7 @@ def select_campaign_or_rotation_plan(
     untracked_limit,
     shard_cycle_index,
     pin_rim_trackers=True,
+    return_retry_overflow_to_regular=False,
 ):
     retry_set = set(retry_queue)
 
@@ -1533,6 +1540,7 @@ def select_campaign_or_rotation_plan(
             regular_limit=page_limit,
             shard_cycle_index=cycle_index,
             pin_rim_trackers=pin_rim_trackers,
+            return_retry_overflow_to_regular=return_retry_overflow_to_regular,
         )
 
     campaign = select(untracked_regular, 0, untracked_limit)
@@ -2198,6 +2206,7 @@ def main():
             untracked_limit=args.untracked_limit,
             shard_cycle_index=args.shard_cycle_index,
             pin_rim_trackers=not args.core_daily_basket,
+            return_retry_overflow_to_regular=args.core_daily_basket,
         )
     else:
         planned_tickers = [*[ticker for ticker in retry_queue if ticker in selected_universe], *regular_tickers]
@@ -2212,6 +2221,7 @@ def main():
             regular_limit=args.regular_limit,
             shard_cycle_index=args.shard_cycle_index,
             pin_rim_trackers=not args.core_daily_basket,
+            return_retry_overflow_to_regular=args.core_daily_basket,
         )
     if args.limit:
         tickers = tickers[: args.limit]

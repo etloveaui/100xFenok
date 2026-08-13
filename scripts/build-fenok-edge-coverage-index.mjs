@@ -724,7 +724,7 @@ function computeEtfReadinessEvidence() {
       fetchable_daily_1y_gap: fetchableDaily1yGap,
       inception_limited_daily_1y_gap: inceptionLimitedDaily1yGap,
       terminal_limited_daily_1y_gap: terminalLimitedDaily1yGap,
-      exact_plan_count_equation_ok: etfDaily1yExactPlan.counts?.equation_ok === true,
+      exact_plan_count_equation_ok: etfDaily1yExactPlan.counts?.scored_equation_ok === true,
       history_gap_report_match: historyGapDaily1yMatches,
     },
   };

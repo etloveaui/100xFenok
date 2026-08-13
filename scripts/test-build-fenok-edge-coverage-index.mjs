@@ -125,6 +125,14 @@ assert(
   !coverageBuilder.includes("Number(scoredDaily1yGap.scored_etf_count) === Number(etfDaily1yExactPlan.counts?.managed_etf_count)"),
   "coverage index never compares the full-scored history gap to the managed-core denominator",
 );
+assert(
+  coverageBuilder.includes("exact_plan_count_equation_ok: etfDaily1yExactPlan.counts?.scored_equation_ok === true"),
+  "coverage output exports the full-scored exact-plan count equation",
+);
+assert(
+  !coverageBuilder.includes("exact_plan_count_equation_ok: etfDaily1yExactPlan.counts?.equation_ok === true"),
+  "coverage output never exports the managed-core equation as full-scored evidence",
+);
 for (const field of [
   "scored_complete",
   "scored_fetchable",

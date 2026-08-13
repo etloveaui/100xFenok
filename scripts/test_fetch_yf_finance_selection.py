@@ -670,7 +670,14 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(len(sources), 56)
         self.assertEqual(list(sources), sorted(sources))
 
+        self.fetcher.ETF_CORE_DAILY_BASKET.write_text("{broken", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "core daily basket is unreadable"):
+            self.fetcher.load_core_daily_basket()
+
         for payload, pattern in [
+            (["not", "an", "object"], "core daily basket must be an object"),
+            ({"daily_refresh_universe": []}, "daily_refresh_universe must be an object"),
+            ({"daily_refresh_universe": {"count": 1, "tickers": "SPY"}}, "tickers must be a list"),
             ({"daily_refresh_universe": {"count": 0, "tickers": []}}, "core daily basket is empty"),
             ({"daily_refresh_universe": {"count": 1, "tickers": ["BAD_SYMBOL"]}}, "invalid tickers"),
             ({"daily_refresh_universe": {"count": 2, "tickers": ["SPY"]}}, "count mismatch"),
@@ -734,7 +741,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(universe["count"], len(core))
         self.assertEqual(len(core), 100)
         bounded_union = core | self.fetcher.MAJOR_ETFS | self.fetcher.LEVERAGED_AND_FOCUS_ETFS | self.fetcher.RIM_TRACKER_ETFS
-        retry = sorted(bounded_union)[:7]
+        retry = sorted(bounded_union)[:50]
         plans = [
             self.fetcher.select_ticker_plan(
                 sorted(bounded_union),
@@ -742,8 +749,10 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
                 shard=f"{shard_index}/6",
                 natural=True,
                 all_shards=True,
+                retry_limit=40,
                 stable_shards=True,
                 pin_rim_trackers=False,
+                return_retry_overflow_to_regular=True,
             )
             for shard_index in range(6)
         ]
@@ -751,6 +760,7 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(set(attempted), bounded_union)
         self.assertEqual(len(attempted), len(bounded_union))
         self.assertEqual(len(attempted), 155)
+        self.assertEqual(len(set(attempted)), 155)
 
     def test_load_universe_keeps_stockanalysis_etfs_aum_first_for_limited_backfills(self) -> None:
         write_json(self.fetcher.STOCKANALYSIS_ETF_UNIVERSE, {"records": [{"ticker": "SMALL", "aum": "1M"}]})
