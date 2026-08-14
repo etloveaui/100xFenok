@@ -2,20 +2,127 @@
   "schema_version": "market-facts/v1",
   "ticker": "DACL",
   "asset_type": "stock",
-  "generated_at": "2026-08-13T06:18:20Z",
-  "source_as_of": null,
+  "generated_at": "2026-08-14T00:43:27Z",
+  "source_as_of": "2026-08-13",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "DACL",
-    "exchange": null,
-    "currency": null,
-    "sector": null,
-    "industry": null,
+    "exchange": "ASE",
+    "currency": "USD",
+    "sector": "",
+    "industry": "",
     "fund_family": null,
     "category": null
   },
-  "facts": {},
+  "facts": {
+    "price": {
+      "value": 25.025,
+      "source": "yf",
+      "as_of": "2026-08-13",
+      "fetched_at": "2026-08-14T00:23:31Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 25.025,
+          "source": "yf",
+          "as_of": "2026-08-13",
+          "fetched_at": "2026-08-14T00:23:31Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 25.025,
+      "source": "yf",
+      "as_of": "2026-08-13",
+      "fetched_at": "2026-08-14T00:23:31Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 25.025,
+          "source": "yf",
+          "as_of": "2026-08-13",
+          "fetched_at": "2026-08-14T00:23:31Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": 0.0,
+      "source": "yf",
+      "as_of": "2026-08-13",
+      "fetched_at": "2026-08-14T00:23:31Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.0,
+          "source": "yf",
+          "as_of": "2026-08-13",
+          "fetched_at": "2026-08-14T00:23:31Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 0.0,
+          "source": "yf.derived",
+          "as_of": "2026-08-13",
+          "fetched_at": "2026-08-14T00:23:31Z",
+          "confidence": "derived"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "change_pct": {
+      "value": 0.0,
+      "source": "yf",
+      "as_of": "2026-08-13",
+      "fetched_at": "2026-08-14T00:23:31Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 0.0,
+          "source": "yf",
+          "as_of": "2026-08-13",
+          "fetched_at": "2026-08-14T00:23:31Z",
+          "confidence": "observed"
+        },
+        {
+          "value": 0.0,
+          "source": "yf.derived",
+          "as_of": "2026-08-13",
+          "fetched_at": "2026-08-14T00:23:31Z",
+          "confidence": "derived"
+        }
+      ],
+      "candidate_count": 2
+    }
+  },
   "etf": null,
   "financials": null,
   "sources": {
