@@ -1,9 +1,9 @@
 {
   "schema_version": "lane-registry-projection/v2",
-  "generated_at": "2026-08-14T08:37:17.957Z",
+  "generated_at": "2026-08-14T10:26:28.758Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
-  "lane_count": 32,
+  "lane_count": 33,
   "lanes": [
     {
       "id": "fred_macro",
@@ -102,6 +102,18 @@
       "owner_workflow": "fetch-stockanalysis.yml"
     },
     {
+      "id": "stockanalysis_etf_detail",
+      "label": "StockAnalysis per-ticker ETF detail",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "StockAnalysis"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "fetch-stockanalysis.yml"
+    },
+    {
       "id": "stockanalysis_stock_financial",
       "label": "StockAnalysis bounded stock and financial pairs",
       "store_kind": "payload",
@@ -145,12 +157,12 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-08-14T08:05:00.000Z",
-          "next_expected_slot": "2026-08-14T09:05:00.000Z",
+          "latest_expected_slot": "2026-08-14T10:05:00.000Z",
+          "next_expected_slot": "2026-08-14T11:05:00.000Z",
           "status": "on_time"
         },
         "latest_attempt": {
-          "observed_at": "2026-08-14T08:24:19.260Z",
+          "observed_at": "2026-08-14T10:13:28.735Z",
           "outcome": "success",
           "failure_class": null
         },
