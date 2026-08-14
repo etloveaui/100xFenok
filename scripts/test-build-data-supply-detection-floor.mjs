@@ -813,8 +813,18 @@ function runConfigAndFixtureChecks() {
     (value) => { value.lanes[0].freshness.calendar = "unknown"; },
     (value) => { value.lanes[0].freshness.source_basis = []; },
     (value) => { value.lanes.find((item) => item.id === "stockanalysis_etf_universe").freshness.source_basis = ["/collected_at"]; },
-    (value) => { value.lanes.find((item) => item.id === "stockanalysis_etf_universe").endpoint_contract.transport = "http"; },
+    // Transport must be declared, not inferred. Omitting it used to mean http,
+    // which made "this lane is http" and "nobody considered transport for this
+    // lane" the same state. Run 31792421833 died of that: the ETF detail lane
+    // declared nothing, defaulted to http, and the http classifier demanded a
+    // per-observation status code its aggregating producer does not emit.
+    (value) => { delete value.lanes.find((item) => item.id === "stockanalysis_etf_universe").endpoint_contract.transport; },
+    (value) => { delete value.lanes.find((item) => item.id === "yahoo_etf_fallback").endpoint_contract.transport; },
+    (value) => { value.lanes.find((item) => item.id === "stockanalysis_etf_universe").endpoint_contract.transport = "unknown"; },
     (value) => { value.lanes.find((item) => item.id === "yahoo_etf_fallback").endpoint_contract.transport = "unknown"; },
+    // An artifact-only lane has no transport at all, so declaring one is still
+    // a contradiction rather than an omission.
+    (value) => { value.lanes.find((item) => item.id === "sec_13f").endpoint_contract.transport = "http"; },
     (value) => { value.lanes[0].producer_members[0].artifact_contracts[0].path = "../escape.json"; },
     (value) => { value.lanes[0].producer_members[0].artifact_contracts[0].path = "data/**/*.json"; value.lanes[0].producer_members[0].artifact_contracts[0].selection = "all"; },
     (value) => { value.lanes[0].producer_members[0].artifact_contracts[0].path = "data/bounded/*.json"; value.lanes[0].producer_members[0].artifact_contracts[0].selection = "single"; },

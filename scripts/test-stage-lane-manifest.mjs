@@ -476,7 +476,11 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   fixture.materialized.always.push(etfRecoveryState);
   const always = run(fixture.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=11 stage_selected=12 staged_index_total=12/);
+  // 11 -> 12 declared on 2026-08-14: the StockAnalysis policy gained
+  // stockanalysis_etf_detail's attempt shard by registry derivation. The lane
+  // was registry-owned by this workflow all along and its shard reached the
+  // specs only as a manual patch after run 31794068491 failed to pack it.
+  assert.match(always.stdout, /declared=12 stage_selected=13 staged_index_total=13/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   assert.equal(cached(fixture.root).includes(etfRecoveryState), true);
   for (const excluded of fixture.materialized.exclude) {
@@ -491,7 +495,8 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
   const trackedAlways = run(tracked.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  assert.match(trackedAlways.stdout, /declared=11 stage_selected=12 staged_index_total=11/);
+  // Same 2026-08-14 derivation as above: one more declared StockAnalysis path.
+  assert.match(trackedAlways.stdout, /declared=12 stage_selected=13 staged_index_total=12/);
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 
@@ -501,7 +506,10 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: YF_FINANCE_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /stage_selected=4 staged_index_total=4/);
+  // 4 -> 5 on 2026-08-14: yahoo_batch_quote_history declared an attempt shard
+  // that no stage owned, so it had never been committed once; registry
+  // derivation now supplies it.
+  assert.match(always.stdout, /stage_selected=5 staged_index_total=5/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   assert.equal(
     cached(fixture.root).includes("data/yf/finance/_summary.json"),
@@ -517,7 +525,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
   const trackedAlways = run(tracked.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
   assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  assert.match(trackedAlways.stdout, /stage_selected=4 staged_index_total=4/);
+  assert.match(trackedAlways.stdout, /stage_selected=5 staged_index_total=5/);
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 

@@ -1,5 +1,5 @@
 {
-  "registry_digest": "755040958051bb4577bd0955db5390a84d0b675528ba041402c3fadc40f7644f",
+  "registry_digest": "2ceb911246612396da8a244d05fedde638949e505744f564f29727167e8a264a",
   "registry_schema": "lane-registry/v3",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -1426,6 +1426,7 @@
       "lanes": [
         "yahoo_etf_fallback",
         "stockanalysis_etf_universe",
+        "stockanalysis_etf_detail",
         "stockanalysis_stock_financial",
         "stockanalysis_surfaces"
       ],
@@ -1457,8 +1458,18 @@
             "required": false
           },
           {
+            "kind": "dynamic_set",
+            "path": "data/yf/finance",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "100xfenok-next/public/data",
+            "required": false
+          },
+          {
             "kind": "file",
-            "path": "data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json",
+            "path": "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json",
             "required": false
           },
           {
@@ -1478,17 +1489,7 @@
           },
           {
             "kind": "file",
-            "path": "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json",
-            "required": false
-          },
-          {
-            "kind": "dynamic_set",
-            "path": "data/yf/finance",
-            "required": false
-          },
-          {
-            "kind": "directory",
-            "path": "100xfenok-next/public/data",
+            "path": "data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json",
             "required": false
           }
         ],
@@ -1656,6 +1657,11 @@
             "kind": "directory",
             "path": "data/yf/estimates-archive",
             "required": true
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history.json",
+            "required": false
           }
         ],
         "required_on_success": [],

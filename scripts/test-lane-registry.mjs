@@ -129,6 +129,31 @@ function clone(value) {
       const lane = draft.lanes.find((row) => row.commit_shards.length > 1);
       lane.commit_shards.push(lane.commit_shards[0]);
     }],
+    // Completeness, both directions. Until 2026-08-14 a policy was checked only
+    // for lanes it DID list — nothing asserted that a workflow lists every lane
+    // the registry says it owns, or that it can commit those lanes' evidence.
+    // Both gaps were real in the shipped registry: fetch-stockanalysis.yml
+    // omitted stockanalysis_etf_detail from its lane list while hand-patching
+    // that lane's shard into its specs after run 31794068491 failed to pack it,
+    // and fetch-yf-finance.yml owned yahoo_batch_quote_history without owning
+    // the attempt shard the lane declares, so that shard has never been
+    // committed once.
+    ["workflow policy omits a lane it owns", (draft) => {
+      const lane = draft.lanes.find((row) => row.owner_workflow);
+      const policyValue = draft.workflow_policies[lane.owner_workflow];
+      policyValue.lanes = policyValue.lanes.filter((id) => id !== lane.id);
+    }],
+    ["workflow policy cannot commit an owned lane's attempt shard", (draft) => {
+      const prefix = "data/admin/data-supply-state/detection-attempts/";
+      const lane = draft.lanes.find((row) => row.owner_workflow
+        && row.commit_shards.some((shard) => shard.startsWith(prefix)));
+      const shard = lane.commit_shards.find((entry) => entry.startsWith(prefix));
+      const policyValue = draft.workflow_policies[lane.owner_workflow];
+      for (const stage of Object.keys(policyValue.stages)) {
+        policyValue.stages[stage] = policyValue.stages[stage]
+          .filter((spec) => spec.path !== shard && !shard.startsWith(`${spec.path}/`));
+      }
+    }],
   ];
   for (const [label, mutate] of cases) {
     const draft = clone(base);

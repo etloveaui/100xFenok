@@ -1357,6 +1357,27 @@ function defaultWorkflowPolicy(laneIds) {
   };
 }
 
+// Derive a workflow's lane attribution and its lanes' attempt-shard specs from
+// the registry, then layer the workflow's hand-written extras on top. The hand
+// list was the drift source: a lane could be registry-owned by a workflow and
+// missing from that workflow's own `lanes`, and a lane's attempt shard could go
+// unstaged while the lane declared it. Both were real on 2026-08-14. Path
+// policy beyond attempt evidence stays hand-written, because only the author
+// knows which product trees a workflow may write.
+function lanePolicy(workflowRel, stages, exclude = []) {
+  const owned = lanes.filter((laneValue) => laneValue.owner_workflow === workflowRel);
+  const declared = stages.always_if_exists ?? [];
+  const derivedShards = [...new Set(owned.flatMap((laneValue) => (laneValue.commit_shards ?? [])
+    .filter((shard) => shard.startsWith(`${ATTEMPT_ROOT}/`))))]
+    .filter((shard) => !declared.some((spec) => spec.path === shard || shard.startsWith(`${spec.path}/`)))
+    .sort()
+    .map((shard) => commitSpec(shard, "file"));
+  return policy(owned.map((laneValue) => laneValue.id), {
+    ...stages,
+    always_if_exists: [...declared, ...derivedShards],
+  }, exclude);
+}
+
 function policy(lanesForWorkflow, stages, exclude = []) {
   return {
     lanes: [...lanesForWorkflow],
@@ -1457,7 +1478,7 @@ Object.assign(workflow_policies, {
 
 // Rich producer policies whose current YAML uses directory/glob/dynamic
 // pathspecs or explicit restore exclusions.
-workflow_policies[".github/workflows/fetch-defillama.yml"] = policy(["defillama_stablecoins"], {
+workflow_policies[".github/workflows/fetch-defillama.yml"] = lanePolicy(".github/workflows/fetch-defillama.yml", {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/defillama_stablecoins.json", "file"),
     commitSpec(publishOutcomeShard("defillama-stablecoins"), "file"),
@@ -1468,7 +1489,7 @@ workflow_policies[".github/workflows/fetch-defillama.yml"] = policy(["defillama_
     commitSpec("data/macro/stablecoins.json", "file", true),
   ],
 });
-workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = policy(["apewisdom_attention"], {
+workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = lanePolicy(".github/workflows/fetch-fenok-apewisdom.yml", {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/apewisdom_attention.json", "file"),
     commitSpec("data/admin/apewisdom_attention/index.json", "file"),
@@ -1479,7 +1500,7 @@ workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = policy(["apew
     commitSpec("data/computed/fenok_social_attention_proxy_history.json", "file"),
   ],
 });
-workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = policy(["gdelt_news_tone"], {
+workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = lanePolicy(".github/workflows/fetch-fenok-news-tone.yml", {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/gdelt_news_tone.json", "file"),
     commitSpec(publishOutcomeShard("gdelt-news-tone"), "file"),
@@ -1491,7 +1512,7 @@ workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = policy(["gdel
     commitSpec("data/computed/fenok_news_tone_proxy_history.json", "file"),
   ],
 });
-workflow_policies[".github/workflows/fetch-sentiment.yml"] = policy(["sentiment"], {
+workflow_policies[".github/workflows/fetch-sentiment.yml"] = lanePolicy(".github/workflows/fetch-sentiment.yml", {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/sentiment.json", "file"),
     commitSpec(publishOutcomeShard("sentiment"), "file"),
@@ -1504,7 +1525,7 @@ workflow_policies[".github/workflows/fetch-sentiment.yml"] = policy(["sentiment"
     commitSpec("data/sentiment/*.json", "glob"),
   ],
 });
-workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = policy(["us_indices_daily"], {
+workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = lanePolicy(".github/workflows/fetch-us-indices-daily.yml", {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/us_indices_daily.json", "file"),
     commitSpec(publishOutcomeShard("us-indices-daily"), "file"),
@@ -1517,7 +1538,7 @@ workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = policy(["us_
     commitSpec("data/indices/sox.json", "file"),
   ],
 });
-workflow_policies[".github/workflows/fetch-oecd-cli.yml"] = policy(["oecd_cli"], {
+workflow_policies[".github/workflows/fetch-oecd-cli.yml"] = lanePolicy(".github/workflows/fetch-oecd-cli.yml", {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/oecd_cli.json", "file"),
     commitSpec(publishOutcomeShard("oecd-cli"), "file"),
@@ -1529,7 +1550,7 @@ workflow_policies[".github/workflows/fetch-oecd-cli.yml"] = policy(["oecd_cli"],
     commitSpec("data/admin/oecd_cli/parity-report.json", "file"),
   ],
 });
-workflow_policies[".github/workflows/fenok-edge-daily.yml"] = policy(["finra_short_volume", "occ_options_volume"], {
+workflow_policies[".github/workflows/fenok-edge-daily.yml"] = lanePolicy(".github/workflows/fenok-edge-daily.yml", {
   always_if_exists: [
     "finra_short_volume",
     "occ_options_volume",
@@ -1541,7 +1562,7 @@ workflow_policies[".github/workflows/fenok-edge-daily.yml"] = policy(["finra_sho
     commitSpec("data/computed/fenok_signal_lens_proxies*.json", "glob"),
   ],
 });
-workflow_policies[".github/workflows/fetch-finra-ats-weekly.yml"] = policy(["finra_ats_weekly"], {
+workflow_policies[".github/workflows/fetch-finra-ats-weekly.yml"] = lanePolicy(".github/workflows/fetch-finra-ats-weekly.yml", {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/finra_ats.json", "file"),
     commitSpec(publishOutcomeShard("finra-ats-weekly"), "file"),
@@ -1553,7 +1574,7 @@ workflow_policies[".github/workflows/fetch-finra-ats-weekly.yml"] = policy(["fin
     commitSpec("data/admin/finra-ats/weeks", "directory", true),
   ],
 });
-workflow_policies[".github/workflows/fetch-yf-finance.yml"] = policy(["yahoo_batch_quote_history"], {
+workflow_policies[".github/workflows/fetch-yf-finance.yml"] = lanePolicy(".github/workflows/fetch-yf-finance.yml", {
   always_if_exists: [
     commitSpec("data/yf/finance", "directory", true),
     commitSpec("data/yf/quarter_closes.json", "file", true),
@@ -1564,23 +1585,19 @@ workflow_policies[".github/workflows/fetch-yf-finance.yml"] = policy(["yahoo_bat
   commitSpec("data/yf/finance/_summary.json", "file"),
   commitSpec("data/yf/estimates-archive/_summary.json", "file"),
 ]);
-workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_etf_fallback", "stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"], {
+workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".github/workflows/fetch-stockanalysis.yml", {
   always_if_exists: [
     commitSpec("data/stockanalysis", "directory", true),
     commitSpec("data/yf/etf-details", "directory", true),
     commitSpec("data/admin/data-supply-state/v1", "directory", true),
     commitSpec("data/admin/stockanalysis-recovery", "directory", true),
     commitSpec("data/admin/yahoo_etf_fallback", "directory", false),
-    commitSpec("data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", "file"),
-    commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", "file"),
-    commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", "file"),
-    commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", "file"),
-    // The shadow lane still writes an attempt shard, and the artifact packer
-    // rejects any path this policy does not own. Run 31794068491 emitted the
-    // shard correctly and then failed to pack it, because being shadow governs
-    // whether a lane may be counted as ready, not whether its evidence may be
-    // carried.
-    commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json", "file"),
+    // The five attempt shards this workflow carries are no longer listed here.
+    // They are derived from the registry by lanePolicy, because hand-listing
+    // them is what let run 31794068491 emit a shard correctly and then fail to
+    // pack it: the lane was added to the registry, the detection config and the
+    // producer, and missed here. Being a shadow lane governs whether evidence
+    // may be counted as ready, never whether it may be carried.
     commitSpec("data/yf/finance", "dynamic_set"),
     commitSpec("100xfenok-next/public/data", "directory", false),
   ],
@@ -1588,7 +1605,7 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
   commitSpec("data/yf/finance/_summary.json", "file"),
 ]);
-workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy(["krx"], {
+workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = lanePolicy(".github/workflows/fenok-edge-krx-daily.yml", {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/krx.json", "file"),
     commitSpec("data/admin/krx/index.json", "file"),
@@ -1604,7 +1621,7 @@ workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = policy(["krx"]
     commitSpec("data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json", "file", true),
   ],
 });
-workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = policy(["damodaran"], {
+workflow_policies[".github/workflows/fetch-damodaran-shadow.yml"] = lanePolicy(".github/workflows/fetch-damodaran-shadow.yml", {
   always_if_exists: [
     commitSpec(attemptShard("damodaran"), "file", false),
     commitSpec(publishOutcomeShard("damodaran"), "file", false),
@@ -1733,6 +1750,16 @@ function validateWorkflowPolicy(policyValue, workflowRel, registry) {
     if (seenLanes.has(laneId)) fail(`${context}.lanes duplicates ${laneId}`);
     seenLanes.add(laneId);
   }
+  // Completeness, not merely membership. Until 2026-08-14 a policy was checked
+  // only against the lanes it DID list, so a lane could be registry-owned by a
+  // workflow and absent from that workflow's own attribution with nothing
+  // noticing. fetch-stockanalysis.yml was in exactly that state.
+  const ownedLanes = registry.lanes.filter((laneValue) => laneValue.owner_workflow === workflowRel);
+  for (const laneValue of ownedLanes) {
+    if (!seenLanes.has(laneValue.id)) {
+      fail(`${context}.lanes omits ${laneValue.id}, which the registry attributes to this workflow`);
+    }
+  }
   exactKeys(policyValue.stages, COMMIT_STAGE_KEYS, `${context}.stages`);
   for (const stage of COMMIT_STAGE_KEYS) {
     const entries = policyValue.stages[stage];
@@ -1750,6 +1777,23 @@ function validateWorkflowPolicy(policyValue, workflowRel, registry) {
     validateCommitSpec(entry, `${context}.exclude`);
     if (seenExclusions.has(entry.path)) fail(`${context}.exclude duplicates ${entry.path}`);
     seenExclusions.add(entry.path);
+  }
+  // A workflow that owns a lane must be able to commit that lane's attempt
+  // evidence. Run 31794068491 emitted a shard correctly and then failed to pack
+  // it because this policy did not own the path, and yahoo_batch_quote_history
+  // has never committed its declared shard once for the same reason. Being a
+  // shadow lane governs whether evidence may be COUNTED, never whether it may
+  // be CARRIED.
+  const stagedPaths = COMMIT_STAGE_KEYS.flatMap((stage) => policyValue.stages[stage].map((spec) => spec.path));
+  const excludedPaths = new Set(policyValue.exclude.map((spec) => spec.path));
+  for (const laneValue of ownedLanes) {
+    for (const shard of laneValue.commit_shards ?? []) {
+      if (!shard.startsWith(`${ATTEMPT_ROOT}/`)) continue;
+      const carried = stagedPaths.some((staged) => staged === shard || shard.startsWith(`${staged}/`));
+      if (!carried || excludedPaths.has(shard)) {
+        fail(`${context} cannot commit ${shard}, the attempt evidence of ${laneValue.id}`);
+      }
+    }
   }
 }
 
