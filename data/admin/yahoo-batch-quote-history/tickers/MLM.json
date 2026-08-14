@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-30T00:50:04Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30502016705",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -188,30 +175,43 @@
       "run_id": "31652949582",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 497,
+      "natural": true,
+      "observed_at": "2026-08-14T00:18:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31755913658",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-13T00:07:09Z",
-    "history_as_of": "2026-08-12",
+    "fetched_at": "2026-08-14T00:20:45Z",
+    "history_as_of": "2026-08-13",
     "path": "data/yf/finance/MLM.json",
-    "payload_sha256": "39dc67790a46696609af454918d284875b1ab6e39266565fe9227b43f6ff8ee1",
-    "quote_as_of": "2026-08-12T20:00:02Z",
-    "source_as_of": "2026-08-12"
+    "payload_sha256": "3407ad7f92d10981ff5fc641b9712cd0ed38ab7cd1d6dd2965065a6811598962",
+    "quote_as_of": "2026-08-13T20:00:02Z",
+    "source_as_of": "2026-08-13"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 497,
     "natural": true,
-    "observed_at": "2026-08-13T00:13:23Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-14T00:18:08Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31652949582",
+    "run_id": "31755913658",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-12",
-    "observed_at": "2026-08-13T00:06:17Z",
-    "payload_sha256": "76d62bed675c056414fa6ad9e54f65dc4142084e808500343cbb3febee3e4a50",
-    "quote_as_of": "2026-08-12T20:00:02Z",
+    "history_as_of": "2026-08-13",
+    "observed_at": "2026-08-14T00:18:08Z",
+    "payload_sha256": "e28c97815c816c8292d12729180d0c996bb0e1c52fafad515974ce0090413f25",
+    "quote_as_of": "2026-08-13T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "31652949582",
+    "run_id": "31755913658",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-12"
+    "source_as_of": "2026-08-13"
   },
   "recovered_at": "2026-08-13T00:06:17Z",
   "recovered_from_run_id": "31648785047",
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MLM",
-  "updated_at": "2026-08-13T00:13:23Z"
+  "updated_at": "2026-08-14T00:18:08Z"
 }

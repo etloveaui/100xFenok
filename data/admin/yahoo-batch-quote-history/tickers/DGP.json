@@ -69,7 +69,7 @@
   "current": {
     "fetched_at": "2026-08-06T10:51:23Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/DGP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DGP.json",
     "payload_sha256": "6550e78a4d359671471e95515cd591f7e2e6b4d1677cdcc5260e06ad15809cad",
     "quote_as_of": "2026-08-05T20:00:00Z",
     "source_as_of": "2026-08-05"
@@ -91,12 +91,12 @@
     "shard": "52/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T20:21:24Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-06T10:51:23Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DGP.json",
-    "payload_sha256": "b344a827ced166b0f7260612896ae45184b23bff0236c4a50a9ebbf86e8fa412",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "6550e78a4d359671471e95515cd591f7e2e6b4d1677cdcc5260e06ad15809cad",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -110,19 +110,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DGP holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DGP holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-05"
   },
   "ticker": "DGP",
-  "updated_at": "2026-08-06T10:49:28Z"
+  "updated_at": "2026-08-14T00:10:47Z"
 }

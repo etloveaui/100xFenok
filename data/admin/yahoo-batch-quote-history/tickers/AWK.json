@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 510,
-      "natural": true,
-      "observed_at": "2026-07-30T00:35:13Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30502016705",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,30 +168,43 @@
       "run_id": "31652949582",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 404,
+      "natural": true,
+      "observed_at": "2026-08-14T00:24:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31755913658",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-13T00:08:47Z",
-    "history_as_of": "2026-08-12",
+    "fetched_at": "2026-08-14T00:26:36Z",
+    "history_as_of": "2026-08-13",
     "path": "data/yf/finance/AWK.json",
-    "payload_sha256": "b0f7ccd9d988a8aa6450349e780c4996cc4e12fbb1670b542bb167e8bbeb66d1",
-    "quote_as_of": "2026-08-12T20:00:02Z",
-    "source_as_of": "2026-08-12"
+    "payload_sha256": "db7d6bd7b9bb8c3f5fe324a0fea280d443551ec074ebff893c8cfb320f714eda",
+    "quote_as_of": "2026-08-13T20:00:03Z",
+    "source_as_of": "2026-08-13"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 404,
     "natural": true,
-    "observed_at": "2026-08-13T00:19:00Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-14T00:24:55Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31652949582",
+    "run_id": "31755913658",
     "schedule": "20 23 * * 1-5",
     "shard": "4/5"
   },
@@ -237,14 +237,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-12",
-    "observed_at": "2026-08-13T00:06:17Z",
-    "payload_sha256": "c936c8b91cb2ac121087a91f430ee521931e82705890e2cb85173625758bbb3c",
-    "quote_as_of": "2026-08-12T20:00:02Z",
+    "history_as_of": "2026-08-13",
+    "observed_at": "2026-08-14T00:24:55Z",
+    "payload_sha256": "e5085c6b4f4ad23d423b4609063f1e6b5e6529b620eaac76d080ee71f3ef1058",
+    "quote_as_of": "2026-08-13T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "31652949582",
+    "run_id": "31755913658",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-12"
+    "source_as_of": "2026-08-13"
   },
   "recovered_at": "2026-07-24T00:27:41Z",
   "recovered_from_run_id": "29968542251",
@@ -255,5 +255,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AWK",
-  "updated_at": "2026-08-13T00:19:00Z"
+  "updated_at": "2026-08-14T00:24:55Z"
 }

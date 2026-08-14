@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-06T05:29:13Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/KMAY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KMAY.json",
     "payload_sha256": "b00d2f700afab334193ba4eb0308fbd3b28d2ebf84e20b67cc09003f29bb29c8",
     "quote_as_of": "2026-08-05T19:59:45Z",
     "source_as_of": "2026-08-05"
@@ -65,12 +65,12 @@
     "shard": "49/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:02:03Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-06T05:29:13Z",
+    "history_as_of": "2026-08-05",
     "path": "data/admin/yahoo-batch-quote-history/lkg/KMAY.json",
-    "payload_sha256": "c84308dba11a5288c9e1accebaad64fe1fb73b9315296a7076c0fa54b6cbc341",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "b00d2f700afab334193ba4eb0308fbd3b28d2ebf84e20b67cc09003f29bb29c8",
+    "quote_as_of": "2026-08-05T19:59:45Z",
+    "source_as_of": "2026-08-05"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "KMAY holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "KMAY holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-05"
   },
   "ticker": "KMAY",
-  "updated_at": "2026-08-06T05:27:19Z"
+  "updated_at": "2026-08-14T00:10:47Z"
 }

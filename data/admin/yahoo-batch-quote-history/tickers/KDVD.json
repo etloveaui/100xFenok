@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-07T09:17:00Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/KDVD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KDVD.json",
     "payload_sha256": "fc14753cfb4fd9820d0ed2272e7e6d5a079fceaaf532c77fe38225b7723c2e4a",
     "quote_as_of": "2026-08-05T15:05:12Z",
     "source_as_of": "2026-08-05T15:05:12Z"
@@ -38,6 +38,14 @@
     "schedule": "7 8 * * 0-5",
     "shard": "64/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-07T09:17:00Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KDVD.json",
+    "payload_sha256": "fc14753cfb4fd9820d0ed2272e7e6d5a079fceaaf532c77fe38225b7723c2e4a",
+    "quote_as_of": "2026-08-05T15:05:12Z",
+    "source_as_of": "2026-08-05T15:05:12Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05T15:05:12Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "KDVD holds LKG because Yahoo source date 2026-08-05T15:05:12Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-05T15:05:12Z"
+  },
   "ticker": "KDVD",
-  "updated_at": "2026-08-07T09:14:45Z"
+  "updated_at": "2026-08-14T00:10:47Z"
 }

@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-12T09:26:17Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/PMNV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PMNV.json",
     "payload_sha256": "b5010b0674018b3a990ba9baf463a0f4eb2eaf9ade25eeaa697be82b69effaec",
     "quote_as_of": "2026-08-05T15:08:35Z",
     "source_as_of": "2026-08-05T15:08:35Z"
@@ -65,12 +65,12 @@
     "shard": "40/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-05T10:48:44Z",
-    "history_as_of": "2026-08-04",
+    "fetched_at": "2026-08-12T09:26:17Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PMNV.json",
-    "payload_sha256": "87d286ba8f413da525ba8bb2d155a2e69f2d241b643c3da13d9c57655557f209",
-    "quote_as_of": "2026-06-29T14:28:57Z",
-    "source_as_of": "2026-06-29T14:28:57Z"
+    "payload_sha256": "b5010b0674018b3a990ba9baf463a0f4eb2eaf9ade25eeaa697be82b69effaec",
+    "quote_as_of": "2026-08-05T15:08:35Z",
+    "source_as_of": "2026-08-05T15:08:35Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05T15:08:35Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 26,
-    "classified_at": "2026-08-05T12:11:49Z",
-    "classified_run_id": "31004461242",
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "PMNV holds LKG because Yahoo source date 2026-06-29T14:28:57Z is 26 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "PMNV holds LKG because Yahoo source date 2026-08-05T15:08:35Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29T14:28:57Z"
+    "source_as_of": "2026-08-05T15:08:35Z"
   },
   "ticker": "PMNV",
-  "updated_at": "2026-08-12T09:23:29Z"
+  "updated_at": "2026-08-14T00:10:47Z"
 }

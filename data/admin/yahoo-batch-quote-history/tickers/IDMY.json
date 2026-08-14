@@ -56,7 +56,7 @@
   "current": {
     "fetched_at": "2026-08-11T23:32:05Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/IDMY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IDMY.json",
     "payload_sha256": "357c436be460712bf45aa0087b24d5d22d51fd60657a6660735005a1b2328ab8",
     "quote_as_of": "2026-08-05T14:00:32Z",
     "source_as_of": "2026-08-05T14:00:32Z"
@@ -78,12 +78,12 @@
     "shard": "35/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-27T22:59:28Z",
-    "history_as_of": "2026-07-24",
+    "fetched_at": "2026-08-11T23:32:05Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/IDMY.json",
-    "payload_sha256": "d4e2950cbe833c2647cba71ba4f663e82979b75a71304d11feb455df29f5be36",
-    "quote_as_of": "2026-07-14T16:48:13Z",
-    "source_as_of": "2026-07-14T16:48:13Z"
+    "payload_sha256": "357c436be460712bf45aa0087b24d5d22d51fd60657a6660735005a1b2328ab8",
+    "quote_as_of": "2026-08-05T14:00:32Z",
+    "source_as_of": "2026-08-05T14:00:32Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -97,19 +97,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05T14:00:32Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-28T00:14:11Z",
-    "classified_run_id": "30316637722",
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "IDMY holds LKG because Yahoo source date 2026-07-14T16:48:13Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "IDMY holds LKG because Yahoo source date 2026-08-05T14:00:32Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-14T16:48:13Z"
+    "source_as_of": "2026-08-05T14:00:32Z"
   },
   "ticker": "IDMY",
-  "updated_at": "2026-08-11T23:29:49Z"
+  "updated_at": "2026-08-14T00:10:47Z"
 }

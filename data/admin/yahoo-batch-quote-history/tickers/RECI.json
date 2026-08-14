@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-11T02:27:37Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/RECI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RECI.json",
     "payload_sha256": "097a02d0ebab9e73ccc3a4111cb11a9e0078f296e5783fb2acb13f65ace86e15",
     "quote_as_of": "2026-08-05T18:05:11Z",
     "source_as_of": "2026-08-05T18:05:11Z"
@@ -38,6 +38,14 @@
     "schedule": "7 0 * * 0-5",
     "shard": "24/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-11T02:27:37Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RECI.json",
+    "payload_sha256": "097a02d0ebab9e73ccc3a4111cb11a9e0078f296e5783fb2acb13f65ace86e15",
+    "quote_as_of": "2026-08-05T18:05:11Z",
+    "source_as_of": "2026-08-05T18:05:11Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05T18:05:11Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "RECI holds LKG because Yahoo source date 2026-08-05T18:05:11Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-05T18:05:11Z"
+  },
   "ticker": "RECI",
-  "updated_at": "2026-08-11T02:24:04Z"
+  "updated_at": "2026-08-14T00:10:47Z"
 }

@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-11T05:21:27Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/NSIV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NSIV.json",
     "payload_sha256": "7e572c8893340f352c6c10cb13a63606fc6661656a4c01a5c836dfea46928ed2",
     "quote_as_of": "2026-08-05T19:11:09Z",
     "source_as_of": "2026-08-05T19:11:09Z"
@@ -38,6 +38,14 @@
     "schedule": "7 4 * * 0-5",
     "shard": "26/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-11T05:21:27Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NSIV.json",
+    "payload_sha256": "7e572c8893340f352c6c10cb13a63606fc6661656a4c01a5c836dfea46928ed2",
+    "quote_as_of": "2026-08-05T19:11:09Z",
+    "source_as_of": "2026-08-05T19:11:09Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05T19:11:09Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "NSIV holds LKG because Yahoo source date 2026-08-05T19:11:09Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-05T19:11:09Z"
+  },
   "ticker": "NSIV",
-  "updated_at": "2026-08-11T05:18:59Z"
+  "updated_at": "2026-08-14T00:10:47Z"
 }
