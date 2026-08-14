@@ -1226,6 +1226,13 @@ const declared_exceptions = [
     owner: "platform",
   },
   {
+    path: "data/yf/estimates-archive",
+    kind: "root",
+    reason: "B-380 change-only Yahoo analyst-estimate history; canonical private retention with no public mirror or product reader",
+    owner: "yahoo_batch_quote_history",
+    public_sync: "exclude",
+  },
+  {
     path: "data/admin/data-supply-detection-floor.json",
     kind: "file",
     reason: "ephemeral detection-floor report; referenced in workflow text but intentionally NOT committed (pinned by test-build-data-supply-detection-floor.mjs)",

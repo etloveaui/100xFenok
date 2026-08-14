@@ -62,6 +62,7 @@ export const FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS = [
   "computed/fenok_social_attention_proxy.json",
   "computed/fenok_social_attention_proxy_history.json",
   "yf/etf-details",
+  "yf/estimates-archive",
   "yf/migration-evidence",
   // The dated Russell factsheet captures belong here too, but this list is
   // asserted equal to deriveForbiddenPrivateDataSupplyRoots(); adding a root by
