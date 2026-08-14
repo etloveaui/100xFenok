@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-14T10:29:11.284Z",
+  "generated_at": "2026-08-14T10:53:02.759Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 5,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -43,6 +43,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-stockanalysis.yml",
+      "label": "Fetch StockAnalysis Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "unrecovered_overdue"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "overdue"
     },
     {
       "workflow": "fetch-yf-finance.yml",
@@ -280,8 +293,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "unknown",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "attempt_gap"
+      ]
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -432,10 +447,10 @@
   ],
   "cadence_state_counts": {
     "not_due": 23,
-    "overdue": 2,
+    "overdue": 3,
     "recovered": 0,
     "no_declaration": 7,
-    "unknown": 1
+    "unknown": 0
   },
   "excluded_workflows": [
     {
@@ -448,14 +463,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31792193937",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31792193937",
-    "observed_at": "2026-08-14T10:29:11.284Z",
-    "event": "schedule",
+    "run_id": "31793787855",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31793787855",
+    "observed_at": "2026-08-14T10:53:02.759Z",
+    "event": "workflow_run",
     "workflows": [
       "fetch-edgar-filings.yml",
       "fetch-finra-ats-weekly.yml",
       "fetch-fred-macro.yml",
+      "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
