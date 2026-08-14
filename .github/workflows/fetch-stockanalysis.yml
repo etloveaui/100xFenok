@@ -492,6 +492,7 @@ jobs:
             )"
             APPLY_STATUS="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])' <<<"$APPLY_JSON")"
             APPLY_CONFIRMATION="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["confirmation"])' <<<"$APPLY_JSON")"
+            APPLY_REASON="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("reason") or "")' <<<"$APPLY_JSON")"
             if [ "$APPLY_STATUS" = "stale" ]; then
               if [ "$APPLY_CONFIRMATION" != "not_confirmed" ]; then
                 echo "stale artifact must be explicitly non-confirming" >&2
@@ -499,6 +500,13 @@ jobs:
               fi
               echo "status=stale" >> "$GITHUB_OUTPUT"
               echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+              echo "stale apply reason: $APPLY_REASON" >&2
+              {
+                echo "### StockAnalysis publish fence"
+                echo "- status: stale"
+                echo "- confirmation: not_confirmed"
+                echo "- reason: $APPLY_REASON"
+              } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
               exit 75
             fi
 
@@ -509,6 +517,7 @@ jobs:
             rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PROJECTION_ORACLE/"
             python3 scripts/test_stockanalysis_recovery_state.py
             node scripts/test-yahoo-etf-fallback-recovery.mjs
+            node scripts/test-stockanalysis-lane-parity.mjs
             node scripts/test-stockanalysis-attempt-emitter.mjs
             STOCKANALYSIS_SOURCE_SURFACE_DIR="data/stockanalysis/surfaces" \
               STOCKANALYSIS_PROJECTION_ORACLE_DIR="$PROJECTION_ORACLE" \
@@ -566,12 +575,13 @@ jobs:
               if ! READBACK_JSON="$({
                 python3 scripts/stockanalysis_artifact.py verify-attempt \
                   --repo-root . \
+                  --artifact-root "$ARTIFACT_ROOT" \
                   --run-id "${{ github.run_id }}" \
                   --run-attempt "${{ github.run_attempt }}"
               })"; then
                 echo "status=not_confirmed" >> "$GITHUB_OUTPUT"
                 echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
-                echo "post-publish main readback did not confirm the current ETF detail attempt" >&2
+                echo "post-publish main readback did not confirm the candidate's current attempt shards" >&2
                 exit 75
               fi
               echo "$READBACK_JSON"

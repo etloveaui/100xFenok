@@ -301,8 +301,15 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         stale_end = publish.index("exit 75", stale_start) + len("exit 75")
         stale = publish[stale_start:stale_end]
         self.assertIn('echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"', stale)
+        self.assertIn('echo "stale apply reason: $APPLY_REASON" >&2', stale)
+        self.assertIn('GITHUB_STEP_SUMMARY', stale)
         self.assertIn("exit 75", stale)
         self.assertIn("scripts/stockanalysis_artifact.py verify-attempt", publish)
+        verify_start = publish.index("python3 scripts/stockanalysis_artifact.py verify-attempt")
+        verify_end = publish.index('})"; then', verify_start)
+        verify = publish[verify_start:verify_end]
+        self.assertIn('--artifact-root "$ARTIFACT_ROOT"', verify)
+        self.assertIn("node scripts/test-stockanalysis-lane-parity.mjs", publish)
         self.assertIn('echo "status=not_confirmed" >> "$GITHUB_OUTPUT"', publish)
         self.assertIn('echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"', publish)
         self.assertLess(

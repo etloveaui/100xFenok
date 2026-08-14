@@ -38,11 +38,7 @@ assert.equal(validateDetectionConfig(DATA_SUPPLY_DETECTION_CONFIG), true);
 assert.equal(lane("yahoo_etf_fallback").enforcement, "live");
 assert.equal(lane("yahoo_etf_fallback").endpoint_contract.transport, "library");
 assert.equal(lane("stockanalysis_etf_universe").enforcement, "live");
-assert.equal(
-  Object.hasOwn(lane("stockanalysis_etf_universe").endpoint_contract, "transport"),
-  false,
-  "undeclared endpoint transport remains HTTP",
-);
+assert.equal(lane("stockanalysis_etf_universe").endpoint_contract.transport, "http");
 assert.deepEqual(
   lane("stockanalysis_etf_universe").freshness.source_basis,
   [],

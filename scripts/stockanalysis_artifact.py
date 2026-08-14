@@ -31,6 +31,13 @@ ETF_DETAIL_ASSERTION_IDS = frozenset({
     "etf_detail_failed",
 })
 ATTEMPT_SHARD_SCHEMA = "data-supply-detection-attempt-shard/v2"
+STOCKANALYSIS_ATTEMPT_SPECS = (
+    ("yahoo_etf_fallback", "data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", "yahoo"),
+    ("stockanalysis_etf_universe", "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", "universe"),
+    ("stockanalysis_etf_detail", ETF_DETAIL_ATTEMPT_SHARD, "etf_detail"),
+    ("stockanalysis_stock_financial", "data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", "stock-financial"),
+    ("stockanalysis_surfaces", "data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", "surfaces"),
+)
 # The Next.js public mirror tree is materialized by the shared projection
 # workflow, never by this source lane. The whole tree is structurally outside
 # the artifact boundary: creation ignores it before validation, extraction
@@ -743,6 +750,101 @@ def verify_etf_detail_attempt(
     }
 
 
+def _read_current_attempt_row(
+    *,
+    repo_root: Path,
+    shard_path: str,
+    lane_id: str,
+    expected_attempt_id: str,
+) -> dict:
+    repo = Path(repo_root).resolve(strict=True)
+    rel = normalize_rel(shard_path)
+    target = repo / rel
+    if target.is_symlink() or not target.is_file():
+        fail(f"current StockAnalysis attempt shard is missing or unsafe: {rel}")
+    try:
+        document = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"current StockAnalysis attempt shard is not valid JSON: {exc}")
+    if not isinstance(document, dict) or document.get("schema_version") != ATTEMPT_SHARD_SCHEMA:
+        fail(f"current StockAnalysis attempt shard schema is invalid: {rel}")
+    if document.get("lane_id") != lane_id:
+        fail(f"current StockAnalysis attempt shard lane is invalid: {rel}")
+    attempts = document.get("attempts")
+    if not isinstance(attempts, list):
+        fail(f"current StockAnalysis attempts must be an array: {rel}")
+    current = [row for row in attempts if isinstance(row, dict) and row.get("attempt_id") == expected_attempt_id]
+    if len(current) != 1:
+        fail(f"current StockAnalysis attempt is absent or duplicated: {expected_attempt_id}")
+    row = current[0]
+    if (
+        row.get("lane_id") != lane_id
+        or row.get("member_id") is not None
+        or not isinstance(row.get("observed_at"), str)
+        or not row["observed_at"]
+        or row.get("execution") not in {"returned", "threw"}
+    ):
+        fail(f"current StockAnalysis attempt evidence is invalid: {expected_attempt_id}")
+    return row
+
+
+def _candidate_attempt_specs(*, repo_root: Path, artifact_root: Path) -> list[tuple[str, str, str]]:
+    repo = Path(repo_root).resolve(strict=True)
+    artifact = external_root(repo, Path(artifact_root), "artifact root")
+    manifest_path = artifact / "manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"StockAnalysis artifact manifest is not valid JSON: {exc}")
+    paths = manifest.get("paths") if isinstance(manifest, dict) else None
+    if not isinstance(paths, list) or not all(isinstance(path, str) for path in paths):
+        fail("StockAnalysis artifact manifest paths are invalid")
+    path_set = set(paths)
+    selected = [spec for spec in STOCKANALYSIS_ATTEMPT_SPECS if spec[1] in path_set]
+    if not selected:
+        fail("StockAnalysis artifact carries no attempt shard for readback")
+    return selected
+
+
+def verify_stockanalysis_attempts(
+    *,
+    repo_root: Path,
+    run_id: str,
+    run_attempt: int,
+    artifact_root: Path,
+) -> dict:
+    """Confirm every attempt shard carried by the candidate on latest main."""
+    selected = _candidate_attempt_specs(repo_root=repo_root, artifact_root=artifact_root)
+    detail = None
+    for lane_id, shard_path, prefix in selected:
+        expected_attempt_id = f"stockanalysis-{prefix}-{run_id}-{run_attempt}"
+        if lane_id == ETF_DETAIL_LANE_ID:
+            detail = verify_etf_detail_attempt(
+                repo_root=repo_root,
+                run_id=run_id,
+                run_attempt=run_attempt,
+                shard_path=shard_path,
+            )
+            continue
+        _read_current_attempt_row(
+            repo_root=repo_root,
+            shard_path=shard_path,
+            lane_id=lane_id,
+            expected_attempt_id=expected_attempt_id,
+        )
+    if detail is None:
+        return {
+            "status": "confirmed",
+            "confirmation": "confirmed",
+            "reason": None,
+            "lanes": [lane_id for lane_id, _, _ in selected],
+        }
+    return {
+        **detail,
+        "lanes": [lane_id for lane_id, _, _ in selected],
+    }
+
+
 def audit_staged_paths(repo_root: Path, artifact_root: Path) -> None:
     manifest = json.loads((Path(artifact_root) / "manifest.json").read_text(encoding="utf-8"))
     expected = manifest.get("paths")
@@ -820,9 +922,9 @@ def main() -> None:
         item.add_argument("--repo-root", default=".")
         item.add_argument("--workflow", default=DEFAULT_WORKFLOW)
     verify.add_argument("--repo-root", default=".")
+    verify.add_argument("--artifact-root", required=True)
     verify.add_argument("--run-id", required=True)
     verify.add_argument("--run-attempt", required=True, type=int)
-    verify.add_argument("--shard-path", default=ETF_DETAIL_ATTEMPT_SHARD)
     seed.add_argument("--candidate-root", required=True)
     seed.add_argument("--replace", action="store_true")
     pack.add_argument("--candidate-root", required=True)
@@ -866,11 +968,11 @@ def main() -> None:
         )
         write_outputs(args.github_output, result)
     elif args.command == "verify-attempt":
-        result = verify_etf_detail_attempt(
+        result = verify_stockanalysis_attempts(
             repo_root=repo,
             run_id=args.run_id,
             run_attempt=args.run_attempt,
-            shard_path=args.shard_path,
+            artifact_root=Path(args.artifact_root),
         )
     else:
         audit_staged_paths(repo, Path(args.artifact_root))
