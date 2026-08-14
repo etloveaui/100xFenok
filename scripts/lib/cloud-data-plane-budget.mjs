@@ -639,8 +639,12 @@ function exactKeys(value, expected, context) {
  *
  * Owner decision 2026-08-14: govern the metrics this candidate actually uses
  * rather than completing the estate-wide policy or declaring hard-limit-only.
- * The estate policy is untouched and its nine gaps stay visible as non-gating
- * findings; this applies only when a candidate scope is in force.
+ * The estate policy is untouched and its six gaps stay visible as non-gating
+ * findings; this applies only when a candidate scope is in force. Corrected from
+ * "nine" on 2026-08-15: the code produces six — R2 class B; D1 max row/blob and
+ * queries per invocation; KV stored bytes, max pointer bytes and reads per day —
+ * matching the prose in cloud-data-plane-candidate-gate.mjs. The nine was a
+ * comment only, and it had been copied into the project's task record.
  *
  * The thresholds are not invented: every one is 80% of the same hard limit the
  * estate policy already uses, which is the ratio that policy itself applies to
