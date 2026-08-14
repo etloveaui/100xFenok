@@ -235,3 +235,10 @@ data/edgar/literature/
 100xfenok-next/public/data/edgar/r3-panel/**
 !100xfenok-next/public/data/edgar/r3-panel/*-receipt.json
 100xfenok-next/public/data/factset-earnings-insight/archives/*.pdf
+# The public FactSet boundary retains only archives/receipt.json. Control-plane
+# scripts and probe logs are canonical working-tree artifacts, not a served surface.
+100xfenok-next/public/data/factset-earnings-insight/fetch-parent.py
+100xfenok-next/public/data/factset-earnings-insight/fetch.py
+100xfenok-next/public/data/factset-earnings-insight/parse.py
+100xfenok-next/public/data/factset-earnings-insight/probe-log.jsonl
+100xfenok-next/public/data/factset-earnings-insight/zacks-render-test.py

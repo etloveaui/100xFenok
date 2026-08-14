@@ -503,6 +503,18 @@ for (const relativePath of [
 ]) {
   removeGeneratedPublicMirror(relativePath);
 }
+// FactSet's public boundary retains only the provenance receipt. The fetch and
+// probe files are canonical control-plane artifacts and must not reach a served
+// surface or be reintroduced by the blanket canonical-data sync.
+for (const relativePath of [
+  "public/data/factset-earnings-insight/fetch-parent.py",
+  "public/data/factset-earnings-insight/fetch.py",
+  "public/data/factset-earnings-insight/parse.py",
+  "public/data/factset-earnings-insight/probe-log.jsonl",
+  "public/data/factset-earnings-insight/zacks-render-test.py",
+]) {
+  removeGeneratedPublicMirror(relativePath);
+}
 removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
 removeGeneratedPublicMirror("public/data/computed/fenok_etf_signals.json");
 removeGeneratedPublicMirror("public/data/computed/etf_action_index.json");
