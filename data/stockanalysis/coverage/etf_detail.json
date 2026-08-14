@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-08-13T22:09:43Z",
+  "generated_at": "2026-08-14T00:56:47Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,37 +17,37 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5573,
+    "candidate_total": 5584,
     "source_breakdown": {
       "etf_universe": 5512,
-      "etf_screener": 5573,
+      "etf_screener": 5584,
       "new_etfs": 100
     },
     "detail_files": 5605,
     "covered_detail_files": 5544,
-    "missing_detail_files": 29,
+    "missing_detail_files": 40,
     "extra_detail_files": 61,
     "stockanalysis_detail_files": 5605,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 99.48,
-    "primary_stockanalysis_pct": 99.48,
+    "coverage_pct": 99.28,
+    "primary_stockanalysis_pct": 99.28,
     "missing_by_source": {
       "etf_universe": 23,
-      "etf_screener": 29,
-      "new_etfs": 27
+      "etf_screener": 40,
+      "new_etfs": 28
     },
     "missing_status_breakdown": {
       "provider_gap_cooldown": 1,
-      "untracked": 28
+      "untracked": 39
     },
     "missing_failure_breakdown": {
       "provider_coverage_gap": 1,
-      "untracked": 28
+      "untracked": 39
     },
     "missing_availability_breakdown": {
       "provider_absent": 1,
-      "unprobed": 28
+      "unprobed": 39
     },
     "pending_tracked": 484,
     "pending_cooldown": 1,
@@ -56,33 +56,33 @@
   },
   "missing_reason_summary": {
     "provider_coverage_gap": 1,
-    "untracked": 28
+    "untracked": 39
   },
   "missing_status_summary": {
     "provider_gap_cooldown": 1,
-    "untracked": 28
+    "untracked": 39
   },
   "missing_availability_summary": {
     "provider_absent": 1,
-    "unprobed": 28
+    "unprobed": 39
   },
   "missing_reason_samples": {
     "provider_coverage_gap": [
       "DACL"
     ],
     "untracked": [
+      "ANTW",
+      "CGPT",
+      "DEPW",
       "FTPA",
+      "HBIL",
       "JLVP",
       "KEO",
       "LITG",
       "LOFD",
       "LYTE",
       "MPDB",
-      "MXLL",
-      "NCLD",
-      "OCNL",
-      "OPPG",
-      "PENU"
+      "MPDY"
     ]
   },
   "missing_status_samples": {
@@ -90,18 +90,18 @@
       "DACL"
     ],
     "untracked": [
+      "ANTW",
+      "CGPT",
+      "DEPW",
       "FTPA",
+      "HBIL",
       "JLVP",
       "KEO",
       "LITG",
       "LOFD",
       "LYTE",
       "MPDB",
-      "MXLL",
-      "NCLD",
-      "OCNL",
-      "OPPG",
-      "PENU"
+      "MPDY"
     ]
   },
   "missing_availability_samples": {
@@ -109,31 +109,41 @@
       "DACL"
     ],
     "unprobed": [
+      "ANTW",
+      "CGPT",
+      "DEPW",
       "FTPA",
+      "HBIL",
       "JLVP",
       "KEO",
       "LITG",
       "LOFD",
       "LYTE",
       "MPDB",
-      "MXLL",
-      "NCLD",
-      "OCNL",
-      "OPPG",
-      "PENU"
+      "MPDY"
     ]
   },
   "missing_tickers": [
+    "ANTW",
+    "CGPT",
     "DACL",
+    "DEPW",
     "FTPA",
+    "HBIL",
     "JLVP",
     "KEO",
     "LITG",
     "LOFD",
     "LYTE",
     "MPDB",
+    "MPDY",
+    "MPIA",
+    "MPIM",
+    "MRAX",
+    "MTAW",
     "MXLL",
     "NCLD",
+    "OAIW",
     "OCNL",
     "OPPG",
     "PENU",
@@ -152,6 +162,7 @@
     "TSIB",
     "UMCU",
     "WSMD",
+    "XAIW",
     "YLDY"
   ],
   "provider_absent_tickers": [
@@ -224,16 +235,26 @@
   ],
   "samples": {
     "missing": [
+      "ANTW",
+      "CGPT",
       "DACL",
+      "DEPW",
       "FTPA",
+      "HBIL",
       "JLVP",
       "KEO",
       "LITG",
       "LOFD",
       "LYTE",
       "MPDB",
+      "MPDY",
+      "MPIA",
+      "MPIM",
+      "MRAX",
+      "MTAW",
       "MXLL",
       "NCLD",
+      "OAIW",
       "OCNL",
       "OPPG",
       "PENU",
@@ -252,24 +273,25 @@
       "TSIB",
       "UMCU",
       "WSMD",
+      "XAIW",
       "YLDY"
     ],
     "missing_provider_gap_cooldown": [
       "DACL"
     ],
     "missing_untracked": [
+      "ANTW",
+      "CGPT",
+      "DEPW",
       "FTPA",
+      "HBIL",
       "JLVP",
       "KEO",
       "LITG",
       "LOFD",
       "LYTE",
       "MPDB",
-      "MXLL",
-      "NCLD",
-      "OCNL",
-      "OPPG",
-      "PENU"
+      "MPDY"
     ],
     "missing_provider_coverage_gap": [
       "DACL"

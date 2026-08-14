@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-s1-stock-public-promotion-dry-run/v0.1",
-  "generated_at": "2026-08-13T22:08:05.601Z",
+  "generated_at": "2026-08-14T00:44:40.399Z",
   "purpose": "Persist an admin-only dry-run and fail-closed explicit-enable plan for future S1 public stock promotion.",
   "contract_doc": "docs/planning/CONTRACT_fenok_s1_stock_promotion_scoring_v0_1_20260630.md",
   "source_gate": "s1_stock_promotion_candidates.joined_gate",
@@ -101,8 +101,8 @@
   },
   "blocker_counts": {
     "evidence_families_min3": 5,
-    "market_currency_country_scope": 5,
-    "price_or_market_cap": 2
+    "market_currency_country_scope": 4,
+    "price_or_market_cap": 1
   },
   "disallowed_claims": {
     "scored_public_s0": false,
@@ -150,7 +150,7 @@
     {
       "id": "s1_public_promotion_dry_run_blockers_exact_current_set",
       "ok": true,
-      "detail": "[[\"230360.KQ\",[\"evidence_families_min3\",\"market_currency_country_scope\"]],[\"BLD\",[\"evidence_families_min3\"]],[\"DACL\",[\"evidence_families_min3\",\"market_currency_country_scope\",\"price_or_market_cap\"]],[\"DAY\",[\"market_currency_country_scope\"]],[\"HOLX\",[\"market_currency_country_scope\"]],[\"MMC\",[\"market_currency_country_scope\"]],[\"OPPG\",[\"evidence_families_min3\",\"price_or_market_cap\"]],[\"STRC\",[\"evidence_families_min3\"]]]"
+      "detail": "[[\"230360.KQ\",[\"evidence_families_min3\",\"market_currency_country_scope\"]],[\"BLD\",[\"evidence_families_min3\"]],[\"DACL\",[\"evidence_families_min3\"]],[\"DAY\",[\"market_currency_country_scope\"]],[\"HOLX\",[\"market_currency_country_scope\"]],[\"MMC\",[\"market_currency_country_scope\"]],[\"OPPG\",[\"evidence_families_min3\",\"price_or_market_cap\"]],[\"STRC\",[\"evidence_families_min3\"]]]"
     },
     {
       "id": "s1_public_promotion_dry_run_admin_only_no_public_write",
@@ -222,7 +222,7 @@
     {
       "id": "s1_promotion_gate_plan_blockers_exact_current_set",
       "ok": true,
-      "detail": "{\"blocked_rows\":[[\"230360.KQ\",[\"evidence_families_min3\",\"market_currency_country_scope\"]],[\"BLD\",[\"evidence_families_min3\"]],[\"DACL\",[\"evidence_families_min3\",\"market_currency_country_scope\",\"price_or_market_cap\"]],[\"DAY\",[\"market_currency_country_scope\"]],[\"HOLX\",[\"market_currency_country_scope\"]],[\"MMC\",[\"market_currency_country_scope\"]],[\"OPPG\",[\"evidence_families_min3\",\"price_or_market_cap\"]],[\"STRC\",[\"evidence_families_min3\"]]],\"source_blocker_counts\":{\"evidence_families_min3\":5,\"market_currency_country_scope\":5,\"price_or_market_cap\":2}}"
+      "detail": "{\"blocked_rows\":[[\"230360.KQ\",[\"evidence_families_min3\",\"market_currency_country_scope\"]],[\"BLD\",[\"evidence_families_min3\"]],[\"DACL\",[\"evidence_families_min3\"]],[\"DAY\",[\"market_currency_country_scope\"]],[\"HOLX\",[\"market_currency_country_scope\"]],[\"MMC\",[\"market_currency_country_scope\"]],[\"OPPG\",[\"evidence_families_min3\",\"price_or_market_cap\"]],[\"STRC\",[\"evidence_families_min3\"]]],\"source_blocker_counts\":{\"evidence_families_min3\":5,\"market_currency_country_scope\":4,\"price_or_market_cap\":1}}"
     },
     {
       "id": "s1_promotion_gate_plan_stdout_only_no_writes",
@@ -321,9 +321,7 @@
       "promotion_action": "repair_blockers_before_shadow_candidate",
       "claim_scope": "Blocked S1 stock candidate plan only; do not score, publish, or include in S0.",
       "blockers": [
-        "evidence_families_min3",
-        "market_currency_country_scope",
-        "price_or_market_cap"
+        "evidence_families_min3"
       ],
       "blocker_actions": [
         {
@@ -332,23 +330,6 @@
           "future_file_targets": [
             "scripts/fetch-stockanalysis.py",
             "scripts/probe-stockanalysis-financials.py",
-            "scripts/audit-fenok-stock-promotion-candidates.mjs"
-          ]
-        },
-        {
-          "blocker": "market_currency_country_scope",
-          "required_action": "repair identity exchange/currency/country scope normalization before joined-ready promotion.",
-          "future_file_targets": [
-            "scripts/build-market-facts.py",
-            "scripts/audit-fenok-stock-promotion-candidates.mjs"
-          ]
-        },
-        {
-          "blocker": "price_or_market_cap",
-          "required_action": "refresh numeric price or market_cap evidence before any score/public promotion.",
-          "future_file_targets": [
-            "scripts/fetch-yf-finance.py",
-            "scripts/build-market-facts.py",
             "scripts/audit-fenok-stock-promotion-candidates.mjs"
           ]
         }
