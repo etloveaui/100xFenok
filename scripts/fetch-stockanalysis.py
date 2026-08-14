@@ -426,6 +426,12 @@ class StockAnalysisAttemptTracker:
                     "candidate_count": 1,
                     "observations": [{
                         "execution": "returned",
+                        # Explicitly null, not absent. A returned library error must
+                        # carry exception_kind as null; omitting the key reads as
+                        # undefined and the emitter refuses the whole envelope. Every
+                        # run so far had failed=0 so this branch never fired, and it
+                        # would have killed the first run that lost a single ETF.
+                        "exception_kind": None,
                         "retry_count": 0,
                         "latency_ms": sum(float(result.get("latency_ms") or 0) for result in self.etf_detail_results),
                         "outcome": "success" if complete else "error",
