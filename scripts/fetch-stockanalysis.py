@@ -478,6 +478,14 @@ class StockAnalysisAttemptTracker:
                     "candidate_count": 1,
                     "observations": [{
                         "execution": "returned",
+                        # Same omission the ETF detail lane carried: a returned
+                        # library error must state exception_kind as null, and an
+                        # absent key reads as undefined. This lane's error branch
+                        # has therefore never been able to emit. Found on
+                        # 2026-08-14 by replacing its parity-gate exemption with a
+                        # real producer sample, which is the whole reason the
+                        # verifier refused to accept named exemptions as coverage.
+                        "exception_kind": None,
                         "retry_count": 0,
                         "latency_ms": sum(float(result.get("latency_ms") or 0) for result in self.stock_financial_results),
                         "outcome": "success" if complete else "error",

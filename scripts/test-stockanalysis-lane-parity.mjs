@@ -31,6 +31,13 @@ const MANIFEST = path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.jso
  * in the fourth, and it cannot pass with an envelope its own emitter refuses.
  */
 
+const SF_TICKERS = ["AAPL", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "JPM"];
+const SF_PAIRS = SF_TICKERS.map((ticker) => ({
+  ticker,
+  stock_path: `data/stockanalysis/stocks/${ticker}.json`,
+  financial_path: `data/stockanalysis/financials/${ticker}.json`,
+}));
+
 // One sample envelope per lane, in the shape that lane's producer actually emits.
 // A registry-owned lane with no sample fails the gate: an unexercised lane is
 // exactly the state that shipped five defects.
@@ -49,15 +56,40 @@ const PRODUCER_ENVELOPES = {
   yahoo_etf_fallback: [
     ["no candidates", { transport: "library", candidate_count: 0, fallback_enabled: true, observations: [] }],
   ],
+  // Replacing the three named exemptions, per the verifier's ruling that a named
+  // exemption is not coverage. Doing so immediately found that this lane carried
+  // the same missing exception_kind as ETF detail, so its error branch had never
+  // been able to emit either.
+  stockanalysis_stock_financial: [
+    ["all eight paired", { transport: "library", candidate_count: 1, observations: [obs({
+      outcome: "success",
+      document: { counts: { requested: 8, stock_ok: 8, financial_ok: 8, failed: 0 }, tickers: SF_TICKERS, pairs: SF_PAIRS },
+    })] }],
+    ["one pair missing", { transport: "library", candidate_count: 1, observations: [obs({
+      outcome: "error",
+      document: { counts: { requested: 8, stock_ok: 7, financial_ok: 7, failed: 1 }, tickers: SF_TICKERS.slice(0, 7), pairs: SF_PAIRS.slice(0, 7) },
+    })] }],
+    ["none paired", { transport: "library", candidate_count: 1, observations: [obs({
+      outcome: "error",
+      document: { counts: { requested: 8, stock_ok: 0, financial_ok: 0, failed: 8 }, tickers: [], pairs: [] },
+    })] }],
+  ],
+  stockanalysis_etf_universe: [
+    ["page returned", { transport: "http", observations: [{ status_code: 200, document: { rows: [{ ticker: "SPY" }] } }] }],
+    ["provider error", { transport: "http", observations: [{ status_code: 503, document: null }] }],
+    ["transport threw", { transport: "http", observations: [{ execution: "threw", exception_kind: "transport" }] }],
+  ],
+  stockanalysis_surfaces: [
+    ["surface returned", { transport: "http", observations: [{ status_code: 200, document: { results: [{ id: "industry_semiconductors", rows: 71 }] } }] }],
+    ["surface error", { transport: "http", observations: [{ status_code: 500, document: null }] }],
+    ["surface threw", { transport: "http", observations: [{ execution: "threw", exception_kind: "unexpected" }] }],
+  ],
 };
+
 
 // Lanes with no producer sample yet, each naming the suite that exercises its
 // producer path. Recorded as an open debt, not as coverage.
-const EXEMPT_LANES = {
-  stockanalysis_etf_universe: "test-stockanalysis-attempt-emitter.mjs",
-  stockanalysis_stock_financial: "test-stockanalysis-attempt-emitter.mjs",
-  stockanalysis_surfaces: "test-stockanalysis-attempt-emitter.mjs",
-};
+const EXEMPT_LANES = {};
 const exemptions = [];
 
 function obs({ outcome, document }) {
@@ -195,11 +227,26 @@ for (const laneId of ownedLanes) {
     `the etf detail producer now emits more observation shapes than the samples cover: ${executions.join(", ")}`);
   assert.match(block, /"exception_kind":\s*None/,
     "the etf detail observation must carry exception_kind explicitly; omitting it reads as undefined and the emitter refuses the envelope");
+
+  // Same check for every OTHER library lane this producer emits. A sample proves
+  // the emitter accepts a shape; this proves the producer sends that shape. The
+  // two together are what an exemption was standing in for, and checking only
+  // the first is how stock_financial's error branch stayed unable to emit.
+  for (const laneId of ["stockanalysis_stock_financial"]) {
+    const marker = `"${laneId}",`;
+    const at = source.indexOf(marker);
+    assert.ok(at > 0, `could not locate the ${laneId} emit block in the producer`);
+    const laneBlock = source.slice(at, at + 1400);
+    assert.match(laneBlock, /"execution":\s*"returned"/, `${laneId} must emit a returned observation`);
+    assert.match(laneBlock, /"exception_kind":\s*None/,
+      `${laneId} omits exception_kind, so its error branch cannot emit at all`);
+  }
 }
 
 const sampled = ownedLanes.length - exemptions.length;
 process.stdout.write(
   `test-stockanalysis-lane-parity: ok — ${sampled}/${ownedLanes.length} lanes have producer samples; `
-  + `${exemptions.length} exempt and NOT verified coverage: `
-  + `${exemptions.map((row) => `${row.lane} (covered_by ${row.covered_by})`).join(", ")}\n`,
+  + (exemptions.length === 0
+    ? "no exemptions\n"
+    : `${exemptions.length} exempt and NOT verified coverage: ${exemptions.map((row) => `${row.lane} (covered_by ${row.covered_by})`).join(", ")}\n`),
 );
