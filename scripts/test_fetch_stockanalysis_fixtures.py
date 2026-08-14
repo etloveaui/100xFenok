@@ -937,7 +937,7 @@ module.main()
             "provider detail response carries no market or holdings observation date",
         )
 
-    def test_reconcile_accepts_valid_overview_when_holdings_surface_omits_holdings(self) -> None:
+    def test_reconcile_rejects_available_overview_when_holdings_surface_omits_holdings(self) -> None:
         original_fetch_svelte = self.fetcher.fetch_svelte_detail
 
         def fake_fetch_svelte(ticker: str, surface: str, _timeout: int, **_kwargs):
@@ -955,24 +955,16 @@ module.main()
         try:
             with self.assertRaisesRegex(ValueError, "missing_required:holdings"):
                 self.fetcher.fetch_etf("AAOX", 1, include_history=False)
-            payload = self.fetcher.fetch_etf(
-                "AAOX",
-                1,
-                include_history=False,
-                include_quote=False,
-                allow_partial_holdings=True,
-            )
+            with self.assertRaisesRegex(ValueError, "missing_required:holdings"):
+                self.fetcher.fetch_etf(
+                    "AAOX",
+                    1,
+                    include_history=False,
+                    include_quote=False,
+                    allow_partial_holdings=True,
+                )
         finally:
             self.fetcher.fetch_svelte_detail = original_fetch_svelte
-
-        self.assertEqual(payload["detail_status"], "stockanalysis_partial")
-        self.assertEqual(payload["normalized"]["holdings"], [])
-        self.assertIn("holdings_unavailable", payload["partial_reason_codes"])
-        self.assertIn(
-            "holdings_surface_omits_holdings",
-            payload["partial_reason_codes"],
-        )
-        self.assertIsNone(payload["source_as_of"])
 
     def test_reconcile_uses_provider_overview_holdings_updated_as_source_date(self) -> None:
         original_fetch_svelte = self.fetcher.fetch_svelte_detail
@@ -980,8 +972,8 @@ module.main()
         def fake_fetch_svelte(ticker: str, surface: str, _timeout: int, **_kwargs):
             if surface == "overview":
                 return f"/etf/{ticker.lower()}/__data.json", {
-                    "holdings": 12,
-                    "holdingsTable": {"count": 12, "updated": "Jul 10, 2026"},
+                    "holdings": None,
+                    "holdingsTable": {"updated": "Jul 10, 2026"},
                     "inception": "Jan 1, 2026",
                 }
             raise ValueError(
@@ -2257,7 +2249,9 @@ module.main()
         self.assertIn('ARGS="$ARGS --fail-on-error"', primary_step)
 
         manifest = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(encoding="utf-8")
-        self.assertIn("node scripts/build-fenok-etf-core-daily-basket.mjs --check", manifest)
+        runner = (ROOT / "scripts" / "update-manifest-projections.sh").read_text(encoding="utf-8")
+        self.assertNotIn("node scripts/build-fenok-etf-core-daily-basket.mjs --check", manifest)
+        self.assertIn("node scripts/build-fenok-etf-core-daily-basket.mjs --check", runner)
 
     def test_central_writer_refreshes_daily1y_report_before_coverage_builder(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "fenok-edge-krx-daily.yml").read_text(encoding="utf-8")
@@ -2267,10 +2261,12 @@ module.main()
         self.assertNotIn(coverage_command, workflow)
 
         manifest = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(encoding="utf-8")
-        initial_build = manifest.split("      - name: Check if manifest changed", 1)[0]
-        self.assertEqual(initial_build.count(report_command), 1)
-        self.assertEqual(initial_build.count(coverage_command), 1)
-        self.assertLess(initial_build.index(report_command), initial_build.index(coverage_command))
+        runner = (ROOT / "scripts" / "update-manifest-projections.sh").read_text(encoding="utf-8")
+        self.assertNotIn(report_command, manifest)
+        self.assertNotIn(coverage_command, manifest)
+        self.assertEqual(runner.count(report_command), 1)
+        self.assertEqual(runner.count(coverage_command), 1)
+        self.assertLess(runner.index(report_command), runner.index(coverage_command))
 
     def test_central_writer_builds_history_and_signals_before_etf_basket(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(encoding="utf-8")
@@ -2281,20 +2277,35 @@ module.main()
         self.assertNotIn(signal_command, workflow)
 
         manifest = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(encoding="utf-8")
+        runner = (ROOT / "scripts" / "update-manifest-projections.sh").read_text(encoding="utf-8")
         initial_build = manifest.split("      - name: Check if manifest changed", 1)[0]
-        self.assertEqual(initial_build.count(report_command), 1)
-        self.assertEqual(initial_build.count(signal_command), 1)
-        self.assertEqual(initial_build.count(basket_command), 1)
-        self.assertLess(initial_build.index(signal_command), initial_build.index(basket_command))
-        self.assertLess(initial_build.index(signal_command), initial_build.index(report_command))
-        self.assertLess(initial_build.index(report_command), initial_build.index(basket_command))
+        runner_call = "bash scripts/update-manifest-projections.sh"
+        self.assertEqual(
+            sum(line.strip() == f"run: {runner_call}" for line in initial_build.splitlines()),
+            1,
+        )
 
         retry_build = manifest.split("      - name: Commit and push manifest (with rebase retry)", 1)[1]
-        self.assertEqual(retry_build.count(report_command), 1)
-        self.assertEqual(retry_build.count(signal_command), 1)
-        self.assertEqual(retry_build.count(basket_command), 1)
-        self.assertLess(retry_build.index(signal_command), retry_build.index(report_command))
-        self.assertLess(retry_build.index(report_command), retry_build.index(basket_command))
+        self.assertEqual(
+            sum(line.strip() == runner_call for line in retry_build.splitlines()),
+            1,
+        )
+        for command in (report_command, signal_command, basket_command):
+            self.assertNotIn(command, manifest)
+            self.assertEqual(runner.count(command), 1)
+
+        def exact_line_index(block: str, command: str) -> int:
+            return next(
+                index
+                for index, line in enumerate(block.splitlines())
+                if line.strip() == command
+            )
+
+        runner_signal = exact_line_index(runner, signal_command)
+        runner_report = exact_line_index(runner, report_command)
+        runner_basket = exact_line_index(runner, basket_command)
+        self.assertLess(runner_signal, runner_report)
+        self.assertLess(runner_report, runner_basket)
 
         materialize_command = "node scripts/materialize-update-manifest-routes.mjs --all"
         shard_projector_command = (
@@ -2307,13 +2318,6 @@ module.main()
         kpi_command = "npm --prefix 100xfenok-next run build:fenok-data-health-kpi"
         retry_build = manifest.split("          for attempt in 1 2 3; do", 1)[1]
 
-        def exact_line_index(block: str, command: str) -> int:
-            return next(
-                index
-                for index, line in enumerate(block.splitlines())
-                if line.strip() == command
-            )
-
         def containing_line_index(block: str, command: str) -> int:
             return next(
                 index
@@ -2321,21 +2325,21 @@ module.main()
                 if command in line
             )
 
-        initial_materialize = exact_line_index(initial_build, materialize_command)
+        runner_materialize = exact_line_index(runner, materialize_command)
         retry_validate = exact_line_index(retry_build, validate_materialization_command)
-        retry_materialize = exact_line_index(retry_build, materialize_command)
-        initial_shard_projector = exact_line_index(initial_build, shard_projector_command)
-        retry_shard_projector = exact_line_index(retry_build, shard_projector_command)
-        self.assertLess(initial_materialize, initial_shard_projector)
-        self.assertLess(initial_shard_projector, containing_line_index(initial_build, override_command))
-        self.assertLess(containing_line_index(initial_build, override_command), exact_line_index(initial_build, kpi_command))
-        self.assertLess(retry_validate, retry_materialize)
-        self.assertLess(retry_materialize, retry_shard_projector)
-        self.assertLess(retry_shard_projector, containing_line_index(retry_build, override_command))
-        self.assertLess(containing_line_index(retry_build, override_command), exact_line_index(retry_build, kpi_command))
-        self.assertEqual(manifest.count(override_command), 2)
-        self.assertEqual(manifest.count(shard_projector_command), 2)
-        self.assertEqual(manifest.count("check-fenok-public-mirror-guard.mjs"), 2)
+        runner_shard_projector = exact_line_index(runner, shard_projector_command)
+        runner_override = containing_line_index(runner, override_command)
+        runner_kpi = exact_line_index(runner, kpi_command)
+        self.assertLess(runner_materialize, runner_shard_projector)
+        self.assertLess(runner_shard_projector, runner_override)
+        self.assertLess(runner_override, runner_kpi)
+        self.assertLess(retry_validate, exact_line_index(retry_build, runner_call))
+        self.assertEqual(manifest.count(override_command), 0)
+        self.assertEqual(runner.count(override_command), 1)
+        self.assertEqual(manifest.count(shard_projector_command), 0)
+        self.assertEqual(runner.count(shard_projector_command), 1)
+        self.assertEqual(manifest.count("check-fenok-public-mirror-guard.mjs"), 0)
+        self.assertEqual(runner.count("check-fenok-public-mirror-guard.mjs"), 1)
         self.assertNotIn(
             "rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/",
             manifest,
