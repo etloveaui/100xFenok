@@ -1070,7 +1070,7 @@ module.main()
 
         original_fetch_etf = self.fetcher.fetch_etf
         saved_outputs = self.fetcher.current_candidate_outputs()
-        self.fetcher.fetch_etf = lambda _ticker, _timeout: (_ for _ in ()).throw(
+        self.fetcher.fetch_etf = lambda _ticker, _timeout, **_kwargs: (_ for _ in ()).throw(
             caught.exception
         )
         try:
@@ -4742,7 +4742,7 @@ module.main()
         original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
         writes = []
 
-        def fake_fetch_etf(_ticker: str, _timeout: int) -> dict:
+        def fake_fetch_etf(_ticker: str, _timeout: int, **_kwargs) -> dict:
             raise urllib.error.URLError("HTTP Error 404: Not Found")
 
         def fake_fallback(
@@ -4865,7 +4865,7 @@ module.main()
                     self.fetcher.YF_OUT_DIR = temp_root / "data" / "yf" / "finance"
                     self.fetcher.YF_ETF_DETAIL_OUT_DIR = temp_root / "data" / "yf" / "etf-details"
                     self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
-                    self.fetcher.fetch_etf = lambda _ticker, _timeout, exc=failure: (_ for _ in ()).throw(exc)
+                    self.fetcher.fetch_etf = lambda _ticker, _timeout, exc=failure, **_kwargs: (_ for _ in ()).throw(exc)
                     self.fetcher.load_yf_finance_module = lambda: FakeYahooModule
                     result = self.fetcher.run_one("etf", "VYMI", 1, False, yf_fallback=True)
                     candidate_exists = (self.fetcher.YF_ETF_DETAIL_OUT_DIR / "VYMI.json").exists()
@@ -4900,7 +4900,7 @@ module.main()
                 self.fetcher.YF_OUT_DIR = temp_root / "data" / "yf" / "finance"
                 self.fetcher.YF_ETF_DETAIL_OUT_DIR = temp_root / "data" / "yf" / "etf-details"
                 self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
-                self.fetcher.fetch_etf = lambda ticker, _timeout: {
+                self.fetcher.fetch_etf = lambda ticker, _timeout, **_kwargs: {
                     "schema_version": self.fetcher.SCHEMA_VERSION,
                     "source": "stockanalysis",
                     "asset_type": "etf",
@@ -5059,7 +5059,7 @@ module.main()
             with tempfile.TemporaryDirectory() as tmp:
                 self.fetcher.OUT_DIR = Path(tmp) / "data" / "stockanalysis"
                 self.fetcher.DATA_SUPPLY_STATE_ROOT = Path(tmp) / "data" / "admin" / "data-supply-state" / "v1"
-                self.fetcher.fetch_etf = lambda ticker, _timeout: {
+                self.fetcher.fetch_etf = lambda ticker, _timeout, **_kwargs: {
                     "schema_version": "yf-etf-detail/v1",
                     "source": "yahoo_finance",
                     "source_provider": "yahoo_finance",
@@ -5095,7 +5095,7 @@ module.main()
                 detail_path.parent.mkdir(parents=True)
                 original_bytes = b'{"source":"stockanalysis","ticker":"VYMI","fetched_at":"2026-07-09T00:00:00Z"}\n'
                 detail_path.write_bytes(original_bytes)
-                self.fetcher.fetch_etf = lambda ticker, _timeout: {
+                self.fetcher.fetch_etf = lambda ticker, _timeout, **_kwargs: {
                     "schema_version": self.fetcher.SCHEMA_VERSION,
                     "source": "stockanalysis",
                     "asset_type": "etf",
@@ -5156,7 +5156,7 @@ module.main()
                 detail_path = detail_dir / "VYMI.json"
                 detail_path.write_bytes(canonical_bytes)
 
-                self.fetcher.fetch_etf = lambda _ticker, _timeout: (_ for _ in ()).throw(
+                self.fetcher.fetch_etf = lambda _ticker, _timeout, **_kwargs: (_ for _ in ()).throw(
                     urllib.error.URLError("HTTP Error 404: Not Found")
                 )
                 self.fetcher.load_yf_finance_module = lambda: FakeYahooModule

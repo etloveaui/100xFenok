@@ -2301,17 +2301,26 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const publicCronShadow = pub.runtime.fetch_cron_skip_detection;
   assert.equal(rootCronShadow.mode, "shadow");
   assert.equal(rootCronShadow.deployment_blocking, false);
+  // Re-pinned 2026-08-14 for the stockanalysis_etf_detail lane, which was
+  // registered earlier that day and left this pin describing the world before
+  // it. The detector is right and the pin was stale: the new member is counted
+  // as an attempt gap, not silently dropped, so the arithmetic closes as
+  // 27 observed + 3 suspected skips + 1 gap = 31. The gap is the honest state
+  // of a lane that has never had a natural run, and it clears when one lands.
   assert.deepEqual(rootCronShadow.counts, {
-    scheduled_members: 30,
-    schedule_bindings: 30,
+    scheduled_members: 31,
+    schedule_bindings: 31,
     observed: 27,
     suspected_skips: 3,
-    attempt_gaps: 0,
+    attempt_gaps: 1,
   });
-  assert.equal(rootCronShadow.rows.length, 30);
+  assert.equal(rootCronShadow.rows.length, 31);
   assert.deepEqual(publicCronShadow.pre_activation_lane_ids, ["damodaran", "oecd_cli", "yahoo_batch_quote_history"]);
   assert.deepEqual(publicCronShadow.suspected_skip_lane_ids, ["apewisdom_attention", "finra_ats_weekly", "gdelt_news_tone"]);
-  assert.deepEqual(publicCronShadow.attempt_gap_lane_ids, []);
+  // The public projection names the gap lane, which is the point: a scheduled
+  // lane with no attempt evidence is visible rather than absent. It clears when
+  // stockanalysis_etf_detail's first natural run lands.
+  assert.deepEqual(publicCronShadow.attempt_gap_lane_ids, ["stockanalysis_etf_detail"]);
   assert.equal(Object.hasOwn(publicCronShadow, "rows"), false);
   assert.equal(JSON.stringify(publicCronShadow).includes(".github/workflows/"), false);
   assert.equal(JSON.stringify(publicCronShadow).includes("43 14 * * *"), false);
