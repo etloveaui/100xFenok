@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  CANDIDATE_PLANNING_POLICY,
   DEFAULT_CLOUD_DATA_PLANE_POLICY,
   buildCloudDataPlaneCatalog,
   buildCloudDataPlaneReport,
@@ -179,6 +180,47 @@ const policy = readFixture("policy.json");
   const inventedPlanningLine = clone(policy);
   inventedPlanningLine.r2.planning_line.class_b_operations_per_month = 8_000_000;
   assert.throws(() => validateCloudDataPlanePolicy(inventedPlanningLine), /keys must be exactly/);
+}
+
+// Estate planning coverage stays deliberately partial; candidate planning
+// covers the same six metrics without relabelling the estate result.
+{
+  const inputs = {
+    inventory: { complete: true, file_count: 2, bytes: 1_000_000_000 },
+    accountBaseline: baseline,
+    requestDemand: demand,
+    policy: DEFAULT_CLOUD_DATA_PLANE_POLICY,
+  };
+  const estate = calculateCloudDataPlaneBudget(inputs);
+  assert.deepEqual(
+    estate.r2.planning_line.coverage.ungoverned,
+    ["class_b_operations_per_month"],
+  );
+  assert.deepEqual(
+    estate.d1.planning_line.coverage.ungoverned.sort(),
+    ["max_row_or_blob_bytes", "queries_per_worker_invocation"],
+  );
+  assert.deepEqual(
+    estate.kv.planning_line.coverage.ungoverned.sort(),
+    ["max_pointer_bytes", "reads_per_day", "stored_bytes"],
+  );
+
+  const candidate = calculateCloudDataPlaneBudget({
+    ...inputs,
+    candidatePlanning: CANDIDATE_PLANNING_POLICY,
+  });
+  for (const service of ["r2", "d1", "kv"]) {
+    assert.deepEqual(
+      candidate[service].planning_line.coverage.ungoverned,
+      [],
+      `${service} candidate planning must govern every candidate metric`,
+    );
+    assert.deepEqual(
+      candidate[service].estate_planning_line.coverage.ungoverned,
+      estate[service].planning_line.coverage.ungoverned,
+      `${service} candidate report must preserve estate gaps`,
+    );
+  }
 }
 
 {
