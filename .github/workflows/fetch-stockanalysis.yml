@@ -500,11 +500,13 @@ jobs:
               fi
               echo "status=stale" >> "$GITHUB_OUTPUT"
               echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+              echo "fence_reason=stale_candidate" >> "$GITHUB_OUTPUT"
               echo "stale apply reason: $APPLY_REASON" >&2
               {
                 echo "### StockAnalysis publish fence"
                 echo "- status: stale"
                 echo "- confirmation: not_confirmed"
+                echo "- fence_reason: stale_candidate"
                 echo "- reason: $APPLY_REASON"
               } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
               exit 75
@@ -567,9 +569,16 @@ jobs:
               -m "StockAnalysis-Artifact-Digest: $ARTIFACT_DIGEST"
             if git push origin HEAD:main; then
               if ! git fetch origin main || ! git checkout -f -B main origin/main; then
-                echo "status=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
                 echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "fence_reason=main_readback_infrastructure" >> "$GITHUB_OUTPUT"
                 echo "post-publish main checkout/readback base was unavailable" >&2
+                {
+                  echo "### StockAnalysis publish fence"
+                  echo "- status: $ACCEPTED_STATUS"
+                  echo "- confirmation: not_confirmed"
+                  echo "- fence_reason: main_readback_infrastructure"
+                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
                 exit 75
               fi
               if ! READBACK_JSON="$({
@@ -579,14 +588,22 @@ jobs:
                   --run-id "${{ github.run_id }}" \
                   --run-attempt "${{ github.run_attempt }}"
               })"; then
-                echo "status=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
                 echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "fence_reason=main_readback_mismatch" >> "$GITHUB_OUTPUT"
                 echo "post-publish main readback did not confirm the candidate's current attempt shards" >&2
+                {
+                  echo "### StockAnalysis publish fence"
+                  echo "- status: $ACCEPTED_STATUS"
+                  echo "- confirmation: not_confirmed"
+                  echo "- fence_reason: main_readback_mismatch"
+                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
                 exit 75
               fi
               echo "$READBACK_JSON"
               echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
               echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"
+              echo "fence_reason=confirmed" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "git push race on attempt ${attempt}; restarting from fresh origin/main"

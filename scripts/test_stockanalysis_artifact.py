@@ -362,7 +362,7 @@ class StockAnalysisArtifactTest(unittest.TestCase):
             "attempts": [{
                 "lane_id": "stockanalysis_etf_detail",
                 "member_id": None,
-                "attempt_id": "stockanalysis-etf_detail-1000-1",
+                "attempt_id": "packed-etf-detail-proof",
                 "observed_at": "2026-08-14T13:00:44Z",
                 "execution": "returned",
                 "exception_kind": None,
@@ -395,7 +395,7 @@ class StockAnalysisArtifactTest(unittest.TestCase):
                 "attempts": [{
                     "lane_id": lane_id,
                     "member_id": None,
-                    "attempt_id": f"stockanalysis-{prefix}-1000-1",
+                    "attempt_id": f"packed-{lane_id}",
                     "observed_at": "2026-08-14T13:00:44Z",
                     "execution": "returned",
                     "exception_kind": None,
@@ -416,6 +416,10 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         ]
         self.artifact.mkdir()
         (self.artifact / "manifest.json").write_text(json.dumps({"paths": attempt_paths}))
+        for rel in attempt_paths:
+            packed = self.artifact / "files" / rel
+            packed.parent.mkdir(parents=True, exist_ok=True)
+            packed.write_bytes((self.root / rel).read_bytes())
 
         result = self.helper.verify_stockanalysis_attempts(
             repo_root=self.root,
@@ -425,7 +429,7 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         )
         self.assertEqual(result["status"], "confirmed")
         self.assertEqual(result["confirmation"], "confirmed")
-        self.assertEqual(result["attempt_id"], "stockanalysis-etf_detail-1000-1")
+        self.assertEqual(result["attempt_id"], "packed-etf-detail-proof")
         self.assertEqual(result["lanes"], [
             "yahoo_etf_fallback",
             "stockanalysis_etf_universe",
@@ -435,7 +439,7 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         ])
 
         shard = json.loads(shard_path.read_text())
-        shard["attempts"][0]["attempt_id"] = "stockanalysis-etf_detail-999-1"
+        shard["attempts"][0]["attempt_id"] = "packed-etf-detail-mismatch"
         shard_path.write_text(json.dumps(shard))
         with self.assertRaisesRegex(ValueError, "current ETF detail attempt"):
             self.helper.verify_stockanalysis_attempts(

@@ -667,6 +667,7 @@ def verify_etf_detail_attempt(
     run_id: str,
     run_attempt: int,
     shard_path: str = ETF_DETAIL_ATTEMPT_SHARD,
+    expected_attempt_id: str | None = None,
 ) -> dict:
     """Confirm that latest main contains this run's successful ETF detail proof."""
     repo = Path(repo_root).resolve(strict=True)
@@ -692,7 +693,10 @@ def verify_etf_detail_attempt(
     if not isinstance(attempts, list):
         fail("ETF detail readback attempts must be an array")
 
-    expected_attempt_id = f"stockanalysis-etf_detail-{run_id}-{run_attempt}"
+    if expected_attempt_id is None:
+        expected_attempt_id = f"stockanalysis-etf_detail-{run_id}-{run_attempt}"
+    elif not isinstance(expected_attempt_id, str) or not expected_attempt_id:
+        fail("ETF detail readback expected attempt_id is required")
     current = [row for row in attempts if isinstance(row, dict) and row.get("attempt_id") == expected_attempt_id]
     if len(current) != 1:
         fail(f"current ETF detail attempt is absent or duplicated: {expected_attempt_id}")
@@ -806,6 +810,38 @@ def _candidate_attempt_specs(*, repo_root: Path, artifact_root: Path) -> list[tu
     return selected
 
 
+def _read_packed_attempt_id(
+    *,
+    repo_root: Path,
+    artifact_root: Path,
+    shard_path: str,
+    lane_id: str,
+) -> str:
+    repo = Path(repo_root).resolve(strict=True)
+    artifact = external_root(repo, Path(artifact_root), "artifact root")
+    rel = normalize_rel(shard_path)
+    target = artifact / "files" / rel
+    if target.is_symlink() or not target.is_file():
+        fail(f"packed StockAnalysis attempt shard is missing or unsafe: {rel}")
+    try:
+        document = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"packed StockAnalysis attempt shard is not valid JSON: {exc}")
+    if not isinstance(document, dict) or document.get("schema_version") != ATTEMPT_SHARD_SCHEMA:
+        fail(f"packed StockAnalysis attempt shard schema is invalid: {rel}")
+    if document.get("lane_id") != lane_id or not isinstance(document.get("attempts"), list):
+        fail(f"packed StockAnalysis attempt shard lane or rows are invalid: {rel}")
+    attempts = document["attempts"]
+    if len(attempts) != 1 or not isinstance(attempts[0], dict):
+        fail(f"packed StockAnalysis attempt shard must contain exactly one row: {rel}")
+    attempt_id = attempts[0].get("attempt_id")
+    if attempts[0].get("lane_id") != lane_id or attempts[0].get("member_id") is not None:
+        fail(f"packed StockAnalysis attempt row lane is invalid: {rel}")
+    if not isinstance(attempt_id, str) or not attempt_id:
+        fail(f"packed StockAnalysis attempt_id is missing: {rel}")
+    return attempt_id
+
+
 def verify_stockanalysis_attempts(
     *,
     repo_root: Path,
@@ -816,21 +852,27 @@ def verify_stockanalysis_attempts(
     """Confirm every attempt shard carried by the candidate on latest main."""
     selected = _candidate_attempt_specs(repo_root=repo_root, artifact_root=artifact_root)
     detail = None
-    for lane_id, shard_path, prefix in selected:
-        expected_attempt_id = f"stockanalysis-{prefix}-{run_id}-{run_attempt}"
+    for lane_id, shard_path, _prefix in selected:
+        packed_attempt_id = _read_packed_attempt_id(
+            repo_root=repo_root,
+            artifact_root=artifact_root,
+            shard_path=shard_path,
+            lane_id=lane_id,
+        )
         if lane_id == ETF_DETAIL_LANE_ID:
             detail = verify_etf_detail_attempt(
                 repo_root=repo_root,
                 run_id=run_id,
                 run_attempt=run_attempt,
                 shard_path=shard_path,
+                expected_attempt_id=packed_attempt_id,
             )
             continue
         _read_current_attempt_row(
             repo_root=repo_root,
             shard_path=shard_path,
             lane_id=lane_id,
-            expected_attempt_id=expected_attempt_id,
+            expected_attempt_id=packed_attempt_id,
         )
     if detail is None:
         return {

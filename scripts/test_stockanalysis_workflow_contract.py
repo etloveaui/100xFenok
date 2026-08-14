@@ -310,8 +310,11 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         verify = publish[verify_start:verify_end]
         self.assertIn('--artifact-root "$ARTIFACT_ROOT"', verify)
         self.assertIn("node scripts/test-stockanalysis-lane-parity.mjs", publish)
-        self.assertIn('echo "status=not_confirmed" >> "$GITHUB_OUTPUT"', publish)
+        self.assertNotIn('echo "status=not_confirmed" >> "$GITHUB_OUTPUT"', publish)
         self.assertIn('echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"', publish)
+        self.assertIn('echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"', publish)
+        self.assertIn('fence_reason=main_readback_infrastructure', publish)
+        self.assertIn('fence_reason=main_readback_mismatch', publish)
         self.assertLess(
             publish.index("git push origin HEAD:main"),
             publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
@@ -319,9 +322,10 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         push = publish.index("git push origin HEAD:main")
         checkout = publish.index("git checkout -f -B main origin/main", push)
         self.assertLess(checkout, publish.index("scripts/stockanalysis_artifact.py verify-attempt"))
+        success_status = publish.index('echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"', verify_start)
         self.assertLess(
             publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
-            publish.index('echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"'),
+            success_status,
         )
 
     def test_projection_oracle_preserves_surface_relative_root(self) -> None:
