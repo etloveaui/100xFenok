@@ -16,17 +16,25 @@ import {
   writeMergedAttemptShard,
 } from "./lib/data-supply-attempt-shard.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 const DEFAULT_SHARD_ROOT = path.join(REPO_ROOT, "data/admin/data-supply-state/detection-attempts");
-const SUPPORTED_LANES = new Set([
-  "yahoo_etf_fallback",
-  "stockanalysis_etf_universe",
-  "stockanalysis_stock_financial",
-  "stockanalysis_surfaces",
-]);
+// Derived from the registry, not listed by hand. A hand-written list is a second
+// place that has to learn about a new lane, and on 2026-08-14 it did not: run
+// 31791326158 fetched 100/100 ETF payloads and then died emitting the attempt,
+// because stockanalysis_etf_detail had been added to the registry, the detection
+// config and the producer, and not here. The restriction this set exists to
+// enforce is preserved — only lanes this workflow owns may be emitted — but the
+// membership question now has one answer instead of two.
+const OWNER_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml";
+const SUPPORTED_LANES = new Set(
+  LANE_REGISTRY.lanes
+    .filter((lane) => lane.owner_workflow === OWNER_WORKFLOW)
+    .map((lane) => lane.id),
+);
 
 function laneConfig(laneId) {
   if (!SUPPORTED_LANES.has(laneId)) throw new Error(`unsupported StockAnalysis attempt lane: ${laneId}`);
