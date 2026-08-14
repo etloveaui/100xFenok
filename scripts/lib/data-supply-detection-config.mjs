@@ -507,6 +507,12 @@ const config = {
           ],
         }),
       ])],
+      // Library transport, for the same reason stockanalysis_stock_financial uses
+      // it: this lane fetches many tickers per run and its attempt evidence is one
+      // aggregated producer outcome, not a per-request HTTP status. The producer
+      // records error, path and latency per ticker and no status code, so an http
+      // contract demands evidence the producer cannot produce. Run 31792421833
+      // failed on exactly that mismatch.
       endpointContract: endpointAssertion(
         "stockanalysis_etf_detail_json",
         objectArrayFieldsAssertion("etf_detail_rows", "/rows", {
@@ -515,6 +521,7 @@ const config = {
           nonEmptyFields: ["ticker"],
           uniqueBy: "ticker",
         }),
+        "library",
       ),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 3 }),
       affectedSurfaceIds: ["stockanalysis_etf_detail"],

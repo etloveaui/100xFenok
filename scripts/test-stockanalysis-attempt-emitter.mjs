@@ -564,7 +564,12 @@ assert.match(stockanalysisLanePolicy, /detection-attempts\/stockanalysis_stock_f
     `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
   assert.deepEqual(gate.undeclared_in_workflow, [],
     `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  // stockanalysis_etf_detail joined this workflow's lanes on 2026-08-14. This
+  // assertion is the one that would have caught the emitter's stale supported
+  // list before run 31791326158 died on it; it was never run when the lane was
+  // added.
   assert.deepEqual(gate.lanes.sort(), [
+    "stockanalysis_etf_detail",
     "stockanalysis_etf_universe",
     "stockanalysis_stock_financial",
     "stockanalysis_surfaces",
