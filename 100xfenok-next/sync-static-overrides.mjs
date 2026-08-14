@@ -516,6 +516,44 @@ for (const relativePath of [
   removeGeneratedPublicMirror(relativePath);
 }
 removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
+// EDGAR public boundary retains provenance receipts only. The SEC bootstrap and
+// RIM-DOW companyfacts caches are canonical recovery/research inputs, not a
+// served surface, and must be removed after blanket canonical synchronization.
+for (const relativePath of [
+  "public/data/edgar/company_tickers.json",
+  "public/data/edgar/rim-dow/AAPL.json",
+  "public/data/edgar/rim-dow/AMGN.json",
+  "public/data/edgar/rim-dow/AMZN.json",
+  "public/data/edgar/rim-dow/AXP.json",
+  "public/data/edgar/rim-dow/BA.json",
+  "public/data/edgar/rim-dow/CAT.json",
+  "public/data/edgar/rim-dow/CRM.json",
+  "public/data/edgar/rim-dow/CSCO.json",
+  "public/data/edgar/rim-dow/CVX.json",
+  "public/data/edgar/rim-dow/DIS.json",
+  "public/data/edgar/rim-dow/GOOGL.json",
+  "public/data/edgar/rim-dow/GS.json",
+  "public/data/edgar/rim-dow/HD.json",
+  "public/data/edgar/rim-dow/HON.json",
+  "public/data/edgar/rim-dow/IBM.json",
+  "public/data/edgar/rim-dow/JNJ.json",
+  "public/data/edgar/rim-dow/JPM.json",
+  "public/data/edgar/rim-dow/KO.json",
+  "public/data/edgar/rim-dow/MCD.json",
+  "public/data/edgar/rim-dow/MMM.json",
+  "public/data/edgar/rim-dow/MRK.json",
+  "public/data/edgar/rim-dow/MSFT.json",
+  "public/data/edgar/rim-dow/NKE.json",
+  "public/data/edgar/rim-dow/NVDA.json",
+  "public/data/edgar/rim-dow/PG.json",
+  "public/data/edgar/rim-dow/SHW.json",
+  "public/data/edgar/rim-dow/TRV.json",
+  "public/data/edgar/rim-dow/UNH.json",
+  "public/data/edgar/rim-dow/V.json",
+  "public/data/edgar/rim-dow/WMT.json",
+]) {
+  removeGeneratedPublicMirror(relativePath);
+}
 removeGeneratedPublicMirror("public/data/computed/fenok_etf_signals.json");
 removeGeneratedPublicMirror("public/data/computed/etf_action_index.json");
 removeGeneratedPublicMirror("public/data/admin/fenok-s1-stock-promotion-gate-plan.json");
