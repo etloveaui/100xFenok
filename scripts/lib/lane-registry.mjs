@@ -1575,6 +1575,12 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = policy(["yahoo_
     commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", "file"),
     commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", "file"),
     commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", "file"),
+    // The shadow lane still writes an attempt shard, and the artifact packer
+    // rejects any path this policy does not own. Run 31794068491 emitted the
+    // shard correctly and then failed to pack it, because being shadow governs
+    // whether a lane may be counted as ready, not whether its evidence may be
+    // carried.
+    commitSpec("data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json", "file"),
     commitSpec("data/yf/finance", "dynamic_set"),
     commitSpec("100xfenok-next/public/data", "directory", false),
   ],

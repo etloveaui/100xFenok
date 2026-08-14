@@ -265,6 +265,9 @@ assert.deepEqual(stockanalysis.stages.always_if_exists, [
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", required: false },
+  // Added 2026-08-14: the shadow ETF detail lane still writes an attempt shard,
+  // and the artifact packer rejects any path this policy does not own.
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json", required: false },
   { kind: "dynamic_set", path: "data/yf/finance", required: false },
   { kind: "directory", path: "100xfenok-next/public/data", required: false },
 ]);
