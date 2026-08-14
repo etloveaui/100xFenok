@@ -228,6 +228,12 @@ class StockAnalysisAttemptTracker:
         self.stock_financial_results: list[dict] = []
         self.surfaces_started = False
         self.surface_observations: list[dict] = []
+        # ETF detail was writing 5,605 canonical payloads with no attempt record of
+        # its own, so no lane owned it and the data-plane inventory could not
+        # account for the largest group in the estate.
+        self.etf_detail_started = False
+        self.etf_detail_expected = 0
+        self.etf_detail_results: list[dict] = []
 
     def configure(
         self,
@@ -334,6 +340,15 @@ class StockAnalysisAttemptTracker:
         if self.active and self.stock_financial_started:
             self.stock_financial_results.append(result)
 
+    def start_etf_detail(self, expected_count: int) -> None:
+        if self.active:
+            self.etf_detail_started = True
+            self.etf_detail_expected = int(expected_count)
+
+    def record_etf_detail(self, result: dict) -> None:
+        if self.active and self.etf_detail_started:
+            self.etf_detail_results.append(result)
+
     def record_surface_http(self, status_code: int, result: dict) -> None:
         if self.active:
             self.surface_observations.append({
@@ -391,6 +406,37 @@ class StockAnalysisAttemptTracker:
                 "stockanalysis_etf_universe",
                 {"transport": "http", "observations": self.universe_observations},
                 "universe",
+            )
+        if self.etf_detail_started:
+            detail_ok = [
+                result for result in self.etf_detail_results
+                if result.get("error") is None and result.get("path")
+            ]
+            requested = self.etf_detail_expected
+            failed = max(requested - len(detail_ok), 0)
+            complete = (
+                requested > 0
+                and len(self.etf_detail_results) == requested
+                and failed == 0
+            )
+            self._emit(
+                "stockanalysis_etf_detail",
+                {
+                    "transport": "library",
+                    "candidate_count": 1,
+                    "observations": [{
+                        "execution": "returned",
+                        "retry_count": 0,
+                        "latency_ms": sum(float(result.get("latency_ms") or 0) for result in self.etf_detail_results),
+                        "outcome": "success" if complete else "error",
+                        "document": {
+                            "requested": requested,
+                            "written": len(detail_ok),
+                            "failed": failed,
+                        },
+                    }],
+                },
+                "etf_detail",
             )
         if self.stock_financial_started:
             stock_ok = [
@@ -6982,6 +7028,10 @@ def _main() -> None:
         )
     results = []
     stop_reason = None
+    # ETF detail writes 5,605 canonical payloads. Until this attempt record
+    # existed, no lane owned that output and the data-plane inventory could not
+    # account for the largest group in the estate.
+    ATTEMPT_TRACKER.start_etf_detail(len(etfs))
     for kind, symbols in (("etf", etfs), ("stock", stocks)):
         for idx, ticker in enumerate(symbols, 1):
             if kind == "etf" and ticker in yahoo_retry_etfs:
@@ -7022,6 +7072,8 @@ def _main() -> None:
                     ),
                 )
             results.append(result)
+            if kind == "etf":
+                ATTEMPT_TRACKER.record_etf_detail(result)
             if kind == "stock" and stock_financial_detection_active:
                 ATTEMPT_TRACKER.record_stock_financial(result)
             status = "OK" if result["error"] is None else f"FAIL {result['error'][:240]}"

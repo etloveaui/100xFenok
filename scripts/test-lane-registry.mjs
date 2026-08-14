@@ -222,7 +222,7 @@ function clone(value) {
   const roots = declaredAdminRoots();
   assert.deepEqual(
     [...(roots.get("data/admin/stockanalysis-recovery") ?? [])].sort(),
-    ["stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"].sort(),
+    ["stockanalysis_etf_detail", "stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"].sort(),
     "the StockAnalysis recovery store must list every claimant lane",
   );
   assert.deepEqual(
@@ -254,7 +254,7 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 29, auxiliary: 3 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 30, auxiliary: 3 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "detection_floor",
       "yahoo_batch_quote_history is a standard detection-floor producer");
     assert.equal(

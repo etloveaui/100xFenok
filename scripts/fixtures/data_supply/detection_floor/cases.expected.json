@@ -72,17 +72,17 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "expected_report": {
-      "config_digest": "1f0d02c928e88564ff284c1dd17e72b959bdc3974f45d74272d13ac88bccbd7c",
+      "config_digest": "232ce4c963d0350ec3bc86f1871aba1e435ab7e1baf79f069073b2b71f59978b",
       "counts": {
         "drift": 0,
         "producer_members_drift": 0,
         "producer_members_ready": 29,
         "producer_members_stale": 0,
-        "producer_members_unavailable": 1,
+        "producer_members_unavailable": 2,
         "producer_members_unobserved": 3,
         "ready": 25,
         "stale": 0,
-        "unavailable": 1,
+        "unavailable": 2,
         "unobserved": 3
       },
       "generated_at": "2026-07-11T00:00:00Z",
@@ -279,6 +279,30 @@
           "monitoring_mode": "post_fetch_artifact",
           "reason": "ok",
           "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
+            "stockanalysis_etf_detail"
+          ],
+          "artifact": {
+            "age": null,
+            "reason": "missing_artifact",
+            "source_as_of": null,
+            "status": "unavailable",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": null,
+            "reason": "workflow_unobserved",
+            "status": "unobserved"
+          },
+          "enforcement": "shadow",
+          "id": "stockanalysis_etf_detail",
+          "kpi_required": false,
+          "label": "StockAnalysis per-ticker ETF detail",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "missing_artifact",
+          "status": "unavailable"
         },
         {
           "affected_surface_ids": [
@@ -880,20 +904,20 @@
           "status": "ready"
         }
       ],
-      "logical_lane_count": 29,
+      "logical_lane_count": 30,
       "monitoring_mode_counts": {
         "artifact_only": 3,
         "composite": 1,
-        "post_fetch_artifact": 25
+        "post_fetch_artifact": 26
       },
-      "producer_member_count": 33,
+      "producer_member_count": 34,
       "schema_version": "data-supply-detection-floor/v1"
     },
     "id": "all_valid_at_fixed_now",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "daa8f85d742135dc44bbfa2c34fe514920dba924c831b6734f4be3c5eae700d2"
+    "report_file_sha256": "52465e56fc28ee4c3a6dda7fca4b3b52296b8578bec7349297612ae42661f47b"
   },
-  "config_digest": "1f0d02c928e88564ff284c1dd17e72b959bdc3974f45d74272d13ac88bccbd7c",
+  "config_digest": "232ce4c963d0350ec3bc86f1871aba1e435ab7e1baf79f069073b2b71f59978b",
   "config_digest_input": {
     "canonicalization": "recursive-sorted-object-keys-preserved-array-order-utf8",
     "enforcement": "shadow",
@@ -966,7 +990,7 @@
     ],
     "schema_version": "data-supply-detection-config/v1"
   },
-  "logical_lane_count": 29,
+  "logical_lane_count": 30,
   "privacy_exclusions": [
     "raw_response_bodies",
     "credentials",
@@ -981,7 +1005,7 @@
     "promotion_pointers",
     "state_transitions"
   ],
-  "producer_member_count": 33,
+  "producer_member_count": 34,
   "reason_cases": [
     {
       "expected_reason": "transport_error",
@@ -1020,7 +1044,7 @@
       "id": "unobserved"
     }
   ],
-  "registry_digest": "42c68a014fa07a797f1dc094f1b3d55b061da9836068dfdfb949df5347494095",
+  "registry_digest": "42934bbd01db2aee53b9b40f942f6a2af6bdbdef800184aa50ba909a89360ce3",
   "schema_version": "data-supply-detection-expected/v1",
   "slickcharts_member_ids": [
     "daily",

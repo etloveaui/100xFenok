@@ -419,6 +419,38 @@ const lanes = [
     declared_exception: "shares the StockAnalysis recovery store with stockanalysis_stock_financial and stockanalysis_surfaces (store is multi-kind: stock/financial/etf/surface/universe)",
   }),
   record({
+    id: "stockanalysis_etf_detail",
+    label: "StockAnalysis per-ticker ETF detail",
+    owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "stockanalysis", role: "source", members: null }],
+    store_kind: "payload",
+    lane_class: "detection_floor",
+    cadence: { kind: "daily" },
+    // Shadow until a real run proves the attempt shard. The project's own rule is
+    // that only attempt-proven lanes may be live, and this lane has never
+    // executed: its emitter was added in the same change that declared it.
+    // Promotion to live requires an observed attempt, not a code review.
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/stockanalysis-recovery",
+    detection_attempt: attemptShard("stockanalysis_etf_detail"),
+    // The 5,605 raw per-ticker payloads are this lane's canonical acquisition
+    // output. The public tree is a shard projection built by sync-public-data,
+    // not a mirror of these paths, so the shards are a derived projection rather
+    // than a public_mirror entry here.
+    canonical_outputs: ["data/stockanalysis/etfs"],
+    public_mirror: [],
+    commit_shards: [
+      attemptShard("stockanalysis_etf_detail"),
+      "data/stockanalysis",
+      "data/admin/stockanalysis-recovery",
+    ],
+    recovery_store: "data/admin/stockanalysis-recovery/index.json",
+    kpi_recovery_shape: "direct",
+    declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe, stockanalysis_stock_financial and stockanalysis_surfaces; separated from the universe lane because the universe index and the per-ticker detail payloads are distinct acquisition units with distinct failure modes",
+  }),
+  record({
     id: "stockanalysis_stock_financial",
     label: "StockAnalysis bounded stock and financial pairs",
     owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
@@ -459,7 +491,7 @@ const lanes = [
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
     detection_attempt: attemptShard("stockanalysis_surfaces"),
-    canonical_outputs: ["data/stockanalysis/surfaces/index.json"],
+    canonical_outputs: ["data/stockanalysis/surfaces"],
     public_mirror: [],
     commit_shards: [
       attemptShard("stockanalysis_surfaces"),
@@ -883,7 +915,24 @@ const lanes = [
     privacy_class: "public_mirror",
     admin_store: null,
     detection_attempt: null,
-    canonical_outputs: ["data/global-scouter/core/metadata.json"],
+    // The lane owns the whole export bundle, not just the metadata marker. The
+    // remaining subpaths — stock detail, raw, indicators, the etfs index, schema
+    // and README — are all product- or admin-surface consumed, and the lane
+    // record declares no admin store, no detection attempt and no recovery
+    // store, so this family carries no control-plane state to separate out.
+    // The four derived core outputs keep their own declarations because Update
+    // Manifest materializes them; everything here is the owner-run export.
+    canonical_outputs: [
+      "data/global-scouter/core/metadata.json",
+      "data/global-scouter/core/stocks_index.json",
+      "data/global-scouter/core/dashboard.json",
+      "data/global-scouter/stocks",
+      "data/global-scouter/raw",
+      "data/global-scouter/indicators",
+      "data/global-scouter/etfs",
+      "data/global-scouter/schema.json",
+      "data/global-scouter/README.md",
+    ],
     public_mirror: ["100xfenok-next/public/data/global-scouter/core/metadata.json"],
     commit_shards: [],
     recovery_store: null,

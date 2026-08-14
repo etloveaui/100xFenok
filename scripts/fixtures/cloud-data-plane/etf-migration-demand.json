@@ -1,0 +1,84 @@
+{
+  "status": "verified",
+  "schema_version": "cloud-data-plane-request-demand/v1",
+  "verified_on": "2026-08-14",
+  "scope": "etf-bulk-payload-migration-to-r2",
+  "period": "per-month-with-daily-operation-rates",
+  "_basis": {
+    "what_moves": "The 5,605 per-ticker StockAnalysis ETF payloads currently stored in Git as canonical files, 1,027,973,690 bytes, published to R2 under the existing generation and pointer contract.",
+    "d1_write_model": "One row per generation per family, not one row per asset. This is the Phase 1 decision the plan required: per-asset rows would put roughly 5,605 writes behind every ETF generation, and the same choice repeated across families is what turns a comfortable margin into a daily-limit incident. Per-generation keeps the ledger a promotion record rather than an inventory mirror.",
+    "r2_class_a_worst_case": "168,180 puts per month assumes every object is rewritten in every daily generation: 5,605 payload objects plus 1 immutable generation manifest, times 30. Content addressing means unchanged objects are not re-uploaded, so the real figure will be lower; the worst case is declared because a limit check must be argued from the ceiling, not the expectation. The manifest term was missing from the first draft and was added after the verifier caught the omission.",
+    "r2_list_worst_case": "retention lists the whole bucket at 1,000 keys per page, so a sweep over 5,605 payloads plus accumulated manifests needs at least 6 requests, not 1. 6 x 30 sweeps = 180. This term grows with publication history because manifests are never deleted.",
+    "class_b_uncertainty": "1,005,470 total = 500,000 serving ceiling + 504,570 publication + 900 retention. The 500,000 serving figure remains a planning ceiling rather than a measurement (current whole-account Class B is 30,200 month-to-date) and must be replaced with a measurement in Phase 3. The publication term was absent from the first draft and is the verifier's finding: the adapter's putIfAbsent issues one presence GET per object key, a readback GET follows every object it actually writes, and parity re-reads the manifest plus every asset. In the all-changed case that is 5,606 presence + 5,606 readback + 5,606 parity + 1 resume-check = 16,819 per publish, x 30 = 504,570. Retention adds one read per manifest per sweep, 30 x 30 = 900 in a fresh 30-manifest month.",
+    "class_b_growth_hazard": "the retention list and manifest-read terms both grow without bound because manifests are never deletion candidates. At this cadence the bucket gains 365 manifests a year, so the sweep cost rises every month while the payload cost does not. Bounded today, unbounded over years — this needs a manifest retention or compaction decision before Phase 3, and is recorded here rather than left to be discovered as drift.",
+    "kv_role": "KV holds one cached pointer and is never the publication authority; the authority is a transaction-capable D1 row or a Durable Object, per the closeout plan's own correction of its first draft."
+  },
+  "_retention": {
+    "rule_source": "scripts/publish-cloud-data-generation.mjs computeRetentionPlan — the shipped planner, not a restatement of intent",
+    "retained_set": "per family: the 3 newest generations by created_at, plus that family's pointer active and previous entries, plus generations named by receipts still in state prepared; the reference scan is then unioned across all families because the object store is shared",
+    "delete_candidates": "only objects/sha256/* payloads referenced by no retained manifest of any family. Manifest keys, pointer keys, probe/* and the explicit protected keys are never candidates, so a rotation deletes payload objects only and never a manifest",
+    "overwrite_behaviour": "zero. Objects are content-addressed at objects/sha256/<sha>, so an unchanged asset reuses its key and emits neither a put nor a delete; only a changed asset writes a new key and only the vacated key can later become unreferenced",
+    "failed_generation_cleanup": "covered by the same unreferenced-object sweep: an abandoned generation's manifest stops being retained and its unique objects become candidates. It adds no separate delete class",
+    "fail_closed": "any unreadable or corrupt manifest, a retained generation with a missing manifest, or a family that cannot be read aborts the whole run with zero deletions, so a partial reference set never produces deletions",
+    "worst_case_derivation": "steady state drops exactly one generation per daily rotation. Its unique objects are at most the full candidate payload count of 5,605, which is the case where every ticker changed that day. 5,605 x 30 rotations = 168,150 object deletes per month. This equals the put worst case for the same reason rather than by assumption: the same all-changed day that writes 5,605 new keys is what strands 5,605 old ones",
+    "coupling_to_declare": "this count assumes retention actually runs once per rotation. If it does not, deletes are 0 and the three-slot storage bound is violated instead, so the delete figure and the storage figure must be accepted or rejected together",
+    "scope_caveat": "retention is bucket-level and rejects a --family argument, so this count is the candidate's attributable worst case within a shared sweep, not an independently schedulable operation",
+    "abandoned_attempt_bound": "objects are content-addressed and immutable, so a retry of the SAME logical generation recomputes the same sha keys, putIfAbsent finds them present, and the retry strands zero additional objects. A partial write only becomes garbage when the next generation carries different content for those assets, and those keys then fall into the same unreferenced-object pool the ordinary sweep already collects. The residual that is NOT closed by this argument: a failed attempt whose content differs from every later retained generation adds at most one generation's worth of objects, 5,605, per failed attempt, and the repository declares no cap on failed attempts per day. The delete figure is therefore bounded per attempt but not per month until an attempt cap is declared; deletes are free, so the real exposure of an uncapped attempt count is retained bytes between sweeps rather than operation cost"
+  },
+  "_reservation_d1_shape": {
+    "why_this_block_exists": "the admission reservation split changed the D1 shape and the prior one-row-per-generation assumption no longer describes it. Measured 2026-08-14 against the rebuilt split; the per-rotation totals are left as formulas because they scale with the admission reservation cap, which is an owner value and is deliberately not chosen here.",
+    "rows_per_admission": 2,
+    "rows_detail": "one keyed admission row plus one shared per-family/per-rotation counter row. The counter is written once per admission but is a single row for the whole rotation, so rows in storage are cap + 1 rather than 2 x cap.",
+    "reads_per_admission": 2,
+    "writes_per_admission": 2,
+    "reads_per_retry": 2,
+    "writes_per_retry": 0,
+    "retry_note": "an exact open retry performs the keyed admission read and the counter read, then returns without writing. A crash-loop therefore costs reads and no rows.",
+    "row_bytes_worst_case": {
+      "admission_row": 545,
+      "counter_row": 406,
+      "declared_row_ceiling": 2000,
+      "measured_at_identifier_length": 128,
+      "note": "measured at the contract's maximum identifier length, so these are upper bounds rather than samples. Neither row grows with the cap, which is the property the earlier single-array shape lacked."
+    },
+    "rows_in_storage_per_rotation": "admission_reservation_cap + 1",
+    "row_retention": "bound to the resume window rather than a separate number: past that horizon a reservation is no longer retryable and its row is prunable by the coordinator-owned cleanup path. This is distinct from the R2 attempt-detail lifecycle.",
+    "queries_per_worker_invocation_impact": "the reservation transaction performs 2 reads and up to 2 writes within one invocation, which must be added to the existing declaration before the gate can be called complete.",
+    "unresolved": "the per-day row and query totals cannot be declared until the owner sets the admission reservation cap; the formulas above are what those totals will be computed from."
+  },
+  "r2": {
+    "class_a": {
+      "put": 168180,
+      "copy": 0,
+      "list": 180,
+      "delete": 168150
+    },
+    "class_b_operations_per_month": 1005470
+  },
+  "d1": {
+    "database_bytes": 5000000,
+    "max_row_or_blob_bytes": 2000,
+    "queries_per_worker_invocation": 2,
+    "tables": [
+      {
+        "id": "publication_generations",
+        "added_rows": 3650,
+        "max_rows": 100000,
+        "retention_days": 365,
+        "purge_batch_rows": 10,
+        "rows_read_per_day": 1000,
+        "logical_writes_per_day": 10,
+        "index_read_amplification": 2,
+        "index_write_amplification": 3
+      }
+    ]
+  },
+  "kv": {
+    "pointer_bytes": 4096,
+    "max_pointer_bytes": 4096,
+    "reads_per_day": 10000,
+    "writes_per_day": 10,
+    "pointers": 1,
+    "model": "single_active_generation_pointer"
+  }
+}

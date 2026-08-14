@@ -492,6 +492,34 @@ const config = {
       affectedSurfaceIds: ["stockanalysis_etf_universe"],
     }),
     lane({
+      id: "stockanalysis_etf_detail",
+      label: "StockAnalysis per-ticker ETF detail",
+      // The per-ticker payloads are written by the same workflow as the universe
+      // index but are a distinct acquisition unit with distinct failure modes, so
+      // they carry their own detection row rather than inheriting the universe
+      // lane's. Without this row the 5,605-file canonical output had no owner.
+      members: [registryMember("stockanalysis_etf_detail", ["20 21 * * *"], [
+        artifact("stockanalysis_etf_detail_recovery_index", "data/admin/stockanalysis-recovery/index.json", {
+          schemaVersion: schemaVersion("/schema_version", "stockanalysis-recovery/v1"),
+          sourceSelector: notApplicableSource(),
+          assertions: [
+            typeAssertion("states_object", "/states", "object"),
+          ],
+        }),
+      ])],
+      endpointContract: endpointAssertion(
+        "stockanalysis_etf_detail_json",
+        objectArrayFieldsAssertion("etf_detail_rows", "/rows", {
+          fields: { ticker: "string" },
+          min: 1,
+          nonEmptyFields: ["ticker"],
+          uniqueBy: "ticker",
+        }),
+      ),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 3 }),
+      affectedSurfaceIds: ["stockanalysis_etf_detail"],
+    }),
+    lane({
       id: "stockanalysis_stock_financial",
       label: "StockAnalysis bounded stock and financial pairs",
       members: [registryMember("stockanalysis_stock_financial", ["20 21 * * *"],

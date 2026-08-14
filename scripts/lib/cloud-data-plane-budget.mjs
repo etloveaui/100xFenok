@@ -5,6 +5,8 @@ import path from "node:path";
 import { canonicalJson } from "./json-canonical.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./data-supply-detection-config.mjs";
 import { DERIVED_ASSET_REGISTRY } from "./derived-asset-registry.mjs";
+import { OWNERSHIP_REGISTRY, RETENTION_REGISTRY } from "./cloud-data-plane-retention-registry.mjs";
+import { buildCandidateScope } from "./cloud-data-plane-candidate-scope.mjs";
 import { LANE_REGISTRY } from "./lane-registry.mjs";
 
 export const CLOUD_DATA_PLANE_REPORT_SCHEMA = "cloud-data-plane-budget/v1";
@@ -217,7 +219,47 @@ function collectRoot(repoRoot, declaration, globalFoldedFiles) {
   };
 }
 
-function scanDataEstate(repoRoot, declarations) {
+/**
+ * Retention widens what can be *declared*, not what can be *skipped*. An entry
+ * without a reason is rejected, and an entry may not shadow a lane's own
+ * canonical output — otherwise this would become a way to drop a served family
+ * out of the canonical set without saying so.
+ */
+function normalizeRetention(registry, declarations, ownership = OWNERSHIP_REGISTRY) {
+  const source = registry ?? RETENTION_REGISTRY;
+  // Platform outputs, external artifacts, documentation and the
+  // exposed-no-consumer hygiene queue are accounted for the same way retention
+  // is — declared with a reason — but they are separate categories on purpose.
+  // Folding them into retention would call serving data control-plane state, and
+  // folding them into canonical ownership would claim a producer that does not
+  // exist. The exposed-no-consumer bucket in particular is a question, not a
+  // claim: it records that something is published with no reader found.
+  const ownershipEntries = ["platform_outputs", "external_artifacts", "exposed_no_consumer", "documentation"]
+    .flatMap((category) => (Array.isArray(ownership?.[category]) ? ownership[category] : []));
+  const retained = [...(Array.isArray(source?.retained) ? source.retained : []), ...ownershipEntries];
+  const optional = Array.isArray(source?.optional_paths) ? source.optional_paths : [];
+  const declaredPaths = new Set(declarations.map((entry) => entry.path));
+  const check = (entry, label) => {
+    if (!plainObject(entry) || typeof entry.path !== "string" || entry.path.length === 0) {
+      fail(`${label} entry requires a path`);
+    }
+    if (typeof entry.reason !== "string" || entry.reason.trim().length === 0) {
+      fail(`${label} ${entry.path} requires a non-empty reason`);
+    }
+    return repoRelative(entry.path, `${label} ${entry.path}`);
+  };
+  const retainedPaths = retained.map((entry) => {
+    const normalized = check(entry, "retention");
+    if (declaredPaths.has(normalized)) {
+      fail(`retention entry ${normalized} shadows a declared canonical output`);
+    }
+    return normalized;
+  });
+  const optionalPaths = optional.map((entry) => check(entry, "optional path"));
+  return { retainedPaths, optionalPaths: new Set(optionalPaths) };
+}
+
+function scanDataEstate(repoRoot, declarations, retainedPaths = []) {
   const dataRoot = insideRepo(repoRoot, "data");
   if (!fs.existsSync(dataRoot) || !fs.lstatSync(dataRoot).isDirectory()) fail("data root is missing");
   const files = [];
@@ -246,10 +288,14 @@ function scanDataEstate(repoRoot, declarations) {
     const owner = declarations.find((root) => root.kind === "file"
       ? root.path === relative
       : relative.startsWith(`${root.path}/`));
+    const retainedBy = owner
+      ? null
+      : retainedPaths.find((root) => relative === root || relative.startsWith(`${root}/`)) ?? null;
     files.push({
       path: relative,
       bytes: stat.size,
       declared: owner !== undefined,
+      retained: retainedBy,
     });
   }
   for (const name of fs.readdirSync(dataRoot).sort((left, right) => left.localeCompare(right))) {
@@ -257,7 +303,11 @@ function scanDataEstate(repoRoot, declarations) {
   }
   files.sort((left, right) => left.path.localeCompare(right.path));
   const declaredFiles = files.filter((file) => file.declared);
-  const unownedFiles = files.filter((file) => !file.declared);
+  // Retained files are accounted for but deliberately kept out of declared
+  // coverage: counting control-plane state as canonical would overstate what the
+  // product actually serves and pull it into the migration scope.
+  const retainedFiles = files.filter((file) => !file.declared && file.retained !== null);
+  const unownedFiles = files.filter((file) => !file.declared && file.retained === null);
   const groupMap = new Map();
   for (const file of unownedFiles) {
     const group = file.path.split("/")[1] ?? "<root>";
@@ -278,6 +328,7 @@ function scanDataEstate(repoRoot, declarations) {
   return {
     total: summarize(files),
     declared: summarize(declaredFiles),
+    retained: summarize(retainedFiles),
     unowned: {
       ...summarize(unownedFiles),
       top_level_groups: topLevelGroups,
@@ -289,14 +340,21 @@ export function inventoryCloudDataPlaneRoots({
   repoRoot,
   laneRegistry = LANE_REGISTRY,
   derivedRegistry = DERIVED_ASSET_REGISTRY,
+  retentionRegistry = RETENTION_REGISTRY,
 } = {}) {
   if (typeof repoRoot !== "string" || repoRoot.length === 0) fail("repoRoot is required");
   const foldedFiles = new Map();
   const declarations = declaredOwnedRoots(laneRegistry, derivedRegistry);
+  const retention = normalizeRetention(retentionRegistry, declarations);
   const roots = declarations
     .map((declaration) => collectRoot(repoRoot, declaration, foldedFiles));
-  const missingPaths = roots.filter((root) => root.missing).map((root) => root.path);
-  const estate = scanDataEstate(repoRoot, declarations);
+  // A root declared optional is allowed to be absent: some scrapers only run on
+  // an explicit manual selection, so absence is the normal state rather than a
+  // lost artifact. Every other absence still fails.
+  const absentRoots = roots.filter((root) => root.missing).map((root) => root.path);
+  const optionalAbsent = absentRoots.filter((rootPath) => retention.optionalPaths.has(rootPath));
+  const missingPaths = absentRoots.filter((rootPath) => !retention.optionalPaths.has(rootPath));
+  const estate = scanDataEstate(repoRoot, declarations, retention.retainedPaths);
   const complete = missingPaths.length === 0 && estate.unowned.file_count === 0;
   const declaredCoverage = {
     file_count: estate.declared.file_count,
@@ -310,7 +368,9 @@ export function inventoryCloudDataPlaneRoots({
     bytes: estate.total.bytes,
     digest: estate.total.digest,
     missing_paths: missingPaths,
+    optional_absent: optionalAbsent,
     declared: estate.declared,
+    retained: estate.retained,
     declared_coverage: declaredCoverage,
     unowned: estate.unowned,
     roots,
@@ -534,8 +594,10 @@ export function buildCloudDataPlaneCatalog({
       bytes: inventory.bytes,
       digest: inventory.digest,
       missing_paths: inventory.missing_paths,
+      optional_absent: inventory.optional_absent,
       declared: inventory.declared,
       declared_coverage: inventory.declared_coverage,
+      retained: inventory.retained,
       unowned: inventory.unowned,
     },
     verdict: catalogVerdict,
@@ -570,6 +632,61 @@ function exactKeys(value, expected, context) {
   if (canonicalJson(actual) !== canonicalJson(required)) {
     fail(`${context} keys must be exactly ${required.join(",")}`);
   }
+}
+
+/**
+ * Planning thresholds for a candidate-scoped run.
+ *
+ * Owner decision 2026-08-14: govern the metrics this candidate actually uses
+ * rather than completing the estate-wide policy or declaring hard-limit-only.
+ * The estate policy is untouched and its nine gaps stay visible as non-gating
+ * findings; this applies only when a candidate scope is in force.
+ *
+ * The thresholds are not invented: every one is 80% of the same hard limit the
+ * estate policy already uses, which is the ratio that policy itself applies to
+ * the two metrics it does govern (8 of 10 GB-month, 800,000 of 1,000,000 Class
+ * A). Extending an existing ratio to the metrics it had skipped is a different
+ * act from picking numbers, and it keeps the two policies commensurable.
+ */
+export const CANDIDATE_PLANNING_POLICY = deepFreeze({
+  schema_version: "cloud-data-plane-candidate-planning/v1",
+  derived_from: "0.8 x the pinned hard limit, the ratio the estate planning line already applies",
+  r2: {
+    decimal_gb_month: 8,
+    class_a_operations_per_month: 800_000,
+    class_b_operations_per_month: 8_000_000,
+  },
+  d1: {
+    database_bytes: 400_000_000,
+    account_bytes: 400_000_000,
+    rows_read_per_day: 4_000_000,
+    rows_written_per_day: 80_000,
+    max_row_or_blob_bytes: 1_600_000,
+    queries_per_worker_invocation: 40,
+  },
+  kv: {
+    stored_bytes: 800_000_000,
+    reads_per_day: 80_000,
+    writes_per_day: 800,
+    max_pointer_bytes: 20_000_000,
+  },
+});
+
+/**
+ * Every metric the candidate policy governs must exist and must not exceed the
+ * hard limit it was derived from. Without this the policy could silently govern
+ * a metric the report does not produce, which reads as coverage and is not.
+ */
+export function validateCandidatePlanningPolicy(policy = CANDIDATE_PLANNING_POLICY) {
+  for (const service of ["r2", "d1", "kv"]) {
+    const hard = DEFAULT_CLOUD_DATA_PLANE_POLICY[service].hard_limit;
+    for (const [key, value] of Object.entries(policy[service] ?? {})) {
+      const ceiling = hard[key];
+      if (ceiling === undefined) fail(`candidate policy governs unknown metric ${service}.${key}`);
+      if (!(value > 0) || value > ceiling) fail(`candidate policy ${service}.${key} must be positive and at most the hard limit ${ceiling}`);
+    }
+  }
+  return true;
 }
 
 export function validateCloudDataPlanePolicy(policy) {
@@ -637,7 +754,24 @@ function evaluate(metrics, limits) {
     exceeded ||= isExceeded;
     missing ||= !metrics[key].complete;
   }
-  return { verdict: exceeded ? "fail" : missing ? "not_verified" : "pass", checks };
+  // Which metrics this limit set actually governs. A metric the policy does not
+  // mention is not "passing" here — it is ungoverned, and saying so is the
+  // difference between an honest partial pass and a green light that quietly
+  // covers less than the reader assumes.
+  const governed = Object.keys(limits).sort();
+  const ungoverned = Object.keys(metrics).sort().filter((key) => !governed.includes(key));
+  const verdict = exceeded ? "fail" : missing ? "not_verified" : "pass";
+  return {
+    verdict,
+    checks,
+    coverage: {
+      governed,
+      ungoverned,
+      complete: ungoverned.length === 0,
+      // Named so a reader never has to infer scope from the verdict alone.
+      label: ungoverned.length === 0 ? verdict : `${verdict}_partial_coverage`,
+    },
+  };
 }
 
 function combine(verdicts) {
@@ -727,7 +861,9 @@ export function calculateCloudDataPlaneBudget({
   accountBaseline = null,
   requestDemand = null,
   policy = DEFAULT_CLOUD_DATA_PLANE_POLICY,
+  candidatePlanning = null,
 } = {}) {
+  if (candidatePlanning) validateCandidatePlanningPolicy(candidatePlanning);
   if (!plainObject(inventory)) fail("inventory must be an object");
   const currentBytes = nonnegative(inventory.bytes, "inventory.bytes");
   const currentObjects = nonnegative(inventory.file_count, "inventory.file_count");
@@ -830,13 +966,22 @@ export function calculateCloudDataPlaneBudget({
 
   function service(name, metrics) {
     const hardLimit = evaluate(metrics, policy?.[name]?.hard_limit);
-    const planningLine = evaluate(metrics, policy?.[name]?.planning_line);
-    return {
+    // A candidate-scoped run is governed by the candidate policy, which covers
+    // every metric the candidate uses. The estate planning line is unchanged and
+    // reported alongside, so a candidate pass never relabels the estate.
+    const planningLimits = candidatePlanning ? candidatePlanning[name] : policy?.[name]?.planning_line;
+    const planningLine = evaluate(metrics, planningLimits);
+    const result = {
       metrics,
       hard_limit: hardLimit,
       planning_line: planningLine,
       verdict: combine([hardLimit.verdict, planningLine.verdict]),
     };
+    if (candidatePlanning) {
+      result.planning_policy = "candidate";
+      result.estate_planning_line = evaluate(metrics, policy?.[name]?.planning_line);
+    }
+    return result;
   }
   const r2 = {
     slots,
@@ -921,6 +1066,7 @@ export function buildCloudDataPlaneReport({
   derivedRegistry = DERIVED_ASSET_REGISTRY,
   detectionConfig = DATA_SUPPLY_DETECTION_CONFIG,
   dataHealthKpi,
+  candidateId = null,
 } = {}) {
   const catalog = buildCloudDataPlaneCatalog({
     repoRoot,
@@ -929,15 +1075,30 @@ export function buildCloudDataPlaneReport({
     detectionConfig,
     dataHealthKpi,
   });
+  // A migration budget is argued from the payload that actually moves, so a
+  // candidate run replaces the estate inventory with the candidate's scoped one.
+  // The catalog is still built and still reported: dropping it would remove the
+  // estate-wide ownership completeness check, and a scoped budget computed over
+  // an estate with unowned files is not trustworthy just because it is smaller.
+  // The scope is recorded in the report so a scoped verdict can never be read as
+  // an estate verdict.
+  const candidateScope = candidateId
+    ? buildCandidateScope({ repoRoot, candidateId, laneRegistry })
+    : null;
   const budget = calculateCloudDataPlaneBudget({
-    inventory: catalog.inventory,
+    inventory: candidateScope ? candidateScope.inventory : catalog.inventory,
     accountBaseline,
     requestDemand,
     policy,
+    // Owner decision 2026-08-14: candidate runs are governed by the candidate
+    // policy; estate runs keep the estate policy and its declared gaps.
+    candidatePlanning: candidateScope ? CANDIDATE_PLANNING_POLICY : null,
   });
   return {
     schema_version: CLOUD_DATA_PLANE_REPORT_SCHEMA,
     catalog,
+    ...(candidateScope ? { candidate_scope: candidateScope.manifest } : {}),
+    inventory_scope: candidateScope ? { kind: "candidate", candidate_id: candidateId } : { kind: "estate" },
     budget,
     verdict: combine([catalog.verdict, budget.verdict]),
   };

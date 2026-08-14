@@ -398,10 +398,15 @@ try {
     .flatMap((asset) => asset.output_inventory)
     .reduce((sum, root) => sum + root.file_count, 0);
   assert.ok(first.catalog.inventory.file_count > derivedOnlyCount);
-  assert.deepEqual(first.catalog.inventory.missing_paths, ["data/slickcharts/1929crash.json"]);
-  assert.equal(first.catalog.inventory.complete, false);
-  assert.ok(first.catalog.inventory.unowned.file_count > 0);
-  assert.ok(first.catalog.inventory.unowned.bytes > 0);
+  // The 1929 crash artifact is now a declared optional path: it is produced only
+  // on an explicit manual selection, so its absence is the normal state and it
+  // moved out of missing_paths into optional_absent. Every estate file is now
+  // owned or declared, so the inventory completes.
+  assert.deepEqual(first.catalog.inventory.missing_paths, []);
+  assert.deepEqual(first.catalog.inventory.optional_absent, ["data/slickcharts/1929crash.json"]);
+  assert.equal(first.catalog.inventory.complete, true);
+  assert.equal(first.catalog.inventory.unowned.file_count, 0);
+  assert.ok(first.catalog.inventory.retained.file_count > 0);
   assert.equal(first.catalog.verdict, "not_verified");
   assert.equal(first.budget.r2.planning_line.verdict, "fail");
   assert.equal(JSON.stringify(first).includes(REPO_ROOT), false);

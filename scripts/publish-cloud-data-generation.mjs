@@ -129,6 +129,7 @@ import {
   validateGenerationManifest,
   validatePublicationReceipt,
 } from "./lib/cloud-data-plane-generation.mjs";
+import { classifyPreparedReceipts } from "./lib/cloud-data-plane-prepared-receipt-lifecycle.mjs";
 import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflare-adapter.mjs";
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
 import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-coordinator.mjs";
@@ -1236,7 +1237,12 @@ export function computeRetentionPlan({
 // indistinguishable from one with no live generations, and guessing wrong
 // deletes production data. Success with pointer null (family never published)
 // is a legitimate answer and contributes nothing to the retained set.
-export async function collectFamiliesRetentionState({ families, createPlane }) {
+// The resume window is threaded in rather than defaulted: a prepared receipt has
+// no terminal state in the contract, so without a bound it protects its
+// generation forever. An absent window aborts before any deletion rather than
+// falling back to indefinite protection, which would silently reinstate the
+// unbounded case this exists to close.
+export async function collectFamiliesRetentionState({ families, createPlane, now, resumeWindowSeconds }) {
   const states = [];
   for (const name of families) {
     let inspection;
@@ -1248,14 +1254,28 @@ export async function collectFamiliesRetentionState({ families, createPlane }) {
         `${name}: ${error.code ?? "ERROR"}: ${error.message}`,
       );
     }
-    const preparedGenerations = [...new Set((inspection?.receipts ?? [])
-      .filter((receipt) => receipt?.state === "prepared")
-      .map((receipt) => receipt.generation_id)
-      .filter(Boolean))].sort();
+    let lifecycle;
+    try {
+      lifecycle = classifyPreparedReceipts({
+        receipts: inspection?.receipts ?? [],
+        now,
+        resumeWindowSeconds,
+      });
+    } catch (error) {
+      // A classification failure is not a reason to fall back to the old
+      // unbounded behaviour; it is a reason to stop before deleting anything.
+      fail("RETENTION_RECEIPT_LIFECYCLE_UNRESOLVED", `${name}: ${error.message}`);
+    }
     states.push({
       name,
       pointer: inspection?.pointer ?? null,
-      preparedGenerations,
+      // Live only. Pointer active/previous and cross-family manifest references
+      // are assembled separately and are unaffected by receipt expiry.
+      preparedGenerations: lifecycle.live_generations,
+      expiredReceipts: lifecycle.expired_receipts,
+      releasedGenerations: lifecycle.released_generations,
+      clockAnomalies: lifecycle.clock_anomalies,
+      resumeWindowSeconds: lifecycle.resume_window_seconds,
     });
   }
   return states;
@@ -1516,6 +1536,11 @@ function parseArgs(argv) {
     else if (arg === "--rollback") args.rollback = true;
     else if (arg === "--retention") args.retention = true;
     else if (arg === "--retention-delete") args.retentionDelete = true;
+    // Owner policy, supplied per run. There is no default: a prepared receipt has
+    // no terminal state, so an omitted window would restore indefinite protection.
+    else if (arg.startsWith("--prepared-resume-window-seconds=")) {
+      args.resumeWindowSeconds = Number.parseInt(arg.slice("--prepared-resume-window-seconds=".length), 10);
+    }
     else if (arg.startsWith("--chaos=")) {
       const mode = arg.slice("--chaos=".length);
       if (!CHAOS_MODES.includes(mode)) fail("ARGS_INVALID", `unknown chaos mode ${mode}`);
@@ -1545,7 +1570,10 @@ function parseArgs(argv) {
 // RETENTION_FAMILY_UNREADABLE). DeleteObject is free on the free tier, so the
 // gate still runs first with a small declaration. --family is deliberately not
 // accepted anywhere on this path.
-async function runRetention({ tolerateGateBlock, retentionDelete, json }) {
+// The resume window is an owner policy value with no safe default, so it arrives
+// as an explicit argument and its absence aborts the run before any deletion.
+// A default here would silently restore indefinite prepared-receipt protection.
+async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWindowSeconds, now }) {
   const log = (line) => {
     if (!json) console.error(line);
   };
@@ -1589,6 +1617,8 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json }) {
       coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: name }),
       coordinatorName: name,
     }),
+    now,
+    resumeWindowSeconds,
   });
   const readObject = async (key) => {
     const entry = await r2Bucket.get(key);
@@ -1618,6 +1648,18 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json }) {
     manifests_read: retentionPlan.manifestCount,
     retained_generations: retentionPlan.retainedGenerations,
     prepared_generations: [...new Set(familiesState.flatMap((state) => state.preparedGenerations))].sort(),
+    // Audit only. A released generation is NOT a delete instruction: it merely
+    // stops being a protection root, and whether any of its objects are deleted
+    // is still decided by the single reference rule. Reported so an operator can
+    // see what the window let go of — the point of bounding protection is that
+    // the release is visible, not that the candidate set silently widens.
+    prepared_receipt_lifecycle: {
+      resume_window_seconds: resumeWindowSeconds,
+      evaluated_at: now,
+      expired_receipts: familiesState.flatMap((state) => (state.expiredReceipts ?? []).map((row) => ({ family: state.name, ...row }))),
+      released_generations: [...new Set(familiesState.flatMap((state) => state.releasedGenerations ?? []))].sort(),
+      clock_anomalies: familiesState.flatMap((state) => (state.clockAnomalies ?? []).map((row) => ({ family: state.name, ...row }))),
+    },
     referenced_object_count: retentionPlan.referencedKeys.length,
     protected_keys_present: retentionPlan.skippedProtected,
     candidate_count: retentionPlan.candidates.length,
@@ -1688,6 +1730,8 @@ export async function runPublisherCli({
       tolerateGateBlock: args.tolerateGateBlock,
       retentionDelete: args.retentionDelete,
       json: args.json,
+      resumeWindowSeconds: args.resumeWindowSeconds,
+      now: new Date().toISOString(),
     });
     return 0;
   }
