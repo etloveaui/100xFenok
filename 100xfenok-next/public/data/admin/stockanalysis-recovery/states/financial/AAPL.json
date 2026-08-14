@@ -4,17 +4,6 @@
   "entity": "AAPL",
   "attempts": [
     {
-      "run_id": "30290132699",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "schedule": "",
-      "natural": false,
-      "observed_at": "2026-07-27T17:39:30Z",
-      "outcome": "failed",
-      "controlled": true,
-      "error": "RuntimeError: controlled failure injection for financial:AAPL"
-    },
-    {
       "run_id": "30310917326",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -143,24 +132,34 @@
       "observed_at": "2026-08-13T22:09:22Z",
       "outcome": "fresh",
       "controlled": false
+    },
+    {
+      "run_id": "31795350702",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "schedule": "",
+      "natural": false,
+      "observed_at": "2026-08-14T11:16:06Z",
+      "outcome": "fresh",
+      "controlled": false
     }
   ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/financials/AAPL.json",
-    "payload_sha256": "eaebeb0f0cdc66a0a81e754066428557bd137d88a894dca8215a4a1ed34614b5",
+    "payload_sha256": "bb9bdff5f5642133d56c9aae255cf6ca908d49590cabbbe8a8616caebb685501",
     "source_as_of": "2026-06-27",
-    "fetched_at": "2026-08-13T22:09:23Z"
+    "fetched_at": "2026-08-14T11:25:51Z"
   },
-  "updated_at": "2026-08-13T22:09:22Z",
+  "updated_at": "2026-08-14T11:16:06Z",
   "last_attempt": {
-    "run_id": "31748565097",
+    "run_id": "31795350702",
     "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "20 21 * * *",
-    "natural": true,
-    "observed_at": "2026-08-13T22:09:22Z",
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "observed_at": "2026-08-14T11:16:06Z",
     "outcome": "fresh",
     "controlled": false
   },

@@ -20,21 +20,391 @@
     "blockers": []
   },
   "runtime": {
-    "projection": "kpi_runtime_projection.v2",
-    "built_at": "2026-08-14T11:34:38.148Z",
-    "evaluated_at": "2026-08-14T11:34:38.148Z",
-    "verdict": "degraded",
-    "slot_status": "degraded",
-    "status_message": "16 retained missed slot(s) recovered by later authoritative ready full snapshot(s).",
-    "publication_halted": false,
-    "deployment_blocking": false,
-    "fresh": true,
-    "missed_slot_count": 16,
-    "recovered_missed_slot_count": 16,
-    "unrecovered_missed_slot_count": 0,
-    "blocking_unrecovered_missed_slot_count": 0,
-    "lane_local_unrecovered_missed_slot_count": 0,
-    "hard_age_ok": true,
+    "producer_context": {
+      "built_at": "2026-08-14T11:34:38.148Z",
+      "duration_ms": 408,
+      "run_id": "31795931525",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "workflow": "Update Manifest",
+      "sha": "289a69ec8d83d66334a9cdc919ed174229452f96",
+      "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-14T10:30Z",
+      "origin": {
+        "source_workflow": "fenok-edge-krx-daily.yml",
+        "source_run_id": "31795753056",
+        "source_run_attempt": 1,
+        "original_event": "schedule",
+        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-14T10:30Z"
+      }
+    },
+    "last_rebuild_context": {
+      "built_at": "2026-08-14T11:34:38.148Z",
+      "run_id": "31795931525",
+      "workflow": "Update Manifest",
+      "event_name": "workflow_dispatch",
+      "sha": "289a69ec8d83d66334a9cdc919ed174229452f96"
+    },
+    "cadence": {
+      "crons_utc": [
+        "30 2 * * *",
+        "30 9 * * *"
+      ],
+      "slot_grace_minutes": 360,
+      "hard_max_age_hours": 26,
+      "slot_retention_days": 14,
+      "v2_activated_at": "2026-07-10T00:37:00.289Z",
+      "calendar_version": "market-calendar/v1-2026"
+    },
+    "slots": {
+      "satisfied_slot_keys": [
+        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-01T00:30Z",
+        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-04T00:30Z",
+        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-05T00:30Z",
+        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-12T00:30Z",
+        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-14T00:30Z",
+        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-03T10:30Z",
+        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-04T10:30Z",
+        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-05T10:30Z",
+        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-10T10:30Z",
+        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-11T10:30Z",
+        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-12T10:30Z",
+        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-13T10:30Z",
+        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-14T10:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-01T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-02T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-03T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-04T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-05T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-09T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-12T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-14T02:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-01T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-02T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-03T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-04T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-05T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-08T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-10T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-11T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-12T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-13T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-14T09:30Z"
+      ],
+      "last_satisfied_slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-14T10:30Z",
+      "missed_slot_keys": [
+        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-06T00:30Z",
+        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-07T00:30Z",
+        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-08T00:30Z",
+        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-11T00:30Z",
+        "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-13T00:30Z",
+        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-06T10:30Z",
+        "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-07T10:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-06T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-07T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-08T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-10T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-11T02:30Z",
+        "update-manifest.yml:30 2 * * *@2026-08-13T02:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-06T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-07T09:30Z",
+        "update-manifest.yml:30 9 * * *@2026-08-09T09:30Z"
+      ],
+      "cron_deferrals": []
+    },
+    "successful_snapshot_history": [
+      {
+        "built_at": "2026-08-01T04:46:21.031Z",
+        "slot_key": "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-01T00:30Z",
+        "run_id": "30684025810",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 360
+      },
+      {
+        "built_at": "2026-08-01T05:56:53.949Z",
+        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-01T02:30Z",
+        "run_id": "30686214796",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 398
+      },
+      {
+        "built_at": "2026-08-01T11:44:25.697Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-01T09:30Z",
+        "run_id": "30696600969",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 388
+      },
+      {
+        "built_at": "2026-08-02T05:50:49.872Z",
+        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-02T02:30Z",
+        "run_id": "30734490174",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 318
+      },
+      {
+        "built_at": "2026-08-02T11:05:39.785Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-02T09:30Z",
+        "run_id": "30744683166",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 410
+      },
+      {
+        "built_at": "2026-08-03T06:16:57.878Z",
+        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-03T02:30Z",
+        "run_id": "30788491461",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 425
+      },
+      {
+        "built_at": "2026-08-03T13:59:20.452Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-03T09:30Z",
+        "run_id": "30814511375",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 388
+      },
+      {
+        "built_at": "2026-08-03T14:26:45.256Z",
+        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-03T10:30Z",
+        "run_id": "30821856135",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 407
+      },
+      {
+        "built_at": "2026-08-04T04:27:05.898Z",
+        "slot_key": "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-04T00:30Z",
+        "run_id": "30877185812",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 398
+      },
+      {
+        "built_at": "2026-08-04T05:38:01.211Z",
+        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-04T02:30Z",
+        "run_id": "30880749835",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 403
+      },
+      {
+        "built_at": "2026-08-04T11:46:53.298Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-04T09:30Z",
+        "run_id": "30905491442",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 403
+      },
+      {
+        "built_at": "2026-08-04T12:50:20.854Z",
+        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-04T10:30Z",
+        "run_id": "30910088272",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 389
+      },
+      {
+        "built_at": "2026-08-05T04:12:58.819Z",
+        "slot_key": "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-05T00:30Z",
+        "run_id": "30973976385",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 399
+      },
+      {
+        "built_at": "2026-08-05T05:37:49.864Z",
+        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-05T02:30Z",
+        "run_id": "30978132828",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 403
+      },
+      {
+        "built_at": "2026-08-05T11:44:39.515Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-05T09:30Z",
+        "run_id": "31001963181",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 396
+      },
+      {
+        "built_at": "2026-08-05T12:59:46.890Z",
+        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-05T10:30Z",
+        "run_id": "31007314904",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 398
+      },
+      {
+        "built_at": "2026-08-08T10:24:35.853Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-08T09:30Z",
+        "run_id": "31251795712",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 310
+      },
+      {
+        "built_at": "2026-08-09T04:07:05.166Z",
+        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-09T02:30Z",
+        "run_id": "31293467652",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 410
+      },
+      {
+        "built_at": "2026-08-10T11:00:33.096Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-10T09:30Z",
+        "run_id": "31380122961",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 419
+      },
+      {
+        "built_at": "2026-08-10T11:50:32.238Z",
+        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-10T10:30Z",
+        "run_id": "31384465842",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 403
+      },
+      {
+        "built_at": "2026-08-11T10:49:12.443Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-11T09:30Z",
+        "run_id": "31481849444",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 413
+      },
+      {
+        "built_at": "2026-08-11T12:01:02.501Z",
+        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-11T10:30Z",
+        "run_id": "31487989433",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 408
+      },
+      {
+        "built_at": "2026-08-12T03:49:34.928Z",
+        "slot_key": "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-12T00:30Z",
+        "run_id": "31560704324",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 326
+      },
+      {
+        "built_at": "2026-08-12T04:43:23.633Z",
+        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-12T02:30Z",
+        "run_id": "31562901227",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 419
+      },
+      {
+        "built_at": "2026-08-12T10:46:01.168Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-12T09:30Z",
+        "run_id": "31587807296",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 365
+      },
+      {
+        "built_at": "2026-08-12T11:51:38.678Z",
+        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-12T10:30Z",
+        "run_id": "31592433283",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 412
+      },
+      {
+        "built_at": "2026-08-13T10:45:55.897Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-13T09:30Z",
+        "run_id": "31691574681",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 399
+      },
+      {
+        "built_at": "2026-08-13T11:36:35.561Z",
+        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-13T10:30Z",
+        "run_id": "31695336373",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 411
+      },
+      {
+        "built_at": "2026-08-14T03:51:04.519Z",
+        "slot_key": "fenok-edge-daily.yml:30 0 * * 2-6@2026-08-14T00:30Z",
+        "run_id": "31767299553",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 417
+      },
+      {
+        "built_at": "2026-08-14T04:33:11.676Z",
+        "slot_key": "update-manifest.yml:30 2 * * *@2026-08-14T02:30Z",
+        "run_id": "31769546425",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 412
+      },
+      {
+        "built_at": "2026-08-14T10:48:11.717Z",
+        "slot_key": "update-manifest.yml:30 9 * * *@2026-08-14T09:30Z",
+        "run_id": "31792435632",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 328
+      },
+      {
+        "built_at": "2026-08-14T11:34:38.148Z",
+        "slot_key": "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-14T10:30Z",
+        "run_id": "31795931525",
+        "run_attempt": 1,
+        "workflow": "Update Manifest",
+        "status": "ready",
+        "duration_ms": 408
+      }
+    ],
+    "authoritative_context": {
+      "authoritative": true,
+      "reason": "valid_dispatch"
+    },
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
@@ -48,16 +418,614 @@
         "suspected_skips": 15,
         "attempt_gaps": 2
       },
-      "pre_activation_lane_ids": [],
-      "suspected_skip_lane_ids": [
-        "edgar_filings",
-        "finra_ats_weekly",
-        "yahoo_batch_quote_history"
-      ],
-      "attempt_gap_lane_ids": [
-        "stockanalysis_etf_detail",
-        "stockanalysis_etf_universe"
+      "pre_activation_members": [],
+      "rows": [
+        {
+          "lane_id": "fred_macro",
+          "member_id": "fred_macro",
+          "workflow": ".github/workflows/fetch-fred-macro.yml",
+          "schedule_id": "daily_0800_utc",
+          "cron": "0 8 * * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T08:00:00.000Z",
+          "observed_at": "2026-08-14T09:03:27.742Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "fred_banking",
+          "member_id": "fred_banking",
+          "workflow": ".github/workflows/fetch-fred-banking.yml",
+          "schedule_id": "daily_0700_utc",
+          "cron": "0 7 * * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T07:00:00.000Z",
+          "observed_at": "2026-08-14T08:14:06.697Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "fred_yardeni",
+          "member_id": "fred_yardeni",
+          "workflow": ".github/workflows/fetch-fred-yardeni.yml",
+          "schedule_id": "weekly_1000_sat_utc",
+          "cron": "0 10 * * 6",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-08T10:00:00.000Z",
+          "observed_at": "2026-08-10T16:28:54.960Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "fdic_tier1",
+          "member_id": "fdic_tier1",
+          "workflow": ".github/workflows/fetch-fdic.yml",
+          "schedule_id": "monthly_first_monday_federal",
+          "cron": "0 6 1-7 * 1",
+          "calendar_id": "us_federal_business",
+          "expected_at": "2026-08-07T06:00:00.000Z",
+          "observed_at": "2026-08-10T08:44:53.496Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "treasury_tga",
+          "member_id": "treasury_tga",
+          "workflow": ".github/workflows/fetch-treasury-tga.yml",
+          "schedule_id": "six_hourly",
+          "cron": "0 */6 * * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-14T00:00:00.000Z",
+          "observed_at": "2026-08-14T07:10:06.019Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "defillama_stablecoins",
+          "member_id": "defillama_stablecoins",
+          "workflow": ".github/workflows/fetch-defillama.yml",
+          "schedule_id": "hourly_at_12",
+          "cron": "12 * * * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-14T05:12:00.000Z",
+          "observed_at": "2026-08-14T10:28:51.273Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "yahoo_etf_fallback",
+          "member_id": "yahoo_etf_fallback",
+          "workflow": ".github/workflows/fetch-stockanalysis.yml",
+          "schedule_id": "weekday_2250_utc",
+          "cron": "50 22 * * 1-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-12T22:50:00.000Z",
+          "observed_at": "2026-08-14T00:57:11Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "yahoo_etf_fallback",
+          "member_id": "yahoo_etf_fallback",
+          "workflow": ".github/workflows/fetch-stockanalysis.yml",
+          "schedule_id": "weekday_2350_utc",
+          "cron": "50 23 * * 1-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-12T23:50:00.000Z",
+          "observed_at": "2026-08-14T00:57:11Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "yahoo_etf_fallback",
+          "member_id": "yahoo_etf_fallback",
+          "workflow": ".github/workflows/fetch-stockanalysis.yml",
+          "schedule_id": "weekly_2320_sun_utc",
+          "cron": "20 23 * * 0",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-09T23:20:00.000Z",
+          "observed_at": "2026-08-14T00:57:11Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "stockanalysis_etf_universe",
+          "member_id": "stockanalysis_etf_universe",
+          "workflow": ".github/workflows/fetch-stockanalysis.yml",
+          "schedule_id": "weekly_2320_sun_utc",
+          "cron": "20 23 * * 0",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-09T23:20:00.000Z",
+          "observed_at": "2026-07-20T01:06:37Z",
+          "state": "attempt_gap",
+          "producer_status": "stale",
+          "producer_reason": "stale"
+        },
+        {
+          "lane_id": "stockanalysis_etf_detail",
+          "member_id": "stockanalysis_etf_detail",
+          "workflow": ".github/workflows/fetch-stockanalysis.yml",
+          "schedule_id": "daily_2120_utc",
+          "cron": "20 21 * * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-12T21:20:00.000Z",
+          "observed_at": null,
+          "state": "attempt_gap",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "stockanalysis_stock_financial",
+          "member_id": "stockanalysis_stock_financial",
+          "workflow": ".github/workflows/fetch-stockanalysis.yml",
+          "schedule_id": "daily_2120_utc",
+          "cron": "20 21 * * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-12T21:20:00.000Z",
+          "observed_at": "2026-08-13T22:09:43Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "stockanalysis_surfaces",
+          "member_id": "stockanalysis_surfaces",
+          "workflow": ".github/workflows/fetch-stockanalysis.yml",
+          "schedule_id": "weekday_2350_utc",
+          "cron": "50 23 * * 1-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-12T23:50:00.000Z",
+          "observed_at": "2026-08-14T00:57:11Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "stockanalysis_surfaces",
+          "member_id": "stockanalysis_surfaces",
+          "workflow": ".github/workflows/fetch-stockanalysis.yml",
+          "schedule_id": "weekly_2320_sun_utc",
+          "cron": "20 23 * * 0",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-09T23:20:00.000Z",
+          "observed_at": "2026-08-14T00:57:11Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "yahoo_ticker_macro",
+          "member_id": "yahoo_ticker_macro",
+          "workflow": ".github/workflows/fetch-yahoo-ticker.yml",
+          "schedule_id": "hourly_at_05",
+          "cron": "5 * * * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-14T05:05:00.000Z",
+          "observed_at": "2026-08-14T10:13:28.735Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "sentiment",
+          "member_id": "sentiment",
+          "workflow": ".github/workflows/fetch-sentiment.yml",
+          "schedule_id": "weekday_2200_us",
+          "cron": "0 22 * * 1-5",
+          "calendar_id": "us_trading",
+          "expected_at": "2026-08-12T22:00:00.000Z",
+          "observed_at": "2026-08-13T22:32:10.171Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "nasdaq_giw_sox",
+          "member_id": "nasdaq_giw_sox",
+          "workflow": ".github/workflows/fetch-nasdaq-giw-sox.yml",
+          "schedule_id": "weekday_2350_us",
+          "cron": "50 23 * * 1-5",
+          "calendar_id": "us_trading",
+          "expected_at": "2026-08-12T23:50:00.000Z",
+          "observed_at": "2026-08-14T00:49:09.765Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "us_indices_daily",
+          "member_id": "us_indices_daily",
+          "workflow": ".github/workflows/fetch-us-indices-daily.yml",
+          "schedule_id": "weekday_2200_us",
+          "cron": "0 22 * * 1-5",
+          "calendar_id": "us_trading",
+          "expected_at": "2026-08-12T22:00:00.000Z",
+          "observed_at": "2026-08-13T22:33:16.143Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "oecd_cli",
+          "member_id": "oecd_cli",
+          "workflow": ".github/workflows/fetch-oecd-cli.yml",
+          "schedule_id": "monthly_0800_utc",
+          "cron": "0 8 1 * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-01T08:00:00.000Z",
+          "observed_at": "2026-08-03T05:49:00.170Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "krx",
+          "member_id": "krx",
+          "workflow": ".github/workflows/fenok-edge-krx-daily.yml",
+          "schedule_id": "weekday_1030_utc",
+          "cron": "30 10 * * 1-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T10:30:00.000Z",
+          "observed_at": "2026-08-14T11:22:08.000Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "slickcharts",
+          "member_id": "daily",
+          "workflow": ".github/workflows/slickcharts-daily.yml",
+          "schedule_id": "daily_0600_utc",
+          "cron": "0 6 * * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T06:00:00.000Z",
+          "observed_at": "2026-08-14T07:39:33.290Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "slickcharts",
+          "member_id": "weekly",
+          "workflow": ".github/workflows/slickcharts-weekly.yml",
+          "schedule_id": "weekly_0700_sun_utc",
+          "cron": "0 7 * * 0",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-09T07:00:00.000Z",
+          "observed_at": "2026-08-10T15:34:44.334Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "slickcharts",
+          "member_id": "monthly",
+          "workflow": ".github/workflows/slickcharts-monthly.yml",
+          "schedule_id": "monthly_0800_utc",
+          "cron": "0 8 1 * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-01T08:00:00.000Z",
+          "observed_at": "2026-08-10T15:35:43.707Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "slickcharts",
+          "member_id": "history",
+          "workflow": ".github/workflows/slickcharts-history.yml",
+          "schedule_id": "monthly_0900_utc",
+          "cron": "0 9 1 * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-01T09:00:00.000Z",
+          "observed_at": "2026-08-11T22:25:41.725Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "slickcharts",
+          "member_id": "symbols",
+          "workflow": ".github/workflows/slickcharts-symbols.yml",
+          "schedule_id": "weekly_0730_sun_utc",
+          "cron": "30 7 * * 0",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-09T07:30:00.000Z",
+          "observed_at": "2026-08-09T08:16:26.983Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "edgar_filings",
+          "member_id": "edgar_filings",
+          "workflow": ".github/workflows/fetch-edgar-filings.yml",
+          "schedule_id": "weekly_0040_mon_federal",
+          "cron": "40 0 * * 1",
+          "calendar_id": "us_federal_business",
+          "expected_at": "2026-08-10T00:40:00.000Z",
+          "observed_at": "2026-08-03T07:22:48.849Z",
+          "state": "suspected_skip",
+          "producer_status": "stale",
+          "producer_reason": "stale"
+        },
+        {
+          "lane_id": "damodaran",
+          "member_id": "damodaran",
+          "workflow": ".github/workflows/fetch-damodaran-shadow.yml",
+          "schedule_id": "weekly_1117_sat_utc",
+          "cron": "17 11 * * 6",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-08T11:17:00.000Z",
+          "observed_at": "2026-08-10T17:38:06.831Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "finra_short_volume",
+          "member_id": "finra_short_volume",
+          "workflow": ".github/workflows/fenok-edge-daily.yml",
+          "schedule_id": "weekday_0030_us",
+          "cron": "30 0 * * 2-6",
+          "calendar_id": "us_trading",
+          "expected_at": "2026-08-13T00:30:00.000Z",
+          "observed_at": "2026-08-14T03:18:06.117Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "finra_ats_weekly",
+          "member_id": "finra_ats_weekly",
+          "workflow": ".github/workflows/fetch-finra-ats-weekly.yml",
+          "schedule_id": "weekly_1117_wed_utc",
+          "cron": "17 11 * * 3",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-12T11:17:00.000Z",
+          "observed_at": "2026-08-05T13:03:45.116Z",
+          "state": "suspected_skip",
+          "producer_status": "stale",
+          "producer_reason": "stale"
+        },
+        {
+          "lane_id": "occ_options_volume",
+          "member_id": "occ_options_volume",
+          "workflow": ".github/workflows/fenok-edge-daily.yml",
+          "schedule_id": "weekday_0030_us",
+          "cron": "30 0 * * 2-6",
+          "calendar_id": "us_trading",
+          "expected_at": "2026-08-13T00:30:00.000Z",
+          "observed_at": "2026-08-14T03:35:39.621Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "yahoo_private_options",
+          "member_id": "yahoo_private_options",
+          "workflow": ".github/workflows/fetch-fenok-private-options.yml",
+          "schedule_id": "weekday_0110_us",
+          "cron": "10 1 * * 2-6",
+          "calendar_id": "us_trading",
+          "expected_at": "2026-08-13T01:10:00.000Z",
+          "observed_at": "2026-08-14T03:37:58.214Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "apewisdom_attention",
+          "member_id": "apewisdom_attention",
+          "workflow": ".github/workflows/fetch-fenok-apewisdom.yml",
+          "schedule_id": "daily_1317_utc",
+          "cron": "17 13 * * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-12T13:17:00.000Z",
+          "observed_at": "2026-08-13T14:33:15.723Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "gdelt_news_tone",
+          "member_id": "gdelt_news_tone",
+          "workflow": ".github/workflows/fetch-fenok-news-tone.yml",
+          "schedule_id": "daily_1443_utc",
+          "cron": "43 14 * * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-12T14:43:00.000Z",
+          "observed_at": "2026-08-13T15:37:21.614Z",
+          "state": "observed",
+          "producer_status": "drift",
+          "producer_reason": "schema_drift"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "weekday_2320_utc",
+          "cron": "20 23 * * 1-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-12T23:20:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_0000_utc",
+          "cron": "7 0 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-14T00:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_0200_utc",
+          "cron": "7 2 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-14T02:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_0400_utc",
+          "cron": "7 4 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-14T04:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_0600_utc",
+          "cron": "7 6 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-14T06:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_0800_utc",
+          "cron": "7 8 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T08:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_1000_utc",
+          "cron": "7 10 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T10:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_1200_utc",
+          "cron": "7 12 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T12:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_1400_utc",
+          "cron": "7 14 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T14:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_1600_utc",
+          "cron": "7 16 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T16:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_1800_utc",
+          "cron": "7 18 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T18:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_2000_utc",
+          "cron": "7 20 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T20:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        },
+        {
+          "lane_id": "yahoo_batch_quote_history",
+          "member_id": "yahoo_batch_quote_history",
+          "workflow": ".github/workflows/fetch-yf-finance.yml",
+          "schedule_id": "yahoo_batch_etf_2200_utc",
+          "cron": "7 22 * * 0-5",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-13T22:07:00.000Z",
+          "observed_at": null,
+          "state": "suspected_skip",
+          "producer_status": "unobserved",
+          "producer_reason": "workflow_unobserved"
+        }
       ]
+    },
+    "publication_gate": {
+      "status": "open",
+      "publication_halted": false,
+      "deployment_blocking": false,
+      "blocking_unrecovered_missed_slot_keys": [],
+      "status_message": "Publication open: no unrecovered full-snapshot missed slots."
     }
   },
   "source_sla": [
@@ -7899,10 +8867,37 @@
             "recovered": 0
           },
           "retry_keys": [],
+          "lkg_details": [],
+          "recovery_details": [
+            {
+              "key": "TQQQ.json",
+              "recovered_from_run_id": "29417720099",
+              "recovery_run_id": "29421917838",
+              "recovery_run_attempt": 1,
+              "recovery_event_name": "schedule",
+              "recovered_at": "2026-07-15T14:04:52.506Z",
+              "source_as_of": "2026-08-13T20:00:00.000Z"
+            },
+            {
+              "key": "SOXL.json",
+              "recovered_from_run_id": "29417720099",
+              "recovery_run_id": "29421917838",
+              "recovery_run_attempt": 1,
+              "recovery_event_name": "schedule",
+              "recovered_at": "2026-07-15T14:04:52.506Z",
+              "source_as_of": "2026-08-13T20:00:00.000Z"
+            }
+          ],
           "promotion_deferral_details": [],
           "current_attempt": {
+            "run_id": "31791333502",
+            "run_attempt": 1,
             "event_name": "schedule",
             "observed_at": "2026-08-14T10:13:28.735Z",
+            "attempted": 2,
+            "successes": 2,
+            "failed": 0,
+            "failed_keys": [],
             "promotion_deferrals": 0,
             "promotion_deferral_keys": []
           }
@@ -8156,10 +9151,37 @@
             "recovered": 0
           },
           "retry_keys": [],
+          "lkg_details": [],
+          "recovery_details": [
+            {
+              "key": "sp500.json",
+              "recovered_from_run_id": "30246526864",
+              "recovery_run_id": "30312327287",
+              "recovery_run_attempt": 1,
+              "recovery_event_name": "schedule",
+              "recovered_at": "2026-07-27T22:55:09.730Z",
+              "source_as_of": "2026-08-13"
+            },
+            {
+              "key": "nasdaq.json",
+              "recovered_from_run_id": "30246526864",
+              "recovery_run_id": "30312327287",
+              "recovery_run_attempt": 1,
+              "recovery_event_name": "schedule",
+              "recovered_at": "2026-07-27T22:55:09.730Z",
+              "source_as_of": "2026-08-13"
+            }
+          ],
           "promotion_deferral_details": [],
           "current_attempt": {
+            "run_id": "31750338803",
+            "run_attempt": 1,
             "event_name": "schedule",
             "observed_at": "2026-08-13T22:33:16.143Z",
+            "attempted": 4,
+            "successes": 4,
+            "failed": 0,
+            "failed_keys": [],
             "promotion_deferrals": 0,
             "promotion_deferral_keys": []
           }
@@ -8345,54 +9367,49 @@
           "lane_id": "slickcharts",
           "generated_at": "2026-08-14T07:39:34.765Z",
           "composite_state": "ready",
+          "active_generation_id": "e3ab2102b75682df6cd32766140713404274d2bcf218c313e6635786b315f03a",
+          "retained_generation_id": null,
           "members": {
             "daily": {
               "resolution_state": "fresh_primary",
               "retry": false,
               "file_count": 5,
-              "recovered_at": null,
-              "recovery_run_attempt": null,
-              "recovery_event_name": null
+              "last_recovery": null
             },
             "weekly": {
               "resolution_state": "fresh_primary",
               "retry": false,
               "file_count": 4,
-              "recovered_at": null,
-              "recovery_run_attempt": null,
-              "recovery_event_name": null
+              "last_recovery": null
             },
             "monthly": {
               "resolution_state": "fresh_primary",
               "retry": false,
               "file_count": 21,
-              "recovered_at": null,
-              "recovery_run_attempt": null,
-              "recovery_event_name": null
+              "last_recovery": null
             },
             "history": {
               "resolution_state": "fresh_primary",
               "retry": false,
               "file_count": 542,
-              "recovered_at": null,
-              "recovery_run_attempt": null,
-              "recovery_event_name": null
+              "last_recovery": null
             },
             "symbols": {
               "resolution_state": "fresh_primary",
               "retry": false,
               "file_count": 2,
-              "recovered_at": null,
-              "recovery_run_attempt": null,
-              "recovery_event_name": null
+              "last_recovery": null
             }
           },
           "retry_members": [],
           "current_attempt": {
+            "run_id": "31780561141",
+            "run_attempt": 1,
             "event_name": "schedule",
             "observed_at": "2026-08-14T07:39:33.329Z",
             "member_id": "daily",
-            "decision": "candidate_promoted"
+            "decision": "candidate_promoted",
+            "base_member_state_sha256": "f8da744cd28b3d87f4e30c2e3c8c3c95e0f2e88501d24af43748752ec899feb5"
           }
         },
         "last_attempt": {
