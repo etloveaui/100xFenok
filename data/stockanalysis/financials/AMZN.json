@@ -3,7 +3,7 @@
   "source": "stockanalysis",
   "asset_type": "stock",
   "ticker": "AMZN",
-  "fetched_at": "2026-08-14T12:41:20Z",
+  "fetched_at": "2026-08-14T21:46:38Z",
   "role": "financial statement cross-check candidate; not valuation SSOT",
   "statements": {
     "annual": {
@@ -18,13 +18,12 @@
           "url": "/stocks/amzn/financials/income-statement/"
         },
         "details": {
-          "source": "fai",
-          "lastTrailingDate": "Jun 30, 2026",
+          "source": "spg",
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
+          "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 13, 2026",
-          "currency": "USD"
+          "lastTradingDay": "Aug 14, 2026"
         },
         "periods": [
           "TTM",
@@ -70,7 +69,7 @@
             ]
           },
           {
-            "field": "grossProfit",
+            "field": "gp",
             "title": "Gross Profit",
             "format": null,
             "values": [
@@ -87,12 +86,12 @@
             "title": "Selling, General & Admin",
             "format": null,
             "values": [
-              58916000000,
-              58301000000,
-              55266000000,
-              56186000000,
-              54129000000,
-              41374000000
+              175817000000,
+              167375000000,
+              153771000000,
+              146805000000,
+              138428000000,
+              116485000000
             ]
           },
           {
@@ -100,7 +99,7 @@
             "title": "Research & Development",
             "format": null,
             "values": [
-              121086000000,
+              119612000000,
               108521000000,
               88544000000,
               85622000000,
@@ -113,29 +112,29 @@
             "title": "Other Operating Expenses",
             "format": null,
             "values": [
-              120096000000,
-              113713000000,
-              99268000000,
-              91386000000,
-              85562000000,
-              75173000000
+              4669000000,
+              4639000000,
+              763000000,
+              767000000,
+              163000000,
+              62000000
             ]
           },
           {
-            "field": "totalOperatingExpenses",
-            "title": "Total Operating Expenses",
+            "field": "opex",
+            "title": "Operating Expenses",
             "format": null,
             "values": [
               300098000000,
               280535000000,
               243078000000,
               233194000000,
-              212904000000,
+              211804000000,
               172599000000
             ]
           },
           {
-            "field": "operatingIncome",
+            "field": "opinc",
             "title": "Operating Income",
             "format": null,
             "values": [
@@ -143,25 +142,12 @@
               79975000000,
               68593000000,
               36852000000,
-              12248000000,
+              13348000000,
               24879000000
             ]
           },
           {
-            "field": "interestIncome",
-            "title": "Interest Income",
-            "format": null,
-            "values": [
-              4660000000,
-              4381000000,
-              4677000000,
-              2949000000,
-              989000000,
-              448000000
-            ]
-          },
-          {
-            "field": "income_statement_interest_expense",
+            "field": "interestExpense",
             "title": "Interest Expense",
             "format": null,
             "values": [
@@ -174,29 +160,94 @@
             ]
           },
           {
-            "field": "otherNonOperatingIncome",
-            "title": "Other Non-Operating Income (Expense)",
+            "field": "interestIncome",
+            "title": "Interest & Investment Income",
             "format": null,
             "values": [
-              80425000000,
-              15229000000,
-              -2250000000,
-              938000000,
-              -16806000000,
-              14633000000
+              4660000000,
+              4381000000,
+              4677000000,
+              2949000000,
+              989000000,
+              448000000
             ]
           },
           {
-            "field": "totalNonOperatingIncome",
-            "title": "Total Non-Operating Income (Expense)",
+            "field": "incomeEquity",
+            "title": "Earnings From Equity Investments",
             "format": null,
             "values": [
-              81754000000,
-              17336000000,
-              21000000,
-              705000000,
-              -18184000000,
-              13272000000
+              -570000000,
+              -554000000,
+              -101000000,
+              -12000000,
+              -3000000,
+              4000000
+            ]
+          },
+          {
+            "field": "currencyGains",
+            "title": "Currency Exchange Gain (Loss)",
+            "format": null,
+            "values": [
+              338000000,
+              19000000,
+              -408000000,
+              65000000,
+              -340000000,
+              -55000000
+            ]
+          },
+          {
+            "field": "otherNonOperating",
+            "title": "Other Non Operating Income (Expenses)",
+            "format": null,
+            "values": [
+              -241000000,
+              -91000000,
+              -414000000,
+              -112000000,
+              -540000000,
+              -19000000
+            ]
+          },
+          {
+            "field": "ebtExcl",
+            "title": "EBT Excluding Unusual Items",
+            "format": null,
+            "values": [
+              94568000000,
+              81456000000,
+              69941000000,
+              36560000000,
+              11087000000,
+              23448000000
+            ]
+          },
+          {
+            "field": "gainInvestments",
+            "title": "Gain (Loss) on Sale of Investments",
+            "format": null,
+            "values": [
+              80328000000,
+              15301000000,
+              -1428000000,
+              985000000,
+              -15926000000,
+              14707000000
+            ]
+          },
+          {
+            "field": "assetWritedown",
+            "title": "Asset Writedown",
+            "format": null,
+            "values": [
+              null,
+              null,
+              null,
+              null,
+              -1100000000,
+              null
             ]
           },
           {
@@ -204,17 +255,17 @@
             "title": "Pretax Income",
             "format": null,
             "values": [
-              175466000000,
-              97311000000,
-              68614000000,
-              37557000000,
-              -5936000000,
-              38151000000
+              174896000000,
+              96757000000,
+              68513000000,
+              37545000000,
+              -5939000000,
+              38155000000
             ]
           },
           {
-            "field": "income_statement_provision_for_income_taxes",
-            "title": "Provision for Income Taxes",
+            "field": "taxexp",
+            "title": "Income Tax Expense",
             "format": null,
             "values": [
               39615000000,
@@ -226,33 +277,20 @@
             ]
           },
           {
-            "field": "netincCompany",
+            "field": "netinc",
             "title": "Net Income",
             "format": null,
             "values": [
-              135851000000,
-              78224000000,
-              59349000000,
-              30437000000,
-              -2719000000,
-              33360000000
+              135281000000,
+              77670000000,
+              59248000000,
+              30425000000,
+              -2722000000,
+              33364000000
             ]
           },
           {
-            "field": "minorityInterest",
-            "title": "Minority Interest in Earnings",
-            "format": null,
-            "values": [
-              570000000,
-              554000000,
-              101000000,
-              12000000,
-              3000000,
-              -4000000
-            ]
-          },
-          {
-            "field": "netIncome",
+            "field": "netinccmn",
             "title": "Net Income to Common",
             "format": null,
             "values": [
@@ -269,7 +307,7 @@
             "title": "Shares Outstanding (Basic)",
             "format": "reduce_precision",
             "values": [
-              10723750000,
+              10724000000,
               10656000000,
               10473000000,
               10304000000,
@@ -282,7 +320,7 @@
             "title": "Shares Outstanding (Diluted)",
             "format": "reduce_precision",
             "values": [
-              10871250000,
+              10871500000,
               10827000000,
               10721000000,
               10492000000,
@@ -295,20 +333,20 @@
             "title": "EPS (Basic)",
             "format": "pershare",
             "values": [
-              12.44,
-              7.29,
-              5.66,
-              2.95,
-              -0.27,
-              3.3
+              12.614789,
+              7.288851,
+              5.657213,
+              2.952736,
+              -0.26715,
+              3.297815
             ]
           },
           {
-            "field": "epsDiluted",
+            "field": "epsdil",
             "title": "EPS (Diluted)",
             "format": "pershare",
             "values": [
-              12.44,
+              12.435888,
               7.17,
               5.53,
               2.9,
@@ -334,12 +372,12 @@
             "title": "Free Cash Flow Per Share",
             "format": "pershare",
             "values": [
-              -1.06933,
-              0.710723,
-              3.06669,
-              3.07063,
-              -1.65796,
-              -1.43026
+              -1.069,
+              0.711,
+              3.067,
+              3.071,
+              -1.658,
+              -1.43
             ]
           },
           {
@@ -347,12 +385,12 @@
             "title": "Gross Margin",
             "format": "percentage",
             "values": [
-              0.507696,
-              0.502857,
-              0.488544,
-              0.469821,
-              0.438053,
-              0.420325
+              0.5077,
+              0.50286,
+              0.48854,
+              0.46982,
+              0.43805,
+              0.42033
             ]
           },
           {
@@ -360,12 +398,12 @@
             "title": "Operating Margin",
             "format": "percentage",
             "values": [
-              0.120813,
-              0.111553,
-              0.107519,
-              0.0641144,
-              0.0238296,
-              0.0529541
+              0.12081,
+              0.11155,
+              0.10752,
+              0.06411,
+              0.02597,
+              0.05295
             ]
           },
           {
@@ -373,25 +411,25 @@
             "title": "Profit Margin",
             "format": "percentage",
             "values": [
-              0.175138,
-              0.109111,
-              0.0930295,
-              0.0529537,
-              -0.00529006,
-              0.0710056
+              0.1744,
+              0.10834,
+              0.09287,
+              0.05293,
+              -0.0053,
+              0.07101
             ]
           },
           {
             "field": "fcfMargin",
-            "title": "FCF Margin",
+            "title": "Free Cash Flow Margin",
             "format": "percentage",
             "values": [
-              -0.0149869,
-              0.0107334,
-              0.0515362,
-              0.0560505,
-              -0.0328668,
-              -0.0313438
+              -0.01499,
+              0.01073,
+              0.05154,
+              0.05605,
+              -0.03287,
+              -0.03134
             ]
           },
           {
@@ -403,7 +441,7 @@
               145731000000,
               121388000000,
               85515000000,
-              54169000000,
+              55269000000,
               59312000000
             ]
           },
@@ -413,11 +451,24 @@
             "format": "percentage",
             "values": [
               0.21776,
-              0.203273,
-              0.190276,
-              0.148777,
-              0.105391,
-              0.126244
+              0.20327,
+              0.19028,
+              0.14878,
+              0.10753,
+              0.12624
+            ]
+          },
+          {
+            "field": "depAmorEbitda",
+            "title": "D&A For EBITDA",
+            "format": null,
+            "values": [
+              75200000000,
+              65756000000,
+              52795000000,
+              48663000000,
+              41921000000,
+              34433000000
             ]
           },
           {
@@ -429,7 +480,7 @@
               79975000000,
               68593000000,
               36852000000,
-              12248000000,
+              13348000000,
               24879000000
             ]
           },
@@ -438,29 +489,55 @@
             "title": "EBIT Margin",
             "format": "percentage",
             "values": [
-              0.120813,
-              0.111553,
-              0.107519,
-              0.0641144,
-              0.0238296,
-              0.0529541
+              0.12081,
+              0.11155,
+              0.10752,
+              0.06411,
+              0.02597,
+              0.05295
             ]
           },
           {
-            "field": "effectiveTaxRate",
+            "field": "taxrate",
             "title": "Effective Tax Rate",
             "format": "percentage",
             "values": [
-              0.22577,
-              0.196144,
-              0.135031,
-              0.189579,
-              0.541947,
-              0.12558
+              0.22651,
+              0.19727,
+              0.13523,
+              0.18964,
+              null,
+              0.12557
+            ]
+          },
+          {
+            "field": "revenueAsReported",
+            "title": "Revenue as Reported",
+            "format": null,
+            "values": [
+              775680000000,
+              716924000000,
+              637959000000,
+              574785000000,
+              513983000000,
+              469822000000
+            ]
+          },
+          {
+            "field": "advertisingExpenses",
+            "title": "Advertising Expenses",
+            "format": null,
+            "values": [
+              null,
+              23500000000,
+              21400000000,
+              20300000000,
+              20600000000,
+              null
             ]
           }
         ],
-        "field_count": 32,
+        "field_count": 38,
         "endpoint": "/stocks/amzn/financials/income-statement/__data.json"
       },
       "balance_sheet": {
@@ -474,13 +551,12 @@
           "url": "/stocks/amzn/financials/balance-sheet/"
         },
         "details": {
-          "source": "fai",
-          "lastTrailingDate": "Jun 30, 2026",
+          "source": "spg",
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
+          "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 13, 2026",
-          "currency": "USD"
+          "lastTradingDay": "Aug 14, 2026"
         },
         "periods": [
           "TTM",
@@ -539,16 +615,42 @@
             ]
           },
           {
-            "field": "balance_sheet_accounts_receivable",
+            "field": "accountsReceivable",
             "title": "Accounts Receivable",
             "format": null,
             "values": [
-              88092000000,
-              67729000000,
-              55451000000,
-              52253000000,
-              42360000000,
-              32891000000
+              70900000000,
+              56300000000,
+              45900000000,
+              42600000000,
+              36202000000,
+              25500000000
+            ]
+          },
+          {
+            "field": "otherReceivables",
+            "title": "Other Receivables",
+            "format": null,
+            "values": [
+              9509000000,
+              4729000000,
+              3004000000,
+              3756000000,
+              1300000000,
+              7149000000
+            ]
+          },
+          {
+            "field": "receivables",
+            "title": "Receivables",
+            "format": null,
+            "values": [
+              80409000000,
+              61029000000,
+              48904000000,
+              46356000000,
+              37502000000,
+              32649000000
             ]
           },
           {
@@ -565,6 +667,32 @@
             ]
           },
           {
+            "field": "prepaidExpenses",
+            "title": "Prepaid Expenses",
+            "format": null,
+            "values": [
+              7400000000,
+              6400000000,
+              6300000000,
+              5400000000,
+              4500000000,
+              null
+            ]
+          },
+          {
+            "field": "restrictedCash",
+            "title": "Restricted Cash",
+            "format": null,
+            "values": [
+              283000000,
+              300000000,
+              247000000,
+              497000000,
+              358000000,
+              242000000
+            ]
+          },
+          {
             "field": "assetsc",
             "title": "Total Current Assets",
             "format": null,
@@ -578,8 +706,8 @@
             ]
           },
           {
-            "field": "balance_sheet_net_property_plant_and_equipment",
-            "title": "Net Property, Plant & Equipment",
+            "field": "netPPE",
+            "title": "Property, Plant & Equipment",
             "format": null,
             "values": [
               538789000000,
@@ -591,7 +719,20 @@
             ]
           },
           {
-            "field": "balance_sheet_goodwill",
+            "field": "investmentsnc",
+            "title": "Long-Term Investments",
+            "format": null,
+            "values": [
+              126995000000,
+              19559000000,
+              4889000000,
+              3568000000,
+              2815000000,
+              4003000000
+            ]
+          },
+          {
+            "field": "goodwill",
             "title": "Goodwill",
             "format": null,
             "values": [
@@ -604,16 +745,29 @@
             ]
           },
           {
-            "field": "balance_sheet_other_long_term_assets",
+            "field": "otherIntangibles",
+            "title": "Other Intangible Assets",
+            "format": null,
+            "values": [
+              null,
+              9197000000,
+              8602000000,
+              7687000000,
+              6097000000,
+              5107000000
+            ]
+          },
+          {
+            "field": "othernoncurrent",
             "title": "Other Long-Term Assets",
             "format": null,
             "values": [
-              284132000000,
-              122607000000,
-              82147000000,
-              56024000000,
-              42758000000,
-              27235000000
+              135837000000,
+              93851000000,
+              68656000000,
+              44769000000,
+              33846000000,
+              18125000000
             ]
           },
           {
@@ -630,7 +784,7 @@
             ]
           },
           {
-            "field": "balance_sheet_accounts_payable",
+            "field": "accountsPayable",
             "title": "Accounts Payable",
             "format": null,
             "values": [
@@ -643,33 +797,85 @@
             ]
           },
           {
-            "field": "balance_sheet_accrued_expenses",
+            "field": "accruedExpenses",
             "title": "Accrued Expenses",
             "format": null,
             "values": [
-              73406000000,
-              75520000000,
-              66965000000,
-              64709000000,
-              62566000000,
-              51775000000
+              53903000000,
+              50560000000,
+              42764000000,
+              38646000000,
+              32746000000,
+              28413000000
             ]
           },
           {
-            "field": "balance_sheet_unearned_revenue",
-            "title": "Unearned Revenue",
+            "field": "debtc",
+            "title": "Short-Term Debt",
+            "format": null,
+            "values": [
+              325000000,
+              455000000,
+              151000000,
+              147000000,
+              8000000000,
+              1043000000
+            ]
+          },
+          {
+            "field": "currentPortDebt",
+            "title": "Current Portion of Long-Term Debt",
+            "format": null,
+            "values": [
+              3745000000,
+              3106000000,
+              5329000000,
+              8765000000,
+              3265000000,
+              1687000000
+            ]
+          },
+          {
+            "field": "currentCapLeases",
+            "title": "Current Portion of Leases",
+            "format": null,
+            "values": [
+              15433000000,
+              14199000000,
+              11921000000,
+              10451000000,
+              11855000000,
+              14432000000
+            ]
+          },
+          {
+            "field": "currentUnearnedRevenue",
+            "title": "Current Unearned Revenue",
             "format": null,
             "values": [
               20428000000,
-              20576000000,
-              18103000000,
-              15227000000,
-              13227000000,
-              11827000000
+              26176000000,
+              23503000000,
+              20527000000,
+              18627000000,
+              17027000000
             ]
           },
           {
-            "field": "liabilitiesc",
+            "field": "otherCurrentLiabilities",
+            "title": "Other Current Liabilities",
+            "format": null,
+            "values": [
+              null,
+              1600000000,
+              1400000000,
+              1400000000,
+              1300000000,
+              1000000000
+            ]
+          },
+          {
+            "field": "currentLiabilities",
             "title": "Total Current Liabilities",
             "format": null,
             "values": [
@@ -682,20 +888,20 @@
             ]
           },
           {
-            "field": "balance_sheet_long_term_debt",
+            "field": "debtnc",
             "title": "Long-Term Debt",
             "format": null,
             "values": [
-              128894000000,
-              65648000000,
-              52623000000,
-              58314000000,
-              67150000000,
-              48744000000
+              137794000000,
+              73448000000,
+              59723000000,
+              64914000000,
+              73850000000,
+              54944000000
             ]
           },
           {
-            "field": "longTermLeases",
+            "field": "capitalLeases",
             "title": "Long-Term Leases",
             "format": null,
             "values": [
@@ -708,29 +914,42 @@
             ]
           },
           {
-            "field": "balance_sheet_other_long_term_liabilities",
-            "title": "Other Long-Term Liabilities",
+            "field": "longTermUnearnedRevenue",
+            "title": "Long-Term Unearned Revenue",
             "format": null,
             "values": [
-              79563000000,
-              35985000000,
-              28593000000,
-              25451000000,
-              21121000000,
-              23643000000
+              4500000000,
+              4400000000,
+              6500000000,
+              5700000000,
+              2900000000,
+              2200000000
             ]
           },
           {
-            "field": "balance_sheet_total_long_term_liabilities",
-            "title": "Total Long-Term Liabilities",
+            "field": "longTermDeferredTaxLiabilities",
+            "title": "Long-Term Deferred Tax Liabilities",
             "format": null,
             "values": [
-              302795000000,
-              188972000000,
-              159493000000,
-              161062000000,
-              161239000000,
-              140038000000
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "field": "otherliabilitiesnoncurrent",
+            "title": "Other Long-Term Liabilities",
+            "format": null,
+            "values": [
+              66163000000,
+              23785000000,
+              14993000000,
+              13151000000,
+              11521000000,
+              15243000000
             ]
           },
           {
@@ -747,7 +966,7 @@
             ]
           },
           {
-            "field": "balance_sheet_common_stock",
+            "field": "commonStock",
             "title": "Common Stock",
             "format": null,
             "values": [
@@ -760,7 +979,33 @@
             ]
           },
           {
-            "field": "balance_sheet_treasury_stock",
+            "field": "additionalPaidInCapital",
+            "title": "Additional Paid-In Capital",
+            "format": null,
+            "values": [
+              149619000000,
+              140024000000,
+              120864000000,
+              99025000000,
+              75066000000,
+              55437000000
+            ]
+          },
+          {
+            "field": "retearn",
+            "title": "Retained Earnings",
+            "format": null,
+            "values": [
+              343438000000,
+              250536000000,
+              172866000000,
+              113618000000,
+              83193000000,
+              85915000000
+            ]
+          },
+          {
+            "field": "treasuryStock",
             "title": "Treasury Stock",
             "format": null,
             "values": [
@@ -773,21 +1018,8 @@
             ]
           },
           {
-            "field": "balance_sheet_additional_paid_in_capital",
-            "title": "Additional Paid-in Capital",
-            "format": null,
-            "values": [
-              149619000000,
-              140024000000,
-              120864000000,
-              99025000000,
-              75066000000,
-              55437000000
-            ]
-          },
-          {
-            "field": "balance_sheet_accumulated_other_comprehensive_income",
-            "title": "Accumulated Other Comprehensive Income",
+            "field": "otherEquity",
+            "title": "Comprehensive Income & Other",
             "format": null,
             "values": [
               66287000000,
@@ -796,19 +1028,6 @@
               -3040000000,
               -4487000000,
               -1376000000
-            ]
-          },
-          {
-            "field": "balance_sheet_retained_earnings",
-            "title": "Retained Earnings",
-            "format": null,
-            "values": [
-              343438000000,
-              250536000000,
-              172866000000,
-              113618000000,
-              83193000000,
-              85915000000
             ]
           },
           {
@@ -842,64 +1061,90 @@
             "title": "Total Debt",
             "format": null,
             "values": [
-              223232000000,
-              152987000000,
-              130900000000,
-              135611000000,
-              140118000000,
-              116395000000
+              251635000000,
+              178547000000,
+              155401000000,
+              161574000000,
+              169938000000,
+              139757000000
             ]
           },
           {
-            "field": "netCash",
+            "field": "netcash",
             "title": "Net Cash (Debt)",
             "format": null,
             "values": [
-              -100244000000,
-              -29958000000,
-              -29698000000,
-              -48831000000,
-              -70092000000,
-              -20346000000
+              -128647000000,
+              -55518000000,
+              -54199000000,
+              -74794000000,
+              -99912000000,
+              -43708000000
             ]
           },
           {
-            "field": "netCashPerShare",
+            "field": "netcashpershare",
             "title": "Net Cash Per Share",
             "format": "pershare",
             "values": [
-              -9.221,
-              -2.767,
-              -2.77,
-              -4.654,
-              -6.879,
-              -1.976
+              -11.83342,
+              -5.12774,
+              -5.05541,
+              -7.12867,
+              -9.80587,
+              -4.24514
             ]
           },
           {
-            "field": "bookValue",
-            "title": "Book Value",
+            "field": "sharesOutFilingDate",
+            "title": "Filing Date Shares Outstanding",
             "format": null,
             "values": [
-              551620000000,
-              411065000000,
-              285970000000,
-              201875000000,
-              146043000000,
-              138245000000
+              10786313572,
+              10734920870,
+              10597729352,
+              10387381291,
+              10247259757,
+              10176888200
             ]
           },
           {
-            "field": "bookValuePerShare",
+            "field": "sharesOutTotalCommon",
+            "title": "Total Common Shares Outstanding",
+            "format": null,
+            "values": [
+              10783000000,
+              10731000000,
+              10593000000,
+              10383000000,
+              10242000000,
+              10180000000
+            ]
+          },
+          {
+            "field": "workingcapital",
+            "title": "Working Capital",
+            "format": null,
+            "values": [
+              7990000000,
+              11078000000,
+              11436000000,
+              7434000000,
+              -8602000000,
+              19314000000
+            ]
+          },
+          {
+            "field": "bvps",
             "title": "Book Value Per Share",
             "format": "pershare",
             "values": [
-              50.7412,
-              37.9667,
-              26.6738,
-              19.2409,
-              14.3334,
-              13.4271
+              51.156449,
+              38.306308,
+              26.996129,
+              19.442839,
+              14.259226,
+              13.580058
             ]
           },
           {
@@ -908,11 +1153,11 @@
             "format": null,
             "values": [
               528116000000,
-              387792000000,
-              262896000000,
-              179086000000,
-              125755000000,
-              122874000000
+              378595000000,
+              254294000000,
+              171399000000,
+              119658000000,
+              117767000000
             ]
           },
           {
@@ -920,16 +1165,55 @@
             "title": "Tangible Book Value Per Share",
             "format": "pershare",
             "values": [
-              48.5791,
-              35.8171,
-              24.5216,
-              17.0688,
-              12.3422,
-              11.9341
+              48.976722,
+              35.280495,
+              24.005852,
+              16.507656,
+              11.683069,
+              11.568467
+            ]
+          },
+          {
+            "field": "land",
+            "title": "Land",
+            "format": null,
+            "values": [
+              null,
+              155121000000,
+              123039000000,
+              105293000000,
+              91650000000,
+              81104000000
+            ]
+          },
+          {
+            "field": "machinery",
+            "title": "Machinery",
+            "format": null,
+            "values": [
+              null,
+              301413000000,
+              218893000000,
+              185039000000,
+              157458000000,
+              128683000000
+            ]
+          },
+          {
+            "field": "constructionInProgress",
+            "title": "Construction In Progress",
+            "format": null,
+            "values": [
+              null,
+              71745000000,
+              46636000000,
+              28840000000,
+              30020000000,
+              24895000000
             ]
           }
         ],
-        "field_count": 33,
+        "field_count": 49,
         "endpoint": "/stocks/amzn/financials/balance-sheet/__data.json"
       },
       "cash_flow": {
@@ -943,13 +1227,12 @@
           "url": "/stocks/amzn/financials/cash-flow-statement/"
         },
         "details": {
-          "source": "fai",
-          "lastTrailingDate": "Jun 30, 2026",
+          "source": "spg",
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
+          "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 13, 2026",
-          "currency": "USD"
+          "lastTradingDay": "Aug 14, 2026"
         },
         "periods": [
           "TTM",
@@ -969,7 +1252,7 @@
         ],
         "rows": [
           {
-            "field": "cash_flow_statement_net_income",
+            "field": "netIncomeCF",
             "title": "Net Income",
             "format": null,
             "values": [
@@ -982,7 +1265,7 @@
             ]
           },
           {
-            "field": "cash_flow_statement_depreciation_and_amortization",
+            "field": "totalDepAmorCF",
             "title": "Depreciation & Amortization",
             "format": null,
             "values": [
@@ -992,6 +1275,19 @@
               48663000000,
               41921000000,
               34433000000
+            ]
+          },
+          {
+            "field": "otherAmortization",
+            "title": "Other Amortization",
+            "format": null,
+            "values": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
             ]
           },
           {
@@ -1008,8 +1304,8 @@
             ]
           },
           {
-            "field": "cash_flow_statement_other_adjustments",
-            "title": "Other Adjustments",
+            "field": "otheroperating",
+            "title": "Other Operating Activities",
             "format": null,
             "values": [
               -38377000000,
@@ -1021,8 +1317,8 @@
             ]
           },
           {
-            "field": "changeInReceivables",
-            "title": "Change in Receivables",
+            "field": "changeAR",
+            "title": "Change in Accounts Receivable",
             "format": null,
             "values": [
               -21409000000,
@@ -1034,8 +1330,8 @@
             ]
           },
           {
-            "field": "cash_flow_statement_changes_in_inventories",
-            "title": "Changes in Inventories",
+            "field": "changeInventory",
+            "title": "Change in Inventory",
             "format": null,
             "values": [
               2078000000,
@@ -1047,8 +1343,8 @@
             ]
           },
           {
-            "field": "cash_flow_statement_changes_in_accounts_payable",
-            "title": "Changes in Accounts Payable",
+            "field": "changeAP",
+            "title": "Change in Accounts Payable",
             "format": null,
             "values": [
               13921000000,
@@ -1060,21 +1356,8 @@
             ]
           },
           {
-            "field": "cash_flow_statement_changes_in_accrued_expenses",
-            "title": "Changes in Accrued Expenses",
-            "format": null,
-            "values": [
-              -6069000000,
-              -5019000000,
-              -2904000000,
-              -2428000000,
-              -1558000000,
-              2123000000
-            ]
-          },
-          {
-            "field": "cash_flow_statement_changes_in_unearned_revenue",
-            "title": "Changes in Unearned Revenue",
+            "field": "changeUnearnedRev",
+            "title": "Change in Unearned Revenue",
             "format": null,
             "values": [
               -749000000,
@@ -1086,16 +1369,16 @@
             ]
           },
           {
-            "field": "cash_flow_statement_changes_in_other_operating_activities",
-            "title": "Changes in Other Operating Activities",
+            "field": "changeOtherNetOperAssets",
+            "title": "Change in Other Net Operating Assets",
             "format": null,
             "values": [
-              -17787000000,
-              -15632000000,
-              -14483000000,
-              -12265000000,
-              -13275000000,
-              -9018000000
+              -23856000000,
+              -20651000000,
+              -17387000000,
+              -14693000000,
+              -14833000000,
+              -6895000000
             ]
           },
           {
@@ -1125,7 +1408,7 @@
             ]
           },
           {
-            "field": "saleofpropertyplantandequipment",
+            "field": "saleOfPropertyPlantAndEquipment",
             "title": "Sale of Property, Plant & Equipment",
             "format": null,
             "values": [
@@ -1138,34 +1421,8 @@
             ]
           },
           {
-            "field": "purchasesOfInvestments",
-            "title": "Purchases of Investments",
-            "format": null,
-            "values": [
-              -72902000000,
-              -54770000000,
-              -26005000000,
-              -1488000000,
-              -2565000000,
-              -60157000000
-            ]
-          },
-          {
-            "field": "cash_flow_statement_proceeds_from_sale_of_investments",
-            "title": "Proceeds from Sale of Investments",
-            "format": null,
-            "values": [
-              67090000000,
-              44386000000,
-              16403000000,
-              5627000000,
-              31601000000,
-              59384000000
-            ]
-          },
-          {
-            "field": "cash_flow_statement_other_investing_activities",
-            "title": "Other Investing Activities",
+            "field": "cashAcquisition",
+            "title": "Cash Acquisitions",
             "format": null,
             "values": [
               -41956000000,
@@ -1174,6 +1431,32 @@
               -5839000000,
               -8316000000,
               -1985000000
+            ]
+          },
+          {
+            "field": "investInSecurities",
+            "title": "Investment in Securities",
+            "format": null,
+            "values": [
+              -5812000000,
+              -10384000000,
+              -9602000000,
+              4139000000,
+              29036000000,
+              -773000000
+            ]
+          },
+          {
+            "field": "otherinvesting",
+            "title": "Other Investing Activities",
+            "format": null,
+            "values": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
             ]
           },
           {
@@ -1190,11 +1473,11 @@
             ]
           },
           {
-            "field": "debtissuedshortterm",
+            "field": "debtIssuedShortTerm",
             "title": "Short-Term Debt Issued",
             "format": null,
             "values": [
-              20798000000,
+              null,
               9320000000,
               5142000000,
               18129000000,
@@ -1203,37 +1486,11 @@
             ]
           },
           {
-            "field": "debtrepaidshortterm",
-            "title": "Short-Term Debt Repaid",
-            "format": null,
-            "values": [
-              -20634000000,
-              -8426000000,
-              -5060000000,
-              -25677000000,
-              -37554000000,
-              -7753000000
-            ]
-          },
-          {
-            "field": "netdebtissuedshortterm",
-            "title": "Net Short-Term Debt Issued (Repaid)",
-            "format": null,
-            "values": [
-              164000000,
-              894000000,
-              82000000,
-              -7548000000,
-              3999000000,
-              203000000
-            ]
-          },
-          {
-            "field": "debtissuedlongterm",
+            "field": "debtIssuedLongTerm",
             "title": "Long-Term Debt Issued",
             "format": null,
             "values": [
-              82671000000,
+              null,
               15673000000,
               null,
               null,
@@ -1242,11 +1499,37 @@
             ]
           },
           {
-            "field": "debtrepaidlongterm",
+            "field": "debtIssuedTotal",
+            "title": "Total Debt Issued",
+            "format": null,
+            "values": [
+              102723000000,
+              24993000000,
+              5142000000,
+              18129000000,
+              62719000000,
+              26959000000
+            ]
+          },
+          {
+            "field": "debtRepaidShortTerm",
+            "title": "Short-Term Debt Repaid",
+            "format": null,
+            "values": [
+              null,
+              -8426000000,
+              -5060000000,
+              -25677000000,
+              -37554000000,
+              -7753000000
+            ]
+          },
+          {
+            "field": "debtRepaidLongTerm",
             "title": "Long-Term Debt Repaid",
             "format": null,
             "values": [
-              -6929000000,
+              null,
               -6906000000,
               -11894000000,
               -8331000000,
@@ -1255,34 +1538,34 @@
             ]
           },
           {
-            "field": "netdebtissuedlongterm",
-            "title": "Net Long-Term Debt Issued (Repaid)",
+            "field": "debtRepaidTotal",
+            "title": "Total Debt Repaid",
             "format": null,
             "values": [
-              75742000000,
-              8767000000,
-              -11894000000,
-              -8331000000,
-              11719000000,
-              6088000000
+              -27563000000,
+              -15332000000,
+              -16954000000,
+              -34008000000,
+              -47001000000,
+              -20668000000
             ]
           },
           {
-            "field": "commonrepurchased",
+            "field": "netDebtIssued",
+            "title": "Net Debt Issued (Repaid)",
+            "format": null,
+            "values": [
+              75160000000,
+              9661000000,
+              -11812000000,
+              -15879000000,
+              15718000000,
+              6291000000
+            ]
+          },
+          {
+            "field": "commonRepurchased",
             "title": "Repurchase of Common Stock",
-            "format": null,
-            "values": [
-              null,
-              null,
-              null,
-              null,
-              -6000000000,
-              null
-            ]
-          },
-          {
-            "field": "netstockissued",
-            "title": "Net Common Stock Issued (Repurchased)",
             "format": null,
             "values": [
               null,
@@ -1347,15 +1630,15 @@
           },
           {
             "field": "fcfMargin",
-            "title": "FCF Margin",
+            "title": "Free Cash Flow Margin",
             "format": "percentage",
             "values": [
-              -0.0149869,
-              0.0107334,
-              0.0515362,
-              0.0560505,
-              -0.0328668,
-              -0.0313438
+              -0.01499,
+              0.01073,
+              0.05154,
+              0.05605,
+              -0.03287,
+              -0.03134
             ]
           },
           {
@@ -1363,12 +1646,12 @@
             "title": "Free Cash Flow Per Share",
             "format": "pershare",
             "values": [
-              -1.06933,
-              0.710723,
-              3.06669,
-              3.07063,
-              -1.65796,
-              -1.43026
+              -1.069,
+              0.711,
+              3.067,
+              3.071,
+              -1.658,
+              -1.43
             ]
           },
           {
@@ -1376,12 +1659,12 @@
             "title": "Levered Free Cash Flow",
             "format": null,
             "values": [
-              104753000000,
-              8632000000,
-              4940000000,
-              7287000000,
-              -20992000000,
-              2569000000
+              3219125000,
+              23793125000,
+              45555875000,
+              45475750000,
+              695125000,
+              -968250000
             ]
           },
           {
@@ -1389,16 +1672,55 @@
             "title": "Unlevered Free Cash Flow",
             "format": null,
             "values": [
-              -33879380233,
-              -14410642055,
-              16834835646,
-              22606652848,
-              -28377772237,
-              -15331303138
+              5301000000,
+              25214375000,
+              47059625000,
+              47464500000,
+              2174500000,
+              162375000
+            ]
+          },
+          {
+            "field": "cashInterestPaid",
+            "title": "Cash Interest Paid",
+            "format": null,
+            "values": [
+              2263000000,
+              1949000000,
+              2364000000,
+              3112000000,
+              2142000000,
+              1772000000
+            ]
+          },
+          {
+            "field": "cashTaxesPaid",
+            "title": "Cash Income Tax Paid",
+            "format": null,
+            "values": [
+              6635000000,
+              8295000000,
+              12308000000,
+              11179000000,
+              6035000000,
+              3688000000
+            ]
+          },
+          {
+            "field": "changeWorkingCapital",
+            "title": "Change in Working Capital",
+            "format": null,
+            "values": [
+              -30015000000,
+              -19969000000,
+              -15541000000,
+              -11541000000,
+              -20886000000,
+              -19611000000
             ]
           }
         ],
-        "field_count": 33,
+        "field_count": 36,
         "endpoint": "/stocks/amzn/financials/cash-flow-statement/__data.json"
       },
       "ratios": {
@@ -1412,13 +1734,12 @@
           "url": "/stocks/amzn/financials/ratios/"
         },
         "details": {
-          "source": "fai",
-          "lastTrailingDate": "Jun 30, 2026",
+          "source": "spg",
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
+          "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 13, 2026",
-          "currency": null
+          "lastTradingDay": "Aug 14, 2026"
         },
         "periods": [
           "TTM",
@@ -1438,42 +1759,42 @@
         ],
         "rows": [
           {
-            "field": "marketCap",
-            "title": "Market Cap",
+            "field": "marketcap",
+            "title": "Market Capitalization",
             "format": "reduce_precision",
             "values": [
-              2859775317344,
-              2476929420000,
-              2323998270000,
-              1577593020000,
-              860328000000,
-              1696376000000
+              2833025259686,
+              2467515659659,
+              2306888265045,
+              1570152607237,
+              856938950784,
+              1691002595271
             ]
           },
           {
             "field": "ev",
             "title": "Enterprise Value",
-            "format": null,
+            "format": "reduce_precision",
             "values": [
-              2988422317344,
-              2506887420000,
-              2353696270000,
-              1626424020000,
-              930420000000,
-              1716722000000
+              2961672259686,
+              2533756659659,
+              2377372265045,
+              1672048607236,
+              962610950784,
+              1748252595270
             ]
           },
           {
-            "field": "lastClosePrice",
+            "field": "lastCloseRatios",
             "title": "Last Close Price",
-            "format": "ratio",
+            "format": "pershare",
             "values": [
               265.13,
               230.82,
               219.39,
               151.94,
               84,
-              166.72
+              166.717
             ]
           },
           {
@@ -1482,11 +1803,11 @@
             "format": "ratio",
             "values": [
               21.319748135396523,
-              32.1925,
-              39.6727,
-              52.3931,
+              31.769,
+              38.936,
+              51.607,
               null,
-              51.4568
+              50.683
             ]
           },
           {
@@ -1503,6 +1824,71 @@
             ]
           },
           {
+            "field": "ps",
+            "title": "PS Ratio",
+            "format": "ratio",
+            "values": [
+              3.66121,
+              3.442,
+              3.616,
+              2.732,
+              1.667,
+              3.599
+            ]
+          },
+          {
+            "field": "pb",
+            "title": "PB Ratio",
+            "format": "ratio",
+            "values": [
+              5.18273,
+              6.003,
+              8.067,
+              7.778,
+              5.868,
+              12.232
+            ]
+          },
+          {
+            "field": "ptbvRatio",
+            "title": "P/TBV Ratio",
+            "format": "ratio",
+            "values": [
+              5.37747,
+              6.518,
+              9.072,
+              9.161,
+              7.162,
+              14.359
+            ]
+          },
+          {
+            "field": "pfcf",
+            "title": "P/FCF Ratio",
+            "format": "ratio",
+            "values": [
+              null,
+              320.665,
+              70.165,
+              48.737,
+              null,
+              null
+            ]
+          },
+          {
+            "field": "pocf",
+            "title": "P/OCF Ratio",
+            "format": "ratio",
+            "values": [
+              17.59526,
+              17.687,
+              19.908,
+              18.484,
+              18.329,
+              36.501
+            ]
+          },
+          {
             "field": "pegRatio",
             "title": "PEG Ratio",
             "format": "ratio",
@@ -1516,81 +1902,16 @@
             ]
           },
           {
-            "field": "ps",
-            "title": "PS Ratio",
-            "format": "ratio",
-            "values": [
-              3.6868,
-              3.45494,
-              3.64286,
-              2.74467,
-              1.67385,
-              3.61068
-            ]
-          },
-          {
-            "field": "pb",
-            "title": "PB Ratio",
-            "format": "ratio",
-            "values": [
-              5.18273,
-              6.02564,
-              8.12672,
-              7.8147,
-              5.89092,
-              12.2708
-            ]
-          },
-          {
-            "field": "ptbvRatio",
-            "title": "P/TBV Ratio",
-            "format": "ratio",
-            "values": [
-              5.458,
-              6.444,
-              8.947,
-              8.902,
-              6.806,
-              13.97
-            ]
-          },
-          {
-            "field": "pfcf",
-            "title": "P/FCF Ratio",
-            "format": "ratio",
-            "values": [
-              null,
-              321.888,
-              70.6855,
-              48.9677,
-              null,
-              null
-            ]
-          },
-          {
-            "field": "pocf",
-            "title": "P/OCF Ratio",
-            "format": "ratio",
-            "values": [
-              17.71823,
-              17.754,
-              20.0557,
-              18.5717,
-              18.402,
-              36.6174
-            ]
-          },
-          {
             "field": "evrevenue",
             "title": "EV/Sales Ratio",
             "format": "ratio",
             "values": [
-              3.85265,
-              3.49673,
-              3.68942,
-              2.82962,
-              1.81022,
-              3.65398
+              3.82706,
+              3.534,
+              3.727,
+              2.909,
+              1.873,
+              3.721
             ]
           },
           {
@@ -1598,12 +1919,12 @@
             "title": "EV/EBITDA Ratio",
             "format": "ratio",
             "values": [
-              17.69218,
-              17.2022,
-              19.3899,
-              19.0192,
-              17.1762,
-              28.9439
+              17.57469,
+              17.387,
+              19.585,
+              19.553,
+              17.417,
+              29.476
             ]
           },
           {
@@ -1611,12 +1932,12 @@
             "title": "EV/EBIT Ratio",
             "format": "ratio",
             "values": [
-              31.88943,
-              31.3459,
-              34.3139,
-              44.1339,
-              75.9651,
-              69.0029
+              31.67765,
+              31.682,
+              34.659,
+              45.372,
+              72.116,
+              70.27
             ]
           },
           {
@@ -1625,9 +1946,9 @@
             "format": "ratio",
             "values": [
               null,
-              325.781,
-              71.5888,
-              50.4834,
+              329.273,
+              72.309,
+              51.9,
               null,
               null
             ]
@@ -1637,12 +1958,12 @@
             "title": "Debt / Equity Ratio",
             "format": "ratio",
             "values": [
-              0.404684,
-              0.372172,
-              0.45774,
-              0.671757,
-              0.95943,
-              0.841947
+              0.456,
+              0.434,
+              0.543,
+              0.8,
+              1.164,
+              1.011
             ]
           },
           {
@@ -1650,12 +1971,12 @@
             "title": "Debt / EBITDA Ratio",
             "format": "ratio",
             "values": [
-              1.322,
-              1.05,
-              1.078,
-              1.586,
-              2.587,
-              1.962
+              1.345023,
+              1.099217,
+              1.144219,
+              1.644853,
+              2.576067,
+              2.053226
             ]
           },
           {
@@ -1664,9 +1985,9 @@
             "format": "ratio",
             "values": [
               null,
-              19.881,
-              3.981,
-              4.209,
+              23.203,
+              4.727,
+              5.015,
               null,
               null
             ]
@@ -1676,12 +1997,12 @@
             "title": "Net Debt / Equity Ratio",
             "format": "ratio",
             "values": [
-              0.182,
-              0.073,
-              0.104,
-              0.242,
-              0.48,
-              0.147
+              0.233,
+              0.135,
+              0.19,
+              0.37,
+              0.684,
+              0.316
             ]
           },
           {
@@ -1689,12 +2010,12 @@
             "title": "Net Debt / EBITDA Ratio",
             "format": "ratio",
             "values": [
-              0.593,
-              0.206,
-              0.245,
-              0.571,
-              1.294,
-              0.343
+              0.762,
+              0.381,
+              0.446,
+              0.875,
+              1.808,
+              0.737
             ]
           },
           {
@@ -1702,12 +2023,12 @@
             "title": "Net Debt / FCF Ratio",
             "format": "ratio",
             "values": [
-              -8.623,
-              3.893,
-              0.903,
-              1.516,
-              -4.149,
-              -1.382
+              -11.066,
+              7.215,
+              1.648,
+              2.322,
+              -5.914,
+              -2.968
             ]
           },
           {
@@ -1715,12 +2036,12 @@
             "title": "Asset Turnover",
             "format": "ratio",
             "values": [
-              0.810647,
-              0.993702,
-              1.10685,
-              1.16056,
-              1.16388,
-              1.2668
+              0.873,
+              0.994,
+              1.107,
+              1.161,
+              1.164,
+              1.267
             ]
           },
           {
@@ -1728,12 +2049,12 @@
             "title": "Inventory Turnover",
             "format": "ratio",
             "values": [
-              9.98236,
-              9.82682,
-              9.66321,
-              8.99957,
-              8.61603,
-              9.6516
+              9.666,
+              9.827,
+              9.663,
+              9,
+              8.616,
+              9.652
             ]
           },
           {
@@ -1741,12 +2062,12 @@
             "title": "Quick Ratio",
             "format": "ratio",
             "values": [
-              0.874856,
-              0.875017,
-              0.873054,
-              0.843048,
-              0.723237,
-              0.90633
+              0.843,
+              0.844,
+              0.837,
+              0.807,
+              0.692,
+              0.905
             ]
           },
           {
@@ -1754,12 +2075,12 @@
             "title": "Current Ratio",
             "format": "ratio",
             "values": [
-              1.03312,
-              1.05082,
-              1.06373,
-              1.04508,
-              0.944644,
-              1.13576
+              1.033,
+              1.051,
+              1.064,
+              1.045,
+              0.945,
+              1.136
             ]
           },
           {
@@ -1767,12 +2088,12 @@
             "title": "Return on Equity (ROE)",
             "format": "percentage",
             "values": [
-              0.282234,
-              0.224448,
-              0.243311,
-              0.174967,
-              -0.0191285,
-              0.288022
+              0.30558,
+              0.22286,
+              0.2429,
+              0.1749,
+              -0.01915,
+              0.28806
             ]
           },
           {
@@ -1780,12 +2101,12 @@
             "title": "Return on Assets (ROA)",
             "format": "percentage",
             "values": [
-              0.0758253,
-              0.0891077,
-              0.102938,
-              0.0603024,
-              0.012704,
-              0.0586582
+              0.06589,
+              0.06928,
+              0.07438,
+              0.04651,
+              0.01889,
+              0.04193
             ]
           },
           {
@@ -1793,12 +2114,12 @@
             "title": "Return on Invested Capital (ROIC)",
             "format": "percentage",
             "values": [
-              0.12503,
-              0.16992,
-              0.20951,
-              0.12795,
-              0.02994,
-              0.17266
+              0.11935,
+              0.15915,
+              0.19233,
+              0.11428,
+              0.06239,
+              0.14714
             ]
           },
           {
@@ -1806,12 +2127,12 @@
             "title": "Return on Capital Employed (ROCE)",
             "format": "percentage",
             "values": [
-              0.128862,
-              0.152989,
-              0.169701,
-              0.10997,
-              0.0418331,
-              0.105176
+              0.11,
+              0.133,
+              0.154,
+              0.102,
+              0.043,
+              0.089
             ]
           },
           {
@@ -1819,12 +2140,12 @@
             "title": "Earnings Yield",
             "format": "percentage",
             "values": [
-              0.0473048,
-              0.0310632,
-              0.0252063,
-              0.0190865,
-              null,
-              0.0194338
+              0.0476354,
+              0.03148,
+              0.02568,
+              0.01938,
+              -0.00318,
+              0.01973
             ]
           },
           {
@@ -1832,12 +2153,12 @@
             "title": "FCF Yield",
             "format": "percentage",
             "values": [
-              null,
-              0.00310667,
-              0.0141472,
-              0.0204216,
-              null,
-              null
+              -0.0040934,
+              0.00312,
+              0.01425,
+              0.02052,
+              -0.01971,
+              -0.00871
             ]
           },
           {
@@ -1846,28 +2167,15 @@
             "format": "percentage",
             "values": [
               -0.00882,
-              -0.009887137393899823,
-              -0.02182615325962638,
-              -0.029737952694081853,
-              0.010392385392385392,
-              -0.009411764705882352
-            ]
-          },
-          {
-            "field": "totalreturn",
-            "title": "Total Shareholder Return",
-            "format": "percentage",
-            "values": [
-              -0.00882,
-              -0.009887137393899823,
-              -0.02182615325962638,
-              -0.029737952694081853,
-              0.010392385392385392,
-              -0.009411764705882352
+              -0.00989,
+              -0.02183,
+              -0.02974,
+              0.01039,
+              -0.00961
             ]
           }
         ],
-        "field_count": 33,
+        "field_count": 32,
         "endpoint": "/stocks/amzn/financials/ratios/__data.json"
       }
     },
@@ -1883,13 +2191,12 @@
           "url": "/stocks/amzn/financials/income-statement/"
         },
         "details": {
-          "source": "fai",
-          "lastTrailingDate": "Jun 30, 2026",
+          "source": "spg",
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
+          "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 13, 2026",
-          "currency": "USD"
+          "lastTradingDay": "Aug 14, 2026"
         },
         "periods": [
           "2026-06-30",
@@ -1991,7 +2298,7 @@
             ]
           },
           {
-            "field": "grossProfit",
+            "field": "gp",
             "title": "Gross Profit",
             "format": null,
             "values": [
@@ -2022,26 +2329,26 @@
             "title": "Selling, General & Admin",
             "format": null,
             "values": [
-              14486000000,
-              12901000000,
-              16968000000,
-              14561000000,
-              14381000000,
-              12391000000,
-              15987000000,
-              13322000000,
-              13553000000,
-              12404000000,
-              15912000000,
-              13112000000,
-              13947000000,
-              13215000000,
-              16151000000,
-              14075000000,
-              12989000000,
-              10914000000,
-              13335000000,
-              10163000000
+              48955000000,
+              44849000000,
+              35543000000,
+              46470000000,
+              44442000000,
+              40920000000,
+              33310000000,
+              41644000000,
+              40632000000,
+              38185000000,
+              32629000000,
+              38672000000,
+              38354000000,
+              37150000000,
+              31380000000,
+              37356000000,
+              35935000000,
+              33757000000,
+              29516000000,
+              30944000000
             ]
           },
           {
@@ -2049,26 +2356,26 @@
             "title": "Research & Development",
             "format": null,
             "values": [
-              33158000000,
-              29567000000,
-              29399000000,
-              28962000000,
-              27166000000,
-              22994000000,
-              23571000000,
-              22245000000,
-              22304000000,
-              20424000000,
-              22038000000,
-              21203000000,
-              21931000000,
-              20450000000,
-              20814000000,
-              19485000000,
-              18072000000,
-              14842000000,
-              15313000000,
-              14380000000
+              28322000000,
+              24908000000,
+              41650000000,
+              24732000000,
+              23081000000,
+              19058000000,
+              34210000000,
+              18583000000,
+              18791000000,
+              16960000000,
+              31416000000,
+              17957000000,
+              18829000000,
+              17420000000,
+              28688000000,
+              16787000000,
+              15468000000,
+              12270000000,
+              21577000000,
+              12097000000
             ]
           },
           {
@@ -2076,37 +2383,37 @@
             "title": "Other Operating Expenses",
             "format": null,
             "values": [
-              29723000000,
-              27736000000,
-              32083000000,
-              30554000000,
-              26175000000,
-              24901000000,
-              28138000000,
-              24922000000,
-              23663000000,
-              22545000000,
-              26249000000,
-              22558000000,
-              21451000000,
-              21128000000,
-              23862000000,
-              20748000000,
-              20432000000,
-              20520000000,
-              22469000000,
-              18487000000
+              90000000,
+              447000000,
+              3757000000,
+              375000000,
+              199000000,
+              308000000,
+              176000000,
+              262000000,
+              97000000,
+              228000000,
+              154000000,
+              244000000,
+              146000000,
+              223000000,
+              9000000,
+              165000000,
+              90000000,
+              59000000,
+              24000000,
+              -11000000
             ]
           },
           {
-            "field": "totalOperatingExpenses",
-            "title": "Total Operating Expenses",
+            "field": "opex",
+            "title": "Operating Expenses",
             "format": null,
             "values": [
               77367000000,
               70204000000,
-              78450000000,
-              74077000000,
+              80950000000,
+              71577000000,
               67722000000,
               60286000000,
               67696000000,
@@ -2117,23 +2424,23 @@
               56873000000,
               57329000000,
               54793000000,
-              60827000000,
+              60077000000,
               54308000000,
               51493000000,
-              46276000000,
+              46086000000,
               51117000000,
               43030000000
             ]
           },
           {
-            "field": "operatingIncome",
+            "field": "opinc",
             "title": "Operating Income",
             "format": null,
             "values": [
               27461000000,
               23852000000,
-              24977000000,
-              17422000000,
+              22477000000,
+              19922000000,
               19171000000,
               18405000000,
               21203000000,
@@ -2144,43 +2451,16 @@
               11188000000,
               7681000000,
               4774000000,
-              2737000000,
+              3487000000,
               2525000000,
               3317000000,
-              3669000000,
+              3859000000,
               3460000000,
               4852000000
             ]
           },
           {
-            "field": "interestIncome",
-            "title": "Interest Income",
-            "format": null,
-            "values": [
-              1295000000,
-              1135000000,
-              1130000000,
-              1100000000,
-              1085000000,
-              1066000000,
-              1248000000,
-              1256000000,
-              1180000000,
-              993000000,
-              901000000,
-              776000000,
-              661000000,
-              611000000,
-              445000000,
-              277000000,
-              159000000,
-              108000000,
-              118000000,
-              119000000
-            ]
-          },
-          {
-            "field": "income_statement_interest_expense",
+            "field": "interestExpense",
             "title": "Interest Expense",
             "format": null,
             "values": [
@@ -2207,57 +2487,219 @@
             ]
           },
           {
-            "field": "otherNonOperatingIncome",
-            "title": "Other Non-Operating Income (Expense)",
+            "field": "interestIncome",
+            "title": "Interest & Investment Income",
             "format": null,
             "values": [
-              53415000000,
-              15647000000,
-              1177000000,
-              10186000000,
-              1117000000,
-              2749000000,
-              468000000,
-              -27000000,
-              -18000000,
-              -2673000000,
-              289000000,
-              1031000000,
-              61000000,
-              -443000000,
-              -3450000000,
-              759000000,
-              -5545000000,
-              -8570000000,
-              11838000000,
-              -163000000
+              1295000000,
+              1135000000,
+              1130000000,
+              1100000000,
+              1085000000,
+              1066000000,
+              1248000000,
+              1256000000,
+              1180000000,
+              993000000,
+              901000000,
+              776000000,
+              661000000,
+              611000000,
+              445000000,
+              277000000,
+              159000000,
+              108000000,
+              118000000,
+              119000000
             ]
           },
           {
-            "field": "totalNonOperatingIncome",
-            "title": "Total Non-Operating Income (Expense)",
+            "field": "incomeEquity",
+            "title": "Earnings From Equity Investments",
             "format": null,
             "values": [
-              53396000000,
-              15982000000,
-              1628000000,
-              10748000000,
-              1686000000,
-              3274000000,
-              1146000000,
-              626000000,
-              573000000,
-              -2324000000,
-              477000000,
-              1001000000,
-              -118000000,
-              -655000000,
-              -3699000000,
-              419000000,
-              -5970000000,
-              -8934000000,
-              11474000000,
-              -537000000
+              -11000000,
+              -19000000,
+              -467000000,
+              -73000000,
+              -15000000,
+              1000000,
+              -20000000,
+              -3000000,
+              7000000,
+              -85000000,
+              null,
+              -4000000,
+              -9000000,
+              1000000,
+              13000000,
+              -3000000,
+              -12000000,
+              -1000000,
+              1000000,
+              -4000000
+            ]
+          },
+          {
+            "field": "currencyGains",
+            "title": "Currency Exchange Gain (Loss)",
+            "format": null,
+            "values": [
+              227000000,
+              160000000,
+              -50000000,
+              1000000,
+              70000000,
+              -2000000,
+              -213000000,
+              17000000,
+              -138000000,
+              -74000000,
+              80000000,
+              -94000000,
+              9000000,
+              70000000,
+              -134000000,
+              -103000000,
+              -117000000,
+              14000000,
+              -27000000,
+              -107000000
+            ]
+          },
+          {
+            "field": "otherNonOperating",
+            "title": "Other Non Operating Income (Expenses)",
+            "format": null,
+            "values": [
+              -47000000,
+              -33000000,
+              -47000000,
+              -9000000,
+              -7000000,
+              -33000000,
+              -104000000,
+              -9000000,
+              -54000000,
+              -247000000,
+              -44000000,
+              -48000000,
+              -37000000,
+              -108000000,
+              -448000000,
+              -18000000,
+              -40000000,
+              -34000000,
+              -35000000,
+              -32000000
+            ]
+          },
+          {
+            "field": "ebtExcl",
+            "title": "EBT Excluding Unusual Items",
+            "format": null,
+            "values": [
+              27611000000,
+              24295000000,
+              22364000000,
+              20403000000,
+              19788000000,
+              18896000000,
+              21544000000,
+              18069000000,
+              15078000000,
+              15250000000,
+              13433000000,
+              11012000000,
+              7465000000,
+              4525000000,
+              2669000000,
+              2061000000,
+              2723000000,
+              3474000000,
+              3035000000,
+              4335000000
+            ]
+          },
+          {
+            "field": "gainInvestments",
+            "title": "Gain (Loss) on Sale of Investments",
+            "format": null,
+            "values": [
+              53235000000,
+              15520000000,
+              1274000000,
+              10194000000,
+              1054000000,
+              2784000000,
+              785000000,
+              -35000000,
+              174000000,
+              -2352000000,
+              253000000,
+              1173000000,
+              89000000,
+              -405000000,
+              -2868000000,
+              880000000,
+              -5388000000,
+              -8550000000,
+              11900000000,
+              -24000000
+            ]
+          },
+          {
+            "field": "assetWritedown",
+            "title": "Asset Writedown",
+            "format": null,
+            "values": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              -750000000,
+              null,
+              null,
+              -190000000,
+              null,
+              null
+            ]
+          },
+          {
+            "field": "legalSettlements",
+            "title": "Legal Settlements",
+            "format": null,
+            "values": [
+              null,
+              null,
+              2500000000,
+              -2500000000,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
             ]
           },
           {
@@ -2265,31 +2707,31 @@
             "title": "Pretax Income",
             "format": null,
             "values": [
-              80857000000,
-              39834000000,
-              26605000000,
-              28170000000,
-              20857000000,
-              21679000000,
-              22349000000,
-              18037000000,
-              15245000000,
-              12983000000,
+              80846000000,
+              39815000000,
+              26138000000,
+              28097000000,
+              20842000000,
+              21680000000,
+              22329000000,
+              18034000000,
+              15252000000,
+              12898000000,
               13686000000,
-              12189000000,
-              7563000000,
-              4119000000,
-              -962000000,
-              2944000000,
-              -2653000000,
-              -5265000000,
-              14934000000,
-              4315000000
+              12185000000,
+              7554000000,
+              4120000000,
+              -949000000,
+              2941000000,
+              -2665000000,
+              -5266000000,
+              14935000000,
+              4311000000
             ]
           },
           {
-            "field": "income_statement_provision_for_income_taxes",
-            "title": "Provision for Income Taxes",
+            "field": "taxexp",
+            "title": "Income Tax Expense",
             "format": null,
             "values": [
               18199000000,
@@ -2315,61 +2757,34 @@
             ]
           },
           {
-            "field": "netincCompany",
+            "field": "netinc",
             "title": "Net Income",
             "format": null,
             "values": [
-              62658000000,
-              30274000000,
-              21659000000,
-              21260000000,
-              18179000000,
-              17126000000,
-              20024000000,
-              15331000000,
-              13478000000,
-              10516000000,
+              62647000000,
+              30255000000,
+              21192000000,
+              21187000000,
+              18164000000,
+              17127000000,
+              20004000000,
+              15328000000,
+              13485000000,
+              10431000000,
               10624000000,
-              9883000000,
-              6759000000,
-              3171000000,
-              265000000,
-              2875000000,
-              -2016000000,
-              -3843000000,
-              14322000000,
-              3160000000
+              9879000000,
+              6750000000,
+              3172000000,
+              278000000,
+              2872000000,
+              -2028000000,
+              -3844000000,
+              14323000000,
+              3156000000
             ]
           },
           {
-            "field": "minorityInterest",
-            "title": "Minority Interest in Earnings",
-            "format": null,
-            "values": [
-              11000000,
-              19000000,
-              467000000,
-              73000000,
-              15000000,
-              -1000000,
-              20000000,
-              3000000,
-              -7000000,
-              85000000,
-              0,
-              4000000,
-              9000000,
-              -1000000,
-              -13000000,
-              3000000,
-              12000000,
-              1000000,
-              -1000000,
-              4000000
-            ]
-          },
-          {
-            "field": "netIncome",
+            "field": "netinccmn",
             "title": "Net Income to Common",
             "format": null,
             "values": [
@@ -2418,7 +2833,7 @@
               10191000000,
               10175000000,
               10171000000,
-              10157000000,
+              10160000000,
               10132000000
             ]
           },
@@ -2445,7 +2860,7 @@
               10331000000,
               10175000000,
               10171000000,
-              10324000000,
+              10320000000,
               10309000000
             ]
           },
@@ -2454,52 +2869,52 @@
             "title": "EPS (Basic)",
             "format": "pershare",
             "values": [
-              5.82,
-              2.82,
-              1.98,
-              1.98,
-              1.71,
-              1.62,
-              1.9,
-              1.46,
-              1.29,
-              1,
-              1.03,
-              0.96,
-              0.66,
-              0.31,
-              0.03,
-              0.28,
-              -0.2,
-              -0.38,
-              1.41,
-              0.31
+              5.817346,
+              2.816252,
+              1.978896,
+              1.984916,
+              1.707624,
+              1.615297,
+              1.895754,
+              1.45967,
+              1.290801,
+              1.003656,
+              1.025878,
+              0.957081,
+              0.656295,
+              0.309463,
+              0.027201,
+              0.281817,
+              -0.199312,
+              -0.377937,
+              1.409744,
+              0.311488
             ]
           },
           {
-            "field": "epsDiluted",
+            "field": "epsdil",
             "title": "EPS (Diluted)",
             "format": "pershare",
             "values": [
               5.75,
               2.78,
-              1.95,
+              1.949304,
               1.95,
               1.68,
               1.59,
-              1.86,
+              1.856817,
               1.43,
               1.26,
               0.98,
-              1,
+              1.005892,
               0.94,
               0.65,
-              0.31,
-              0.03,
+              0.309463,
+              0.019459,
               0.28,
               -0.2,
               -0.38,
-              1.39,
+              1.38838,
               0.31
             ]
           },
@@ -2535,26 +2950,26 @@
             "title": "Free Cash Flow Per Share",
             "format": "pershare",
             "values": [
-              -0.809043,
-              -1.67105,
-              1.37503,
-              0.0396496,
-              0.0307237,
-              -0.741592,
-              1.65277,
-              0.312156,
-              0.715446,
-              0.380881,
-              2.62743,
-              0.827619,
-              0.480524,
-              -0.910312,
-              1.22051,
-              -0.481464,
-              -0.664275,
-              -1.74427,
-              0.305211,
-              -0.818217
+              -0.809,
+              -1.671,
+              1.375,
+              0.04,
+              0.031,
+              -0.742,
+              1.653,
+              0.312,
+              0.715,
+              0.381,
+              2.627,
+              0.828,
+              0.481,
+              -0.91,
+              1.221,
+              -0.481,
+              -0.664,
+              -1.744,
+              0.305,
+              -0.818
             ]
           },
           {
@@ -2562,26 +2977,26 @@
             "title": "Gross Margin",
             "format": "percentage",
             "values": [
-              0.522557,
-              0.518161,
-              0.484694,
-              0.507851,
-              0.518139,
-              0.505509,
-              0.473391,
-              0.490316,
-              0.501375,
-              0.493186,
-              0.455446,
-              0.475675,
-              0.483767,
-              0.467713,
-              0.426021,
-              0.447148,
-              0.452101,
-              0.428919,
-              0.397178,
-              0.432101
+              0.52256,
+              0.51816,
+              0.48469,
+              0.50785,
+              0.51814,
+              0.50551,
+              0.47339,
+              0.49032,
+              0.50138,
+              0.49319,
+              0.45545,
+              0.47567,
+              0.48377,
+              0.46771,
+              0.42602,
+              0.44715,
+              0.4521,
+              0.42892,
+              0.39718,
+              0.4321
             ]
           },
           {
@@ -2590,25 +3005,25 @@
             "format": "percentage",
             "values": [
               0.13689,
-              0.131402,
-              0.117051,
-              0.0966981,
-              0.114316,
-              0.118233,
-              0.112907,
-              0.109588,
-              0.0991505,
-              0.106808,
-              0.0777178,
-              0.0781924,
-              0.0571575,
-              0.0374849,
-              0.018344,
-              0.0198661,
-              0.0273603,
-              0.0315087,
-              0.0251798,
-              0.0437859
+              0.1314,
+              0.10533,
+              0.11057,
+              0.11432,
+              0.11823,
+              0.11291,
+              0.10959,
+              0.09915,
+              0.10681,
+              0.07772,
+              0.07819,
+              0.05716,
+              0.03748,
+              0.02337,
+              0.01987,
+              0.02736,
+              0.03314,
+              0.02518,
+              0.04379
             ]
           },
           {
@@ -2616,53 +3031,53 @@
             "title": "Profit Margin",
             "format": "percentage",
             "values": [
-              0.312344,
-              0.166781,
-              0.101502,
-              0.118,
-              0.108401,
-              0.110017,
-              0.106629,
-              0.096496,
-              0.0910817,
-              0.0733779,
-              0.0625085,
-              0.0690718,
-              0.0502965,
-              0.0248983,
-              0.00177609,
-              0.0226198,
-              -0.016629,
-              -0.033003,
-              0.104227,
-              0.0285168
+              0.31229,
+              0.16668,
+              0.09931,
+              0.1176,
+              0.10831,
+              0.11002,
+              0.10652,
+              0.09648,
+              0.09113,
+              0.07278,
+              0.06251,
+              0.06904,
+              0.05023,
+              0.02491,
+              0.00186,
+              0.0226,
+              -0.01673,
+              -0.03301,
+              0.10423,
+              0.02848
             ]
           },
           {
             "field": "fcfMargin",
-            "title": "FCF Margin",
+            "title": "Free Cash Flow Margin",
             "format": "percentage",
             "values": [
-              -0.0439718,
-              -0.100105,
-              0.0699999,
-              0.00238665,
-              0.0019797,
-              -0.0514174,
-              0.0947964,
-              0.0210918,
-              0.0517716,
-              0.0283575,
+              -0.04397,
+              -0.10011,
+              0.07,
+              0.00239,
+              0.00198,
+              -0.05142,
+              0.0948,
+              0.02109,
+              0.05177,
+              0.02836,
               0.16402,
-              0.0610694,
-              0.0373634,
-              -0.0739569,
-              0.0843208,
-              -0.0391342,
-              -0.0557517,
-              -0.152356,
-              0.022931,
-              -0.0761199
+              0.06107,
+              0.03736,
+              -0.07396,
+              0.08432,
+              -0.03913,
+              -0.05575,
+              -0.15236,
+              0.02293,
+              -0.07612
             ]
           },
           {
@@ -2672,8 +3087,8 @@
             "values": [
               47449000000,
               42797000000,
-              44448000000,
-              34218000000,
+              41948000000,
+              36718000000,
               34398000000,
               32667000000,
               36834000000,
@@ -2684,10 +3099,10 @@
               23319000000,
               19270000000,
               15897000000,
-              15422000000,
+              16172000000,
               12852000000,
               13033000000,
-              12862000000,
+              13052000000,
               13399000000,
               13800000000
             ]
@@ -2697,26 +3112,53 @@
             "title": "EBITDA Margin",
             "format": "percentage",
             "values": [
-              0.236528,
-              0.235771,
-              0.208299,
-              0.189922,
-              0.205114,
-              0.209852,
-              0.196143,
-              0.194194,
-              0.180501,
-              0.188336,
-              0.159031,
-              0.162975,
-              0.143396,
-              0.124821,
-              0.103362,
-              0.101116,
-              0.107503,
-              0.110457,
-              0.0975097,
-              0.124535
+              0.23653,
+              0.23577,
+              0.19658,
+              0.2038,
+              0.20511,
+              0.20985,
+              0.19614,
+              0.19419,
+              0.1805,
+              0.18834,
+              0.15903,
+              0.16297,
+              0.1434,
+              0.12482,
+              0.10839,
+              0.10112,
+              0.1075,
+              0.11209,
+              0.09751,
+              0.12454
+            ]
+          },
+          {
+            "field": "depAmorEbitda",
+            "title": "D&A For EBITDA",
+            "format": null,
+            "values": [
+              19988000000,
+              18945000000,
+              19471000000,
+              16796000000,
+              15227000000,
+              14262000000,
+              15631000000,
+              13442000000,
+              12038000000,
+              11684000000,
+              13820000000,
+              12131000000,
+              11589000000,
+              11123000000,
+              12685000000,
+              10327000000,
+              9716000000,
+              9193000000,
+              9939000000,
+              8948000000
             ]
           },
           {
@@ -2726,8 +3168,8 @@
             "values": [
               27461000000,
               23852000000,
-              24977000000,
-              17422000000,
+              22477000000,
+              19922000000,
               19171000000,
               18405000000,
               21203000000,
@@ -2738,10 +3180,10 @@
               11188000000,
               7681000000,
               4774000000,
-              2737000000,
+              3487000000,
               2525000000,
               3317000000,
-              3669000000,
+              3859000000,
               3460000000,
               4852000000
             ]
@@ -2752,56 +3194,83 @@
             "format": "percentage",
             "values": [
               0.13689,
-              0.131402,
-              0.117051,
-              0.0966981,
-              0.114316,
-              0.118233,
-              0.112907,
-              0.109588,
-              0.0991505,
-              0.106808,
-              0.0777178,
-              0.0781924,
-              0.0571575,
-              0.0374849,
-              0.018344,
-              0.0198661,
-              0.0273603,
-              0.0315087,
-              0.0251798,
-              0.0437859
+              0.1314,
+              0.10533,
+              0.11057,
+              0.11432,
+              0.11823,
+              0.11291,
+              0.10959,
+              0.09915,
+              0.10681,
+              0.07772,
+              0.07819,
+              0.05716,
+              0.03748,
+              0.02337,
+              0.01987,
+              0.02736,
+              0.03314,
+              0.02518,
+              0.04379
             ]
           },
           {
-            "field": "effectiveTaxRate",
+            "field": "taxrate",
             "title": "Effective Tax Rate",
             "format": "percentage",
             "values": [
-              0.225076,
-              0.239996,
-              0.185905,
-              0.245296,
-              0.128398,
-              0.210019,
-              0.104032,
-              0.150025,
-              0.115907,
-              0.190018,
-              0.223732,
-              0.189187,
-              0.106307,
-              0.230153,
-              1.27547,
-              0.0234375,
-              0.240106,
-              0.270085,
-              0.0409803,
-              0.267671
+              0.22511,
+              0.24011,
+              0.18923,
+              0.24593,
+              0.12849,
+              0.21001,
+              0.10412,
+              0.15005,
+              0.11585,
+              0.19127,
+              0.22373,
+              0.18925,
+              0.10643,
+              0.2301,
+              null,
+              0.02346,
+              null,
+              null,
+              0.04098,
+              0.26792
+            ]
+          },
+          {
+            "field": "revenueAsReported",
+            "title": "Revenue as Reported",
+            "format": null,
+            "values": [
+              200606000000,
+              181519000000,
+              213386000000,
+              180169000000,
+              167702000000,
+              155667000000,
+              187792000000,
+              158877000000,
+              147977000000,
+              143313000000,
+              169961000000,
+              143083000000,
+              134383000000,
+              127358000000,
+              149204000000,
+              127101000000,
+              121234000000,
+              116444000000,
+              137412000000,
+              110812000000
             ]
           }
         ],
-        "field_count": 32,
+        "field_count": 38,
         "endpoint": "/stocks/amzn/financials/income-statement/__data.json?p=quarterly"
       },
       "balance_sheet": {
@@ -2815,13 +3284,12 @@
           "url": "/stocks/amzn/financials/balance-sheet/"
         },
         "details": {
-          "source": "fai",
-          "lastTrailingDate": "Jun 30, 2026",
+          "source": "spg",
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
+          "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 13, 2026",
-          "currency": "USD"
+          "lastTradingDay": "Aug 14, 2026"
         },
         "periods": [
           "2026-06-30",
@@ -2950,30 +3418,84 @@
             ]
           },
           {
-            "field": "balance_sheet_accounts_receivable",
+            "field": "accountsReceivable",
             "title": "Accounts Receivable",
             "format": null,
             "values": [
-              88092000000,
-              75532000000,
-              67729000000,
-              61175000000,
-              57415000000,
-              54216000000,
-              55451000000,
-              51638000000,
-              50106000000,
-              47768000000,
-              52253000000,
-              43420000000,
-              39925000000,
-              37646000000,
-              42360000000,
-              36154000000,
-              34804000000,
-              32504000000,
-              32891000000,
-              28610000000
+              70900000000,
+              59700000000,
+              56300000000,
+              50500000000,
+              47200000000,
+              44600000000,
+              45900000000,
+              42900000000,
+              40900000000,
+              39100000000,
+              42600000000,
+              33955000000,
+              30925000000,
+              29300000000,
+              36202000000,
+              27700000000,
+              26500000000,
+              25100000000,
+              25500000000,
+              21700000000
+            ]
+          },
+          {
+            "field": "otherReceivables",
+            "title": "Other Receivables",
+            "format": null,
+            "values": [
+              9509000000,
+              8302000000,
+              4729000000,
+              3573000000,
+              3159000000,
+              3051000000,
+              3004000000,
+              2605000000,
+              2815000000,
+              2594000000,
+              3756000000,
+              3700000000,
+              4000000000,
+              7969000000,
+              1300000000,
+              8230000000,
+              8097000000,
+              7213000000,
+              7149000000,
+              6692000000
+            ]
+          },
+          {
+            "field": "receivables",
+            "title": "Receivables",
+            "format": null,
+            "values": [
+              80409000000,
+              68002000000,
+              61029000000,
+              54073000000,
+              50359000000,
+              47651000000,
+              48904000000,
+              45505000000,
+              43715000000,
+              41694000000,
+              46356000000,
+              37655000000,
+              34925000000,
+              37269000000,
+              37502000000,
+              35930000000,
+              34597000000,
+              32313000000,
+              32649000000,
+              28392000000
             ]
           },
           {
@@ -3004,6 +3526,60 @@
             ]
           },
           {
+            "field": "prepaidExpenses",
+            "title": "Prepaid Expenses",
+            "format": null,
+            "values": [
+              7400000000,
+              7200000000,
+              6400000000,
+              6800000000,
+              6700000000,
+              6200000000,
+              6300000000,
+              5800000000,
+              5900000000,
+              5600000000,
+              5400000000,
+              5300000000,
+              4477000000,
+              null,
+              4500000000,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "field": "restrictedCash",
+            "title": "Restricted Cash",
+            "format": null,
+            "values": [
+              283000000,
+              330000000,
+              300000000,
+              302000000,
+              356000000,
+              365000000,
+              247000000,
+              333000000,
+              491000000,
+              474000000,
+              497000000,
+              465000000,
+              523000000,
+              377000000,
+              358000000,
+              224000000,
+              207000000,
+              191000000,
+              242000000,
+              218000000
+            ]
+          },
+          {
             "field": "assetsc",
             "title": "Total Current Assets",
             "format": null,
@@ -3031,8 +3607,8 @@
             ]
           },
           {
-            "field": "balance_sheet_net_property_plant_and_equipment",
-            "title": "Net Property, Plant & Equipment",
+            "field": "netPPE",
+            "title": "Property, Plant & Equipment",
             "format": null,
             "values": [
               538789000000,
@@ -3058,7 +3634,34 @@
             ]
           },
           {
-            "field": "balance_sheet_goodwill",
+            "field": "investmentsnc",
+            "title": "Long-Term Investments",
+            "format": null,
+            "values": [
+              126995000000,
+              51423000000,
+              19559000000,
+              20000000000,
+              9900000000,
+              9200000000,
+              4889000000,
+              3286000000,
+              2915000000,
+              2901000000,
+              3568000000,
+              2653000000,
+              2533000000,
+              2707000000,
+              2815000000,
+              3331000000,
+              3168000000,
+              3957000000,
+              4003000000,
+              7200000000
+            ]
+          },
+          {
+            "field": "goodwill",
             "title": "Goodwill",
             "format": null,
             "values": [
@@ -3085,30 +3688,84 @@
             ]
           },
           {
-            "field": "balance_sheet_other_long_term_assets",
+            "field": "otherIntangibles",
+            "title": "Other Intangible Assets",
+            "format": null,
+            "values": [
+              null,
+              null,
+              9197000000,
+              null,
+              null,
+              null,
+              8602000000,
+              null,
+              null,
+              null,
+              7687000000,
+              null,
+              null,
+              null,
+              6097000000,
+              null,
+              null,
+              null,
+              5107000000,
+              null
+            ]
+          },
+          {
+            "field": "deferredLongTermCharges",
+            "title": "Long-Term Deferred Charges",
+            "format": null,
+            "values": [
+              21300000000,
+              21500000000,
+              null,
+              null,
+              20400000000,
+              20300000000,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "field": "othernoncurrent",
             "title": "Other Long-Term Assets",
             "format": null,
             "values": [
-              284132000000,
-              151827000000,
-              122607000000,
-              99904000000,
-              87854000000,
-              84246000000,
-              82147000000,
-              71309000000,
-              63340000000,
-              60947000000,
-              56024000000,
-              53913000000,
-              50224000000,
-              46392000000,
-              42758000000,
-              37503000000,
-              33730000000,
-              32033000000,
-              27235000000,
-              29227000000
+              135837000000,
+              78904000000,
+              93851000000,
+              79904000000,
+              57554000000,
+              54746000000,
+              68656000000,
+              68023000000,
+              60425000000,
+              58046000000,
+              44769000000,
+              51260000000,
+              47691000000,
+              43685000000,
+              33846000000,
+              34172000000,
+              30562000000,
+              28076000000,
+              18125000000,
+              22027000000
             ]
           },
           {
@@ -3139,7 +3796,7 @@
             ]
           },
           {
-            "field": "balance_sheet_accounts_payable",
+            "field": "accountsPayable",
             "title": "Accounts Payable",
             "format": null,
             "values": [
@@ -3166,61 +3823,169 @@
             ]
           },
           {
-            "field": "balance_sheet_accrued_expenses",
+            "field": "accruedExpenses",
             "title": "Accrued Expenses",
             "format": null,
             "values": [
-              73406000000,
-              71120000000,
-              75520000000,
-              68051000000,
-              66974000000,
-              66331000000,
-              66965000000,
-              60602000000,
-              60351000000,
-              63970000000,
-              64709000000,
-              58812000000,
-              64235000000,
-              66382000000,
-              62566000000,
-              59974000000,
-              56254000000,
-              58141000000,
-              51775000000,
-              41546000000
+              53903000000,
+              53668000000,
+              50560000000,
+              50232000000,
+              48543000000,
+              48723000000,
+              42764000000,
+              44259000000,
+              42382000000,
+              44596000000,
+              38646000000,
+              36336000000,
+              35463000000,
+              35786000000,
+              32746000000,
+              30591000000,
+              30071000000,
+              30961000000,
+              28413000000,
+              25011000000
             ]
           },
           {
-            "field": "balance_sheet_unearned_revenue",
-            "title": "Unearned Revenue",
+            "field": "debtc",
+            "title": "Short-Term Debt",
+            "format": null,
+            "values": [
+              325000000,
+              152000000,
+              455000000,
+              220000000,
+              173000000,
+              76000000,
+              151000000,
+              88000000,
+              76000000,
+              50000000,
+              147000000,
+              5733000000,
+              13500000000,
+              16900000000,
+              8000000000,
+              12800000000,
+              8435000000,
+              10800000000,
+              1043000000,
+              725000000
+            ]
+          },
+          {
+            "field": "currentPortDebt",
+            "title": "Current Portion of Long-Term Debt",
+            "format": null,
+            "values": [
+              3745000000,
+              3172000000,
+              3106000000,
+              4278000000,
+              5285000000,
+              5289000000,
+              5329000000,
+              5561000000,
+              7718000000,
+              9117000000,
+              8765000000,
+              6266000000,
+              4266000000,
+              2268000000,
+              3265000000,
+              4501000000,
+              5249000000,
+              2898000000,
+              1687000000,
+              1185000000
+            ]
+          },
+          {
+            "field": "currentCapLeases",
+            "title": "Current Portion of Leases",
+            "format": null,
+            "values": [
+              15433000000,
+              14128000000,
+              14199000000,
+              13321000000,
+              12973000000,
+              12243000000,
+              11921000000,
+              10694000000,
+              10175000000,
+              10207000000,
+              10451000000,
+              10477000000,
+              11006000000,
+              11428000000,
+              11855000000,
+              12082000000,
+              12499000000,
+              13482000000,
+              14432000000,
+              14625000000
+            ]
+          },
+          {
+            "field": "currentUnearnedRevenue",
+            "title": "Current Unearned Revenue",
             "format": null,
             "values": [
               20428000000,
               20887000000,
-              20576000000,
+              26176000000,
               21113000000,
               21662000000,
               20599000000,
-              18103000000,
+              23503000000,
               16305000000,
               16004000000,
               15927000000,
-              15227000000,
+              20527000000,
               14398000000,
               14522000000,
               14281000000,
-              13227000000,
+              18627000000,
               12629000000,
               12818000000,
               12820000000,
-              11827000000,
+              17027000000,
               10974000000
             ]
           },
           {
-            "field": "liabilitiesc",
+            "field": "otherCurrentLiabilities",
+            "title": "Other Current Liabilities",
+            "format": null,
+            "values": [
+              null,
+              null,
+              1600000000,
+              null,
+              null,
+              null,
+              1400000000,
+              null,
+              null,
+              null,
+              1400000000,
+              null,
+              null,
+              null,
+              1300000000,
+              null,
+              null,
+              null,
+              1000000000,
+              null
+            ]
+          },
+          {
+            "field": "currentLiabilities",
             "title": "Total Current Liabilities",
             "format": null,
             "values": [
@@ -3247,34 +4012,34 @@
             ]
           },
           {
-            "field": "balance_sheet_long_term_debt",
+            "field": "debtnc",
             "title": "Long-Term Debt",
             "format": null,
             "values": [
-              128894000000,
-              119074000000,
-              65648000000,
-              50742000000,
-              50718000000,
-              53374000000,
-              52623000000,
-              54890000000,
-              54889000000,
-              57634000000,
-              58314000000,
-              61098000000,
-              63092000000,
-              67084000000,
-              67150000000,
-              58919000000,
-              58053000000,
-              47556000000,
-              48744000000,
-              50055000000
+              137794000000,
+              127274000000,
+              73448000000,
+              57942000000,
+              57918000000,
+              60474000000,
+              59723000000,
+              62390000000,
+              61789000000,
+              64134000000,
+              64914000000,
+              67698000000,
+              69692000000,
+              73684000000,
+              73850000000,
+              65619000000,
+              64853000000,
+              54356000000,
+              54944000000,
+              55855000000
             ]
           },
           {
-            "field": "longTermLeases",
+            "field": "capitalLeases",
             "title": "Long-Term Leases",
             "format": null,
             "values": [
@@ -3301,57 +4066,84 @@
             ]
           },
           {
-            "field": "balance_sheet_other_long_term_liabilities",
-            "title": "Other Long-Term Liabilities",
+            "field": "longTermUnearnedRevenue",
+            "title": "Long-Term Unearned Revenue",
             "format": null,
             "values": [
-              79563000000,
-              48072000000,
-              35985000000,
-              27675000000,
-              27535000000,
-              27973000000,
-              28593000000,
-              29306000000,
-              27226000000,
-              26657000000,
-              25451000000,
-              21707000000,
-              21853000000,
-              20931000000,
-              21121000000,
-              22259000000,
-              23458000000,
-              23971000000,
-              23643000000,
-              23945000000
+              4500000000,
+              4400000000,
+              4400000000,
+              4100000000,
+              4300000000,
+              4900000000,
+              6500000000,
+              7000000000,
+              6700000000,
+              6400000000,
+              5700000000,
+              2700000000,
+              2700000000,
+              2800000000,
+              2900000000,
+              2700000000,
+              2600000000,
+              2500000000,
+              2200000000,
+              2000000000
             ]
           },
           {
-            "field": "balance_sheet_total_long_term_liabilities",
-            "title": "Total Long-Term Liabilities",
+            "field": "longTermDeferredTaxLiabilities",
+            "title": "Long-Term Deferred Tax Liabilities",
             "format": null,
             "values": [
-              302795000000,
-              257960000000,
-              188972000000,
-              163094000000,
-              161474000000,
-              161218000000,
-              159493000000,
-              163998000000,
-              160199000000,
-              161343000000,
-              161062000000,
-              158696000000,
-              160767000000,
-              162282000000,
-              161239000000,
-              150510000000,
-              148035000000,
-              137258000000,
-              140038000000,
-              137848000000
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "field": "otherliabilitiesnoncurrent",
+            "title": "Other Long-Term Liabilities",
+            "format": null,
+            "values": [
+              66163000000,
+              35472000000,
+              23785000000,
+              16375000000,
+              16035000000,
+              15973000000,
+              14993000000,
+              14806000000,
+              13626000000,
+              13757000000,
+              13151000000,
+              12407000000,
+              12553000000,
+              11531000000,
+              11521000000,
+              12859000000,
+              14058000000,
+              14671000000,
+              15243000000,
+              16145000000
             ]
           },
           {
@@ -3382,7 +4174,7 @@
             ]
           },
           {
-            "field": "balance_sheet_common_stock",
+            "field": "commonStock",
             "title": "Common Stock",
             "format": null,
             "values": [
@@ -3409,7 +4201,61 @@
             ]
           },
           {
-            "field": "balance_sheet_treasury_stock",
+            "field": "additionalPaidInCapital",
+            "title": "Additional Paid-In Capital",
+            "format": null,
+            "values": [
+              149619000000,
+              143979000000,
+              140024000000,
+              135679000000,
+              130923000000,
+              124514000000,
+              120864000000,
+              115934000000,
+              110633000000,
+              103938000000,
+              99025000000,
+              92711000000,
+              86896000000,
+              79863000000,
+              75066000000,
+              69419000000,
+              63871000000,
+              58793000000,
+              55437000000,
+              51879000000
+            ]
+          },
+          {
+            "field": "retearn",
+            "title": "Retained Earnings",
+            "format": null,
+            "values": [
+              343438000000,
+              280791000000,
+              250536000000,
+              229344000000,
+              208157000000,
+              189993000000,
+              172866000000,
+              152862000000,
+              137534000000,
+              124049000000,
+              113618000000,
+              102994000000,
+              93115000000,
+              86365000000,
+              83193000000,
+              82915000000,
+              80043000000,
+              82071000000,
+              85915000000,
+              71592000000
+            ]
+          },
+          {
+            "field": "treasuryStock",
             "title": "Treasury Stock",
             "format": null,
             "values": [
@@ -3436,35 +4282,8 @@
             ]
           },
           {
-            "field": "balance_sheet_additional_paid_in_capital",
-            "title": "Additional Paid-in Capital",
-            "format": null,
-            "values": [
-              149619000000,
-              143979000000,
-              140024000000,
-              135679000000,
-              130923000000,
-              124514000000,
-              120864000000,
-              115934000000,
-              110633000000,
-              103938000000,
-              99025000000,
-              92711000000,
-              86896000000,
-              79863000000,
-              75066000000,
-              69419000000,
-              63871000000,
-              58793000000,
-              55437000000,
-              51879000000
-            ]
-          },
-          {
-            "field": "balance_sheet_accumulated_other_comprehensive_income",
-            "title": "Accumulated Other Comprehensive Income",
+            "field": "otherEquity",
+            "title": "Comprehensive Income & Other",
             "format": null,
             "values": [
               66287000000,
@@ -3487,33 +4306,6 @@
               -2365000000,
               -1376000000,
               -1075000000
-            ]
-          },
-          {
-            "field": "balance_sheet_retained_earnings",
-            "title": "Retained Earnings",
-            "format": null,
-            "values": [
-              343438000000,
-              280791000000,
-              250536000000,
-              229344000000,
-              208157000000,
-              189993000000,
-              172866000000,
-              152862000000,
-              137534000000,
-              124049000000,
-              113618000000,
-              102994000000,
-              93115000000,
-              86365000000,
-              83193000000,
-              82915000000,
-              80043000000,
-              82071000000,
-              85915000000,
-              71592000000
             ]
           },
           {
@@ -3575,134 +4367,188 @@
             "title": "Total Debt",
             "format": null,
             "values": [
-              223232000000,
-              209888000000,
-              152987000000,
-              135419000000,
-              133939000000,
-              133245000000,
-              130900000000,
-              134692000000,
-              132973000000,
-              134686000000,
-              135611000000,
-              136989000000,
-              138914000000,
-              141351000000,
-              140118000000,
-              128251000000,
-              124577000000,
-              113287000000,
-              116395000000,
-              113903000000
+              251635000000,
+              235540000000,
+              178547000000,
+              160438000000,
+              159570000000,
+              157953000000,
+              155401000000,
+              158535000000,
+              157842000000,
+              160560000000,
+              161574000000,
+              166065000000,
+              174286000000,
+              178547000000,
+              169938000000,
+              164334000000,
+              157560000000,
+              147267000000,
+              139757000000,
+              136238000000
             ]
           },
           {
-            "field": "netCash",
+            "field": "netcash",
             "title": "Net Cash (Debt)",
             "format": null,
             "values": [
-              -100244000000,
-              -66799000000,
-              -29958000000,
-              -41222000000,
-              -40759000000,
-              -38680000000,
-              -29698000000,
-              -46641000000,
-              -43881000000,
-              -49612000000,
-              -48831000000,
-              -72820000000,
-              -74944000000,
-              -76946000000,
-              -70092000000,
-              -69589000000,
-              -63867000000,
-              -46902000000,
-              -20346000000,
-              -34915000000
+              -128647000000,
+              -92451000000,
+              -55518000000,
+              -66241000000,
+              -66390000000,
+              -63388000000,
+              -54199000000,
+              -70484000000,
+              -68750000000,
+              -75486000000,
+              -74794000000,
+              -101896000000,
+              -110316000000,
+              -114142000000,
+              -99912000000,
+              -105672000000,
+              -96850000000,
+              -80882000000,
+              -43708000000,
+              -57250000000
             ]
           },
           {
-            "field": "netCashPerShare",
+            "field": "netcashpershare",
             "title": "Net Cash Per Share",
             "format": "pershare",
             "values": [
-              -9.194,
-              -6.143,
-              -2.758,
-              -3.801,
-              -3.772,
-              -3.584,
-              -2.757,
-              -4.345,
-              -4.098,
-              -4.65,
-              -4.602,
-              -6.897,
-              -7.172,
-              -7.437,
-              -6.8,
-              -6.736,
-              -6.277,
-              -4.611,
-              -1.971,
-              -3.387
+              -11.79923,
+              -8.50202,
+              -5.11074,
+              -6.10798,
+              -6.14381,
+              -5.87307,
+              -5.03194,
+              -6.56581,
+              -6.42043,
+              -7.0746,
+              -7.04939,
+              -9.65107,
+              -10.55757,
+              -11.03141,
+              -9.69267,
+              -10.22863,
+              -9.51843,
+              -7.95222,
+              -4.23527,
+              -5.5534
             ]
           },
           {
-            "field": "bookValue",
-            "title": "Book Value",
+            "field": "sharesOutFilingDate",
+            "title": "Filing Date Shares Outstanding",
             "format": null,
             "values": [
-              551620000000,
-              441914000000,
-              411065000000,
-              369631000000,
-              333775000000,
-              305867000000,
-              285970000000,
-              259151000000,
-              236447000000,
-              216661000000,
-              201875000000,
-              182973000000,
-              168602000000,
-              154526000000,
-              146043000000,
-              137489000000,
-              131402000000,
-              134001000000,
-              138245000000,
-              120564000000
+              10786313572,
+              10757109436,
+              10734920870,
+              10690216011,
+              10664912097,
+              10616352407,
+              10597729352,
+              10515011008,
+              10495566881,
+              10406627415,
+              10387381291,
+              10334030586,
+              10317750796,
+              10260353688,
+              10247259757,
+              10201654176,
+              10187554818,
+              10174409620,
+              10176888200,
+              10142952400
             ]
           },
           {
-            "field": "bookValuePerShare",
+            "field": "sharesOutTotalCommon",
+            "title": "Total Common Shares Outstanding",
+            "format": null,
+            "values": [
+              10783000000,
+              10754000000,
+              10731000000,
+              10687000000,
+              10660000000,
+              10613000000,
+              10593000000,
+              10511000000,
+              10490000000,
+              10403000000,
+              10383000000,
+              10330000000,
+              10313000000,
+              10258000000,
+              10242000000,
+              10198000000,
+              10183000000,
+              10170804700,
+              10180000000,
+              10140000000
+            ]
+          },
+          {
+            "field": "workingcapital",
+            "title": "Working Capital",
+            "format": null,
+            "values": [
+              7990000000,
+              38399000000,
+              11078000000,
+              1670000000,
+              4499000000,
+              8474000000,
+              11436000000,
+              14315000000,
+              15135000000,
+              11024000000,
+              7434000000,
+              -2219000000,
+              -7756000000,
+              -11349000000,
+              -8602000000,
+              -8900000000,
+              -6624000000,
+              -5632000000,
+              19314000000,
+              14537000000
+            ]
+          },
+          {
+            "field": "bvps",
             "title": "Book Value Per Share",
             "format": "pershare",
             "values": [
-              50.5934,
-              40.6395,
-              37.8408,
-              34.0831,
-              30.8879,
-              28.3394,
-              26.55,
-              24.1408,
-              22.0813,
-              20.3056,
-              19.0269,
-              17.3303,
-              16.1357,
-              14.9344,
-              14.1679,
-              13.3084,
-              12.9142,
-              13.1748,
-              13.3906,
-              11.695
+              51.156449,
+              41.092988,
+              38.306308,
+              34.586974,
+              31.310975,
+              28.820032,
+              26.996129,
+              24.655218,
+              22.540228,
+              20.82678,
+              19.442839,
+              17.712778,
+              16.348492,
+              15.06395,
+              14.259226,
+              13.481957,
+              12.904055,
+              13.175063,
+              13.580058,
+              11.88994
             ]
           },
           {
@@ -3712,23 +4558,23 @@
             "values": [
               528116000000,
               418465000000,
-              387792000000,
+              378595000000,
               346371000000,
               310620000000,
               282778000000,
-              262896000000,
+              254294000000,
               236070000000,
               213568000000,
               193891000000,
-              179086000000,
+              171399000000,
               160224000000,
               145817000000,
               131777000000,
-              125755000000,
+              119658000000,
               117321000000,
               111207000000,
               113772000000,
-              122874000000,
+              117767000000,
               105219000000
             ]
           },
@@ -3737,30 +4583,111 @@
             "title": "Tangible Book Value Per Share",
             "format": "pershare",
             "values": [
-              48.4377,
-              38.4831,
-              35.6984,
-              31.9383,
-              28.7451,
-              26.2001,
-              24.4078,
-              21.9907,
-              19.9447,
-              18.1716,
-              16.879,
-              15.1756,
-              13.9551,
-              12.7358,
-              12.1997,
-              11.3562,
-              10.9294,
-              11.1859,
-              11.9018,
-              10.2065
+              48.976722,
+              38.912497,
+              35.280495,
+              32.410498,
+              29.138836,
+              26.644492,
+              24.005852,
+              22.459328,
+              20.359199,
+              18.637989,
+              16.507656,
+              15.510551,
+              14.139144,
+              12.846266,
+              11.683069,
+              11.504314,
+              10.920848,
+              11.186135,
+              11.568467,
+              10.376627
+            ]
+          },
+          {
+            "field": "land",
+            "title": "Land",
+            "format": null,
+            "values": [
+              null,
+              null,
+              155121000000,
+              null,
+              null,
+              null,
+              123039000000,
+              null,
+              null,
+              null,
+              105293000000,
+              null,
+              null,
+              null,
+              91650000000,
+              null,
+              null,
+              null,
+              81104000000,
+              null
+            ]
+          },
+          {
+            "field": "machinery",
+            "title": "Machinery",
+            "format": null,
+            "values": [
+              null,
+              null,
+              301413000000,
+              null,
+              null,
+              null,
+              218893000000,
+              null,
+              null,
+              null,
+              185039000000,
+              null,
+              null,
+              null,
+              157458000000,
+              null,
+              null,
+              null,
+              128683000000,
+              null
+            ]
+          },
+          {
+            "field": "constructionInProgress",
+            "title": "Construction In Progress",
+            "format": null,
+            "values": [
+              null,
+              null,
+              71745000000,
+              null,
+              null,
+              null,
+              46636000000,
+              null,
+              null,
+              null,
+              28840000000,
+              null,
+              null,
+              null,
+              30020000000,
+              null,
+              null,
+              null,
+              24895000000,
+              null
             ]
           }
         ],
-        "field_count": 33,
+        "field_count": 50,
         "endpoint": "/stocks/amzn/financials/balance-sheet/__data.json?p=quarterly"
       },
       "cash_flow": {
@@ -3774,13 +4701,12 @@
           "url": "/stocks/amzn/financials/cash-flow-statement/"
         },
         "details": {
-          "source": "fai",
-          "lastTrailingDate": "Jun 30, 2026",
+          "source": "spg",
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
+          "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 13, 2026",
-          "currency": "USD"
+          "lastTradingDay": "Aug 14, 2026"
         },
         "periods": [
           "2026-06-30",
@@ -3828,7 +4754,7 @@
         ],
         "rows": [
           {
-            "field": "cash_flow_statement_net_income",
+            "field": "netIncomeCF",
             "title": "Net Income",
             "format": null,
             "values": [
@@ -3855,7 +4781,7 @@
             ]
           },
           {
-            "field": "cash_flow_statement_depreciation_and_amortization",
+            "field": "totalDepAmorCF",
             "title": "Depreciation & Amortization",
             "format": null,
             "values": [
@@ -3879,6 +4805,60 @@
               9193000000,
               9939000000,
               8948000000
+            ]
+          },
+          {
+            "field": "otherAmortization",
+            "title": "Other Amortization",
+            "format": null,
+            "values": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
+            ]
+          },
+          {
+            "field": "gainInvestmentsCF",
+            "title": "Loss (Gain) From Sale of Investments",
+            "format": null,
+            "values": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
             ]
           },
           {
@@ -3909,8 +4889,8 @@
             ]
           },
           {
-            "field": "cash_flow_statement_other_adjustments",
-            "title": "Other Adjustments",
+            "field": "otheroperating",
+            "title": "Other Operating Activities",
             "format": null,
             "values": [
               -35690000000,
@@ -3931,13 +4911,13 @@
               -2097000000,
               4149000000,
               6688000000,
-              -3623000000,
+              -15627000000,
               1273000000
             ]
           },
           {
-            "field": "changeInReceivables",
-            "title": "Change in Receivables",
+            "field": "changeAR",
+            "title": "Change in Accounts Receivable",
             "format": null,
             "values": [
               -8204000000,
@@ -3954,7 +4934,7 @@
               -3584000000,
               -2041000000,
               4724000000,
-              -8788000000,
+              4487000000,
               -4794000000,
               -6799000000,
               -1516000000,
@@ -3963,8 +4943,8 @@
             ]
           },
           {
-            "field": "cash_flow_statement_changes_in_inventories",
-            "title": "Changes in Inventories",
+            "field": "changeInventory",
+            "title": "Change in Inventory",
             "format": null,
             "values": [
               -1818000000,
@@ -3990,8 +4970,8 @@
             ]
           },
           {
-            "field": "cash_flow_statement_changes_in_accounts_payable",
-            "title": "Changes in Accounts Payable",
+            "field": "changeAP",
+            "title": "Change in Accounts Payable",
             "format": null,
             "values": [
               9442000000,
@@ -4017,35 +4997,8 @@
             ]
           },
           {
-            "field": "cash_flow_statement_changes_in_accrued_expenses",
-            "title": "Changes in Accrued Expenses",
-            "format": null,
-            "values": [
-              -2018000000,
-              -8045000000,
-              5993000000,
-              -1999000000,
-              -4952000000,
-              -4061000000,
-              4042000000,
-              129000000,
-              -4147000000,
-              -2928000000,
-              6594000000,
-              -1321000000,
-              -1938000000,
-              -5763000000,
-              5777000000,
-              -20000000,
-              -1412000000,
-              -5903000000,
-              9333000000,
-              -1465000000
-            ]
-          },
-          {
-            "field": "cash_flow_statement_changes_in_unearned_revenue",
-            "title": "Changes in Unearned Revenue",
+            "field": "changeUnearnedRev",
+            "title": "Change in Unearned Revenue",
             "format": null,
             "values": [
               -281000000,
@@ -4071,30 +5024,30 @@
             ]
           },
           {
-            "field": "cash_flow_statement_changes_in_other_operating_activities",
-            "title": "Changes in Other Operating Activities",
+            "field": "changeOtherNetOperAssets",
+            "title": "Change in Other Net Operating Assets",
             "format": null,
             "values": [
-              -4717000000,
-              -3811000000,
-              -5220000000,
-              -4039000000,
-              -2971000000,
-              -3402000000,
-              -4190000000,
-              -4537000000,
-              -3055000000,
-              -2701000000,
-              -2802000000,
-              -3134000000,
-              -3126000000,
-              -3203000000,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null
+              -6735000000,
+              -11856000000,
+              773000000,
+              -6038000000,
+              -7923000000,
+              -7463000000,
+              -148000000,
+              -4408000000,
+              -7202000000,
+              -5629000000,
+              3792000000,
+              -4455000000,
+              -5064000000,
+              -8966000000,
+              -7498000000,
+              -20000000,
+              -1412000000,
+              -5903000000,
+              9333000000,
+              -1465000000
             ]
           },
           {
@@ -4152,7 +5105,7 @@
             ]
           },
           {
-            "field": "saleofpropertyplantandequipment",
+            "field": "saleOfPropertyPlantAndEquipment",
             "title": "Sale of Property, Plant & Equipment",
             "format": null,
             "values": [
@@ -4179,62 +5132,8 @@
             ]
           },
           {
-            "field": "purchasesOfInvestments",
-            "title": "Purchases of Investments",
-            "format": null,
-            "values": [
-              -26006000000,
-              -23256000000,
-              -16214000000,
-              -7426000000,
-              -17797000000,
-              -13333000000,
-              -12533000000,
-              -3068000000,
-              -8439000000,
-              -1965000000,
-              -435000000,
-              -219000000,
-              -496000000,
-              -338000000,
-              -233000000,
-              -239000000,
-              -329000000,
-              -1764000000,
-              -8266000000,
-              -15231000000
-            ]
-          },
-          {
-            "field": "cash_flow_statement_proceeds_from_sale_of_investments",
-            "title": "Proceeds from Sale of Investments",
-            "format": null,
-            "values": [
-              24196000000,
-              17686000000,
-              8841000000,
-              16367000000,
-              11441000000,
-              7737000000,
-              3677000000,
-              8069000000,
-              3265000000,
-              1392000000,
-              1568000000,
-              1393000000,
-              1551000000,
-              1115000000,
-              5683000000,
-              557000000,
-              2608000000,
-              22753000000,
-              12537000000,
-              15808000000
-            ]
-          },
-          {
-            "field": "cash_flow_statement_other_investing_activities",
-            "title": "Other Investing Activities",
+            "field": "cashAcquisition",
+            "title": "Cash Acquisitions",
             "format": null,
             "values": [
               -24359000000,
@@ -4257,6 +5156,60 @@
               -6341000000,
               -381000000,
               -654000000
+            ]
+          },
+          {
+            "field": "investInSecurities",
+            "title": "Investment in Securities",
+            "format": null,
+            "values": [
+              -1810000000,
+              -5570000000,
+              -7373000000,
+              8941000000,
+              -6356000000,
+              -5596000000,
+              -8856000000,
+              5001000000,
+              -5174000000,
+              -573000000,
+              1133000000,
+              1174000000,
+              1055000000,
+              777000000,
+              5450000000,
+              318000000,
+              2279000000,
+              20989000000,
+              4271000000,
+              577000000
+            ]
+          },
+          {
+            "field": "otherinvesting",
+            "title": "Other Investing Activities",
+            "format": null,
+            "values": [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null
             ]
           },
           {
@@ -4287,16 +5240,70 @@
             ]
           },
           {
-            "field": "debtissuedshortterm",
+            "field": "debtIssuedShortTerm",
             "title": "Short-Term Debt Issued",
             "format": null,
             "values": [
               9368000000,
               6018000000,
-              2189000000,
+              null,
               3223000000,
               2093000000,
               1815000000,
+              null,
+              1725000000,
+              525000000,
+              338000000,
+              null,
+              216000000,
+              4399000000,
+              12780000000,
+              null,
+              12338000000,
+              4865000000,
+              13743000000,
+              null,
+              2187000000
+            ]
+          },
+          {
+            "field": "debtIssuedLongTerm",
+            "title": "Long-Term Debt Issued",
+            "format": null,
+            "values": [
+              13557000000,
+              53441000000,
+              null,
+              null,
+              null,
+              746000000,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              107000000,
+              12824000000,
+              null,
+              null,
+              176000000
+            ]
+          },
+          {
+            "field": "debtIssuedTotal",
+            "title": "Total Debt Issued",
+            "format": null,
+            "values": [
+              22925000000,
+              59459000000,
+              17116000000,
+              3223000000,
+              2093000000,
+              2561000000,
               2554000000,
               1725000000,
               525000000,
@@ -4305,151 +5312,124 @@
               216000000,
               4399000000,
               12780000000,
-              10607000000,
-              12338000000,
-              4865000000,
+              18842000000,
+              12445000000,
+              17689000000,
               13743000000,
-              2667000000,
-              2187000000
+              2867000000,
+              2363000000
             ]
           },
           {
-            "field": "debtrepaidshortterm",
+            "field": "debtRepaidShortTerm",
             "title": "Short-Term Debt Repaid",
             "format": null,
             "values": [
               -9573000000,
               -6109000000,
-              -3126000000,
+              null,
               -1826000000,
               -1392000000,
               -2082000000,
-              -2607000000,
+              null,
               -1820000000,
               -229000000,
               -404000000,
-              -6338000000,
+              null,
               -8095000000,
               -7641000000,
               -3603000000,
-              -15797000000,
+              null,
               -7916000000,
               -7610000000,
               -6231000000,
-              -2659000000,
+              null,
               -1917000000
             ]
           },
           {
-            "field": "netdebtissuedshortterm",
-            "title": "Net Short-Term Debt Issued (Repaid)",
-            "format": null,
-            "values": [
-              -205000000,
-              -91000000,
-              -937000000,
-              1397000000,
-              701000000,
-              -267000000,
-              -53000000,
-              -95000000,
-              296000000,
-              -66000000,
-              -5604000000,
-              -7879000000,
-              -3242000000,
-              9177000000,
-              -5190000000,
-              4422000000,
-              -2745000000,
-              7512000000,
-              8000000,
-              270000000
-            ]
-          },
-          {
-            "field": "debtissuedlongterm",
-            "title": "Long-Term Debt Issued",
-            "format": null,
-            "values": [
-              13557000000,
-              53441000000,
-              15673000000,
-              null,
-              null,
-              746000000,
-              -746000000,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              8235000000,
-              107000000,
-              12824000000,
-              null,
-              200000000,
-              176000000
-            ]
-          },
-          {
-            "field": "debtrepaidlongterm",
+            "field": "debtRepaidLongTerm",
             "title": "Long-Term Debt Repaid",
             "format": null,
             "values": [
               -3206000000,
               -583000000,
-              -1699000000,
+              null,
               -1441000000,
               -3240000000,
               -526000000,
-              -3255000000,
+              null,
               -2663000000,
               -4786000000,
               -1190000000,
-              -1142000000,
+              null,
               -1069000000,
               -3297000000,
               -2823000000,
-              -2959000000,
+              null,
               -1513000000,
               -2119000000,
               -2856000000,
-              -3308000000,
+              null,
               -3222000000
             ]
           },
           {
-            "field": "netdebtissuedlongterm",
-            "title": "Net Long-Term Debt Issued (Repaid)",
+            "field": "debtRepaidTotal",
+            "title": "Total Debt Repaid",
             "format": null,
             "values": [
-              10351000000,
-              52858000000,
-              13974000000,
-              -1441000000,
-              -3240000000,
-              220000000,
-              -4001000000,
-              -2663000000,
-              -4786000000,
-              -1190000000,
-              -1142000000,
-              -1069000000,
-              -3297000000,
-              -2823000000,
-              5276000000,
-              -1406000000,
-              10705000000,
-              -2856000000,
-              -3108000000,
-              -3046000000
+              -12779000000,
+              -6692000000,
+              -4825000000,
+              -3267000000,
+              -4632000000,
+              -2608000000,
+              -5862000000,
+              -4483000000,
+              -5015000000,
+              -1594000000,
+              -7480000000,
+              -9164000000,
+              -10938000000,
+              -6426000000,
+              -18756000000,
+              -9429000000,
+              -9729000000,
+              -9087000000,
+              -5967000000,
+              -5139000000
             ]
           },
           {
-            "field": "commonrepurchased",
+            "field": "netDebtIssued",
+            "title": "Net Debt Issued (Repaid)",
+            "format": null,
+            "values": [
+              10146000000,
+              52767000000,
+              12291000000,
+              -44000000,
+              -2539000000,
+              -47000000,
+              -3308000000,
+              -2758000000,
+              -4490000000,
+              -1256000000,
+              -6746000000,
+              -8948000000,
+              -6539000000,
+              6354000000,
+              86000000,
+              3016000000,
+              7960000000,
+              4656000000,
+              -3100000000,
+              -2776000000
+            ]
+          },
+          {
+            "field": "commonRepurchased",
             "title": "Repurchase of Common Stock",
             "format": null,
             "values": [
@@ -4467,7 +5447,7 @@
               null,
               null,
               null,
-              0,
+              null,
               null,
               -3334000000,
               -2666000000,
@@ -4476,8 +5456,8 @@
             ]
           },
           {
-            "field": "netstockissued",
-            "title": "Net Common Stock Issued (Repurchased)",
+            "field": "otherfinancing",
+            "title": "Other Financing Activities",
             "format": null,
             "values": [
               null,
@@ -4494,10 +5474,10 @@
               null,
               null,
               null,
-              0,
               null,
-              -3334000000,
-              -2666000000,
+              null,
+              null,
+              null,
               null,
               null
             ]
@@ -4612,29 +5592,29 @@
           },
           {
             "field": "fcfMargin",
-            "title": "FCF Margin",
+            "title": "Free Cash Flow Margin",
             "format": "percentage",
             "values": [
-              -0.0439718,
-              -0.100105,
-              0.0699999,
-              0.00238665,
-              0.0019797,
-              -0.0514174,
-              0.0947964,
-              0.0210918,
-              0.0517716,
-              0.0283575,
+              -0.04397,
+              -0.10011,
+              0.07,
+              0.00239,
+              0.00198,
+              -0.05142,
+              0.0948,
+              0.02109,
+              0.05177,
+              0.02836,
               0.16402,
-              0.0610694,
-              0.0373634,
-              -0.0739569,
-              0.0843208,
-              -0.0391342,
-              -0.0557517,
-              -0.152356,
-              0.022931,
-              -0.0761199
+              0.06107,
+              0.03736,
+              -0.07396,
+              0.08432,
+              -0.03913,
+              -0.05575,
+              -0.15236,
+              0.02293,
+              -0.07612
             ]
           },
           {
@@ -4642,26 +5622,26 @@
             "title": "Free Cash Flow Per Share",
             "format": "pershare",
             "values": [
-              -0.809043,
-              -1.67105,
-              1.37503,
-              0.0396496,
-              0.0307237,
-              -0.741592,
-              1.65277,
-              0.312156,
-              0.715446,
-              0.380881,
-              2.62743,
-              0.827619,
-              0.480524,
-              -0.910312,
-              1.22051,
-              -0.481464,
-              -0.664275,
-              -1.74427,
-              0.305211,
-              -0.818217
+              -0.809,
+              -1.671,
+              1.375,
+              0.04,
+              0.031,
+              -0.742,
+              1.653,
+              0.312,
+              0.715,
+              0.381,
+              2.627,
+              0.828,
+              0.481,
+              -0.91,
+              1.221,
+              -0.481,
+              -0.664,
+              -1.744,
+              0.305,
+              -0.818
             ]
           },
           {
@@ -4669,26 +5649,26 @@
             "title": "Levered Free Cash Flow",
             "format": null,
             "values": [
-              39181000000,
-              39148000000,
-              28926000000,
-              -2502000000,
-              -6369000000,
-              -10677000000,
-              14870000000,
-              -2581000000,
-              -462000000,
-              -7633000000,
-              24062000000,
-              -269000000,
-              -3907000000,
-              -12599000000,
-              15771000000,
-              -623000000,
-              -1358000000,
-              -21507000000,
-              18554000000,
-              -10774000000
+              -3583125000,
+              -13771500000,
+              17452750000,
+              3121000000,
+              3004375000,
+              215000000,
+              20659625000,
+              8065000000,
+              11253875000,
+              5577375000,
+              29432000000,
+              12927750000,
+              9332625000,
+              -6216625000,
+              20773625000,
+              -2274500000,
+              -2776875000,
+              -15127125000,
+              8202250000,
+              -3146625000
             ]
           },
           {
@@ -4696,30 +5676,111 @@
             "title": "Unlevered Free Cash Flow",
             "format": null,
             "values": [
-              -12331822180,
-              -25746384194,
-              15030653185,
-              -10496554136,
-              -5284520736,
-              -13217398081,
-              17917220099,
-              -352084382,
-              3514414628,
-              -4409601171,
-              30437720298,
-              7871376159,
-              2746455772,
-              -18449750182,
-              14653044699,
-              -4045179688,
-              -4769430079,
-              -19640943590,
-              10649208116,
-              -7600739282
+              -2761875000,
+              -13271500000,
+              17877125000,
+              3457250000,
+              3326875000,
+              553125000,
+              21015875000,
+              8441875000,
+              11622000000,
+              5979875000,
+              29877625000,
+              13431500000,
+              9857625000,
+              -5702250000,
+              21207375000,
+              -1888875000,
+              -2411875000,
+              -14832125000,
+              8503500000,
+              -2838500000
+            ]
+          },
+          {
+            "field": "cashInterestPaid",
+            "title": "Cash Interest Paid",
+            "format": null,
+            "values": [
+              871000000,
+              452000000,
+              563000000,
+              377000000,
+              647000000,
+              362000000,
+              771000000,
+              384000000,
+              802000000,
+              407000000,
+              907000000,
+              591000000,
+              1072000000,
+              542000000,
+              768000000,
+              431000000,
+              499000000,
+              444000000,
+              518000000,
+              445000000
+            ]
+          },
+          {
+            "field": "cashTaxesPaid",
+            "title": "Cash Income Tax Paid",
+            "format": null,
+            "values": [
+              2655000000,
+              1323000000,
+              1521000000,
+              1136000000,
+              4761000000,
+              877000000,
+              4146000000,
+              2004000000,
+              5700000000,
+              458000000,
+              4197000000,
+              2628000000,
+              3735000000,
+              619000000,
+              1695000000,
+              742000000,
+              3145000000,
+              453000000,
+              334000000,
+              750000000
+            ]
+          },
+          {
+            "field": "changeWorkingCapital",
+            "title": "Change in Working Capital",
+            "format": null,
+            "values": [
+              -7596000000,
+              -24366000000,
+              9270000000,
+              -7323000000,
+              -6163000000,
+              -15753000000,
+              7100000000,
+              -6674000000,
+              -6084000000,
+              -9883000000,
+              13505000000,
+              -4436000000,
+              -6293000000,
+              -14317000000,
+              10526000000,
+              -5254000000,
+              -8081000000,
+              -18077000000,
+              9771000000,
+              -9244000000
             ]
           }
         ],
-        "field_count": 33,
+        "field_count": 38,
         "endpoint": "/stocks/amzn/financials/cash-flow-statement/__data.json?p=quarterly"
       },
       "ratios": {
@@ -4733,13 +5794,12 @@
           "url": "/stocks/amzn/financials/ratios/"
         },
         "details": {
-          "source": "fai",
-          "lastTrailingDate": "Jun 30, 2026",
+          "source": "spg",
           "fiscalYear": "January - December",
           "fiscalYearShort": "Jan - Dec",
+          "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 13, 2026",
-          "currency": null
+          "lastTradingDay": "Aug 14, 2026"
         },
         "periods": [
           "TTM",
@@ -4761,7 +5821,8 @@
           "2022-09-30",
           "2022-06-30",
           "2022-03-31",
-          "2021-12-31"
+          "2021-12-31",
+          "2021-09-30"
         ],
         "fiscal_years": [
           "2026",
@@ -4783,67 +5844,70 @@
           "2022",
           "2022",
           "2022",
+          "2021",
           "2021"
         ],
         "rows": [
           {
-            "field": "marketCap",
-            "title": "Market Cap",
+            "field": "marketcap",
+            "title": "Market Capitalization",
             "format": "reduce_precision",
             "values": [
-              2859775317344,
-              2570020220000,
-              2239735580000,
-              2476929420000,
+              2833025259686,
+              2563849462976,
+              2235761969595,
+              2467515659659,
               2341694749138,
-              2338697400000,
-              2019229380000,
-              2323998270000,
-              1958514630000,
-              2027192500000,
-              1876493140000,
-              1577593020000,
-              1313149600000,
-              1344402680000,
-              1059548820000,
-              860328000000,
-              1152374000000,
-              1081536430000,
-              1659340000000,
-              1696376000000
+              2329121554572,
+              2016323986512,
+              2306888265045,
+              1955638976937,
+              2011080747949,
+              1873675837271,
+              1570152607237,
+              1311592481188,
+              1337539706768,
+              1058439460301,
+              856938950784,
+              1151193694434,
+              1080624045740,
+              1658807334380,
+              1691002595271,
+              1663677365821
             ]
           },
           {
             "field": "ev",
             "title": "Enterprise Value",
-            "format": null,
+            "format": "reduce_precision",
             "values": [
-              2988422317344,
-              2670264220000,
-              2306534580000,
-              2506887420000,
-              2382916749138,
-              2379456400000,
-              2057909380000,
-              2353696270000,
-              2005155630000,
-              2071073500000,
-              1926105140000,
-              1626424020000,
-              1385969600000,
-              1419346680000,
-              1136494820000,
-              930420000000,
-              1221963000000,
-              1145403430000,
-              1706242000000,
-              1716722000000
+              2961672259686,
+              2656300462976,
+              2291279969594,
+              2533756659659,
+              2408084749138,
+              2392509554571,
+              2070522986511,
+              2377372265045,
+              2024388976936,
+              2086566747948,
+              1948469837270,
+              1672048607236,
+              1421908481187,
+              1451681706767,
+              1158351460300,
+              962610950784,
+              1248043694434,
+              1161506045740,
+              1702197334379,
+              1748252595270,
+              1697030365820
             ]
           },
           {
-            "field": "lastClosePrice",
+            "field": "lastCloseRatios",
             "title": "Last Close Price",
-            "format": "ratio",
+            "format": "pershare",
             "values": [
               265.13,
               238.34,
@@ -4863,8 +5927,9 @@
               84,
               113,
               106.21,
-              163,
-              166.72
+              162.9975,
+              166.717,
+              164.252
             ]
           },
           {
@@ -4873,25 +5938,26 @@
             "format": "ratio",
             "values": [
               21.319748135396523,
-              19.1592,
-              24.8829,
-              32.1925,
-              31.0127,
-              33.4947,
-              31.0375,
-              39.6727,
-              39.8994,
-              46.2321,
-              50.5266,
-              52.3931,
-              65.8653,
-              102.646,
-              245.929,
+              18.952,
+              24.623,
+              31.769,
+              30.618,
+              32.98,
+              30.576,
+              38.936,
+              39.216,
+              45.275,
+              49.721,
+              51.607,
+              65.322,
+              102.321,
+              246.493,
+              -314.82,
+              101.669,
               null,
-              102.727,
-              93.9912,
-              78.3654,
-              51.4568
+              null,
+              50.683,
+              63.347
             ]
           },
           {
@@ -4918,7 +5984,148 @@
               70.493,
               63.955,
               66.855,
-              84.835
+              84.835,
+              59.421
+            ]
+          },
+          {
+            "field": "ps",
+            "title": "PS Ratio",
+            "format": "ratio",
+            "values": [
+              3.66121,
+              3.305,
+              3.01,
+              3.442,
+              3.387,
+              3.476,
+              3.101,
+              3.616,
+              3.154,
+              3.328,
+              3.172,
+              2.732,
+              2.367,
+              2.486,
+              2.016,
+              1.667,
+              2.292,
+              2.224,
+              3.472,
+              3.599,
+              3.633
+            ]
+          },
+          {
+            "field": "pb",
+            "title": "PB Ratio",
+            "format": "ratio",
+            "values": [
+              5.18273,
+              4.648,
+              5.059,
+              6.003,
+              6.335,
+              6.978,
+              6.592,
+              8.067,
+              7.546,
+              8.505,
+              8.648,
+              7.778,
+              7.168,
+              7.933,
+              6.85,
+              5.868,
+              8.373,
+              8.224,
+              12.379,
+              12.232,
+              13.799
+            ]
+          },
+          {
+            "field": "ptbvRatio",
+            "title": "P/TBV Ratio",
+            "format": "ratio",
+            "values": [
+              5.37747,
+              4.855,
+              5.343,
+              6.518,
+              6.761,
+              7.498,
+              7.13,
+              9.072,
+              8.284,
+              9.417,
+              9.664,
+              9.161,
+              8.186,
+              9.173,
+              8.032,
+              7.162,
+              9.812,
+              9.717,
+              14.58,
+              14.359,
+              15.812
+            ]
+          },
+          {
+            "field": "pfcf",
+            "title": "P/FCF Ratio",
+            "format": "ratio",
+            "values": [
+              null,
+              null,
+              null,
+              320.665,
+              221.751,
+              172.771,
+              null,
+              70.165,
+              45.53,
+              41.603,
+              40.999,
+              48.737,
+              77.513,
+              416.809,
+              null,
+              -50.727,
+              null,
+              null,
+              null,
+              -114.831,
+              null
+            ]
+          },
+          {
+            "field": "pocf",
+            "title": "P/OCF Ratio",
+            "format": "ratio",
+            "values": [
+              17.59526,
+              15.885,
+              15.052,
+              17.687,
+              17.918,
+              19.227,
+              17.702,
+              19.908,
+              17.352,
+              18.629,
+              18.898,
+              18.484,
+              18.305,
+              21.629,
+              19.482,
+              18.329,
+              29.023,
+              30.377,
+              null,
+              36.501,
+              30.43
             ]
           },
           {
@@ -4945,142 +6152,8 @@
               1.71,
               1.576,
               2.459,
-              3.343
-            ]
-          },
-          {
-            "field": "ps",
-            "title": "PS Ratio",
-            "format": "ratio",
-            "values": [
-              3.6868,
-              3.31325,
-              3.01536,
-              3.45494,
-              3.38723,
-              3.4904,
-              3.10501,
-              3.64286,
-              3.15824,
-              3.35442,
-              3.17651,
-              2.74467,
-              2.37019,
-              2.49868,
-              2.01858,
-              1.67385,
-              2.29469,
-              2.22583,
-              3.47325,
-              3.61068
-            ]
-          },
-          {
-            "field": "pb",
-            "title": "PB Ratio",
-            "format": "ratio",
-            "values": [
-              5.18273,
-              4.65904,
-              5.06826,
-              6.02564,
-              6.33522,
-              7.00681,
-              6.60166,
-              8.12672,
-              7.55743,
-              8.57356,
-              8.66096,
-              7.8147,
-              7.17674,
-              7.97382,
-              6.85677,
-              5.89092,
-              8.38157,
-              8.23075,
-              12.383,
-              12.2708
-            ]
-          },
-          {
-            "field": "ptbvRatio",
-            "title": "P/TBV Ratio",
-            "format": "ratio",
-            "values": [
-              5.458,
-              4.921,
-              5.412,
-              6.466,
-              6.875,
-              7.632,
-              7.262,
-              8.989,
-              8.473,
-              9.689,
-              9.926,
-              9.002,
-              8.377,
-              9.341,
-              8.11,
-              6.885,
-              9.951,
-              9.718,
-              14.572,
-              14.008
-            ]
-          },
-          {
-            "field": "pfcf",
-            "title": "P/FCF Ratio",
-            "format": "ratio",
-            "values": [
-              null,
-              null,
-              null,
-              321.888,
-              221.751,
-              173.481,
-              97.0317,
-              70.6855,
-              45.5967,
-              41.9361,
-              41.0611,
-              48.9677,
-              77.6047,
-              418.948,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null
-            ]
-          },
-          {
-            "field": "pocf",
-            "title": "P/OCF Ratio",
-            "format": "ratio",
-            "values": [
-              17.71823,
-              15.923,
-              15.0792,
-              17.754,
-              17.9178,
-              19.3062,
-              17.7276,
-              20.0557,
-              17.3772,
-              18.7786,
-              18.9264,
-              18.5717,
-              18.3263,
-              21.7397,
-              19.5021,
-              18.402,
-              29.0527,
-              30.4024,
-              42.1966,
-              36.6174
+              3.343,
+              2.048
             ]
           },
           {
@@ -5088,26 +6161,27 @@
             "title": "EV/Sales Ratio",
             "format": "ratio",
             "values": [
-              3.85265,
-              3.44248,
-              3.10529,
-              3.49673,
-              3.44686,
-              3.55123,
-              3.16449,
-              3.68942,
-              3.23345,
-              3.42703,
-              3.2605,
-              2.82962,
-              2.50162,
-              2.63797,
-              2.16518,
-              1.81022,
-              2.43326,
-              2.35727,
-              3.57143,
-              3.65398
+              3.82706,
+              3.424,
+              3.085,
+              3.534,
+              3.483,
+              3.571,
+              3.184,
+              3.727,
+              3.264,
+              3.453,
+              3.298,
+              2.909,
+              2.566,
+              2.698,
+              2.207,
+              1.873,
+              2.485,
+              2.39,
+              3.563,
+              3.721,
+              3.706
             ]
           },
           {
@@ -5115,26 +6189,27 @@
             "title": "EV/EBITDA Ratio",
             "format": "ratio",
             "values": [
-              17.69218,
-              15.8086,
-              14.7987,
-              17.2022,
-              17.2529,
-              17.658,
-              16.1958,
-              19.3899,
-              17.9701,
-              19.9048,
-              19.9371,
-              19.0192,
-              18.7526,
-              22.3727,
-              19.8674,
-              17.1762,
-              23.4659,
-              21.5926,
-              30.5937,
-              28.9439
+              17.57469,
+              15.726,
+              14.701,
+              17.387,
+              17.125,
+              17.755,
+              16.295,
+              19.585,
+              18.142,
+              20.054,
+              20.169,
+              19.553,
+              19.046,
+              22.615,
+              19.987,
+              17.467,
+              23.847,
+              21.798,
+              30.401,
+              29.476,
+              28.095
             ]
           },
           {
@@ -5142,26 +6217,27 @@
             "title": "EV/EBIT Ratio",
             "format": "ratio",
             "values": [
-              31.88943,
-              28.4944,
-              27.0016,
-              31.3459,
-              31.2715,
-              31.2306,
-              28.7053,
-              34.3139,
-              33.0889,
-              38.088,
-              40.648,
-              44.1339,
-              52.5387,
-              80.1121,
-              85.1116,
-              75.9651,
-              94.2073,
-              74.8728,
-              86.6861,
-              69.0029
+              31.67765,
+              28.345,
+              26.823,
+              31.682,
+              30.598,
+              31.402,
+              28.881,
+              34.659,
+              33.406,
+              38.373,
+              41.12,
+              45.372,
+              52.411,
+              78.61,
+              82.135,
+              72.991,
+              94.829,
+              74.994,
+              85.654,
+              70.27,
+              59.983
             ]
           },
           {
@@ -5172,22 +6248,23 @@
               null,
               null,
               null,
-              325.781,
-              225.655,
-              176.504,
-              98.8904,
-              71.5888,
-              46.6826,
-              42.8439,
-              42.1467,
-              50.4834,
-              81.9083,
-              442.302,
+              329.273,
+              228.038,
+              177.473,
+              null,
+              72.309,
+              47.13,
+              43.164,
+              42.636,
+              51.9,
+              84.032,
+              452.378,
+              null,
+              -56.983,
               null,
               null,
               null,
-              null,
-              null,
+              -118.719,
               null
             ]
           },
@@ -5196,26 +6273,27 @@
             "title": "Debt / Equity Ratio",
             "format": "ratio",
             "values": [
-              0.404684,
-              0.404684,
-              0.474952,
-              0.372172,
-              0.366363,
-              0.401285,
-              0.435631,
-              0.45774,
-              0.519743,
-              0.56238,
-              0.621644,
-              0.671757,
-              0.748684,
-              0.823917,
-              0.914739,
-              0.95943,
-              0.932809,
-              0.94806,
-              0.845419,
-              0.841947
+              0.456,
+              0.456,
+              0.533,
+              0.434,
+              0.434,
+              0.478,
+              0.516,
+              0.543,
+              0.612,
+              0.668,
+              0.741,
+              0.8,
+              0.908,
+              1.034,
+              1.155,
+              1.164,
+              1.195,
+              1.199,
+              1.099,
+              1.011,
+              1.13
             ]
           },
           {
@@ -5223,26 +6301,27 @@
             "title": "Debt / EBITDA Ratio",
             "format": "ratio",
             "values": [
-              1.322,
-              4.705,
-              4.904,
-              3.442,
-              3.958,
-              3.894,
-              4.079,
-              3.554,
-              4.366,
-              4.978,
-              4.99,
-              5.017,
-              5.875,
-              7.209,
-              8.892,
-              9.086,
-              9.979,
-              9.559,
-              8.808,
-              8.687
+              1.345023,
+              1.203189,
+              1.240834,
+              0.967776,
+              0.979523,
+              1.036627,
+              1.078826,
+              0.960677,
+              1.148305,
+              1.305645,
+              1.31801,
+              1.33719,
+              1.562818,
+              1.947591,
+              2.358364,
+              2.254208,
+              2.642026,
+              2.519025,
+              2.356423,
+              2.241456,
+              2.117733
             ]
           },
           {
@@ -5253,23 +6332,24 @@
               null,
               null,
               null,
-              10.242,
-              314.928,
-              403.431,
+              23.203,
+              15.193,
+              11.837,
               null,
-              7.353,
-              40.195,
-              17.357,
-              33.141,
-              4.865,
-              15.677,
-              27.667,
+              4.727,
+              3.691,
+              3.265,
+              3.513,
+              5.015,
+              9.814,
+              54.312,
               null,
-              11.137,
+              -10.06,
               null,
               null,
               null,
-              36.939
+              -9.49,
+              null
             ]
           },
           {
@@ -5277,26 +6357,27 @@
             "title": "Net Debt / Equity Ratio",
             "format": "ratio",
             "values": [
-              0.182,
-              0.182,
-              0.151,
-              0.073,
-              0.112,
-              0.122,
-              0.126,
-              0.104,
-              0.18,
-              0.186,
-              0.229,
-              0.242,
-              0.398,
-              0.445,
-              0.498,
-              0.48,
-              0.506,
-              0.486,
-              0.35,
-              0.147
+              0.233,
+              0.233,
+              0.209,
+              0.135,
+              0.179,
+              0.199,
+              0.207,
+              0.19,
+              0.272,
+              0.291,
+              0.348,
+              0.37,
+              0.557,
+              0.654,
+              0.739,
+              0.684,
+              0.769,
+              0.737,
+              0.604,
+              0.316,
+              0.475
             ]
           },
           {
@@ -5304,26 +6385,27 @@
             "title": "Net Debt / EBITDA Ratio",
             "format": "ratio",
             "values": [
+              0.762,
+              0.762,
               0.593,
-              2.113,
-              1.561,
-              0.674,
-              1.205,
-              1.185,
-              1.184,
-              0.806,
-              1.512,
-              1.643,
-              1.838,
-              1.807,
-              3.123,
-              3.889,
-              4.84,
-              4.545,
-              5.415,
-              4.9,
-              3.647,
-              1.518
+              0.381,
+              0.471,
+              0.493,
+              0.499,
+              0.446,
+              0.632,
+              0.661,
+              0.781,
+              0.875,
+              1.365,
+              1.719,
+              1.97,
+              1.813,
+              2.019,
+              1.818,
+              1.445,
+              0.737,
+              0.948
             ]
           },
           {
@@ -5331,26 +6413,27 @@
             "title": "Net Debt / FCF Ratio",
             "format": "ratio",
             "values": [
-              -8.623,
-              -11.364,
-              -3.676,
-              2.006,
-              95.865,
-              122.768,
-              -4.833,
-              1.668,
-              13.919,
-              5.728,
-              12.208,
-              1.752,
-              8.334,
-              14.926,
-              -8.169,
-              5.571,
-              -13.991,
-              -9.449,
-              -2.644,
-              6.457
+              -11.066,
+              -11.066,
+              -37.399,
+              7.215,
+              6.273,
+              4.925,
+              3.046,
+              1.648,
+              1.641,
+              1.422,
+              1.652,
+              2.322,
+              6.022,
+              34.377,
+              -13.317,
+              -5.914,
+              -4.014,
+              -3.252,
+              -3.288,
+              -2.968,
+              -25.231
             ]
           },
           {
@@ -5358,26 +6441,27 @@
             "title": "Asset Turnover",
             "format": "ratio",
             "values": [
-              0.225671,
-              0.225671,
-              0.232734,
-              0.295766,
-              0.274533,
-              0.271146,
-              0.26514,
-              0.325816,
-              0.296548,
-              0.286659,
-              0.287966,
-              0.343172,
-              0.312666,
-              0.299516,
-              0.291056,
-              0.337862,
-              0.313532,
-              0.310838,
-              0.317354,
-              0.370511
+              0.798,
+              0.837,
+              1.104,
+              1.022,
+              1.012,
+              0.982,
+              1.242,
+              1.115,
+              1.09,
+              1.083,
+              1.34,
+              1.187,
+              1.141,
+              1.099,
+              1.34,
+              1.199,
+              1.168,
+              1.121,
+              1.369,
+              1.194,
+              null
             ]
           },
           {
@@ -5385,26 +6469,27 @@
             "title": "Inventory Turnover",
             "format": "ratio",
             "values": [
-              9.98236,
-              2.42448,
-              2.41617,
-              3.03172,
-              2.2854,
-              2.1568,
-              2.29741,
-              2.92877,
-              2.26481,
-              2.08739,
-              2.22402,
-              2.73328,
-              2.08241,
-              1.85638,
-              1.9605,
-              2.5547,
-              2.07955,
-              2.13335,
-              2.26049,
-              2.93559
+              9.666,
+              10.255,
+              9.347,
+              11.021,
+              8.617,
+              8.43,
+              8.787,
+              11.251,
+              9.227,
+              9.046,
+              9.014,
+              10.774,
+              8.337,
+              7.844,
+              7.909,
+              9.643,
+              7.515,
+              7.265,
+              7.867,
+              10.424,
+              9.145
             ]
           },
           {
@@ -5412,26 +6497,27 @@
             "title": "Quick Ratio",
             "format": "ratio",
             "values": [
-              0.874856,
-              0.874856,
-              1.0086,
-              0.875017,
-              0.795979,
-              0.805661,
-              0.844526,
-              0.873054,
-              0.865071,
-              0.880042,
-              0.868447,
-              0.843048,
-              0.7409,
-              0.700866,
-              0.691543,
-              0.723237,
-              0.675506,
-              0.680828,
-              0.708841,
-              0.90633
+              0.843,
+              0.843,
+              0.974,
+              0.844,
+              0.76,
+              0.768,
+              0.807,
+              0.837,
+              0.827,
+              0.84,
+              0.829,
+              0.807,
+              0.701,
+              0.667,
+              0.689,
+              0.692,
+              0.674,
+              0.679,
+              0.707,
+              0.905,
+              0.866
             ]
           },
           {
@@ -5439,26 +6525,27 @@
             "title": "Current Ratio",
             "format": "ratio",
             "values": [
-              1.03312,
-              1.03312,
-              1.17715,
-              1.05082,
-              1.00856,
-              1.02407,
-              1.0481,
-              1.06373,
-              1.08865,
-              1.09569,
-              1.07207,
-              1.04508,
-              0.984719,
-              0.947679,
-              0.923094,
-              0.944644,
-              0.936593,
-              0.952784,
-              0.95963,
-              1.13576
+              1.033,
+              1.033,
+              1.177,
+              1.051,
+              1.009,
+              1.024,
+              1.048,
+              1.064,
+              1.089,
+              1.096,
+              1.072,
+              1.045,
+              0.985,
+              0.948,
+              0.923,
+              0.945,
+              0.937,
+              0.953,
+              0.96,
+              1.136,
+              1.117
             ]
           },
           {
@@ -5466,26 +6553,27 @@
             "title": "Return on Equity (ROE)",
             "format": "percentage",
             "values": [
-              0.141537,
-              0.141537,
-              0.0809702,
-              0.0621461,
-              0.0676228,
-              0.0637611,
-              0.0655506,
-              0.0820916,
-              0.0693516,
-              0.06655,
-              0.0566615,
-              0.0610719,
-              0.0616797,
-              0.0450594,
-              0.0219806,
-              0.00186431,
-              0.0222822,
-              -0.0163766,
-              -0.0323865,
-              0.123653
+              0.50444,
+              0.28376,
+              0.21716,
+              0.24096,
+              0.22718,
+              0.23151,
+              0.29357,
+              0.24742,
+              0.23809,
+              0.19938,
+              0.22084,
+              0.22479,
+              0.16712,
+              0.08442,
+              0.00784,
+              0.08544,
+              -0.06113,
+              -0.11296,
+              0.44273,
+              0.10727,
+              null
             ]
           },
           {
@@ -5493,26 +6581,27 @@
             "title": "Return on Assets (ROA)",
             "format": "percentage",
             "values": [
-              0.0239391,
-              0.0239391,
-              0.0232422,
-              0.0281837,
-              0.020035,
-              0.0270164,
-              0.0247646,
-              0.0329599,
-              0.0276226,
-              0.0251281,
-              0.0249127,
-              0.0207035,
-              0.0198228,
-              0.0152997,
-              0.00839918,
-              -0.00170728,
-              0.00608268,
-              0.00646261,
-              0.00729871,
-              0.00894704
+              0.06823,
+              0.06875,
+              0.07269,
+              0.07064,
+              0.07232,
+              0.07256,
+              0.08765,
+              0.0764,
+              0.06756,
+              0.07228,
+              0.06508,
+              0.058,
+              0.04077,
+              0.02575,
+              0.01956,
+              0.01488,
+              0.01997,
+              0.02321,
+              0.02154,
+              0.03266,
+              null
             ]
           },
           {
@@ -5520,26 +6609,27 @@
             "title": "Return on Invested Capital (ROIC)",
             "format": "percentage",
             "values": [
-              0.03667,
-              0.03667,
-              0.03817,
-              0.04774,
-              0.03348,
-              0.04647,
-              0.04405,
-              0.06114,
-              0.0505,
-              0.04746,
-              0.04796,
-              0.04049,
-              0.03633,
-              0.0289,
-              0.01642,
-              -0.00356,
-              0.01226,
-              0.0134,
-              0.01578,
-              0.02113
+              0.03504,
+              0.03622,
+              0.04039,
+              0.03594,
+              0.04343,
+              0.04099,
+              0.05672,
+              0.04662,
+              0.04343,
+              0.04353,
+              0.03652,
+              0.03218,
+              0.02507,
+              0.01428,
+              0.01426,
+              0.01046,
+              0.01497,
+              0.01945,
+              0.01845,
+              0.02179,
+              null
             ]
           },
           {
@@ -5547,26 +6637,27 @@
             "title": "Return on Capital Employed (ROCE)",
             "format": "percentage",
             "values": [
-              0.0406931,
-              0.0406931,
-              0.0408789,
-              0.04778,
-              0.0364525,
-              0.0429894,
-              0.0435575,
-              0.0524567,
-              0.0455298,
-              0.0404179,
-              0.0440608,
-              0.039417,
-              0.0355362,
-              0.025233,
-              0.0162362,
-              0.00934824,
-              0.00924213,
-              0.0127097,
-              0.0153216,
-              0.0146271
+              0.11,
+              0.11,
+              0.122,
+              0.133,
+              0.148,
+              0.154,
+              0.153,
+              0.154,
+              0.143,
+              0.137,
+              0.125,
+              0.102,
+              0.079,
+              0.056,
+              0.045,
+              0.043,
+              0.046,
+              0.055,
+              0.073,
+              0.089,
+              0.109
             ]
           },
           {
@@ -5574,26 +6665,27 @@
             "title": "Earnings Yield",
             "format": "percentage",
             "values": [
-              0.0473048,
-              0.0521943,
-              0.0401882,
-              0.0310632,
-              0.0322448,
-              0.0298555,
-              0.0322191,
-              0.0252063,
-              0.0250631,
-              0.02163,
-              0.0197916,
-              0.0190865,
-              0.0151825,
-              0.00974225,
-              0.00406622,
-              null,
-              0.00973451,
-              0.0106393,
-              0.0127607,
-              0.0194338
+              0.0476354,
+              0.05276,
+              0.04061,
+              0.03148,
+              0.03266,
+              0.03032,
+              0.03271,
+              0.02568,
+              0.0255,
+              0.02209,
+              0.02011,
+              0.01938,
+              0.01531,
+              0.00977,
+              0.00406,
+              -0.00318,
+              0.00984,
+              0.01074,
+              0.01291,
+              0.01973,
+              0.01579
             ]
           },
           {
@@ -5601,26 +6693,27 @@
             "title": "FCF Yield",
             "format": "percentage",
             "values": [
-              null,
-              null,
-              null,
-              0.00310667,
-              0.00450955,
-              0.00576432,
-              0.0103059,
-              0.0141472,
-              0.0219314,
-              0.0238458,
-              0.0243539,
-              0.0204216,
-              0.0128858,
-              0.00238693,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null
+              -0.0040934,
+              -0.00453,
+              -0.00111,
+              0.00312,
+              0.00451,
+              0.00579,
+              0.01032,
+              0.01425,
+              0.02196,
+              0.02404,
+              0.02439,
+              0.02052,
+              0.0129,
+              0.0024,
+              -0.0081,
+              -0.01971,
+              -0.02287,
+              -0.02756,
+              -0.01483,
+              -0.00871,
+              -0.00136
             ]
           },
           {
@@ -5629,56 +6722,30 @@
             "format": "percentage",
             "values": [
               -0.00882,
-              -0.008976494540070332,
-              -0.007504864263874734,
-              -0.008541453904001486,
-              -0.010246856078248719,
-              -0.009152035861038476,
-              -0.011527647610121837,
-              -0.015174363807728557,
-              -0.016764538738397422,
-              -0.024787060962771557,
-              -0.031216777809993233,
-              -0.029297632906480405,
-              -0.02197270351369664,
-              -0.02692874692874693,
-              -0.017304099891849375,
-              0.0015497869043006587,
-              -0.002134057619555728,
-              0.01079136690647482,
-              0.008674463937621833,
-              -0.006237816764132553
-            ]
-          },
-          {
-            "field": "totalreturn",
-            "title": "Total Shareholder Return",
-            "format": "percentage",
-            "values": [
-              -0.00882,
-              -0.008976494540070332,
-              -0.007504864263874734,
-              -0.008541453904001486,
-              -0.010246856078248719,
-              -0.009152035861038476,
-              -0.011527647610121837,
-              -0.015174363807728557,
-              -0.016764538738397422,
-              -0.024787060962771557,
-              -0.031216777809993233,
-              -0.029297632906480405,
-              -0.02197270351369664,
-              -0.02692874692874693,
-              -0.017304099891849375,
-              0.0015497869043006587,
-              -0.002134057619555728,
-              0.01079136690647482,
-              0.008674463937621833,
-              -0.006237816764132553
+              -0.00898,
+              -0.0075,
+              -0.00854,
+              -0.01025,
+              -0.00915,
+              -0.01153,
+              -0.01517,
+              -0.01676,
+              -0.02479,
+              -0.03122,
+              -0.0293,
+              -0.02197,
+              -0.02693,
+              -0.0173,
+              0.00116,
+              -0.00213,
+              0.01079,
+              0.00867,
+              -0.00585,
+              -0.00674
             ]
           }
         ],
-        "field_count": 33,
+        "field_count": 32,
         "endpoint": "/stocks/amzn/financials/ratios/__data.json?p=quarterly"
       }
     }
@@ -5686,45 +6753,45 @@
   "summary": {
     "annual": {
       "income": {
-        "field_count": 32,
+        "field_count": 38,
         "period_count": 6,
         "period": "annual"
       },
       "balance_sheet": {
-        "field_count": 33,
+        "field_count": 49,
         "period_count": 6,
         "period": "annual"
       },
       "cash_flow": {
-        "field_count": 33,
+        "field_count": 36,
         "period_count": 6,
         "period": "annual"
       },
       "ratios": {
-        "field_count": 33,
+        "field_count": 32,
         "period_count": 6,
         "period": "annual"
       }
     },
     "quarterly": {
       "income": {
-        "field_count": 32,
+        "field_count": 38,
         "period_count": 20,
         "period": "quarterly"
       },
       "balance_sheet": {
-        "field_count": 33,
+        "field_count": 50,
         "period_count": 20,
         "period": "quarterly"
       },
       "cash_flow": {
-        "field_count": 33,
+        "field_count": 38,
         "period_count": 20,
         "period": "quarterly"
       },
       "ratios": {
-        "field_count": 33,
-        "period_count": 20,
+        "field_count": 32,
+        "period_count": 21,
         "period": "quarterly"
       }
     }
