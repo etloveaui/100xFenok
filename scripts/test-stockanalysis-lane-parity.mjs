@@ -51,6 +51,15 @@ const PRODUCER_ENVELOPES = {
   ],
 };
 
+// Lanes with no producer sample yet, each naming the suite that exercises its
+// producer path. Recorded as an open debt, not as coverage.
+const EXEMPT_LANES = {
+  stockanalysis_etf_universe: "test-stockanalysis-attempt-emitter.mjs",
+  stockanalysis_stock_financial: "test-stockanalysis-attempt-emitter.mjs",
+  stockanalysis_surfaces: "test-stockanalysis-attempt-emitter.mjs",
+};
+const exemptions = [];
+
 function obs({ outcome, document }) {
   // exception_kind is present and null on purpose. Omitting it reads as
   // undefined and the emitter refuses the envelope; that omission is exactly
@@ -105,12 +114,17 @@ for (const laneId of ownedLanes) {
 for (const laneId of ownedLanes) {
   const samples = PRODUCER_ENVELOPES[laneId];
   if (!samples) {
-    // Lanes whose producer path is exercised by their own suites are exempt only
-    // by being named here, so the exemption is visible rather than implicit.
-    assert.ok(
-      ["stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"].includes(laneId),
-      `${laneId} is registry-owned with no producer envelope sample and no recorded exemption`,
-    );
+    // NOT verified coverage. These three predate the gate and are exempt only by
+    // being named, each with the suite that exercises its producer path. The
+    // verifier ruled on 2026-08-14 that named exemptions are not family-wide
+    // closure: they must be replaced with real producer samples before another
+    // lane is onboarded or parity is called complete. An exemption is a hole with
+    // a label on it, and a hole with a label is what produced this whole day.
+    const covering = EXEMPT_LANES[laneId];
+    assert.ok(covering, `${laneId} is registry-owned with no producer envelope sample and no recorded exemption`);
+    assert.ok(fs.existsSync(path.join(REPO_ROOT, "scripts", covering)),
+      `${laneId} claims coverage by ${covering}, which does not exist`);
+    exemptions.push({ lane: laneId, covered_by: covering });
     continue;
   }
   for (const [label, envelope] of samples) {
@@ -183,4 +197,9 @@ for (const laneId of ownedLanes) {
     "the etf detail observation must carry exception_kind explicitly; omitting it reads as undefined and the emitter refuses the envelope");
 }
 
-process.stdout.write(`test-stockanalysis-lane-parity: ok (${ownedLanes.length} lanes compared across registry, detection config, commit policy and producer)\n`);
+const sampled = ownedLanes.length - exemptions.length;
+process.stdout.write(
+  `test-stockanalysis-lane-parity: ok — ${sampled}/${ownedLanes.length} lanes have producer samples; `
+  + `${exemptions.length} exempt and NOT verified coverage: `
+  + `${exemptions.map((row) => `${row.lane} (covered_by ${row.covered_by})`).join(", ")}\n`,
+);
