@@ -79,6 +79,10 @@ export const RETENTION_REGISTRY = Object.freeze({
       reason: "FactSet lane working tree: fetch and parse scripts, a probe log, and the archive directory whose PDFs are gitignored. Control-plane tooling and state, not a served surface. The public archive copies were removed on 2026-08-13 on redistribution grounds.",
     },
     {
+      path: "data/yf/estimates-archive",
+      reason: "Private Yahoo analyst-estimate history: change-only snapshots and first-knowable fetch receipt timestamps for B-380. The public generic-sync mirror is removed and no product reader exists; the canonical record remains for research and a future serving-intent decision.",
+    },
+    {
       path: "data/stockanalysis/canary",
       reason: "ETF endpoint contract canary. Its own producer comment states it is a latest-state canary, not history, and no consumer exists.",
     },
@@ -268,7 +272,6 @@ export const OWNERSHIP_REGISTRY = Object.freeze({
   ]),
   exposed_no_consumer: Object.freeze([
     { path: "data/damodaran/archives", reason: "26 source spreadsheets published by the generic sync with no product reader found. Their writer is unhooked from CI and the receipt is dated 2026-08-06. Queued for a serving-intent decision, not claimed as canonical serving." },
-    { path: "data/yf/estimates-archive", reason: "17 archived estimate snapshots published with no product reader found. Committed under lane policy but absent from the lane's canonical outputs." },
     { path: "data/yf/migration-evidence", reason: "Migration evidence retained from an earlier lane change; published with no product reader." },
   ]),
   documentation: Object.freeze([

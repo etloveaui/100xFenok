@@ -9,6 +9,10 @@ const isMain = process.argv[1]
 const PRIVATE_DATA_SUPPLY_PUBLIC_ROOTS = Object.freeze([
   "public/data/admin/data-supply-state",
   "public/data/yf/etf-details",
+  // B-380 is a private, change-only Yahoo estimate history record. It has no
+  // product reader or public lane; remove the whole generated tree so future
+  // date shards cannot leak through blanket canonical synchronization.
+  "public/data/yf/estimates-archive",
   "public/data/yf/migration-evidence",
   // Dated Russell factsheet captures, including the source PDFs. Evidence for
   // the RIM research record, never a product surface.
