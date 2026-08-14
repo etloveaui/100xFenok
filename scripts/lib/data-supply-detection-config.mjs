@@ -513,16 +513,24 @@ const config = {
       // records error, path and latency per ticker and no status code, so an http
       // contract demands evidence the producer cannot produce. Run 31792421833
       // failed on exactly that mismatch.
-      endpointContract: endpointAssertion(
-        "stockanalysis_etf_detail_json",
-        objectArrayFieldsAssertion("etf_detail_rows", "/rows", {
-          fields: { ticker: "string" },
-          min: 1,
-          nonEmptyFields: ["ticker"],
-          uniqueBy: "ticker",
-        }),
-        "library",
-      ),
+      // The assertions match the document the producer actually emits. The first
+      // draft asserted a /rows array of tickers, which the producer never sends
+      // and could not sensibly send: a run writes up to 5,605 payloads and an
+      // attempt shard carrying every ticker would be the payload again. Run
+      // 31795350702 executed successfully and still recorded
+      // {"id":"etf_detail_rows","passed":false} for exactly that reason, which
+      // denied the lane ready credit while nothing was actually wrong with it.
+      // The aggregate counts are the honest evidence, and failed === 0 is the
+      // claim that matters; stockanalysis_stock_financial asserts its own counts
+      // the same way.
+      endpointContract: {
+        ...endpointAssertions("stockanalysis_etf_detail_json", [
+          typeAssertion("etf_detail_requested", "/requested", "number"),
+          typeAssertion("etf_detail_written", "/written", "number"),
+          exactAssertion("etf_detail_failed", "/failed", 0),
+        ]),
+        transport: "library",
+      },
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 3 }),
       affectedSurfaceIds: ["stockanalysis_etf_detail"],
     }),
