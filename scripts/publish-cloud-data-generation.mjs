@@ -1220,6 +1220,32 @@ export function computeRetentionPlan({
   candidates.sort((left, right) => left.key.localeCompare(right.key));
   skippedProtected.sort();
 
+  // Manifests are collected under the same single-reference discipline as
+  // payloads, added 2026-08-15 by owner decision. Rollback reads only
+  // pointer.previous (see rollbackGeneration), so no execution path reads a
+  // generation older than N-1, yet manifests were excluded from collection
+  // permanently while no budget metric could see them grow.
+  //
+  // The classifier is deliberately narrower than a manifests/ prefix: an entry
+  // qualifies only if it is a valid generation manifest whose key equals
+  // manifests/<its own generation_id>.json — the same test that built
+  // generationManifests — and whose id is outside the retained set. Every
+  // non-generation alias stays in nonGenerationManifests and is never a
+  // candidate, and protected keys are excluded here as well as in the payload
+  // loop, so neither can be reached by a renamed or spoofed key.
+  const sizeByKey = new Map(objectEntries.map(({ key, size }) => [key, size ?? null]));
+  const manifestCandidates = generationManifests
+    .filter((entry) => !retainedIds.has(entry.manifest.generation_id) && !protectedKeys.has(entry.key))
+    .map((entry) => ({
+      key: entry.key,
+      size: sizeByKey.get(entry.key) ?? null,
+      generation_id: entry.manifest.generation_id,
+      family: entry.family,
+      reason: "generation is outside the retained set: outside the keep-newest window, "
+        + "named by no pointer, and held by no prepared receipt",
+    }))
+    .sort((left, right) => left.key.localeCompare(right.key));
+
   return {
     keepNewest,
     retainedGenerations: [...retainedIds].sort(),
@@ -1228,6 +1254,10 @@ export function computeRetentionPlan({
     candidates,
     skippedProtected,
     manifestCount: generationManifests.length + nonGenerationManifests.length,
+    manifestCandidates,
+    manifestCandidateBytes: manifestCandidates.reduce((total, entry) => total + (entry.size ?? 0), 0),
+    manifestBytes: [...generationManifests, ...nonGenerationManifests]
+      .reduce((total, entry) => total + (sizeByKey.get(entry.key) ?? 0), 0),
   };
 }
 
@@ -1295,7 +1325,23 @@ export async function executeRetentionPlan({ plan, deleteObject }) {
       deleted.push({ key: candidate.key, size: candidate.size });
     }
   }
-  return { deleted, failures };
+  // Manifests go last, deliberately. A manifest is the only record of which
+  // objects a generation held, so deleting it before its payloads would leave a
+  // failed payload deletion with nothing left to explain it. Reported as its own
+  // class rather than merged into deleted, because a manifest deletion removes
+  // evidence while a payload deletion removes data.
+  const deletedManifests = [];
+  const manifestFailures = [];
+  for (const candidate of plan.manifestCandidates ?? []) {
+    const outcome = await deleteObject(candidate.key);
+    const row = { key: candidate.key, size: candidate.size, generation_id: candidate.generation_id };
+    if (outcome?.ok === false) {
+      manifestFailures.push({ ...row, error: outcome.error ?? "delete failed" });
+    } else {
+      deletedManifests.push(row);
+    }
+  }
+  return { deleted, failures, deletedManifests, manifestFailures };
 }
 
 // --- result vocabulary + health classifier -----------------------------------
@@ -1665,6 +1711,16 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWi
     candidate_count: retentionPlan.candidates.length,
     candidate_bytes: retentionPlan.candidates.reduce((total, candidate) => total + (candidate.size ?? 0), 0),
     candidates: retentionPlan.candidates,
+    // Manifest terms are reported separately from payload terms because no
+    // budget metric measures manifests at all: neither count nor bytes reaches
+    // the storage slots calculation, so this report is the only place their
+    // growth is visible until a metric exists. Kept distinct rather than summed,
+    // since a manifest deletion removes evidence and a payload deletion removes
+    // data, and an operator needs to see which happened.
+    manifest_bytes: retentionPlan.manifestBytes,
+    manifest_candidate_count: retentionPlan.manifestCandidates.length,
+    manifest_candidate_bytes: retentionPlan.manifestCandidateBytes,
+    manifest_candidates: retentionPlan.manifestCandidates,
     gate_before: gateVerdict(gateBefore),
   };
   if (retentionDelete) {
@@ -1675,9 +1731,18 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWi
     report.deleted = executed.deleted;
     report.deleted_count = executed.deleted.length;
     report.delete_failures = executed.failures;
+    // Durable record of which manifests were removed. Once a manifest is gone
+    // its objects can only ever be reported as orphaned, so this list is the
+    // only thing that keeps that reason attributable afterwards.
+    report.deleted_manifests = executed.deletedManifests;
+    report.deleted_manifest_count = executed.deletedManifests.length;
+    report.deleted_manifest_bytes = executed.deletedManifests
+      .reduce((total, row) => total + (row.size ?? 0), 0);
+    report.manifest_delete_failures = executed.manifestFailures;
     emit(report);
-    if (executed.failures.length > 0) {
-      fail("RETENTION_DELETE_FAILED", `${executed.failures.length} object(s) could not be deleted`);
+    const failureCount = executed.failures.length + executed.manifestFailures.length;
+    if (failureCount > 0) {
+      fail("RETENTION_DELETE_FAILED", `${failureCount} object(s) could not be deleted`);
     }
     return;
   }

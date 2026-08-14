@@ -2182,6 +2182,37 @@ const asFamily = (manifest, familyName) => ({
   assert.equal(plan.candidates[0].size, g1.assets.find((asset) => asset.object_key === uniqueKey).bytes);
   assert.ok(plan.skippedProtected.includes(P1_EVIDENCE_KEY));
   assert.ok(plan.skippedProtected.includes("probe/lag.json"));
+
+  // Manifests became a deletion candidate class on 2026-08-15 by owner decision.
+  // Rollback reads only pointer.previous, so nothing reads a generation older
+  // than N-1, yet manifests were excluded from collection forever and grew
+  // without any budget metric able to see them.
+  //
+  // The classifier is deliberately narrow: a candidate must be a valid
+  // generation manifest whose key matches its own generation_id AND sit outside
+  // the retained set. Here g1 is outside the keep-newest window and named by no
+  // pointer or receipt, so its manifest is collected — while the protected pilot
+  // manifest, which is a non-generation alias, is not, and neither is any
+  // retained generation's manifest.
+  assert.deepEqual(
+    plan.manifestCandidates.map((candidate) => candidate.key),
+    [`manifests/${g1.generation_id}.json`],
+  );
+  assert.equal(plan.manifestCandidates[0].generation_id, g1.generation_id);
+  assert.equal(plan.manifestCandidates[0].size, 800);
+  assert.equal(plan.manifestCandidateBytes, 800);
+  assert.equal(
+    plan.manifestCandidates.some((candidate) => candidate.key === "manifests/r2-live-pilot-1.json"),
+    false,
+    "a protected non-generation manifest must never be collected",
+  );
+  for (const retained of [g2, g3, g4]) {
+    assert.equal(
+      plan.manifestCandidates.some((candidate) => candidate.generation_id === retained.generation_id),
+      false,
+      `retained generation ${retained.generation_id} must keep its manifest`,
+    );
+  }
   const deletedKeys = [];
   const outcome = await executeRetentionPlan({
     plan,
@@ -2190,9 +2221,15 @@ const asFamily = (manifest, familyName) => ({
       return { ok: true };
     },
   });
-  assert.deepEqual(deletedKeys, [uniqueKey]); // exactly one object collected
+  // Payload objects are deleted first and manifests last, so a payload deletion
+  // that fails leaves its manifest in place to explain what happened rather than
+  // orphaning the evidence ahead of the data.
+  assert.deepEqual(deletedKeys, [uniqueKey, `manifests/${g1.generation_id}.json`]);
   assert.equal(outcome.deleted.length, 1);
+  assert.equal(outcome.deletedManifests.length, 1);
+  assert.equal(outcome.deletedManifests[0].generation_id, g1.generation_id);
   assert.equal(outcome.failures.length, 0);
+  assert.equal(outcome.manifestFailures.length, 0);
 
   // A failing deleter is recorded, never thrown, and does not strand the batch.
   const failureOutcome = await executeRetentionPlan({
