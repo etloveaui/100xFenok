@@ -111,6 +111,7 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         self.assertEqual(manifest["paths"], ["data/stockanalysis/a.json"])
         result = self.apply()
         self.assertEqual(result["status"], "applied")
+        self.assertEqual(result["confirmation"], "pending")
         self.assertEqual((self.root / "data/stockanalysis/a.json").read_text(), '{"value":2}\n')
         run("git", "add", "--", "data/stockanalysis", cwd=self.root)
         self.helper.audit_staged_paths(self.root, self.artifact)
@@ -349,7 +350,57 @@ class StockAnalysisArtifactTest(unittest.TestCase):
         before = target.read_bytes()
         result = self.apply()
         self.assertEqual(result["status"], "stale")
+        self.assertEqual(result["confirmation"], "not_confirmed")
         self.assertEqual(target.read_bytes(), before)
+
+    def test_post_publish_readback_confirms_current_etf_detail_success_attempt(self) -> None:
+        shard_path = self.root / "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json"
+        shard_path.parent.mkdir(parents=True, exist_ok=True)
+        shard_path.write_text(json.dumps({
+            "schema_version": "data-supply-detection-attempt-shard/v2",
+            "lane_id": "stockanalysis_etf_detail",
+            "attempts": [{
+                "lane_id": "stockanalysis_etf_detail",
+                "member_id": None,
+                "attempt_id": "stockanalysis-etf_detail-1000-1",
+                "observed_at": "2026-08-14T13:00:44Z",
+                "execution": "returned",
+                "exception_kind": None,
+                "http_status": None,
+                "auth": "not_applicable",
+                "rate_limited": False,
+                "decode": "ok",
+                "payload": "non_empty",
+                "assertions": [
+                    {"id": "etf_detail_requested", "passed": True},
+                    {"id": "etf_detail_written", "passed": True},
+                    {"id": "etf_detail_failed", "passed": True},
+                ],
+                "candidates": 1,
+                "retry_count": 0,
+                "latency_ms": 577118,
+                "outcome": "success",
+            }],
+        }, indent=2) + "\n")
+
+        result = self.helper.verify_etf_detail_attempt(
+            repo_root=self.root,
+            run_id="1000",
+            run_attempt=1,
+        )
+        self.assertEqual(result["status"], "confirmed")
+        self.assertEqual(result["confirmation"], "confirmed")
+        self.assertEqual(result["attempt_id"], "stockanalysis-etf_detail-1000-1")
+
+        shard = json.loads(shard_path.read_text())
+        shard["attempts"][0]["attempt_id"] = "stockanalysis-etf_detail-999-1"
+        shard_path.write_text(json.dumps(shard))
+        with self.assertRaisesRegex(ValueError, "current ETF detail attempt"):
+            self.helper.verify_etf_detail_attempt(
+                repo_root=self.root,
+                run_id="1000",
+                run_attempt=1,
+            )
 
     def test_newer_publish_trailer_rejects_older_artifact_lane_wide(self) -> None:
         (self.candidate / "data/stockanalysis/a.json").write_text('{"value":2}\n')

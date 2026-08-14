@@ -491,9 +491,15 @@ jobs:
                 --github-output "$RUNNER_TEMP/stockanalysis-apply-output"
             )"
             APPLY_STATUS="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])' <<<"$APPLY_JSON")"
+            APPLY_CONFIRMATION="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["confirmation"])' <<<"$APPLY_JSON")"
             if [ "$APPLY_STATUS" = "stale" ]; then
+              if [ "$APPLY_CONFIRMATION" != "not_confirmed" ]; then
+                echo "stale artifact must be explicitly non-confirming" >&2
+                exit 1
+              fi
               echo "status=stale" >> "$GITHUB_OUTPUT"
-              exit 0
+              echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+              exit 75
             fi
 
             PROJECTION_ORACLE_ROOT="$RUNNER_TEMP/stockanalysis-projection-oracle"
@@ -551,7 +557,26 @@ jobs:
               -m "StockAnalysis-Run-ID: ${{ github.run_id }}" \
               -m "StockAnalysis-Artifact-Digest: $ARTIFACT_DIGEST"
             if git push origin HEAD:main; then
+              if ! git fetch origin main || ! git checkout -f -B main origin/main; then
+                echo "status=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "post-publish main checkout/readback base was unavailable" >&2
+                exit 75
+              fi
+              if ! READBACK_JSON="$({
+                python3 scripts/stockanalysis_artifact.py verify-attempt \
+                  --repo-root . \
+                  --run-id "${{ github.run_id }}" \
+                  --run-attempt "${{ github.run_attempt }}"
+              })"; then
+                echo "status=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "post-publish main readback did not confirm the current ETF detail attempt" >&2
+                exit 75
+              fi
+              echo "$READBACK_JSON"
               echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
+              echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "git push race on attempt ${attempt}; restarting from fresh origin/main"

@@ -23,6 +23,14 @@ DEFAULT_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml"
 DEFAULT_LANE_MANIFEST = "data/admin/lane-commit-manifest.json"
 MAX_FILE_COUNT = 20_000
 MAX_TOTAL_BYTES = 750 * 1024 * 1024
+ETF_DETAIL_ATTEMPT_SHARD = "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json"
+ETF_DETAIL_LANE_ID = "stockanalysis_etf_detail"
+ETF_DETAIL_ASSERTION_IDS = frozenset({
+    "etf_detail_requested",
+    "etf_detail_written",
+    "etf_detail_failed",
+})
+ATTEMPT_SHARD_SCHEMA = "data-supply-detection-attempt-shard/v2"
 # The Next.js public mirror tree is materialized by the shared projection
 # workflow, never by this source lane. The whole tree is structurally outside
 # the artifact boundary: creation ignores it before validation, extraction
@@ -601,7 +609,12 @@ def apply_artifact(
     assert_clean_targets(repo, manifest["paths"])
     reason = stale_reason(repo, manifest)
     if reason:
-        return {"status": "stale", "reason": reason, "paths": manifest["paths"]}
+        return {
+            "status": "stale",
+            "confirmation": "not_confirmed",
+            "reason": reason,
+            "paths": manifest["paths"],
+        }
     artifact = Path(artifact_root).resolve(strict=True)
     backups: dict[str, tuple[bytes, int] | None] = {}
     temp_paths: list[Path] = []
@@ -617,6 +630,7 @@ def apply_artifact(
             replace_fn(temp_path, target)
         return {
             "status": "applied",
+            "confirmation": "pending",
             "reason": None,
             "paths": manifest["paths"],
             "artifact_digest": artifact_digest,
@@ -638,6 +652,95 @@ def apply_artifact(
     finally:
         for temp_path in temp_paths:
             temp_path.unlink(missing_ok=True)
+
+
+def verify_etf_detail_attempt(
+    *,
+    repo_root: Path,
+    run_id: str,
+    run_attempt: int,
+    shard_path: str = ETF_DETAIL_ATTEMPT_SHARD,
+) -> dict:
+    """Confirm that latest main contains this run's successful ETF detail proof."""
+    repo = Path(repo_root).resolve(strict=True)
+    if not isinstance(run_id, str) or not run_id:
+        fail("ETF detail readback run_id is required")
+    if not isinstance(run_attempt, int) or run_attempt < 1:
+        fail("ETF detail readback run_attempt must be a positive integer")
+    rel = normalize_rel(shard_path)
+    target = repo / rel
+    if target.is_symlink() or not target.is_file():
+        fail(f"ETF detail readback shard is missing or unsafe: {rel}")
+    try:
+        document = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"ETF detail readback shard is not valid JSON: {exc}")
+    if not isinstance(document, dict):
+        fail("ETF detail readback shard must be an object")
+    if document.get("schema_version") != ATTEMPT_SHARD_SCHEMA:
+        fail("ETF detail readback shard schema is invalid")
+    if document.get("lane_id") != ETF_DETAIL_LANE_ID:
+        fail("ETF detail readback shard lane is invalid")
+    attempts = document.get("attempts")
+    if not isinstance(attempts, list):
+        fail("ETF detail readback attempts must be an array")
+
+    expected_attempt_id = f"stockanalysis-etf_detail-{run_id}-{run_attempt}"
+    current = [row for row in attempts if isinstance(row, dict) and row.get("attempt_id") == expected_attempt_id]
+    if len(current) != 1:
+        fail(f"current ETF detail attempt is absent or duplicated: {expected_attempt_id}")
+    row = current[0]
+    required = {
+        "lane_id",
+        "member_id",
+        "observed_at",
+        "execution",
+        "exception_kind",
+        "http_status",
+        "auth",
+        "rate_limited",
+        "decode",
+        "payload",
+        "assertions",
+        "candidates",
+        "retry_count",
+        "latency_ms",
+        "outcome",
+    }
+    missing = sorted(required - row.keys())
+    if missing:
+        fail(f"current ETF detail attempt is missing fields: {', '.join(missing)}")
+    if (
+        row["lane_id"] != ETF_DETAIL_LANE_ID
+        or row["member_id"] is not None
+        or not isinstance(row["observed_at"], str)
+        or not row["observed_at"]
+        or row["execution"] != "returned"
+        or row["exception_kind"] is not None
+        or row["http_status"] is not None
+        or row["auth"] != "not_applicable"
+        or row["rate_limited"] is not False
+        or row["decode"] != "ok"
+        or row["payload"] != "non_empty"
+        or row["candidates"] != 1
+        or row["outcome"] != "success"
+    ):
+        fail(f"current ETF detail attempt is not a successful returned proof: {expected_attempt_id}")
+    assertions = row["assertions"]
+    if not isinstance(assertions, list):
+        fail("current ETF detail assertions must be an array")
+    assertion_ids = [item.get("id") for item in assertions if isinstance(item, dict)]
+    if len(assertion_ids) != len(assertions) or set(assertion_ids) != ETF_DETAIL_ASSERTION_IDS or len(assertion_ids) != len(set(assertion_ids)):
+        fail("current ETF detail assertions do not exactly match the contract")
+    if any(item.get("passed") is not True for item in assertions):
+        fail(f"current ETF detail assertions are not all passed: {expected_attempt_id}")
+    return {
+        "status": "confirmed",
+        "confirmation": "confirmed",
+        "reason": None,
+        "attempt_id": expected_attempt_id,
+        "path": rel,
+    }
 
 
 def audit_staged_paths(repo_root: Path, artifact_root: Path) -> None:
@@ -701,7 +804,7 @@ def write_outputs(path: str | None, result: dict) -> None:
     if not path:
         return
     with Path(path).open("a", encoding="utf-8") as handle:
-        for key in ("status", "reason"):
+        for key in ("status", "confirmation", "reason"):
             handle.write(f"{key}={str(result.get(key) or '')}\n")
 
 
@@ -712,9 +815,14 @@ def main() -> None:
     pack = subparsers.add_parser("pack")
     apply = subparsers.add_parser("apply")
     audit = subparsers.add_parser("audit-stage")
+    verify = subparsers.add_parser("verify-attempt")
     for item in (seed, pack, apply, audit):
         item.add_argument("--repo-root", default=".")
         item.add_argument("--workflow", default=DEFAULT_WORKFLOW)
+    verify.add_argument("--repo-root", default=".")
+    verify.add_argument("--run-id", required=True)
+    verify.add_argument("--run-attempt", required=True, type=int)
+    verify.add_argument("--shard-path", default=ETF_DETAIL_ATTEMPT_SHARD)
     seed.add_argument("--candidate-root", required=True)
     seed.add_argument("--replace", action="store_true")
     pack.add_argument("--candidate-root", required=True)
@@ -757,6 +865,13 @@ def main() -> None:
             artifact_digest=args.artifact_digest,
         )
         write_outputs(args.github_output, result)
+    elif args.command == "verify-attempt":
+        result = verify_etf_detail_attempt(
+            repo_root=repo,
+            run_id=args.run_id,
+            run_attempt=args.run_attempt,
+            shard_path=args.shard_path,
+        )
     else:
         audit_staged_paths(repo, Path(args.artifact_root))
         result = {"status": "ok"}

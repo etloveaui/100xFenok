@@ -295,6 +295,28 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertLess(publish.index("git commit \"${COMMIT_ARGS[@]}\""), publish.index("git push origin HEAD:main"))
         self.assertIn("if: ${{ steps.publish.outputs.status == 'published' }}", publish)
 
+    def test_publish_is_non_confirming_on_stale_and_reads_back_current_main(self) -> None:
+        publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
+        stale_start = publish.index('if [ "$APPLY_STATUS" = "stale" ]; then')
+        stale_end = publish.index("exit 75", stale_start) + len("exit 75")
+        stale = publish[stale_start:stale_end]
+        self.assertIn('echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"', stale)
+        self.assertIn("exit 75", stale)
+        self.assertIn("scripts/stockanalysis_artifact.py verify-attempt", publish)
+        self.assertIn('echo "status=not_confirmed" >> "$GITHUB_OUTPUT"', publish)
+        self.assertIn('echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"', publish)
+        self.assertLess(
+            publish.index("git push origin HEAD:main"),
+            publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
+        )
+        push = publish.index("git push origin HEAD:main")
+        checkout = publish.index("git checkout -f -B main origin/main", push)
+        self.assertLess(checkout, publish.index("scripts/stockanalysis_artifact.py verify-attempt"))
+        self.assertLess(
+            publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
+            publish.index('echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"'),
+        )
+
     def test_projection_oracle_preserves_surface_relative_root(self) -> None:
         publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
         self.assertIn(
