@@ -195,7 +195,7 @@
     "candidate_fields": 89184,
     "multi_candidate_fields": 57405,
     "policy_mismatch_fields": 0,
-    "percent_scale_warnings": 107,
+    "percent_scale_warnings": 106,
     "return_field_coverage": {
       "return_1m": {
         "total": 6616,
@@ -293,32 +293,32 @@
     }
   },
   "market_source_parity": {
-    "generated_at": "2026-08-14T11:32:56Z",
+    "generated_at": "2026-08-14T11:58:18Z",
     "summary": {
       "inspected_ticker_files": 6802,
       "fields": 19,
       "multi_candidate_fields": 57405,
       "divergence_rows": 57334,
-      "percent_scale_warnings": 199,
+      "percent_scale_warnings": 198,
       "diagnosis_counts": {
-        "agreement": 10966,
-        "scale_mismatch": 199,
-        "sign_divergence": 3041,
+        "agreement": 11030,
+        "scale_mismatch": 198,
+        "sign_divergence": 3008,
         "stale": 31745,
-        "value_drift": 11383
+        "value_drift": 11353
       },
       "stale_rows": 31745,
-      "scale_mismatch_rows": 199,
-      "sign_divergence_rows": 3041
+      "scale_mismatch_rows": 198,
+      "sign_divergence_rows": 3008
     }
   },
   "incremental_etf": {
-    "status": "pass",
+    "status": "fail",
     "has_run_evidence": true,
     "index_file_exists": true,
     "proof_file_exists": true,
     "plan_file_exists": true,
-    "index_generated_at": "2026-08-14T00:56:47Z",
+    "index_generated_at": "2026-08-14T11:26:51Z",
     "proof_generated_at": "2026-08-13T00:47:33Z",
     "plan_generated_at": "2026-07-29T23:44:33Z",
     "counts": {
@@ -332,20 +332,19 @@
       "plan_history_gap": 0,
       "plan_inception_limited_history_gap": 0,
       "plan_total_history_gap": 0,
-      "no_actionable_plan": 1,
+      "no_actionable_plan": 0,
       "cooldown_skipped": 0,
       "pending_ledger_tracked": 484,
       "pending_ledger_cooldown": 1,
-      "etfs_stockanalysis_ok": 101,
+      "etfs_stockanalysis_ok": 100,
       "etfs_yahoo_fallback_ok": 0,
       "etfs_still_pending": 0,
-      "hard_failed": 0,
+      "hard_failed": 32,
       "market_facts_yf_fallback": 506
     },
     "notes": [
       "incremental_plan_available",
-      "incremental_not_reflected_in_fetch_index",
-      "cooldown_tracked_no_actionable_plan"
+      "incremental_not_reflected_in_fetch_index"
     ]
   }
 }
