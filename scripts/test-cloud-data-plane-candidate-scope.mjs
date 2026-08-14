@@ -15,6 +15,7 @@ import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CANDIDATE = "stockanalysis_etf_detail";
+const GLOBAL_SCOUTER = "global_scouter";
 
 function ownedRoot() {
   const root = fs.mkdtempSync(path.join(fs.realpathSync.native(os.tmpdir()), "fenok-candidate-scope-"));
@@ -34,6 +35,9 @@ function assertThrows(run, fragment) {
 function independentMeasure(absoluteRoot) {
   let files = 0;
   let bytes = 0;
+  const rootStat = fs.lstatSync(absoluteRoot);
+  if (rootStat.isFile()) return { files: 1, bytes: rootStat.size };
+  assert.equal(rootStat.isDirectory(), true, `${absoluteRoot} must be a file or directory`);
   const walk = (current) => {
     for (const entry of fs.readdirSync(current)) {
       const next = path.join(current, entry);
@@ -213,6 +217,59 @@ function budgetIntegrationChecks(manifest) {
   });
 }
 
+function globalScouterChecks() {
+  assert.ok(candidateScopeIds().includes(GLOBAL_SCOUTER), "the Global Scouter candidate must be registered");
+  const { manifest, inventory } = buildCandidateScope({ repoRoot: REPO_ROOT, candidateId: GLOBAL_SCOUTER });
+  assert.equal(manifest.schema_version, CANDIDATE_SCOPE_SCHEMA);
+  assert.equal(manifest.candidate_id, GLOBAL_SCOUTER);
+  assert.equal(manifest.owner.lane_id, GLOBAL_SCOUTER);
+  assert.equal(manifest.owner.enforcement, "shadow");
+  assert.equal(manifest.owner.owner_workflow, null);
+
+  const declared = LANE_REGISTRY.lanes.find((row) => row.id === GLOBAL_SCOUTER).roots.canonical_outputs;
+  assert.deepEqual(manifest.included_canonical_roots.map((row) => row.path), [...declared].sort());
+  const measuredIndependently = manifest.included_canonical_roots
+    .map((row) => independentMeasure(path.join(REPO_ROOT, row.path)))
+    .reduce((sum, row) => ({ files: sum.files + row.files, bytes: sum.bytes + row.bytes }), { files: 0, bytes: 0 });
+  assert.deepEqual(
+    { files: manifest.totals.file_count, bytes: manifest.totals.bytes },
+    measuredIndependently,
+  );
+  assert.equal(manifest.totals.file_count, 1082);
+
+  assert.deepEqual(
+    manifest.excluded.map((row) => row.path),
+    [
+      "data/global-scouter/core/per_bands_index.json",
+      "data/global-scouter/core/revision_movers.json",
+      "data/global-scouter/core/slick_index.json",
+      "data/global-scouter/core/stocks_analyzer.json",
+    ],
+  );
+  assert.deepEqual(
+    manifest.derived_public_projection_roots.map((row) => row.path).sort(),
+    [
+      "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
+      "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
+      "100xfenok-next/public/data/global-scouter/core/slick_index.json",
+      "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
+    ],
+  );
+  for (const row of manifest.derived_public_projection_roots) {
+    assert.equal(row.migrates, false);
+    assert.ok(row.reason.length > 0);
+  }
+  assert.equal(inventory.complete, true);
+  assert.equal(inventory.file_count, manifest.totals.file_count);
+  assert.equal(inventory.bytes, manifest.totals.bytes);
+  assert.equal(inventory.digest, manifest.path_digest);
+  assert.equal(
+    buildCandidateScope({ repoRoot: REPO_ROOT, candidateId: GLOBAL_SCOUTER }).manifest.path_digest,
+    manifest.path_digest,
+  );
+  return manifest;
+}
+
 // The calculator checks above prove the arithmetic. They do not prove the wiring:
 // which inventory the report actually hands the calculator, and whether a scoped
 // run is labelled as one. A scoped verdict silently presented as an estate verdict
@@ -275,6 +332,7 @@ async function reportAndCliChecks() {
 }
 
 const manifest = realScopeChecks();
+globalScouterChecks();
 failClosedChecks(manifest);
 await budgetIntegrationChecks(manifest);
 await reportAndCliChecks();

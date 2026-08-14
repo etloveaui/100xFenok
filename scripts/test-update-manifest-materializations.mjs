@@ -8,6 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { orderMaterializations, validateMaterializationRoutes } from "./materialize-update-manifest-routes.mjs";
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workflow = fs.readFileSync(path.join(root, ".github/workflows/update-manifest.yml"), "utf8");
@@ -129,10 +130,31 @@ assert.equal(fs.existsSync(path.join(root, "scripts/materialize-update-manifest-
 const helperPath = path.join(root, "scripts/materialize-update-manifest-routes.mjs");
 const routes = manifest.update_manifest.materializations;
 const BATCH2_ROUTES = EXPECTED_ROUTES.slice(9);
-const relevantPublicIgnoreRules = fs.readFileSync(path.join(root, ".gitignore"), "utf8")
+const publicIgnoreRules = fs.readFileSync(path.join(root, ".gitignore"), "utf8")
   .split(/\r?\n/u)
   .map((line) => line.trim())
   .filter((line) => line && !line.startsWith("#") && line.startsWith("100xfenok-next/public/data/"))
+;
+// Global Scouter is a whole-family generic-sync mirror. Its directory ignore is
+// intentionally not an Update Manifest route: the full sync boundary rebuilds
+// the unchanged public URL, while the four derived core files keep their exact
+// materialization routes below. Keep this exception explicit so a future route
+// or ignore edit cannot silently erase the distinction.
+const GENERIC_SYNC_IGNORE_RULES = ["100xfenok-next/public/data/global-scouter/"];
+assert.deepEqual(
+  publicIgnoreRules.filter((rule) => GENERIC_SYNC_IGNORE_RULES.includes(rule)),
+  GENERIC_SYNC_IGNORE_RULES,
+  "Global Scouter must retain one explicit whole-family generic-sync ignore rule",
+);
+const globalScouterLane = LANE_REGISTRY.lanes.find((lane) => lane.id === "global_scouter");
+assert.ok(globalScouterLane, "Global Scouter lane must exist");
+assert.deepEqual(
+  globalScouterLane.roots.public_mirror,
+  ["100xfenok-next/public/data/global-scouter"],
+  "Global Scouter generic-sync ignore must match the registry public mirror root",
+);
+const relevantPublicIgnoreRules = publicIgnoreRules
+  .filter((ignoreRule) => !GENERIC_SYNC_IGNORE_RULES.includes(ignoreRule))
   .filter((ignoreRule) => BATCH2_ROUTES.some((route) => (
     ignoreRule === route.destination || ignoreRule.startsWith(`${route.destination}/`)
   )));
@@ -141,10 +163,6 @@ assert.deepEqual(
   [
     "100xfenok-next/public/data/sec-13f/investors/griffin.json",
     "100xfenok-next/public/data/damodaran/",
-    "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
-    "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
-    "100xfenok-next/public/data/global-scouter/core/slick_index.json",
-    "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
     "100xfenok-next/public/data/sec-13f/summary.json",
     "100xfenok-next/public/data/sec-13f/by_sector.json",
     "100xfenok-next/public/data/sec-13f/by_ticker.json",

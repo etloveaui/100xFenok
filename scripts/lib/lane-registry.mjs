@@ -933,7 +933,11 @@ const lanes = [
       "data/global-scouter/schema.json",
       "data/global-scouter/README.md",
     ],
-    public_mirror: ["100xfenok-next/public/data/global-scouter/core/metadata.json"],
+    // The entire owner-run bundle is rebuilt by the generic sync boundary at
+    // the existing public URL. Naming the directory makes the 1,081 formerly
+    // allow-by-default copies explicit without treating the four workflow-
+    // derived core outputs as part of this lane's canonical export roots.
+    public_mirror: ["100xfenok-next/public/data/global-scouter"],
     commit_shards: [],
     recovery_store: null,
     declared_exception: "external owner-run converter has no GitHub attempt shard; cadence is evidenced by canonical metadata",

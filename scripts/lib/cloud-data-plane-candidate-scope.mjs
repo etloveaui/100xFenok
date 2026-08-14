@@ -54,6 +54,47 @@ const CANDIDATE_SCOPES = Object.freeze({
       "data/stockanalysis/surface_consumers.json": "surface consumer declaration for the surfaces lane, not ETF detail payload",
     }),
   }),
+  global_scouter: Object.freeze({
+    id: "global_scouter",
+    // The owner-run export is a family with three individually declared core
+    // files plus whole directory outputs. The four workflow-derived core
+    // outputs are deliberately excluded here: they already have their own
+    // materialization routes and were closed as a separate canonical-only
+    // slice.
+    classification_roots: Object.freeze(["data/global-scouter"]),
+    derived_public_projection_roots: Object.freeze([
+      Object.freeze({
+        path: "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
+        kind: "materialized_file",
+        migrates: false,
+        reason: "derived by the stocks-analyzer workflow and restored by its exact Update Manifest route; measured separately from the owner-run export",
+      }),
+      Object.freeze({
+        path: "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
+        kind: "materialized_file",
+        migrates: false,
+        reason: "derived by the stocks-analyzer workflow and restored by its exact Update Manifest route; measured separately from the owner-run export",
+      }),
+      Object.freeze({
+        path: "100xfenok-next/public/data/global-scouter/core/slick_index.json",
+        kind: "materialized_file",
+        migrates: false,
+        reason: "derived by the stocks-analyzer workflow and restored by its exact Update Manifest route; measured separately from the owner-run export",
+      }),
+      Object.freeze({
+        path: "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
+        kind: "materialized_file",
+        migrates: false,
+        reason: "derived by the revision-movers workflow and restored by its exact Update Manifest route; measured separately from the owner-run export",
+      }),
+    ]),
+    declared_exclusions: Object.freeze({
+      "data/global-scouter/core/stocks_analyzer.json": "workflow-derived core output already governed by a separate exact materialization route",
+      "data/global-scouter/core/per_bands_index.json": "workflow-derived core output already governed by a separate exact materialization route",
+      "data/global-scouter/core/slick_index.json": "workflow-derived core output already governed by a separate exact materialization route",
+      "data/global-scouter/core/revision_movers.json": "workflow-derived core output already governed by a separate exact materialization route",
+    }),
+  }),
 });
 
 export function candidateScopeIds() {
@@ -174,21 +215,35 @@ export function buildCandidateScope({
   // a written reason. Anything else stops the build.
   const excluded = [];
   const unclassified = [];
-  for (const classificationRoot of scope.classification_roots) {
+  const includedRootSet = new Set(includedRoots);
+  const classificationRootSet = new Set(scope.classification_roots);
+  const isContainerOfDeclaredPath = (relative) => (
+    includedRoots.some((root) => root.startsWith(`${relative}/`))
+    || scope.classification_roots.some((root) => root.startsWith(`${relative}/`))
+  );
+  const classify = (relative) => {
+    if (includedRootSet.has(relative)) return;
+    const otherOwner = owners.get(relative);
+    if (otherOwner) {
+      excluded.push({ path: relative, class: "other_lane_owned", owner_lane: otherOwner, reason: `declared canonical output of lane ${otherOwner}` });
+      return;
+    }
+    const declared = scope.declared_exclusions[relative];
+    if (declared) {
+      excluded.push({ path: relative, class: "declared_exclusion", owner_lane: null, reason: declared });
+      return;
+    }
+    if (isContainerOfDeclaredPath(relative)) {
+      for (const entry of listDirEntries(path.join(repoRoot, relative))) {
+        classify(`${relative}/${entry}`);
+      }
+      return;
+    }
+    unclassified.push(relative);
+  };
+  for (const classificationRoot of classificationRootSet) {
     for (const entry of listDirEntries(path.join(repoRoot, classificationRoot))) {
-      const relative = `${classificationRoot}/${entry}`;
-      if (includedRoots.includes(relative)) continue;
-      const otherOwner = owners.get(relative);
-      if (otherOwner) {
-        excluded.push({ path: relative, class: "other_lane_owned", owner_lane: otherOwner, reason: `declared canonical output of lane ${otherOwner}` });
-        continue;
-      }
-      const declared = scope.declared_exclusions[relative];
-      if (declared) {
-        excluded.push({ path: relative, class: "declared_exclusion", owner_lane: null, reason: declared });
-        continue;
-      }
-      unclassified.push(relative);
+      classify(`${classificationRoot}/${entry}`);
     }
   }
   if (unclassified.length > 0) {
