@@ -1231,7 +1231,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
                       aria-expanded={isExpanded}
                       aria-label={`${row.label} 추이 차트 ${isExpanded ? "접기" : "펼치기"}`}
                       onClick={() => setExpandedRow(isExpanded ? null : row.label)}
-                      className="mt-1 inline-flex min-h-7 min-w-9 items-center justify-center rounded-md border border-slate-200 bg-white px-2 text-[9px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
+                      className="mt-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-slate-200 bg-white px-2 text-[9px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
                     >
                       추이
                     </button>
@@ -1426,7 +1426,7 @@ function StockEstimatesPanel({
             data-stock-estimates-granularity={item.key}
             aria-pressed={granularity === item.key}
             onClick={() => setGranularity(item.key)}
-            className={`min-h-9 rounded-md px-3 text-[11px] font-black transition ${
+            className={`min-h-11 rounded-md px-3 text-[11px] font-black transition ${
               granularity === item.key
                 ? "bg-white text-slate-950 shadow-sm"
                 : "text-slate-500 hover:text-slate-900"
@@ -2418,9 +2418,9 @@ function OwnershipHeroCp({
 
   return (
     <>
-      <section className="cpw4-hero" id="guru-section" data-stock-tab-card="ownership-guru">
+      <section className="cpw4-hero" id="guru-section" data-stock-tab-card="ownership-guru" data-smart-money-section="diff">
         <div className="cpw4-hero__top">
-          <p className="cpw4-hero__eyebrow">
+          <p className="cpw4-hero__eyebrow" data-smart-money-asof>
             13F 기관 자금 흐름{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}{holderCount > 0 ? ` · 보유 ${holderCount}곳` : ""}
           </p>
           {hasFlow ? (
@@ -2479,7 +2479,7 @@ function OwnershipHeroCp({
       </section>
 
       <div className="cpw4-own-body-grid">
-        <section className="cp-stock-tab-card" data-stock-tab-card="ownership-holders">
+        <section className="cp-stock-tab-card" data-stock-tab-card="ownership-holders" data-smart-money-section="holdings">
           <header className="cp-stock-tab-card__header">
             <div><p className="cp-stock-rail-eyebrow">13F Guru</p><h2>Top Guru 보유 비중</h2></div>
             <span style={{ fontSize: 11.5, color: "var(--cp-text-soft)", fontWeight: 650 }}>포트폴리오 내 {ticker} 비중 기준{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}</span>
@@ -2487,14 +2487,14 @@ function OwnershipHeroCp({
           <div className="cp-stock-tab-card__body">
             {top10.length > 0 ? (
               <>
-                <div className="cpw4-holder-cols">
+                <div className="cpw4-holder-cols" data-smart-money-report-date-column>
                   <span>#</span><span>투자자</span><span>포트폴리오 비중</span><span className="right">비중</span><span className="right">주식수</span><span className="right">공시 기준</span>
                 </div>
                 {top10.map((h, i) => {
                   const maxWeight = top10[0]?.weight || 1;
                   const barPct = maxWeight > 0 ? Math.max(4, (h.weight / maxWeight) * 100) : 0;
                   return (
-                    <div className="cpw4-holder-row" key={h.investor}>
+                    <div className="cpw4-holder-row" key={h.investor} data-smart-money-report-date-cell>
                       <div className={`cpw4-holder-rank ${i < 3 ? "cpw4-holder-rank--top" : ""}`}>{i + 1}</div>
                       <TransitionLink href={ROUTES.superinvestorsGuru(h.investor)} className="cpw4-holder-name" title={h.investor}>{h.investor}</TransitionLink>
                       <div className="cpw4-holder-track"><div className="cpw4-holder-fill" style={{ width: `${barPct}%` }} /></div>
@@ -2562,7 +2562,7 @@ function OwnershipHeroCp({
         </div>
       </div>
 
-      <p className="cpw4-disclaimer">13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다{reportBasisLabel ? ` · ${reportBasisLabel} 데이터` : ""}. Guru 합산 보유 평가액은 현재가 × 보유주식수 근사치입니다.</p>
+      <p className="cpw4-disclaimer" data-smart-money-lag-disclosure>13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다{reportBasisLabel ? ` · ${reportBasisLabel} 데이터` : ""}. Guru 합산 보유 평가액은 현재가 × 보유주식수 근사치입니다.</p>
     </>
   );
 }
