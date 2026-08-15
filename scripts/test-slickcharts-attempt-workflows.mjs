@@ -69,6 +69,11 @@ for (const member of ["history", "symbols"]) {
     /scripts\/publish-slickcharts-attempt\.sh[\s\S]*?--manifest-workflow \.github\/workflows\/slickcharts-weekly\.yml[\s\S]*?--manifest-always always_if_exists[\s\S]*?--[\s\S]*?data\/slickcharts\/sp500\.json[\s\S]*?data\/slickcharts\/berkshire\.json/,
     "weekly must opt into its always manifest stage while retaining all positional data paths",
   );
+  assert.match(
+    weekly,
+    /CLOUD_ACCEPTANCE_MIN_OBSERVED_AT=\$\(date -u \+%Y-%m-%dT%H:%M:%SZ\)" >> "\$GITHUB_ENV"[\s\S]*?- name: Check slickcharts-weekly cloud acceptance[\s\S]*?CLOUD_ACCEPTANCE_BASE_URL: https:\/\/100xfenok\.etloveaui\.workers\.dev[\s\S]*?check-cloud-family-acceptance\.mjs --family=slickcharts-weekly/,
+    "weekly must record a current-run-bound cloud acceptance check",
+  );
 }
 
 {

@@ -54,6 +54,7 @@ jobs:
           echo "SLICKCHARTS_ATTEMPT_EVENTS_PATH=$RUNNER_TEMP/slickcharts-weekly-attempt-events.jsonl" >> "$GITHUB_ENV"
           echo "SLICKCHARTS_COMPOSITE_SNAPSHOT_DIR=$RUNNER_TEMP/slickcharts-composite-weekly-baseline" >> "$GITHUB_ENV"
           echo "SLICKCHARTS_COMPOSITE_STATUS_PATH=$RUNNER_TEMP/slickcharts-composite-weekly-status.json" >> "$GITHUB_ENV"
+          echo "CLOUD_ACCEPTANCE_MIN_OBSERVED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -174,6 +175,16 @@ jobs:
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=slickcharts-weekly --tolerate-gate-block --json
+
+      # A tolerated cost-gate block is a known non-proof, not a green cloud
+      # promotion. Bind this check to the current run so a prior generation
+      # cannot satisfy the weekly cloud evidence by accident.
+      - name: Check slickcharts-weekly cloud acceptance
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          CLOUD_ACCEPTANCE_BASE_URL: https://100xfenok.etloveaui.workers.dev
+        run: node scripts/ops/check-cloud-family-acceptance.mjs --family=slickcharts-weekly
 
       - name: Persist slickcharts-weekly publish outcome
         if: ${{ always() }}
