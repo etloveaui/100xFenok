@@ -2614,6 +2614,83 @@ module.main()
                 }
             )
 
+    def test_bank_ratio_profile_uses_statement_specific_floor(self) -> None:
+        periods = ["2025-12-31", "2024-12-31", "2023-12-31", "2022-12-31", "2021-12-31", "2020-12-31"]
+        fields = ["marketcap", "pe", "pb", "roe", "dividendyield"] + [
+            f"ratio_{index}" for index in range(10)
+        ]
+        rows = [
+            {"field": field, "values": [float(index + 1)] * len(periods)}
+            for index, field in enumerate(fields)
+        ]
+        self.fetcher.validate_financial_statement(
+            {
+                "ticker": "JPM",
+                "statement": "ratios",
+                "period": "annual",
+                "periods": periods,
+                "rows": rows,
+                "field_count": len(rows),
+            }
+        )
+        short_periods = periods[:2]
+        with self.assertRaisesRegex(ValueError, r"ratios annual periods=2"):
+            self.fetcher.validate_financial_statement(
+                {
+                    "ticker": "JPM",
+                    "statement": "ratios",
+                    "period": "annual",
+                    "periods": short_periods,
+                    "rows": [
+                        {"field": field, "values": [1.0] * len(short_periods)}
+                        for field in fields
+                    ],
+                    "field_count": len(rows),
+                }
+            )
+        with self.assertRaisesRegex(ValueError, r"ratios annual rows=14 min=15"):
+            self.fetcher.validate_financial_statement(
+                {
+                    "ticker": "JPM",
+                    "statement": "ratios",
+                    "period": "annual",
+                    "periods": periods,
+                    "rows": rows[:-1],
+                    "field_count": len(rows) - 1,
+                }
+            )
+
+        null_rows = [
+            {"field": field, "values": [None] * len(periods)}
+            for field in fields
+        ]
+        with self.assertRaisesRegex(ValueError, "no finite observations"):
+            self.fetcher.validate_financial_statement(
+                {
+                    "ticker": "JPM",
+                    "statement": "ratios",
+                    "period": "annual",
+                    "periods": periods,
+                    "rows": null_rows,
+                    "field_count": len(null_rows),
+                }
+            )
+
+        missing_required = [row for row in rows if row["field"] != "roe"]
+        with self.assertRaisesRegex(ValueError, "missing required fields.*roe"):
+            self.fetcher.validate_financial_statement(
+                {
+                    "ticker": "JPM",
+                    "statement": "ratios",
+                    "period": "annual",
+                    "periods": periods,
+                    "rows": missing_required + [
+                        {"field": "ratio_extra", "values": [1.0] * len(periods)}
+                    ],
+                    "field_count": len(rows),
+                }
+            )
+
     def test_stock_payload_links_financials_summary_when_supplied(self) -> None:
         financials = {
             "fetched_at": "2026-06-18T00:00:00Z",

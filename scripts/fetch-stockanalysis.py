@@ -668,6 +668,20 @@ FINANCIAL_STATEMENT_PATHS = {
 }
 FINANCIAL_PERIODS = ("annual", "quarterly")
 MIN_FINANCIAL_FIELD_COUNT = 20
+MIN_FINANCIAL_FIELD_COUNT_BY_STATEMENT = {
+    # StockAnalysis publishes fewer ratio rows for bank issuers because
+    # enterprise-value, turnover and debt-to-cash-flow metrics are not
+    # meaningful or are omitted. JPM currently returns 15 structurally valid
+    # ratio rows; keep that profile distinct from the 20-row floor used by
+    # the statement families whose row set is stable across the focus basket.
+    "ratios": 15,
+}
+REQUIRED_FINANCIAL_FIELDS_BY_STATEMENT = {
+    # These are the stable ratio anchors used to distinguish a complete
+    # provider profile from an arbitrary short payload. Field-id casing has
+    # changed across provider payloads, so validation canonicalizes ids first.
+    "ratios": {"marketcap", "pe", "pb", "roe", "dividendyield"},
+}
 MIN_FINANCIAL_PERIOD_COUNT = {
     "annual": 3,
     "quarterly": 4,
@@ -1282,11 +1296,41 @@ def normalize_financial_statement(ticker: str, statement: str, decoded: dict) ->
 
 def validate_financial_statement(statement: dict) -> None:
     period = statement.get("period")
+    statement_name = str(statement.get("statement") or "")
     rows = statement.get("rows") or []
     periods = statement.get("periods") or []
     min_periods = MIN_FINANCIAL_PERIOD_COUNT.get(str(period), 1)
-    if len(rows) < MIN_FINANCIAL_FIELD_COUNT:
-        raise ValueError(f"financial statement below field floor: {statement.get('statement')} {period} rows={len(rows)}")
+    min_fields = MIN_FINANCIAL_FIELD_COUNT_BY_STATEMENT.get(
+        statement_name,
+        MIN_FINANCIAL_FIELD_COUNT,
+    )
+    if len(rows) < min_fields:
+        raise ValueError(
+            f"financial statement below field floor: {statement_name} {period} "
+            f"rows={len(rows)} min={min_fields}"
+        )
+    required_fields = REQUIRED_FINANCIAL_FIELDS_BY_STATEMENT.get(statement_name, set())
+    if required_fields:
+        available_fields = {
+            re.sub(r"[^a-z0-9]", "", str(row.get("field") or "").lower())
+            for row in rows
+        }
+        missing_fields = sorted(required_fields - available_fields)
+        if missing_fields:
+            raise ValueError(
+                f"financial statement missing required fields: {statement_name} "
+                f"{', '.join(missing_fields)}"
+            )
+    if statement_name == "ratios":
+        has_finite_value = any(
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and math.isfinite(value)
+            for row in rows
+            for value in (row.get("values") or [])
+        )
+        if not has_finite_value:
+            raise ValueError("financial statement ratios has no finite observations")
     if len(periods) < min_periods:
         raise ValueError(f"financial statement below period floor: {statement.get('statement')} {period} periods={len(periods)}")
     for row in rows:
