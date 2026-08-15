@@ -19,48 +19,6 @@
 @import "../styles/cp-w4-chart.css";
 @import "../styles/cp-w5-kit.css";
 
-/* Keep Tailwind's rem-based 11-unit controls at the 44px touch target on the
-   compact shell, where the product root font is intentionally smaller. */
-@media (max-width: 767px) {
-  a.min-h-11,
-  button.min-h-11,
-  input.min-h-11,
-  select.min-h-11 {
-    min-height: 44px !important;
-  }
-
-  input.h-11,
-  select.h-11 {
-    height: 44px !important;
-    min-height: 44px !important;
-  }
-
-  [data-etfs-surface] .cpw5-cta-btn,
-  .cpw5-etfs-search,
-  .cpw5-etfs-filter-field select {
-    min-height: 44px !important;
-    height: 44px !important;
-  }
-}
-
-[data-superinvestor-page][data-superinvestor-selected-context="true"] {
-  display: flex;
-  flex-direction: column;
-}
-
-[data-superinvestor-page][data-superinvestor-selected-context="true"] > [data-superinvestor-selected-landing] {
-  order: 1;
-}
-
-[data-superinvestor-page][data-superinvestor-selected-context="true"] > [data-superinvestor-overview] {
-  order: 2;
-}
-
-[data-superinvestor-page][data-superinvestor-selected-context="true"] > [role="tablist"],
-[data-superinvestor-page][data-superinvestor-selected-context="true"] > [role="tabpanel"] {
-  order: 3;
-}
-
 :root {
   /* P2-S1 token foundation: light values preserve the current UI exactly. */
   --fnk-neutral-50: #f8fafc;
@@ -1017,4 +975,46 @@ body:has([data-immersive-route]) #main-content {
       padding-top: calc(var(--nav-height-desktop) + env(safe-area-inset-top));
     }
   }
+}
+
+/* Keep compact-shell controls at the measured 44px touch target even though
+   the product root font intentionally makes Tailwind's rem units smaller. */
+@media (max-width: 767px) {
+  a.min-h-11,
+  button.min-h-11,
+  input.min-h-11,
+  select.min-h-11 {
+    min-height: 44px !important;
+  }
+
+  input.h-11,
+  select.h-11 {
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+
+  [data-etfs-surface] .cpw5-cta-btn,
+  .cpw5-etfs-search,
+  .cpw5-etfs-filter-field select {
+    min-height: 44px !important;
+    height: 44px !important;
+  }
+}
+
+[data-superinvestor-page][data-superinvestor-selected-context="true"] {
+  display: flex;
+  flex-direction: column;
+}
+
+[data-superinvestor-page][data-superinvestor-selected-context="true"] > [data-superinvestor-selected-landing] {
+  order: 1;
+}
+
+[data-superinvestor-page][data-superinvestor-selected-context="true"] > [data-superinvestor-overview] {
+  order: 2;
+}
+
+[data-superinvestor-page][data-superinvestor-selected-context="true"] > [role="tablist"],
+[data-superinvestor-page][data-superinvestor-selected-context="true"] > [role="tabpanel"] {
+  order: 3;
 }
