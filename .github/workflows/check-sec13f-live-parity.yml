@@ -1,0 +1,108 @@
+name: Check SEC 13F Live Semantic Parity
+
+# Read-only observation of the canonical SEC 13F projection. This is deliberately
+# separate from deployment, publication, freshness credit and graph expansion.
+
+on:
+  schedule:
+    # 19:15 KST, after the 09:30 UTC materialization window plus settle time.
+    - cron: '15 10 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: sec13f-live-semantic-parity
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout probe scripts and Git object database
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            /scripts/ops/
+            /scripts/lib/
+            /scripts/test-sec13f-live-privacy.mjs
+          sparse-checkout-cone-mode: false
+
+      - name: Pin canonical comparison ref
+        run: git fetch --depth=1 origin main:refs/remotes/origin/main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: '22'
+
+      - name: Run semantic parity probe
+        id: semantic
+        continue-on-error: true
+        env:
+          SEC13F_PARITY_BASE_URL: https://100xfenok.etloveaui.workers.dev
+          SEC13F_PARITY_CANONICAL_REF: origin/main
+          SEC13F_PARITY_REPORT_PATH: ${{ runner.temp }}/sec13f-semantic-parity.md
+        run: node scripts/ops/check-sec13f-live-parity.mjs
+
+      - name: Run separate private-route smoke
+        id: privacy
+        continue-on-error: true
+        env:
+          SEC13F_PRIVACY_LOG_PATH: ${{ runner.temp }}/sec13f-privacy.log
+        run: |
+          set -o pipefail
+          node scripts/test-sec13f-live-privacy.mjs \
+            --base-url https://100xfenok.etloveaui.workers.dev \
+            2>&1 | tee "$SEC13F_PRIVACY_LOG_PATH"
+
+      - name: Publish probe summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/sec13f-semantic-parity.md" ]; then
+            cat "$RUNNER_TEMP/sec13f-semantic-parity.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f "$RUNNER_TEMP/sec13f-privacy.log" ]; then
+            {
+              echo
+              echo 'SEC 13F private-route smoke'
+              cat "$RUNNER_TEMP/sec13f-privacy.log"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Open or update parity alarm
+        if: steps.semantic.outcome == 'failure' || steps.privacy.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="100xFenok SEC 13F live semantic parity alarm"
+          {
+            printf '%s\n\n' '[alert] SEC 13F live semantic parity or private-route smoke failed.'
+            if [ -f "$RUNNER_TEMP/sec13f-semantic-parity.md" ]; then cat "$RUNNER_TEMP/sec13f-semantic-parity.md"; fi
+            if [ -f "$RUNNER_TEMP/sec13f-privacy.log" ]; then cat "$RUNNER_TEMP/sec13f-privacy.log"; fi
+            printf '\nObserved by: %s\n' "$RUN_URL"
+          } > "$RUNNER_TEMP/sec13f-parity-issue.md"
+          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file "$RUNNER_TEMP/sec13f-parity-issue.md"
+          else
+            gh issue create --title "$title" --body-file "$RUNNER_TEMP/sec13f-parity-issue.md"
+          fi
+
+      - name: Close parity alarm on recovery
+        if: steps.semantic.outcome == 'success' && steps.privacy.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="100xFenok SEC 13F live semantic parity alarm"
+          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          [ -n "$existing" ] || exit 0
+          gh issue comment "$existing" --body "[all-clear] SEC 13F semantic parity and private-route smoke recovered. Observed by: $RUN_URL"
+          gh issue close "$existing" --reason completed
