@@ -4,16 +4,6 @@
   "entity": "JPM",
   "attempts": [
     {
-      "run_id": "30495499317",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 21 * * *",
-      "natural": true,
-      "observed_at": "2026-07-29T22:17:11Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
       "run_id": "30769627245",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -143,27 +133,36 @@
       "outcome": "failed",
       "controlled": false,
       "error": "ValueError: financial candidate is required for stock pair: JPM; ValueError: financial statement below field floor: ratios annual rows=15"
+    },
+    {
+      "run_id": "31910027994",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-15T21:40:57Z",
+      "outcome": "recovered",
+      "controlled": false
     }
   ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
-    "path": "data/admin/stockanalysis-recovery/lkg/stock/JPM.json",
-    "payload_sha256": "ff7cf7a24472b3f0fa4d45fb3546e3d419953084e3fd3320b238f14175ae00d8",
-    "source_as_of": "2026-08-14T00:00:00Z",
-    "fetched_at": "2026-08-14T12:41:34Z"
+    "path": "data/stockanalysis/stocks/JPM.json",
+    "payload_sha256": "dcced5980ffe39aef711f1a02ae162aaa28629eb9c21cfdc885d8b3415c99466",
+    "source_as_of": "2026-08-14T20:00:00Z",
+    "fetched_at": "2026-08-15T21:41:19Z"
   },
-  "updated_at": "2026-08-14T21:46:31Z",
+  "updated_at": "2026-08-15T21:40:57Z",
   "last_attempt": {
-    "run_id": "31843688447",
+    "run_id": "31910027994",
     "run_attempt": 1,
     "event_name": "schedule",
     "schedule": "20 21 * * *",
     "natural": true,
-    "observed_at": "2026-08-14T21:46:31Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "ValueError: financial candidate is required for stock pair: JPM; ValueError: financial statement below field floor: ratios annual rows=15"
+    "observed_at": "2026-08-15T21:40:57Z",
+    "outcome": "recovered",
+    "controlled": false
   },
   "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/stock/JPM.json",
@@ -171,19 +170,9 @@
     "source_as_of": "2026-08-14T00:00:00Z",
     "fetched_at": "2026-08-14T12:41:34Z"
   },
-  "recovered_from_run_id": "29624561317",
-  "recovered_at": "2026-07-18T22:56:25Z",
+  "recovered_from_run_id": "31843688447",
+  "recovered_at": "2026-08-15T21:40:57Z",
   "last_recovered_failure": {
-    "run_id": "29624561317",
-    "run_attempt": 1,
-    "observed_at": "2026-07-18T01:18:00Z",
-    "error": "HTTPError: HTTP Error 404: Not Found",
-    "controlled": false,
-    "had_canonical_before_failure": true,
-    "expected_payload_sha256": "08c970a9016adb0199d49f1af751a872da096ab36673f6d5bb9abaa56532d8c5",
-    "data_loss": false
-  },
-  "latest_failure": {
     "run_id": "31843688447",
     "run_attempt": 1,
     "observed_at": "2026-08-14T21:46:31Z",
@@ -192,5 +181,8 @@
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "ff7cf7a24472b3f0fa4d45fb3546e3d419953084e3fd3320b238f14175ae00d8",
     "data_loss": false
-  }
+  },
+  "recovery_run_id": "31910027994",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule"
 }

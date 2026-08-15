@@ -4,16 +4,6 @@
   "entity": "JPM",
   "attempts": [
     {
-      "run_id": "30495499317",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 21 * * *",
-      "natural": true,
-      "observed_at": "2026-07-29T22:17:11Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
       "run_id": "30769627245",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -143,29 +133,49 @@
       "outcome": "failed",
       "controlled": false,
       "error": "ValueError: financial statement below field floor: ratios annual rows=15"
+    },
+    {
+      "run_id": "31910027994",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-15T21:40:57Z",
+      "outcome": "recovered",
+      "controlled": false
     }
   ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
+    "path": "data/stockanalysis/financials/JPM.json",
+    "payload_sha256": "61d6dc428d492aa620a37d4d763e5b2491d38d83f2fa98f9eda7ea7495394f4e",
+    "source_as_of": "2026-06-30",
+    "fetched_at": "2026-08-15T21:41:19Z"
+  },
+  "updated_at": "2026-08-15T21:40:57Z",
+  "last_attempt": {
+    "run_id": "31910027994",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "observed_at": "2026-08-15T21:40:57Z",
+    "outcome": "recovered",
+    "controlled": false
+  },
+  "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/financial/JPM.json",
     "payload_sha256": "a6a53afd207b1ac6fe03baf2a34b706a353e0d3657cb5c5759c5827a84c2e782",
     "source_as_of": "2026-06-30",
     "fetched_at": "2026-08-14T12:41:34Z"
   },
-  "updated_at": "2026-08-14T21:46:31Z",
-  "last_attempt": {
-    "run_id": "31843688447",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "20 21 * * *",
-    "natural": true,
-    "observed_at": "2026-08-14T21:46:31Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "ValueError: financial statement below field floor: ratios annual rows=15"
-  },
-  "latest_failure": {
+  "recovered_from_run_id": "31843688447",
+  "recovered_at": "2026-08-15T21:40:57Z",
+  "recovery_run_id": "31910027994",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "last_recovered_failure": {
     "run_id": "31843688447",
     "run_attempt": 1,
     "observed_at": "2026-08-14T21:46:31Z",
@@ -174,11 +184,5 @@
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "a6a53afd207b1ac6fe03baf2a34b706a353e0d3657cb5c5759c5827a84c2e782",
     "data_loss": false
-  },
-  "lkg": {
-    "path": "data/admin/stockanalysis-recovery/lkg/financial/JPM.json",
-    "payload_sha256": "a6a53afd207b1ac6fe03baf2a34b706a353e0d3657cb5c5759c5827a84c2e782",
-    "source_as_of": "2026-06-30",
-    "fetched_at": "2026-08-14T12:41:34Z"
   }
 }
