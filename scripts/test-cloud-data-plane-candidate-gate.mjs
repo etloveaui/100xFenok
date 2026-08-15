@@ -64,7 +64,7 @@ const estateReport = buildCloudDataPlaneReport({ repoRoot: REPO_ROOT, accountBas
   const receipt = buildCandidateScopeReceipt({ report: candidateReport, baseCommit: BASE, measuredAt: MEASURED_AT, demand: DEMAND, accountBaseline: baseline });
   assert.equal(receipt.schema_version, CANDIDATE_SCOPE_RECEIPT_SCHEMA);
   assert.equal(receipt.candidate.id, CANDIDATE);
-  assert.equal(receipt.candidate.enforcement, "shadow");
+  assert.equal(receipt.candidate.enforcement, "live");
   assert.equal(receipt.base.commit, BASE);
   assert.ok(receipt.base.lane_registry_digest);
   assert.equal(receipt.scope.path_digest, candidateReport.candidate_scope.path_digest);
@@ -163,7 +163,7 @@ const estateReport = buildCloudDataPlaneReport({ repoRoot: REPO_ROOT, accountBas
   const tampers = [
     ["schema_version", (r) => ({ ...r, schema_version: "candidate-scope-receipt/v0" })],
     ["candidate_id", (r) => ({ ...r, candidate: { ...r.candidate, id: "other_lane" } })],
-    ["candidate_enforcement", (r) => ({ ...r, candidate: { ...r.candidate, enforcement: "live" } })],
+    ["candidate_enforcement", (r) => ({ ...r, candidate: { ...r.candidate, enforcement: "shadow" } })],
     ["base_commit", (r) => ({ ...r, base: { ...r.base, commit: "" } })],
     ["base_lane_registry_digest", (r) => ({ ...r, base: { ...r.base, lane_registry_digest: "0".repeat(64) } })],
     ["scope_path_digest", (r) => ({ ...r, scope: { ...r.scope, path_digest: "0".repeat(64) } })],

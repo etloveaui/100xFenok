@@ -64,11 +64,11 @@ function realScopeChecks() {
   assert.equal(manifest.schema_version, CANDIDATE_SCOPE_SCHEMA);
   assert.equal(manifest.candidate_id, CANDIDATE);
 
-  // Ownership is asserted from the registry, and the lane must still be shadow:
-  // a scope contract that silently followed a live flip would let a migration
-  // budget be argued for a lane that was promoted without an emitter attempt.
+  // Ownership is asserted from the registry, and this candidate is now live only
+  // because its natural attempt shard, publish fence and origin readback landed.
+  // Keep the literal guard so an unreviewed enforcement flip still fails loudly.
   assert.equal(manifest.owner.lane_id, CANDIDATE);
-  assert.equal(manifest.owner.enforcement, "shadow");
+  assert.equal(manifest.owner.enforcement, "live");
   assert.equal(manifest.owner.owner_workflow, ".github/workflows/fetch-stockanalysis.yml");
 
   // The include set must equal the lane's declared canonical outputs exactly.
@@ -313,7 +313,7 @@ async function reportAndCliChecks() {
   assert.equal(parsed.candidate_scope.candidate_id, CANDIDATE);
   assert.equal(parsed.candidate_scope.totals.bytes, scoped.inventory.bytes);
   assert.equal(parsed.candidate_scope.path_digest, scoped.manifest.path_digest);
-  assert.equal(parsed.candidate_scope.owner.enforcement, "shadow");
+  assert.equal(parsed.candidate_scope.owner.enforcement, "live");
   // Absent baseline stays unverified. It must never round up to a pass.
   assert.equal(parsed.budget.r2.planning_line.verdict, "not_verified");
   assert.notEqual(parsed.verdict, "pass");
