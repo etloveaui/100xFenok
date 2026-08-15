@@ -1,9 +1,22 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-15T10:43:43.760Z",
+  "generated_at": "2026-08-15T12:06:15.874Z",
   "status": "open",
-  "open_incident_count": 5,
+  "open_incident_count": 7,
   "open_incidents": [
+    {
+      "workflow": "fetch-damodaran-shadow.yml",
+      "label": "Fetch Damodaran Data",
+      "streak": 2,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": 31255487819,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31255487819",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -70,6 +83,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
+    },
+    {
+      "workflow": "validate-workflows.yml",
+      "label": "Validate GitHub Workflows",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31871787585,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31871787585",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -464,16 +490,18 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31880170473",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31880170473",
-    "observed_at": "2026-08-15T10:43:43.760Z",
-    "event": "schedule",
+    "run_id": "31883666555",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31883666555",
+    "observed_at": "2026-08-15T12:06:15.874Z",
+    "event": "workflow_run",
     "workflows": [
+      "fetch-damodaran-shadow.yml",
       "fetch-edgar-filings.yml",
       "fetch-finra-ats-weekly.yml",
       "fetch-fred-macro.yml",
       "fetch-fred-yardeni.yml",
-      "fetch-stockanalysis.yml"
+      "fetch-stockanalysis.yml",
+      "validate-workflows.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
