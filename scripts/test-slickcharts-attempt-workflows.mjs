@@ -86,7 +86,7 @@ for (const member of ["history", "symbols"]) {
   assert.doesNotMatch(singleAttempt, /--manifest-workflow/, "single-symbol attempt must remain shard-only");
   assert.match(
     symbols,
-    /- name: Check slickcharts-symbols cloud acceptance[\s\S]*?CLOUD_ACCEPTANCE_MIN_OBSERVED_AT: \$\{\{ github\.run_started_at \}\}[\s\S]*?check-cloud-family-acceptance\.mjs --family=slickcharts-symbols/,
+    /- name: Capture cloud acceptance run start[\s\S]*?CLOUD_ACCEPTANCE_MIN_OBSERVED_AT=\$\(date -u \+%Y-%m-%dT%H:%M:%SZ\)" >> "\$GITHUB_ENV"[\s\S]*?- name: Check slickcharts-symbols cloud acceptance[\s\S]*?CLOUD_ACCEPTANCE_BASE_URL: https:\/\/100xfenok\.etloveaui\.workers\.dev[\s\S]*?check-cloud-family-acceptance\.mjs --family=slickcharts-symbols/,
     "symbols must record a current-run-bound cloud acceptance check",
   );
   const monthly = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-monthly.yml"), "utf8");
