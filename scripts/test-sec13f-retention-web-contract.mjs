@@ -16,6 +16,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SEC_ROOT = path.join(ROOT, "data/sec-13f");
 const INVESTORS_ROOT = path.join(SEC_ROOT, "investors");
 const CLIENT_HOOK = path.join(ROOT, "100xfenok-next/src/hooks/use13FData.ts");
+const PUBLIC_SEC_ROOT = path.join(ROOT, "100xfenok-next/public/data/sec-13f");
 const PUBLIC_INVESTORS_ROOT = path.join(ROOT, "100xfenok-next/public/data/sec-13f/investors");
 const WORKER_PATH = path.join(ROOT, "100xfenok-next/worker.ts");
 
@@ -37,6 +38,7 @@ const schema = readJson("data/sec-13f/schema.json");
 const metadata = summary.metadata;
 const consensus = readJson("data/sec-13f/analytics/consensus.json");
 const byTicker = readJson("data/sec-13f/by_ticker.json");
+const factorExposure = readJson("data/sec-13f/analytics/factor_exposures_summary.json");
 
 assert.ok(metadata && typeof metadata === "object", "13F metadata is required");
 assert.equal(metadata.partial_run, false, "13F refresh must not be partial");
@@ -69,6 +71,23 @@ assert.equal(
   fs.existsSync(path.join(PUBLIC_INVESTORS_ROOT, "griffin.json")),
   false,
   "private griffin investor payload must be absent from the local public projection",
+);
+for (const relativePath of ["README.md", "schema.json", "analytics/factor_exposures_summary.json"]) {
+  assert.equal(
+    fs.existsSync(path.join(PUBLIC_SEC_ROOT, relativePath)),
+    false,
+    `canonical-only SEC 13F public twin must be absent: ${relativePath}`,
+  );
+}
+assert.equal(
+  factorExposure.raw_data_boundary,
+  "admin_private_path_redacted",
+  "factor-exposure canonical payload must carry the public-safe private boundary",
+);
+assert.doesNotMatch(
+  JSON.stringify(factorExposure),
+  /_private\/admin\/fama_french\/raw/u,
+  "factor-exposure public payload must not disclose the private raw-cache path",
 );
 assert.ok(
   schema.files?.["analytics/factor_exposures_summary.json"],
@@ -124,6 +143,12 @@ assert.ok(investorRoute, "SEC 13F investor directory lacks a materialization rou
 assert.equal(investorRoute.mode, "rsync_tree");
 assert.equal(investorRoute.delete, true);
 assert.deepEqual(investorRoute.excludes, ["griffin.json"]);
+for (const relativePath of ["README.md", "schema.json"]) {
+  const route = routeBySource.get(`data/sec-13f/${relativePath}`);
+  assert.ok(route, `SEC 13F documentation payload lacks a materialization route: ${relativePath}`);
+  assert.equal(route.destination, `100xfenok-next/public/data/sec-13f/${relativePath}`);
+  assert.equal(route.mode, "cp_file");
+}
 
 const hook = fs.readFileSync(CLIENT_HOOK, "utf8");
 const worker = fs.readFileSync(WORKER_PATH, "utf8");

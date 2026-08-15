@@ -392,7 +392,7 @@ async function main() {
     contract_doc: "docs/planning/CONTRACT_superinvestors_charts_20260628.md",
     feasibility_doc: "docs/planning/FEASIBILITY_superinvestors_factor_radar_20260628.md",
     public_surface_status: "track_d_v2_factor_radar_derived_public_only",
-    raw_data_boundary: "raw Ken French ZIP/CSV cache stays under _private/admin/fama_french/raw and is not mirrored to public assets",
+    raw_data_boundary: "admin_private_path_redacted",
     factor_sources: {
       fiveFactor: {
         id: SOURCES.fiveFactor.id,

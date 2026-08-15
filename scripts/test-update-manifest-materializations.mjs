@@ -18,7 +18,7 @@ const helperCall = "node scripts/materialize-update-manifest-routes.mjs";
 // Independent oracle: never derive this map from the manifest generator. A
 // corrupt generator and regenerated artifact must fail here even if they drift
 // together. The map deliberately owns the exact source/destination pairing and
-// materialization semantics for all 40 routes.
+// materialization semantics for all 42 routes.
 const EXPECTED_ROUTES = [
   { source: "data/slickcharts", destination: "100xfenok-next/public/data/slickcharts", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/yf/finance", destination: "100xfenok-next/public/data/yf/finance", mode: "rsync_tree", delete: true, excludes: [] },
@@ -39,6 +39,8 @@ const EXPECTED_ROUTES = [
   { source: "data/global-scouter/core/per_bands_index.json", destination: "100xfenok-next/public/data/global-scouter/core/per_bands_index.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/global-scouter/core/slick_index.json", destination: "100xfenok-next/public/data/global-scouter/core/slick_index.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/global-scouter/core/revision_movers.json", destination: "100xfenok-next/public/data/global-scouter/core/revision_movers.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/README.md", destination: "100xfenok-next/public/data/sec-13f/README.md", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/schema.json", destination: "100xfenok-next/public/data/sec-13f/schema.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/summary.json", destination: "100xfenok-next/public/data/sec-13f/summary.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/by_sector.json", destination: "100xfenok-next/public/data/sec-13f/by_sector.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/by_ticker.json", destination: "100xfenok-next/public/data/sec-13f/by_ticker.json", mode: "cp_file", delete: false, excludes: [] },
@@ -73,8 +75,8 @@ function routeOracleFields(route) {
   };
 }
 
-assert.equal(EXPECTED_ROUTES.length, 40, "route oracle must contain exactly 40 routes");
-assert.equal(manifest.update_manifest.materializations.length, 40, "manifest must contain exactly 40 routes");
+assert.equal(EXPECTED_ROUTES.length, 42, "route oracle must contain exactly 42 routes");
+assert.equal(manifest.update_manifest.materializations.length, 42, "manifest must contain exactly 42 routes");
 assert.deepEqual(manifest.update_manifest.materializations.map(routeOracleFields), EXPECTED_ROUTES);
 for (const route of EXPECTED_ROUTES) {
   assert.ok(
@@ -165,6 +167,8 @@ assert.deepEqual(
   [
     "100xfenok-next/public/data/sec-13f/investors/griffin.json",
     "100xfenok-next/public/data/damodaran/",
+    "100xfenok-next/public/data/sec-13f/README.md",
+    "100xfenok-next/public/data/sec-13f/schema.json",
     "100xfenok-next/public/data/sec-13f/summary.json",
     "100xfenok-next/public/data/sec-13f/by_sector.json",
     "100xfenok-next/public/data/sec-13f/by_ticker.json",
@@ -173,6 +177,7 @@ assert.deepEqual(
     "100xfenok-next/public/data/sec-13f/analytics/conviction.json",
     "100xfenok-next/public/data/sec-13f/analytics/conviction_entries.json",
     "100xfenok-next/public/data/sec-13f/analytics/enhanced_consensus.json",
+    "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json",
     "100xfenok-next/public/data/sec-13f/analytics/hhi.json",
     "100xfenok-next/public/data/sec-13f/analytics/multi_quarter_trends.json",
     "100xfenok-next/public/data/sec-13f/analytics/new_positions.json",

@@ -77,6 +77,8 @@
       "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
       "100xfenok-next/public/data/global-scouter/core/slick_index.json",
       "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
+      "100xfenok-next/public/data/sec-13f/README.md",
+      "100xfenok-next/public/data/sec-13f/schema.json",
       "100xfenok-next/public/data/sec-13f/summary.json",
       "100xfenok-next/public/data/sec-13f/by_sector.json",
       "100xfenok-next/public/data/sec-13f/by_ticker.json",
@@ -271,6 +273,24 @@
         "mode": "cp_file",
         "required": true,
         "source": "data/global-scouter/core/revision_movers.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/README.md",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/README.md",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/schema.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/schema.json",
         "trailing_slash": false
       },
       {
@@ -2416,6 +2436,16 @@
           {
             "kind": "file",
             "path": "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/README.md",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/schema.json",
             "required": false
           },
           {
