@@ -504,3 +504,7 @@ jobs:
           node -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync(0,"utf8")); const okSchema = p.schema_version === "fenok-data-health-kpi/v1" || p.schema_version === "fenok-data-health-kpi/v2"; if (!okSchema || typeof p.generated_at !== "string" || !Array.isArray(p.lanes)) { console.error(JSON.stringify({schema_version:p.schema_version,generated_at:p.generated_at,lanes:Array.isArray(p.lanes)})); process.exit(1); } const r=p.runtime||{}; if (p.status !== "ready") console.warn("::warning:: KPI data state: " + (p.status_message||p.status)); if (r.verdict && r.verdict !== "ready") console.warn("::warning:: KPI runtime state: " + (r.status_message||r.verdict)); console.log(JSON.stringify({ok:true,schema:p.schema_version,status:p.status,status_message:p.status_message,built_at:r.built_at||null,verdict:r.verdict||null,fresh:r.fresh??null,hard_age_ok:r.hard_age_ok??null},null,2));' < "$live_kpi_path"
 
           node ../scripts/check-live-deploy-provenance.mjs --post
+
+      - name: Smoke SEC 13F private boundary
+        if: ${{ env.SUPERSEDED != 'true' }}
+        run: node scripts/test-sec13f-live-privacy.mjs --base-url https://100xfenok.etloveaui.workers.dev

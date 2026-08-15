@@ -56,6 +56,11 @@ jobs:
           node scripts/build-13f-factor-radar-v2.mjs
           node scripts/build-guru-holders-index.mjs
 
+      - name: Build and verify the review-only 13F bridge index
+        run: |
+          node scripts/build-sec13f-bridge-index.mjs
+          node scripts/test-sec13f-bridge-index.mjs
+
       - name: Build revision movers + industry benchmarks
         run: |
           node scripts/build-revision-movers.mjs
@@ -103,6 +108,7 @@ jobs:
             data/sec-13f/analytics/portfolio_views.json \
             data/sec-13f/analytics/factor_exposures_summary.json \
             data/sec-13f/analytics/guru_holders_index.json \
+            data/computed/sec13f_bridge_index.json \
             data/global-scouter/core/revision_movers.json \
             data/damodaran/industry_benchmarks.json \
             data/calendar/prev-values.json

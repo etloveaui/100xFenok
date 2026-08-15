@@ -77,6 +77,16 @@ function isExcluded(relativePath, excludes) {
   );
 }
 
+function removeExcludedDestinations(destination, relativePaths) {
+  for (const relativePath of relativePaths) {
+    const target = path.join(destination, relativePath);
+    const stat = lstatIfExists(target);
+    if (!stat) continue;
+    if (stat.isSymbolicLink()) fail(`excluded destination is a symlink: ${relativePath}`);
+    fs.rmSync(target, { recursive: stat.isDirectory() });
+  }
+}
+
 export function validateMaterializationRoutes({ repoRoot, routes }) {
   const resolvedRepo = fs.realpathSync(repoRoot);
   const sourceAllow = path.join(resolvedRepo, "data");
@@ -117,6 +127,18 @@ export function validateMaterializationRoutes({ repoRoot, routes }) {
     }
     if (route.mode === "cp_file" && route.excludes.length > 0) {
       fail(`routes[${index}] cp_file cannot exclude paths`);
+    }
+    if (route.remove_excluded !== undefined) {
+      if (!Array.isArray(route.remove_excluded)) fail(`routes[${index}].remove_excluded must be an array`);
+      for (const [removeIndex, relativePath] of route.remove_excluded.entries()) {
+        assertSafeRelative(relativePath, `routes[${index}].remove_excluded[${removeIndex}]`);
+        if (!route.excludes.includes(relativePath)) {
+          fail(`routes[${index}].remove_excluded[${removeIndex}] must also be excluded`);
+        }
+      }
+      if (route.mode !== "rsync_tree" || route.delete !== true) {
+        fail(`routes[${index}].remove_excluded requires delete-parity rsync_tree`);
+      }
     }
     const sourceAbs = path.resolve(resolvedRepo, route.source);
     const destinationAbs = path.resolve(resolvedRepo, route.destination);
@@ -277,6 +299,9 @@ export function materializeUpdateManifestRoutes(options) {
       if (!fs.readFileSync(route.sourceAbs).equals(fs.readFileSync(route.destinationAbs))) fail("cp_file parity differs");
     } else {
       fs.mkdirSync(route.destinationAbs, { recursive: true });
+      if (route.remove_excluded?.length) {
+        removeExcludedDestinations(route.destinationAbs, route.remove_excluded);
+      }
       // Anchored exact-path rules work for both files (griffin.json) and
       // directory entries (etfs) without broad glob matching.
       const excludeArgs = route.excludes.flatMap((exclude) => ["--exclude", `/${exclude}`]);

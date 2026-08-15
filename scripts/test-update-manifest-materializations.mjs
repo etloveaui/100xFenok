@@ -59,7 +59,7 @@ const EXPECTED_ROUTES = [
   { source: "data/sec-13f/analytics/turnover.json", destination: "100xfenok-next/public/data/sec-13f/analytics/turnover.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/damodaran", destination: "100xfenok-next/public/data/damodaran", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/calendar/prev-values.json", destination: "100xfenok-next/public/data/calendar/prev-values.json", mode: "cp_file", delete: false, excludes: [] },
-  { source: "data/sec-13f/investors", destination: "100xfenok-next/public/data/sec-13f/investors", mode: "rsync_tree", delete: true, excludes: ["griffin.json"] },
+  { source: "data/sec-13f/investors", destination: "100xfenok-next/public/data/sec-13f/investors", mode: "rsync_tree", delete: true, excludes: ["griffin.json"], remove_excluded: ["griffin.json"] },
 ];
 
 function routeOracleFields(route) {
@@ -69,6 +69,7 @@ function routeOracleFields(route) {
     mode: route.mode,
     delete: route.delete,
     excludes: route.excludes,
+    ...(route.remove_excluded ? { remove_excluded: route.remove_excluded } : {}),
   };
 }
 
@@ -337,7 +338,7 @@ function runHelper(fixture, args) {
   const first = runHelper(fixture, ["--all"]);
   assert.equal(first.status, 0, `${first.stderr}\n${first.stdout}`);
   assert.equal(fs.existsSync(destinationOnly), false, "exact investor mirror must remove destination-only content");
-  assert.equal(fs.readFileSync(excludedGriffin, "utf8"), "public-excluded\n");
+  assert.equal(fs.existsSync(excludedGriffin), false, "stale excluded griffin.json must be purged");
   const second = runHelper(fixture, ["--all"]);
   assert.equal(second.status, 0, `${second.stderr}\n${second.stdout}`);
   assert.equal(
@@ -345,11 +346,7 @@ function runHelper(fixture, args) {
     false,
     "second exact investor mirror run must keep destination-only content removed",
   );
-  assert.equal(
-    fs.readFileSync(excludedGriffin, "utf8"),
-    "public-excluded\n",
-    "second run must preserve excluded griffin.json content",
-  );
+  assert.equal(fs.existsSync(excludedGriffin), false, "second run must keep excluded griffin.json absent");
   for (const route of routes) {
     const source = path.join(fixture.repoRoot, route.source);
     const destination = path.join(fixture.repoRoot, route.destination);

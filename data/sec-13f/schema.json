@@ -383,6 +383,21 @@
         }
       }
     },
+    "analytics/factor_exposures_summary.json": {
+      "description": "Derived factor-exposure summary for the current public 13F analytics surface",
+      "schema": {
+        "schema_version": "number",
+        "generated_at": "ISO8601 datetime",
+        "source_file": "string",
+        "formula_version": "string",
+        "public_surface_status": "string",
+        "raw_data_boundary": "string",
+        "coverage": "object",
+        "factor_sources": "object",
+        "fields": "string[]",
+        "rows": "object[]"
+      }
+    },
     "analytics/ticker_aliases.json": {
       "description": "Raw 13F company-name key normalization diagnostics for by_ticker and consensus rebuilds",
       "schema": {

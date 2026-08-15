@@ -342,13 +342,13 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 }
 
-// Stocks Analyzer pins 15 literal canonical pathspecs plus the canonical
+// Stocks Analyzer pins 16 literal canonical pathspecs plus the canonical
 // investor JSON glob; public mirror staging is owned by the merge boundary.
 {
   const fixture = makeFixture({ workflow: BUILD_STOCKS_ANALYZER_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], BUILD_STOCKS_ANALYZER_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=16 stage_selected=17 staged_index_total=17/);
+  assert.match(always.stdout, /declared=17 stage_selected=18 staged_index_total=18/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   execFileSync("git", ["add", "-A"], { cwd: fixture.root });
@@ -495,7 +495,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
   const trackedAlways = run(tracked.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  // Same 2026-08-14 derivation as above: one more declared StockAnalysis path.
+  // Same registry derivation as above: one more declared StockAnalysis path.
   assert.match(trackedAlways.stdout, /declared=12 stage_selected=13 staged_index_total=12/);
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }

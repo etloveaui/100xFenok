@@ -15,6 +15,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SEC_ROOT = path.join(ROOT, "data/sec-13f");
 const INVESTORS_ROOT = path.join(SEC_ROOT, "investors");
 const CLIENT_HOOK = path.join(ROOT, "100xfenok-next/src/hooks/use13FData.ts");
+const PUBLIC_INVESTORS_ROOT = path.join(ROOT, "100xfenok-next/public/data/sec-13f/investors");
 
 function readJson(relativePath) {
   return JSON.parse(fs.readFileSync(path.join(ROOT, relativePath), "utf8"));
@@ -30,6 +31,7 @@ function assertQuarter(value, label) {
 }
 
 const summary = readJson("data/sec-13f/summary.json");
+const schema = readJson("data/sec-13f/schema.json");
 const metadata = summary.metadata;
 const consensus = readJson("data/sec-13f/analytics/consensus.json");
 const byTicker = readJson("data/sec-13f/by_ticker.json");
@@ -60,6 +62,15 @@ assert.deepEqual(
   investorFiles,
   investorEntries.map(([id]) => id).sort(),
   "summary and investor payload registries must stay aligned",
+);
+assert.equal(
+  fs.existsSync(path.join(PUBLIC_INVESTORS_ROOT, "griffin.json")),
+  false,
+  "private griffin investor payload must be absent from the local public projection",
+);
+assert.ok(
+  schema.files?.["analytics/factor_exposures_summary.json"],
+  "13F schema must declare the factor-exposure summary route",
 );
 
 let currentCohort = 0;

@@ -1671,6 +1671,7 @@ workflow_policies[".github/workflows/build-stocks-analyzer.yml"] = policy([], {
       "data/sec-13f/analytics/portfolio_views.json",
       "data/sec-13f/analytics/factor_exposures_summary.json",
       "data/sec-13f/analytics/guru_holders_index.json",
+      "data/computed/sec13f_bridge_index.json",
       "data/global-scouter/core/revision_movers.json",
       "data/damodaran/industry_benchmarks.json",
       "data/calendar/prev-values.json",

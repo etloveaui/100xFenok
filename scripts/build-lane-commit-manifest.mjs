@@ -465,9 +465,11 @@ export const UPDATE_MANIFEST_MATERIALIZATIONS = [
     destination: "100xfenok-next/public/data/sec-13f/investors",
     mode: "rsync_tree",
     delete: true,
-    // griffin.json is an intentionally absent public mirror artifact and is
-    // explicitly ignored at that destination by the repository contract.
+    // griffin.json is an intentionally absent public mirror artifact. The
+    // materializer purges a stale destination copy before the delete-parity
+    // rsync, so an old public bundle cannot keep serving the private file.
     excludes: ["griffin.json"],
+    remove_excluded: ["griffin.json"],
     required: true,
     trailing_slash: true,
   },
@@ -659,7 +661,11 @@ export function validateLaneCommitManifest(manifest, { registry = LANE_REGISTRY 
   }
   for (const [index, route] of update.materializations.entries()) {
     const routeKeys = Object.keys(route).sort();
-    if (JSON.stringify(routeKeys) !== JSON.stringify(["delete", "destination", "excludes", "mode", "required", "source", "trailing_slash"])) fail(`materializations[${index}] keys are invalid`);
+    const allowedRouteKeys = ["delete", "destination", "excludes", "mode", "remove_excluded", "required", "source", "trailing_slash"];
+    const expectedRouteKeys = route.remove_excluded === undefined
+      ? allowedRouteKeys.filter((key) => key !== "remove_excluded")
+      : allowedRouteKeys;
+    if (JSON.stringify(routeKeys) !== JSON.stringify(expectedRouteKeys.sort())) fail(`materializations[${index}] keys are invalid`);
     validatePathString(route.source, `materializations[${index}].source`);
     validatePathString(route.destination, `materializations[${index}].destination`);
     if (!Array.isArray(route.excludes)) fail(`materializations[${index}].excludes must be an array`);
@@ -669,6 +675,17 @@ export function validateLaneCommitManifest(manifest, { registry = LANE_REGISTRY 
       if (exclude.endsWith("/") || exclude.includes("*")) fail(`materializations[${index}].excludes[${excludeIndex}] must be an exact relative path`);
       if (seenExcludes.has(exclude)) fail(`materializations[${index}].excludes duplicates ${exclude}`);
       seenExcludes.add(exclude);
+    }
+    if (route.remove_excluded !== undefined) {
+      if (!Array.isArray(route.remove_excluded)) fail(`materializations[${index}].remove_excluded must be an array`);
+      const seenRemoved = new Set();
+      for (const [removeIndex, removePath] of route.remove_excluded.entries()) {
+        validatePathString(removePath, `materializations[${index}].remove_excluded[${removeIndex}]`);
+        if (!route.excludes.includes(removePath)) fail(`materializations[${index}].remove_excluded must also be excluded`);
+        if (seenRemoved.has(removePath)) fail(`materializations[${index}].remove_excluded duplicates ${removePath}`);
+        seenRemoved.add(removePath);
+      }
+      if (route.mode !== "rsync_tree" || route.delete !== true) fail(`materializations[${index}].remove_excluded requires delete-parity rsync_tree`);
     }
     if (!["cp_file", "rsync_tree"].includes(route.mode)) fail(`materializations[${index}].mode is invalid`);
     if (typeof route.delete !== "boolean" || typeof route.required !== "boolean" || typeof route.trailing_slash !== "boolean") fail(`materializations[${index}] booleans are invalid`);

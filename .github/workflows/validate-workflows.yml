@@ -35,6 +35,11 @@ on:
       - 'scripts/build-13f-trades.mjs'
       - 'scripts/build-13f-portfolio-views.mjs'
       - 'scripts/build-13f-factor-radar-v2.mjs'
+      - 'scripts/build-sec13f-bridge-index.mjs'
+      - 'scripts/test-sec13f-bridge-index.mjs'
+      - 'scripts/test-sec13f-retention-web-contract.mjs'
+      - 'scripts/test-update-manifest-materializations.mjs'
+      - 'data/computed/sec13f_bridge_index.json'
       - 'scripts/build-guru-holders-index.mjs'
       - 'scripts/build-revision-movers.mjs'
       - 'scripts/build-industry-benchmarks.mjs'
@@ -102,6 +107,11 @@ on:
       - 'scripts/build-13f-trades.mjs'
       - 'scripts/build-13f-portfolio-views.mjs'
       - 'scripts/build-13f-factor-radar-v2.mjs'
+      - 'scripts/build-sec13f-bridge-index.mjs'
+      - 'scripts/test-sec13f-bridge-index.mjs'
+      - 'scripts/test-sec13f-retention-web-contract.mjs'
+      - 'scripts/test-update-manifest-materializations.mjs'
+      - 'data/computed/sec13f_bridge_index.json'
       - 'scripts/build-guru-holders-index.mjs'
       - 'scripts/build-revision-movers.mjs'
       - 'scripts/build-industry-benchmarks.mjs'
@@ -202,6 +212,9 @@ jobs:
           node scripts/test-update-manifest-materializations.mjs
           node scripts/test-update-manifest-central-staging.mjs
           node scripts/test-lane-commit-manifest-parity.mjs
+          node scripts/test-update-manifest-materializations.mjs
+          node scripts/test-sec13f-retention-web-contract.mjs
+          node scripts/test-sec13f-bridge-index.mjs
           node scripts/test-build-data-supply-detection-floor.mjs
           node scripts/test-update-manifest-rebuild-policy.mjs
           node scripts/test-update-manifest-dispatch-decoupling.mjs

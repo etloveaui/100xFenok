@@ -1,5 +1,5 @@
 {
-  "registry_digest": "bc919c9f0de047ef3ba327ed36fe0a5fc379404624248653faed9b00a0b58360",
+  "registry_digest": "6bd2d2371b53912af1f2a1250a68e0d8666b0943c6b59afe97e132afa3fe425d",
   "registry_schema": "lane-registry/v3",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -460,6 +460,9 @@
           "griffin.json"
         ],
         "mode": "rsync_tree",
+        "remove_excluded": [
+          "griffin.json"
+        ],
         "required": true,
         "source": "data/sec-13f/investors",
         "trailing_slash": true
@@ -601,6 +604,11 @@
           {
             "kind": "file",
             "path": "data/sec-13f/analytics/guru_holders_index.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/computed/sec13f_bridge_index.json",
             "required": false
           },
           {

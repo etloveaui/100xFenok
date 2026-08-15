@@ -32,6 +32,7 @@ const PRODUCERS = Object.freeze([
   ["scripts/build-13f-portfolio-views.mjs", "data/sec-13f/analytics/portfolio_views.json"],
   ["scripts/build-13f-factor-radar-v2.mjs", "data/sec-13f/analytics/factor_exposures_summary.json"],
   ["scripts/build-guru-holders-index.mjs", "data/sec-13f/analytics/guru_holders_index.json"],
+  ["scripts/build-sec13f-bridge-index.mjs", "data/computed/sec13f_bridge_index.json"],
   ["scripts/build-revision-movers.mjs", "data/global-scouter/core/revision_movers.json"],
   ["scripts/build-industry-benchmarks.mjs", "data/damodaran/industry_benchmarks.json"],
   ["scripts/build-calendar-prev.mjs", "data/calendar/prev-values.json"],
@@ -175,6 +176,11 @@ for (const [relativePath, removedOutputs] of Object.entries(REMOVED_MIRROR_OUTPU
         covering[0].excludes,
         ["griffin.json"],
         `${relativePath} investors mirror route must keep the exact griffin.json exclusion: ${expectedRoute.destination}`,
+      );
+      assert.deepEqual(
+        covering[0].remove_excluded,
+        ["griffin.json"],
+        `${relativePath} investors mirror route must purge a stale griffin.json destination: ${expectedRoute.destination}`,
       );
     } else {
       assert.equal(
