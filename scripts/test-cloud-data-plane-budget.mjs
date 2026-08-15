@@ -8,11 +8,13 @@ import { fileURLToPath } from "node:url";
 import {
   CANDIDATE_PLANNING_POLICY,
   DEFAULT_CLOUD_DATA_PLANE_POLICY,
+  R2_MANIFEST_PLANNING_ENVELOPE,
   buildCloudDataPlaneCatalog,
   buildCloudDataPlaneReport,
   calculateCloudDataPlaneBudget,
   cloudDataPlaneExitCode,
   inventoryCloudDataPlaneRoots,
+  validateCandidatePlanningPolicy,
   validateCloudDataPlanePolicy,
 } from "./lib/cloud-data-plane-budget.mjs";
 import { canonicalJson } from "./lib/json-canonical.mjs";
@@ -46,6 +48,13 @@ const policy = readFixture("policy.json");
   assert.equal(result.r2.class_a_breakdown.delete_free.lower_bound, 5);
   assert.equal(result.r2.metrics.class_a_operations_per_month.lower_bound, 32);
   assert.equal(result.r2.metrics.class_b_operations_per_month.lower_bound, 55);
+  assert.equal(result.r2.manifest_planning_line.metrics.manifest_count.lower_bound, 15);
+  assert.equal(result.r2.manifest_planning_line.metrics.manifest_bytes.lower_bound, 540_000);
+  assert.equal(result.r2.manifest_planning_line.checks.manifest_count.limit, 61);
+  assert.equal(result.r2.manifest_planning_line.checks.manifest_bytes.limit, 117_000_000);
+  assert.equal(result.r2.manifest_planning_line.checks.manifest_count.verdict, "pass");
+  assert.equal(result.r2.manifest_planning_line.checks.manifest_bytes.verdict, "pass");
+  assert.equal(result.r2.manifest_planning_line.verdict, "pass");
   assert.equal(result.d1.metrics.account_bytes.lower_bound, 2500);
   assert.equal(result.d1.metrics.rows_read_per_day.lower_bound, 85);
   assert.equal(result.d1.metrics.rows_written_per_day.lower_bound, 33);
@@ -79,6 +88,7 @@ const policy = readFixture("policy.json");
   });
   assert.equal(missing.verdict, "not_verified");
   assert.equal(missing.r2.metrics.decimal_gb_month.lower_bound, 3);
+  assert.equal(missing.r2.manifest_planning_line.verdict, "not_verified");
 
   const partial = calculateCloudDataPlaneBudget({
     inventory: { complete: true, file_count: 2, bytes: 1_000_000_000 },
@@ -87,6 +97,7 @@ const policy = readFixture("policy.json");
     policy,
   });
   assert.equal(partial.verdict, "not_verified");
+  assert.equal(partial.r2.manifest_planning_line.verdict, "not_verified");
 }
 
 // Account-reported zero prior slots never shrink the conservative three-slot plan.
@@ -141,6 +152,61 @@ const policy = readFixture("policy.json");
   assert.equal(result.verdict, "fail");
 }
 
+// The manifest planning envelope is monthly and fails closed: over-limit counts
+// or bytes fail, and either missing input side reads as not_verified, never as
+// zero inventory.
+{
+  const overCount = clone(demand);
+  overCount.r2.manifests = { count: 50, bytes: 40_000 };
+  const countResult = calculateCloudDataPlaneBudget({
+    inventory: { complete: true, file_count: 2, bytes: 1_000_000_000 },
+    accountBaseline: baseline,
+    requestDemand: overCount,
+    policy,
+  });
+  assert.equal(countResult.r2.manifest_planning_line.checks.manifest_count.lower_bound, 62);
+  assert.equal(countResult.r2.manifest_planning_line.checks.manifest_count.verdict, "fail");
+  assert.equal(countResult.r2.manifest_planning_line.checks.manifest_bytes.verdict, "pass");
+  assert.equal(countResult.verdict, "pass", "estate budget remains non-gating for the review-only envelope");
+
+  const overBytes = clone(demand);
+  overBytes.r2.manifests = { count: 3, bytes: 116_500_001 };
+  const bytesResult = calculateCloudDataPlaneBudget({
+    inventory: { complete: true, file_count: 2, bytes: 1_000_000_000 },
+    accountBaseline: baseline,
+    requestDemand: overBytes,
+    policy,
+  });
+  assert.equal(bytesResult.r2.manifest_planning_line.checks.manifest_bytes.lower_bound, 117_000_001);
+  assert.equal(bytesResult.r2.manifest_planning_line.checks.manifest_bytes.verdict, "fail");
+  assert.equal(bytesResult.r2.manifest_planning_line.checks.manifest_count.verdict, "pass");
+  assert.equal(bytesResult.verdict, "pass", "estate budget remains non-gating for the review-only envelope");
+
+  const noDemandManifests = clone(demand);
+  delete noDemandManifests.r2.manifests;
+  const demandMissing = calculateCloudDataPlaneBudget({
+    inventory: { complete: true, file_count: 2, bytes: 1_000_000_000 },
+    accountBaseline: baseline,
+    requestDemand: noDemandManifests,
+    policy,
+  });
+  assert.equal(demandMissing.r2.manifest_planning_line.metrics.manifest_count.complete, false);
+  assert.equal(demandMissing.r2.manifest_planning_line.verdict, "not_verified");
+  assert.equal(demandMissing.verdict, "pass", "review-only manifest evidence must not fail the estate budget");
+
+  const noBaselineManifests = clone(baseline);
+  delete noBaselineManifests.r2.manifests;
+  const baselineMissing = calculateCloudDataPlaneBudget({
+    inventory: { complete: true, file_count: 2, bytes: 1_000_000_000 },
+    accountBaseline: noBaselineManifests,
+    requestDemand: demand,
+    policy,
+  });
+  assert.equal(baselineMissing.r2.manifest_planning_line.metrics.manifest_bytes.complete, false);
+  assert.equal(baselineMissing.r2.manifest_planning_line.verdict, "not_verified");
+  assert.equal(baselineMissing.verdict, "pass", "review-only manifest evidence must not fail the estate budget");
+}
+
 // Planning lines and platform hard limits remain separate gates.
 {
   const planningPolicy = clone(policy);
@@ -170,6 +236,10 @@ const policy = readFixture("policy.json");
   assert.equal(DEFAULT_CLOUD_DATA_PLANE_POLICY.d1.hard_limit.database_bytes, 500_000_000);
   assert.equal(DEFAULT_CLOUD_DATA_PLANE_POLICY.d1.hard_limit.queries_per_worker_invocation, 50);
   assert.equal(validateCloudDataPlanePolicy(DEFAULT_CLOUD_DATA_PLANE_POLICY), true);
+  assert.deepEqual(R2_MANIFEST_PLANNING_ENVELOPE, { manifest_count: 61, manifest_bytes: 117_000_000 });
+  assert.equal(CANDIDATE_PLANNING_POLICY.r2.manifest_count, R2_MANIFEST_PLANNING_ENVELOPE.manifest_count);
+  assert.equal(CANDIDATE_PLANNING_POLICY.r2.manifest_bytes, R2_MANIFEST_PLANNING_ENVELOPE.manifest_bytes);
+  assert.equal(validateCandidatePlanningPolicy(), true);
   const emptyLimits = clone(policy);
   emptyLimits.r2.hard_limit = {};
   emptyLimits.r2.planning_line = {};
@@ -183,7 +253,8 @@ const policy = readFixture("policy.json");
 }
 
 // Estate planning coverage stays deliberately partial; candidate planning
-// covers the same six metrics without relabelling the estate result.
+// covers every candidate metric, including the manifest pair, without
+// relabelling the estate result.
 {
   const inputs = {
     inventory: { complete: true, file_count: 2, bytes: 1_000_000_000 },
@@ -221,6 +292,11 @@ const policy = readFixture("policy.json");
       `${service} candidate report must preserve estate gaps`,
     );
   }
+  assert.equal(candidate.r2.planning_line.checks.manifest_count.limit, 61);
+  assert.equal(candidate.r2.planning_line.checks.manifest_count.verdict, "pass");
+  assert.equal(candidate.r2.planning_line.checks.manifest_bytes.limit, 117_000_000);
+  assert.equal(candidate.r2.planning_line.checks.manifest_bytes.verdict, "pass");
+  assert.equal(candidate.r2.manifest_planning_line.verdict, "pass");
 }
 
 {

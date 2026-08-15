@@ -635,6 +635,25 @@ function exactKeys(value, expected, context) {
 }
 
 /**
+ * Operator planning/review envelope for the R2 generation-manifest inventory,
+ * normalized to the budget report's monthly period.
+ *
+ * Why it exists: manifests are never deletion candidates under the retention
+ * planner, so their count and bytes accumulate while payload objects rotate;
+ * the budget report therefore measures them instead of treating them as
+ * bookkeeping. These values are explicitly NOT a Cloudflare hard limit — the
+ * provider publishes no manifest-specific R2 limit, so this is operator
+ * planning/review policy only and must never be cited as provider authority.
+ * Owner review 2026-08-16: manifest_count = 61 per month (730 per year rounded
+ * conservatively up to the month) and manifest_bytes = 117,000,000 per month
+ * (1.4 GB per year rounded conservatively up to the month).
+ */
+export const R2_MANIFEST_PLANNING_ENVELOPE = deepFreeze({
+  manifest_count: 61,
+  manifest_bytes: 117_000_000,
+});
+
+/**
  * Planning thresholds for a candidate-scoped run.
  *
  * Owner decision 2026-08-14: govern the metrics this candidate actually uses
@@ -650,15 +669,20 @@ function exactKeys(value, expected, context) {
  * estate policy already uses, which is the ratio that policy itself applies to
  * the two metrics it does govern (8 of 10 GB-month, 800,000 of 1,000,000 Class
  * A). Extending an existing ratio to the metrics it had skipped is a different
- * act from picking numbers, and it keeps the two policies commensurable.
+ * act from picking numbers, and it keeps the two policies commensurable. The
+ * two manifest entries are the deliberate exception: no provider hard limit
+ * exists for them, so their ceiling is the pinned monthly operator envelope
+ * above (R2_MANIFEST_PLANNING_ENVELOPE), not an 80% ratio.
  */
 export const CANDIDATE_PLANNING_POLICY = deepFreeze({
   schema_version: "cloud-data-plane-candidate-planning/v1",
-  derived_from: "0.8 x the pinned hard limit, the ratio the estate planning line already applies",
+  derived_from: "0.8 x the pinned hard limit for provider-limited metrics; the pinned monthly operator envelope for the manifest metrics",
   r2: {
     decimal_gb_month: 8,
     class_a_operations_per_month: 800_000,
     class_b_operations_per_month: 8_000_000,
+    // Custom metrics: ceiling is the pinned operator envelope, not a hard limit.
+    ...R2_MANIFEST_PLANNING_ENVELOPE,
   },
   d1: {
     database_bytes: 400_000_000,
@@ -685,9 +709,13 @@ export function validateCandidatePlanningPolicy(policy = CANDIDATE_PLANNING_POLI
   for (const service of ["r2", "d1", "kv"]) {
     const hard = DEFAULT_CLOUD_DATA_PLANE_POLICY[service].hard_limit;
     for (const [key, value] of Object.entries(policy[service] ?? {})) {
-      const ceiling = hard[key];
+      // manifest_count/manifest_bytes are custom metrics: no provider hard limit
+      // exists, so their ceiling is the pinned R2 manifest planning envelope.
+      const ceiling = (service === "r2" && key in R2_MANIFEST_PLANNING_ENVELOPE)
+        ? R2_MANIFEST_PLANNING_ENVELOPE[key]
+        : hard[key];
       if (ceiling === undefined) fail(`candidate policy governs unknown metric ${service}.${key}`);
-      if (!(value > 0) || value > ceiling) fail(`candidate policy ${service}.${key} must be positive and at most the hard limit ${ceiling}`);
+      if (!(value > 0) || value > ceiling) fail(`candidate policy ${service}.${key} must be positive and at most the ceiling ${ceiling}`);
     }
   }
   return true;
@@ -914,6 +942,26 @@ export function calculateCloudDataPlaneBudget({
       inputsVerified,
     ),
   };
+  // Generation manifests are measured additively like every other inventory
+  // metric. They stay in their own planning line (below) so the official estate
+  // planning line keeps its declared six gaps; missing manifest evidence must
+  // fail closed as not_verified, never read as zero inventory.
+  const manifestMetrics = {
+    manifest_count: addMetric(
+      r2Baseline?.manifests,
+      r2Demand?.manifests,
+      "count",
+      "count",
+      inputsVerified,
+    ),
+    manifest_bytes: addMetric(
+      r2Baseline?.manifests,
+      r2Demand?.manifests,
+      "bytes",
+      "bytes",
+      inputsVerified,
+    ),
+  };
 
   const d1Baseline = accountBaseline?.d1 ?? null;
   const d1Demand = requestDemand?.d1 ?? null;
@@ -968,13 +1016,13 @@ export function calculateCloudDataPlaneBudget({
       ? "pass"
       : "not_verified";
 
-  function service(name, metrics) {
+  function service(name, metrics, planningMetrics = metrics) {
     const hardLimit = evaluate(metrics, policy?.[name]?.hard_limit);
     // A candidate-scoped run is governed by the candidate policy, which covers
     // every metric the candidate uses. The estate planning line is unchanged and
     // reported alongside, so a candidate pass never relabels the estate.
     const planningLimits = candidatePlanning ? candidatePlanning[name] : policy?.[name]?.planning_line;
-    const planningLine = evaluate(metrics, planningLimits);
+    const planningLine = evaluate(planningMetrics, planningLimits);
     const result = {
       metrics,
       hard_limit: hardLimit,
@@ -1004,7 +1052,17 @@ export function calculateCloudDataPlaneBudget({
       list: classAList,
       delete_free: addMetric(r2Baseline?.class_a, r2Demand?.class_a, "delete", "delete", inputsVerified),
     },
-    ...service("r2", r2Metrics),
+    // Candidate planning governs the manifest metrics too; the estate planning
+    // line never sees them, so its six declared gaps are unchanged.
+    ...service(
+      "r2",
+      r2Metrics,
+      candidatePlanning ? { ...r2Metrics, ...manifestMetrics } : r2Metrics,
+    ),
+    manifest_planning_line: {
+      metrics: manifestMetrics,
+      ...evaluate(manifestMetrics, R2_MANIFEST_PLANNING_ENVELOPE),
+    },
   };
   const d1 = {
     table_contracts: {

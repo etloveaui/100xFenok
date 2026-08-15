@@ -17,7 +17,17 @@ const CANDIDATE = "stockanalysis_etf_detail";
 const BASE = "1465331e474edbab7e5a26534632fdf640e4e5f0";
 const MEASURED_AT = "2026-08-14T05:00:00Z";
 
-const DEMAND = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane", "etf-migration-demand.json"), "utf8"));
+const DURABLE_DEMAND = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane", "etf-migration-demand.json"), "utf8"));
+// The durable ETF demand intentionally has no generation-manifest measurement
+// yet. The pass-path below uses a clearly test-only copy so the gate contract
+// remains exercised without presenting synthetic manifest bytes as live proof.
+const DEMAND = {
+  ...DURABLE_DEMAND,
+  r2: {
+    ...DURABLE_DEMAND.r2,
+    manifests: { count: 1, bytes: 2_000_000 },
+  },
+};
 
 // Offline baseline, shaped after the 2026-08-14 observation. No live call.
 async function fixtureBaseline() {
@@ -51,6 +61,9 @@ async function fixtureBaseline() {
 }
 
 const baseline = await fixtureBaseline();
+// The account collector cannot identify manifest objects from the GraphQL
+// aggregate alone. This is a test-only read-side fixture, not a remote baseline.
+baseline.r2.manifests = { count: 12, bytes: 500_000 };
 const candidateReport = buildCloudDataPlaneReport({
   repoRoot: REPO_ROOT,
   candidateId: CANDIDATE,
@@ -58,6 +71,17 @@ const candidateReport = buildCloudDataPlaneReport({
   requestDemand: DEMAND,
 });
 const estateReport = buildCloudDataPlaneReport({ repoRoot: REPO_ROOT, accountBaseline: baseline, requestDemand: DEMAND });
+const durableCandidateReport = buildCloudDataPlaneReport({
+  repoRoot: REPO_ROOT,
+  candidateId: CANDIDATE,
+  accountBaseline: baseline,
+  requestDemand: DURABLE_DEMAND,
+});
+assert.equal(
+  durableCandidateReport.budget.r2.manifest_planning_line.verdict,
+  "not_verified",
+  "durable ETF demand stays unverified until a real generation manifest is measured",
+);
 
 // --- receipt: binds base and time without touching the deterministic digest ---
 {

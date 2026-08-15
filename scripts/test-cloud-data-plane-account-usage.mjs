@@ -149,7 +149,7 @@ function verifiedBaseline({ perTableRows = {} } = {}) {
   assert.equal(unauthorized.schema_version, ACCOUNT_BASELINE_SCHEMA);
 }
 
-// --- Test 4: baseline plus demand reaches a measured verdict; malformed input does not ---
+// --- Test 4: provider metrics measure, but missing manifest inventory holds the admission verdict ---
 {
   const demand = JSON.parse(
     fs.readFileSync(path.join(REPO_ROOT, "scripts/fixtures/cloud-data-plane/etf-migration-demand.json"), "utf8"),
@@ -168,7 +168,12 @@ function verifiedBaseline({ perTableRows = {} } = {}) {
     true,
     "baseline plus demand must complete every metric",
   );
-  assert.ok(["pass", "fail"].includes(report.budget.verdict), "the verdict must be measured, not not_verified");
+  assert.equal(
+    report.budget.r2.manifest_planning_line.verdict,
+    "not_verified",
+    "the missing manifest inventory must remain visible",
+  );
+  assert.notEqual(report.budget.verdict, "pass");
 
   const brokenDemand = { ...demand, status: "draft" };
   const brokenReport = buildCloudDataPlaneReport({
@@ -186,6 +191,7 @@ function verifiedBaseline({ perTableRows = {} } = {}) {
     true,
     "an unverified demand must not be accepted for any added-load metric",
   );
+  assert.equal(brokenReport.budget.r2.manifest_planning_line.verdict, "not_verified");
 }
 
 // --- Test 5: the emitted envelope satisfies the checker's inputVerified contract ---
