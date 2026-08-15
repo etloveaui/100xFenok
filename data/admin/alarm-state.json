@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-14T22:45:58.584Z",
+  "generated_at": "2026-08-15T01:55:10.216Z",
   "status": "open",
-  "open_incident_count": 5,
+  "open_incident_count": 4,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -48,19 +48,6 @@
     {
       "workflow": "fetch-stockanalysis.yml",
       "label": "Fetch StockAnalysis Data",
-      "streak": 1,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "unrecovered_overdue"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
-    },
-    {
-      "workflow": "fetch-yf-finance.yml",
-      "label": "Fetch YF Finance Data",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -342,10 +329,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "global-writer-queue-observer.yml",
@@ -449,8 +434,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 22,
-    "overdue": 4,
+    "not_due": 23,
+    "overdue": 3,
     "recovered": 0,
     "no_declaration": 7,
     "unknown": 0
@@ -466,16 +451,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31847707639",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31847707639",
-    "observed_at": "2026-08-14T22:45:58.584Z",
+    "run_id": "31857662535",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31857662535",
+    "observed_at": "2026-08-15T01:55:10.216Z",
     "event": "schedule",
     "workflows": [
       "fetch-edgar-filings.yml",
       "fetch-finra-ats-weekly.yml",
       "fetch-fred-macro.yml",
-      "fetch-stockanalysis.yml",
-      "fetch-yf-finance.yml"
+      "fetch-stockanalysis.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
