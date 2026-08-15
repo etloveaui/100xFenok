@@ -19,26 +19,32 @@ function parseBaseUrl(argv) {
 }
 
 const baseUrl = parseBaseUrl(process.argv.slice(2));
-const controller = new AbortController();
-const timeout = setTimeout(() => controller.abort(), 15_000);
-const cacheBust = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-let response;
-try {
-  response = await fetch(`${baseUrl}/data/sec-13f/investors/griffin.json?privacy_smoke=1&cb=${cacheBust}`, {
-    cache: "no-store",
-    headers: {
-      "cache-control": "no-cache, no-store",
-      pragma: "no-cache",
-    },
-    signal: controller.signal,
-  });
-} finally {
-  clearTimeout(timeout);
-}
+const privatePaths = [
+  ["griffin investor", "/data/sec-13f/investors/griffin.json"],
+  ["bridge index", "/data/computed/sec13f_bridge_index.json"],
+];
+for (const [label, privatePath] of privatePaths) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  const cacheBust = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  let response;
+  try {
+    response = await fetch(`${baseUrl}${privatePath}?privacy_smoke=1&cb=${cacheBust}`, {
+      cache: "no-store",
+      headers: {
+        "cache-control": "no-cache, no-store",
+        pragma: "no-cache",
+      },
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
-assert.equal(
-  response.status,
-  404,
-  `private SEC 13F investor route must return 404, got ${response.status}`,
-);
-console.log(`sec13f live privacy: ok (griffin route HTTP ${response.status})`);
+  assert.equal(
+    response.status,
+    404,
+    `private ${label} route must return 404, got ${response.status}`,
+  );
+  console.log(`sec13f live privacy: ok (${label} HTTP ${response.status})`);
+}

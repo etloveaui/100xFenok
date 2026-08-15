@@ -16,6 +16,7 @@ import {
 // any stale asset, cache entry, or future fallback from making it public.
 const PRIVATE_PUBLIC_PATHS = new Set([
   "/data/sec-13f/investors/griffin.json",
+  "/data/computed/sec13f_bridge_index.json",
 ]);
 
 const worker = {

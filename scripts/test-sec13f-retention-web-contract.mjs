@@ -126,11 +126,16 @@ assert.deepEqual(investorRoute.excludes, ["griffin.json"]);
 
 const hook = fs.readFileSync(CLIENT_HOOK, "utf8");
 const worker = fs.readFileSync(WORKER_PATH, "utf8");
-assert.match(
-  worker,
-  /PRIVATE_PUBLIC_PATHS[\s\S]*?\/data\/sec-13f\/investors\/griffin\.json/u,
-  "Worker must declare the private SEC 13F path",
-);
+for (const privatePath of [
+  "/data/sec-13f/investors/griffin.json",
+  "/data/computed/sec13f_bridge_index.json",
+]) {
+  assert.match(
+    worker,
+    new RegExp(`PRIVATE_PUBLIC_PATHS[\\s\\S]*?${privatePath.replaceAll("/", "\\/")}`, "u"),
+    `Worker must declare the private SEC 13F path: ${privatePath}`,
+  );
+}
 assert.match(
   worker,
   /if \(PRIVATE_PUBLIC_PATHS\.has\(url\.pathname\)\)\s*\{\s*return new Response\(null,\s*\{\s*status: 404/u,

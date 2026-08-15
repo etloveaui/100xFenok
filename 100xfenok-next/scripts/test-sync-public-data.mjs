@@ -160,7 +160,10 @@ const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
   "computed/fenok_social_attention_proxy.json",
   "computed/fenok_social_attention_proxy_history.json",
 ]);
-const EXPECTED_PRIVATE_EXACT_FILE = "sec-13f/investors/griffin.json";
+const EXPECTED_PRIVATE_EXACT_FILES = Object.freeze([
+  "computed/sec13f_bridge_index.json",
+  "sec-13f/investors/griffin.json",
+]);
 
 // Lane Registry ⇄ exclusion cross-check (BACKLOG #366 step 2): roots derive
 // from the registry, and the gate still fails closed if a consumer drops one.
@@ -365,7 +368,7 @@ function seedPrivateRoots(sourceRoot, destinationRoot) {
   // exercises the root/file split (2026-07-19 deploy-crash class): on the
   // source side they must be withheld as excluded exact files, and stale
   // destination copies must be removed as exact files.
-  for (const relativeFile of [...EXPECTED_PRIVATE_PROXY_FILES, EXPECTED_PRIVATE_EXACT_FILE]) {
+  for (const relativeFile of [...EXPECTED_PRIVATE_PROXY_FILES, ...EXPECTED_PRIVATE_EXACT_FILES]) {
     write(sourceRoot, relativeFile, '{"secret":true}\n');
     write(destinationRoot, relativeFile, '{"stale":true}\n');
   }
@@ -1090,15 +1093,15 @@ try {
   );
   assert.equal(
     EXCLUDED_PUBLIC_DATA_FILES.length,
-    9,
-    `the exact-file exclusion set must be exactly the nine genuine private files (declared exceptions + private proxies), got ${EXCLUDED_PUBLIC_DATA_FILES.length}: ${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`,
+    10,
+    `the exact-file exclusion set must be exactly the ten genuine private files (declared exceptions + private proxies), got ${EXCLUDED_PUBLIC_DATA_FILES.length}: ${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`,
   );
   const expectedDerivedExactFiles = [
     DETECTION_FLOOR_REPORT,
     "admin/damodaran-shadow-parity.json",
     "admin/sec-13f-shadow-parity.json",
     "admin/lane-commit-manifest.json",
-    EXPECTED_PRIVATE_EXACT_FILE,
+    ...EXPECTED_PRIVATE_EXACT_FILES,
     ...EXPECTED_PRIVATE_PROXY_FILES,
   ];
   for (const expectedFile of expectedDerivedExactFiles) {
@@ -1156,12 +1159,12 @@ try {
   );
   // Exact-file exclusion set (order-insensitive contract; membership + count
   // are the pins, traversal order is not).
-  const expectedExcludedExactFiles = [DETECTION_FLOOR_REPORT, EXPECTED_PRIVATE_EXACT_FILE, ...EXPECTED_PRIVATE_PROXY_FILES].sort();
+  const expectedExcludedExactFiles = [DETECTION_FLOOR_REPORT, ...EXPECTED_PRIVATE_EXACT_FILES, ...EXPECTED_PRIVATE_PROXY_FILES].sort();
   const expectedDirectExcludedRoots = EXCLUDED_PUBLIC_DATA_ROOTS.filter((root) =>
     !RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS.some((policy) => root.startsWith(`${policy.relativeRoot}/`))
   );
-  assert.equal(rehearsal.excludedSourceFiles, 6);
-  assert.equal(rehearsal.removedDestinationExactFiles, 6);
+  assert.equal(rehearsal.excludedSourceFiles, 7);
+  assert.equal(rehearsal.removedDestinationExactFiles, 7);
   assert.deepEqual([...rehearsal.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...rehearsal.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
   assert.equal(rehearsal.excludedSourceRoots, expectedDirectExcludedRoots.length);
@@ -1177,10 +1180,10 @@ try {
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(result.filesCopied, 4);
   assert.equal(result.excludedSourceRoots, expectedDirectExcludedRoots.length);
-  assert.equal(result.excludedSourceFiles, 6);
+  assert.equal(result.excludedSourceFiles, 7);
   assert.equal(result.removedDestinationRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.equal(result.removedDestinationFiles, EXCLUDED_PUBLIC_DATA_ROOTS.length);
-  assert.equal(result.removedDestinationExactFiles, 6);
+  assert.equal(result.removedDestinationExactFiles, 7);
   assert.deepEqual([...result.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...result.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
   assert.equal(fs.readFileSync(path.join(destinationRoot, "safe/keep.json"), "utf8"), '{"safe":true}\n');
@@ -1214,7 +1217,7 @@ try {
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(rerun.filesCopied, 4);
   assert.equal(rerun.excludedSourceRoots, expectedDirectExcludedRoots.length);
-  assert.equal(rerun.excludedSourceFiles, 6);
+  assert.equal(rerun.excludedSourceFiles, 7);
   assert.equal(rerun.removedDestinationRoots, 0);
   assert.equal(rerun.removedDestinationFiles, 0);
   assert.equal(rerun.removedDestinationExactFiles, 0);

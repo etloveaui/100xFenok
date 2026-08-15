@@ -486,6 +486,11 @@ function clone(value) {
   assert.equal(privateSec13fInvestor?.kind, "file");
   assert.equal(privateSec13fInvestor?.public_sync, "exclude",
     "the private SEC 13F investor payload must remain excluded from generic public synchronization");
+  const privateSec13fBridge = LANE_REGISTRY.declared_exceptions
+    .find((entry) => entry.path === "data/computed/sec13f_bridge_index.json");
+  assert.equal(privateSec13fBridge?.kind, "file");
+  assert.equal(privateSec13fBridge?.public_sync, "exclude",
+    "the review-only SEC 13F bridge must remain excluded from generic public synchronization");
 }
 
 // --- (c) checker fixtures: declared / undeclared / absent ------------------------
