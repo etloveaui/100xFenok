@@ -16,6 +16,7 @@ const SEC_ROOT = path.join(ROOT, "data/sec-13f");
 const INVESTORS_ROOT = path.join(SEC_ROOT, "investors");
 const CLIENT_HOOK = path.join(ROOT, "100xfenok-next/src/hooks/use13FData.ts");
 const PUBLIC_INVESTORS_ROOT = path.join(ROOT, "100xfenok-next/public/data/sec-13f/investors");
+const WORKER_PATH = path.join(ROOT, "100xfenok-next/worker.ts");
 
 function readJson(relativePath) {
   return JSON.parse(fs.readFileSync(path.join(ROOT, relativePath), "utf8"));
@@ -124,6 +125,22 @@ assert.equal(investorRoute.delete, true);
 assert.deepEqual(investorRoute.excludes, ["griffin.json"]);
 
 const hook = fs.readFileSync(CLIENT_HOOK, "utf8");
+const worker = fs.readFileSync(WORKER_PATH, "utf8");
+assert.match(
+  worker,
+  /PRIVATE_PUBLIC_PATHS[\s\S]*?\/data\/sec-13f\/investors\/griffin\.json/u,
+  "Worker must declare the private SEC 13F path",
+);
+assert.match(
+  worker,
+  /if \(PRIVATE_PUBLIC_PATHS\.has\(url\.pathname\)\)\s*\{\s*return new Response\(null,\s*\{\s*status: 404/u,
+  "Worker must fail closed with HTTP 404 before public fallbacks",
+);
+assert.ok(
+  worker.indexOf("PRIVATE_PUBLIC_PATHS.has(url.pathname)")
+    < worker.indexOf("handleCloudDataPlaneRequest(request, env)"),
+  "private SEC 13F edge guard must run before every public route fallback",
+);
 const clientPaths = [
   "/data/sec-13f/analytics/consensus.json",
   "/data/sec-13f/summary.json",

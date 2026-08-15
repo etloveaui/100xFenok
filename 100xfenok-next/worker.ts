@@ -11,14 +11,31 @@ import {
   type WindDownReviewCoordinatorState,
 } from "./src/features/mona-vnext/memory/learningProfileCoordinator";
 
+// Defense in depth for canonical-only payloads: the source/public projection
+// contract keeps this file out of the bundle, while this edge guard prevents
+// any stale asset, cache entry, or future fallback from making it public.
+const PRIVATE_PUBLIC_PATHS = new Set([
+  "/data/sec-13f/investors/griffin.json",
+]);
+
 const worker = {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const url = new URL(request.url);
+    if (PRIVATE_PUBLIC_PATHS.has(url.pathname)) {
+      return new Response(null, {
+        status: 404,
+        headers: {
+          "cache-control": "no-store",
+          "x-content-type-options": "nosniff",
+        },
+      });
+    }
+
     // The data-plane door is answered before the application handler, so
     // Next middleware and rate limits never see it and it cannot be cached.
     const routed = await handleCloudDataPlaneRequest(request, env);
     if (routed) return routed;
 
-    const url = new URL(request.url);
     const assets = (env as { ASSETS?: { fetch: (request: Request) => Promise<Response> } })?.ASSETS;
 
     // run_worker_first routes every /data/* request to this Worker before the

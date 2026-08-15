@@ -21,9 +21,10 @@ function parseBaseUrl(argv) {
 const baseUrl = parseBaseUrl(process.argv.slice(2));
 const controller = new AbortController();
 const timeout = setTimeout(() => controller.abort(), 15_000);
+const cacheBust = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 let response;
 try {
-  response = await fetch(`${baseUrl}/data/sec-13f/investors/griffin.json?privacy_smoke=1`, {
+  response = await fetch(`${baseUrl}/data/sec-13f/investors/griffin.json?privacy_smoke=1&cb=${cacheBust}`, {
     cache: "no-store",
     headers: {
       "cache-control": "no-cache, no-store",
