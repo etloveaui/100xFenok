@@ -481,6 +481,11 @@ function clone(value) {
     .find((entry) => entry.path === "data/admin/data-supply-detection-floor.json");
   assert.equal(floorException?.may_be_absent, true,
     "the ephemeral detection-floor report must be declared may_be_absent (intentionally not committed)");
+  const privateSec13fInvestor = LANE_REGISTRY.declared_exceptions
+    .find((entry) => entry.path === "data/sec-13f/investors/griffin.json");
+  assert.equal(privateSec13fInvestor?.kind, "file");
+  assert.equal(privateSec13fInvestor?.public_sync, "exclude",
+    "the private SEC 13F investor payload must remain excluded from generic public synchronization");
 }
 
 // --- (c) checker fixtures: declared / undeclared / absent ------------------------

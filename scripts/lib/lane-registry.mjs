@@ -1276,6 +1276,13 @@ const declared_exceptions = [
     public_sync: "exclude",
   },
   {
+    path: "data/sec-13f/investors/griffin.json",
+    kind: "file",
+    reason: "private SEC 13F investor payload retained canonically for audit; no public product route or approved mirror",
+    owner: "platform",
+    public_sync: "exclude",
+  },
+  {
     path: "data/admin/alarm-state.json",
     kind: "file",
     reason: "#365 P3 pipeline alarm state (open incidents / last firing / watched workflows); committed by pipeline-failure-alarm.yml, public-safe run-metadata only; not a lane store",
