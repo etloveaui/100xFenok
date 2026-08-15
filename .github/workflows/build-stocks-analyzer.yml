@@ -2,7 +2,9 @@ name: Build Stocks Analyzer
 
 # Merge Global Scouter + SlickCharts with bounded Yahoo forward-metric fallbacks
 # into a single native-ready stocks_analyzer.json for the stock-analyzer feature.
-# Runs daily after the global-scouter raw export window.
+# Runs daily after the global-scouter raw export window. SEC 13F ingestion is
+# owned by the external CCH converter; this workflow only enriches and derives
+# from the canonical SEC payload after the provenance guard passes.
 
 on:
   schedule:
@@ -42,12 +44,16 @@ jobs:
           node scripts/test-yf-screener-enrichment.mjs
           node scripts/build-stocks-analyzer.mjs
 
-      - name: Build 13F analytics (trades ranking + portfolio views)
+      - name: Verify SEC 13F source provenance
+        run: node scripts/test-sec13f-source-route.mjs
+
+      - name: Build 13F downstream analytics (SEC ingestion is external)
         run: |
           node scripts/build-13f-enrichment-backfill.mjs
           node scripts/build-13f-integrity-indexes.mjs
           node scripts/build-13f-trades.mjs
           node scripts/build-13f-portfolio-views.mjs
+          node scripts/build-13f-factor-radar-v2.mjs
           node scripts/build-guru-holders-index.mjs
 
       - name: Build revision movers + industry benchmarks
@@ -95,15 +101,10 @@ jobs:
             data/sec-13f/analytics/ticker_aliases.json \
             data/sec-13f/analytics/trades_ranking.json \
             data/sec-13f/analytics/portfolio_views.json \
+            data/sec-13f/analytics/factor_exposures_summary.json \
             data/sec-13f/analytics/guru_holders_index.json \
             data/global-scouter/core/revision_movers.json \
             data/damodaran/industry_benchmarks.json \
-            data/computed/fenok-rim/fair-values.json \
-            data/computed/fenok-rim/identification-receipt.json \
-            data/computed/fenok-rim/index-residual-roe-diagnostic.json \
-            data/computed/fenok-rim/input-diagnostics.json \
-            data/computed/fenok-rim/membership-sensitivity-2026.json \
-            data/computed/fenok-rim/payout-history.json \
             data/calendar/prev-values.json
           if git diff --staged --quiet; then
             echo "No stocks analyzer or 13F analytics changes to publish"

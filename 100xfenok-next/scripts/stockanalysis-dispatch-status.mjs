@@ -22,8 +22,8 @@ function scheduledDaily1yDispatch() {
   return {
     status: DISPATCH_STATUS.SCHEDULED_BACKFILL_ACTIVE,
     workflow: "fetch-stockanalysis.yml",
-    schedule: "50 22 * * 1-5",
-    schedule_kst: "Tue-Sat 07:50",
+    schedule: "50 23 * * 1-5",
+    schedule_kst: "Tue-Sat 08:50",
     inputs: { ...DAILY_1Y_INPUTS, incremental_etf_limit: "120" },
     note: "The weekday scheduled lane drains ETF daily 1Y required-history gaps at 120 per run. Manual reruns remain owner-gated and this diagnostic lane is not the ETF service gate.",
   };

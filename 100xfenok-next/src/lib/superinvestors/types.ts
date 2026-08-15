@@ -140,7 +140,9 @@ export interface FactorExposuresSummaryData {
   coverage?: {
     row_count?: number | null;
     same_period_cohort_count?: number | null;
+    common_performance_start_date?: string | null;
     common_performance_end_date?: string | null;
+    common_performance_observation_count?: number | null;
     factor_aligned_as_of?: string | null;
     observation_count_min?: number | null;
     observation_count_max?: number | null;

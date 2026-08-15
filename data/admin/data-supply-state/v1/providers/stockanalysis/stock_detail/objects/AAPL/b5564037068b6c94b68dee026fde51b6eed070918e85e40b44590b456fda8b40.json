@@ -1,0 +1,2409 @@
+{
+  "schema_version": "stockanalysis/v1",
+  "source": "stockanalysis",
+  "asset_type": "stock",
+  "ticker": "AAPL",
+  "source_as_of": "2026-08-13T20:00:00Z",
+  "fetched_at": "2026-08-13T22:09:24Z",
+  "endpoints": {
+    "overview": "/stocks/aapl/__data.json",
+    "history": "/api/symbol/s/AAPL/history?range=1Y&period=Monthly",
+    "quote": "/api/quotes/s/AAPL"
+  },
+  "normalized": {
+    "overview": {
+      "marketCap": "4.46T",
+      "revenue": "466.82B",
+      "revenue_type": "ttm",
+      "netIncome": "128.93B",
+      "sharesOut": "14.59B",
+      "eps": "8.72",
+      "peRatio": "35.02",
+      "forwardPE": "33.34",
+      "dividend": "$1.08 (0.35%)",
+      "beta": "1.09",
+      "analysts": "Buy",
+      "target": "322.28 (+5.58%)",
+      "earningsDate": "Jul 30, 2026"
+    },
+    "quote": {
+      "p": 305.26,
+      "pd": 305.26,
+      "c": 3.01,
+      "cp": 1,
+      "cl": 302.25,
+      "cdr": 1,
+      "o": 304.21,
+      "h": 306,
+      "l": 302.05,
+      "v": 40285515,
+      "ts": 1786651200000,
+      "u": "Aug 13, 2026, 4:00 PM EDT",
+      "td": "2026-08-13",
+      "h52": 344.57,
+      "l52": 223.78,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 304.9,
+      "epd": 304.9,
+      "ec": -0.36,
+      "ecp": -0.12,
+      "eu": "Aug 13, 2026, 6:07 PM EDT",
+      "es": "After-hours",
+      "ets": 1786658866427.1018,
+      "etd": "2026-08-13",
+      "epv": null,
+      "days": 0,
+      "exp": 1786658967997,
+      "symbol": "AAPL",
+      "uid": "AAPL"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 309.58,
+        "h": 316.289,
+        "l": 300.57,
+        "c": 305.26,
+        "a": 305.26,
+        "v": 430135284,
+        "ch": -1.1
+      },
+      {
+        "t": "2026-07-01",
+        "o": 293.44,
+        "h": 344.57,
+        "l": 289.195,
+        "c": 308.91,
+        "a": 308.643809,
+        "v": 1198909236,
+        "ch": 6.76
+      },
+      {
+        "t": "2026-06-01",
+        "o": 309.625,
+        "h": 317.4,
+        "l": 273.75,
+        "c": 289.36,
+        "a": 289.110655,
+        "v": 1401452677,
+        "ch": -7.27
+      },
+      {
+        "t": "2026-05-01",
+        "o": 278.855,
+        "h": 315,
+        "l": 274.86,
+        "c": 312.06,
+        "a": 311.791094,
+        "v": 981286386,
+        "ch": 15.11
+      },
+      {
+        "t": "2026-04-01",
+        "o": 254.08,
+        "h": 276,
+        "l": 245.7,
+        "c": 271.35,
+        "a": 270.866613,
+        "v": 907538475,
+        "ch": 6.92
+      },
+      {
+        "t": "2026-03-02",
+        "o": 262.41,
+        "h": 266.53,
+        "l": 245.51,
+        "c": 253.79,
+        "a": 253.337895,
+        "v": 900035757,
+        "ch": -3.93
+      },
+      {
+        "t": "2026-02-02",
+        "o": 260.03,
+        "h": 280.905,
+        "l": 255.45,
+        "c": 264.18,
+        "a": 263.709386,
+        "v": 988921083,
+        "ch": 1.91
+      },
+      {
+        "t": "2026-01-02",
+        "o": 272.255,
+        "h": 277.84,
+        "l": 243.42,
+        "c": 259.48,
+        "a": 258.775616,
+        "v": 1040017271,
+        "ch": -4.55
+      },
+      {
+        "t": "2025-12-01",
+        "o": 278.01,
+        "h": 288.62,
+        "l": 266.95,
+        "c": 271.86,
+        "a": 271.12201,
+        "v": 924529010,
+        "ch": -2.51
+      },
+      {
+        "t": "2025-11-03",
+        "o": 270.42,
+        "h": 280.38,
+        "l": 265.32,
+        "c": 278.85,
+        "a": 278.093035,
+        "v": 877578237,
+        "ch": 3.24
+      },
+      {
+        "t": "2025-10-01",
+        "o": 255.04,
+        "h": 277.32,
+        "l": 244,
+        "c": 270.37,
+        "a": 269.374925,
+        "v": 1097142365,
+        "ch": 6.18
+      }
+    ],
+    "financials": {
+      "path": "financials/AAPL.json",
+      "fetched_at": "2026-08-13T22:09:23Z",
+      "role": "financial statement cross-check candidate; not valuation SSOT",
+      "summary": {
+        "annual": {
+          "income": {
+            "field_count": 28,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "balance_sheet": {
+            "field_count": 36,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "cash_flow": {
+            "field_count": 31,
+            "period_count": 6,
+            "period": "annual"
+          },
+          "ratios": {
+            "field_count": 35,
+            "period_count": 6,
+            "period": "annual"
+          }
+        },
+        "quarterly": {
+          "income": {
+            "field_count": 28,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "balance_sheet": {
+            "field_count": 36,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "cash_flow": {
+            "field_count": 32,
+            "period_count": 20,
+            "period": "quarterly"
+          },
+          "ratios": {
+            "field_count": 35,
+            "period_count": 20,
+            "period": "quarterly"
+          }
+        }
+      }
+    }
+  },
+  "financials_path": "financials/AAPL.json",
+  "raw": {
+    "overview": {
+      "trust": {
+        "sources": [
+          {
+            "name": "S&P Global Market Intelligence",
+            "short": "S&P Global",
+            "url": "https://www.spglobal.com/market-intelligence/en"
+          },
+          {
+            "name": "CBOE",
+            "short": "CBOE",
+            "url": "https://www.cboe.com/"
+          },
+          {
+            "name": "Nasdaq UTP",
+            "short": "Nasdaq UTP",
+            "url": "https://www.utpplan.com/overview",
+            "noUtm": true
+          }
+        ],
+        "topic": "overview",
+        "ticker": "AAPL",
+        "lastChecked": 1786658938264,
+        "summary": {
+          "text": "Fundamental and historical data is provided by S&P Global Market Intelligence. Real-time stock price data is provided by CBOE and 15-minute delayed consolidated tape pricing data is provided by Nasdaq UTP."
+        }
+      },
+      "marketCap": "4.46T",
+      "marketCapGrowth": 32.13996544740321,
+      "revenue": "466.82B",
+      "revenue_type": "ttm",
+      "revenueGrowth": 14.242,
+      "netIncome": "128.93B",
+      "netIncomeGrowth": 29.865,
+      "sharesOut": "14.59B",
+      "eps": "8.72",
+      "epsGrowth": 32.611,
+      "peRatio": "35.02",
+      "forwardPE": "33.34",
+      "dividend": "$1.08 (0.35%)",
+      "exDividendDate": "Aug 10, 2026",
+      "beta": "1.09",
+      "analysts": "Buy",
+      "target": "322.28 (+5.58%)",
+      "earningsDate": "Jul 30, 2026",
+      "description": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide. The company offers iPhone, a line of smartphones; Mac, a line of personal computers; iPad, a line of multi-purpose tablets; and wearables, home, and accessories comprising AirPods, Apple Vision Pro, Apple TV, Apple Watch, Beats products, and HomePod, as well as Apple branded and third-party accessories. It also provides AppleCare support and cloud services; and operates various platforms, including the App Store that all...",
+      "infoTable": [
+        {
+          "t": "Industry",
+          "v": "Consumer Electronics",
+          "u": "stocks/industry/consumer-electronics"
+        },
+        {
+          "t": "Sector",
+          "v": "Technology",
+          "u": "stocks/sector/technology"
+        },
+        {
+          "t": "IPO Date",
+          "v": "Dec 12, 1980"
+        },
+        {
+          "t": "Employees",
+          "v": "166,000",
+          "u": "stocks/aapl/employees"
+        },
+        {
+          "t": "Stock Exchange",
+          "v": "NASDAQ"
+        },
+        {
+          "t": "Ticker Symbol",
+          "v": "AAPL"
+        },
+        {
+          "t": "Website",
+          "v": "https://www.apple.com",
+          "eu": "https://www.apple.com"
+        }
+      ],
+      "financialIntro": "In fiscal year 2025, Apple's revenue was $416.16 billion, an increase of 6.43% compared to the previous year's $391.04 billion. Earnings were $112.01 billion, an increase of 19.50%.",
+      "financialChart": [
+        {
+          "year": "2021",
+          "revenue": 365817000000,
+          "earnings": 94680000000,
+          "revenueGrowth": 33.259,
+          "earningsGrowth": 64.916
+        },
+        {
+          "year": "2022",
+          "revenue": 394328000000,
+          "earnings": 99803000000,
+          "revenueGrowth": 7.794,
+          "earningsGrowth": 5.411
+        },
+        {
+          "year": "2023",
+          "revenue": 383285000000,
+          "earnings": 96995000000,
+          "revenueGrowth": -2.8000000000000003,
+          "earningsGrowth": -2.814
+        },
+        {
+          "year": "2024",
+          "revenue": 391035000000,
+          "earnings": 93736000000,
+          "revenueGrowth": 2.022,
+          "earningsGrowth": -3.36
+        },
+        {
+          "year": "2025",
+          "revenue": 416161000000,
+          "earnings": 112010000000,
+          "revenueGrowth": 6.426,
+          "earningsGrowth": 19.495
+        }
+      ],
+      "analystIntro": "According to 46 analysts, the average rating for AAPL stock is \"Buy.\" The 12-month stock price target is $322.28, which is an increase of 5.58% from the latest price.",
+      "analystTarget": {
+        "target": "$322.28",
+        "change": "5.58%",
+        "changeWord": "upside"
+      },
+      "analystChart": {
+        "strongBuy": 21,
+        "buy": 6,
+        "hold": 14,
+        "sell": 2,
+        "strongSell": 3
+      },
+      "news": {
+        "exp": "1786661463823",
+        "data": [
+          {
+            "url": "https://techcrunch.com/2026/08/13/if-apple-sends-you-a-push-notification-alerting-you-to-a-spyware-attack-take-it-seriously/",
+            "img": "https://cdn.snapi.dev/images/v1/h/s/8/apl12-3556897-3870491.jpg",
+            "title": "If Apple sends you a push notification alerting you to a spyware attack, take it seriously",
+            "text": "Apple has sent out a new batch of notifications to customers who it suspects have been targeted with spyware capable of hacking into their devices. The tech giant sends out these notifications on occa...",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 13, 2026, 5:50 PM EDT",
+            "ago": "19 minutes ago"
+          },
+          {
+            "url": "https://www.wsj.com/tech/apple-showcases-texas-mac-mini-factory-new-manufacturing-school-16fb8a10",
+            "img": "https://cdn.snapi.dev/images/v1/e/h/y/apl47-3541415-3870343.jpg",
+            "title": "Apple Showcases Texas Mac Mini Factory, New Manufacturing School",
+            "text": "In one of his last public appearances as CEO, Tim Cook offered Secretary of Commerce Howard Lutnick a tour of a facility meant to highlight its investments in U.S. supply chains.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 13, 2026, 4:16 PM EDT",
+            "ago": "1 hour ago"
+          },
+          {
+            "url": "https://www.cnbc.com/2026/08/13/apples-tim-cook-and-howard-lutnick-open-houston-manufacturing-plant.html",
+            "img": "https://cdn.snapi.dev/images/v1/p/f/w/apl28-3547367-3869999.jpg",
+            "title": "Apple's Tim Cook joined by Howard Lutnick in opening Houston manufacturing plant",
+            "text": "Apple CEO Tim Cook was joined by Trump administration officials including Secretary of Commerce Howard Lutnick on Wednesday to open a new manufacturing facility in Houston. The facility is also where ...",
+            "source": "CNBC",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 13, 2026, 3:33 PM EDT",
+            "ago": "2 hours ago"
+          },
+          {
+            "url": "ckPPChC17yY",
+            "img": "https://cdn.snapi.dev/images/v1/u/e/q/apl12-3556897-3869791.jpg",
+            "title": "Apple opens new advanced manufacturing facility in Houston",
+            "text": "CNBC's MacKenzie Sigalos reports on news regarding Apple.",
+            "source": "CNBC Television",
+            "type": "Video",
+            "tickers": null,
+            "time": "Aug 13, 2026, 2:05 PM EDT",
+            "ago": "4 hours ago"
+          },
+          {
+            "url": "https://techcrunch.com/2026/08/13/apple-in-talks-to-pay-publishers-to-provide-siri-with-current-news-report/",
+            "img": "https://cdn.snapi.dev/images/v1/h/u/l/apl48-3541354-3869190.jpg",
+            "title": "Apple in talks to pay publishers to provide Siri with current news: report",
+            "text": "Apple is in talks to pay publishers to use their content to power the upcoming Siri AI, according to a new report from The Wall Street Journal. The tech giant has reached out to publishers in recent m...",
+            "source": "TechCrunch",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 13, 2026, 10:34 AM EDT",
+            "ago": "7 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/aapl-stocks-post-earnings-sell-off-is-not-over",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/shutterstock_380042644-750x406.jpg",
+            "title": "AAPL Stock’s Post-Earnings Sell-Off Is Not Over",
+            "text": "Apple ($AAPL) is still facing a post-earnings sell-off, in my view. Fiscal Q3 revenue increased 16% to $109.4 billion, while earnings per share (EPS) climbed 29% to $2.02, prompting Tim…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$META",
+              "$MSFT",
+              "$NVDA"
+            ],
+            "time": "2026-08-13T13:57:11.000Z",
+            "ago": "8 hours ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/08/13/three-warren-buffett-stocks-to-buy-and-hold-forever/",
+            "img": "https://cdn.snapi.dev/images/v1/k/y/c/computer-electronic11-3868523.jpg",
+            "title": "Three Warren Buffett stocks to buy and hold forever",
+            "text": "Legendary investor Warren Buffett built Berkshire Hathaway on a single core principle: buy high-return businesses with structural competitive moats and hold them for decades. Although Buffett stepped ...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": [
+              "$GOOG",
+              "$GOOGL",
+              "$KO"
+            ],
+            "time": "Aug 13, 2026, 8:42 AM EDT",
+            "ago": "9 hours ago"
+          },
+          {
+            "url": "https://www.wsj.com/business/media/apple-in-talks-to-pay-publishers-to-improve-ai-powered-siri-0641f64b",
+            "img": "https://cdn.snapi.dev/images/v1/q/e/y/apl41-3543129-3867430.jpg",
+            "title": "Apple in Talks to Pay Publishers to Improve AI-Powered Siri",
+            "text": "The content deals could provide the tech company's voice assistant with current news and information.",
+            "source": "WSJ",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 12, 2026, 6:30 PM EDT",
+            "ago": "23 hours ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/apple-aapl-hires-former-american-airlines-executive-to-lead-its-government-affairs-unit",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/aaa-65-750x406.jpg",
+            "title": "Apple (AAPL) Hires Former American Airlines Executive to Lead Its Government Affairs Unit",
+            "text": "The company is trying to navigate the Trump White House.",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": [
+              "$AAL",
+              "$JPM"
+            ],
+            "time": "2026-08-12T19:26:55.000Z",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://nypost.com/2026/08/12/business/apple-sued-over-icloud-privacy-fraud-in-class-action-complaint/",
+            "img": "https://cdn.snapi.dev/images/v1/p/p/c/apl37-3544828-3866063.jpg",
+            "title": "Apple sued for allegedly misleading consumers over iCloud+ privacy feature in class-action complaint",
+            "text": "Apple charges customers between $0.99 to $59.99 a month for the premium iCloud subscription, depending on how much storage they wanted, according to its website.",
+            "source": "New York Post",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 12, 2026, 10:54 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://invezz.com/news/2026/08/12/two-mega-cap-stocks-and-one-more-to-rally-on-cooler-cpi/",
+            "img": "https://cdn.snapi.dev/images/v1/e/k/l/computer-electronic37-3865472.jpg",
+            "title": "Two mega-cap stocks and one more to rally on cooler CPI",
+            "text": "US stock markets are standing at a crucial inflection point as investors brace for the release of the July Consumer Price Index (CPI) report. Wall Street consensus estimates project headline inflation...",
+            "source": "Invezz",
+            "type": "Article",
+            "tickers": [
+              "$DHI",
+              "$TSLA"
+            ],
+            "time": "Aug 12, 2026, 8:41 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.businessinsider.com/apple-siri-iphone-openai-speaker-gadget-joanna-stern-peter-kafka-2026-8",
+            "img": "https://cdn.snapi.dev/images/v1/m/h/0/apl10-3557877-3865042.jpg",
+            "title": "Apple launches new iPhones next month. What's inside the phone is a much bigger deal.",
+            "text": "Apple has been promising a new, improved Siri for two years. It's finally coming out next month.",
+            "source": "Business Insider",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 12, 2026, 6:00 AM EDT",
+            "ago": "1 day ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/norways-sovereign-wealth-fund-holds-1-2b-stake-in-spacex-reuters-reports-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/07/image-7-1-750x406.png",
+            "title": "Norway’s sovereign wealth fund holds $1.2B stake in SpaceX, Reuters reports",
+            "text": "Norway’s $2.3T sovereign wealth fund held a 0.05% SpaceX (SPCX) stake worth $1.22B as of June 30, alongside major positions in Nvidia (NVDA), Apple (AAPL), Alphabet (GOOG) (GOOGL), Microsoft (MSFT),…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": [
+              "$GOOG",
+              "$GOOGL",
+              "$MSFT",
+              "$NVDA",
+              "$SPCX",
+              "$TSM"
+            ],
+            "time": "2026-08-11T19:50:33.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/apple-aapl-hit-by-another-senior-exit-pay-and-wallet-chief-jennifer-bailey-retires",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2026/08/shutterstock_2712115747-750x406.jpg",
+            "title": "Apple (AAPL) Hit By Another Senior Exit: Pay and Wallet Chief Jennifer Bailey Retires",
+            "text": "Apple ($AAPL) is seeing another major leadership change. According to a Bloomberg report, Jennifer Bailey, the longtime head of Apple Pay and Wallet, is retiring after more than 20 years…",
+            "source": "TipRanks",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-11T18:35:19.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "hA2zDSZTh1c",
+            "img": "https://cdn.snapi.dev/images/v1/z/l/f/apl46-3541978-3863595.jpg",
+            "title": "Apple's Glass-Centric iPhone Should Still Be Ready in 2027",
+            "text": "Apple's planned glass-centric iPhone remains on track for 2027, Bloomberg reports, despite a Jefferies analyst saying supply-chain checks suggested the device had been canceled. Bloomberg Intelligence...",
+            "source": "Bloomberg Technology",
+            "type": "Video",
+            "tickers": null,
+            "time": "Aug 11, 2026, 2:31 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/head-of-pay-and-wallet-services-retiring-from-apple-bloomberg-reports-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_2090914558-750x406.jpg",
+            "title": "Head of Pay and Wallet services retiring from Apple, Bloomberg reports",
+            "text": "Jennifer Bailey, the longtime head of Pay and Wallet services, is retiring from Apple (AAPL) after more than two decades at the company, reported Bloomberg, citing a staff memo that…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-11T17:55:46.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/equity-etf-content-hub/value-strikes-back-inside-2026s-great-rotation/",
+            "img": "https://cdn.snapi.dev/images/v1/b/g/e/computer-electronic12-3863379.jpg",
+            "title": "Value Strikes Back: Inside 2026's Great Rotation",
+            "text": "The mantra carrying the markets higher for years has been to leave it to mega-cap tech titans and AI leaders to drive the bulk of market gains, leaving cap-weighted indexes historically top-heavy. But...",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$AMZN",
+              "#AVLV",
+              "#CGDV",
+              "#DFIV",
+              "$MSFT",
+              "$MU",
+              "#SCHD"
+            ],
+            "time": "Aug 11, 2026, 1:02 PM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.businesswire.com/news/home/20260811935365/en/Eagle-Freedom-Alliance-Recognizes-Apple-for-Advancing-Responsible-Mineral-Sourcing-in-East-Africa/",
+            "img": "https://cdn.snapi.dev/images/v1/j/a/x/press9-3862443.jpg",
+            "title": "Eagle Freedom Alliance Recognizes Apple for Advancing Responsible Mineral Sourcing in East Africa",
+            "text": "FORT WORTH, Texas--(BUSINESS WIRE)-- #Apple--Investor-led recognition highlights Apple for its ethical supply chain adoption.",
+            "source": "Business Wire",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 11, 2026, 8:30 AM EDT",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "https://www.tipranks.com/news/the-fly/apple-still-planning-to-offer-glass-centric-iphone-in-2027-bloomberg-reports-thefly-news",
+            "img": "https://blog.tipranks.com/wp-content/uploads/2022/09/shutterstock_380042644-750x406.jpg",
+            "title": "Apple still planning to offer glass-centric iPhone in 2027, Bloomberg reports",
+            "text": "Apple (AAPL) is still planning to launch iPhone Pro models next year that will make use of a new glassy look for the device’s 20th anniversary, people familiar with the…",
+            "source": "TheFly",
+            "type": "Article",
+            "tickers": null,
+            "time": "2026-08-11T10:55:22.000Z",
+            "ago": "2 days ago"
+          },
+          {
+            "url": "68ufEA3f9Nk",
+            "img": "https://cdn.snapi.dev/images/v1/q/l/f/apl14-3555309-3861193.jpg",
+            "title": "Bull v. Bear: AAPL Valuation Hits Roadblock, Earnings Runway Still Wide",
+            "text": "Characteristics and Risks of Standardized Options: https://bit.ly/2v9tH6D. Apple (AAPL) got a downgrade and price target cut from Jefferies, with the firm hinting toward the iPhone maker canceling its...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": null,
+            "time": "Aug 10, 2026, 3:00 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "m54XfrIUI24",
+            "img": "https://cdn.snapi.dev/images/v1/c/1/e/apl26-3549101-3861125.jpg",
+            "title": "Apple playing catch-up with AI-enabled security flaw hunters",
+            "text": "CNBC's MacKenzie Sigalos joins 'The Exchange' to discuss how Apple is racing to fix vulnerability for Macs.",
+            "source": "CNBC Television",
+            "type": "Video",
+            "tickers": null,
+            "time": "Aug 10, 2026, 2:24 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.foxbusiness.com/markets/apple-testing-chinese-made-cxmt-memory-chips-iphones-macbooks-amid-global-shortage",
+            "img": "https://cdn.snapi.dev/images/v1/6/q/7/apl25-3549155-3861073.jpg",
+            "title": "Apple reportedly testing Chinese-made memory chips for iPhones, MacBooks amid global shortage",
+            "text": "Apple is reportedly testing CXMT memory chips for iPhones and MacBooks sold in China but needs White House approval under U.S. restrictions.",
+            "source": "Fox Business",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 10, 2026, 2:21 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.etftrends.com/equity-etf-content-hub/data-science-disconnect-high-performance-with-low-assets/",
+            "img": "https://cdn.snapi.dev/images/v1/d/n/l/computer-electronic34-3861050.jpg",
+            "title": "The Data Science Disconnect: High Performance With Low Assets",
+            "text": "Many investors know the JPMorgan Nasdaq Equity Premium Income ETF (JEPQ) for its options strategy. However, its underlying performance relies heavily on an engine that gets far less spotlight.",
+            "source": "ETF Trends",
+            "type": "Article",
+            "tickers": [
+              "$CHEF",
+              "$HPE",
+              "#JEPQ",
+              "#LCDS",
+              "#MCDS",
+              "$MPC",
+              "$RHP"
+            ],
+            "time": "Aug 10, 2026, 2:10 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "https://www.investopedia.com/market-update-apple-stock-analyst-concerns-about-iphone-setback-aapl-12037746",
+            "img": "https://cdn.snapi.dev/images/v1/j/5/g/apl27-3547620-3861030.jpg",
+            "title": "Apple Stock Falls Amid Concerns About iPhone Setback",
+            "text": "Apple could be changing its iPhone lineup plans, according to Wall Street analysts, which could push back future price increases.",
+            "source": "Investopedia",
+            "type": "Article",
+            "tickers": null,
+            "time": "Aug 10, 2026, 2:03 PM EDT",
+            "ago": "3 days ago"
+          },
+          {
+            "url": "iy5RysMCSUw",
+            "img": "https://cdn.snapi.dev/images/v1/g/f/m/computer-electronic30-3860903.jpg",
+            "title": "The Big 3: INTC, UBER, AAPL",
+            "text": "@ProsperTradingAcademy's Scott Bauer turns to stocks that recently experienced volatile moves, both to the upside and downside. He sees Intel (INTC) as a long-term trading opportunity, believes Uber T...",
+            "source": "Schwab Network",
+            "type": "Video",
+            "tickers": [
+              "$INTC",
+              "$UBER"
+            ],
+            "time": "Aug 10, 2026, 1:00 PM EDT",
+            "ago": "3 days ago"
+          }
+        ]
+      },
+      "chart": {
+        "expiration": 1786662544303,
+        "data": [
+          {
+            "c": 302.54,
+            "o": 304.13,
+            "t": 1786613400
+          },
+          {
+            "c": 303.07,
+            "t": 1786613460
+          },
+          {
+            "c": 303.02,
+            "t": 1786613520
+          },
+          {
+            "c": 303.79,
+            "t": 1786613580
+          },
+          {
+            "c": 303.87,
+            "t": 1786613640
+          },
+          {
+            "c": 303.84,
+            "t": 1786613700
+          },
+          {
+            "c": 304.14,
+            "t": 1786613760
+          },
+          {
+            "c": 304.5,
+            "t": 1786613820
+          },
+          {
+            "c": 304.35,
+            "t": 1786613880
+          },
+          {
+            "c": 304.53,
+            "t": 1786613940
+          },
+          {
+            "c": 304.56,
+            "t": 1786614000
+          },
+          {
+            "c": 304.03,
+            "t": 1786614060
+          },
+          {
+            "c": 303.5,
+            "t": 1786614120
+          },
+          {
+            "c": 303.48,
+            "t": 1786614180
+          },
+          {
+            "c": 303.43,
+            "t": 1786614240
+          },
+          {
+            "c": 303.48,
+            "t": 1786614300
+          },
+          {
+            "c": 303.1,
+            "t": 1786614360
+          },
+          {
+            "c": 303.02,
+            "t": 1786614420
+          },
+          {
+            "c": 303.42,
+            "t": 1786614480
+          },
+          {
+            "c": 303.71,
+            "t": 1786614540
+          },
+          {
+            "c": 303.76,
+            "t": 1786614600
+          },
+          {
+            "c": 304.16,
+            "t": 1786614660
+          },
+          {
+            "c": 304.16,
+            "t": 1786614720
+          },
+          {
+            "c": 304.32,
+            "t": 1786614780
+          },
+          {
+            "c": 304.3,
+            "t": 1786614840
+          },
+          {
+            "c": 304.47,
+            "t": 1786614900
+          },
+          {
+            "c": 304.52,
+            "t": 1786614960
+          },
+          {
+            "c": 304.31,
+            "t": 1786615020
+          },
+          {
+            "c": 304.6,
+            "t": 1786615080
+          },
+          {
+            "c": 304.57,
+            "t": 1786615140
+          },
+          {
+            "c": 304.53,
+            "t": 1786615200
+          },
+          {
+            "c": 304.48,
+            "t": 1786615260
+          },
+          {
+            "c": 304.48,
+            "t": 1786615320
+          },
+          {
+            "c": 304.53,
+            "t": 1786615380
+          },
+          {
+            "c": 304.42,
+            "t": 1786615440
+          },
+          {
+            "c": 304.58,
+            "t": 1786615500
+          },
+          {
+            "c": 304.85,
+            "t": 1786615560
+          },
+          {
+            "c": 304.79,
+            "t": 1786615620
+          },
+          {
+            "c": 304.71,
+            "t": 1786615680
+          },
+          {
+            "c": 304.85,
+            "t": 1786615740
+          },
+          {
+            "c": 304.91,
+            "t": 1786615800
+          },
+          {
+            "c": 304.93,
+            "t": 1786615860
+          },
+          {
+            "c": 304.87,
+            "t": 1786615920
+          },
+          {
+            "c": 305.34,
+            "t": 1786615980
+          },
+          {
+            "c": 305.48,
+            "t": 1786616040
+          },
+          {
+            "c": 305.88,
+            "t": 1786616100
+          },
+          {
+            "c": 305.06,
+            "t": 1786616160
+          },
+          {
+            "c": 304.81,
+            "t": 1786616220
+          },
+          {
+            "c": 304.79,
+            "t": 1786616280
+          },
+          {
+            "c": 304.53,
+            "t": 1786616340
+          },
+          {
+            "c": 304.45,
+            "t": 1786616400
+          },
+          {
+            "c": 304.19,
+            "t": 1786616460
+          },
+          {
+            "c": 304.56,
+            "t": 1786616520
+          },
+          {
+            "c": 304.56,
+            "t": 1786616580
+          },
+          {
+            "c": 304.63,
+            "t": 1786616640
+          },
+          {
+            "c": 304.94,
+            "t": 1786616700
+          },
+          {
+            "c": 305.13,
+            "t": 1786616760
+          },
+          {
+            "c": 305.3,
+            "t": 1786616820
+          },
+          {
+            "c": 305.53,
+            "t": 1786616880
+          },
+          {
+            "c": 305.65,
+            "t": 1786616940
+          },
+          {
+            "c": 305.84,
+            "t": 1786617000
+          },
+          {
+            "c": 305.35,
+            "t": 1786617060
+          },
+          {
+            "c": 305.1,
+            "t": 1786617120
+          },
+          {
+            "c": 305.2,
+            "t": 1786617180
+          },
+          {
+            "c": 305.12,
+            "t": 1786617240
+          },
+          {
+            "c": 304.86,
+            "t": 1786617300
+          },
+          {
+            "c": 305.03,
+            "t": 1786617360
+          },
+          {
+            "c": 305.28,
+            "t": 1786617420
+          },
+          {
+            "c": 305.16,
+            "t": 1786617480
+          },
+          {
+            "c": 305.19,
+            "t": 1786617540
+          },
+          {
+            "c": 305.16,
+            "t": 1786617600
+          },
+          {
+            "c": 304.96,
+            "t": 1786617660
+          },
+          {
+            "c": 305.22,
+            "t": 1786617720
+          },
+          {
+            "c": 305.03,
+            "t": 1786617780
+          },
+          {
+            "c": 304.97,
+            "t": 1786617840
+          },
+          {
+            "c": 304.87,
+            "t": 1786617900
+          },
+          {
+            "c": 304.86,
+            "t": 1786617960
+          },
+          {
+            "c": 304.77,
+            "t": 1786618020
+          },
+          {
+            "c": 304.79,
+            "t": 1786618080
+          },
+          {
+            "c": 304.57,
+            "t": 1786618140
+          },
+          {
+            "c": 304.95,
+            "t": 1786618200
+          },
+          {
+            "c": 305.05,
+            "t": 1786618260
+          },
+          {
+            "c": 304.99,
+            "t": 1786618320
+          },
+          {
+            "c": 304.84,
+            "t": 1786618380
+          },
+          {
+            "c": 304.88,
+            "t": 1786618440
+          },
+          {
+            "c": 304.83,
+            "t": 1786618500
+          },
+          {
+            "c": 304.97,
+            "t": 1786618560
+          },
+          {
+            "c": 305,
+            "t": 1786618620
+          },
+          {
+            "c": 304.98,
+            "t": 1786618680
+          },
+          {
+            "c": 305.13,
+            "t": 1786618740
+          },
+          {
+            "c": 304.95,
+            "t": 1786618800
+          },
+          {
+            "c": 304.98,
+            "t": 1786618860
+          },
+          {
+            "c": 304.9,
+            "t": 1786618920
+          },
+          {
+            "c": 304.8,
+            "t": 1786618980
+          },
+          {
+            "c": 304.91,
+            "t": 1786619040
+          },
+          {
+            "c": 304.71,
+            "t": 1786619100
+          },
+          {
+            "c": 304.37,
+            "t": 1786619160
+          },
+          {
+            "c": 304.13,
+            "t": 1786619220
+          },
+          {
+            "c": 304.17,
+            "t": 1786619280
+          },
+          {
+            "c": 304.21,
+            "t": 1786619340
+          },
+          {
+            "c": 304.21,
+            "t": 1786619400
+          },
+          {
+            "c": 304.28,
+            "t": 1786619460
+          },
+          {
+            "c": 304.27,
+            "t": 1786619520
+          },
+          {
+            "c": 304.15,
+            "t": 1786619580
+          },
+          {
+            "c": 304.24,
+            "t": 1786619640
+          },
+          {
+            "c": 304.15,
+            "t": 1786619700
+          },
+          {
+            "c": 304.08,
+            "t": 1786619760
+          },
+          {
+            "c": 303.87,
+            "t": 1786619820
+          },
+          {
+            "c": 303.86,
+            "t": 1786619880
+          },
+          {
+            "c": 304.15,
+            "t": 1786619940
+          },
+          {
+            "c": 304.3,
+            "t": 1786620000
+          },
+          {
+            "c": 304.24,
+            "t": 1786620060
+          },
+          {
+            "c": 304.12,
+            "t": 1786620120
+          },
+          {
+            "c": 304.07,
+            "t": 1786620180
+          },
+          {
+            "c": 304.17,
+            "t": 1786620240
+          },
+          {
+            "c": 303.98,
+            "t": 1786620300
+          },
+          {
+            "c": 303.89,
+            "t": 1786620360
+          },
+          {
+            "c": 303.73,
+            "t": 1786620420
+          },
+          {
+            "c": 303.66,
+            "t": 1786620480
+          },
+          {
+            "c": 303.73,
+            "t": 1786620540
+          },
+          {
+            "c": 303.67,
+            "t": 1786620600
+          },
+          {
+            "c": 303.61,
+            "t": 1786620660
+          },
+          {
+            "c": 303.86,
+            "t": 1786620720
+          },
+          {
+            "c": 303.79,
+            "t": 1786620780
+          },
+          {
+            "c": 303.79,
+            "t": 1786620840
+          },
+          {
+            "c": 303.52,
+            "t": 1786620900
+          },
+          {
+            "c": 303.43,
+            "t": 1786620960
+          },
+          {
+            "c": 303.4,
+            "t": 1786621020
+          },
+          {
+            "c": 303.31,
+            "t": 1786621080
+          },
+          {
+            "c": 303.5,
+            "t": 1786621140
+          },
+          {
+            "c": 303.35,
+            "t": 1786621200
+          },
+          {
+            "c": 303.48,
+            "t": 1786621260
+          },
+          {
+            "c": 303.56,
+            "t": 1786621320
+          },
+          {
+            "c": 303.47,
+            "t": 1786621380
+          },
+          {
+            "c": 303.44,
+            "t": 1786621440
+          },
+          {
+            "c": 303.43,
+            "t": 1786621500
+          },
+          {
+            "c": 303.53,
+            "t": 1786621560
+          },
+          {
+            "c": 303.39,
+            "t": 1786621620
+          },
+          {
+            "c": 303.44,
+            "t": 1786621680
+          },
+          {
+            "c": 303.37,
+            "t": 1786621740
+          },
+          {
+            "c": 303.44,
+            "t": 1786621800
+          },
+          {
+            "c": 303.42,
+            "t": 1786621860
+          },
+          {
+            "c": 303.47,
+            "t": 1786621920
+          },
+          {
+            "c": 303.35,
+            "t": 1786621980
+          },
+          {
+            "c": 303.33,
+            "t": 1786622040
+          },
+          {
+            "c": 303.33,
+            "t": 1786622100
+          },
+          {
+            "c": 303.22,
+            "t": 1786622160
+          },
+          {
+            "c": 303.2,
+            "t": 1786622220
+          },
+          {
+            "c": 302.93,
+            "t": 1786622280
+          },
+          {
+            "c": 302.79,
+            "t": 1786622340
+          },
+          {
+            "c": 302.82,
+            "t": 1786622400
+          },
+          {
+            "c": 302.75,
+            "t": 1786622460
+          },
+          {
+            "c": 302.74,
+            "t": 1786622520
+          },
+          {
+            "c": 302.74,
+            "t": 1786622580
+          },
+          {
+            "c": 302.69,
+            "t": 1786622640
+          },
+          {
+            "c": 302.79,
+            "t": 1786622700
+          },
+          {
+            "c": 302.88,
+            "t": 1786622760
+          },
+          {
+            "c": 302.83,
+            "t": 1786622820
+          },
+          {
+            "c": 302.82,
+            "t": 1786622880
+          },
+          {
+            "c": 303.21,
+            "t": 1786622940
+          },
+          {
+            "c": 303.12,
+            "t": 1786623000
+          },
+          {
+            "c": 303.15,
+            "t": 1786623060
+          },
+          {
+            "c": 303.26,
+            "t": 1786623120
+          },
+          {
+            "c": 303.17,
+            "t": 1786623180
+          },
+          {
+            "c": 303.41,
+            "t": 1786623240
+          },
+          {
+            "c": 303.38,
+            "t": 1786623300
+          },
+          {
+            "c": 303.37,
+            "t": 1786623360
+          },
+          {
+            "c": 303.41,
+            "t": 1786623420
+          },
+          {
+            "c": 303.45,
+            "t": 1786623480
+          },
+          {
+            "c": 303.6,
+            "t": 1786623540
+          },
+          {
+            "c": 303.7,
+            "t": 1786623600
+          },
+          {
+            "c": 303.36,
+            "t": 1786623660
+          },
+          {
+            "c": 303.51,
+            "t": 1786623720
+          },
+          {
+            "c": 303.46,
+            "t": 1786623780
+          },
+          {
+            "c": 303.55,
+            "t": 1786623840
+          },
+          {
+            "c": 303.62,
+            "t": 1786623900
+          },
+          {
+            "c": 303.68,
+            "t": 1786623960
+          },
+          {
+            "c": 303.65,
+            "t": 1786624020
+          },
+          {
+            "c": 303.61,
+            "t": 1786624080
+          },
+          {
+            "c": 303.44,
+            "t": 1786624140
+          },
+          {
+            "c": 303.3,
+            "t": 1786624200
+          },
+          {
+            "c": 303.17,
+            "t": 1786624260
+          },
+          {
+            "c": 303.1,
+            "t": 1786624320
+          },
+          {
+            "c": 303.24,
+            "t": 1786624380
+          },
+          {
+            "c": 303.2,
+            "t": 1786624440
+          },
+          {
+            "c": 303.24,
+            "t": 1786624500
+          },
+          {
+            "c": 303.1,
+            "t": 1786624560
+          },
+          {
+            "c": 303.24,
+            "t": 1786624620
+          },
+          {
+            "c": 303.3,
+            "t": 1786624680
+          },
+          {
+            "c": 303.23,
+            "t": 1786624740
+          },
+          {
+            "c": 303.19,
+            "t": 1786624800
+          },
+          {
+            "c": 303.18,
+            "t": 1786624860
+          },
+          {
+            "c": 303.2,
+            "t": 1786624920
+          },
+          {
+            "c": 303.27,
+            "t": 1786624980
+          },
+          {
+            "c": 303.23,
+            "t": 1786625040
+          },
+          {
+            "c": 303.23,
+            "t": 1786625100
+          },
+          {
+            "c": 303.36,
+            "t": 1786625160
+          },
+          {
+            "c": 303.61,
+            "t": 1786625220
+          },
+          {
+            "c": 303.67,
+            "t": 1786625280
+          },
+          {
+            "c": 303.71,
+            "t": 1786625340
+          },
+          {
+            "c": 303.69,
+            "t": 1786625400
+          },
+          {
+            "c": 303.66,
+            "t": 1786625460
+          },
+          {
+            "c": 303.62,
+            "t": 1786625520
+          },
+          {
+            "c": 303.45,
+            "t": 1786625580
+          },
+          {
+            "c": 303.59,
+            "t": 1786625640
+          },
+          {
+            "c": 303.32,
+            "t": 1786625700
+          },
+          {
+            "c": 303.2,
+            "t": 1786625760
+          },
+          {
+            "c": 303.18,
+            "t": 1786625820
+          },
+          {
+            "c": 303.14,
+            "t": 1786625880
+          },
+          {
+            "c": 303.03,
+            "t": 1786625940
+          },
+          {
+            "c": 303.12,
+            "t": 1786626000
+          },
+          {
+            "c": 303.02,
+            "t": 1786626060
+          },
+          {
+            "c": 302.88,
+            "t": 1786626120
+          },
+          {
+            "c": 302.95,
+            "t": 1786626180
+          },
+          {
+            "c": 303,
+            "t": 1786626240
+          },
+          {
+            "c": 302.93,
+            "t": 1786626300
+          },
+          {
+            "c": 303,
+            "t": 1786626360
+          },
+          {
+            "c": 303,
+            "t": 1786626420
+          },
+          {
+            "c": 303.07,
+            "t": 1786626480
+          },
+          {
+            "c": 303.06,
+            "t": 1786626540
+          },
+          {
+            "c": 303.08,
+            "t": 1786626600
+          },
+          {
+            "c": 302.99,
+            "t": 1786626660
+          },
+          {
+            "c": 302.92,
+            "t": 1786626720
+          },
+          {
+            "c": 302.97,
+            "t": 1786626780
+          },
+          {
+            "c": 303.08,
+            "t": 1786626840
+          },
+          {
+            "c": 303.04,
+            "t": 1786626900
+          },
+          {
+            "c": 303.02,
+            "t": 1786626960
+          },
+          {
+            "c": 303,
+            "t": 1786627020
+          },
+          {
+            "c": 302.98,
+            "t": 1786627080
+          },
+          {
+            "c": 303.04,
+            "t": 1786627140
+          },
+          {
+            "c": 303.08,
+            "t": 1786627200
+          },
+          {
+            "c": 303.09,
+            "t": 1786627260
+          },
+          {
+            "c": 303.02,
+            "t": 1786627320
+          },
+          {
+            "c": 303.01,
+            "t": 1786627380
+          },
+          {
+            "c": 303.16,
+            "t": 1786627440
+          },
+          {
+            "c": 303.18,
+            "t": 1786627500
+          },
+          {
+            "c": 303.14,
+            "t": 1786627560
+          },
+          {
+            "c": 303.33,
+            "t": 1786627620
+          },
+          {
+            "c": 303.28,
+            "t": 1786627680
+          },
+          {
+            "c": 303.34,
+            "t": 1786627740
+          },
+          {
+            "c": 303.35,
+            "t": 1786627800
+          },
+          {
+            "c": 303.33,
+            "t": 1786627860
+          },
+          {
+            "c": 303.12,
+            "t": 1786627920
+          },
+          {
+            "c": 303.15,
+            "t": 1786627980
+          },
+          {
+            "c": 303.23,
+            "t": 1786628040
+          },
+          {
+            "c": 303.34,
+            "t": 1786628100
+          },
+          {
+            "c": 303.4,
+            "t": 1786628160
+          },
+          {
+            "c": 303.48,
+            "t": 1786628220
+          },
+          {
+            "c": 303.63,
+            "t": 1786628280
+          },
+          {
+            "c": 303.67,
+            "t": 1786628340
+          },
+          {
+            "c": 303.82,
+            "t": 1786628400
+          },
+          {
+            "c": 303.79,
+            "t": 1786628460
+          },
+          {
+            "c": 303.41,
+            "t": 1786628520
+          },
+          {
+            "c": 303.46,
+            "t": 1786628580
+          },
+          {
+            "c": 303.55,
+            "t": 1786628640
+          },
+          {
+            "c": 303.65,
+            "t": 1786628700
+          },
+          {
+            "c": 303.76,
+            "t": 1786628760
+          },
+          {
+            "c": 303.86,
+            "t": 1786628820
+          },
+          {
+            "c": 303.73,
+            "t": 1786628880
+          },
+          {
+            "c": 303.68,
+            "t": 1786628940
+          },
+          {
+            "c": 303.49,
+            "t": 1786629000
+          },
+          {
+            "c": 303.42,
+            "t": 1786629060
+          },
+          {
+            "c": 303.49,
+            "t": 1786629120
+          },
+          {
+            "c": 303.5,
+            "t": 1786629180
+          },
+          {
+            "c": 303.42,
+            "t": 1786629240
+          },
+          {
+            "c": 303.43,
+            "t": 1786629300
+          },
+          {
+            "c": 303.46,
+            "t": 1786629360
+          },
+          {
+            "c": 303.44,
+            "t": 1786629420
+          },
+          {
+            "c": 303.41,
+            "t": 1786629480
+          },
+          {
+            "c": 303.44,
+            "t": 1786629540
+          },
+          {
+            "c": 303.45,
+            "t": 1786629600
+          },
+          {
+            "c": 303.29,
+            "t": 1786629660
+          },
+          {
+            "c": 302.96,
+            "t": 1786629720
+          },
+          {
+            "c": 303.02,
+            "t": 1786629780
+          },
+          {
+            "c": 303,
+            "t": 1786629840
+          },
+          {
+            "c": 303.02,
+            "t": 1786629900
+          },
+          {
+            "c": 303.07,
+            "t": 1786629960
+          },
+          {
+            "c": 303.14,
+            "t": 1786630020
+          },
+          {
+            "c": 303.01,
+            "t": 1786630080
+          },
+          {
+            "c": 303.06,
+            "t": 1786630140
+          },
+          {
+            "c": 303.17,
+            "t": 1786630200
+          },
+          {
+            "c": 303.19,
+            "t": 1786630260
+          },
+          {
+            "c": 303.4,
+            "t": 1786630320
+          },
+          {
+            "c": 303.43,
+            "t": 1786630380
+          },
+          {
+            "c": 303.42,
+            "t": 1786630440
+          },
+          {
+            "c": 303.31,
+            "t": 1786630500
+          },
+          {
+            "c": 303.33,
+            "t": 1786630560
+          },
+          {
+            "c": 303.38,
+            "t": 1786630620
+          },
+          {
+            "c": 303.45,
+            "t": 1786630680
+          },
+          {
+            "c": 303.46,
+            "t": 1786630740
+          },
+          {
+            "c": 303.44,
+            "t": 1786630800
+          },
+          {
+            "c": 303.43,
+            "t": 1786630860
+          },
+          {
+            "c": 303.42,
+            "t": 1786630920
+          },
+          {
+            "c": 303.36,
+            "t": 1786630980
+          },
+          {
+            "c": 303.43,
+            "t": 1786631040
+          },
+          {
+            "c": 303.41,
+            "t": 1786631100
+          },
+          {
+            "c": 303.49,
+            "t": 1786631160
+          },
+          {
+            "c": 303.44,
+            "t": 1786631220
+          },
+          {
+            "c": 303.45,
+            "t": 1786631280
+          },
+          {
+            "c": 303.31,
+            "t": 1786631340
+          },
+          {
+            "c": 303.4,
+            "t": 1786631400
+          },
+          {
+            "c": 303.37,
+            "t": 1786631460
+          },
+          {
+            "c": 303.34,
+            "t": 1786631520
+          },
+          {
+            "c": 303.44,
+            "t": 1786631580
+          },
+          {
+            "c": 303.43,
+            "t": 1786631640
+          },
+          {
+            "c": 303.47,
+            "t": 1786631700
+          },
+          {
+            "c": 303.48,
+            "t": 1786631760
+          },
+          {
+            "c": 303.39,
+            "t": 1786631820
+          },
+          {
+            "c": 303.43,
+            "t": 1786631880
+          },
+          {
+            "c": 303.21,
+            "t": 1786631940
+          },
+          {
+            "c": 303.46,
+            "t": 1786632000
+          },
+          {
+            "c": 303.72,
+            "t": 1786632060
+          },
+          {
+            "c": 303.9,
+            "t": 1786632120
+          },
+          {
+            "c": 303.9,
+            "t": 1786632180
+          },
+          {
+            "c": 303.8,
+            "t": 1786632240
+          },
+          {
+            "c": 303.5,
+            "t": 1786632300
+          },
+          {
+            "c": 303.59,
+            "t": 1786632360
+          },
+          {
+            "c": 303.58,
+            "t": 1786632420
+          },
+          {
+            "c": 303.58,
+            "t": 1786632480
+          },
+          {
+            "c": 303.64,
+            "t": 1786632540
+          },
+          {
+            "c": 303.27,
+            "t": 1786632600
+          },
+          {
+            "c": 303.32,
+            "t": 1786632660
+          },
+          {
+            "c": 303.33,
+            "t": 1786632720
+          },
+          {
+            "c": 303.33,
+            "t": 1786632780
+          },
+          {
+            "c": 303.37,
+            "t": 1786632840
+          },
+          {
+            "c": 303.44,
+            "t": 1786632900
+          },
+          {
+            "c": 303.3,
+            "t": 1786632960
+          },
+          {
+            "c": 303.26,
+            "t": 1786633020
+          },
+          {
+            "c": 303.28,
+            "t": 1786633080
+          },
+          {
+            "c": 303.19,
+            "t": 1786633140
+          },
+          {
+            "c": 303.07,
+            "t": 1786633200
+          },
+          {
+            "c": 303.2,
+            "t": 1786633260
+          },
+          {
+            "c": 303.22,
+            "t": 1786633320
+          },
+          {
+            "c": 303.18,
+            "t": 1786633380
+          },
+          {
+            "c": 303.29,
+            "t": 1786633440
+          },
+          {
+            "c": 303.4,
+            "t": 1786633500
+          },
+          {
+            "c": 303.46,
+            "t": 1786633560
+          },
+          {
+            "c": 303.43,
+            "t": 1786633620
+          },
+          {
+            "c": 303.29,
+            "t": 1786633680
+          },
+          {
+            "c": 303.215,
+            "t": 1786633740
+          },
+          {
+            "c": 303.47,
+            "t": 1786633800
+          },
+          {
+            "c": 303.384,
+            "t": 1786633860
+          },
+          {
+            "c": 303.44,
+            "t": 1786633920
+          },
+          {
+            "c": 303.44,
+            "t": 1786633980
+          },
+          {
+            "c": 303.5,
+            "t": 1786634040
+          },
+          {
+            "c": 303.55,
+            "t": 1786634100
+          },
+          {
+            "c": 303.584,
+            "t": 1786634160
+          },
+          {
+            "c": 303.76,
+            "t": 1786634220
+          },
+          {
+            "c": 303.84,
+            "t": 1786634280
+          },
+          {
+            "c": 303.865,
+            "t": 1786634340
+          },
+          {
+            "c": 303.975,
+            "t": 1786634400
+          },
+          {
+            "c": 304.305,
+            "t": 1786634460
+          },
+          {
+            "c": 304.07,
+            "t": 1786634520
+          },
+          {
+            "c": 304.34,
+            "t": 1786634580
+          },
+          {
+            "c": 304.11,
+            "t": 1786634640
+          },
+          {
+            "c": 304.16,
+            "t": 1786634700
+          },
+          {
+            "c": 304.392,
+            "t": 1786634760
+          },
+          {
+            "c": 304.26,
+            "t": 1786634820
+          },
+          {
+            "c": 304.335,
+            "t": 1786634880
+          },
+          {
+            "c": 304.4,
+            "t": 1786634940
+          },
+          {
+            "c": 304.555,
+            "t": 1786635000
+          },
+          {
+            "c": 304.36,
+            "t": 1786635060
+          },
+          {
+            "c": 304.35,
+            "t": 1786635120
+          },
+          {
+            "c": 304.43,
+            "t": 1786635180
+          },
+          {
+            "c": 304.58,
+            "t": 1786635240
+          },
+          {
+            "c": 304.305,
+            "t": 1786635300
+          },
+          {
+            "c": 304.155,
+            "t": 1786635360
+          },
+          {
+            "c": 304.13,
+            "t": 1786635420
+          },
+          {
+            "c": 304.07,
+            "t": 1786635480
+          },
+          {
+            "c": 304.24,
+            "t": 1786635540
+          },
+          {
+            "c": 304.06,
+            "t": 1786635600
+          },
+          {
+            "c": 304.16,
+            "t": 1786635660
+          },
+          {
+            "c": 304.13,
+            "t": 1786635720
+          },
+          {
+            "c": 304.12,
+            "t": 1786635780
+          },
+          {
+            "c": 304.105,
+            "t": 1786635840
+          },
+          {
+            "c": 304.21,
+            "t": 1786635900
+          },
+          {
+            "c": 304.36,
+            "t": 1786635960
+          },
+          {
+            "c": 304.47,
+            "t": 1786636020
+          },
+          {
+            "c": 304.421,
+            "t": 1786636080
+          },
+          {
+            "c": 304.825,
+            "t": 1786636140
+          },
+          {
+            "c": 304.78,
+            "t": 1786636200
+          },
+          {
+            "c": 304.71,
+            "t": 1786636260
+          },
+          {
+            "c": 304.785,
+            "t": 1786636320
+          },
+          {
+            "c": 304.78,
+            "t": 1786636380
+          },
+          {
+            "c": 305.146,
+            "t": 1786636440
+          },
+          {
+            "c": 305.22,
+            "t": 1786636500
+          },
+          {
+            "c": 305.172,
+            "t": 1786636560
+          },
+          {
+            "c": 305.05,
+            "t": 1786636620
+          },
+          {
+            "c": 305.12,
+            "t": 1786636680
+          },
+          {
+            "c": 305.27,
+            "t": 1786636740
+          },
+          {
+            "c": 305.26,
+            "t": 1786636800
+          }
+        ]
+      },
+      "changes": {
+        "price1w": 312.41,
+        "price1m": 315.32,
+        "price3m": 294.8,
+        "price6m": 261.73,
+        "priceYTD": 271.86,
+        "price1y": 229.65,
+        "price5y": 148.89,
+        "priceMAX": 0.0837
+      },
+      "source": "polygon"
+    },
+    "history": [
+      {
+        "t": "2026-08-03",
+        "o": 309.58,
+        "h": 316.289,
+        "l": 300.57,
+        "c": 305.26,
+        "a": 305.26,
+        "v": 430135284,
+        "ch": -1.1
+      },
+      {
+        "t": "2026-07-01",
+        "o": 293.44,
+        "h": 344.57,
+        "l": 289.195,
+        "c": 308.91,
+        "a": 308.643809,
+        "v": 1198909236,
+        "ch": 6.76
+      },
+      {
+        "t": "2026-06-01",
+        "o": 309.625,
+        "h": 317.4,
+        "l": 273.75,
+        "c": 289.36,
+        "a": 289.110655,
+        "v": 1401452677,
+        "ch": -7.27
+      },
+      {
+        "t": "2026-05-01",
+        "o": 278.855,
+        "h": 315,
+        "l": 274.86,
+        "c": 312.06,
+        "a": 311.791094,
+        "v": 981286386,
+        "ch": 15.11
+      },
+      {
+        "t": "2026-04-01",
+        "o": 254.08,
+        "h": 276,
+        "l": 245.7,
+        "c": 271.35,
+        "a": 270.866613,
+        "v": 907538475,
+        "ch": 6.92
+      },
+      {
+        "t": "2026-03-02",
+        "o": 262.41,
+        "h": 266.53,
+        "l": 245.51,
+        "c": 253.79,
+        "a": 253.337895,
+        "v": 900035757,
+        "ch": -3.93
+      },
+      {
+        "t": "2026-02-02",
+        "o": 260.03,
+        "h": 280.905,
+        "l": 255.45,
+        "c": 264.18,
+        "a": 263.709386,
+        "v": 988921083,
+        "ch": 1.91
+      },
+      {
+        "t": "2026-01-02",
+        "o": 272.255,
+        "h": 277.84,
+        "l": 243.42,
+        "c": 259.48,
+        "a": 258.775616,
+        "v": 1040017271,
+        "ch": -4.55
+      },
+      {
+        "t": "2025-12-01",
+        "o": 278.01,
+        "h": 288.62,
+        "l": 266.95,
+        "c": 271.86,
+        "a": 271.12201,
+        "v": 924529010,
+        "ch": -2.51
+      },
+      {
+        "t": "2025-11-03",
+        "o": 270.42,
+        "h": 280.38,
+        "l": 265.32,
+        "c": 278.85,
+        "a": 278.093035,
+        "v": 877578237,
+        "ch": 3.24
+      },
+      {
+        "t": "2025-10-01",
+        "o": 255.04,
+        "h": 277.32,
+        "l": 244,
+        "c": 270.37,
+        "a": 269.374925,
+        "v": 1097142365,
+        "ch": 6.18
+      }
+    ],
+    "quote": {
+      "p": 305.26,
+      "pd": 305.26,
+      "c": 3.01,
+      "cp": 1,
+      "cl": 302.25,
+      "cdr": 1,
+      "o": 304.21,
+      "h": 306,
+      "l": 302.05,
+      "v": 40285515,
+      "ts": 1786651200000,
+      "u": "Aug 13, 2026, 4:00 PM EDT",
+      "td": "2026-08-13",
+      "h52": 344.57,
+      "l52": 223.78,
+      "ex": "NASDAQ",
+      "ms": "closed",
+      "fms": "post",
+      "e": true,
+      "ep": 304.9,
+      "epd": 304.9,
+      "ec": -0.36,
+      "ecp": -0.12,
+      "eu": "Aug 13, 2026, 6:07 PM EDT",
+      "es": "After-hours",
+      "ets": 1786658866427.1018,
+      "etd": "2026-08-13",
+      "epv": null,
+      "days": 0,
+      "exp": 1786658967997,
+      "symbol": "AAPL",
+      "uid": "AAPL"
+    }
+  }
+}

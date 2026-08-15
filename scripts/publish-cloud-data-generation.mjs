@@ -129,6 +129,7 @@ import {
   validateGenerationManifest,
   validatePublicationReceipt,
 } from "./lib/cloud-data-plane-generation.mjs";
+import { classifyPreparedReceipts } from "./lib/cloud-data-plane-prepared-receipt-lifecycle.mjs";
 import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflare-adapter.mjs";
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
 import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-coordinator.mjs";
@@ -1219,6 +1220,32 @@ export function computeRetentionPlan({
   candidates.sort((left, right) => left.key.localeCompare(right.key));
   skippedProtected.sort();
 
+  // Manifests are collected under the same single-reference discipline as
+  // payloads, added 2026-08-15 by owner decision. Rollback reads only
+  // pointer.previous (see rollbackGeneration), so no execution path reads a
+  // generation older than N-1, yet manifests were excluded from collection
+  // permanently while no budget metric could see them grow.
+  //
+  // The classifier is deliberately narrower than a manifests/ prefix: an entry
+  // qualifies only if it is a valid generation manifest whose key equals
+  // manifests/<its own generation_id>.json — the same test that built
+  // generationManifests — and whose id is outside the retained set. Every
+  // non-generation alias stays in nonGenerationManifests and is never a
+  // candidate, and protected keys are excluded here as well as in the payload
+  // loop, so neither can be reached by a renamed or spoofed key.
+  const sizeByKey = new Map(objectEntries.map(({ key, size }) => [key, size ?? null]));
+  const manifestCandidates = generationManifests
+    .filter((entry) => !retainedIds.has(entry.manifest.generation_id) && !protectedKeys.has(entry.key))
+    .map((entry) => ({
+      key: entry.key,
+      size: sizeByKey.get(entry.key) ?? null,
+      generation_id: entry.manifest.generation_id,
+      family: entry.family,
+      reason: "generation is outside the retained set: outside the keep-newest window, "
+        + "named by no pointer, and held by no prepared receipt",
+    }))
+    .sort((left, right) => left.key.localeCompare(right.key));
+
   return {
     keepNewest,
     retainedGenerations: [...retainedIds].sort(),
@@ -1227,6 +1254,10 @@ export function computeRetentionPlan({
     candidates,
     skippedProtected,
     manifestCount: generationManifests.length + nonGenerationManifests.length,
+    manifestCandidates,
+    manifestCandidateBytes: manifestCandidates.reduce((total, entry) => total + (entry.size ?? 0), 0),
+    manifestBytes: [...generationManifests, ...nonGenerationManifests]
+      .reduce((total, entry) => total + (sizeByKey.get(entry.key) ?? 0), 0),
   };
 }
 
@@ -1236,7 +1267,12 @@ export function computeRetentionPlan({
 // indistinguishable from one with no live generations, and guessing wrong
 // deletes production data. Success with pointer null (family never published)
 // is a legitimate answer and contributes nothing to the retained set.
-export async function collectFamiliesRetentionState({ families, createPlane }) {
+// The resume window is threaded in rather than defaulted: a prepared receipt has
+// no terminal state in the contract, so without a bound it protects its
+// generation forever. An absent window aborts before any deletion rather than
+// falling back to indefinite protection, which would silently reinstate the
+// unbounded case this exists to close.
+export async function collectFamiliesRetentionState({ families, createPlane, now, resumeWindowSeconds }) {
   const states = [];
   for (const name of families) {
     let inspection;
@@ -1248,14 +1284,28 @@ export async function collectFamiliesRetentionState({ families, createPlane }) {
         `${name}: ${error.code ?? "ERROR"}: ${error.message}`,
       );
     }
-    const preparedGenerations = [...new Set((inspection?.receipts ?? [])
-      .filter((receipt) => receipt?.state === "prepared")
-      .map((receipt) => receipt.generation_id)
-      .filter(Boolean))].sort();
+    let lifecycle;
+    try {
+      lifecycle = classifyPreparedReceipts({
+        receipts: inspection?.receipts ?? [],
+        now,
+        resumeWindowSeconds,
+      });
+    } catch (error) {
+      // A classification failure is not a reason to fall back to the old
+      // unbounded behaviour; it is a reason to stop before deleting anything.
+      fail("RETENTION_RECEIPT_LIFECYCLE_UNRESOLVED", `${name}: ${error.message}`);
+    }
     states.push({
       name,
       pointer: inspection?.pointer ?? null,
-      preparedGenerations,
+      // Live only. Pointer active/previous and cross-family manifest references
+      // are assembled separately and are unaffected by receipt expiry.
+      preparedGenerations: lifecycle.live_generations,
+      expiredReceipts: lifecycle.expired_receipts,
+      releasedGenerations: lifecycle.released_generations,
+      clockAnomalies: lifecycle.clock_anomalies,
+      resumeWindowSeconds: lifecycle.resume_window_seconds,
     });
   }
   return states;
@@ -1275,7 +1325,23 @@ export async function executeRetentionPlan({ plan, deleteObject }) {
       deleted.push({ key: candidate.key, size: candidate.size });
     }
   }
-  return { deleted, failures };
+  // Manifests go last, deliberately. A manifest is the only record of which
+  // objects a generation held, so deleting it before its payloads would leave a
+  // failed payload deletion with nothing left to explain it. Reported as its own
+  // class rather than merged into deleted, because a manifest deletion removes
+  // evidence while a payload deletion removes data.
+  const deletedManifests = [];
+  const manifestFailures = [];
+  for (const candidate of plan.manifestCandidates ?? []) {
+    const outcome = await deleteObject(candidate.key);
+    const row = { key: candidate.key, size: candidate.size, generation_id: candidate.generation_id };
+    if (outcome?.ok === false) {
+      manifestFailures.push({ ...row, error: outcome.error ?? "delete failed" });
+    } else {
+      deletedManifests.push(row);
+    }
+  }
+  return { deleted, failures, deletedManifests, manifestFailures };
 }
 
 // --- result vocabulary + health classifier -----------------------------------
@@ -1516,6 +1582,11 @@ function parseArgs(argv) {
     else if (arg === "--rollback") args.rollback = true;
     else if (arg === "--retention") args.retention = true;
     else if (arg === "--retention-delete") args.retentionDelete = true;
+    // Owner policy, supplied per run. There is no default: a prepared receipt has
+    // no terminal state, so an omitted window would restore indefinite protection.
+    else if (arg.startsWith("--prepared-resume-window-seconds=")) {
+      args.resumeWindowSeconds = Number.parseInt(arg.slice("--prepared-resume-window-seconds=".length), 10);
+    }
     else if (arg.startsWith("--chaos=")) {
       const mode = arg.slice("--chaos=".length);
       if (!CHAOS_MODES.includes(mode)) fail("ARGS_INVALID", `unknown chaos mode ${mode}`);
@@ -1545,7 +1616,10 @@ function parseArgs(argv) {
 // RETENTION_FAMILY_UNREADABLE). DeleteObject is free on the free tier, so the
 // gate still runs first with a small declaration. --family is deliberately not
 // accepted anywhere on this path.
-async function runRetention({ tolerateGateBlock, retentionDelete, json }) {
+// The resume window is an owner policy value with no safe default, so it arrives
+// as an explicit argument and its absence aborts the run before any deletion.
+// A default here would silently restore indefinite prepared-receipt protection.
+async function runRetention({ tolerateGateBlock, retentionDelete, json, resumeWindowSeconds, now }) {
   const log = (line) => {
     if (!json) console.error(line);
   };
@@ -1589,6 +1663,8 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json }) {
       coordinatorNamespace: createRemoteCoordinatorNamespace({ endpoint, key: writeKey, family: name }),
       coordinatorName: name,
     }),
+    now,
+    resumeWindowSeconds,
   });
   const readObject = async (key) => {
     const entry = await r2Bucket.get(key);
@@ -1618,11 +1694,33 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json }) {
     manifests_read: retentionPlan.manifestCount,
     retained_generations: retentionPlan.retainedGenerations,
     prepared_generations: [...new Set(familiesState.flatMap((state) => state.preparedGenerations))].sort(),
+    // Audit only. A released generation is NOT a delete instruction: it merely
+    // stops being a protection root, and whether any of its objects are deleted
+    // is still decided by the single reference rule. Reported so an operator can
+    // see what the window let go of — the point of bounding protection is that
+    // the release is visible, not that the candidate set silently widens.
+    prepared_receipt_lifecycle: {
+      resume_window_seconds: resumeWindowSeconds,
+      evaluated_at: now,
+      expired_receipts: familiesState.flatMap((state) => (state.expiredReceipts ?? []).map((row) => ({ family: state.name, ...row }))),
+      released_generations: [...new Set(familiesState.flatMap((state) => state.releasedGenerations ?? []))].sort(),
+      clock_anomalies: familiesState.flatMap((state) => (state.clockAnomalies ?? []).map((row) => ({ family: state.name, ...row }))),
+    },
     referenced_object_count: retentionPlan.referencedKeys.length,
     protected_keys_present: retentionPlan.skippedProtected,
     candidate_count: retentionPlan.candidates.length,
     candidate_bytes: retentionPlan.candidates.reduce((total, candidate) => total + (candidate.size ?? 0), 0),
     candidates: retentionPlan.candidates,
+    // Manifest terms are reported separately from payload terms because no
+    // budget metric measures manifests at all: neither count nor bytes reaches
+    // the storage slots calculation, so this report is the only place their
+    // growth is visible until a metric exists. Kept distinct rather than summed,
+    // since a manifest deletion removes evidence and a payload deletion removes
+    // data, and an operator needs to see which happened.
+    manifest_bytes: retentionPlan.manifestBytes,
+    manifest_candidate_count: retentionPlan.manifestCandidates.length,
+    manifest_candidate_bytes: retentionPlan.manifestCandidateBytes,
+    manifest_candidates: retentionPlan.manifestCandidates,
     gate_before: gateVerdict(gateBefore),
   };
   if (retentionDelete) {
@@ -1633,9 +1731,18 @@ async function runRetention({ tolerateGateBlock, retentionDelete, json }) {
     report.deleted = executed.deleted;
     report.deleted_count = executed.deleted.length;
     report.delete_failures = executed.failures;
+    // Durable record of which manifests were removed. Once a manifest is gone
+    // its objects can only ever be reported as orphaned, so this list is the
+    // only thing that keeps that reason attributable afterwards.
+    report.deleted_manifests = executed.deletedManifests;
+    report.deleted_manifest_count = executed.deletedManifests.length;
+    report.deleted_manifest_bytes = executed.deletedManifests
+      .reduce((total, row) => total + (row.size ?? 0), 0);
+    report.manifest_delete_failures = executed.manifestFailures;
     emit(report);
-    if (executed.failures.length > 0) {
-      fail("RETENTION_DELETE_FAILED", `${executed.failures.length} object(s) could not be deleted`);
+    const failureCount = executed.failures.length + executed.manifestFailures.length;
+    if (failureCount > 0) {
+      fail("RETENTION_DELETE_FAILED", `${failureCount} object(s) could not be deleted`);
     }
     return;
   }
@@ -1688,6 +1795,8 @@ export async function runPublisherCli({
       tolerateGateBlock: args.tolerateGateBlock,
       retentionDelete: args.retentionDelete,
       json: args.json,
+      resumeWindowSeconds: args.resumeWindowSeconds,
+      now: new Date().toISOString(),
     });
     return 0;
   }

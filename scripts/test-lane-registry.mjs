@@ -129,6 +129,31 @@ function clone(value) {
       const lane = draft.lanes.find((row) => row.commit_shards.length > 1);
       lane.commit_shards.push(lane.commit_shards[0]);
     }],
+    // Completeness, both directions. Until 2026-08-14 a policy was checked only
+    // for lanes it DID list — nothing asserted that a workflow lists every lane
+    // the registry says it owns, or that it can commit those lanes' evidence.
+    // Both gaps were real in the shipped registry: fetch-stockanalysis.yml
+    // omitted stockanalysis_etf_detail from its lane list while hand-patching
+    // that lane's shard into its specs after run 31794068491 failed to pack it,
+    // and fetch-yf-finance.yml owned yahoo_batch_quote_history without owning
+    // the attempt shard the lane declares, so that shard has never been
+    // committed once.
+    ["workflow policy omits a lane it owns", (draft) => {
+      const lane = draft.lanes.find((row) => row.owner_workflow);
+      const policyValue = draft.workflow_policies[lane.owner_workflow];
+      policyValue.lanes = policyValue.lanes.filter((id) => id !== lane.id);
+    }],
+    ["workflow policy cannot commit an owned lane's attempt shard", (draft) => {
+      const prefix = "data/admin/data-supply-state/detection-attempts/";
+      const lane = draft.lanes.find((row) => row.owner_workflow
+        && row.commit_shards.some((shard) => shard.startsWith(prefix)));
+      const shard = lane.commit_shards.find((entry) => entry.startsWith(prefix));
+      const policyValue = draft.workflow_policies[lane.owner_workflow];
+      for (const stage of Object.keys(policyValue.stages)) {
+        policyValue.stages[stage] = policyValue.stages[stage]
+          .filter((spec) => spec.path !== shard && !shard.startsWith(`${spec.path}/`));
+      }
+    }],
   ];
   for (const [label, mutate] of cases) {
     const draft = clone(base);
@@ -222,7 +247,7 @@ function clone(value) {
   const roots = declaredAdminRoots();
   assert.deepEqual(
     [...(roots.get("data/admin/stockanalysis-recovery") ?? [])].sort(),
-    ["stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"].sort(),
+    ["stockanalysis_etf_detail", "stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"].sort(),
     "the StockAnalysis recovery store must list every claimant lane",
   );
   assert.deepEqual(
@@ -254,7 +279,7 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 29, auxiliary: 3 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 30, auxiliary: 3 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "detection_floor",
       "yahoo_batch_quote_history is a standard detection-floor producer");
     assert.equal(
@@ -279,6 +304,8 @@ function clone(value) {
       "Damodaran keeps its measured in-repo owner workflow");
     assert.equal(registryLaneById("stockanalysis_stock_financial").enforcement, "live",
       "the bounded StockAnalysis pair lane is live after its first committed natural 8-pair attempt");
+    assert.equal(registryLaneById("stockanalysis_etf_detail").enforcement, "live",
+      "the bounded StockAnalysis ETF detail lane is live after its first committed natural fence-confirmed attempt");
     assert.equal(registryLaneById("yahoo_private_options").enforcement, "live",
       "the targeted Yahoo options lane is live after its first committed natural schedule attempt");
     for (const {

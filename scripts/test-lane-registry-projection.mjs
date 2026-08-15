@@ -56,6 +56,7 @@ const EXPECTED_LANE_IDS = [
   "defillama_stablecoins",
   "yahoo_etf_fallback",
   "stockanalysis_etf_universe",
+  "stockanalysis_etf_detail",
   "stockanalysis_stock_financial",
   "stockanalysis_surfaces",
   "yahoo_ticker_macro",
@@ -81,8 +82,8 @@ const EXPECTED_LANE_IDS = [
   "gdelt_news_tone",
   "yahoo_batch_quote_history",
 ];
-assert.equal(projection.lanes.length, 32, "projection must carry all 32 registry lanes");
-assert.equal(projection.lane_count, 32);
+assert.equal(projection.lanes.length, 33, "projection must carry all 33 registry lanes");
+assert.equal(projection.lane_count, 33);
 assert.deepEqual(
   projection.lanes.map(({ id }) => id),
   EXPECTED_LANE_IDS,

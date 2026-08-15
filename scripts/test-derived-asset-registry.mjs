@@ -53,9 +53,14 @@ function clone(value) {
     [{ path: "data/computed/fenok-rim", kind: "directory" }],
     "the Fenok RIM directory must have one registry owner",
   );
+  assert.equal(fenokRim.lifecycle, "quarantined");
+  assert.equal(fenokRim.owner_workflow, null);
+  assert.equal(fenokRim.writer, null);
+  assert.deepEqual(fenokRim.inputs, []);
+  assert.equal(fenokRim.cadence.kind, "orphaned");
   assert.equal(fenokRim.privacy_class, "public_mirror");
   assert.equal(fenokRim.public_serving_status, "active");
-  assert.equal(fenokRim.recovery, "rebuild_from_inputs");
+  assert.equal(fenokRim.recovery, "none");
   assert.deepEqual(
     fenokRim.public_outputs,
     [
@@ -71,9 +76,14 @@ function clone(value) {
     [{ path: "data/computed/rim-index", kind: "directory" }],
     "the RIM index input directory must have one registry owner",
   );
+  assert.equal(rimIndex.lifecycle, "quarantined");
+  assert.equal(rimIndex.owner_workflow, null);
+  assert.equal(rimIndex.writer, null);
+  assert.deepEqual(rimIndex.inputs, []);
+  assert.equal(rimIndex.cadence.kind, "orphaned");
   assert.equal(rimIndex.privacy_class, "public_mirror");
   assert.equal(rimIndex.public_serving_status, "active");
-  assert.equal(rimIndex.recovery, "rebuild_from_inputs");
+  assert.equal(rimIndex.recovery, "none");
   assert.deepEqual(
     rimIndex.public_outputs,
     [{ path: "100xfenok-next/public/data/computed/rim-index/inputs.json", kind: "file" }],

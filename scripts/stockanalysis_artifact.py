@@ -23,6 +23,21 @@ DEFAULT_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml"
 DEFAULT_LANE_MANIFEST = "data/admin/lane-commit-manifest.json"
 MAX_FILE_COUNT = 20_000
 MAX_TOTAL_BYTES = 750 * 1024 * 1024
+ETF_DETAIL_ATTEMPT_SHARD = "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json"
+ETF_DETAIL_LANE_ID = "stockanalysis_etf_detail"
+ETF_DETAIL_ASSERTION_IDS = frozenset({
+    "etf_detail_requested",
+    "etf_detail_written",
+    "etf_detail_failed",
+})
+ATTEMPT_SHARD_SCHEMA = "data-supply-detection-attempt-shard/v2"
+STOCKANALYSIS_ATTEMPT_SPECS = (
+    ("yahoo_etf_fallback", "data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", "yahoo"),
+    ("stockanalysis_etf_universe", "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", "universe"),
+    ("stockanalysis_etf_detail", ETF_DETAIL_ATTEMPT_SHARD, "etf_detail"),
+    ("stockanalysis_stock_financial", "data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", "stock-financial"),
+    ("stockanalysis_surfaces", "data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", "surfaces"),
+)
 # The Next.js public mirror tree is materialized by the shared projection
 # workflow, never by this source lane. The whole tree is structurally outside
 # the artifact boundary: creation ignores it before validation, extraction
@@ -601,7 +616,12 @@ def apply_artifact(
     assert_clean_targets(repo, manifest["paths"])
     reason = stale_reason(repo, manifest)
     if reason:
-        return {"status": "stale", "reason": reason, "paths": manifest["paths"]}
+        return {
+            "status": "stale",
+            "confirmation": "not_confirmed",
+            "reason": reason,
+            "paths": manifest["paths"],
+        }
     artifact = Path(artifact_root).resolve(strict=True)
     backups: dict[str, tuple[bytes, int] | None] = {}
     temp_paths: list[Path] = []
@@ -617,6 +637,7 @@ def apply_artifact(
             replace_fn(temp_path, target)
         return {
             "status": "applied",
+            "confirmation": "pending",
             "reason": None,
             "paths": manifest["paths"],
             "artifact_digest": artifact_digest,
@@ -638,6 +659,232 @@ def apply_artifact(
     finally:
         for temp_path in temp_paths:
             temp_path.unlink(missing_ok=True)
+
+
+def verify_etf_detail_attempt(
+    *,
+    repo_root: Path,
+    run_id: str,
+    run_attempt: int,
+    shard_path: str = ETF_DETAIL_ATTEMPT_SHARD,
+    expected_attempt_id: str | None = None,
+) -> dict:
+    """Confirm that latest main contains this run's successful ETF detail proof."""
+    repo = Path(repo_root).resolve(strict=True)
+    if not isinstance(run_id, str) or not run_id:
+        fail("ETF detail readback run_id is required")
+    if not isinstance(run_attempt, int) or run_attempt < 1:
+        fail("ETF detail readback run_attempt must be a positive integer")
+    rel = normalize_rel(shard_path)
+    target = repo / rel
+    if target.is_symlink() or not target.is_file():
+        fail(f"ETF detail readback shard is missing or unsafe: {rel}")
+    try:
+        document = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"ETF detail readback shard is not valid JSON: {exc}")
+    if not isinstance(document, dict):
+        fail("ETF detail readback shard must be an object")
+    if document.get("schema_version") != ATTEMPT_SHARD_SCHEMA:
+        fail("ETF detail readback shard schema is invalid")
+    if document.get("lane_id") != ETF_DETAIL_LANE_ID:
+        fail("ETF detail readback shard lane is invalid")
+    attempts = document.get("attempts")
+    if not isinstance(attempts, list):
+        fail("ETF detail readback attempts must be an array")
+
+    if expected_attempt_id is None:
+        expected_attempt_id = f"stockanalysis-etf_detail-{run_id}-{run_attempt}"
+    elif not isinstance(expected_attempt_id, str) or not expected_attempt_id:
+        fail("ETF detail readback expected attempt_id is required")
+    current = [row for row in attempts if isinstance(row, dict) and row.get("attempt_id") == expected_attempt_id]
+    if len(current) != 1:
+        fail(f"current ETF detail attempt is absent or duplicated: {expected_attempt_id}")
+    row = current[0]
+    required = {
+        "lane_id",
+        "member_id",
+        "observed_at",
+        "execution",
+        "exception_kind",
+        "http_status",
+        "auth",
+        "rate_limited",
+        "decode",
+        "payload",
+        "assertions",
+        "candidates",
+        "retry_count",
+        "latency_ms",
+        "outcome",
+    }
+    missing = sorted(required - row.keys())
+    if missing:
+        fail(f"current ETF detail attempt is missing fields: {', '.join(missing)}")
+    if (
+        row["lane_id"] != ETF_DETAIL_LANE_ID
+        or row["member_id"] is not None
+        or not isinstance(row["observed_at"], str)
+        or not row["observed_at"]
+        or row["execution"] != "returned"
+        or row["exception_kind"] is not None
+        or row["http_status"] is not None
+        or row["auth"] != "not_applicable"
+        or row["rate_limited"] is not False
+        or row["decode"] != "ok"
+        or row["payload"] != "non_empty"
+        or row["candidates"] != 1
+        or row["outcome"] != "success"
+    ):
+        fail(f"current ETF detail attempt is not a successful returned proof: {expected_attempt_id}")
+    assertions = row["assertions"]
+    if not isinstance(assertions, list):
+        fail("current ETF detail assertions must be an array")
+    assertion_ids = [item.get("id") for item in assertions if isinstance(item, dict)]
+    if len(assertion_ids) != len(assertions) or set(assertion_ids) != ETF_DETAIL_ASSERTION_IDS or len(assertion_ids) != len(set(assertion_ids)):
+        fail("current ETF detail assertions do not exactly match the contract")
+    if any(item.get("passed") is not True for item in assertions):
+        fail(f"current ETF detail assertions are not all passed: {expected_attempt_id}")
+    return {
+        "status": "confirmed",
+        "confirmation": "confirmed",
+        "reason": None,
+        "attempt_id": expected_attempt_id,
+        "path": rel,
+    }
+
+
+def _read_current_attempt_row(
+    *,
+    repo_root: Path,
+    shard_path: str,
+    lane_id: str,
+    expected_attempt_id: str,
+) -> dict:
+    repo = Path(repo_root).resolve(strict=True)
+    rel = normalize_rel(shard_path)
+    target = repo / rel
+    if target.is_symlink() or not target.is_file():
+        fail(f"current StockAnalysis attempt shard is missing or unsafe: {rel}")
+    try:
+        document = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"current StockAnalysis attempt shard is not valid JSON: {exc}")
+    if not isinstance(document, dict) or document.get("schema_version") != ATTEMPT_SHARD_SCHEMA:
+        fail(f"current StockAnalysis attempt shard schema is invalid: {rel}")
+    if document.get("lane_id") != lane_id:
+        fail(f"current StockAnalysis attempt shard lane is invalid: {rel}")
+    attempts = document.get("attempts")
+    if not isinstance(attempts, list):
+        fail(f"current StockAnalysis attempts must be an array: {rel}")
+    current = [row for row in attempts if isinstance(row, dict) and row.get("attempt_id") == expected_attempt_id]
+    if len(current) != 1:
+        fail(f"current StockAnalysis attempt is absent or duplicated: {expected_attempt_id}")
+    row = current[0]
+    if (
+        row.get("lane_id") != lane_id
+        or row.get("member_id") is not None
+        or not isinstance(row.get("observed_at"), str)
+        or not row["observed_at"]
+        or row.get("execution") not in {"returned", "threw"}
+    ):
+        fail(f"current StockAnalysis attempt evidence is invalid: {expected_attempt_id}")
+    return row
+
+
+def _candidate_attempt_specs(*, repo_root: Path, artifact_root: Path) -> list[tuple[str, str, str]]:
+    repo = Path(repo_root).resolve(strict=True)
+    artifact = external_root(repo, Path(artifact_root), "artifact root")
+    manifest_path = artifact / "manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"StockAnalysis artifact manifest is not valid JSON: {exc}")
+    paths = manifest.get("paths") if isinstance(manifest, dict) else None
+    if not isinstance(paths, list) or not all(isinstance(path, str) for path in paths):
+        fail("StockAnalysis artifact manifest paths are invalid")
+    path_set = set(paths)
+    selected = [spec for spec in STOCKANALYSIS_ATTEMPT_SPECS if spec[1] in path_set]
+    if not selected:
+        fail("StockAnalysis artifact carries no attempt shard for readback")
+    return selected
+
+
+def _read_packed_attempt_id(
+    *,
+    repo_root: Path,
+    artifact_root: Path,
+    shard_path: str,
+    lane_id: str,
+) -> str:
+    repo = Path(repo_root).resolve(strict=True)
+    artifact = external_root(repo, Path(artifact_root), "artifact root")
+    rel = normalize_rel(shard_path)
+    target = artifact / "files" / rel
+    if target.is_symlink() or not target.is_file():
+        fail(f"packed StockAnalysis attempt shard is missing or unsafe: {rel}")
+    try:
+        document = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"packed StockAnalysis attempt shard is not valid JSON: {exc}")
+    if not isinstance(document, dict) or document.get("schema_version") != ATTEMPT_SHARD_SCHEMA:
+        fail(f"packed StockAnalysis attempt shard schema is invalid: {rel}")
+    if document.get("lane_id") != lane_id or not isinstance(document.get("attempts"), list):
+        fail(f"packed StockAnalysis attempt shard lane or rows are invalid: {rel}")
+    attempts = document["attempts"]
+    if len(attempts) != 1 or not isinstance(attempts[0], dict):
+        fail(f"packed StockAnalysis attempt shard must contain exactly one row: {rel}")
+    attempt_id = attempts[0].get("attempt_id")
+    if attempts[0].get("lane_id") != lane_id or attempts[0].get("member_id") is not None:
+        fail(f"packed StockAnalysis attempt row lane is invalid: {rel}")
+    if not isinstance(attempt_id, str) or not attempt_id:
+        fail(f"packed StockAnalysis attempt_id is missing: {rel}")
+    return attempt_id
+
+
+def verify_stockanalysis_attempts(
+    *,
+    repo_root: Path,
+    run_id: str,
+    run_attempt: int,
+    artifact_root: Path,
+) -> dict:
+    """Confirm every attempt shard carried by the candidate on latest main."""
+    selected = _candidate_attempt_specs(repo_root=repo_root, artifact_root=artifact_root)
+    detail = None
+    for lane_id, shard_path, _prefix in selected:
+        packed_attempt_id = _read_packed_attempt_id(
+            repo_root=repo_root,
+            artifact_root=artifact_root,
+            shard_path=shard_path,
+            lane_id=lane_id,
+        )
+        if lane_id == ETF_DETAIL_LANE_ID:
+            detail = verify_etf_detail_attempt(
+                repo_root=repo_root,
+                run_id=run_id,
+                run_attempt=run_attempt,
+                shard_path=shard_path,
+                expected_attempt_id=packed_attempt_id,
+            )
+            continue
+        _read_current_attempt_row(
+            repo_root=repo_root,
+            shard_path=shard_path,
+            lane_id=lane_id,
+            expected_attempt_id=packed_attempt_id,
+        )
+    if detail is None:
+        return {
+            "status": "confirmed",
+            "confirmation": "confirmed",
+            "reason": None,
+            "lanes": [lane_id for lane_id, _, _ in selected],
+        }
+    return {
+        **detail,
+        "lanes": [lane_id for lane_id, _, _ in selected],
+    }
 
 
 def audit_staged_paths(repo_root: Path, artifact_root: Path) -> None:
@@ -701,7 +948,7 @@ def write_outputs(path: str | None, result: dict) -> None:
     if not path:
         return
     with Path(path).open("a", encoding="utf-8") as handle:
-        for key in ("status", "reason"):
+        for key in ("status", "confirmation", "reason"):
             handle.write(f"{key}={str(result.get(key) or '')}\n")
 
 
@@ -712,9 +959,14 @@ def main() -> None:
     pack = subparsers.add_parser("pack")
     apply = subparsers.add_parser("apply")
     audit = subparsers.add_parser("audit-stage")
+    verify = subparsers.add_parser("verify-attempt")
     for item in (seed, pack, apply, audit):
         item.add_argument("--repo-root", default=".")
         item.add_argument("--workflow", default=DEFAULT_WORKFLOW)
+    verify.add_argument("--repo-root", default=".")
+    verify.add_argument("--artifact-root", required=True)
+    verify.add_argument("--run-id", required=True)
+    verify.add_argument("--run-attempt", required=True, type=int)
     seed.add_argument("--candidate-root", required=True)
     seed.add_argument("--replace", action="store_true")
     pack.add_argument("--candidate-root", required=True)
@@ -757,6 +1009,13 @@ def main() -> None:
             artifact_digest=args.artifact_digest,
         )
         write_outputs(args.github_output, result)
+    elif args.command == "verify-attempt":
+        result = verify_stockanalysis_attempts(
+            repo_root=repo,
+            run_id=args.run_id,
+            run_attempt=args.run_attempt,
+            artifact_root=Path(args.artifact_root),
+        )
     else:
         audit_staged_paths(repo, Path(args.artifact_root))
         result = {"status": "ok"}

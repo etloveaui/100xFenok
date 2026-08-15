@@ -56,6 +56,11 @@ if [[ ! "${BEFORE_SHA-}" =~ ^(AUTO|[0-9a-fA-F]{40})$ ]]; then
   exit 2
 fi
 
+# --- S0: Adopt legacy site metadata into its canonical root ----------------
+# The two legacy surfaces remain producer-owned. Their disjoint JSON outputs
+# are merged fail-closed before any canonical/public projection consumes them.
+node scripts/materialize-site-metadata.mjs --write
+
 # --- S1: Rebuild and verify SlickCharts canonical source --------------------
 if [ "$REBUILD_SLICKCHARTS" = "true" ]; then
   python scripts/scrapers/membership-tracker.py --quiet

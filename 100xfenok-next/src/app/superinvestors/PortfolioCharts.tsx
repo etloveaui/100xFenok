@@ -11,6 +11,11 @@ import type { FactorExposureRecord, FactorExposuresSummaryData, PerformanceSerie
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 import { formatAsOf } from "@/lib/market-valuation/freshness";
 import { formatDecimal, formatInteger, formatPercent, formatPlainPercent, formatSignedPercent } from "@/lib/format";
+import {
+  alignSamePeriodPerformance,
+  formatQuarterDate,
+  getCommonSamePeriodWindow,
+} from "./samePeriodWindow";
 
 type MaybeNumber = number | null | undefined;
 const CANONICAL_SECTOR_SET = new Set<string>(CANONICAL_SECTORS);
@@ -490,42 +495,6 @@ interface ScatterPoint {
 }
 
 const MAX_OVERLAY_LINES = 15;
-const SAME_START_DATE = "2021-03-31";
-const MIN_FULL_OBSERVATIONS = 22;
-
-function isSamePeriodPerformance(performance: PerformanceSeries | null | undefined): performance is PerformanceSeries {
-  return Boolean(
-    performance
-      && performance.dates[0] === SAME_START_DATE
-      && performance.portfolio.length >= MIN_FULL_OBSERVATIONS,
-  );
-}
-
-function commonSamePeriodEndDate(data: PortfolioViewsData): string | null {
-  const endCounts = new Map<string, number>();
-  for (const view of Object.values(data.investors)) {
-    const perf = view.performance;
-    if (!isSamePeriodPerformance(perf)) continue;
-    const endDate = perf.dates.at(-1);
-    if (endDate) endCounts.set(endDate, (endCounts.get(endDate) ?? 0) + 1);
-  }
-  return [...endCounts.entries()].sort((a, b) => b[1] - a[1] || b[0].localeCompare(a[0]))[0]?.[0] ?? null;
-}
-
-function alignSamePeriodPerformance(
-  performance: PerformanceSeries | null | undefined,
-  endDate: string | null,
-): PerformanceSeries | null {
-  if (!isSamePeriodPerformance(performance) || !endDate) return null;
-  const endIndex = performance.dates.indexOf(endDate);
-  if (endIndex < MIN_FULL_OBSERVATIONS - 1) return null;
-  return {
-    dates: performance.dates.slice(0, endIndex + 1),
-    portfolio: performance.portfolio.slice(0, endIndex + 1),
-    spy: performance.spy ? performance.spy.slice(0, endIndex + 1) : null,
-    coverage: performance.coverage.slice(0, endIndex),
-  };
-}
 
 function computeAnnualizedRiskReturn(performance: PerformanceSeries): { annReturn: number; annVol: number } | null {
   const dates = performance.dates;
@@ -572,12 +541,12 @@ interface RiskReturnScatterProps {
 
 export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
   const chartTheme = useMarketChartTheme();
-  const commonEndDate = useMemo(() => commonSamePeriodEndDate(data), [data]);
+  const samePeriodWindow = useMemo(() => getCommonSamePeriodWindow(data), [data]);
 
   const { investorPoints, spyPoint } = useMemo(() => {
     const points: ScatterPoint[] = [];
     for (const [id, view] of Object.entries(data.investors)) {
-      const performance = alignSamePeriodPerformance(view.performance, commonEndDate);
+      const performance = alignSamePeriodPerformance(view.performance, samePeriodWindow);
       if (!performance) continue;
       const calc = computeAnnualizedRiskReturn(performance);
       if (!calc) continue;
@@ -591,7 +560,7 @@ export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
 
     let spy: ScatterPoint | null = null;
     for (const view of Object.values(data.investors)) {
-      const perf = alignSamePeriodPerformance(view.performance, commonEndDate);
+      const perf = alignSamePeriodPerformance(view.performance, samePeriodWindow);
       const spySeries = perf?.spy;
       if (!perf || !spySeries || !Array.isArray(spySeries) || spySeries.length === 0) continue;
       const calc = computeAnnualizedRiskReturn({
@@ -606,7 +575,7 @@ export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
       }
     }
     return { investorPoints: points, spyPoint: spy };
-  }, [data, commonEndDate]);
+  }, [data, samePeriodWindow]);
 
   const chartData = useMemo<ChartData<"scatter">>(() => {
     const datasets: ChartData<"scatter">["datasets"] = [
@@ -706,7 +675,8 @@ export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
         />
       </div>
       <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
-        좌상단(고수익·저변동성)에 가까울수록 리스크 조정 수익 우수 · 13F 롱 포트폴리오 기준{commonEndDate ? ` · ${commonEndDate}까지` : ""}
+        좌상단(고수익·저변동성)에 가까울수록 리스크 조정 수익 우수 · 13F 롱 포트폴리오 기준
+        {samePeriodWindow ? ` · ${formatQuarterDate(samePeriodWindow.startDate)}~${formatQuarterDate(samePeriodWindow.endDate)} · ${samePeriodWindow.investorCount}명` : ""}
       </p>
     </div>
   );
@@ -735,14 +705,14 @@ interface CumulativeReturnOverlayProps {
 
 export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) {
   const chartTheme = useMarketChartTheme();
-  const commonEndDate = useMemo(() => commonSamePeriodEndDate(data), [data]);
+  const samePeriodWindow = useMemo(() => getCommonSamePeriodWindow(data), [data]);
 
   const { fullSeries, spySeries, labels } = useMemo(() => {
     const full: FullSeriesEntry[] = [];
     let spy: number[] | null = null;
     let labs: string[] = [];
     for (const [id, view] of Object.entries(data.investors)) {
-      const perf = alignSamePeriodPerformance(view.performance, commonEndDate);
+      const perf = alignSamePeriodPerformance(view.performance, samePeriodWindow);
       if (!perf) continue;
       const calc = computeAnnualizedRiskReturn(perf);
       if (!calc) continue;
@@ -756,7 +726,7 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
     }
     full.sort((a, b) => b.annReturn - a.annReturn);
     return { fullSeries: full, spySeries: spy, labels: labs };
-  }, [data, commonEndDate]);
+  }, [data, samePeriodWindow]);
 
   const top10Ids = useMemo(() => new Set(fullSeries.slice(0, 10).map((s) => s.id)), [fullSeries]);
   const fullSeriesKey = useMemo(() => fullSeries.map((s) => s.id).join("|"), [fullSeries]);
@@ -888,7 +858,7 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
           상위 10
         </button>
         <span className="text-[10px] font-semibold text-[var(--c-ink-3)]">
-          {selected.size}/{MAX_OVERLAY_LINES}명 · 2021-Q1 기준 100{commonEndDate ? ` · ${commonEndDate}까지` : ""}
+          {selected.size}/{MAX_OVERLAY_LINES}명 · {samePeriodWindow ? `${formatQuarterDate(samePeriodWindow.startDate)} 기준 100 · ${formatQuarterDate(samePeriodWindow.endDate)}까지` : "동일기간 확인 중"}
         </span>
       </div>
 
@@ -926,11 +896,11 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
           data={chartData}
           options={options}
           role="img"
-          aria-label="2021년 1분기 기준 거장 누적 수익 오버레이"
+          aria-label="동일기간 기준 거장 누적 수익 오버레이"
         />
       </div>
       <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
-        2021-Q1 동일 기준{commonEndDate ? ` · ${commonEndDate}까지` : ""} · {fullSeries.length}명 중 선택 {selected.size}명 · SPY는 두꺼운 회색 선
+        {samePeriodWindow ? `${formatQuarterDate(samePeriodWindow.startDate)} 동일 기준 · ${formatQuarterDate(samePeriodWindow.endDate)}까지` : "동일기간 확인 중"} · {fullSeries.length}명 중 선택 {selected.size}명 · SPY는 두꺼운 회색 선
       </p>
     </div>
   );

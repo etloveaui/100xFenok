@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-09T16:50:52Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/GGRW.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GGRW.json",
     "payload_sha256": "739313d2f3a57673e6d121cb65c03b830b84fba11929fc0eb1520292caf96ec0",
     "quote_as_of": "2026-08-05T19:59:45Z",
     "source_as_of": "2026-08-05T19:59:45Z"
@@ -51,6 +51,14 @@
     "schedule": "7 16 * * 0-5",
     "shard": "8/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-09T16:50:52Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GGRW.json",
+    "payload_sha256": "739313d2f3a57673e6d121cb65c03b830b84fba11929fc0eb1520292caf96ec0",
+    "quote_as_of": "2026-08-05T19:59:45Z",
+    "source_as_of": "2026-08-05T19:59:45Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05T19:59:45Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "GGRW holds LKG because Yahoo source date 2026-08-05T19:59:45Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-05T19:59:45Z"
+  },
   "ticker": "GGRW",
-  "updated_at": "2026-08-09T16:47:26Z"
+  "updated_at": "2026-08-14T00:10:47Z"
 }

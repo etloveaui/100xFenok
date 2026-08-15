@@ -12,12 +12,25 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const SEC13F_CONVERTER_ANALYTICS = Object.freeze([
+  "buying_pressure.json",
+  "conviction.json",
+  "conviction_entries.json",
+  "enhanced_consensus.json",
+  "hhi.json",
+  "multi_quarter_trends.json",
+  "new_positions.json",
+  "options_hedge.json",
+  "turnover.json",
+]);
 const PRODUCERS = Object.freeze([
+  ["scripts/materialize-site-metadata.mjs", "data/metadata"],
   ["scripts/build-stocks-analyzer.mjs", "data/global-scouter/core/stocks_analyzer.json"],
   ["scripts/build-13f-enrichment-backfill.mjs", "data/sec-13f/summary.json"],
   ["scripts/build-13f-integrity-indexes.mjs", "data/sec-13f/analytics/consensus.json"],
   ["scripts/build-13f-trades.mjs", "data/sec-13f/analytics/trades_ranking.json"],
   ["scripts/build-13f-portfolio-views.mjs", "data/sec-13f/analytics/portfolio_views.json"],
+  ["scripts/build-13f-factor-radar-v2.mjs", "data/sec-13f/analytics/factor_exposures_summary.json"],
   ["scripts/build-guru-holders-index.mjs", "data/sec-13f/analytics/guru_holders_index.json"],
   ["scripts/build-revision-movers.mjs", "data/global-scouter/core/revision_movers.json"],
   ["scripts/build-industry-benchmarks.mjs", "data/damodaran/industry_benchmarks.json"],
@@ -58,6 +71,9 @@ const REMOVED_MIRROR_OUTPUTS = Object.freeze({
   ],
   "scripts/build-13f-portfolio-views.mjs": [
     { source: "data/sec-13f/analytics/portfolio_views.json", destination: "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json" },
+  ],
+  "scripts/build-13f-factor-radar-v2.mjs": [
+    { source: "data/sec-13f/analytics/factor_exposures_summary.json", destination: "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json" },
   ],
   "scripts/build-guru-holders-index.mjs": [
     { source: "data/sec-13f/analytics/guru_holders_index.json", destination: "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json" },
@@ -108,13 +124,27 @@ for (const [relativePath, canonicalPath] of PRODUCERS) {
     `${relativePath} lost its canonical output path`);
 }
 
+// The frozen converter emits these analytics only into a caller-selected
+// staging directory. It must continue rejecting both committed canonical and
+// public trees so Update Manifest remains the sole public projection boundary.
+const sec13fGenerator = fs.readFileSync(path.join(REPO_ROOT, "scripts/sec13f/generator.py"), "utf8");
+assert.match(sec13fGenerator, /ROOT \/ "data" \/ "sec-13f"/u);
+assert.match(sec13fGenerator, /ROOT \/ "100xfenok-next" \/ "public" \/ "data" \/ "sec-13f"/u);
+assert.match(sec13fGenerator, /output_root overlaps protected data tree/u);
+for (const analytic of SEC13F_CONVERTER_ANALYTICS) {
+  assert.match(sec13fGenerator, new RegExp(`"${analytic.replaceAll(".", "\\.")}"`, "u"),
+    `frozen SEC 13F generator lost converter analytic: ${analytic}`);
+}
+
 assert.match(sources["scripts/build-stocks-analyzer.mjs"], /writeJson\(PATHS\.output, output\)/u);
+assert.doesNotMatch(sources["scripts/materialize-site-metadata.mjs"], /100xfenok-next|public[\\/]+data/u);
 assert.match(sources["scripts/build-stocks-analyzer.mjs"], /writeJson\(PATHS\.perBandsOutput, perBandsOutput\)/u);
 assert.match(sources["scripts/build-stocks-analyzer.mjs"], /writeJson\(PATHS\.slickOutput, slickOutput\)/u);
 assert.match(sources["scripts/build-13f-enrichment-backfill.mjs"], /writeJson\(SUMMARY_PATH, summary\)/u);
 assert.match(sources["scripts/build-13f-enrichment-backfill.mjs"], /writeJson\(BY_SECTOR_PATH, bySector\)/u);
 assert.match(sources["scripts/build-13f-trades.mjs"], /writeJson\(OUTPUT, output\)/u);
 assert.match(sources["scripts/build-13f-portfolio-views.mjs"], /writeJson\(OUTPUT, output\)/u);
+assert.match(sources["scripts/build-13f-factor-radar-v2.mjs"], /writeJson\(OUTPUT, output\)/u);
 assert.match(sources["scripts/build-guru-holders-index.mjs"], /writeFileSync\(OUT, JSON\.stringify\(output\)\)/u);
 assert.match(sources["scripts/build-revision-movers.mjs"], /writeFileSync\(OUT, JSON\.stringify\(payload\)\)/u);
 assert.match(sources["scripts/build-industry-benchmarks.mjs"], /writeFileSync\(OUT, JSON\.stringify\(payload\)\)/u);
@@ -175,4 +205,4 @@ for (const [relativePath, removedOutputs] of Object.entries(REMOVED_TREE_MIRROR_
   }
 }
 
-console.log("build-producers public-write fence: ok (11 canonical-only APIs)");
+console.log(`build-producers public-write fence: ok (${PRODUCERS.length} canonical-only APIs)`);

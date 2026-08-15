@@ -79,6 +79,17 @@ function pathCovered(candidate, specs) {
   return specs.some((spec) => candidate === spec.path || (spec.kind === "directory" && candidate.startsWith(`${spec.path}/`)));
 }
 
+function cleanupCandidates(paths, specs, label) {
+  const candidates = [...new Set(paths)].sort();
+  const outside = [];
+  for (const candidate of candidates) {
+    assertSafePath(candidate, `${label} candidate`);
+    if (!pathCovered(candidate, specs)) outside.push(candidate);
+  }
+  if (outside.length) fail(`${label} candidates outside central policy: ${outside.join(", ")}`);
+  return candidates;
+}
+
 function listScoped(repoRoot, args, paths) {
   return nulPaths(runGit(repoRoot, [...args, "--", ...paths]));
 }
@@ -127,8 +138,12 @@ function cleanUntrackedAfterReset(repoRoot, policy) {
   if (cached.length || tracked.length) {
     fail(`cleanup requires clean tracked state: cached=${cached.length} changed=${tracked.length}`);
   }
-  const untracked = collectUntracked(repoRoot, policy);
+  const untracked = cleanupCandidates(collectUntracked(repoRoot, policy), policy.specs, "ordinary cleanup");
+  const ignored = cleanupCandidates(collectIgnored(repoRoot, policy), policy.specs, "ignored cleanup");
   if (untracked.length) runGit(repoRoot, ["clean", "-fd", "--", ...untracked]);
+  console.log(`update-manifest central cleanup delete log: kind=ordinary count=${untracked.length} paths=${JSON.stringify(untracked)}`);
+  if (ignored.length) runGit(repoRoot, ["clean", "-fdX", "--", ...ignored]);
+  console.log(`update-manifest central cleanup delete log: kind=ignored count=${ignored.length} paths=${JSON.stringify(ignored)}`);
   return assertCleanAfterReset(repoRoot, policy);
 }
 

@@ -228,6 +228,12 @@ class StockAnalysisAttemptTracker:
         self.stock_financial_results: list[dict] = []
         self.surfaces_started = False
         self.surface_observations: list[dict] = []
+        # ETF detail was writing 5,605 canonical payloads with no attempt record of
+        # its own, so no lane owned it and the data-plane inventory could not
+        # account for the largest group in the estate.
+        self.etf_detail_started = False
+        self.etf_detail_expected = 0
+        self.etf_detail_results: list[dict] = []
 
     def configure(
         self,
@@ -334,6 +340,19 @@ class StockAnalysisAttemptTracker:
         if self.active and self.stock_financial_started:
             self.stock_financial_results.append(result)
 
+    def start_etf_detail(self, expected_count: int) -> None:
+        # A stocks-only natural run has no ETF acquisition to observe. Do not
+        # turn that intentional omission into a synthetic failed ETF attempt:
+        # once the lane is live, that row would overwrite the last successful
+        # ETF run and falsely degrade the lane.
+        if self.active and int(expected_count) > 0:
+            self.etf_detail_started = True
+            self.etf_detail_expected = int(expected_count)
+
+    def record_etf_detail(self, result: dict) -> None:
+        if self.active and self.etf_detail_started:
+            self.etf_detail_results.append(result)
+
     def record_surface_http(self, status_code: int, result: dict) -> None:
         if self.active:
             self.surface_observations.append({
@@ -392,6 +411,43 @@ class StockAnalysisAttemptTracker:
                 {"transport": "http", "observations": self.universe_observations},
                 "universe",
             )
+        if self.etf_detail_started:
+            detail_ok = [
+                result for result in self.etf_detail_results
+                if result.get("error") is None and result.get("path")
+            ]
+            requested = self.etf_detail_expected
+            failed = max(requested - len(detail_ok), 0)
+            complete = (
+                requested > 0
+                and len(self.etf_detail_results) == requested
+                and failed == 0
+            )
+            self._emit(
+                "stockanalysis_etf_detail",
+                {
+                    "transport": "library",
+                    "candidate_count": 1,
+                    "observations": [{
+                        "execution": "returned",
+                        # Explicitly null, not absent. A returned library error must
+                        # carry exception_kind as null; omitting the key reads as
+                        # undefined and the emitter refuses the whole envelope. Every
+                        # run so far had failed=0 so this branch never fired, and it
+                        # would have killed the first run that lost a single ETF.
+                        "exception_kind": None,
+                        "retry_count": 0,
+                        "latency_ms": sum(float(result.get("latency_ms") or 0) for result in self.etf_detail_results),
+                        "outcome": "success" if complete else "error",
+                        "document": {
+                            "requested": requested,
+                            "written": len(detail_ok),
+                            "failed": failed,
+                        },
+                    }],
+                },
+                "etf_detail",
+            )
         if self.stock_financial_started:
             stock_ok = [
                 result for result in self.stock_financial_results
@@ -426,6 +482,14 @@ class StockAnalysisAttemptTracker:
                     "candidate_count": 1,
                     "observations": [{
                         "execution": "returned",
+                        # Same omission the ETF detail lane carried: a returned
+                        # library error must state exception_kind as null, and an
+                        # absent key reads as undefined. This lane's error branch
+                        # has therefore never been able to emit. Found on
+                        # 2026-08-14 by replacing its parity-gate exemption with a
+                        # real producer sample, which is the whole reason the
+                        # verifier refused to accept named exemptions as coverage.
+                        "exception_kind": None,
                         "retry_count": 0,
                         "latency_ms": sum(float(result.get("latency_ms") or 0) for result in self.stock_financial_results),
                         "outcome": "success" if complete else "error",
@@ -604,6 +668,20 @@ FINANCIAL_STATEMENT_PATHS = {
 }
 FINANCIAL_PERIODS = ("annual", "quarterly")
 MIN_FINANCIAL_FIELD_COUNT = 20
+MIN_FINANCIAL_FIELD_COUNT_BY_STATEMENT = {
+    # StockAnalysis publishes fewer ratio rows for bank issuers because
+    # enterprise-value, turnover and debt-to-cash-flow metrics are not
+    # meaningful or are omitted. JPM currently returns 15 structurally valid
+    # ratio rows; keep that profile distinct from the 20-row floor used by
+    # the statement families whose row set is stable across the focus basket.
+    "ratios": 15,
+}
+REQUIRED_FINANCIAL_FIELDS_BY_STATEMENT = {
+    # These are the stable ratio anchors used to distinguish a complete
+    # provider profile from an arbitrary short payload. Field-id casing has
+    # changed across provider payloads, so validation canonicalizes ids first.
+    "ratios": {"marketcap", "pe", "pb", "roe", "dividendyield"},
+}
 MIN_FINANCIAL_PERIOD_COUNT = {
     "annual": 3,
     "quarterly": 4,
@@ -1218,11 +1296,41 @@ def normalize_financial_statement(ticker: str, statement: str, decoded: dict) ->
 
 def validate_financial_statement(statement: dict) -> None:
     period = statement.get("period")
+    statement_name = str(statement.get("statement") or "")
     rows = statement.get("rows") or []
     periods = statement.get("periods") or []
     min_periods = MIN_FINANCIAL_PERIOD_COUNT.get(str(period), 1)
-    if len(rows) < MIN_FINANCIAL_FIELD_COUNT:
-        raise ValueError(f"financial statement below field floor: {statement.get('statement')} {period} rows={len(rows)}")
+    min_fields = MIN_FINANCIAL_FIELD_COUNT_BY_STATEMENT.get(
+        statement_name,
+        MIN_FINANCIAL_FIELD_COUNT,
+    )
+    if len(rows) < min_fields:
+        raise ValueError(
+            f"financial statement below field floor: {statement_name} {period} "
+            f"rows={len(rows)} min={min_fields}"
+        )
+    required_fields = REQUIRED_FINANCIAL_FIELDS_BY_STATEMENT.get(statement_name, set())
+    if required_fields:
+        available_fields = {
+            re.sub(r"[^a-z0-9]", "", str(row.get("field") or "").lower())
+            for row in rows
+        }
+        missing_fields = sorted(required_fields - available_fields)
+        if missing_fields:
+            raise ValueError(
+                f"financial statement missing required fields: {statement_name} "
+                f"{', '.join(missing_fields)}"
+            )
+    if statement_name == "ratios":
+        has_finite_value = any(
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and math.isfinite(value)
+            for row in rows
+            for value in (row.get("values") or [])
+        )
+        if not has_finite_value:
+            raise ValueError("financial statement ratios has no finite observations")
     if len(periods) < min_periods:
         raise ValueError(f"financial statement below period floor: {statement.get('statement')} {period} periods={len(periods)}")
     for row in rows:
@@ -1349,6 +1457,24 @@ def should_emit_stockanalysis_etf_universe_detection(args: argparse.Namespace) -
         and getattr(args, "natural_run", False)
         and getattr(args, "event_name", None) == "schedule"
         and getattr(args, "event_schedule", None) == STOCKANALYSIS_ETF_UNIVERSE_DETECTION_SCHEDULE
+    )
+
+
+def should_emit_stockanalysis_etf_detail_detection(
+    args: argparse.Namespace,
+    etfs: list[str],
+) -> bool:
+    """Only the natural ETF schedules may produce live detail evidence.
+
+    Manual ETF fetches can refresh canonical payloads, but they must not create
+    an attempt row that impersonates the scheduled freshness observation.
+    """
+
+    return bool(
+        etfs
+        and getattr(args, "natural_run", False)
+        and getattr(args, "event_name", None) == "schedule"
+        and getattr(args, "event_schedule", None) in STOCKANALYSIS_ETF_DETAIL_DETECTION_SCHEDULES
     )
 
 
@@ -4504,6 +4630,10 @@ def unique_symbols(items: list[str]) -> list[str]:
 
 NATURAL_RECOVERY_KINDS = frozenset({"stock", "financial", "etf", "surface", "universe"})
 ETF_DETAIL_RECOVERY_LIMIT = 1
+STOCKANALYSIS_ETF_DETAIL_DETECTION_SCHEDULES = frozenset({
+    "50 23 * * 1-5",
+    "20 23 * * 0",
+})
 
 
 def parse_natural_recovery_kinds(value: str) -> set[str]:
@@ -6982,6 +7112,11 @@ def _main() -> None:
         )
     results = []
     stop_reason = None
+    # ETF detail writes 5,605 canonical payloads. Until this attempt record
+    # existed, no lane owned that output and the data-plane inventory could not
+    # account for the largest group in the estate.
+    if should_emit_stockanalysis_etf_detail_detection(args, etfs):
+        ATTEMPT_TRACKER.start_etf_detail(len(etfs))
     for kind, symbols in (("etf", etfs), ("stock", stocks)):
         for idx, ticker in enumerate(symbols, 1):
             if kind == "etf" and ticker in yahoo_retry_etfs:
@@ -7022,6 +7157,8 @@ def _main() -> None:
                     ),
                 )
             results.append(result)
+            if kind == "etf":
+                ATTEMPT_TRACKER.record_etf_detail(result)
             if kind == "stock" and stock_financial_detection_active:
                 ATTEMPT_TRACKER.record_stock_financial(result)
             status = "OK" if result["error"] is None else f"FAIL {result['error'][:240]}"

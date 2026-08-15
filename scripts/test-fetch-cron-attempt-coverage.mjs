@@ -67,13 +67,13 @@ const scheduledMembers = DATA_SUPPLY_DETECTION_CONFIG.lanes
   .flatMap((lane) => lane.producer_members)
   .filter((member) => member.cadence_declaration?.kind === "github_workflow" && member.schedule.length > 0);
 const scheduleBindings = scheduledMembers.reduce((sum, member) => sum + member.schedule.length, 0);
-assert.equal(scheduledMembers.length, 30);
-assert.equal(scheduleBindings, 45);
+assert.equal(scheduledMembers.length, 31);
+assert.equal(scheduleBindings, 35);
 
 // Schedule parity. The detection config declares when a lane is expected to
 // run, and the observer attributes a missed slot against that declaration. If
 // a workflow's cron shape changes and this list does not, monitoring silently
-// stops covering the new slots: that is how twelve ETF slots were left behind
+// stops covering the new slots: that is how stale ETF slots were left behind
 // a six-slot declaration. Derive the truth from the workflow file instead of
 // trusting a hand-maintained list.
 function workflowCrons(relativePath) {
@@ -91,7 +91,7 @@ function workflowCrons(relativePath) {
 // crons, so a member declares a subset, not the whole schedule. Two invariants
 // hold that together: no member may claim a cron the workflow does not have,
 // and every cron the workflow has must be claimed by some member. The second
-// is the one that was violated: twelve ETF slots existed with nobody watching.
+// is the one that was violated: the shipped ETF slot existed with nobody watching.
 const workflowUnion = new Map();
 for (const member of scheduledMembers) {
   const evidence = member.cadence_declaration?.evidence;
@@ -118,10 +118,10 @@ assert.deepEqual(canonicalCalendars, calendars, "canonical calendar SSOT matches
 const yahooWorkflow = ".github/workflows/fetch-yf-finance.yml";
 const yahooWorkflowCrons = new Set(workflowCrons(yahooWorkflow));
 const yahooCalendarSchedules = canonicalCalendars.schedules.filter((schedule) => (
-  schedule.id === "weekday_2320_utc" || schedule.id.startsWith("yahoo_batch_etf_")
+  schedule.id === "weekday_2320_utc" || schedule.id === "yahoo_batch_etf_0000_utc"
 ));
 const yahooCalendarCrons = new Set(yahooCalendarSchedules.map((schedule) => schedule.cron));
-assert.equal(yahooCalendarSchedules.length, 13, "Yahoo calendar must cover one stock and twelve ETF slots");
+assert.equal(yahooCalendarSchedules.length, 2, "Yahoo calendar must cover one stock and one ETF slot");
 assert.equal(yahooCalendarCrons.size, yahooCalendarSchedules.length, "Yahoo calendar slots must have unique crons");
 assert.deepEqual(
   [...yahooCalendarCrons].sort(),
@@ -129,15 +129,9 @@ assert.deepEqual(
   "fetch-yf-finance.yml schedules and Yahoo detection calendar must stay exactly in sync",
 );
 
-// The lane this regression exists for: one stock slot plus twelve ETF slots.
+// The lane this regression exists for: one stock slot plus one ETF slot.
 const yahooMember = scheduledMembers.find((member) => member.id === "yahoo_batch_quote_history");
-assert.equal(yahooMember.schedule.length, 13);
-for (let hour = 0; hour < 24; hour += 2) {
-  assert.ok(
-    yahooMember.schedule.includes(`7 ${hour} * * 0-5`),
-    `yahoo lane must declare the ${hour}:07 ETF slot`,
-  );
-}
+assert.deepEqual(yahooMember.schedule, ["20 23 * * 1-5", "7 0 * * 0-5"]);
 assert.equal(
   DATA_SUPPLY_DETECTION_CONFIG.lanes.find((lane) => lane.id === "damodaran")
     ?.producer_members[0]?.activated_at,
@@ -156,11 +150,11 @@ assert.equal(coverage.schema_version, "fetch-cron-attempt-coverage/v1");
 assert.equal(coverage.mode, "shadow");
 assert.equal(coverage.deployment_blocking, false);
 assert.deepEqual(coverage.counts, {
-  scheduled_members: 30,
-  schedule_bindings: 30,
-  observed: 27,
+  scheduled_members: 31,
+  schedule_bindings: 31,
+  observed: 26,
   suspected_skips: 3,
-  attempt_gaps: 0,
+  attempt_gaps: 2,
 });
 assert.deepEqual(coverage.pre_activation_members, [
   {
@@ -187,16 +181,16 @@ assert.deepEqual(coverage.pre_activation_members, [
     activated_at: "2026-08-01T01:00:13Z",
     first_eligible_at: "2026-08-03T23:20:00.000Z",
   },
-  // Twelve two-hourly ETF slots. Each fires Sunday-Friday, so the first
-  // eligible occurrence after activation is the same day at that hour.
-  ...[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22].map((hour) => ({
+  // The single ETF slot fires Sunday-Friday, so its first eligible
+  // occurrence after activation is Sunday at 00:07 UTC.
+  {
     lane_id: "yahoo_batch_quote_history",
     member_id: "yahoo_batch_quote_history",
     workflow: ".github/workflows/fetch-yf-finance.yml",
-    cron: `7 ${hour} * * 0-5`,
+    cron: "7 0 * * 0-5",
     activated_at: "2026-08-01T01:00:13Z",
-    first_eligible_at: `2026-08-02T${String(hour).padStart(2, "0")}:07:00.000Z`,
-  })),
+    first_eligible_at: "2026-08-02T00:07:00.000Z",
+  },
 ]);
 assert.equal(coverage.rows.some((row) => row.lane_id === "oecd_cli"), false);
 assert.equal(coverage.rows.some((row) => row.lane_id === "damodaran"), false);
@@ -227,7 +221,7 @@ assert.deepEqual(
 assert.equal(coverage.status, "warning");
 assert.equal(rowOf(coverage, "gdelt_news_tone").state, "suspected_skip");
 assert.equal(rowOf(coverage, "apewisdom_attention").state, "suspected_skip");
-assert.equal(coverage.rows.filter((row) => row.lane_id === "yahoo_etf_fallback").length, 3);
+assert.equal(coverage.rows.filter((row) => row.lane_id === "yahoo_etf_fallback").length, 2);
 assert.equal(coverage.rows.filter((row) => row.lane_id === "stockanalysis_surfaces").length, 2);
 assert.equal(coverage.rows.filter((row) => row.lane_id === "slickcharts").length, 5);
 
@@ -281,8 +275,8 @@ assert.equal(rowOf(postActivationCoverage, "damodaran").expected_at, "2026-07-25
 assert.equal(rowOf(postActivationCoverage, "damodaran").state, "suspected_skip");
 assert.deepEqual(
   postActivationCoverage.pre_activation_members.map((row) => row.lane_id),
-  // one stock slot plus twelve ETF slots
-  ["oecd_cli", ...Array(13).fill("yahoo_batch_quote_history")],
+  // one stock slot plus one ETF slot
+  ["oecd_cli", ...Array(2).fill("yahoo_batch_quote_history")],
 );
 
 const missingReportCoverage = buildFetchCronAttemptCoverage({
@@ -293,10 +287,10 @@ const missingReportCoverage = buildFetchCronAttemptCoverage({
 assert.equal(missingReportCoverage.deployment_blocking, false);
 assert.equal(missingReportCoverage.status, "warning");
 assert.deepEqual(missingReportCoverage.counts, {
-  scheduled_members: 30,
-  schedule_bindings: 30,
+  scheduled_members: 31,
+  schedule_bindings: 31,
   observed: 0,
-  suspected_skips: 30,
+  suspected_skips: 31,
   attempt_gaps: 0,
 });
 

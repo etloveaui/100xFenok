@@ -6,8 +6,9 @@
  * The dated snapshot ("18 staging workflows / 54 true orphans / 1,025
  * regenerable shard assets", 2026-08-03) is intentionally NOT trusted: every
  * number below is re-measured from the live tree on each run. Tree-state
- * only (no network, no writes except the disposition snapshot at
- * scripts/public-mirror-untrack-disposition.json).
+ * only (no network, no repository writes except the disposition snapshot at
+ * scripts/public-mirror-untrack-disposition.json; classifier fixtures use a
+ * bounded temporary directory).
  *
  * Measurements:
  *   staging_workflows — every workflow whose shell names a
@@ -15,10 +16,13 @@
  *     normalization, excluding the merge-boundary workflows that legitimately
  *     own the mirror (update-manifest.yml, fetch-stockanalysis.yml). Anything
  *     else is lane-owned staging and blocks untracking.
- *   mirror orphans — mirror files with no canonical counterpart in data/,
+ *   mirror orphans — mirror files with no tracked canonical counterpart in
+ *     data/,
  *     classified deterministically as:
- *       boundary-copy            canonical data/<rel> exists; the sync full
- *                                walk copies it, so it is not an orphan.
+ *       boundary-copy            canonical data/<rel> is tracked in Git; the
+ *                                sync full walk copies it, so it is not an orphan.
+ *       untracked-canonical      canonical data/<rel> exists on disk but is
+ *                                not tracked in Git; unsafe to untrack.
  *       generated                no canonical; produced by the sync transform
  *                                roots (computed/market_facts/shards/,
  *                                stockanalysis/etfs/shards/) or another
@@ -38,10 +42,13 @@
  * written so the failure is reviewable):
  *   A. lane-owned staging workflows == 0
  *   B. private-preserve mirror files == 0
- *   C. genuine-delete-candidate + archive-preserve mirror files == 0
+ *   C. untracked-canonical mirror files == 0
+ *   D. genuine-delete-candidate + archive-preserve mirror files == 0
  */
 
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -59,6 +66,7 @@ const WORKFLOWS_DIR = path.join(REPO_ROOT, ".github", "workflows");
 const CANONICAL_ROOT = path.join(REPO_ROOT, "data");
 const MIRROR_ROOT = path.join(REPO_ROOT, "100xfenok-next", "public", "data");
 const DISPOSITION_PATH = path.join(SCRIPT_DIR, "public-mirror-untrack-disposition.json");
+const CANONICAL_GIT_PREFIX = "data/";
 
 // The merge boundary workflows that legitimately write the mirror.
 const BOUNDARY_WORKFLOWS = new Set([
@@ -94,9 +102,31 @@ function isCoveredByRoot(relativePath, root) {
   return relativePath === root || relativePath.startsWith(root);
 }
 
-function classifyMirrorFile(relativePath) {
-  if (fs.existsSync(path.join(CANONICAL_ROOT, relativePath))) {
+export function readTrackedCanonicalPaths({ repoRoot = REPO_ROOT } = {}) {
+  const result = spawnSync("git", ["ls-files", "-z", "--", "data"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (result.error) throw new Error(`git ls-files failed: ${result.error.message}`);
+  if (result.status !== 0) {
+    throw new Error(`git ls-files failed: ${(result.stderr || `status ${result.status}`).trim()}`);
+  }
+  return new Set(result.stdout.split("\0").filter(Boolean));
+}
+
+export function classifyMirrorFile(relativePath, {
+  canonicalRoot = CANONICAL_ROOT,
+  trackedCanonicalPaths,
+} = {}) {
+  if (!(trackedCanonicalPaths instanceof Set)) {
+    throw new TypeError("trackedCanonicalPaths must be a prefetched Set");
+  }
+  if (trackedCanonicalPaths.has(`${CANONICAL_GIT_PREFIX}${relativePath}`)) {
     return "boundary-copy";
+  }
+  if (fs.existsSync(path.join(canonicalRoot, relativePath))) {
+    return "untracked-canonical";
   }
   if (GENERATED_ROOTS.some((root) => isCoveredByRoot(relativePath, root))) {
     return "generated";
@@ -137,32 +167,59 @@ export function measureStagingWorkflows({ workflowsDir = WORKFLOWS_DIR } = {}) {
   return { laneOwned, boundaryOwned };
 }
 
-export function measureMirrorDisposition({ mirrorRoot = MIRROR_ROOT } = {}) {
+export function measureMirrorDisposition({
+  mirrorRoot = MIRROR_ROOT,
+  canonicalRoot = CANONICAL_ROOT,
+  trackedCanonicalPaths = readTrackedCanonicalPaths(),
+} = {}) {
   const disposition = {
     "boundary-copy": [],
+    "untracked-canonical": [],
     generated: [],
     "private-preserve": [],
     "archive-preserve": [],
     "genuine-delete-candidate": [],
   };
   for (const relativePath of walkFiles(mirrorRoot, mirrorRoot).sort()) {
-    disposition[classifyMirrorFile(relativePath)].push(relativePath);
+    disposition[classifyMirrorFile(relativePath, { canonicalRoot, trackedCanonicalPaths })].push(relativePath);
   }
   return disposition;
 }
 
+export function runClassifierFixtures() {
+  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "public-mirror-untrack-fixture-"));
+  const canonicalRoot = path.join(fixtureRoot, "data");
+  try {
+    fs.mkdirSync(path.join(canonicalRoot, "tracked"), { recursive: true });
+    fs.mkdirSync(path.join(canonicalRoot, "untracked"), { recursive: true });
+    fs.writeFileSync(path.join(canonicalRoot, "tracked", "sample.json"), "tracked\n");
+    fs.writeFileSync(path.join(canonicalRoot, "untracked", "sample.json"), "untracked\n");
+    const trackedCanonicalPaths = new Set(["data/tracked/sample.json"]);
+    const trackedClass = classifyMirrorFile("tracked/sample.json", { canonicalRoot, trackedCanonicalPaths });
+    const untrackedClass = classifyMirrorFile("untracked/sample.json", { canonicalRoot, trackedCanonicalPaths });
+    if (trackedClass !== "boundary-copy" || untrackedClass !== "untracked-canonical") {
+      throw new Error(`classifier fixture failed: tracked=${trackedClass} untracked=${untrackedClass}`);
+    }
+  } finally {
+    fs.rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
 function main() {
   const staging = measureStagingWorkflows();
-  const disposition = measureMirrorDisposition();
+  runClassifierFixtures();
+  const trackedCanonicalPaths = readTrackedCanonicalPaths();
+  const disposition = measureMirrorDisposition({ trackedCanonicalPaths });
   const counts = Object.fromEntries(
     Object.entries(disposition).map(([className, files]) => [className, files.length]),
   );
 
   const snapshot = {
-    schema_version: "public-mirror-untrack-disposition/v1",
+    schema_version: "public-mirror-untrack-disposition/v2",
     measured_at: new Date().toISOString(),
     method:
-      "live tree scan; boundary-copy = canonical counterpart exists; generated = sync transform root; " +
+      "live tree scan; boundary-copy = Git-tracked canonical counterpart; untracked-canonical = disk-only canonical counterpart; " +
+      "generated = sync transform root; " +
       "private-preserve = excluded/forbidden; archive-preserve = legacy archive root; " +
       "genuine-delete-candidate = remainder",
     staging_workflows: {
@@ -179,7 +236,7 @@ function main() {
     // deterministic sample. Orphan-relevant classes are listed in full.
     disposition: {
       ...Object.fromEntries(
-        ["generated", "private-preserve", "archive-preserve", "genuine-delete-candidate"]
+        ["untracked-canonical", "generated", "private-preserve", "archive-preserve", "genuine-delete-candidate"]
           .map((className) => [className, disposition[className]]),
       ),
       "boundary-copy_sample": [
@@ -197,6 +254,7 @@ function main() {
       `  staging workflows: lane_owned=${staging.laneOwned.length} boundary_owned=${staging.boundaryOwned.length}\n` +
       `  mirror files: total=${snapshot.mirror_counts.total_files} ` +
       `boundary_copy=${counts["boundary-copy"]} generated=${counts.generated} ` +
+      `untracked_canonical=${counts["untracked-canonical"]} ` +
       `private_preserve=${counts["private-preserve"]} archive_preserve=${counts["archive-preserve"]} ` +
       `genuine_delete_candidate=${counts["genuine-delete-candidate"]}\n` +
       `  disposition snapshot: ${path.relative(REPO_ROOT, DISPOSITION_PATH)}`,
@@ -209,6 +267,9 @@ function main() {
   if (counts["private-preserve"] > 0) {
     violations.push(`private-preserve mirror files (${counts["private-preserve"]}) — a private root is public:\n- ${disposition["private-preserve"].join("\n- ")}`);
   }
+  if (counts["untracked-canonical"] > 0) {
+    violations.push(`untracked-canonical mirror files (${counts["untracked-canonical"]}) — canonical data is not tracked in Git:\n- ${disposition["untracked-canonical"].join("\n- ")}`);
+  }
   const deleteCandidates = counts["genuine-delete-candidate"] + counts["archive-preserve"];
   if (deleteCandidates > 0) {
     violations.push(`true mirror orphans (${deleteCandidates}):\n- ${[...disposition["genuine-delete-candidate"], ...disposition["archive-preserve"]].join("\n- ")}`);
@@ -218,7 +279,7 @@ function main() {
     for (const violation of violations) console.error(`- ${violation}`);
     process.exit(1);
   }
-  console.log("\nuntrack-ready: no lane-owned mirror staging; no private leaks; no true orphans");
+  console.log("\nuntrack-ready: no lane-owned mirror staging; no untracked canonical backing; no private leaks; no true orphans");
 }
 
-main();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

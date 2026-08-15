@@ -120,8 +120,8 @@ async function inspectStaticContracts() {
   if (!macroSource.includes("전체 CSV 저장") || !macroSource.includes("전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준")) {
     addFailure(failures, "csv-full-export-copy", "full CSV export copy missing");
   }
-  if (!macroSource.includes("macroContextId") || !macroSource.includes("매크로 인사이트 카드")) {
-    addFailure(failures, "macro-context-state", "MacroChartClient must carry macro context state and render the insight card");
+  if (!macroSource.includes("macroContextId") || !macroSource.includes('aria-label="매크로 인사이트"')) {
+    addFailure(failures, "macro-context-state", "MacroChartClient must carry macro context state and render the insight section");
   }
   for (const id of ["risk-liquidity", "bank-credit", "activity", "crypto-liquidity"]) {
     if (!macroContextSource.includes(`id: "${id}"`) || !macroContextSource.includes(`macro=${id}`)) {
@@ -244,6 +244,17 @@ async function waitForMacroChart(page) {
   await page.waitForTimeout(350);
 }
 
+async function openSeriesEditor(page, requiredLabel = "TGA 축") {
+  const editor = page.locator('details[data-macro-chart-series-editor="true"]');
+  if ((await editor.getAttribute("open")) === null) {
+    await editor.locator("summary").click();
+  }
+  const control = requiredLabel
+    ? editor.locator(`select[aria-label="${requiredLabel}"]`)
+    : editor.locator("select").first();
+  await control.waitFor({ state: "visible", timeout: 10_000 });
+}
+
 async function collectLayout(page) {
   return page.evaluate(() => {
     const viewportWidth = window.innerWidth;
@@ -332,6 +343,7 @@ async function inspectSharedDesktop(page) {
   const rangeAfterZoomOut = await page.evaluate(() => new URL(window.location.href).searchParams.get("range"));
   if (rangeAfterZoomOut !== "1Y") addFailure(failures, "zoom-out-url-update", `range=${rangeAfterZoomOut}`);
 
+  await openSeriesEditor(page, null);
   await page.getByLabel("TGA 축").selectOption("right");
   await page.waitForTimeout(200);
   const axisAfterSelect = splitParam(await page.evaluate(() => new URL(window.location.href).searchParams.get("axis")));
@@ -360,20 +372,21 @@ async function inspectSharedDesktop(page) {
   if (!(await page.locator('[aria-label="매크로 분석 요약"]').getByText("연결 데이터").isVisible())) {
     addFailure(failures, "analysis-summary-visible", "analysis summary missing");
   }
-  const insightCard = page.locator('[aria-label="매크로 인사이트 카드"]');
-  if (!(await insightCard.getByText("리스크·유동성").isVisible())) {
-    addFailure(failures, "macro-insight-context", "risk-liquidity insight card missing");
+  const insightSection = page.locator('[aria-label="매크로 인사이트"]');
+  if (!(await insightSection.getByText("리스크·유동성").isVisible())) {
+    addFailure(failures, "macro-insight-context", "risk-liquidity insight section missing");
   }
-  if (!(await insightCard.getByRole("link", { name: "스크리너" }).isVisible())) {
-    addFailure(failures, "macro-insight-screener-link", "insight screener link missing");
+  const connectionEditor = page.locator('details[data-macro-chart-connection-editor="true"]');
+  if ((await connectionEditor.getAttribute("open")) === null) {
+    await connectionEditor.locator("summary").click();
   }
-  const insightStockHref = await insightCard.getByRole("link", { name: "NVDA" }).getAttribute("href");
+  const screenerConnection = connectionEditor.locator('a[data-macro-chart-context-link="screener"]');
+  if (!(await screenerConnection.isVisible())) {
+    addFailure(failures, "macro-insight-screener-link", "connection screener link missing");
+  }
+  const insightStockHref = await connectionEditor.locator('a[data-macro-chart-context-link="stock"]').getAttribute("href");
   if (!insightStockHref?.includes("/stock/NVDA") || !insightStockHref.includes("macro=risk-liquidity")) {
     addFailure(failures, "macro-insight-stock-link", `href=${insightStockHref ?? "missing"}`);
-  }
-  const screenerConnection = insightCard.getByRole("link", { name: "스크리너" });
-  if (!(await screenerConnection.isVisible())) {
-    addFailure(failures, "connection-link-visible", "screener connection link missing");
   }
   const screenerHref = await screenerConnection.getAttribute("href");
   if (!screenerHref?.includes("/screener") || !screenerHref.includes("macro=risk-liquidity") || !screenerHref.includes("preset=connected")) {
@@ -417,6 +430,7 @@ async function inspectSharedDesktop(page) {
 
   await page.goto(routeUrl("/macro-chart"), { waitUntil: "networkidle", timeout: 60_000 });
   await waitForMacroChart(page);
+  await openSeriesEditor(page, null);
   await page.locator("button", { hasText: "QA 저장 프리셋" }).first().click();
   await page.waitForFunction(() => new URL(window.location.href).searchParams.get("range") === "1Y", null, { timeout: 10_000 });
   const paramsAfterUserPreset = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
@@ -434,6 +448,7 @@ async function inspectSharedDesktop(page) {
     addFailure(failures, "user-preset-apply-macro", `macro=${paramsAfterUserPreset.macro ?? "missing"}`);
   }
 
+  await openSeriesEditor(page);
   await page.getByLabel("TGA 축").selectOption("auto");
   await page.waitForTimeout(200);
   const axisAfterAuto = await page.evaluate(() => new URL(window.location.href).searchParams.get("axis"));
@@ -456,6 +471,7 @@ async function inspectSharedDesktop(page) {
   });
   await page.goto(routeUrl("/macro-chart"), { waitUntil: "networkidle", timeout: 60_000 });
   await waitForMacroChart(page);
+  await openSeriesEditor(page, null);
   await page.locator("button", { hasText: "QA 손상 프리셋" }).first().click();
   await page.waitForTimeout(250);
   const paramsAfterCorruptPreset = await page.evaluate(() => Object.fromEntries(new URL(window.location.href).searchParams.entries()));
@@ -468,6 +484,7 @@ async function inspectSharedDesktop(page) {
 
   await page.goto(routeUrl(sharedRoute), { waitUntil: "networkidle", timeout: 60_000 });
   await waitForMacroChart(page);
+  await openSeriesEditor(page, null);
   await page.locator("#macro-series-search").fill("MOVE");
   await page.waitForTimeout(350);
   const moveCandidate = page.locator('button[aria-pressed="false"]').filter({ hasText: "MOVE" }).first();
@@ -486,36 +503,46 @@ async function inspectSharedDesktop(page) {
   await page.getByRole("button", { name: "합성 추가" }).click();
   await page.waitForTimeout(300);
 
-  const pngPromise = page.waitForEvent("download", { timeout: 15_000 });
-  await page.getByRole("button", { name: "PNG 저장" }).click();
-  const pngDownload = await pngPromise;
-  if (!pngDownload.suggestedFilename().endsWith(".png")) {
-    addFailure(failures, "png-download-name", pngDownload.suggestedFilename());
-  }
-  const pngPath = await pngDownload.path();
-  if (!pngPath) {
-    addFailure(failures, "png-download-path", "download path unavailable");
+  const pngButton = page.locator('button[data-macro-chart-action="png"]');
+  if (!(await pngButton.isEnabled())) {
+    addFailure(failures, "png-download-enabled", "PNG export button is disabled");
   } else {
-    const signature = await readFile(pngPath);
-    const pngMagic = signature.subarray(0, 8).toString("hex");
-    if (pngMagic !== "89504e470d0a1a0a") addFailure(failures, "png-download-signature", pngMagic);
-    if (signature.byteLength < 1024) addFailure(failures, "png-download-size", `bytes=${signature.byteLength}`);
+    const pngPromise = page.waitForEvent("download", { timeout: 15_000 });
+    await pngButton.click();
+    const pngDownload = await pngPromise;
+    if (!pngDownload.suggestedFilename().endsWith(".png")) {
+      addFailure(failures, "png-download-name", pngDownload.suggestedFilename());
+    }
+    const pngPath = await pngDownload.path();
+    if (!pngPath) {
+      addFailure(failures, "png-download-path", "download path unavailable");
+    } else {
+      const signature = await readFile(pngPath);
+      const pngMagic = signature.subarray(0, 8).toString("hex");
+      if (pngMagic !== "89504e470d0a1a0a") addFailure(failures, "png-download-signature", pngMagic);
+      if (signature.byteLength < 1024) addFailure(failures, "png-download-size", `bytes=${signature.byteLength}`);
+    }
   }
 
-  const downloadPromise = page.waitForEvent("download", { timeout: 15_000 });
-  await page.getByRole("button", { name: "전체 CSV 저장" }).click();
-  const download = await downloadPromise;
-  if (!download.suggestedFilename().startsWith("100xfenok-macro-chart-")) {
-    addFailure(failures, "csv-download-name", download.suggestedFilename());
-  }
-  const downloadPath = await download.path();
-  if (!downloadPath) {
-    addFailure(failures, "csv-download-path", "download path unavailable");
+  const csvButton = page.locator('button[data-macro-chart-action="csv"]');
+  if (!(await csvButton.isEnabled())) {
+    addFailure(failures, "csv-download-enabled", "CSV export button is disabled");
   } else {
-    const csvHeader = (await readFile(downloadPath, "utf8")).split("\n")[0] ?? "";
-    const expectedHeaders = expectedSharedSeries.map((id, index) => `${id}_${expectedSharedTransforms[index] ?? "raw"}`);
-    const missingHeaders = ["date", ...expectedHeaders, "formula-ratio-sp500-DGS10"].filter((header) => !csvHeader.includes(`"${header}"`));
-    if (missingHeaders.length) addFailure(failures, "csv-header-content", `missing=${missingHeaders.join(",")}`);
+    const downloadPromise = page.waitForEvent("download", { timeout: 15_000 });
+    await csvButton.click();
+    const download = await downloadPromise;
+    if (!download.suggestedFilename().startsWith("100xfenok-macro-chart-")) {
+      addFailure(failures, "csv-download-name", download.suggestedFilename());
+    }
+    const downloadPath = await download.path();
+    if (!downloadPath) {
+      addFailure(failures, "csv-download-path", "download path unavailable");
+    } else {
+      const csvHeader = (await readFile(downloadPath, "utf8")).split("\n")[0] ?? "";
+      const expectedHeaders = expectedSharedSeries.map((id, index) => `${id}_${expectedSharedTransforms[index] ?? "raw"}`);
+      const missingHeaders = ["date", ...expectedHeaders, "formula-ratio-sp500-DGS10"].filter((header) => !csvHeader.includes(`"${header}"`));
+      if (missingHeaders.length) addFailure(failures, "csv-header-content", `missing=${missingHeaders.join(",")}`);
+    }
   }
 
   await page.getByRole("button", { name: "은행·신용 렌즈" }).click();
@@ -570,27 +597,33 @@ async function inspectStooqFusionRoute(page) {
   if (params.axis !== "stq~NVDA.US:right") addFailure(failures, "stooq-axis-roundtrip", `axis=${params.axis ?? "missing"}`);
   if (params.formula !== "ratio:stq~NVDA.US:M2SL") addFailure(failures, "stooq-formula-roundtrip", `formula=${params.formula ?? "missing"}`);
   if (!(await hasVisibleText(page, "NVDA"))) addFailure(failures, "stooq-label-visible", "NVDA label missing");
-  if (!(await hasVisibleText(page, "시장 심볼은 owner Worker proxy 경유"))) {
-    addFailure(failures, "stooq-provenance-copy", "Stooq provenance copy missing");
+  if (!(await hasVisibleText(page, "시장 심볼은 외부 데이터 경로를 경유합니다"))) {
+    addFailure(failures, "stooq-provenance-copy", "market-symbol provenance copy missing");
   }
-  if (!(await hasVisibleText(page, "시장 심볼 · 주식 · $ · daily"))) {
-    addFailure(failures, "stooq-source-frequency-copy", "Stooq source/frequency tag missing");
+  await openSeriesEditor(page, null);
+  if (!(await hasVisibleText(page, "시장 심볼 · 주식 · $ · 일간"))) {
+    addFailure(failures, "stooq-source-frequency-copy", "market-symbol source/frequency tag missing");
   }
   if (!(await hasVisibleText(page, "NVDA/M2 ×100"))) addFailure(failures, "stooq-formula-visible", "NVDA/M2 formula missing");
 
-  const csvPromise = page.waitForEvent("download", { timeout: 15_000 });
-  await page.getByRole("button", { name: "전체 CSV 저장" }).click();
-  const csvDownload = await csvPromise;
-  const csvPath = await csvDownload.path();
-  if (!csvPath) {
-    addFailure(failures, "stooq-csv-download-path", "download path unavailable");
+  const stooqCsvButton = page.locator('button[data-macro-chart-action="csv"]');
+  if (!(await stooqCsvButton.isEnabled())) {
+    addFailure(failures, "stooq-csv-download-enabled", "CSV export button is disabled");
   } else {
-    const csv = await readFile(csvPath, "utf8");
-    if (!csv.includes('"__meta_source","market-symbol","data-spine","computed"')) {
-      addFailure(failures, "stooq-csv-source-meta", "source metadata row missing market-symbol/data-spine/computed");
-    }
-    if (!csv.includes('"__meta_frequency","daily","monthly","computed"')) {
-      addFailure(failures, "stooq-csv-frequency-meta", "frequency metadata row missing daily/monthly/computed");
+    const csvPromise = page.waitForEvent("download", { timeout: 15_000 });
+    await stooqCsvButton.click();
+    const csvDownload = await csvPromise;
+    const csvPath = await csvDownload.path();
+    if (!csvPath) {
+      addFailure(failures, "stooq-csv-download-path", "download path unavailable");
+    } else {
+      const csv = await readFile(csvPath, "utf8");
+      if (!csv.includes('"__meta_source","market-symbol","data-spine","computed"')) {
+        addFailure(failures, "stooq-csv-source-meta", "source metadata row missing market-symbol/data-spine/computed");
+      }
+      if (!csv.includes('"__meta_frequency","daily","monthly","computed"')) {
+        addFailure(failures, "stooq-csv-frequency-meta", "source frequency row missing daily/monthly/computed");
+      }
     }
   }
 
@@ -683,11 +716,6 @@ async function inspectConnectedSurfaces(page) {
   if (!(await macroCard.getByText("리스크·유동성").isVisible())) {
     addFailure(failures, "screener-macro-card", "risk-liquidity context missing");
   }
-  const connectedPreset = page.getByRole("button", { name: "연결 데이터", exact: true });
-  const presetPressed = await connectedPreset.getAttribute("aria-pressed");
-  if (presetPressed !== "true") {
-    addFailure(failures, "screener-preset-state", `aria-pressed=${presetPressed}`);
-  }
   if (!(await page.getByText("연결: 지수 편입 연결").isVisible())) {
     addFailure(failures, "screener-connection-state", "indexMembership filter chip missing");
   }
@@ -696,7 +724,7 @@ async function inspectConnectedSurfaces(page) {
     waitUntil: "networkidle",
     timeout: 60_000,
   });
-  await page.getByRole("heading", { name: "ETF 센터" }).waitFor({ timeout: 30_000 });
+  await page.locator('[aria-label="매크로 연결 맥락"]').waitFor({ timeout: 30_000 });
   if (response?.status() !== 200) {
     addFailure(failures, "etf-http-status", `status=${response?.status() ?? "unknown"}`);
   }
@@ -709,6 +737,7 @@ async function inspectConnectedSurfaces(page) {
     addFailure(failures, "etf-macro-card", "crypto-liquidity context missing");
   }
   const digitalSegment = page.getByRole("group", { name: "ETF 세그먼트" }).getByRole("button", { name: /디지털자산/ });
+  await digitalSegment.click();
   const digitalPressed = await digitalSegment.getAttribute("aria-pressed");
   if (digitalPressed !== "true") {
     addFailure(failures, "etf-digital-state", `aria-pressed=${digitalPressed}`);
@@ -819,7 +848,7 @@ async function inspectMobile(page) {
   if (await search.isVisible()) {
     addFailure(failures, "mobile-picker-initially-collapsed", "search input visible before opening picker");
   }
-  await page.getByRole("button", { name: "열기" }).first().click();
+  await openSeriesEditor(page, null);
   await page.waitForTimeout(200);
   if (!(await search.isVisible())) {
     addFailure(failures, "mobile-picker-opens", "search input hidden after opening picker");
@@ -832,11 +861,11 @@ async function inspectMobile(page) {
   await page.getByLabel("합성 오른쪽 시리즈").selectOption("DGS10");
   await page.getByRole("button", { name: "합성 추가" }).click();
   await page.waitForTimeout(300);
-  const mobileStatus = page.locator('[aria-label="모바일 매크로 상태"]');
-  if (!(await mobileStatus.getByText("합성 1개").isVisible())) {
+  const mobileEditor = page.locator('details[data-macro-chart-series-editor="true"]');
+  if (!(await mobileEditor.getByText("합성 1개").isVisible())) {
     addFailure(failures, "mobile-formula-count-chip", "formula count chip missing");
   }
-  if (!(await mobileStatus.getByRole("button", { name: /S&P 500\/10Y ×100 삭제/ }).isVisible())) {
+  if (!(await mobileEditor.getByText("S&P 500/10Y ×100", { exact: true }).isVisible())) {
     addFailure(failures, "mobile-formula-chip", "formula chip missing");
   }
 

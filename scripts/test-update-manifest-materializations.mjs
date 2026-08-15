@@ -8,6 +8,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { orderMaterializations, validateMaterializationRoutes } from "./materialize-update-manifest-routes.mjs";
+import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workflow = fs.readFileSync(path.join(root, ".github/workflows/update-manifest.yml"), "utf8");
@@ -17,7 +18,7 @@ const helperCall = "node scripts/materialize-update-manifest-routes.mjs";
 // Independent oracle: never derive this map from the manifest generator. A
 // corrupt generator and regenerated artifact must fail here even if they drift
 // together. The map deliberately owns the exact source/destination pairing and
-// materialization semantics for all 30 routes.
+// materialization semantics for all 40 routes.
 const EXPECTED_ROUTES = [
   { source: "data/slickcharts", destination: "100xfenok-next/public/data/slickcharts", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/yf/finance", destination: "100xfenok-next/public/data/yf/finance", mode: "rsync_tree", delete: true, excludes: [] },
@@ -41,11 +42,21 @@ const EXPECTED_ROUTES = [
   { source: "data/sec-13f/summary.json", destination: "100xfenok-next/public/data/sec-13f/summary.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/by_sector.json", destination: "100xfenok-next/public/data/sec-13f/by_sector.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/by_ticker.json", destination: "100xfenok-next/public/data/sec-13f/by_ticker.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/buying_pressure.json", destination: "100xfenok-next/public/data/sec-13f/analytics/buying_pressure.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/consensus.json", destination: "100xfenok-next/public/data/sec-13f/analytics/consensus.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/conviction.json", destination: "100xfenok-next/public/data/sec-13f/analytics/conviction.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/conviction_entries.json", destination: "100xfenok-next/public/data/sec-13f/analytics/conviction_entries.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/enhanced_consensus.json", destination: "100xfenok-next/public/data/sec-13f/analytics/enhanced_consensus.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/hhi.json", destination: "100xfenok-next/public/data/sec-13f/analytics/hhi.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/multi_quarter_trends.json", destination: "100xfenok-next/public/data/sec-13f/analytics/multi_quarter_trends.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/new_positions.json", destination: "100xfenok-next/public/data/sec-13f/analytics/new_positions.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/options_hedge.json", destination: "100xfenok-next/public/data/sec-13f/analytics/options_hedge.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/ticker_aliases.json", destination: "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/trades_ranking.json", destination: "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/portfolio_views.json", destination: "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/factor_exposures_summary.json", destination: "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/guru_holders_index.json", destination: "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/turnover.json", destination: "100xfenok-next/public/data/sec-13f/analytics/turnover.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/damodaran", destination: "100xfenok-next/public/data/damodaran", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/calendar/prev-values.json", destination: "100xfenok-next/public/data/calendar/prev-values.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/investors", destination: "100xfenok-next/public/data/sec-13f/investors", mode: "rsync_tree", delete: true, excludes: ["griffin.json"] },
@@ -61,8 +72,8 @@ function routeOracleFields(route) {
   };
 }
 
-assert.equal(EXPECTED_ROUTES.length, 30, "route oracle must contain exactly 30 routes");
-assert.equal(manifest.update_manifest.materializations.length, 30, "manifest must contain exactly 30 routes");
+assert.equal(EXPECTED_ROUTES.length, 40, "route oracle must contain exactly 40 routes");
+assert.equal(manifest.update_manifest.materializations.length, 40, "manifest must contain exactly 40 routes");
 assert.deepEqual(manifest.update_manifest.materializations.map(routeOracleFields), EXPECTED_ROUTES);
 for (const route of EXPECTED_ROUTES) {
   assert.ok(
@@ -120,10 +131,31 @@ assert.equal(fs.existsSync(path.join(root, "scripts/materialize-update-manifest-
 const helperPath = path.join(root, "scripts/materialize-update-manifest-routes.mjs");
 const routes = manifest.update_manifest.materializations;
 const BATCH2_ROUTES = EXPECTED_ROUTES.slice(9);
-const relevantPublicIgnoreRules = fs.readFileSync(path.join(root, ".gitignore"), "utf8")
+const publicIgnoreRules = fs.readFileSync(path.join(root, ".gitignore"), "utf8")
   .split(/\r?\n/u)
   .map((line) => line.trim())
   .filter((line) => line && !line.startsWith("#") && line.startsWith("100xfenok-next/public/data/"))
+;
+// Global Scouter is a whole-family generic-sync mirror. Its directory ignore is
+// intentionally not an Update Manifest route: the full sync boundary rebuilds
+// the unchanged public URL, while the four derived core files keep their exact
+// materialization routes below. Keep this exception explicit so a future route
+// or ignore edit cannot silently erase the distinction.
+const GENERIC_SYNC_IGNORE_RULES = ["100xfenok-next/public/data/global-scouter/"];
+assert.deepEqual(
+  publicIgnoreRules.filter((rule) => GENERIC_SYNC_IGNORE_RULES.includes(rule)),
+  GENERIC_SYNC_IGNORE_RULES,
+  "Global Scouter must retain one explicit whole-family generic-sync ignore rule",
+);
+const globalScouterLane = LANE_REGISTRY.lanes.find((lane) => lane.id === "global_scouter");
+assert.ok(globalScouterLane, "Global Scouter lane must exist");
+assert.deepEqual(
+  globalScouterLane.roots.public_mirror,
+  ["100xfenok-next/public/data/global-scouter"],
+  "Global Scouter generic-sync ignore must match the registry public mirror root",
+);
+const relevantPublicIgnoreRules = publicIgnoreRules
+  .filter((ignoreRule) => !GENERIC_SYNC_IGNORE_RULES.includes(ignoreRule))
   .filter((ignoreRule) => BATCH2_ROUTES.some((route) => (
     ignoreRule === route.destination || ignoreRule.startsWith(`${route.destination}/`)
   )));
@@ -132,10 +164,24 @@ assert.deepEqual(
   [
     "100xfenok-next/public/data/sec-13f/investors/griffin.json",
     "100xfenok-next/public/data/damodaran/",
-    "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
-    "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
-    "100xfenok-next/public/data/global-scouter/core/slick_index.json",
-    "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
+    "100xfenok-next/public/data/sec-13f/summary.json",
+    "100xfenok-next/public/data/sec-13f/by_sector.json",
+    "100xfenok-next/public/data/sec-13f/by_ticker.json",
+    "100xfenok-next/public/data/sec-13f/analytics/buying_pressure.json",
+    "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
+    "100xfenok-next/public/data/sec-13f/analytics/conviction.json",
+    "100xfenok-next/public/data/sec-13f/analytics/conviction_entries.json",
+    "100xfenok-next/public/data/sec-13f/analytics/enhanced_consensus.json",
+    "100xfenok-next/public/data/sec-13f/analytics/hhi.json",
+    "100xfenok-next/public/data/sec-13f/analytics/multi_quarter_trends.json",
+    "100xfenok-next/public/data/sec-13f/analytics/new_positions.json",
+    "100xfenok-next/public/data/sec-13f/analytics/options_hedge.json",
+    "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
+    "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
+    "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
+    "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
+    "100xfenok-next/public/data/sec-13f/analytics/turnover.json",
+    "100xfenok-next/public/data/sec-13f/investors/",
   ],
   "batch-2 routes must account for every overlapping public-data ignore rule",
 );

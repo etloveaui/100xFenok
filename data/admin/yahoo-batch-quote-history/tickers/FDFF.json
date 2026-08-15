@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-06T14:35:07Z",
     "history_as_of": "2026-08-05",
-    "path": "data/yf/finance/FDFF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FDFF.json",
     "payload_sha256": "40981d7dc331b2dcc8469e741bc97ee48607f0bfd9dc6aa193cfbf7bd3ced953",
     "quote_as_of": "2026-08-05T20:00:00Z",
     "source_as_of": "2026-08-05"
@@ -51,6 +51,14 @@
     "schedule": "7 12 * * 0-5",
     "shard": "54/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-06T14:35:07Z",
+    "history_as_of": "2026-08-05",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FDFF.json",
+    "payload_sha256": "40981d7dc331b2dcc8469e741bc97ee48607f0bfd9dc6aa193cfbf7bd3ced953",
+    "quote_as_of": "2026-08-05T20:00:00Z",
+    "source_as_of": "2026-08-05"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "FDFF holds LKG because Yahoo source date 2026-08-05 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-05"
+  },
   "ticker": "FDFF",
-  "updated_at": "2026-08-06T14:33:02Z"
+  "updated_at": "2026-08-14T00:10:47Z"
 }

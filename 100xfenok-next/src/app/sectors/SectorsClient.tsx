@@ -449,7 +449,7 @@ export default function SectorsClient() {
               key={window.key}
               type="button"
               data-active={window.key === sortWindow ? "true" : "false"}
-              className="cpw5-sectors-period-btn"
+              className="cpw5-sectors-period-btn min-h-11"
               onClick={() => setSortWindow(window.key)}
               aria-pressed={window.key === sortWindow}
             >

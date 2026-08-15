@@ -2,7 +2,7 @@
 
 > **Source**: Global Scouter Tool (internal)
 > **Update**: On-demand
-> **Files**: 1,084
+> **Files**: 1,086 on disk (1,084 payload files + README/schema)
 > **Release**: v2.4.0 | **Schema**: v2.3.0
 
 ---
@@ -32,13 +32,15 @@ global-scouter/
 │   └── index.json           # ETF/Index data (22 items)
 ├── indicators/              # v2.1.0
 │   └── economic.json        # Economic indicators (1,071 records)
-└── raw/                     # v2.3.0
+├── raw/                     # v2.3.0
     ├── manifest.json        # Raw layer file catalog
     ├── companies_a_company.json
     ├── eps_consensus_t_eps_c.json
     ├── growth_consensus_t_growth_c.json
     ├── valuation_s_valuation.json
     └── ...
+├── schema.json              # Export schema
+└── README.md                # This document
 ```
 
 ## File Counts
@@ -50,7 +52,10 @@ global-scouter/
 | etfs/ | 1 |
 | indicators/ | 1 |
 | raw/ | 9 |
-| **Total** | 1,084 |
+| schema.json + README.md | 2 |
+| **Total on disk** | 1,086 |
+
+The payload total excludes this README and `schema.json`: 1,084 files.
 
 ## Schema
 

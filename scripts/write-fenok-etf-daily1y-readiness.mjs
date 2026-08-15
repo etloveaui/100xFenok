@@ -668,9 +668,14 @@ export function buildScoredEtfDaily1yFetchablePlan({
     counts: {
       managed_etf_count: denominator,
       scored_universe_total: scoredUniverseTotal,
-      // Compatibility alias for legacy consumers: under the core basket scope it
-      // always equals managed_etf_count (the intersection is fail-fast enforced).
-      scored_etf_count: denominator,
+      // Compatibility alias consumed by the coverage index: preserve the full
+      // scored-universe denominator. Core dispatch uses managed_etf_count.
+      scored_etf_count: scoredUniverseTotal,
+      scored_complete: asNumber(scored.complete),
+      scored_fetchable: asNumber(scored.fetchable),
+      scored_inception_limited: asNumber(scored.inception_limited),
+      scored_terminal_limited: asNumber(scored.terminal_limited),
+      scored_equation_ok: historyGapReportEquationOk,
       core_basket_ticker_count: basketTickers.length,
       core_tickers_missing_from_summary: coreMissingFromSummary.length,
       complete: completeRows.length,

@@ -275,11 +275,10 @@ jobs:
               INPUT_HISTORY_GAPS_ONLY="${YF_WEEKLY_ETF_HISTORY_GAPS_ONLY:-false}"
               INPUT_HISTORY_MIN_ROWS="${YF_WEEKLY_ETF_HISTORY_MIN_ROWS:-200}"
               INPUT_UNTRACKED_ONLY="${YF_WEEKLY_ETF_UNTRACKED_ONLY:-false}"
-              # The full StockAnalysis universe/screener stays off the
-              # scheduled lane; only an explicit operator repo-variable opt-in
-              # can re-enable it. Manual dispatches keep the input default.
-              INPUT_STOCKANALYSIS_ETFS="${YF_WEEKLY_ETF_STOCKANALYSIS_ETFS:-false}"
-              INPUT_CORE_DAILY_BASKET="${YF_WEEKLY_ETF_CORE_DAILY_BASKET:-true}"
+              # The scheduled lane is always bounded to the core union. Broad
+              # StockAnalysis ETF acquisition remains a manual-dispatch opt-in.
+              INPUT_STOCKANALYSIS_ETFS="false"
+              INPUT_CORE_DAILY_BASKET="true"
               INPUT_STOCKS_ONLY="false"
             fi
             INPUT_INCLUDE_SHARES_FULL="false"

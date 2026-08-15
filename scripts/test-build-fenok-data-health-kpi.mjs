@@ -1029,6 +1029,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "defillama_stablecoins",
     "yahoo_etf_fallback",
     "stockanalysis_etf_universe",
+    "stockanalysis_etf_detail",
     "stockanalysis_stock_financial",
     "yahoo_ticker_macro",
     "sentiment",
@@ -1049,17 +1050,32 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   const report = (laneId = null, overrides = {}) => {
     const value = structuredClone(JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report);
     // The canonical baseline keeps ApeWisdom and GDELT honestly unobserved
-    // because their fixtures have no attempt rows. Adapter unit cases need an
+    // because their fixtures have no attempt rows. ETF detail is also
+    // unavailable in the fixture artifact set. Adapter unit cases need an
     // all-ready live projection, so synthesize only those rows.
-    for (const id of ["apewisdom_attention", "gdelt_news_tone"]) {
+    for (const id of ["apewisdom_attention", "gdelt_news_tone", "stockanalysis_etf_detail"]) {
       const proxy = value.lanes.find((item) => item.id === id);
       proxy.status = "ready";
       proxy.reason = "ok";
       proxy.endpoint = { status: "ready", reason: "ok", observed_at: value.generated_at };
-      value.counts.ready += 1;
-      value.counts.unobserved -= 1;
-      value.counts.producer_members_ready += 1;
-      value.counts.producer_members_unobserved -= 1;
+      if (id === "stockanalysis_etf_detail") {
+        proxy.artifact = {
+          age: 0,
+          reason: "ok",
+          source_as_of: null,
+          status: "ready",
+          unit: "calendar_days",
+        };
+        value.counts.ready += 1;
+        value.counts.unavailable -= 1;
+        value.counts.producer_members_ready += 1;
+        value.counts.producer_members_unavailable -= 1;
+      } else {
+        value.counts.ready += 1;
+        value.counts.unobserved -= 1;
+        value.counts.producer_members_ready += 1;
+        value.counts.producer_members_unobserved -= 1;
+      }
     }
     if (laneId !== null) {
       const index = value.lanes.findIndex((item) => item.id === laneId);
@@ -2271,13 +2287,14 @@ console.log("# KPI v2 runtime self-proof fixtures");
   writeReadyRecoveryIndex(tmp, "us-indices-daily", "us_indices_daily", ["sp500.json", "nasdaq.json"]);
   writeReadySlickchartsComposite(tmp, "2026-07-14T11:00:00Z", slickchartsLiveRoot);
   const { root, public: pub } = runBuilder(tmp, {}, now, { slickchartsRepoRoot: slickchartsLiveRoot });
-  assert.equal(root.totals.lanes, 33);
+  assert.equal(root.totals.lanes, 34);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
     const sourceRow = installedReport.lanes.find((item) => item.id === laneConfig.id);
     const baselineUnobserved = ["apewisdom_attention", "gdelt_news_tone"].includes(laneConfig.id);
-    assert.equal(mapped.status, baselineUnobserved ? "degraded" : "ready");
-    assert.equal(mapped.reason, baselineUnobserved ? "workflow_unobserved" : "ok");
+    const baselineUnavailable = laneConfig.id === "stockanalysis_etf_detail";
+    assert.equal(mapped.status, baselineUnobserved || baselineUnavailable ? "degraded" : "ready");
+    assert.equal(mapped.reason, baselineUnobserved ? "workflow_unobserved" : baselineUnavailable ? "missing_artifact" : "ok");
     assert.equal(mapped.artifact.source_as_of, sourceRow.artifact.source_as_of);
     assert.equal(mapped.deployment_blocking, false);
     assert.equal(root.deployment_integrity.blockers.some((item) => item.lane_id === laneConfig.id), false);
@@ -2301,17 +2318,23 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const publicCronShadow = pub.runtime.fetch_cron_skip_detection;
   assert.equal(rootCronShadow.mode, "shadow");
   assert.equal(rootCronShadow.deployment_blocking, false);
+  // The live ETF-detail lane declares two natural schedule slots. This fixed
+  // fixture has no attempt row for either slot, so both bindings remain visible
+  // as gaps rather than being silently dropped.
   assert.deepEqual(rootCronShadow.counts, {
-    scheduled_members: 30,
-    schedule_bindings: 30,
-    observed: 27,
+    scheduled_members: 31,
+    schedule_bindings: 31,
+    observed: 26,
     suspected_skips: 3,
-    attempt_gaps: 0,
+    attempt_gaps: 2,
   });
-  assert.equal(rootCronShadow.rows.length, 30);
+  assert.equal(rootCronShadow.rows.length, 31);
   assert.deepEqual(publicCronShadow.pre_activation_lane_ids, ["damodaran", "oecd_cli", "yahoo_batch_quote_history"]);
   assert.deepEqual(publicCronShadow.suspected_skip_lane_ids, ["apewisdom_attention", "finra_ats_weekly", "gdelt_news_tone"]);
-  assert.deepEqual(publicCronShadow.attempt_gap_lane_ids, []);
+  // The public projection names the gap lane, which is the point: a scheduled
+  // lane with no attempt evidence is visible rather than absent. It clears when
+  // stockanalysis_etf_detail's first natural run lands.
+  assert.deepEqual(publicCronShadow.attempt_gap_lane_ids, ["stockanalysis_etf_detail"]);
   assert.equal(Object.hasOwn(publicCronShadow, "rows"), false);
   assert.equal(JSON.stringify(publicCronShadow).includes(".github/workflows/"), false);
   assert.equal(JSON.stringify(publicCronShadow).includes("43 14 * * *"), false);

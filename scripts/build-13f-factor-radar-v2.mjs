@@ -7,7 +7,7 @@
  * JSON only.
  *
  * Run: node scripts/build-13f-factor-radar-v2.mjs
- * Output: data/sec-13f/analytics/factor_exposures_summary.json (+ public mirror)
+ * Output: data/sec-13f/analytics/factor_exposures_summary.json
  */
 
 import fs from "node:fs";
@@ -19,13 +19,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const PORTFOLIO_VIEWS_PATH = path.join(ROOT, "data/sec-13f/analytics/portfolio_views.json");
 const OUTPUT = path.join(ROOT, "data/sec-13f/analytics/factor_exposures_summary.json");
-const PUBLIC_OUTPUT = path.join(ROOT, "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json");
 const RAW_CACHE_DIR = process.env.FENOK_FF_RAW_CACHE
   ? path.resolve(process.env.FENOK_FF_RAW_CACHE)
   : path.join(ROOT, "_private/admin/fama_french/raw");
 
-const SAME_START_DATE = "2021-03-31";
-const MIN_FULL_OBSERVATIONS = 22;
+const MIN_SHARED_OBSERVATIONS = 20;
 const FACTORS = [
   ["market", "mktRf", "marketBeta", "marketScore"],
   ["size", "smb", "sizeBeta", "sizeScore"],
@@ -182,34 +180,52 @@ function compound(values) {
   return values.reduce((acc, value) => acc * (1 + value), 1) - 1;
 }
 
-function isSamePeriodPerformance(performance) {
+function isValidPerformance(performance) {
   return Boolean(
     performance
       && Array.isArray(performance.dates)
       && Array.isArray(performance.portfolio)
-      && performance.dates[0] === SAME_START_DATE
-      && performance.portfolio.length >= MIN_FULL_OBSERVATIONS,
+      && performance.dates.length === performance.portfolio.length
+      && performance.dates.length >= MIN_SHARED_OBSERVATIONS,
   );
 }
 
-function commonSamePeriodEndDate(portfolioViews) {
-  const endCounts = new Map();
-  for (const view of Object.values(portfolioViews.investors ?? {})) {
-    if (!isSamePeriodPerformance(view.performance)) continue;
-    const endDate = view.performance.dates.at(-1);
-    if (endDate) endCounts.set(endDate, (endCounts.get(endDate) ?? 0) + 1);
-  }
-  return [...endCounts.entries()].sort((a, b) => b[1] - a[1] || b[0].localeCompare(a[0]))[0]?.[0] ?? null;
+function mostCommon(values) {
+  const counts = new Map();
+  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] ?? null;
 }
 
-function alignSamePeriodPerformance(performance, endDate) {
-  if (!isSamePeriodPerformance(performance) || !endDate) return null;
-  const endIndex = performance.dates.indexOf(endDate);
-  if (endIndex < MIN_FULL_OBSERVATIONS - 1) return null;
+function sameDates(left, right) {
+  return left.length === right.length && left.every((date, index) => date === right[index]);
+}
+
+function commonSamePeriodWindow(portfolioViews) {
+  const candidates = Object.values(portfolioViews.investors ?? {})
+    .map((view) => view.performance)
+    .filter(isValidPerformance);
+  const startDate = mostCommon(candidates.map((performance) => performance.dates[0]));
+  if (!startDate) return null;
+  const startCandidates = candidates.filter((performance) => performance.dates[0] === startDate);
+  const endDate = mostCommon(startCandidates.map((performance) => performance.dates.at(-1) ?? ""));
+  if (!endDate) return null;
+  const periodCandidates = startCandidates.filter((performance) => performance.dates.at(-1) === endDate);
+  const reference = [...periodCandidates].sort((left, right) => right.dates.length - left.dates.length)[0];
+  if (!reference) return null;
+  const dates = reference.dates;
+  const matching = periodCandidates.filter((performance) => sameDates(performance.dates, dates));
+  return matching.length > 0 ? { startDate, endDate, dates, investorCount: matching.length } : null;
+}
+
+function alignSamePeriodPerformance(performance, window) {
+  if (!window || !isValidPerformance(performance)) return null;
+  if (performance.dates[0] !== window.startDate || performance.dates.at(-1) !== window.endDate) return null;
+  if (!sameDates(performance.dates, window.dates)) return null;
   return {
-    dates: performance.dates.slice(0, endIndex + 1),
-    portfolio: performance.portfolio.slice(0, endIndex + 1),
-    coverage: Array.isArray(performance.coverage) ? performance.coverage.slice(0, endIndex) : [],
+    dates: performance.dates,
+    portfolio: performance.portfolio,
+    coverage: Array.isArray(performance.coverage) ? performance.coverage : [],
   };
 }
 
@@ -320,9 +336,9 @@ async function main() {
   }
 
   const portfolioViews = JSON.parse(fs.readFileSync(PORTFOLIO_VIEWS_PATH, "utf8"));
-  const commonEndDate = commonSamePeriodEndDate(portfolioViews);
+  const samePeriodWindow = commonSamePeriodWindow(portfolioViews);
   const samePeriodEntries = Object.entries(portfolioViews.investors ?? {})
-    .map(([id, view]) => [id, view, alignSamePeriodPerformance(view.performance, commonEndDate)])
+    .map(([id, view]) => [id, view, alignSamePeriodPerformance(view.performance, samePeriodWindow)])
     .filter((entry) => entry[2]);
 
   const rawRows = [];
@@ -398,7 +414,9 @@ async function main() {
     coverage: {
       row_count: rows.length,
       same_period_cohort_count: samePeriodEntries.length,
-      common_performance_end_date: commonEndDate,
+      common_performance_start_date: samePeriodWindow?.startDate ?? null,
+      common_performance_end_date: samePeriodWindow?.endDate ?? null,
+      common_performance_observation_count: samePeriodWindow?.dates.length ?? null,
       factor_aligned_as_of: asOfValues.at(-1) ?? null,
       observation_count_min: obsValues.length ? Math.min(...obsValues) : null,
       observation_count_max: obsValues.length ? Math.max(...obsValues) : null,
@@ -408,7 +426,6 @@ async function main() {
     rows,
   };
   writeJson(OUTPUT, output);
-  writeJson(PUBLIC_OUTPUT, output);
   console.log(`factor_exposures_summary: rows=${rows.length} same_period=${samePeriodEntries.length} as_of=${output.coverage.factor_aligned_as_of}`);
   console.log(`raw cache: ${RAW_CACHE_DIR}`);
 }

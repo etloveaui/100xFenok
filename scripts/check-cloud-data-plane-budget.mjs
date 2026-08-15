@@ -18,17 +18,22 @@ function parseArgs(argv) {
     accountBaseline: null,
     requestDemand: null,
     policy: DEFAULT_CLOUD_DATA_PLANE_POLICY,
+    candidateId: null,
     format: "json",
   };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
-    if (!["--repo-root", "--account-baseline", "--request-demand", "--policy", "--format"].includes(flag)) {
+    if (!["--repo-root", "--account-baseline", "--request-demand", "--policy", "--candidate", "--format"].includes(flag)) {
       throw new Error(`unknown argument: ${flag}`);
     }
     const value = argv[index + 1];
     if (!value || value.startsWith("--")) throw new Error(`${flag} requires a value`);
     index += 1;
     if (flag === "--repo-root") options.repoRoot = path.resolve(value);
+    // A candidate run scopes the budget to one migration input. Without it the
+    // run stays estate-wide, which is the right default for ownership checks and
+    // the wrong input for a migration limit.
+    else if (flag === "--candidate") options.candidateId = value;
     else if (flag === "--format") {
       if (value !== "json") throw new Error("--format only supports json");
       options.format = value;

@@ -158,6 +158,14 @@ def assert_statement_paths_serve_their_statement() -> None:
         assert_true(path != "financials",
                     f"{key}: /financials/ is the overview page and carries no statement rows")
 
+    probe = load_probe_module()
+    for key, path in probe.STATEMENT_PATHS.items():
+        expected = EXPECTED_NORMALIZED_STATEMENTS[key]
+        assert_true(path.split("/")[-1] == expected,
+                    f"probe {key}: declared path {path!r} does not end in the statement it serves ({expected!r})")
+        assert_true(path != "financials",
+                    f"probe {key}: /financials/ is the overview page and carries no statement rows")
+
 
 if __name__ == "__main__":
     main()

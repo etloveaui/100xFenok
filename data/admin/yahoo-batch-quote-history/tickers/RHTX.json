@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-07T20:53:26Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/RHTX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RHTX.json",
     "payload_sha256": "bd344fbac1e645dfc47974ba02d04046593fc88e738043151b5f52602366d62f",
     "quote_as_of": "2026-08-05T13:37:11Z",
     "source_as_of": "2026-08-05T13:37:11Z"
@@ -51,6 +51,14 @@
     "schedule": "7 20 * * 0-5",
     "shard": "70/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-07T20:53:26Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RHTX.json",
+    "payload_sha256": "bd344fbac1e645dfc47974ba02d04046593fc88e738043151b5f52602366d62f",
+    "quote_as_of": "2026-08-05T13:37:11Z",
+    "source_as_of": "2026-08-05T13:37:11Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-05T13:37:11Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-14T00:10:47Z",
+    "classified_run_id": "31755913658",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "RHTX holds LKG because Yahoo source date 2026-08-05T13:37:11Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-05T13:37:11Z"
+  },
   "ticker": "RHTX",
-  "updated_at": "2026-08-07T20:49:21Z"
+  "updated_at": "2026-08-14T00:10:47Z"
 }

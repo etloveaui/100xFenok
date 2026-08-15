@@ -13,7 +13,7 @@ ETF signals are a separate lane from stock signals. ETF rows must not increase s
 - ETF rows must remain absent from `data/computed/fenok_signals.json`.
 - UI/API consumption and a public summary mirror are now verified by the named ETF gate, so the coverage index can hold `public=true`.
 - The full scored-ETF lane is PUBLIC/DAILY/GATED on the exact `4,431` scored eligible denominator: `4,431 = 3,642 complete + 0 fetchable + 740 inception-limited + 49 terminal-limited`. The two broader full-primary gaps, `FEAT` and `FIVY`, sit outside this exact scored plan and remain visible diagnostic/backfill work.
-- ETF Core Daily Basket is a separate ETF service DAILY/GATED sublane with its own selected denominator. Current local regeneration is `1,574` structural candidates -> `100` selected core refresh tickers, `100` fresh and `0` stale, so `etf_core_daily_basket_ready=true`; this result does not set or clear full S3.
+- ETF Core Daily Basket is a separate ETF service DAILY/GATED sublane with its own selected denominator. Current local regeneration is `1,580` structural candidates -> `99` selected core refresh tickers, `99` fresh and `0` stale, so `etf_core_daily_basket_ready=true`; this result does not set or clear full S3.
 - This is not a full-universe paid-ready ETF claim. Paid-ready wording for broad ETF scoring still requires explicit owner approval of the product scope; full scored-lane and Core Basket readiness remain separately named claims.
 
 ## Signal Families
@@ -116,8 +116,8 @@ classification catalog and owner-approved schema.
 
 - Purpose: provide a separately measured service DAILY/GATED ETF set without redefining the full scored-lane denominator.
 - Readiness label: `etf_core_daily_basket_ready`. Core Daily Basket is a separate ETF service DAILY/GATED sublane; its readiness must not set, clear, or substitute for full `etf_scoring_lane.daily/gated` in either direction.
-- Current generated selection: `1,574` structural candidates -> `100` selected core refresh tickers (`50` Equity, `35` Fixed Income, `6` Alternatives, `7` Asset Allocation, `2` Commodity).
-- Current readiness: `fresh_selected_count=100`, `stale_selected_count=0`, blockers `[]`; therefore `core_daily_basket_ready=true`.
+- Current generated selection: `1,580` structural candidates -> `99` selected core refresh tickers (`50` Equity, `35` Fixed Income, `2` Alternatives, `6` Asset Allocation, `6` Commodity; Currency has no selected row).
+- Current readiness: `fresh_selected_count=99`, `stale_selected_count=0`, blockers `[]`; therefore `core_daily_basket_ready=true`. The selection is data-driven and is not required to equal 100; the contract floor is `selected_count >= 75`.
 - Exclusions by default: leveraged, inverse, single-stock, single-stock/concentrated derivative-income strategy, low-confidence classification, broken-history rows, and stale quote/volume rows.
 - Candidate buckets: broad US equity, sector, factor/style/dividend, international, fixed income, commodity/currency, alternatives, and asset-allocation funds.
 - Minimum proof before inclusion:

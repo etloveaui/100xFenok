@@ -2,18 +2,25 @@
 
 > **Source**: SEC EDGAR
 > **Update**: Quarterly
-> **Files**: 77 public JSON (60 investors + 3 index + 14 analytics, mirrored to public data)
+> **Files**: 79 public JSON (60 investors + 3 index + 15 analytics + schema, mirrored to public data)
 > **Version**: 3.3.3 data payload / 3.4.0 schema contract
 
 ---
 
 ## Overview
 
-Institutional holdings data from SEC 13F filings. Tracks 60 major investors' portfolio positions across 30 quarters through 2026-Q1 where filings are available (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
+Institutional holdings data from SEC 13F filings. Tracks 60 major investors' portfolio positions across 31 quarters through 2026-Q2 where filings are available (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
 
 Current-quarter integrity indexes are rebuilt from investor filings after conversion. `by_ticker.json` and `analytics/consensus.json` use normalized ticker keys only; company-name aliases and unresolved rows are kept separately in `analytics/ticker_aliases.json`.
 
-Public investor holdings are also backfilled from local `data/yf/finance/*.json` and `data/yf/quarter_closes.json` after conversion. This keeps sector/industry/market-cap/return enrichment deterministic without live Yahoo calls during the 13F publish path. The 2026-Q1 current cohort includes 57 of 60 tracked investors; `einhorn`, `scion`, and `vanguard` are excluded from current-quarter analytics until fresh filings are available.
+Public investor holdings are also backfilled from local `data/yf/finance/*.json` and `data/yf/quarter_closes.json` after conversion. This keeps sector/industry/market-cap/return enrichment deterministic without live Yahoo calls during the 13F publish path. The 2026-Q2 current cohort includes 56 of 60 tracked investors; `ackman`, `einhorn`, `scion`, and `vanguard` are excluded from current-quarter analytics until fresh filings are available.
+
+## Refresh Route
+
+1. Run the external CCH SEC converter against SEC EDGAR and verify its output; the converter is the only SEC-ingestion owner.
+2. Copy the converter's canonical output into `data/sec-13f/` without copying the internal conversion report.
+3. Run local YF enrichment, ticker/integrity indexes, guru holders, trades, portfolio views, and phase-2 closeout builders in sequence.
+4. Rebuild the public projection through the Update Manifest boundary. The daily stocks-analyzer workflow does not ingest SEC filings; its source-provenance gate rejects a missing or stale-due-quarter converter payload before downstream enrichment.
 
 ## Structure
 
@@ -41,7 +48,8 @@ sec-13f/
     ├── ticker_aliases.json # Raw company-name to ticker diagnostics
     ├── guru_holders_index.json # Current-quarter ticker holder lookup
     ├── trades_ranking.json # Estimated buy/sell pressure by ticker
-    └── portfolio_views.json # Investor portfolio charts and return views
+    ├── portfolio_views.json # Investor portfolio charts and return views
+    └── factor_exposures_summary.json # Separate factor-exposure analysis input
 ```
 
 ## Investors Tracked (60)
@@ -68,7 +76,7 @@ sec-13f/
   "metadata": {
     "version": "3.4.0",
     "generated_at": "2026-05-18T...",
-    "quarters_covered": ["2026-Q1", "2025-Q4", "..."],
+    "quarters_covered": ["2026-Q2", "2026-Q1", "..."],
     "data_latency_note": "13F filings may be delayed up to 45 days after quarter end",
     "enrichment_coverage": {
       "sector": 0.7058,
@@ -90,8 +98,8 @@ sec-13f/
     "group": "value",
     "filings": [
       {
-        "quarter": "2026-Q1",
-        "filing_date": "2026-05-15",
+        "quarter": "2026-Q2",
+        "filing_date": "2026-08-14",
         "aum_total": 263095703570.0,
         "holdings_count": 90,
         "reported_holdings_count": 90,
@@ -156,7 +164,7 @@ Stale investors are flagged in `summary.json` with `is_stale`, `latest_quarter`,
 ```json
 {
   "schema_version": "sec-13f-ticker-aliases/v1",
-  "quarter": "2026-Q1",
+  "quarter": "2026-Q2",
   "source_rows": 5554,
   "mapped_rows": 5337,
   "unmapped_rows": 217,
@@ -196,10 +204,11 @@ const consensus = await fetch(`${BASE}/analytics/consensus.json`).then(r => r.js
 
 ## Current Publish Snapshot
 
+- Source provenance: upstream SEC converter quarter is `2026-Q2`; its generation timestamp is preserved separately from local YF enrichment so daily derived runs cannot masquerade as SEC ingestion
 - Tracked investor files: 60
-- Current analytics cohort: 57 investors for 2026-Q1
-- Stale investors excluded from current-quarter analytics: `einhorn`, `scion`, `vanguard`
-- Analytics files: 14 (`10` converter outputs + `4` 100x derived indexes)
-- Local YF enrichment: 116,668 public holdings scanned; 76,604 rows touched; 567 unique profile symbols matched
+- Current analytics cohort: 56 investors for 2026-Q2
+- Stale investors excluded from current-quarter analytics: `ackman`, `einhorn`, `scion`, `vanguard`
+- Analytics files: 15 (`10` converter outputs + `4` 100x derived indexes + `1` separate factor-exposure summary)
+- Local YF enrichment: 116,882 public holdings scanned; 77,776 rows touched; 706 unique profile symbols matched
 
-*Last Updated: 2026-06-17*
+*Last Updated: 2026-08-15*

@@ -38,10 +38,12 @@ assert.equal(validateDetectionConfig(DATA_SUPPLY_DETECTION_CONFIG), true);
 assert.equal(lane("yahoo_etf_fallback").enforcement, "live");
 assert.equal(lane("yahoo_etf_fallback").endpoint_contract.transport, "library");
 assert.equal(lane("stockanalysis_etf_universe").enforcement, "live");
-assert.equal(
-  Object.hasOwn(lane("stockanalysis_etf_universe").endpoint_contract, "transport"),
-  false,
-  "undeclared endpoint transport remains HTTP",
+assert.equal(lane("stockanalysis_etf_universe").endpoint_contract.transport, "http");
+assert.equal(lane("stockanalysis_etf_detail").enforcement, "live");
+assert.equal(lane("stockanalysis_etf_detail").kpi_required, true);
+assert.deepEqual(
+  lane("stockanalysis_etf_detail").producer_members[0].artifact_contracts[0].assertions.map((item) => item.id),
+  ["counts_by_kind_object"],
 );
 assert.deepEqual(
   lane("stockanalysis_etf_universe").freshness.source_basis,
@@ -564,7 +566,12 @@ assert.match(stockanalysisLanePolicy, /detection-attempts\/stockanalysis_stock_f
     `declared shards the workflow never commits: ${JSON.stringify(gate.missing_in_workflow)}`);
   assert.deepEqual(gate.undeclared_in_workflow, [],
     `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
+  // stockanalysis_etf_detail joined this workflow's lanes on 2026-08-14. This
+  // assertion is the one that would have caught the emitter's stale supported
+  // list before run 31791326158 died on it; it was never run when the lane was
+  // added.
   assert.deepEqual(gate.lanes.sort(), [
+    "stockanalysis_etf_detail",
     "stockanalysis_etf_universe",
     "stockanalysis_stock_financial",
     "stockanalysis_surfaces",

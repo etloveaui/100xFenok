@@ -236,11 +236,19 @@ assert.deepEqual(fenokEdgeDaily.exclude, []);
 
 const yfFinance = manifest.workflows[".github/workflows/fetch-yf-finance.yml"];
 assert.deepEqual(yfFinance.lanes, ["yahoo_batch_quote_history"]);
+// The attempt shard is a conscious 2026-08-14 addition, not drift. This lane
+// declared the shard in its commit_shards and its workflow emitted it, but no
+// stage owned the path, so it had never once been committed: 26 of the 27
+// declared attempt shards existed on disk and this was the missing one. The
+// expectation below pinned that gap in place. Derivation from the registry now
+// supplies it, and the registry's own completeness check refuses a workflow
+// that cannot carry an owned lane's evidence.
 assert.deepEqual(yfFinance.stages.always_if_exists, [
   { kind: "directory", path: "data/yf/finance", required: true },
   { kind: "file", path: "data/yf/quarter_closes.json", required: true },
   { kind: "directory", path: "data/admin/yahoo-batch-quote-history", required: true },
   { kind: "directory", path: "data/yf/estimates-archive", required: true },
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history.json", required: false },
 ]);
 assert.deepEqual(yfFinance.stages.success_if_exists, []);
 assert.deepEqual(yfFinance.exclude, [
@@ -249,9 +257,16 @@ assert.deepEqual(yfFinance.exclude, [
 ]);
 
 const stockanalysis = manifest.workflows[".github/workflows/fetch-stockanalysis.yml"];
+// The lane list is now derived from the registry rather than hand-written, so
+// stockanalysis_etf_detail appears here for the first time: it was
+// registry-owned by this workflow all along and missing from the workflow's own
+// attribution, while its shard sat in the specs as a manual patch added after
+// run 31794068491 failed to pack it. Attempt-shard specs are derived and sorted,
+// so they now follow the hand-written path policy instead of being interleaved.
 assert.deepEqual(stockanalysis.lanes, [
   "yahoo_etf_fallback",
   "stockanalysis_etf_universe",
+  "stockanalysis_etf_detail",
   "stockanalysis_stock_financial",
   "stockanalysis_surfaces",
 ]);
@@ -261,12 +276,13 @@ assert.deepEqual(stockanalysis.stages.always_if_exists, [
   { kind: "directory", path: "data/admin/data-supply-state/v1", required: true },
   { kind: "directory", path: "data/admin/stockanalysis-recovery", required: true },
   { kind: "directory", path: "data/admin/yahoo_etf_fallback", required: false },
-  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", required: false },
+  { kind: "dynamic_set", path: "data/yf/finance", required: false },
+  { kind: "directory", path: "100xfenok-next/public/data", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_surfaces.json", required: false },
-  { kind: "dynamic_set", path: "data/yf/finance", required: false },
-  { kind: "directory", path: "100xfenok-next/public/data", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/detection-attempts/yahoo_etf_fallback.json", required: false },
 ]);
 assert.deepEqual(stockanalysis.stages.success_if_exists, []);
 assert.deepEqual(stockanalysis.exclude, [
@@ -424,6 +440,7 @@ assert.deepEqual(buildStocksAnalyzer.stages.always_if_exists.map(({ kind, path: 
   "file:data/sec-13f/analytics/ticker_aliases.json",
   "file:data/sec-13f/analytics/trades_ranking.json",
   "file:data/sec-13f/analytics/portfolio_views.json",
+  "file:data/sec-13f/analytics/factor_exposures_summary.json",
   "file:data/sec-13f/analytics/guru_holders_index.json",
   "file:data/global-scouter/core/revision_movers.json",
   "file:data/damodaran/industry_benchmarks.json",

@@ -9,6 +9,10 @@ const isMain = process.argv[1]
 const PRIVATE_DATA_SUPPLY_PUBLIC_ROOTS = Object.freeze([
   "public/data/admin/data-supply-state",
   "public/data/yf/etf-details",
+  // B-380 is a private, change-only Yahoo estimate history record. It has no
+  // product reader or public lane; remove the whole generated tree so future
+  // date shards cannot leak through blanket canonical synchronization.
+  "public/data/yf/estimates-archive",
   "public/data/yf/migration-evidence",
   // Dated Russell factsheet captures, including the source PDFs. Evidence for
   // the RIM research record, never a product surface.
@@ -503,7 +507,57 @@ for (const relativePath of [
 ]) {
   removeGeneratedPublicMirror(relativePath);
 }
+// FactSet's public boundary retains only the provenance receipt. The fetch and
+// probe files are canonical control-plane artifacts and must not reach a served
+// surface or be reintroduced by the blanket canonical-data sync.
+for (const relativePath of [
+  "public/data/factset-earnings-insight/fetch-parent.py",
+  "public/data/factset-earnings-insight/fetch.py",
+  "public/data/factset-earnings-insight/parse.py",
+  "public/data/factset-earnings-insight/probe-log.jsonl",
+  "public/data/factset-earnings-insight/zacks-render-test.py",
+]) {
+  removeGeneratedPublicMirror(relativePath);
+}
 removeGeneratedPublicMirror("public/data/computed/fenok_signals.json");
+// EDGAR public boundary retains provenance receipts only. The SEC bootstrap and
+// RIM-DOW companyfacts caches are canonical recovery/research inputs, not a
+// served surface, and must be removed after blanket canonical synchronization.
+for (const relativePath of [
+  "public/data/edgar/company_tickers.json",
+  "public/data/edgar/rim-dow/AAPL.json",
+  "public/data/edgar/rim-dow/AMGN.json",
+  "public/data/edgar/rim-dow/AMZN.json",
+  "public/data/edgar/rim-dow/AXP.json",
+  "public/data/edgar/rim-dow/BA.json",
+  "public/data/edgar/rim-dow/CAT.json",
+  "public/data/edgar/rim-dow/CRM.json",
+  "public/data/edgar/rim-dow/CSCO.json",
+  "public/data/edgar/rim-dow/CVX.json",
+  "public/data/edgar/rim-dow/DIS.json",
+  "public/data/edgar/rim-dow/GOOGL.json",
+  "public/data/edgar/rim-dow/GS.json",
+  "public/data/edgar/rim-dow/HD.json",
+  "public/data/edgar/rim-dow/HON.json",
+  "public/data/edgar/rim-dow/IBM.json",
+  "public/data/edgar/rim-dow/JNJ.json",
+  "public/data/edgar/rim-dow/JPM.json",
+  "public/data/edgar/rim-dow/KO.json",
+  "public/data/edgar/rim-dow/MCD.json",
+  "public/data/edgar/rim-dow/MMM.json",
+  "public/data/edgar/rim-dow/MRK.json",
+  "public/data/edgar/rim-dow/MSFT.json",
+  "public/data/edgar/rim-dow/NKE.json",
+  "public/data/edgar/rim-dow/NVDA.json",
+  "public/data/edgar/rim-dow/PG.json",
+  "public/data/edgar/rim-dow/SHW.json",
+  "public/data/edgar/rim-dow/TRV.json",
+  "public/data/edgar/rim-dow/UNH.json",
+  "public/data/edgar/rim-dow/V.json",
+  "public/data/edgar/rim-dow/WMT.json",
+]) {
+  removeGeneratedPublicMirror(relativePath);
+}
 removeGeneratedPublicMirror("public/data/computed/fenok_etf_signals.json");
 removeGeneratedPublicMirror("public/data/computed/etf_action_index.json");
 removeGeneratedPublicMirror("public/data/admin/fenok-s1-stock-promotion-gate-plan.json");

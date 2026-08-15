@@ -862,6 +862,14 @@ export default function SuperinvestorsClient({
     if (!byTickerEntry) return [];
     return [...byTickerEntry.holder_details].sort((a, b) => (b.weight || 0) - (a.weight || 0));
   }, [byTickerEntry]);
+  const selectedContextKey =
+    tab === "gurus" && selectedGuruEntry
+      ? `guru:${selectedGuruEntry[0]}`
+      : tab === "by-ticker" && selectedTicker && byTickerEntry && byTickerHolderRows.length > 0
+      ? `ticker:${selectedTicker}`
+      : tab === "trades" && tradesData && (tradesData.bought[0] || tradesData.sold[0])
+      ? `trades:${tradesData.metadata.quarter}`
+      : null;
 
   const sectorRows = useMemo(() => {
     if (!bySector) return [];
@@ -972,7 +980,11 @@ export default function SuperinvestorsClient({
   const topConvictionHoldRows = convictionEntries?.top_conviction_hold?.slice(0, 3) ?? [];
 
   return (
-    <div className="data-shell-page">
+    <div
+      className="data-shell-page"
+      data-superinvestor-page
+      data-superinvestor-selected-context={selectedContextKey ? "true" : "false"}
+    >
       <section className="panel data-shell-header">
         <div className="data-shell-head-main">
           <p className="data-shell-kicker">기관 공시 분석</p>
@@ -997,6 +1009,7 @@ export default function SuperinvestorsClient({
         </div>
       ) : null}
 
+      <div data-superinvestor-overview>
       {/* Hero — verdict-first (cp-design-system-spec.md §A.1). Buy/sell balance is the
           route's single dominant visual; methodology detail moves to the bottom accordion. */}
       <CpVerdictHero
@@ -1109,8 +1122,11 @@ export default function SuperinvestorsClient({
         </div>
       </section>
 
+      </div>
+
       {dataReady && selectedGuruEntry ? (
         <section
+          data-superinvestor-selected-landing
           data-superinvestor-guru-landing
           data-superinvestor-guru-id={selectedGuruEntry[0]}
           className="rounded-[1.5rem] border border-brand-interactive/30 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-4 shadow-[var(--sh-sm)]"
@@ -1174,6 +1190,7 @@ export default function SuperinvestorsClient({
 
       {dataReady && tab === "by-ticker" && selectedTicker && byTickerEntry && byTickerHolderRows.length > 0 ? (
         <section
+          data-superinvestor-selected-landing
           data-superinvestor-ticker-landing
           data-superinvestor-ticker-symbol={selectedTicker}
           data-superinvestor-ticker-quarter={quarter ?? ""}
@@ -1257,6 +1274,7 @@ export default function SuperinvestorsClient({
 
       {tab === "trades" && tradesData && (topBoughtTrade || topSoldTrade) ? (
         <section
+          data-superinvestor-selected-landing
           data-superinvestor-trades-landing
           data-superinvestor-trades-quarter={tradesData.metadata.quarter}
           className="rounded-[1.5rem] border border-brand-interactive/30 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-4 shadow-[var(--sh-sm)]"

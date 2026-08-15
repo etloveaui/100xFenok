@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-08-12",
+  "last_updated": "2026-08-15",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -9,7 +9,7 @@
       "updated": null,
       "update_frequency": "hourly",
       "source": "GitHub repository tree",
-      "file_count": 13554,
+      "file_count": 14046,
       "schema": false,
       "description": "Hourly folder listing cache for notification-control-panel-web.html",
       "updated_reason": "internal listing cache has a build time but no upstream source date"
@@ -43,7 +43,7 @@
     },
     "indices": {
       "version": "2.0.0",
-      "updated": "2026-08-11",
+      "updated": "2026-08-14",
       "update_frequency": "daily",
       "source": "Google Sheets (Apps Script)",
       "file_count": 5,
@@ -61,16 +61,16 @@
     },
     "sec-13f": {
       "version": "3.4.0",
-      "updated": "2026-05-01",
+      "updated": "2026-07-31",
       "update_frequency": "quarterly",
       "source": "SEC EDGAR",
       "file_count": 78,
       "schema": true,
-      "description": "Institutional holdings from 60 tracked investors across 30 quarters; 57 current 2026-Q1 cohort investors, 14 analytics files, local YF enrichment, passive/institutional cohorts, and stale-investor exclusion."
+      "description": "Institutional holdings from 60 tracked investors across 31 quarters; 56 current 2026-Q2 cohort investors, 15 analytics files, local YF enrichment, passive/institutional cohorts, and stale-investor exclusion."
     },
     "sentiment": {
       "version": "1.0.0",
-      "updated": "2026-08-04",
+      "updated": "2026-08-11",
       "update_frequency": "daily",
       "source": "Multiple (AAII, CNN, CFTC, CBOE)",
       "file_count": 13,
@@ -101,7 +101,7 @@
       "updated": "2026-01-09",
       "update_frequency": "after source data refresh",
       "source": "Macro Monitor computed signal export",
-      "file_count": 7703,
+      "file_count": 7753,
       "schema": false,
       "description": "Deterministic computed signals and normalized market facts derived from macro, sentiment, Yahoo, StockAnalysis, and SlickCharts data."
     },
@@ -120,7 +120,7 @@
       "updated": null,
       "update_frequency": "weekly / on-demand",
       "source": "Yahoo Finance via yfinance",
-      "file_count": 7312,
+      "file_count": 7317,
       "schema": false,
       "description": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces.",
       "updated_reason": "source date unavailable for required Yahoo finance histories: finance/DAY.json"
@@ -130,7 +130,7 @@
       "updated": null,
       "update_frequency": "weekly / on-demand",
       "source": "StockAnalysis public JSON, Svelte/devalue payloads, and HTML tables",
-      "file_count": 5739,
+      "file_count": 5748,
       "schema": true,
       "description": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces.",
       "updated_reason": "provider publishes no aggregate source date"
@@ -149,7 +149,7 @@
       "updated": null,
       "update_frequency": "weekly / on-demand",
       "source": "SEC company_tickers.json",
-      "file_count": 31,
+      "file_count": 39,
       "schema": true,
       "description": "Normalized SEC ticker-to-CIK cache used by the EDGAR filing timeline builder.",
       "updated_reason": "SEC company ticker feed publishes no aggregate source date"
@@ -206,6 +206,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-08-15",
+      "folder": "sec-13f",
+      "version": "3.4.0",
+      "change": "Q2 2026 SEC 13F refresh: 60 tracked investors, 31 quarters covered where filed, 79 JSON files including schema, and 15 analytics files. Current-quarter analytics use 56 non-stale investors; ackman, einhorn, scion, and vanguard remain stale-excluded. Canonical and public mirrors were rebuilt together after local YF enrichment.",
+      "breaking": false
+    },
     {
       "date": "2026-08-10",
       "folder": "benchmarks",
@@ -795,13 +802,13 @@
     "on_new_file": "Add to folder schema.json files section",
     "version_format": "MAJOR.MINOR.PATCH (breaking.feature.fix)"
   },
-  "generatedAt": "2026-08-12T13:58:51Z",
+  "generatedAt": "2026-08-15T12:01:46Z",
   "categories": [
     {
       "name": "computed",
       "path": "/data/computed/",
       "schemaVersion": "1.0.0",
-      "fileCount": 7703,
+      "fileCount": 7753,
       "lastUpdated": "2026-01-09",
       "lastUpdatedReason": null,
       "notes": "Deterministic computed signals and normalized market facts derived from macro, sentiment, Yahoo, StockAnalysis, and SlickCharts data."
@@ -820,7 +827,7 @@
       "path": "/data/sentiment/",
       "schemaVersion": "1.0.0",
       "fileCount": 13,
-      "lastUpdated": "2026-08-04",
+      "lastUpdated": "2026-08-11",
       "lastUpdatedReason": null,
       "notes": "Market sentiment indicators"
     },
@@ -837,7 +844,7 @@
       "name": "stockanalysis",
       "path": "/data/stockanalysis/",
       "schemaVersion": "1.2.0",
-      "fileCount": 5739,
+      "fileCount": 5748,
       "lastUpdated": null,
       "lastUpdatedReason": "provider publishes no aggregate source date",
       "notes": "ETF holdings, ETF metadata, quote/history cross-checks, stock financial statement candidates, stock overview snapshots, and market event surfaces."
@@ -846,7 +853,7 @@
       "name": "yf",
       "path": "/data/yf/",
       "schemaVersion": "1.0.0",
-      "fileCount": 7312,
+      "fileCount": 7317,
       "lastUpdated": null,
       "lastUpdatedReason": "source date unavailable for required Yahoo finance histories: finance/DAY.json",
       "notes": "Ticker-level quote, financial statement, holder, analyst, event, history, and quarter-close payloads used by Stock, Screener, Portfolio, and ETF surfaces."
@@ -856,9 +863,9 @@
       "path": "/data/sec-13f/",
       "schemaVersion": "3.4.0",
       "fileCount": 78,
-      "lastUpdated": "2026-05-01",
+      "lastUpdated": "2026-07-31",
       "lastUpdatedReason": null,
-      "notes": "Institutional holdings from 60 tracked investors across 30 quarters; 57 current 2026-Q1 cohort investors, 14 analytics files, local YF enrichment, passive/institutional cohorts, and stale-investor exclusion."
+      "notes": "Institutional holdings from 60 tracked investors across 31 quarters; 56 current 2026-Q2 cohort investors, 15 analytics files, local YF enrichment, passive/institutional cohorts, and stale-investor exclusion."
     },
     {
       "name": "benchmarks",
@@ -883,7 +890,7 @@
       "path": "/data/indices/",
       "schemaVersion": "2.0.0",
       "fileCount": 5,
-      "lastUpdated": "2026-08-11",
+      "lastUpdated": "2026-08-14",
       "lastUpdatedReason": null,
       "notes": "S&P 500 and NASDAQ daily price history (1980-present, 46 years)"
     },
@@ -927,7 +934,7 @@
       "name": "edgar",
       "path": "/data/edgar/",
       "schemaVersion": "1.0.0",
-      "fileCount": 31,
+      "fileCount": 39,
       "lastUpdated": null,
       "lastUpdatedReason": "SEC company ticker feed publishes no aggregate source date",
       "notes": "Normalized SEC ticker-to-CIK cache used by the EDGAR filing timeline builder."

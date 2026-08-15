@@ -72,17 +72,17 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "expected_report": {
-      "config_digest": "1f0d02c928e88564ff284c1dd17e72b959bdc3974f45d74272d13ac88bccbd7c",
+      "config_digest": "bdccb9b8628280f9142b16ecc87d0f6f0343ade192e9f49b94dac0ae193771a5",
       "counts": {
         "drift": 0,
         "producer_members_drift": 0,
         "producer_members_ready": 29,
         "producer_members_stale": 0,
-        "producer_members_unavailable": 1,
+        "producer_members_unavailable": 2,
         "producer_members_unobserved": 3,
         "ready": 25,
         "stale": 0,
-        "unavailable": 1,
+        "unavailable": 2,
         "unobserved": 3
       },
       "generated_at": "2026-07-11T00:00:00Z",
@@ -279,6 +279,30 @@
           "monitoring_mode": "post_fetch_artifact",
           "reason": "ok",
           "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
+            "stockanalysis_etf_detail"
+          ],
+          "artifact": {
+            "age": null,
+            "reason": "missing_artifact",
+            "source_as_of": null,
+            "status": "unavailable",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": null,
+            "reason": "workflow_unobserved",
+            "status": "unobserved"
+          },
+          "enforcement": "live",
+          "id": "stockanalysis_etf_detail",
+          "kpi_required": true,
+          "label": "StockAnalysis per-ticker ETF detail",
+          "monitoring_mode": "post_fetch_artifact",
+          "reason": "missing_artifact",
+          "status": "unavailable"
         },
         {
           "affected_surface_ids": [
@@ -880,20 +904,20 @@
           "status": "ready"
         }
       ],
-      "logical_lane_count": 29,
+      "logical_lane_count": 30,
       "monitoring_mode_counts": {
         "artifact_only": 3,
         "composite": 1,
-        "post_fetch_artifact": 25
+        "post_fetch_artifact": 26
       },
-      "producer_member_count": 33,
+      "producer_member_count": 34,
       "schema_version": "data-supply-detection-floor/v1"
     },
     "id": "all_valid_at_fixed_now",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "daa8f85d742135dc44bbfa2c34fe514920dba924c831b6734f4be3c5eae700d2"
+    "report_file_sha256": "02d5d0a49139d4d49ceacb18db4db1989da2cb324775fe817391e6ea853b0328"
   },
-  "config_digest": "1f0d02c928e88564ff284c1dd17e72b959bdc3974f45d74272d13ac88bccbd7c",
+  "config_digest": "bdccb9b8628280f9142b16ecc87d0f6f0343ade192e9f49b94dac0ae193771a5",
   "config_digest_input": {
     "canonicalization": "recursive-sorted-object-keys-preserved-array-order-utf8",
     "enforcement": "shadow",
@@ -907,6 +931,7 @@
       "defillama_stablecoins",
       "yahoo_etf_fallback",
       "stockanalysis_etf_universe",
+      "stockanalysis_etf_detail",
       "stockanalysis_stock_financial",
       "stockanalysis_surfaces",
       "yahoo_ticker_macro",
@@ -938,6 +963,7 @@
       "defillama_stablecoins",
       "yahoo_etf_fallback",
       "stockanalysis_etf_universe",
+      "stockanalysis_etf_detail",
       "stockanalysis_stock_financial",
       "stockanalysis_surfaces",
       "yahoo_ticker_macro",
@@ -966,7 +992,7 @@
     ],
     "schema_version": "data-supply-detection-config/v1"
   },
-  "logical_lane_count": 29,
+  "logical_lane_count": 30,
   "privacy_exclusions": [
     "raw_response_bodies",
     "credentials",
@@ -981,7 +1007,7 @@
     "promotion_pointers",
     "state_transitions"
   ],
-  "producer_member_count": 33,
+  "producer_member_count": 34,
   "reason_cases": [
     {
       "expected_reason": "transport_error",
@@ -1020,7 +1046,7 @@
       "id": "unobserved"
     }
   ],
-  "registry_digest": "769017b2299fd2beb905bd8c111fe76edfd38d43e7e2e25a7b6b366ffc9a7bc5",
+  "registry_digest": "430222ee08c5c8356b1145b39bf88053c6c2cf5c83edaef23b01084040ed3ede",
   "schema_version": "data-supply-detection-expected/v1",
   "slickcharts_member_ids": [
     "daily",

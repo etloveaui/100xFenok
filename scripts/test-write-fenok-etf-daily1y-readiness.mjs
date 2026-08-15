@@ -266,7 +266,9 @@ function activeSelection(rootDir, ticker) {
 
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-etf-daily1y-readiness-"));
 const fixtureGeneratedAt = "2026-07-09T00:00:00.000Z";
-writeFixture(fixtureRoot, "data/computed/fenok_etf_signals_summary.json", { rows: [{ ticker: "AAA" }] });
+writeFixture(fixtureRoot, "data/computed/fenok_etf_signals_summary.json", {
+  rows: ["AAA", "BBB", "CCC", "DDD"].map((ticker) => ({ ticker })),
+});
 writeFixture(fixtureRoot, "data/admin/fenok-etf-core-daily-basket.json", {
   schema_version: "fenok-etf-core-daily-basket/v1",
   generated_at: fixtureGeneratedAt,
@@ -284,12 +286,14 @@ writeFixture(fixtureRoot, "data/stockanalysis/backfill/history_gap_report_latest
   },
   daily_1y_gap: {
     scored_etfs: {
-      scored_etf_count: 1,
-      complete: 1,
+      scored_etf_count: 4,
+      complete: 4,
       fetchable: 0,
       inception_limited: 0,
       terminal_limited: 0,
-      classification_projection: daily1yClassificationProjection({ complete: [{ ticker: "AAA" }] }),
+      classification_projection: daily1yClassificationProjection({
+        complete: ["AAA", "BBB", "CCC", "DDD"].map((ticker) => ({ ticker })),
+      }),
     },
   },
   recommended_dispatch: null,
@@ -313,7 +317,7 @@ writeFixture(fixtureRoot, "data/admin/fenok-edge-coverage-index.json", {
         daily_ready: true,
         gated_ready: true,
         counts: {
-          scored_public_etf: 1,
+          scored_public_etf: 4,
           fetchable_daily_1y_gap: 0,
           inception_limited_daily_1y_gap: 0,
           terminal_limited_daily_1y_gap: 0,
@@ -709,11 +713,16 @@ assert.equal(payload.exact_fetchable_plan.fetchable_count, readiness.daily_1y_fe
 assert.equal(payload.exact_fetchable_plan.can_drive_bounded_ticker_batches, true);
 assert.equal(payload.exact_fetchable_plan.batch_count, Math.ceil(readiness.daily_1y_fetchable / 120));
 
-assert.equal(plan.counts.scored_etf_count, readiness.denominator);
+assert.equal(plan.counts.scored_etf_count, 4);
 assert.equal(plan.counts.managed_etf_count, readiness.denominator);
-assert.equal(plan.counts.scored_universe_total, readiness.denominator);
-// Compatibility alias stays equal to the managed core denominator.
-assert.equal(plan.counts.scored_etf_count, plan.counts.managed_etf_count);
+assert.equal(plan.counts.scored_universe_total, 4);
+assert.notEqual(plan.counts.scored_etf_count, plan.counts.managed_etf_count);
+assert.equal(plan.counts.scored_etf_count, plan.counts.scored_universe_total);
+assert.equal(plan.counts.scored_complete, 4);
+assert.equal(plan.counts.scored_fetchable, 0);
+assert.equal(plan.counts.scored_inception_limited, 0);
+assert.equal(plan.counts.scored_terminal_limited, 0);
+assert.equal(plan.counts.scored_equation_ok, true);
 assert.equal(plan.counts.core_basket_ticker_count, 1);
 assert.equal(plan.counts.core_tickers_missing_from_summary, 0);
 assert.equal(plan.counts.complete, readiness.daily_1y_complete);

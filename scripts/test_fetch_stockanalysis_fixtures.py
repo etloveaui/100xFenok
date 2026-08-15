@@ -154,6 +154,29 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             with self.subTest(overrides=overrides):
                 self.assertFalse(self.fetcher.should_emit_stockanalysis_etf_universe_detection(args(**overrides)))
 
+    def test_etf_detail_detection_requires_natural_etf_schedule(self) -> None:
+        def args(**overrides):
+            values = {
+                "natural_run": True,
+                "event_name": "schedule",
+                "event_schedule": "50 23 * * 1-5",
+            }
+            values.update(overrides)
+            return Namespace(**values)
+
+        self.assertTrue(self.fetcher.should_emit_stockanalysis_etf_detail_detection(args(), ["SPY"]))
+        self.assertTrue(self.fetcher.should_emit_stockanalysis_etf_detail_detection(
+            args(event_schedule="20 23 * * 0"), ["SPY"]
+        ))
+        for overrides, etfs in (
+            ({"natural_run": False}, ["SPY"]),
+            ({"event_name": "workflow_dispatch"}, ["SPY"]),
+            ({"event_schedule": "20 21 * * *"}, ["SPY"]),
+            ({}, []),
+        ):
+            with self.subTest(overrides=overrides, etfs=etfs):
+                self.assertFalse(self.fetcher.should_emit_stockanalysis_etf_detail_detection(args(**overrides), etfs))
+
     def test_etf_universe_payload_keeps_provider_date_unstamped(self) -> None:
         original_fetch = self.fetcher.fetch_text_response
         original_parse = self.fetcher.parse_etf_universe_page
@@ -626,6 +649,26 @@ module.main()
         self.assertFalse(envelope["fallback_enabled"])
         self.assertEqual(envelope["observations"], [])
 
+    def test_attempt_tracker_does_not_emit_unattempted_etf_detail(self) -> None:
+        original_run = self.fetcher.subprocess.run
+        calls = []
+
+        def fake_run(args, **kwargs):
+            calls.append((args, kwargs))
+            return subprocess.CompletedProcess(args, 0)
+
+        self.fetcher.subprocess.run = fake_run
+        try:
+            tracker = self.fetcher.StockAnalysisAttemptTracker()
+            tracker.configure(active=True, yahoo_enabled=False, run_id="126", run_attempt=1)
+            tracker.start_etf_detail(0)
+            tracker.emit()
+        finally:
+            self.fetcher.subprocess.run = original_run
+
+        lanes = [args[args.index("--lane") + 1] for args, _kwargs in calls]
+        self.assertEqual(lanes, ["yahoo_etf_fallback"])
+
     def test_yahoo_thrown_error_wiring_carries_the_cause_to_the_observation(self) -> None:
         """The real fetch path must hand the exception to the tracker.
 
@@ -937,7 +980,7 @@ module.main()
             "provider detail response carries no market or holdings observation date",
         )
 
-    def test_reconcile_accepts_valid_overview_when_holdings_surface_omits_holdings(self) -> None:
+    def test_reconcile_rejects_available_overview_when_holdings_surface_omits_holdings(self) -> None:
         original_fetch_svelte = self.fetcher.fetch_svelte_detail
 
         def fake_fetch_svelte(ticker: str, surface: str, _timeout: int, **_kwargs):
@@ -955,24 +998,16 @@ module.main()
         try:
             with self.assertRaisesRegex(ValueError, "missing_required:holdings"):
                 self.fetcher.fetch_etf("AAOX", 1, include_history=False)
-            payload = self.fetcher.fetch_etf(
-                "AAOX",
-                1,
-                include_history=False,
-                include_quote=False,
-                allow_partial_holdings=True,
-            )
+            with self.assertRaisesRegex(ValueError, "missing_required:holdings"):
+                self.fetcher.fetch_etf(
+                    "AAOX",
+                    1,
+                    include_history=False,
+                    include_quote=False,
+                    allow_partial_holdings=True,
+                )
         finally:
             self.fetcher.fetch_svelte_detail = original_fetch_svelte
-
-        self.assertEqual(payload["detail_status"], "stockanalysis_partial")
-        self.assertEqual(payload["normalized"]["holdings"], [])
-        self.assertIn("holdings_unavailable", payload["partial_reason_codes"])
-        self.assertIn(
-            "holdings_surface_omits_holdings",
-            payload["partial_reason_codes"],
-        )
-        self.assertIsNone(payload["source_as_of"])
 
     def test_reconcile_uses_provider_overview_holdings_updated_as_source_date(self) -> None:
         original_fetch_svelte = self.fetcher.fetch_svelte_detail
@@ -980,8 +1015,8 @@ module.main()
         def fake_fetch_svelte(ticker: str, surface: str, _timeout: int, **_kwargs):
             if surface == "overview":
                 return f"/etf/{ticker.lower()}/__data.json", {
-                    "holdings": 12,
-                    "holdingsTable": {"count": 12, "updated": "Jul 10, 2026"},
+                    "holdings": None,
+                    "holdingsTable": {"updated": "Jul 10, 2026"},
                     "inception": "Jan 1, 2026",
                 }
             raise ValueError(
@@ -1070,7 +1105,7 @@ module.main()
 
         original_fetch_etf = self.fetcher.fetch_etf
         saved_outputs = self.fetcher.current_candidate_outputs()
-        self.fetcher.fetch_etf = lambda _ticker, _timeout: (_ for _ in ()).throw(
+        self.fetcher.fetch_etf = lambda _ticker, _timeout, **_kwargs: (_ for _ in ()).throw(
             caught.exception
         )
         try:
@@ -2257,7 +2292,9 @@ module.main()
         self.assertIn('ARGS="$ARGS --fail-on-error"', primary_step)
 
         manifest = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(encoding="utf-8")
-        self.assertIn("node scripts/build-fenok-etf-core-daily-basket.mjs --check", manifest)
+        runner = (ROOT / "scripts" / "update-manifest-projections.sh").read_text(encoding="utf-8")
+        self.assertNotIn("node scripts/build-fenok-etf-core-daily-basket.mjs --check", manifest)
+        self.assertIn("node scripts/build-fenok-etf-core-daily-basket.mjs --check", runner)
 
     def test_central_writer_refreshes_daily1y_report_before_coverage_builder(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "fenok-edge-krx-daily.yml").read_text(encoding="utf-8")
@@ -2267,10 +2304,12 @@ module.main()
         self.assertNotIn(coverage_command, workflow)
 
         manifest = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(encoding="utf-8")
-        initial_build = manifest.split("      - name: Check if manifest changed", 1)[0]
-        self.assertEqual(initial_build.count(report_command), 1)
-        self.assertEqual(initial_build.count(coverage_command), 1)
-        self.assertLess(initial_build.index(report_command), initial_build.index(coverage_command))
+        runner = (ROOT / "scripts" / "update-manifest-projections.sh").read_text(encoding="utf-8")
+        self.assertNotIn(report_command, manifest)
+        self.assertNotIn(coverage_command, manifest)
+        self.assertEqual(runner.count(report_command), 1)
+        self.assertEqual(runner.count(coverage_command), 1)
+        self.assertLess(runner.index(report_command), runner.index(coverage_command))
 
     def test_central_writer_builds_history_and_signals_before_etf_basket(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(encoding="utf-8")
@@ -2281,20 +2320,35 @@ module.main()
         self.assertNotIn(signal_command, workflow)
 
         manifest = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(encoding="utf-8")
+        runner = (ROOT / "scripts" / "update-manifest-projections.sh").read_text(encoding="utf-8")
         initial_build = manifest.split("      - name: Check if manifest changed", 1)[0]
-        self.assertEqual(initial_build.count(report_command), 1)
-        self.assertEqual(initial_build.count(signal_command), 1)
-        self.assertEqual(initial_build.count(basket_command), 1)
-        self.assertLess(initial_build.index(signal_command), initial_build.index(basket_command))
-        self.assertLess(initial_build.index(signal_command), initial_build.index(report_command))
-        self.assertLess(initial_build.index(report_command), initial_build.index(basket_command))
+        runner_call = "bash scripts/update-manifest-projections.sh"
+        self.assertEqual(
+            sum(line.strip() == f"run: {runner_call}" for line in initial_build.splitlines()),
+            1,
+        )
 
         retry_build = manifest.split("      - name: Commit and push manifest (with rebase retry)", 1)[1]
-        self.assertEqual(retry_build.count(report_command), 1)
-        self.assertEqual(retry_build.count(signal_command), 1)
-        self.assertEqual(retry_build.count(basket_command), 1)
-        self.assertLess(retry_build.index(signal_command), retry_build.index(report_command))
-        self.assertLess(retry_build.index(report_command), retry_build.index(basket_command))
+        self.assertEqual(
+            sum(line.strip() == runner_call for line in retry_build.splitlines()),
+            1,
+        )
+        for command in (report_command, signal_command, basket_command):
+            self.assertNotIn(command, manifest)
+            self.assertEqual(runner.count(command), 1)
+
+        def exact_line_index(block: str, command: str) -> int:
+            return next(
+                index
+                for index, line in enumerate(block.splitlines())
+                if line.strip() == command
+            )
+
+        runner_signal = exact_line_index(runner, signal_command)
+        runner_report = exact_line_index(runner, report_command)
+        runner_basket = exact_line_index(runner, basket_command)
+        self.assertLess(runner_signal, runner_report)
+        self.assertLess(runner_report, runner_basket)
 
         materialize_command = "node scripts/materialize-update-manifest-routes.mjs --all"
         shard_projector_command = (
@@ -2307,13 +2361,6 @@ module.main()
         kpi_command = "npm --prefix 100xfenok-next run build:fenok-data-health-kpi"
         retry_build = manifest.split("          for attempt in 1 2 3; do", 1)[1]
 
-        def exact_line_index(block: str, command: str) -> int:
-            return next(
-                index
-                for index, line in enumerate(block.splitlines())
-                if line.strip() == command
-            )
-
         def containing_line_index(block: str, command: str) -> int:
             return next(
                 index
@@ -2321,21 +2368,21 @@ module.main()
                 if command in line
             )
 
-        initial_materialize = exact_line_index(initial_build, materialize_command)
+        runner_materialize = exact_line_index(runner, materialize_command)
         retry_validate = exact_line_index(retry_build, validate_materialization_command)
-        retry_materialize = exact_line_index(retry_build, materialize_command)
-        initial_shard_projector = exact_line_index(initial_build, shard_projector_command)
-        retry_shard_projector = exact_line_index(retry_build, shard_projector_command)
-        self.assertLess(initial_materialize, initial_shard_projector)
-        self.assertLess(initial_shard_projector, containing_line_index(initial_build, override_command))
-        self.assertLess(containing_line_index(initial_build, override_command), exact_line_index(initial_build, kpi_command))
-        self.assertLess(retry_validate, retry_materialize)
-        self.assertLess(retry_materialize, retry_shard_projector)
-        self.assertLess(retry_shard_projector, containing_line_index(retry_build, override_command))
-        self.assertLess(containing_line_index(retry_build, override_command), exact_line_index(retry_build, kpi_command))
-        self.assertEqual(manifest.count(override_command), 2)
-        self.assertEqual(manifest.count(shard_projector_command), 2)
-        self.assertEqual(manifest.count("check-fenok-public-mirror-guard.mjs"), 2)
+        runner_shard_projector = exact_line_index(runner, shard_projector_command)
+        runner_override = containing_line_index(runner, override_command)
+        runner_kpi = exact_line_index(runner, kpi_command)
+        self.assertLess(runner_materialize, runner_shard_projector)
+        self.assertLess(runner_shard_projector, runner_override)
+        self.assertLess(runner_override, runner_kpi)
+        self.assertLess(retry_validate, exact_line_index(retry_build, runner_call))
+        self.assertEqual(manifest.count(override_command), 0)
+        self.assertEqual(runner.count(override_command), 1)
+        self.assertEqual(manifest.count(shard_projector_command), 0)
+        self.assertEqual(runner.count(shard_projector_command), 1)
+        self.assertEqual(manifest.count("check-fenok-public-mirror-guard.mjs"), 0)
+        self.assertEqual(runner.count("check-fenok-public-mirror-guard.mjs"), 1)
         self.assertNotIn(
             "rsync -a --checksum --delete data/stockanalysis/ 100xfenok-next/public/data/stockanalysis/",
             manifest,
@@ -2564,6 +2611,83 @@ module.main()
                     "periods": ["2025-12-31"],
                     "rows": [],
                     "field_count": 0,
+                }
+            )
+
+    def test_bank_ratio_profile_uses_statement_specific_floor(self) -> None:
+        periods = ["2025-12-31", "2024-12-31", "2023-12-31", "2022-12-31", "2021-12-31", "2020-12-31"]
+        fields = ["marketcap", "pe", "pb", "roe", "dividendyield"] + [
+            f"ratio_{index}" for index in range(10)
+        ]
+        rows = [
+            {"field": field, "values": [float(index + 1)] * len(periods)}
+            for index, field in enumerate(fields)
+        ]
+        self.fetcher.validate_financial_statement(
+            {
+                "ticker": "JPM",
+                "statement": "ratios",
+                "period": "annual",
+                "periods": periods,
+                "rows": rows,
+                "field_count": len(rows),
+            }
+        )
+        short_periods = periods[:2]
+        with self.assertRaisesRegex(ValueError, r"ratios annual periods=2"):
+            self.fetcher.validate_financial_statement(
+                {
+                    "ticker": "JPM",
+                    "statement": "ratios",
+                    "period": "annual",
+                    "periods": short_periods,
+                    "rows": [
+                        {"field": field, "values": [1.0] * len(short_periods)}
+                        for field in fields
+                    ],
+                    "field_count": len(rows),
+                }
+            )
+        with self.assertRaisesRegex(ValueError, r"ratios annual rows=14 min=15"):
+            self.fetcher.validate_financial_statement(
+                {
+                    "ticker": "JPM",
+                    "statement": "ratios",
+                    "period": "annual",
+                    "periods": periods,
+                    "rows": rows[:-1],
+                    "field_count": len(rows) - 1,
+                }
+            )
+
+        null_rows = [
+            {"field": field, "values": [None] * len(periods)}
+            for field in fields
+        ]
+        with self.assertRaisesRegex(ValueError, "no finite observations"):
+            self.fetcher.validate_financial_statement(
+                {
+                    "ticker": "JPM",
+                    "statement": "ratios",
+                    "period": "annual",
+                    "periods": periods,
+                    "rows": null_rows,
+                    "field_count": len(null_rows),
+                }
+            )
+
+        missing_required = [row for row in rows if row["field"] != "roe"]
+        with self.assertRaisesRegex(ValueError, "missing required fields.*roe"):
+            self.fetcher.validate_financial_statement(
+                {
+                    "ticker": "JPM",
+                    "statement": "ratios",
+                    "period": "annual",
+                    "periods": periods,
+                    "rows": missing_required + [
+                        {"field": "ratio_extra", "values": [1.0] * len(periods)}
+                    ],
+                    "field_count": len(rows),
                 }
             )
 
@@ -4742,7 +4866,7 @@ module.main()
         original_state_root = self.fetcher.DATA_SUPPLY_STATE_ROOT
         writes = []
 
-        def fake_fetch_etf(_ticker: str, _timeout: int) -> dict:
+        def fake_fetch_etf(_ticker: str, _timeout: int, **_kwargs) -> dict:
             raise urllib.error.URLError("HTTP Error 404: Not Found")
 
         def fake_fallback(
@@ -4865,7 +4989,7 @@ module.main()
                     self.fetcher.YF_OUT_DIR = temp_root / "data" / "yf" / "finance"
                     self.fetcher.YF_ETF_DETAIL_OUT_DIR = temp_root / "data" / "yf" / "etf-details"
                     self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
-                    self.fetcher.fetch_etf = lambda _ticker, _timeout, exc=failure: (_ for _ in ()).throw(exc)
+                    self.fetcher.fetch_etf = lambda _ticker, _timeout, exc=failure, **_kwargs: (_ for _ in ()).throw(exc)
                     self.fetcher.load_yf_finance_module = lambda: FakeYahooModule
                     result = self.fetcher.run_one("etf", "VYMI", 1, False, yf_fallback=True)
                     candidate_exists = (self.fetcher.YF_ETF_DETAIL_OUT_DIR / "VYMI.json").exists()
@@ -4900,7 +5024,7 @@ module.main()
                 self.fetcher.YF_OUT_DIR = temp_root / "data" / "yf" / "finance"
                 self.fetcher.YF_ETF_DETAIL_OUT_DIR = temp_root / "data" / "yf" / "etf-details"
                 self.fetcher.DATA_SUPPLY_STATE_ROOT = temp_root / "data" / "admin" / "data-supply-state" / "v1"
-                self.fetcher.fetch_etf = lambda ticker, _timeout: {
+                self.fetcher.fetch_etf = lambda ticker, _timeout, **_kwargs: {
                     "schema_version": self.fetcher.SCHEMA_VERSION,
                     "source": "stockanalysis",
                     "asset_type": "etf",
@@ -5059,7 +5183,7 @@ module.main()
             with tempfile.TemporaryDirectory() as tmp:
                 self.fetcher.OUT_DIR = Path(tmp) / "data" / "stockanalysis"
                 self.fetcher.DATA_SUPPLY_STATE_ROOT = Path(tmp) / "data" / "admin" / "data-supply-state" / "v1"
-                self.fetcher.fetch_etf = lambda ticker, _timeout: {
+                self.fetcher.fetch_etf = lambda ticker, _timeout, **_kwargs: {
                     "schema_version": "yf-etf-detail/v1",
                     "source": "yahoo_finance",
                     "source_provider": "yahoo_finance",
@@ -5095,7 +5219,7 @@ module.main()
                 detail_path.parent.mkdir(parents=True)
                 original_bytes = b'{"source":"stockanalysis","ticker":"VYMI","fetched_at":"2026-07-09T00:00:00Z"}\n'
                 detail_path.write_bytes(original_bytes)
-                self.fetcher.fetch_etf = lambda ticker, _timeout: {
+                self.fetcher.fetch_etf = lambda ticker, _timeout, **_kwargs: {
                     "schema_version": self.fetcher.SCHEMA_VERSION,
                     "source": "stockanalysis",
                     "asset_type": "etf",
@@ -5156,7 +5280,7 @@ module.main()
                 detail_path = detail_dir / "VYMI.json"
                 detail_path.write_bytes(canonical_bytes)
 
-                self.fetcher.fetch_etf = lambda _ticker, _timeout: (_ for _ in ()).throw(
+                self.fetcher.fetch_etf = lambda _ticker, _timeout, **_kwargs: (_ for _ in ()).throw(
                     urllib.error.URLError("HTTP Error 404: Not Found")
                 )
                 self.fetcher.load_yf_finance_module = lambda: FakeYahooModule

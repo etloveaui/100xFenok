@@ -66,6 +66,10 @@ import {
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const PUBLISH_SCRIPT = path.join(REPO_ROOT, "scripts", "publish-cloud-data-generation.mjs");
+// Retention now runs the prepared-receipt resume window, which is owner policy
+// with no default. These are test values, deliberately not a suggested policy.
+const RETENTION_NOW = "2026-08-03T12:00:00.000Z";
+const RETENTION_WINDOW = 6 * 3600;
 const NOW_1 = "2026-08-03T00:00:00.000Z";
 const NOW_2 = "2026-08-03T01:00:00.000Z";
 const NOW_3 = "2026-08-03T02:00:00.000Z";
@@ -2178,6 +2182,37 @@ const asFamily = (manifest, familyName) => ({
   assert.equal(plan.candidates[0].size, g1.assets.find((asset) => asset.object_key === uniqueKey).bytes);
   assert.ok(plan.skippedProtected.includes(P1_EVIDENCE_KEY));
   assert.ok(plan.skippedProtected.includes("probe/lag.json"));
+
+  // Manifests became a deletion candidate class on 2026-08-15 by owner decision.
+  // Rollback reads only pointer.previous, so nothing reads a generation older
+  // than N-1, yet manifests were excluded from collection forever and grew
+  // without any budget metric able to see them.
+  //
+  // The classifier is deliberately narrow: a candidate must be a valid
+  // generation manifest whose key matches its own generation_id AND sit outside
+  // the retained set. Here g1 is outside the keep-newest window and named by no
+  // pointer or receipt, so its manifest is collected — while the protected pilot
+  // manifest, which is a non-generation alias, is not, and neither is any
+  // retained generation's manifest.
+  assert.deepEqual(
+    plan.manifestCandidates.map((candidate) => candidate.key),
+    [`manifests/${g1.generation_id}.json`],
+  );
+  assert.equal(plan.manifestCandidates[0].generation_id, g1.generation_id);
+  assert.equal(plan.manifestCandidates[0].size, 800);
+  assert.equal(plan.manifestCandidateBytes, 800);
+  assert.equal(
+    plan.manifestCandidates.some((candidate) => candidate.key === "manifests/r2-live-pilot-1.json"),
+    false,
+    "a protected non-generation manifest must never be collected",
+  );
+  for (const retained of [g2, g3, g4]) {
+    assert.equal(
+      plan.manifestCandidates.some((candidate) => candidate.generation_id === retained.generation_id),
+      false,
+      `retained generation ${retained.generation_id} must keep its manifest`,
+    );
+  }
   const deletedKeys = [];
   const outcome = await executeRetentionPlan({
     plan,
@@ -2186,9 +2221,15 @@ const asFamily = (manifest, familyName) => ({
       return { ok: true };
     },
   });
-  assert.deepEqual(deletedKeys, [uniqueKey]); // exactly one object collected
+  // Payload objects are deleted first and manifests last, so a payload deletion
+  // that fails leaves its manifest in place to explain what happened rather than
+  // orphaning the evidence ahead of the data.
+  assert.deepEqual(deletedKeys, [uniqueKey, `manifests/${g1.generation_id}.json`]);
   assert.equal(outcome.deleted.length, 1);
+  assert.equal(outcome.deletedManifests.length, 1);
+  assert.equal(outcome.deletedManifests[0].generation_id, g1.generation_id);
   assert.equal(outcome.failures.length, 0);
+  assert.equal(outcome.manifestFailures.length, 0);
 
   // A failing deleter is recorded, never thrown, and does not strand the batch.
   const failureOutcome = await executeRetentionPlan({
@@ -2262,6 +2303,68 @@ const asFamily = (manifest, familyName) => ({
   assert.deepEqual(plan.candidates.map((candidate) => candidate.key), [keyV]);
   assert.ok(!plan.referencedKeys.includes(keyV));
   console.log("retention case 6 ok (cross-family shared objects survive; prepared protects within its family)");
+
+  // Prepared-receipt expiry, wired end to end: an expired receipt stops being a
+  // protection root, but only where nothing else holds the generation. The
+  // failure this guards against is an expiry that quietly widens the candidate
+  // set past what the window actually released.
+  const preparedReceipt = (generationId, createdAt, id) => ({
+    schema_version: "100x-cloud-publication-receipt/v1",
+    receipt_id: id,
+    operation: "publish",
+    state: "prepared",
+    generation_id: generationId,
+    created_at: createdAt,
+    promoted_pointer_sequence: null,
+  });
+  const lifecycleStates = await collectFamiliesRetentionState({
+    now: "2026-08-03T12:00:00.000Z",
+    resumeWindowSeconds: 6 * 3600,
+    families: ["fred-macro", "oecd-cli"],
+    createPlane: (name) => ({
+      async inspect() {
+        if (name === "fred-macro") {
+          return {
+            pointer: pointerOf(b4.generation_id, b3.generation_id),
+            receipts: [
+              // Stale by 12 hours: past the window, so b1 loses receipt protection.
+              preparedReceipt(b1.generation_id, "2026-08-03T00:00:00.000Z", "r-stale"),
+              // Fresh: b2 keeps receipt protection.
+              preparedReceipt(b2.generation_id, "2026-08-03T11:00:00.000Z", "r-fresh"),
+            ],
+          };
+        }
+        return { pointer: pointerOf(a4.generation_id, a3.generation_id), receipts: [] };
+      },
+    }),
+  });
+  const fredState = lifecycleStates.find((state) => state.name === "fred-macro");
+  assert.deepEqual(fredState.preparedGenerations, [b2.generation_id]);
+  assert.deepEqual(fredState.releasedGenerations, [b1.generation_id]);
+  assert.equal(fredState.expiredReceipts.length, 1);
+  assert.equal(fredState.expiredReceipts[0].receipt_id, "r-stale");
+  assert.deepEqual(fredState.clockAnomalies, []);
+
+  const expiredPlan = computeRetentionPlan({
+    families: lifecycleStates,
+    manifestEntries: [...aGens, ...bGens].map(manifestEntry),
+    objectEntries: retentionObjectEntries([...aGens, ...bGens]),
+  });
+  // b1 is released by the window and is outside B's newest three, so its unique
+  // object T becomes a candidate. That is the intended effect of bounding.
+  assert.ok(!expiredPlan.retainedGenerations.includes(b1.generation_id));
+  assert.ok(expiredPlan.candidates.some((candidate) => candidate.key === keyT));
+  // The three things an expiry must never release:
+  // 1. an object shared with another family's retained generation;
+  assert.ok(expiredPlan.referencedKeys.includes(keyS));
+  assert.ok(!expiredPlan.candidates.some((candidate) => candidate.key === keyS));
+  // 2. a generation still held by the pointer;
+  for (const held of [a3, a4, b3, b4]) {
+    assert.ok(expiredPlan.retainedGenerations.includes(held.generation_id), `${held.generation_id} is pointer-held`);
+  }
+  // 3. a generation still held by a live prepared receipt.
+  assert.ok(expiredPlan.retainedGenerations.includes(b2.generation_id));
+  console.log("retention case 6b ok (expired prepared receipt releases only what nothing else holds)");
 }
 
 // Case 7: retention is BUCKET-LEVEL. Family B rolled back so its pointer
@@ -2321,6 +2424,8 @@ const asFamily = (manifest, familyName) => ({
   let aborted = false;
   try {
     await collectFamiliesRetentionState({
+      now: RETENTION_NOW,
+      resumeWindowSeconds: RETENTION_WINDOW,
       families: ["fred-macro", "oecd-cli"],
       createPlane: (name) => {
         inspected += 1;
@@ -2347,6 +2452,8 @@ const asFamily = (manifest, familyName) => ({
   assert.equal(inspected, 1); // the loop stops at the first failing family — abort = zero deletions
 
   const emptyStates = await collectFamiliesRetentionState({
+    now: RETENTION_NOW,
+    resumeWindowSeconds: RETENTION_WINDOW,
     families: ["fred-macro", "oecd-cli"],
     createPlane: () => ({ async inspect() { return { receipts: [], pointer: null }; } }),
   });

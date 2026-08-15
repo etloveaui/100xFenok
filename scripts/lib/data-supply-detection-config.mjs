@@ -225,30 +225,54 @@ function externalMember(id, cadenceDeclaration, artifactContracts) {
   return member(id, null, [], artifactContracts, null, cadenceDeclaration);
 }
 
-function endpoint(endpointFamily, assertionId = null, pointer = null, expected = null) {
+// The two transports a probed lane can have. There is no third value and no
+// default: see validateEndpointContract for why absence is now a load failure.
+const ENDPOINT_TRANSPORTS = new Set(["http", "library"]);
+
+function declaredTransport(transport, endpointFamily) {
+  if (!ENDPOINT_TRANSPORTS.has(transport)) {
+    throw new TypeError(
+      `${endpointFamily}: endpoint transport must be declared explicitly as "http" or "library"`,
+    );
+  }
+  return transport;
+}
+
+function endpoint(endpointFamily, assertionId = null, pointer = null, expected = null, transport = null) {
   const artifactOnly = assertionId === null;
+  if (artifactOnly) {
+    if (transport !== null) {
+      throw new TypeError(`${endpointFamily}: an artifact-only endpoint has no transport to declare`);
+    }
+    return {
+      endpoint_family: endpointFamily,
+      probe_mode: "artifact_only",
+      assertions: [],
+    };
+  }
   return {
     endpoint_family: endpointFamily,
-    probe_mode: artifactOnly ? "artifact_only" : "injected_post_fetch",
-    assertions: artifactOnly ? [] : [{ id: assertionId, kind: "type", pointer, expected }],
+    probe_mode: "injected_post_fetch",
+    assertions: [{ id: assertionId, kind: "type", pointer, expected }],
+    transport: declaredTransport(transport, endpointFamily),
   };
 }
 
-function endpointAssertion(endpointFamily, assertion, transport = null) {
-  const contract = {
+function endpointAssertion(endpointFamily, assertion, transport) {
+  return {
     endpoint_family: endpointFamily,
     probe_mode: "injected_post_fetch",
     assertions: [assertion],
+    transport: declaredTransport(transport, endpointFamily),
   };
-  if (transport !== null) contract.transport = transport;
-  return contract;
 }
 
-function endpointAssertions(endpointFamily, assertions) {
+function endpointAssertions(endpointFamily, assertions, transport) {
   return {
     endpoint_family: endpointFamily,
     probe_mode: "injected_post_fetch",
     assertions,
+    transport: declaredTransport(transport, endpointFamily),
   };
 }
 
@@ -318,7 +342,7 @@ const config = {
           ],
         }),
       ])],
-      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array"),
+      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "hours", calendar: "utc", maxStaleness: 48 }),
       affectedSurfaceIds: ["macro_fred"],
     }),
@@ -355,7 +379,7 @@ const config = {
           ],
         }),
       ])],
-      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array"),
+      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array", "http"),
       freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 250 }),
       affectedSurfaceIds: ["banking_liquidity", "rim_index_inputs"],
     }),
@@ -373,7 +397,7 @@ const config = {
           ],
         }),
       ])],
-      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array"),
+      endpointContract: endpoint("fred_api", "observations_array", "/observations", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
       affectedSurfaceIds: ["yardeni_model"],
     }),
@@ -386,7 +410,7 @@ const config = {
           assertions: [exactAssertion("source_fdic", "/source", "FDIC"), typeAssertion("data_array", "/data", "array"), minRowsAssertion("data_non_empty", "/data")],
         }),
       ], "us_federal_business")],
-      endpointContract: endpoint("fdic_bankfind", "bank_data_array", "/data", "array"),
+      endpointContract: endpoint("fdic_bankfind", "bank_data_array", "/data", "array", "http"),
       freshnessPolicy: freshness({
         fold: "latest",
         unit: "due_window",
@@ -409,7 +433,7 @@ const config = {
           ],
         }),
       ])],
-      endpointContract: endpoint("treasury_fiscal_data", "data_array", "/data", "array"),
+      endpointContract: endpoint("treasury_fiscal_data", "data_array", "/data", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_federal_business", maxStaleness: 2 }),
       affectedSurfaceIds: ["macro_tga"],
     }),
@@ -431,7 +455,7 @@ const config = {
       endpointContract: endpointAssertions("defillama_stablecoins_api", [
         minRowsAssertion("chart_array", "/chart"),
         minRowsAssertion("pegged_assets_array", "/stablecoins/peggedAssets"),
-      ]),
+      ], "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 2 }),
       affectedSurfaceIds: ["macro_stablecoins"],
     }),
@@ -439,7 +463,6 @@ const config = {
       id: "yahoo_etf_fallback",
       label: "Yahoo ETF fallback",
       members: [registryMember("yahoo_etf_fallback", [
-        "50 22 * * 1-5",
         "50 23 * * 1-5",
         "20 23 * * 0",
       ], [
@@ -459,8 +482,7 @@ const config = {
           symbol: "string",
           quoteType: "string",
         }),
-        "library",
-      ),
+        "library",),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 8 }),
       affectedSurfaceIds: ["stockanalysis_etf_detail_coverage"],
     }),
@@ -487,9 +509,51 @@ const config = {
           nonEmptyFields: ["ticker", "name"],
           uniqueBy: "ticker",
         }),
-      ),
+      "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 8 }),
       affectedSurfaceIds: ["stockanalysis_etf_universe"],
+    }),
+    lane({
+      id: "stockanalysis_etf_detail",
+      label: "StockAnalysis per-ticker ETF detail",
+      // The per-ticker payloads are written by the same workflow as the universe
+      // index but are a distinct acquisition unit with distinct failure modes, so
+      // they carry their own detection row rather than inheriting the universe
+      // lane's. Without this row the 5,605-file canonical output had no owner.
+      // ETF detail is a member of the ETF/surface schedules. The separate
+      // stocks-only schedule must not create a synthetic detail failure row.
+      members: [registryMember("stockanalysis_etf_detail", ["50 23 * * 1-5", "20 23 * * 0"], [
+        artifact("stockanalysis_etf_detail_recovery_index", "data/admin/stockanalysis-recovery/index.json", {
+          schemaVersion: schemaVersion("/schema_version", "stockanalysis-recovery-index/v1"),
+          sourceSelector: notApplicableSource(),
+          assertions: [
+            typeAssertion("counts_by_kind_object", "/counts_by_kind", "object"),
+          ],
+        }),
+      ])],
+      // Library transport, for the same reason stockanalysis_stock_financial uses
+      // it: this lane fetches many tickers per run and its attempt evidence is one
+      // aggregated producer outcome, not a per-request HTTP status. The producer
+      // records error, path and latency per ticker and no status code, so an http
+      // contract demands evidence the producer cannot produce. Run 31792421833
+      // failed on exactly that mismatch.
+      // The assertions match the document the producer actually emits. The first
+      // draft asserted a /rows array of tickers, which the producer never sends
+      // and could not sensibly send: a run writes up to 5,605 payloads and an
+      // attempt shard carrying every ticker would be the payload again. Run
+      // 31795350702 executed successfully and still recorded
+      // {"id":"etf_detail_rows","passed":false} for exactly that reason, which
+      // denied the lane ready credit while nothing was actually wrong with it.
+      // The aggregate counts are the honest evidence, and failed === 0 is the
+      // claim that matters; stockanalysis_stock_financial asserts its own counts
+      // the same way.
+      endpointContract: endpointAssertions("stockanalysis_etf_detail_json", [
+        typeAssertion("etf_detail_requested", "/requested", "number"),
+        typeAssertion("etf_detail_written", "/written", "number"),
+        exactAssertion("etf_detail_failed", "/failed", 0),
+      ], "library"),
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 3 }),
+      affectedSurfaceIds: ["stockanalysis_etf_detail"],
     }),
     lane({
       id: "stockanalysis_stock_financial",
@@ -523,22 +587,19 @@ const config = {
             ],
           }),
         ]))],
-      endpointContract: {
-        ...endpointAssertions("stockanalysis_stock_financial_batch", [
-          exactAssertion("stock_financial_requested", "/counts/requested", 8),
-          exactAssertion("stock_financial_stock_ok", "/counts/stock_ok", 8),
-          exactAssertion("stock_financial_financial_ok", "/counts/financial_ok", 8),
-          exactAssertion("stock_financial_failed", "/counts/failed", 0),
-          exactAssertion("stock_financial_tickers", "/tickers", STOCKANALYSIS_STOCK_FINANCIAL_TICKERS),
-          objectArrayFieldsAssertion("stock_financial_pairs", "/pairs", {
-            fields: { ticker: "string", stock_path: "string", financial_path: "string" },
-            min: 8,
-            nonEmptyFields: ["ticker", "stock_path", "financial_path"],
-            uniqueBy: "ticker",
-          }),
-        ]),
-        transport: "library",
-      },
+      endpointContract: endpointAssertions("stockanalysis_stock_financial_batch", [
+        exactAssertion("stock_financial_requested", "/counts/requested", 8),
+        exactAssertion("stock_financial_stock_ok", "/counts/stock_ok", 8),
+        exactAssertion("stock_financial_financial_ok", "/counts/financial_ok", 8),
+        exactAssertion("stock_financial_failed", "/counts/failed", 0),
+        exactAssertion("stock_financial_tickers", "/tickers", STOCKANALYSIS_STOCK_FINANCIAL_TICKERS),
+        objectArrayFieldsAssertion("stock_financial_pairs", "/pairs", {
+          fields: { ticker: "string", stock_path: "string", financial_path: "string" },
+          min: 8,
+          nonEmptyFields: ["ticker", "stock_path", "financial_path"],
+          uniqueBy: "ticker",
+        }),
+      ], "library"),
       freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 2 }),
       affectedSurfaceIds: ["stockanalysis_stock_financial_candidates"],
     }),
@@ -590,7 +651,7 @@ const config = {
           nonEmptyFields: ["surface", "status", "endpoint"],
           uniqueBy: "surface",
         }),
-      ]),
+      ], "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 3 }),
       affectedSurfaceIds: ["market_events_stockanalysis"],
     }),
@@ -612,7 +673,7 @@ const config = {
         symbol: "string",
         price: "number",
         regularMarketTime: "number",
-      })),
+      }), "http"),
       // The stamp is a US regular-session quote time, so it freezes at the
       // close and only moves at the next open. Judged in raw hours on the utc
       // calendar this lane was stale roughly sixteen hours a day and every
@@ -651,7 +712,7 @@ const config = {
       endpointContract: endpointAssertion(
         "sentiment_normalized_sources",
         normalizedSeriesBundleAssertion("series_array", "/series"),
-      ),
+      "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["sentiment_dashboard"],
     }),
@@ -690,7 +751,7 @@ const config = {
           nonEmptyFields: ["Name", "Symbol"],
           uniqueBy: "Symbol",
         }),
-      ),
+      "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["rim_index_inputs"],
     }),
@@ -707,7 +768,7 @@ const config = {
           assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("nasdaq_non_empty", "")],
         }),
       ], "us_trading")],
-      endpointContract: endpoint("yahoo_chart_v8", "chart_result_array", "/chart/result", "array"),
+      endpointContract: endpoint("yahoo_chart_v8", "chart_result_array", "/chart/result", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["rim_index_inputs", "macro_index_charts"],
     }),
@@ -721,7 +782,7 @@ const config = {
           assertions: [typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 22), typeAssertion("records_array", "/records", "array"), minRowsAssertion("records_non_empty", "/records")],
         }),
       ])],
-      endpointContract: endpoint("oecd_sdmx", "sdmx_cli_rows", "/data", "array"),
+      endpointContract: endpoint("oecd_sdmx", "sdmx_cli_rows", "/data", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 70 }),
       affectedSurfaceIds: ["activity_surveys"],
       visibility: "admin_only",
@@ -749,8 +810,7 @@ const config = {
           as_of: "string",
           latest_run: "object",
         }),
-        "library",
-      ),
+        "library",),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 4 }),
       affectedSurfaceIds: ["rim_index_inputs"],
     }),
@@ -808,7 +868,7 @@ const config = {
           }),
         ]),
       ],
-      endpointContract: endpoint("slickcharts_html", "table_rows", "/rows", "array"),
+      endpointContract: endpoint("slickcharts_html", "table_rows", "/rows", "array", "http"),
       freshnessPolicy: freshness({ fold: "member_worst", unit: "calendar_days", calendar: "utc", maxStaleness: 40 }),
       affectedSurfaceIds: ["slickcharts_discovery", "stock_signals"],
     }),
@@ -838,7 +898,7 @@ const config = {
           ],
         }),
       ], "us_federal_business")],
-      endpointContract: endpoint("sec_edgar", "recent_form_array", "/filings/recent/form", "array"),
+      endpointContract: endpoint("sec_edgar", "recent_form_array", "/filings/recent/form", "array", "http"),
       freshnessPolicy: freshness({
         fold: "latest",
         unit: "due_window",
@@ -944,8 +1004,7 @@ const config = {
       endpointContract: endpointAssertion(
         "damodaran_converter",
         exactAssertion("owner_guard_match", "/status", "match"),
-        "library",
-      ),
+        "library",),
       freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
       affectedSurfaceIds: ["market_valuation", "stock_detail", "regime"],
     }),
@@ -959,7 +1018,7 @@ const config = {
           assertions: [exactAssertion("formula_version", "/formula_version", FLOW_PROXY_FORMULA_VERSION), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ], "us_trading")],
-      endpointContract: endpoint("finra_regsho", "regsho_rows", "/rows", "array"),
+      endpointContract: endpoint("finra_regsho", "regsho_rows", "/rows", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["fenok_flow_proxies"],
       visibility: "admin_only",
@@ -982,7 +1041,7 @@ const config = {
       endpointContract: endpointAssertions("finra_otc_weekly_summary", [
         minRowsAssertion("weekly_summary_rows", "/rows"),
         exactAssertion("weekly_summary_row_shape", "/row_shape_valid", true),
-      ]),
+      ], "http"),
       // The marker folds to the older tranche date. Forty-two calendar days
       // keeps a normal four-week T2/OTCE publication fresh while the producer
       // separately enforces the exact two-/four-week tier targets.
@@ -1000,7 +1059,7 @@ const config = {
           assertions: [exactAssertion("formula_version", "/formula_version", OCC_OPTIONS_FORMULA_VERSION), typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ], "us_trading")],
-      endpointContract: endpoint("occ_market_data", "csv_rows", "/rows", "array"),
+      endpointContract: endpoint("occ_market_data", "csv_rows", "/rows", "array", "http"),
       freshnessPolicy: freshness({ fold: "latest", unit: "business_days", calendar: "us_trading", maxStaleness: 3 }),
       affectedSurfaceIds: ["fenok_occ_options"],
       visibility: "admin_only",
@@ -1042,7 +1101,7 @@ const config = {
       endpointContract: endpointAssertions("apewisdom", [
         typeAssertion("results_array", "/results", "array"),
         minRowsAssertion("results_non_empty", "/results"),
-      ]),
+      ], "http"),
       freshnessPolicy: freshness({
         fold: "latest",
         unit: "calendar_days",
@@ -1064,7 +1123,7 @@ const config = {
       ])],
       endpointContract: endpointAssertions("gdelt_doc", [
         typeAssertion("articles_array", "/articles", "array"),
-      ]),
+      ], "http"),
       freshnessPolicy: freshness({
         fold: "latest",
         unit: "calendar_days",
@@ -1077,7 +1136,7 @@ const config = {
     lane({
       id: "yahoo_batch_quote_history",
       label: "Yahoo batch quote/history",
-      // One stock slot plus twelve two-hourly ETF slots. These keys must stay
+      // One stock slot plus one ETF slot. These keys must stay
       // identical to the workflow's own `on.schedule`, or the detection
       // observer cannot attribute a missed slot; see
       // test-fetch-cron-attempt-coverage.mjs, which derives them from the
@@ -1085,17 +1144,6 @@ const config = {
       members: [registryMember("yahoo_batch_quote_history", [
         "20 23 * * 1-5",
         "7 0 * * 0-5",
-        "7 2 * * 0-5",
-        "7 4 * * 0-5",
-        "7 6 * * 0-5",
-        "7 8 * * 0-5",
-        "7 10 * * 0-5",
-        "7 12 * * 0-5",
-        "7 14 * * 0-5",
-        "7 16 * * 0-5",
-        "7 18 * * 0-5",
-        "7 20 * * 0-5",
-        "7 22 * * 0-5",
       ], [
         artifact("yahoo_batch_quote_history_index", "data/admin/yahoo-batch-quote-history/index.json", {
           schemaVersion: schemaVersion("/schema_version", "yahoo-batch-quote-history-index/v1"),
@@ -1110,8 +1158,7 @@ const config = {
       endpointContract: endpointAssertion(
         "yfinance_batch_library",
         typeAssertion("current_attempt_completed", "/current_attempt/attempted", "number"),
-        "library",
-      ),
+        "library",),
       freshnessPolicy: freshness({ fold: "latest", unit: "hours", calendar: "utc", maxStaleness: 30 }),
       affectedSurfaceIds: ["yahoo_batch_quote_history_admin"],
       visibility: "admin_only",
@@ -1352,13 +1399,21 @@ function validateMember(memberValue, context) {
 }
 
 function validateEndpointContract(endpointValue, context, artifactOnly) {
-  const library = endpointValue?.transport === "library";
-  exactKeys(endpointValue, library
-    ? ["endpoint_family", "probe_mode", "transport", "assertions"]
-    : ["endpoint_family", "probe_mode", "assertions"], context);
+  // Transport is declared, never inferred. Until 2026-08-14 the key was
+  // forbidden unless it was exactly "library", so http had no representation at
+  // all: a lane that was http and a lane whose author never considered
+  // transport were the same bytes. The classifier then read that silence as
+  // http and demanded a per-observation status code, which an aggregating
+  // producer does not emit — that is how run 31792421833 died. Absence is now a
+  // load failure, and every non-artifact-only lane states which one it is.
+  exactKeys(endpointValue, artifactOnly
+    ? ["endpoint_family", "probe_mode", "assertions"]
+    : ["endpoint_family", "probe_mode", "transport", "assertions"], context);
   requireIdentifier(endpointValue.endpoint_family, `${context}.endpoint_family`);
   if (!new Set(["injected_post_fetch", "artifact_only"]).has(endpointValue.probe_mode)) fail(`${context}.probe_mode is invalid`);
-  if (library && artifactOnly) fail(`${context}.transport library is invalid for artifact-only lanes`);
+  if (!artifactOnly && !ENDPOINT_TRANSPORTS.has(endpointValue.transport)) {
+    fail(`${context}.transport must be declared explicitly as "http" or "library"`);
+  }
   if (artifactOnly !== (endpointValue.probe_mode === "artifact_only")) fail(`${context}.probe_mode contradicts monitoring mode`);
   validateAssertions(endpointValue.assertions, `${context}.assertions`, { allowEmpty: artifactOnly });
   if (artifactOnly && endpointValue.assertions.length !== 0) fail(`${context}.assertions must be empty for artifact-only lanes`);
