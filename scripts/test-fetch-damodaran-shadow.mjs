@@ -596,6 +596,10 @@ function activeRetryFixture(prefix) {
     "focused ERP source-date test must run after dependency installation and before fetch",
   );
   assert.match(workflow, /node scripts\/fetch-damodaran-shadow\.mjs/);
+  assert.match(
+    workflow,
+    /PYTHONDONTWRITEBYTECODE:\s*['"]1['"]/
+  );
   assert.match(workflow, /uses:\s*actions\/upload-artifact@v4/);
   assert.match(workflow, /if:\s*\$\{\{ always\(\) \}\}[\s\S]+damodaran-owner-guard/);
   // Post-slice-2 contract (#377): the lane no longer mirrors to the public
