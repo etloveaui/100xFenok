@@ -18,9 +18,9 @@ const BASE = "1465331e474edbab7e5a26534632fdf640e4e5f0";
 const MEASURED_AT = "2026-08-14T05:00:00Z";
 
 const DURABLE_DEMAND = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane", "etf-migration-demand.json"), "utf8"));
-// The durable ETF demand intentionally has no generation-manifest measurement
-// yet. The pass-path below uses a clearly test-only copy so the gate contract
-// remains exercised without presenting synthetic manifest bytes as live proof.
+// The durable ETF demand now carries a measured-local representative manifest
+// size. The pass-path below still uses a clearly test-only copy so the gate
+// contract exercises a distinct synthetic input without presenting it as live.
 const DEMAND = {
   ...DURABLE_DEMAND,
   r2: {
@@ -79,9 +79,11 @@ const durableCandidateReport = buildCloudDataPlaneReport({
 });
 assert.equal(
   durableCandidateReport.budget.r2.manifest_planning_line.verdict,
-  "not_verified",
-  "durable ETF demand stays unverified until a real generation manifest is measured",
+  "pass",
+  "durable ETF demand carries the measured-local manifest pair",
 );
+assert.equal(durableCandidateReport.budget.r2.manifest_planning_line.metrics.manifest_count.complete, true);
+assert.equal(durableCandidateReport.budget.r2.manifest_planning_line.metrics.manifest_bytes.complete, true);
 
 // --- receipt: binds base and time without touching the deterministic digest ---
 {

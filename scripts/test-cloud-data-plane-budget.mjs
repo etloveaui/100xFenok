@@ -17,6 +17,7 @@ import {
   validateCandidatePlanningPolicy,
   validateCloudDataPlanePolicy,
 } from "./lib/cloud-data-plane-budget.mjs";
+import { buildCandidateScope } from "./lib/cloud-data-plane-candidate-scope.mjs";
 import { canonicalJson } from "./lib/json-canonical.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -27,6 +28,10 @@ const clone = (value) => JSON.parse(JSON.stringify(value));
 const baseline = readFixture("account-baseline.json");
 const demand = readFixture("request-demand.json");
 const policy = readFixture("policy.json");
+const measuredEtfDemand = JSON.parse(fs.readFileSync(
+  path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane", "etf-migration-demand.json"),
+  "utf8",
+));
 
 // Exact arithmetic: current + previous + in-progress slots are measured separately.
 {
@@ -250,6 +255,36 @@ const policy = readFixture("policy.json");
   const inventedPlanningLine = clone(policy);
   inventedPlanningLine.r2.planning_line.class_b_operations_per_month = 8_000_000;
   assert.throws(() => validateCloudDataPlanePolicy(inventedPlanningLine), /keys must be exactly/);
+}
+
+// The ETF manifest measurement is durable local planning evidence, not a live
+// R2 inventory. Bind the fixture to the current candidate scope and keep the
+// monthly arithmetic explicit so peer prose cannot be mistaken for a gate.
+{
+  const measurement = measuredEtfDemand._manifest_measurement;
+  const scope = buildCandidateScope({ repoRoot: REPO_ROOT, candidateId: "stockanalysis_etf_detail" });
+  assert.equal(measurement.schema_version, "cloud-data-plane-manifest-measurement/v1");
+  assert.equal(measurement.status, "measured_local");
+  assert.equal(measurement.measurement_mode, "local_filesystem_dry_run");
+  assert.equal(measurement.remote_readback, "not_verified");
+  assert.equal(measurement.family_id, "stockanalysis-etf-detail");
+  assert.equal(measurement.source_sha256, "d444965d51f9919cdff6d0df8ce8aad9e03b090eab86f0985ca7f3e462e225e9");
+  assert.equal(measurement.generation_id, "stockanalysis-etf-detail-007ca92a127b27b0");
+  assert.equal(measuredEtfDemand.r2.manifests.count, 1);
+  assert.equal(measuredEtfDemand.r2.manifests.bytes, 1_786_095);
+  assert.equal(measurement.path_digest, scope.manifest.path_digest);
+  assert.equal(measurement.asset_count, scope.manifest.totals.file_count);
+  assert.equal(measurement.unique_object_count, scope.manifest.totals.file_count);
+  assert.equal(measurement.payload_bytes, scope.manifest.totals.bytes);
+  assert.equal(measurement.manifest_bytes_per_generation, measuredEtfDemand.r2.manifests.bytes);
+  assert.equal(measurement.monthly_review.generation_count, R2_MANIFEST_PLANNING_ENVELOPE.manifest_count);
+  assert.equal(
+    measurement.monthly_review.manifest_bytes,
+    measurement.monthly_review.generation_count * measurement.manifest_bytes_per_generation,
+  );
+  assert.equal(measurement.monthly_review.manifest_bytes, 108_951_795);
+  assert.ok(measurement.monthly_review.manifest_bytes < measurement.monthly_review.limit_bytes);
+  assert.equal(measurement.monthly_review.limit_bytes, R2_MANIFEST_PLANNING_ENVELOPE.manifest_bytes);
 }
 
 // Estate planning coverage stays deliberately partial; candidate planning

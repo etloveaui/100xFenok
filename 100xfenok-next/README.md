@@ -20,6 +20,24 @@ the result.
 
 ## Local QA
 
+### EDGAR summary QA ordering
+
+`data/edgar-korean-summaries/` is canonical-only in Git. The public mirror under
+`public/data/edgar-korean-summaries/` is generated materialization, so running
+`qa:edgar-summaries` or `qa:edgar-translations` directly on a clean canonical-only
+checkout is expected to fail closed until the mirror exists. For a local check,
+materialize first, then run the two QA commands:
+
+```bash
+node scripts/sync-public-data.mjs --write
+npm run qa:edgar-summaries
+npm run qa:edgar-translations
+```
+
+The EDGAR producer workflow writes the canonical and generated roots before its
+QA step. This ordering note changes no data, freshness, graph, deploy, or live
+evidence status.
+
 Run `npm run qa:canonical-root-inventory` before any #296 canonical-root
 redirect, legacy delete, or deploy proposal. It is static and makes no network
 or runtime mutation. The report also checks route-backed iframe catalog drift:
