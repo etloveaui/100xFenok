@@ -153,12 +153,12 @@ def _html_attempt_tuple(
             provider_date=provider_date,
             response_sha256=response_sha256,
         )
+    has_table_rows = bool(BeautifulSoup(html, "html.parser").select("table tr"))
     return _returned_attempt_tuple(
         status,
         decode="ok",
         payload="non_empty",
-        # Legacy receipt name; each scraper/parser owns structural validity.
-        assertions=[{"id": "table_rows", "passed": True}],
+        assertions=[{"id": "table_rows", "passed": has_table_rows}],
         provider_date=provider_date,
         response_sha256=response_sha256,
     )
