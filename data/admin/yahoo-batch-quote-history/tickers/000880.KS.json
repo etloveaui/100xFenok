@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 884,
-      "natural": true,
-      "observed_at": "2026-08-11T23:29:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31544436443",
-      "schedule": "7 22 * * 0-5",
-      "shard": "35/72"
-    },
-    {
-      "attempts_used": 1,
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
@@ -198,6 +185,20 @@
       "run_id": "31755913658",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 703,
+      "natural": true,
+      "observed_at": "2026-08-14T23:48:33Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "31851174388",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -214,16 +215,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 709,
+    "latency_ms": 703,
     "natural": true,
-    "observed_at": "2026-08-14T00:10:47Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-14T23:48:33Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31755913658",
+    "run_id": "31851174388",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-14T23:48:33Z",
+    "provider_history_as_of": "2026-08-13",
+    "provider_quote_as_of": "2026-07-29T06:30:02Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "31851174388"
   },
   "lkg": {
     "fetched_at": "2026-08-14T00:11:07Z",
@@ -259,5 +270,5 @@
     "source_as_of": "2026-07-29T06:30:02Z"
   },
   "ticker": "000880.KS",
-  "updated_at": "2026-08-14T00:14:35Z"
+  "updated_at": "2026-08-14T23:48:33Z"
 }

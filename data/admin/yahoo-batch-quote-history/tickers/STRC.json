@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-28T00:18:14Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30316637722",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,31 +168,45 @@
       "run_id": "31764357371",
       "schedule": "7 0 * * 0-5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 538,
+      "natural": true,
+      "observed_at": "2026-08-15T00:05:28Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31851174388",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-14T00:28:01Z",
-    "history_as_of": "2026-08-13",
+    "fetched_at": "2026-08-15T00:08:59Z",
+    "history_as_of": "2026-08-14",
     "path": "data/yf/finance/STRC.json",
-    "payload_sha256": "aa2bcda611bf866ce039d7e0c0b90453b0f5219e063d471be4985aefdbc02b6e",
-    "quote_as_of": "2026-08-13T20:00:00Z",
-    "source_as_of": "2026-08-13"
+    "payload_sha256": "7a59f1b8e2b583a56fc5caf45c5a1aafaac5131e46e99e27f19f4146dea1a963",
+    "quote_as_of": "2026-08-14T20:00:00Z",
+    "source_as_of": "2026-08-14"
   },
   "discovered_from": [
-    "focus_etf_configuration"
+    "focus_etf_configuration",
+    "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 538,
     "natural": true,
-    "observed_at": "2026-08-14T02:41:13Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-15T00:05:28Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31764357371",
-    "schedule": "7 0 * * 0-5",
-    "shard": "5/6"
+    "run_id": "31851174388",
+    "schedule": "20 23 * * 1-5",
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-06-29T14:45:52Z",
@@ -218,14 +219,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-13",
-    "observed_at": "2026-08-14T00:24:55Z",
-    "payload_sha256": "ef208a27f4481ff502140f42d18f84f0c0a6397d8a097503ca25d05659f9b621",
-    "quote_as_of": "2026-08-13T20:00:00Z",
+    "history_as_of": "2026-08-14",
+    "observed_at": "2026-08-15T00:05:28Z",
+    "payload_sha256": "7b5c983c41e0a6687469e179286ecda336f35cb23db3adf5098d680b07c8f0b1",
+    "quote_as_of": "2026-08-14T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31755913658",
+    "run_id": "31851174388",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-13"
+    "source_as_of": "2026-08-14"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -241,5 +242,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "STRC",
-  "updated_at": "2026-08-14T02:41:13Z"
+  "updated_at": "2026-08-15T00:05:28Z"
 }
