@@ -41,12 +41,24 @@ function clone(value) {
 
 {
   assert.equal(validateDerivedAssetRegistry(DERIVED_ASSET_REGISTRY), true);
-  assert.equal(DERIVED_ASSET_REGISTRY.assets.length, 34, "34 logical derived assets are declared");
+  assert.equal(DERIVED_ASSET_REGISTRY.assets.length, 35, "35 logical derived assets are declared");
   assert.equal(
     DERIVED_ASSET_REGISTRY.assets.flatMap((asset) => asset.outputs).length,
-    38,
-    "all 34 top-level files and four recursive directories are declared exactly once",
+    39,
+    "all 35 top-level files and four recursive directories are declared exactly once",
   );
+  const sec13fBridge = derivedAssetById("sec13f_bridge_index");
+  assert.deepEqual(
+    sec13fBridge.outputs,
+    [{ path: "data/computed/sec13f_bridge_index.json", kind: "file" }],
+    "the review-only SEC 13F bridge must have one private canonical owner",
+  );
+  assert.equal(sec13fBridge.owner_workflow, ".github/workflows/build-stocks-analyzer.yml");
+  assert.equal(sec13fBridge.writer, "scripts/build-sec13f-bridge-index.mjs");
+  assert.deepEqual(sec13fBridge.public_outputs, []);
+  assert.equal(sec13fBridge.public_serving_status, "private");
+  assert.equal(sec13fBridge.cadence.kind, "daily");
+  assert.equal(sec13fBridge.recovery, "rebuild_from_inputs");
   const fenokRim = derivedAssetById("fenok_rim");
   assert.deepEqual(
     fenokRim.outputs,
