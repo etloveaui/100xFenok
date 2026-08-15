@@ -30,6 +30,7 @@ const PRODUCERS = Object.freeze([
   ["scripts/build-13f-integrity-indexes.mjs", "data/sec-13f/analytics/consensus.json"],
   ["scripts/build-13f-trades.mjs", "data/sec-13f/analytics/trades_ranking.json"],
   ["scripts/build-13f-portfolio-views.mjs", "data/sec-13f/analytics/portfolio_views.json"],
+  ["scripts/build-13f-factor-radar-v2.mjs", "data/sec-13f/analytics/factor_exposures_summary.json"],
   ["scripts/build-guru-holders-index.mjs", "data/sec-13f/analytics/guru_holders_index.json"],
   ["scripts/build-revision-movers.mjs", "data/global-scouter/core/revision_movers.json"],
   ["scripts/build-industry-benchmarks.mjs", "data/damodaran/industry_benchmarks.json"],
@@ -70,6 +71,9 @@ const REMOVED_MIRROR_OUTPUTS = Object.freeze({
   ],
   "scripts/build-13f-portfolio-views.mjs": [
     { source: "data/sec-13f/analytics/portfolio_views.json", destination: "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json" },
+  ],
+  "scripts/build-13f-factor-radar-v2.mjs": [
+    { source: "data/sec-13f/analytics/factor_exposures_summary.json", destination: "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json" },
   ],
   "scripts/build-guru-holders-index.mjs": [
     { source: "data/sec-13f/analytics/guru_holders_index.json", destination: "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json" },
@@ -140,6 +144,7 @@ assert.match(sources["scripts/build-13f-enrichment-backfill.mjs"], /writeJson\(S
 assert.match(sources["scripts/build-13f-enrichment-backfill.mjs"], /writeJson\(BY_SECTOR_PATH, bySector\)/u);
 assert.match(sources["scripts/build-13f-trades.mjs"], /writeJson\(OUTPUT, output\)/u);
 assert.match(sources["scripts/build-13f-portfolio-views.mjs"], /writeJson\(OUTPUT, output\)/u);
+assert.match(sources["scripts/build-13f-factor-radar-v2.mjs"], /writeJson\(OUTPUT, output\)/u);
 assert.match(sources["scripts/build-guru-holders-index.mjs"], /writeFileSync\(OUT, JSON\.stringify\(output\)\)/u);
 assert.match(sources["scripts/build-revision-movers.mjs"], /writeFileSync\(OUT, JSON\.stringify\(payload\)\)/u);
 assert.match(sources["scripts/build-industry-benchmarks.mjs"], /writeFileSync\(OUT, JSON\.stringify\(payload\)\)/u);
@@ -200,4 +205,4 @@ for (const [relativePath, removedOutputs] of Object.entries(REMOVED_TREE_MIRROR_
   }
 }
 
-console.log("build-producers public-write fence: ok (12 canonical-only APIs)");
+console.log(`build-producers public-write fence: ok (${PRODUCERS.length} canonical-only APIs)`);

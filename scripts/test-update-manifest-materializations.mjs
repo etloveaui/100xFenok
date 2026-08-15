@@ -18,7 +18,7 @@ const helperCall = "node scripts/materialize-update-manifest-routes.mjs";
 // Independent oracle: never derive this map from the manifest generator. A
 // corrupt generator and regenerated artifact must fail here even if they drift
 // together. The map deliberately owns the exact source/destination pairing and
-// materialization semantics for all 39 routes.
+// materialization semantics for all 40 routes.
 const EXPECTED_ROUTES = [
   { source: "data/slickcharts", destination: "100xfenok-next/public/data/slickcharts", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/yf/finance", destination: "100xfenok-next/public/data/yf/finance", mode: "rsync_tree", delete: true, excludes: [] },
@@ -54,6 +54,7 @@ const EXPECTED_ROUTES = [
   { source: "data/sec-13f/analytics/ticker_aliases.json", destination: "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/trades_ranking.json", destination: "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/portfolio_views.json", destination: "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/sec-13f/analytics/factor_exposures_summary.json", destination: "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/guru_holders_index.json", destination: "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/sec-13f/analytics/turnover.json", destination: "100xfenok-next/public/data/sec-13f/analytics/turnover.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/damodaran", destination: "100xfenok-next/public/data/damodaran", mode: "rsync_tree", delete: true, excludes: [] },
@@ -71,8 +72,8 @@ function routeOracleFields(route) {
   };
 }
 
-assert.equal(EXPECTED_ROUTES.length, 39, "route oracle must contain exactly 39 routes");
-assert.equal(manifest.update_manifest.materializations.length, 39, "manifest must contain exactly 39 routes");
+assert.equal(EXPECTED_ROUTES.length, 40, "route oracle must contain exactly 40 routes");
+assert.equal(manifest.update_manifest.materializations.length, 40, "manifest must contain exactly 40 routes");
 assert.deepEqual(manifest.update_manifest.materializations.map(routeOracleFields), EXPECTED_ROUTES);
 for (const route of EXPECTED_ROUTES) {
   assert.ok(

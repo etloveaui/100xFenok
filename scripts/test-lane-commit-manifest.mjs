@@ -440,6 +440,7 @@ assert.deepEqual(buildStocksAnalyzer.stages.always_if_exists.map(({ kind, path: 
   "file:data/sec-13f/analytics/ticker_aliases.json",
   "file:data/sec-13f/analytics/trades_ranking.json",
   "file:data/sec-13f/analytics/portfolio_views.json",
+  "file:data/sec-13f/analytics/factor_exposures_summary.json",
   "file:data/sec-13f/analytics/guru_holders_index.json",
   "file:data/global-scouter/core/revision_movers.json",
   "file:data/damodaran/industry_benchmarks.json",

@@ -1,5 +1,5 @@
 {
-  "registry_digest": "430222ee08c5c8356b1145b39bf88053c6c2cf5c83edaef23b01084040ed3ede",
+  "registry_digest": "bc919c9f0de047ef3ba327ed36fe0a5fc379404624248653faed9b00a0b58360",
   "registry_schema": "lane-registry/v3",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -92,6 +92,7 @@
       "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
       "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
       "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
+      "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json",
       "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
       "100xfenok-next/public/data/sec-13f/analytics/turnover.json",
       "100xfenok-next/public/data/damodaran",
@@ -409,6 +410,15 @@
       },
       {
         "delete": false,
+        "destination": "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/sec-13f/analytics/factor_exposures_summary.json",
+        "trailing_slash": false
+      },
+      {
+        "delete": false,
         "destination": "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
         "excludes": [],
         "mode": "cp_file",
@@ -581,6 +591,11 @@
           {
             "kind": "file",
             "path": "data/sec-13f/analytics/portfolio_views.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/sec-13f/analytics/factor_exposures_summary.json",
             "required": false
           },
           {
@@ -2468,6 +2483,11 @@
           {
             "kind": "file",
             "path": "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json",
             "required": false
           },
           {

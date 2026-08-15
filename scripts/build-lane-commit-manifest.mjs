@@ -416,6 +416,15 @@ export const UPDATE_MANIFEST_MATERIALIZATIONS = [
     trailing_slash: false,
   },
   {
+    source: "data/sec-13f/analytics/factor_exposures_summary.json",
+    destination: "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
     source: "data/sec-13f/analytics/guru_holders_index.json",
     destination: "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
     mode: "cp_file",

@@ -19,6 +19,7 @@ import type {
   PortfolioViewsData,
 } from "@/lib/superinvestors/types";
 import { loadPortfolioViews, loadFactorExposuresSummary } from "./portfolioViewsLoader";
+import { formatQuarterDate, getCommonSamePeriodWindow } from "./samePeriodWindow";
 import { DATA_STATE_LABELS } from "@/lib/data-state";
 import { formatCurrencyCompact, formatPlainPercent } from "@/lib/format";
 
@@ -700,6 +701,7 @@ export default function InsightsTab() {
   }, []);
 
   const quarterLabel = bp?.metadata.quarter ?? np?.metadata.quarter ?? hhi?.metadata.quarter ?? ce?.metadata.quarter ?? "";
+  const samePeriodWindow = pv ? getCommonSamePeriodWindow(pv) : null;
 
   if (failed) {
     return (
@@ -736,6 +738,12 @@ export default function InsightsTab() {
         <div className="space-y-4">
           <SuperinvestorInsightsStatus metadata={[tr?.metadata, pv?.metadata, bp?.metadata, np?.metadata, hhi?.metadata, ce?.metadata]} />
 
+          {samePeriodWindow ? (
+            <div className="text-[10px] font-semibold text-[var(--c-ink-3)]">
+              공통 성과 구간: {formatQuarterDate(samePeriodWindow.startDate)}~{formatQuarterDate(samePeriodWindow.endDate)} · {samePeriodWindow.investorCount}명 · {samePeriodWindow.dates.length}개 분기
+            </div>
+          ) : null}
+
           {/* 0. 리스크-수익 분포 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">리스크-수익 분포</h3>
@@ -745,8 +753,8 @@ export default function InsightsTab() {
 
           {/* 0b. 동일기간 누적 수익 오버레이 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
-            <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">2021-Q1 기준 누적 수익 (동일기간)</h3>
-            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">22개 분기 전체 데이터를 가진 투자자만 대상으로 2021-Q1 기준 100에서 누적 성과 비교</p>
+            <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">동일기간 누적 수익</h3>
+            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">공통으로 존재하는 분기 구간만 사용해 첫 분기 100으로 누적 성과를 비교합니다.</p>
             {pv ? <CumulativeReturnOverlay data={pv} /> : <UnavailablePanel label="동일기간 누적 수익" />}
           </div>
 

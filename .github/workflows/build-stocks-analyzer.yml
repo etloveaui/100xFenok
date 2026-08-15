@@ -53,6 +53,7 @@ jobs:
           node scripts/build-13f-integrity-indexes.mjs
           node scripts/build-13f-trades.mjs
           node scripts/build-13f-portfolio-views.mjs
+          node scripts/build-13f-factor-radar-v2.mjs
           node scripts/build-guru-holders-index.mjs
 
       - name: Build revision movers + industry benchmarks
@@ -100,6 +101,7 @@ jobs:
             data/sec-13f/analytics/ticker_aliases.json \
             data/sec-13f/analytics/trades_ranking.json \
             data/sec-13f/analytics/portfolio_views.json \
+            data/sec-13f/analytics/factor_exposures_summary.json \
             data/sec-13f/analytics/guru_holders_index.json \
             data/global-scouter/core/revision_movers.json \
             data/damodaran/industry_benchmarks.json \
