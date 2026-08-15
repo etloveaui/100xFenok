@@ -249,6 +249,9 @@ function buildBridgeIndex() {
 
   const countClass = (className) => rows.filter((row) => row.classification.classes.includes(className)).length;
   const countType = (type) => rows.filter((row) => row.classification.type === type).length;
+  const extensionRows = rows.filter((row) => row.classification.type === "sec13f_extension_stock");
+  const marketFactsOnlyRows = rows.filter((row) => row.classification.type === "sec13f_market_facts_only");
+  const unresolvedRows = rows.filter((row) => row.classification.type === "sec13f_unresolved");
   const sourceGeneratedAt = deterministicGeneratedAt([
     analyzer.generated_at,
     actionIndex.generated_at,
@@ -314,6 +317,20 @@ function buildBridgeIndex() {
       sec13f_extension_stock: countType("sec13f_extension_stock"),
       sec13f_market_facts_only: countType("sec13f_market_facts_only"),
       sec13f_unresolved: countType("sec13f_unresolved"),
+      estimate: {
+        extension_full: extensionRows.filter((row) => row.yf_estimates.state === "full").length,
+        extension_incomplete: extensionRows.filter((row) => row.yf_estimates.state === "incomplete").length,
+        market_facts_only_incomplete: marketFactsOnlyRows.filter((row) => row.yf_estimates.state === "incomplete").length,
+        unresolved_absent: unresolvedRows.filter((row) => row.yf_estimates.state === "absent").length,
+        as_of: {
+          bridge_generated_at: sourceGeneratedAt,
+          yf_finance: deterministicGeneratedAt(rows.map((row) => row.yf_estimates.source_as_of)),
+          market_facts: marketFactsIndex.core_surface_source_as_of ?? null,
+          sec13f: sec13fSummary.metadata?.source_quarter ?? null,
+        },
+      },
+      price_observed_extension: extensionRows.filter((row) => row.completeness.market_facts_price_observed).length,
+      price_observed_extension_as_of: marketFactsIndex.core_surface_source_as_of ?? null,
     },
     rows,
   };

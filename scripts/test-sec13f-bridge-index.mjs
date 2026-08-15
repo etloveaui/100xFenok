@@ -36,6 +36,14 @@ function isNonEmpty(value) {
   return value !== null && value !== undefined && value !== "";
 }
 
+function deterministicGeneratedAt(values) {
+  const valid = values
+    .map((value) => String(value ?? "").trim())
+    .filter((value) => value && Number.isFinite(Date.parse(value)))
+    .map((value) => new Date(value).toISOString());
+  return valid.length ? valid.sort().at(-1) : null;
+}
+
 function sha256File(relativePath) {
   return crypto.createHash("sha256")
     .update(fs.readFileSync(path.join(ROOT, relativePath)))
@@ -147,6 +155,20 @@ assert.equal(extensionRows.filter((row) => row.completeness.market_facts_price_o
 assert.equal(extensionRows.filter((row) => row.completeness.bridge_field_floor).length, 76);
 assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "full").length, 38);
 assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "incomplete").length, 38);
+assert.deepEqual(index.counts.estimate, {
+  extension_full: 38,
+  extension_incomplete: 38,
+  market_facts_only_incomplete: 36,
+  unresolved_absent: 478,
+  as_of: {
+    bridge_generated_at: index.generated_at,
+    yf_finance: deterministicGeneratedAt(index.rows.map((row) => row.yf_estimates.source_as_of)),
+    market_facts: marketFactsIndex.core_surface_source_as_of ?? null,
+    sec13f: sec13fSummary.metadata?.source_quarter ?? null,
+  },
+});
+assert.equal(index.counts.price_observed_extension, 76);
+assert.equal(index.counts.price_observed_extension_as_of, marketFactsIndex.core_surface_source_as_of ?? null);
 
 const expectedYfPaths = extensionRows.map((row) => row.yf_estimates.path).filter((relativePath) => fs.existsSync(path.join(ROOT, relativePath)));
 const expectedMarketFactsDetailPaths = outside
