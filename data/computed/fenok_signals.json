@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-15T21:42:38.475Z",
+  "generated_at": "2026-08-15T22:03:03.042Z",
   "source_file": "computed/stock_action_index.json",
   "source_date": "2026-08-07",
   "source_date_reason": null,
-  "source_generated_at": "2026-08-15T21:42:36.532Z",
+  "source_generated_at": "2026-08-15T22:03:01.113Z",
   "source_score_contract": "action-score-v0.3.1",
   "formula_version": "fenok-native-signals-v0.2.3-common-basis",
   "contract_doc": "docs/planning/CONTRACT_fenok_native_signals_v0_2_phase_a_20260628.md",
@@ -92805,14 +92805,16 @@
           }
         },
         "durability_profitability": {
-          "score_0_100": 60.69,
+          "score_0_100": 69.4,
           "direction": "constructive",
-          "coverage_ratio": 1,
+          "coverage_ratio": 0.8,
           "confidence": "high",
           "basis": "observed_only_absolute_durability_phase_a",
-          "observed_only_score_0_100": 60.69,
-          "coverage_adjusted_score_0_100": 60.69,
-          "missing_inputs": [],
+          "observed_only_score_0_100": 69.4,
+          "coverage_adjusted_score_0_100": 55.52,
+          "missing_inputs": [
+            "cash_durability"
+          ],
           "financials_source": {
             "path": "stockanalysis/financials/JPM.json",
             "role": "financial statement cross-check candidate; not valuation SSOT"
@@ -92829,21 +92831,21 @@
               "score": 100,
               "operating_margin": 46.547,
               "roe": 18.399,
-              "latest_eps": 20.02,
-              "source_field": "epsDiluted",
+              "latest_eps": 20.054385,
+              "source_field": "epsBasic",
               "note": "based on latest EPS from local stockanalysis financials"
             },
             "cash_durability": {
-              "score": 43.33,
-              "coverage_ratio": 1,
-              "average_fcf_margin": 8.586864,
-              "fcf_margin_field": "fcfMargin",
-              "fcf_margin_score": 34.35,
-              "fcf_field": "fcf",
-              "fcf_positive_count": 3,
-              "fcf_years": 5,
-              "positive_fcf_count_score": 60,
-              "status": "available_from_local_stockanalysis"
+              "score": null,
+              "coverage_ratio": 0,
+              "average_fcf_margin": null,
+              "fcf_margin_field": null,
+              "fcf_margin_score": null,
+              "fcf_field": null,
+              "fcf_positive_count": 0,
+              "fcf_years": 0,
+              "positive_fcf_count_score": null,
+              "status": "missing_financials_input"
             },
             "margin_level": {
               "score": 61.19,
@@ -92864,15 +92866,15 @@
               "note": "ROIC missing; ROE available when profitability signal exists"
             },
             "multi_year_stability": {
-              "score": 65,
-              "coverage_ratio": 1,
-              "eps_field": "epsDiluted",
+              "score": 100,
+              "coverage_ratio": 0.5,
+              "eps_field": "epsBasic",
               "eps_positive_count": 5,
               "eps_years": 5,
               "eps_consecutive_positive_from_latest": 5,
-              "fcf_field": "fcf",
-              "fcf_positive_count": 3,
-              "fcf_years": 5,
+              "fcf_field": null,
+              "fcf_positive_count": 0,
+              "fcf_years": 0,
               "fcf_consecutive_positive_from_latest": 0,
               "status": "available_from_local_stockanalysis"
             }
