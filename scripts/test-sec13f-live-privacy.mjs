@@ -6,6 +6,7 @@
 // correct checkout.
 
 import assert from "node:assert/strict";
+import { derivedPrivateFileOutputs } from "./lib/derived-asset-registry.mjs";
 
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 
@@ -21,8 +22,11 @@ function parseBaseUrl(argv) {
 const baseUrl = parseBaseUrl(process.argv.slice(2));
 const privatePaths = [
   ["griffin investor", "/data/sec-13f/investors/griffin.json"],
-  ["bridge index", "/data/computed/sec13f_bridge_index.json"],
-];
+  ...derivedPrivateFileOutputs().map((relativePath) => [
+    `private derived ${relativePath}`,
+    `/${relativePath}`,
+  ]),
+].filter((entry, index, entries) => entries.findIndex((candidate) => candidate[1] === entry[1]) === index);
 for (const [label, privatePath] of privatePaths) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15_000);

@@ -1049,6 +1049,22 @@ function deepFreeze(value) {
 
 export const DERIVED_ASSET_REGISTRY = deepFreeze(registry);
 
+// Single-file private derived outputs need an exact public-sync boundary too.
+// Directory-shaped outputs already use the restricted allowlist in the sync
+// consumer, but a file cannot be protected by a directory traversal rule.
+// Keep this derived from the registry so a newly declared private file cannot
+// silently enter the generic public-data walk.
+export function derivedPrivateFileOutputs(registryValue = DERIVED_ASSET_REGISTRY) {
+  validateDerivedAssetRegistry(registryValue);
+  return [...new Set(
+    registryValue.assets
+      .filter((assetValue) => assetValue.privacy_class === "private")
+      .flatMap((assetValue) => assetValue.outputs
+        .filter((spec) => spec.kind === "file" && spec.path.startsWith("data/"))
+        .map((spec) => spec.path)),
+  )].sort();
+}
+
 export function derivedAssetRegistryDigest(registryValue = DERIVED_ASSET_REGISTRY) {
   validateDerivedAssetRegistry(registryValue);
   return createHash("sha256").update(canonicalJson(registryValue), "utf8").digest("hex");

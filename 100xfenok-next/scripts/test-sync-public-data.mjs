@@ -11,7 +11,9 @@ import {
   EXCLUDED_PUBLIC_DATA_FILES,
   EXCLUDED_PUBLIC_DATA_ROOTS,
   RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS,
+  RESTRICTED_DERIVED_PUBLIC_DATA_FILES,
   deriveRestrictedDerivedPublicDataRoots,
+  deriveRestrictedDerivedPublicDataFiles,
   syncPublicData,
   syncStockanalysisEtfShardProjection,
 } from "./sync-public-data.mjs";
@@ -41,6 +43,7 @@ import {
   deriveExcludedPublicDataRoots,
   deriveForbiddenPrivateDataSupplyRoots,
 } from "../../scripts/lib/lane-routing.mjs";
+import { derivedPrivateFileOutputs } from "../../scripts/lib/derived-asset-registry.mjs";
 import { FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS } from "./check-fenok-public-mirror-guard.mjs";
 import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-indexes.mjs";
 
@@ -57,7 +60,9 @@ import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-i
   // registry-parameter honored end to end (sol fh-155 B2): an injected
   // registry with NO declared exceptions must derive accordingly.
   const derivedRoots = deriveExcludedPublicDataRoots();
-  const derivedFiles = deriveExcludedPublicDataFiles();
+  const derivedLaneFiles = deriveExcludedPublicDataFiles();
+  const derivedAssetFiles = deriveRestrictedDerivedPublicDataFiles();
+  const derivedFiles = [...new Set([...derivedLaneFiles, ...derivedAssetFiles])].sort();
   const derivedGuardRoots = deriveForbiddenPrivateDataSupplyRoots();
   const withoutExceptions = { ...LANE_REGISTRY, declared_exceptions: [] };
   assert.equal(deriveExcludedPublicDataRoots(withoutExceptions).includes("admin/data-supply-state"), false,
@@ -67,7 +72,7 @@ import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-i
   assert.equal(setEqual(derivedRoots, EXCLUDED_PUBLIC_DATA_ROOTS), true,
     `registry-derived sync roots diverge from the consumer exclusion set: derived=${JSON.stringify(derivedRoots)} consumer=${JSON.stringify(EXCLUDED_PUBLIC_DATA_ROOTS)}`);
   assert.equal(setEqual(derivedFiles, EXCLUDED_PUBLIC_DATA_FILES), true,
-    `registry-derived sync files diverge from the consumer exclusion set: derived=${JSON.stringify(derivedFiles)} consumer=${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`);
+    `registry-derived sync files diverge from the consumer exclusion set: lane=${JSON.stringify(derivedLaneFiles)} asset=${JSON.stringify(derivedAssetFiles)} consumer=${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`);
   assert.equal(setEqual(derivedGuardRoots, FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS), true,
     `registry-derived guard roots diverge from the hand list: derived=${JSON.stringify(derivedGuardRoots)} hand=${JSON.stringify(FORBIDDEN_PRIVATE_DATA_SUPPLY_ROOTS)}`);
   // Semantic invariant (no tautology): a canonical of a public/public_mirror
@@ -80,7 +85,7 @@ import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-i
     if (!planeEnrolled) continue;
     for (const canonical of lane.roots.canonical_outputs) {
       assert.equal(
-        derivedFiles.includes(canonical.replace(/^data\//, "")),
+        derivedLaneFiles.includes(canonical.replace(/^data\//, "")),
         false,
         `public or plane-enrolled canonical must never derive into exact-file deletion: ${canonical} (lane ${lane.id})`,
       );
@@ -129,6 +134,16 @@ import { PRIVATE_DATA_SUPPLY_ROOTS } from "../../scripts/build-phase2-closeout-i
     deriveRestrictedDerivedPublicDataRoots(),
     "the active restricted-root policy must equal its registry derivation",
   );
+  assert.deepEqual(
+    RESTRICTED_DERIVED_PUBLIC_DATA_FILES,
+    deriveRestrictedDerivedPublicDataFiles(),
+    "the active restricted-file policy must equal its derived-asset registry derivation",
+  );
+  assert.deepEqual(
+    RESTRICTED_DERIVED_PUBLIC_DATA_FILES,
+    derivedPrivateFileOutputs().map((relativePath) => relativePath.replace(/^data\//u, "")),
+    "every private single-file derived output must be withheld from the generic public walk",
+  );
 
   // materialize.py coverage: every derived private root must be covered by the
   // Python private-token lists (either path form) — the third consumer of the
@@ -160,8 +175,25 @@ const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
   "computed/fenok_social_attention_proxy.json",
   "computed/fenok_social_attention_proxy_history.json",
 ]);
-const EXPECTED_PRIVATE_EXACT_FILES = Object.freeze([
+const EXPECTED_PRIVATE_DERIVED_FILES = Object.freeze([
+  "computed/etf_action_index.json",
+  "computed/fenok_etf_signals.json",
+  "computed/fenok_flow_proxies.json",
+  "computed/fenok_flow_proxies_history.json",
+  "computed/fenok_news_tone_proxy.json",
+  "computed/fenok_news_tone_proxy_history.json",
+  "computed/fenok_occ_options_volume.json",
+  "computed/fenok_occ_options_volume_history.json",
+  "computed/fenok_signal_lens_proxies.json",
+  "computed/fenok_signal_lens_proxies_history.json",
+  "computed/fenok_signal_lens_proxies_summary.json",
+  "computed/fenok_signals.json",
+  "computed/fenok_social_attention_proxy.json",
+  "computed/fenok_social_attention_proxy_history.json",
   "computed/sec13f_bridge_index.json",
+]);
+const EXPECTED_PRIVATE_EXACT_FILES = Object.freeze([
+  ...EXPECTED_PRIVATE_DERIVED_FILES,
   "sec-13f/investors/griffin.json",
 ]);
 
@@ -213,6 +245,11 @@ const EXPECTED_PRIVATE_EXACT_FILES = Object.freeze([
       `private proxy file missing from EXCLUDED_PUBLIC_DATA_FILES: ${expectedFile}`,
     );
   }
+  assert.deepEqual(
+    RESTRICTED_DERIVED_PUBLIC_DATA_FILES,
+    EXPECTED_PRIVATE_DERIVED_FILES,
+    "private derived single-file outputs changed without updating the boundary contract",
+  );
 
   // Value-changing derivation case: a mirrorless private lane with one
   // file-shaped and one directory-shaped canonical must split across the two
@@ -368,7 +405,7 @@ function seedPrivateRoots(sourceRoot, destinationRoot) {
   // exercises the root/file split (2026-07-19 deploy-crash class): on the
   // source side they must be withheld as excluded exact files, and stale
   // destination copies must be removed as exact files.
-  for (const relativeFile of [...EXPECTED_PRIVATE_PROXY_FILES, ...EXPECTED_PRIVATE_EXACT_FILES]) {
+  for (const relativeFile of EXPECTED_PRIVATE_EXACT_FILES) {
     write(sourceRoot, relativeFile, '{"secret":true}\n');
     write(destinationRoot, relativeFile, '{"stale":true}\n');
   }
@@ -1088,13 +1125,16 @@ try {
   );
   assert.deepEqual(
     EXCLUDED_PUBLIC_DATA_FILES,
-    deriveExcludedPublicDataFiles(),
-    "the exact-file exclusion set must equal the registry derivation exactly (single fail-closed SSOT; no consumer hand list)",
+    [...new Set([
+      ...deriveExcludedPublicDataFiles(),
+      ...deriveRestrictedDerivedPublicDataFiles(),
+    ])].sort(),
+    "the exact-file exclusion set must equal the lane plus derived-asset registry derivations",
   );
   assert.equal(
     EXCLUDED_PUBLIC_DATA_FILES.length,
-    10,
-    `the exact-file exclusion set must be exactly the ten genuine private files (declared exceptions + private proxies), got ${EXCLUDED_PUBLIC_DATA_FILES.length}: ${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`,
+    20,
+    `the exact-file exclusion set must cover the six declared exceptions plus all private derived files, got ${EXCLUDED_PUBLIC_DATA_FILES.length}: ${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`,
   );
   const expectedDerivedExactFiles = [
     DETECTION_FLOOR_REPORT,
@@ -1121,7 +1161,6 @@ try {
     "stockanalysis/surfaces/index.json",
     "computed/fenok_occ_options_availability.json",
     "computed/market_facts/index.json",
-    "computed/fenok_signals.json",
   ]) {
     assert.equal(
       EXCLUDED_PUBLIC_DATA_FILES.includes(copyableFile),
@@ -1159,12 +1198,12 @@ try {
   );
   // Exact-file exclusion set (order-insensitive contract; membership + count
   // are the pins, traversal order is not).
-  const expectedExcludedExactFiles = [DETECTION_FLOOR_REPORT, ...EXPECTED_PRIVATE_EXACT_FILES, ...EXPECTED_PRIVATE_PROXY_FILES].sort();
+  const expectedExcludedExactFiles = [DETECTION_FLOOR_REPORT, ...EXPECTED_PRIVATE_EXACT_FILES].sort();
   const expectedDirectExcludedRoots = EXCLUDED_PUBLIC_DATA_ROOTS.filter((root) =>
     !RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS.some((policy) => root.startsWith(`${policy.relativeRoot}/`))
   );
-  assert.equal(rehearsal.excludedSourceFiles, 7);
-  assert.equal(rehearsal.removedDestinationExactFiles, 7);
+  assert.equal(rehearsal.excludedSourceFiles, 17);
+  assert.equal(rehearsal.removedDestinationExactFiles, 17);
   assert.deepEqual([...rehearsal.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...rehearsal.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
   assert.equal(rehearsal.excludedSourceRoots, expectedDirectExcludedRoots.length);
@@ -1180,10 +1219,10 @@ try {
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(result.filesCopied, 4);
   assert.equal(result.excludedSourceRoots, expectedDirectExcludedRoots.length);
-  assert.equal(result.excludedSourceFiles, 7);
+  assert.equal(result.excludedSourceFiles, 17);
   assert.equal(result.removedDestinationRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.equal(result.removedDestinationFiles, EXCLUDED_PUBLIC_DATA_ROOTS.length);
-  assert.equal(result.removedDestinationExactFiles, 7);
+  assert.equal(result.removedDestinationExactFiles, 17);
   assert.deepEqual([...result.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...result.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
   assert.equal(fs.readFileSync(path.join(destinationRoot, "safe/keep.json"), "utf8"), '{"safe":true}\n');
@@ -1217,7 +1256,7 @@ try {
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(rerun.filesCopied, 4);
   assert.equal(rerun.excludedSourceRoots, expectedDirectExcludedRoots.length);
-  assert.equal(rerun.excludedSourceFiles, 7);
+  assert.equal(rerun.excludedSourceFiles, 17);
   assert.equal(rerun.removedDestinationRoots, 0);
   assert.equal(rerun.removedDestinationFiles, 0);
   assert.equal(rerun.removedDestinationExactFiles, 0);

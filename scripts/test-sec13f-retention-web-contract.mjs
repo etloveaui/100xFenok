@@ -10,6 +10,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildLaneCommitManifest } from "./build-lane-commit-manifest.mjs";
+import { derivedPrivateFileOutputs } from "./lib/derived-asset-registry.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SEC_ROOT = path.join(ROOT, "data/sec-13f");
@@ -134,6 +135,14 @@ for (const privatePath of [
     worker,
     new RegExp(`PRIVATE_PUBLIC_PATHS[\\s\\S]*?${privatePath.replaceAll("/", "\\/")}`, "u"),
     `Worker must declare the private SEC 13F path: ${privatePath}`,
+  );
+}
+for (const relativePath of derivedPrivateFileOutputs()) {
+  const publicPath = `/${relativePath}`;
+  assert.match(
+    worker,
+    new RegExp(publicPath.replaceAll("/", "\\/"), "u"),
+    `Worker private edge guard is missing derived registry output: ${publicPath}`,
   );
 }
 assert.match(

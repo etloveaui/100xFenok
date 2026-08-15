@@ -23,33 +23,43 @@ import {
   stockanalysisEtfSourceBindingSha256,
   stockanalysisEtfTickerKey,
 } from "../src/lib/stockanalysis-etf-shard.mjs";
-import { DERIVED_ASSET_REGISTRY } from "../../scripts/lib/derived-asset-registry.mjs";
+import {
+  DERIVED_ASSET_REGISTRY,
+  derivedPrivateFileOutputs,
+} from "../../scripts/lib/derived-asset-registry.mjs";
 import {
   deriveExcludedPublicDataFiles,
   deriveExcludedPublicDataRoots,
 } from "../../scripts/lib/lane-routing.mjs";
+
+const CANONICAL_DATA_PREFIX = "data/";
+const PUBLIC_DATA_PREFIX = "100xfenok-next/public/data/";
 
 // Registry-derived #366 privacy boundary. A newly registered private admin
 // store or file-shaped private canonical is excluded immediately instead of
 // waiting for a second hand-list edit.
 export const EXCLUDED_PUBLIC_DATA_ROOTS = Object.freeze(deriveExcludedPublicDataRoots());
 
-// Exact-file exclusions are the same single registry-derived SSOT as the
-// roots. deriveExcludedPublicDataFiles() returns the declared private
-// exception files (public_sync:"exclude" / may_be_absent shorthand) plus every
-// file-shaped (.json) canonical of a genuinely PRIVATE, mirrorless lane that
-// is not explicitly named a public_canonical_output. Public/public_mirror
-// plane families never derive here — a temporarily empty public_mirror list
-// (mirror ownership moved to the merge boundary) must not schedule tracked
-// LKG fallback deletion. They live in the FILES list (not ROOTS) because a
-// file-shaped entry in the ROOTS list crashes the build once the artifact
-// exists on disk (2026-07-19 apewisdom first-run class: "excluded source root
-// must be a directory"). There is no second hand list: the runtime cannot
-// broaden private publication without a registry edit.
-export const EXCLUDED_PUBLIC_DATA_FILES = Object.freeze(deriveExcludedPublicDataFiles());
+// Exact-file exclusions combine the lane registry's private canonical files
+// with the derived-asset registry's private single-file outputs. Directory-
+// shaped derived assets use the restricted allowlist below; a file cannot be
+// protected by directory traversal. Both registries are authoritative, so a
+// new private file must be declared before the generic walk can copy it.
+export function deriveRestrictedDerivedPublicDataFiles(registry = DERIVED_ASSET_REGISTRY) {
+  return derivedPrivateFileOutputs(registry)
+    .map((relativePath) => relativePath.slice(CANONICAL_DATA_PREFIX.length));
+}
 
-const CANONICAL_DATA_PREFIX = "data/";
-const PUBLIC_DATA_PREFIX = "100xfenok-next/public/data/";
+export const RESTRICTED_DERIVED_PUBLIC_DATA_FILES = Object.freeze(
+  deriveRestrictedDerivedPublicDataFiles(),
+);
+
+export const EXCLUDED_PUBLIC_DATA_FILES = Object.freeze([
+  ...new Set([
+    ...deriveExcludedPublicDataFiles(),
+    ...deriveRestrictedDerivedPublicDataFiles(),
+  ]),
+].sort());
 
 // A directory-shaped derived asset may expose either its whole directory or a
 // reviewed set of files. The latter is a fail-closed allowlist: adding another
