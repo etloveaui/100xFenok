@@ -13,7 +13,12 @@ import { canonicalJson } from "./json-canonical.mjs";
 import { COMPUTED_SIGNALS_SOURCE_LANE_IDS, LANE_REGISTRY } from "./lane-registry.mjs";
 
 export const DERIVED_ASSET_REGISTRY_SCHEMA = "derived-asset-registry/v1";
-export const DERIVED_ASSET_LIFECYCLES = Object.freeze(["active", "orphaned"]);
+export const DERIVED_ASSET_LIFECYCLES = Object.freeze([
+  "active",
+  "quarantined",
+  "retired",
+  "orphaned",
+]);
 export const DERIVED_INPUT_KINDS = Object.freeze(["lane", "asset", "prior_asset", "path"]);
 export const DERIVED_OUTPUT_KINDS = Object.freeze(["file", "directory"]);
 export const DERIVED_CADENCE_KINDS = Object.freeze([
@@ -58,13 +63,11 @@ export const DERIVED_WRITER_RECOVERY_CONTRACTS = Object.freeze({
   "scripts/build-fenok-etf-core-daily-basket.mjs": "rebuild_from_inputs",
   "scripts/build-fenok-etf-signals.mjs": "rebuild_from_inputs",
   "scripts/build-fenok-flow-proxies.mjs": "rebuild_from_inputs",
-  "scripts/build-fenok-rim-index.mjs": "rebuild_from_inputs",
   "scripts/build-fenok-signal-lens-proxies.mjs": "rebuild_from_inputs",
   "scripts/build-fenok-signals.mjs": "rebuild_from_inputs",
   "scripts/build-market-facts.py": "rebuild_from_inputs",
   "scripts/build-market-source-parity.py": "rebuild_from_inputs",
   "scripts/build-phase2-closeout-indexes.mjs": "rebuild_from_inputs",
-  "scripts/build-rim-index.mjs": "rebuild_from_inputs",
   "scripts/export-computed-signals.mjs": "rebuild_from_inputs",
   "scripts/fetch-fenok-apewisdom-attention-proxy.mjs": "lane_lkg",
   "scripts/fetch-fenok-krx-daily-private.mjs": "lane_lkg",
@@ -625,47 +628,35 @@ const assets = [
   }),
   asset({
     id: "fenok_rim",
-    label: "Fenok RIM research and public projections",
+    label: "Fenok RIM research and quarantined public projections",
     outputs: [output("data/computed/fenok-rim", "directory")],
-    owner_workflow: ".github/workflows/build-stocks-analyzer.yml",
-    writer: "scripts/build-fenok-rim-index.mjs",
-    inputs: [
-      lane("fred_macro"),
-      lane("krx"),
-      lane("nasdaq_giw_sox"),
-      lane("yahoo_batch_quote_history"),
-      derived("market_facts"),
-    ],
-    cadence: STOCKS_ANALYZER_DAILY,
+    owner_workflow: null,
+    writer: null,
+    inputs: [],
+    cadence: ORPHANED,
     privacy_class: "public_mirror",
     public_outputs: [
       output("100xfenok-next/public/data/computed/fenok-rim/fair-values.json"),
       output("100xfenok-next/public/data/computed/fenok-rim/payout-history.json"),
       output("100xfenok-next/public/data/computed/fenok-rim/sustainable-index-ranges.public.json"),
     ],
-    retention: SNAPSHOT,
-    recovery: "rebuild_from_inputs",
+    retention: ORPHANED_RETENTION,
+    recovery: "none",
+    lifecycle: "quarantined",
   }),
   asset({
     id: "rim_index",
-    label: "RIM index input bundle",
+    label: "RIM index input bundle (quarantined historical surface)",
     outputs: [output("data/computed/rim-index", "directory")],
-    owner_workflow: ".github/workflows/update-manifest.yml",
-    writer: "scripts/build-rim-index.mjs",
-    inputs: [
-      lane("fred_macro"),
-      lane("krx"),
-      lane("nasdaq_giw_sox"),
-      lane("yahoo_batch_quote_history"),
-      derived("market_facts"),
-      derived("stock_action_index"),
-      derived("signals"),
-    ],
-    cadence: TWICE_DAILY,
+    owner_workflow: null,
+    writer: null,
+    inputs: [],
+    cadence: ORPHANED,
     privacy_class: "public_mirror",
     public_outputs: [output("100xfenok-next/public/data/computed/rim-index/inputs.json")],
-    retention: SNAPSHOT,
-    recovery: "rebuild_from_inputs",
+    retention: ORPHANED_RETENTION,
+    recovery: "none",
+    lifecycle: "quarantined",
   }),
   // Research records, never served. Both directories hold audit trails for retired or
   // quarantined work: frozen criteria, freeze receipts, adjudications and the red-team
@@ -889,11 +880,11 @@ export function validateDerivedAssetRegistry(
       fail(`asset ${assetValue.id} recovery_evidence is invalid`);
     }
 
-    if (assetValue.lifecycle === "orphaned") {
+    if (assetValue.lifecycle !== "active") {
       if (assetValue.owner_workflow !== null || assetValue.writer !== null || assetValue.inputs.length !== 0
         || assetValue.cadence.kind !== "orphaned" || assetValue.retention.kind !== "orphaned"
         || assetValue.recovery !== "none" || assetValue.recovery_evidence !== null) {
-        fail(`asset ${assetValue.id} orphaned contract is inconsistent`);
+        fail(`asset ${assetValue.id} ${assetValue.lifecycle} contract is inconsistent`);
       }
     } else {
       if (!validRepoPath(assetValue.owner_workflow) || !assetValue.owner_workflow.startsWith(".github/workflows/")) {
