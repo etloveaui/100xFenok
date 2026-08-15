@@ -427,11 +427,9 @@ const lanes = [
     store_kind: "payload",
     lane_class: "detection_floor",
     cadence: { kind: "daily" },
-    // Shadow until a real run proves the attempt shard. The project's own rule is
-    // that only attempt-proven lanes may be live, and this lane has never
-    // executed: its emitter was added in the same change that declared it.
-    // Promotion to live requires an observed attempt, not a code review.
-    enforcement: "shadow",
+    // Promoted after natural schedule run 31852235035 emitted the complete
+    // attempt shard, passed the publish fence and confirmed origin readback.
+    enforcement: "live",
     privacy_class: "public_mirror",
     admin_store: "data/admin/stockanalysis-recovery",
     detection_attempt: attemptShard("stockanalysis_etf_detail"),
@@ -448,7 +446,11 @@ const lanes = [
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
-    declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe, stockanalysis_stock_financial and stockanalysis_surfaces; separated from the universe lane because the universe index and the per-ticker detail payloads are distinct acquisition units with distinct failure modes",
+    declared_exception: "shares the StockAnalysis recovery store with stockanalysis_etf_universe, stockanalysis_stock_financial and stockanalysis_surfaces; promoted live after natural schedule run 31852235035 committed the complete ETF-detail attempt shard with fence-confirmed origin readback; separated from the universe lane because the universe index and the per-ticker detail payloads are distinct acquisition units with distinct failure modes",
+    script_sources: [
+      "scripts/fetch-stockanalysis.py",
+      "scripts/emit-stockanalysis-attempt.mjs",
+    ],
   }),
   record({
     id: "stockanalysis_stock_financial",

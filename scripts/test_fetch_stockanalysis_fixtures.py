@@ -154,6 +154,29 @@ class StockanalysisFetcherFixtureTest(unittest.TestCase):
             with self.subTest(overrides=overrides):
                 self.assertFalse(self.fetcher.should_emit_stockanalysis_etf_universe_detection(args(**overrides)))
 
+    def test_etf_detail_detection_requires_natural_etf_schedule(self) -> None:
+        def args(**overrides):
+            values = {
+                "natural_run": True,
+                "event_name": "schedule",
+                "event_schedule": "50 23 * * 1-5",
+            }
+            values.update(overrides)
+            return Namespace(**values)
+
+        self.assertTrue(self.fetcher.should_emit_stockanalysis_etf_detail_detection(args(), ["SPY"]))
+        self.assertTrue(self.fetcher.should_emit_stockanalysis_etf_detail_detection(
+            args(event_schedule="20 23 * * 0"), ["SPY"]
+        ))
+        for overrides, etfs in (
+            ({"natural_run": False}, ["SPY"]),
+            ({"event_name": "workflow_dispatch"}, ["SPY"]),
+            ({"event_schedule": "20 21 * * *"}, ["SPY"]),
+            ({}, []),
+        ):
+            with self.subTest(overrides=overrides, etfs=etfs):
+                self.assertFalse(self.fetcher.should_emit_stockanalysis_etf_detail_detection(args(**overrides), etfs))
+
     def test_etf_universe_payload_keeps_provider_date_unstamped(self) -> None:
         original_fetch = self.fetcher.fetch_text_response
         original_parse = self.fetcher.parse_etf_universe_page
@@ -625,6 +648,26 @@ module.main()
         self.assertEqual(envelope["candidate_count"], 0)
         self.assertFalse(envelope["fallback_enabled"])
         self.assertEqual(envelope["observations"], [])
+
+    def test_attempt_tracker_does_not_emit_unattempted_etf_detail(self) -> None:
+        original_run = self.fetcher.subprocess.run
+        calls = []
+
+        def fake_run(args, **kwargs):
+            calls.append((args, kwargs))
+            return subprocess.CompletedProcess(args, 0)
+
+        self.fetcher.subprocess.run = fake_run
+        try:
+            tracker = self.fetcher.StockAnalysisAttemptTracker()
+            tracker.configure(active=True, yahoo_enabled=False, run_id="126", run_attempt=1)
+            tracker.start_etf_detail(0)
+            tracker.emit()
+        finally:
+            self.fetcher.subprocess.run = original_run
+
+        lanes = [args[args.index("--lane") + 1] for args, _kwargs in calls]
+        self.assertEqual(lanes, ["yahoo_etf_fallback"])
 
     def test_yahoo_thrown_error_wiring_carries_the_cause_to_the_observation(self) -> None:
         """The real fetch path must hand the exception to the tracker.

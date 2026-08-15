@@ -341,7 +341,11 @@ class StockAnalysisAttemptTracker:
             self.stock_financial_results.append(result)
 
     def start_etf_detail(self, expected_count: int) -> None:
-        if self.active:
+        # A stocks-only natural run has no ETF acquisition to observe. Do not
+        # turn that intentional omission into a synthetic failed ETF attempt:
+        # once the lane is live, that row would overwrite the last successful
+        # ETF run and falsely degrade the lane.
+        if self.active and int(expected_count) > 0:
             self.etf_detail_started = True
             self.etf_detail_expected = int(expected_count)
 
@@ -1409,6 +1413,24 @@ def should_emit_stockanalysis_etf_universe_detection(args: argparse.Namespace) -
         and getattr(args, "natural_run", False)
         and getattr(args, "event_name", None) == "schedule"
         and getattr(args, "event_schedule", None) == STOCKANALYSIS_ETF_UNIVERSE_DETECTION_SCHEDULE
+    )
+
+
+def should_emit_stockanalysis_etf_detail_detection(
+    args: argparse.Namespace,
+    etfs: list[str],
+) -> bool:
+    """Only the natural ETF schedules may produce live detail evidence.
+
+    Manual ETF fetches can refresh canonical payloads, but they must not create
+    an attempt row that impersonates the scheduled freshness observation.
+    """
+
+    return bool(
+        etfs
+        and getattr(args, "natural_run", False)
+        and getattr(args, "event_name", None) == "schedule"
+        and getattr(args, "event_schedule", None) in STOCKANALYSIS_ETF_DETAIL_DETECTION_SCHEDULES
     )
 
 
@@ -4564,6 +4586,10 @@ def unique_symbols(items: list[str]) -> list[str]:
 
 NATURAL_RECOVERY_KINDS = frozenset({"stock", "financial", "etf", "surface", "universe"})
 ETF_DETAIL_RECOVERY_LIMIT = 1
+STOCKANALYSIS_ETF_DETAIL_DETECTION_SCHEDULES = frozenset({
+    "50 23 * * 1-5",
+    "20 23 * * 0",
+})
 
 
 def parse_natural_recovery_kinds(value: str) -> set[str]:
@@ -7045,7 +7071,8 @@ def _main() -> None:
     # ETF detail writes 5,605 canonical payloads. Until this attempt record
     # existed, no lane owned that output and the data-plane inventory could not
     # account for the largest group in the estate.
-    ATTEMPT_TRACKER.start_etf_detail(len(etfs))
+    if should_emit_stockanalysis_etf_detail_detection(args, etfs):
+        ATTEMPT_TRACKER.start_etf_detail(len(etfs))
     for kind, symbols in (("etf", etfs), ("stock", stocks)):
         for idx, ticker in enumerate(symbols, 1):
             if kind == "etf" and ticker in yahoo_retry_etfs:

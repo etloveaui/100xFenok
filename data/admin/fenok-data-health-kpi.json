@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-08-15T01:58:49.942Z",
+  "generated_at": "2026-08-15T02:42:39.782Z",
   "status": "degraded",
   "status_label": "저하",
   "status_message": "13 required lane(s) are not ready; healthy lanes may still publish.",
@@ -38,11 +38,11 @@
       }
     },
     "last_rebuild_context": {
-      "built_at": "2026-08-15T01:58:49.942Z",
-      "run_id": "31857392804",
-      "workflow": "Update Manifest",
-      "event_name": "workflow_dispatch",
-      "sha": "83c4148f4483e6c008109395f7067882fb5559e8"
+      "built_at": "2026-08-15T02:42:39.782Z",
+      "run_id": null,
+      "workflow": null,
+      "event_name": null,
+      "sha": null
     },
     "cadence": {
       "crons_utc": [
@@ -69,7 +69,6 @@
         "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-12T10:30Z",
         "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-13T10:30Z",
         "fenok-edge-krx-daily.yml:30 10 * * 1-5@2026-08-14T10:30Z",
-        "update-manifest.yml:30 2 * * *@2026-08-01T02:30Z",
         "update-manifest.yml:30 2 * * *@2026-08-02T02:30Z",
         "update-manifest.yml:30 2 * * *@2026-08-03T02:30Z",
         "update-manifest.yml:30 2 * * *@2026-08-04T02:30Z",
@@ -407,13 +406,13 @@
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-08-15T01:58:47.351Z",
+      "evaluated_at": "2026-08-15T02:42:38Z",
       "status": "warning",
       "deployment_blocking": false,
       "counts": {
         "scheduled_members": 31,
-        "schedule_bindings": 46,
-        "observed": 43,
+        "schedule_bindings": 35,
+        "observed": 32,
         "suspected_skips": 2,
         "attempt_gaps": 1
       },
@@ -491,21 +490,8 @@
           "schedule_id": "hourly_at_12",
           "cron": "12 * * * *",
           "calendar_id": "utc",
-          "expected_at": "2026-08-14T19:12:00.000Z",
-          "observed_at": "2026-08-14T23:45:44.748Z",
-          "state": "observed",
-          "producer_status": "ready",
-          "producer_reason": "ok"
-        },
-        {
-          "lane_id": "yahoo_etf_fallback",
-          "member_id": "yahoo_etf_fallback",
-          "workflow": ".github/workflows/fetch-stockanalysis.yml",
-          "schedule_id": "weekday_2250_utc",
-          "cron": "50 22 * * 1-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-13T22:50:00.000Z",
-          "observed_at": "2026-08-15T00:13:05Z",
+          "expected_at": "2026-08-14T20:12:00.000Z",
+          "observed_at": "2026-08-15T02:01:09.427Z",
           "state": "observed",
           "producer_status": "ready",
           "producer_reason": "ok"
@@ -553,10 +539,23 @@
           "lane_id": "stockanalysis_etf_detail",
           "member_id": "stockanalysis_etf_detail",
           "workflow": ".github/workflows/fetch-stockanalysis.yml",
-          "schedule_id": "daily_2120_utc",
-          "cron": "20 21 * * *",
+          "schedule_id": "weekday_2350_utc",
+          "cron": "50 23 * * 1-5",
           "calendar_id": "utc",
-          "expected_at": "2026-08-13T21:20:00.000Z",
+          "expected_at": "2026-08-13T23:50:00.000Z",
+          "observed_at": "2026-08-15T00:13:05Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "stockanalysis_etf_detail",
+          "member_id": "stockanalysis_etf_detail",
+          "workflow": ".github/workflows/fetch-stockanalysis.yml",
+          "schedule_id": "weekly_2320_sun_utc",
+          "cron": "20 23 * * 0",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-09T23:20:00.000Z",
           "observed_at": "2026-08-15T00:13:05Z",
           "state": "observed",
           "producer_status": "ready",
@@ -608,7 +607,7 @@
           "schedule_id": "hourly_at_05",
           "cron": "5 * * * *",
           "calendar_id": "utc",
-          "expected_at": "2026-08-14T19:05:00.000Z",
+          "expected_at": "2026-08-14T20:05:00.000Z",
           "observed_at": "2026-08-15T01:45:56.846Z",
           "state": "observed",
           "producer_status": "ready",
@@ -869,149 +868,6 @@
           "cron": "7 0 * * 0-5",
           "calendar_id": "utc",
           "expected_at": "2026-08-14T00:07:00.000Z",
-          "observed_at": "2026-08-15T00:05:28Z",
-          "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_0200_utc",
-          "cron": "7 2 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-14T02:07:00.000Z",
-          "observed_at": "2026-08-15T00:05:28Z",
-          "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_0400_utc",
-          "cron": "7 4 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-14T04:07:00.000Z",
-          "observed_at": "2026-08-15T00:05:28Z",
-          "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_0600_utc",
-          "cron": "7 6 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-14T06:07:00.000Z",
-          "observed_at": "2026-08-15T00:05:28Z",
-          "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_0800_utc",
-          "cron": "7 8 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-14T08:07:00.000Z",
-          "observed_at": "2026-08-15T00:05:28Z",
-          "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_1000_utc",
-          "cron": "7 10 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-14T10:07:00.000Z",
-          "observed_at": "2026-08-15T00:05:28Z",
-          "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_1200_utc",
-          "cron": "7 12 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-14T12:07:00.000Z",
-          "observed_at": "2026-08-15T00:05:28Z",
-          "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_1400_utc",
-          "cron": "7 14 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-14T14:07:00.000Z",
-          "observed_at": "2026-08-15T00:05:28Z",
-          "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_1600_utc",
-          "cron": "7 16 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-14T16:07:00.000Z",
-          "observed_at": "2026-08-15T00:05:28Z",
-          "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_1800_utc",
-          "cron": "7 18 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-14T18:07:00.000Z",
-          "observed_at": "2026-08-15T00:05:28Z",
-          "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_2000_utc",
-          "cron": "7 20 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-14T20:07:00.000Z",
-          "observed_at": "2026-08-15T00:05:28Z",
-          "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
-        },
-        {
-          "lane_id": "yahoo_batch_quote_history",
-          "member_id": "yahoo_batch_quote_history",
-          "workflow": ".github/workflows/fetch-yf-finance.yml",
-          "schedule_id": "yahoo_batch_etf_2200_utc",
-          "cron": "7 22 * * 0-5",
-          "calendar_id": "utc",
-          "expected_at": "2026-08-13T22:07:00.000Z",
           "observed_at": "2026-08-15T00:05:28Z",
           "state": "observed",
           "producer_status": "unavailable",
@@ -1290,7 +1146,7 @@
               "collection_fresh_count": 23,
               "stale_count": 0,
               "collected_at_floor": "2026-08-15T00:03:17Z",
-              "collection_age_hours": 1.926,
+              "collection_age_hours": 2.656,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -1489,7 +1345,7 @@
               "collection_fresh_count": 16,
               "stale_count": 0,
               "collected_at_floor": "2026-08-15T00:03:31Z",
-              "collection_age_hours": 1.922,
+              "collection_age_hours": 2.652,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -1546,7 +1402,7 @@
               "collection_fresh_count": 3,
               "stale_count": 0,
               "collected_at_floor": "2026-08-15T00:03:43Z",
-              "collection_age_hours": 1.919,
+              "collection_age_hours": 2.649,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -6074,7 +5930,7 @@
               "collection_fresh_count": 5,
               "stale_count": 0,
               "collected_at_floor": "2026-08-15T00:03:17Z",
-              "collection_age_hours": 1.926,
+              "collection_age_hours": 2.656,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -6142,7 +5998,7 @@
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 0.01,
+      "age": 0.74,
       "status": "ready"
     },
     {
@@ -6164,7 +6020,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 106.41,
+      "age": 107.14,
       "status": "ready"
     },
     {
@@ -6175,7 +6031,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 137.71,
+      "age": 138.44,
       "status": "ready"
     },
     {
@@ -6186,7 +6042,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 106.4,
+      "age": 107.13,
       "status": "ready"
     },
     {
@@ -6197,7 +6053,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 77.16,
+      "age": 77.89,
       "status": "ready"
     }
   ],
@@ -6258,7 +6114,7 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-08-15T01:58:47.351Z",
+      "generated_at": "2026-08-15T02:42:38Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -6276,8 +6132,8 @@
     }
   ],
   "totals": {
-    "lanes": 33,
-    "ready": 20,
+    "lanes": 34,
+    "ready": 21,
     "degraded": 13,
     "warning": 0,
     "blocked": 0,
@@ -10125,10 +9981,10 @@
       "label": "Daily automation and deploy gates",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "Daily automation and deploy gates is not ready: manifest reconciliation: update-manifest rebuild path; StockAnalysis daily-1Y schedule: weekday catch-up lane. Other lanes may publish.",
+      "status_message": "Daily automation and deploy gates is not ready: manifest reconciliation: update-manifest rebuild path. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-15T01:58:50.353Z",
+      "as_of": "2026-08-15T02:42:39.944Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -10205,8 +10061,8 @@
         {
           "id": "stockanalysis_daily1y_scheduled",
           "label": "StockAnalysis daily-1Y schedule",
-          "status": "blocked",
-          "status_label": "차단",
+          "status": "ready",
+          "status_label": "정상",
           "detail": "weekday catch-up lane",
           "platform_blocking": false
         },
@@ -10597,7 +10453,7 @@
         ],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-14T23:45:44.748Z",
+          "observed_at": "2026-08-15T02:01:09.427Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -10724,6 +10580,51 @@
         }
       ],
       "reason": "stale",
+      "artifact": {
+        "source_as_of": null,
+        "source_as_of_reason": "dateless_by_provider"
+      }
+    },
+    {
+      "id": "stockanalysis_etf_detail",
+      "label": "StockAnalysis per-ticker ETF detail",
+      "status": "ready",
+      "status_label": "정상",
+      "status_message": "StockAnalysis per-ticker ETF detail is ready.",
+      "deployment_blocking": false,
+      "required": true,
+      "as_of": null,
+      "counts": {},
+      "details": {
+        "recovery_retry_set": [],
+        "recovery_recovered": [],
+        "last_attempt": {
+          "event_name": null,
+          "observed_at": "2026-08-15T00:13:05Z",
+          "outcome": "success",
+          "failure_class": null
+        },
+        "last_attempt_reason": null
+      },
+      "checks": [
+        {
+          "id": "detection_floor_status",
+          "label": "Detection floor status",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "ok; source_as_of null",
+          "platform_blocking": false
+        },
+        {
+          "id": "lkg_retry_set_empty",
+          "label": "LKG retry set empty",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "empty",
+          "platform_blocking": false
+        }
+      ],
+      "reason": "ok",
       "artifact": {
         "source_as_of": null,
         "source_as_of_reason": "dateless_by_provider"
@@ -11941,14 +11842,6 @@
       "required": true
     },
     {
-      "lane_id": "automation_contract",
-      "check_id": "stockanalysis_daily1y_scheduled",
-      "status": "blocked",
-      "label": "StockAnalysis daily-1Y schedule",
-      "detail": "weekday catch-up lane",
-      "required": true
-    },
-    {
       "lane_id": "fred_banking",
       "check_id": "detection_floor_status",
       "status": "blocked",
@@ -11994,6 +11887,14 @@
       "status": "blocked",
       "label": "Detection floor status",
       "detail": "unexpected_error; source_as_of null",
+      "required": true
+    },
+    {
+      "lane_id": "us_indices_daily",
+      "check_id": "recovery_state_present",
+      "status": "blocked",
+      "label": "Recovery state",
+      "detail": "recovery index is missing or malformed",
       "required": true
     }
   ]

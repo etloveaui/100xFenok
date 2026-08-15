@@ -463,7 +463,6 @@ const config = {
       id: "yahoo_etf_fallback",
       label: "Yahoo ETF fallback",
       members: [registryMember("yahoo_etf_fallback", [
-        "50 22 * * 1-5",
         "50 23 * * 1-5",
         "20 23 * * 0",
       ], [
@@ -521,12 +520,14 @@ const config = {
       // index but are a distinct acquisition unit with distinct failure modes, so
       // they carry their own detection row rather than inheriting the universe
       // lane's. Without this row the 5,605-file canonical output had no owner.
-      members: [registryMember("stockanalysis_etf_detail", ["20 21 * * *"], [
+      // ETF detail is a member of the ETF/surface schedules. The separate
+      // stocks-only schedule must not create a synthetic detail failure row.
+      members: [registryMember("stockanalysis_etf_detail", ["50 23 * * 1-5", "20 23 * * 0"], [
         artifact("stockanalysis_etf_detail_recovery_index", "data/admin/stockanalysis-recovery/index.json", {
-          schemaVersion: schemaVersion("/schema_version", "stockanalysis-recovery/v1"),
+          schemaVersion: schemaVersion("/schema_version", "stockanalysis-recovery-index/v1"),
           sourceSelector: notApplicableSource(),
           assertions: [
-            typeAssertion("states_object", "/states", "object"),
+            typeAssertion("counts_by_kind_object", "/counts_by_kind", "object"),
           ],
         }),
       ])],
@@ -1135,7 +1136,7 @@ const config = {
     lane({
       id: "yahoo_batch_quote_history",
       label: "Yahoo batch quote/history",
-      // One stock slot plus twelve two-hourly ETF slots. These keys must stay
+      // One stock slot plus one ETF slot. These keys must stay
       // identical to the workflow's own `on.schedule`, or the detection
       // observer cannot attribute a missed slot; see
       // test-fetch-cron-attempt-coverage.mjs, which derives them from the
@@ -1143,17 +1144,6 @@ const config = {
       members: [registryMember("yahoo_batch_quote_history", [
         "20 23 * * 1-5",
         "7 0 * * 0-5",
-        "7 2 * * 0-5",
-        "7 4 * * 0-5",
-        "7 6 * * 0-5",
-        "7 8 * * 0-5",
-        "7 10 * * 0-5",
-        "7 12 * * 0-5",
-        "7 14 * * 0-5",
-        "7 16 * * 0-5",
-        "7 18 * * 0-5",
-        "7 20 * * 0-5",
-        "7 22 * * 0-5",
       ], [
         artifact("yahoo_batch_quote_history_index", "data/admin/yahoo-batch-quote-history/index.json", {
           schemaVersion: schemaVersion("/schema_version", "yahoo-batch-quote-history-index/v1"),

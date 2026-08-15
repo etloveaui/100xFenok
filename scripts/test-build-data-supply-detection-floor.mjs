@@ -605,6 +605,7 @@ function runConfigAndFixtureChecks() {
     "defillama_stablecoins",
     "yahoo_etf_fallback",
     "stockanalysis_etf_universe",
+    "stockanalysis_etf_detail",
     "stockanalysis_stock_financial",
     "yahoo_ticker_macro",
     "sentiment",
@@ -987,8 +988,8 @@ function runAttemptShardChecks(artifactRoot) {
   // Denominator derivation (re-derive before changing): the config declares 30 logical
   // lanes, of which exactly 2 carry a declared external cadence (benchmarks,
   // global_scouter). With an empty private root the remaining 28 are unobserved. The
-  // previous 27 predates the stockanalysis_etf_detail shadow lane, which is itself
-  // unobserved until a real emitter attempt exists.
+  // previous 27 predates the stockanalysis_etf_detail live lane, which remains
+  // unobserved in this intentionally empty fixture root.
   assert.equal(emptyReport.lanes.filter((row) => row.endpoint.reason === "workflow_unobserved").length, 28,
     "empty private root keeps GitHub and ownerless lanes explicitly unobserved without hiding declared external cadence");
 

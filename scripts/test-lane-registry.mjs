@@ -304,6 +304,8 @@ function clone(value) {
       "Damodaran keeps its measured in-repo owner workflow");
     assert.equal(registryLaneById("stockanalysis_stock_financial").enforcement, "live",
       "the bounded StockAnalysis pair lane is live after its first committed natural 8-pair attempt");
+    assert.equal(registryLaneById("stockanalysis_etf_detail").enforcement, "live",
+      "the bounded StockAnalysis ETF detail lane is live after its first committed natural fence-confirmed attempt");
     assert.equal(registryLaneById("yahoo_private_options").enforcement, "live",
       "the targeted Yahoo options lane is live after its first committed natural schedule attempt");
     for (const {

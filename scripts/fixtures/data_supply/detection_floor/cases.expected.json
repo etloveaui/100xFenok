@@ -72,7 +72,7 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "expected_report": {
-      "config_digest": "d8dbabd2911103bfc14e167d51eb080e9a018dba8ba9a9cc888bffe975691c00",
+      "config_digest": "bdccb9b8628280f9142b16ecc87d0f6f0343ade192e9f49b94dac0ae193771a5",
       "counts": {
         "drift": 0,
         "producer_members_drift": 0,
@@ -296,9 +296,9 @@
             "reason": "workflow_unobserved",
             "status": "unobserved"
           },
-          "enforcement": "shadow",
+          "enforcement": "live",
           "id": "stockanalysis_etf_detail",
-          "kpi_required": false,
+          "kpi_required": true,
           "label": "StockAnalysis per-ticker ETF detail",
           "monitoring_mode": "post_fetch_artifact",
           "reason": "missing_artifact",
@@ -915,9 +915,9 @@
     },
     "id": "all_valid_at_fixed_now",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "8013eaf28d44d0a5ff713246e00946b546583775822f3ee958bae1f5ccc663e7"
+    "report_file_sha256": "02d5d0a49139d4d49ceacb18db4db1989da2cb324775fe817391e6ea853b0328"
   },
-  "config_digest": "d8dbabd2911103bfc14e167d51eb080e9a018dba8ba9a9cc888bffe975691c00",
+  "config_digest": "bdccb9b8628280f9142b16ecc87d0f6f0343ade192e9f49b94dac0ae193771a5",
   "config_digest_input": {
     "canonicalization": "recursive-sorted-object-keys-preserved-array-order-utf8",
     "enforcement": "shadow",
@@ -931,6 +931,7 @@
       "defillama_stablecoins",
       "yahoo_etf_fallback",
       "stockanalysis_etf_universe",
+      "stockanalysis_etf_detail",
       "stockanalysis_stock_financial",
       "stockanalysis_surfaces",
       "yahoo_ticker_macro",
@@ -962,6 +963,7 @@
       "defillama_stablecoins",
       "yahoo_etf_fallback",
       "stockanalysis_etf_universe",
+      "stockanalysis_etf_detail",
       "stockanalysis_stock_financial",
       "stockanalysis_surfaces",
       "yahoo_ticker_macro",
@@ -1044,7 +1046,7 @@
       "id": "unobserved"
     }
   ],
-  "registry_digest": "294cd9b3fdafe55218143499e033094851e5cfa31e5e647b0659062f0966b598",
+  "registry_digest": "430222ee08c5c8356b1145b39bf88053c6c2cf5c83edaef23b01084040ed3ede",
   "schema_version": "data-supply-detection-expected/v1",
   "slickcharts_member_ids": [
     "daily",

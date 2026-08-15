@@ -39,6 +39,12 @@ assert.equal(lane("yahoo_etf_fallback").enforcement, "live");
 assert.equal(lane("yahoo_etf_fallback").endpoint_contract.transport, "library");
 assert.equal(lane("stockanalysis_etf_universe").enforcement, "live");
 assert.equal(lane("stockanalysis_etf_universe").endpoint_contract.transport, "http");
+assert.equal(lane("stockanalysis_etf_detail").enforcement, "live");
+assert.equal(lane("stockanalysis_etf_detail").kpi_required, true);
+assert.deepEqual(
+  lane("stockanalysis_etf_detail").producer_members[0].artifact_contracts[0].assertions.map((item) => item.id),
+  ["counts_by_kind_object"],
+);
 assert.deepEqual(
   lane("stockanalysis_etf_universe").freshness.source_basis,
   [],
