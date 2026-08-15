@@ -348,7 +348,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   const fixture = makeFixture({ workflow: BUILD_STOCKS_ANALYZER_WORKFLOW });
   const always = run(fixture.root, "always_if_exists", [], BUILD_STOCKS_ANALYZER_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  assert.match(always.stdout, /declared=15 stage_selected=16 staged_index_total=16/);
+  assert.match(always.stdout, /declared=16 stage_selected=17 staged_index_total=17/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
 
   execFileSync("git", ["add", "-A"], { cwd: fixture.root });
