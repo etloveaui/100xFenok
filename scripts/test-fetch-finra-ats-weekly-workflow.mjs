@@ -20,7 +20,7 @@ assert.equal(exactCount(source, "controlled_failure:"), 1, "controlled failure i
 assert.equal(exactCount(source, "FINRA_API_CLIENT_ID: ${{ secrets.FINRA_API_CLIENT_ID }}"), 1);
 assert.equal(exactCount(source, "FINRA_API_CLIENT_SECRET: ${{ secrets.FINRA_API_CLIENT_SECRET }}"), 1);
 assert.equal(source.includes("echo $FINRA_API_CLIENT"), false, "workflow must never echo FINRA secrets");
-assert.equal(exactCount(source, "group: fenok-data-writer-finra-ats-weekly-${{ github.ref }}"), 1);
+assert.equal(exactCount(source, "group: fenok-data-writer-refs/heads/main"), 1);
 assert.equal(exactCount(source, "cancel-in-progress: false"), 1);
 assert.equal(exactCount(source, "queue: max"), 1, "loss-intolerant FINRA acquisition must never replace a waiter");
 assert.equal(exactCount(source, "node scripts/fetch-finra-ats-weekly.mjs"), 1);
