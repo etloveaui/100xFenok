@@ -501,8 +501,16 @@ for (const doc of investorDocs) {
 }
 
 const summary = readExistingJson(SUMMARY_PATH, {}, guardSummaryDoc);
+const sourceGeneratedAt = String(
+  summary.metadata?.source_generated_at ?? summary.metadata?.generated_at ?? "",
+).trim() || null;
+const sourceQuarter = String(
+  summary.metadata?.source_quarter ?? summary.metadata?.quarters_covered?.[0] ?? "",
+).trim() || null;
 summary.metadata = {
   ...(summary.metadata ?? {}),
+  source_generated_at: sourceGeneratedAt,
+  source_quarter: sourceQuarter,
   enrichment_coverage: coverage.coverage,
   enrichment_source_mix: coverage.sourceMix,
   enrichment_denominator: "public_filtered_holdings",

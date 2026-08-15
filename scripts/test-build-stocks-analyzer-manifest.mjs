@@ -24,6 +24,7 @@ assert.ok(
   "manifest staging must precede the static canonical path list",
 );
 assert.match(workflow, /data\/sec-13f\/investors\/\*\.json/);
+assert.match(workflow, /scripts\/test-sec13f-source-route\.mjs/);
 assert.doesNotMatch(workflow, /100xfenok-next\/public/);
 assert.doesNotMatch(workflow, /find 100xfenok-next\/public/, "no lane mirror staging may return");
 assert.match(workflow, /data\/calendar\/prev-values\.json/);

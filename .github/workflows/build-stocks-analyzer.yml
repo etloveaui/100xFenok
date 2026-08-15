@@ -2,7 +2,9 @@ name: Build Stocks Analyzer
 
 # Merge Global Scouter + SlickCharts with bounded Yahoo forward-metric fallbacks
 # into a single native-ready stocks_analyzer.json for the stock-analyzer feature.
-# Runs daily after the global-scouter raw export window.
+# Runs daily after the global-scouter raw export window. SEC 13F ingestion is
+# owned by the external CCH converter; this workflow only enriches and derives
+# from the canonical SEC payload after the provenance guard passes.
 
 on:
   schedule:
@@ -42,7 +44,10 @@ jobs:
           node scripts/test-yf-screener-enrichment.mjs
           node scripts/build-stocks-analyzer.mjs
 
-      - name: Build 13F analytics (trades ranking + portfolio views)
+      - name: Verify SEC 13F source provenance
+        run: node scripts/test-sec13f-source-route.mjs
+
+      - name: Build 13F downstream analytics (SEC ingestion is external)
         run: |
           node scripts/build-13f-enrichment-backfill.mjs
           node scripts/build-13f-integrity-indexes.mjs

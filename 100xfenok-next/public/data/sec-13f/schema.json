@@ -1,7 +1,7 @@
 {
   "folder": "sec-13f",
   "version": "3.4.0",
-  "updated": "2026-06-17",
+  "updated": "2026-08-15",
   "source": "SEC EDGAR 13F filings",
   "update_frequency": "quarterly (45 days after quarter end)",
   "maintainer": "SEC 13F Converter v3.4.0 (accumulate mode, full backfill default)",
@@ -10,7 +10,7 @@
     "by_sector.json": "Holdings by sector",
     "by_ticker.json": "Holdings by ticker",
     "investors/": "60 individual investor files",
-    "analytics/": "Derived metrics (14 files: 10 converter outputs + 4 100x derived indexes)"
+    "analytics/": "Derived metrics (15 files: 10 converter outputs + 4 100x derived indexes + 1 separate factor-exposure summary)"
   },
   "files": {
     "summary.json": {
@@ -30,6 +30,8 @@
             "price_at_filing": "number (0-1)",
             "return_since_filing": "number (0-1)"
           },
+          "source_generated_at": "ISO8601 datetime|null; upstream SEC converter generation time, preserved across local enrichment",
+          "source_quarter": "string|null; latest quarter emitted by the upstream SEC converter",
           "enrichment_source_mix": "object<string, number>",
           "enrichment_denominator": "raw_holdings|public_filtered_holdings",
           "enrichment_backfill": {
@@ -528,6 +530,11 @@
     ]
   },
   "breaking_changes_history": [
+    {
+      "version": "3.4.0",
+      "date": "2026-08-15",
+      "change": "Q2 2026 SEC 13F refresh: 60 tracked investors, 31 quarters covered where filed, 79 JSON files including schema, and 15 analytics files. Current-quarter analytics use 56 non-stale investors; ackman, einhorn, scion, and vanguard remain stale-excluded."
+    },
     {
       "version": "3.4.0",
       "date": "2026-06-17",
