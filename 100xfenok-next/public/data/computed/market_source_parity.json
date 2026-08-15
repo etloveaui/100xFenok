@@ -1,23 +1,23 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-08-14T23:42:19Z",
+  "generated_at": "2026-08-15T00:25:48Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6802,
     "fields": 19,
     "multi_candidate_fields": 57405,
     "divergence_rows": 57334,
-    "percent_scale_warnings": 198,
+    "percent_scale_warnings": 195,
     "diagnosis_counts": {
-      "agreement": 11016,
-      "scale_mismatch": 198,
-      "sign_divergence": 3016,
-      "stale": 31745,
-      "value_drift": 11359
+      "agreement": 10947,
+      "scale_mismatch": 195,
+      "sign_divergence": 3028,
+      "stale": 31747,
+      "value_drift": 11417
     },
-    "stale_rows": 31745,
-    "scale_mismatch_rows": 198,
-    "sign_divergence_rows": 3016
+    "stale_rows": 31747,
+    "scale_mismatch_rows": 195,
+    "sign_divergence_rows": 3028
   },
   "by_field": {
     "beta": {
@@ -3412,6 +3412,41 @@
       }
     },
     {
+      "ticker": "DHR",
+      "asset_type": "stock",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 198.377867,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 3.283457513643772
+        },
+        {
+          "source": "yf",
+          "value": -3.3375978
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 198.377867,
+      "fresh_spread_pct": 198.377867,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
+      }
+    },
+    {
       "ticker": "FDT",
       "asset_type": "etf",
       "field": "change_pct",
@@ -3820,41 +3855,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.history": 53.0
-      }
-    },
-    {
-      "ticker": "SWKS",
-      "asset_type": "stock",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 198.080055,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 7.392446739126989
-        },
-        {
-          "source": "yf",
-          "value": -7.537156
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 198.080055,
-      "fresh_spread_pct": 198.080055,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
       }
     },
     {
@@ -5215,6 +5215,46 @@
       }
     },
     {
+      "ticker": "NFLX",
+      "asset_type": "stock",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 3,
+      "relative_spread_pct": 101.883048,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 5.43
+        },
+        {
+          "source": "yf",
+          "value": -0.10224208
+        },
+        {
+          "source": "yf.derived",
+          "value": -0.10224948875255406
+        }
+      ],
+      "diagnosis": "scale_mismatch",
+      "spread_pct": 101.883048,
+      "fresh_spread_pct": 101.883048,
+      "stale_sources": [],
+      "scale_mismatch": true,
+      "scale_factor": 53,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 1.0,
+        "yf": 0.0,
+        "yf.derived": 0.0
+      }
+    },
+    {
       "ticker": "CVRD",
       "asset_type": "etf",
       "field": "return_1y",
@@ -5801,41 +5841,6 @@
       "diagnosis": "scale_mismatch",
       "spread_pct": 101.526221,
       "fresh_spread_pct": 101.526221,
-      "stale_sources": [],
-      "scale_mismatch": true,
-      "scale_factor": 66,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
-      }
-    },
-    {
-      "ticker": "010780.KS",
-      "asset_type": "stock",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 101.516543,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -13.52572670620375
-        },
-        {
-          "source": "yf",
-          "value": 0.20512342
-        }
-      ],
-      "diagnosis": "scale_mismatch",
-      "spread_pct": 101.516543,
-      "fresh_spread_pct": 101.516543,
       "stale_sources": [],
       "scale_mismatch": true,
       "scale_factor": 66,
@@ -6973,41 +6978,6 @@
       }
     },
     {
-      "ticker": "DKS",
-      "asset_type": "stock",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 101.044736,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 0.0944815367204471
-        },
-        {
-          "source": "yf",
-          "value": -9.04358
-        }
-      ],
-      "diagnosis": "scale_mismatch",
-      "spread_pct": 101.044736,
-      "fresh_spread_pct": 101.044736,
-      "stale_sources": [],
-      "scale_mismatch": true,
-      "scale_factor": 96,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
-      }
-    },
-    {
       "ticker": "BOEU",
       "asset_type": "etf",
       "field": "return_1m",
@@ -7297,41 +7267,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 53.0
-      }
-    },
-    {
-      "ticker": "VG",
-      "asset_type": "stock",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 100.844774,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -8.634753021297056
-        },
-        {
-          "source": "yf",
-          "value": 0.072944164
-        }
-      ],
-      "diagnosis": "scale_mismatch",
-      "spread_pct": 100.844774,
-      "fresh_spread_pct": 100.844774,
-      "stale_sources": [],
-      "scale_mismatch": true,
-      "scale_factor": 118,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
       }
     },
     {
@@ -8007,6 +7942,41 @@
       }
     },
     {
+      "ticker": "GGG",
+      "asset_type": "stock",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 100.476705,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 0.012087076866172965
+        },
+        {
+          "source": "yf",
+          "value": -2.5355458
+        }
+      ],
+      "diagnosis": "scale_mismatch",
+      "spread_pct": 100.476705,
+      "fresh_spread_pct": 100.476705,
+      "stale_sources": [],
+      "scale_mismatch": true,
+      "scale_factor": 210,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
+      }
+    },
+    {
       "ticker": "BAY",
       "asset_type": "etf",
       "field": "return_1m",
@@ -8407,6 +8377,47 @@
       ],
       "scale_mismatch": true,
       "scale_factor": 319,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 50.0
+      }
+    },
+    {
+      "ticker": "DEFR",
+      "asset_type": "etf",
+      "field": "return_1m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 100.309207,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -0.0037537787145302767
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 1.214
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 1.214
+        }
+      ],
+      "diagnosis": "scale_mismatch",
+      "spread_pct": 100.309207,
+      "fresh_spread_pct": 100.309207,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": true,
+      "scale_factor": 323,
       "sign_divergence": true,
       "selected_rationale": {
         "selected": "yf.history_1y",
@@ -13215,6 +13226,41 @@
       }
     },
     {
+      "ticker": "DHR",
+      "asset_type": "stock",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 198.377867,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 3.283457513643772
+        },
+        {
+          "source": "yf",
+          "value": -3.3375978
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 198.377867,
+      "fresh_spread_pct": 198.377867,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
+      }
+    },
+    {
       "ticker": "IYE",
       "asset_type": "etf",
       "field": "return_1m",
@@ -13253,41 +13299,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 53.0
-      }
-    },
-    {
-      "ticker": "SWKS",
-      "asset_type": "stock",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 198.080055,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 7.392446739126989
-        },
-        {
-          "source": "yf",
-          "value": -7.537156
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 198.080055,
-      "fresh_spread_pct": 198.080055,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
       }
     },
     {
@@ -14228,6 +14239,41 @@
       }
     },
     {
+      "ticker": "032640.KS",
+      "asset_type": "stock",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 196.4006,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 4.002810376407136
+        },
+        {
+          "source": "yf",
+          "value": -3.8587332
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 196.4006,
+      "fresh_spread_pct": 196.4006,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
+      }
+    },
+    {
       "ticker": "POW",
       "asset_type": "etf",
       "field": "return_1m",
@@ -14266,6 +14312,41 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 50.0
+      }
+    },
+    {
+      "ticker": "383220.KS",
+      "asset_type": "stock",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 196.346457,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -10.913029260332987
+        },
+        {
+          "source": "yf",
+          "value": 11.326861
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 196.346457,
+      "fresh_spread_pct": 196.346457,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
       }
     },
     {
@@ -14474,41 +14555,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 53.0,
-        "yf": 0.0
-      }
-    },
-    {
-      "ticker": "004370.KS",
-      "asset_type": "stock",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 195.905777,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -2.265489712313639
-        },
-        {
-          "source": "yf",
-          "value": 2.3622036
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 195.905777,
-      "fresh_spread_pct": 195.905777,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
         "yf": 0.0
       }
     },
@@ -15312,41 +15358,6 @@
       }
     },
     {
-      "ticker": "UDR",
-      "asset_type": "stock",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 194.635045,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 2.0880868664172736
-        },
-        {
-          "source": "yf",
-          "value": -2.2064626
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 194.635045,
-      "fresh_spread_pct": 194.635045,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
-      }
-    },
-    {
       "ticker": "OARK",
       "asset_type": "etf",
       "field": "return_1m",
@@ -15476,6 +15487,41 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 50.0,
+        "yf": 0.0
+      }
+    },
+    {
+      "ticker": "SWKS",
+      "asset_type": "stock",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 194.17641,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 6.782536510211133
+        },
+        {
+          "source": "yf",
+          "value": -6.3875494
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 194.17641,
+      "fresh_spread_pct": 194.17641,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
         "yf": 0.0
       }
     },
@@ -16275,41 +16321,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 50.0
-      }
-    },
-    {
-      "ticker": "BSTU",
-      "asset_type": "etf",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 192.75034,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 0.38736129823293425
-        },
-        {
-          "source": "yf",
-          "value": -0.35927892
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 192.75034,
-      "fresh_spread_pct": 192.75034,
-      "stale_sources": [],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "yf": 0.0
       }
     }
   ]
