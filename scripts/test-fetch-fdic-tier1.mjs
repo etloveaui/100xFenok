@@ -18,11 +18,28 @@ import {
   runFdicTier1,
 } from "./fetch-fdic-tier1.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
+import { isFirstMonday, isFdicScheduleOccurrence, scheduleEligible } from "./guard-fdic-first-monday.mjs";
 
 const OBSERVED_AT = "2026-07-14T12:34:56.000Z";
 const ATTEMPT_ID = "fdic-tier1-20260714t123456000z-test";
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const QUARTERS = ["20251231", "20260331"];
+
+{
+  assert.equal(isFirstMonday("2026-08-03T06:00:00Z"), true, "first Monday is eligible");
+  assert.equal(isFirstMonday("2026-08-10T06:00:00Z"), false, "second Monday is not eligible");
+  assert.equal(isFirstMonday("2026-08-04T06:00:00Z"), false, "first Tuesday is not eligible");
+  assert.equal(isFirstMonday("2026-09-07T06:00:00Z"), true, "Labor Day is still the first Monday date");
+  assert.equal(isFdicScheduleOccurrence("2026-08-03T06:00:00Z"), true, "non-holiday first Monday is eligible");
+  assert.equal(isFdicScheduleOccurrence("2026-09-07T06:00:00Z"), false, "federal holiday is skipped");
+  assert.equal(scheduleEligible({ eventName: "schedule", now: "2026-08-10T06:00:00Z" }), false);
+  assert.equal(scheduleEligible({ eventName: "schedule", now: "2026-09-07T06:00:00Z" }), false, "holiday schedule is skipped");
+  assert.equal(scheduleEligible({ eventName: "workflow_dispatch", now: "2026-08-10T06:00:00Z" }), true, "manual dispatch stays available");
+  const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fdic.yml"), "utf8");
+  assert.match(workflow, /cron:\s*['"]0 6 1-7 \* 1['"]/);
+  assert.match(workflow, /guard-fdic-first-monday\.mjs/);
+  assert.match(workflow, /steps\.schedule_gate\.outputs\.eligible/);
+}
 
 function expectedAssertionIds(laneId) {
   const lane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === laneId);
@@ -636,7 +653,7 @@ function assertValidShard(shard) {
   assert.match(workflow, /INPUT_PERSISTENCE_MIGRATION_ONLY:/);
   assert.match(workflow, /data\/admin\/fdic_tier1\/index\.json/);
   assert.match(workflow, /data\/admin\/fdic_tier1\/lkg\/fdic_tier1\.json/);
-  assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
+  assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) && \(github\.event_name != 'schedule' \|\| steps\.schedule_gate\.outputs\.eligible == 'true'\) \}\}/);
 }
 
 // Lane Registry ⇄ commit-shard completeness gate (#366 step 4).

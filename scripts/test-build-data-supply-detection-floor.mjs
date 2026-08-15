@@ -944,6 +944,47 @@ function runConfigAndFixtureChecks() {
   assert.deepEqual(canonicalCalendars, calendarsFixture, "promoted calendar SSOT matches the proven fixture byte-for-data");
   assert.equal(validateCalendars(canonicalCalendars), undefined);
   assert.equal(validateConfigCalendarBindings(DATA_SUPPLY_DETECTION_CONFIG, canonicalCalendars), true);
+  {
+    const fdicSchedule = canonicalCalendars.schedules.find((row) => row.id === "monthly_first_monday_federal");
+    assert.equal(fdicSchedule.day_weekday_mode, "and", "FDIC cadence must mean first Monday, not POSIX day/weekday OR");
+    const firstMondayObserved = "2026-08-03T06:00:00Z";
+    const afterSecondMonday = "2026-08-11T06:00:00Z";
+    assert.equal(
+      evaluateAttemptCadence(
+        firstMondayObserved,
+        [fdicSchedule.cron],
+        fdicSchedule.calendar_id,
+        afterSecondMonday,
+        canonicalCalendars,
+      ).reason,
+      "ok",
+      "the second Monday must not replace the first-Monday occurrence",
+    );
+    assert.equal(
+      evaluateAttemptCadence(
+        firstMondayObserved,
+        [fdicSchedule.cron],
+        fdicSchedule.calendar_id,
+        "2026-09-15T06:00:00Z",
+        canonicalCalendars,
+      ).reason,
+      "ok",
+      "a federal holiday must not create a September FDIC occurrence",
+    );
+    const posixCalendar = clone(canonicalCalendars);
+    posixCalendar.schedules.find((row) => row.id === fdicSchedule.id).day_weekday_mode = "or";
+    assert.equal(
+      evaluateAttemptCadence(
+        firstMondayObserved,
+        [fdicSchedule.cron],
+        fdicSchedule.calendar_id,
+        afterSecondMonday,
+        posixCalendar,
+      ).reason,
+      "stale",
+      "the regression must distinguish explicit intersection from POSIX OR",
+    );
+  }
   const missingCadenceContract = clone(canonicalCalendars);
   missingCadenceContract.schedules = missingCadenceContract.schedules.filter((row) => row.id !== "six_hourly");
   assertThrowsCode(() => validateConfigCalendarBindings(DATA_SUPPLY_DETECTION_CONFIG, missingCadenceContract), "calendar_error");

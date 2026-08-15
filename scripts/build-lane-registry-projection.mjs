@@ -13,6 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
+import { matchesDayWeekday } from "./lib/schedule-day-weekday.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -250,17 +251,20 @@ function calendarParts(epoch, timezone) {
   };
 }
 
-function cronMatches(epoch, parsed, calendar) {
+function cronMatches(epoch, parsed, calendar, schedule) {
   const utc = calendarParts(epoch, "UTC");
   const local = calendarParts(epoch, calendar.timezone);
-  if (calendar.holidays?.includes(local.iso)) return false;
   if (!parsed.minute.has(utc.minute) || !parsed.hour.has(utc.hour) || !parsed.month.has(local.month)) return false;
   const dayMatch = parsed.day.has(local.day);
   const weekdayMatch = parsed.weekday.has(local.weekday);
-  if (parsed.dayWildcard && parsed.weekdayWildcard) return true;
-  if (parsed.dayWildcard) return weekdayMatch;
-  if (parsed.weekdayWildcard) return dayMatch;
-  return dayMatch || weekdayMatch;
+  return matchesDayWeekday({
+    dayMatch,
+    weekdayMatch,
+    dayWildcard: parsed.dayWildcard,
+    weekdayWildcard: parsed.weekdayWildcard,
+    dayWeekdayMode: schedule?.day_weekday_mode,
+    isHoliday: calendar.holidays?.includes(local.iso) ?? false,
+  });
 }
 
 function findOccurrence(schedule, calendar, fromEpoch, direction) {
@@ -271,7 +275,7 @@ function findOccurrence(schedule, calendar, fromEpoch, direction) {
   if (direction > 0) cursor += 60_000;
   const boundary = cursor + direction * 400 * 86_400_000;
   while (direction > 0 ? cursor <= boundary : cursor >= boundary) {
-    if (cronMatches(cursor, parsed, calendar)) return cursor;
+    if (cronMatches(cursor, parsed, calendar, schedule)) return cursor;
     cursor += step;
   }
   return null;

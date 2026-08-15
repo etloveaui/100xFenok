@@ -11,6 +11,7 @@ import {
   validateDetectionConfig,
 } from "./lib/data-supply-detection-config.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
+import { matchesDayWeekday } from "./lib/schedule-day-weekday.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -130,11 +131,12 @@ function isPlainObject(value) {
   return prototype === Object.prototype || prototype === null;
 }
 
-function exactKeys(value, expected, context) {
+function exactKeys(value, expected, context, optional = []) {
   if (!isPlainObject(value)) fail("schema_error", `${context} must be a plain object`);
   const actual = Object.keys(value).sort();
   const wanted = [...expected].sort();
-  if (actual.length !== wanted.length || actual.some((key, index) => key !== wanted[index])) {
+  const allowed = new Set([...expected, ...optional]);
+  if (actual.length < wanted.length || actual.some((key) => !allowed.has(key))) {
     fail("schema_error", `${context} keys must be exactly ${wanted.join(",")}`);
   }
 }
@@ -704,17 +706,20 @@ function parseCron(cron) {
   };
 }
 
-function cronMatches(epoch, parsed, calendar) {
+function cronMatches(epoch, parsed, calendar, schedule) {
   const parts = calendarParts(epoch, "UTC");
   const calendarDate = calendarParts(epoch, calendar.timezone).iso;
-  if (calendar.holidays.includes(calendarDate)) return false;
   if (!parsed.minute.has(parts.minute) || !parsed.hour.has(parts.hour) || !parsed.month.has(parts.month)) return false;
   const dayMatch = parsed.day.has(parts.day);
   const weekdayMatch = parsed.weekday.has(parts.weekday);
-  if (parsed.dayWildcard && parsed.weekdayWildcard) return true;
-  if (parsed.dayWildcard) return weekdayMatch;
-  if (parsed.weekdayWildcard) return dayMatch;
-  return dayMatch || weekdayMatch;
+  return matchesDayWeekday({
+    dayMatch,
+    weekdayMatch,
+    dayWildcard: parsed.dayWildcard,
+    weekdayWildcard: parsed.weekdayWildcard,
+    dayWeekdayMode: schedule?.day_weekday_mode,
+    isHoliday: calendar.holidays.includes(calendarDate),
+  });
 }
 
 function graceElapsed(occurrenceEpoch, nowEpoch, grace, calendar) {
@@ -733,7 +738,7 @@ function firstEligibleOccurrence(schedule, activatedAtEpoch, calendar) {
   let cursor = Math.ceil(activatedAtEpoch / 60_000) * 60_000;
   const ceiling = cursor + 400 * 86_400_000;
   while (cursor <= ceiling) {
-    if (cronMatches(cursor, parsed, calendar)) return cursor;
+    if (cronMatches(cursor, parsed, calendar, schedule)) return cursor;
     cursor += 60_000;
   }
   fail("calendar_error", `no activation-eligible occurrence found for ${schedule.id}`);
@@ -760,7 +765,7 @@ function latestDueOccurrence(
     ? searchFloor
     : Math.max(searchFloor, Math.ceil(activatedAtEpoch / 60_000) * 60_000);
   while (cursor >= floor) {
-    if (cronMatches(cursor, parsed, calendar) && graceElapsed(cursor, nowEpoch, schedule.grace, calendar)) {
+    if (cronMatches(cursor, parsed, calendar, schedule) && graceElapsed(cursor, nowEpoch, schedule.grace, calendar)) {
       cache.set(key, cursor);
       return cursor;
     }
@@ -1004,10 +1009,16 @@ export function validateCalendars(calendars) {
   const scheduleIds = new Set();
   const scheduleContracts = new Set();
   for (const row of calendars.schedules) {
-    exactKeys(row, ["id", "cron", "calendar_id", "grace"], `schedule ${row?.id ?? "?"}`);
+    exactKeys(row, ["id", "cron", "calendar_id", "grace"], `schedule ${row?.id ?? "?"}`, ["day_weekday_mode"]);
     if (!IDENTIFIER.test(row.id) || scheduleIds.has(row.id) || !ids.has(row.calendar_id) || typeof row.cron !== "string") fail("calendar_error", "schedule identity is invalid");
     scheduleIds.add(row.id);
-    parseCron(row.cron);
+    const parsed = parseCron(row.cron);
+    if (row.day_weekday_mode !== undefined && !new Set(["or", "and"]).has(row.day_weekday_mode)) {
+      fail("calendar_error", `${row.id} day_weekday_mode is invalid`);
+    }
+    if (row.day_weekday_mode === "and" && (parsed.dayWildcard || parsed.weekdayWildcard)) {
+      fail("calendar_error", `${row.id} day_weekday_mode=and requires restricted day and weekday fields`);
+    }
     const scheduleKey = `${row.calendar_id}:${row.cron}`;
     if (scheduleContracts.has(scheduleKey)) fail("calendar_error", "duplicate cron/calendar grace contract");
     scheduleContracts.add(scheduleKey);
