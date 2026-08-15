@@ -555,6 +555,14 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   assert.equal(result.controlled_failure, true);
   assert.equal(result.exit_code, 0);
   assert.equal(result.promoted, false);
+  const currentPath = markerPathFor(root);
+  const lkgPath = path.join(root, "data/admin/finra-ats/lkg/weekly-summary.json");
+  assert.equal(fs.existsSync(lkgPath), true, "controlled failure must retain the canonical marker as LKG");
+  assert.deepEqual(fs.readFileSync(lkgPath), fs.readFileSync(currentPath), "LKG bytes must equal the last valid canonical marker");
+  const state = readJson(path.join(root, "data/admin/finra-ats/index.json"));
+  assert.equal(state.items["weekly-summary"].resolution_state, "lkg_primary");
+  assert.equal(state.items["weekly-summary"].retry, true);
+  assert.equal(state.items["weekly-summary"].lkg.path, "data/admin/finra-ats/lkg/weekly-summary.json");
 }
 
 // Failure cannot silently switch to a public endpoint: missing OAuth credentials
