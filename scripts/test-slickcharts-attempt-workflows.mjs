@@ -84,6 +84,11 @@ for (const member of ["history", "symbols"]) {
   );
   const singleAttempt = symbols.slice(symbols.indexOf("- name: Commit symbols attempt"));
   assert.doesNotMatch(singleAttempt, /--manifest-workflow/, "single-symbol attempt must remain shard-only");
+  assert.match(
+    symbols,
+    /- name: Check slickcharts-symbols cloud acceptance[\s\S]*?CLOUD_ACCEPTANCE_MIN_OBSERVED_AT: \$\{\{ github\.run_started_at \}\}[\s\S]*?check-cloud-family-acceptance\.mjs --family=slickcharts-symbols/,
+    "symbols must record a current-run-bound cloud acceptance check",
+  );
   const monthly = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-monthly.yml"), "utf8");
   assert.match(
     monthly,

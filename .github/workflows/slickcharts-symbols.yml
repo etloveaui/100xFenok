@@ -248,6 +248,18 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=slickcharts-symbols --tolerate-gate-block --json
 
+      # A tolerated cost-gate block is a known non-proof, not a green cloud
+      # promotion. Keep this evidence check non-blocking for the producer lane
+      # but bind it to this run's outcome and exact generation so an old
+      # published record cannot satisfy the post-run acceptance by accident.
+      - name: Check slickcharts-symbols cloud acceptance
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          CLOUD_ACCEPTANCE_BASE_URL: https://100xfenok.etloveaui.workers.dev
+          CLOUD_ACCEPTANCE_MIN_OBSERVED_AT: ${{ github.run_started_at }}
+        run: node scripts/ops/check-cloud-family-acceptance.mjs --family=slickcharts-symbols
+
       - name: Persist slickcharts-symbols publish outcome
         if: ${{ always() }}
         run: node scripts/persist-cloud-publish-outcome.mjs --family=slickcharts-symbols --workflow=.github/workflows/slickcharts-symbols.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}
