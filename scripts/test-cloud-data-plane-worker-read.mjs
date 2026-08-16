@@ -26,6 +26,12 @@ import {
   handleCloudDataPlaneAsset,
   isEnrolledPath,
 } from "./lib/cloud-data-plane-worker-read.mjs";
+import {
+  PLANE_ENROLLMENT_EXACT,
+  PLANE_ENROLLMENT_PREFIXES,
+  PLANE_ENROLLMENT_SCHEMA_VERSION,
+} from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
+import { derivePublicPlaneEnrollment } from "./lib/plane-enrollment-derivation.mjs";
 import { FAMILIES } from "./publish-cloud-data-generation.mjs";
 
 const require = createRequire(new URL("../100xfenok-next/package.json", import.meta.url));
@@ -38,64 +44,75 @@ const NOW = "2026-08-03T04:00:00.000Z";
 const encoder = new TextEncoder();
 
 // --- read-side enrolment is derived from the publisher's FAMILIES table -----
-// The worker lib cannot import the publisher (its node-only imports would
-// break the bundle), so the table is hand-derived; this block proves the
-// derivation is exact and stays exact as FAMILIES changes.
 {
-  const publicFamilies = Object.entries(FAMILIES).filter(([, f]) => f.privacy_class === "public");
-  const familyByName = new Map(publicFamilies);
-  const manifestPrefix = (family) => family.manifest_prefix ?? family.root;
+  const expected = derivePublicPlaneEnrollment(FAMILIES);
+  const publicFamilies = Object.entries(FAMILIES).filter(([, family]) => family.privacy_class === "public");
+  const privateFamilies = Object.entries(FAMILIES).filter(([, family]) => family.privacy_class === "private");
+  const expectedFamilies = new Set([
+    ...expected.exact.map(([, family]) => family),
+    ...expected.prefixes.map(({ family }) => family),
+  ]);
 
-  for (const [pathname, familyName] of ENROLLED_PATHS) {
-    const family = familyByName.get(familyName);
-    assert.ok(family, `enrolled family ${familyName} exists in FAMILIES`);
-    if (family.files) {
-      const relative = `public${pathname}`.slice(manifestPrefix(family).length + 1);
-      assert.ok(
-        family.files.includes(relative),
-        `${pathname} is listed in FAMILIES.${familyName}.files`,
-      );
-    } else {
-      assert.ok(
-        ENROLLED_PREFIXES.some(({ prefix, family: f }) => f === familyName && pathname.startsWith(prefix)),
-        `${pathname} is covered by the ${familyName} tree prefix`,
-      );
-    }
+  assert.equal(PLANE_ENROLLMENT_SCHEMA_VERSION, expected.schema_version);
+  assert.deepEqual(PLANE_ENROLLMENT_EXACT, expected.exact, "generated exact data matches derivation");
+  assert.deepEqual(PLANE_ENROLLMENT_PREFIXES, expected.prefixes, "generated prefix data matches derivation");
+  assert.deepEqual([...ENROLLED_PATHS], expected.exact, "worker exact surface matches artifact");
+  assert.deepEqual(ENROLLED_PREFIXES, expected.prefixes, "worker prefix surface matches artifact");
+  assert.equal(expected.exact.length, 610, "exact enrollment count");
+  assert.equal(expected.prefixes.length, 1, "prefix enrollment count");
+  assert.equal(expectedFamilies.size, 18, "public family claim count");
+  assert.equal(publicFamilies.length, 18, "publisher public family count");
+  assert.equal(privateFamilies.length, 5, "publisher private family count");
+  for (const [familyName] of privateFamilies) {
+    assert.equal(expectedFamilies.has(familyName), false, `private family ${familyName} absent`);
+    assert.equal([...ENROLLED_PATHS.values()].includes(familyName), false, `private family ${familyName} exact absent`);
+    assert.equal(ENROLLED_PREFIXES.some(({ family }) => family === familyName), false, `private family ${familyName} prefix absent`);
   }
+  assert.equal([...ENROLLED_PATHS.keys()].some((pathname) => pathname.includes("stockanalysis")), false, "stockanalysis path absent");
+  assert.equal(expected.prefixes[0].prefix, "/data/edgar-korean-summaries/");
 
-  for (const { prefix, family: familyName } of ENROLLED_PREFIXES) {
-    assert.ok(familyByName.has(familyName), `prefix family ${familyName} exists in FAMILIES`);
-    assert.ok(prefix.startsWith("/") && prefix.endsWith("/"), `${prefix} is a bounded /.../ prefix`);
-  }
-
-  // The contract counts: every explicit FAMILIES file is exact (610 total,
-  // fred-macro and the computed-signals pilot included), and EDGAR is the only
-  // tree prefix.
-  const expectedExact = publicFamilies.reduce((n, [, f]) => n + (f.files ? f.files.length : 0), 0);
-  assert.equal(ENROLLED_PATHS.size, expectedExact, `exact entries match FAMILIES (${expectedExact})`);
-  assert.equal(ENROLLED_PREFIXES.length, 1, "exactly one tree prefix is enrolled");
-  assert.equal(ENROLLED_PREFIXES[0].prefix, "/data/edgar-korean-summaries/");
-
-  // Every public family's every published file is enrolled exactly or by prefix.
-  for (const [familyName, family] of publicFamilies) {
-    const files = family.files;
-    if (!files) {
-      // A tree family (no files list) must be covered by exactly its own
-      // manifest prefix, slash-bounded.
-      const treePrefix = `/${manifestPrefix(family)}/`.replace(/^\/public/, "");
-      assert.ok(
-        ENROLLED_PREFIXES.some(({ prefix, family: f }) => f === familyName && prefix === treePrefix),
-        `tree family ${familyName} is covered by exactly ${treePrefix}`,
-      );
-      continue;
-    }
-    for (const file of files) {
-      const pathname = `/${manifestPrefix(family)}/${file}`.replace(/^\/public/, "");
-      const covered = ENROLLED_PATHS.has(pathname)
-        || ENROLLED_PREFIXES.some(({ prefix }) => pathname.startsWith(prefix));
-      assert.ok(covered, `family ${familyName} file ${pathname} is enrolled`);
-    }
-  }
+  assert.throws(
+    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/data/bad", files: [], privacy_class: "unknown" } }),
+    /privacy_class/,
+  );
+  assert.throws(
+    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/data//bad", files: ["ok.json"], privacy_class: "public" } }),
+    /empty or dot segment/,
+  );
+  assert.throws(
+    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/not-data/bad", files: ["ok.json"], privacy_class: "public" } }),
+    /public\/data\/ or public\/generated\//,
+  );
+  assert.throws(
+    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/datax/bad", files: ["ok.json"], privacy_class: "public" } }),
+    /public\/data\/ or public\/generated\//,
+  );
+  assert.throws(
+    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/data/bad", files: ["query?.json"], privacy_class: "public" } }),
+    /URL syntax or control characters/,
+  );
+  assert.throws(
+    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/generated/bad#fragment", files: ["ok.json"], privacy_class: "public" } }),
+    /URL syntax or control characters/,
+  );
+  assert.throws(
+    () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/data/bad", files: ["dir/../ok.json"], privacy_class: "public" } }),
+    /empty or dot segment/,
+  );
+  assert.throws(
+    () => derivePublicPlaneEnrollment({
+      one: { manifest_prefix: "public/data/shared", files: ["same.json"], privacy_class: "public" },
+      two: { manifest_prefix: "public/data/shared", files: ["same.json"], privacy_class: "public" },
+    }),
+    /duplicate exact path/,
+  );
+  assert.throws(
+    () => derivePublicPlaneEnrollment({
+      tree: { manifest_prefix: "public/data/shared", privacy_class: "public" },
+      file: { manifest_prefix: "public/data/shared", files: ["same.json"], privacy_class: "public" },
+    }),
+    /duplicate prefix|cross-family exact\/prefix overlap/,
+  );
 }
 
 const moduleSource = async (name) => readFile(new URL(`./lib/${name}`, import.meta.url), "utf8");

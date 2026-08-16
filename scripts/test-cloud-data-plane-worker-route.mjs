@@ -32,6 +32,10 @@ const ROUTE = "https://worker.test/internal/cloud-data-plane";
 const encoder = new TextEncoder();
 
 const moduleSource = async (name) => readFile(new URL(`./lib/${name}`, import.meta.url), "utf8");
+const canonicalModuleSource = async (name) => readFile(
+  new URL(`../100xfenok-next/scripts/cloud-data-plane/${name}`, import.meta.url),
+  "utf8",
+);
 
 // The same wiring worker.ts uses: route first, enrolled assets second (plane,
 // then ASSETS fallback), application afterwards.
@@ -74,12 +78,17 @@ async function createWorker(bindings) {
         {
           type: "ESModule",
           path: "cloud-data-plane-worker-read.mjs",
-          contents: await moduleSource("cloud-data-plane-worker-read.mjs"),
+          contents: await canonicalModuleSource("cloud-data-plane-worker-read.mjs"),
+        },
+        {
+          type: "ESModule",
+          path: "cloud-data-plane-enrollment.generated.mjs",
+          contents: await canonicalModuleSource("cloud-data-plane-enrollment.generated.mjs"),
         },
         {
           type: "ESModule",
           path: "cloud-data-plane-cloudflare-adapter.mjs",
-          contents: await moduleSource("cloud-data-plane-cloudflare-adapter.mjs"),
+          contents: await canonicalModuleSource("cloud-data-plane-cloudflare-adapter.mjs"),
         },
         {
           type: "ESModule",
@@ -89,12 +98,12 @@ async function createWorker(bindings) {
         {
           type: "ESModule",
           path: "cloud-data-plane-generation.mjs",
-          contents: await moduleSource("cloud-data-plane-generation.mjs"),
+          contents: await canonicalModuleSource("cloud-data-plane-generation.mjs"),
         },
         {
           type: "ESModule",
           path: "json-canonical.mjs",
-          contents: await moduleSource("json-canonical.mjs"),
+          contents: await canonicalModuleSource("json-canonical.mjs"),
         },
       ],
     }, {
