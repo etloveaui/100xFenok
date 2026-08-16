@@ -12,6 +12,31 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workflow = fs.readFileSync(path.join(root, ".github/workflows/build-stocks-analyzer.yml"), "utf8");
 
+assert.match(
+  workflow,
+  /push:\s+branches: \[main\][\s\S]*?data\/computed\/stock_action_index\.json[\s\S]*?data\/computed\/market_facts\/index\.json[\s\S]*?data\/computed\/market_facts\/tickers\/\*\*[\s\S]*?data\/sec-13f\/by_ticker\.json[\s\S]*?data\/sec-13f\/summary\.json/,
+  "bridge input changes must trigger the owner workflow",
+);
+for (const stepName of [
+  "Build stocks_analyzer.json",
+  "Verify SEC 13F source provenance",
+  "Build 13F downstream analytics (SEC ingestion is external)",
+  "Build revision movers + industry benchmarks",
+  "Build calendar previous-release values (FRED)",
+  "Verify output",
+]) {
+  const stepStart = workflow.indexOf(`- name: ${stepName}`);
+  assert.ok(stepStart >= 0, `workflow step must exist: ${stepName}`);
+  const stepEnd = workflow.indexOf("\n      - name:", stepStart + 1);
+  const step = workflow.slice(stepStart, stepEnd < 0 ? workflow.length : stepEnd);
+  assert.match(step, /if: github\.event_name != 'push'/, `${stepName} must be skipped on lightweight pushes`);
+}
+const bridgeStepStart = workflow.indexOf("- name: Build and verify the review-only 13F bridge index");
+const bridgeStepEnd = workflow.indexOf("\n      - name:", bridgeStepStart + 1);
+const bridgeStep = workflow.slice(bridgeStepStart, bridgeStepEnd < 0 ? workflow.length : bridgeStepEnd);
+assert.doesNotMatch(bridgeStep, /if: github\.event_name != 'push'/, "bridge refresh must run on lightweight pushes");
+assert.match(bridgeStep, /build-sec13f-bridge-index\.mjs[\s\S]*test-sec13f-bridge-index\.mjs/);
+
 assert.doesNotMatch(workflow, /git add (?:-A|--all)/);
 assert.match(
   workflow,

@@ -7,6 +7,18 @@ name: Build Stocks Analyzer
 # from the canonical SEC payload after the provenance guard passes.
 
 on:
+  # The bridge is also derived from committed Stock Action / Market Facts /
+  # SEC 13F inputs that can advance outside this workflow. A push-triggered
+  # lightweight pass keeps its review-only fingerprints current without
+  # rerunning the full analyzer pipeline.
+  push:
+    branches: [main]
+    paths:
+      - 'data/computed/stock_action_index.json'
+      - 'data/computed/market_facts/index.json'
+      - 'data/computed/market_facts/tickers/**'
+      - 'data/sec-13f/by_ticker.json'
+      - 'data/sec-13f/summary.json'
   schedule:
     - cron: '7 6 * * *'
   workflow_dispatch:
@@ -40,14 +52,17 @@ jobs:
           node-version: '22'
 
       - name: Build stocks_analyzer.json
+        if: github.event_name != 'push'
         run: |
           node scripts/test-yf-screener-enrichment.mjs
           node scripts/build-stocks-analyzer.mjs
 
       - name: Verify SEC 13F source provenance
+        if: github.event_name != 'push'
         run: node scripts/test-sec13f-source-route.mjs
 
       - name: Build 13F downstream analytics (SEC ingestion is external)
+        if: github.event_name != 'push'
         run: |
           node scripts/build-13f-enrichment-backfill.mjs
           node scripts/build-13f-integrity-indexes.mjs
@@ -62,6 +77,7 @@ jobs:
           node scripts/test-sec13f-bridge-index.mjs
 
       - name: Build revision movers + industry benchmarks
+        if: github.event_name != 'push'
         run: |
           node scripts/build-revision-movers.mjs
           node scripts/build-industry-benchmarks.mjs
@@ -73,12 +89,14 @@ jobs:
       # scripts remain runnable on demand for archived research.
 
       - name: Build calendar previous-release values (FRED)
+        if: github.event_name != 'push'
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         # non-fatal: calendar context is an enhancement, not a build gate
         run: node scripts/build-calendar-prev.mjs || echo "calendar prev-values skipped"
 
       - name: Verify output
+        if: github.event_name != 'push'
         run: |
           echo "=== stocks_analyzer.json header ==="
           head -20 data/global-scouter/core/stocks_analyzer.json
@@ -116,7 +134,11 @@ jobs:
             echo "No stocks analyzer or 13F analytics changes to publish"
             exit 0
           fi
-          git commit -m "data: refresh stocks_analyzer.json + 13f analytics"
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            git commit -m "chore: refresh SEC 13F bridge index"
+          else
+            git commit -m "data: refresh stocks_analyzer.json + 13f analytics"
+          fi
           for attempt in $(seq 1 5); do
             if ! git pull --rebase --autostash origin main; then
               echo "git rebase failed on attempt ${attempt}; aborting and retrying"
