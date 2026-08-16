@@ -127,15 +127,34 @@ permissions:
   contents: write
   actions: write
 
+# Serialize Yahoo runs against each other so an older artifact cannot publish
+# after a newer acquisition. This private group does not occupy the global Git
+# writer queue; only the publish job below takes fenok-data-writer.
 concurrency:
-  group: fenok-data-writer-refs/heads/main
+  group: yf-finance-pipeline-${{ github.ref }}
   cancel-in-progress: false
   queue: max
 
 jobs:
-  fetch-yf-finance:
+  acquire-yf-finance:
     runs-on: ubuntu-latest
     timeout-minutes: 240
+    env:
+      YF_PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
+    # Acquisition cannot commit or push: read-only token, enforced structurally
+    # rather than by convention. The workflow-level write permission is retained
+    # for the publish job, which inherits it.
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      artifact_name: ${{ steps.artifact_identity.outputs.name }}
+      artifact_digest: ${{ steps.upload.outputs.artifact-digest }}
+      artifact_ready: ${{ steps.pack.outputs.ready }}
+      base_sha: ${{ steps.artifact_identity.outputs.base_sha }}
+      plan_only: ${{ steps.artifact_identity.outputs.plan_only }}
+      fetch_outcome: ${{ steps.fetch_batch.outcome }}
+      quarter_closes_outcome: ${{ steps.quarter_closes.outcome }}
     steps:
       - uses: actions/checkout@v4
 
@@ -143,6 +162,13 @@ jobs:
         run: |
           git fetch --depth=1 origin +main:refs/remotes/origin/main
           git checkout -B main origin/main
+
+      - name: Expose immutable artifact identity
+        id: artifact_identity
+        run: |
+          echo "name=yf-finance-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+          echo "base_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "plan_only=$YF_PLAN_ONLY" >> "$GITHUB_OUTPUT"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -299,6 +325,10 @@ jobs:
           fi
           echo "YF_PLAN_ONLY=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_ENV"
           echo "YF_LANE=$([ "${INPUT_STOCKS_ONLY:-false}" = "true" ] && echo stock || echo etf)" >> "$GITHUB_ENV"
+          # The publish job is a separate runner, so the plan-only decision has
+          # to cross the job boundary as an output; GITHUB_ENV does not.
+          # Written before the provider call so a failed fetch still carries it.
+          echo "plan_only=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_OUTPUT"
           ARGS="--profile ${INPUT_PROFILE:-full} --max-age-hours ${INPUT_MAX_AGE_HOURS:-0} --record-batch-state --run-id ${GITHUB_RUN_ID} --run-attempt ${GITHUB_RUN_ATTEMPT}"
           # A bounded manual recovery uses the same deterministic retry lane
           # as the scheduled ETF slot; ordinary manual dispatches keep their
@@ -350,6 +380,253 @@ jobs:
         run: |
           python3 scripts/build-quarter-closes.py
 
+      # -------------------------------------------------------------------
+      # Artifact boundary. Everything above this line ran without the global
+      # writer lock. Nothing above commits or pushes.
+      # -------------------------------------------------------------------
+
+      - name: Pack immutable Yahoo candidate
+        id: pack
+        if: ${{ always() && env.YF_PLAN_ONLY != 'true' }}
+        env:
+          ARTIFACT_NAME: ${{ steps.artifact_identity.outputs.name }}
+          BASE_SHA: ${{ steps.artifact_identity.outputs.base_sha }}
+        run: |
+          set -euo pipefail
+          ART="$RUNNER_TEMP/yf-artifact"
+          rm -rf "$ART"
+          mkdir -p "$ART"
+          # The candidate roots are exactly the lane manifest's always_if_exists
+          # declarations for this workflow plus the legacy hand list, selected
+          # with the same git query the manifest stager uses, so the artifact
+          # and the staging step below cannot disagree about the candidate set.
+          git ls-files --modified --deleted --others --exclude-standard --deduplicate -z -- \
+            data/yf/finance \
+            data/yf/quarter_closes.json \
+            data/admin/yahoo-batch-quote-history \
+            data/yf/estimates-archive \
+            data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history.json \
+            > "$ART/candidate-paths.z"
+          : > "$ART/candidate-present.z"
+          : > "$ART/candidate-deleted.txt"
+          : > "$ART/candidate-digests.txt"
+          present=0
+          deleted=0
+          while IFS= read -r -d '' candidate; do
+            if [ "$candidate" = "data/yf/finance/_summary.json" ]; then
+              continue
+            fi
+            if [ -e "$candidate" ]; then
+              [ -f "$candidate" ] && [ ! -L "$candidate" ] \
+                || { echo "::error::Yahoo candidate is not a regular file: $candidate" >&2; exit 1; }
+              printf '%s\0' "$candidate" >> "$ART/candidate-present.z"
+              sha256sum "$candidate" >> "$ART/candidate-digests.txt"
+              present=$((present + 1))
+            else
+              printf '%s\n' "$candidate" >> "$ART/candidate-deleted.txt"
+              deleted=$((deleted + 1))
+            fi
+          done < "$ART/candidate-paths.z"
+          if [ "$present" -eq 0 ] && [ "$deleted" -eq 0 ]; then
+            echo "No fetched Yahoo candidate changes to pack"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          tar --null -c -T "$ART/candidate-present.z" -f "$ART/candidate.tar"
+          TAR_SHA="$(sha256sum "$ART/candidate.tar" | awk '{print $1}')"
+          DIGESTS_SHA="$(sha256sum "$ART/candidate-digests.txt" | awk '{print $1}')"
+          DELETED_SHA="$(sha256sum "$ART/candidate-deleted.txt" | awk '{print $1}')"
+          jq -n \
+            --arg schema 'yf-finance-candidate-artifact/v1' \
+            --arg artifact_name "$ARTIFACT_NAME" \
+            --arg base_sha "$BASE_SHA" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            --arg run_number "$GITHUB_RUN_NUMBER" \
+            --arg run_attempt "$GITHUB_RUN_ATTEMPT" \
+            --arg workflow_ref "$GITHUB_WORKFLOW_REF" \
+            --arg tar_sha256 "$TAR_SHA" \
+            --arg digests_sha256 "$DIGESTS_SHA" \
+            --arg deleted_sha256 "$DELETED_SHA" \
+            --argjson present "$present" \
+            --argjson deleted "$deleted" \
+            '{schema: $schema, artifact_name: $artifact_name, base_sha: $base_sha,
+              run_id: $run_id, run_number: $run_number, run_attempt: $run_attempt,
+              workflow_ref: $workflow_ref, candidate_tar_sha256: $tar_sha256,
+              candidate_digests_sha256: $digests_sha256,
+              candidate_deleted_sha256: $deleted_sha256,
+              candidate_present: $present, candidate_deleted: $deleted}' \
+            > "$ART/metadata.json"
+          rm -f "$ART/candidate-paths.z" "$ART/candidate-present.z"
+          echo "packed Yahoo candidate: present=$present deleted=$deleted base=$BASE_SHA"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload immutable Yahoo candidate
+        id: upload
+        if: ${{ always() && steps.pack.outputs.ready == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact_identity.outputs.name }}
+          path: ${{ runner.temp }}/yf-artifact
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-yf-finance:
+    needs: acquire-yf-finance
+    # Runs even when acquisition failed, because the pre-split persist step ran
+    # under always(): a failed fetch still persists its partial candidates and
+    # its attempt evidence. It is skipped only when the run was plan-only, was
+    # cancelled, or produced no candidate at all.
+    if: ${{ always() && needs.acquire-yf-finance.result != 'cancelled' && needs.acquire-yf-finance.outputs.plan_only != 'true' && needs.acquire-yf-finance.outputs.artifact_ready == 'true' }}
+    runs-on: ubuntu-latest
+    # The serialized critical section is apply, stage, commit, push and
+    # readback — not the provider fetch. Cap it so a stuck publish cannot hold
+    # the global writer queue for the acquisition timeout.
+    timeout-minutes: 45
+    env:
+      YF_PLAN_ONLY: ${{ needs.acquire-yf-finance.outputs.plan_only }}
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Download immutable Yahoo candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.acquire-yf-finance.outputs.artifact_name }}
+          path: ${{ runner.temp }}/yf-artifact
+
+      - name: Validate artifact identity, base and candidate paths
+        env:
+          ARTIFACT_DIGEST: ${{ needs.acquire-yf-finance.outputs.artifact_digest }}
+          ARTIFACT_NAME: ${{ needs.acquire-yf-finance.outputs.artifact_name }}
+          BASE_SHA: ${{ needs.acquire-yf-finance.outputs.base_sha }}
+        run: |
+          set -euo pipefail
+          ART="$RUNNER_TEMP/yf-artifact"
+          for required in metadata.json candidate.tar candidate-digests.txt candidate-deleted.txt; do
+            [ -f "$ART/$required" ] || { echo "::error::artifact is missing $required" >&2; exit 1; }
+          done
+          [[ "$ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]] \
+            || { echo "::error::GitHub artifact digest is invalid" >&2; exit 1; }
+          jq -e \
+            --arg schema 'yf-finance-candidate-artifact/v1' \
+            --arg artifact_name "$ARTIFACT_NAME" \
+            --arg base_sha "$BASE_SHA" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            --arg run_number "$GITHUB_RUN_NUMBER" \
+            --arg run_attempt "$GITHUB_RUN_ATTEMPT" \
+            --arg workflow_ref "$GITHUB_WORKFLOW_REF" \
+            '.schema == $schema and .artifact_name == $artifact_name
+             and .base_sha == $base_sha and (.base_sha | test("^[0-9a-f]{40}$"))
+             and .run_id == $run_id and .run_number == $run_number
+             and .run_attempt == $run_attempt and .workflow_ref == $workflow_ref' \
+            "$ART/metadata.json" > /dev/null
+          ACTUAL_TAR="$(sha256sum "$ART/candidate.tar" | awk '{print $1}')"
+          [ "$ACTUAL_TAR" = "$(jq -r '.candidate_tar_sha256' "$ART/metadata.json")" ] \
+            || { echo "::error::candidate tar digest mismatch" >&2; exit 1; }
+          ACTUAL_DIGESTS="$(sha256sum "$ART/candidate-digests.txt" | awk '{print $1}')"
+          [ "$ACTUAL_DIGESTS" = "$(jq -r '.candidate_digests_sha256' "$ART/metadata.json")" ] \
+            || { echo "::error::candidate digest list mismatch" >&2; exit 1; }
+          ACTUAL_DELETED="$(sha256sum "$ART/candidate-deleted.txt" | awk '{print $1}')"
+          [ "$ACTUAL_DELETED" = "$(jq -r '.candidate_deleted_sha256' "$ART/metadata.json")" ] \
+            || { echo "::error::candidate deletion list mismatch" >&2; exit 1; }
+          # The path allowlist is enforced before extraction, so a tampered or
+          # mismatched artifact can never write outside the Yahoo candidate roots.
+          tar -tf "$ART/candidate.tar" > "$ART/candidate-entries.txt"
+          tar -tvf "$ART/candidate.tar" \
+            | awk 'substr($1, 1, 1) != "-" { bad=1 } END { exit bad }' \
+            || { echo "::error::artifact contains a non-regular tar entry" >&2; exit 1; }
+          awk '
+            length($1) == 64 && $1 !~ /[^0-9a-f]/ && substr($0, 65, 2) == "  " {
+              print substr($0, 67)
+              next
+            }
+            { bad=1 }
+            END { exit bad }
+          ' "$ART/candidate-digests.txt" > "$ART/candidate-digest-paths.txt" \
+            || { echo "::error::candidate digest list is malformed" >&2; exit 1; }
+          cat "$ART/candidate-entries.txt" "$ART/candidate-digest-paths.txt" "$ART/candidate-deleted.txt" \
+            > "$ART/candidate-all-paths.txt"
+          if grep -E '(^/|(^|/)\.\.?(/|$)|//)' "$ART/candidate-all-paths.txt" > "$ART/candidate-noncanonical.txt"; then
+            echo "::error::artifact contains a non-canonical candidate path" >&2
+            cat "$ART/candidate-noncanonical.txt" >&2
+            exit 1
+          fi
+          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$|data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history\.json$)' "$ART/candidate-entries.txt" > "$ART/candidate-outside.txt"; then
+            echo "::error::artifact contains paths outside the Yahoo candidate allowlist" >&2
+            cat "$ART/candidate-outside.txt" >&2
+            exit 1
+          fi
+          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$|data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history\.json$)' "$ART/candidate-deleted.txt" > "$ART/deleted-outside.txt"; then
+            echo "::error::artifact deletion list contains paths outside the Yahoo candidate allowlist" >&2
+            cat "$ART/deleted-outside.txt" >&2
+            exit 1
+          fi
+          if grep -vE '^(data/yf/finance/|data/yf/estimates-archive/|data/admin/yahoo-batch-quote-history/|data/yf/quarter_closes\.json$|data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history\.json$)' "$ART/candidate-digest-paths.txt" > "$ART/digest-outside.txt"; then
+            echo "::error::artifact digest list contains paths outside the Yahoo candidate allowlist" >&2
+            cat "$ART/digest-outside.txt" >&2
+            exit 1
+          fi
+          [ "$(wc -l < "$ART/candidate-digests.txt" | tr -d ' ')" = "$(jq -r '.candidate_present' "$ART/metadata.json")" ] \
+            || { echo "::error::candidate present count mismatch" >&2; exit 1; }
+          [ "$(wc -l < "$ART/candidate-entries.txt" | tr -d ' ')" = "$(jq -r '.candidate_present' "$ART/metadata.json")" ] \
+            || { echo "::error::candidate tar entry count mismatch" >&2; exit 1; }
+          [ "$(wc -l < "$ART/candidate-deleted.txt" | tr -d ' ')" = "$(jq -r '.candidate_deleted' "$ART/metadata.json")" ] \
+            || { echo "::error::candidate deleted count mismatch" >&2; exit 1; }
+          diff -u \
+            <(LC_ALL=C sort "$ART/candidate-entries.txt") \
+            <(LC_ALL=C sort "$ART/candidate-digest-paths.txt") \
+            > "$ART/candidate-path-parity.diff" \
+            || { echo "::error::candidate tar and digest paths disagree" >&2; cat "$ART/candidate-path-parity.diff" >&2; exit 1; }
+          echo "artifact validated: $(wc -l < "$ART/candidate-entries.txt") entries at base $BASE_SHA"
+
+      - name: Apply candidate onto latest main
+        env:
+          BASE_SHA: ${{ needs.acquire-yf-finance.outputs.base_sha }}
+        run: |
+          set -euo pipefail
+          ART="$RUNNER_TEMP/yf-artifact"
+          git fetch --depth=1 origin +main:refs/remotes/origin/main
+          git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null \
+            || git fetch --no-tags origin "$BASE_SHA"
+          git merge-base --is-ancestor "$BASE_SHA" origin/main \
+            || { echo "::error::Yahoo candidate base is not an ancestor of latest main" >&2; exit 1; }
+          cat "$ART/candidate-entries.txt" "$ART/candidate-deleted.txt" \
+            | sort -u > "$ART/candidate-all.txt"
+          while IFS= read -r candidate; do
+            [ -n "$candidate" ] || continue
+            if ! git diff --quiet "$BASE_SHA" origin/main -- "$candidate"; then
+              echo "::error::stale Yahoo candidate path changed since acquisition: $candidate" >&2
+              exit 1
+            fi
+          done < "$ART/candidate-all.txt"
+          git checkout -B main origin/main
+          tar --no-same-owner --no-same-permissions -xf "$ART/candidate.tar" -C .
+          # Re-verify every extracted file against the digest recorded at pack
+          # time, so transport corruption fails closed before staging.
+          sha256sum -c --quiet "$ART/candidate-digests.txt"
+          if [ -s "$ART/candidate-deleted.txt" ]; then
+            while IFS= read -r removed; do
+              [ -n "$removed" ] || continue
+              rm -f -- "$removed"
+            done < "$ART/candidate-deleted.txt"
+          fi
+          echo "applied Yahoo candidate onto $(git rev-parse HEAD)"
+
       - name: Persist fetched Yahoo source data
         id: persist_yahoo_state
         if: ${{ always() && env.YF_PLAN_ONLY != 'true' }}
@@ -381,6 +658,7 @@ jobs:
             fi
             if git push; then
               echo "persisted=true" >> "$GITHUB_OUTPUT"
+              echo "pushed_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "candidate push race on attempt ${attempt}; retrying after rebase"
@@ -389,8 +667,42 @@ jobs:
           echo "candidate push failed after retrying concurrent main updates"
           exit 1
 
+      - name: Read back landed commit from origin/main
+        id: readback
+        if: ${{ steps.persist_yahoo_state.outputs.persisted == 'true' }}
+        env:
+          PUSHED_SHA: ${{ steps.persist_yahoo_state.outputs.pushed_sha }}
+        run: |
+          set -euo pipefail
+          # DEC-305: a publish is confirmed only by a landed commit read back
+          # from origin/main, never by a green push step.
+          git fetch --deepen=50 origin main || git fetch origin main
+          REMOTE_SHA="$(git rev-parse origin/main)"
+          if [ "$PUSHED_SHA" = "$REMOTE_SHA" ]; then
+            echo "origin/main readback confirmed at $PUSHED_SHA"
+          elif git merge-base --is-ancestor "$PUSHED_SHA" origin/main; then
+            echo "origin/main readback confirmed: $PUSHED_SHA is an ancestor of $REMOTE_SHA"
+          else
+            echo "::error::origin/main readback did not contain pushed commit $PUSHED_SHA" >&2
+            exit 1
+          fi
+          while read -r expected path; do
+            [ -n "$path" ] || continue
+            actual="$(git show "origin/main:$path" | sha256sum | awk '{print $1}')"
+            [ "$actual" = "$expected" ] \
+              || { echo "::error::origin/main payload digest mismatch: $path" >&2; exit 1; }
+          done < "$RUNNER_TEMP/yf-artifact/candidate-digests.txt"
+          while IFS= read -r removed; do
+            [ -n "$removed" ] || continue
+            if git cat-file -e "origin/main:$removed" 2>/dev/null; then
+              echo "::error::origin/main still contains deleted Yahoo candidate: $removed" >&2
+              exit 1
+            fi
+          done < "$RUNNER_TEMP/yf-artifact/candidate-deleted.txt"
+          echo "confirmed=true" >> "$GITHUB_OUTPUT"
+
       - name: Publish failed Yahoo attempt evidence
-        if: ${{ always() && env.YF_PLAN_ONLY != 'true' && (steps.fetch_batch.outcome == 'failure' || steps.quarter_closes.outcome == 'failure') && steps.persist_yahoo_state.outcome == 'success' && steps.persist_yahoo_state.outputs.persisted == 'true' }}
+        if: ${{ always() && env.YF_PLAN_ONLY != 'true' && (needs.acquire-yf-finance.outputs.fetch_outcome == 'failure' || needs.acquire-yf-finance.outputs.quarter_closes_outcome == 'failure') && steps.persist_yahoo_state.outcome == 'success' && steps.persist_yahoo_state.outputs.persisted == 'true' && steps.readback.outputs.confirmed == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run update-manifest.yml --ref main

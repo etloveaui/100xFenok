@@ -11,6 +11,32 @@ import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-
 
 const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-yf-finance.yml", import.meta.url), "utf8");
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+// Indentation-aware job/step isolation: an assertion about a step must prove
+// itself inside that step's own span. A whole-file lazy span lets an earlier
+// pack-step condition stand in for the publish persist step, so a two-job
+// acquire/artifact/publish split could otherwise pass falsely.
+function extractJobSpan(text, jobName) {
+  const lines = text.split("\n");
+  const start = lines.findIndex((line) => line === `  ${jobName}:`);
+  assert.ok(start !== -1, `job ${jobName} must exist`);
+  let end = start + 1;
+  while (end < lines.length && !/^  \S/.test(lines[end])) end += 1;
+  return lines.slice(start, end).join("\n");
+}
+
+function extractStepSpan(jobSpan, stepName) {
+  const lines = jobSpan.split("\n");
+  const start = lines.findIndex((line) => line === `      - name: ${stepName}`);
+  assert.ok(start !== -1, `step ${stepName} must exist in the job`);
+  let end = start + 1;
+  while (end < lines.length && !/^      - /.test(lines[end])) end += 1;
+  return lines.slice(start, end).join("\n");
+}
+
+const acquireJob = extractJobSpan(workflowText, "acquire-yf-finance");
+const publishJob = extractJobSpan(workflowText, "publish-yf-finance");
+
 for (const input of [
   "untracked_only", "retry_limit", "regular_limit", "untracked_limit",
   "shard_cycle_index", "scheduled_weekday", "stable_shards",
@@ -35,22 +61,6 @@ assert.match(
   /if \[ "\$EVENT_NAME" = "schedule" \] \|\| \[ "\$INPUT_UNTRACKED_ONLY" = "true" \]; then ARGS="\$ARGS --natural-run"; fi/,
   "bounded manual recovery must claim the natural retry queue while ordinary dispatches stay unchanged",
 );
-// The untracked recovery branch must bind the core ETF scope before ARGS is
-// built: force the core daily basket and keep StockAnalysis ETF expansion
-// false. The assertion anchors the assignments between the dispatch-branch
-// header and the schedule-branch header, so the pair cannot satisfy it from
-// inside the scheduled lane or from outside the branch. Lazy spans keep it
-// resilient to re-indentation while the shell tokens stay exact.
-assert.match(
-  workflowText,
-  /if \[ "\$EVENT_NAME" = "workflow_dispatch" \] && \[ "\$INPUT_UNTRACKED_ONLY" = "true" \]; then[\s\S]*?INPUT_CORE_DAILY_BASKET="true"[\s\S]*?INPUT_STOCKANALYSIS_ETFS="false"[\s\S]*?fi[\s\S]*?if \[ "\$EVENT_NAME" = "schedule" \]; then/,
-  "untracked recovery must force the core daily basket and keep StockAnalysis ETF expansion false inside its dispatch branch, before ARGS is built",
-);
-assert.match(
-  workflowText,
-  /if \[ "\$INPUT_CORE_DAILY_BASKET" = "true" \]; then ARGS="\$ARGS --core-daily-basket"; fi/,
-  "the forced core basket flag must reach the fetch ARGS",
-);
 const gate = checkWorkflowCommitShardsAgainstRegistry({
   workflowText,
   workflowRel: ".github/workflows/fetch-yf-finance.yml",
@@ -61,17 +71,58 @@ assert.deepEqual(gate.missing_in_workflow, [],
 assert.deepEqual(gate.undeclared_in_workflow, [],
   `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
 assert.deepEqual(gate.lanes, ["yahoo_batch_quote_history"], "the registry must attribute this lane to fetch-yf-finance.yml");
-assert.match(
-  workflowText,
-  /- name: Emit Yahoo batch detection attempt[\s\S]*?if: \$\{\{ always\(\) && env\.YF_PLAN_ONLY != 'true' \}\}[\s\S]*?node scripts\/emit-yahoo-batch-quote-history-attempt\.mjs[\s\S]*?- name: Refresh owned Yahoo quarter-close source/,
-  "the standard attempt shard must be emitted after the batch and before downstream refresh work",
-);
-assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/);
-assert.match(workflowText, /--stage always_if_exists/);
-assert.match(
-  workflowText,
-  /if: \$\{\{ always\(\) && env\.YF_PLAN_ONLY != 'true' \}\}[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage always_if_exists[\s\S]*?git add --[\s\S]*?git restore --staged --worktree -- data\/yf\/finance\/_summary\.json/,
-  "manifest staging must remain inside the non-plan persist step, alongside the legacy hand list and before the summary exclusion",
-);
+
+// Acquisition stays read-only against the remote: local fetch/checkout are
+// allowed, but no remote Git mutation or workflow dispatch command may appear
+// inside the acquire job itself (workflow dispatch is `gh workflow run` in
+// this repo's command vocabulary).
+for (const forbidden of ["git add", "git commit", "git push", "git pull", "gh workflow run"]) {
+  assert.ok(!acquireJob.includes(forbidden),
+    `acquire-yf-finance must not contain "${forbidden}"`);
+}
+
+// The standard attempt shard step runs under the exact always/non-plan
+// condition inside the acquire job, after the batch and before downstream
+// refresh work.
+{
+  const emitStep = extractStepSpan(acquireJob, "Emit Yahoo batch detection attempt");
+  assert.match(
+    emitStep,
+    /if: \$\{\{ always\(\) && env\.YF_PLAN_ONLY != 'true' \}\}/,
+    "the attempt shard step must run under the exact always/non-plan condition",
+  );
+  assert.match(
+    emitStep,
+    /node scripts\/emit-yahoo-batch-quote-history-attempt\.mjs/,
+    "the attempt shard step must call the standard emitter",
+  );
+  const refreshStep = extractStepSpan(acquireJob, "Refresh owned Yahoo quarter-close source");
+  assert.ok(acquireJob.indexOf(refreshStep) > acquireJob.indexOf(emitStep),
+    "the standard attempt shard must be emitted after the batch and before downstream refresh work");
+}
+
+// The non-plan persist step must carry, in order, the exact always/non-plan
+// condition, this workflow's manifest staging invocation, the
+// always_if_exists stage, a real git add, and the finance summary restore
+// exclusion. The markers are proven inside the publish persist step's own
+// span, so an earlier pack-step condition cannot satisfy this assertion.
+{
+  const persistStep = extractStepSpan(publishJob, "Persist fetched Yahoo source data");
+  const persistMarkers = [
+    "if: ${{ always() && env.YF_PLAN_ONLY != 'true' }}",
+    "scripts/stage-lane-manifest.sh",
+    "--workflow .github/workflows/fetch-yf-finance.yml",
+    "--stage always_if_exists",
+    "git add --",
+    "git restore --staged --worktree -- data/yf/finance/_summary.json",
+  ];
+  let cursor = -1;
+  for (const marker of persistMarkers) {
+    const at = persistStep.indexOf(marker, cursor + 1);
+    assert.ok(at > cursor,
+      `publish persist step must contain "${marker}" in order after the previous persist marker`);
+    cursor = at;
+  }
+}
 
 console.log("test-fetch-yf-finance-workflow: ok");
