@@ -74,7 +74,7 @@
     "build:static": "bash scripts/load-guard.sh npm run build:static:steps",
     "build:static:steps": "npm run qa:data-supply-policy-registry && npm run build:version && npm run sync-static && npm run qa:fenok-edge-readiness && npm run qa:routes && npm run qa:tokens && NEXT_BUILD_TARGET=static next build",
     "cf:build": "bash scripts/load-guard.sh npm run cf:build:steps",
-    "cf:build:steps": "npm run build:version && npm run sync-static && node scripts/check-fenok-data-health-kpi.mjs --strict && npm run qa:tokens && NEXT_BUILD_TARGET=cloudflare opennextjs-cloudflare build && node scripts/check-cloudflare-asset-budget.mjs",
+    "cf:build:steps": "npm run qa:data-supply-policy-registry && npm run build:version && npm run sync-static && npm run qa:routes && node scripts/check-fenok-data-health-kpi.mjs --strict && npm run qa:tokens && NEXT_BUILD_TARGET=cloudflare opennextjs-cloudflare build && node scripts/check-cloudflare-asset-budget.mjs",
     "verify:contracts": "bash scripts/load-guard.sh npm run qa:registry-contracts",
     "cf:build:next": "NEXT_BUILD_TARGET=${NEXT_BUILD_TARGET:-cloudflare} next build",
     "cf:preview": "opennextjs-cloudflare preview",
