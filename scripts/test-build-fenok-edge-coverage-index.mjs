@@ -141,6 +141,18 @@ assert(reconcileTaiwanCurrentUniverseDenominator(null, 1177, pct) === null, "nul
 // managed-core dispatch denominator.
 const coverageBuilder = fs.readFileSync(new URL("./build-fenok-edge-coverage-index.mjs", import.meta.url), "utf8");
 assert(
+  coverageBuilder.includes("validateKrxIssuerDailyCoverageReceipt"),
+  "coverage index validates the KRX bridge issuer-coverage receipt",
+);
+assert(
+  coverageBuilder.includes("selectKrxIssuerDailyCoverageEvidence"),
+  "coverage index selects raw proof or a bound receipt, never an unbound stale raw fallback",
+);
+assert(
+  !coverageBuilder.includes("krx_daily_smoke_5d/raw/core_stock_index/stk_bydd_trd/20260626.json"),
+  "coverage index does not derive current KRX coverage from the historical smoke raw fallback",
+);
+assert(
   coverageBuilder.includes("const exactPlanScoredCount = Number(etfDaily1yExactPlan.counts?.scored_etf_count) || 0;"),
   "coverage index reads the full-scored exact-plan compatibility denominator",
 );

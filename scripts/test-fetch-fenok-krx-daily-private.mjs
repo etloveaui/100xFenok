@@ -118,6 +118,7 @@ assert.deepEqual(
 {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-derived-test-"));
   fs.mkdirSync(path.join(tmpDir, "raw/core_stock_index/stk_bydd_trd"), { recursive: true });
+  fs.mkdirSync(path.join(tmpDir, "raw/core_stock_index/ksq_bydd_trd"), { recursive: true });
   fs.mkdirSync(path.join(tmpDir, "raw/bond_commodity_esg/kts_bydd_trd"), { recursive: true });
   fs.writeFileSync(
     path.join(tmpDir, "raw/core_stock_index/stk_bydd_trd/20260629.json"),
@@ -125,6 +126,14 @@ assert.deepEqual(
       OutBlock_1: [
         { MKT_NM: "KOSPI", ISU_CD: "005930", ISU_NM: "삼성전자", MKTCAP: "2000" },
         { MKT_NM: "KOSPI", ISU_CD: "000660", ISU_NM: "SK하이닉스", MKTCAP: "1000" },
+        { MKT_NM: "KOSDAQ", ISU_CD: "123456", ISU_NM: "샘플", MKTCAP: "9999" },
+      ],
+    }, null, 2)}\n`,
+  );
+  fs.writeFileSync(
+    path.join(tmpDir, "raw/core_stock_index/ksq_bydd_trd/20260629.json"),
+    `${JSON.stringify({
+      OutBlock_1: [
         { MKT_NM: "KOSDAQ", ISU_CD: "123456", ISU_NM: "샘플", MKTCAP: "9999" },
       ],
     }, null, 2)}\n`,
@@ -156,8 +165,23 @@ assert.deepEqual(
       planned_full_trading_day_count: 252,
     },
     endpoint_count: 31,
+    attempted_call_count: 31,
+    full_252_status: "not_run_heavy",
     fetched_at: "2026-06-29T09:00:00.000Z",
-    files: [],
+    files: [
+      {
+        api_id: "stk_bydd_trd",
+        path: path.join(tmpDir, "raw/core_stock_index/stk_bydd_trd/20260629.json"),
+        status: "success",
+        row_count: 3,
+      },
+      {
+        api_id: "ksq_bydd_trd",
+        path: path.join(tmpDir, "raw/core_stock_index/ksq_bydd_trd/20260629.json"),
+        status: "success",
+        row_count: 1,
+      },
+    ],
     normalized_score_candidates: [],
     request_budget: config.requestBudget,
     summary: { total_files: 31, success_files: 31, empty_files: 0, failed_files: 0, total_rows: 1000, failed_reasons: {} },
@@ -166,13 +190,26 @@ assert.deepEqual(
     core_stock_index: { endpoint_count: 9, date_count: 1, files: [], summary: manifest.summary },
     bond_commodity_esg: { endpoint_count: 12, date_count: 1, files: [], summary: manifest.summary },
   };
-  const bridge = buildBridgeIndex(manifest, groupManifests, config);
+  fs.writeFileSync(path.join(tmpDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  const bridge = buildBridgeIndex(manifest, groupManifests, config, {
+    activeUniverseRows: [
+      { ticker: "005930", market: "KRX" },
+      { ticker: "000660", market: "KRX" },
+      { ticker: "123456", market: "KOSDAQ" },
+    ],
+  });
   assert.equal(bridge.bridge_scope, "stats_and_public_safe_rim_inputs_private_path_refs_no_raw_rows");
   assert.equal(bridge.derived_rim_inputs.status, "ready");
   assert.equal(bridge.derived_rim_inputs.kospi_weights.row_count, 2);
   assert.equal(bridge.derived_rim_inputs.kospi_weights.rows[0].code, "005930");
   assert.equal(bridge.derived_rim_inputs.kospi_weights.rows[0].weight_pct, 66.6666666667);
   assert.equal(bridge.derived_rim_inputs.korea_10y.value, 0.04241);
+  assert.equal(bridge.issuer_daily_coverage_receipt.covered_count, 3);
+  assert.equal(bridge.issuer_daily_coverage_receipt.denominator, 3);
+  assert.equal(bridge.issuer_daily_coverage_receipt.missing_count, 0);
+  assert.equal(bridge.issuer_daily_coverage_receipt.raw_public, false);
+  assert.equal(bridge.issuer_daily_coverage_receipt.per_issuer_rows, false);
+  assert.equal(Object.hasOwn(bridge.issuer_daily_coverage_receipt, "covered_codes"), false);
   assert.equal(JSON.stringify(bridge).includes("TDD_CLSPRC"), false);
   assert.equal(JSON.stringify(bridge).includes("LIST_SHRS"), false);
   fs.rmSync(tmpDir, { recursive: true, force: true });

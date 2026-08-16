@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import "./test-fenok-edge-source-stamp.mjs";
+import "./test-fenok-edge-krx-coverage-receipt.mjs";
 
 import {
   activeS0DailyGatedReady,

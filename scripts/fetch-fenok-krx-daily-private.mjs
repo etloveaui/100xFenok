@@ -9,6 +9,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
 
@@ -19,6 +20,10 @@ import {
   classifyLkgFailure,
   isNaturalScheduleRun,
 } from "./lib/data-supply-lkg-store.mjs";
+import {
+  activeKrxUniverseCodes,
+  buildKrxIssuerDailyCoverageReceipt,
+} from "./lib/fenok-edge-krx-coverage-receipt.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -1170,7 +1175,31 @@ function buildDerivedRimInputs(manifest, config) {
   };
 }
 
-function buildBridgeIndex(manifest, groupManifests, config) {
+function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, activeUniverseRows }) {
+  const activeUniverseCodes = activeKrxUniverseCodes(activeUniverseRows);
+  const coveredCodes = new Set();
+  for (const file of manifest.files ?? []) {
+    if (!file.path || !REQUIRED_DAILY_ISSUER_ENDPOINTS.has(file.api_id) || file.status !== "success" || Number(file.row_count) <= 0) continue;
+    const payload = readOptionalJson(resolveRepoPath(file.path));
+    for (const row of Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : []) {
+      const code = String(row?.ISU_CD ?? "").replace(/[^0-9A-Z]/giu, "").slice(0, 6).toUpperCase();
+      if (code) coveredCodes.add(code);
+    }
+  }
+  const proofManifestPath = path.join(config.outputRoot, "manifest.json");
+  if (!fs.existsSync(proofManifestPath)) return null;
+  const proofManifestSha256 = createHash("sha256")
+    .update(fs.readFileSync(proofManifestPath))
+    .digest("hex");
+  return buildKrxIssuerDailyCoverageReceipt({
+    bridgeDocument,
+    activeUniverseCodes,
+    coveredCodes,
+    proofManifestSha256,
+  });
+}
+
+function buildBridgeIndex(manifest, groupManifests, config, options = {}) {
   const groupSummaries = Object.fromEntries(
     Object.entries(groupManifests).map(([group, groupManifest]) => [
       group,
@@ -1186,7 +1215,7 @@ function buildBridgeIndex(manifest, groupManifests, config) {
   const derivedRimInputs = buildDerivedRimInputs(manifest, config);
   const providerDates = krxProviderSourceDateRange(manifest);
 
-  return {
+  const bridgeDocument = {
     schema_version: "fenok-edge-korea-krx-bridge/v1",
     generated_at: new Date().toISOString(),
     market: MARKET,
@@ -1256,6 +1285,16 @@ function buildBridgeIndex(manifest, groupManifests, config) {
       command: batchCommandTemplate(),
     },
   };
+  const issuerDailyCoverageReceipt = buildIssuerDailyCoverageReceipt({
+    manifest,
+    config,
+    bridgeDocument,
+    activeUniverseRows: options.activeUniverseRows
+      ?? readOptionalJson(path.join(REPO_ROOT, "data/computed/fenok_signals.json"))?.rows,
+  });
+  return issuerDailyCoverageReceipt
+    ? { ...bridgeDocument, issuer_daily_coverage_receipt: issuerDailyCoverageReceipt }
+    : bridgeDocument;
 }
 
 function buildPlan(config) {
