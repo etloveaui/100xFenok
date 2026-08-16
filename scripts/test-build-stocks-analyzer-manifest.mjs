@@ -12,11 +12,22 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workflow = fs.readFileSync(path.join(root, ".github/workflows/build-stocks-analyzer.yml"), "utf8");
 
-assert.match(
-  workflow,
-  /push:\s+branches: \[main\][\s\S]*?data\/computed\/stock_action_index\.json[\s\S]*?data\/computed\/market_facts\/index\.json[\s\S]*?data\/computed\/market_facts\/tickers\/\*\*[\s\S]*?data\/sec-13f\/by_ticker\.json[\s\S]*?data\/sec-13f\/summary\.json/,
-  "bridge input changes must trigger the owner workflow",
-);
+const pushStart = workflow.indexOf("\n  push:\n");
+const scheduleStart = workflow.indexOf("\n  schedule:\n", pushStart);
+assert.ok(pushStart >= 0 && scheduleStart > pushStart, "push trigger must precede schedule trigger");
+const pushBlock = workflow.slice(pushStart, scheduleStart);
+const pushPaths = [...pushBlock.matchAll(/^\s+- '([^']+)'$/gm)].map((match) => match[1]);
+assert.deepEqual(pushPaths, [
+  "data/global-scouter/core/stocks_analyzer.json",
+  "data/computed/stock_action_index.json",
+  "data/computed/market_facts/index.json",
+  "data/computed/market_facts/tickers/**",
+  "data/sec-13f/by_ticker.json",
+  "data/sec-13f/summary.json",
+  "data/yf/finance/**",
+], "push trigger must cover exactly the bridge inputs");
+assert.match(workflow, /\n  schedule:\n/);
+assert.match(workflow, /\n  workflow_dispatch:\n/);
 for (const stepName of [
   "Build stocks_analyzer.json",
   "Verify SEC 13F source provenance",
@@ -36,6 +47,20 @@ const bridgeStepEnd = workflow.indexOf("\n      - name:", bridgeStepStart + 1);
 const bridgeStep = workflow.slice(bridgeStepStart, bridgeStepEnd < 0 ? workflow.length : bridgeStepEnd);
 assert.doesNotMatch(bridgeStep, /if: github\.event_name != 'push'/, "bridge refresh must run on lightweight pushes");
 assert.match(bridgeStep, /build-sec13f-bridge-index\.mjs[\s\S]*test-sec13f-bridge-index\.mjs/);
+
+const retryStart = workflow.indexOf("for attempt in $(seq 1 5); do");
+const retryBlock = workflow.slice(retryStart);
+assert.match(
+  retryBlock,
+  /git pull --rebase --autostash origin main[\s\S]*?build-sec13f-bridge-index\.mjs[\s\S]*?test-sec13f-bridge-index\.mjs[\s\S]*?git add data\/computed\/sec13f_bridge_index\.json[\s\S]*?git push/,
+  "every retry must rebuild and verify the bridge after rebase",
+);
+const dispatchText = "gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true";
+const dispatchIndex = workflow.indexOf(dispatchText);
+const dispatchGuardStart = workflow.lastIndexOf('if [[ "$GITHUB_EVENT_NAME" != "push" ]]; then', dispatchIndex);
+const dispatchGuardEnd = workflow.indexOf("\n              fi", dispatchGuardStart);
+assert.ok(dispatchGuardStart >= 0 && dispatchIndex > dispatchGuardStart && dispatchIndex < dispatchGuardEnd,
+  "Update Manifest dispatch must be guarded out for push-triggered bridge refreshes");
 
 assert.doesNotMatch(workflow, /git add (?:-A|--all)/);
 assert.match(

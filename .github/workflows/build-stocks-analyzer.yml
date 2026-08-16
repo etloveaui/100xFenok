@@ -14,11 +14,13 @@ on:
   push:
     branches: [main]
     paths:
+      - 'data/global-scouter/core/stocks_analyzer.json'
       - 'data/computed/stock_action_index.json'
       - 'data/computed/market_facts/index.json'
       - 'data/computed/market_facts/tickers/**'
       - 'data/sec-13f/by_ticker.json'
       - 'data/sec-13f/summary.json'
+      - 'data/yf/finance/**'
   schedule:
     - cron: '7 6 * * *'
   workflow_dispatch:
@@ -146,8 +148,19 @@ jobs:
               sleep 3
               continue
             fi
+            # The bridge fingerprints every input listed in the trigger. A
+            # successful rebase may advance one of those inputs, so rebuild
+            # and verify after the rebase, then amend before attempting push.
+            node scripts/build-sec13f-bridge-index.mjs
+            node scripts/test-sec13f-bridge-index.mjs
+            git add data/computed/sec13f_bridge_index.json
+            if ! git diff --staged --quiet; then
+              git commit --amend --no-edit
+            fi
             if git push; then
-              gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
+              if [[ "$GITHUB_EVENT_NAME" != "push" ]]; then
+                gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
+              fi
               exit 0
             fi
             echo "git push race on attempt ${attempt}; retrying after rebase"
