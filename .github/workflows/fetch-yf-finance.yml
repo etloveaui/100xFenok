@@ -209,6 +209,12 @@ jobs:
               echo "::error::bounded untracked recovery requires limit, retry_limit, regular_limit, and untracked_limit" >&2
               exit 2
             fi
+            # Bounded recovery is the same deterministic lane as the scheduled
+            # ETF/core slot: bind to the core daily basket union and never
+            # expand to the broad StockAnalysis ETF universe, so the fetch
+            # cannot fall into the all_sources state branch.
+            INPUT_CORE_DAILY_BASKET="true"
+            INPUT_STOCKANALYSIS_ETFS="false"
           fi
           if [ "$EVENT_NAME" = "schedule" ]; then
             if [ "$EVENT_SCHEDULE" = "20 23 * * 1-5" ]; then

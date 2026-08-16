@@ -35,6 +35,22 @@ assert.match(
   /if \[ "\$EVENT_NAME" = "schedule" \] \|\| \[ "\$INPUT_UNTRACKED_ONLY" = "true" \]; then ARGS="\$ARGS --natural-run"; fi/,
   "bounded manual recovery must claim the natural retry queue while ordinary dispatches stay unchanged",
 );
+// The untracked recovery branch must bind the core ETF scope before ARGS is
+// built: force the core daily basket and keep StockAnalysis ETF expansion
+// false. The assertion anchors the assignments between the dispatch-branch
+// header and the schedule-branch header, so the pair cannot satisfy it from
+// inside the scheduled lane or from outside the branch. Lazy spans keep it
+// resilient to re-indentation while the shell tokens stay exact.
+assert.match(
+  workflowText,
+  /if \[ "\$EVENT_NAME" = "workflow_dispatch" \] && \[ "\$INPUT_UNTRACKED_ONLY" = "true" \]; then[\s\S]*?INPUT_CORE_DAILY_BASKET="true"[\s\S]*?INPUT_STOCKANALYSIS_ETFS="false"[\s\S]*?fi[\s\S]*?if \[ "\$EVENT_NAME" = "schedule" \]; then/,
+  "untracked recovery must force the core daily basket and keep StockAnalysis ETF expansion false inside its dispatch branch, before ARGS is built",
+);
+assert.match(
+  workflowText,
+  /if \[ "\$INPUT_CORE_DAILY_BASKET" = "true" \]; then ARGS="\$ARGS --core-daily-basket"; fi/,
+  "the forced core basket flag must reach the fetch ARGS",
+);
 const gate = checkWorkflowCommitShardsAgainstRegistry({
   workflowText,
   workflowRel: ".github/workflows/fetch-yf-finance.yml",
