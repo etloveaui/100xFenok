@@ -4,7 +4,7 @@ import handler from "./.open-next/worker.js";
 // Plain-JS data-plane modules, shared byte-for-byte with the node publisher so
 // the Worker and CI cannot drift into two different contracts.
 import { handleCloudDataPlaneRequest } from "../scripts/lib/cloud-data-plane-worker-route.mjs";
-import { handleCloudDataPlaneAsset, isEnrolledPath } from "../scripts/lib/cloud-data-plane-worker-read.mjs";
+import { handleCloudDataPlaneAsset, isEnrolledPath } from "./scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
 import {
   handleMonaVnextProfileCoordinatorRequest,
   type WindDownReviewCoordinatorEnv,

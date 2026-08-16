@@ -22,6 +22,10 @@ const encoder = new TextEncoder();
 // The worker modules are the real adapter-side files, mounted into Miniflare
 // under a flat virtual root so their relative imports keep resolving.
 const moduleSource = async (name) => readFile(new URL(`./lib/${name}`, import.meta.url), "utf8");
+// generation/json-canonical moved inside the app package boundary; the
+// coordinator stays root-side. The flat mount keeps "./"-imports intact, so
+// each file loads from its own home.
+const canonicalModuleSource = async (name) => readFile(new URL(`../100xfenok-next/scripts/cloud-data-plane/${name}`, import.meta.url), "utf8");
 const ENTRY_SOURCE = [
   'export { CloudDataPlaneCoordinator } from "./cloud-data-plane-coordinator.mjs";',
   'export default { fetch() { return new Response("cloud-data-plane pilot entry"); } };',
@@ -41,12 +45,12 @@ const miniflare = new Miniflare({
     {
       type: "ESModule",
       path: "cloud-data-plane-generation.mjs",
-      contents: await moduleSource("cloud-data-plane-generation.mjs"),
+      contents: await canonicalModuleSource("cloud-data-plane-generation.mjs"),
     },
     {
       type: "ESModule",
       path: "json-canonical.mjs",
-      contents: await moduleSource("json-canonical.mjs"),
+      contents: await canonicalModuleSource("json-canonical.mjs"),
     },
   ],
   r2Buckets: ["CLOUD_OBJECTS"],

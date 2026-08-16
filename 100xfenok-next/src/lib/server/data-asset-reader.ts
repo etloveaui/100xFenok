@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
   handleCloudDataPlaneAsset,
-} from "../../../../scripts/lib/cloud-data-plane-worker-read.mjs";
+} from "../../../scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
 
 /**
  * Unified data-asset reader — first slice (no production cutover).
