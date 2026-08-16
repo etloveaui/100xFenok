@@ -14,8 +14,9 @@
 // - GET  .../objects (no key) keeps the listing envelope { result: [...],
 //   result_info: { cursor } } already proven by check-r2-free-tier-usage.mjs.
 //
-// Retry policy: never retry 4xx (a semantic answer, not a transient one);
-// network errors and 5xx get at most 3 attempts with exponential backoff.
+// Retry policy: HTTP 429 gets a separate bounded Retry-After/backoff window;
+// every other 4xx is a semantic no-retry. Network errors and 5xx get at most
+// 3 attempts with exponential backoff.
 // Every attempt carries a bounded deadline (default 60s; override with the
 // timeoutMs option). A deadline hit is a network-class failure: it is retried
 // like any other transport error and finally fails as R2_REST_NETWORK with a
@@ -23,7 +24,9 @@
 
 const API_BASE = "https://api.cloudflare.com/client/v4/accounts";
 const MAX_ATTEMPTS = 3;
+const MAX_RATE_LIMIT_ATTEMPTS = 8;
 const BACKOFF_BASE_MS = 200;
+const MAX_RATE_LIMIT_BACKOFF_MS = 10_000;
 const DEFAULT_FETCH_TIMEOUT_MS = 60_000;
 
 function fail(code, detail) {
@@ -34,6 +37,30 @@ function fail(code, detail) {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function stableJitterMs(value) {
+  let hash = 0;
+  for (const char of String(value)) hash = ((hash * 33) + char.charCodeAt(0)) >>> 0;
+  return hash % 251;
+}
+
+function retryAfterMs(response) {
+  const raw = response.headers.get("retry-after");
+  if (!raw) return null;
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.ceil(seconds * 1000);
+  const instant = Date.parse(raw);
+  return Number.isFinite(instant) ? Math.max(0, instant - Date.now()) : null;
+}
+
+function rateLimitDelayMs(response, attempt, url) {
+  const exponential = Math.min(BACKOFF_BASE_MS * 2 ** (attempt - 1), MAX_RATE_LIMIT_BACKOFF_MS);
+  const requested = retryAfterMs(response) ?? 0;
+  return Math.min(
+    Math.max(requested, exponential) + stableJitterMs(url),
+    MAX_RATE_LIMIT_BACKOFF_MS,
+  );
 }
 
 async function fetchWithTimeout(fetchImpl, url, init, timeoutMs) {
@@ -60,33 +87,59 @@ async function readErrorBody(response) {
   }
 }
 
-export function createR2RestBucket({ accountId, bucket, token, fetchImpl = fetch, timeoutMs = DEFAULT_FETCH_TIMEOUT_MS }) {
+export function createR2RestBucket({
+  accountId,
+  bucket,
+  token,
+  fetchImpl = fetch,
+  timeoutMs = DEFAULT_FETCH_TIMEOUT_MS,
+  sleepImpl = sleep,
+}) {
   if (!accountId || !bucket || !token) {
     fail("R2_REST_CONFIG_INVALID", "accountId, bucket and token are required");
   }
   if (typeof fetchImpl !== "function") {
     fail("R2_REST_CONFIG_INVALID", "fetchImpl must be a function");
   }
+  if (typeof sleepImpl !== "function") {
+    fail("R2_REST_CONFIG_INVALID", "sleepImpl must be a function");
+  }
   const effectiveTimeoutMs = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : DEFAULT_FETCH_TIMEOUT_MS;
   const objectsUrl = `${API_BASE}/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucket)}/objects`;
   const authHeaders = { Authorization: `Bearer ${token}` };
 
   // One HTTP round trip with the shared retry policy. Returns the Response on
-  // any status; only network failures and 5xx are retried.
+  // any status; network failures and 5xx use the existing three-attempt bound.
+  // HTTP 429 alone gets a longer bounded retry window that honors Retry-After
+  // and adds stable per-object jitter, so bounded parallel workers do not
+  // immediately collide again. Every other 4xx remains a semantic no-retry.
   async function request(url, init) {
     let lastError = null;
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    let transientAttempts = 0;
+    let rateLimitAttempts = 0;
+    while (true) {
       let response;
       try {
         response = await fetchWithTimeout(fetchImpl, url, init, effectiveTimeoutMs);
       } catch (error) {
         lastError = error;
-        if (attempt < MAX_ATTEMPTS) await sleep(BACKOFF_BASE_MS * 2 ** (attempt - 1));
+        transientAttempts += 1;
+        if (transientAttempts >= MAX_ATTEMPTS) break;
+        await sleepImpl(BACKOFF_BASE_MS * 2 ** (transientAttempts - 1));
         continue;
       }
-      if (response.status >= 500 && attempt < MAX_ATTEMPTS) {
-        await sleep(BACKOFF_BASE_MS * 2 ** (attempt - 1));
+      if (response.status === 429) {
+        rateLimitAttempts += 1;
+        if (rateLimitAttempts >= MAX_RATE_LIMIT_ATTEMPTS) return response;
+        await sleepImpl(rateLimitDelayMs(response, rateLimitAttempts, url));
         continue;
+      }
+      if (response.status >= 500) {
+        transientAttempts += 1;
+        if (transientAttempts < MAX_ATTEMPTS) {
+          await sleepImpl(BACKOFF_BASE_MS * 2 ** (transientAttempts - 1));
+          continue;
+        }
       }
       return response;
     }

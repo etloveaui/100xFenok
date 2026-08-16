@@ -170,6 +170,77 @@ async function assertRejectsCode(promise, code) {
   await assertRejectsCode(rejectingBucket.put("objects/sha256/cc", bytes), "R2_REST_HTTP");
   assert.equal(rejectCalls, 1);
 
+  // 429 is the only retryable 4xx. Retry-After is combined with bounded
+  // exponential backoff; the injected sleeper keeps the contract deterministic
+  // and proves the retry budget without wall-clock sleeps.
+  let rateLimitCalls = 0;
+  const rateLimitDelays = [];
+  const rateLimitedBucket = createR2RestBucket({
+    accountId: "acct",
+    bucket: "bucket",
+    token: "token",
+    sleepImpl: async (delay) => { rateLimitDelays.push(delay); },
+    fetchImpl: async () => {
+      rateLimitCalls += 1;
+      return rateLimitCalls < 4
+        ? new Response("", { status: 429, headers: { "retry-after": "2" } })
+        : new Response(bytes, { status: 200 });
+    },
+  });
+  const rateLimitedObject = await rateLimitedBucket.get("objects/sha256/rate-limited");
+  assert.deepEqual(new Uint8Array(await rateLimitedObject.arrayBuffer()), bytes);
+  assert.equal(rateLimitCalls, 4);
+  assert.equal(rateLimitDelays.length, 3);
+  assert.ok(rateLimitDelays.every((delay) => delay >= 2_000 && delay <= 2_250));
+
+  const dateRateLimitDelays = [];
+  let dateRateLimitCalls = 0;
+  const dateRateLimitedBucket = createR2RestBucket({
+    accountId: "acct",
+    bucket: "bucket",
+    token: "token",
+    sleepImpl: async (delay) => { dateRateLimitDelays.push(delay); },
+    fetchImpl: async () => {
+      dateRateLimitCalls += 1;
+      return dateRateLimitCalls === 1
+        ? new Response("", {
+          status: 429,
+          headers: { "retry-after": new Date(Date.now() + 60_000).toUTCString() },
+        })
+        : new Response(bytes, { status: 200 });
+    },
+  });
+  await dateRateLimitedBucket.get("objects/sha256/rate-limited-date");
+  assert.equal(dateRateLimitCalls, 2);
+  assert.deepEqual(dateRateLimitDelays, [10_000]);
+
+  let exhaustedRateLimitCalls = 0;
+  const exhaustedRateLimitBucket = createR2RestBucket({
+    accountId: "acct",
+    bucket: "bucket",
+    token: "token",
+    sleepImpl: async () => {},
+    fetchImpl: async () => {
+      exhaustedRateLimitCalls += 1;
+      return new Response("", { status: 429, headers: { "retry-after": "0" } });
+    },
+  });
+  await assertRejectsCode(
+    exhaustedRateLimitBucket.get("objects/sha256/rate-limited-exhausted"),
+    "R2_REST_HTTP",
+  );
+  assert.equal(exhaustedRateLimitCalls, 8);
+
+  assert.throws(
+    () => createR2RestBucket({
+      accountId: "acct",
+      bucket: "bucket",
+      token: "token",
+      sleepImpl: null,
+    }),
+    (error) => error.code === "R2_REST_CONFIG_INVALID",
+  );
+
   let networkCalls = 0;
   const deadBucket = createR2RestBucket({
     accountId: "acct",
@@ -208,7 +279,7 @@ async function assertRejectsCode(promise, code) {
   const hungElapsed = Date.now() - hungStarted;
   assert.equal(hungCalls, 3);
   assert.ok(hungElapsed < 5_000, `hung r2-rest fetch escaped its deadline: ${hungElapsed}ms`);
-  console.log("r2-rest shim: 404/200/5xx-retry/4xx-no-retry/network-retry/timeout-abort ok");
+  console.log("r2-rest shim: 404/200/5xx-retry/429-bounded-retry/other-4xx-no-retry/network-retry/timeout-abort ok");
 }
 
 // --- remote coordinator timeout, offline via an injected fetch --------------
