@@ -2,18 +2,18 @@
 
 > **Source**: SEC EDGAR
 > **Update**: Quarterly
-> **Files**: 79 public JSON (60 investors + 3 index + 15 analytics + schema, mirrored to public data)
+> **Files**: 82 public JSON (63 investors + 3 index + 15 analytics + schema, mirrored to public data)
 > **Version**: 3.3.3 data payload / 3.4.0 schema contract
 
 ---
 
 ## Overview
 
-Institutional holdings data from SEC 13F filings. Tracks 60 major investors' portfolio positions across 31 quarters through 2026-Q2 where filings are available (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
+Institutional holdings data from SEC 13F filings. Tracks 63 major investors' portfolio positions across 31 quarters through 2026-Q2 where filings are available (accumulate mode). The converter normalizes SEC 13F value units, supports 13F-HR/A amendments, and marks stale investors so older filings do not contaminate current-quarter analytics.
 
 Current-quarter integrity indexes are rebuilt from investor filings after conversion. `by_ticker.json` and `analytics/consensus.json` use normalized ticker keys only; company-name aliases and unresolved rows are kept separately in `analytics/ticker_aliases.json`.
 
-Public investor holdings are also backfilled from local `data/yf/finance/*.json` and `data/yf/quarter_closes.json` after conversion. This keeps sector/industry/market-cap/return enrichment deterministic without live Yahoo calls during the 13F publish path. The 2026-Q2 current cohort includes 56 of 60 tracked investors; `ackman`, `einhorn`, `scion`, and `vanguard` are excluded from current-quarter analytics until fresh filings are available.
+Public investor holdings are also backfilled from local `data/yf/finance/*.json` and `data/yf/quarter_closes.json` after conversion. This keeps sector/industry/market-cap/return enrichment deterministic without live Yahoo calls during the 13F publish path. The 2026-Q2 current cohort includes 59 of 63 tracked investors; `ackman`, `einhorn`, `scion`, and `vanguard` are excluded from current-quarter analytics until fresh filings are available.
 
 ## Refresh Route
 
@@ -29,7 +29,7 @@ sec-13f/
 ├── summary.json           # Aggregated holdings summary
 ├── by_sector.json         # Holdings grouped by sector
 ├── by_ticker.json         # Holdings grouped by ticker
-├── investors/             # Individual investor files (60 files)
+├── investors/             # Individual investor files (63 files)
 │   ├── buffett.json       # Berkshire Hathaway
 │   ├── druckenmiller.json # Duquesne Family Office
 │   ├── dalio.json         # Bridgewater Associates
@@ -52,18 +52,18 @@ sec-13f/
     └── factor_exposures_summary.json # Separate factor-exposure analysis input
 ```
 
-## Investors Tracked (60)
+## Investors Tracked (63)
 
 | Category | Investors |
 |----------|-----------|
-| Value (10) | buffett, marks, klarman, greenblatt, einhorn, pabrai, gayner, russo, miller, fidelity |
+| Value (12) | buffett, marks, klarman, greenblatt, einhorn, pabrai, gayner, russo, miller, fidelity, himalaya, gmo |
 | Macro (4) | druckenmiller, soros, dalio, tudor |
 | Hedge (11) | griffin, cohen, hohn, laffont, millennium, scion, d1, altimeter, whale_rock, balyasny, abdiel |
 | Tiger Cubs (3) | halvorsen, coleman, mandel |
 | Activist (3) | ackman, icahn, peltz |
 | Event-Driven (3) | tepper, loeb, singer |
 | Quant (5) | fisher, asness, renaissance, de_shaw, two_sigma |
-| Growth (11) | wood, akre, polen, hhlr, sands, fundsmith, edgewood, wcm, dorsey, durable, dragoneer |
+| Growth (12) | wood, akre, polen, hhlr, sands, fundsmith, edgewood, wcm, dorsey, durable, dragoneer, atreides |
 | Passive/Mega (6) | blackrock, vanguard, state_street, geode, northern_trust, norges |
 | Institutional Active (4) | wellington, trowe, capital_world, capital_research_global |
 
@@ -205,10 +205,10 @@ const consensus = await fetch(`${BASE}/analytics/consensus.json`).then(r => r.js
 ## Current Publish Snapshot
 
 - Source provenance: upstream SEC converter quarter is `2026-Q2`; its generation timestamp is preserved separately from local YF enrichment so daily derived runs cannot masquerade as SEC ingestion
-- Tracked investor files: 60
-- Current analytics cohort: 56 investors for 2026-Q2
+- Tracked investor files: 63
+- Current analytics cohort: 59 investors for 2026-Q2
 - Stale investors excluded from current-quarter analytics: `ackman`, `einhorn`, `scion`, `vanguard`
 - Analytics files: 15 (`10` converter outputs + `4` 100x derived indexes + `1` separate factor-exposure summary)
-- Local YF enrichment: 116,882 public holdings scanned; 77,776 rows touched; 706 unique profile symbols matched
+- Local YF enrichment: 121,090 public holdings scanned; 80,247 rows touched; 88,504 profile symbols matched
 
-*Last Updated: 2026-08-15*
+*Last Updated: 2026-08-17*

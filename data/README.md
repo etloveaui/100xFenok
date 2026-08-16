@@ -18,7 +18,7 @@
 | [global-scouter/](global-scouter/README.md) | 1,084 | On-demand | Global Scouter Tool |
 | [indices/](indices/README.md) | 2 | Manual | Various |
 | [macro/](macro/README.md) | 10 | Daily/Weekly/Monthly/Quarterly | FRED + FDIC + OECD + PMI |
-| [sec-13f/](sec-13f/README.md) | 79 | Quarterly | SEC EDGAR |
+| [sec-13f/](sec-13f/README.md) | 82 | Quarterly | SEC EDGAR |
 | [sentiment/](sentiment/README.md) | 13 | Daily/Weekly | AAII, CNN, CFTC, CBOE, Alternative.me |
 | [slickcharts/](slickcharts/README.md) | 568 | Daily/Weekly/Monthly | SlickCharts.com |
 | [yardney/](yardney/README.md) | 1 | Weekly | Feno Yardeni: FRED WAAA/WBAA + Bloomberg-sourced benchmark price/EPS |
