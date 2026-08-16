@@ -29,10 +29,14 @@ jobs:
     permissions:
       contents: read
       actions: read
-    # Family-specific: two shadow publications must not overlap, but this must
-    # not occupy the global Git writer queue — nothing here writes to Git.
+    # One constant group for the family, deliberately NOT keyed on github.ref.
+    # Two shadow publications must never overlap even when dispatched from
+    # different refs, because they contend for the same R2 keyspace and the same
+    # pointer — a ref-scoped group would let a branch dispatch run beside main.
+    # It still does not occupy the global Git writer queue; nothing here writes
+    # to Git.
     concurrency:
-      group: stockanalysis-etf-shadow-publish-${{ github.ref }}
+      group: stockanalysis-etf-shadow-publish
       cancel-in-progress: false
       queue: max
     outputs:

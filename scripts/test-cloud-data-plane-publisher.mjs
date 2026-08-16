@@ -8,6 +8,13 @@
 
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+// Pure resolver functions only — no miniflare, so this import stays runnable
+// here while the dedicated Worker suite keeps its runtime dependency.
+import {
+  ENROLLED_PATHS,
+  familyForPath,
+  isEnrolledPath,
+} from "./lib/cloud-data-plane-worker-read.mjs";
 import { mkdtemp, mkdir, rm, writeFile, readFile } from "node:fs/promises";
 import { mkdtempSync, statSync } from "node:fs";
 import http from "node:http";
@@ -45,6 +52,8 @@ import {
   recordPublishOutcome,
   resolveExpectedPointerSequence,
   assertPublicationAuthorization,
+  familyDeclaresStrictGate,
+  gateBlocksPublication,
   resolveSourceAsOf,
   RETENTION_PROTECTED_KEYS,
   rollbackLiveGeneration,
@@ -3259,6 +3268,76 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
     "rollback runs its own small cost gate before touching the pointer");
   await rm(rollbackRoot, { recursive: true, force: true });
   console.log("rollback independence ok (own gate first, pointer-domain failure, zero object writes)");
+}
+
+// Private means non-servable, and that is asserted directly against the Worker
+// resolver rather than inferred from the family being marked private. This
+// lives here because the dedicated Worker test needs miniflare; the resolver
+// itself is a pure function and needs nothing.
+{
+  const family = FAMILIES["stockanalysis-etf-detail"];
+  assert.equal(family.privacy_class, "private",
+    "the shadow family must stay private for the enrolment derivation to exclude it");
+  const representativePaths = [
+    "/data/stockanalysis/etfs/SPY.json",
+    "/data/stockanalysis/etfs/index.json",
+    "/public/data/stockanalysis/etfs/SPY.json",
+    "/data/stockanalysis/etfs/",
+  ];
+  for (const pathname of representativePaths) {
+    assert.equal(familyForPath(pathname), null,
+      `${pathname} must not resolve to any cloud-plane family while the ETF family is private`);
+    assert.equal(isEnrolledPath(pathname), false,
+      `${pathname} must not be an enrolled path`);
+  }
+  // The public shard projection the site actually serves is equally unenrolled:
+  // this packet changes nothing about how those 1,025 assets are delivered.
+  assert.equal(isEnrolledPath("/data/stockanalysis/etfs/shards/manifest.json"), false,
+    "the public shard projection stays outside the data plane");
+  assert.equal([...ENROLLED_PATHS.keys()].filter((p) => p.includes("stockanalysis")).length, 0,
+    "no stockanalysis path may appear in ENROLLED_PATHS");
+  console.log("private non-serving ok (representative ETF payloads resolve to no family and no enrolled path)");
+}
+
+// Strict gate: for a declared strict family EVERY nonzero verdict is terminal,
+// including the script's exit 1 at its own 70% WARN threshold — tighter than
+// the owner's 80% stop, which is the conservative reading this first
+// publication wants. Tolerant families keep publishing through exit 1.
+{
+  assert.equal(familyDeclaresStrictGate("stockanalysis-etf-detail"), true);
+  assert.equal(familyDeclaresStrictGate("oecd-cli"), false);
+  assert.equal(familyDeclaresStrictGate("damodaran"), false);
+
+  assert.equal(gateBlocksPublication({ gateCode: 1, strictGate: true }), true,
+    "a strict family must block on the 70% WARN, not publish through it");
+  assert.equal(gateBlocksPublication({ gateCode: 2, strictGate: true }), true);
+  assert.equal(gateBlocksPublication({ gateCode: 0, strictGate: true }), false);
+  assert.equal(gateBlocksPublication({ gateCode: 1, strictGate: false }), false,
+    "tolerant families keep their existing exit-1 behaviour");
+  assert.equal(gateBlocksPublication({ gateCode: 2, strictGate: false }), true);
+  assert.equal(gateBlocksPublication({ gateCode: 0, strictGate: false }), false);
+
+  // The block must record evidence and return BEFORE the env check and before
+  // any plane is created, so a blocked strict run performs no remote call.
+  // Asserted from source, because driving the real CLI for this family would
+  // mean walking its 1 GB payload tree to build a manifest the gate rejects.
+  const source = await readFile(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), "publish-cloud-data-generation.mjs"),
+    "utf8",
+  );
+  const gateBlockAt = source.indexOf("if (gateBlocked) {");
+  const recordAt = source.indexOf('await recordOutcome("gate_blocked")');
+  const envCheckAt = source.indexOf("// Env for the live write, checked after the gate and before any write.");
+  const planeAt = source.indexOf("const publishPlane = createPublishPlaneImpl({");
+  assert.ok(gateBlockAt > 0 && recordAt > gateBlockAt,
+    "the gate block must record its gate_blocked evidence inside the block");
+  assert.ok(gateBlockAt < envCheckAt && gateBlockAt < planeAt,
+    "the gate block must be reached before the env check and before plane creation");
+  // And the strict family must also declare the class B reads the gate now sees.
+  assert.equal(FAMILIES["stockanalysis-etf-detail"].plan.class_b, 34_000);
+  assert.ok(FAMILIES["stockanalysis-etf-detail"].plan.class_b >= 2 * 16_819,
+    "declared class B must be at least 2x the measured 16,819 read operations");
+  console.log("strict gate ok (exit 1 terminal for the strict family, tolerant families unchanged, blocks before any plane)");
 }
 
 console.log("test-cloud-data-plane-publisher: ok");

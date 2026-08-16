@@ -129,7 +129,7 @@ import {
   validateGenerationManifest,
   validatePublicationReceipt,
 } from "./lib/cloud-data-plane-generation.mjs";
-import { PLANE_PUBLISH_OUTCOME_BINDINGS } from "./lib/lane-registry.mjs";
+import { PLANE_PUBLISH_OUTCOME_BINDINGS, PLANE_PUBLISHER_EXCEPTIONS } from "./lib/lane-registry.mjs";
 import { classifyPreparedReceipts } from "./lib/cloud-data-plane-prepared-receipt-lifecycle.mjs";
 import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflare-adapter.mjs";
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
@@ -507,7 +507,13 @@ export const FAMILIES = {
     // 1,028,334,686 bytes. Caps carry roughly 25% headroom over the measurement
     // so ordinary universe growth does not trip the gate, while a runaway set
     // still fails closed.
-    plan: { class_a: 12_000, bytes: 2_200_000_000 },
+    // class_b is declared because a publication of this family READS heavily and
+    // those reads were previously invisible to the gate: the adapter issues one
+    // presence GET per object key, a readback GET follows every object actually
+    // written, and parity re-reads the manifest plus every asset — 16,819 in the
+    // all-changed case. 34,000 is >= 2x that measurement, the same safety ratio
+    // the class_a and bytes plans already use.
+    plan: { class_a: 12_000, class_b: 34_000, bytes: 2_200_000_000 },
     policy: { max_assets: 7_000, max_total_bytes: 1_300_000_000 },
   },
   "computed-signals": {
@@ -1488,11 +1494,17 @@ export async function verifyGenerationParity({ pointerStore, objectStore, payloa
   return { assets: manifest.assets.length, bytes, pointer };
 }
 
-function runCostGate({ planClassA, planBytes, env }) {
+// planClassB is required rather than optional-with-a-guess. The gate script has
+// always accepted --plan-class-b and folded it into its projection; the
+// publisher simply never sent it, so every read a publication performs was
+// invisible to the limit check. Callers that genuinely read nothing pass 0
+// explicitly — rollback, retention and the post-publish confirmation gates.
+function runCostGate({ planClassA, planClassB, planBytes, env }) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [
       GATE_SCRIPT,
       `--plan-class-a=${planClassA}`,
+      `--plan-class-b=${planClassB}`,
       `--plan-bytes=${planBytes}`,
     ], { cwd: REPO_ROOT, env, stdio: ["ignore", "pipe", "pipe"] });
     const stdoutChunks = [];
@@ -1632,6 +1644,18 @@ export async function deleteR2Object({ accountId, bucket, token, key, fetchImpl 
   } catch (error) {
     return { ok: false, error: `${error.code ?? "ERROR"}: ${error.message}` };
   }
+}
+
+// Gate strictness, exported as two small pure functions so the decision can be
+// tested for every (family, gate code) pair without walking a family's payload
+// tree. Exit 1 is the gate script's 70% WARN: tolerant families publish through
+// it exactly as before, and a strict family treats it as terminal.
+export function familyDeclaresStrictGate(familyName) {
+  return Boolean(PLANE_PUBLISHER_EXCEPTIONS[familyName]?.strict_gate);
+}
+
+export function gateBlocksPublication({ gateCode, strictGate }) {
+  return strictGate ? gateCode !== 0 : (gateCode !== 0 && gateCode !== 1);
 }
 
 // Publication admission: FAMILIES and the registry-derived eligible bindings
@@ -1951,7 +1975,7 @@ export async function runPublisherCli({
       const rollbackEndpoint = env.DATA_PLANE_ENDPOINT;
       const rollbackWriteKey = env.DATA_PLANE_WRITE_KEY;
       const rollbackAccountId = env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID;
-      const rollbackGateBefore = await runCostGateImpl({ planClassA: 10, planBytes: 0, env });
+      const rollbackGateBefore = await runCostGateImpl({ planClassA: 10, planClassB: 0, planBytes: 0, env });
       if (!args.json && rollbackGateBefore.stdout.trim()) stderr(rollbackGateBefore.stdout.trim());
       if (rollbackGateBefore.code !== 0 && rollbackGateBefore.code !== 1) {
         if (rollbackGateBefore.stderr.trim()) stderr(rollbackGateBefore.stderr.trim());
@@ -1985,7 +2009,7 @@ export async function runPublisherCli({
         pointerStore: rollbackPlane.pointerStore,
       });
       const rollbackPointerAfter = await rollbackPlane.pointerStore.get();
-      const rollbackGateAfter = await runCostGateImpl({ planClassA: 0, planBytes: 0, env });
+      const rollbackGateAfter = await runCostGateImpl({ planClassA: 0, planClassB: 0, planBytes: 0, env });
       emit({
         result: "rolled_back",
         receipt_id: rolled.receipt.receipt_id,
@@ -2057,9 +2081,13 @@ export async function runPublisherCli({
     // touches only the coordinator (DeleteObject is free on the free tier, so
     // retention declares a small but still generous plan) — the gate runs first
     // in every mode.
-    const gatePlan = args.rollback ? { class_a: 10, bytes: 0 } : family.plan;
+    // class_b defaults to 0 for the families that predate this field, which
+    // preserves their gate arithmetic exactly; a family that declares reads
+    // declares them here.
+    const gatePlan = family.plan;
     const gateBefore = await runCostGateImpl({
       planClassA: gatePlan.class_a,
+      planClassB: gatePlan.class_b ?? 0,
       planBytes: gatePlan.bytes,
       env,
     });
@@ -2067,13 +2095,25 @@ export async function runPublisherCli({
     if (!args.json && gateBefore.stdout.trim()) {
       stderr(gateBefore.stdout.trim());
     }
-    if (gateBefore.code !== 0 && gateBefore.code !== 1) {
+    // Gate strictness is per family and declared in the registry. Tolerant
+    // families keep exactly their existing behaviour, where exit 1 is the
+    // script's 70% WARN and publication proceeds. A strict family treats ANY
+    // nonzero code as a block — the 70% warn is already tighter than the
+    // owner's 80% stop, and for the first publication of the largest payload in
+    // the estate the conservative reading is the correct one. Strictness also
+    // ignores --tolerate-gate-block, so a manual dispatch cannot reintroduce
+    // the false green the flag would produce. Either way this returns before
+    // the env check and before any plane is created, so a blocked gate performs
+    // no remote call, while the gate_blocked evidence is still recorded.
+    const strictGate = familyDeclaresStrictGate(args.family);
+    const gateBlocked = gateBlocksPublication({ gateCode: gateBefore.code, strictGate });
+    if (gateBlocked) {
       if (gateBefore.stderr.trim()) stderr(gateBefore.stderr.trim());
       const outcomeShard = canRecordOutcome ? await recordOutcome("gate_blocked") : null;
-      if (args.tolerateGateBlock) {
+      if (args.tolerateGateBlock && !strictGate) {
         emit({
           result: "gate_blocked",
-          mode: args.rollback ? "rollback" : (args.retention ? "retention" : "publish"),
+          mode: args.retention ? "retention" : "publish",
           generation_id: manifest.generation_id,
           gate_exit: gateBefore.code,
           ...plan,
@@ -2082,7 +2122,10 @@ export async function runPublisherCli({
         return 0;
       }
       stderr("publish-cloud-data-generation: cost gate blocked the publish"
-        + ` (exit ${gateBefore.code}); rerun with --tolerate-gate-block to record-and-skip`);
+        + ` (exit ${gateBefore.code})`
+        + (strictGate
+          ? "; this family declares strict_gate, so any nonzero verdict is terminal"
+          : "; rerun with --tolerate-gate-block to record-and-skip"));
       return 3;
     }
 
@@ -2169,7 +2212,7 @@ export async function runPublisherCli({
     } catch (error) {
       if (args.chaos === "stale-sequence" && error.code === "STALE_WRITER") {
         const pointerNow = await plane.pointerStore.get();
-        const gateAfter = await runCostGateImpl({ planClassA: 0, planBytes: 0, env });
+        const gateAfter = await runCostGateImpl({ planClassA: 0, planClassB: 0, planBytes: 0, env });
         emit({
           result: "chaos_stale_writer",
           chaos: args.chaos,
@@ -2190,7 +2233,7 @@ export async function runPublisherCli({
         });
         const receipt = await plane.ledger.get(receiptId);
         const pointerNow = await plane.pointerStore.get();
-        const gateAfter = await runCostGateImpl({ planClassA: 0, planBytes: 0, env });
+        const gateAfter = await runCostGateImpl({ planClassA: 0, planClassB: 0, planBytes: 0, env });
         emit({
           result: "chaos_abort_after_prepare",
           chaos: args.chaos,
@@ -2231,7 +2274,7 @@ export async function runPublisherCli({
     log(`byte parity ok: ${parity.assets}/${parity.assets} assets, ${parity.bytes} bytes`);
 
     // 5. Gate again after the write batch, then the single JSON summary line.
-    const gateAfter = await runCostGateImpl({ planClassA: 0, planBytes: 0, env });
+    const gateAfter = await runCostGateImpl({ planClassA: 0, planClassB: 0, planBytes: 0, env });
     outcomeState.gateAfter = gateVerdict(gateAfter);
     const outcomeShard = await recordOutcome(resolved.resume ? "resumed" : "published");
     emit({
