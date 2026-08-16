@@ -60,8 +60,11 @@ jobs:
         with:
           node-version: '22'
 
-      # No continue-on-error: a failed publish is a failed job. The outcome is
-      # still carried to persistence through the job output below.
+      # No continue-on-error, and deliberately NO --tolerate-gate-block. That
+      # flag turns an unknown or over-threshold cost verdict into exit 0, which
+      # would make an explicitly requested first shadow run report green while
+      # publishing nothing. The gate-block outcome shard is still written and
+      # still uploaded below; only the exit code differs, and this run goes red.
       - name: Publish stockanalysis-etf-detail generation to the cloud data plane
         id: publish_cloud_generation
         env:
@@ -69,7 +72,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
-        run: node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --tolerate-gate-block --json
+        run: node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --json
 
       # always(): a failed publish still produces an outcome shard, and losing
       # that evidence is the failure mode this upload exists to prevent.

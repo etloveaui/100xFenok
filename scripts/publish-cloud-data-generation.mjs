@@ -1871,14 +1871,13 @@ export async function runPublisherCli({
     : DEFAULT_PUBLISH_OUTCOMES_ROOT,
 } = {}) {
   const args = parseArgs(argv);
-  // Publication admission. This runs before argument dispatch, before the cost
-  // gate and before any object write, because the failure it prevents is a
-  // family that exists only in FAMILIES: the publisher would happily publish it
-  // and no lane would own, stage or land its outcome. Set-equality in both
-  // directions is the whole check — a FAMILIES key with no derived binding is
-  // unauthorized, and a derived binding with no FAMILIES key is a lane that
-  // declared publication the publisher cannot perform.
-  assertPublicationAuthorization();
+  // Publication admission is NOT called here. It gates publication and dry-run
+  // only, from inside the try below, after retention and rollback have had
+  // their chance to return. Gating every mode would have made recovery depend
+  // on an unrelated registry mismatch, which is the opposite of what a rollback
+  // path is for. The failure it does prevent is a family that exists only in
+  // FAMILIES: the publisher would publish it and no lane would own, stage or
+  // land its outcome.
   const log = (...parts) => {
     if (!args.json) stderr(...parts);
   };
@@ -1941,6 +1940,75 @@ export async function runPublisherCli({
     : { ok: false, error: outcome.error?.message ?? String(outcome.error) };
 
   try {
+    // 0. Rollback stands alone and runs FIRST. It is pointer-only: it writes no
+    // object and reads no local payload, so it must not depend on the raw Git
+    // tree still being present, nor on the publisher and registry sets agreeing
+    // with each other. That independence is the entire point — recovery has to
+    // outlive both an unrelated authority mismatch and the eventual retirement
+    // of the canonical tree. Publication and dry-run stay admission-gated below.
+    if (args.rollback) {
+      const rollbackToken = env.CLOUDFLARE_API_TOKEN;
+      const rollbackEndpoint = env.DATA_PLANE_ENDPOINT;
+      const rollbackWriteKey = env.DATA_PLANE_WRITE_KEY;
+      const rollbackAccountId = env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID;
+      const rollbackGateBefore = await runCostGateImpl({ planClassA: 10, planBytes: 0, env });
+      if (!args.json && rollbackGateBefore.stdout.trim()) stderr(rollbackGateBefore.stdout.trim());
+      if (rollbackGateBefore.code !== 0 && rollbackGateBefore.code !== 1) {
+        if (rollbackGateBefore.stderr.trim()) stderr(rollbackGateBefore.stderr.trim());
+        if (args.tolerateGateBlock) {
+          emit({ result: "gate_blocked", mode: "rollback", gate_exit: rollbackGateBefore.code });
+          return 0;
+        }
+        stderr("publish-cloud-data-generation: cost gate blocked the rollback"
+          + ` (exit ${rollbackGateBefore.code}); rerun with --tolerate-gate-block to record-and-skip`);
+        return 3;
+      }
+      const rollbackMissing = [
+        ["CLOUDFLARE_API_TOKEN", rollbackToken],
+        ["DATA_PLANE_ENDPOINT", rollbackEndpoint],
+        ["DATA_PLANE_WRITE_KEY", rollbackWriteKey],
+      ].filter(([, value]) => !value).map(([name]) => name);
+      if (rollbackMissing.length) {
+        stderr(`publish-cloud-data-generation: missing env ${rollbackMissing.join(", ")} — no rollback attempted`);
+        return 2;
+      }
+      const { plane: rollbackPlane } = createPublishPlaneImpl({
+        accountId: rollbackAccountId,
+        token: rollbackToken,
+        endpoint: rollbackEndpoint,
+        writeKey: rollbackWriteKey,
+        family: args.family,
+      });
+      const rolled = await rollbackLiveGeneration({
+        objectStore: rollbackPlane.objectStore,
+        ledger: rollbackPlane.ledger,
+        pointerStore: rollbackPlane.pointerStore,
+      });
+      const rollbackPointerAfter = await rollbackPlane.pointerStore.get();
+      const rollbackGateAfter = await runCostGateImpl({ planClassA: 0, planBytes: 0, env });
+      emit({
+        result: "rolled_back",
+        receipt_id: rolled.receipt.receipt_id,
+        receipt_state: rolled.receipt.state,
+        pointer_sequence_before: rolled.pointerBefore.sequence,
+        pointer_sequence_after: rollbackPointerAfter?.sequence ?? null,
+        active_generation_before: rolled.pointerBefore.active.generation_id,
+        previous_generation_before: rolled.pointerBefore.previous?.generation_id ?? null,
+        active_generation_after: rollbackPointerAfter?.active.generation_id ?? null,
+        previous_generation_after: rollbackPointerAfter?.previous?.generation_id ?? null,
+        objects_written: 0,
+        gate_before: gateVerdict(rollbackGateBefore),
+        gate_after: gateVerdict(rollbackGateAfter),
+      });
+      return 0;
+    }
+
+    // Publication and dry-run only: both write or plan a write against the
+    // declared family set, so both require FAMILIES and the registry-derived
+    // eligible bindings to be exactly set-equal. Retention returned above and
+    // rollback returned just now; neither is admission-gated.
+    assertPublicationAuthorization();
+
     // 1. Manifest from disk.
     const { manifest, payloads, summary, sourceAsOf } = await buildFamilyManifest({
       familyName: args.family,
@@ -2039,34 +2107,6 @@ export async function runPublisherCli({
     // Rollback mode: pointer-only change through the contract's
     // rollbackGeneration; the summary records the sequence and both generation
     // ids before and after, because rollback moves the sequence FORWARD.
-    if (args.rollback) {
-      const { plane } = createPublishPlaneImpl({
-        accountId, token, endpoint, writeKey, family: args.family,
-      });
-      const rolled = await rollbackLiveGeneration({
-        objectStore: plane.objectStore,
-        ledger: plane.ledger,
-        pointerStore: plane.pointerStore,
-      });
-      const pointerAfter = await plane.pointerStore.get();
-      const gateAfter = await runCostGateImpl({ planClassA: 0, planBytes: 0, env });
-      emit({
-        result: "rolled_back",
-        receipt_id: rolled.receipt.receipt_id,
-        receipt_state: rolled.receipt.state,
-        pointer_sequence_before: rolled.pointerBefore.sequence,
-        pointer_sequence_after: pointerAfter?.sequence ?? null,
-        active_generation_before: rolled.pointerBefore.active.generation_id,
-        previous_generation_before: rolled.pointerBefore.previous?.generation_id ?? null,
-        active_generation_after: pointerAfter?.active.generation_id ?? null,
-        previous_generation_after: pointerAfter?.previous?.generation_id ?? null,
-        objects_written: 0,
-        gate_before: gateVerdict(gateBefore),
-        gate_after: gateVerdict(gateAfter),
-      });
-      return 0;
-    }
-
     // 3. Publish through the REST R2 bridge + remote coordinator shim.
     const publishPlane = createPublishPlaneImpl({
       accountId, token, endpoint, writeKey, family: args.family,

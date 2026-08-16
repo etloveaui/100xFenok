@@ -3182,6 +3182,83 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   );
   assert.deepEqual(assertPublicationAuthorization({ families: { alpha: {} }, bindings }), { authorized: 1 });
   console.log("publication admission ok (set-equal both directions, refuses before gate and before any write)");
+
+  // Ordering is the load-bearing part and it is enforced from the source, not
+  // assumed: admission must be reached before the cost gate (so a mismatch can
+  // never spend a request or write an object), and the rollback branch must be
+  // reached before BOTH admission and the local manifest build (so recovery
+  // survives an unrelated registry mismatch and the eventual retirement of the
+  // raw Git tree).
+  const publisherSource = await readFile(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), "publish-cloud-data-generation.mjs"),
+    "utf8",
+  );
+  const rollbackBranchAt = publisherSource.indexOf("if (args.rollback) {");
+  const admissionCallAt = publisherSource.indexOf("    assertPublicationAuthorization();");
+  const manifestBuildAt = publisherSource.indexOf("await buildFamilyManifest({");
+  const gateCallAt = publisherSource.indexOf("const gateBefore = await runCostGateImpl({");
+  assert.ok(rollbackBranchAt > 0 && admissionCallAt > 0 && manifestBuildAt > 0 && gateCallAt > 0,
+    "all four ordering anchors must exist in the publisher source");
+  assert.ok(rollbackBranchAt < admissionCallAt,
+    "rollback must be reached before publication admission");
+  assert.ok(rollbackBranchAt < manifestBuildAt,
+    "rollback must be reached before the local family manifest is built");
+  assert.ok(admissionCallAt < manifestBuildAt && admissionCallAt < gateCallAt,
+    "publication admission must be reached before the manifest build and before the cost gate");
+  console.log("publisher mode ordering ok (rollback before admission and manifest; admission before manifest and gate)");
+}
+
+// Rollback is pointer-only and independent: it runs its own cost gate, writes
+// no object, and never reaches the admission or manifest paths.
+{
+  const rollbackEnv = {
+    CLOUDFLARE_API_TOKEN: "test-token",
+    DATA_PLANE_ENDPOINT: "https://example.invalid/internal/cloud-data-plane",
+    DATA_PLANE_WRITE_KEY: "test-write-key",
+  };
+  const gateCalls = [];
+  const plane = createMemoryCloudDataPlane();
+  let puts = 0;
+  // The publisher writes through putIfAbsent, not put, so count that one.
+  const countingPlane = {
+    ...plane,
+    objectStore: {
+      ...plane.objectStore,
+      async putIfAbsent(key, bytes) {
+        puts += 1;
+        return plane.objectStore.putIfAbsent(key, bytes);
+      },
+    },
+  };
+  const rollbackRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-rollback-"));
+  const rollbackErr = [];
+  const rollbackExit = await runPublisherCli({
+    argv: ["--family=oecd-cli", "--json", "--rollback"],
+    env: rollbackEnv,
+    outcomesRoot: rollbackRoot,
+    runCostGateImpl: async (options) => {
+      gateCalls.push({ planClassA: options.planClassA, planBytes: options.planBytes });
+      return { code: 0, stdout: "", stderr: "" };
+    },
+    createPublishPlaneImpl: () => ({ plane: countingPlane, objectsWritten: () => puts }),
+    stdout: () => {},
+    stderr: (...parts) => rollbackErr.push(parts.join(" ")),
+  });
+  // Against an empty pointer there is nothing to roll back to, and the failure
+  // must come from the POINTER domain. That is the discriminating detail: it
+  // proves rollback reached the coordinator on its own rather than dying
+  // earlier in admission or in the local manifest build.
+  assert.notEqual(rollbackExit, 0, "rollback with no previous generation must fail");
+  const rollbackDiagnostic = rollbackErr.join("\n");
+  assert.match(rollbackDiagnostic, /ROLLBACK_TARGET_MISSING/,
+    "rollback must fail in the pointer domain, not in admission or manifest construction");
+  assert.doesNotMatch(rollbackDiagnostic, /FAMILY_NOT_AUTHORIZED|FAMILY_ASOF_INVALID/,
+    "rollback must not be gated by publication admission or the source clock");
+  assert.equal(puts, 0, "rollback must not put a single object");
+  assert.deepEqual(gateCalls[0], { planClassA: 10, planBytes: 0 },
+    "rollback runs its own small cost gate before touching the pointer");
+  await rm(rollbackRoot, { recursive: true, force: true });
+  console.log("rollback independence ok (own gate first, pointer-domain failure, zero object writes)");
 }
 
 console.log("test-cloud-data-plane-publisher: ok");

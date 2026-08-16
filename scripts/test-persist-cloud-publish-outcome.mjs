@@ -45,12 +45,6 @@ function run(command, args, cwd) {
   assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 23);
   for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
     const workflowText = fs.readFileSync(path.join(REPO_ROOT, binding.workflow), "utf8");
-    const publishCommand = `node scripts/publish-cloud-data-generation.mjs --family=${family} --tolerate-gate-block --json`;
-    assert.equal(workflowText.split(publishCommand).length - 1, 1, `${family} must have exactly one publisher`);
-    const publishIndex = workflowText.indexOf(publishCommand);
-    const publishStepStart = workflowText.lastIndexOf("\n      - name:", publishIndex);
-    const publishStepEnd = workflowText.indexOf("\n      - name:", publishIndex);
-    const isCoordinator = binding.workflow === COORDINATOR_WORKFLOW;
     // Deviations are read from the registry, never hardcoded here: an exception
     // is a reviewed declaration with a reason, and it must name the same
     // workflow the binding resolves to or it is describing something else.
@@ -61,6 +55,35 @@ function run(command, args, cwd) {
       assert.ok(typeof exception.reason === "string" && exception.reason.length > 0,
         `${family} publisher exception must carry a reason`);
     }
+    // Gate tolerance is per-family and declared. A tolerated publisher records
+    // a blocked gate and exits 0; a strict one must go red, because a run that
+    // was explicitly requested and published nothing is not a success.
+    const strictGate = Boolean(exception?.strict_gate);
+    if (strictGate) {
+      assert.ok(typeof exception.strict_gate_reason === "string" && exception.strict_gate_reason.length > 0,
+        `${family} must carry a strict_gate_reason`);
+      // Scoped to executed commands, not prose: the workflow is expected to
+      // explain in a comment which flag it refuses and why, and banning the
+      // word outright would punish exactly that documentation.
+      const toleratingRunLines = workflowText.split("\n")
+        .filter((line) => /^\s*(run:|- run:)/.test(line) && line.includes("--tolerate-gate-block"));
+      assert.deepEqual(toleratingRunLines, [],
+        `${family} declares strict_gate, so no run command may tolerate a blocked gate`);
+      // Going red must not cost the evidence. A blocked gate still writes the
+      // outcome shard, so the upload and the persistence job both have to run
+      // on a failed publish, not only on a successful one.
+      assert.match(workflowText, /Upload [^\n]*outcome shard\n\s*if: \$\{\{ always\(\) \}\}/,
+        `${family} must upload its outcome shard under always()`);
+      assert.match(workflowText, /needs\.publish\.result != 'cancelled'/,
+        `${family} persistence must run on a failed publish, skipping only a cancelled one`);
+    }
+    const publishCommand = `node scripts/publish-cloud-data-generation.mjs --family=${family}`
+      + `${strictGate ? "" : " --tolerate-gate-block"} --json`;
+    assert.equal(workflowText.split(publishCommand).length - 1, 1, `${family} must have exactly one publisher`);
+    const publishIndex = workflowText.indexOf(publishCommand);
+    const publishStepStart = workflowText.lastIndexOf("\n      - name:", publishIndex);
+    const publishStepEnd = workflowText.indexOf("\n      - name:", publishIndex);
+    const isCoordinator = binding.workflow === COORDINATOR_WORKFLOW;
     const detachedPersistence = isCoordinator || Boolean(exception?.detached_persistence);
     const persistenceStepStart = detachedPersistence
       ? workflowText.lastIndexOf(

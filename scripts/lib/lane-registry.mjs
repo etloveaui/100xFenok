@@ -1797,6 +1797,8 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
     reason: "pre-shadow publication splits publish and persistence into separate jobs so only the persistence job takes the global Git writer lock; the publisher itself must still fail the job",
     canonical_commit: "external_authority",
     canonical_commit_reason: "the canonical data/stockanalysis/etfs tree is acquired and committed by fetch-stockanalysis.yml; this publish job performs no canonical Git write at all, and the separate persistence job is the only step that touches Git",
+    strict_gate: true,
+    strict_gate_reason: "first shadow publication of the largest payload in the estate: --tolerate-gate-block turns an unknown or over-threshold cost verdict into exit 0, so an explicitly requested run would report green while having published nothing. The gate-block outcome shard is still written and persisted; only the exit code changes, and the run must be red",
   }),
 });
 
