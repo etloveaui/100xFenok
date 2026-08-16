@@ -480,7 +480,16 @@ function clone(value) {
   const floorException = LANE_REGISTRY.declared_exceptions
     .find((entry) => entry.path === "data/admin/data-supply-detection-floor.json");
   assert.equal(floorException?.may_be_absent, true,
-    "the ephemeral detection-floor report must be declared may_be_absent (intentionally not committed)");
+    "the detection-floor report may be absent before a projection run");
+  assert.equal(floorException?.owner, "detection-floor",
+    "the detection-floor report remains owned by the detection-floor producer");
+  assert.equal(floorException?.public_sync, "exclude",
+    "the detection-floor report remains excluded from public synchronization");
+  const proxyCoverageReview = LANE_REGISTRY.declared_exceptions
+    .find((entry) => entry.path === "data/admin/fenok-edge-proxy-coverage-review.json");
+  assert.equal(proxyCoverageReview?.owner, "platform");
+  assert.equal(proxyCoverageReview?.public_sync, "exclude",
+    "the review-only proxy coverage audit must remain excluded from public synchronization");
   const privateSec13fInvestor = LANE_REGISTRY.declared_exceptions
     .find((entry) => entry.path === "data/sec-13f/investors/griffin.json");
   assert.equal(privateSec13fInvestor?.kind, "file");

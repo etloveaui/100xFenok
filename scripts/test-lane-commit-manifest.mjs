@@ -505,7 +505,7 @@ for (const [label, mutate] of [
 
 // Central commit paths are derived from the route table rather than
 // hand-copied, so the rebuilt projection is compared against the committed
-// artifact semantically: the same 77-path set and count, with byte equality
+// artifact semantically: the same 78-path set and count, with byte equality
 // everywhere else once the derived central ordering is normalized.
 const rebuilt = buildLaneCommitManifest(LANE_REGISTRY);
 const rebuiltCentral = rebuilt.update_manifest.central_commit_paths;

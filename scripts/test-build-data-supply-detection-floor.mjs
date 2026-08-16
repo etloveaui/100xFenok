@@ -2286,9 +2286,18 @@ function runWorkflowBridgeChecks() {
   const initialRunnerCall = updateWorkflow.indexOf("run: bash scripts/update-manifest-projections.sh");
   const retryReset = updateWorkflow.indexOf("git reset --hard origin/main");
   const retryRunnerCall = updateWorkflow.indexOf("bash scripts/update-manifest-projections.sh", retryReset);
+  const laneCommitManifest = readJson(path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"));
   assert.ok(initialRunnerCall >= 0, "update-manifest initial path runs the shared runner");
   assert.ok(retryReset >= 0 && retryRunnerCall > retryReset, "update-manifest retry rebuilds the floor via the shared runner after resetting to latest main");
-  assert.equal(updateWorkflow.includes("data/admin/data-supply-detection-floor.json \\\n"), false, "ephemeral report is not added to the manifest commit pathspec");
+  assert.ok(
+    laneCommitManifest.update_manifest.central_commit_paths.includes("data/admin/data-supply-detection-floor.json"),
+    "detection-floor report is committed with the KPI that consumes it",
+  );
+  assert.equal(
+    updateWorkflow.includes("data/admin/data-supply-detection-floor.json \\\n"),
+    false,
+    "central staging owns the detection-floor commit pathspec; workflow must not duplicate it",
+  );
 }
 
 function runCurrentRepositoryDryRun(adminReportBefore) {

@@ -2814,7 +2814,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
   ok("fetch-cron schedule/expected/observed/evaluated tamper is rejected against source parity");
 }
 
-// 4b1c. The detection-floor report is intentionally ephemeral/uncommitted.
+// 4b1c. A missing detection-floor report is valid before the next projection.
 // A later checkout retains canonical schedule validation but cannot claim source parity.
 {
   const tmp = mkTmp("cron-shadow-ephemeral-source-absent");
@@ -2824,7 +2824,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
   seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
   fs.unlinkSync(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"));
   assert.equal(runChecker(tmp, now, { strict: true, context: "reconcile" }).exit, 0);
-  ok("missing ephemeral detection-floor source is warn-only while canonical schedule checks remain active");
+  ok("missing detection-floor source is warn-only while canonical schedule checks remain active");
 }
 
 // 4b2. Checker independently compares bounded KPI recovery evidence to the source index.

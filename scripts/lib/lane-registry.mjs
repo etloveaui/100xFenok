@@ -1237,9 +1237,16 @@ const declared_exceptions = [
   {
     path: "data/admin/data-supply-detection-floor.json",
     kind: "file",
-    reason: "ephemeral detection-floor report; referenced in workflow text but intentionally NOT committed (pinned by test-build-data-supply-detection-floor.mjs)",
-    owner: "platform",
+    reason: "per-run detection-floor report; committed with the KPI it feeds for source parity, admin-private and excluded from public sync and self-triggering",
+    owner: "detection-floor",
     may_be_absent: true,
+    public_sync: "exclude",
+  },
+  {
+    path: "data/admin/fenok-edge-proxy-coverage-review.json",
+    kind: "file",
+    reason: "review-only FINRA/OCC proxy coverage audit; committed admin evidence with no public consumer or freshness/promotion authority",
+    owner: "platform",
     public_sync: "exclude",
   },
   {

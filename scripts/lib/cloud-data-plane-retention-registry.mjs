@@ -180,7 +180,7 @@ export const RETENTION_REGISTRY = Object.freeze({
     },
     {
       path: "data/admin/data-supply-detection-floor.json",
-      reason: "Detection floor projection; its declared exception excludes it from public sync and allows absence.",
+      reason: "Detection floor projection committed with the KPI source-parity proof; its declared exception excludes it from public sync and allows absence before projection.",
     },
     {
       path: "data/admin/lane-commit-manifest.json",
