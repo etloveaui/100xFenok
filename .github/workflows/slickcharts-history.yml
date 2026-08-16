@@ -58,11 +58,6 @@ permissions:
   contents: write
   actions: write
 
-concurrency:
-  group: fenok-data-writer-refs/heads/main
-  cancel-in-progress: false
-  queue: max
-
 jobs:
   # Run membership tracker first
   membership:
@@ -217,6 +212,10 @@ jobs:
 
   # Merge all batch files
   merge-history:
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
     needs: [scrape-returns, scrape-dividends]
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -465,6 +464,10 @@ jobs:
 
   # Single symbol scraping for testing
   scrape-single:
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
     if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
