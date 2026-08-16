@@ -2691,6 +2691,110 @@ module.main()
                 }
             )
 
+    def test_non_payer_profile_accepts_missing_dividend_yield_with_reason(self) -> None:
+        periods = [
+            "2025-12-31",
+            "2024-12-31",
+            "2023-12-31",
+            "2022-12-31",
+            "2021-12-31",
+            "2020-12-31",
+        ]
+        fields = ["marketcap", "pe", "pb", "roe"] + [
+            f"ratio_{index}" for index in range(11)
+        ]
+        statement = {
+            "ticker": "AMZN",
+            "statement": "ratios",
+            "period": "annual",
+            "periods": periods,
+            "rows": [
+                {"field": field, "values": [float(index + 1)] * len(periods)}
+                for index, field in enumerate(fields)
+            ],
+            "field_count": len(fields),
+        }
+
+        self.fetcher.validate_financial_statement(
+            statement,
+            issuer_profile={"dividend": "n/a"},
+        )
+
+        self.assertEqual(
+            statement["validation"],
+            {
+                "accepted_missing_fields": [
+                    {
+                        "field": "dividendyield",
+                        "reason": "provider_overview_declares_no_dividend",
+                    }
+                ],
+                "issuer_dividend_profile": {
+                    "classification": "non_payer",
+                    "reason": "provider_overview_declares_no_dividend",
+                },
+            },
+        )
+
+    def test_payer_or_unknown_profile_still_requires_dividend_yield(self) -> None:
+        periods = [
+            "2025-12-31",
+            "2024-12-31",
+            "2023-12-31",
+            "2022-12-31",
+            "2021-12-31",
+            "2020-12-31",
+        ]
+        fields = ["marketcap", "pe", "pb", "roe"] + [
+            f"ratio_{index}" for index in range(11)
+        ]
+
+        def statement() -> dict:
+            return {
+                "ticker": "JPM",
+                "statement": "ratios",
+                "period": "annual",
+                "periods": periods,
+                "rows": [
+                    {"field": field, "values": [float(index + 1)] * len(periods)}
+                    for index, field in enumerate(fields)
+                ],
+                "field_count": len(fields),
+            }
+
+        with self.assertRaisesRegex(ValueError, "missing required fields.*dividendyield"):
+            self.fetcher.validate_financial_statement(
+                statement(),
+                issuer_profile={"dividend": "$6.00 (1.65%)"},
+            )
+        with self.assertRaisesRegex(ValueError, "missing required fields.*dividendyield"):
+            self.fetcher.validate_financial_statement(statement())
+
+    def test_stock_payload_reuses_prefetched_overview(self) -> None:
+        overview = {
+            "marketCap": "2.8T",
+            "dividend": "n/a",
+        }
+        calls = []
+
+        def fake_fetch_json(path: str, _timeout: int) -> dict:
+            calls.append(path)
+            if path == "/api/symbol/s/AMZN/history?range=1Y&period=Monthly":
+                return {"data": [{"t": "2026-08-14", "c": 200.0}]}
+            if path == "/api/quotes/s/AMZN":
+                return {"data": {"symbol": "AMZN", "uid": "AMZN", "p": 200.0, "td": "2026-08-14"}}
+            raise AssertionError(f"unexpected endpoint: {path}")
+
+        original_fetch_json = self.fetcher.fetch_json
+        self.fetcher.fetch_json = fake_fetch_json
+        try:
+            payload = self.fetcher.fetch_stock("AMZN", timeout=1, overview=overview)
+        finally:
+            self.fetcher.fetch_json = original_fetch_json
+
+        self.assertNotIn("/stocks/amzn/__data.json", calls)
+        self.assertEqual(payload["normalized"]["overview"]["dividend"], "n/a")
+
     def test_stock_payload_links_financials_summary_when_supplied(self) -> None:
         financials = {
             "fetched_at": "2026-06-18T00:00:00Z",

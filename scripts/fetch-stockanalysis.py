@@ -680,8 +680,20 @@ REQUIRED_FINANCIAL_FIELDS_BY_STATEMENT = {
     # These are the stable ratio anchors used to distinguish a complete
     # provider profile from an arbitrary short payload. Field-id casing has
     # changed across provider payloads, so validation canonicalizes ids first.
+    # dividendyield is conditional only for an explicitly non-paying issuer;
+    # the accepted omission is written into the normalized statement.
     "ratios": {"marketcap", "pe", "pb", "roe", "dividendyield"},
 }
+NON_PAYER_DIVIDEND_MARKERS = frozenset({
+    "",
+    "-",
+    "—",
+    "n/a",
+    "na",
+    "none",
+    "null",
+    "not applicable",
+})
 MIN_FINANCIAL_PERIOD_COUNT = {
     "annual": 3,
     "quarterly": 4,
@@ -1294,7 +1306,68 @@ def normalize_financial_statement(ticker: str, statement: str, decoded: dict) ->
     }
 
 
-def validate_financial_statement(statement: dict) -> None:
+def classify_issuer_dividend_profile(issuer_profile: dict | None) -> dict:
+    """Classify only explicit provider dividend signals; unknown stays strict."""
+    if not isinstance(issuer_profile, dict):
+        return {
+            "classification": "unknown",
+            "reason": "issuer_profile_unavailable",
+        }
+    if "dividend" not in issuer_profile:
+        return {
+            "classification": "unknown",
+            "reason": "issuer_profile_dividend_missing",
+        }
+    value = issuer_profile.get("dividend")
+    if value is None:
+        return {
+            "classification": "unknown",
+            "reason": "issuer_profile_dividend_null",
+        }
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if math.isfinite(value) and value == 0:
+            return {
+                "classification": "non_payer",
+                "reason": "provider_overview_declares_zero_dividend",
+            }
+        if math.isfinite(value) and value > 0:
+            return {
+                "classification": "payer",
+                "reason": "provider_overview_declares_positive_dividend",
+            }
+    text = str(value).strip().lower().replace(",", "")
+    if text in NON_PAYER_DIVIDEND_MARKERS:
+        return {
+            "classification": "non_payer",
+            "reason": "provider_overview_declares_no_dividend",
+        }
+    numeric_values = []
+    for token in re.findall(r"[-+]?\d+(?:\.\d+)?", text):
+        try:
+            numeric_values.append(float(token))
+        except ValueError:
+            continue
+    if numeric_values and any(value > 0 for value in numeric_values):
+        return {
+            "classification": "payer",
+            "reason": "provider_overview_declares_positive_dividend",
+        }
+    if numeric_values and all(value == 0 for value in numeric_values):
+        return {
+            "classification": "non_payer",
+            "reason": "provider_overview_declares_zero_dividend",
+        }
+    return {
+        "classification": "unknown",
+        "reason": "issuer_profile_dividend_unrecognized",
+    }
+
+
+def validate_financial_statement(
+    statement: dict,
+    issuer_profile: dict | None = None,
+) -> None:
+    statement.pop("validation", None)
     period = statement.get("period")
     statement_name = str(statement.get("statement") or "")
     rows = statement.get("rows") or []
@@ -1316,11 +1389,27 @@ def validate_financial_statement(statement: dict) -> None:
             for row in rows
         }
         missing_fields = sorted(required_fields - available_fields)
+        accepted_missing_fields = []
+        if "dividendyield" in missing_fields:
+            dividend_profile = classify_issuer_dividend_profile(issuer_profile)
+            if dividend_profile["classification"] == "non_payer":
+                missing_fields.remove("dividendyield")
+                accepted_missing_fields.append(
+                    {
+                        "field": "dividendyield",
+                        "reason": dividend_profile["reason"],
+                    }
+                )
         if missing_fields:
             raise ValueError(
                 f"financial statement missing required fields: {statement_name} "
                 f"{', '.join(missing_fields)}"
             )
+        if accepted_missing_fields:
+            statement["validation"] = {
+                "accepted_missing_fields": accepted_missing_fields,
+                "issuer_dividend_profile": dividend_profile,
+            }
     if statement_name == "ratios":
         has_finite_value = any(
             isinstance(value, (int, float))
@@ -1339,7 +1428,13 @@ def validate_financial_statement(statement: dict) -> None:
             raise ValueError(f"financial row value/period mismatch: {statement.get('statement')} {period} {row.get('field')}")
 
 
-def fetch_financial_statement(ticker: str, statement: str, period: str, timeout: int) -> dict:
+def fetch_financial_statement(
+    ticker: str,
+    statement: str,
+    period: str,
+    timeout: int,
+    issuer_profile: dict | None = None,
+) -> dict:
     path = FINANCIAL_STATEMENT_PATHS[statement]
     suffix = "?p=quarterly" if period == "quarterly" else ""
     endpoint = f"/stocks/{ticker.lower()}/{path}/__data.json{suffix}"
@@ -1347,16 +1442,26 @@ def fetch_financial_statement(ticker: str, statement: str, period: str, timeout:
     decoded = extract_financial_node(payload)
     normalized = normalize_financial_statement(ticker, statement, decoded)
     normalized["endpoint"] = endpoint
-    validate_financial_statement(normalized)
+    validate_financial_statement(normalized, issuer_profile=issuer_profile)
     return normalized
 
 
-def fetch_financials(ticker: str, timeout: int) -> dict:
+def fetch_financials(
+    ticker: str,
+    timeout: int,
+    issuer_profile: dict | None = None,
+) -> dict:
     statements = {}
     for period in FINANCIAL_PERIODS:
         period_statements = {}
         for statement in FINANCIAL_STATEMENT_PATHS:
-            period_statements[statement] = fetch_financial_statement(ticker, statement, period, timeout)
+            period_statements[statement] = fetch_financial_statement(
+                ticker,
+                statement,
+                period,
+                timeout,
+                issuer_profile=issuer_profile,
+            )
         statements[period] = period_statements
     return {
         "schema_version": SCHEMA_VERSION,
@@ -3195,13 +3300,24 @@ def fetch_etf(
     return payload
 
 
-def fetch_stock(ticker: str, timeout: int, financials: dict | None = None) -> dict:
+def fetch_stock_overview(ticker: str, timeout: int) -> dict:
+    endpoint = f"/stocks/{ticker.lower()}/__data.json"
+    return extract_stock_overview_node(fetch_json(endpoint, timeout))
+
+
+def fetch_stock(
+    ticker: str,
+    timeout: int,
+    financials: dict | None = None,
+    overview: dict | None = None,
+) -> dict:
     paths = {
         "overview": f"/stocks/{ticker.lower()}/__data.json",
         "history": f"/api/symbol/s/{ticker}/history?range=1Y&period=Monthly",
         "quote": f"/api/quotes/s/{ticker}",
     }
-    overview = extract_stock_overview_node(fetch_json(paths["overview"], timeout))
+    if overview is None:
+        overview = fetch_stock_overview(ticker, timeout)
     raw = {
         "overview": overview,
         "history": pick_data(fetch_json(paths["history"], timeout)),
@@ -6324,9 +6440,26 @@ def run_one(
 
             financials = None
             financials_rel_path = None
+            stock_overview = None
             if include_financials:
                 try:
-                    financial_candidate = fetch_financials(ticker, timeout)
+                    try:
+                        stock_overview = fetch_stock_overview(ticker, timeout)
+                    except (
+                        urllib.error.URLError,
+                        TimeoutError,
+                        OSError,
+                        json.JSONDecodeError,
+                        ValueError,
+                        RuntimeError,
+                    ):
+                        # Unknown issuer profile must retain the strict anchor rule.
+                        stock_overview = None
+                    financial_candidate = fetch_financials(
+                        ticker,
+                        timeout,
+                        issuer_profile=stock_overview,
+                    )
                     if recovery_store is not None and not recovery_store.recovery_candidate_advances(
                         "financial", ticker, financial_candidate
                     ):
@@ -6354,7 +6487,15 @@ def run_one(
                     f"{financials_error or 'unavailable'}"
                 )
             try:
-                payload = fetch_stock(ticker, timeout, financials)
+                if stock_overview is None:
+                    payload = fetch_stock(ticker, timeout, financials)
+                else:
+                    payload = fetch_stock(
+                        ticker,
+                        timeout,
+                        financials,
+                        overview=stock_overview,
+                    )
                 if financials is not None:
                     validate_stock_financial_pair(ticker, payload, financials)
                 if recovery_store is not None and not recovery_store.recovery_candidate_advances(
