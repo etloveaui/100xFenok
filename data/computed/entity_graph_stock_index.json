@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-index/v1",
-  "generated_at": "2026-08-16T15:44:07.041Z",
+  "generated_at": "2026-08-16T16:40:11.525Z",
   "source_as_of": {
     "stocks_analyzer": "2026-08-14",
     "stock_action_index": "2026-08-14",
@@ -29,7 +29,7 @@
     "stocks": 1066,
     "with_market_facts": 1066,
     "with_filings": 202,
-    "with_sec_13f": 423,
+    "with_sec_13f": 424,
     "with_index_membership": 415,
     "with_single_stock_etfs": 86
   },
@@ -14477,30 +14477,34 @@
       "route": "/stock/SLF",
       "canonical_sector": "Financials",
       "confidence": {
-        "label": "medium",
-        "rank": 2,
-        "coverage_ratio": 0.5222
+        "label": "high",
+        "rank": 3,
+        "coverage_ratio": 0.8
       },
       "flags": {
         "market_facts": true,
         "filings": false,
-        "sec_13f": false,
+        "sec_13f": true,
         "index_membership": false,
         "single_stock_etfs": false
       },
-      "connection_count": 1,
+      "connection_count": 2,
       "service_count": 0,
       "as_of": {
         "profile": "2026-08-14",
         "action_index": "2026-08-14",
         "market_facts": "2026-08-14",
         "filings": null,
-        "sec_13f": null
+        "sec_13f": "2026-Q2"
       },
       "relations": [
         {
           "type": "belongs_to_sector",
           "target": "sector:Financials"
+        },
+        {
+          "type": "held_by_13f_investors",
+          "target": "sec13f:SLF"
         }
       ]
     },
