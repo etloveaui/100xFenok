@@ -413,6 +413,10 @@ function GuruDetailPanel({
   const latestQuarter = latest?.quarter ?? summary.quarter ?? "—";
   const reportDate = latest?.report_date ?? "—";
   const filingDate = latest?.filing_date ?? "—";
+  const cik = data?.investor?.cik ?? data?.metadata?.cik ?? "";
+  const secBrowseUrl = cik
+    ? `https://www.sec.gov/edgar/browse/?CIK=${encodeURIComponent(cik)}&owner=exclude&action=getcompany`
+    : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -450,8 +454,23 @@ function GuruDetailPanel({
             {filingDate}
           </p>
           <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
-            SEC 13F 데이터 변환
+            {latest?.form ?? "SEC 13F 데이터 변환"}
           </p>
+          {secBrowseUrl ? (
+            <a
+              href={secBrowseUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex text-[10px] font-black text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-950"
+            >
+              SEC 원문 탐색 ↗
+            </a>
+          ) : null}
+          {latest?.accession_number ? (
+            <p className="mt-1 break-all text-[9px] font-semibold text-[var(--c-ink-3)]">
+              접수번호 {latest.accession_number}
+            </p>
+          ) : null}
         </div>
         <div
           data-superinvestor-guru-lag-disclosure

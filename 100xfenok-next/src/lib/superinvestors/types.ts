@@ -365,6 +365,8 @@ export interface InvestorFiling {
   quarter: string;
   filing_date: string;
   report_date: string;
+  form?: string;
+  accession_number?: string;
   aum_total: number;
   holdings_count: number;
   top_10_weight: number;
