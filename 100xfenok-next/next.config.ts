@@ -1,12 +1,28 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const buildTarget = process.env.NEXT_BUILD_TARGET ?? "runtime";
 const isStaticProfile = buildTarget === "static";
 const isCloudflareProfile = buildTarget === "cloudflare";
+const repositoryRoot = path.resolve(process.cwd(), "..");
 
 const nextConfig: NextConfig = {
   // Runtime-first build. "static" profile keeps dist output only.
   ...(isStaticProfile ? { distDir: "dist" } : {}),
+
+  // The data-asset reader imports repo-level (project-root-relative)
+  // cloud-data-plane modules from ../scripts/lib. Widening the trace root to
+  // the repository keeps those modules in the server output trace; the
+  // includes below resolve from the Next project root per Next semantics.
+  outputFileTracingRoot: repositoryRoot,
+  outputFileTracingIncludes: {
+    "/api/data/**": [
+      "../scripts/lib/cloud-data-plane-worker-read.mjs",
+      "../scripts/lib/cloud-data-plane-generation.mjs",
+      "../scripts/lib/cloud-data-plane-cloudflare-adapter.mjs",
+      "../scripts/lib/json-canonical.mjs",
+    ],
+  },
 
   // Disable Next image optimization for static export and Cloudflare preview.
   images: {
@@ -19,9 +35,9 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Turbopack root configuration
+  // Turbopack root configuration (must equal outputFileTracingRoot)
   turbopack: {
-    root: process.cwd(),
+    root: repositoryRoot,
   },
   allowedDevOrigins: ["127.0.0.1"],
 

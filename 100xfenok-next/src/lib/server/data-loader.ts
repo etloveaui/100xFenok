@@ -2,6 +2,7 @@ import type { Dirent } from "node:fs";
 import { lstat, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { normalizeForFilePath } from "@/lib/ticker";
+import { readDataAsset } from "./data-asset-reader";
 import {
   sha256Text,
   stockanalysisEtfPayloadDocumentResultFromVerifiedShard,
@@ -1024,13 +1025,25 @@ export async function getDataSupplyEtfPayloadDocument(ticker: string) {
 }
 
 export async function getStockanalysisEtfUniverse() {
-  const universePath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", "etf_universe.json");
-  return readOptionalJsonRecord(universePath);
+  const result = await readDataAsset("/data/stockanalysis/etf_universe.json");
+  if (result.kind !== "ok") return null;
+  try {
+    return asJsonRecord(JSON.parse(result.raw) as unknown);
+  } catch {
+    return null;
+  }
 }
 
 export async function getStockanalysisSurface(surfaceName: string) {
-  const surfacePath = path.join(PUBLIC_DATA_ROOT, "stockanalysis", "surfaces", `${surfaceName}.json`);
-  return readOptionalJsonRecord(surfacePath);
+  const normalized = normalizeStockanalysisSurfaceName(surfaceName);
+  if (normalized === null) return null;
+  const result = await readDataAsset(`/data/stockanalysis/surfaces/${normalized}.json`);
+  if (result.kind !== "ok") return null;
+  try {
+    return asJsonRecord(JSON.parse(result.raw) as unknown);
+  } catch {
+    return null;
+  }
 }
 
 export async function getDamodaranManifest() {
