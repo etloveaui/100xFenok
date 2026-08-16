@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-16T05:48:01.238Z",
+  "generated_at": "2026-08-16T08:46:49.585Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -56,6 +56,32 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
+    },
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31934465484,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31934465484",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "slickcharts-symbols.yml",
+      "label": "SlickCharts Symbols",
+      "streak": 1,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": 31935105871,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31935105871",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
     }
   ],
   "watched_workflows": [
@@ -465,15 +491,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31929780363",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31929780363",
-    "observed_at": "2026-08-16T05:48:01.238Z",
-    "event": "schedule",
+    "run_id": "31937227049",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31937227049",
+    "observed_at": "2026-08-16T08:46:49.585Z",
+    "event": "workflow_run",
     "workflows": [
       "fetch-edgar-filings.yml",
       "fetch-fred-macro.yml",
       "fetch-fred-yardeni.yml",
-      "fetch-stockanalysis.yml"
+      "fetch-stockanalysis.yml",
+      "global-writer-queue-observer.yml",
+      "slickcharts-symbols.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
