@@ -276,6 +276,7 @@ assert.deepEqual(stockanalysis.stages.always_if_exists, [
   { kind: "directory", path: "data/admin/data-supply-state/v1", required: true },
   { kind: "directory", path: "data/admin/stockanalysis-recovery", required: true },
   { kind: "directory", path: "data/admin/yahoo_etf_fallback", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json", required: false },
   { kind: "dynamic_set", path: "data/yf/finance", required: false },
   { kind: "directory", path: "100xfenok-next/public/data", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json", required: false },

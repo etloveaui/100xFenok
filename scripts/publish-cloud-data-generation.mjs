@@ -129,6 +129,7 @@ import {
   validateGenerationManifest,
   validatePublicationReceipt,
 } from "./lib/cloud-data-plane-generation.mjs";
+import { PLANE_PUBLISH_OUTCOME_BINDINGS } from "./lib/lane-registry.mjs";
 import { classifyPreparedReceipts } from "./lib/cloud-data-plane-prepared-receipt-lifecycle.mjs";
 import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflare-adapter.mjs";
 import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
@@ -488,6 +489,27 @@ export const FAMILIES = {
     plan: { class_a: 10, bytes: 15_000 },
     policy: { max_assets: 4, max_total_bytes: 30_000 },
   },
+  // Pre-shadow StockAnalysis ETF detail. PRIVATE and deliberately non-servable:
+  // a private family is filtered out of the read-side enrolment derivation, so
+  // it cannot be half-enrolled by a later edit. There is no manifest_prefix and
+  // no files list — this is a tree family over the canonical acquisition root,
+  // and the public 1,025-asset shard projection stays exactly where it is,
+  // built by sync-public-data and served from static as today.
+  "stockanalysis-etf-detail": {
+    root: "data/stockanalysis/etfs",
+    privacy_class: "private",
+    // Truthful tree clock: every enrolled payload must carry its own valid
+    // source_as_of, per-asset dates are stored in the manifest, and the family
+    // summary is the conservative MINIMUM. A missing or malformed value fails
+    // before any write rather than silently inheriting the publication time.
+    source_as_of: { per_asset_key: "source_as_of" },
+    // Measured 2026-08-16 and re-measured at this base: 5,605 assets /
+    // 1,028,334,686 bytes. Caps carry roughly 25% headroom over the measurement
+    // so ordinary universe growth does not trip the gate, while a runaway set
+    // still fails closed.
+    plan: { class_a: 12_000, bytes: 2_200_000_000 },
+    policy: { max_assets: 7_000, max_total_bytes: 1_300_000_000 },
+  },
   "computed-signals": {
     root: "data/computed",
     manifest_prefix: "public/data/computed",
@@ -592,12 +614,13 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
     config.files !== undefined,
     config.max_date !== undefined,
     config.key !== undefined,
+    config.per_asset_key !== undefined,
   ].filter(Boolean).length;
   if (modes === 0) {
-    fail("FAMILY_ASOF_INVALID", "source_as_of declares no mode: need files, max_date, or key");
+    fail("FAMILY_ASOF_INVALID", "source_as_of declares no mode: need files, max_date, key, or per_asset_key");
   }
   if (modes > 1) {
-    fail("FAMILY_ASOF_INVALID", "source_as_of must declare exactly one mode: files, max_date, or key");
+    fail("FAMILY_ASOF_INVALID", "source_as_of must declare exactly one mode: files, max_date, key, or per_asset_key");
   }
   const decodeJson = (bytes) => {
     try {
@@ -636,6 +659,40 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
     }
     return values.sort().at(-1);
   };
+  if (config.per_asset_key !== undefined) {
+    // Tree mode. Same semantics as the per-file mode — per-asset dates stored,
+    // conservative minimum as the family summary — but the asset set comes from
+    // the enrolled tree rather than a declared list, because this family has
+    // thousands of payloads and enumerating them would be the same hand-written
+    // drift the derived bindings just removed.
+    if (typeof config.per_asset_key !== "string" || config.per_asset_key.length === 0) {
+      fail("FAMILY_ASOF_INVALID", "source_as_of.per_asset_key must be a non-empty string");
+    }
+    if (!relRoot) {
+      fail("FAMILY_ASOF_INVALID", "per-asset-key source_as_of requires a relRoot");
+    }
+    if (payloads.size === 0) {
+      fail("FAMILY_ASOF_INVALID", "per-asset-key source_as_of requires at least one enrolled payload");
+    }
+    const perAsset = new Map();
+    for (const [enrolledPath, bytes] of payloads) {
+      const relative = enrolledPath.startsWith(`${relRoot}/`)
+        ? enrolledPath.slice(relRoot.length + 1)
+        : enrolledPath;
+      const json = decodeJson(bytes);
+      const raw = json?.[config.per_asset_key];
+      const value = toIsoDay(raw);
+      if (value === null) {
+        fail(
+          "FAMILY_ASOF_INVALID",
+          `${relative}.${config.per_asset_key} = ${JSON.stringify(raw)} is not an ISO date or date-time`,
+        );
+      }
+      perAsset.set(relative, value);
+    }
+    const values = [...perAsset.values()].sort();
+    return { value: values[0], origin: "per-asset", perAsset };
+  }
   if (config.files) {
     if (typeof config.files !== "object" || config.files === null || Array.isArray(config.files)) {
       fail("FAMILY_ASOF_INVALID", "source_as_of.files must be an object mapping file paths to { key }");
@@ -1569,6 +1626,30 @@ export async function deleteR2Object({ accountId, bucket, token, key, fetchImpl 
   }
 }
 
+// Publication admission: FAMILIES and the registry-derived eligible bindings
+// must be exactly set-equal. Exported so the focused test can assert both
+// mismatch directions without driving a publish.
+export function assertPublicationAuthorization({
+  families = FAMILIES,
+  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+} = {}) {
+  const declared = new Set(Object.keys(families));
+  const eligible = new Set(Object.keys(bindings));
+  const unauthorized = [...declared].filter((name) => !eligible.has(name)).sort();
+  const unpublishable = [...eligible].filter((name) => !declared.has(name)).sort();
+  if (unauthorized.length > 0 || unpublishable.length > 0) {
+    const parts = [];
+    if (unauthorized.length > 0) {
+      parts.push(`publisher families with no registry publish-outcome owner: ${unauthorized.join(", ")}`);
+    }
+    if (unpublishable.length > 0) {
+      parts.push(`registry publish-outcome owners with no publisher family: ${unpublishable.join(", ")}`);
+    }
+    fail("FAMILY_NOT_AUTHORIZED", `publication authorization mismatch — ${parts.join("; ")}`);
+  }
+  return { authorized: declared.size };
+}
+
 function parseArgs(argv) {
   const args = {
     family: null, dryRun: false, json: false, tolerateGateBlock: false, chaos: null, rollback: false,
@@ -1782,6 +1863,14 @@ export async function runPublisherCli({
     : DEFAULT_PUBLISH_OUTCOMES_ROOT,
 } = {}) {
   const args = parseArgs(argv);
+  // Publication admission. This runs before argument dispatch, before the cost
+  // gate and before any object write, because the failure it prevents is a
+  // family that exists only in FAMILIES: the publisher would happily publish it
+  // and no lane would own, stage or land its outcome. Set-equality in both
+  // directions is the whole check — a FAMILIES key with no derived binding is
+  // unauthorized, and a derived binding with no FAMILIES key is a lane that
+  // declared publication the publisher cannot perform.
+  assertPublicationAuthorization();
   const log = (...parts) => {
     if (!args.json) stderr(...parts);
   };

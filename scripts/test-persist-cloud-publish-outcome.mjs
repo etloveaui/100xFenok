@@ -38,7 +38,7 @@ function run(command, args, cwd) {
 // is immediately followed by a non-blocking always() persistence step.
 {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
-  assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 22);
+  assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 23);
   for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
     const workflowText = fs.readFileSync(path.join(REPO_ROOT, binding.workflow), "utf8");
     const publishCommand = `node scripts/publish-cloud-data-generation.mjs --family=${family} --tolerate-gate-block --json`;
@@ -114,7 +114,7 @@ function run(command, args, cwd) {
     ["-rf artifacts/attempt-dividends-*", "-rf artifacts/attempt-returns-*"],
     "slickcharts-history cleanup must not remove broader runner paths",
   );
-  console.log("publish-outcome workflow contract: 22/22 ordered, always-persisted, exact-owned");
+  console.log("publish-outcome workflow contract: 23/23 ordered, always-persisted, exact-owned");
 }
 
 // Real local-git integration: one helper invocation lands the shard on main;

@@ -55,7 +55,7 @@ function writeWorkflow(root, file, source) {
 // 20+ row copy that can omit a new publisher. Lane-owned publishers must name
 // a real lane. A lane-less publisher must be explicitly declared as a platform
 // publisher (the computed-signals coordinator case).
-assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 22);
+assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 23);
 for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
   assert.ok(LANE_REGISTRY.workflow_policies[binding.workflow], `${family} workflow policy must be declared`);
   assert.ok(

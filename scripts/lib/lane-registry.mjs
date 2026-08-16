@@ -133,36 +133,11 @@ export const COMPUTED_SIGNALS_SOURCE_LANE_IDS = Object.freeze([
   "sentiment",
 ]);
 
-// Plane publisher family names are intentionally kept separate from lane ids:
-// the publisher CLI uses hyphenated family names while the registry uses
-// underscore ids, and SlickCharts has one composite lane with five callers.
-export const PLANE_PUBLISH_OUTCOME_BINDINGS = Object.freeze({
-  "oecd-cli": { lane_id: "oecd_cli", workflow: ".github/workflows/fetch-oecd-cli.yml" },
-  "fred-macro": { lane_id: "fred_macro", workflow: ".github/workflows/fetch-fred-macro.yml" },
-  "defillama-stablecoins": { lane_id: "defillama_stablecoins", workflow: ".github/workflows/fetch-defillama.yml" },
-  "fdic-tier1": { lane_id: "fdic_tier1", workflow: ".github/workflows/fetch-fdic.yml" },
-  "treasury-tga": { lane_id: "treasury_tga", workflow: ".github/workflows/fetch-treasury-tga.yml" },
-  "fred-banking": { lane_id: "fred_banking", workflow: ".github/workflows/fetch-fred-banking.yml" },
-  "fred-yardeni": { lane_id: "fred_yardeni", workflow: ".github/workflows/fetch-fred-yardeni.yml" },
-  damodaran: { lane_id: "damodaran", workflow: ".github/workflows/fetch-damodaran-shadow.yml" },
-  sentiment: { lane_id: "sentiment", workflow: ".github/workflows/fetch-sentiment.yml" },
-  "yahoo-ticker-macro": { lane_id: "yahoo_ticker_macro", workflow: ".github/workflows/fetch-yahoo-ticker.yml" },
-  "nasdaq-giw-sox": { lane_id: "nasdaq_giw_sox", workflow: ".github/workflows/fetch-nasdaq-giw-sox.yml" },
-  "slickcharts-daily": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-daily.yml" },
-  "slickcharts-weekly": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-weekly.yml" },
-  "slickcharts-monthly": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-monthly.yml" },
-  "slickcharts-history": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-history.yml" },
-  "slickcharts-symbols": { lane_id: "slickcharts", workflow: ".github/workflows/slickcharts-symbols.yml" },
-  "edgar-korean-summaries": { lane_id: "edgar_filings", workflow: ".github/workflows/fetch-edgar-filings.yml" },
-  "us-indices-daily": { lane_id: "us_indices_daily", workflow: ".github/workflows/fetch-us-indices-daily.yml" },
-  "finra-short-volume": { lane_id: "finra_short_volume", workflow: ".github/workflows/fenok-edge-daily.yml" },
-  "finra-ats-weekly": { lane_id: "finra_ats_weekly", workflow: ".github/workflows/fetch-finra-ats-weekly.yml" },
-  "gdelt-news-tone": { lane_id: "gdelt_news_tone", workflow: ".github/workflows/fetch-fenok-news-tone.yml" },
-  // One-asset computed-signals pilot coordinator: owns no acquisition lane and
-  // commits ONLY the publish-outcome shard (no signals Git commit); the
-  // coordinator workflow is a declared platform_publisher, not a lane record.
-  "computed-signals": { lane_id: "computed_signals", workflow: ".github/workflows/coordinate-computed-signals.yml" },
-});
+// PLANE_PUBLISH_OUTCOME_BINDINGS used to live here as a hand-written table of
+// 22 entries. It is now DERIVED from actual publish-outcome shard ownership and
+// exported after workflow_policies is assembled; see derivePlanePublishOutcomeBindings
+// below. The hand-written form was a second place to register a family, and a
+// family registered in the publisher but missing here was silently unauthorized.
 
 const providers = [
   { id: "fred", label: "FRED", class: "external_data" },
@@ -441,6 +416,12 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("stockanalysis_etf_detail"),
+      // Owning this shard is what authorizes the plane family: the derived
+      // binding below reads publish-outcome ownership, so a publisher FAMILIES
+      // entry with no lane owner cannot publish. It also makes the outcome
+      // land — the publisher writes it to the workspace and only a declared
+      // commit shard carries it to origin, which DEC-305 requires.
+      publishOutcomeShard("stockanalysis-etf-detail"),
       "data/stockanalysis",
       "data/admin/stockanalysis-recovery",
     ],
@@ -1626,6 +1607,10 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".gi
     commitSpec("data/admin/data-supply-state/v1", "directory", true),
     commitSpec("data/admin/stockanalysis-recovery", "directory", true),
     commitSpec("data/admin/yahoo_etf_fallback", "directory", false),
+    // Publish-outcome shards are not under data-supply-state/v1 and lanePolicy
+    // derives attempt shards only, so this one is explicit. Optional because a
+    // run that publishes nothing writes no outcome.
+    commitSpec(publishOutcomeShard("stockanalysis-etf-detail"), "file", false),
     // The five attempt shards this workflow carries are no longer listed here.
     // They are derived from the registry by lanePolicy, because hand-listing
     // them is what let run 31794068491 emit a shard correctly and then fail to
@@ -1717,6 +1702,82 @@ workflow_policies[".github/workflows/coordinate-computed-signals.yml"] = policy(
     commitSpec(publishOutcomeShard("computed-signals"), "file"),
   ],
 });
+
+// --- Derived plane publish-outcome bindings ---------------------------------
+// Family names stay hyphenated while lane ids stay underscored, so the two
+// namespaces still need a mapping. What changed is where the mapping comes
+// from: it is now READ from who actually owns each publish-outcome shard,
+// rather than restated by hand. A hand-written table is a second place to
+// register a family, and a family present in the publisher but absent here was
+// silently unauthorized rather than rejected.
+//
+// Three sources, in precedence order, each fail-closed on conflict:
+//   1. a lane's own commit_shards          -> that lane, its owner workflow
+//   2. a lane's caller_workflows shards    -> that lane, the calling workflow
+//      (SlickCharts: one composite lane, five member workflows)
+//   3. a lane-less platform_publisher workflow policy stage
+//      (computed-signals is the only such case and must stay the only one)
+const PUBLISH_OUTCOME_SHARD_RE = new RegExp(`^${PUBLISH_OUTCOME_ROOT}/([a-z0-9][a-z0-9-]*)\\.json$`);
+
+function publishOutcomeFamily(shardPath) {
+  const match = PUBLISH_OUTCOME_SHARD_RE.exec(shardPath);
+  return match ? match[1] : null;
+}
+
+function derivePlanePublishOutcomeBindings() {
+  const derived = {};
+  const claim = (family, laneId, workflow, source) => {
+    const existing = derived[family];
+    if (existing && (existing.lane_id !== laneId || existing.workflow !== workflow)) {
+      throw new Error(
+        `lane-registry: publish-outcome family ${family} is claimed twice — `
+        + `${existing.lane_id}@${existing.workflow} (${existing.source}) vs ${laneId}@${workflow} (${source})`,
+      );
+    }
+    derived[family] = { lane_id: laneId, workflow, source };
+  };
+
+  for (const laneValue of lanes) {
+    for (const shard of laneValue.commit_shards ?? []) {
+      const family = publishOutcomeFamily(shard);
+      if (!family) continue;
+      if (!laneValue.owner_workflow) {
+        throw new Error(`lane-registry: lane ${laneValue.id} owns publish-outcome ${family} without an owner workflow`);
+      }
+      claim(family, laneValue.id, laneValue.owner_workflow, "lane_commit_shards");
+    }
+    for (const [callerWorkflow, callerSpec] of Object.entries(laneValue.caller_workflows ?? {})) {
+      for (const shard of callerSpec.commit_shards ?? []) {
+        const family = publishOutcomeFamily(shard);
+        if (!family) continue;
+        claim(family, laneValue.id, callerWorkflow, "caller_commit_shards");
+      }
+    }
+  }
+
+  for (const [workflowRel, classification] of Object.entries(workflow_classes)) {
+    if (classification.class !== "platform_publisher") continue;
+    const stages = workflow_policies[workflowRel]?.stages ?? {};
+    for (const stageKey of COMMIT_STAGE_KEYS) {
+      for (const spec of stages[stageKey] ?? []) {
+        const family = publishOutcomeFamily(spec.path);
+        if (!family) continue;
+        // A lane-less publisher has no lane record to read an id from, so the
+        // id is the family with hyphens normalized. This is deliberately the
+        // only place that conversion is allowed, and only for this class.
+        claim(family, family.replace(/-/g, "_"), workflowRel, "platform_publisher_policy");
+      }
+    }
+  }
+
+  return Object.fromEntries(
+    Object.entries(derived)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([family, value]) => [family, Object.freeze({ lane_id: value.lane_id, workflow: value.workflow })]),
+  );
+}
+
+export const PLANE_PUBLISH_OUTCOME_BINDINGS = Object.freeze(derivePlanePublishOutcomeBindings());
 
 // --- Validation (fail-closed, mirrors the detection config's loader) ---------
 

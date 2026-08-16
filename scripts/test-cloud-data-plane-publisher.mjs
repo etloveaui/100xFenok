@@ -44,6 +44,7 @@ import {
   listR2ObjectsDetailed,
   recordPublishOutcome,
   resolveExpectedPointerSequence,
+  assertPublicationAuthorization,
   resolveSourceAsOf,
   RETENTION_PROTECTED_KEYS,
   rollbackLiveGeneration,
@@ -1537,6 +1538,64 @@ try {
       "FAMILY_ASOF_INVALID",
     );
     console.log("source_as_of mode detection ok (max_date+key, empty files, file-only all reject)");
+
+    // per_asset_key tree mode: the pre-shadow StockAnalysis ETF family has no
+    // index file and thousands of payloads, so every asset carries its own
+    // clock. Valid resolves to the conservative MINIMUM with per-asset dates
+    // retained; a missing or malformed value fails before any write.
+    const perAssetRoot = "data/stockanalysis/etfs";
+    const perAssetFamily = { root: perAssetRoot, source_as_of: { per_asset_key: "source_as_of" } };
+    const encodeJson = (value) => new TextEncoder().encode(JSON.stringify(value));
+    const perAssetValid = resolveSourceAsOf({
+      family: perAssetFamily,
+      payloads: new Map([
+        [`${perAssetRoot}/SPY.json`, encodeJson({ source_as_of: "2026-08-15" })],
+        [`${perAssetRoot}/QQQ.json`, encodeJson({ source_as_of: "2026-08-14T22:10:00Z" })],
+        [`${perAssetRoot}/SOXL.json`, encodeJson({ source_as_of: "2026-08-16" })],
+      ]),
+      createdIsoDay: "2026-08-17",
+      relRoot: perAssetRoot,
+    });
+    assert.equal(perAssetValid.origin, "per-asset");
+    assert.equal(perAssetValid.value, "2026-08-14", "family summary is the conservative minimum, not the newest or the created day");
+    assert.deepEqual([...perAssetValid.perAsset.entries()].sort(), [
+      ["QQQ.json", "2026-08-14"],
+      ["SOXL.json", "2026-08-16"],
+      ["SPY.json", "2026-08-15"],
+    ], "per-asset dates are retained for the manifest");
+    await assertRejectsCode(
+      async () => resolveSourceAsOf({
+        family: perAssetFamily,
+        payloads: new Map([
+          [`${perAssetRoot}/SPY.json`, encodeJson({ source_as_of: "2026-08-15" })],
+          [`${perAssetRoot}/QQQ.json`, encodeJson({ updated: "2026-08-15" })],
+        ]),
+        createdIsoDay: "2026-08-17",
+        relRoot: perAssetRoot,
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    await assertRejectsCode(
+      async () => resolveSourceAsOf({
+        family: perAssetFamily,
+        payloads: new Map([
+          [`${perAssetRoot}/SPY.json`, encodeJson({ source_as_of: "not-a-date" })],
+        ]),
+        createdIsoDay: "2026-08-17",
+        relRoot: perAssetRoot,
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    await assertRejectsCode(
+      async () => resolveSourceAsOf({
+        family: perAssetFamily,
+        payloads: new Map(),
+        createdIsoDay: "2026-08-17",
+        relRoot: perAssetRoot,
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    console.log("per_asset_key tree clock ok (minimum summary, per-asset retained, missing/malformed/empty reject)");
 
     // Legacy modes unchanged: { key } payload mode and { file, key }
     // family-index mode still produce one uniform family date.
@@ -3085,6 +3144,32 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
     reason: "missing-result",
   });
   console.log("result vocabulary ok (known results healthy; unknown/not-json/missing are bugs)");
+}
+
+// Publication admission. The publisher must refuse before the cost gate and
+// before any write when FAMILIES and the registry-derived eligible bindings are
+// not set-equal, in BOTH directions. Shipped state must be authorized.
+{
+  const shipped = assertPublicationAuthorization();
+  assert.equal(shipped.authorized, 23, "shipped FAMILIES and derived bindings are set-equal at 23");
+
+  const bindings = { alpha: { lane_id: "alpha", workflow: ".github/workflows/a.yml" } };
+  // A publisher family nobody owns: publishable but its outcome would never land.
+  assert.throws(
+    () => assertPublicationAuthorization({ families: { alpha: {}, orphan: {} }, bindings }),
+    /publisher families with no registry publish-outcome owner: orphan/,
+  );
+  // A registry owner the publisher cannot serve: declared publication that is
+  // structurally impossible, which is just as wrong and used to be invisible.
+  assert.throws(
+    () => assertPublicationAuthorization({
+      families: { alpha: {} },
+      bindings: { ...bindings, ghost: { lane_id: "ghost", workflow: ".github/workflows/g.yml" } },
+    }),
+    /registry publish-outcome owners with no publisher family: ghost/,
+  );
+  assert.deepEqual(assertPublicationAuthorization({ families: { alpha: {} }, bindings }), { authorized: 1 });
+  console.log("publication admission ok (set-equal both directions, refuses before gate and before any write)");
 }
 
 console.log("test-cloud-data-plane-publisher: ok");
