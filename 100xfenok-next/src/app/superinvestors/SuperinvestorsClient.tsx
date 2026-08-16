@@ -957,6 +957,16 @@ export default function SuperinvestorsClient({
     summary?.metadata?.investor_count ??
     summary?.metadata?.total_investors ??
     null;
+  const trackedInvestorCount =
+    summary?.metadata?.investor_count ??
+    summary?.metadata?.total_investors ??
+    consensus?.metadata?.total_investors ??
+    null;
+  const retainedQuarterCount = summary?.metadata?.quarters_covered?.length ?? null;
+  const retainedQuarterRange =
+    summary?.metadata?.quarters_covered && summary.metadata.quarters_covered.length > 1
+      ? `${summary.metadata.quarters_covered.at(-1)}~${summary.metadata.quarters_covered[0]}`
+      : null;
   const tickerCount =
     consensus?.metadata?.tickers_count ??
     summary?.metadata?.total_tickers ??
@@ -1031,6 +1041,60 @@ export default function SuperinvestorsClient({
           기관 공시 데이터를 불러오지 못했습니다.
         </div>
       ) : null}
+
+      <section
+        data-superinvestor-data-boundary
+        aria-label="13F 데이터 범위"
+        className="rounded-[1.5rem] border border-amber-200 bg-amber-50/60 px-4 py-4 shadow-[var(--sh-sm)] sm:px-5"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-amber-700">데이터 범위</p>
+            <h2 className="mt-1 text-base font-black tracking-tight text-amber-950">
+              {quarter ?? "분기 확인 중"} · 현재 반영 범위
+            </h2>
+          </div>
+          <span
+            data-superinvestor-data-boundary-lag
+            className="inline-flex min-h-8 items-center rounded-full border border-amber-200 bg-white px-2.5 text-[10px] font-black text-amber-800"
+          >
+            SEC 13F · 최대 45일 지연
+          </span>
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div data-superinvestor-data-boundary-cohort className="rounded-xl border border-amber-100 bg-white/80 px-3 py-2.5">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">현재 반영</p>
+            <p className="mt-1 orbitron text-sm font-black text-slate-950">
+              {investorCount != null && trackedInvestorCount != null
+                ? `${formatInteger(investorCount)} / ${formatInteger(trackedInvestorCount)}명`
+                : "확인 중"}
+            </p>
+            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">최신 분기 코호트 / 추적 대상</p>
+          </div>
+          <div data-superinvestor-data-boundary-stale className="rounded-xl border border-amber-100 bg-white/80 px-3 py-2.5">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">stale 제외</p>
+            <p className="mt-1 orbitron text-sm font-black text-slate-950">{dataReady ? `${formatInteger(excludedStale.length)}명` : "확인 중"}</p>
+            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">최신 분기 계산에서 제외</p>
+          </div>
+          <div data-superinvestor-data-boundary-history className="rounded-xl border border-amber-100 bg-white/80 px-3 py-2.5">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">보존 이력</p>
+            <p className="mt-1 orbitron text-sm font-black text-slate-950">
+              {retainedQuarterCount != null ? `${formatInteger(retainedQuarterCount)}개 분기` : "확인 중"}
+            </p>
+            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">{retainedQuarterRange ?? "분기 범위 확인 중"}</p>
+          </div>
+          <div data-superinvestor-data-boundary-tickers className="rounded-xl border border-amber-100 bg-white/80 px-3 py-2.5">
+            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">분석 종목</p>
+            <p className="mt-1 orbitron text-sm font-black text-slate-950">
+              {tickerCount != null ? `${formatInteger(tickerCount)}개` : "확인 중"}
+            </p>
+            <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">현재 분기 보유 티커</p>
+          </div>
+        </div>
+        <p data-superinvestor-data-boundary-disclaimer className="mt-3 text-[10px] font-semibold leading-4 text-amber-900/75">
+          이 화면은 SEC 13F 분기 스냅샷을 분석합니다. 실시간 보유·공매도·비13F 자산은 포함하지 않으며, stale 투자자는 최신 분기 계산에서 제외한 뒤 보존 이력에는 남깁니다.
+        </p>
+      </section>
 
       <div data-superinvestor-overview>
       {/* Hero — verdict-first (cp-design-system-spec.md §A.1). Buy/sell balance is the
