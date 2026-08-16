@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-16T15:41:48.995Z",
+  "generated_at": "2026-08-16T16:47:02.228Z",
   "status": "open",
-  "open_incident_count": 5,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -69,6 +69,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
+    },
+    {
+      "workflow": "validate-workflows.yml",
+      "label": "Validate GitHub Workflows",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 31952922144,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31952922144",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -473,16 +486,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31956324442",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31956324442",
-    "observed_at": "2026-08-16T15:41:48.995Z",
+    "run_id": "31959479674",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31959479674",
+    "observed_at": "2026-08-16T16:47:02.228Z",
     "event": "schedule",
     "workflows": [
       "fetch-edgar-filings.yml",
       "fetch-fred-macro.yml",
       "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
-      "slickcharts-symbols.yml"
+      "slickcharts-symbols.yml",
+      "validate-workflows.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
