@@ -4,8 +4,10 @@ import {
   getDataSupplyEtfEnrollmentDocument,
   getDataSupplyEtfIndexDocument,
   getDataSupplyEtfPayloadDocument,
+  getStockanalysisEtfPlaneDocument,
   getStockanalysisEtfShardDocument,
   type PublicJsonDocument,
+  type StockanalysisEtfPlaneDocumentResult,
   type StockanalysisEtfShardDocumentResult,
 } from "./data-loader";
 
@@ -53,6 +55,12 @@ export type EtfDetailResolution =
       stateObservedAt: string;
     }
   | { kind: "shard"; document: PublicJsonDocument; projectionDigest: string }
+  | {
+      kind: "plane";
+      document: PublicJsonDocument & { bytes: ArrayBuffer };
+      generationId: string;
+      sourceAsOf: string | null;
+    }
   | { kind: "not_found"; projectionDigest: string }
   | { kind: "shard_unavailable"; reason: string; projectionDigest: string | null }
   | {
@@ -65,6 +73,7 @@ export interface EtfDetailResolverDependencies {
   readEnrollment: () => Promise<PublicJsonDocument | null>;
   readIndex: () => Promise<PublicJsonDocument | null>;
   readProjectionPayload: (ticker: string) => Promise<PublicJsonDocument | null>;
+  readPlanePayload: (ticker: string) => Promise<StockanalysisEtfPlaneDocumentResult>;
   readShardPayload: (ticker: string) => Promise<StockanalysisEtfShardDocumentResult>;
   now: () => Date;
 }
@@ -73,6 +82,7 @@ const DEFAULT_DEPENDENCIES: EtfDetailResolverDependencies = {
   readEnrollment: getDataSupplyEtfEnrollmentDocument,
   readIndex: getDataSupplyEtfIndexDocument,
   readProjectionPayload: getDataSupplyEtfPayloadDocument,
+  readPlanePayload: getStockanalysisEtfPlaneDocument,
   readShardPayload: getStockanalysisEtfShardDocument,
   now: () => new Date(),
 };
@@ -391,10 +401,22 @@ export async function resolveDataSupplyEtfDetail(
           projectionDigest: shard.manifestSha256,
         };
   };
+  const resolvePlaneThenShard = async (): Promise<EtfDetailResolution> => {
+    const plane = await dependencies.readPlanePayload(ticker);
+    if (plane.kind === "ok" && isStrictShardEtfPayload(plane.document.value, ticker)) {
+      return {
+        kind: "plane",
+        document: plane.document,
+        generationId: plane.generationId,
+        sourceAsOf: plane.sourceAsOf,
+      };
+    }
+    return resolveShard();
+  };
   const indexDocument = await dependencies.readIndex();
   if (!indexDocument) {
     if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
-    return resolveShard();
+    return resolvePlaneThenShard();
   }
 
   const parsedIndex = await parseIndex(indexDocument, guard, dependencies.now());
@@ -403,11 +425,11 @@ export async function resolveDataSupplyEtfDetail(
   }
   if (parsedIndex.kind === "invalid") {
     if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
-    return resolveShard();
+    return resolvePlaneThenShard();
   }
   const entries = parsedIndex.entries;
   if (!enrolled) {
-    return resolveShard();
+    return resolvePlaneThenShard();
   }
 
   const parsed = parseEntry(ticker, entries[ticker], guard.indexSha, dependencies.now());

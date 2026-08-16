@@ -651,14 +651,18 @@ export async function rollbackGeneration({
   return { pointer: nextPointer, receipt: promoted, summary };
 }
 
-export async function resolvePublicAsset({
-  publicPath,
+export async function resolveGenerationAsset({
+  assetPath,
+  expectedPrivacyClass,
   pointerStore,
   objectStore,
 }) {
+  if (expectedPrivacyClass !== "public" && expectedPrivacyClass !== "private") {
+    return { kind: "unavailable", reason: "PRIVACY_CLASS_INVALID" };
+  }
   let normalized;
   try {
-    normalized = normalizedPath(publicPath.replace(/^\/+/, ""), "publicPath");
+    normalized = normalizedPath(assetPath.replace(/^\/+/, ""), "assetPath");
   } catch (error) {
     return { kind: "unavailable", reason: error.code ?? "PATH_INVALID" };
   }
@@ -683,7 +687,7 @@ export async function resolvePublicAsset({
       return { kind: "unavailable", reason: "MANIFEST_CROSS_BIND_INVALID" };
     }
     const asset = manifest.assets.find((entry) => entry.path === normalized);
-    if (!asset || asset.privacy_class !== "public") return { kind: "not_enrolled" };
+    if (!asset || asset.privacy_class !== expectedPrivacyClass) return { kind: "not_enrolled" };
     const payload = await objectStore.get(asset.object_key);
     if (
       !(payload instanceof Uint8Array)
@@ -703,6 +707,19 @@ export async function resolvePublicAsset({
   } catch {
     return { kind: "unavailable", reason: "DATA_PLANE_INTEGRITY_UNAVAILABLE" };
   }
+}
+
+export async function resolvePublicAsset({
+  publicPath,
+  pointerStore,
+  objectStore,
+}) {
+  return resolveGenerationAsset({
+    assetPath: publicPath,
+    expectedPrivacyClass: "public",
+    pointerStore,
+    objectStore,
+  });
 }
 
 export function createMemoryCloudDataPlane() {

@@ -2,7 +2,7 @@ import type { Dirent } from "node:fs";
 import { lstat, readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { normalizeForFilePath } from "@/lib/ticker";
-import { readDataAsset } from "./data-asset-reader";
+import { readDataAsset, readPrivateCloudGenerationAsset } from "./data-asset-reader";
 import {
   sha256Text,
   stockanalysisEtfPayloadDocumentResultFromVerifiedShard,
@@ -96,6 +96,14 @@ export type StockanalysisEtfShardDocumentResult =
       manifestSha256: string | null;
       snapshotId: string | null;
     };
+export type StockanalysisEtfPlaneDocumentResult =
+  | {
+      kind: "ok";
+      document: PublicJsonDocument & { bytes: ArrayBuffer };
+      generationId: string;
+      sourceAsOf: string | null;
+    }
+  | { kind: "unavailable"; reason: string };
 
 let dataJsonFilesByPathPromise: Promise<DataJsonFilesByPath> | null = null;
 
@@ -226,6 +234,30 @@ export function normalizeStockanalysisTicker(value: string): string | null {
   const normalized = normalizeForFilePath(value);
   if (!/^[A-Z0-9][A-Z0-9.-]{0,19}$/.test(normalized)) return null;
   return normalized;
+}
+
+export async function getStockanalysisEtfPlaneDocument(
+  ticker: string,
+): Promise<StockanalysisEtfPlaneDocumentResult> {
+  const normalizedTicker = normalizeStockanalysisTicker(ticker);
+  if (!normalizedTicker) return { kind: "unavailable", reason: "invalid_ticker" };
+  const result = await readPrivateCloudGenerationAsset({
+    family: "stockanalysis-etf-detail",
+    manifestPath: `data/stockanalysis/etfs/${normalizedTicker}.json`,
+  });
+  if (result.kind !== "ok") return result;
+  try {
+    const value = asJsonRecord(JSON.parse(result.raw) as unknown);
+    if (!value) return { kind: "unavailable", reason: "invalid_plane_payload" };
+    return {
+      kind: "ok",
+      document: { raw: result.raw, value, bytes: result.bytes },
+      generationId: result.generationId,
+      sourceAsOf: result.sourceAsOf,
+    };
+  } catch {
+    return { kind: "unavailable", reason: "invalid_plane_payload" };
+  }
 }
 
 export async function getStockanalysisEtfShardDocument(

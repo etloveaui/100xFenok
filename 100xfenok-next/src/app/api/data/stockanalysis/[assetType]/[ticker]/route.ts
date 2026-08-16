@@ -41,6 +41,16 @@ export async function buildEtfResponse(resolution: EtfDetailResolution, ticker: 
       },
     });
   }
+  if (resolution.kind === "plane") {
+    return new Response(resolution.document.bytes, {
+      headers: {
+        ...STOCKANALYSIS_CACHE_HEADERS,
+        "Content-Type": "application/json",
+        "X-100x-ETF-Detail-Authority": "cloud-data-plane",
+        "X-Data-Plane-Generation": resolution.generationId,
+      },
+    });
+  }
   if (resolution.kind === "unavailable") {
     const representation = buildUnavailableEtfRepresentation(ticker, resolution.dataSupply);
     return NextResponse.json(

@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   normalizeDataAssetPublicPath,
+  normalizeGenerationManifestPath,
+  readPrivateCloudGenerationAsset,
   readDataAsset,
   readDataAssetWithDeps,
 } from "./data-asset-reader.ts";
@@ -50,6 +52,39 @@ test("normalize accepts only a clean single-slash public data path", () => {
     normalizeDataAssetPublicPath("/data/stockanalysis/surfaces/etf_screener.json"),
     "/data/stockanalysis/surfaces/etf_screener.json",
   );
+});
+
+test("generation manifest paths admit bounded public/private roots and reject URL ambiguity", () => {
+  assert.equal(
+    normalizeGenerationManifestPath("data/stockanalysis/etfs/BRK.B.json"),
+    "data/stockanalysis/etfs/BRK.B.json",
+  );
+  assert.equal(
+    normalizeGenerationManifestPath("public/generated/index.json"),
+    "public/generated/index.json",
+  );
+  for (const value of [
+    "/data/stockanalysis/etfs/SPY.json",
+    "data/stockanalysis/../secret.json",
+    "data/stockanalysis//SPY.json",
+    "data/stockanalysis/SPY%2fsecret.json",
+    "data/stockanalysis/SPY.json?x=1",
+    "private/stockanalysis/SPY.json",
+    "public/datax/SPY.json",
+  ]) assert.equal(normalizeGenerationManifestPath(value), null, `should reject: ${value}`);
+});
+
+test("private generation reader binds the one family to one ETF path before resolving bindings", async () => {
+  for (const input of [
+    { family: undefined, manifestPath: "data/stockanalysis/etfs/SPY.json" },
+    { family: null, manifestPath: "data/stockanalysis/etfs/SPY.json" },
+    { family: "fred-macro", manifestPath: "data/stockanalysis/etfs/SPY.json" },
+    { family: "stockanalysis-etf-detail", manifestPath: "data/stockanalysis/stocks/SPY.json" },
+    { family: "stockanalysis-etf-detail", manifestPath: "data/stockanalysis/etfs/SPY/other.json" },
+  ]) {
+    const result = await readPrivateCloudGenerationAsset(input as never);
+    assert.deepEqual(result, { kind: "unavailable", reason: "INVALID_GENERATION_ASSET_REQUEST" });
+  }
 });
 
 test("parity: normalize accepts exactly what familyForPath enrolls for a clean path", () => {

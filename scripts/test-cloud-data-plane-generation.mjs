@@ -8,6 +8,7 @@ import {
   createMemoryCloudDataPlane,
   publishGeneration,
   runBoundedAsyncPool,
+  resolveGenerationAsset,
   resolvePublicAsset,
   rollbackGeneration,
   sha256Bytes,
@@ -317,6 +318,31 @@ let poolPayloads;
     objectStore: plane.objectStore,
   });
   assert.deepEqual(privateResult, { kind: "not_enrolled" });
+
+  const privateAuthorityResult = await resolveGenerationAsset({
+    assetPath: "data/private/source.json",
+    expectedPrivacyClass: "private",
+    pointerStore: plane.pointerStore,
+    objectStore: plane.objectStore,
+  });
+  assert.equal(privateAuthorityResult.kind, "ok");
+  assert.deepEqual(privateAuthorityResult.bytes, encoder.encode(firstValues["data/private/source.json"]));
+
+  const privateAsPublic = await resolveGenerationAsset({
+    assetPath: "public/data/market.json",
+    expectedPrivacyClass: "private",
+    pointerStore: plane.pointerStore,
+    objectStore: plane.objectStore,
+  });
+  assert.deepEqual(privateAsPublic, { kind: "not_enrolled" });
+
+  const invalidPrivacy = await resolveGenerationAsset({
+    assetPath: "data/private/source.json",
+    expectedPrivacyClass: "secret",
+    pointerStore: plane.pointerStore,
+    objectStore: plane.objectStore,
+  });
+  assert.deepEqual(invalidPrivacy, { kind: "unavailable", reason: "PRIVACY_CLASS_INVALID" });
 
   const absentResult = await resolvePublicAsset({
     publicPath: "public/data/not-present.json",

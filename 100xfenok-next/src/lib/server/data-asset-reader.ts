@@ -3,6 +3,8 @@ import path from "node:path";
 import {
   handleCloudDataPlaneAsset,
 } from "../../../scripts/cloud-data-plane/cloud-data-plane-worker-read.mjs";
+import { createCloudflareCloudDataPlane } from "../../../scripts/cloud-data-plane/cloud-data-plane-cloudflare-adapter.mjs";
+import { resolveGenerationAsset } from "../../../scripts/cloud-data-plane/cloud-data-plane-generation.mjs";
 
 /**
  * Unified data-asset reader — first slice (no production cutover).
@@ -28,6 +30,18 @@ export type DataAssetReadSource = "filesystem" | "data-plane" | "assets";
 
 export type DataAssetReadResult =
   | { kind: "ok"; raw: string; source: DataAssetReadSource }
+  | { kind: "unavailable"; reason: string };
+
+export type CloudGenerationAssetReadResult =
+  | {
+      kind: "ok";
+      raw: string;
+      bytes: ArrayBuffer;
+      source: "data-plane";
+      generationId: string;
+      sourceAsOf: string | null;
+      publishedAt: string;
+    }
   | { kind: "unavailable"; reason: string };
 
 /** Minimal env shape; only the two plane bindings gate the plane tier. */
@@ -76,6 +90,20 @@ export function normalizeDataAssetPublicPath(value: string): string | null {
   return decoded;
 }
 
+export function normalizeGenerationManifestPath(value: string): string | null {
+  if (typeof value !== "string" || value.length === 0 || value.startsWith("/")) return null;
+  if (/[?#%\\\u0000-\u001f\u007f]/u.test(value)) return null;
+  const segments = value.split("/");
+  if (segments.some((segment) => segment === "" || segment === "." || segment === "..")) return null;
+  if (segments[0] === "data" && segments.length > 1) return value;
+  if (
+    segments[0] === "public"
+    && (segments[1] === "data" || segments[1] === "generated")
+    && segments.length > 2
+  ) return value;
+  return null;
+}
+
 /** Relative path under public/data for a normalized `/data/...` public path. */
 function publicDataRelativePath(publicPath: string): string {
   return publicPath.slice("/data/".length);
@@ -104,6 +132,64 @@ async function resolveRuntimeEnv(injected: DataAssetReaderEnv): Promise<DataAsse
     };
   } catch {
     return {};
+  }
+}
+
+export async function readPrivateCloudGenerationAsset(
+  input: {
+    family: "stockanalysis-etf-detail";
+    manifestPath: string;
+  },
+  injectedEnv: DataAssetReaderEnv = {},
+): Promise<CloudGenerationAssetReadResult> {
+  const manifestPath = normalizeGenerationManifestPath(input.manifestPath);
+  if (
+    manifestPath === null
+    || typeof input.family !== "string"
+    || input.family !== "stockanalysis-etf-detail"
+    || !/^data\/stockanalysis\/etfs\/[A-Z0-9][A-Z0-9.-]{0,19}\.json$/.test(manifestPath)
+  ) return { kind: "unavailable", reason: "INVALID_GENERATION_ASSET_REQUEST" };
+
+  const env = await resolveRuntimeEnv(injectedEnv);
+  if (env.DATA_PLANE_BUCKET === undefined || env.CLOUD_DATA_PLANE_COORDINATOR === undefined) {
+    return { kind: "unavailable", reason: "DATA_PLANE_BINDINGS_UNAVAILABLE" };
+  }
+  try {
+    const plane = createCloudflareCloudDataPlane({
+      r2Bucket: env.DATA_PLANE_BUCKET,
+      coordinatorNamespace: env.CLOUD_DATA_PLANE_COORDINATOR,
+      coordinatorName: input.family,
+    });
+    const resolved = await resolveGenerationAsset({
+      assetPath: manifestPath,
+      expectedPrivacyClass: "private",
+      pointerStore: plane.pointerStore,
+      objectStore: plane.objectStore,
+    });
+    if (
+      resolved?.kind !== "ok"
+      || !(resolved.bytes instanceof Uint8Array)
+      || typeof resolved.generation_id !== "string"
+      || typeof resolved.published_at !== "string"
+      || (resolved.source_as_of !== null && resolved.source_as_of !== undefined
+        && typeof resolved.source_as_of !== "string")
+    ) {
+      return { kind: "unavailable", reason: resolved?.reason ?? "DATA_PLANE_ASSET_NOT_ENROLLED" };
+    }
+    const bytes = new ArrayBuffer(resolved.bytes.byteLength);
+    new Uint8Array(bytes).set(resolved.bytes);
+    const raw = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    return {
+      kind: "ok",
+      raw,
+      bytes,
+      source: "data-plane",
+      generationId: resolved.generation_id,
+      sourceAsOf: resolved.source_as_of ?? null,
+      publishedAt: resolved.published_at,
+    };
+  } catch {
+    return { kind: "unavailable", reason: "DATA_PLANE_INTEGRITY_UNAVAILABLE" };
   }
 }
 
