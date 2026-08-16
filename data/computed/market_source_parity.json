@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-08-16T01:35:28Z",
+  "generated_at": "2026-08-16T02:07:37Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6802,
@@ -11,13 +11,13 @@
     "diagnosis_counts": {
       "agreement": 10952,
       "scale_mismatch": 195,
-      "sign_divergence": 3028,
+      "sign_divergence": 3026,
       "stale": 31747,
-      "value_drift": 11416
+      "value_drift": 11418
     },
     "stale_rows": 31747,
     "scale_mismatch_rows": 195,
-    "sign_divergence_rows": 3028
+    "sign_divergence_rows": 3026
   },
   "by_field": {
     "beta": {
@@ -3821,6 +3821,52 @@
       }
     },
     {
+      "ticker": "TLT",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 4,
+      "relative_spread_pct": 198.103023,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -3.318721799806226
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 4.863
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 4.863
+        },
+        {
+          "source": "yf",
+          "value": -4.77075
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 198.103023,
+      "fresh_spread_pct": 198.103023,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 57.0,
+        "yf": 0.0
+      }
+    },
+    {
       "ticker": "IYE",
       "asset_type": "etf",
       "field": "return_3m",
@@ -4069,43 +4115,6 @@
       ],
       "diagnosis": "stale",
       "spread_pct": 197.993965,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 54.0,
-        "yf": 0.0
-      }
-    },
-    {
-      "ticker": "SHYD",
-      "asset_type": "etf",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 2,
-      "relative_spread_pct": 197.983822,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": -0.09
-        },
-        {
-          "source": "yf",
-          "value": 0.08818544
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 197.983822,
       "fresh_spread_pct": null,
       "stale_sources": [
         "stockanalysis.quote"
@@ -13302,6 +13311,52 @@
       }
     },
     {
+      "ticker": "TLT",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 4,
+      "relative_spread_pct": 198.103023,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -3.318721799806226
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 4.863
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 4.863
+        },
+        {
+          "source": "yf",
+          "value": -4.77075
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 198.103023,
+      "fresh_spread_pct": 198.103023,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 57.0,
+        "yf": 0.0
+      }
+    },
+    {
       "ticker": "DIV",
       "asset_type": "etf",
       "field": "return_1m",
@@ -16280,47 +16335,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
-      }
-    },
-    {
-      "ticker": "RJMI",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 192.818982,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -1.4377660366814564
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 1.549
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 1.549
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 192.818982,
-      "fresh_spread_pct": 192.818982,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 50.0
       }
     }
   ]
