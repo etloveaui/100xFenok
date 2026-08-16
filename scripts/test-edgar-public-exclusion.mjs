@@ -2,9 +2,11 @@
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { removePrivateEdgarPublicTree } from "../100xfenok-next/sync-static-overrides.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const publicRoot = path.join(ROOT, "100xfenok-next", "public", "data", "edgar");
@@ -52,6 +54,37 @@ for (const relative of removed) {
     true,
     `sync-static-overrides must remove ${relative}`,
   );
+}
+
+function listFiles(directory, prefix = "", result = []) {
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) listFiles(absolute, relative, result);
+    else result.push(relative);
+  }
+  return result.sort();
+}
+
+assert.deepEqual(
+  listFiles(publicRoot),
+  receipts.slice().sort(),
+  "public EDGAR must retain receipts only; ignored cache residue is not an allowed boundary",
+);
+
+const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-public-boundary-"));
+try {
+  const fixturePublic = path.join(fixtureRoot, "public/data/edgar");
+  fs.mkdirSync(path.join(fixturePublic, "r1-panel/prices"), { recursive: true });
+  fs.mkdirSync(path.join(fixturePublic, "r2-panel"), { recursive: true });
+  fs.writeFileSync(path.join(fixturePublic, "r1-panel/prices/KEY.json"), "private\n");
+  fs.writeFileSync(path.join(fixturePublic, "r2-panel/dividend-fetch-receipt.json"), "receipt\n");
+  const result = removePrivateEdgarPublicTree({ baseDir: fixtureRoot, logger: () => {} });
+  assert.equal(result.filesRemoved, 1, "fixture private EDGAR cache must be removed");
+  assert.equal(fs.existsSync(path.join(fixturePublic, "r1-panel/prices/KEY.json")), false);
+  assert.equal(fs.existsSync(path.join(fixturePublic, "r2-panel/dividend-fetch-receipt.json")), true);
+} finally {
+  fs.rmSync(fixtureRoot, { recursive: true, force: true });
 }
 
 assert.deepEqual(

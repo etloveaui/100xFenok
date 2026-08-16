@@ -42,6 +42,13 @@ export const FORBIDDEN_PATTERNS = [
   /^computed\/fenok_signal_lens_proxies.*\.json$/,
   /^computed\/fenok_social_attention_proxy.*\.json$/,
   /^computed\/fenok_apewisdom.*\.json$/,
+  // EDGAR's public boundary retains only the eight fetch receipts. The R1/R2/R3
+  // panel caches are private recovery inputs; reject any cache/log/bytecode
+  // residue even if a blanket sync recreates it before static cleanup.
+  /^edgar\/r[123]-panel\/(?![^/]+-receipt\.json$).+$/u,
+  // FactSet's public boundary is catalog-only: keep the provenance receipt and
+  // reject fetch logs, scripts, bytecode and any future control-plane residue.
+  /^factset-earnings-insight\/(?!archives\/receipt\.json$).+$/u,
 ];
 
 const FORBIDDEN_RAW_PATTERNS = [

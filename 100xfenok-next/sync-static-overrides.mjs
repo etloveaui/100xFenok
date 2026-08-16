@@ -80,6 +80,72 @@ function removeGeneratedPublicMirror(relativePath) {
   console.log(`[sync-static-overrides] removed private-only public mirror ${relativePath}`);
 }
 
+// Some private families share a public top-level directory with an approved
+// receipt or summary. A blanket canonical walk can therefore recreate ignored
+// working-tree caches beneath that directory even though Git never tracks
+// them. Remove every public child except the explicitly approved boundary so
+// the cleanup is fail-closed for newly appearing cache/log/bytecode files too.
+export function removePublicTreeExcept(
+  relativeRoot,
+  keepRelativePaths,
+  { baseDir = rootDir, logger = console.log } = {},
+) {
+  const rootPath = path.join(baseDir, relativeRoot);
+  if (!fs.existsSync(rootPath)) return { filesRemoved: 0, directoriesRemoved: 0 };
+
+  const keep = new Set(keepRelativePaths);
+  const files = [];
+  const directories = [];
+  const visit = (directory, prefix) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolute = path.join(directory, entry.name);
+      const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        directories.push(absolute);
+        visit(absolute, relative);
+      } else {
+        files.push({ absolute, relative });
+      }
+    }
+  };
+  visit(rootPath, "");
+
+  let filesRemoved = 0;
+  for (const file of files) {
+    if (keep.has(file.relative)) continue;
+    fs.unlinkSync(file.absolute);
+    filesRemoved += 1;
+    logger(`[sync-static-overrides] removed private-only public mirror ${path.join(relativeRoot, file.relative)}`);
+  }
+
+  let directoriesRemoved = 0;
+  for (const directory of directories.sort((left, right) => right.length - left.length)) {
+    if (fs.readdirSync(directory).length !== 0) continue;
+    fs.rmdirSync(directory);
+    directoriesRemoved += 1;
+  }
+  return { filesRemoved, directoriesRemoved };
+}
+
+const EDGAR_PUBLIC_RECEIPTS = Object.freeze([
+  "r1-panel/dei-refetch-receipt.json",
+  "r1-panel/duration-refetch-receipt.json",
+  "r1-panel/price-fetch-receipt.json",
+  "r1-panel/primary-e-fetch-receipt.json",
+  "r1-panel/sic-fetch-receipt.json",
+  "r2-panel/dividend-fetch-receipt.json",
+  "r3-panel/r3-dividend-fetch-receipt.json",
+  "r3-panel/r3-price-fetch-receipt.json",
+]);
+
+export function removePrivateEdgarPublicTree(options = {}) {
+  return removePublicTreeExcept("public/data/edgar", EDGAR_PUBLIC_RECEIPTS, options);
+}
+
+export function removePrivateFactsetPublicTree(options = {}) {
+  return removePublicTreeExcept("public/data/factset-earnings-insight", ["archives/receipt.json"], options);
+}
+
 // Third-party research inputs. These are read under research use and are not ours to
 // republish: the Li-Mohanram paper text and PDF, and the Ken French factor archives.
 // The mirror guard already refuses .csv and .txt in the public tree, which catches the
@@ -490,6 +556,8 @@ function compactFenokEdgePublicMirror() {
 if (isMain) {
 removePrivateDataSupplyPublicTrees();
 removePrivateResearchPublicTrees();
+removePrivateEdgarPublicTree();
+removePrivateFactsetPublicTree();
 // The FENO RIM research records. They carry every operand, the frozen
 // calibration constants, the fitted discount equation, and the source notes that
 // name where each constant came from. Only the redacted projection built by
