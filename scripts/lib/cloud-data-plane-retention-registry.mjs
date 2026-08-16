@@ -183,6 +183,10 @@ export const RETENTION_REGISTRY = Object.freeze({
       reason: "Detection floor projection committed with the KPI source-parity proof; its declared exception excludes it from public sync and allows absence before projection.",
     },
     {
+      path: "data/admin/fenok-edge-proxy-coverage-review.json",
+      reason: "Review-only FINRA/OCC proxy coverage audit retained as private admin evidence; it has no product consumer or migration authority.",
+    },
+    {
       path: "data/admin/lane-commit-manifest.json",
       reason: "Private deterministic workflow commit and routing manifest; excluded from public sync.",
     },
