@@ -42,6 +42,7 @@ import {
   type ColumnPreset,
   type ScreenerFilterState,
 } from "@/lib/screener/filter-url";
+import { readScreenerView, writeScreenerView, readScreenerUniverses, writeScreenerUniverses } from "@/lib/personal/personal-state";
 
 const PAGE_SIZE = 50;
 type ScreenerDensity = "compact" | "standard" | "comfortable";
@@ -1439,8 +1440,8 @@ export default function ScreenerClient({
 
   useEffect(() => {
     if (initialColumnPreset) return;
-    const saved = localStorage.getItem("screener-preset") as ColumnPreset | null;
-    if (!saved || !PRESET_KEYS[saved]) return;
+    const saved = readScreenerView().columnPreset;
+    if (!saved) return;
     const frame = window.requestAnimationFrame(() => {
       setPreset(saved);
       setSortKey((current) => {
@@ -1453,21 +1454,17 @@ export default function ScreenerClient({
   }, [initialColumnPreset]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("screener-density");
-    if (saved === "compact" || saved === "standard" || saved === "comfortable") {
-      const frame = window.requestAnimationFrame(() => setDensity(saved));
-      return () => window.cancelAnimationFrame(frame);
-    }
-    return undefined;
+    const saved = readScreenerView().density;
+    if (!saved) return undefined;
+    const frame = window.requestAnimationFrame(() => setDensity(saved));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem("screener-view-mode");
-    if (saved === "table" || saved === "card") {
-      const frame = window.requestAnimationFrame(() => setViewMode(saved));
-      return () => window.cancelAnimationFrame(frame);
-    }
-    return undefined;
+    const saved = readScreenerView().viewMode;
+    if (!saved) return undefined;
+    const frame = window.requestAnimationFrame(() => setViewMode(saved));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   // Ensure Fenok Picks always defaults to conviction desc when no explicit valid sort is set.
@@ -1489,7 +1486,7 @@ export default function ScreenerClient({
 
   function handlePresetChange(next: ColumnPreset) {
     setPreset(next);
-    localStorage.setItem("screener-preset", next);
+    writeScreenerView({ columnPreset: next });
     // Default sort for Fenok Picks is conviction desc; otherwise reset to a valid column
     if (next === "fenokPicks") {
       setSortKey("fenokConvictionScore");
@@ -1505,12 +1502,12 @@ export default function ScreenerClient({
 
   function handleDensityChange(next: ScreenerDensity) {
     setDensity(next);
-    localStorage.setItem("screener-density", next);
+    writeScreenerView({ density: next });
   }
 
   function handleViewModeChange(next: ScreenerViewMode) {
     setViewMode(next);
-    localStorage.setItem("screener-view-mode", next);
+    writeScreenerView({ viewMode: next });
   }
 
   // Sync filter state to URL for deep-link round-trips.
@@ -1905,12 +1902,11 @@ export default function ScreenerClient({
     setSortKey(next.sortKey);
     setSortDir(next.sortDir);
     setPreset(next.preset);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("screener-preset", next.preset);
-    }
+    writeScreenerView({ columnPreset: next.preset });
   }
 
   const [savedPresets, setSavedPresets] = useState<{ name: string; state: ScreenerFilterState }[]>([]);
+  const [presetsHydrated, setPresetsHydrated] = useState(false);
   const [presetMenuOpen, setPresetMenuOpen] = useState(false);
   const [presetName, setPresetName] = useState("");
 
@@ -1918,15 +1914,13 @@ export default function ScreenerClient({
     if (typeof window === "undefined") return;
     let frame: number | null = null;
     try {
-      const raw = localStorage.getItem("screener-filter-presets");
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as unknown;
-      if (Array.isArray(parsed)) {
-        const presets = parsed.filter((p): p is { name: string; state: ScreenerFilterState } => typeof p === "object" && p !== null && typeof (p as { name?: unknown }).name === "string" && typeof (p as { state?: unknown }).state === "object");
-        frame = window.requestAnimationFrame(() => setSavedPresets(presets));
-      }
+      const presets = readScreenerUniverses();
+      frame = window.requestAnimationFrame(() => {
+        setSavedPresets(presets);
+        setPresetsHydrated(true);
+      });
     } catch {
-      // ignore malformed localStorage
+      // ignore malformed storage (module also fails closed)
     }
     return () => {
       if (frame !== null) window.cancelAnimationFrame(frame);
@@ -1934,9 +1928,9 @@ export default function ScreenerClient({
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem("screener-filter-presets", JSON.stringify(savedPresets));
-  }, [savedPresets]);
+    if (!presetsHydrated) return;
+    writeScreenerUniverses(savedPresets);
+  }, [presetsHydrated, savedPresets]);
 
   function handleSavePreset() {
     const name = presetName.trim();
