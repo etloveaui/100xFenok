@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-16T16:39:07.509Z",
+  "generated_at": "2026-08-16T18:54:14.300Z",
   "totals": {
     "rootJsonCount": 24498,
     "publicJsonCount": 10824,
     "mirroredRootJsonCount": 8775,
     "missingPublicMirrorCount": 15723,
     "publicOnlyJsonCount": 2049,
-    "directDataFetchCount": 128,
+    "directDataFetchCount": 143,
     "dynamicPatternCount": 10
   },
   "mirror_sync_status": "partial",
@@ -299,7 +299,7 @@
       "category": "stockanalysis",
       "rootJsonCount": 5749,
       "publicJsonCount": 1169,
-      "directFetchCount": 9,
+      "directFetchCount": 24,
       "dynamicPatternCount": 5,
       "generatedSourceCount": 0,
       "status": "active",
@@ -1213,7 +1213,8 @@
         "100xfenok-next/public/admin/data-lab/shared/data-lab-config.js",
         "100xfenok-next/public/admin/valuation-lab/shared/vlab-config.js",
         "100xfenok-next/src/hooks/useMarketValuation.ts",
-        "100xfenok-next/src/lib/connected/connected-loaders.ts"
+        "100xfenok-next/src/lib/connected/connected-loaders.ts",
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
       ]
     },
     {
@@ -1271,6 +1272,27 @@
       ]
     },
     {
+      "dataPath": "stockanalysis/..%2F..%2Fsecret.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/\\u0000.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/%2e%2e/secret.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
       "dataPath": "stockanalysis/backfill/latest.json",
       "category": "stockanalysis",
       "consumers": [
@@ -1297,7 +1319,71 @@
       "category": "stockanalysis",
       "consumers": [
         "100xfenok-next/public/admin/data-lab/app/ops-console.js",
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts",
         "100xfenok-next/src/lib/server/data-loader.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/foo?bar=baz.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/foo/../../bar.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/foo/./bar.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/foo//bar.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/foo\\\\bar.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/foo#bar.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/foo%23bar.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/foo%2Fbar.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/foo%3Fbar.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
       ]
     },
     {
@@ -1316,10 +1402,31 @@
       ]
     },
     {
+      "dataPath": "stockanalysis/surfaces/${normalized}.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-loader.ts"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/surfaces/definitely_missing.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
+      ]
+    },
+    {
       "dataPath": "stockanalysis/surfaces/earnings_calendar.json",
       "category": "stockanalysis",
       "consumers": [
         "100xfenok-next/public/admin/data-lab/app/ops-console.js"
+      ]
+    },
+    {
+      "dataPath": "stockanalysis/surfaces/etf_screener.json",
+      "category": "stockanalysis",
+      "consumers": [
+        "100xfenok-next/src/lib/server/data-asset-reader.test.ts"
       ]
     },
     {
