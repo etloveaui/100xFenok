@@ -133,7 +133,9 @@ async function readFromAssets(
 ): Promise<DataAssetReadResult | null> {
   if (!env.ASSETS) return null;
   try {
-    const response = await env.ASSETS.fetch(new URL(publicPath, "https://assets.local"));
+    const response = await env.ASSETS.fetch(
+      new Request(new URL(publicPath, "https://assets.local")),
+    );
     if (!response.ok) return null;
     return { kind: "ok", raw: await response.text(), source: "assets" };
   } catch {
