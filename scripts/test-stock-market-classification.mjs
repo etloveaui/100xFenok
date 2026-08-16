@@ -65,6 +65,7 @@ assert.equal(
 assert.equal(marketFor("2454.TW", classifications), "TW", "Taiwan .TW suffix must map to Taiwan");
 assert.equal(marketFor("1234.TWO", classifications), "TW", "Taiwan .TWO suffix must map to Taiwan");
 assert.equal(marketScopeFromMarket("TW"), "asia", "Taiwan uses the existing Asia scoring scope");
+assert.equal(marketFor("285A.T", classifications), "US_CLASS", "Japan .T suffix remains visible as an upstream anomaly until denominator policy is fixed");
 const stockActionIndex = JSON.parse(
   fs.readFileSync(path.join(repoRoot, "data", "computed", "stock_action_index.json"), "utf8"),
 );

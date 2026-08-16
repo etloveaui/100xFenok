@@ -157,5 +157,8 @@ const taiwanYfSource = coverageIndex.source_availability.sources.find((row) => r
 assert.equal(taiwanYfSource?.availability_status, "ready");
 assert.equal(taiwanYfSource?.covered_count, explicitTaiwanCount);
 assert.equal(taiwanYfSource?.denominator, explicitTaiwanCount);
+assert.ok(Array.isArray(coverageIndex.active_scoring_universe.japan_ticker_anomalies));
+assert.ok(coverageIndex.active_scoring_universe.japan_ticker_anomalies.length >= 1);
+assert.ok(coverageIndex.active_scoring_universe.japan_ticker_anomalies.every((row) => row.market === "US_CLASS" && row.market_scope === "us"));
 
 console.log("test-check-fenok-edge-freshness: ok");

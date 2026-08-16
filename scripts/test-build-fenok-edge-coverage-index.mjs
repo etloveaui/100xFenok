@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Focused unit test for the Taiwan universe classification + carry-over
+ * Focused unit test for the Taiwan/Japan universe classification + carry-over
  * denominator reconciliation used by build-fenok-edge-coverage-index.mjs.
  * First test coverage for that build script.
  */
@@ -12,6 +12,12 @@ import {
   selectExplicitTaiwanRows,
   selectTaiwanTickerAnomalies,
 } from "./lib/taiwan-universe.mjs";
+import {
+  hasJapanTickerSuffix,
+  isExplicitJapanRow,
+  selectExplicitJapanRows,
+  selectJapanTickerAnomalies,
+} from "./lib/japan-universe.mjs";
 import fs from "node:fs";
 
 let failures = 0;
@@ -78,6 +84,27 @@ assert(
   !anomalies.some((a) => a.ticker === "2330.TW"),
   "explicit-Taiwan suffix row is not an anomaly",
 );
+
+// --- Japan suffix anomaly detection ---
+// Japan rows currently retain their upstream US_CLASS/us tag until a separate
+// classifier/denominator decision lands; the coverage index must surface them
+// rather than silently relabeling or counting them as plain-US FINRA rows.
+assert(isExplicitJapanRow({ market: "JP" }), "market=JP is explicit Japan");
+assert(isExplicitJapanRow({ market: "JPX" }), "market=JPX is explicit Japan");
+assert(isExplicitJapanRow({ market_scope: "japan" }), "market_scope=japan is explicit Japan");
+assert(!isExplicitJapanRow({ market: "US_CLASS", market_scope: "us" }), "US_CLASS/us is NOT explicit Japan");
+assert(hasJapanTickerSuffix({ ticker: "285A.T" }), ".T suffix recognized");
+assert(hasJapanTickerSuffix({ ticker_normalized: "285A-T" }), "normalized -T suffix recognized");
+const japanRows = [
+  { ticker: "285A.T", ticker_normalized: "285A-T", market: "US_CLASS", market_scope: "us", company: "Kioxia" },
+  { ticker: "7203.T", ticker_normalized: "7203-T", market: "JP", market_scope: "asia", company: "Toyota" },
+  { ticker: "AAPL", ticker_normalized: "AAPL", market: "US", market_scope: "us", company: "Apple" },
+];
+const explicitJapan = selectExplicitJapanRows(japanRows);
+const japanAnomalies = selectJapanTickerAnomalies(japanRows, explicitJapan);
+assert(explicitJapan.length === 1 && explicitJapan[0].ticker === "7203.T", "explicit JP row lands in the Japan bucket");
+assert(japanAnomalies.length === 1 && japanAnomalies[0].ticker === "285A.T", "US_CLASS Japan suffix is surfaced as an anomaly");
+assert(!japanAnomalies.some((row) => row.ticker === "7203.T"), "explicit JP suffix row is not an anomaly");
 
 // --- Carry-over denominator reconciliation (the 1173 vs 1177 fix) ---
 // A stale carried row (frozen denominator 1173) must be re-stamped to the
@@ -153,4 +180,4 @@ if (failures > 0) {
   console.error(`\n${failures} assertion(s) failed`);
   process.exit(1);
 }
-console.log(JSON.stringify({ ok: true, suite: "build-fenok-edge-coverage-index taiwan classification + denominator" }, null, 2));
+console.log(JSON.stringify({ ok: true, suite: "build-fenok-edge-coverage-index taiwan+japan anomaly classification + denominator" }, null, 2));

@@ -78,10 +78,14 @@ function normalizedSymbol(value) {
   return String(value ?? "").trim().toUpperCase().replaceAll(".", "-");
 }
 
-function finraQuerySymbol(value) {
+const FOREIGN_EXCHANGE_SUFFIX_RE = /\.(?:T|TW|TWO|KS|KQ|HK|SS|SZ)$/;
+
+export function finraQuerySymbol(value) {
   const symbol = String(value ?? "").trim().toUpperCase();
   // FINRA US symbols are alphabetic-leading. A one-letter class suffix is kept
-  // (BRK.B/BF.B); country suffixes and numeric foreign listings stay excluded.
+  // (BRK.B/BF.B), while known country/exchange suffixes stay outside the US
+  // ATS denominator even when the base symbol starts with a letter.
+  if (FOREIGN_EXCHANGE_SUFFIX_RE.test(symbol)) return null;
   return /^[A-Z][A-Z0-9]{0,10}(?:\.[A-Z])?$/.test(symbol) ? symbol : null;
 }
 

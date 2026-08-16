@@ -1,7 +1,7 @@
 {
   "schema_version": "fenok-edge-coverage-index-public/v0.1",
   "source_schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-08-16T04:23:49.262Z",
+  "generated_at": "2026-08-16T04:36:53.598Z",
   "purpose": "Compact public admin readiness mirror. Contains derived counts/status only; no raw rows, private manifests, target ticker lists, or private artifact paths.",
   "raw_policy": {
     "raw_public": false,
@@ -59,9 +59,9 @@
     "collected_stock_candidates": 1189,
     "scored_public_stock": 1181,
     "stock_promotion_audit_gap": 8,
-    "stage": "PUBLIC_GATED_WITH_BLOCKED_LEDGER",
-    "public_done_claim_allowed": true,
-    "caveat": "S1 stock candidates are closed by current public S0 rows plus an explicit blocked/excluded promotion ledger; blocked rows are not scored or fabricated."
+    "stage": "NORMALIZED",
+    "public_done_claim_allowed": false,
+    "caveat": "market_facts is a normalized collected/candidate layer. It does not expand scored/public stock coverage until candidates are joined, scored, published, refreshed, and gated."
   },
   "etf_universe": {
     "collected_etf_candidates": 5613,
@@ -95,14 +95,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-08-16T04:23:13.479Z",
-          "age_hours": 0.01,
+          "age_hours": 0.23,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-08-16T04:23:41.014Z",
-          "age_hours": 0,
+          "age_hours": 0.22,
           "max_age_hours": 48
         },
         {
@@ -282,14 +282,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-08-16T04:23:13.479Z",
-          "age_hours": 0.01,
+          "age_hours": 0.23,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-08-16T04:23:41.014Z",
-          "age_hours": 0,
+          "age_hours": 0.22,
           "max_age_hours": 48
         },
         {
@@ -326,14 +326,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-08-16T04:23:13.479Z",
-          "age_hours": 0.01,
+          "age_hours": 0.23,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-08-16T04:23:41.014Z",
-          "age_hours": 0,
+          "age_hours": 0.22,
           "max_age_hours": 48
         },
         {
@@ -380,14 +380,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-08-16T04:23:13.479Z",
-          "age_hours": 0.01,
+          "age_hours": 0.23,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-08-16T04:23:41.014Z",
-          "age_hours": 0,
+          "age_hours": 0.22,
           "max_age_hours": 48
         },
         {
@@ -597,7 +597,7 @@
         "evidence_origin": "derived_counts_only",
         "artifact_present": true,
         "generated_at": "2026-08-16T04:23:41.177Z",
-        "generated_age_hours": 0,
+        "generated_age_hours": 0.22,
         "generated_fresh": true,
         "core_daily_basket_ready": true,
         "daily_ready": true,
@@ -640,8 +640,8 @@
         "denominator": 337,
         "denominator_label": "active_scoring_universe.korea",
         "coverage_pct": 100,
-        "active_scoring_coverage_pct": 28.75,
-        "source_date": "2026-07-09",
+        "active_scoring_coverage_pct": 28.54,
+        "source_date": null,
         "availability_status": "ready",
         "claim_scope": "source_available",
         "not_public_scoring": true,
@@ -831,31 +831,31 @@
         "label": "Current active stock scoring chain",
         "denominator": 1181,
         "stage": "PUBLIC",
-        "readiness_status": "ready",
-        "public_done_claim_allowed": true,
+        "readiness_status": "not_ready",
+        "public_done_claim_allowed": false,
         "requirements": {
           "source_available": true,
           "normalized": true,
           "joined_to_target_universe": true,
           "scored": true,
           "public": true,
-          "daily": true,
-          "gated": true
+          "daily": false,
+          "gated": false
         },
-        "caveat": "The current active stock chain is public-scored and has all-active-stock daily/gated source proof under the current S0 scope; FINRA/OCC mapping remains separate proxy expansion work for non-plain rows.",
+        "caveat": "The current active stock chain is public-scored, but daily accumulation and fail-closed readiness gates are not fully proven by this index.",
         "blocking_evidence": {
           "evidence_origin": "derived_counts_only",
-          "daily_ready": true,
-          "gated_ready": true,
+          "daily_ready": false,
+          "gated_ready": false,
           "checks": [
             {
               "id": "krx_full_daily_source_ready",
-              "status": "ready",
+              "status": "stale",
               "covered_count": 337,
               "denominator": 337,
               "missing_count": 0,
-              "source_date": "2026-07-09",
-              "age_days": 1,
+              "source_date": null,
+              "age_days": null,
               "max_age_days": 4,
               "eligibility_policy": "active_scoring_universe rows where market=KRX or KOSDAQ; counted date is the latest fully populated issuer daily proof date.",
               "caveat": "Empty KRX calendar runs are not counted as issuer daily coverage."
@@ -1042,7 +1042,20 @@
               "next_action": "If this blocks, rerun the targeted Taiwan YF daily shard before claiming all active S0 stocks as daily/gated."
             }
           ],
-          "blockers": [],
+          "blockers": [
+            {
+              "id": "krx_full_daily_source_ready",
+              "status": "stale",
+              "covered_count": 337,
+              "denominator": 337,
+              "missing_count": 0,
+              "source_date": null,
+              "age_days": null,
+              "max_age_days": 4,
+              "eligibility_policy": "active_scoring_universe rows where market=KRX or KOSDAQ; counted date is the latest fully populated issuer daily proof date.",
+              "caveat": "Empty KRX calendar runs are not counted as issuer daily coverage."
+            }
+          ],
           "caveat": "Readiness blocker counts only; no raw rows, private manifests, target ticker lists, or public scoring claims."
         }
       },
@@ -1050,19 +1063,19 @@
         "id": "expanded_stock_candidates",
         "label": "Expanded stock candidate promotion",
         "denominator": 1189,
-        "stage": "PUBLIC_GATED_WITH_BLOCKED_LEDGER",
-        "readiness_status": "ready",
-        "public_done_claim_allowed": true,
+        "stage": "NORMALIZED",
+        "readiness_status": "not_ready",
+        "public_done_claim_allowed": false,
         "requirements": {
           "source_available": true,
           "normalized": true,
           "joined_to_target_universe": true,
           "scored": true,
           "public": true,
-          "daily": true,
-          "gated": true
+          "daily": false,
+          "gated": false
         },
-        "caveat": "Every S1 stock candidate is either current public S0 daily/gated or explicitly blocked by the promotion ledger; blocked rows stay non-public and non-scored.",
+        "caveat": "8 stock candidates need promotion audit before they can increase scored/public stock coverage.",
         "promotion_gate_readiness": {
           "evidence_origin": "admin_promotion_artifact_and_current_public_counts",
           "artifact_present": true,
@@ -1072,10 +1085,13 @@
           "joined_ready": true,
           "scored_ready": true,
           "public_ready": true,
-          "daily_ready": true,
-          "gated_ready": true,
-          "public_done_claim_allowed": true,
-          "blockers": [],
+          "daily_ready": false,
+          "gated_ready": false,
+          "public_done_claim_allowed": false,
+          "blockers": [
+            "active_s0_daily_ready",
+            "active_s0_gated_ready"
+          ],
           "counts": {
             "denominator": 1189,
             "current_public_stock": 1181,
@@ -1114,11 +1130,11 @@
             },
             {
               "id": "inherits_active_s0_daily_ready",
-              "ok": true
+              "ok": false
             },
             {
               "id": "inherits_active_s0_gated_ready",
-              "ok": true
+              "ok": false
             }
           ],
           "caveat": "S1 completion means every normalized stock candidate is either promoted into the current public S0 daily/gated chain or explicitly excluded by the blocked promotion ledger; blocked rows are not fabricated public scores."
@@ -1167,14 +1183,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-08-16T04:23:13.479Z",
-              "age_hours": 0.01,
+              "age_hours": 0.23,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-08-16T04:23:41.014Z",
-              "age_hours": 0,
+              "age_hours": 0.22,
               "max_age_hours": 48
             },
             {
@@ -1354,14 +1370,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-08-16T04:23:13.479Z",
-              "age_hours": 0.01,
+              "age_hours": 0.23,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-08-16T04:23:41.014Z",
-              "age_hours": 0,
+              "age_hours": 0.22,
               "max_age_hours": 48
             },
             {
@@ -1398,14 +1414,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-08-16T04:23:13.479Z",
-              "age_hours": 0.01,
+              "age_hours": 0.23,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-08-16T04:23:41.014Z",
-              "age_hours": 0,
+              "age_hours": 0.22,
               "max_age_hours": 48
             },
             {
@@ -1452,14 +1468,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-08-16T04:23:13.479Z",
-              "age_hours": 0.01,
+              "age_hours": 0.23,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-08-16T04:23:41.014Z",
-              "age_hours": 0,
+              "age_hours": 0.22,
               "max_age_hours": 48
             },
             {
@@ -1684,7 +1700,7 @@
           "evidence_origin": "derived_counts_only",
           "artifact_present": true,
           "generated_at": "2026-08-16T04:23:41.177Z",
-          "generated_age_hours": 0,
+          "generated_age_hours": 0.22,
           "generated_fresh": true,
           "core_daily_basket_ready": true,
           "daily_ready": true,
@@ -1739,13 +1755,13 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-08-16T04:23:49.262Z"
+        "generated_at": "2026-08-16T04:36:53.598Z"
       },
       {
         "id": "korea_counted_source_date",
-        "source_date": "2026-07-09",
-        "age_days": 1,
-        "status": "ready",
+        "source_date": null,
+        "age_days": null,
+        "status": "stale",
         "caveat": "20260629 KRX run exists but is mostly empty; gate uses latest fully populated proof date."
       },
       {
@@ -1812,14 +1828,14 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-08-16T04:23:13.479Z",
-        "age_hours": 0.01,
+        "age_hours": 0.23,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
         "generated_at": "2026-08-16T04:23:41.014Z",
-        "age_hours": 0,
+        "age_hours": 0.22,
         "max_age_hours": 48,
         "fetchable_required_history": 436,
         "inception_limited_required_history": 204,
@@ -1978,7 +1994,7 @@
       {
         "id": "etf_core_daily_basket",
         "generated_at": "2026-08-16T04:23:41.177Z",
-        "age_hours": 0,
+        "age_hours": 0.22,
         "selected_count": 99,
         "fresh_selected_count": 99,
         "stale_selected_count": 0,

@@ -25,6 +25,10 @@ import {
   selectExplicitTaiwanRows,
   selectTaiwanTickerAnomalies,
 } from "./lib/taiwan-universe.mjs";
+import {
+  selectExplicitJapanRows,
+  selectJapanTickerAnomalies,
+} from "./lib/japan-universe.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -512,10 +516,13 @@ const koreaRows = universeRows.filter((row) => row.market === "KRX" || row.marke
 const asiaExTwRows = universeRows.filter((row) => row.market === "HKEX" || row.market === "SSE" || row.market === "SZSE");
 const explicitTaiwanRows = selectExplicitTaiwanRows(universeRows);
 const taiwanRows = explicitTaiwanRows;
+const explicitJapanRows = selectExplicitJapanRows(universeRows);
+const japanRows = explicitJapanRows;
 const s0DailyEligibleRows = [...usRows, ...koreaRows, ...asiaExTwRows, ...taiwanRows];
 const finraEligibleRows = usRows.filter((row) => row.market === "US");
 const usClassYfRows = usRows.filter((row) => row.market !== "US");
 const taiwanTickerAnomalies = selectTaiwanTickerAnomalies(universeRows, explicitTaiwanRows);
+const japanTickerAnomalies = selectJapanTickerAnomalies(universeRows, explicitJapanRows);
 
 const usUniverse = new Set(usRows.map((row) => normTicker(row.ticker_normalized ?? row.ticker)));
 const krUniverseCodes = new Set(koreaRows.map((row) => krCode(row.ticker_normalized ?? row.ticker)).filter(Boolean));
@@ -1135,6 +1142,12 @@ const index = {
       public_scoring_total_remains: activeScoringTotal,
     },
     taiwan_ticker_anomalies: taiwanTickerAnomalies,
+    japan_ticker_anomalies: japanTickerAnomalies,
+    japan_mapping: {
+      explicit_count: japanRows.length,
+      anomaly_count: japanTickerAnomalies.length,
+      source_policy: "JP rows require committed YF daily evidence with JPX exchange, JPY currency and Japan country metadata; this does not create FINRA/OCC proxy authority.",
+    },
   },
   expanded_stock_candidate_universe: {
     source_file: "data/computed/market_facts/index.json",

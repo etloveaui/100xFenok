@@ -50,6 +50,7 @@ function makeRoot(tag, signalRows = null) {
     rows: signalRows ?? [
       { ticker: "AAPL", ticker_normalized: "AAPL", market_scope: "us" },
       { ticker: "BRK.B", ticker_normalized: "BRK-B", market_scope: "us" },
+      { ticker: "285A.T", ticker_normalized: "285A-T", market_scope: "us" },
       { ticker: "7203.T", ticker_normalized: "7203-T", market_scope: "us" },
       { ticker: "005930.KS", ticker_normalized: "005930-KS", market_scope: "korea" },
     ],
@@ -207,12 +208,14 @@ assert.equal(parsePaginationTotal({ "record-total": "11" }), 11);
 assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /record-total/);
 
 // market_scope=us is the only universe source. Dot/class-share aliases map
-// through ticker_normalized, while a foreign symbol remains outside FINRA scope.
+// through ticker_normalized, while country-suffixed foreign symbols remain
+// outside FINRA scope even when their base starts with a letter.
 {
   const root = makeRoot("universe");
   const universe = loadTrackedUniverse(root);
   assert.deepEqual(universe.query_symbols, ["AAPL", "BRK.B"]);
   assert.equal(universe.canonical_by_symbol.get("BRK-B"), "BRK.B");
+  assert.equal(universe.canonical_by_symbol.has("285A-T"), false);
   assert.equal(universe.canonical_by_symbol.has("7203-T"), false);
 }
 
@@ -445,7 +448,7 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
     source_sha256: loadTrackedUniverse(root).universe_sha256,
     selected_count: 2,
     mapped_count: 2,
-    excluded_count: 1,
+    excluded_count: 2,
   });
   assert.equal(t2OtceRaw.auth_path, "oauth_client_credentials");
   assert.doesNotMatch(fs.readFileSync(t2OtceRawPath, "utf8"), /mock-token|client-secret|grant_type|\"body\"/);
