@@ -416,12 +416,6 @@ const lanes = [
     public_mirror: [],
     commit_shards: [
       attemptShard("stockanalysis_etf_detail"),
-      // Owning this shard is what authorizes the plane family: the derived
-      // binding below reads publish-outcome ownership, so a publisher FAMILIES
-      // entry with no lane owner cannot publish. It also makes the outcome
-      // land — the publisher writes it to the workspace and only a declared
-      // commit shard carries it to origin, which DEC-305 requires.
-      publishOutcomeShard("stockanalysis-etf-detail"),
       "data/stockanalysis",
       "data/admin/stockanalysis-recovery",
     ],
@@ -432,6 +426,19 @@ const lanes = [
       "scripts/fetch-stockanalysis.py",
       "scripts/emit-stockanalysis-attempt.mjs",
     ],
+    // The plane publication is a dedicated manual caller, not the acquisition
+    // workflow. Owning the publish-outcome shard HERE is what authorizes the
+    // family and points the derived binding at the shadow workflow, so the
+    // primary StockAnalysis workflow never claims the same shard.
+    caller_workflows: {
+      ".github/workflows/stockanalysis-etf-shadow-publish.yml": {
+        commit_shards: [publishOutcomeShard("stockanalysis-etf-detail")],
+        script_sources: [
+          "scripts/publish-cloud-data-generation.mjs",
+          "scripts/persist-cloud-publish-outcome.mjs",
+        ],
+      },
+    },
   }),
   record({
     id: "stockanalysis_stock_financial",
@@ -1607,10 +1614,6 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".gi
     commitSpec("data/admin/data-supply-state/v1", "directory", true),
     commitSpec("data/admin/stockanalysis-recovery", "directory", true),
     commitSpec("data/admin/yahoo_etf_fallback", "directory", false),
-    // Publish-outcome shards are not under data-supply-state/v1 and lanePolicy
-    // derives attempt shards only, so this one is explicit. Optional because a
-    // run that publishes nothing writes no outcome.
-    commitSpec(publishOutcomeShard("stockanalysis-etf-detail"), "file", false),
     // The five attempt shards this workflow carries are no longer listed here.
     // They are derived from the registry by lanePolicy, because hand-listing
     // them is what let run 31794068491 emit a shard correctly and then fail to
@@ -1703,6 +1706,15 @@ workflow_policies[".github/workflows/coordinate-computed-signals.yml"] = policy(
   ],
 });
 
+// Dedicated manual StockAnalysis ETF shadow publisher. It commits ONLY the
+// publish-outcome shard: the canonical payload stays owned by the acquisition
+// workflow, and this caller never touches data/stockanalysis.
+workflow_policies[".github/workflows/stockanalysis-etf-shadow-publish.yml"] = policy(["stockanalysis_etf_detail"], {
+  always_if_exists: [
+    commitSpec(publishOutcomeShard("stockanalysis-etf-detail"), "file"),
+  ],
+});
+
 // --- Derived plane publish-outcome bindings ---------------------------------
 // Family names stay hyphenated while lane ids stay underscored, so the two
 // namespaces still need a mapping. What changed is where the mapping comes
@@ -1717,6 +1729,58 @@ workflow_policies[".github/workflows/coordinate-computed-signals.yml"] = policy(
 //      (SlickCharts: one composite lane, five member workflows)
 //   3. a lane-less platform_publisher workflow policy stage
 //      (computed-signals is the only such case and must stay the only one)
+// A lane-less platform publisher has no lane record to read an id from. That
+// mapping is declared, not inferred: hyphen normalization happened to be right
+// for computed-signals and would be silently wrong for the next one.
+export const PLATFORM_PUBLISHER_LANE_IDS = Object.freeze({
+  ".github/workflows/coordinate-computed-signals.yml": "computed_signals",
+});
+
+// Declared deviations from the canonical publisher-step contract. Tests read
+// this instead of hardcoding family names, so an exception is a reviewed
+// registry statement with a reason rather than an invisible skip. Persistence
+// is mandatory in every case; only its shape and the publisher's blocking
+// semantics may differ.
+export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
+  damodaran: Object.freeze({
+    workflow: ".github/workflows/fetch-damodaran-shadow.yml",
+    non_blocking_publisher: true,
+    detached_persistence: false,
+    reason: "DEC-280 restored continue-on-error on the Damodaran cloud publish so Git stays authoritative when the plane is unavailable; the publish-outcome diagnostic is preserved and its persistence step remains mandatory",
+  }),
+  "fdic-tier1": Object.freeze({
+    workflow: ".github/workflows/fetch-fdic.yml",
+    non_blocking_publisher: false,
+    detached_persistence: false,
+    conditional_persistence: true,
+    reason: "DEC-336 first-Monday schedule gate can skip the run before any publish, so persistence carries the same eligibility guard; it still runs under always() for every eligible run and there is no outcome to persist for an ineligible one",
+  }),
+  "slickcharts-history": Object.freeze({
+    workflow: ".github/workflows/slickcharts-history.yml",
+    non_blocking_publisher: false,
+    detached_persistence: true,
+    reason: "composite finalize and artifact cleanup run between publish and persistence, so the persistence step is not the immediately following step",
+  }),
+  "slickcharts-symbols": Object.freeze({
+    workflow: ".github/workflows/slickcharts-symbols.yml",
+    non_blocking_publisher: false,
+    detached_persistence: true,
+    reason: "DEC-319 current-run-bound cloud acceptance check runs between publish and persistence; it is deliberately non-blocking and must stay visible, so persistence is not the immediately following step",
+  }),
+  "slickcharts-weekly": Object.freeze({
+    workflow: ".github/workflows/slickcharts-weekly.yml",
+    non_blocking_publisher: false,
+    detached_persistence: true,
+    reason: "DEC-340 mirrored the symbols acceptance check onto the weekly member, so the same non-blocking check sits between publish and persistence",
+  }),
+  "stockanalysis-etf-detail": Object.freeze({
+    workflow: ".github/workflows/stockanalysis-etf-shadow-publish.yml",
+    non_blocking_publisher: false,
+    detached_persistence: true,
+    reason: "pre-shadow publication splits publish and persistence into separate jobs so only the persistence job takes the global Git writer lock; the publisher itself must still fail the job",
+  }),
+});
+
 const PUBLISH_OUTCOME_SHARD_RE = new RegExp(`^${PUBLISH_OUTCOME_ROOT}/([a-z0-9][a-z0-9-]*)\\.json$`);
 
 function publishOutcomeFamily(shardPath) {
@@ -1762,10 +1826,14 @@ function derivePlanePublishOutcomeBindings() {
       for (const spec of stages[stageKey] ?? []) {
         const family = publishOutcomeFamily(spec.path);
         if (!family) continue;
-        // A lane-less publisher has no lane record to read an id from, so the
-        // id is the family with hyphens normalized. This is deliberately the
-        // only place that conversion is allowed, and only for this class.
-        claim(family, family.replace(/-/g, "_"), workflowRel, "platform_publisher_policy");
+        const declaredLaneId = PLATFORM_PUBLISHER_LANE_IDS[workflowRel];
+        if (!declaredLaneId) {
+          throw new Error(
+            `lane-registry: platform_publisher ${workflowRel} owns publish-outcome ${family} `
+            + "with no PLATFORM_PUBLISHER_LANE_IDS declaration",
+          );
+        }
+        claim(family, declaredLaneId, workflowRel, "platform_publisher_policy");
       }
     }
   }

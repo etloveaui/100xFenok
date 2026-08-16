@@ -9,7 +9,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { persistPublishOutcome } from "./persist-cloud-publish-outcome.mjs";
-import { PLANE_PUBLISH_OUTCOME_BINDINGS } from "./lib/lane-registry.mjs";
+import { PLANE_PUBLISH_OUTCOME_BINDINGS, PLANE_PUBLISHER_EXCEPTIONS } from "./lib/lane-registry.mjs";
 import {
   appendPublishOutcome,
   buildPublishOutcomeRecord,
@@ -47,7 +47,18 @@ function run(command, args, cwd) {
     const publishStepStart = workflowText.lastIndexOf("\n      - name:", publishIndex);
     const publishStepEnd = workflowText.indexOf("\n      - name:", publishIndex);
     const isCoordinator = binding.workflow === COORDINATOR_WORKFLOW;
-    const persistenceStepStart = isCoordinator || family === "slickcharts-history"
+    // Deviations are read from the registry, never hardcoded here: an exception
+    // is a reviewed declaration with a reason, and it must name the same
+    // workflow the binding resolves to or it is describing something else.
+    const exception = PLANE_PUBLISHER_EXCEPTIONS[family] ?? null;
+    if (exception) {
+      assert.equal(exception.workflow, binding.workflow,
+        `${family} publisher exception must name its bound workflow`);
+      assert.ok(typeof exception.reason === "string" && exception.reason.length > 0,
+        `${family} publisher exception must carry a reason`);
+    }
+    const detachedPersistence = isCoordinator || Boolean(exception?.detached_persistence);
+    const persistenceStepStart = detachedPersistence
       ? workflowText.lastIndexOf(
         "\n      - name:",
         workflowText.indexOf(`persist-cloud-publish-outcome.mjs --family=${family} --workflow=${binding.workflow}`),
@@ -64,11 +75,27 @@ function run(command, args, cwd) {
       nextStepEnd === -1 ? workflowText.length : nextStepEnd,
     );
     assert.match(publishStep, /\n        id: publish_cloud_generation\n/);
-    assert.doesNotMatch(publishStep, /continue-on-error:/, `${family} publisher failure must remain a job failure`);
+    if (exception?.non_blocking_publisher) {
+      assert.match(publishStep, /continue-on-error:/,
+        `${family} declares a non-blocking publisher, so the exception must describe the shipped workflow`);
+    } else {
+      assert.doesNotMatch(publishStep, /continue-on-error:/, `${family} publisher failure must remain a job failure`);
+    }
+    // The outcome may be carried within the job or across jobs; both are exact
+    // expressions, and persistence stays mandatory either way.
     assert.match(persistenceStep, new RegExp(
-      `persist-cloud-publish-outcome\\.mjs --family=${family} --workflow=${binding.workflow.replaceAll(".", "\\.")} --publisher-outcome=\\$\\{\\{ steps\\.publish_cloud_generation\\.outcome \\}\\}`,
+      `persist-cloud-publish-outcome\\.mjs --family=${family} --workflow=${binding.workflow.replaceAll(".", "\\.")}`
+      + ` --publisher-outcome=\\$\\{\\{ (?:steps\\.publish_cloud_generation\\.outcome|needs\\.[a-z0-9_-]+\\.outputs\\.publisher_outcome) \\}\\}`,
     ));
-    assert.match(persistenceStep, /if: \$\{\{ always\(\) \}\}/);
+    // Persistence is unconditional by default. A declared conditional guard may
+    // narrow it, but only by ANDing onto always() — the step can never stop
+    // being an always() step, so a failed publish still persists its outcome.
+    if (exception?.conditional_persistence) {
+      assert.match(persistenceStep, /if: \$\{\{ always\(\) && /,
+        `${family} declares conditional persistence, which must still begin at always()`);
+    } else {
+      assert.match(persistenceStep, /if: \$\{\{ always\(\) \}\}/);
+    }
     assert.doesNotMatch(persistenceStep, /continue-on-error:/, `${family} evidence failure must fail the workflow`);
 
     if (isCoordinator) {

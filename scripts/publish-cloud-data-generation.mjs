@@ -676,9 +676,17 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
     }
     const perAsset = new Map();
     for (const [enrolledPath, bytes] of payloads) {
-      const relative = enrolledPath.startsWith(`${relRoot}/`)
-        ? enrolledPath.slice(relRoot.length + 1)
-        : enrolledPath;
+      // Fail closed rather than falling back to the absolute key: a payload
+      // outside the family root means the enrolled set and the declared root
+      // disagree, and silently keying such a row would let a foreign path
+      // contribute to this family's source clock.
+      if (!enrolledPath.startsWith(`${relRoot}/`)) {
+        fail(
+          "FAMILY_ASOF_INVALID",
+          `per-asset-key payload ${enrolledPath} is outside the family root ${relRoot}`,
+        );
+      }
+      const relative = enrolledPath.slice(relRoot.length + 1);
       const json = decodeJson(bytes);
       const raw = json?.[config.per_asset_key];
       const value = toIsoDay(raw);

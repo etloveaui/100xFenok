@@ -1595,7 +1595,19 @@ try {
       }),
       "FAMILY_ASOF_INVALID",
     );
-    console.log("per_asset_key tree clock ok (minimum summary, per-asset retained, missing/malformed/empty reject)");
+    await assertRejectsCode(
+      async () => resolveSourceAsOf({
+        family: perAssetFamily,
+        payloads: new Map([
+          [`${perAssetRoot}/SPY.json`, encodeJson({ source_as_of: "2026-08-15" })],
+          ["data/stockanalysis/stocks/AAPL.json", encodeJson({ source_as_of: "2026-08-15" })],
+        ]),
+        createdIsoDay: "2026-08-17",
+        relRoot: perAssetRoot,
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    console.log("per_asset_key tree clock ok (minimum summary, per-asset retained, missing/malformed/empty/outside-root reject)");
 
     // Legacy modes unchanged: { key } payload mode and { file, key }
     // family-index mode still produce one uniform family date.

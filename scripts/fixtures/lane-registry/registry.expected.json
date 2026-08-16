@@ -1,5 +1,5 @@
 {
   "schema_version": "lane-registry-expected/v1",
-  "note": "Exact-value pin of scripts/lib/lane-registry.mjs. Any registry edit is a conscious fixture bump (DEC-266), mirroring the detection config's config_digest pin. Bumped 2026-08-17: stockanalysis_etf_detail now owns the stockanalysis-etf-detail publish-outcome shard in both its lane commit shards and its workflow policy, which is what authorizes the private pre-shadow plane family and makes its outcome land; the hand-written PLANE_PUBLISH_OUTCOME_BINDINGS table was removed and the export is derived from that ownership instead.",
-  "registry_digest": "cbcba7e8ef2462106c3c62b797eaa8ace8ce75af2a3a0d56eb6f55b69e0accea"
+  "note": "Exact-value pin of scripts/lib/lane-registry.mjs. Any registry edit is a conscious fixture bump (DEC-266), mirroring the detection config's config_digest pin. Bumped 2026-08-17: the hand-written PLANE_PUBLISH_OUTCOME_BINDINGS table was removed and the export is derived from actual publish-outcome shard ownership; stockanalysis_etf_detail gained a dedicated shadow-publish caller workflow that owns the stockanalysis-etf-detail shard, which authorizes the private pre-shadow plane family and makes its outcome land; lane-less platform publisher ids and the publisher-contract exceptions are now declared rather than inferred.",
+  "registry_digest": "a32d33f88023bc69815de457593cac2b04e27c0dfe87bb5294f8f965b01c6287"
 }
