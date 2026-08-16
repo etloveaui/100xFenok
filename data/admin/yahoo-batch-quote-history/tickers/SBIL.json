@@ -12,31 +12,44 @@
       "run_id": "31078091927",
       "schedule": "7 4 * * 0-5",
       "shard": "50/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 766,
+      "natural": true,
+      "observed_at": "2026-08-16T01:55:14Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "31920599137",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T06:44:26Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SBIL.json",
-    "payload_sha256": "68dd5471ff38e8baa1288d2ec3642d3980c710211d7d02d7a06a574db6d2e7b4",
-    "quote_as_of": "2026-08-05T20:00:00Z",
-    "source_as_of": "2026-08-05"
+    "fetched_at": "2026-08-16T01:55:20Z",
+    "history_as_of": "2026-08-14",
+    "path": "data/yf/finance/SBIL.json",
+    "payload_sha256": "110e8b75b25f4fefddb77d6842905213ce3d011b5ac18e81f058a412fa26b643",
+    "quote_as_of": "2026-08-14T20:00:00Z",
+    "source_as_of": "2026-08-14"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 370,
+    "latency_ms": 766,
     "natural": true,
-    "observed_at": "2026-08-06T06:42:20Z",
+    "observed_at": "2026-08-16T01:55:14Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31078091927",
-    "schedule": "7 4 * * 0-5",
-    "shard": "50/72"
+    "run_id": "31920599137",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-06T06:44:26Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T06:42:20Z",
-    "payload_sha256": "c8691da5a6f17e9951a2852a3bb3f8bafb120b7b4705fbd0f46da0d6907e57e4",
-    "quote_as_of": "2026-08-05T20:00:00Z",
+    "history_as_of": "2026-08-14",
+    "observed_at": "2026-08-16T01:55:14Z",
+    "payload_sha256": "dc82d33c1f38852a4f061940c26b03489e5a779e6bdbd78e3ceec7241a572672",
+    "quote_as_of": "2026-08-14T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31078091927",
+    "run_id": "31920599137",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-08-14"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-05"
   },
   "ticker": "SBIL",
-  "updated_at": "2026-08-14T00:10:47Z"
+  "updated_at": "2026-08-16T01:55:14Z"
 }
