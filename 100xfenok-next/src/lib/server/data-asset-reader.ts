@@ -93,10 +93,14 @@ async function resolveRuntimeEnv(injected: DataAssetReaderEnv): Promise<DataAsse
   try {
     const { getCloudflareContext } = await import("@opennextjs/cloudflare");
     const { env } = await getCloudflareContext({ async: true });
+    // The generated CloudflareEnv type can lag wrangler.jsonc bindings between
+    // type-generation runs. Narrow through this reader's runtime contract so
+    // the checked-in binding configuration remains the source of truth.
+    const runtimeEnv = env as unknown as DataAssetReaderEnv;
     return {
-      ASSETS: env.ASSETS,
-      DATA_PLANE_BUCKET: env.DATA_PLANE_BUCKET,
-      CLOUD_DATA_PLANE_COORDINATOR: env.CLOUD_DATA_PLANE_COORDINATOR,
+      ASSETS: runtimeEnv.ASSETS,
+      DATA_PLANE_BUCKET: runtimeEnv.DATA_PLANE_BUCKET,
+      CLOUD_DATA_PLANE_COORDINATOR: runtimeEnv.CLOUD_DATA_PLANE_COORDINATOR,
     };
   } catch {
     return {};
