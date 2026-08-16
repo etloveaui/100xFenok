@@ -150,5 +150,12 @@ const s0Ledger = s0FinraOccLedgerEvidence(coverageIndex, coverageIndex.active_sc
 assert.equal(s0Ledger.ready, true);
 assert.equal(s0Ledger.integrity_ready, true);
 assert.equal(s0Ledger.raw_policy.admin_local_only, true);
+const explicitTaiwanCount = coverageIndex.active_scoring_universe.buckets.explicit_taiwan;
+assert.ok(explicitTaiwanCount >= 1, "the reviewed Taiwan mapping must remain in the active universe");
+assert.deepEqual(coverageIndex.active_scoring_universe.taiwan_ticker_anomalies, []);
+const taiwanYfSource = coverageIndex.source_availability.sources.find((row) => row.id === "taiwan_yf_daily_source");
+assert.equal(taiwanYfSource?.availability_status, "ready");
+assert.equal(taiwanYfSource?.covered_count, explicitTaiwanCount);
+assert.equal(taiwanYfSource?.denominator, explicitTaiwanCount);
 
 console.log("test-check-fenok-edge-freshness: ok");

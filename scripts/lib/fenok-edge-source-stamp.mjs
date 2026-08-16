@@ -4,6 +4,7 @@ export const FENOK_EDGE_SOURCE_AS_OF_IDS = Object.freeze([
   "us_occ_options_proxy",
   "us_class_yf_daily_source",
   "asia_ex_taiwan_yf_daily_source",
+  "taiwan_yf_daily_source",
 ]);
 
 function normalizeIsoDate(value) {

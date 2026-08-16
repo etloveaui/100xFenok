@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   detectSecondaryDepositaryRepresentations,
+  marketScopeFromMarket,
   normalizeTicker,
 } from "./stock-action-score-core.mjs";
 
@@ -60,6 +61,22 @@ assert.equal(
   marketFor("BRK.B", classifications),
   "US_CLASS",
   "the existing dot-based class-share rule must survive",
+);
+assert.equal(marketFor("2454.TW", classifications), "TW", "Taiwan .TW suffix must map to Taiwan");
+assert.equal(marketFor("1234.TWO", classifications), "TW", "Taiwan .TWO suffix must map to Taiwan");
+assert.equal(marketScopeFromMarket("TW"), "asia", "Taiwan uses the existing Asia scoring scope");
+const stockActionIndex = JSON.parse(
+  fs.readFileSync(path.join(repoRoot, "data", "computed", "stock_action_index.json"), "utf8"),
+);
+assert.deepEqual(
+  stockActionIndex.rows.find((row) => row.ticker_normalized === "2454-TW"),
+  {
+    ...stockActionIndex.rows.find((row) => row.ticker_normalized === "2454-TW"),
+    market: "TW",
+    marketScope: "asia",
+    country: "TW",
+  },
+  "landed stock-action artifact must carry the reviewed Taiwan market mapping",
 );
 
 const withoutHomeLine = rows.filter((row) => row.symbol !== "000660.KS");

@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-edge-coverage-index/v0.2",
-  "generated_at": "2026-08-16T03:37:36.639Z",
+  "generated_at": "2026-08-16T03:51:35.083Z",
   "source_as_of": "2026-07-09",
   "source_as_of_inputs": [
     {
@@ -22,6 +22,10 @@
     {
       "id": "asia_ex_taiwan_yf_daily_source",
       "source_date": "2026-08-14"
+    },
+    {
+      "id": "taiwan_yf_daily_source",
+      "source_date": "2026-08-14"
     }
   ],
   "purpose": "Derived admin-only readiness index. Separates current active scoring universe, collected candidate denominators, source availability, and public scoring readiness.",
@@ -37,7 +41,7 @@
   },
   "active_scoring_universe": {
     "source_file": "data/computed/fenok_signals.json",
-    "generated_at": "2026-08-16T03:36:51.088Z",
+    "generated_at": "2026-08-16T03:51:04.845Z",
     "current_only": true,
     "total": 1181,
     "by_market": [
@@ -62,44 +66,41 @@
         "count": 19
       },
       {
+        "market": "TW",
+        "count": 1
+      },
+      {
         "market": "US",
         "count": 691
       },
       {
         "market": "US_CLASS",
-        "count": 61
+        "count": 60
       }
     ],
     "buckets": {
-      "us": 752,
+      "us": 751,
       "korea": 337,
       "asia_ex_taiwan": 92,
-      "explicit_taiwan": 0
+      "explicit_taiwan": 1
     },
     "s0_daily_gated_scope": {
       "policy": "all_active_stock_current_daily_sources",
       "eligible_count": 1181,
       "eligible_buckets": {
-        "us": 752,
+        "us": 751,
         "us_plain_finra_occ": 691,
-        "us_class_or_non_plain_yf": 61,
+        "us_class_or_non_plain_yf": 60,
         "korea": 337,
-        "asia_ex_taiwan": 92
+        "asia_ex_taiwan": 92,
+        "taiwan_yf": 1
       },
       "excluded_count": 0,
       "excluded_markets": [],
-      "asia_source_policy": "HKEX/SSE/SZSE rows use scheduled YF daily stock shards as the counted daily source.",
+      "asia_source_policy": "HKEX/SSE/SZSE rows use scheduled YF daily stock shards; explicit Taiwan rows use the targeted Taiwan YF daily shard as the counted daily source.",
       "public_scoring_total_remains": 1181
     },
-    "taiwan_ticker_anomalies": [
-      {
-        "ticker": "2454.TW",
-        "ticker_normalized": "2454-TW",
-        "market": "US_CLASS",
-        "market_scope": "us",
-        "company": "Mediatek"
-      }
-    ]
+    "taiwan_ticker_anomalies": []
   },
   "expanded_stock_candidate_universe": {
     "source_file": "data/computed/market_facts/index.json",
@@ -207,14 +208,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-08-16T03:36:52.580Z",
-          "age_hours": 0.01,
+          "age_hours": 0.25,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-08-16T03:37:26.510Z",
-          "age_hours": 0,
+          "age_hours": 0.24,
           "max_age_hours": 48
         },
         {
@@ -394,14 +395,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-08-16T03:36:52.580Z",
-          "age_hours": 0.01,
+          "age_hours": 0.25,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-08-16T03:37:26.510Z",
-          "age_hours": 0,
+          "age_hours": 0.24,
           "max_age_hours": 48
         },
         {
@@ -438,14 +439,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-08-16T03:36:52.580Z",
-          "age_hours": 0.01,
+          "age_hours": 0.25,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-08-16T03:37:26.510Z",
-          "age_hours": 0,
+          "age_hours": 0.24,
           "max_age_hours": 48
         },
         {
@@ -492,14 +493,14 @@
           "id": "etf_signal_summary_fresh",
           "ok": true,
           "generated_at": "2026-08-16T03:36:52.580Z",
-          "age_hours": 0.01,
+          "age_hours": 0.25,
           "max_age_hours": 48
         },
         {
           "id": "etf_history_gap_report_fresh",
           "ok": true,
           "generated_at": "2026-08-16T03:37:26.510Z",
-          "age_hours": 0,
+          "age_hours": 0.24,
           "max_age_hours": 48
         },
         {
@@ -709,7 +710,7 @@
         "evidence_origin": "derived_counts_only",
         "artifact_present": true,
         "generated_at": "2026-08-16T03:37:26.712Z",
-        "generated_age_hours": 0,
+        "generated_age_hours": 0.24,
         "generated_fresh": true,
         "core_daily_basket_ready": true,
         "daily_ready": true,
@@ -806,7 +807,7 @@
         "strict_metric_ready_count": 688,
         "source_ready_count": 691,
         "low_confidence_placeholder_count": 13,
-        "excluded_us_class_count": 61,
+        "excluded_us_class_count": 60,
         "eligibility_policy": "active rows where market=US and the counted FINRA source file has been checked for the ticker"
       },
       {
@@ -828,7 +829,7 @@
           "counted_present_rows": 691,
           "options_activity_rows": 686,
           "no_listed_options_source_ready_rows": 5,
-          "excluded_us_class_or_non_plain_rows": 61,
+          "excluded_us_class_or_non_plain_rows": 60,
           "both_sides_loaded_or_legacy_rows": 19700,
           "partial_zero_side_rows": 401,
           "partial_zero_side_rule": "A ticker row may count when exactly one OCC side is loaded and the other side is no_record; the no_record side is represented as zero volume.",
@@ -838,11 +839,11 @@
       {
         "id": "us_class_yf_daily_source",
         "label": "US_CLASS/non-plain YF daily source coverage",
-        "covered_count": 61,
-        "denominator": 61,
+        "covered_count": 60,
+        "denominator": 60,
         "denominator_label": "active_scoring_universe.us_class_or_non_plain",
         "coverage_pct": 100,
-        "active_scoring_coverage_pct": 5.17,
+        "active_scoring_coverage_pct": 5.08,
         "source_date": "2026-08-14",
         "availability_status": "ready",
         "claim_scope": "yf_daily_source_available",
@@ -851,12 +852,12 @@
         "source_file_pattern": "data/yf/finance/{TICKER}.json",
         "latest_source_date": "2026-08-14",
         "ready_basis_counts": {
-          "yf_history_1y": 61
+          "yf_history_1y": 60
         },
         "markets": [
           {
             "market": "US_CLASS",
-            "count": 61
+            "count": 60
           }
         ],
         "sample_blockers": []
@@ -896,12 +897,38 @@
         "sample_blockers": []
       },
       {
+        "id": "taiwan_yf_daily_source",
+        "label": "Taiwan YF daily source coverage",
+        "covered_count": 1,
+        "denominator": 1,
+        "denominator_label": "active_scoring_universe.explicit_taiwan",
+        "coverage_pct": 100,
+        "active_scoring_coverage_pct": 0.08,
+        "source_date": "2026-08-14",
+        "availability_status": "ready",
+        "claim_scope": "yf_daily_source_available",
+        "not_public_scoring": true,
+        "caveat": "YF daily stock shards provide counted daily freshness for explicitly mapped Taiwan rows. Taiwan official flow/options collection remains separate proxy expansion work.",
+        "source_file_pattern": "data/yf/finance/{TICKER}.json",
+        "latest_source_date": "2026-08-14",
+        "ready_basis_counts": {
+          "yf_history_1y": 1
+        },
+        "markets": [
+          {
+            "market": "TW",
+            "count": 1
+          }
+        ],
+        "sample_blockers": []
+      },
+      {
         "id": "us_latest_bounded_backfill_run",
         "label": "US latest bounded backfill run coverage",
         "covered_count": 8,
-        "denominator": 752,
+        "denominator": 751,
         "denominator_label": "active_scoring_universe.us",
-        "coverage_pct": 1.06,
+        "coverage_pct": 1.07,
         "active_scoring_coverage_pct": 0.68,
         "source_date": "2026-06-26",
         "availability_status": "ready",
@@ -933,13 +960,13 @@
       {
         "id": "taiwan_current_universe",
         "label": "Taiwan current active-universe numerator",
-        "covered_count": 0,
+        "covered_count": 1,
         "denominator": 1181,
         "denominator_label": "active_scoring_universe.total",
-        "coverage_pct": 0,
-        "active_scoring_coverage_pct": 0,
+        "coverage_pct": 0.08,
+        "active_scoring_coverage_pct": 0.08,
         "source_date": "2026-06-26",
-        "availability_status": "not_in_universe",
+        "availability_status": "ready",
         "claim_scope": "not_current_numerator",
         "not_public_scoring": true,
         "caveat": "Taiwan source collection is active, but the current active scoring universe has no explicit Taiwan bucket. It does not increase the current numerator until universe mapping is fixed.",
@@ -1027,7 +1054,7 @@
       "coverage_pct": 100,
       "claim_scope": "source_availability_composite",
       "not_public_scoring": true,
-      "formula": "KRX latest fully populated issuer daily proof + US FINRA source-ready rows + US_CLASS/non-plain YF daily source-ready rows + HKEX/SSE/SZSE YF daily source-ready rows"
+      "formula": "KRX latest fully populated issuer daily proof + US FINRA source-ready rows + US_CLASS/non-plain YF daily source-ready rows + HKEX/SSE/SZSE YF daily source-ready rows + explicit Taiwan YF daily source-ready rows"
     }
   },
   "public_scoring_readiness": {
@@ -1086,25 +1113,25 @@
               "age_days": 2,
               "max_age_days": 4,
               "eligibility_policy": "active_scoring_universe rows where market=US. Source readiness means the FINRA daily file was checked for the ticker; absent FINRA rows stay null/low-evidence, not fabricated metrics.",
-              "excluded_us_class_count": 61,
+              "excluded_us_class_count": 60,
               "row_existence_count": 701,
               "strict_metric_ready_count": 688,
-              "strict_metric_missing_or_placeholder_count": 64,
+              "strict_metric_missing_or_placeholder_count": 63,
               "low_confidence_placeholder_count": 13,
               "derived_gap_breakdown": {
                 "row_existence_criterion": {
                   "covered_count": 701,
-                  "missing_count": 51,
+                  "missing_count": 50,
                   "missing_categories": {
-                    "non_plain_or_foreign_suffix_requires_universe_mapping": 51
+                    "non_plain_or_foreign_suffix_requires_universe_mapping": 50
                   }
                 },
                 "strict_metric_ready_criterion": {
                   "covered_count": 688,
-                  "missing_or_placeholder_count": 64,
+                  "missing_or_placeholder_count": 63,
                   "missing_or_placeholder_categories": {
                     "class_share_placeholder_requires_finra_symbol_policy": 2,
-                    "non_plain_or_foreign_suffix_requires_universe_mapping": 51,
+                    "non_plain_or_foreign_suffix_requires_universe_mapping": 50,
                     "non_plain_placeholder_requires_universe_mapping": 7,
                     "plain_us_finra_metric_gap": 4
                   }
@@ -1136,7 +1163,7 @@
               "eligibility_policy": "active_scoring_universe rows where market=US and ticker is a plain OCC underlying; US_CLASS foreign/class rows stay in active US bucket but are excluded from OCC plain-underlying readiness until mapped or rebucketed.",
               "derived_gap_breakdown": {
                 "missing_categories": {
-                  "excluded_non_plain_or_foreign_suffix_count": 58,
+                  "excluded_non_plain_or_foreign_suffix_count": 57,
                   "excluded_class_share_symbol_count": 2,
                   "plain_us_attempted_unresolved_count": 5,
                   "plain_us_no_record_attempt_count": 5,
@@ -1170,7 +1197,7 @@
                   }
                 },
                 "non_plain_or_foreign_suffix_requires_universe_mapping": {
-                  "count": 58,
+                  "count": 57,
                   "blocks_current_plain_occ_readiness": false
                 },
                 "class_share_symbol_normalization_or_source_gap": {
@@ -1183,8 +1210,8 @@
             {
               "id": "us_class_yf_daily_source_ready",
               "status": "ready",
-              "covered_count": 61,
-              "denominator": 61,
+              "covered_count": 60,
+              "denominator": 60,
               "missing_count": 0,
               "source_date": "2026-08-14",
               "latest_source_date": "2026-08-14",
@@ -1193,7 +1220,7 @@
               "markets": [
                 {
                   "market": "US_CLASS",
-                  "count": 61
+                  "count": 60
                 }
               ],
               "claim_scope": "yf_daily_source_available",
@@ -1233,6 +1260,29 @@
               "daily_gated_scope_policy": "Current S0 daily/gated source scope is all active stock rows: KRX/KOSDAQ via KRX, plain US via FINRA/OCC source proof, HKEX/SSE/SZSE via scheduled YF daily stock shards.",
               "sample_blockers": [],
               "next_action": "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed Asia tickers before claiming all active S0 stocks as daily/gated."
+            },
+            {
+              "id": "taiwan_yf_daily_source_ready",
+              "status": "ready",
+              "covered_count": 1,
+              "denominator": 1,
+              "missing_count": 0,
+              "source_date": "2026-08-14",
+              "latest_source_date": "2026-08-14",
+              "age_days": 2,
+              "max_age_days": 4,
+              "markets": [
+                {
+                  "market": "TW",
+                  "count": 1
+                }
+              ],
+              "claim_scope": "yf_daily_source_available",
+              "source_file_pattern": "data/yf/finance/{TICKER}.json",
+              "daily_gated_scope_denominator": 1181,
+              "daily_gated_scope_policy": "Explicit Taiwan rows use the scheduled YF daily stock source for S0 daily/gated readiness; Taiwan official flow/options collection remains a separate proxy expansion lane.",
+              "sample_blockers": [],
+              "next_action": "If this blocks, rerun the targeted Taiwan YF daily shard before claiming all active S0 stocks as daily/gated."
             }
           ],
           "blockers": [],
@@ -1360,14 +1410,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-08-16T03:36:52.580Z",
-              "age_hours": 0.01,
+              "age_hours": 0.25,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-08-16T03:37:26.510Z",
-              "age_hours": 0,
+              "age_hours": 0.24,
               "max_age_hours": 48
             },
             {
@@ -1547,14 +1597,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-08-16T03:36:52.580Z",
-              "age_hours": 0.01,
+              "age_hours": 0.25,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-08-16T03:37:26.510Z",
-              "age_hours": 0,
+              "age_hours": 0.24,
               "max_age_hours": 48
             },
             {
@@ -1591,14 +1641,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-08-16T03:36:52.580Z",
-              "age_hours": 0.01,
+              "age_hours": 0.25,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-08-16T03:37:26.510Z",
-              "age_hours": 0,
+              "age_hours": 0.24,
               "max_age_hours": 48
             },
             {
@@ -1645,14 +1695,14 @@
               "id": "etf_signal_summary_fresh",
               "ok": true,
               "generated_at": "2026-08-16T03:36:52.580Z",
-              "age_hours": 0.01,
+              "age_hours": 0.25,
               "max_age_hours": 48
             },
             {
               "id": "etf_history_gap_report_fresh",
               "ok": true,
               "generated_at": "2026-08-16T03:37:26.510Z",
-              "age_hours": 0,
+              "age_hours": 0.24,
               "max_age_hours": 48
             },
             {
@@ -1877,7 +1927,7 @@
           "evidence_origin": "derived_counts_only",
           "artifact_present": true,
           "generated_at": "2026-08-16T03:37:26.712Z",
-          "generated_age_hours": 0,
+          "generated_age_hours": 0.24,
           "generated_fresh": true,
           "core_daily_basket_ready": true,
           "daily_ready": true,
@@ -1910,13 +1960,13 @@
         "id": "taiwan_current_numerator",
         "label": "Taiwan current active-universe numerator",
         "denominator": 1181,
-        "stage": "COLLECTED",
+        "stage": "JOINED",
         "readiness_status": "not_ready",
         "public_done_claim_allowed": false,
         "requirements": {
           "source_available": true,
           "normalized": true,
-          "joined_to_target_universe": false,
+          "joined_to_target_universe": true,
           "scored": false,
           "public": false,
           "daily": false,
@@ -1946,18 +1996,28 @@
       "caveat": "This is Korea 20-trading-day bounded progress. It does not change the latest fully populated proof beyond the batch end date."
     },
     "us_252_reference_ticker_queue": {
-      "status": "not_started",
-      "completed_batches": 0,
+      "status": "started_bounded_supervised",
+      "completed_batches": 1,
       "total_batches": 51,
-      "completed_trading_dates": 0,
+      "completed_trading_dates": 5,
       "total_trading_dates": 252,
-      "completed_finra_requests": 0,
+      "completed_finra_requests": 5,
       "total_finra_requests": 252,
-      "completed_occ_side_requests": 0,
+      "completed_occ_side_requests": 80,
       "total_occ_side_requests": 4032,
-      "latest_batch_manifest": null,
-      "latest_batch_dates": [],
-      "latest_batch_status_counts": null,
+      "latest_batch_manifest": "_private/admin/fenok-flow/backfill/20260629-full252/manifests/us_daily_backfill_smoke_5d_20250702.json",
+      "latest_batch_dates": [
+        "20250626",
+        "20250627",
+        "20250630",
+        "20250701",
+        "20250702"
+      ],
+      "latest_batch_status_counts": {
+        "success": 10,
+        "partial_or_failed": 0,
+        "empty": 0
+      },
       "caveat": "This is 252-history progress for the 8 reference tickers only. It does not expand current active coverage beyond the existing computed US rows."
     }
   },
@@ -1967,7 +2027,7 @@
       {
         "id": "coverage_index_generated",
         "status": "ready",
-        "generated_at": "2026-08-16T03:37:36.639Z"
+        "generated_at": "2026-08-16T03:51:35.083Z"
       },
       {
         "id": "korea_counted_source_date",
@@ -1994,8 +2054,8 @@
         "latest_source_date": "2026-08-14",
         "age_days": 2,
         "status": "ready",
-        "covered_count": 61,
-        "denominator": 61,
+        "covered_count": 60,
+        "denominator": 60,
         "caveat": "Oldest YF history_1y observation date across US_CLASS/non-plain active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim."
       },
       {
@@ -2007,6 +2067,16 @@
         "covered_count": 92,
         "denominator": 92,
         "caveat": "Oldest YF history_1y observation date across HKEX/SSE/SZSE active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim."
+      },
+      {
+        "id": "taiwan_yf_source_date",
+        "source_date": "2026-08-14",
+        "latest_source_date": "2026-08-14",
+        "age_days": 2,
+        "status": "ready",
+        "covered_count": 1,
+        "denominator": 1,
+        "caveat": "Oldest YF history_1y observation date across explicitly mapped Taiwan active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim."
       },
       {
         "id": "etf_public_surface",
@@ -2030,14 +2100,14 @@
       {
         "id": "etf_signal_summary_freshness",
         "generated_at": "2026-08-16T03:36:52.580Z",
-        "age_hours": 0.01,
+        "age_hours": 0.25,
         "max_age_hours": 48,
         "status": "ready"
       },
       {
         "id": "etf_required_history_gap",
         "generated_at": "2026-08-16T03:37:26.510Z",
-        "age_hours": 0,
+        "age_hours": 0.24,
         "max_age_hours": 48,
         "fetchable_required_history": 436,
         "inception_limited_required_history": 204,
@@ -2196,7 +2266,7 @@
       {
         "id": "etf_core_daily_basket",
         "generated_at": "2026-08-16T03:37:26.712Z",
-        "age_hours": 0,
+        "age_hours": 0.24,
         "selected_count": 99,
         "fresh_selected_count": 99,
         "stale_selected_count": 0,
@@ -2205,9 +2275,9 @@
       },
       {
         "id": "taiwan_universe_mapping",
-        "status": "blocked_for_numerator",
-        "explicit_taiwan_count": 0,
-        "anomaly_count": 1,
+        "status": "ready",
+        "explicit_taiwan_count": 1,
+        "anomaly_count": 0,
         "caveat": "Source readiness is separate from current active-universe numerator coverage."
       }
     ]

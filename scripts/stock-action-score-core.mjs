@@ -161,6 +161,9 @@ export function normalizeTicker(symbol, secondaryDepositaryRepresentations = nul
   if (raw.endsWith(".HK")) return { ticker_normalized: raw.replace(".HK", ""), market: "HKEX" };
   if (raw.endsWith(".SZ")) return { ticker_normalized: raw.replace(".SZ", ""), market: "SZSE" };
   if (raw.endsWith(".SS")) return { ticker_normalized: raw.replace(".SS", ""), market: "SSE" };
+  if (raw.endsWith(".TW") || raw.endsWith(".TWO")) {
+    return { ticker_normalized: raw.replace(/\.(TW|TWO)$/, "-$1"), market: "TW" };
+  }
   if (/^\d{4,6}$/.test(raw)) return { ticker_normalized: raw, market: "ASIA" };
   if (raw.includes(".")) return { ticker_normalized: raw.replace(".", "-"), market: "US_CLASS" };
   if (secondaryDepositaryRepresentations?.has(raw)) {
@@ -187,7 +190,7 @@ export function clamp(value, min, max) {
 export function marketScopeFromMarket(market) {
   if (market === "US" || market === "US_CLASS") return "us";
   if (market === "KRX" || market === "KOSDAQ") return "korea";
-  if (market === "HKEX" || market === "SSE" || market === "SZSE" || market === "ASIA") return "asia";
+  if (market === "HKEX" || market === "SSE" || market === "SZSE" || market === "ASIA" || market === "TW") return "asia";
   return "other";
 }
 

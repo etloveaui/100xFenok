@@ -345,6 +345,7 @@ function countryFromNormalizedMarket(market) {
   if (market === "KRX" || market === "KOSDAQ") return "KR";
   if (market === "HKEX") return "HK";
   if (market === "SSE" || market === "SZSE") return "CN";
+  if (market === "TW") return "TW";
   if (market === "US" || market === "US_CLASS") return "US";
   return null;
 }
@@ -751,7 +752,9 @@ function buildStockActionIndex() {
         company: stock.companyName ?? symbol,
         sector: stock.sector ?? null,
         canonicalSector,
-        country: stock.country ?? null,
+        country: normalized.market === "TW"
+          ? countryFromNormalizedMarket(normalized.market)
+          : stock.country ?? null,
         price: num(stock.price),
         marketCap: num(stock.marketCap),
         per: num(stock.per),

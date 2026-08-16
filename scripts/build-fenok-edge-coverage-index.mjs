@@ -418,6 +418,7 @@ function recomputeSourceComposites(index) {
   const occCount = Number(findById(sources, "us_occ_options_proxy")?.covered_count) || 0;
   const usClassYfCount = Number(findById(sources, "us_class_yf_daily_source")?.covered_count) || 0;
   const asiaYfCount = Number(findById(sources, "asia_ex_taiwan_yf_daily_source")?.covered_count) || 0;
+  const taiwanYfCount = Number(findById(sources, "taiwan_yf_daily_source")?.covered_count) || 0;
   const latestUsCount = Number(findById(sources, "us_latest_bounded_backfill_run")?.covered_count) || 0;
   const composites = index.source_availability_composites ?? {};
 
@@ -434,8 +435,8 @@ function recomputeSourceComposites(index) {
     composites.strict_new_bounded_run_plus_kr.coverage_pct = pct(krxCount + latestUsCount, activeTotal);
   }
   if (composites.latest_available_all_active_daily_sources) {
-    composites.latest_available_all_active_daily_sources.covered_count = krxCount + finraCount + usClassYfCount + asiaYfCount;
-    composites.latest_available_all_active_daily_sources.coverage_pct = pct(krxCount + finraCount + usClassYfCount + asiaYfCount, activeTotal);
+    composites.latest_available_all_active_daily_sources.covered_count = krxCount + finraCount + usClassYfCount + asiaYfCount + taiwanYfCount;
+    composites.latest_available_all_active_daily_sources.coverage_pct = pct(krxCount + finraCount + usClassYfCount + asiaYfCount + taiwanYfCount, activeTotal);
   }
 }
 
@@ -509,8 +510,9 @@ const etfEligible = Number(etfSignals?.coverage?.eligible_etf_count) || Number(m
 const usRows = universeRows.filter((row) => row.market === "US" || row.market === "US_CLASS");
 const koreaRows = universeRows.filter((row) => row.market === "KRX" || row.market === "KOSDAQ");
 const asiaExTwRows = universeRows.filter((row) => row.market === "HKEX" || row.market === "SSE" || row.market === "SZSE");
-const s0DailyEligibleRows = [...usRows, ...koreaRows, ...asiaExTwRows];
 const explicitTaiwanRows = selectExplicitTaiwanRows(universeRows);
+const taiwanRows = explicitTaiwanRows;
+const s0DailyEligibleRows = [...usRows, ...koreaRows, ...asiaExTwRows, ...taiwanRows];
 const finraEligibleRows = usRows.filter((row) => row.market === "US");
 const usClassYfRows = usRows.filter((row) => row.market !== "US");
 const taiwanTickerAnomalies = selectTaiwanTickerAnomalies(universeRows, explicitTaiwanRows);
@@ -586,6 +588,12 @@ const asiaYfBlockingEvidenceRows = asiaYfEvidenceRows.filter((row) => !row.ready
 const asiaYfSourceDates = unique(asiaYfEvidenceRows.map((row) => row.source_date));
 const asiaYfOldestSourceDate = asiaYfSourceDates.at(0) ?? null;
 const asiaYfLatestSourceDate = asiaYfSourceDates.at(-1) ?? null;
+const taiwanYfEvidenceRows = taiwanRows.map(yfDailySourceEvidence);
+const taiwanYfReadyEvidenceRows = taiwanYfEvidenceRows.filter((row) => row.ready);
+const taiwanYfBlockingEvidenceRows = taiwanYfEvidenceRows.filter((row) => !row.ready);
+const taiwanYfSourceDates = unique(taiwanYfEvidenceRows.map((row) => row.source_date));
+const taiwanYfOldestSourceDate = taiwanYfSourceDates.at(0) ?? null;
+const taiwanYfLatestSourceDate = taiwanYfSourceDates.at(-1) ?? null;
 
 const taiwanBridge = readJson("data/admin/taiwan-data-bridge-index.json", readJson("data/computed/taiwan-data-bridge-index.json", {}));
 const taiwanHistorical = readJson("_private/admin/fenok-edge-taiwan/backfill/20260629/historical_smoke/historical_manifest.json", {});
@@ -819,6 +827,7 @@ function activeS0BlockingEvidence() {
   const occDailyReady = occPlainSourceReadyRows.length === occDailyEligibleRows.length;
   const usClassYfDailyReady = usClassYfReadyEvidenceRows.length === usClassYfRows.length;
   const asiaYfDailyReady = asiaYfReadyEvidenceRows.length === asiaExTwRows.length;
+  const taiwanYfDailyReady = taiwanYfReadyEvidenceRows.length === taiwanRows.length;
   const checks = [
     {
       id: "krx_full_daily_source_ready",
@@ -966,6 +975,24 @@ function activeS0BlockingEvidence() {
       sample_blockers: asiaYfBlockingEvidenceRows.slice(0, 10),
       next_action: "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed Asia tickers before claiming all active S0 stocks as daily/gated.",
     },
+    {
+      id: "taiwan_yf_daily_source_ready",
+      status: countedDailySourceStatus({ coverageReady: taiwanYfDailyReady, sourceDate: taiwanYfOldestSourceDate }),
+      covered_count: taiwanYfReadyEvidenceRows.length,
+      denominator: taiwanRows.length,
+      missing_count: taiwanYfBlockingEvidenceRows.length,
+      source_date: taiwanYfOldestSourceDate,
+      latest_source_date: taiwanYfLatestSourceDate,
+      age_days: ageDays(taiwanYfOldestSourceDate),
+      max_age_days: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
+      markets: marketCounts(taiwanRows),
+      claim_scope: "yf_daily_source_available",
+      source_file_pattern: "data/yf/finance/{TICKER}.json",
+      daily_gated_scope_denominator: s0DailyEligibleRows.length,
+      daily_gated_scope_policy: "Explicit Taiwan rows use the scheduled YF daily stock source for S0 daily/gated readiness; Taiwan official flow/options collection remains a separate proxy expansion lane.",
+      sample_blockers: taiwanYfBlockingEvidenceRows.slice(0, 10),
+      next_action: "If this blocks, rerun the targeted Taiwan YF daily shard before claiming all active S0 stocks as daily/gated.",
+    },
   ];
   return {
     evidence_origin: "derived_counts_only",
@@ -1100,10 +1127,11 @@ const index = {
         us_class_or_non_plain_yf: usClassYfRows.length,
         korea: koreaRows.length,
         asia_ex_taiwan: asiaExTwRows.length,
+        taiwan_yf: taiwanRows.length,
       },
       excluded_count: 0,
       excluded_markets: [],
-      asia_source_policy: "HKEX/SSE/SZSE rows use scheduled YF daily stock shards as the counted daily source.",
+      asia_source_policy: "HKEX/SSE/SZSE rows use scheduled YF daily stock shards; explicit Taiwan rows use the targeted Taiwan YF daily shard as the counted daily source.",
       public_scoring_total_remains: activeScoringTotal,
     },
     taiwan_ticker_anomalies: taiwanTickerAnomalies,
@@ -1259,6 +1287,25 @@ const index = {
       },
     }),
     coverageRow({
+      id: "taiwan_yf_daily_source",
+      label: "Taiwan YF daily source coverage",
+      count: taiwanYfReadyEvidenceRows.length,
+      denominator: taiwanRows.length,
+      denominatorLabel: "active_scoring_universe.explicit_taiwan",
+      sourceDate: taiwanYfOldestSourceDate,
+      status: taiwanYfReadyEvidenceRows.length === taiwanRows.length ? "ready" : "partial",
+      claimScope: "yf_daily_source_available",
+      activeTotal: activeScoringTotal,
+      caveat: "YF daily stock shards provide counted daily freshness for explicitly mapped Taiwan rows. Taiwan official flow/options collection remains separate proxy expansion work.",
+      extra: {
+        source_file_pattern: "data/yf/finance/{TICKER}.json",
+        latest_source_date: taiwanYfLatestSourceDate,
+        ready_basis_counts: countByCategory(taiwanYfReadyEvidenceRows, (row) => row.ready_basis),
+        markets: marketCounts(taiwanRows),
+        sample_blockers: taiwanYfBlockingEvidenceRows.slice(0, 10),
+      },
+    }),
+    coverageRow({
       id: "us_latest_bounded_backfill_run",
       label: "US latest bounded backfill run coverage",
       count: latestUsIntersection.length,
@@ -1345,13 +1392,13 @@ const index = {
       caveat: "HKEX/SSE/SZSE active rows are included in the current S0 daily/gated source scope through YF daily stock shards; any nonzero count here blocks the all-active-stock daily claim.",
     },
     latest_available_all_active_daily_sources: {
-      covered_count: koreaIntersection.length + finraEligibleSourceReadyRows.length + usClassYfReadyEvidenceRows.length + asiaYfReadyEvidenceRows.length,
+      covered_count: koreaIntersection.length + finraEligibleSourceReadyRows.length + usClassYfReadyEvidenceRows.length + asiaYfReadyEvidenceRows.length + taiwanYfReadyEvidenceRows.length,
       denominator: activeScoringTotal,
       denominator_label: "active_scoring_universe.total",
-      coverage_pct: pct(koreaIntersection.length + finraEligibleSourceReadyRows.length + usClassYfReadyEvidenceRows.length + asiaYfReadyEvidenceRows.length, activeScoringTotal),
+      coverage_pct: pct(koreaIntersection.length + finraEligibleSourceReadyRows.length + usClassYfReadyEvidenceRows.length + asiaYfReadyEvidenceRows.length + taiwanYfReadyEvidenceRows.length, activeScoringTotal),
       claim_scope: "source_availability_composite",
       not_public_scoring: true,
-      formula: "KRX latest fully populated issuer daily proof + US FINRA source-ready rows + US_CLASS/non-plain YF daily source-ready rows + HKEX/SSE/SZSE YF daily source-ready rows",
+      formula: "KRX latest fully populated issuer daily proof + US FINRA source-ready rows + US_CLASS/non-plain YF daily source-ready rows + HKEX/SSE/SZSE YF daily source-ready rows + explicit Taiwan YF daily source-ready rows",
     },
   },
   public_scoring_readiness: {
@@ -1526,6 +1573,16 @@ const index = {
         covered_count: asiaYfReadyEvidenceRows.length,
         denominator: asiaExTwRows.length,
         caveat: "Oldest YF history_1y observation date across HKEX/SSE/SZSE active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim.",
+      },
+      {
+        id: "taiwan_yf_source_date",
+        source_date: taiwanYfOldestSourceDate,
+        latest_source_date: taiwanYfLatestSourceDate,
+        age_days: ageDays(taiwanYfOldestSourceDate),
+        status: countedDailySourceFresh(taiwanYfOldestSourceDate) && taiwanYfReadyEvidenceRows.length === taiwanRows.length ? "ready" : "stale",
+        covered_count: taiwanYfReadyEvidenceRows.length,
+        denominator: taiwanRows.length,
+        caveat: "Oldest YF history_1y observation date across explicitly mapped Taiwan active rows; any missing/stale ticker blocks the all-active-stock S0 daily claim.",
       },
       {
         id: "etf_public_surface",
