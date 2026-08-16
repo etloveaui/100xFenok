@@ -9,7 +9,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { persistPublishOutcome } from "./persist-cloud-publish-outcome.mjs";
-import { PLANE_PUBLISH_OUTCOME_BINDINGS, PLANE_PUBLISHER_EXCEPTIONS } from "./lib/lane-registry.mjs";
+import {
+  PLANE_CANONICAL_COMMIT_MODES,
+  PLANE_PUBLISH_OUTCOME_BINDINGS,
+  PLANE_PUBLISHER_EXCEPTIONS,
+} from "./lib/lane-registry.mjs";
 import {
   appendPublishOutcome,
   buildPublishOutcomeRecord,
@@ -108,9 +112,43 @@ function run(command, args, cwd) {
       assert.ok(exportStepStart >= 0 && exportStepStart < publishStepStart,
         "coordinator publisher must follow the exporter step");
     } else {
+      // Canonical-commit contract. The default is unchanged and strict: the step
+      // immediately before publication is the job's own Commit. The two other
+      // modes are declared per family in the registry with their own reason, so
+      // a deviation is a reviewed statement and never an inferred allowance.
+      const canonicalCommit = exception?.canonical_commit ?? "immediately_preceding";
+      assert.ok(PLANE_CANONICAL_COMMIT_MODES.includes(canonicalCommit),
+        `${family} declares an unknown canonical-commit mode: ${canonicalCommit}`);
+      if (canonicalCommit !== "immediately_preceding") {
+        assert.ok(
+          typeof exception?.canonical_commit_reason === "string" && exception.canonical_commit_reason.length > 0,
+          `${family} must carry a canonical_commit_reason for mode ${canonicalCommit}`,
+        );
+      }
       const previousStepStart = workflowText.lastIndexOf("\n      - name:", publishStepStart - 1);
       const previousStep = workflowText.slice(previousStepStart, publishStepStart);
-      assert.match(previousStep, /- name: Commit/, `${family} must publish only after its canonical commit/push step`);
+      // The publish job's own text, so "no Commit in this job" cannot be
+      // satisfied or broken by a sibling job's steps.
+      const jobStart = workflowText.lastIndexOf("\n  ", workflowText.lastIndexOf("\n    steps:", publishStepStart));
+      const nextJobMatch = /\n {2}[a-z][a-z0-9_-]*:\n/.exec(workflowText.slice(publishStepStart));
+      const publishJobText = workflowText.slice(
+        jobStart === -1 ? 0 : jobStart,
+        nextJobMatch ? publishStepStart + nextJobMatch.index : workflowText.length,
+      );
+      if (canonicalCommit === "immediately_preceding") {
+        assert.match(previousStep, /- name: Commit/, `${family} must publish only after its canonical commit/push step`);
+      } else if (canonicalCommit === "earlier_same_job") {
+        // Still a canonical committer: prove the Commit step exists before the
+        // publisher in this job, just not adjacent to it.
+        const commitIndex = publishJobText.indexOf("- name: Commit");
+        assert.ok(commitIndex >= 0 && commitIndex < publishJobText.indexOf("- name: Publish"),
+          `${family} declares earlier_same_job, so its publish job must still contain a Commit step before publication`);
+      } else {
+        // external_authority: another workflow owns the canonical tree, so this
+        // publish job must perform no canonical Git write of its own.
+        assert.equal((publishJobText.match(/- name: Commit/g) ?? []).length, 0,
+          `${family} declares external_authority, so its publish job must contain no Commit step`);
+      }
     }
 
     const shardPath = `${OUTCOME_ROOT}/${family}.json`;

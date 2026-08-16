@@ -1736,11 +1736,26 @@ export const PLATFORM_PUBLISHER_LANE_IDS = Object.freeze({
   ".github/workflows/coordinate-computed-signals.yml": "computed_signals",
 });
 
+// Where a publisher's canonical Git write lives relative to its publish step.
+// The default is the strictest reading and stays the default: publication must
+// immediately follow the job's own canonical Commit step. The two other modes
+// are narrow and must each be justified per family.
+//   immediately_preceding — default; the step before publish is named Commit
+//   earlier_same_job      — the job does commit canonically, but a reviewed
+//                           step runs between that commit and publication
+//   external_authority    — the publish job performs no canonical Git write at
+//                           all, because another workflow owns that tree
+export const PLANE_CANONICAL_COMMIT_MODES = Object.freeze([
+  "immediately_preceding",
+  "earlier_same_job",
+  "external_authority",
+]);
+
 // Declared deviations from the canonical publisher-step contract. Tests read
 // this instead of hardcoding family names, so an exception is a reviewed
 // registry statement with a reason rather than an invisible skip. Persistence
-// is mandatory in every case; only its shape and the publisher's blocking
-// semantics may differ.
+// is mandatory in every case; only its shape, the publisher's blocking
+// semantics and the location of the canonical commit may differ.
 export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
   damodaran: Object.freeze({
     workflow: ".github/workflows/fetch-damodaran-shadow.yml",
@@ -1766,6 +1781,8 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
     non_blocking_publisher: false,
     detached_persistence: true,
     reason: "DEC-319 current-run-bound cloud acceptance check runs between publish and persistence; it is deliberately non-blocking and must stay visible, so persistence is not the immediately following step",
+    canonical_commit: "earlier_same_job",
+    canonical_commit_reason: "the job does perform its canonical write in 'Commit and push changes'; only 'Remove consumed symbol attempt artifacts' runs between that commit and publication, so the canonical commit is still this job's own and merely not adjacent",
   }),
   "slickcharts-weekly": Object.freeze({
     workflow: ".github/workflows/slickcharts-weekly.yml",
@@ -1778,6 +1795,8 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
     non_blocking_publisher: false,
     detached_persistence: true,
     reason: "pre-shadow publication splits publish and persistence into separate jobs so only the persistence job takes the global Git writer lock; the publisher itself must still fail the job",
+    canonical_commit: "external_authority",
+    canonical_commit_reason: "the canonical data/stockanalysis/etfs tree is acquired and committed by fetch-stockanalysis.yml; this publish job performs no canonical Git write at all, and the separate persistence job is the only step that touches Git",
   }),
 });
 
