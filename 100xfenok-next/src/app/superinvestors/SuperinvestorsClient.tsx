@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
-import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
+import { PRIVATE_INVESTOR_IDS, use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { CANONICAL_SECTORS, resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
@@ -398,7 +398,7 @@ function GuruDetailPanel({
   summary: SummaryInvestor;
   pvData: PortfolioViewsData | null;
 }) {
-  const { data, loading } = useInvestorDetail(id);
+  const { data, loading, status } = useInvestorDetail(id);
   const [turnover, setTurnover] = useState<number | null | undefined>(undefined);
 
   const latest: InvestorFiling | null = data?.investor?.filings?.[data.investor.filings.length - 1] ?? null;
@@ -580,6 +580,10 @@ function GuruDetailPanel({
         <div className="mt-4">
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">Top 보유</p>
           <LatestHoldingsTable holdings={latest.holdings ?? []} />
+        </div>
+      ) : status === "private" ? (
+        <div className="mt-4">
+          <EmptyState title="상세 데이터는 비공개입니다" desc="요약·포트폴리오 정보는 공개 범위에서 제공되며, 원문 보유내역은 공개하지 않습니다." />
         </div>
       ) : (
         <div className="mt-4">
@@ -1625,7 +1629,14 @@ export default function SuperinvestorsClient({
                           {inv.group}
                         </span>
                         <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950">{inv.name}</h3>
-                        <p className="text-xs font-semibold text-slate-500">{id}</p>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                          <p className="text-xs font-semibold text-slate-500">{id}</p>
+                          {PRIVATE_INVESTOR_IDS.has(id) ? (
+                            <span className="inline-flex rounded-md border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[10px] font-black text-slate-600">
+                              상세 비공개
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
 

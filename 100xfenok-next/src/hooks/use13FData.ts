@@ -92,16 +92,28 @@ export function use13FData(): SuperInvestorsDataResult {
 
 const INVESTOR_CACHE = new Map<string, InvestorData>();
 
+// The public route intentionally excludes this payload. Keep the UI contract
+// explicit so a policy 404 is not presented as a transient fetch failure.
+export const PRIVATE_INVESTOR_IDS = new Set(["griffin"]);
+
+type InvestorDetailStatus = "idle" | "loading" | "ready" | "private" | "error";
+
 export function useInvestorDetail(name: string | null) {
   const [data, setData] = useState<InvestorData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(Boolean(name));
+  const [status, setStatus] = useState<InvestorDetailStatus>(name ? "loading" : "idle");
 
   useEffect(() => {
     if (!name) {
       setData(null);
       setLoading(false);
+      setStatus("idle");
       return;
     }
+
+    setData(null);
+    setLoading(true);
+    setStatus("loading");
 
     let cancelled = false;
     const run = async () => {
@@ -109,17 +121,36 @@ export function useInvestorDetail(name: string | null) {
       if (cached !== undefined) {
         setData(cached);
         setLoading(false);
+        setStatus("ready");
         return;
       }
 
       setLoading(true);
+      setStatus("loading");
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
       try {
-        const r = await fetchJson<InvestorData>(`/data/sec-13f/investors/${name}.json`);
-        if (r) INVESTOR_CACHE.set(name, r);
-        if (!cancelled) setData(r);
+        const response = await fetch(`/data/sec-13f/investors/${name}.json`, { signal: controller.signal });
+        if (!response.ok) {
+          if (!cancelled) {
+            setData(null);
+            setStatus(response.status === 404 && PRIVATE_INVESTOR_IDS.has(name) ? "private" : "error");
+          }
+          return;
+        }
+        const investor = (await response.json()) as InvestorData;
+        INVESTOR_CACHE.set(name, investor);
+        if (!cancelled) {
+          setData(investor);
+          setStatus("ready");
+        }
       } catch {
-        if (!cancelled) setData(null);
+        if (!cancelled) {
+          setData(null);
+          setStatus("error");
+        }
       } finally {
+        window.clearTimeout(timeoutId);
         if (!cancelled) setLoading(false);
       }
     };
@@ -130,5 +161,5 @@ export function useInvestorDetail(name: string | null) {
     };
   }, [name]);
 
-  return { data, loading };
+  return { data, loading, status };
 }
