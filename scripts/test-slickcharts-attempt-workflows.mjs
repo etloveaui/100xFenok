@@ -94,6 +94,18 @@ for (const member of ["history", "symbols"]) {
     /- name: Capture cloud acceptance run start[\s\S]*?CLOUD_ACCEPTANCE_MIN_OBSERVED_AT=\$\(date -u \+%Y-%m-%dT%H:%M:%SZ\)" >> "\$GITHUB_ENV"[\s\S]*?- name: Check slickcharts-symbols cloud acceptance[\s\S]*?CLOUD_ACCEPTANCE_BASE_URL: https:\/\/100xfenok\.etloveaui\.workers\.dev[\s\S]*?check-cloud-family-acceptance\.mjs --family=slickcharts-symbols/,
     "symbols must record a current-run-bound cloud acceptance check",
   );
+  const symbolsPersistStart = symbols.indexOf("- name: Persist slickcharts-symbols publish outcome");
+  const symbolsCleanupStart = symbols.indexOf("- name: Remove consumed symbol attempt artifacts");
+  assert.ok(symbolsCleanupStart >= 0 && symbolsCleanupStart < symbolsPersistStart,
+    "symbols telemetry cleanup must precede outcome persistence");
+  const symbolsCleanup = symbols.slice(symbolsCleanupStart, symbolsPersistStart);
+  assert.match(
+    symbolsCleanup,
+    /rm -rf -- \\\n\s+artifacts\/attempt-symbols-A-D \\\n\s+artifacts\/attempt-symbols-E-L \\\n\s+artifacts\/attempt-symbols-M-R \\\n\s+artifacts\/attempt-symbols-S-Z/,
+    "symbols cleanup must remove only the four consumed attempt artifact directories",
+  );
+  assert.doesNotMatch(symbolsCleanup, /artifacts\/attempt-symbols-\*/,
+    "symbols cleanup must not widen to an unbounded artifact glob");
   const monthly = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-monthly.yml"), "utf8");
   assert.match(
     monthly,

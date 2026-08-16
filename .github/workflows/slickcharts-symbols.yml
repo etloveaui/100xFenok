@@ -241,6 +241,18 @@ jobs:
             data/slickcharts/symbols.json \
             data/slickcharts/symbols-all.json
 
+      # The merge job consumes these telemetry artifacts before the canonical
+      # commit. Remove only the four exact downloaded directories so the
+      # single-family publish-outcome helper sees no unrelated dirty paths.
+      - name: Remove consumed symbol attempt artifacts
+        if: ${{ always() }}
+        run: |
+          rm -rf -- \
+            artifacts/attempt-symbols-A-D \
+            artifacts/attempt-symbols-E-L \
+            artifacts/attempt-symbols-M-R \
+            artifacts/attempt-symbols-S-Z
+
       - name: Publish slickcharts-symbols generation to the cloud data plane
         id: publish_cloud_generation
         if: ${{ needs.scrape-batch.result == 'success' }}
