@@ -6,6 +6,7 @@
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -115,7 +116,22 @@ assert.equal(committed.gdelt_news_tone.last_attempt.outcome, expectedGdeltOutcom
   "committed GDELT shard must produce the assertion-derived public attempt outcome");
 assert.equal(committed.gdelt_news_tone.last_attempt.observed_at, expectedGdeltAttempt.observed_at,
   "committed GDELT shard must provide its latest observed_at");
-assert.deepEqual(committed.yahoo_batch_quote_history, missingYahoo,
-  "missing Yahoo shard must not fall back to the private recovery index clock");
+
+// The live repository may legitimately gain a Yahoo attempt shard after this
+// test was authored. Build the missing-shard case in an isolated fixture root
+// instead of depending on the current checkout's mutable data state.
+const missingShardDataRoot = fs.mkdtempSync(path.join(os.tmpdir(), "100x-kpi-last-attempt-"));
+const fixtureDetectionRoot = path.join(missingShardDataRoot, "admin", "data-supply-state", "detection-attempts");
+fs.mkdirSync(fixtureDetectionRoot, { recursive: true });
+fs.copyFileSync(gdeltShardPath, path.join(fixtureDetectionRoot, "gdelt_news_tone.json"));
+try {
+  const fixtureCommitted = loadCommittedDetectionAttemptDetails(shardLanes, { dataRoot: missingShardDataRoot });
+  assert.deepEqual(fixtureCommitted.gdelt_news_tone, committed.gdelt_news_tone,
+    "isolated fixture must preserve the committed GDELT attempt detail");
+  assert.deepEqual(fixtureCommitted.yahoo_batch_quote_history, missingYahoo,
+    "missing Yahoo shard must not fall back to the private recovery index clock");
+} finally {
+  fs.rmSync(missingShardDataRoot, { recursive: true, force: true });
+}
 
 console.log(JSON.stringify({ ok: true, suite: "detection attempt clock (GDELT failure + Yahoo missing + public projection)" }, null, 2));
