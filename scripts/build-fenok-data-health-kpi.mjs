@@ -685,9 +685,18 @@ const DETECTION_REASON_STATUS = Object.freeze({
   future_source: "unavailable",
   unexpected_error: "unavailable",
 });
+function canonicalRecoveryKeys(laneId) {
+  const lane = LANE_REGISTRY.lanes.find((laneValue) => laneValue.id === laneId);
+  const outputs = lane?.roots?.canonical_outputs;
+  if (!Array.isArray(outputs) || outputs.length === 0 || outputs.some((value) => typeof value !== "string" || value === "")) {
+    throw new Error(`lane registry canonical outputs are missing for ${laneId}`);
+  }
+  return outputs.map((value) => path.basename(value));
+}
+
 const DETECTION_RECOVERY_CONFIG = Object.freeze({
   yahoo_ticker_macro: { lane_id: "yahoo_hourly_ticker", keys: ["TQQQ.json", "SOXL.json"] },
-  us_indices_daily: { lane_id: "us_indices_daily", keys: ["sp500.json", "nasdaq.json"] },
+  us_indices_daily: { lane_id: "us_indices_daily", keys: canonicalRecoveryKeys("us_indices_daily") },
   slickcharts: { lane_id: "slickcharts", kind: "composite_v1", members: SLICKCHARTS_COMPOSITE_MEMBERS },
 });
 

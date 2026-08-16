@@ -1,9 +1,9 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-08-16T01:05:09.890Z",
+  "generated_at": "2026-08-16T01:19:13.143Z",
   "status": "degraded",
   "status_label": "저하",
-  "status_message": "14 required lane(s) are not ready; healthy lanes may still publish.",
+  "status_message": "13 required lane(s) are not ready; healthy lanes may still publish.",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -22,7 +22,7 @@
   "runtime": {
     "projection": "kpi_runtime_projection.v2",
     "built_at": "2026-08-15T10:06:49.746Z",
-    "evaluated_at": "2026-08-16T01:05:09.890Z",
+    "evaluated_at": "2026-08-16T01:19:13.143Z",
     "verdict": "degraded",
     "slot_status": "degraded",
     "status_message": "16 retained missed slot(s) recovered by later authoritative ready full snapshot(s).",
@@ -38,19 +38,20 @@
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-08-16T01:05:07.147Z",
+      "evaluated_at": "2026-08-15T02:49:26Z",
       "status": "warning",
       "deployment_blocking": false,
       "counts": {
         "scheduled_members": 31,
         "schedule_bindings": 35,
-        "observed": 33,
-        "suspected_skips": 1,
+        "observed": 32,
+        "suspected_skips": 2,
         "attempt_gaps": 1
       },
       "pre_activation_lane_ids": [],
       "suspected_skip_lane_ids": [
-        "edgar_filings"
+        "edgar_filings",
+        "finra_ats_weekly"
       ],
       "attempt_gap_lane_ids": [
         "stockanalysis_etf_universe"
@@ -320,7 +321,7 @@
               "collection_fresh_count": 23,
               "stale_count": 0,
               "collected_at_floor": "2026-08-15T00:03:17Z",
-              "collection_age_hours": 25.031,
+              "collection_age_hours": 25.266,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -519,7 +520,7 @@
               "collection_fresh_count": 16,
               "stale_count": 0,
               "collected_at_floor": "2026-08-15T00:03:31Z",
-              "collection_age_hours": 25.027,
+              "collection_age_hours": 25.262,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -576,7 +577,7 @@
               "collection_fresh_count": 3,
               "stale_count": 0,
               "collected_at_floor": "2026-08-15T00:03:43Z",
-              "collection_age_hours": 25.024,
+              "collection_age_hours": 25.258,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -5104,7 +5105,7 @@
               "collection_fresh_count": 5,
               "stale_count": 0,
               "collected_at_floor": "2026-08-15T00:03:17Z",
-              "collection_age_hours": 25.031,
+              "collection_age_hours": 25.266,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -5172,7 +5173,7 @@
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 0.01,
+      "age": 0.24,
       "status": "ready"
     },
     {
@@ -5194,7 +5195,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 129.51,
+      "age": 129.75,
       "status": "ready"
     },
     {
@@ -5205,7 +5206,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 160.81,
+      "age": 161.05,
       "status": "ready"
     },
     {
@@ -5216,7 +5217,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 129.5,
+      "age": 129.74,
       "status": "ready"
     },
     {
@@ -5227,7 +5228,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 100.27,
+      "age": 100.5,
       "status": "ready"
     }
   ],
@@ -5288,7 +5289,7 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-08-16T01:05:07.147Z",
+      "generated_at": "2026-08-15T02:49:26Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -5307,12 +5308,12 @@
   ],
   "totals": {
     "lanes": 34,
-    "ready": 20,
-    "degraded": 14,
+    "ready": 21,
+    "degraded": 13,
     "warning": 0,
     "blocked": 0,
     "unavailable": 0,
-    "required_not_ready": 14,
+    "required_not_ready": 13,
     "platform_blocking_not_ready": 0
   },
   "lanes": [
@@ -9185,7 +9186,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-16T01:05:10.298Z",
+      "as_of": "2026-08-16T01:19:13.366Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -9345,7 +9346,7 @@
       "status_message": "FRED macro series is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-15",
+      "as_of": "2026-08-14",
       "counts": {},
       "details": {
         "recovery_retry_set": [],
@@ -9364,7 +9365,7 @@
           "label": "Detection floor status",
           "status": "ready",
           "status_label": "정상",
-          "detail": "ok; source_as_of 2026-08-15",
+          "detail": "ok; source_as_of 2026-08-14",
           "platform_blocking": false
         },
         {
@@ -9378,7 +9379,7 @@
       ],
       "reason": "ok",
       "artifact": {
-        "source_as_of": "2026-08-15"
+        "source_as_of": "2026-08-14"
       }
     },
     {
@@ -9634,7 +9635,7 @@
       "status_message": "DefiLlama stablecoins is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-15",
+      "as_of": "2026-08-14",
       "counts": {},
       "details": {
         "recovery_retry_set": [],
@@ -9666,7 +9667,7 @@
           "label": "Detection floor status",
           "status": "ready",
           "status_label": "정상",
-          "detail": "ok; source_as_of 2026-08-15",
+          "detail": "ok; source_as_of 2026-08-14",
           "platform_blocking": false
         },
         {
@@ -9680,7 +9681,7 @@
       ],
       "reason": "ok",
       "artifact": {
-        "source_as_of": "2026-08-15"
+        "source_as_of": "2026-08-14"
       }
     },
     {
@@ -10133,9 +10134,9 @@
     {
       "id": "us_indices_daily",
       "label": "US index daily close (Yahoo live canonical)",
-      "status": "degraded",
-      "status_label": "저하",
-      "status_message": "US index daily close (Yahoo live canonical) is not ready: Recovery state: recovery index is missing or malformed; Recovery current attempt: current-attempt recovery evidence is missing; Recovery retry set: 0 key(s) remain on retained LKG; Recovery LKG integrity: LKG binding is missing, malformed, or unavailable. Other lanes may publish.",
+      "status": "ready",
+      "status_label": "정상",
+      "status_message": "US index daily close (Yahoo live canonical) is ready.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-08-14",
@@ -10189,37 +10190,37 @@
         {
           "id": "recovery_state_present",
           "label": "Recovery state",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "recovery index is missing or malformed",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "4 exact per-file keys are named",
           "platform_blocking": false
         },
         {
           "id": "recovery_current_attempt",
           "label": "Recovery current attempt",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "current-attempt recovery evidence is missing",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "run 31845772794",
           "platform_blocking": false
         },
         {
           "id": "recovery_retry_set_empty",
           "label": "Recovery retry set",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "0 key(s) remain on retained LKG",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "retry set is empty",
           "platform_blocking": false
         },
         {
           "id": "recovery_lkg_integrity",
           "label": "Recovery LKG integrity",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "LKG binding is missing, malformed, or unavailable",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "all retained LKG rows are sha256-bound",
           "platform_blocking": false
         }
       ],
-      "reason": "recovery_degraded",
+      "reason": "ok",
       "artifact": {
         "source_as_of": "2026-08-14"
       }
@@ -10521,7 +10522,7 @@
       "status_message": "Damodaran owner-guard producer is not ready: LKG retry set empty: damodaran lkg_primary after run 31404207078; recovery_not_advanced_by_provider at run 31414959413. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-15T19:51:44.591Z",
+      "as_of": "2026-08-10T17:39:11.718Z",
       "counts": {},
       "details": {
         "recovery_retry_set": [
@@ -10549,7 +10550,7 @@
           "label": "Detection floor status",
           "status": "ready",
           "status_label": "정상",
-          "detail": "ok; source_as_of 2026-08-15T19:51:44.591Z",
+          "detail": "ok; source_as_of 2026-08-10T17:39:11.718Z",
           "platform_blocking": false
         },
         {
@@ -10563,7 +10564,7 @@
       ],
       "reason": "ok",
       "artifact": {
-        "source_as_of": "2026-08-15T19:51:44.591Z"
+        "source_as_of": "2026-08-10T17:39:11.718Z"
       }
     },
     {
@@ -10741,7 +10742,7 @@
       "status_message": "ApeWisdom attention is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-15",
+      "as_of": "2026-08-14",
       "counts": {},
       "details": {
         "recovery_retry_set": [],
@@ -10773,7 +10774,7 @@
           "label": "Detection floor status",
           "status": "ready",
           "status_label": "정상",
-          "detail": "ok; source_as_of 2026-08-15",
+          "detail": "ok; source_as_of 2026-08-14",
           "platform_blocking": false
         },
         {
@@ -10787,7 +10788,7 @@
       ],
       "reason": "ok",
       "artifact": {
-        "source_as_of": "2026-08-15"
+        "source_as_of": "2026-08-14"
       }
     },
     {
@@ -10795,7 +10796,7 @@
       "label": "GDELT news tone",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "GDELT news tone is not ready: Detection floor status: schema_drift; source_as_of 2026-08-09T15:01:00.000Z; LKG retry set empty: news_tone_proxy lkg_primary after run 31891339849. Other lanes may publish.",
+      "status_message": "GDELT news tone is not ready: Detection floor status: rate_limited; source_as_of 2026-08-09T15:01:00.000Z; LKG retry set empty: news_tone_proxy lkg_primary after run 31891339849. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-08-09T15:01:00.000Z",
@@ -10826,7 +10827,7 @@
           "label": "Detection floor status",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "schema_drift; source_as_of 2026-08-09T15:01:00.000Z",
+          "detail": "rate_limited; source_as_of 2026-08-09T15:01:00.000Z",
           "platform_blocking": false
         },
         {
@@ -10838,7 +10839,7 @@
           "platform_blocking": false
         }
       ],
-      "reason": "schema_drift",
+      "reason": "rate_limited",
       "artifact": {
         "source_as_of": "2026-08-09T15:01:00.000Z"
       }
@@ -11038,11 +11039,11 @@
       "required": true
     },
     {
-      "lane_id": "us_indices_daily",
-      "check_id": "recovery_state_present",
+      "lane_id": "oecd_cli",
+      "check_id": "detection_floor_status",
       "status": "blocked",
-      "label": "Recovery state",
-      "detail": "recovery index is missing or malformed",
+      "label": "Detection floor status",
+      "detail": "stale; source_as_of 2026-06-01",
       "required": true
     }
   ]

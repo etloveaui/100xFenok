@@ -1467,7 +1467,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
 
   const recoveryAware = buildDetectionFloorLanes(report(), {
     yahoo_ticker_macro: yahooRecovery,
-    us_indices_daily: recoveryIndex("us_indices_daily", ["sp500.json", "nasdaq.json"]),
+    us_indices_daily: recoveryIndex("us_indices_daily", ["sp500.json", "nasdaq.json", "nasdaq100.json", "sox.json"]),
     slickcharts: readySlickchartsCompositeIndex(),
   });
   assert.equal(recoveryAware.find((item) => item.id === "yahoo_ticker_macro")?.status, "degraded");
@@ -1608,7 +1608,9 @@ const TARGET_RECOVERY_FIXTURES = Object.freeze({
   us_indices_daily: {
     relPath: "us-indices-daily",
     laneId: "us_indices_daily",
-    keys: ["sp500.json", "nasdaq.json"],
+    // Keep this fixture explicit: a future canonical-output expansion must fail
+    // the ready-lane integration test instead of silently shrinking KPI coverage.
+    keys: ["sp500.json", "nasdaq.json", "nasdaq100.json", "sox.json"],
   },
   slickcharts: {
     relPath: "slickcharts-composite-recovery",
@@ -2284,7 +2286,7 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const installedReport = JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report;
   writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
   writeReadyRecoveryIndex(tmp, "yahoo-hourly-ticker", "yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
-  writeReadyRecoveryIndex(tmp, "us-indices-daily", "us_indices_daily", ["sp500.json", "nasdaq.json"]);
+  writeReadyRecoveryIndex(tmp, "us-indices-daily", "us_indices_daily", ["sp500.json", "nasdaq.json", "nasdaq100.json", "sox.json"]);
   writeReadySlickchartsComposite(tmp, "2026-07-14T11:00:00Z", slickchartsLiveRoot);
   const { root, public: pub } = runBuilder(tmp, {}, now, { slickchartsRepoRoot: slickchartsLiveRoot });
   assert.equal(root.totals.lanes, 34);
