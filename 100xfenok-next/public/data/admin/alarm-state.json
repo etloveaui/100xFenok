@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-15T21:39:55.824Z",
+  "generated_at": "2026-08-16T18:51:06.354Z",
   "status": "open",
-  "open_incident_count": 5,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -21,7 +21,7 @@
     {
       "workflow": "fetch-fred-macro.yml",
       "label": "Fetch FRED Macro Data",
-      "streak": 5,
+      "streak": 6,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 31474859038,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31474859038",
@@ -58,12 +58,25 @@
       "cadence_status": "overdue"
     },
     {
+      "workflow": "slickcharts-symbols.yml",
+      "label": "SlickCharts Symbols",
+      "streak": 1,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": 31935105871,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31935105871",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
       "workflow": "validate-workflows.yml",
       "label": "Validate GitHub Workflows",
-      "streak": 4,
+      "streak": 5,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 31905003839,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31905003839",
+      "first_failing_run_id": 31952922144,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31952922144",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -76,9 +89,10 @@
       "file": "build-stocks-analyzer.yml",
       "label": "Build Stocks Analyzer",
       "events": [
+        "push",
         "schedule"
       ],
-      "event": "schedule",
+      "event": null,
       "failure_streak_threshold": 2,
       "cadence_status": "no_declaration",
       "cadence_evidence": []
@@ -468,24 +482,20 @@
       "reason": "self-monitoring would create a recursive alarm loop"
     }
   ],
-  "unknown_workflows": [
-    {
-      "workflow": "check-sec13f-live-parity.yml",
-      "status": "unknown"
-    }
-  ],
+  "unknown_workflows": [],
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "31909977042",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31909977042",
-    "observed_at": "2026-08-15T21:39:55.824Z",
+    "run_id": "31965708920",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31965708920",
+    "observed_at": "2026-08-16T18:51:06.354Z",
     "event": "schedule",
     "workflows": [
       "fetch-edgar-filings.yml",
       "fetch-fred-macro.yml",
       "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
+      "slickcharts-symbols.yml",
       "validate-workflows.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"

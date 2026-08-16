@@ -1,7 +1,7 @@
 {
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
-  "generated_at": "2026-08-15T21:41:26Z",
+  "generated_at": "2026-08-16T21:40:42Z",
   "source_as_of": {
     "surfaces": {
       "market_events": null,
@@ -60,7 +60,7 @@
       "candidate_path": null,
       "financials_path": "financials/AAPL.json",
       "financials_error": null,
-      "latency_ms": 2387,
+      "latency_ms": 2282,
       "stockanalysis_error": null,
       "provider_availability_status": null,
       "provider_availability_reason": null,
@@ -78,7 +78,7 @@
       "candidate_path": null,
       "financials_path": "financials/NVDA.json",
       "financials_error": null,
-      "latency_ms": 3059,
+      "latency_ms": 2279,
       "stockanalysis_error": null,
       "provider_availability_status": null,
       "provider_availability_reason": null,
@@ -96,7 +96,7 @@
       "candidate_path": null,
       "financials_path": "financials/MSFT.json",
       "financials_error": null,
-      "latency_ms": 2859,
+      "latency_ms": 1833,
       "stockanalysis_error": null,
       "provider_availability_status": null,
       "provider_availability_reason": null,
@@ -109,8 +109,8 @@
       "status": "error",
       "provider": null,
       "path": null,
-      "latency_ms": 976,
-      "error": "ValueError: financial candidate is required for stock pair: AMZN; ValueError: financial statement missing required fields: ratios dividendyield"
+      "latency_ms": 1710,
+      "error": "ValueError: source did not advance beyond the retained LKG for stock:AMZN"
     },
     {
       "ticker": "GOOGL",
@@ -123,7 +123,7 @@
       "candidate_path": null,
       "financials_path": "financials/GOOGL.json",
       "financials_error": null,
-      "latency_ms": 2697,
+      "latency_ms": 1874,
       "stockanalysis_error": null,
       "provider_availability_status": null,
       "provider_availability_reason": null,
@@ -141,7 +141,7 @@
       "candidate_path": null,
       "financials_path": "financials/META.json",
       "financials_error": null,
-      "latency_ms": 2846,
+      "latency_ms": 1762,
       "stockanalysis_error": null,
       "provider_availability_status": null,
       "provider_availability_reason": null,
@@ -154,8 +154,8 @@
       "status": "error",
       "provider": null,
       "path": null,
-      "latency_ms": 1351,
-      "error": "ValueError: financial candidate is required for stock pair: TSLA; ValueError: financial statement missing required fields: ratios dividendyield"
+      "latency_ms": 1831,
+      "error": "ValueError: source did not advance beyond the retained LKG for stock:TSLA"
     },
     {
       "ticker": "JPM",
@@ -168,7 +168,7 @@
       "candidate_path": null,
       "financials_path": "financials/JPM.json",
       "financials_error": null,
-      "latency_ms": 2629,
+      "latency_ms": 2049,
       "stockanalysis_error": null,
       "provider_availability_status": null,
       "provider_availability_reason": null,
@@ -178,7 +178,7 @@
   ],
   "etf_detail_coverage": {
     "path": "coverage/etf_detail.json",
-    "generated_at": "2026-08-15T21:41:26Z",
+    "generated_at": "2026-08-16T21:40:42Z",
     "status": "warn",
     "counts": {
       "candidate_total": 5590,
@@ -231,8 +231,8 @@
       "lkg": 118,
       "unavailable": 1,
       "retry": 119,
-      "failed": 4,
-      "recovered": 2,
+      "failed": 2,
+      "recovered": 0,
       "promotion_deferred": 0
     },
     "degraded_tickers": [
@@ -358,49 +358,33 @@
     ],
     "degraded_surfaces": [],
     "degraded_universes": [],
-    "recovered_tickers": [
-      "JPM"
-    ],
+    "recovered_tickers": [],
     "recovered_etfs": [],
     "recovered_surfaces": [],
     "recovered_universes": [],
     "current_attempt": {
-      "run_id": "31910027994",
+      "run_id": "31974093247",
       "run_attempt": 1,
       "event_name": "schedule",
       "schedule": "20 21 * * *",
       "natural": true,
-      "attempted": 16,
+      "attempted": 14,
       "successes": 12,
-      "failed": 4,
-      "recovered": 2,
+      "failed": 2,
+      "recovered": 0,
       "promotion_deferred": 0,
       "errors": [
         {
           "artifact_kind": "stock",
           "entity": "AMZN",
-          "error": "ValueError: financial candidate is required for stock pair: AMZN; ValueError: financial statement missing required fields: ratios dividendyield",
+          "error": "ValueError: source did not advance beyond the retained LKG for stock:AMZN",
           "controlled": false,
           "data_loss": false
         },
         {
           "artifact_kind": "stock",
           "entity": "TSLA",
-          "error": "ValueError: financial candidate is required for stock pair: TSLA; ValueError: financial statement missing required fields: ratios dividendyield",
-          "controlled": false,
-          "data_loss": false
-        },
-        {
-          "artifact_kind": "financial",
-          "entity": "AMZN",
-          "error": "ValueError: financial statement missing required fields: ratios dividendyield",
-          "controlled": false,
-          "data_loss": false
-        },
-        {
-          "artifact_kind": "financial",
-          "entity": "TSLA",
-          "error": "ValueError: financial statement missing required fields: ratios dividendyield",
+          "error": "ValueError: source did not advance beyond the retained LKG for stock:TSLA",
           "controlled": false,
           "data_loss": false
         }
@@ -419,7 +403,7 @@
         {
           "artifact_kind": "stock",
           "entity": "JPM",
-          "outcome": "recovered"
+          "outcome": "fresh"
         },
         {
           "artifact_kind": "stock",
@@ -449,7 +433,7 @@
         {
           "artifact_kind": "financial",
           "entity": "JPM",
-          "outcome": "recovered"
+          "outcome": "fresh"
         },
         {
           "artifact_kind": "financial",

@@ -1,14 +1,14 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-08-15T21:40:57Z",
+  "generated_at": "2026-08-16T21:40:14Z",
   "counts": {
     "tracked": 206,
     "fresh": 87,
     "lkg": 118,
     "unavailable": 1,
     "retry": 119,
-    "failed": 4,
-    "recovered": 2,
+    "failed": 2,
+    "recovered": 0,
     "promotion_deferred": 0
   },
   "counts_by_kind": {
@@ -563,8 +563,8 @@
       "resolution_state": "lkg_primary",
       "payload_sha256": "09d3e74e310befbe12ccfdfddac36276fea6cc26a2c6161ff87b2e03ee8054ad",
       "source_as_of": "2026-08-14T20:00:00Z",
-      "failure_run_id": "31910027994",
-      "failure_observed_at": "2026-08-15T21:40:57Z",
+      "failure_run_id": "31974093247",
+      "failure_observed_at": "2026-08-16T21:40:14Z",
       "data_loss": false
     },
     {
@@ -813,8 +813,8 @@
       "resolution_state": "lkg_primary",
       "payload_sha256": "f9b5c2044df4dc07de03aea978d48f0464cd4545449e6fab8c751c4458b04060",
       "source_as_of": "2026-08-14T20:00:00Z",
-      "failure_run_id": "31910027994",
-      "failure_observed_at": "2026-08-15T21:40:57Z",
+      "failure_run_id": "31974093247",
+      "failure_observed_at": "2026-08-16T21:40:14Z",
       "data_loss": false
     },
     {
@@ -1841,74 +1841,35 @@
     "WTIB",
     "XLII"
   ],
-  "recovered_details": [
-    {
-      "artifact_kind": "stock",
-      "entity": "JPM",
-      "payload_sha256": "dcced5980ffe39aef711f1a02ae162aaa28629eb9c21cfdc885d8b3415c99466",
-      "source_as_of": "2026-08-14T20:00:00Z",
-      "recovered_from_run_id": "31843688447",
-      "recovery_run_id": "31910027994",
-      "recovery_run_attempt": 1,
-      "recovery_event_name": "schedule",
-      "recovered_at": "2026-08-15T21:40:57Z"
-    },
-    {
-      "artifact_kind": "financial",
-      "entity": "JPM",
-      "payload_sha256": "61d6dc428d492aa620a37d4d763e5b2491d38d83f2fa98f9eda7ea7495394f4e",
-      "source_as_of": "2026-06-30",
-      "recovered_from_run_id": "31843688447",
-      "recovery_run_id": "31910027994",
-      "recovery_run_attempt": 1,
-      "recovery_event_name": "schedule",
-      "recovered_at": "2026-08-15T21:40:57Z"
-    }
-  ],
-  "recovered_tickers": [
-    "JPM"
-  ],
+  "recovered_details": [],
+  "recovered_tickers": [],
   "recovered_surfaces": [],
   "recovered_universes": [],
   "recovered_etfs": [],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "31910027994",
+    "run_id": "31974093247",
     "run_attempt": 1,
     "event_name": "schedule",
     "schedule": "20 21 * * *",
     "natural": true,
-    "attempted": 16,
+    "attempted": 14,
     "successes": 12,
-    "failed": 4,
-    "recovered": 2,
+    "failed": 2,
+    "recovered": 0,
     "promotion_deferred": 0,
     "errors": [
       {
         "artifact_kind": "stock",
         "entity": "AMZN",
-        "error": "ValueError: financial candidate is required for stock pair: AMZN; ValueError: financial statement missing required fields: ratios dividendyield",
+        "error": "ValueError: source did not advance beyond the retained LKG for stock:AMZN",
         "controlled": false,
         "data_loss": false
       },
       {
         "artifact_kind": "stock",
         "entity": "TSLA",
-        "error": "ValueError: financial candidate is required for stock pair: TSLA; ValueError: financial statement missing required fields: ratios dividendyield",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "AMZN",
-        "error": "ValueError: financial statement missing required fields: ratios dividendyield",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "TSLA",
-        "error": "ValueError: financial statement missing required fields: ratios dividendyield",
+        "error": "ValueError: source did not advance beyond the retained LKG for stock:TSLA",
         "controlled": false,
         "data_loss": false
       }
@@ -1927,7 +1888,7 @@
       {
         "artifact_kind": "stock",
         "entity": "JPM",
-        "outcome": "recovered"
+        "outcome": "fresh"
       },
       {
         "artifact_kind": "stock",
@@ -1957,7 +1918,7 @@
       {
         "artifact_kind": "financial",
         "entity": "JPM",
-        "outcome": "recovered"
+        "outcome": "fresh"
       },
       {
         "artifact_kind": "financial",
