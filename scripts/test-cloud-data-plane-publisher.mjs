@@ -1618,6 +1618,103 @@ try {
     );
     console.log("per_asset_key tree clock ok (minimum summary, per-asset retained, missing/malformed/empty/outside-root reject)");
 
+    // The StockAnalysis ETF tree resolves the same source clock used by the
+    // Python acquisition path, rather than looking for a hand-maintained key.
+    // Quote -> holdings -> latest history is per asset; fetched_at and a stale
+    // top-level source_as_of are deliberately ignored.
+    const stockAnalysisRoot = "data/stockanalysis/etfs";
+    const stockAnalysisFamily = FAMILIES["stockanalysis-etf-detail"];
+    assert.equal(
+      stockAnalysisFamily.source_as_of.per_asset_resolver,
+      "stockanalysis_detail_source_timestamp",
+    );
+    const stockAnalysisPayload = (value) => new TextEncoder().encode(JSON.stringify(value));
+    const stockAnalysisValid = resolveSourceAsOf({
+      family: stockAnalysisFamily,
+      payloads: new Map([
+        [`${stockAnalysisRoot}/AAAD.json`, stockAnalysisPayload({
+          fetched_at: "2026-08-17T00:00:00Z",
+          source_as_of: "2026-08-17",
+          raw: {
+            quote: {
+              ts: Date.parse("2026-07-08T20:00:00Z"),
+              td: "2026-07-08",
+            },
+            holdings: { date: "Jan 1, 2000" },
+          },
+          normalized: {
+            quote: { ts: Date.parse("2026-07-09T20:00:00Z"), td: "2026-07-09" },
+            holdings_updated: "Jul 2, 2026",
+          },
+        })],
+        [`${stockAnalysisRoot}/HOLDINGS.json`, stockAnalysisPayload({
+          fetched_at: "2026-08-17T00:00:00Z",
+          raw: {
+            quote: { ts: "malformed", td: "malformed" },
+            holdings: { date: "Jul 6, 2026" },
+          },
+          normalized: { holdings_updated: "Jul 7, 2026" },
+        })],
+        [`${stockAnalysisRoot}/HISTORY.json`, stockAnalysisPayload({
+          fetched_at: "2026-08-17T00:00:00Z",
+          source_as_of: "2026-08-17",
+          normalized: {
+            history_periods: {
+              daily_1y: [{ t: "2026-07-05" }, { t: "2026-07-07" }],
+            },
+          },
+        })],
+      ]),
+      createdIsoDay: "2026-08-17",
+      relRoot: stockAnalysisRoot,
+    });
+    assert.equal(stockAnalysisValid.origin, "per-asset");
+    assert.equal(stockAnalysisValid.value, "2026-07-06");
+    assert.deepEqual([...stockAnalysisValid.perAsset.entries()].sort(), [
+      ["AAAD.json", "2026-07-08"],
+      ["HISTORY.json", "2026-07-07"],
+      ["HOLDINGS.json", "2026-07-06"],
+    ]);
+    const actualAAAD = JSON.parse(
+      await readFile(path.join(REPO_ROOT, "data/stockanalysis/etfs/AAAD.json"), "utf8"),
+    );
+    const actualAAADResolved = resolveSourceAsOf({
+      family: stockAnalysisFamily,
+      payloads: new Map([[`${stockAnalysisRoot}/AAAD.json`, stockAnalysisPayload(actualAAAD)]]),
+      createdIsoDay: "2026-08-17",
+      relRoot: stockAnalysisRoot,
+    });
+    assert.equal(actualAAADResolved.perAsset.get("AAAD.json"), "2026-07-08");
+    await assertRejectsCode(
+      async () => resolveSourceAsOf({
+        family: stockAnalysisFamily,
+        payloads: new Map([
+          [`${stockAnalysisRoot}/ONLY_FETCHED.json`, stockAnalysisPayload({
+            fetched_at: "2026-08-17T00:00:00Z",
+            source_as_of: "not-used-as-source-evidence",
+          })],
+        ]),
+        createdIsoDay: "2026-08-17",
+        relRoot: stockAnalysisRoot,
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    await assertRejectsCode(
+      async () => resolveSourceAsOf({
+        family: stockAnalysisFamily,
+        payloads: new Map([
+          [`${stockAnalysisRoot}/BAD_DATE.json`, stockAnalysisPayload({
+            raw: { holdings: { date: "2026-02-31" } },
+            normalized: { history_periods: { daily_1y: [] } },
+          })],
+        ]),
+        createdIsoDay: "2026-08-17",
+        relRoot: stockAnalysisRoot,
+      }),
+      "FAMILY_ASOF_INVALID",
+    );
+    console.log("stockanalysis detail source clock ok (quote/holdings/history priority, per-asset minimum, fetched_at ignored, missing/invalid fail)");
+
     // Legacy modes unchanged: { key } payload mode and { file, key }
     // family-index mode still produce one uniform family date.
     await writeFile(

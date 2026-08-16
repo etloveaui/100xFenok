@@ -193,6 +193,10 @@ const DEFAULT_PUBLISH_OUTCOMES_ROOT = path.join(
 //                    time. A present-but-invalid value fails loudly; the
 //                    per-file and max_date modes also fail loudly on any
 //                    missing or malformed declaration (they never fall back).
+//                    { per_asset_resolver: "stockanalysis_detail_source_timestamp" }
+//                    applies the existing StockAnalysis ETF acquisition priority
+//                    independently to every enrolled JSON payload; it ignores
+//                    fetched_at and any top-level source_as_of field.
 // P5+ adds more families here.
 export const FAMILIES = {
   "oecd-cli": {
@@ -502,7 +506,7 @@ export const FAMILIES = {
     // source_as_of, per-asset dates are stored in the manifest, and the family
     // summary is the conservative MINIMUM. A missing or malformed value fails
     // before any write rather than silently inheriting the publication time.
-    source_as_of: { per_asset_key: "source_as_of" },
+    source_as_of: { per_asset_resolver: "stockanalysis_detail_source_timestamp" },
     // Measured 2026-08-16 and re-measured at this base: 5,605 assets /
     // 1,028,334,686 bytes. Caps carry roughly 25% headroom over the measurement
     // so ordinary universe growth does not trip the gate, while a runaway set
@@ -583,6 +587,128 @@ export function toIsoDay(value) {
   return dateTime && isRealIsoDay(dateTime[1]) ? dateTime[1] : null;
 }
 
+const STOCKANALYSIS_DETAIL_SOURCE_RESOLVER = "stockanalysis_detail_source_timestamp";
+const STOCKANALYSIS_MONTHS = new Map([
+  ["jan", 1], ["january", 1],
+  ["feb", 2], ["february", 2],
+  ["mar", 3], ["march", 3],
+  ["apr", 4], ["april", 4],
+  ["may", 5],
+  ["jun", 6], ["june", 6],
+  ["jul", 7], ["july", 7],
+  ["aug", 8], ["august", 8],
+  ["sep", 9], ["sept", 9], ["september", 9],
+  ["oct", 10], ["october", 10],
+  ["nov", 11], ["november", 11],
+  ["dec", 12], ["december", 12],
+]);
+
+function parseStockAnalysisIsoTimestamp(value) {
+  if (typeof value !== "string" || value.trim() === "") return null;
+  const trimmed = value.trim();
+  // Python datetime.fromisoformat accepts ISO date-only values and ISO
+  // date-times with either T or space separators. Keep the Node branch
+  // deliberately narrow so Date.parse does not accept browser-only formats.
+  if (!/^\d{4}-\d{2}-\d{2}(?:$|[T ]\d{2}:\d{2}(?::\d{2}(?:[.,]\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)$/.test(trimmed)) {
+    return null;
+  }
+  if (!isRealIsoDay(trimmed.slice(0, 10))) return null;
+  // Python treats a timezone-less datetime as UTC in this acquisition path;
+  // Date.parse would otherwise interpret it in the Node process timezone.
+  const parseValue = trimmed.length > 10
+    && !/[zZ]$/.test(trimmed)
+    && !/[+-]\d{2}:?\d{2}$/.test(trimmed)
+    ? `${trimmed}Z`
+    : trimmed;
+  const milliseconds = Date.parse(parseValue);
+  return Number.isFinite(milliseconds) ? new Date(milliseconds) : null;
+}
+
+function stockAnalysisCollectionDay(value) {
+  const parsed = parseStockAnalysisIsoTimestamp(value);
+  if (parsed === null) return null;
+  const day = parsed.toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  return day <= today ? day : null;
+}
+
+function stockAnalysisEpochTimestamp(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  const seconds = Math.abs(value) >= 100_000_000_000 ? value / 1000 : value;
+  const milliseconds = seconds * 1000;
+  if (!Number.isFinite(milliseconds)) return null;
+  const parsed = new Date(milliseconds);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const tomorrow = Date.now() + 24 * 60 * 60 * 1000;
+  return parsed.getTime() <= tomorrow ? parsed.toISOString() : null;
+}
+
+function stockAnalysisSourceDate(value) {
+  const parsed = parseStockAnalysisIsoTimestamp(value);
+  if (parsed !== null) return parsed.toISOString().slice(0, 10);
+  if (typeof value !== "string") return null;
+  const match = value.trim().match(/^([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})$/);
+  if (!match) return null;
+  const month = STOCKANALYSIS_MONTHS.get(match[1].toLowerCase());
+  const day = Number(match[2]);
+  const year = Number(match[3]);
+  if (month === undefined || !Number.isInteger(day) || !Number.isInteger(year)) return null;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day
+    ? date.toISOString().slice(0, 10)
+    : null;
+}
+
+function stockAnalysisQuoteSourceDay(quote) {
+  if (!quote || typeof quote !== "object" || Array.isArray(quote)) return null;
+  const timestamp = stockAnalysisEpochTimestamp(quote.ts);
+  const sourceDay = stockAnalysisCollectionDay(quote.td);
+  if (timestamp && (!sourceDay || timestamp.slice(0, 10) === sourceDay)) {
+    return timestamp.slice(0, 10);
+  }
+  return sourceDay;
+}
+
+function stockAnalysisLatestHistorySourceDay(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const normalized = payload.normalized && typeof payload.normalized === "object"
+    ? payload.normalized
+    : {};
+  const data = payload.data && typeof payload.data === "object" ? payload.data : {};
+  const historyPeriods = normalized.history_periods && typeof normalized.history_periods === "object"
+    ? normalized.history_periods
+    : {};
+  const candidates = [normalized.history, historyPeriods.daily_1y, data.history_1y];
+  const days = [];
+  for (const rows of candidates) {
+    if (!Array.isArray(rows)) continue;
+    for (const row of rows) {
+      if (!row || typeof row !== "object" || Array.isArray(row)) continue;
+      const day = stockAnalysisCollectionDay(row.date || row.t || row.time);
+      if (day) days.push(day);
+    }
+  }
+  return days.length > 0 ? days.sort().at(-1) : null;
+}
+
+// Mirrors stockanalysis_detail_source_timestamp in fetch-stockanalysis.py.
+// The manifest only needs an ISO day, so quote epoch precision is normalized
+// after the Python-equivalent priority/fallback decision.
+function stockAnalysisDetailSourceDay(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const raw = payload.raw && typeof payload.raw === "object" ? payload.raw : {};
+  const normalized = payload.normalized && typeof payload.normalized === "object"
+    ? payload.normalized
+    : {};
+  return stockAnalysisQuoteSourceDay(raw.quote)
+    || stockAnalysisQuoteSourceDay(normalized.quote)
+    || stockAnalysisSourceDate(raw.holdings?.date)
+    || stockAnalysisSourceDate(normalized.holdings_updated)
+    || stockAnalysisLatestHistorySourceDay(payload);
+}
+
 // Resolve the family's SOURCE time for the manifest's source_as_of field.
 //   - { file, key }: read key from the JSON file at <root>/<file>; the value
 //     must be date-like (fail FAMILY_ASOF_INVALID otherwise).
@@ -597,6 +723,10 @@ export function toIsoDay(value) {
 //     created_at fallback).
 //     The summary value is the conservative MINIMUM asset date, origin
 //     "per-asset" (truthful per-asset labeling, not family-index).
+//   - { per_asset_resolver: "stockanalysis_detail_source_timestamp" }:
+//     apply the StockAnalysis ETF detail source priority to each enrolled JSON
+//     payload; the summary is the conservative MINIMUM and fetched_at is never
+//     used as source time.
 //   - { file, max_date: { array, key } }: take the MAXIMUM normalized key over
 //     the named top-level array of the JSON file at <root>/<file> (e.g. the
 //     FDIC latest reported quarter). The collection time is never used; a
@@ -621,12 +751,13 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
     config.max_date !== undefined,
     config.key !== undefined,
     config.per_asset_key !== undefined,
+    config.per_asset_resolver !== undefined,
   ].filter(Boolean).length;
   if (modes === 0) {
-    fail("FAMILY_ASOF_INVALID", "source_as_of declares no mode: need files, max_date, key, or per_asset_key");
+    fail("FAMILY_ASOF_INVALID", "source_as_of declares no mode: need files, max_date, key, per_asset_key, or per_asset_resolver");
   }
   if (modes > 1) {
-    fail("FAMILY_ASOF_INVALID", "source_as_of must declare exactly one mode: files, max_date, key, or per_asset_key");
+    fail("FAMILY_ASOF_INVALID", "source_as_of must declare exactly one mode: files, max_date, key, per_asset_key, or per_asset_resolver");
   }
   const decodeJson = (bytes) => {
     try {
@@ -700,6 +831,41 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
         fail(
           "FAMILY_ASOF_INVALID",
           `${relative}.${config.per_asset_key} = ${JSON.stringify(raw)} is not an ISO date or date-time`,
+        );
+      }
+      perAsset.set(relative, value);
+    }
+    const values = [...perAsset.values()].sort();
+    return { value: values[0], origin: "per-asset", perAsset };
+  }
+  if (config.per_asset_resolver !== undefined) {
+    if (config.per_asset_resolver !== STOCKANALYSIS_DETAIL_SOURCE_RESOLVER) {
+      fail(
+        "FAMILY_ASOF_INVALID",
+        `unsupported per-asset source_as_of resolver: ${JSON.stringify(config.per_asset_resolver)}`,
+      );
+    }
+    if (!relRoot) {
+      fail("FAMILY_ASOF_INVALID", "per-asset resolver source_as_of requires a relRoot");
+    }
+    if (payloads.size === 0) {
+      fail("FAMILY_ASOF_INVALID", "per-asset resolver source_as_of requires at least one enrolled payload");
+    }
+    const perAsset = new Map();
+    for (const [enrolledPath, bytes] of payloads) {
+      if (!enrolledPath.startsWith(`${relRoot}/`)) {
+        fail(
+          "FAMILY_ASOF_INVALID",
+          `per-asset resolver payload ${enrolledPath} is outside the family root ${relRoot}`,
+        );
+      }
+      const relative = enrolledPath.slice(relRoot.length + 1);
+      const json = decodeJson(bytes);
+      const value = stockAnalysisDetailSourceDay(json);
+      if (value === null) {
+        fail(
+          "FAMILY_ASOF_INVALID",
+          `${relative} has no valid StockAnalysis detail source timestamp (fetched_at is acquisition time only)`,
         );
       }
       perAsset.set(relative, value);
