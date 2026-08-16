@@ -3246,7 +3246,11 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
     env: rollbackEnv,
     outcomesRoot: rollbackRoot,
     runCostGateImpl: async (options) => {
-      gateCalls.push({ planClassA: options.planClassA, planBytes: options.planBytes });
+      gateCalls.push({
+        planClassA: options.planClassA,
+        planClassB: options.planClassB,
+        planBytes: options.planBytes,
+      });
       return { code: 0, stdout: "", stderr: "" };
     },
     createPublishPlaneImpl: () => ({ plane: countingPlane, objectsWritten: () => puts }),
@@ -3264,8 +3268,16 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.doesNotMatch(rollbackDiagnostic, /FAMILY_NOT_AUTHORIZED|FAMILY_ASOF_INVALID/,
     "rollback must not be gated by publication admission or the source clock");
   assert.equal(puts, 0, "rollback must not put a single object");
-  assert.deepEqual(gateCalls[0], { planClassA: 10, planBytes: 0 },
-    "rollback runs its own small cost gate before touching the pointer");
+  // Rollback is pointer-authority-only, not read-free: it fetches the previous
+  // manifest and every payload that manifest names before moving the pointer.
+  // The declared ceiling is derived from the family's own policy so it needs no
+  // local read: 2 * (max_assets + 1).
+  const oecdCeiling = 2 * (FAMILIES["oecd-cli"].policy.max_assets + 1);
+  assert.deepEqual(gateCalls[0], { planClassA: 10, planClassB: oecdCeiling, planBytes: 0 },
+    "the first rollback gate must declare the derived nonzero read ceiling");
+  assert.ok(gateCalls[0].planClassB > 0, "rollback Class B must not be declared as zero");
+  assert.equal(2 * (FAMILIES["stockanalysis-etf-detail"].policy.max_assets + 1), 14_002,
+    "the ETF family's derived rollback read ceiling is 14,002");
   await rm(rollbackRoot, { recursive: true, force: true });
   console.log("rollback independence ok (own gate first, pointer-domain failure, zero object writes)");
 }

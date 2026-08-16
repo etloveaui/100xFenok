@@ -1964,18 +1964,35 @@ export async function runPublisherCli({
     : { ok: false, error: outcome.error?.message ?? String(outcome.error) };
 
   try {
-    // 0. Rollback stands alone and runs FIRST. It is pointer-only: it writes no
-    // object and reads no local payload, so it must not depend on the raw Git
-    // tree still being present, nor on the publisher and registry sets agreeing
-    // with each other. That independence is the entire point — recovery has to
-    // outlive both an unrelated authority mismatch and the eventual retirement
-    // of the canonical tree. Publication and dry-run stay admission-gated below.
+    // 0. Rollback stands alone and runs FIRST. It is pointer-authority-only: it
+    // performs ZERO object writes and reads no LOCAL payload, so it must not
+    // depend on the raw Git tree still being present, nor on the publisher and
+    // registry sets agreeing with each other. It DOES perform remote
+    // verification reads — the previous manifest and every payload that manifest
+    // names are fetched and validated before the pointer moves — and those reads
+    // are declared to the gate below rather than pretended away.
+    // That independence is the entire point: recovery has to outlive both an
+    // unrelated authority mismatch and the eventual retirement of the canonical
+    // tree. Publication and dry-run stay admission-gated below.
     if (args.rollback) {
       const rollbackToken = env.CLOUDFLARE_API_TOKEN;
       const rollbackEndpoint = env.DATA_PLANE_ENDPOINT;
       const rollbackWriteKey = env.DATA_PLANE_WRITE_KEY;
       const rollbackAccountId = env.CLOUDFLARE_ACCOUNT_ID ?? DEFAULT_ACCOUNT_ID;
-      const rollbackGateBefore = await runCostGateImpl({ planClassA: 10, planClassB: 0, planBytes: 0, env });
+      // Rollback writes no object, but it is NOT read-free: rollbackLiveGeneration
+      // fetches the previous manifest and then every payload it names in order to
+      // validate them before the pointer moves. Declaring 0 here was false. The
+      // ceiling is derived from the family's own declared policy rather than from
+      // the local tree, so it stays honest without reading anything: one manifest
+      // plus max_assets payloads, doubled for the same >=2x margin every other
+      // plan in this file uses. For the ETF family that is 2 * (7,000 + 1) = 14,002.
+      const rollbackReadCeiling = 2 * ((family.policy?.max_assets ?? 0) + 1);
+      const rollbackGateBefore = await runCostGateImpl({
+        planClassA: 10,
+        planClassB: rollbackReadCeiling,
+        planBytes: 0,
+        env,
+      });
       if (!args.json && rollbackGateBefore.stdout.trim()) stderr(rollbackGateBefore.stdout.trim());
       if (rollbackGateBefore.code !== 0 && rollbackGateBefore.code !== 1) {
         if (rollbackGateBefore.stderr.trim()) stderr(rollbackGateBefore.stderr.trim());
@@ -2071,6 +2088,10 @@ export async function runPublisherCli({
           }
           : {}),
         planned_class_a: family.plan.class_a,
+        // Audit symmetry: the dry-run summary now reports the read plan the gate
+        // would receive, so a reviewer can see all three declared dimensions
+        // without running the publication.
+        planned_class_b: family.plan.class_b ?? 0,
         planned_bytes: family.plan.bytes,
         gate: "not_run",
       });
