@@ -188,7 +188,7 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             flags=re.DOTALL,
         )
         publish = re.search(
-            r"  publish-stockanalysis:\n(?P<body>.*)\Z",
+            r"  publish-stockanalysis:\n(?P<body>.*?)(?=\n  publish-stockanalysis-etf-plane:)",
             self.text,
             flags=re.DOTALL,
         )
@@ -211,6 +211,44 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn("group: fenok-data-writer-refs/heads/main", publish_body)
         self.assertIn("cancel-in-progress: false", publish_body)
         self.assertIn("queue: max", publish_body)
+
+    def test_natural_etf_plane_publish_reuses_artifact_outside_git_lock(self) -> None:
+        plane = re.search(
+            r"  publish-stockanalysis-etf-plane:\n(?P<body>.*?)(?=\n  persist-stockanalysis-etf-plane:)",
+            self.text,
+            flags=re.DOTALL,
+        )
+        persist = re.search(
+            r"  persist-stockanalysis-etf-plane:\n(?P<body>.*)\Z",
+            self.text,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(plane)
+        self.assertIsNotNone(persist)
+        plane_body = plane.group("body")
+        persist_body = persist.group("body")
+        for expected in (
+            "github.event_name == 'schedule'",
+            "github.event.schedule == '50 23 * * 1-5'",
+            "github.event.schedule == '20 23 * * 0'",
+            "needs: acquire-stockanalysis",
+            "actions/download-artifact@v4",
+            "needs.acquire-stockanalysis.outputs.artifact_digest",
+            "scripts/stockanalysis_artifact.py apply",
+            'if [ "$APPLY_STATUS" != "applied" ]; then',
+            'rm -f "$OUTCOME_SHARD"',
+            "group: stockanalysis-etf-detail-publish",
+            "node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --json",
+            "stockanalysis-etf-detail-natural-outcome-${{ github.run_id }}-${{ github.run_attempt }}",
+        ):
+            self.assertIn(expected, plane_body)
+        self.assertNotIn("fenok-data-writer-refs/heads/main", plane_body)
+        self.assertNotIn("git commit", plane_body)
+        self.assertNotIn("git push", plane_body)
+        self.assertGreaterEqual(plane_body.count('rm -f "$OUTCOME_SHARD"'), 2)
+        self.assertIn("group: fenok-data-writer-refs/heads/main", persist_body)
+        self.assertIn("scripts/persist-cloud-publish-outcome.mjs", persist_body)
+        self.assertIn("--workflow=.github/workflows/fetch-stockanalysis.yml", persist_body)
 
     def test_candidate_artifact_is_context_bound_and_immutable(self) -> None:
         for expected in (
