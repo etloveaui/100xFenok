@@ -19,6 +19,8 @@ const usEnrichedSignal = {
   shortTermCommonBasisCall: "mixed" as const,
   shortTermInputCount: 5,
   shortTermBasisCode: "us_enriched_v1",
+  shortTermComparableScore: null,
+  shortTermComparableCall: null,
 };
 
 const projected = projectFenokShortTermFields(usEnrichedSignal);
@@ -29,12 +31,16 @@ assert.deepStrictEqual(
     fenokShortTermCommonBasisCall: projected.fenokShortTermCommonBasisCall,
     fenokShortTermInputCount: projected.fenokShortTermInputCount,
     fenokShortTermBasisCode: projected.fenokShortTermBasisCode,
+    fenokShortTermComparableScore: projected.fenokShortTermComparableScore,
+    fenokShortTermComparableCall: projected.fenokShortTermComparableCall,
   },
   {
     fenokShortTermCommonBasisScore: 61,
     fenokShortTermCommonBasisCall: "혼재",
     fenokShortTermInputCount: 5,
     fenokShortTermBasisCode: "us_enriched_v1",
+    fenokShortTermComparableScore: null,
+    fenokShortTermComparableCall: null,
   },
 );
 

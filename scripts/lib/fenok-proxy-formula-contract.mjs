@@ -1,6 +1,6 @@
 export const FLOW_PROXY_FORMULA_VERSION = "fenok-flow-proxies-v0.3-short-pressure-calibration";
 export const OCC_OPTIONS_FORMULA_VERSION = "fenok-occ-options-volume-v0.2-volume-skew-calibration";
-export const NATIVE_SIGNAL_FORMULA_VERSION = "fenok-native-signals-v0.2.3-common-basis";
+export const NATIVE_SIGNAL_FORMULA_VERSION = "fenok-native-signals-v0.2.4-null-comparable";
 
 const SHORT_TERM_COMMON_KEYS = [
   "technical_flow",
@@ -25,6 +25,8 @@ function unavailableShortTermComposite() {
     shortTermConvictionCall: null,
     shortTermInputCount: null,
     shortTermBasisCode: null,
+    shortTermComparableScore: null,
+    shortTermComparableCall: null,
   };
 }
 
@@ -63,6 +65,10 @@ export function buildShortTermConvictionComposite(signals, marketScope) {
     shortTermConvictionCall: shortTermConvictionCallFromScore(shortTermConvictionScore),
     shortTermInputCount: localScores.length,
     shortTermBasisCode: localScores.length > commonScores.length ? "us_enriched_v1" : "common_3_v1",
+    // Cross-market comparability stays fail-closed until the normalized-axis
+    // producer contract is implemented and independently calibrated.
+    shortTermComparableScore: null,
+    shortTermComparableCall: null,
   };
 }
 

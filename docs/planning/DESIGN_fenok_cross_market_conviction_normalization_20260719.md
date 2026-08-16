@@ -1,7 +1,7 @@
 # DESIGN: Fenok Cross-Market Conviction Normalization
 
 Date: 2026-07-19  
-Status: design-only; gate pending, implementation not started  
+Status: Stage A schema/producer reservation landed; normalized-axis implementation remains design-only
 Scope: Fenok stock short-term conviction / Edge Score formula family  
 Target contract module: `scripts/lib/fenok-proxy-formula-contract.mjs`
 
@@ -16,7 +16,7 @@ score from the current axes:
 2. `shortTermConvictionScore` remains the market-local score for compatibility.
    US rows may add the two US-only flow inputs; Korea and Asia remain on the
    three common inputs. Every row publishes its basis and actual input count.
-3. `shortTermComparableScore` remains absent/null until the three underlying
+3. `shortTermComparableScore` is now explicit and null until the three underlying
    axes are rebuilt on common currency, benchmark, and fixed-scale contracts.
    Cross-market score features stay disabled until that producer is live.
 
@@ -24,7 +24,9 @@ Do not use per-market percentile anchoring in v1. Percentiles answer "rank
 inside this market," not "same signal strength," and would erase measured
 regime differences in the common-basis score.
 
-This document does not change a formula version or regenerate artifacts.
+Stage A only reserves the comparable fields as nullable output and keeps every
+consumer fail-closed. It does not implement normalized axes, enable
+cross-market ranking, or award freshness credit.
 
 ## Problem
 
@@ -136,6 +138,11 @@ The local score must also emit:
   its own score using the declared call thresholds;
 - `shortTermComparableScore` and `shortTermComparableCall`: absent/null until
   the normalized producer contract below is satisfied.
+
+Stage A emits both fields explicitly as `null` in the private full artifact and
+compact public summary. Consumers may carry the fields, but no sort, filter, or
+display path may treat null as a comparable score or fall back from it to the
+market-local/common-basis score.
 
 Call thresholds are exact: score >= 70 is `concentrated`, score <= 40 is
 `diluted`, otherwise `mixed`; a null score always produces a null call.

@@ -4,7 +4,7 @@ const MARKET_LABEL = Object.freeze({
   asia: "아시아",
 });
 
-const COMMON_COMPARISON_NOTE = "동일한 공통 3개 입력 기준이므로 시장 간 직접 비교할 수 있습니다.";
+const COMMON_COMPARISON_NOTE = "공통 3개 입력을 함께 공개하지만, 현재 축의 통화·벤치마크·고정 척도가 달라 시장 간 직접 비교는 보류합니다.";
 
 function normalizeMarket(marketScope) {
   return typeof marketScope === "string" ? marketScope.trim().toLowerCase() : "";

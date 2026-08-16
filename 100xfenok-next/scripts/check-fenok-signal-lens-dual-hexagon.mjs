@@ -61,6 +61,8 @@ const PUBLIC_SUMMARY_FIELDS = [
   "shortTermCommonBasisCall",
   "shortTermInputCount",
   "shortTermBasisCode",
+  "shortTermComparableScore",
+  "shortTermComparableCall",
   "durabilityProfitabilityScore",
   "durabilityProfitabilityCoverage",
   "upsidePotentialScore",
@@ -92,6 +94,8 @@ const FULL_SHORT_TERM_COMPOSITE_KEYS = [
   "conviction_call",
   "input_count",
   "basis_code",
+  "comparable_score_0_100",
+  "comparable_call",
 ];
 const PRIVATE_SOURCE_PUBLIC_PATH = path.join(publicDataRoot, "computed/fenok_signals.json");
 
@@ -152,7 +156,7 @@ const UI_CONTRACTS = [
       "function buildDetailLongTermAxes",
       "function buildDetailShortTermAxes",
       "FenokSignalRadarHexagonPair",
-      "Fenok Edge Score",
+      "aria-label={`Fenok Edge",
       "Short Edge",
       "Long Edge",
       "commonBasisShortTermView",
@@ -168,7 +172,7 @@ const UI_CONTRACTS = [
       "shortTermCommonBasisCopy",
       "shortTerm.sourceInputCount",
       "shortTerm.basisCode",
-      "const shortScore = shortTerm.score",
+      "const shortScore = resolveFenokShortTermScore(record)",
     ],
   },
   {
@@ -315,6 +319,8 @@ function validateFullShortTermComposite(ticker, sourceRow, errors) {
     conviction_call: expectedComposite.shortTermConvictionCall,
     input_count: expectedComposite.shortTermInputCount,
     basis_code: expectedComposite.shortTermBasisCode,
+    comparable_score_0_100: expectedComposite.shortTermComparableScore,
+    comparable_call: expectedComposite.shortTermComparableCall,
   };
   for (const key of FULL_SHORT_TERM_COMPOSITE_KEYS) {
     if (actual[key] !== expected[key]) {

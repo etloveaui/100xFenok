@@ -64,6 +64,8 @@ type FenokShortTermFields = Pick<
   | "fenokShortTermCommonBasisCall"
   | "fenokShortTermInputCount"
   | "fenokShortTermBasisCode"
+  | "fenokShortTermComparableScore"
+  | "fenokShortTermComparableCall"
 >;
 
 export function projectFenokShortTermFields(
@@ -86,6 +88,11 @@ export function projectFenokShortTermFields(
     ),
     fenokShortTermInputCount: fenokSignal?.shortTermInputCount ?? null,
     fenokShortTermBasisCode: fenokSignal?.shortTermBasisCode ?? null,
+    fenokShortTermComparableScore: fenokSignal?.shortTermComparableScore ?? null,
+    fenokShortTermComparableCall: convictionCallFromRecord(
+      fenokSignal?.shortTermComparableCall,
+      fenokSignal?.shortTermComparableScore,
+    ),
   };
 }
 

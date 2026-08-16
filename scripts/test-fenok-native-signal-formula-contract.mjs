@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   NATIVE_SIGNAL_FORMULA_VERSION,
@@ -7,6 +10,8 @@ import {
   buildShortTermConvictionComposite,
   shortTermConvictionCallFromScore,
 } from "./lib/fenok-proxy-formula-contract.mjs";
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function signals({ technical = 80, volume = 70, relative = 60, options, shortPressure } = {}) {
   return {
@@ -18,7 +23,7 @@ function signals({ technical = 80, volume = 70, relative = 60, options, shortPre
   };
 }
 
-assert.equal(NATIVE_SIGNAL_FORMULA_VERSION, "fenok-native-signals-v0.2.3-common-basis");
+assert.equal(NATIVE_SIGNAL_FORMULA_VERSION, "fenok-native-signals-v0.2.4-null-comparable");
 assert.equal(shortTermConvictionCallFromScore(70), "concentrated");
 assert.equal(shortTermConvictionCallFromScore(40), "diluted");
 assert.equal(shortTermConvictionCallFromScore(55), "mixed");
@@ -33,6 +38,8 @@ assert.deepEqual(
     shortTermConvictionCall: "concentrated",
     shortTermInputCount: 5,
     shortTermBasisCode: "us_enriched_v1",
+    shortTermComparableScore: null,
+    shortTermComparableCall: null,
   },
 );
 
@@ -45,6 +52,8 @@ assert.deepEqual(
     shortTermConvictionCall: "concentrated",
     shortTermInputCount: 4,
     shortTermBasisCode: "us_enriched_v1",
+    shortTermComparableScore: null,
+    shortTermComparableCall: null,
   },
 );
 
@@ -57,6 +66,8 @@ assert.deepEqual(
     shortTermConvictionCall: "concentrated",
     shortTermInputCount: 3,
     shortTermBasisCode: "common_3_v1",
+    shortTermComparableScore: null,
+    shortTermComparableCall: null,
   },
 );
 
@@ -73,6 +84,8 @@ for (const marketScope of ["korea", "asia"]) {
       shortTermConvictionCall: "diluted",
       shortTermInputCount: 3,
       shortTermBasisCode: "common_3_v1",
+      shortTermComparableScore: null,
+      shortTermComparableCall: null,
     },
   );
 }
@@ -84,6 +97,8 @@ const unavailableComposite = {
   shortTermConvictionCall: null,
   shortTermInputCount: null,
   shortTermBasisCode: null,
+  shortTermComparableScore: null,
+  shortTermComparableCall: null,
 };
 
 assert.deepEqual(
@@ -111,5 +126,13 @@ assert.equal(
 assert.equal(buildLongTermConvictionScore({ profitability: { score_0_100: 60 } }), 60);
 assert.equal(buildLongTermConvictionScore({}), null);
 assert.equal(buildLongTermConvictionScore(null), null);
+
+const summary = JSON.parse(fs.readFileSync(path.join(repoRoot, "data/computed/fenok_signals_summary.json"), "utf8"));
+const comparableScoreIndex = summary.fields.indexOf("shortTermComparableScore");
+const comparableCallIndex = summary.fields.indexOf("shortTermComparableCall");
+assert.ok(comparableScoreIndex >= 0, "public summary must carry the reserved comparable score field");
+assert.ok(comparableCallIndex >= 0, "public summary must carry the reserved comparable call field");
+assert.equal(summary.formula_version, NATIVE_SIGNAL_FORMULA_VERSION);
+assert.ok(summary.rows.every((row) => row[comparableScoreIndex] === null && row[comparableCallIndex] === null));
 
 console.log("fenok native signal formula contract tests passed");

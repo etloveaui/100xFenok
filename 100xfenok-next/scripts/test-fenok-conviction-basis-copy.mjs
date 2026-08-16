@@ -21,7 +21,7 @@ assert.deepEqual(shortTermCommonBasisCopy("us", {
   basisCode: "us_enriched_v1",
   label: "미국 · 공통 3개 입력 기준",
   detail: "미국 종목의 단기 점수는 시장 공통 3개 입력으로 계산합니다. 원천 5개 입력 · 산출 기준 us_enriched_v1.",
-  comparisonNote: "동일한 공통 3개 입력 기준이므로 시장 간 직접 비교할 수 있습니다.",
+  comparisonNote: "공통 3개 입력을 함께 공개하지만, 현재 축의 통화·벤치마크·고정 척도가 달라 시장 간 직접 비교는 보류합니다.",
 });
 assert.deepEqual(shortTermCommonBasisCopy("KOREA", {
   sourceInputCount: 3,
@@ -34,7 +34,7 @@ assert.deepEqual(shortTermCommonBasisCopy("KOREA", {
   basisCode: "common_3input_v1",
   label: "한국 · 공통 3개 입력 기준",
   detail: "한국 종목의 단기 점수는 시장 공통 3개 입력으로 계산합니다. 원천 3개 입력 · 산출 기준 common_3input_v1.",
-  comparisonNote: "동일한 공통 3개 입력 기준이므로 시장 간 직접 비교할 수 있습니다.",
+  comparisonNote: "공통 3개 입력을 함께 공개하지만, 현재 축의 통화·벤치마크·고정 척도가 달라 시장 간 직접 비교는 보류합니다.",
 });
 assert.deepEqual(shortTermCommonBasisCopy(null), {
   marketScope: "unknown",
@@ -44,7 +44,7 @@ assert.deepEqual(shortTermCommonBasisCopy(null), {
   basisCode: null,
   label: "시장 미확인 · 공통 3개 입력 기준",
   detail: "시장 미확인 종목의 단기 점수는 시장 공통 3개 입력으로 계산합니다.",
-  comparisonNote: "동일한 공통 3개 입력 기준이므로 시장 간 직접 비교할 수 있습니다.",
+  comparisonNote: "공통 3개 입력을 함께 공개하지만, 현재 축의 통화·벤치마크·고정 척도가 달라 시장 간 직접 비교는 보류합니다.",
 });
 
 for (const relativePath of [
@@ -60,7 +60,7 @@ for (const relativePath of [
 }
 
 const basisCopySource = fs.readFileSync(path.join(appRoot, "src/lib/fenok-signals/conviction-basis-copy.mjs"), "utf8");
-assert.doesNotMatch(basisCopySource, /shortTermConvictionBasisCopy|직접 비교할 수 없습니다/, "legacy non-comparable disclosure must be retired after all consumers flip");
+assert.match(basisCopySource, /시장 간 직접 비교는 보류합니다/, "common-basis copy must disclose that cross-market comparability is not yet available");
 
 const screenerHook = fs.readFileSync(path.join(appRoot, "src/hooks/useScreenerData.ts"), "utf8");
 const screenerTypes = fs.readFileSync(path.join(appRoot, "src/lib/screener/types.ts"), "utf8");

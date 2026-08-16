@@ -56,6 +56,8 @@ The 2026-07-19 common-basis emitter appends these backward-compatible fields:
 - `shortTermCommonBasisCall`
 - `shortTermInputCount`
 - `shortTermBasisCode`
+- `shortTermComparableScore` (currently always `null`)
+- `shortTermComparableCall` (currently always `null`)
 
 The common-basis score requires all three current common axes. It is a
 composition disclosure only and must not be treated as cross-market comparable.
@@ -65,18 +67,22 @@ scores, calls, input count, and basis code.
 
 The private full row is the emitter SSOT and carries the same values under
 `short_term_composite`: `common_basis_score_0_100`, `common_basis_call`,
-`conviction_score_0_100`, `conviction_call`, `input_count`, and `basis_code`.
-The compact summary projects its four new public fields from that object; it
-does not independently recompute them.
+`conviction_score_0_100`, `conviction_call`, `input_count`, `basis_code`,
+`comparable_score_0_100`, and `comparable_call`. The comparable pair is
+intentionally null until the normalized-axis producer contract is implemented,
+calibrated, and verified. The compact summary projects all six short-term
+contract fields from that object; it does not independently recompute them.
 
 ## Formula Version
 
-- `formula_version`: `fenok-native-signals-v0.2.3-common-basis`
+- `formula_version`: `fenok-native-signals-v0.2.4-null-comparable`
 - `public_surface_status`:
   `phase_b_v0_2_stock_signal_lens_approved_summary_public`
 
-The v0.2.3 bump adds the common-basis emitter and market-aware input metadata.
-It does not add a cross-market-comparable score or flip a UI consumer.
+The v0.2.3 bump added the common-basis emitter and market-aware input metadata.
+The v0.2.4 bump makes the reserved comparable fields explicit and nullable; it
+does not implement normalized axes, add a cross-market score, or flip a UI
+consumer. A null comparable field is the required fail-closed state.
 
 The Phase B public summary also carries the derived `net_options_proxy`,
 `off_exchange_activity_proxy`, and `short_pressure_proxy` axes. The v0.2.2
