@@ -237,6 +237,19 @@ function rawGet(url, { timeoutMs = 30000 } = {}) {
   });
 }
 
+// GDELT sometimes signals its request throttle with HTTP 200 and a plain-text
+// advisory instead of HTTP 429 or a JSON document. Treat that provider-owned
+// response as throttling so the bounded retry/fallback path can adjudicate it;
+// classifying it as schema drift would incorrectly skip the recovery path.
+function isGdeltThrottleAdvisory(response) {
+  if (!Number.isInteger(response?.statusCode) || response.statusCode < 200 || response.statusCode >= 300) {
+    return false;
+  }
+  const body = String(response.body ?? "").toLowerCase();
+  return body.includes("please limit requests to one every 5 seconds")
+    || body.includes("high-traffic users should switch to our ngrams dataset");
+}
+
 function rawGetBuffer(url, { timeoutMs = 30000, maxBytes = MAX_LEGACY_TOC_BYTES } = {}) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, { headers: { "User-Agent": "FenokResearch/1.0" } }, (res) => {
@@ -320,7 +333,14 @@ async function observeAttempt({
     let result;
     try {
       const raw = await rawGetFn(gdeltDocUrl(query, maxRecords));
-      result = classifyEndpointResponse(raw, { laneId: LANE_ID });
+      result = isGdeltThrottleAdvisory(raw)
+        ? attemptResult("rate_limited", returnedTuple({
+          httpStatus: raw.statusCode,
+          rateLimited: true,
+          decode: "error",
+          payload: "non_empty",
+        }))
+        : classifyEndpointResponse(raw, { laneId: LANE_ID });
     } catch (err) {
       const kind = transportError(err) ? "transport" : "unexpected";
       result = attemptResult(kind === "transport" ? "transport_error" : "unexpected_error", threwTuple(kind));

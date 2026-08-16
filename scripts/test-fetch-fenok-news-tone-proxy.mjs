@@ -258,6 +258,50 @@ async function runLkgCase(root, snapshot, {
 
 {
   const responses = [
+    rawResponse(200, "Please limit requests to one every 5 seconds or contact kalev.leetaru5@gmail.com for larger queries."),
+    rawResponse(200, { articles: [{ title: "DoorDash expands partnership" }] }),
+  ];
+  const sleeps = [];
+  const observed = await observeAttempt({
+    maxRecords: 25,
+    retries: 2,
+    retryBackoffMs: 6500,
+    controlledFailure: false,
+    rawGetFn: async () => responses.shift(),
+    sleepFn: async (ms) => sleeps.push(ms),
+  });
+  assert.equal(observed.result.status, "ready");
+  assert.equal(observed.result.reason, "ok");
+  assert.equal(observed.result.attempt.retry_reason, "rate_limited");
+  assert.equal(observed.result.attempt.retry_count, 1);
+  assert.deepEqual(sleeps, [6500],
+    "HTTP 200 throttle advisory must use the bounded retry path rather than schema-drift handling");
+}
+
+{
+  const responses = [
+    rawResponse(200, "All high-traffic users should switch to our ngrams dataset."),
+    rawResponse(200, "Please limit requests to one every 5 seconds."),
+    rawResponse(200, "Please limit requests to one every 5 seconds."),
+  ];
+  const observed = await observeAttempt({
+    maxRecords: 25,
+    retries: 2,
+    retryBackoffMs: 6500,
+    controlledFailure: false,
+    rawGetFn: async () => responses.shift(),
+    sleepFn: async () => {},
+  });
+  assert.equal(observed.result.reason, "rate_limited");
+  assert.equal(observed.result.attempt.http_status, 200);
+  assert.equal(observed.result.attempt.rate_limited, true);
+  assert.equal(observed.result.attempt.decode, "error");
+  assert.deepEqual(observed.result.attempt.assertions, [{ id: "articles_array", passed: false }]);
+  assert.equal(observed.result.attempt.retry_count, 2);
+}
+
+{
+  const responses = [
     rawResponse(429, "rate limited"),
     rawResponse(429, "rate limited"),
     rawResponse(429, "rate limited"),
