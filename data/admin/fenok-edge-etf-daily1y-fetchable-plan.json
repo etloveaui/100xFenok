@@ -1,7 +1,7 @@
 {
   "schema_version": "fenok-edge-etf-daily1y-fetchable-plan/v0.1",
-  "generated_at": "2026-08-16T13:49:48.150Z",
-  "classification_as_of": "2026-08-16T13:49:20.853Z",
+  "generated_at": "2026-08-16T14:12:32.933Z",
+  "classification_as_of": "2026-08-16T14:11:57.449Z",
   "purpose": "Admin-only no-fetch selector for exact auto-managed core daily basket ETF daily 1Y fetchable gaps.",
   "source_files": {
     "etf_signal_summary": "data/computed/fenok_etf_signals_summary.json",
@@ -68,17 +68,11 @@
     "full_scored_report_consistent": true
   },
   "yf_local_crosscheck": {
-    "complete": 98,
-    "missing_or_lt_min_rows": 1,
+    "complete": 99,
+    "missing_or_lt_min_rows": 0,
     "min_daily_1y_rows": 200,
-    "matches_exact_fetchable_selector": false,
-    "sample": [
-      {
-        "ticker": "RLY",
-        "yf_history_rows": null,
-        "yf_missing_file_or_history": true
-      }
-    ],
+    "matches_exact_fetchable_selector": true,
+    "sample": [],
     "caveat": "Do not use the raw local YF-only count as the ETF readiness blocker; it is not R2-selected authority and over-selects versus the exact effective-detail continuity check."
   },
   "bounded_batches": {
