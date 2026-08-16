@@ -11,11 +11,53 @@ const SAFE_ID = /^[a-z0-9][a-z0-9._-]{0,127}$/;
 const MIME_TYPE = /^[a-z0-9][a-z0-9.+-]*\/[a-z0-9][a-z0-9.+-]*$/i;
 const PUBLIC_PREFIXES = Object.freeze(["public/data/", "public/generated/"]);
 const PRIVATE_PREFIXES = Object.freeze(["data/"]);
+export const DEFAULT_REMOTE_IO_CONCURRENCY = 8;
 
 function fail(code, detail) {
   const error = new Error(`${code}:${detail}`);
   error.code = code;
   throw error;
+}
+
+// Keep remote I/O bounded without copying the task payloads into another
+// collection. A failed task rejects the pool; workers already in flight may
+// settle, but callers must not continue into their commit protocol.
+export async function runBoundedAsyncPool(
+  tasks,
+  task,
+  concurrency = DEFAULT_REMOTE_IO_CONCURRENCY,
+) {
+  if (
+    !Number.isSafeInteger(concurrency)
+    || concurrency < 1
+    || concurrency > DEFAULT_REMOTE_IO_CONCURRENCY
+  ) {
+    fail("REMOTE_IO_CONCURRENCY_INVALID", String(concurrency));
+  }
+  if (typeof task !== "function") fail("REMOTE_IO_TASK_INVALID", "task must be a function");
+  const iterator = tasks?.[Symbol.iterator]?.();
+  if (!iterator) fail("REMOTE_IO_TASKS_INVALID", "tasks must be iterable");
+  let failed = false;
+  let firstFailure;
+  const worker = async () => {
+    while (true) {
+      if (failed) return;
+      let next;
+      try {
+        next = iterator.next();
+        if (next.done) return;
+        await task(next.value);
+      } catch (error) {
+        if (!failed) {
+          failed = true;
+          firstFailure = error;
+        }
+        return;
+      }
+    }
+  };
+  await Promise.allSettled(Array.from({ length: concurrency }, worker));
+  if (failed) throw firstFailure;
 }
 
 function plainObject(value) {
@@ -457,7 +499,7 @@ export async function publishGeneration({
   // be a redundant GET and is skipped. A newly written object (or an adapter
   // that returns no result) still gets the immediate readback, and the final
   // post-promotion parity GET below stays mandatory for every asset.
-  for (const object of immutableObjectsByKey.values()) {
+  await runBoundedAsyncPool(immutableObjectsByKey.values(), async (object) => {
     const outcome = await objectStore.putIfAbsent(object.key, object.bytes);
     if (outcome?.alreadyPresent !== true) {
       const stored = await objectStore.get(object.key);
@@ -465,7 +507,7 @@ export async function publishGeneration({
         fail("OBJECT_READBACK_INVALID", object.key);
       }
     }
-  }
+  });
 
   const prepared = {
     schema_version: PUBLICATION_RECEIPT_SCHEMA,

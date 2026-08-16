@@ -124,6 +124,7 @@ import {
   GENERATION_MANIFEST_SCHEMA,
   publishGeneration,
   rollbackGeneration,
+  runBoundedAsyncPool,
   sha256Bytes,
   sha256Canonical,
   validateGenerationManifest,
@@ -1663,7 +1664,8 @@ export function classifyResultLine(line) {
 
 // Exit evidence: resolve the active generation through the pointer and compare
 // every asset byte-for-byte against the files read from disk.
-export async function verifyGenerationParity({ pointerStore, objectStore, payloads }) {  const pointer = await pointerStore.get();
+export async function verifyGenerationParity({ pointerStore, objectStore, payloads }) {
+  const pointer = await pointerStore.get();
   if (!pointer) fail("PARITY_POINTER_MISSING", "no active pointer after publish");
   const manifestBytes = await objectStore.get(pointer.active.manifest_key);
   if (
@@ -1682,7 +1684,7 @@ export async function verifyGenerationParity({ pointerStore, objectStore, payloa
     fail("PARITY_MANIFEST_CROSS_BIND", pointer.active.manifest_key);
   }
   let bytes = 0;
-  for (const asset of manifest.assets) {
+  await runBoundedAsyncPool(manifest.assets, async (asset) => {
     const stored = await objectStore.get(asset.object_key);
     if (
       !(stored instanceof Uint8Array)
@@ -1700,7 +1702,7 @@ export async function verifyGenerationParity({ pointerStore, objectStore, payloa
       fail("PARITY_ASSET_MISMATCH", asset.path);
     }
     bytes += stored.byteLength;
-  }
+  });
   return { assets: manifest.assets.length, bytes, pointer };
 }
 

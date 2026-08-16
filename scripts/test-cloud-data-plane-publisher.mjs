@@ -352,7 +352,11 @@ console.log("manifest build from fixture tree ok (4 assets, 3 unique objects, pr
 
   const corrupt = createHarness(undefined, manifest.assets[0].object_key);
   await assertRejectsCode(publish(corrupt, NOW_2), "OBJECT_READBACK_INVALID");
-  assert.equal(corrupt.calls.gets, 1);
+  // Other immutable readbacks may already be in flight when the corrupt one
+  // rejects; the failure code remains fail-closed while the bounded pool
+  // permits those requests to settle.
+  assert.ok(corrupt.calls.gets >= 1);
+  assert.ok(corrupt.calls.gets <= immutableObjectCount);
 
   const seededObjects = createMemoryCloudDataPlane();
   await publishGeneration({
@@ -374,6 +378,57 @@ console.log("manifest build from fixture tree ok (4 assets, 3 unique objects, pr
   console.log(
     "putIfAbsent readback reduction ok (write readback kept + corruption detected; already-present skips only the immediate readback; pointer/asset parity kept)",
   );
+}
+
+// Final parity asset reads use the same bounded pool. Deferred reads make the
+// overlap and all-assets-complete properties deterministic without sleeps.
+{
+  const parityPlane = createMemoryCloudDataPlane();
+  await publishGeneration({
+    manifest,
+    payloads,
+    expectedPointerSequence: 0,
+    objectStore: parityPlane.objectStore,
+    ledger: parityPlane.ledger,
+    pointerStore: parityPlane.pointerStore,
+    policy: POLICY,
+    now: () => NOW_1,
+  });
+  const pendingReads = [];
+  const allAssetReadsStarted = new Promise((resolve) => {
+    pendingReads.started = resolve;
+  });
+  let activeReads = 0;
+  let maxActiveReads = 0;
+  const parityObjectStore = {
+    async get(key) {
+      if (key === `manifests/${manifest.generation_id}.json`) {
+        return parityPlane.objectStore.get(key);
+      }
+      activeReads += 1;
+      maxActiveReads = Math.max(maxActiveReads, activeReads);
+      let release;
+      const gate = new Promise((resolve) => { release = resolve; });
+      pendingReads.push({ release });
+      if (pendingReads.length === manifest.assets.length) pendingReads.started();
+      await gate;
+      activeReads -= 1;
+      return parityPlane.objectStore.get(key);
+    },
+  };
+  const parityCheck = verifyGenerationParity({
+    pointerStore: parityPlane.pointerStore,
+    objectStore: parityObjectStore,
+    payloads,
+  });
+  await allAssetReadsStarted;
+  assert.ok(maxActiveReads > 1);
+  assert.ok(maxActiveReads <= 8);
+  pendingReads.forEach(({ release }) => release());
+  const parity = await parityCheck;
+  assert.equal(parity.assets, manifest.assets.length);
+  assert.equal(parity.bytes, manifest.assets.reduce((sum, asset) => sum + asset.bytes, 0));
+  console.log("bounded parity reads ok (overlap >1, all assets complete)");
 }
 
 // --- coordinator endpoint stub over node:http --------------------------------

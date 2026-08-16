@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 
 import {
   ACTIVE_POINTER_SCHEMA,
+  DEFAULT_REMOTE_IO_CONCURRENCY,
   GENERATION_MANIFEST_SCHEMA,
   createMemoryCloudDataPlane,
   publishGeneration,
+  runBoundedAsyncPool,
   resolvePublicAsset,
   rollbackGeneration,
   sha256Bytes,
@@ -103,6 +105,145 @@ assert.equal(first.pointer.sequence, 1);
 assert.equal(first.pointer.previous, null);
 assert.equal(first.receipt.state, "promoted");
 assert.equal(first.receipt.operation, "publish");
+
+// Remote immutable publication uses a deterministic bounded pool: eight
+// deferred puts start, then the remaining two start only after capacity is
+// released. This proves overlap without allowing an unbounded fan-out.
+let poolManifest;
+let poolPayloads;
+{
+  assert.equal(DEFAULT_REMOTE_IO_CONCURRENCY, 8);
+  await assert.rejects(
+    runBoundedAsyncPool([], async () => {}, DEFAULT_REMOTE_IO_CONCURRENCY + 1),
+    /REMOTE_IO_CONCURRENCY_INVALID:9/,
+  );
+  const poolValues = Object.fromEntries(
+    Array.from({ length: 9 }, (_, index) => [
+      `public/data/pool-${index}.json`,
+      `{"value":${index}}\n`,
+    ]),
+  );
+  poolManifest = buildManifest(
+    "generation-pool",
+    Object.entries(poolValues).map(([path, text]) => ({ path, text })),
+  );
+  poolPayloads = payloadMap(poolManifest, poolValues);
+  const poolPlane = createMemoryCloudDataPlane();
+  const pending = [];
+  const startedEight = new Promise((resolve) => { pending.startedEight = resolve; });
+  const startedTen = new Promise((resolve) => { pending.startedTen = resolve; });
+  let inFlight = 0;
+  let maxInFlight = 0;
+  let completedObjects = 0;
+  const poolObjectStore = {
+    async putIfAbsent(key, bytes) {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      let release;
+      const gate = new Promise((resolve) => { release = resolve; });
+      pending.push({ release });
+      if (pending.length === 8) pending.startedEight();
+      if (pending.length === 10) pending.startedTen();
+      await gate;
+      inFlight -= 1;
+      const outcome = await poolPlane.objectStore.putIfAbsent(key, bytes);
+      completedObjects += 1;
+      return outcome;
+    },
+    get: poolPlane.objectStore.get,
+  };
+  const publishProbe = publishGeneration({
+    manifest: poolManifest,
+    payloads: poolPayloads,
+    expectedPointerSequence: 0,
+    objectStore: poolObjectStore,
+    ledger: poolPlane.ledger,
+    pointerStore: poolPlane.pointerStore,
+    policy: PUBLICATION_POLICY,
+    now: () => NOW,
+  });
+  await startedEight;
+  assert.equal(maxInFlight, 8);
+  pending.slice(0, 8).forEach(({ release }) => release());
+  await startedTen;
+  assert.equal(maxInFlight, 8);
+  pending.slice(8).forEach(({ release }) => release());
+  const poolPublished = await publishProbe;
+  assert.equal(poolPublished.summary.asset_count, 9);
+  assert.equal(completedObjects, 10);
+  console.log("bounded immutable publication ok (max in-flight 8, overlap >1, all 10 objects complete)");
+}
+
+// An immutable task failure rejects before the coordinator commit protocol;
+// any already-started object work cannot produce a prepared receipt or CAS.
+{
+  const failurePlane = createMemoryCloudDataPlane();
+  let putCalls = 0;
+  let prepareCalls = 0;
+  let casCalls = 0;
+  let rejectionObserved = false;
+  let postRejectionCalls = 0;
+  let releaseInitialWindow;
+  const initialWindowStarted = new Promise((resolve) => {
+    releaseInitialWindow = resolve;
+  });
+  const pendingInitialWindow = [];
+  const failingObjectStore = {
+    async putIfAbsent(key, bytes) {
+      putCalls += 1;
+      if (rejectionObserved) postRejectionCalls += 1;
+      if (putCalls === 1) throw new Error("injected immutable failure");
+      if (putCalls <= DEFAULT_REMOTE_IO_CONCURRENCY) {
+        let release;
+        const gate = new Promise((resolve) => { release = resolve; });
+        pendingInitialWindow.push({ release });
+        if (putCalls === DEFAULT_REMOTE_IO_CONCURRENCY) releaseInitialWindow();
+        await gate;
+      }
+      return failurePlane.objectStore.putIfAbsent(key, bytes);
+    },
+    get: failurePlane.objectStore.get,
+  };
+  const failingLedger = {
+    async get() { return null; },
+    async prepare() { prepareCalls += 1; },
+    async markPromoted() {},
+  };
+  const failingPointerStore = {
+    async get() { return null; },
+    async compareAndSwap() { casCalls += 1; },
+  };
+  const failurePublish = publishGeneration({
+    manifest: poolManifest,
+    payloads: poolPayloads,
+    expectedPointerSequence: 0,
+    objectStore: failingObjectStore,
+    ledger: failingLedger,
+    pointerStore: failingPointerStore,
+    policy: PUBLICATION_POLICY,
+    now: () => NOW,
+  });
+  const observedFailure = failurePublish.catch((error) => {
+    rejectionObserved = true;
+    throw error;
+  });
+  await initialWindowStarted;
+  assert.equal(putCalls, DEFAULT_REMOTE_IO_CONCURRENCY);
+  assert.ok(putCalls < 10);
+  pendingInitialWindow.forEach(({ release }) => release());
+  await assert.rejects(
+    observedFailure,
+    /injected immutable failure/,
+  );
+  const callsAtRejection = putCalls;
+  await Promise.resolve();
+  assert.equal(putCalls, callsAtRejection);
+  assert.equal(postRejectionCalls, 0);
+  assert.equal(callsAtRejection, DEFAULT_REMOTE_IO_CONCURRENCY);
+  assert.equal(prepareCalls, 0);
+  assert.equal(casCalls, 0);
+  console.log("bounded immutable failure gate ok (initial window only, no post-rejection calls or prepare/CAS)");
+}
 
 // Publication requires explicit freshness, size and public-payload policies.
 {
