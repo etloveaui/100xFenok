@@ -9,12 +9,23 @@ import { fileURLToPath } from "node:url";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { isEligibleRecoveryRun } from "./lib/data-supply-lkg-store.mjs";
 import { validateAttemptEvidence, validateAttemptShard } from "./build-data-supply-detection-floor.mjs";
-import { runNasdaqGiwSox, rotateSoxSnapshotHistory, retainLatestSnapshotDates, soxHistoryPathFor, validSoxHistory, SOX_PERSISTENCE_POLICY } from "./fetch-nasdaq-giw-sox-constituents.mjs";
+import { runNasdaqGiwSox as runNasdaqGiwSoxProduction, rotateSoxSnapshotHistory, retainLatestSnapshotDates, soxHistoryPathFor, validSoxHistory, SOX_PERSISTENCE_POLICY } from "./fetch-nasdaq-giw-sox-constituents.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OBSERVED_AT = "2026-07-16T02:00:00.000Z";
 const DATES = ["2026-07-16", "2026-07-15"];
+
+// Synthetic fixture runs must not inherit the host Actions attempt context.
+// Production defaults still read GITHUB_RUN_ATTEMPT; the test harness pins a
+// first attempt and lets individual cases override it when retry semantics are
+// under test.
+const runNasdaqGiwSox = (options = {}) => runNasdaqGiwSoxProduction({
+  runId: "local",
+  runAttempt: 1,
+  eventName: "local",
+  ...options,
+});
 
 function response(statusCode, payload) {
   return { statusCode, body: typeof payload === "string" ? payload : JSON.stringify(payload) };
