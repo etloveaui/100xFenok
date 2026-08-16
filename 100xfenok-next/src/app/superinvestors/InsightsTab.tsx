@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import TransitionLink from "@/components/TransitionLink";
 import TickerChip from "@/components/TickerChip";
+import { fetch13FJson } from "@/hooks/use13FData";
 import { ROUTES } from "@/lib/routes";
 import type {
   BuyingPressureData,
@@ -54,10 +55,8 @@ let bpPromise: Promise<BuyingPressureData | null> | null = null;
 function loadBuyingPressure(): Promise<BuyingPressureData | null> {
   if (bpCache) return Promise.resolve(bpCache);
   if (bpPromise) return bpPromise;
-  bpPromise = fetch("/data/sec-13f/analytics/buying_pressure.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((d) => { bpCache = d; return d; })
-    .catch(() => { bpPromise = null; return null; });
+  bpPromise = fetch13FJson<BuyingPressureData>("/data/sec-13f/analytics/buying_pressure.json")
+    .then((d) => { if (!d) { bpPromise = null; return null; } bpCache = d; return d; });
   return bpPromise;
 }
 
@@ -66,10 +65,8 @@ let trPromise: Promise<TradesRankingData | null> | null = null;
 function loadTradesRanking(): Promise<TradesRankingData | null> {
   if (trCache) return Promise.resolve(trCache);
   if (trPromise) return trPromise;
-  trPromise = fetch("/data/sec-13f/analytics/trades_ranking.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((d) => { trCache = d; return d; })
-    .catch(() => { trPromise = null; return null; });
+  trPromise = fetch13FJson<TradesRankingData>("/data/sec-13f/analytics/trades_ranking.json")
+    .then((d) => { if (!d) { trPromise = null; return null; } trCache = d; return d; });
   return trPromise;
 }
 
@@ -78,10 +75,8 @@ let npPromise: Promise<NewPositionsData | null> | null = null;
 function loadNewPositions(): Promise<NewPositionsData | null> {
   if (npCache) return Promise.resolve(npCache);
   if (npPromise) return npPromise;
-  npPromise = fetch("/data/sec-13f/analytics/new_positions.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((d) => { npCache = d; return d; })
-    .catch(() => { npPromise = null; return null; });
+  npPromise = fetch13FJson<NewPositionsData>("/data/sec-13f/analytics/new_positions.json")
+    .then((d) => { if (!d) { npPromise = null; return null; } npCache = d; return d; });
   return npPromise;
 }
 
@@ -90,10 +85,8 @@ let hhiPromise: Promise<HhiData | null> | null = null;
 function loadHhi(): Promise<HhiData | null> {
   if (hhiCache) return Promise.resolve(hhiCache);
   if (hhiPromise) return hhiPromise;
-  hhiPromise = fetch("/data/sec-13f/analytics/hhi.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((d) => { hhiCache = d; return d; })
-    .catch(() => { hhiPromise = null; return null; });
+  hhiPromise = fetch13FJson<HhiData>("/data/sec-13f/analytics/hhi.json")
+    .then((d) => { if (!d) { hhiPromise = null; return null; } hhiCache = d; return d; });
   return hhiPromise;
 }
 
@@ -102,10 +95,8 @@ let cvPromise: Promise<ConvictionData | null> | null = null;
 function loadConviction(): Promise<ConvictionData | null> {
   if (cvCache) return Promise.resolve(cvCache);
   if (cvPromise) return cvPromise;
-  cvPromise = fetch("/data/sec-13f/analytics/conviction.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((d) => { cvCache = d; return d; })
-    .catch(() => { cvPromise = null; return null; });
+  cvPromise = fetch13FJson<ConvictionData>("/data/sec-13f/analytics/conviction.json")
+    .then((d) => { if (!d) { cvPromise = null; return null; } cvCache = d; return d; });
   return cvPromise;
 }
 
@@ -114,10 +105,8 @@ let cePromise: Promise<ConvictionEntriesData | null> | null = null;
 function loadConvictionEntries(): Promise<ConvictionEntriesData | null> {
   if (ceCache) return Promise.resolve(ceCache);
   if (cePromise) return cePromise;
-  cePromise = fetch("/data/sec-13f/analytics/conviction_entries.json")
-    .then((r) => (r.ok ? r.json() : null))
-    .then((d) => { ceCache = d; return d; })
-    .catch(() => { cePromise = null; return null; });
+  cePromise = fetch13FJson<ConvictionEntriesData>("/data/sec-13f/analytics/conviction_entries.json")
+    .then((d) => { if (!d) { cePromise = null; return null; } ceCache = d; return d; });
   return cePromise;
 }
 
@@ -314,11 +303,14 @@ function BuyingPressureCard({ data, trades }: { data: BuyingPressureData | null;
       .filter((r) => r.net_buyers + r.net_sellers >= 3)
       .sort((a, b) => a.pressure - b.pressure)
       .slice(0, 12);
+    const legacyCohortLabel = data?.metadata.current_cohort_investors
+      ? `${data.metadata.current_cohort_investors}인`
+      : "현재 코호트";
     return {
       buyRows: legacyBuy,
       sellRows: legacySell,
       quarter: data?.metadata.quarter ?? "",
-      note: "29인 전체 포트폴리오 변화량 기반 매수/매도 압력 (net_buyers+net_sellers≥3 필터)",
+      note: `${legacyCohortLabel} 전체 포트폴리오 변화량 기반 매수/매도 압력 (net_buyers+net_sellers≥3 필터)`,
     };
   }, [data, trades]);
 

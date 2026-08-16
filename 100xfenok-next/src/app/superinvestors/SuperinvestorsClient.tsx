@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
-import { PRIVATE_INVESTOR_IDS, use13FData, useInvestorDetail } from "@/hooks/use13FData";
+import { fetch13FJson, PRIVATE_INVESTOR_IDS, use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { CANONICAL_SECTORS, resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
@@ -102,18 +102,14 @@ let turnoverPromise: Promise<TurnoverData["by_investor"] | null> | null = null;
 function loadTurnover(): Promise<TurnoverData["by_investor"] | null> {
   if (turnoverCache) return Promise.resolve(turnoverCache);
   if (turnoverPromise) return turnoverPromise;
-  turnoverPromise = fetch("/data/sec-13f/analytics/turnover.json")
-    .then((res) => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json() as Promise<TurnoverData>;
-    })
+  turnoverPromise = fetch13FJson<TurnoverData>("/data/sec-13f/analytics/turnover.json")
     .then((data) => {
+      if (!data) {
+        turnoverPromise = null;
+        return null;
+      }
       turnoverCache = data.by_investor ?? {};
       return turnoverCache;
-    })
-    .catch(() => {
-      turnoverPromise = null;
-      return null;
     });
   return turnoverPromise;
 }
@@ -160,19 +156,15 @@ function normalizePortfolioViews(data: unknown): PortfolioViewsData | null {
 function loadPortfolioViews(): Promise<PortfolioViewsData | null> {
   if (pvCache) return Promise.resolve(pvCache);
   if (pvPromise) return pvPromise;
-  pvPromise = fetch("/data/sec-13f/analytics/portfolio_views.json")
-    .then((res) => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    })
-    .then((data) => {
-      pvCache = normalizePortfolioViews(data);
-      return pvCache;
-    })
-    .catch(() => {
+  pvPromise = fetch13FJson<unknown>("/data/sec-13f/analytics/portfolio_views.json").then((data) => {
+    if (!data) {
       pvPromise = null;
       return null;
-    });
+    }
+    pvCache = normalizePortfolioViews(data);
+    if (!pvCache) pvPromise = null;
+    return pvCache;
+  });
   return pvPromise;
 }
 
@@ -393,10 +385,14 @@ function GuruDetailPanel({
   id,
   summary,
   pvData,
+  pvLoading,
+  pvFailed,
 }: {
   id: string;
   summary: SummaryInvestor;
   pvData: PortfolioViewsData | null;
+  pvLoading: boolean;
+  pvFailed: boolean;
 }) {
   const { data, loading, status } = useInvestorDetail(id);
   const [turnover, setTurnover] = useState<number | null | undefined>(undefined);
@@ -586,6 +582,24 @@ function GuruDetailPanel({
             ) : null}
             <GuruTrendBlock investorId={id} />
           </div>
+        </div>
+      ) : pvLoading ? (
+        <div
+          data-superinvestor-guru-portfolio-state="loading"
+          role="status"
+          aria-live="polite"
+          className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500"
+        >
+          보유 포트폴리오 데이터를 불러오는 중입니다…
+        </div>
+      ) : pvFailed ? (
+        <div
+          data-superinvestor-guru-portfolio-state="error"
+          role="status"
+          aria-live="polite"
+          className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"
+        >
+          보유 포트폴리오 데이터를 불러오지 못했습니다.
         </div>
       ) : null}
 
@@ -819,6 +833,7 @@ export default function SuperinvestorsClient({
   const [tradesBoughtExpanded, setTradesBoughtExpanded] = useState(false);
   const [tradesSoldExpanded, setTradesSoldExpanded] = useState(false);
   const [pvData, setPvData] = useState<PortfolioViewsData | null>(null);
+  const [pvLoading, setPvLoading] = useState(true);
   const [pvFailed, setPvFailed] = useState(false);
   const [totalPortfolioOpen, setTotalPortfolioOpen] = useState(false);
 
@@ -925,9 +940,9 @@ export default function SuperinvestorsClient({
       setTradesLoading(true);
       setTradesFailed(false);
       try {
-        const res = await fetch("/data/sec-13f/analytics/trades_ranking.json");
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = normalizeTradesRanking(await res.json());
+        const json = normalizeTradesRanking(
+          await fetch13FJson<unknown>("/data/sec-13f/analytics/trades_ranking.json"),
+        );
         if (!json) throw new Error("Invalid trades_ranking shape");
         if (!cancelled) setTradesData(json);
       } catch {
@@ -944,8 +959,14 @@ export default function SuperinvestorsClient({
     let cancelled = false;
     loadPortfolioViews().then((data) => {
       if (cancelled) return;
-      if (data) setPvData(data);
-      else setPvFailed(true);
+      setPvData(data);
+      setPvFailed(!data);
+      setPvLoading(false);
+    }).catch(() => {
+      if (cancelled) return;
+      setPvData(null);
+      setPvFailed(true);
+      setPvLoading(false);
     });
     return () => { cancelled = true; };
   }, []);
@@ -957,6 +978,12 @@ export default function SuperinvestorsClient({
     summary?.metadata?.investor_count ??
     summary?.metadata?.total_investors ??
     null;
+  const portfolioCohortCount =
+    typeof pvData?.metadata?.cohort_count === "number" &&
+    Number.isFinite(pvData.metadata.cohort_count) &&
+    pvData.metadata.cohort_count > 0
+      ? pvData.metadata.cohort_count
+      : null;
   const trackedInvestorCount =
     summary?.metadata?.investor_count ??
     summary?.metadata?.total_investors ??
@@ -1158,7 +1185,15 @@ export default function SuperinvestorsClient({
                 );
               })
             ) : (
-              <CpEmptyState message={pvFailed ? "섹터 로테이션 데이터를 불러오지 못했습니다." : "섹터 로테이션 데이터를 불러오는 중입니다…"} />
+              <CpEmptyState
+                message={
+                  pvLoading
+                    ? "섹터 로테이션 데이터를 불러오는 중입니다…"
+                    : pvFailed
+                    ? "섹터 로테이션 데이터를 불러오지 못했습니다."
+                    : "섹터 로테이션 데이터가 없습니다."
+                }
+              />
             )}
           </CpSectionCard>
         </div>
@@ -1470,7 +1505,25 @@ export default function SuperinvestorsClient({
       {/* Consensus */}
       <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.consensus} active={tab === "consensus"} className="space-y-3">
           {/* Total portfolio (collapsible) */}
-          {pvData && !pvFailed ? (
+          {pvLoading ? (
+            <div
+              data-superinvestor-portfolio-state="loading"
+              role="status"
+              aria-live="polite"
+              className="rounded-[1.2rem] border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500"
+            >
+              거장 토탈 포트폴리오 데이터를 불러오는 중입니다… 코호트 확인 중
+            </div>
+          ) : pvFailed ? (
+            <div
+              data-superinvestor-portfolio-state="error"
+              role="status"
+              aria-live="polite"
+              className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700"
+            >
+              거장 토탈 포트폴리오 데이터를 불러오지 못했습니다. 다른 13F 패널은 계속 확인할 수 있습니다.
+            </div>
+          ) : pvData ? (
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
               <button
                 type="button"
@@ -1487,7 +1540,7 @@ export default function SuperinvestorsClient({
                       {pvData.metadata.quarter}
                     </span>
                     <span className="text-[10px] font-semibold text-[var(--c-ink-3)]">
-                      {pvData.total.treemap.length}종목 · 30인 합산
+                      {pvData.total.treemap.length}종목 · {portfolioCohortCount != null ? `${formatInteger(portfolioCohortCount)}인 합산` : "코호트 확인 중"}
                     </span>
                   </div>
                 </div>
@@ -1770,7 +1823,15 @@ export default function SuperinvestorsClient({
                       </TransitionLink>
                     </div>
 
-                    {isOpen ? <GuruDetailPanel id={id} summary={inv} pvData={pvData} /> : null}
+                    {isOpen ? (
+                      <GuruDetailPanel
+                        id={id}
+                        summary={inv}
+                        pvData={pvData}
+                        pvLoading={pvLoading}
+                        pvFailed={pvFailed}
+                      />
+                    ) : null}
                   </div>
                 );
               })}

@@ -12,9 +12,9 @@ import type {
   SuperInvestorsDataResult,
 } from "@/lib/superinvestors/types";
 
-const FETCH_TIMEOUT_MS = 6000;
+export const SEC_13F_FETCH_TIMEOUT_MS = 6000;
 
-async function fetchJson<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
+export async function fetch13FJson<T>(url: string, timeoutMs = SEC_13F_FETCH_TIMEOUT_MS): Promise<T | null> {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -50,12 +50,12 @@ export function use13FData(): SuperInvestorsDataResult {
 
     void (async () => {
       const [consensus, summary, byTicker, enhancedConsensus, bySector, convictionEntries] = await Promise.all([
-        fetchJson<ConsensusData>("/data/sec-13f/analytics/consensus.json"),
-        fetchJson<SummaryData>("/data/sec-13f/summary.json"),
-        fetchJson<ByTickerData>("/data/sec-13f/by_ticker.json"),
-        fetchJson<EnhancedConsensusData>("/data/sec-13f/analytics/enhanced_consensus.json"),
-        fetchJson<SectorHoldingsData>("/data/sec-13f/by_sector.json"),
-        fetchJson<ConvictionEntriesData>("/data/sec-13f/analytics/conviction_entries.json"),
+        fetch13FJson<ConsensusData>("/data/sec-13f/analytics/consensus.json"),
+        fetch13FJson<SummaryData>("/data/sec-13f/summary.json"),
+        fetch13FJson<ByTickerData>("/data/sec-13f/by_ticker.json"),
+        fetch13FJson<EnhancedConsensusData>("/data/sec-13f/analytics/enhanced_consensus.json"),
+        fetch13FJson<SectorHoldingsData>("/data/sec-13f/by_sector.json"),
+        fetch13FJson<ConvictionEntriesData>("/data/sec-13f/analytics/conviction_entries.json"),
       ]);
 
       if (!isMountedRef.current) return;
@@ -128,7 +128,7 @@ export function useInvestorDetail(name: string | null) {
       setLoading(true);
       setStatus("loading");
       const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+      const timeoutId = window.setTimeout(() => controller.abort(), SEC_13F_FETCH_TIMEOUT_MS);
       try {
         const response = await fetch(`/data/sec-13f/investors/${name}.json`, { signal: controller.signal });
         if (!response.ok) {
