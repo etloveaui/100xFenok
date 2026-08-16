@@ -195,8 +195,10 @@ const DEFAULT_PUBLISH_OUTCOMES_ROOT = path.join(
 //                    missing or malformed declaration (they never fall back).
 //                    { per_asset_resolver: "stockanalysis_detail_source_timestamp" }
 //                    applies the existing StockAnalysis ETF acquisition priority
-//                    independently to every enrolled JSON payload; it ignores
-//                    fetched_at and any top-level source_as_of field.
+//                    independently to every enrolled JSON payload. A payload
+//                    with NO source candidate at all is an availability
+//                    observation, so its validated fetched_at is the truthful
+//                    observation clock; malformed source candidates still fail.
 // P5+ adds more families here.
 export const FAMILIES = {
   "oecd-cli": {
@@ -502,10 +504,11 @@ export const FAMILIES = {
   "stockanalysis-etf-detail": {
     root: "data/stockanalysis/etfs",
     privacy_class: "private",
-    // Truthful tree clock: every enrolled payload must carry its own valid
-    // source_as_of, per-asset dates are stored in the manifest, and the family
-    // summary is the conservative MINIMUM. A missing or malformed value fails
-    // before any write rather than silently inheriting the publication time.
+    // Truthful tree clock: each enrolled payload contributes either a valid
+    // provider source date or, only when it has no source candidate at all, a
+    // validated availability-observation date. Per-asset dates are stored in
+    // the manifest and the family summary is the conservative MINIMUM. Missing
+    // or malformed evidence fails before any write.
     source_as_of: { per_asset_resolver: "stockanalysis_detail_source_timestamp" },
     // Measured 2026-08-16 and re-measured at this base: 5,605 assets /
     // 1,028,334,686 bytes. Caps carry roughly 25% headroom over the measurement
@@ -696,17 +699,50 @@ function stockAnalysisLatestHistorySourceDay(payload) {
 // Mirrors stockanalysis_detail_source_timestamp in fetch-stockanalysis.py.
 // The manifest only needs an ISO day, so quote epoch precision is normalized
 // after the Python-equivalent priority/fallback decision.
-function stockAnalysisDetailSourceDay(payload) {
+function stockAnalysisHasSourceCandidate(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
+  const raw = payload.raw && typeof payload.raw === "object" ? payload.raw : {};
+  const normalized = payload.normalized && typeof payload.normalized === "object"
+    ? payload.normalized
+    : {};
+  const data = payload.data && typeof payload.data === "object" ? payload.data : {};
+  const historyPeriods = normalized.history_periods && typeof normalized.history_periods === "object"
+    ? normalized.history_periods
+    : {};
+  const present = (value) => value !== undefined && value !== null && value !== "";
+  const quoteCandidate = (quote) => quote
+    && typeof quote === "object"
+    && !Array.isArray(quote)
+    && (present(quote.ts) || present(quote.td));
+  return quoteCandidate(raw.quote)
+    || quoteCandidate(normalized.quote)
+    || present(raw.holdings?.date)
+    || present(normalized.holdings_updated)
+    || [normalized.history, historyPeriods.daily_1y, data.history_1y]
+      .some((rows) => Array.isArray(rows) && rows.length > 0);
+}
+
+function stockAnalysisDetailSourceObservation(payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
   const raw = payload.raw && typeof payload.raw === "object" ? payload.raw : {};
   const normalized = payload.normalized && typeof payload.normalized === "object"
     ? payload.normalized
     : {};
-  return stockAnalysisQuoteSourceDay(raw.quote)
+  const sourceDay = stockAnalysisQuoteSourceDay(raw.quote)
     || stockAnalysisQuoteSourceDay(normalized.quote)
     || stockAnalysisSourceDate(raw.holdings?.date)
     || stockAnalysisSourceDate(normalized.holdings_updated)
     || stockAnalysisLatestHistorySourceDay(payload);
+  if (sourceDay !== null) return { day: sourceDay, origin: "source" };
+  // Empty provider stubs are canonical evidence too. They carry no market-data
+  // source candidate to date, so fetched_at dates the availability observation
+  // itself. Never use this fallback when a candidate was present but malformed:
+  // that would turn corruption into apparent freshness.
+  if (stockAnalysisHasSourceCandidate(payload)) return null;
+  const observationDay = stockAnalysisCollectionDay(payload.fetched_at);
+  return observationDay === null
+    ? null
+    : { day: observationDay, origin: "acquisition-observation" };
 }
 
 // Resolve the family's SOURCE time for the manifest's source_as_of field.
@@ -725,8 +761,9 @@ function stockAnalysisDetailSourceDay(payload) {
 //     "per-asset" (truthful per-asset labeling, not family-index).
 //   - { per_asset_resolver: "stockanalysis_detail_source_timestamp" }:
 //     apply the StockAnalysis ETF detail source priority to each enrolled JSON
-//     payload; the summary is the conservative MINIMUM and fetched_at is never
-//     used as source time.
+//     payload. The summary is the conservative MINIMUM. Only a payload with no
+//     source candidate at all may use fetched_at as its availability-observation
+//     clock; malformed candidates never fall back.
 //   - { file, max_date: { array, key } }: take the MAXIMUM normalized key over
 //     the named top-level array of the JSON file at <root>/<file> (e.g. the
 //     FDIC latest reported quarter). The collection time is never used; a
@@ -852,6 +889,7 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
       fail("FAMILY_ASOF_INVALID", "per-asset resolver source_as_of requires at least one enrolled payload");
     }
     const perAsset = new Map();
+    let observationFallbackCount = 0;
     for (const [enrolledPath, bytes] of payloads) {
       if (!enrolledPath.startsWith(`${relRoot}/`)) {
         fail(
@@ -861,17 +899,23 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
       }
       const relative = enrolledPath.slice(relRoot.length + 1);
       const json = decodeJson(bytes);
-      const value = stockAnalysisDetailSourceDay(json);
-      if (value === null) {
+      const resolved = stockAnalysisDetailSourceObservation(json);
+      if (resolved === null) {
         fail(
           "FAMILY_ASOF_INVALID",
-          `${relative} has no valid StockAnalysis detail source timestamp (fetched_at is acquisition time only)`,
+          `${relative} has no valid StockAnalysis detail source or availability-observation timestamp`,
         );
       }
-      perAsset.set(relative, value);
+      if (resolved.origin === "acquisition-observation") observationFallbackCount += 1;
+      perAsset.set(relative, resolved.day);
     }
     const values = [...perAsset.values()].sort();
-    return { value: values[0], origin: "per-asset", perAsset };
+    const origin = observationFallbackCount === 0
+      ? "per-asset"
+      : observationFallbackCount === perAsset.size
+        ? "per-asset-observation"
+        : "per-asset-mixed-source-observation";
+    return { value: values[0], origin, perAsset, observationFallbackCount };
   }
   if (config.files) {
     if (typeof config.files !== "object" || config.files === null || Array.isArray(config.files)) {
@@ -2241,6 +2285,9 @@ export async function runPublisherCli({
         generation_id: manifest.generation_id,
         source_as_of: sourceAsOf.value,
         source_as_of_origin: sourceAsOf.origin,
+        ...(sourceAsOf.observationFallbackCount !== undefined
+          ? { source_as_of_observation_fallbacks: sourceAsOf.observationFallbackCount }
+          : {}),
         ...plan,
         // Explicit-enrollment families also list each enrolled asset; tree
         // families (oecd-cli) keep the original summary shape byte-identical.
@@ -2470,6 +2517,9 @@ export async function runPublisherCli({
       source_sha: manifest.source_sha,
       source_as_of: effectiveAsOf,
       source_as_of_origin: sourceAsOf.origin,
+      ...(sourceAsOf.observationFallbackCount !== undefined
+        ? { source_as_of_observation_fallbacks: sourceAsOf.observationFallbackCount }
+        : {}),
       receipt_id: published.receipt.receipt_id,
       receipt_state: published.receipt.state,
       pointer_sequence_before: pointerSequenceBefore,

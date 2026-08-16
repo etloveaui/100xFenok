@@ -1620,8 +1620,10 @@ try {
 
     // The StockAnalysis ETF tree resolves the same source clock used by the
     // Python acquisition path, rather than looking for a hand-maintained key.
-    // Quote -> holdings -> latest history is per asset; fetched_at and a stale
-    // top-level source_as_of are deliberately ignored.
+    // Quote -> holdings -> latest history is per asset. An empty provider stub
+    // uses fetched_at only as its availability-observation clock; fetched_at
+    // never masks a malformed source candidate, and stale top-level
+    // source_as_of remains ignored.
     const stockAnalysisRoot = "data/stockanalysis/etfs";
     const stockAnalysisFamily = FAMILIES["stockanalysis-etf-detail"];
     assert.equal(
@@ -1664,16 +1666,24 @@ try {
             },
           },
         })],
+        [`${stockAnalysisRoot}/ONLY_FETCHED.json`, stockAnalysisPayload({
+          fetched_at: "2026-07-15T00:00:00Z",
+          source_as_of: "not-used-as-source-evidence",
+          raw: { quote: null, holdings: {}, history_periods: {} },
+          normalized: { quote: null, holdings_updated: null, history_periods: {} },
+        })],
       ]),
       createdIsoDay: "2026-08-17",
       relRoot: stockAnalysisRoot,
     });
-    assert.equal(stockAnalysisValid.origin, "per-asset");
+    assert.equal(stockAnalysisValid.origin, "per-asset-mixed-source-observation");
+    assert.equal(stockAnalysisValid.observationFallbackCount, 1);
     assert.equal(stockAnalysisValid.value, "2026-07-06");
     assert.deepEqual([...stockAnalysisValid.perAsset.entries()].sort(), [
       ["AAAD.json", "2026-07-08"],
       ["HISTORY.json", "2026-07-07"],
       ["HOLDINGS.json", "2026-07-06"],
+      ["ONLY_FETCHED.json", "2026-07-15"],
     ]);
     const actualAAAD = JSON.parse(
       await readFile(path.join(REPO_ROOT, "data/stockanalysis/etfs/AAAD.json"), "utf8"),
@@ -1685,25 +1695,24 @@ try {
       relRoot: stockAnalysisRoot,
     });
     assert.equal(actualAAADResolved.perAsset.get("AAAD.json"), "2026-07-08");
-    await assertRejectsCode(
-      async () => resolveSourceAsOf({
-        family: stockAnalysisFamily,
-        payloads: new Map([
-          [`${stockAnalysisRoot}/ONLY_FETCHED.json`, stockAnalysisPayload({
-            fetched_at: "2026-08-17T00:00:00Z",
-            source_as_of: "not-used-as-source-evidence",
-          })],
-        ]),
-        createdIsoDay: "2026-08-17",
-        relRoot: stockAnalysisRoot,
-      }),
-      "FAMILY_ASOF_INVALID",
+    const actualABXB = JSON.parse(
+      await readFile(path.join(REPO_ROOT, "data/stockanalysis/etfs/ABXB.json"), "utf8"),
     );
+    const actualABXBResolved = resolveSourceAsOf({
+      family: stockAnalysisFamily,
+      payloads: new Map([[`${stockAnalysisRoot}/ABXB.json`, stockAnalysisPayload(actualABXB)]]),
+      createdIsoDay: "2026-08-17",
+      relRoot: stockAnalysisRoot,
+    });
+    assert.equal(actualABXBResolved.origin, "per-asset-observation");
+    assert.equal(actualABXBResolved.observationFallbackCount, 1);
+    assert.equal(actualABXBResolved.perAsset.get("ABXB.json"), "2026-07-15");
     await assertRejectsCode(
       async () => resolveSourceAsOf({
         family: stockAnalysisFamily,
         payloads: new Map([
           [`${stockAnalysisRoot}/BAD_DATE.json`, stockAnalysisPayload({
+            fetched_at: "2026-07-15T00:00:00Z",
             raw: { holdings: { date: "2026-02-31" } },
             normalized: { history_periods: { daily_1y: [] } },
           })],
@@ -1713,7 +1722,7 @@ try {
       }),
       "FAMILY_ASOF_INVALID",
     );
-    console.log("stockanalysis detail source clock ok (quote/holdings/history priority, per-asset minimum, fetched_at ignored, missing/invalid fail)");
+    console.log("stockanalysis detail source clock ok (source priority, empty observation fallback, malformed evidence fail)");
 
     // Legacy modes unchanged: { key } payload mode and { file, key }
     // family-index mode still produce one uniform family date.
