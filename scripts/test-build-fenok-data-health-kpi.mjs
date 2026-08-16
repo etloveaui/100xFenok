@@ -814,6 +814,21 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     terminal_provider_unsupported: 1,
     terminal_retry_overlap: 1,
   });
+
+  const coreOnly = buildStockDenominatorReconciliation({
+    coverageIndex,
+    yahooBatchState: { ...yahooBatchState, active_universe_scope: "core_etf" },
+    stockPromotionDryRun,
+  });
+  assert.equal(coreOnly.status, "blocked");
+  assert.match(coreOnly.status_message, /not the stock-compatible all_sources scope/);
+
+  const stockCompatible = buildStockDenominatorReconciliation({
+    coverageIndex,
+    yahooBatchState: { ...yahooBatchState, active_universe_scope: "all_sources" },
+    stockPromotionDryRun,
+  });
+  assert.equal(stockCompatible.status, "ready");
   assert.equal(reconciled.equations.yahoo_active_partition.ok, true);
   assert.equal(reconciled.equations.retry_overlay.ok, true);
   assert.equal(reconciled.equations.terminal_subset.ok, true);

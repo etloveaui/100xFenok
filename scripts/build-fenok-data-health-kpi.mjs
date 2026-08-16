@@ -1652,6 +1652,10 @@ export function buildStockDenominatorReconciliation({
   if (!yahooBatchState || !yahooCounts || typeof yahooCounts !== "object" || Array.isArray(yahooCounts)) {
     blockers.push("Yahoo active-universe counts are missing");
   } else {
+    const activeUniverseScope = yahooBatchState.active_universe_scope;
+    if (activeUniverseScope !== undefined && activeUniverseScope !== null && activeUniverseScope !== "all_sources") {
+      blockers.push(`Yahoo active-universe snapshot scope is ${String(activeUniverseScope)}, not the stock-compatible all_sources scope`);
+    }
     for (const field of activeFields) {
       if (!strictNonNegativeInteger(yahooCounts[field])) {
         blockers.push(`Yahoo count ${field} is missing or not a non-negative integer`);

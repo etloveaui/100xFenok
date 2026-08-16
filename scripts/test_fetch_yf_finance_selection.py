@@ -2359,6 +2359,26 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.assertEqual(index["counts"]["fresh"], 0)
         self.assertEqual(index["counts"]["lkg"], 0)
 
+    def test_core_etf_index_does_not_replace_stock_compatible_index(self) -> None:
+        store = self.fetcher.YahooBatchStateStore(
+            self.root / "admin" / "yahoo-batch-quote-history",
+            self.fetcher.OUT_DIR,
+        )
+        core_run = {**self._run("core-etf"), "active_universe_scope": "core_etf"}
+        core_index = store.rebuild_index({"ETF"}, core_run)
+        core_path = store.root / "index-core-etf.json"
+        stock_path = store.root / "index.json"
+
+        self.assertEqual(core_index["active_universe_scope"], "core_etf")
+        self.assertTrue(core_path.exists())
+        self.assertFalse(stock_path.exists())
+
+        stock_run = {**self._run("stock"), "active_universe_scope": "all_sources"}
+        stock_index = store.rebuild_index({"STOCK"}, stock_run)
+        self.assertEqual(stock_index["active_universe_scope"], "all_sources")
+        self.assertEqual(json.loads(core_path.read_text(encoding="utf-8"))["active_universe_scope"], "core_etf")
+        self.assertEqual(json.loads(stock_path.read_text(encoding="utf-8"))["active_universe_scope"], "all_sources")
+
     def test_observed_and_terminal_state_win_over_stale_pending_inventory(self) -> None:
         store = self.fetcher.YahooBatchStateStore(
             self.root / "admin" / "yahoo-batch-quote-history",

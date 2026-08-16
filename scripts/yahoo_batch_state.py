@@ -14,6 +14,8 @@ NEW_LISTING_PENDING_DAYS = 31
 ERROR_TEXT_LIMIT = 1000
 PROMOTION_CONTRACT_PROVIDER_OBSERVATION_V2 = "provider_observation/v2"
 ACTIVE_UNIVERSE_SCHEMA_VERSION = "yahoo-batch-active-universe/v1"
+CORE_ETF_INDEX_FILENAME = "index-core-etf.json"
+DEFAULT_INDEX_FILENAME = "index.json"
 TERMINAL_RESOLUTION_STATE = "terminal_provider_unsupported"
 PROMOTION_DEFERRAL_REASONS = {
     "foreign_writer_conflict",
@@ -995,6 +997,7 @@ class YahooBatchStateStore:
 
     def rebuild_index(self, active_universe: set[str], run: dict, batch_failure: str | None = None) -> dict:
         active = set(active_universe)
+        active_universe_scope = str(run.get("active_universe_scope") or "").strip() or None
         counts = {
             "active": len(active),
             "untracked": 0,
@@ -1170,6 +1173,7 @@ class YahooBatchStateStore:
             "schema_version": "yahoo-batch-quote-history-index/v1",
             "generated_at": str(run.get("observed_at") or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
             "lane_id": "yahoo_batch_quote_history",
+            "active_universe_scope": active_universe_scope,
             "counts": counts,
             "oldest_source_as_of": oldest[0],
             "oldest_source_ticker": oldest[1],
@@ -1225,5 +1229,6 @@ class YahooBatchStateStore:
                 "Pending history is a normal new-listing state and self-resolves on a natural Yahoo run."
             ),
         }
-        _write_json(self.root / "index.json", index)
+        index_filename = CORE_ETF_INDEX_FILENAME if active_universe_scope == "core_etf" else DEFAULT_INDEX_FILENAME
+        _write_json(self.root / index_filename, index)
         return index

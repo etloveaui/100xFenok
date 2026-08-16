@@ -2150,6 +2150,7 @@ def main():
         "schedule": args.event_schedule,
         "natural": args.natural_run,
         "shard": args.shard,
+        "active_universe_scope": "core_etf" if args.core_daily_basket else "all_sources" if state_store else "selection",
         "observed_at": _observed_now(),
     }
     terminal_evidence = state_store.load_terminal_evidence(S1_STOCK_PROMOTION_DRY_RUN) if state_store else None
