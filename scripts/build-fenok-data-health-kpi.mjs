@@ -3000,6 +3000,19 @@ function packageScriptOrderCheck(scriptName, tokens) {
   return true;
 }
 
+// Update Manifest invokes the shared projection runner from both its initial
+// path and its push-retry loop. S14 lives in that runner, so checking only the
+// workflow YAML for the nested npm command produces a false degraded KPI.
+function updateManifestKpiBuildWired() {
+  return workflowCheck(
+    ".github/workflows/update-manifest.yml",
+    "bash scripts/update-manifest-projections.sh",
+  ) && workflowCheck(
+    "scripts/update-manifest-projections.sh",
+    "npm --prefix 100xfenok-next run build:fenok-data-health-kpi",
+  );
+}
+
 function deployWorkerKpiGateWired() {
   return workflowCheck(".github/workflows/deploy-worker.yml", "        run: npm run cf:build\n")
     && packageScriptCheck("cf:build", "npm run cf:build:steps")
@@ -3017,7 +3030,7 @@ function buildAutomationLane() {
   return lane("automation_contract", "Daily automation and deploy gates", [
     check("sync_static_builds_kpi", "sync-static KPI build", workflowCheck("100xfenok-next/package.json", "build:fenok-data-health-kpi"), "package script wiring"),
     check("sync_static_checks_kpi", "sync-static KPI check", workflowCheck("100xfenok-next/package.json", "qa:fenok-data-health-kpi"), "package gate wiring"),
-    check("update_manifest_rebuilds_kpi", "manifest reconciliation", workflowCheck(".github/workflows/update-manifest.yml", "build:fenok-data-health-kpi"), "update-manifest rebuild path"),
+    check("update_manifest_rebuilds_kpi", "manifest reconciliation", updateManifestKpiBuildWired(), "update-manifest rebuild path"),
     check("deploy_worker_checks_kpi", "Worker deploy gate", deployWorkerKpiGateWired(), "deploy build/reconcile/verify wiring"),
     check("deploy_worker_smokes_kpi", "Worker live KPI smoke", workflowCheck(".github/workflows/deploy-worker.yml", "Smoke data health KPI"), "deploy post-smoke contract"),
     check("phase_b_checker_strict", "Phase B checker strict mode", workflowCheck("100xfenok-next/package.json", "check-fenok-data-health-kpi.mjs --strict"), "strict checker wiring"),

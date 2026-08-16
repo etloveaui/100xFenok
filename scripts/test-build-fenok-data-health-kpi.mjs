@@ -5001,6 +5001,11 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
 // ids, order, and both public flags per entry.
 {
   const payload = buildPayload("2026-07-19T05:00:00Z", null, null);
+  const automationLane = payload.lanes.find((item) => item.id === "automation_contract");
+  const manifestKpiCheck = automationLane.checks.find((item) => item.id === "update_manifest_rebuilds_kpi");
+  assert.equal(manifestKpiCheck.status, "ready",
+    "automation KPI must recognize the S14 build inside the shared Update Manifest runner");
+  ok("automation KPI recognizes the shared Update Manifest runner's S14 build");
   const legacy = [
     { id: "fenok_edge_coverage_index", public_mirror: true, public_safe: true },
     { id: "rim_index_inputs", public_mirror: true, public_safe: true },
