@@ -1,8 +1,10 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const buildTarget = process.env.NEXT_BUILD_TARGET ?? "runtime";
 const isStaticProfile = buildTarget === "static";
 const isCloudflareProfile = buildTarget === "cloudflare";
+const repositoryRoot = path.resolve(process.cwd(), "..");
 
 const nextConfig: NextConfig = {
   // Runtime-first build. "static" profile keeps dist output only.
@@ -17,6 +19,14 @@ const nextConfig: NextConfig = {
         hostname: "placehold.co",
       },
     ],
+  },
+
+  // Turbopack must resolve the shared cloud-data-plane modules one directory
+  // above the app. Keep output-file tracing at the app default: widening that
+  // separate root changes Next's standalone layout in a way OpenNext cannot
+  // consume, while these statically imported modules are bundled by Turbopack.
+  turbopack: {
+    root: repositoryRoot,
   },
 
   allowedDevOrigins: ["127.0.0.1"],
