@@ -64,6 +64,30 @@ class DataSpinePolicyTest(unittest.TestCase):
         self.assertIn("authority-only", label)
         self.assertIn("provenance", label)
 
+    def test_market_facts_price_accepts_yahoo_regular_market_fallback(self) -> None:
+        payload = {
+            "data": {
+                "info": {
+                    "symbol": "688825.SS",
+                    "quoteType": "EQUITY",
+                    "regularMarketPrice": 55.18,
+                    "regularMarketTime": 1786690801,
+                },
+                "history_1y": [],
+            },
+            "fetched_at": "2026-08-15T00:02:50Z",
+        }
+        built = self.facts.build_one("688825.SS", payload, None, None)
+        self.assertEqual(built["facts"]["price"]["value"], 55.18)
+        self.assertEqual(built["facts"]["price"]["source"], "yf")
+        self.assertEqual(built["source_as_of"], built["facts"]["price"]["as_of"])
+        self.assertIsNotNone(built["source_as_of"])
+
+        payload["data"]["info"]["currentPrice"] = 56.01
+        preferred = self.facts.build_one("688825.SS", payload, None, None)
+        self.assertEqual(preferred["facts"]["price"]["value"], 56.01,
+                         "currentPrice must remain preferred over regularMarketPrice")
+
 
 if __name__ == "__main__":
     unittest.main()

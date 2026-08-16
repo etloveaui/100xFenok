@@ -132,9 +132,15 @@ function ageDays(value, now = Date.now()) {
 }
 
 function freshness(label, asOf, maxAgeDays, { warnOnly = false, calendar = null, missingReason = SOURCE_FLOOR_UNAVAILABLE } = {}) {
+  // Keep fixture and production evaluations on the same clock. The generator
+  // already accepts PS_GENERATED_AT for deterministic stamp evidence; using
+  // wall-clock time here made a fully fresh fixture appear stale as the test
+  // date aged, while the emitted generated_at claimed the injected clock.
+  const clockMs = new Date(generatedAt).getTime();
+  const clockDate = new Date(clockMs).toISOString().slice(0, 10);
   const days = calendar
-    ? businessDayAge(dateOnly(asOf), new Date().toISOString().slice(0, 10), calendar)
-    : ageDays(asOf);
+    ? businessDayAge(dateOnly(asOf), clockDate, calendar)
+    : ageDays(asOf, clockMs);
   if (!asOf || days === null) {
     return check(
       label,

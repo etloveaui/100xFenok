@@ -481,6 +481,16 @@ def yf_fact(yf_payload, key):
     return fact(value, "yf", as_of=yf_source_as_of(yf_payload), fetched_at=(yf_payload or {}).get("fetched_at"))
 
 
+def yf_current_price_fact(yf_payload):
+    """Use Yahoo's explicit current price, with its regular-market field as a same-source fallback."""
+    data = (yf_payload or {}).get("data") or {}
+    info = data.get("info") or {}
+    value = info.get("currentPrice")
+    if value is None:
+        value = info.get("regularMarketPrice")
+    return fact(value, "yf", as_of=yf_source_as_of(yf_payload), fetched_at=(yf_payload or {}).get("fetched_at"))
+
+
 def yf_percent_fact(yf_payload, key):
     data = (yf_payload or {}).get("data") or {}
     info = data.get("info") or {}
@@ -802,7 +812,7 @@ def build_one(
 
     price = resolve_fact(
         "price",
-        yf_fact(yf_payload, "currentPrice"),
+        yf_current_price_fact(yf_payload),
         yf_fast_fact(yf_payload, "last_price"),
         stockanalysis_quote_fact(sa_payload, "p"),
         slick_fact(slick_payload, "price"),
