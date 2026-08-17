@@ -115,7 +115,7 @@ def build_shadow_report(
         "investors_compared": len(investor_ids - absent_investors),
         "investors_missing": missing_investors,
         "investors_extra": extra_investors,
-        "outputs_expected": summary.get("expected_files", 73),
+        "outputs_expected": summary.get("expected_files", 76),
         "outputs_compared": summary.get("compared_files", 0),
         "outputs_missing": missing,
         "outputs_extra": extra,

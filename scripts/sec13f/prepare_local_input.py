@@ -3,7 +3,7 @@
 
 This is the Slice C0 boundary: it only reads a retained ``RawCache``, a
 versioned filing/unit manifest, and a versioned CUSIP reference mapping.  It
-never creates a SEC client, performs a network request, generates the 73 base
+never creates a SEC client, performs a network request, generates the 76 base
 outputs, or touches canonical/public SEC 13F data.
 """
 
@@ -134,8 +134,8 @@ def _load_registry(path: Path) -> tuple[dict[str, Any], str]:
         raise LocalInputError("registry must be a mapping")
     investors = registry.get("investors")
     groups = registry.get("groups")
-    if not isinstance(investors, dict) or not isinstance(groups, dict) or len(investors) != 60:
-        raise LocalInputError("registry must declare exactly 60 investors and groups")
+    if not isinstance(investors, dict) or not isinstance(groups, dict) or len(investors) != 63:
+        raise LocalInputError("registry must declare exactly 63 investors and groups")
     seen_ciks: set[str] = set()
     for investor_id, investor in investors.items():
         if not isinstance(investor_id, str) or not investor_id or not isinstance(investor, dict):
@@ -238,7 +238,7 @@ def _load_manifest(path: Path, *, registry: Mapping[str, Any], registry_digest: 
             )
         )
     if investor_ids != set(investors):
-        raise LocalInputError("local input manifest filings must cover all 60 registry investors")
+        raise LocalInputError("local input manifest filings must cover all 63 registry investors")
 
     raw_decisions = payload.get("unit_decisions")
     if not isinstance(raw_decisions, list) or not raw_decisions:

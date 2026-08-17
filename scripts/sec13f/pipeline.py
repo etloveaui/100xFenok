@@ -27,7 +27,7 @@ except ImportError:  # pragma: no cover - direct-script import path
     from parser import Sec13FParseError, parse_cover_xml, parse_filing_component
 
 
-EXPECTED_INVESTOR_COUNT = 60
+EXPECTED_INVESTOR_COUNT = 63
 
 
 class PipelineError(RuntimeError):

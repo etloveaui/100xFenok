@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze a detached 73-file oracle from the pinned CCH generator.
+"""Freeze a detached 76-file oracle from the pinned CCH generator.
 
 This is a manual fixture-maintenance utility.  Normal tests consume the frozen
 oracle and never import or execute sibling-repository code.
@@ -18,7 +18,7 @@ import xml.etree.ElementTree as stdlib_element_tree
 
 
 ROOT = Path(__file__).resolve().parents[2]
-EXPECTED_OUTPUT_COUNT = 73
+EXPECTED_OUTPUT_COUNT = 76
 FORBIDDEN_OUTPUTS = (
     ROOT / "data" / "sec-13f",
     ROOT / "100xfenok-next" / "public" / "data" / "sec-13f",
@@ -139,7 +139,7 @@ def freeze(*, cch_root: Path, input_path: Path, output_root: Path, manifest_path
     _assert_safe_output(output_root, cch_root)
     _assert_safe_manifest(manifest_path, cch_root)
     if output_root == manifest_path or output_root in manifest_path.parents:
-        raise OracleFreezeError("manifest path must stay outside the 73-file oracle root")
+        raise OracleFreezeError("manifest path must stay outside the 76-file oracle root")
     _validate_source(cch_root, source_manifest)
     if output_root.exists():
         if not output_root.is_dir():
@@ -154,7 +154,7 @@ def freeze(*, cch_root: Path, input_path: Path, output_root: Path, manifest_path
     if not isinstance(generated_at, str) or not generated_at:
         raise OracleFreezeError("fixture input requires a fixed generated_at")
     _freeze_generated_at(cch_generator, generated_at)
-    cch_generator.JSONGenerator(output_dir=output_root, total_investors=60).generate_all(
+    cch_generator.JSONGenerator(output_dir=output_root, total_investors=63).generate_all(
         investors_data=fixture_input["investors_data"],
         quarters_covered=fixture_input["quarters_covered"],
         summary_metadata_extra=fixture_input.get("summary_metadata_extra"),

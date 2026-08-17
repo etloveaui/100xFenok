@@ -390,7 +390,7 @@ def build_fixture_contract() -> dict[str, Any]:
                 "compare_separately": True,
             },
             "output_boundary": {
-                "base": {"root_indexes": 3, "investors": 60, "analytics": 10, "total": 73},
+                "base": {"root_indexes": 3, "investors": 63, "analytics": 10, "total": 76},
                 "platform_derived": 5,
                 "schema": "separate_non_runtime_contract",
             },
@@ -402,7 +402,7 @@ def build_fixture_contract() -> dict[str, Any]:
                         "analytics/conviction.json",
                     ],
                     "json_path": "$.metadata.generated_at",
-                    "measured_occurrences": 62,
+                    "measured_occurrences": 65,
                 }
             ],
             "non_volatile_provenance_paths": [
@@ -496,7 +496,7 @@ def build_comparison_manifest(
         entry["path"].removeprefix("data/sec-13f/"): entry for entry in platform_base["entries"]
     }
     if set(cch_by_path) != set(platform_by_path):
-        raise ValueError("CCH and platform 73-output path sets differ")
+        raise ValueError("CCH and platform 76-output path sets differ")
     entries = []
     for relative_path in sorted(cch_by_path):
         cch_entry = cch_by_path[relative_path]
@@ -550,8 +550,8 @@ def main() -> int:
     source_registry = cch_root / "config" / "investors.yaml"
     registry = yaml.safe_load(source_registry.read_text(encoding="utf-8"))
     investors = registry.get("investors", {})
-    if len(investors) != 60:
-        raise ValueError(f"expected 60 source investors, found {len(investors)}")
+    if len(investors) != 63:
+        raise ValueError(f"expected 63 source investors, found {len(investors)}")
 
     REGISTRY_TARGET.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source_registry, REGISTRY_TARGET)
@@ -565,8 +565,8 @@ def main() -> int:
         *[(f"data/sec-13f/investors/{investor_id}.json", "investor") for investor_id in investors],
         *[(f"data/sec-13f/analytics/{name}", "converter_analytic") for name in BASE_ANALYTICS],
     ]
-    if len(base_paths) != 73:
-        raise ValueError(f"expected 73 base outputs, found {len(base_paths)}")
+    if len(base_paths) != 76:
+        raise ValueError(f"expected 76 base outputs, found {len(base_paths)}")
     derived_paths = [
         (f"data/sec-13f/analytics/{name}", "platform_derived") for name in PLATFORM_DERIVED
     ]
@@ -599,7 +599,7 @@ def main() -> int:
         logical_root="output",
         source_commit=cch_source_commit,
         snapshot_kind="tracked_roots_and_analytics_plus_local_gitignored_investors",
-        note="73 runtime outputs; conversion_report.json excluded",
+        note="76 runtime outputs; conversion_report.json excluded",
     )
     cch_cache_manifest = build_detached_manifest(
         paths=cache_paths,
@@ -613,7 +613,7 @@ def main() -> int:
         paths=base_paths,
         schema_version="sec13f-base-output-manifest/v1",
         platform_commit=platform_commit,
-        boundary="3 root indexes + 60 investor files + 10 converter analytics",
+        boundary="3 root indexes + 63 investor files + 10 converter analytics",
     )
 
     write_json(FIXTURE_ROOT / "sec_filing_cases.json", build_fixture_contract())
@@ -627,7 +627,7 @@ def main() -> int:
             paths=derived_paths,
             schema_version="sec13f-platform-derived-manifest/v1",
             platform_commit=platform_commit,
-            boundary="five platform-derived analytics excluded from the 73-output base",
+            boundary="five platform-derived analytics excluded from the 76-output base",
         ),
     )
     write_json(
@@ -640,8 +640,8 @@ def main() -> int:
     )
     print(
         "froze SEC 13F Slice 0 contract: "
-        f"60 investors, 9 cases, 73 CCH outputs, {len(cache_paths)} cache files, "
-        "73 platform base, 5 derived"
+        f"63 investors, 9 cases, 76 CCH outputs, {len(cache_paths)} cache files, "
+        "76 platform base, 5 derived"
     )
     return 0
 

@@ -315,13 +315,13 @@ class IncrementalLedger:
         if (
             not isinstance(manifest, dict)
             or manifest.get("schema_version") != "sec13f-base-generation/v1"
-            or manifest.get("output_count") != 73
-            or manifest.get("investor_count") != 60
+            or manifest.get("output_count") != 76
+            or manifest.get("investor_count") != 63
             or manifest.get("investor_data_digest") != investor_digest
         ):
             raise RunFailure("generation_manifest_invalid")
         entries = manifest.get("entries")
-        if not isinstance(entries, list) or len(entries) != 73:
+        if not isinstance(entries, list) or len(entries) != 76:
             raise RunFailure("generation_manifest_invalid")
         seen: set[str] = set()
         for entry in entries:

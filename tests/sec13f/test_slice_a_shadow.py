@@ -48,11 +48,11 @@ class SliceAShadowTest(unittest.TestCase):
             )
 
             self.assertEqual(report["result"], "pass")
-            self.assertEqual(report["investors_expected"], 60)
-            self.assertEqual(report["investors_compared"], 60)
-            self.assertEqual(report["outputs_expected"], 73)
-            self.assertEqual(report["outputs_compared"], 73)
-            self.assertEqual(report["normalized_match_count"], 73)
+            self.assertEqual(report["investors_expected"], 63)
+            self.assertEqual(report["investors_compared"], 63)
+            self.assertEqual(report["outputs_expected"], 76)
+            self.assertEqual(report["outputs_compared"], 76)
+            self.assertEqual(report["normalized_match_count"], 76)
             self.assertEqual(report["accessions_compared"], ["0000000001-26-000001"])
             self.assertEqual(report["field_mismatches"], [])
             for field in (

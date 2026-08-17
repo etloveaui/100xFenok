@@ -12,7 +12,7 @@ from typing import Any
 from normalization import NormalizationError, apply_weight_filter
 
 
-EXPECTED_INVESTOR_COUNT = 60
+EXPECTED_INVESTOR_COUNT = 63
 INVESTOR_ID_PATTERN = re.compile(r"^[a-z0-9_]+$")
 
 
@@ -189,7 +189,7 @@ def _normalize_filing(filing: dict[str, Any], *, investor_id: str, index: int) -
 def prepare_investor_data(registry: dict[str, Any], investor_runs: dict[str, Any]) -> dict[str, Any]:
     investors = registry.get("investors") if isinstance(registry, dict) else None
     if not isinstance(investors, dict) or len(investors) != EXPECTED_INVESTOR_COUNT:
-        raise InputAdapterError("registry must contain exactly 60 investors")
+        raise InputAdapterError("registry must contain exactly 63 investors")
     if not isinstance(investor_runs, dict) or set(investor_runs) != set(investors):
         raise InputAdapterError("investor runs must match registry exactly")
     output: dict[str, Any] = {}

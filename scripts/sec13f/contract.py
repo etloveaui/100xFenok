@@ -13,22 +13,22 @@ from typing import Any
 import yaml
 
 
-EXPECTED_INVESTOR_COUNT = 60
-EXPECTED_BASE_OUTPUT_COUNT = 73
+EXPECTED_INVESTOR_COUNT = 63
+EXPECTED_BASE_OUTPUT_COUNT = 76
 EXPECTED_DERIVED_OUTPUT_COUNT = 5
 CIK_PATTERN = re.compile(r"^\d{10}$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
-EXPECTED_REGISTRY_SHA256 = "2a079d1adbe41acd7a1d3740bcfcc9e7f81a2b291ebe9e841efdd1f043edac35"
+EXPECTED_REGISTRY_SHA256 = "4190d0865b97b5ba69bfd229df5b2cea7bc8947021b8a0fdaa10f0fdde1a2784"
 PINNED_CONTENT_DIGESTS = {
-    "sec13f-base-output-manifest/v1": "409278b5dfbd321846aa74cc4155b9069b0e68dc2a53ae9a451e3c85d45d9e09",
-    "sec13f-cch-cache-manifest/v1": "346e63bab2dcfacf6430adfaf2c29e0e85a2e5df7739b5bb41279b6ab0bb3ff5",
-    "sec13f-cch-output-manifest/v1": "4decc214b9ffbfdf163b1289c2a98983bae602f7761bdf83888181e23be75c8b",
-    "sec13f-cch-platform-baseline/v1": "dfa7cc22b98c4933e5cb5017acffa1cbde7ec8c09c0fc7ef6f2a22f988893404",
-    "sec13f-cch-fixture-oracle/v1": "1139c6ac8007d0134b48956192d5aaaf8dee282028f43cefb0886362633baf9a",
-    "sec13f-cch-snapshot/v1": "25ac11ff90bd5eaf8fcfbfa8e873a1d90803ac08668ac3e7eba9f344016b452c",
-    "sec13f-platform-derived-manifest/v1": "86933a4248d211e66ec7909f8761ec57dc83c3ffffef411bc044944a93fe2ec6",
-    "sec13f-generator-input/v1": "9f9d13eb9ce4980757fb4c69945bc644331ff3011cb631973c1d19213ddb56d9",
-    "sec13f-slice0-fixtures/v1": "605dc8a6a096e2968c9af05f4f84a2185f621d580c49b96fdc2a4df611caf085",
+    "sec13f-base-output-manifest/v1": "e80b00d2149c64341a25b7eb4ec6be4f64d722e342e7adca8ee65f6c585c58df",
+    "sec13f-cch-cache-manifest/v1": "ecad1fd8beb2d3a8639222a2e7172c94dd6abf2d6cef3ec99e487b49b6cdf249",
+    "sec13f-cch-output-manifest/v1": "d7e01ce94e57c72477ca42321458c182dc81d93bbd5eb3d4fd0e5b5c739c9b5b",
+    "sec13f-cch-platform-baseline/v1": "874be75c9a645339e800553237551c63ed091e977955f107706fe69ab853600e",
+    "sec13f-cch-fixture-oracle/v1": "03ef5848d395b84e1d8a655852f3fdacf3999bc54d67ec7b9abb3eddc720da82",
+    "sec13f-cch-snapshot/v1": "ad15a499e9c190b3ce6e1a97340f6768b87b03fa9c84d7addb864be03d5da430",
+    "sec13f-platform-derived-manifest/v1": "e6cc941539fe9ed001017463a5261446438c88c9a56b131ce35aef9c40f36a64",
+    "sec13f-generator-input/v1": "7b081866187831c17efd7c6a1acc9ccd9004993a4cb5d867995d677bcb8c534f",
+    "sec13f-slice0-fixtures/v1": "2ab5871e167526b74e991854437d98b041546ac76a625c2fb29c97e71b46a0f2",
 }
 
 
@@ -195,7 +195,7 @@ def validate_comparison_manifest(payload: dict[str, Any], root: Path) -> None:
     _validate_self_digest(payload, "CCH/platform comparison")
     entries = payload.get("entries")
     if not isinstance(entries, list) or len(entries) != EXPECTED_BASE_OUTPUT_COUNT:
-        raise ContractError("CCH/platform comparison: exact 73 entries are required")
+        raise ContractError("CCH/platform comparison: exact 76 entries are required")
     exact_count = 0
     for entry in entries:
         if not isinstance(entry, dict):
@@ -270,7 +270,7 @@ def validate_generator_input(payload: dict[str, Any], *, registry: dict[str, Any
         raise ContractError("generator input: registry digest mismatch")
     investors = payload.get("investors_data")
     if not isinstance(investors, dict) or len(investors) != EXPECTED_INVESTOR_COUNT:
-        raise ContractError("generator input: exact 60 investors are required")
+        raise ContractError("generator input: exact 63 investors are required")
     if registry is not None and set(investors) != set(registry["investors"]):
         raise ContractError("generator input: investor identities do not match registry")
     if any(not isinstance(row, dict) or len(row.get("filings", [])) != 4 for row in investors.values()):
@@ -280,8 +280,8 @@ def validate_generator_input(payload: dict[str, Any], *, registry: dict[str, Any
     if payload.get("generated_at") != "2026-07-20T12:00:00":
         raise ContractError("generator input: fixed generated_at changed")
     accessions = payload.get("accessions_compared")
-    if not isinstance(accessions, list) or len(accessions) != 480 or len(set(accessions)) != 480:
-        raise ContractError("generator input: exact 480 unique parsed accessions are required")
+    if not isinstance(accessions, list) or len(accessions) != 504 or len(set(accessions)) != 504:
+        raise ContractError("generator input: exact 504 unique parsed accessions are required")
     if any(re.fullmatch(r"\d{10}-\d{2}-\d{6}", value) is None for value in accessions):
         raise ContractError("generator input: invalid accession")
     lineage = {
@@ -309,7 +309,7 @@ def load_and_validate_all(root: Path) -> None:
     validate_source_manifest(load_json(fixture_root / "cch_source_manifest.json"))
     validate_detached_manifest(
         load_json(fixture_root / "cch_cache_manifest.json"),
-        expected_count=62,
+        expected_count=65,
         label="CCH cache manifest",
     )
     validate_output_manifest(

@@ -42,7 +42,7 @@ class SliceAEndToEndTest(unittest.TestCase):
             summary_metadata_extra=self.fixture_input["summary_metadata_extra"],
         )
 
-    def test_full_sixty_investor_seventy_three_payload_oracle_parity(self) -> None:
+    def test_full_sixty_three_investor_seventy_six_payload_oracle_parity(self) -> None:
         rebuilt_input = build_fixture_input()
         self.assertEqual(rebuilt_input, self.fixture_input)
         first = rebuilt_input["investors_data"][sorted(rebuilt_input["investors_data"])[0]]["filings"][0]
@@ -64,11 +64,11 @@ class SliceAEndToEndTest(unittest.TestCase):
             )
 
         self.assertEqual(report["result"], "pass")
-        self.assertEqual((report["investors_expected"], report["investors_compared"]), (60, 60))
-        self.assertEqual((report["outputs_expected"], report["outputs_compared"]), (73, 73))
-        self.assertEqual(report["normalized_match_count"], 73)
+        self.assertEqual((report["investors_expected"], report["investors_compared"]), (63, 63))
+        self.assertEqual((report["outputs_expected"], report["outputs_compared"]), (76, 76))
+        self.assertEqual(report["normalized_match_count"], 76)
         self.assertEqual(report["field_mismatches"], [])
-        self.assertEqual(len(report["accessions_compared"]), 480)
+        self.assertEqual(len(report["accessions_compared"]), 504)
         self.assertEqual(len(report["fixture_cases_passed"]), 6)
         self.assertEqual(len(report["fixture_cases_blocked"]), 3)
         self.assertEqual(report["canonical_tree_before"], report["canonical_tree_after"])
