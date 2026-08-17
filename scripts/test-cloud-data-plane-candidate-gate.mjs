@@ -18,6 +18,8 @@ const BASE = "1465331e474edbab7e5a26534632fdf640e4e5f0";
 const MEASURED_AT = "2026-08-14T05:00:00Z";
 
 const DURABLE_DEMAND = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane", "etf-migration-demand.json"), "utf8"));
+const GLOBAL_CANDIDATE = "global_scouter";
+const GLOBAL_DEMAND = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane", "global-scouter-migration-demand.json"), "utf8"));
 // The durable ETF demand now carries a measured-local representative manifest
 // size. The pass-path below still uses a clearly test-only copy so the gate
 // contract exercises a distinct synthetic input without presenting it as live.
@@ -84,6 +86,35 @@ assert.equal(
 );
 assert.equal(durableCandidateReport.budget.r2.manifest_planning_line.metrics.manifest_count.complete, true);
 assert.equal(durableCandidateReport.budget.r2.manifest_planning_line.metrics.manifest_bytes.complete, true);
+
+// Global Scouter is caller-only shadow evidence. Its local scope and demand are
+// reportable, but no account baseline or remote publish receipt is available, so
+// the candidate gate must remain not_verified rather than manufacturing a pass.
+const globalReport = buildCloudDataPlaneReport({
+  repoRoot: REPO_ROOT,
+  candidateId: GLOBAL_CANDIDATE,
+  requestDemand: GLOBAL_DEMAND,
+});
+assert.deepEqual(globalReport.inventory_scope, { kind: "candidate", candidate_id: GLOBAL_CANDIDATE });
+assert.equal(globalReport.candidate_scope.owner.enforcement, "shadow");
+assert.equal(globalReport.candidate_scope.owner.owner_workflow, null);
+assert.equal(globalReport.candidate_scope.totals.file_count, 1082);
+assert.equal(globalReport.candidate_scope.totals.bytes, 87_268_011);
+assert.equal(globalReport.budget.r2.slots.current.bytes, 87_268_011);
+assert.equal(globalReport.budget.r2.slots.previous.bytes, 87_268_011);
+assert.equal(globalReport.budget.r2.slots.in_progress.bytes, 87_268_011);
+assert.equal(globalReport.budget.r2.manifest_planning_line.metrics.manifest_count.lower_bound, 5);
+assert.equal(globalReport.budget.r2.manifest_planning_line.metrics.manifest_bytes.lower_bound, 355913);
+assert.equal(globalReport.budget.input_provenance.account_baseline.status, "not_verified");
+assert.equal(globalReport.budget.verdict, "not_verified");
+const globalGate = evaluateCandidateGate({ report: globalReport, demand: GLOBAL_DEMAND });
+assert.equal(globalGate.schema_version, CANDIDATE_GATE_SCHEMA);
+assert.equal(globalGate.candidate_id, GLOBAL_CANDIDATE);
+assert.equal(globalGate.inputs.candidate_scope_complete, true);
+assert.equal(globalGate.inputs.account_baseline_status, "not_verified");
+assert.equal(globalGate.inputs.receipt_bound, false);
+assert.deepEqual(globalGate.inputs.receipt_failures, ["receipt_absent"]);
+assert.equal(globalGate.verdict, "not_verified");
 
 // --- receipt: binds base and time without touching the deterministic digest ---
 {

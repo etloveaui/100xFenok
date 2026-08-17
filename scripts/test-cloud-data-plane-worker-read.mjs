@@ -93,7 +93,9 @@ function extractRunWorkerFirstPatterns(source) {
   assert.equal(expected.exact.length, 610, "exact enrollment count");
   assert.equal(expected.prefixes.length, 1, "prefix enrollment count");
   assert.equal(expectedFamilies.size, 18, "public family claim count");
-  assert.equal(publicFamilies.length, 18, "publisher public family count");
+  assert.equal(publicFamilies.length, 19, "publisher public family count (one shadow reader exclusion)");
+  assert.equal(expectedFamilies.has("global-scouter"), false, "Global Scouter remains reader-unenrolled");
+  assert.equal(isEnrolledPath("/data/global-scouter/core/metadata.json"), false, "Global Scouter reader path remains unenrolled");
   assert.equal(privateFamilies.length, 5, "publisher private family count");
   for (const [familyName] of privateFamilies) {
     assert.equal(expectedFamilies.has(familyName), false, `private family ${familyName} absent`);
@@ -144,6 +146,34 @@ function extractRunWorkerFirstPatterns(source) {
       file: { manifest_prefix: "public/data/shared", files: ["same.json"], privacy_class: "public" },
     }),
     /duplicate prefix|cross-family exact\/prefix overlap/,
+  );
+  assert.deepEqual(
+    derivePublicPlaneEnrollment({
+      shadow: {
+        manifest_prefix: "public/data/shadow",
+        privacy_class: "public",
+        reader_enrollment: false,
+        files: ["payload.json"],
+      },
+      ordinary: {
+        manifest_prefix: "public/data/ordinary",
+        privacy_class: "public",
+        files: ["payload.json"],
+      },
+    }).exact,
+    [["/data/ordinary/payload.json", "ordinary"]],
+    "only an explicit false reader_enrollment suppresses a public family",
+  );
+  assert.throws(
+    () => derivePublicPlaneEnrollment({
+      bad: {
+        manifest_prefix: "public/data/bad",
+        privacy_class: "public",
+        reader_enrollment: "false",
+        files: ["payload.json"],
+      },
+    }),
+    /reader_enrollment must be boolean/,
   );
 }
 

@@ -16,6 +16,7 @@ import {
   LANE_REGISTRY,
   LANE_REGISTRY_SCHEMA,
   PLANE_PUBLISH_OUTCOME_BINDINGS,
+  PLANE_PUBLISHER_EXCEPTIONS,
   declaredAdminRoots,
   declaredExceptionPaths,
   providerBlastRadius,
@@ -276,6 +277,51 @@ function clone(value) {
       "the stockanalysis-etf-detail family must stay bound to its lane");
     assert.notEqual(binding.workflow, ".github/workflows/stockanalysis-etf-shadow-publish.yml",
       "the retired shadow workflow must not own the publish outcome");
+  }
+  // Global Scouter is caller-only: the external owner keeps acquisition and
+  // consumer/public-mirror ownership, while the manual shadow caller may
+  // publish and persist exactly one outcome shard.
+  {
+    const globalScouter = registryLaneById("global_scouter");
+    const globalWorkflow = ".github/workflows/global-scouter-shadow-publish.yml";
+    assert.equal(globalScouter.owner_workflow, null,
+      "Global Scouter must retain external acquisition ownership");
+    assert.equal(globalScouter.enforcement, "shadow",
+      "Global Scouter must remain shadow until separately promoted");
+    assert.deepEqual(globalScouter.caller_workflows?.[globalWorkflow], {
+      commit_shards: ["data/admin/data-supply-state/publish-outcomes/global-scouter.json"],
+      script_sources: [
+        "scripts/publish-cloud-data-generation.mjs",
+        "scripts/persist-cloud-publish-outcome.mjs",
+      ],
+    }, "Global Scouter caller claim must bind only the outcome shard and writer helpers");
+    const globalBinding = PLANE_PUBLISH_OUTCOME_BINDINGS["global-scouter"];
+    assert.deepEqual(globalBinding, {
+      lane_id: "global_scouter",
+      workflow: globalWorkflow,
+    }, "Global Scouter outcome must bind to its caller, not an acquisition workflow");
+    assert.deepEqual(LANE_REGISTRY.workflow_policies[globalWorkflow], {
+      lanes: ["global_scouter"],
+      stages: {
+        always_if_exists: [
+          { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/global-scouter.json", required: false },
+        ],
+        success_if_exists: [],
+        success_verify_not_plan_if_exists: [],
+        required_on_success: [],
+      },
+      exclude: [],
+    }, "Global Scouter caller policy must stage the outcome shard only");
+    assert.deepEqual(PLANE_PUBLISHER_EXCEPTIONS["global-scouter"], {
+      workflow: globalWorkflow,
+      non_blocking_publisher: false,
+      detached_persistence: true,
+      reason: "manual caller-only shadow publication for the owner-run Global Scouter bundle; acquisition and public consumer ownership remain external to this workflow, while only the separate persistence job may commit its outcome evidence",
+      canonical_commit: "external_authority",
+      canonical_commit_reason: "the owner-run Global Scouter export and its existing Git/public mirror remain the canonical authority; this caller performs no canonical Git write in the publish job and the persistence job commits only the outcome shard",
+      strict_gate: true,
+      strict_gate_reason: "PUBLISH-SHADOW is an explicit manual request: --tolerate-gate-block would turn an unknown or over-threshold cost verdict into exit 0 while publishing nothing, so the caller must go red and still upload and persist its outcome shard",
+    }, "Global Scouter exception must declare detached external-authority strict semantics");
   }
   assert.deepEqual(
     [...(roots.get("data/admin/yahoo_etf_fallback") ?? [])],

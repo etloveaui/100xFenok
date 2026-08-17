@@ -32,6 +32,10 @@ const measuredEtfDemand = JSON.parse(fs.readFileSync(
   path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane", "etf-migration-demand.json"),
   "utf8",
 ));
+const measuredGlobalScouterDemand = JSON.parse(fs.readFileSync(
+  path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane", "global-scouter-migration-demand.json"),
+  "utf8",
+));
 
 // Exact arithmetic: current + previous + in-progress slots are measured separately.
 {
@@ -303,6 +307,66 @@ const measuredEtfDemand = JSON.parse(fs.readFileSync(
   assert.equal(measurement.monthly_review.manifest_bytes, 108_951_795);
   assert.ok(measurement.monthly_review.manifest_bytes < measurement.monthly_review.limit_bytes);
   assert.equal(measurement.monthly_review.limit_bytes, R2_MANIFEST_PLANNING_ENVELOPE.manifest_bytes);
+}
+
+// The Global Scouter shadow lane has its own family demand. It is measured from
+// the candidate scope, not inferred from the ETF fixture or the whole estate.
+// The local manifest dry-run is useful planning evidence; the absent account
+// baseline still keeps every additive metric incomplete and the budget closed.
+{
+  const measurement = measuredGlobalScouterDemand._manifest_measurement;
+  const scope = buildCandidateScope({ repoRoot: REPO_ROOT, candidateId: "global_scouter" });
+  assert.equal(measuredGlobalScouterDemand.status, "verified");
+  assert.equal(measuredGlobalScouterDemand.scope, "global-scouter-one-family-payload-migration-to-r2");
+  assert.equal(measurement.schema_version, "cloud-data-plane-manifest-measurement/v1");
+  assert.equal(measurement.status, "measured_local");
+  assert.equal(measurement.measurement_mode, "local_scope_plus_local_manifest_dry_run");
+  assert.equal(measurement.family_id, "global-scouter");
+  assert.equal(measurement.source_sha256, "771161ee38c27eaceaff87f000582a8d5f8b4dcb8a5477117bf842eb0fe5837d");
+  assert.equal(measurement.generation_id, "global-scouter-dbc7abdaf92e17a5");
+  assert.equal(measurement.path_digest, scope.manifest.path_digest);
+  assert.equal(measurement.asset_count, scope.manifest.totals.file_count);
+  assert.equal(measurement.unique_object_count, scope.manifest.totals.file_count);
+  assert.equal(measurement.payload_bytes, scope.manifest.totals.bytes);
+  assert.equal(measurement.asset_count, 1082);
+  assert.equal(measurement.payload_bytes, 87_268_011);
+  assert.equal(measurement.manifest_bytes_per_generation, measuredGlobalScouterDemand.r2.manifests.bytes);
+  assert.deepEqual(measurement.manifest_bytes_provenance, {
+    status: "measured_local",
+    measured_on: "2026-08-17",
+    measurement_mode: "local_generation_manifest_dry_run",
+    remote_readback: "not_verified",
+  });
+  assert.equal(measurement.remote_readback, "not_verified");
+  assert.equal(measurement.monthly_review.generation_count, 5);
+  assert.equal(
+    measurement.monthly_review.manifest_bytes,
+    measurement.monthly_review.generation_count * measurement.manifest_bytes_per_generation,
+  );
+  assert.equal(measurement.monthly_review.manifest_bytes, 1_779_565);
+  assert.ok(measurement.monthly_review.manifest_bytes < measurement.monthly_review.limit_bytes);
+
+  const budget = calculateCloudDataPlaneBudget({
+    inventory: scope.inventory,
+    requestDemand: measuredGlobalScouterDemand,
+  });
+  assert.deepEqual(budget.assumptions.r2_slots, ["current", "previous", "in_progress"]);
+  assert.deepEqual(budget.r2.slots.current, { bytes: 87_268_011, objects: 1082, complete: true });
+  assert.deepEqual(budget.r2.slots.previous, { bytes: 87_268_011, objects: 1082, complete: true });
+  assert.deepEqual(budget.r2.slots.in_progress, { bytes: 87_268_011, objects: 1082, complete: true });
+  assert.equal(budget.r2.peak_objects.lower_bound, 3246);
+  assert.equal(budget.r2.metrics.decimal_gb_month.lower_bound, 0.261804033);
+  assert.equal(budget.r2.class_a_breakdown.put.lower_bound, 5415);
+  assert.equal(budget.r2.class_a_breakdown.list.lower_bound, 10);
+  assert.equal(budget.r2.class_a_breakdown.delete_free.lower_bound, 5410);
+  assert.equal(budget.r2.metrics.class_a_operations_per_month.lower_bound, 5425);
+  assert.equal(budget.r2.metrics.class_b_operations_per_month.lower_bound, 516275);
+  assert.equal(budget.r2.manifest_planning_line.metrics.manifest_count.lower_bound, 5);
+  assert.equal(budget.r2.manifest_planning_line.metrics.manifest_bytes.lower_bound, 355913);
+  assert.equal(budget.r2.manifest_planning_line.verdict, "not_verified");
+  assert.equal(budget.r2.planning_line.verdict, "not_verified");
+  assert.equal(budget.verdict, "not_verified");
+  assert.equal(budget.input_provenance.account_baseline.status, "not_verified");
 }
 
 // Estate planning coverage stays deliberately partial; candidate planning

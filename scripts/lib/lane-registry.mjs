@@ -924,6 +924,18 @@ const lanes = [
     commit_shards: [],
     recovery_store: null,
     declared_exception: "external owner-run converter has no GitHub attempt shard; cadence is evidenced by canonical metadata",
+    // The manual shadow caller publishes the owner-run bundle without owning
+    // acquisition, public mirroring, or consumer enrolment. Its two scripts
+    // are declared here so manifest parity covers the actual writer helpers.
+    caller_workflows: {
+      ".github/workflows/global-scouter-shadow-publish.yml": {
+        commit_shards: [publishOutcomeShard("global-scouter")],
+        script_sources: [
+          "scripts/publish-cloud-data-generation.mjs",
+          "scripts/persist-cloud-publish-outcome.mjs",
+        ],
+      },
+    },
   }),
   record({
     id: "damodaran",
@@ -1625,6 +1637,13 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".gi
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
   commitSpec("data/yf/finance/_summary.json", "file"),
 ]);
+workflow_policies[".github/workflows/global-scouter-shadow-publish.yml"] = policy(["global_scouter"], {
+  // This caller stages evidence only. The owner-run canonical/public bundle
+  // remains outside the caller's Git staging boundary.
+  always_if_exists: [
+    commitSpec(publishOutcomeShard("global-scouter"), "file", false),
+  ],
+});
 workflow_policies[".github/workflows/fenok-edge-krx-daily.yml"] = lanePolicy(".github/workflows/fenok-edge-krx-daily.yml", {
   always_if_exists: [
     commitSpec("data/admin/data-supply-state/detection-attempts/krx.json", "file"),
@@ -1788,6 +1807,16 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
     canonical_commit_reason: "the natural plane generation is current authority for data/stockanalysis/etfs while Git retains its existing tree as LKG; fetch-stockanalysis.yml commits the other source-lane and derived state, and the detached persistence job commits only publish evidence",
     strict_gate: true,
     strict_gate_reason: "natural publication of the largest payload in the estate: --tolerate-gate-block turns an unknown or over-threshold cost verdict into exit 0, so a scheduled run would report green while having published nothing. The gate-block outcome shard is still written and persisted; only the exit code changes, and the run must be red",
+  }),
+  "global-scouter": Object.freeze({
+    workflow: ".github/workflows/global-scouter-shadow-publish.yml",
+    non_blocking_publisher: false,
+    detached_persistence: true,
+    reason: "manual caller-only shadow publication for the owner-run Global Scouter bundle; acquisition and public consumer ownership remain external to this workflow, while only the separate persistence job may commit its outcome evidence",
+    canonical_commit: "external_authority",
+    canonical_commit_reason: "the owner-run Global Scouter export and its existing Git/public mirror remain the canonical authority; this caller performs no canonical Git write in the publish job and the persistence job commits only the outcome shard",
+    strict_gate: true,
+    strict_gate_reason: "PUBLISH-SHADOW is an explicit manual request: --tolerate-gate-block would turn an unknown or over-threshold cost verdict into exit 0 while publishing nothing, so the caller must go red and still upload and persist its outcome shard",
   }),
 });
 

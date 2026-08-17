@@ -55,7 +55,7 @@ function writeWorkflow(root, file, source) {
 // 20+ row copy that can omit a new publisher. Lane-owned publishers must name
 // a real lane. A lane-less publisher must be explicitly declared as a platform
 // publisher (the computed-signals coordinator case).
-assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 23);
+assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 24);
 for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
   assert.ok(LANE_REGISTRY.workflow_policies[binding.workflow], `${family} workflow policy must be declared`);
   assert.ok(
@@ -76,6 +76,24 @@ assert.deepEqual(PLANE_PUBLISH_OUTCOME_BINDINGS["computed-signals"], {
   lane_id: "computed_signals",
   workflow: ".github/workflows/coordinate-computed-signals.yml",
 });
+assert.deepEqual(PLANE_PUBLISH_OUTCOME_BINDINGS["global-scouter"], {
+  lane_id: "global_scouter",
+  workflow: ".github/workflows/global-scouter-shadow-publish.yml",
+});
+const globalScouterWorkflow = fs.readFileSync(
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", ".github/workflows/global-scouter-shadow-publish.yml"),
+  "utf8",
+);
+assert.match(
+  globalScouterWorkflow,
+  /node scripts\/publish-cloud-data-generation\.mjs --family=global-scouter --json/,
+  "Global Scouter caller must use the strict publisher command",
+);
+assert.match(
+  globalScouterWorkflow,
+  /node scripts\/persist-cloud-publish-outcome\.mjs --family=global-scouter --workflow=\.github\/workflows\/global-scouter-shadow-publish\.yml --publisher-outcome=/,
+  "Global Scouter caller must persist its exact outcome binding",
+);
 
 const outcomeShard = (family, records) => ({
   schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,

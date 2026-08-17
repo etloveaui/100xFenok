@@ -377,6 +377,13 @@ try {
   assert.equal(await unenrolled.text(), "application handler");
   assert.equal(unenrolled.headers.get("x-data-plane-published-at"), null, "application response gains no plane heartbeat");
 
+  // Global Scouter is public for publication but explicitly reader-unenrolled
+  // during the caller-only shadow phase, so its read path stays application-owned.
+  const globalShadow = await readGet("/data/global-scouter/core/metadata.json");
+  assert.equal(globalShadow.status, 200);
+  assert.equal(await globalShadow.text(), "application handler");
+  assert.equal(globalShadow.headers.get("x-data-plane-published-at"), null);
+
   // Siblings of enrolled trees must not match the bounded prefixes.
   const nearMiss = await readGet("/data/edgar-korean-summaries-evil/index.json");
   assert.equal(nearMiss.status, 200);

@@ -1,0 +1,94 @@
+{
+  "schema_version": "cloud-data-plane-request-demand/v1",
+  "status": "verified",
+  "verified_on": "2026-08-17",
+  "scope": "global-scouter-one-family-payload-migration-to-r2",
+  "period": "weekly-publication-normalized-to-30-day-review",
+  "_basis": {
+    "what_moves": "The owner-run Global Scouter bundle contributes 1,082 canonical payload files and 87,268,011 bytes. The four derived core projections are excluded from this family and remain owned by their own publication path.",
+    "publication_cadence": "The source declares weekly cadence. Five weekly generations are used for the conservative 30-day review envelope; this is a planning value, not a remote publication receipt.",
+    "r2_generation_model": "One family publication contains 1,082 payload assets plus one immutable generation manifest. The all-changed ceiling therefore plans 1,083 puts per generation and 1,082 newly unreferenced payload objects at each rotation; manifests are never deletion candidates.",
+    "r2_retention_model": "The family retains current, previous, and in_progress generations. The calculator carries those three measured slots independently. A five-sweep monthly review lists the 1,082 payload assets plus accumulated manifests in two 1,000-key pages per sweep, for 10 list operations; delete remains free and is recorded only as the all-changed rotation ceiling.",
+    "r2_class_b_model": "The request demand carries a 500,000-operation serving planning ceiling plus 16,250 publication reads (1,083 presence reads + 1,083 readbacks + 1,083 parity reads + 1 resume check, times five generations) and 25 manifest-retention reads (five manifests reviewed across five sweeps). The account baseline is still required before this additive request plan can be called complete.",
+    "d1_model": "One publication-generation row is added per weekly family generation, with the existing coordinator shape represented as a single table contract. The row, query, and purge values are explicit planning inputs and are not an account measurement.",
+    "kv_model": "KV holds one active generation pointer. It is a cache and not publication authority; the single-pointer contract is retained in the demand so a multi-pointer plan fails closed."
+  },
+  "_manifest_measurement": {
+    "schema_version": "cloud-data-plane-manifest-measurement/v1",
+    "status": "measured_local",
+    "measured_on": "2026-08-17",
+    "measurement_mode": "local_scope_plus_local_manifest_dry_run",
+    "source_root": "data/global-scouter",
+    "family_id": "global-scouter",
+    "path_prefix": "data/global-scouter",
+    "path_digest": "2b17330123c606c85b442007fc2eaf2581c1dad5d9d42dcf0bc1cfcd63b25a66",
+    "source_sha256": "771161ee38c27eaceaff87f000582a8d5f8b4dcb8a5477117bf842eb0fe5837d",
+    "generation_id": "global-scouter-dbc7abdaf92e17a5",
+    "asset_count": 1082,
+    "unique_object_count": 1082,
+    "payload_bytes": 87268011,
+    "manifest_bytes_per_generation": 355913,
+    "manifest_bytes_provenance": {
+      "status": "measured_local",
+      "measured_on": "2026-08-17",
+      "measurement_mode": "local_generation_manifest_dry_run",
+      "remote_readback": "not_verified"
+    },
+    "monthly_review": {
+      "generation_count": 5,
+      "manifest_bytes": 1779565,
+      "limit_bytes": 117000000,
+      "verdict": "pass"
+    },
+    "remote_readback": "not_verified"
+  },
+  "_retention": {
+    "rule_source": "the shipped three-slot family retention contract",
+    "retained_set": "current, previous, and in_progress for this family; prepared generations remain protected until their lifecycle resolves",
+    "delete_candidates": "only unreferenced objects/sha256 payloads; generation manifests, pointers, probes, and protected evidence are never deletion candidates",
+    "overwrite_behaviour": "zero. Content-addressed payload keys are reused when an unchanged asset is published",
+    "failed_generation_cleanup": "an abandoned generation contributes only unreferenced payload keys to the ordinary retention sweep; no separate delete class is invented",
+    "fail_closed": "an unreadable or missing retained manifest aborts the bucket-level sweep with zero deletions",
+    "worst_case_derivation": "1,082 payload deletes per all-changed weekly rotation times five planned generations equals 5,410 free DeleteObject operations per 30-day review",
+    "scope_caveat": "retention is bucket-level in the publisher; these figures are this family's attributable planning envelope, not an independently schedulable remote operation"
+  },
+  "r2": {
+    "manifests": {
+      "count": 5,
+      "bytes": 355913
+    },
+    "class_a": {
+      "put": 5415,
+      "copy": 0,
+      "list": 10,
+      "delete": 5410
+    },
+    "class_b_operations_per_month": 516275
+  },
+  "d1": {
+    "database_bytes": 5000000,
+    "max_row_or_blob_bytes": 2000,
+    "queries_per_worker_invocation": 2,
+    "tables": [
+      {
+        "id": "publication_generations",
+        "added_rows": 5,
+        "max_rows": 100000,
+        "retention_days": 365,
+        "purge_batch_rows": 5,
+        "rows_read_per_day": 10,
+        "logical_writes_per_day": 5,
+        "index_read_amplification": 2,
+        "index_write_amplification": 3
+      }
+    ]
+  },
+  "kv": {
+    "pointer_bytes": 4096,
+    "max_pointer_bytes": 4096,
+    "reads_per_day": 10000,
+    "writes_per_day": 5,
+    "pointers": 1,
+    "model": "single_active_generation_pointer"
+  }
+}

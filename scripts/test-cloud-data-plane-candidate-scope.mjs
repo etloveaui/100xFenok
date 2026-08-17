@@ -302,6 +302,31 @@ async function reportAndCliChecks() {
     estateReport.budget.r2.metrics.decimal_gb_month.lower_bound,
   );
 
+  // The shadow Global Scouter caller uses its own 1,082-file scope and demand;
+  // it must never silently fall back to the estate inventory or to a green
+  // verdict while the account baseline is absent.
+  const globalScoped = buildCandidateScope({ repoRoot: REPO_ROOT, candidateId: GLOBAL_SCOUTER });
+  const globalDemandPath = path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane", "global-scouter-migration-demand.json");
+  const globalDemand = JSON.parse(fs.readFileSync(globalDemandPath, "utf8"));
+  const globalReport = buildCloudDataPlaneReport({
+    repoRoot: REPO_ROOT,
+    candidateId: GLOBAL_SCOUTER,
+    requestDemand: globalDemand,
+  });
+  assert.deepEqual(globalReport.inventory_scope, { kind: "candidate", candidate_id: GLOBAL_SCOUTER });
+  assert.deepEqual(globalReport.candidate_scope, globalScoped.manifest);
+  assert.equal(globalReport.catalog.inventory.file_count, estateReport.catalog.inventory.file_count);
+  assert.ok(globalReport.catalog.inventory.bytes > globalScoped.inventory.bytes);
+  for (const slot of Object.values(globalReport.budget.r2.slots)) {
+    assert.equal(slot.bytes, globalScoped.inventory.bytes);
+    assert.equal(slot.objects, globalScoped.inventory.file_count);
+  }
+  assert.equal(globalReport.budget.r2.manifest_planning_line.metrics.manifest_count.lower_bound, 5);
+  assert.equal(globalReport.budget.r2.manifest_planning_line.metrics.manifest_bytes.lower_bound, 355913);
+  assert.equal(globalReport.budget.r2.planning_line.verdict, "not_verified");
+  assert.equal(globalReport.budget.input_provenance.account_baseline.status, "not_verified");
+  assert.equal(globalReport.budget.verdict, "not_verified");
+
   const checker = path.join(REPO_ROOT, "scripts", "check-cloud-data-plane-budget.mjs");
   const demand = path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane", "etf-migration-demand.json");
   const run = (args) => spawnSync(process.execPath, [checker, ...args], { cwd: REPO_ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
@@ -317,6 +342,41 @@ async function reportAndCliChecks() {
   // Absent baseline stays unverified. It must never round up to a pass.
   assert.equal(parsed.budget.r2.planning_line.verdict, "not_verified");
   assert.notEqual(parsed.verdict, "pass");
+
+  const globalCli = run(["--candidate", GLOBAL_SCOUTER, "--request-demand", globalDemandPath, "--format", "json"]);
+  assert.equal(globalCli.status, 2, `the shadow Global Scouter run without an account baseline must not exit 0: ${globalCli.stderr}`);
+  const globalParsed = JSON.parse(globalCli.stdout);
+  assert.deepEqual(globalParsed.inventory_scope, { kind: "candidate", candidate_id: GLOBAL_SCOUTER });
+  assert.equal(globalParsed.candidate_scope.candidate_id, GLOBAL_SCOUTER);
+  assert.equal(globalParsed.candidate_scope.owner.enforcement, "shadow");
+  assert.equal(globalParsed.candidate_scope.totals.file_count, 1082);
+  assert.equal(globalParsed.candidate_scope.totals.bytes, 87_268_011);
+  assert.equal(globalParsed.candidate_scope.path_digest, globalScoped.manifest.path_digest);
+  assert.equal(globalParsed.budget.r2.manifest_planning_line.metrics.manifest_count.lower_bound, 5);
+  assert.equal(globalParsed.budget.r2.manifest_planning_line.metrics.manifest_bytes.lower_bound, 355913);
+  assert.equal(globalParsed.budget.input_provenance.account_baseline.status, "not_verified");
+  assert.equal(globalParsed.budget.r2.planning_line.verdict, "not_verified");
+  assert.notEqual(globalParsed.verdict, "pass");
+
+  // A verified account baseline does not turn an unverified Global Scouter
+  // remote readback into a migration pass. The manifest arithmetic can be
+  // complete while the overall CLI remains fail-closed on the unresolved
+  // candidate evidence.
+  const globalBaselinePath = path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane-budget", "account-baseline.json");
+  assert.equal(globalDemand._manifest_measurement.remote_readback, "not_verified");
+  const globalWithBaselineCli = run([
+    "--candidate", GLOBAL_SCOUTER,
+    "--account-baseline", globalBaselinePath,
+    "--request-demand", globalDemandPath,
+    "--format", "json",
+  ]);
+  assert.equal(globalWithBaselineCli.status, 2, "a verified baseline must not promote unverified Global remote evidence");
+  const globalWithBaseline = JSON.parse(globalWithBaselineCli.stdout);
+  assert.equal(globalWithBaseline.budget.input_provenance.account_baseline.status, "verified");
+  assert.equal(globalWithBaseline.budget.r2.manifest_planning_line.verdict, "pass");
+  assert.equal(globalWithBaseline.budget.d1.table_contracts.verdict, "not_verified");
+  assert.equal(globalWithBaseline.budget.verdict, "not_verified");
+  assert.equal(globalWithBaseline.verdict, "not_verified");
 
   // The default CLI path is unchanged and still estate-wide.
   const estateCli = run(["--format", "json"]);

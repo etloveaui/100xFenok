@@ -101,6 +101,10 @@ export function derivePublicPlaneEnrollment(families) {
     if (family.privacy_class !== "public" && family.privacy_class !== "private") {
       throw invalid(`${familyName}.privacy_class must be public or private`);
     }
+    if (family.reader_enrollment !== undefined && typeof family.reader_enrollment !== "boolean") {
+      throw invalid(`${familyName}.reader_enrollment must be boolean when declared`);
+    }
+    if (family.reader_enrollment === false) continue;
     if (family.privacy_class !== "public") continue;
 
     const prefix = publicUrlPrefix(family.manifest_prefix, familyName);

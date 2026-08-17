@@ -116,7 +116,7 @@
 // is a clear error before any write; the token is enforced by the gate first.
 
 import { spawn } from "node:child_process";
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -130,6 +130,7 @@ import {
   validateGenerationManifest,
   validatePublicationReceipt,
 } from "./lib/cloud-data-plane-generation.mjs";
+import { buildCandidateScope } from "./lib/cloud-data-plane-candidate-scope.mjs";
 import { PLANE_PUBLISH_OUTCOME_BINDINGS, PLANE_PUBLISHER_EXCEPTIONS } from "./lib/lane-registry.mjs";
 import { classifyPreparedReceipts } from "./lib/cloud-data-plane-prepared-receipt-lifecycle.mjs";
 import { createCloudflareCloudDataPlane } from "./lib/cloud-data-plane-cloudflare-adapter.mjs";
@@ -165,7 +166,11 @@ const DEFAULT_PUBLISH_OUTCOMES_ROOT = path.join(
 //                    private, "public/data/" or "public/generated/" for public)
 //   files            explicit enrollment list (defaults to walking the whole
 //                    root tree); paths are relative to root
+//   candidate_scope_id optional registry-derived candidate scope replacing a
+//                    hand-written files list for a multi-root publication
 //   privacy_class    "private" or "public" (contract-enforced against prefix)
+//   reader_enrollment optional public read-side enrollment switch; only an
+//                    explicit false suppresses generated reader enrollment
 //   plan             cost-gate declaration, >= 2x the real spend
 //   policy           contract publication policy budgets
 //   validate_public_payload  required for public families: the contract calls
@@ -543,12 +548,65 @@ export const FAMILIES = {
       return !Object.keys(value).some((key) => /token|secret|password|cookie/i.test(key));
     },
   },
+  "global-scouter": {
+    // Shadow caller-only publication: the canonical export is public, but its
+    // read-side enrollment remains deliberately off until the independent
+    // reader/projection lane is admitted.
+    root: "data/global-scouter",
+    manifest_prefix: "public/data/global-scouter",
+    candidate_scope_id: "global_scouter",
+    reader_enrollment: false,
+    privacy_class: "public",
+    // Global Scouter's source clock is the export's provider date, not the
+    // converter acquisition timestamp.
+    source_as_of: { file: "core/metadata.json", key: "source_date" },
+    // Measured candidate scope: 1,082 assets / 87,268,011 bytes. The class-A
+    // and byte declarations retain >=2x headroom. An all-changed generation
+    // measures 3,250 reads (1,083 presence + 1,083 readback + 1,083 parity
+    // + 1 resume); class-B is conservatively rounded to 7,000 (>=2x).
+    plan: { class_a: 2_200, class_b: 7_000, bytes: 180_000_000 },
+    policy: { max_assets: 1_300, max_total_bytes: 110_000_000 },
+    validate_public_payload({ asset, bytes }) {
+      const SENSITIVE_KEY = /token|secret|password|cookie|authorization|api[_-]?key|credential|private[_-]?key/i;
+      const assetPath = asset?.path;
+      if (assetPath === "README.md" || assetPath?.endsWith("/README.md")) {
+        try {
+          const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+          return text.trim().length > 0 && !/(?:^|["'\s])(?:token|secret|password|cookie|authorization|api[_-]?key|credential|private[_-]?key)\s*[:=]/i.test(text);
+        } catch {
+          return false;
+        }
+      }
+      // Existing family validators are also callable with bytes-only fixtures;
+      // an absent asset path therefore means the JSON branch, while any known
+      // non-JSON path fails closed.
+      if (assetPath !== undefined && !assetPath.endsWith(".json")) return false;
+      let value;
+      try {
+        value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+      } catch {
+        return false;
+      }
+      if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+      const stack = [value];
+      while (stack.length > 0) {
+        const current = stack.pop();
+        if (current === null || typeof current !== "object") continue;
+        for (const [key, child] of Object.entries(current)) {
+          if (SENSITIVE_KEY.test(key)) return false;
+          if (child !== null && typeof child === "object") stack.push(child);
+        }
+      }
+      return true;
+    },
+  },
 };
 
 const CONTENT_TYPES = {
   ".json": "application/json",
   ".ndjson": "application/x-ndjson",
   ".csv": "text/csv",
+  ".md": "text/markdown",
 };
 
 function fail(code, detail) {
@@ -566,6 +624,32 @@ async function walkFiles(absDir, prefix = "") {
       files.push(...await walkFiles(path.join(absDir, entry.name), relative));
     } else if (entry.isFile()) {
       files.push(relative);
+    }
+  }
+  return files;
+}
+
+// Candidate scopes are the registry-derived source of truth for large or
+// multi-root publications. The publisher intentionally consumes the scope's
+// included roots rather than carrying a second hand-written asset list.
+async function filesFromCandidateScope({ candidateScopeId, absRoot }) {
+  const { manifest } = buildCandidateScope({ repoRoot: REPO_ROOT, candidateId: candidateScopeId });
+  const absoluteFamilyRoot = path.resolve(absRoot);
+  const files = [];
+  for (const included of manifest.included_canonical_roots) {
+    const absolute = path.join(REPO_ROOT, included.path);
+    const relativeRoot = path.relative(absoluteFamilyRoot, absolute);
+    if (!relativeRoot || relativeRoot.startsWith("..") || path.isAbsolute(relativeRoot)) {
+      fail("FAMILY_SCOPE_ROOT_INVALID", `${candidateScopeId}: ${included.path} is outside ${absRoot}`);
+    }
+    const entries = await stat(absolute);
+    if (entries.isFile()) {
+      files.push(relativeRoot);
+    } else if (entries.isDirectory()) {
+      const nested = await walkFiles(absolute);
+      files.push(...nested.map((relative) => path.join(relativeRoot, relative)));
+    } else {
+      fail("FAMILY_SCOPE_ROOT_INVALID", `${candidateScopeId}: ${included.path} is not a regular file or directory`);
     }
   }
   return files;
@@ -1051,7 +1135,11 @@ export async function buildFamilyManifest({
 }) {
   const family = FAMILIES[familyName];
   if (!family) fail("FAMILY_UNKNOWN", familyName);
-  const enrolled = explicitFiles ?? family.files ?? null;
+  const enrolled = explicitFiles ?? family.files ?? (
+    family.candidate_scope_id
+      ? await filesFromCandidateScope({ candidateScopeId: family.candidate_scope_id, absRoot })
+      : null
+  );
   const files = (enrolled ?? await walkFiles(absRoot))
     .sort((left, right) => left.localeCompare(right));
   if (files.length === 0) fail("FAMILY_EMPTY", absRoot);
@@ -2293,7 +2381,7 @@ export async function runPublisherCli({
         ...plan,
         // Explicit-enrollment families also list each enrolled asset; tree
         // families (oecd-cli) keep the original summary shape byte-identical.
-        ...(family.files
+        ...(family.files || family.candidate_scope_id
           ? {
             enrolled: manifest.assets.map((asset) => ({
               path: asset.path,

@@ -1,5 +1,5 @@
 {
-  "registry_digest": "82d8c062c121fda97575ed9d41898d62b8c16acc2490ab9cf47610597f46c623",
+  "registry_digest": "23f884b5162996c54bad11f1e8a6e02acc6f6c835f33c2c3d4e393848a64ab36",
   "registry_schema": "lane-registry/v3",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -1716,6 +1716,24 @@
           {
             "kind": "file",
             "path": "data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history.json",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/global-scouter-shadow-publish.yml": {
+      "exclude": [],
+      "lanes": [
+        "global_scouter"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/publish-outcomes/global-scouter.json",
             "required": false
           }
         ],

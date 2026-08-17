@@ -64,7 +64,10 @@ function jobBlockAt(text, index) {
 // is immediately followed by a non-blocking always() persistence step.
 {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
-  assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 23);
+  assert.ok(PLANE_PUBLISH_OUTCOME_BINDINGS["global-scouter"],
+    "Global Scouter caller publication must be authorized by the registry");
+  assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 24,
+    "the authorized publisher set is an exact registry contract");
   for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
     const workflowText = fs.readFileSync(path.join(REPO_ROOT, binding.workflow), "utf8");
     // Deviations are read from the registry, never hardcoded here: an exception
@@ -210,6 +213,33 @@ function jobBlockAt(text, index) {
     }
   }
 
+  // Caller-only Global Scouter shadow contract: workflow_dispatch confirmation,
+  // latest-main/Node 22 setup, a family-local non-writer publish concurrency
+  // group, and a persistence-only global writer lock with artifact handoff.
+  {
+    const workflowRel = ".github/workflows/global-scouter-shadow-publish.yml";
+    const workflowText = fs.readFileSync(path.join(REPO_ROOT, workflowRel), "utf8");
+    const publishJob = jobBlockAt(workflowText, workflowText.indexOf("  publish:"));
+    const persistJob = jobBlockAt(workflowText, workflowText.indexOf("  persist:"));
+    const trigger = workflowText.slice(workflowText.indexOf("on:"), workflowText.indexOf("permissions:"));
+    assert.match(trigger, /workflow_dispatch:/);
+    assert.doesNotMatch(trigger, /schedule:|workflow_run:|push:|pull_request:/);
+    assert.match(workflowText, /confirm must be exactly PUBLISH-SHADOW/);
+    assert.match(workflowText, /if \[ \"\$CONFIRM\" != \"PUBLISH-SHADOW\" \]; then/);
+    assert.match(publishJob, /group: global-scouter-shadow-publish/);
+    assert.doesNotMatch(publishJob, /group: fenok-data-writer-refs\/heads\/main/);
+    assert.match(persistJob, /group: fenok-data-writer-refs\/heads\/main/);
+    assert.match(workflowText, /node-version: '22'/g);
+    assert.match(workflowText, /Start from latest main/);
+    assert.match(workflowText, /node scripts\/publish-cloud-data-generation\.mjs --family=global-scouter --json/);
+    assert.doesNotMatch(workflowText.split("\n").filter((line) => /^\s*(run:|- run:)/.test(line)).join("\n"), /--tolerate-gate-block/);
+    assert.match(workflowText, /Upload global-scouter outcome shard\n\s*if: \$\{\{ always\(\) \}\}/);
+    assert.match(workflowText, /global-scouter-outcome-\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}/g);
+    assert.match(workflowText, /Download global-scouter outcome shard/);
+    assert.match(workflowText, /if: \$\{\{ always\(\) && needs\.publish\.result != 'cancelled' \}\}/);
+    assert.match(workflowText, /Persist global-scouter publish outcome\n\s*if: \$\{\{ always\(\) \}\}/);
+  }
+
   const slickchartsHistory = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/slickcharts-history.yml"), "utf8");
   const finalizeStart = slickchartsHistory.indexOf("- name: Finalize SlickCharts composite recovery");
   const returnsTarget = slickchartsHistory.indexOf("artifacts/attempt-returns-*");
@@ -226,7 +256,7 @@ function jobBlockAt(text, index) {
     ["-rf artifacts/attempt-dividends-*", "-rf artifacts/attempt-returns-*"],
     "slickcharts-history cleanup must not remove broader runner paths",
   );
-  console.log("publish-outcome workflow contract: 23/23 ordered, always-persisted, exact-owned");
+  console.log(`publish-outcome workflow contract: ${Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length}/${Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length} ordered, always-persisted, exact-owned`);
 }
 
 // Real local-git integration: one helper invocation lands the shard on main;

@@ -52,6 +52,28 @@ assert.equal(etfDetailBinding.workflow, ".github/workflows/fetch-stockanalysis.y
 assert.notEqual(etfDetailBinding.workflow, ".github/workflows/stockanalysis-etf-shadow-publish.yml",
   "the retired shadow publisher must not own the ETF detail publish outcome");
 
+// Global Scouter is a caller-only shadow publisher. Its generated policy may
+// stage the outcome evidence and nothing from the owner-run canonical/public
+// bundle.
+const globalScouterBinding = PLANE_PUBLISH_OUTCOME_BINDINGS["global-scouter"];
+assert.deepEqual(globalScouterBinding, {
+  lane_id: "global_scouter",
+  workflow: ".github/workflows/global-scouter-shadow-publish.yml",
+});
+const globalScouter = manifest.workflows[globalScouterBinding.workflow];
+assert.deepEqual(globalScouter.lanes, ["global_scouter"]);
+assert.deepEqual(globalScouter.stages.always_if_exists, [
+  {
+    kind: "file",
+    path: "data/admin/data-supply-state/publish-outcomes/global-scouter.json",
+    required: false,
+  },
+]);
+assert.deepEqual(globalScouter.stages.success_if_exists, []);
+assert.deepEqual(globalScouter.stages.success_verify_not_plan_if_exists, []);
+assert.deepEqual(globalScouter.stages.required_on_success, []);
+assert.deepEqual(globalScouter.exclude, []);
+
 const defillama = manifest.workflows[".github/workflows/fetch-defillama.yml"];
 assert.deepEqual(defillama.lanes, ["defillama_stablecoins"]);
 assert.deepEqual(defillama.stages.always_if_exists.map((entry) => entry.path), [
