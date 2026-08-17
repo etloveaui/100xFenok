@@ -127,6 +127,24 @@ export function derivePublicPlaneEnrollment(families) {
   });
 }
 
+export function derivePrivatePlaneDeny(fileOutputs) {
+  if (!Array.isArray(fileOutputs)) {
+    throw invalid("private deny file outputs must be an array");
+  }
+
+  const paths = fileOutputs.map((file, index) => {
+    const segments = requireCleanSegments(file, `private deny file outputs entry ${index}`);
+    if (segments[0] !== "data" || segments.length === 1) {
+      throw invalid(`private deny file outputs entry ${index} must start with data/`);
+    }
+    return `/${segments.join("/")}`;
+  });
+  const uniquePaths = new Set(paths);
+  if (uniquePaths.size !== paths.length) throw invalid("duplicate private deny path");
+
+  return Object.freeze(paths.sort(compareStrings));
+}
+
 function assertSchema(schema) {
   if (schema?.schema_version !== PLANE_ENROLLMENT_SCHEMA_VERSION
     || !Array.isArray(schema.exact)
@@ -135,8 +153,23 @@ function assertSchema(schema) {
   }
 }
 
-export function renderPlaneEnrollmentModule(schema) {
+function assertPrivateDeny(privateDeny) {
+  if (!Array.isArray(privateDeny)) throw invalid("private deny must be an array");
+  const normalized = derivePrivatePlaneDeny(privateDeny.map((pathname, index) => {
+    if (typeof pathname !== "string" || !pathname.startsWith("/")) {
+      throw invalid(`private deny entry ${index} must be an absolute URL path`);
+    }
+    return pathname.slice(1);
+  }));
+  if (normalized.length !== privateDeny.length
+    || normalized.some((pathname, index) => pathname !== privateDeny[index])) {
+    throw invalid("private deny paths must be sorted and unique");
+  }
+}
+
+export function renderPlaneEnrollmentModule(schema, privateDeny = []) {
   assertSchema(schema);
+  assertPrivateDeny(privateDeny);
   const exact = [...schema.exact]
     .sort(([leftPath, leftFamily], [rightPath, rightFamily]) => (
       compareStrings(leftPath, rightPath) || compareStrings(leftFamily, rightFamily)
@@ -149,6 +182,9 @@ export function renderPlaneEnrollmentModule(schema) {
     ))
     .map((entry) => `  ${JSON.stringify(entry)},`)
     .join("\n");
+  const renderedPrivateDeny = privateDeny
+    .map((pathname) => `  ${JSON.stringify(pathname)},`)
+    .join("\n");
   return [
     `export const PLANE_ENROLLMENT_SCHEMA_VERSION = ${JSON.stringify(schema.schema_version)};`,
     "export const PLANE_ENROLLMENT_EXACT = Object.freeze([",
@@ -156,6 +192,9 @@ export function renderPlaneEnrollmentModule(schema) {
     "]);",
     "export const PLANE_ENROLLMENT_PREFIXES = Object.freeze([",
     prefixes,
+    "]);",
+    "export const PLANE_ENROLLMENT_PRIVATE_DENY = Object.freeze([",
+    renderedPrivateDeny,
     "]);",
     "",
   ].join("\n");

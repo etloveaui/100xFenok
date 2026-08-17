@@ -1,33 +1,22 @@
 // Single source of truth for the selective Cloudflare asset-to-Worker boundary.
 //
-// The private paths stay explicit because they are deny routes, not public
-// enrollment. Public Worker-first families are derived from the generated
-// enrollment authority so a newly enrolled family cannot silently bypass the
-// data-plane read path or its fallback contract.
+// Private deny paths are derived from the generated registry output, with the
+// isolated Griffin exception kept explicit. Public Worker-first families are
+// derived from the generated enrollment authority so a newly enrolled family
+// cannot silently bypass the data-plane read path or its fallback contract.
 
 import {
   PLANE_ENROLLMENT_EXACT,
+  PLANE_ENROLLMENT_PRIVATE_DENY,
   PLANE_ENROLLMENT_PREFIXES,
 } from "./cloud-data-plane-enrollment.generated.mjs";
 
-const PRIVATE_PUBLIC_PATH_VALUES = Object.freeze([
+const EXPLICIT_PRIVATE_PATH_VALUES = Object.freeze([
   "/data/sec-13f/investors/griffin.json",
-  "/data/computed/etf_action_index.json",
-  "/data/computed/fenok_etf_signals.json",
-  "/data/computed/fenok_flow_proxies.json",
-  "/data/computed/fenok_flow_proxies_history.json",
-  "/data/computed/fenok_news_tone_proxy.json",
-  "/data/computed/fenok_news_tone_proxy_history.json",
-  "/data/computed/fenok_occ_options_volume.json",
-  "/data/computed/fenok_occ_options_volume_history.json",
-  "/data/computed/fenok_signal_lens_proxies.json",
-  "/data/computed/fenok_signal_lens_proxies_history.json",
-  "/data/computed/fenok_signal_lens_proxies_summary.json",
-  "/data/computed/fenok_signals.json",
-  "/data/computed/fenok_social_attention_proxy.json",
-  "/data/computed/fenok_social_attention_proxy_history.json",
-  "/data/computed/sec13f_bridge_index.json",
 ]);
+export const PRIVATE_PUBLIC_PATH_VALUES = Object.freeze([
+  ...new Set([...PLANE_ENROLLMENT_PRIVATE_DENY, ...EXPLICIT_PRIVATE_PATH_VALUES]),
+].sort());
 const PRIVATE_PUBLIC_PATH_SET = new Set(PRIVATE_PUBLIC_PATH_VALUES);
 
 // Keep the mutating Set private to this module. Callers receive a frozen

@@ -614,3 +614,20 @@ export const PLANE_ENROLLMENT_EXACT = Object.freeze([
 export const PLANE_ENROLLMENT_PREFIXES = Object.freeze([
   {"prefix":"/data/edgar-korean-summaries/","family":"edgar-korean-summaries"},
 ]);
+export const PLANE_ENROLLMENT_PRIVATE_DENY = Object.freeze([
+  "/data/computed/etf_action_index.json",
+  "/data/computed/fenok_etf_signals.json",
+  "/data/computed/fenok_flow_proxies.json",
+  "/data/computed/fenok_flow_proxies_history.json",
+  "/data/computed/fenok_news_tone_proxy.json",
+  "/data/computed/fenok_news_tone_proxy_history.json",
+  "/data/computed/fenok_occ_options_volume.json",
+  "/data/computed/fenok_occ_options_volume_history.json",
+  "/data/computed/fenok_signal_lens_proxies.json",
+  "/data/computed/fenok_signal_lens_proxies_history.json",
+  "/data/computed/fenok_signal_lens_proxies_summary.json",
+  "/data/computed/fenok_signals.json",
+  "/data/computed/fenok_social_attention_proxy.json",
+  "/data/computed/fenok_social_attention_proxy_history.json",
+  "/data/computed/sec13f_bridge_index.json",
+]);

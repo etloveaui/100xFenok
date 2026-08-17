@@ -4,9 +4,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 import { derivedPrivateFileOutputs } from "./lib/derived-asset-registry.mjs";
+import { PLANE_ENROLLMENT_PRIVATE_DENY } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
 import {
   FINAL_WORKER_FIRST_PATTERNS,
   PRIVATE_PUBLIC_PATHS,
+  PRIVATE_PUBLIC_PATH_VALUES,
   deriveWorkerFirstPatterns,
 } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
 
@@ -43,6 +45,19 @@ assert.equal(FINAL_WORKER_FIRST_PATTERNS.includes("/data/*"), false, "broad data
 assert.equal(FINAL_WORKER_FIRST_PATTERNS.some((pattern) => pattern.startsWith("!")), false, "no negative override can bypass Worker-first");
 assert.equal(Object.isFrozen(FINAL_WORKER_FIRST_PATTERNS), true, "Worker-first list is immutable");
 assert.equal(Object.isFrozen(PRIVATE_PUBLIC_PATHS), true, "private deny authority is immutable");
+assert.equal(Object.isFrozen(PRIVATE_PUBLIC_PATH_VALUES), true, "private deny paths are immutable");
+
+const expectedDerivedPrivatePaths = derivedPrivateFileOutputs().map((relativePath) => `/${relativePath}`);
+assert.deepEqual(
+  PLANE_ENROLLMENT_PRIVATE_DENY,
+  expectedDerivedPrivatePaths,
+  "generated private deny export matches derived registry outputs",
+);
+assert.deepEqual(
+  PRIVATE_PUBLIC_PATH_VALUES,
+  [...new Set([...expectedDerivedPrivatePaths, "/data/sec-13f/investors/griffin.json"])].sort(),
+  "final private deny authority is exactly derived outputs plus Griffin",
+);
 
 for (const relativePath of [
   "data/sec-13f/investors/griffin.json",

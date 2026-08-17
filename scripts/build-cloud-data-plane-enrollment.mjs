@@ -5,7 +5,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { FAMILIES } from "./publish-cloud-data-generation.mjs";
+import { derivedPrivateFileOutputs } from "./lib/derived-asset-registry.mjs";
 import {
+  derivePrivatePlaneDeny,
   derivePublicPlaneEnrollment,
   renderPlaneEnrollmentModule,
 } from "./lib/plane-enrollment-derivation.mjs";
@@ -49,7 +51,8 @@ async function atomicWrite(filePath, contents) {
 
 const mode = modeFromArgs(process.argv.slice(2));
 const schema = derivePublicPlaneEnrollment(FAMILIES);
-const expected = renderPlaneEnrollmentModule(schema);
+const privateDeny = derivePrivatePlaneDeny(derivedPrivateFileOutputs());
+const expected = renderPlaneEnrollmentModule(schema, privateDeny);
 const current = await readCurrent();
 
 if (mode === "check") {
