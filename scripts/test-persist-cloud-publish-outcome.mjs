@@ -37,6 +37,28 @@ function run(command, args, cwd) {
   return result.stdout.trim();
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function persistCommandPattern(family, workflow) {
+  return new RegExp(
+    `persist-cloud-publish-outcome\\.mjs\\s+--family=${escapeRegExp(family)}`
+      + `\\s+--workflow=${escapeRegExp(workflow)}`,
+  );
+}
+
+function jobBlockAt(text, index) {
+  const headings = [...text.matchAll(/^  [a-z][a-z0-9_-]*:\s*$/gmu)];
+  const position = headings.findIndex((match, candidate) => (
+    match.index <= index && (candidate === headings.length - 1 || headings[candidate + 1].index > index)
+  ));
+  assert.ok(position >= 0, "persistence command must belong to a workflow job");
+  const start = headings[position].index;
+  const end = position + 1 < headings.length ? headings[position + 1].index : text.length;
+  return text.slice(start, end);
+}
+
 // Canonical workflow contract: every bound publisher follows the canonical
 // data commit, owns exactly one family, fails the job on publish failure, and
 // is immediately followed by a non-blocking always() persistence step.
@@ -74,7 +96,7 @@ function run(command, args, cwd) {
       // on a failed publish, not only on a successful one.
       assert.match(workflowText, /Upload [^\n]*outcome shard\n\s*if: \$\{\{ always\(\) \}\}/,
         `${family} must upload its outcome shard under always()`);
-      assert.match(workflowText, /needs\.publish\.result != 'cancelled'/,
+      assert.match(workflowText, /needs\.[a-z0-9_-]+\.result != 'cancelled'/,
         `${family} persistence must run on a failed publish, skipping only a cancelled one`);
     }
     const publishCommand = `node scripts/publish-cloud-data-generation.mjs --family=${family}`
@@ -85,11 +107,9 @@ function run(command, args, cwd) {
     const publishStepEnd = workflowText.indexOf("\n      - name:", publishIndex);
     const isCoordinator = binding.workflow === COORDINATOR_WORKFLOW;
     const detachedPersistence = isCoordinator || Boolean(exception?.detached_persistence);
+    const persistenceCommandIndex = workflowText.search(persistCommandPattern(family, binding.workflow));
     const persistenceStepStart = detachedPersistence
-      ? workflowText.lastIndexOf(
-        "\n      - name:",
-        workflowText.indexOf(`persist-cloud-publish-outcome.mjs --family=${family} --workflow=${binding.workflow}`),
-      )
+      ? workflowText.lastIndexOf("\n      - name:", persistenceCommandIndex)
       : workflowText.indexOf("\n      - name:", publishIndex);
     assert.ok(
       publishStepStart >= 0 && publishStepEnd > publishIndex && persistenceStepStart >= publishStepEnd,
@@ -111,8 +131,9 @@ function run(command, args, cwd) {
     // The outcome may be carried within the job or across jobs; both are exact
     // expressions, and persistence stays mandatory either way.
     assert.match(persistenceStep, new RegExp(
-      `persist-cloud-publish-outcome\\.mjs --family=${family} --workflow=${binding.workflow.replaceAll(".", "\\.")}`
-      + ` --publisher-outcome=\\$\\{\\{ (?:steps\\.publish_cloud_generation\\.outcome|needs\\.[a-z0-9_-]+\\.outputs\\.publisher_outcome) \\}\\}`,
+      `persist-cloud-publish-outcome\\.mjs\\s+--family=${escapeRegExp(family)}`
+      + `\\s+--workflow=${escapeRegExp(binding.workflow)}`
+      + `\\s+--publisher-outcome=\\$\\{\\{ (?:steps\\.publish_cloud_generation\\.outcome|needs\\.[a-z0-9_-]+\\.outputs\\.publisher_outcome) \\}\\}`,
     ));
     // Persistence is unconditional by default. A declared conditional guard may
     // narrow it, but only by ANDing onto always() — the step can never stop
@@ -120,6 +141,9 @@ function run(command, args, cwd) {
     if (exception?.conditional_persistence) {
       assert.match(persistenceStep, /if: \$\{\{ always\(\) && /,
         `${family} declares conditional persistence, which must still begin at always()`);
+    } else if (exception?.detached_persistence && !/\n        if: /.test(persistenceStep)) {
+      assert.match(jobBlockAt(workflowText, persistenceCommandIndex), /\n    if: >-\n\s+always\(\) &&/,
+        `${family} detached persistence job must begin with always()`);
     } else {
       assert.match(persistenceStep, /if: \$\{\{ always\(\) \}\}/);
     }

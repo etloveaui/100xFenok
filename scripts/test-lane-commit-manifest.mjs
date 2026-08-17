@@ -43,6 +43,15 @@ for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) 
   );
 }
 
+// P0 ownership: the ETF detail publish-outcome family is bound to the natural
+// StockAnalysis workflow that runs the publish/persist jobs; the retired
+// shadow publisher has no remaining claim.
+const etfDetailBinding = PLANE_PUBLISH_OUTCOME_BINDINGS["stockanalysis-etf-detail"];
+assert.equal(etfDetailBinding.workflow, ".github/workflows/fetch-stockanalysis.yml",
+  "the natural StockAnalysis workflow must own the ETF detail publish outcome");
+assert.notEqual(etfDetailBinding.workflow, ".github/workflows/stockanalysis-etf-shadow-publish.yml",
+  "the retired shadow publisher must not own the ETF detail publish outcome");
+
 const defillama = manifest.workflows[".github/workflows/fetch-defillama.yml"];
 assert.deepEqual(defillama.lanes, ["defillama_stablecoins"]);
 assert.deepEqual(defillama.stages.always_if_exists.map((entry) => entry.path), [
@@ -278,6 +287,7 @@ assert.deepEqual(stockanalysis.stages.always_if_exists, [
   { kind: "directory", path: "data/admin/yahoo_etf_fallback", required: false },
   { kind: "dynamic_set", path: "data/yf/finance", required: false },
   { kind: "directory", path: "100xfenok-next/public/data", required: false },
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_detail.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_etf_universe.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/stockanalysis_stock_financial.json", required: false },

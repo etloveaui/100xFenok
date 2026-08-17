@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
-import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
+import { LANE_REGISTRY, PLANE_PUBLISH_OUTCOME_BINDINGS } from "./lib/lane-registry.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const EMITTER = path.join(REPO_ROOT, "scripts", "emit-stockanalysis-attempt.mjs");
@@ -120,6 +120,23 @@ const ownedLanes = LANE_REGISTRY.lanes
 {
   assert.ok(ownedLanes.length >= 5, `expected several owned lanes, got ${ownedLanes.length}`);
   assert.ok(ownedLanes.includes("stockanalysis_etf_detail"));
+}
+
+// --- 1b. P0 outcome ownership: the natural workflow owns the family -----------
+{
+  const binding = PLANE_PUBLISH_OUTCOME_BINDINGS["stockanalysis-etf-detail"];
+  assert.ok(binding, "the stockanalysis-etf-detail family must stay bound");
+  assert.equal(binding.workflow, OWNER_WORKFLOW,
+    "the natural StockAnalysis workflow must own the stockanalysis-etf-detail publish outcome");
+  assert.notEqual(binding.workflow, ".github/workflows/stockanalysis-etf-shadow-publish.yml",
+    "the retired shadow workflow must not own the publish outcome");
+  const etfDetail = LANE_REGISTRY.lanes.find((lane) => lane.id === "stockanalysis_etf_detail");
+  assert.equal(etfDetail.caller_workflows, undefined,
+    "the retired shadow caller claim must be removed from the lane record");
+  assert.ok(
+    etfDetail.commit_shards.includes("data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json"),
+    "the natural StockAnalysis lane must own the publish-outcome shard",
+  );
 }
 
 // --- 2. every owned lane exists in the detection config ---

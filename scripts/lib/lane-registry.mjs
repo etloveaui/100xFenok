@@ -418,6 +418,7 @@ const lanes = [
       attemptShard("stockanalysis_etf_detail"),
       "data/stockanalysis",
       "data/admin/stockanalysis-recovery",
+      publishOutcomeShard("stockanalysis-etf-detail"),
     ],
     recovery_store: "data/admin/stockanalysis-recovery/index.json",
     kpi_recovery_shape: "direct",
@@ -426,19 +427,11 @@ const lanes = [
       "scripts/fetch-stockanalysis.py",
       "scripts/emit-stockanalysis-attempt.mjs",
     ],
-    // The plane publication is a dedicated manual caller, not the acquisition
-    // workflow. Owning the publish-outcome shard HERE is what authorizes the
-    // family and points the derived binding at the shadow workflow, so the
-    // primary StockAnalysis workflow never claims the same shard.
-    caller_workflows: {
-      ".github/workflows/stockanalysis-etf-shadow-publish.yml": {
-        commit_shards: [publishOutcomeShard("stockanalysis-etf-detail")],
-        script_sources: [
-          "scripts/publish-cloud-data-generation.mjs",
-          "scripts/persist-cloud-publish-outcome.mjs",
-        ],
-      },
-    },
+    // The natural workflow owns the publish-outcome family: the plane
+    // publication and its separate always() persistence job both run inside
+    // fetch-stockanalysis.yml. Declaring the shard HERE (lane commit_shards)
+    // is what authorizes the family and points the derived binding at the
+    // owning workflow, with exactly one owner and no dedicated caller claim.
   }),
   record({
     id: "stockanalysis_stock_financial",
@@ -1622,6 +1615,10 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".gi
     // may be counted as ready, never whether it may be carried.
     commitSpec("data/yf/finance", "dynamic_set"),
     commitSpec("100xfenok-next/public/data", "directory", false),
+    // Owned publish-outcome shard for the natural plane publish job. The
+    // separate persistence job validates this exact optional-file stage before
+    // committing anything (persist-cloud-publish-outcome.mjs).
+    commitSpec(publishOutcomeShard("stockanalysis-etf-detail"), "file", false),
   ],
 }, [
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
@@ -1706,9 +1703,12 @@ workflow_policies[".github/workflows/coordinate-computed-signals.yml"] = policy(
   ],
 });
 
-// Dedicated manual StockAnalysis ETF shadow publisher. It commits ONLY the
-// publish-outcome shard: the canonical payload stays owned by the acquisition
-// workflow, and this caller never touches data/stockanalysis.
+// Retired manual StockAnalysis ETF shadow publisher (superseded 2026-08-17 by
+// the natural publish/persist jobs in fetch-stockanalysis.yml). The policy
+// entry is retained only because the retired workflow file still exists on
+// disk and the writer inventory requires a manifest entry for every writer
+// workflow; the family's derived binding now points at the natural workflow,
+// so a manual dispatch's persist step is refused by PLANE_PUBLISH_OUTCOME_BINDINGS.
 workflow_policies[".github/workflows/stockanalysis-etf-shadow-publish.yml"] = policy(["stockanalysis_etf_detail"], {
   always_if_exists: [
     commitSpec(publishOutcomeShard("stockanalysis-etf-detail"), "file"),
@@ -1791,12 +1791,12 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
     reason: "DEC-340 mirrored the symbols acceptance check onto the weekly member, so the same non-blocking check sits between publish and persistence",
   }),
   "stockanalysis-etf-detail": Object.freeze({
-    workflow: ".github/workflows/stockanalysis-etf-shadow-publish.yml",
+    workflow: ".github/workflows/fetch-stockanalysis.yml",
     non_blocking_publisher: false,
     detached_persistence: true,
-    reason: "pre-shadow publication splits publish and persistence into separate jobs so only the persistence job takes the global Git writer lock; the publisher itself must still fail the job",
+    reason: "natural publication splits publish and persistence into separate jobs so only the persistence job takes the global Git writer lock; the publisher itself must still fail the job",
     canonical_commit: "external_authority",
-    canonical_commit_reason: "the canonical data/stockanalysis/etfs tree is acquired and committed by fetch-stockanalysis.yml; this publish job performs no canonical Git write at all, and the separate persistence job is the only step that touches Git",
+    canonical_commit_reason: "the publish job performs no canonical Git write at all: acquisition and the Git commit/persistence steps live in fetch-stockanalysis.yml outside this publishing job, and the separate persistence job is the only step that touches Git",
     strict_gate: true,
     strict_gate_reason: "first shadow publication of the largest payload in the estate: --tolerate-gate-block turns an unknown or over-threshold cost verdict into exit 0, so an explicitly requested run would report green while having published nothing. The gate-block outcome shard is still written and persisted; only the exit code changes, and the run must be red",
   }),

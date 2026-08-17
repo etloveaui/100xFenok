@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import {
   LANE_REGISTRY,
   LANE_REGISTRY_SCHEMA,
+  PLANE_PUBLISH_OUTCOME_BINDINGS,
   declaredAdminRoots,
   declaredExceptionPaths,
   providerBlastRadius,
@@ -250,6 +251,27 @@ function clone(value) {
     ["stockanalysis_etf_detail", "stockanalysis_etf_universe", "stockanalysis_stock_financial", "stockanalysis_surfaces"].sort(),
     "the StockAnalysis recovery store must list every claimant lane",
   );
+  // P0 ownership: the stockanalysis-etf-detail publish-outcome family belongs
+  // to the natural StockAnalysis workflow (the acquisition workflow that runs
+  // the publish and persistence jobs), with exactly one owner and no retired
+  // shadow caller claim.
+  {
+    const etfDetail = registryLaneById("stockanalysis_etf_detail");
+    assert.equal(etfDetail.caller_workflows, undefined,
+      "the retired shadow publisher must no longer claim the stockanalysis-etf-detail outcome shard");
+    assert.ok(
+      etfDetail.commit_shards.includes("data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json"),
+      "the natural StockAnalysis lane must own the publish-outcome shard",
+    );
+    const binding = PLANE_PUBLISH_OUTCOME_BINDINGS["stockanalysis-etf-detail"];
+    assert.ok(binding, "the stockanalysis-etf-detail family must stay bound");
+    assert.equal(binding.workflow, ".github/workflows/fetch-stockanalysis.yml",
+      "the natural StockAnalysis workflow must own the stockanalysis-etf-detail publish outcome");
+    assert.equal(binding.lane_id, "stockanalysis_etf_detail",
+      "the stockanalysis-etf-detail family must stay bound to its lane");
+    assert.notEqual(binding.workflow, ".github/workflows/stockanalysis-etf-shadow-publish.yml",
+      "the retired shadow workflow must not own the publish outcome");
+  }
   assert.deepEqual(
     [...(roots.get("data/admin/yahoo_etf_fallback") ?? [])],
     ["yahoo_etf_fallback"],
