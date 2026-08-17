@@ -4,16 +4,6 @@
   "entity": "AMZN",
   "attempts": [
     {
-      "run_id": "30956702755",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 21 * * *",
-      "natural": true,
-      "observed_at": "2026-08-04T22:33:14Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
       "run_id": "31052986835",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -144,27 +134,36 @@
       "outcome": "failed",
       "controlled": false,
       "error": "ValueError: source did not advance beyond the retained LKG for stock:AMZN"
+    },
+    {
+      "run_id": "32072627394",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-17T21:45:53Z",
+      "outcome": "recovered",
+      "controlled": false
     }
   ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
-    "path": "data/admin/stockanalysis-recovery/lkg/stock/AMZN.json",
-    "payload_sha256": "09d3e74e310befbe12ccfdfddac36276fea6cc26a2c6161ff87b2e03ee8054ad",
-    "source_as_of": "2026-08-14T20:00:00Z",
-    "fetched_at": "2026-08-14T21:46:38Z"
+    "path": "data/stockanalysis/stocks/AMZN.json",
+    "payload_sha256": "c38b5068d21357c531a3a7a72e6d25abfa3e44323725b03a9f32a7f4e6f7efdd",
+    "source_as_of": "2026-08-17T20:00:00Z",
+    "fetched_at": "2026-08-17T21:46:00Z"
   },
-  "updated_at": "2026-08-16T21:40:14Z",
+  "updated_at": "2026-08-17T21:45:53Z",
   "last_attempt": {
-    "run_id": "31974093247",
+    "run_id": "32072627394",
     "run_attempt": 1,
     "event_name": "schedule",
     "schedule": "20 21 * * *",
     "natural": true,
-    "observed_at": "2026-08-16T21:40:14Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "ValueError: source did not advance beyond the retained LKG for stock:AMZN"
+    "observed_at": "2026-08-17T21:45:53Z",
+    "outcome": "recovered",
+    "controlled": false
   },
   "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/stock/AMZN.json",
@@ -172,19 +171,9 @@
     "source_as_of": "2026-08-14T20:00:00Z",
     "fetched_at": "2026-08-14T21:46:38Z"
   },
-  "recovered_from_run_id": "29624561317",
-  "recovered_at": "2026-07-18T22:56:25Z",
+  "recovered_from_run_id": "31974093247",
+  "recovered_at": "2026-08-17T21:45:53Z",
   "last_recovered_failure": {
-    "run_id": "29624561317",
-    "run_attempt": 1,
-    "observed_at": "2026-07-18T01:18:00Z",
-    "error": "HTTPError: HTTP Error 404: Not Found",
-    "controlled": false,
-    "had_canonical_before_failure": true,
-    "expected_payload_sha256": "9ceedb0fb53faf696a30175ee275eb099e1a376c168856a8fb313fc8656ded40",
-    "data_loss": false
-  },
-  "latest_failure": {
     "run_id": "31974093247",
     "run_attempt": 1,
     "observed_at": "2026-08-16T21:40:14Z",
@@ -193,5 +182,8 @@
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "09d3e74e310befbe12ccfdfddac36276fea6cc26a2c6161ff87b2e03ee8054ad",
     "data_loss": false
-  }
+  },
+  "recovery_run_id": "32072627394",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule"
 }

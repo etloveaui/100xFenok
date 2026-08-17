@@ -4,16 +4,6 @@
   "entity": "AMZN",
   "attempts": [
     {
-      "run_id": "30769627245",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 21 * * *",
-      "natural": true,
-      "observed_at": "2026-08-02T22:14:54Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
       "run_id": "30956702755",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -143,29 +133,49 @@
       "outcome": "failed",
       "controlled": false,
       "error": "ValueError: financial statement missing required fields: ratios dividendyield"
+    },
+    {
+      "run_id": "32072627394",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-17T21:45:53Z",
+      "outcome": "recovered",
+      "controlled": false
     }
   ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
+    "path": "data/stockanalysis/financials/AMZN.json",
+    "payload_sha256": "4177a07e5797086587d1b83c513d45f152c504453e5be2991844d9d916a5bfd6",
+    "source_as_of": "2026-06-30",
+    "fetched_at": "2026-08-17T21:45:59Z"
+  },
+  "updated_at": "2026-08-17T21:45:53Z",
+  "last_attempt": {
+    "run_id": "32072627394",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "observed_at": "2026-08-17T21:45:53Z",
+    "outcome": "recovered",
+    "controlled": false
+  },
+  "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/financial/AMZN.json",
     "payload_sha256": "2892c1f1bcb8f8435148fdd3c676943f335a8735b355a30cba47d99ab2fc1e44",
     "source_as_of": "2026-06-30",
     "fetched_at": "2026-08-14T21:46:38Z"
   },
-  "updated_at": "2026-08-15T21:40:57Z",
-  "last_attempt": {
-    "run_id": "31910027994",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "20 21 * * *",
-    "natural": true,
-    "observed_at": "2026-08-15T21:40:57Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "ValueError: financial statement missing required fields: ratios dividendyield"
-  },
-  "latest_failure": {
+  "recovered_from_run_id": "31910027994",
+  "recovered_at": "2026-08-17T21:45:53Z",
+  "recovery_run_id": "32072627394",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "last_recovered_failure": {
     "run_id": "31910027994",
     "run_attempt": 1,
     "observed_at": "2026-08-15T21:40:57Z",
@@ -174,11 +184,5 @@
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "2892c1f1bcb8f8435148fdd3c676943f335a8735b355a30cba47d99ab2fc1e44",
     "data_loss": false
-  },
-  "lkg": {
-    "path": "data/admin/stockanalysis-recovery/lkg/financial/AMZN.json",
-    "payload_sha256": "2892c1f1bcb8f8435148fdd3c676943f335a8735b355a30cba47d99ab2fc1e44",
-    "source_as_of": "2026-06-30",
-    "fetched_at": "2026-08-14T21:46:38Z"
   }
 }

@@ -4,16 +4,6 @@
   "entity": "TSLA",
   "attempts": [
     {
-      "run_id": "30956702755",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 21 * * *",
-      "natural": true,
-      "observed_at": "2026-08-04T22:33:14Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
       "run_id": "31052986835",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -144,27 +134,36 @@
       "outcome": "failed",
       "controlled": false,
       "error": "ValueError: source did not advance beyond the retained LKG for stock:TSLA"
+    },
+    {
+      "run_id": "32072627394",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-17T21:45:53Z",
+      "outcome": "recovered",
+      "controlled": false
     }
   ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
-    "path": "data/admin/stockanalysis-recovery/lkg/stock/TSLA.json",
-    "payload_sha256": "f9b5c2044df4dc07de03aea978d48f0464cd4545449e6fab8c751c4458b04060",
-    "source_as_of": "2026-08-14T20:00:00Z",
-    "fetched_at": "2026-08-14T21:46:44Z"
+    "path": "data/stockanalysis/stocks/TSLA.json",
+    "payload_sha256": "e4ae99699a137e442751d2d3f2ae7e2227f0672d5caa164f0c4d1814496e5e07",
+    "source_as_of": "2026-08-17T20:00:00Z",
+    "fetched_at": "2026-08-17T21:46:05Z"
   },
-  "updated_at": "2026-08-16T21:40:14Z",
+  "updated_at": "2026-08-17T21:45:53Z",
   "last_attempt": {
-    "run_id": "31974093247",
+    "run_id": "32072627394",
     "run_attempt": 1,
     "event_name": "schedule",
     "schedule": "20 21 * * *",
     "natural": true,
-    "observed_at": "2026-08-16T21:40:14Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "ValueError: source did not advance beyond the retained LKG for stock:TSLA"
+    "observed_at": "2026-08-17T21:45:53Z",
+    "outcome": "recovered",
+    "controlled": false
   },
   "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/stock/TSLA.json",
@@ -172,19 +171,9 @@
     "source_as_of": "2026-08-14T20:00:00Z",
     "fetched_at": "2026-08-14T21:46:44Z"
   },
-  "recovered_from_run_id": "29624561317",
-  "recovered_at": "2026-07-18T22:56:25Z",
+  "recovered_from_run_id": "31974093247",
+  "recovered_at": "2026-08-17T21:45:53Z",
   "last_recovered_failure": {
-    "run_id": "29624561317",
-    "run_attempt": 1,
-    "observed_at": "2026-07-18T01:18:00Z",
-    "error": "HTTPError: HTTP Error 404: Not Found",
-    "controlled": false,
-    "had_canonical_before_failure": true,
-    "expected_payload_sha256": "32ea3eb95eb463da42ccc4febbdee0eee5ff0caf95ad3090c0f81a59e091bd9f",
-    "data_loss": false
-  },
-  "latest_failure": {
     "run_id": "31974093247",
     "run_attempt": 1,
     "observed_at": "2026-08-16T21:40:14Z",
@@ -193,5 +182,8 @@
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "f9b5c2044df4dc07de03aea978d48f0464cd4545449e6fab8c751c4458b04060",
     "data_loss": false
-  }
+  },
+  "recovery_run_id": "32072627394",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule"
 }

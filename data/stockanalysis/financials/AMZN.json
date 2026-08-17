@@ -3,7 +3,7 @@
   "source": "stockanalysis",
   "asset_type": "stock",
   "ticker": "AMZN",
-  "fetched_at": "2026-08-14T21:46:38Z",
+  "fetched_at": "2026-08-17T21:45:59Z",
   "role": "financial statement cross-check candidate; not valuation SSOT",
   "statements": {
     "annual": {
@@ -23,7 +23,7 @@
           "fiscalYearShort": "Jan - Dec",
           "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 14, 2026"
+          "lastTradingDay": "Aug 17, 2026"
         },
         "periods": [
           "TTM",
@@ -556,7 +556,7 @@
           "fiscalYearShort": "Jan - Dec",
           "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 14, 2026"
+          "lastTradingDay": "Aug 17, 2026"
         },
         "periods": [
           "TTM",
@@ -1232,7 +1232,7 @@
           "fiscalYearShort": "Jan - Dec",
           "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 14, 2026"
+          "lastTradingDay": "Aug 17, 2026"
         },
         "periods": [
           "TTM",
@@ -1739,7 +1739,7 @@
           "fiscalYearShort": "Jan - Dec",
           "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 14, 2026"
+          "lastTradingDay": "Aug 17, 2026"
         },
         "periods": [
           "TTM",
@@ -1763,7 +1763,7 @@
             "title": "Market Capitalization",
             "format": "reduce_precision",
             "values": [
-              2833025259686,
+              2818571599499,
               2467515659659,
               2306888265045,
               1570152607237,
@@ -1776,7 +1776,7 @@
             "title": "Enterprise Value",
             "format": "reduce_precision",
             "values": [
-              2961672259686,
+              2947218599499,
               2533756659659,
               2377372265045,
               1672048607236,
@@ -1789,7 +1789,7 @@
             "title": "Last Close Price",
             "format": "pershare",
             "values": [
-              265.13,
+              262.65,
               230.82,
               219.39,
               151.94,
@@ -1802,7 +1802,7 @@
             "title": "PE Ratio",
             "format": "ratio",
             "values": [
-              21.319748135396523,
+              21.12032530366951,
               31.769,
               38.936,
               51.607,
@@ -1815,7 +1815,7 @@
             "title": "Forward PE",
             "format": "ratio",
             "values": [
-              28.538982357563427,
+              28.25621550676148,
               31.014,
               37.455,
               45.346,
@@ -1828,7 +1828,7 @@
             "title": "PS Ratio",
             "format": "ratio",
             "values": [
-              3.66121,
+              3.61073,
               3.442,
               3.616,
               2.732,
@@ -1841,7 +1841,7 @@
             "title": "PB Ratio",
             "format": "ratio",
             "values": [
-              5.18273,
+              5.13425,
               6.003,
               8.067,
               7.778,
@@ -1854,7 +1854,7 @@
             "title": "P/TBV Ratio",
             "format": "ratio",
             "values": [
-              5.37747,
+              5.30333,
               6.518,
               9.072,
               9.161,
@@ -1880,7 +1880,7 @@
             "title": "P/OCF Ratio",
             "format": "ratio",
             "values": [
-              17.59526,
+              17.35268,
               17.687,
               19.908,
               18.484,
@@ -1893,7 +1893,7 @@
             "title": "PEG Ratio",
             "format": "ratio",
             "values": [
-              1.37356,
+              1.35995,
               1.814,
               1.686,
               1.679,
@@ -1906,7 +1906,7 @@
             "title": "EV/Sales Ratio",
             "format": "ratio",
             "values": [
-              3.82706,
+              3.77658,
               3.534,
               3.727,
               2.909,
@@ -1919,7 +1919,7 @@
             "title": "EV/EBITDA Ratio",
             "format": "ratio",
             "values": [
-              17.57469,
+              17.34288,
               17.387,
               19.585,
               19.553,
@@ -1932,7 +1932,7 @@
             "title": "EV/EBIT Ratio",
             "format": "ratio",
             "values": [
-              31.67765,
+              31.25983,
               31.682,
               34.659,
               45.372,
@@ -2140,7 +2140,7 @@
             "title": "Earnings Yield",
             "format": "percentage",
             "values": [
-              0.0476354,
+              0.0483013,
               0.03148,
               0.02568,
               0.01938,
@@ -2153,7 +2153,7 @@
             "title": "FCF Yield",
             "format": "percentage",
             "values": [
-              -0.0040934,
+              -0.0041506,
               0.00312,
               0.01425,
               0.02052,
@@ -2176,7 +2176,19 @@
           }
         ],
         "field_count": 32,
-        "endpoint": "/stocks/amzn/financials/ratios/__data.json"
+        "endpoint": "/stocks/amzn/financials/ratios/__data.json",
+        "validation": {
+          "accepted_missing_fields": [
+            {
+              "field": "dividendyield",
+              "reason": "provider_overview_declares_no_dividend"
+            }
+          ],
+          "issuer_dividend_profile": {
+            "classification": "non_payer",
+            "reason": "provider_overview_declares_no_dividend"
+          }
+        }
       }
     },
     "quarterly": {
@@ -2196,7 +2208,7 @@
           "fiscalYearShort": "Jan - Dec",
           "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 14, 2026"
+          "lastTradingDay": "Aug 17, 2026"
         },
         "periods": [
           "2026-06-30",
@@ -3289,7 +3301,7 @@
           "fiscalYearShort": "Jan - Dec",
           "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 14, 2026"
+          "lastTradingDay": "Aug 17, 2026"
         },
         "periods": [
           "2026-06-30",
@@ -4706,7 +4718,7 @@
           "fiscalYearShort": "Jan - Dec",
           "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 14, 2026"
+          "lastTradingDay": "Aug 17, 2026"
         },
         "periods": [
           "2026-06-30",
@@ -5799,7 +5811,7 @@
           "fiscalYearShort": "Jan - Dec",
           "lastTrailingDate": "Jun 30, 2026",
           "reportingFrequency": null,
-          "lastTradingDay": "Aug 14, 2026"
+          "lastTradingDay": "Aug 17, 2026"
         },
         "periods": [
           "TTM",
@@ -5853,7 +5865,7 @@
             "title": "Market Capitalization",
             "format": "reduce_precision",
             "values": [
-              2833025259686,
+              2818571599499,
               2563849462976,
               2235761969595,
               2467515659659,
@@ -5881,7 +5893,7 @@
             "title": "Enterprise Value",
             "format": "reduce_precision",
             "values": [
-              2961672259686,
+              2947218599499,
               2656300462976,
               2291279969594,
               2533756659659,
@@ -5909,7 +5921,7 @@
             "title": "Last Close Price",
             "format": "pershare",
             "values": [
-              265.13,
+              262.65,
               238.34,
               208.27,
               230.82,
@@ -5937,7 +5949,7 @@
             "title": "PE Ratio",
             "format": "ratio",
             "values": [
-              21.319748135396523,
+              21.12032530366951,
               18.952,
               24.623,
               31.769,
@@ -5965,7 +5977,7 @@
             "title": "Forward PE",
             "format": "ratio",
             "values": [
-              28.538982357563427,
+              28.25621550676148,
               28.493,
               26.953,
               31.014,
@@ -5993,7 +6005,7 @@
             "title": "PS Ratio",
             "format": "ratio",
             "values": [
-              3.66121,
+              3.61073,
               3.305,
               3.01,
               3.442,
@@ -6021,7 +6033,7 @@
             "title": "PB Ratio",
             "format": "ratio",
             "values": [
-              5.18273,
+              5.13425,
               4.648,
               5.059,
               6.003,
@@ -6049,7 +6061,7 @@
             "title": "P/TBV Ratio",
             "format": "ratio",
             "values": [
-              5.37747,
+              5.30333,
               4.855,
               5.343,
               6.518,
@@ -6105,7 +6117,7 @@
             "title": "P/OCF Ratio",
             "format": "ratio",
             "values": [
-              17.59526,
+              17.35268,
               15.885,
               15.052,
               17.687,
@@ -6133,7 +6145,7 @@
             "title": "PEG Ratio",
             "format": "ratio",
             "values": [
-              1.37356,
+              1.35995,
               1.329,
               1.434,
               1.814,
@@ -6161,7 +6173,7 @@
             "title": "EV/Sales Ratio",
             "format": "ratio",
             "values": [
-              3.82706,
+              3.77658,
               3.424,
               3.085,
               3.534,
@@ -6189,7 +6201,7 @@
             "title": "EV/EBITDA Ratio",
             "format": "ratio",
             "values": [
-              17.57469,
+              17.34288,
               15.726,
               14.701,
               17.387,
@@ -6217,7 +6229,7 @@
             "title": "EV/EBIT Ratio",
             "format": "ratio",
             "values": [
-              31.67765,
+              31.25983,
               28.345,
               26.823,
               31.682,
@@ -6665,7 +6677,7 @@
             "title": "Earnings Yield",
             "format": "percentage",
             "values": [
-              0.0476354,
+              0.0483013,
               0.05276,
               0.04061,
               0.03148,
@@ -6693,7 +6705,7 @@
             "title": "FCF Yield",
             "format": "percentage",
             "values": [
-              -0.0040934,
+              -0.0041506,
               -0.00453,
               -0.00111,
               0.00312,
@@ -6746,7 +6758,19 @@
           }
         ],
         "field_count": 32,
-        "endpoint": "/stocks/amzn/financials/ratios/__data.json?p=quarterly"
+        "endpoint": "/stocks/amzn/financials/ratios/__data.json?p=quarterly",
+        "validation": {
+          "accepted_missing_fields": [
+            {
+              "field": "dividendyield",
+              "reason": "provider_overview_declares_no_dividend"
+            }
+          ],
+          "issuer_dividend_profile": {
+            "classification": "non_payer",
+            "reason": "provider_overview_declares_no_dividend"
+          }
+        }
       }
     }
   },
