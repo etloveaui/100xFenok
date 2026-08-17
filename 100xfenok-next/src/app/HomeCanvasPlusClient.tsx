@@ -11,6 +11,8 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { clamp, formatSignedPercentDecimal, getRegimeClass, getRegimeLabel } from "@/lib/dashboard/formatters";
 import { DATA_STATE_LABELS } from "@/lib/data-state";
 import type { DashboardSnapshot, SectorSnapshot } from "@/lib/dashboard/types";
+import { projectMaterialChanges } from "@/lib/home/material-change";
+import { readPersonalFlags, type Flag } from "@/lib/personal/personal-state";
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/types";
@@ -63,17 +65,6 @@ type RevisionMoversData = {
   generated_at?: string;
   up?: RevisionMoverRow[];
   down?: RevisionMoverRow[];
-};
-
-type StockMoverHighlight = {
-  key: string;
-  label: string;
-  ticker: string;
-  name: string;
-  change: number;
-  tone: RegimeTone;
-  /** True for the placeholder row shown while movers are loading — routing must key off this, never off display text. */
-  isPlaceholder?: boolean;
 };
 
 type FinanceHistoryPoint = {
@@ -188,11 +179,6 @@ function formatSignedPercentUnit(value: number | null | undefined, digits = 2): 
   if (typeof value !== "number" || !Number.isFinite(value)) return "-";
   const prefix = value > 0 ? "+" : value < 0 ? "-" : "";
   return `${prefix}${Math.abs(value).toFixed(digits)}%`;
-}
-
-function formatRevisionMove(value: number | null | undefined): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
-  return formatSignedPercentUnit(value * 100, 1);
 }
 
 function formatMarketState(value: string | null): string {
@@ -312,42 +298,50 @@ function buildInvestorHighlights(data: TradesRankingData | null): InvestorHighli
   return highlights;
 }
 
-function buildStockMoverHighlights(data: RevisionMoversData | null): StockMoverHighlight[] {
-  if (!data) return [];
-  const up = (data.up ?? [])
-    .filter((row) => row.ticker && typeof row.change_1w === "number" && Number.isFinite(row.change_1w))
-    .sort((a, b) => (b.change_1w ?? 0) - (a.change_1w ?? 0))
-    .slice(0, 2)
-    .map((row) => ({
-      key: `up-${row.ticker}`,
-      label: "상향",
-      ticker: row.ticker ?? "",
-      name: row.name ?? "내년(FY+1) EPS 추정치",
-      change: row.change_1w ?? 0,
-      tone: "positive" as RegimeTone,
-    }));
-  const down = (data.down ?? [])
-    .filter((row) => row.ticker && typeof row.change_1w === "number" && Number.isFinite(row.change_1w))
-    .sort((a, b) => (a.change_1w ?? 0) - (b.change_1w ?? 0))
-    .slice(0, 2)
-    .map((row) => ({
-      key: `down-${row.ticker}`,
-      label: "하향",
-      ticker: row.ticker ?? "",
-      name: row.name ?? "내년(FY+1) EPS 추정치",
-      change: row.change_1w ?? 0,
-      tone: "negative" as RegimeTone,
-    }));
-  return [...up, ...down];
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function useInvestorHighlights(): { highlights: InvestorHighlight[]; quarter: string; loading: boolean } {
-  const [data, setData] = useState<TradesRankingData | null>(null);
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isSafeTradesRankingRow(value: unknown): value is TradesRankingRow {
+  if (!isRecord(value) || !isRecord(value.top_investor)) return false;
+  return typeof value.ticker === "string"
+    && value.ticker.trim().length > 0
+    && typeof value.sector === "string"
+    && isFiniteNumber(value.amount)
+    && isFiniteNumber(value.investors_count)
+    && (value.new_count === undefined || isFiniteNumber(value.new_count))
+    && typeof value.top_investor.name === "string"
+    && value.top_investor.name.trim().length > 0;
+}
+
+function isValidTradesRankingData(value: unknown): value is TradesRankingData {
+  if (!isRecord(value) || !isRecord(value.metadata)) return false;
+  const quarter = value.metadata.quarter;
+  return typeof quarter === "string"
+    && /^\d{4}-Q[1-4]$/.test(quarter.trim())
+    && Array.isArray(value.bought)
+    && value.bought.every(isSafeTradesRankingRow)
+    && Array.isArray(value.sold)
+    && value.sold.every(isSafeTradesRankingRow);
+}
+
+function useInvestorHighlights(): {
+  source: {
+    metadata: { quarter: string; generated_at?: string };
+    highlights: InvestorHighlight[];
+  } | null;
+  loading: boolean;
+} {
+  const [data, setData] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    fetchJson<TradesRankingData>("/data/sec-13f/analytics/trades_ranking.json")
+    fetchJson<unknown>("/data/sec-13f/analytics/trades_ranking.json")
       .then((payload) => {
         if (!cancelled) setData(payload);
       })
@@ -362,25 +356,27 @@ function useInvestorHighlights(): { highlights: InvestorHighlight[]; quarter: st
     };
   }, []);
 
+  const source = useMemo(() => {
+    if (!isValidTradesRankingData(data)) return null;
+    const highlights = buildInvestorHighlights(data);
+    return {
+      metadata: {
+        quarter: data.metadata.quarter,
+        ...(typeof data.metadata.generated_at === "string" && data.metadata.generated_at.trim().length > 0
+          ? { generated_at: data.metadata.generated_at }
+          : {}),
+      },
+      highlights,
+    };
+  }, [data]);
+
   return {
-    highlights: buildInvestorHighlights(data),
-    quarter: data?.metadata?.quarter ?? "13F",
+    source,
     loading,
   };
 }
 
-function completeOldestMoverAsOf(rows: RevisionMoverRow[]): string | null {
-  if (rows.length === 0) return null;
-  const dates = rows.map((row) => (
-    typeof row.as_of === "string" && /^\d{4}-\d{2}-\d{2}/.test(row.as_of)
-      ? row.as_of.slice(0, 10)
-      : null
-  ));
-  if (dates.some((value) => value === null)) return null;
-  return [...dates].sort()[0] ?? null;
-}
-
-function useStockMovers(): { movers: StockMoverHighlight[]; asOf: string | null; loading: boolean } {
+function useStockMovers(): { data: RevisionMoversData | null; loading: boolean } {
   const [data, setData] = useState<RevisionMoversData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -401,13 +397,21 @@ function useStockMovers(): { movers: StockMoverHighlight[]; asOf: string | null;
     };
   }, []);
 
-  const sourceAsOf = completeOldestMoverAsOf([...(data?.up ?? []), ...(data?.down ?? [])]);
-
   return {
-    movers: buildStockMoverHighlights(data),
-    asOf: sourceAsOf,
+    data,
     loading,
   };
+}
+
+function materialFlagLabel(flag: Flag): string {
+  if (flag === "WATCH") return "관심";
+  if (flag === "THESIS") return "테시스";
+  if (flag === "RISK") return "위험";
+  return "확인";
+}
+
+function materialSourceClock(value: string | null, fallback: string): string {
+  return value ?? fallback;
 }
 
 function CpMarketDashboardBand({
@@ -630,73 +634,106 @@ function CpGatewayCard({ tile }: { tile: (typeof GATEWAY_TILES)[number] }) {
 function CpHomeSliceTwo() {
   const investor = useInvestorHighlights();
   const stockMovers = useStockMovers();
-  const moverFallback: StockMoverHighlight[] = [{
-    key: "pending",
-    label: "대기",
-    ticker: DATA_STATE_LABELS.pending,
-    name: `실적추정 변화 데이터 ${DATA_STATE_LABELS.pending}`,
-    change: 0,
-    tone: "neutral",
-    isPlaceholder: true,
-  }];
+  const [personalFlags, setPersonalFlags] = useState<Record<string, Flag>>({});
+
+  useEffect(() => {
+    setPersonalFlags(readPersonalFlags());
+  }, []);
+
+  const projection = useMemo(
+    () => projectMaterialChanges(stockMovers.data, investor.source, personalFlags),
+    [investor.source, personalFlags, stockMovers.data],
+  );
+
+  const revisionClock = materialSourceClock(projection.sources.revision.evidence.asOf, "기준일 미확인");
+  const superinvestorClock = materialSourceClock(projection.sources.superinvestor.evidence.quarter, "분기 미확인");
+  const bothSourcesLoading = stockMovers.loading && investor.loading;
+  const oneSourceLoading = stockMovers.loading !== investor.loading;
+  const anySourceLoading = stockMovers.loading || investor.loading;
+  const sourceUnavailable = projection.sources.revision.status !== "available"
+    || projection.sources.superinvestor.status !== "available";
+  const changedEmptyMessage = bothSourcesLoading
+    ? DATA_STATE_LABELS.pending
+    : oneSourceLoading
+      ? "남은 데이터 소스를 불러오는 중입니다."
+      : sourceUnavailable
+        ? "일부 데이터 소스를 사용할 수 없어 확인이 필요합니다."
+        : "표시할 변경 사항이 없습니다.";
+  const attentionEmptyMessage = bothSourcesLoading
+    ? DATA_STATE_LABELS.pending
+    : oneSourceLoading
+      ? "남은 데이터 소스를 불러오는 중입니다."
+      : sourceUnavailable
+        ? "일부 데이터 소스를 사용할 수 없어 확인이 필요합니다."
+        : "플래그가 있는 변경 사항이 없습니다.";
+  const attentionCountLabel = projection.attention.length > 0
+    ? `${projection.attention.length}개`
+    : anySourceLoading
+      ? DATA_STATE_LABELS.pending
+      : sourceUnavailable
+        ? "확인 필요"
+        : "0개";
 
   return (
-    <section className="cp-home-slice-two" aria-label="홈 관찰 구역">
+    <section className="cp-home-slice-two" aria-label="개인 시장 운영">
       <div className="cp-watch-zone" data-canvas-plus-watch-zone>
         <header className="cp-watch-zone__header">
           <div>
-            <p className="cp-lab__eyebrow">관찰 구역</p>
-            <h2>오늘의 관찰대</h2>
+            <p className="cp-lab__eyebrow">What Changed</p>
+            <h2>무엇이 바뀌었나</h2>
           </div>
-          <span>{stockMovers.loading ? DATA_STATE_LABELS.pending : stockMovers.asOf ? formatDatePart(stockMovers.asOf) : "기준일 미확인"}</span>
+          <div aria-label="변경 데이터 기준">
+            <span>리비전 {revisionClock}</span>
+            <span>13F {superinvestorClock}</span>
+          </div>
         </header>
 
         <div className="cp-watch-zone__indices">
-          {(stockMovers.movers.length > 0 ? stockMovers.movers : moverFallback).map((mover) => {
-            return (
+          {projection.changed.length === 0 ? (
+            <p>{changedEmptyMessage}</p>
+          ) : projection.changed.map((item) => (
               <TransitionLink
-                href={mover.isPlaceholder ? ROUTES.explore : ROUTES.stock(mover.ticker)}
+                href={ROUTES.stock(item.ticker)}
                 className="cp-watch-chip"
-                data-tone={mover.tone}
-                key={mover.key}
+                data-tone={item.kind === "down" || item.kind === "sell" ? "negative" : item.kind === "new-position" ? "warning" : "positive"}
+                key={item.id}
               >
-                <span>실적추정 {mover.label}</span>
-                <strong>{mover.ticker}</strong>
-                <p>{mover.name}</p>
-                <em>{formatRevisionMove(mover.change)}</em>
+                <span>{item.label}</span>
+                <strong>{item.ticker}</strong>
+                <p>{item.title}</p>
+                <em>{item.detail}</em>
               </TransitionLink>
-            );
-          })}
+            ))}
         </div>
       </div>
 
-      <TransitionLink href={ROUTES.superinvestors} className="cp-investor-card" data-canvas-plus-investor-card>
+      <div className="cp-investor-card" data-canvas-plus-investor-card>
         <header className="cp-investor-card__header">
           <div>
-            <p className="cp-lab__eyebrow">13F 신호</p>
-            <h2>투자자 하이라이트</h2>
+            <p className="cp-lab__eyebrow">My Attention</p>
+            <h2>내가 확인할 항목</h2>
           </div>
-          <span>{investor.loading ? DATA_STATE_LABELS.pending : investor.quarter}</span>
+          <span>{attentionCountLabel}</span>
         </header>
 
         <div className="cp-investor-card__stack">
-          {(investor.highlights.length > 0 ? investor.highlights : [{
-            key: "pending",
-            label: "13F 대기",
-            ticker: "대기",
-            meta: `투자자 매매 동향 ${DATA_STATE_LABELS.pending}`,
-            signal: "-",
-            tone: "neutral" as RegimeTone,
-          }]).map((item) => (
-            <div className="cp-investor-row" data-tone={item.tone} key={item.key}>
-              <span>{item.label}</span>
+          {projection.attention.length === 0 ? (
+            <p>{attentionEmptyMessage}</p>
+          ) : projection.attention.map((item) => (
+            <TransitionLink
+              href={ROUTES.stock(item.ticker)}
+              className="cp-investor-row"
+              data-tone={item.kind === "down" || item.kind === "sell" || item.flag === "RISK" ? "negative" : item.flag === "VERIFY" || item.kind === "new-position" ? "warning" : "positive"}
+              key={item.id}
+            >
+              <span>{materialFlagLabel(item.flag)}</span>
               <strong>{item.ticker}</strong>
-              <p>{item.meta}</p>
-              <em>{item.signal}</em>
-            </div>
+              <p>{item.title}</p>
+              <em>{item.detail}</em>
+            </TransitionLink>
           ))}
         </div>
-      </TransitionLink>
+      </div>
     </section>
   );
 }
