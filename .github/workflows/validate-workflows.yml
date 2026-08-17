@@ -82,6 +82,8 @@ on:
       - 'scripts/lib/publish-outcome-shard.mjs'
       - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - '100xfenok-next/package.json'
+      - '100xfenok-next/scripts/load-guard.sh'
+      - '100xfenok-next/scripts/test-load-guard-remote-dispatch.mjs'
   pull_request:
     paths:
       - '.github/workflows/**'
@@ -157,6 +159,8 @@ on:
       - 'scripts/lib/publish-outcome-shard.mjs'
       - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - '100xfenok-next/package.json'
+      - '100xfenok-next/scripts/load-guard.sh'
+      - '100xfenok-next/scripts/test-load-guard-remote-dispatch.mjs'
   workflow_dispatch:
 
 permissions:
@@ -171,6 +175,9 @@ jobs:
 
       - name: Parse workflow YAML
         run: ruby scripts/ops/validate-workflow-yaml.rb
+
+      - name: Validate remote heavy guard contract
+        run: node 100xfenok-next/scripts/test-load-guard-remote-dispatch.mjs
 
       # Prove unknown keys, invalid queue enums, and max+cancel incompatibility
       # all fail while GitHub's supported queue modes pass.
