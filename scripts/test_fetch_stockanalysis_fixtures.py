@@ -2409,11 +2409,11 @@ module.main()
             exact_line_index(retry_build, central_stage),
         )
 
-    def test_cloud_overlay_dispatch_flag_reaches_update_manifest_only_when_plane_won(self) -> None:
+    def test_plane_success_gates_projection_without_cutting_over_projection_authority(self) -> None:
         fetch_workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(
             encoding="utf-8"
         )
-        self.assertIn("--field etf_cloud_generation=true", fetch_workflow)
+        self.assertNotIn("--field etf_cloud_generation=true", fetch_workflow)
         self.assertIn("needs.persist-stockanalysis-etf-plane.result == 'success'", fetch_workflow)
         self.assertIn("needs.publish-stockanalysis-etf-plane.result == 'skipped'", fetch_workflow)
         self.assertIn("needs.persist-stockanalysis-etf-plane.result == 'skipped'", fetch_workflow)

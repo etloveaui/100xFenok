@@ -1633,7 +1633,6 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".gi
     commitSpec(publishOutcomeShard("stockanalysis-etf-detail"), "file", false),
   ],
 }, [
-  commitSpec("data/stockanalysis/etfs", "directory"),
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
   commitSpec("data/yf/finance/_summary.json", "file"),
 ]);
@@ -1804,9 +1803,9 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
     detached_persistence: true,
     reason: "natural publication splits publish and persistence into separate jobs so only the persistence job takes the global Git writer lock; the publisher itself must still fail the job",
     canonical_commit: "external_authority",
-    canonical_commit_reason: "the natural plane generation is current authority for data/stockanalysis/etfs while Git retains its existing tree as LKG; fetch-stockanalysis.yml commits the other source-lane and derived state, and the detached persistence job commits only publish evidence",
+    canonical_commit_reason: "the publish job performs no canonical Git write itself: acquisition and the raw ETF Git commit live in the sibling fetch-stockanalysis publisher, while the detached persistence job commits only publish evidence",
     strict_gate: true,
-    strict_gate_reason: "natural publication of the largest payload in the estate: --tolerate-gate-block turns an unknown or over-threshold cost verdict into exit 0, so a scheduled run would report green while having published nothing. The gate-block outcome shard is still written and persisted; only the exit code changes, and the run must be red",
+    strict_gate_reason: "natural shadow publication of the largest payload in the estate: --tolerate-gate-block turns an unknown or over-threshold cost verdict into exit 0, so a scheduled run would report green while having published nothing. The gate-block outcome shard is still written and persisted; only the exit code changes, and the run must be red",
   }),
   "global-scouter": Object.freeze({
     workflow: ".github/workflows/global-scouter-shadow-publish.yml",

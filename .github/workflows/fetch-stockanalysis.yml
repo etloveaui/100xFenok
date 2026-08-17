@@ -552,15 +552,6 @@ jobs:
               --workflow .github/workflows/fetch-stockanalysis.yml \
               --stage always_if_exists
             git add -- data/computed/data-supply/etf-detail 100xfenok-next/public/data
-            # Raw ETF canonical files are retired from Git current-state
-            # output: the natural plane generation is the current state and
-            # Update Manifest projects from the verified cloud overlay. The
-            # The lane manifest excludes the canonical ETF tree; fail closed
-            # if any raw canonical path ever re-enters the staged set.
-            if [ -n "$(git diff --cached --name-only -- data/stockanalysis/etfs)" ]; then
-              echo "raw ETF canonical files must never be staged for publication" >&2
-              exit 1
-            fi
             if git diff --staged --quiet; then
               COMMIT_ARGS=(--allow-empty)
               COMMIT_SUBJECT="chore: record stockanalysis no-change run"
@@ -754,13 +745,12 @@ jobs:
 
   # Aggregate projection dispatch: shared projection rebuild fires only when
   # the natural StockAnalysis ETF plane generation was BOTH published and
-  # persisted (the persisted outcome shard is the binding authority the
-  # projection runner matches against), and the Git publisher also committed
-  # the same acquisition's source-lane state. Non-ETF scheduled runs and
-  # manual runs keep dispatching exactly as before -- the plane and its
-  # persistence are skipped, so their 'skipped' results permit the dispatch
-  # while no R2 materialization is forced. This job stages no git commit and
-  # must never carry the shared-writer concurrency group.
+  # persisted, and the Git publisher also committed the same acquisition's
+  # canonical source-lane state. The projection remains Git/static-owned while
+  # DEC-381 holds storage authority; a successful plane publish is evidence,
+  # not permission to materialize R2 into the projection. Non-ETF scheduled
+  # runs and manual runs keep dispatching through the same canonical path.
+  # This job stages no git commit and must never carry the shared-writer group.
   dispatch-stockanalysis-projection:
     needs:
       - publish-stockanalysis
@@ -791,16 +781,6 @@ jobs:
       - name: Dispatch shared projection rebuild
         env:
           GH_TOKEN: ${{ github.token }}
-          ETF_CLOUD_GENERATION_READY: >-
-            ${{ github.event_name == 'schedule' &&
-                (github.event.schedule == '50 23 * * 1-5' ||
-                 github.event.schedule == '20 23 * * 0') }}
         run: |
           set -euo pipefail
-          if [ "$ETF_CLOUD_GENERATION_READY" = "true" ]; then
-            gh workflow run update-manifest.yml \
-              --ref main \
-              --field etf_cloud_generation=true
-          else
-            gh workflow run update-manifest.yml --ref main
-          fi
+          gh workflow run update-manifest.yml --ref main

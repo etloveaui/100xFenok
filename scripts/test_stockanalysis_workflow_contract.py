@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import re
 import unittest
@@ -414,9 +415,9 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             "github.event.schedule == '50 23 * * 1-5'",
             "github.event.schedule == '20 23 * * 0'",
             "gh workflow run update-manifest.yml",
-            "etf_cloud_generation=true",
         ):
             self.assertIn(expected, body)
+        self.assertNotIn("etf_cloud_generation=true", body)
         # The dispatch job stages/commits nothing and must never carry the
         # shared-writer concurrency group.
         self.assertNotIn("fenok-data-writer-refs/heads/main", body)
@@ -427,18 +428,21 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         publisher = self.text.split("  publish-stockanalysis:\n", 1)[1].split("  publish-stockanalysis-etf-plane:\n", 1)[0]
         self.assertNotIn("gh workflow run update-manifest.yml", publisher)
 
-    def test_raw_etf_canonical_files_are_never_staged_by_the_git_publisher(self) -> None:
+    def test_raw_etf_canonical_files_remain_owned_by_the_git_publisher(self) -> None:
         publisher = self.text.split("  publish-stockanalysis:\n", 1)[1].split("  publish-stockanalysis-etf-plane:\n", 1)[0]
-        add_idx = publisher.index(
-            "git add -- data/computed/data-supply/etf-detail 100xfenok-next/public/data"
+        manifest = json.loads(
+            (ROOT / "data" / "admin" / "lane-commit-manifest.json").read_text(encoding="utf-8")
         )
-        manifest_stage_idx = publisher.index("scripts/stage-lane-manifest.sh")
-        guard_idx = publisher.index("git diff --cached --name-only -- data/stockanalysis/etfs")
-        commit_idx = publisher.index("git commit \"${COMMIT_ARGS[@]}\"")
-        self.assertLess(manifest_stage_idx, guard_idx)
-        self.assertLess(add_idx, guard_idx)
-        self.assertLess(guard_idx, commit_idx)
-        self.assertIn("raw ETF canonical files must never be staged for publication", publisher)
+        policy = manifest["workflows"][".github/workflows/fetch-stockanalysis.yml"]
+        self.assertIn(
+            {"kind": "directory", "path": "data/stockanalysis", "required": True},
+            policy["stages"]["always_if_exists"],
+        )
+        self.assertNotIn(
+            {"kind": "directory", "path": "data/stockanalysis/etfs", "required": False},
+            policy["exclude"],
+        )
+        self.assertNotIn("raw ETF canonical files must never be staged for publication", publisher)
         self.assertNotIn("git restore --staged -- data/stockanalysis/etfs", publisher)
         self.assertNotIn("git add --all", publisher)
         self.assertNotIn("git add -A", publisher)
