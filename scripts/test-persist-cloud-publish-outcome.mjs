@@ -284,16 +284,17 @@ function jobBlockAt(text, index) {
     run("git", ["clone", origin, workerA], temp);
     run("git", ["clone", origin, workerB], temp);
 
-    await appendPublishOutcome({
-      outcomesRoot: path.join(workerA, OUTCOME_ROOT),
+    const generationA = buildPublishOutcomeRecord({
       family: "oecd-cli",
-      record: buildPublishOutcomeRecord({
-        family: "oecd-cli",
-        result: "failed",
-        generationId: "generation-a",
-        observedAt: "2026-08-10T01:00:00.000Z",
-      }),
+      result: "failed",
+      generationId: "generation-a",
+      observedAt: "2026-08-10T01:00:00.000Z",
     });
+    await writeFile(path.join(workerA, OUTCOME_ROOT, "oecd-cli.json"), `${JSON.stringify({
+      schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
+      family: "oecd-cli",
+      records: [generationA],
+    }, null, 2)}\n`);
     await appendPublishOutcome({
       outcomesRoot: path.join(workerB, OUTCOME_ROOT),
       family: "oecd-cli",

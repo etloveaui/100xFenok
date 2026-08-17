@@ -106,6 +106,15 @@ function readShard(filePath, family) {
   return shard;
 }
 
+function readHeadShard(repoRoot, shardPath, family) {
+  const listing = runGit(repoRoot, ["ls-tree", "--name-only", "HEAD", "--", shardPath]);
+  if (listing.stdout.trim() === "") return null;
+  const result = runGit(repoRoot, ["show", `HEAD:${shardPath}`]);
+  const shard = JSON.parse(result.stdout);
+  validatePublishOutcomeShard(shard, family);
+  return shard;
+}
+
 function validateOwnership({ family, workflow, manifestPath }) {
   const binding = PLANE_PUBLISH_OUTCOME_BINDINGS[family];
   if (!binding) throw new Error(`unknown publish family: ${family}`);
@@ -199,7 +208,14 @@ export function persistPublishOutcome({
   if (publisherOutcome === "skipped") {
     throw new Error(`publisher skipped but outcome shard changed for ${family}`);
   }
-  const savedShard = readShard(absoluteShard, family);
+  const incomingShard = readShard(absoluteShard, family);
+  const headShard = readHeadShard(repoRoot, shardPath, family);
+  const savedShard = headShard
+    ? mergePublishOutcomeShards({ family, shards: [headShard, incomingShard] })
+    : incomingShard;
+  if (canonicalJson(incomingShard) !== canonicalJson(savedShard)) {
+    writeJsonAtomic(absoluteShard, savedShard);
+  }
   runGit(repoRoot, ["config", "user.name", "github-actions[bot]"]);
   runGit(repoRoot, ["config", "user.email", "github-actions[bot]@users.noreply.github.com"]);
   runGit(repoRoot, ["add", "--", shardPath]);
