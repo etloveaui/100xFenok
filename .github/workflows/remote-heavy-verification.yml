@@ -32,11 +32,23 @@ jobs:
       run:
         working-directory: 100xfenok-next
     steps:
+      - name: Validate requested revision
+        working-directory: .
+        env:
+          REVISION: ${{ inputs.revision }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$REVISION" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "revision must be an exact 40-hex commit" >&2
+            exit 64
+          fi
+
       - name: Checkout requested revision
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.revision }}
           fetch-depth: 1
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -47,14 +59,55 @@ jobs:
         run: npm ci
 
       - name: Run closed verification suite
+        id: verification
         env:
           SUITE: ${{ inputs.suite }}
+          FENOK_REMOTE_HEAVY_NESTED_EXECUTION: "1"
+          FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ inputs.revision }}
         run: |
           set -euo pipefail
           case "$SUITE" in
-            runtime-build) npm run build:runtime:steps;;
-            static-build) npm run build:static:steps;;
-            cloudflare-build) npm run cf:build:steps;;
-            contracts) npm run qa:registry-contracts;;
+            runtime-build) npm run build:runtime;;
+            static-build) npm run build:static;;
+            cloudflare-build) npm run cf:build;;
+            contracts) npm run verify:contracts;;
             *) echo "unsupported suite" >&2; exit 64;;
           esac
+
+      - name: Emit completion receipt
+        if: always()
+        working-directory: .
+        env:
+          STATUS: ${{ job.status }}
+          CONCLUSION: ${{ steps.verification.conclusion }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SUITE: ${{ inputs.suite }}
+          REVISION: ${{ inputs.revision }}
+          WORKFLOW: ${{ github.workflow }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          WORKFLOW_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node_version="$(node --version 2>/dev/null || printf 'unavailable')"
+          npm_version="$(npm --version 2>/dev/null || printf 'unavailable')"
+          node_path="$(command -v node 2>/dev/null || printf 'unavailable')"
+          npm_path="$(command -v npm 2>/dev/null || printf 'unavailable')"
+          {
+            printf '%s\n' '## Remote heavy verification completion receipt'
+            printf 'status=%s\n' "$STATUS"
+            printf 'conclusion=%s\n' "$CONCLUSION"
+            printf 'run_id=%s\n' "$RUN_ID"
+            printf 'run_attempt=%s\n' "$RUN_ATTEMPT"
+            printf 'run_url=%s\n' "$RUN_URL"
+            printf 'suite=%s\n' "$SUITE"
+            printf 'revision=%s\n' "$REVISION"
+            printf 'workflow=%s\n' "$WORKFLOW"
+            printf 'workflow_ref=%s\n' "$WORKFLOW_REF"
+            printf 'workflow_sha=%s\n' "$WORKFLOW_SHA"
+            printf 'node_version=%s\n' "$node_version"
+            printf 'npm_version=%s\n' "$npm_version"
+            printf 'node_path=%s\n' "$node_path"
+            printf 'npm_path=%s\n' "$npm_path"
+          } | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
