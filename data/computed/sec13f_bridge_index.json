@@ -1,6 +1,6 @@
 {
   "schema_version": "sec13f-bridge-index/v1",
-  "generated_at": "2026-08-16T13:28:14.716Z",
+  "generated_at": "2026-08-17T05:57:10.936Z",
   "purpose": "Review-only typed inventory of SEC 13F tickers outside the Global Scouter analyzer universe.",
   "contract": {
     "candidate_type": "sec13f_extension_stock",
@@ -31,13 +31,13 @@
   },
   "input_fingerprints": {
     "analyzer": "2a22226158bcfa720830aabb5ab657f78e39a01681023ddeda2bc698d39262df",
-    "action_index": "6da6b7f6d8cfd35d6d1f94cbac3386cee1524dd832ccad78eb7b4779d9f48fb0",
-    "market_facts": "6883ec48ada7581789be5062cc371f4293c1b488ee97c4dc6998b3cbdba5ff17",
-    "sec13f_by_ticker": "a731a66f05d9d7722865359530a00464c2feb31d62aaf5e99248b3da85e3dd72",
-    "sec13f_summary": "a62bf758bed1a5d778164df4207fb2b4d7a719f016c32326454523fe1ffba4f3",
+    "action_index": "b4091b32793d083fdf8398f895b12de1e02677a1c1b9453a801dcd7b1eeec2a7",
+    "market_facts": "905e61053b9d16d39a56364f7a41edddee81b15f45be3359d66e6307c2e22911",
+    "sec13f_by_ticker": "8674641fb1bad691c182503406af1868ae850d0e87bdb2f7d1bfaece5fecca21",
+    "sec13f_summary": "bed48a0962d490c28ec260e7789a5b4b5961e8e5c91de484e3aa5ca0a388de69",
     "market_facts_details": {
       "file_count": 112,
-      "sha256": "29e751b740c808e1debed98664c2176103070fbb62a614804e6bfab49263edd1"
+      "sha256": "f5e2e0f180f6240562dd6098d976ccd6773964dc23e0e86148aba1d5e139ca43"
     },
     "yf_finance_candidates": {
       "file_count": 76,
@@ -46,29 +46,29 @@
   },
   "graph_invariants": {
     "core_stock_count": 1066,
-    "sec13f_ticker_count": 1013,
-    "core_intersection_count": 423,
+    "sec13f_ticker_count": 1025,
+    "core_intersection_count": 424,
     "warning_threshold": 450,
     "graph_mutation_applied": false,
     "public_surface_mutation_applied": false
   },
   "counts": {
-    "sec13f_outside_core": 590,
+    "sec13f_outside_core": 601,
     "action_plus_market_facts": 76,
     "market_facts_only": 36,
-    "no_action_index_overlap": 514,
-    "no_market_facts": 478,
+    "no_action_index_overlap": 525,
+    "no_market_facts": 489,
     "action_index_only": 0,
     "sec13f_extension_stock": 76,
     "sec13f_market_facts_only": 36,
-    "sec13f_unresolved": 478,
+    "sec13f_unresolved": 489,
     "estimate": {
       "extension_full": 38,
       "extension_incomplete": 38,
       "market_facts_only_incomplete": 36,
-      "unresolved_absent": 478,
+      "unresolved_absent": 489,
       "as_of": {
-        "bridge_generated_at": "2026-08-16T13:28:14.716Z",
+        "bridge_generated_at": "2026-08-17T05:57:10.936Z",
         "yf_finance": "2026-08-14T00:00:00.000Z",
         "market_facts": "2026-07-28",
         "sec13f": "2026-Q2"
@@ -483,6 +483,61 @@
       }
     },
     {
+      "ticker": "ACVA",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 71204288
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/ACVA.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
       "ticker": "ADC",
       "classification": {
         "type": "sec13f_unresolved",
@@ -801,6 +856,61 @@
       "yf_estimates": {
         "file": false,
         "path": "data/yf/finance/AEVA.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
+      "ticker": "AGCO",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 45689969
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/AGCO.json",
         "state": "absent",
         "source_as_of": null,
         "fields_present": [],
@@ -1296,6 +1406,61 @@
       "yf_estimates": {
         "file": false,
         "path": "data/yf/finance/AMG.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
+      "ticker": "AMRC",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 56054220
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/AMRC.json",
         "state": "absent",
         "source_as_of": null,
         "fields_present": [],
@@ -2034,8 +2199,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 31624743
+        "holders_count": 2,
+        "total_market_value": 119736875
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -2199,8 +2364,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 44,
-        "total_market_value": 310288651302
+        "holders_count": 46,
+        "total_market_value": 315200865766
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -3411,8 +3576,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 2,
-        "total_market_value": 79314103
+        "holders_count": 3,
+        "total_market_value": 123730166
       },
       "market_facts": {
         "asset_type": "stock",
@@ -6519,8 +6684,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 996001641
+        "holders_count": 2,
+        "total_market_value": 1083868662
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -7014,8 +7179,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 4,
-        "total_market_value": 553230309
+        "holders_count": 5,
+        "total_market_value": 622998640
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -7609,6 +7774,61 @@
       }
     },
     {
+      "ticker": "CRC",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 47988037
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/CRC.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
       "ticker": "CRCL",
       "classification": {
         "type": "sec13f_unresolved",
@@ -7899,8 +8119,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 9,
-        "total_market_value": 2777123616
+        "holders_count": 10,
+        "total_market_value": 2988630687
       },
       "market_facts": {
         "asset_type": "stock",
@@ -8821,8 +9041,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 76888356
+        "holders_count": 2,
+        "total_market_value": 202540683
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -9261,8 +9481,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 19,
-        "total_market_value": 17254785421
+        "holders_count": 20,
+        "total_market_value": 17711225290
       },
       "market_facts": {
         "asset_type": "etf",
@@ -9721,8 +9941,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 7,
-        "total_market_value": 1846254696
+        "holders_count": 8,
+        "total_market_value": 1892797409
       },
       "market_facts": {
         "asset_type": "etf",
@@ -11212,8 +11432,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 2,
-        "total_market_value": 491153130
+        "holders_count": 3,
+        "total_market_value": 849552281
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -13701,6 +13921,61 @@
       }
     },
     {
+      "ticker": "GPRE",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 59966112
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/GPRE.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
       "ticker": "GSHD",
       "classification": {
         "type": "sec13f_unresolved",
@@ -13772,8 +14047,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 4,
-        "total_market_value": 2629014557
+        "holders_count": 5,
+        "total_market_value": 2817701448
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -14307,8 +14582,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 20,
-        "total_market_value": 41262379901
+        "holders_count": 21,
+        "total_market_value": 41972579341
       },
       "market_facts": {
         "asset_type": "etf",
@@ -20283,8 +20558,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 7,
-        "total_market_value": 5718525581
+        "holders_count": 8,
+        "total_market_value": 5736234982
       },
       "market_facts": {
         "asset_type": "stock",
@@ -20655,8 +20930,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 21,
-        "total_market_value": 44478704381
+        "holders_count": 22,
+        "total_market_value": 44492495308
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -20765,8 +21040,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 135537061
+        "holders_count": 2,
+        "total_market_value": 169068716
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -21390,8 +21665,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 92095943
+        "holders_count": 2,
+        "total_market_value": 136723224
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -21493,6 +21768,61 @@
         "bridge_field_floor": true,
         "per_present": true,
         "forward_pe_present": true
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
+      "ticker": "NXE",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 71279749
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/NXE.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
       },
       "acceptance": {
         "promotion_status": "held",
@@ -22015,8 +22345,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 4,
-        "total_market_value": 693160315
+        "holders_count": 5,
+        "total_market_value": 743200110
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -22979,8 +23309,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 38140000
+        "holders_count": 2,
+        "total_market_value": 858998157
       },
       "market_facts": {
         "asset_type": "stock",
@@ -23028,6 +23358,61 @@
         "bridge_field_floor": true,
         "per_present": true,
         "forward_pe_present": true
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
+      "ticker": "PDFS",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 46617763
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/PDFS.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
       },
       "acceptance": {
         "promotion_status": "held",
@@ -23754,6 +24139,61 @@
       }
     },
     {
+      "ticker": "PSMT",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 52022363
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/PSMT.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
       "ticker": "PSNL",
       "classification": {
         "type": "sec13f_unresolved",
@@ -24020,8 +24460,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 12,
-        "total_market_value": 66191552186
+        "holders_count": 13,
+        "total_market_value": 68548032186
       },
       "market_facts": {
         "asset_type": "etf",
@@ -24490,8 +24930,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 25,
-        "total_market_value": 83611045927
+        "holders_count": 26,
+        "total_market_value": 83723902893
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -25414,6 +25854,61 @@
       }
     },
     {
+      "ticker": "RUN",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 107102645
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/RUN.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
       "ticker": "RVMD",
       "classification": {
         "type": "sec13f_unresolved",
@@ -26111,8 +26606,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 4,
-        "total_market_value": 1870085997
+        "holders_count": 5,
+        "total_market_value": 2049221683
       },
       "market_facts": {
         "asset_type": "etf",
@@ -26461,8 +26956,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 63610128
+        "holders_count": 2,
+        "total_market_value": 136297508
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -27481,8 +27976,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 2,
-        "total_market_value": 243223810
+        "holders_count": 3,
+        "total_market_value": 332437796
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -27970,6 +28465,61 @@
       }
     },
     {
+      "ticker": "SQM",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 119357663
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/SQM.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
       "ticker": "SSO",
       "classification": {
         "type": "sec13f_market_facts_only",
@@ -27986,8 +28536,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 2,
-        "total_market_value": 169821275
+        "holders_count": 3,
+        "total_market_value": 214701950
       },
       "market_facts": {
         "asset_type": "etf",
@@ -28106,8 +28656,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 4,
-        "total_market_value": 692378138
+        "holders_count": 5,
+        "total_market_value": 750936951
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -30014,8 +30564,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 70772578
+        "holders_count": 2,
+        "total_market_value": 109103903
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -30069,8 +30619,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 8,
-        "total_market_value": 10282718160
+        "holders_count": 9,
+        "total_market_value": 10493120183
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -30124,8 +30674,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 5,
-        "total_market_value": 9734958868
+        "holders_count": 6,
+        "total_market_value": 9855945132
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -30289,8 +30839,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 1619294000
+        "holders_count": 2,
+        "total_market_value": 1884740499
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -30639,8 +31189,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 5,
-        "total_market_value": 559304435
+        "holders_count": 6,
+        "total_market_value": 852129942
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -30749,8 +31299,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 5,
-        "total_market_value": 11031456292
+        "holders_count": 6,
+        "total_market_value": 11096449539
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -31833,6 +32383,61 @@
         "action_price_present": false,
         "action_valuation_present": false,
         "yf_estimate_or_absent_reason": true,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
+      "ticker": "VECO",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 18034260
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/VECO.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
         "bridge_field_floor": false,
         "per_present": false,
         "forward_pe_present": false
@@ -32963,8 +33568,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 3,
-        "total_market_value": 644261332
+        "holders_count": 4,
+        "total_market_value": 689442212
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -33293,8 +33898,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 92631385
+        "holders_count": 2,
+        "total_market_value": 158801624
       },
       "market_facts": null,
       "stock_action_index": null,
@@ -33478,8 +34083,8 @@
         "yf_finance": false
       },
       "sec13f": {
-        "holders_count": 1,
-        "total_market_value": 194070204
+        "holders_count": 2,
+        "total_market_value": 215274921
       },
       "market_facts": null,
       "stock_action_index": null,

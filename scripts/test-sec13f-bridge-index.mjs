@@ -92,12 +92,13 @@ const secTickers = Object.keys(sec13fByTicker).map(normalizeTicker).filter(Boole
 const outside = secTickers.filter((ticker) => !core.has(ticker));
 const intersection = secTickers.filter((ticker) => core.has(ticker));
 
-// DEC-325 is an intentional regression pin. A changed count requires a new
-// universe decision; it must not silently become a product expansion.
+// DEC-325 is an intentional regression pin. DEC-379 expanded the canonical
+// 13F cohort from 60 to 63 investors; these post-reseal counts keep that
+// approved source expansion from silently widening the product surface.
 assert.equal(core.size, 1066, "Global Scouter analyzer core count drifted");
-assert.equal(secTickers.length, 1013, "SEC 13F ticker count drifted");
-assert.equal(intersection.length, 423, "SEC 13F/core intersection drifted");
-assert.equal(outside.length, 590, "SEC 13F outside-core boundary drifted");
+assert.equal(secTickers.length, 1025, "SEC 13F ticker count drifted");
+assert.equal(intersection.length, 424, "SEC 13F/core intersection drifted");
+assert.equal(outside.length, 601, "SEC 13F outside-core boundary drifted");
 
 const expected = new Map();
 for (const ticker of outside) {
@@ -139,12 +140,12 @@ for (const row of index.rows) {
 const countClass = (name) => index.rows.filter((row) => row.classification.classes.includes(name)).length;
 assert.equal(countClass("action_plus_market_facts"), 76);
 assert.equal(countClass("market_facts_only"), 36);
-assert.equal(countClass("no_action_index_overlap"), 514);
-assert.equal(countClass("no_market_facts"), 478);
+assert.equal(countClass("no_action_index_overlap"), 525);
+assert.equal(countClass("no_market_facts"), 489);
 assert.equal(countClass("action_index_only"), 0);
 assert.equal(index.counts.sec13f_extension_stock, 76);
 assert.equal(index.counts.sec13f_market_facts_only, 36);
-assert.equal(index.counts.sec13f_unresolved, 478);
+assert.equal(index.counts.sec13f_unresolved, 489);
 
 const extensionRows = index.rows.filter((row) => row.classification.type === "sec13f_extension_stock");
 assert.equal(extensionRows.length, 76);
@@ -159,7 +160,7 @@ assert.deepEqual(index.counts.estimate, {
   extension_full: 38,
   extension_incomplete: 38,
   market_facts_only_incomplete: 36,
-  unresolved_absent: 478,
+  unresolved_absent: 489,
   as_of: {
     bridge_generated_at: index.generated_at,
     yf_finance: deterministicGeneratedAt(index.rows.map((row) => row.yf_estimates.source_as_of)),
