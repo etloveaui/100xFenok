@@ -78,6 +78,21 @@ for (const member of ["history", "symbols"]) {
 
 {
   const symbols = fs.readFileSync(path.join(root, ".github", "workflows", "slickcharts-symbols.yml"), "utf8");
+  const symbolsJobsStart = symbols.indexOf("jobs:");
+  const symbolsBatch = symbols.slice(symbols.indexOf("  scrape-batch:"), symbols.indexOf("  merge-batches:"));
+  const symbolsMerge = symbols.slice(symbols.indexOf("  merge-batches:"), symbols.indexOf("  scrape-single:"));
+  const symbolsSingle = symbols.slice(symbols.indexOf("  scrape-single:"));
+  assert.doesNotMatch(symbols.slice(0, symbolsJobsStart), /^concurrency:/m,
+    "symbols acquisition must not be serialized at workflow scope");
+  assert.doesNotMatch(symbolsBatch, /^    concurrency:/m,
+    "symbols batch acquisition must remain outside the global writer lock");
+  for (const [job, body] of [["merge-batches", symbolsMerge], ["scrape-single", symbolsSingle]]) {
+    assert.match(
+      body,
+      /^    concurrency:\n      group: fenok-data-writer-refs\/heads\/main\n      cancel-in-progress: false\n      queue: max$/m,
+      `${job} must retain the global writer lock`,
+    );
+  }
   assert.equal(
     (symbols.match(/--manifest-workflow \.github\/workflows\/slickcharts-symbols\.yml/g) ?? []).length,
     1,

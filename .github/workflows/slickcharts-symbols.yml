@@ -45,11 +45,6 @@ permissions:
   contents: write
   actions: write
 
-concurrency:
-  group: fenok-data-writer-refs/heads/main
-  cancel-in-progress: false
-  queue: max
-
 jobs:
   # Matrix build for parallel batch execution
   scrape-batch:
@@ -117,6 +112,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     if: ${{ always() && (github.event.inputs.batch == 'ALL' || github.event_name == 'schedule') }}
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
 
     steps:
       - name: Capture cloud acceptance run start
@@ -283,6 +282,10 @@ jobs:
     if: ${{ github.event.inputs.batch == 'single' && github.event.inputs.symbol != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
 
     steps:
       - name: Configure single-symbol attempt telemetry path
