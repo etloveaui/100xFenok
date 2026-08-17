@@ -1,6 +1,6 @@
 {
   "schema_version": "data-entity-graph-stock-services/v1",
-  "generated_at": "2026-08-16T23:43:11.930Z",
+  "generated_at": "2026-08-17T00:09:29.821Z",
   "source_as_of": {
     "stocks_analyzer": "2026-08-14",
     "stock_action_index": "2026-08-14",
@@ -28,7 +28,7 @@
   "totals": {
     "stocks": 1066,
     "with_single_stock_etfs": 86,
-    "single_stock_etfs": 180
+    "single_stock_etfs": 181
   },
   "stocks": {
     "AAL": {
@@ -344,9 +344,9 @@
           "etf_key": "etf:AKAL",
           "target_key": "ticker:AKAM",
           "ticker": "AKAL",
-          "label": "ETF Opportunities Trust - T-REX 2X Long AKAM Daily Target ETF",
+          "label": "T-REX 2X Long AKAM Daily Target ETF",
           "route": "/etfs/AKAL",
-          "category": "-",
+          "category": "Equity",
           "confidence": "high",
           "classification_source": "stockanalysis.overview.description",
           "raw_underlying": "AKAM",
@@ -2938,6 +2938,32 @@
       "ticker": "LITE",
       "route": "/stock/LITE",
       "single_stock_etfs": [
+        {
+          "etf_key": "etf:LITG",
+          "target_key": "ticker:LITE",
+          "ticker": "LITG",
+          "label": "Themes ETF Trust - Leverage Shares 2X Long LITE Daily ETF",
+          "route": "/etfs/LITG",
+          "category": "Equity",
+          "confidence": "medium",
+          "classification_source": "stockanalysis.etf_list.name",
+          "raw_underlying": "LITE",
+          "canonical_underlying_ticker": "LITE",
+          "resolution_method": "direct",
+          "resolution_source": "raw_underlying.symbol",
+          "matched_alias": "LITE",
+          "resolution_note": "classification_confidence=medium; resolution_method=direct; resolution_source=raw_underlying.symbol",
+          "market_facts": false,
+          "service_flags": [
+            "etf_center",
+            "leveraged",
+            "single_stock"
+          ],
+          "as_of": {
+            "etf_universe": null,
+            "market_facts": null
+          }
+        },
         {
           "etf_key": "etf:LITZ",
           "target_key": "ticker:LITE",
