@@ -874,6 +874,12 @@ function runConfigAndFixtureChecks() {
       fs.mkdirSync(libDir, { recursive: true });
       for (const file of [...LIB_FILES, "lane-registry.mjs"]) {
         let source = fs.readFileSync(path.join(REPO_ROOT, "scripts", "lib", file), "utf8");
+        if (file === "json-canonical.mjs") {
+          source = fs.readFileSync(
+            path.join(REPO_ROOT, "100xfenok-next", "scripts", "cloud-data-plane", "json-canonical.mjs"),
+            "utf8",
+          );
+        }
         if (file === "lane-registry.mjs") source = mutateRegistry(source);
         fs.writeFileSync(path.join(libDir, file), source);
       }
@@ -886,16 +892,15 @@ function runConfigAndFixtureChecks() {
 
     // (a) an auxiliary lane flipped live: LIVE_LANE_IDS gains it but LANE_IDS
     // excludes it -> the live-coverage guard must fire.
-    const liveWithoutRow = loadConfigWithRegistry((source) => {
-      const anchor = 'id: "admin_live_voice_logs"';
-      const index = source.indexOf(anchor);
-      const segment = source.slice(index, index + 400);
-      if (!segment.includes('enforcement: "shadow"')) throw new Error("RED(a) mutation anchor missing");
-      return source.slice(0, index) + segment.replace('enforcement: "shadow"', 'enforcement: "live"') + source.slice(index + 400);
-    });
+    const liveWithoutRow = loadConfigWithRegistry((source) => mutateRegistryRecord(
+      source,
+      "admin_live_voice_logs",
+      'enforcement: "shadow"',
+      'enforcement: "live"',
+    ));
     assert.equal(liveWithoutRow.status, 1, `RED(a) unexpectedly loaded: ${liveWithoutRow.stdout}`);
     assert.match(liveWithoutRow.stderr, /live registry lanes must have detection rows: admin_live_voice_logs/,
-      "RED(a): a live registry lane without a detection row must fail loudly by name");
+      `RED(a): a live registry lane without a detection row must fail loudly by name; stderr=${liveWithoutRow.stderr}`);
 
     // (b) a detection_floor lane reclassed as auxiliary: derived LANE_IDS
     // shrinks while the hand-written lanes stay 22 -> identity check fails.
