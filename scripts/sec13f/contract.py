@@ -18,16 +18,16 @@ EXPECTED_BASE_OUTPUT_COUNT = 76
 EXPECTED_DERIVED_OUTPUT_COUNT = 5
 CIK_PATTERN = re.compile(r"^\d{10}$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
-EXPECTED_REGISTRY_SHA256 = "4190d0865b97b5ba69bfd229df5b2cea7bc8947021b8a0fdaa10f0fdde1a2784"
+EXPECTED_REGISTRY_SHA256 = "179a2c2e7f6cbbcddaf61d0a2e4766e7952f11dc49f45870f39611e5c8d88664"
 PINNED_CONTENT_DIGESTS = {
-    "sec13f-base-output-manifest/v1": "e80b00d2149c64341a25b7eb4ec6be4f64d722e342e7adca8ee65f6c585c58df",
-    "sec13f-cch-cache-manifest/v1": "ecad1fd8beb2d3a8639222a2e7172c94dd6abf2d6cef3ec99e487b49b6cdf249",
-    "sec13f-cch-output-manifest/v1": "d7e01ce94e57c72477ca42321458c182dc81d93bbd5eb3d4fd0e5b5c739c9b5b",
-    "sec13f-cch-platform-baseline/v1": "874be75c9a645339e800553237551c63ed091e977955f107706fe69ab853600e",
-    "sec13f-cch-fixture-oracle/v1": "03ef5848d395b84e1d8a655852f3fdacf3999bc54d67ec7b9abb3eddc720da82",
-    "sec13f-cch-snapshot/v1": "ad15a499e9c190b3ce6e1a97340f6768b87b03fa9c84d7addb864be03d5da430",
-    "sec13f-platform-derived-manifest/v1": "e6cc941539fe9ed001017463a5261446438c88c9a56b131ce35aef9c40f36a64",
-    "sec13f-generator-input/v1": "7b081866187831c17efd7c6a1acc9ccd9004993a4cb5d867995d677bcb8c534f",
+    "sec13f-base-output-manifest/v1": "165ec1c42070332683ee99b4da8a06e7edfc3a076821a3eac804a93bac7f2c04",
+    "sec13f-cch-cache-manifest/v1": "86acde19a2f6fc76a886026cdac8aaca1f96a73d3436cc67c3ffcaf7b245908c",
+    "sec13f-cch-output-manifest/v1": "a4d4e2a3cb823cdeccf35b30d07803e7c1b9b73c26c3915bb0664f2b8d440ca7",
+    "sec13f-cch-platform-baseline/v1": "e585ec0ecb281cc4a5a7f2bed86e0af69864761955e1dd5649b584775dc8d5bf",
+    "sec13f-cch-fixture-oracle/v1": "e2a941658cc70512a391515aad1dd70449407f233f0d2f7efe7ed71c23b92e09",
+    "sec13f-cch-snapshot/v1": "ed19f742e1a7932c09b7f925b9bd5dd49feac49378b90ebbdd0e6902027dbb0f",
+    "sec13f-platform-derived-manifest/v1": "839ec7a9341cc564c1b47b6ecb6cb7d411125098d6bb7c2209af82c8b121bce0",
+    "sec13f-generator-input/v1": "a1604c3c1362c0b14f5ea518ce939024a5acbefb5e4c4d62e31c8ad86fa87394",
     "sec13f-slice0-fixtures/v1": "2ab5871e167526b74e991854437d98b041546ac76a625c2fb29c97e71b46a0f2",
 }
 
