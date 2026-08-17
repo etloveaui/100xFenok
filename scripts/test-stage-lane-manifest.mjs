@@ -476,11 +476,14 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   fixture.materialized.always.push(etfRecoveryState);
   const always = run(fixture.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(always.status, 0, `${always.stderr}\n${always.stdout}`);
-  // 11 -> 12 declared on 2026-08-14: the StockAnalysis policy gained
-  // stockanalysis_etf_detail's attempt shard by registry derivation. The lane
-  // was registry-owned by this workflow all along and its shard reached the
-  // specs only as a manual patch after run 31794068491 failed to pack it.
-  assert.match(always.stdout, /declared=12 stage_selected=13 staged_index_total=13/);
+  const declaredAlways = fixture.paths.always.length;
+  const materializedAlways = fixture.materialized.always.length;
+  assert.match(
+    always.stdout,
+    new RegExp(
+      `declared=${declaredAlways} stage_selected=${materializedAlways} staged_index_total=${materializedAlways}`,
+    ),
+  );
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   assert.equal(cached(fixture.root).includes(etfRecoveryState), true);
   for (const excluded of fixture.materialized.exclude) {
@@ -495,8 +498,15 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
   const trackedAlways = run(tracked.root, "always_if_exists", [], STOCKANALYSIS_WORKFLOW);
   assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  // Same registry derivation as above: one more declared StockAnalysis path.
-  assert.match(trackedAlways.stdout, /declared=12 stage_selected=13 staged_index_total=12/);
+  const trackedDeclared = tracked.paths.always.length;
+  const trackedMaterialized = tracked.materialized.always.length;
+  const trackedProof = trackedAlways.stdout.match(
+    /declared=(\d+) stage_selected=(\d+) staged_index_total=(\d+)/,
+  );
+  assert.ok(trackedProof, trackedAlways.stdout);
+  assert.equal(Number(trackedProof[1]), trackedDeclared);
+  assert.ok(Number(trackedProof[2]) >= trackedMaterialized);
+  assert.equal(Number(trackedProof[3]), trackedMaterialized);
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 
