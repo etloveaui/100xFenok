@@ -47,7 +47,7 @@ function writeExecutable(name, body) {
   return file;
 }
 
-const fakeGit = writeExecutable("git", `#!/usr/bin/env bash
+const fakeGit = writeExecutable("git", `#!/bin/bash
 set -eu
 subcommand=""
 for arg in "$@"; do
@@ -82,12 +82,12 @@ case "$subcommand" in
   *) echo "unexpected git: $*" >&2; exit 64;;
 esac
 `);
-const fakeGh = writeExecutable("gh", `#!/usr/bin/env bash
+const fakeGh = writeExecutable("gh", `#!/bin/bash
 set -eu
 if [[ "\${FAKE_GH_FAILURE:-0}" = "1" ]]; then exit 1; fi
 printf '%s\\n' "$*" >> "$DISPATCH_LOG"
 `);
-const fakeNpm = writeExecutable("npm", `#!/usr/bin/env bash
+const fakeNpm = writeExecutable("npm", `#!/bin/bash
 set -eu
 printf local > "$LOCAL_MARKER"
 `);
@@ -99,7 +99,7 @@ function runGuard({ extraEnv = {}, withoutGh = false, withoutNpm = false, comman
   delete inheritedEnv[NESTED_MARKER];
   const env = {
     ...inheritedEnv,
-    PATH: withoutNpm ? baseBin : `${withoutGh ? baseBin : bin}:/usr/bin:/bin`,
+    PATH: withoutGh || withoutNpm ? baseBin : `${bin}:/usr/bin:/bin`,
     FAKE_REPO: REPO_ROOT,
     FAKE_HEAD: VALID_HEAD,
     FAKE_REMOTE_HEAD: VALID_HEAD,
@@ -107,7 +107,7 @@ function runGuard({ extraEnv = {}, withoutGh = false, withoutNpm = false, comman
     LOCAL_MARKER: localMarker,
     ...extraEnv,
   };
-  return spawnSync("bash", [GUARD, ...command], {
+  return spawnSync("/bin/bash", [GUARD, ...command], {
     cwd: APP_ROOT,
     encoding: "utf8",
     env,
