@@ -1,5 +1,5 @@
 {
-  "registry_digest": "3c31c7feee1c63018358cd8f6d10744ad05210357e990adea95f6f9cdd03f2c7",
+  "registry_digest": "82d8c062c121fda97575ed9d41898d62b8c16acc2490ab9cf47610597f46c623",
   "registry_schema": "lane-registry/v3",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -1458,6 +1458,11 @@
     ".github/workflows/fetch-stockanalysis.yml": {
       "exclude": [
         {
+          "kind": "directory",
+          "path": "data/stockanalysis/etfs",
+          "required": false
+        },
+        {
           "kind": "file",
           "path": "data/stockanalysis/backfill/history_gap_report_latest.json",
           "required": false
@@ -2072,24 +2077,6 @@
             "required": true
           }
         ],
-        "success_verify_not_plan_if_exists": []
-      }
-    },
-    ".github/workflows/stockanalysis-etf-shadow-publish.yml": {
-      "exclude": [],
-      "lanes": [
-        "stockanalysis_etf_detail"
-      ],
-      "stages": {
-        "always_if_exists": [
-          {
-            "kind": "file",
-            "path": "data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json",
-            "required": false
-          }
-        ],
-        "required_on_success": [],
-        "success_if_exists": [],
         "success_verify_not_plan_if_exists": []
       }
     },

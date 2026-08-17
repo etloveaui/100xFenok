@@ -296,6 +296,7 @@ assert.deepEqual(stockanalysis.stages.always_if_exists, [
 ]);
 assert.deepEqual(stockanalysis.stages.success_if_exists, []);
 assert.deepEqual(stockanalysis.exclude, [
+  { kind: "directory", path: "data/stockanalysis/etfs", required: false },
   { kind: "file", path: "data/stockanalysis/backfill/history_gap_report_latest.json", required: false },
   { kind: "file", path: "data/yf/finance/_summary.json", required: false },
 ]);

@@ -2409,6 +2409,31 @@ module.main()
             exact_line_index(retry_build, central_stage),
         )
 
+    def test_cloud_overlay_dispatch_flag_reaches_update_manifest_only_when_plane_won(self) -> None:
+        fetch_workflow = (ROOT / ".github" / "workflows" / "fetch-stockanalysis.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("--field etf_cloud_generation=true", fetch_workflow)
+        self.assertIn("needs.persist-stockanalysis-etf-plane.result == 'success'", fetch_workflow)
+        self.assertIn("needs.publish-stockanalysis-etf-plane.result == 'skipped'", fetch_workflow)
+        self.assertIn("needs.persist-stockanalysis-etf-plane.result == 'skipped'", fetch_workflow)
+
+        update_workflow = (ROOT / ".github" / "workflows" / "update-manifest.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("etf_cloud_generation:", update_workflow)
+        self.assertIn("default: 'false'", update_workflow.split("etf_cloud_generation:", 1)[1].split("rebuild_slickcharts:", 1)[0])
+        self.assertIn("github.event.inputs.etf_cloud_generation == 'true'", update_workflow)
+        self.assertIn(
+            "node scripts/materialize-cloud-data-plane-family.mjs",
+            update_workflow,
+        )
+        self.assertNotIn(
+            "materialize-cloud-data-plane-family.mjs",
+            update_workflow.split("          for attempt in 1 2 3; do", 1)[1],
+            "the retry loop must reuse the same external snapshot, never re-materialize",
+        )
+
     def test_generic_html_table_fixture(self) -> None:
         html = (FIXTURE_DIR / "generic_table.fixture.html").read_text(encoding="utf-8")
         tables = self.fetcher.parse_html_tables(html)

@@ -331,7 +331,10 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertNotIn('echo "status=no_changes"', publish)
         self.assertLess(publish.index("git checkout -f -B main origin/main"), publish.index("git commit \"${COMMIT_ARGS[@]}\""))
         self.assertLess(publish.index("git commit \"${COMMIT_ARGS[@]}\""), publish.index("git push origin HEAD:main"))
-        self.assertIn("if: ${{ steps.publish.outputs.status == 'published' }}", publish)
+        # Projection dispatch moved OUT of the Git publisher into the aggregate
+        # dispatch job (gated on plane publish + persistence); no residual
+        # per-step status gate may reappear inside the writer.
+        self.assertNotIn("steps.publish.outputs", self.text)
 
     def test_publish_is_non_confirming_on_stale_and_reads_back_current_main(self) -> None:
         publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
@@ -391,6 +394,54 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             publish.index('mkdir -p "$PROJECTION_ORACLE"'),
             publish.index('rsync -a --checksum --delete data/stockanalysis/surfaces/'),
         )
+
+    def test_projection_dispatch_requires_git_publisher_plane_and_persistence(self) -> None:
+        dispatch = re.search(
+            r"  dispatch-stockanalysis-projection:\n(?P<body>.*)\Z",
+            self.text,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(dispatch)
+        body = dispatch.group("body")
+        for expected in (
+            "needs:\n      - publish-stockanalysis\n      - publish-stockanalysis-etf-plane\n      - persist-stockanalysis-etf-plane",
+            "always()",
+            "needs.publish-stockanalysis.result == 'success'",
+            "needs.publish-stockanalysis-etf-plane.result == 'success'",
+            "needs.persist-stockanalysis-etf-plane.result == 'success'",
+            "needs.publish-stockanalysis-etf-plane.result == 'skipped'",
+            "needs.persist-stockanalysis-etf-plane.result == 'skipped'",
+            "github.event.schedule == '50 23 * * 1-5'",
+            "github.event.schedule == '20 23 * * 0'",
+            "gh workflow run update-manifest.yml",
+            "etf_cloud_generation=true",
+        ):
+            self.assertIn(expected, body)
+        # The dispatch job stages/commits nothing and must never carry the
+        # shared-writer concurrency group.
+        self.assertNotIn("fenok-data-writer-refs/heads/main", body)
+        self.assertNotIn("100xfenok-next", body)
+        self.assertNotIn("git commit", body)
+        # The Git publisher alone owns staging/commit; the dispatch is not a
+        # step inside it.
+        publisher = self.text.split("  publish-stockanalysis:\n", 1)[1].split("  publish-stockanalysis-etf-plane:\n", 1)[0]
+        self.assertNotIn("gh workflow run update-manifest.yml", publisher)
+
+    def test_raw_etf_canonical_files_are_never_staged_by_the_git_publisher(self) -> None:
+        publisher = self.text.split("  publish-stockanalysis:\n", 1)[1].split("  publish-stockanalysis-etf-plane:\n", 1)[0]
+        add_idx = publisher.index(
+            "git add -- data/computed/data-supply/etf-detail 100xfenok-next/public/data"
+        )
+        manifest_stage_idx = publisher.index("scripts/stage-lane-manifest.sh")
+        guard_idx = publisher.index("git diff --cached --name-only -- data/stockanalysis/etfs")
+        commit_idx = publisher.index("git commit \"${COMMIT_ARGS[@]}\"")
+        self.assertLess(manifest_stage_idx, guard_idx)
+        self.assertLess(add_idx, guard_idx)
+        self.assertLess(guard_idx, commit_idx)
+        self.assertIn("raw ETF canonical files must never be staged for publication", publisher)
+        self.assertNotIn("git restore --staged -- data/stockanalysis/etfs", publisher)
+        self.assertNotIn("git add --all", publisher)
+        self.assertNotIn("git add -A", publisher)
 
 
 if __name__ == "__main__":

@@ -82,4 +82,66 @@ assert.equal(
   "node ../scripts/test-check-rim-index-five-canonical.mjs && node ../scripts/test-build-feno-rim-five-index-canonical.mjs && node ../scripts/check-rim-index-five-canonical.mjs",
 );
 
+// StockAnalysis ETF cloud overlay: Update Manifest materializes the verified
+// cloud generation EXACTLY ONCE (before S1), both projection passes consume
+// that same external snapshot through the shared runner, and the runner owns
+// the backup/overlay/restore + scoped git-clean contract per pass. The runner
+// never re-materializes and never stages raw canonical ETF files.
+{
+  const materializerCommand = "node scripts/materialize-cloud-data-plane-family.mjs \\";
+  const materializeCalls = exactLineIndices(workflowLines, materializerCommand);
+  assert.equal(materializeCalls.length, 1,
+    "workflow must materialize the verified cloud overlay exactly once per job");
+  for (const argument of [
+    "--family stockanalysis-etf-detail \\",
+    "--manifest-prefix data/stockanalysis/etfs/ \\",
+  ]) {
+    assert.equal(exactLineIndices(workflowLines, argument).length, 1,
+      `workflow must pass the required materializer argument: ${argument}`);
+  }
+  const materializeIndex = materializeCalls[0];
+  const initialRunnerIndex = exactLineIndices(workflowLines, "run: bash scripts/update-manifest-projections.sh")[0];
+  const retryRunnerIndex = exactLineIndices(workflowLines, "bash scripts/update-manifest-projections.sh")[0];
+  assert.ok(materializeIndex < initialRunnerIndex,
+    "materialization must precede the first projection pass");
+  assert.ok(materializeIndex < retryRunnerIndex,
+    "materialization must precede the retry projection pass (reused snapshot)");
+  assert.equal(workflowLines.filter((line) => line.includes("ETF_DETAIL_OVERLAY_ROOT")).length, 1,
+    "the overlay root must be exported exactly once for both runner call sites");
+  assert.equal(workflowLines.filter((line) => line.includes("ETF_DETAIL_OVERLAY_RECEIPT")).length, 1,
+    "the verified receipt path must be exported exactly once for both runner call sites");
+
+  for (const marker of [
+    'ETF_LKG_TREE="data/stockanalysis/etfs"',
+    "require_etf_overlay_env",
+    "verify_etf_overlay_pointer_current() {",
+    "verify_etf_overlay_binding",
+    "restore_etf_lkg_tree() {",
+    "etf_overlay_restore_and_exit() {",
+    "trap 'etf_overlay_restore_and_exit' EXIT",
+    "trap 'exit 129' HUP",
+    "trap 'exit 130' INT",
+    "trap 'exit 143' TERM",
+    'git ls-files --others --exclude-standard -- "$ETF_LKG_TREE"',
+  ]) {
+    assert.ok(runnerLines.some((line) => line.includes(marker)),
+      `runner must carry overlay marker: ${marker}`);
+  }
+  assert.equal(
+    runnerLines.filter((line) => line.includes("materialize-cloud-data-plane-family")).length,
+    1,
+    "runner must use the materializer only for its manifest-only receipt verification mode",
+  );
+  assert.equal(exactLineIndices(runnerLines, '--verify-receipt "$ETF_DETAIL_OVERLAY_RECEIPT" \\').length, 1,
+    "runner must verify the pinned receipt without re-materializing payloads");
+  assert.equal(exactLineIndices(runnerLines, "verify_etf_overlay_pointer_current").length, 2,
+    "runner must verify the active pointer before and after every projection pass");
+  const backupCopy = 'cp -a "$ETF_LKG_TREE/." "$ETF_OVERLAY_BACKUP_ROOT/etfs/"';
+  const overlayCopy = 'cp -a "$ETF_DETAIL_OVERLAY_ROOT/." "$ETF_LKG_TREE/"';
+  const backupCopyIndex = runnerLines.findIndex((line) => line.includes(backupCopy));
+  const overlayCopyIndex = runnerLines.findIndex((line) => line.includes(overlayCopy));
+  assert.ok(backupCopyIndex >= 0 && overlayCopyIndex >= 0 && backupCopyIndex < overlayCopyIndex,
+    "Git LKG snapshot must be taken before the overlay replaces the tree");
+}
+
 console.log("test-update-manifest-workflow: ok");

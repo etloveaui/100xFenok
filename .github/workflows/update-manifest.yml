@@ -114,6 +114,10 @@ on:
         description: 'Origin canonical slot_key (§2)'
         required: false
         default: ''
+      etf_cloud_generation:
+        description: 'True only when a natural StockAnalysis ETF plane generation was published AND persisted; enables the verified cloud overlay for this projection run'
+        required: false
+        default: 'false'
       # Legacy compatibility input, intentionally IGNORED by the rebuild policy
       # below: legacy callers still pass -f rebuild_slickcharts=true and the
       # supplied value must never gate the rebuild. Every workflow_dispatch
@@ -163,6 +167,56 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Materialize verified stockanalysis ETF cloud generation once
+        if: ${{ github.event.inputs.etf_cloud_generation == 'true' }}
+        env:
+          # Read-only materialization through the existing plane bridge; the
+          # materializer never mutates the plane. Credentials are bound to this
+          # step only and never printed.
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
+          DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ] \
+            || [ -z "${DATA_PLANE_ENDPOINT:-}" ] || [ -z "${DATA_PLANE_WRITE_KEY:-}" ]; then
+            echo "::error::ETF cloud overlay materialization requires plane read credentials; failing closed" >&2
+            exit 2
+          fi
+          OVERLAY_ROOT="$RUNNER_TEMP/stockanalysis-etf-detail-overlay"
+          if [ -e "$OVERLAY_ROOT" ]; then
+            echo "::error::ETF overlay output root must not pre-exist: $OVERLAY_ROOT" >&2
+            exit 2
+          fi
+          MATERIALIZE_LOG="$RUNNER_TEMP/stockanalysis-etf-detail-materialize.out"
+          node scripts/materialize-cloud-data-plane-family.mjs \
+            --family stockanalysis-etf-detail \
+            --manifest-prefix data/stockanalysis/etfs/ \
+            --output-root "$OVERLAY_ROOT" | tee "$MATERIALIZE_LOG"
+          RECEIPT="$RUNNER_TEMP/stockanalysis-etf-detail-verified-receipt.json"
+          python3 - "$MATERIALIZE_LOG" "$RECEIPT" <<'PYEOF'
+          import json
+          import sys
+
+          log_path, receipt_path = sys.argv[1], sys.argv[2]
+          lines = [line.strip() for line in open(log_path, encoding="utf-8") if line.strip()]
+          if len(lines) != 1:
+              raise SystemExit("materializer must emit exactly one JSON receipt object on stdout")
+          try:
+              candidate = json.loads(lines[0])
+          except ValueError as error:
+              raise SystemExit(f"materializer receipt is not JSON: {error}") from error
+          if not isinstance(candidate, dict):
+              raise SystemExit("materializer receipt must be a JSON object")
+          with open(receipt_path, "w", encoding="utf-8") as handle:
+              json.dump(candidate, handle)
+          PYEOF
+          {
+            echo "ETF_DETAIL_OVERLAY_ROOT=$OVERLAY_ROOT"
+            echo "ETF_DETAIL_OVERLAY_RECEIPT=$RECEIPT"
+          } >> "$GITHUB_ENV"
+
       - name: Rebuild and project shared derived state
         # S1-S14 of the projection stack live in one runner shared with the
         # push-retry loop below, so the two call sites cannot drift.
@@ -171,6 +225,10 @@ jobs:
           VALIDATE_SLICKCHARTS_SKIP_PUBLIC: 'true'
           RESET_ETF_SNAPSHOTS: 'false'
           BEFORE_SHA: ${{ github.event_name == 'push' && github.event.before || 'AUTO' }}
+          CLOUDFLARE_API_TOKEN: ${{ github.event.inputs.etf_cloud_generation == 'true' && secrets.CLOUDFLARE_API_TOKEN || '' }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ github.event.inputs.etf_cloud_generation == 'true' && 'aeeb5ea3affe55a2219d08ea02dad9e1' || '' }}
+          DATA_PLANE_ENDPOINT: ${{ github.event.inputs.etf_cloud_generation == 'true' && 'https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane' || '' }}
+          DATA_PLANE_WRITE_KEY: ${{ github.event.inputs.etf_cloud_generation == 'true' && secrets.DATA_PLANE_WRITE_KEY || '' }}
         run: bash scripts/update-manifest-projections.sh
 
       - name: Check if manifest changed
@@ -194,6 +252,10 @@ jobs:
           REBUILD_SLICKCHARTS: ${{ github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
           VALIDATE_SLICKCHARTS_SKIP_PUBLIC: 'false'
           RESET_ETF_SNAPSHOTS: 'true'
+          CLOUDFLARE_API_TOKEN: ${{ github.event.inputs.etf_cloud_generation == 'true' && secrets.CLOUDFLARE_API_TOKEN || '' }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ github.event.inputs.etf_cloud_generation == 'true' && 'aeeb5ea3affe55a2219d08ea02dad9e1' || '' }}
+          DATA_PLANE_ENDPOINT: ${{ github.event.inputs.etf_cloud_generation == 'true' && 'https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane' || '' }}
+          DATA_PLANE_WRITE_KEY: ${{ github.event.inputs.etf_cloud_generation == 'true' && secrets.DATA_PLANE_WRITE_KEY || '' }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

@@ -1,5 +1,5 @@
 {
   "schema_version": "lane-registry-expected/v1",
-  "note": "Exact-value pin of scripts/lib/lane-registry.mjs. Any registry edit is a conscious fixture bump (DEC-266), mirroring the detection config's config_digest pin. Bumped 2026-08-17: the stockanalysis-etf-detail publish-outcome claim moved out of the retired shadow-publish caller workflow into the lane's own commit_shards, so the derived PLANE_PUBLISH_OUTCOME_BINDINGS authorizes the natural fetch-stockanalysis.yml publish/persist jobs (exactly one owner, shadow caller claim removed); the shadow workflow policy entry is retained only while the retired workflow file still exists on disk.",
-  "registry_digest": "3c31c7feee1c63018358cd8f6d10744ad05210357e990adea95f6f9cdd03f2c7"
+  "note": "Exact-value pin of scripts/lib/lane-registry.mjs. Any registry edit is a conscious fixture bump (DEC-266), mirroring the detection config's config_digest pin. Bumped 2026-08-17: the stockanalysis-etf-detail publish-outcome claim belongs only to the natural fetch-stockanalysis.yml lane; its commit policy excludes data/stockanalysis/etfs because the natural cloud generation is current authority while Git retains the existing raw tree only as LKG, and the superseded manual shadow workflow and policy are removed.",
+  "registry_digest": "82d8c062c121fda97575ed9d41898d62b8c16acc2490ab9cf47610597f46c623"
 }

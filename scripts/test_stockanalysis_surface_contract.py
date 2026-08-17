@@ -184,6 +184,97 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
             "a whole-tree stockanalysis diff would fail by contract; etfs/ is shard-only",
         )
 
+    def test_cloud_overlay_materializes_once_and_restores_lkg_before_staging(self) -> None:
+        projection_workflow = (
+            ROOT / ".github" / "workflows" / "update-manifest.yml"
+        ).read_text(encoding="utf-8")
+        projection_runner = (
+            ROOT / "scripts" / "update-manifest-projections.sh"
+        ).read_text(encoding="utf-8")
+
+        materialize_lines = [
+            line.strip()
+            for line in projection_workflow.splitlines()
+            if "materialize-cloud-data-plane-family.mjs" in line
+        ]
+        self.assertEqual(
+            len(materialize_lines),
+            1,
+            "the verified cloud overlay must be materialized exactly once per Update Manifest job",
+        )
+        self.assertIn("--family stockanalysis-etf-detail", projection_workflow)
+        self.assertIn("--manifest-prefix data/stockanalysis/etfs/", projection_workflow)
+
+        initial_block = projection_workflow.split("      - name: Check if manifest changed", 1)[0]
+        runner_call = "run: bash scripts/update-manifest-projections.sh"
+        self.assertLess(
+            initial_block.index("materialize-cloud-data-plane-family.mjs"),
+            initial_block.index(runner_call),
+            "materialization must precede the first projection pass",
+        )
+        retry_block = projection_workflow.split("          for attempt in 1 2 3; do", 1)[1]
+        self.assertNotIn(
+            "materialize-cloud-data-plane-family.mjs",
+            retry_block,
+            "retry passes must reuse the same external snapshot; no second materialization",
+        )
+        self.assertIn("ETF_DETAIL_OVERLAY_ROOT", projection_workflow)
+        self.assertIn("ETF_DETAIL_OVERLAY_RECEIPT", projection_workflow)
+
+        runner_lines = [line.strip() for line in projection_runner.splitlines()]
+        for marker in (
+            'ETF_LKG_TREE="data/stockanalysis/etfs"',
+            "require_etf_overlay_env",
+            "verify_etf_overlay_pointer_current() {",
+            "verify_etf_overlay_binding",
+            "restore_etf_lkg_tree() {",
+            "etf_overlay_restore_and_exit() {",
+            "trap 'etf_overlay_restore_and_exit' EXIT",
+            "trap 'exit 129' HUP",
+            "trap 'exit 130' INT",
+            "trap 'exit 143' TERM",
+        ):
+            self.assertIn(marker, runner_lines)
+        self.assertEqual(
+            projection_runner.count("materialize-cloud-data-plane-family.mjs"),
+            1,
+            "the runner may call only the manifest-only receipt verifier",
+        )
+        self.assertIn('--verify-receipt "$ETF_DETAIL_OVERLAY_RECEIPT"', projection_runner)
+        self.assertEqual(
+            runner_lines.count("verify_etf_overlay_pointer_current"),
+            2,
+            "the pointer must stay current before and after every projection pass",
+        )
+        backup_copy = 'cp -a "$ETF_LKG_TREE/." "$ETF_OVERLAY_BACKUP_ROOT/etfs/"'
+        overlay_copy = 'cp -a "$ETF_DETAIL_OVERLAY_ROOT/." "$ETF_LKG_TREE/"'
+        self.assertIn(backup_copy, runner_lines)
+        self.assertIn(overlay_copy, runner_lines)
+        self.assertLess(
+            runner_lines.index(backup_copy),
+            runner_lines.index(overlay_copy),
+            "the Git LKG snapshot must be taken BEFORE the overlay replaces the tree",
+        )
+        self.assertTrue(
+            any("restore_etf_lkg_tree" in line for line in runner_lines),
+            "the runner must carry the LKG restore routine",
+        )
+        # The runner restores LKG and asserts scoped cleanliness before the
+        # caller's central change probe / staging runs (workflow-owned).
+        self.assertTrue(
+            any('git ls-files --others --exclude-standard -- "$ETF_LKG_TREE"' in line for line in runner_lines),
+            "the runner must assert scoped git cleanliness of the canonical ETF tree",
+        )
+
+        # Least privilege on materialization credentials: values are bound to
+        # the step env and never echoed into the log.
+        materialize_step = projection_workflow.split("      - name: Materialize verified stockanalysis ETF cloud generation once", 1)[1]
+        materialize_step = materialize_step.split("      - name: Rebuild and project shared derived state", 1)[0]
+        self.assertIn("secrets.CLOUDFLARE_API_TOKEN", materialize_step)
+        self.assertIn("secrets.DATA_PLANE_WRITE_KEY", materialize_step)
+        self.assertNotIn('echo "$CLOUDFLARE_API_TOKEN"', materialize_step)
+        self.assertNotIn('echo "$DATA_PLANE_WRITE_KEY"', materialize_step)
+
     # NOTE: test_surface_catalog_labels_cover_all_index_groups removed — it validated
     # SurfaceCatalogCard.tsx groupLabel coverage, but that public diagnostic card was
     # intentionally removed in ef5227996. The catalog/groupLabel surface no longer exists.

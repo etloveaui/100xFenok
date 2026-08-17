@@ -1621,6 +1621,7 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".gi
     commitSpec(publishOutcomeShard("stockanalysis-etf-detail"), "file", false),
   ],
 }, [
+  commitSpec("data/stockanalysis/etfs", "directory"),
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
   commitSpec("data/yf/finance/_summary.json", "file"),
 ]);
@@ -1700,18 +1701,6 @@ workflow_policies[".github/workflows/update-manifest.yml"] = policy([], {
 workflow_policies[".github/workflows/coordinate-computed-signals.yml"] = policy([], {
   always_if_exists: [
     commitSpec(publishOutcomeShard("computed-signals"), "file"),
-  ],
-});
-
-// Retired manual StockAnalysis ETF shadow publisher (superseded 2026-08-17 by
-// the natural publish/persist jobs in fetch-stockanalysis.yml). The policy
-// entry is retained only because the retired workflow file still exists on
-// disk and the writer inventory requires a manifest entry for every writer
-// workflow; the family's derived binding now points at the natural workflow,
-// so a manual dispatch's persist step is refused by PLANE_PUBLISH_OUTCOME_BINDINGS.
-workflow_policies[".github/workflows/stockanalysis-etf-shadow-publish.yml"] = policy(["stockanalysis_etf_detail"], {
-  always_if_exists: [
-    commitSpec(publishOutcomeShard("stockanalysis-etf-detail"), "file"),
   ],
 });
 
@@ -1796,9 +1785,9 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
     detached_persistence: true,
     reason: "natural publication splits publish and persistence into separate jobs so only the persistence job takes the global Git writer lock; the publisher itself must still fail the job",
     canonical_commit: "external_authority",
-    canonical_commit_reason: "the publish job performs no canonical Git write at all: acquisition and the Git commit/persistence steps live in fetch-stockanalysis.yml outside this publishing job, and the separate persistence job is the only step that touches Git",
+    canonical_commit_reason: "the natural plane generation is current authority for data/stockanalysis/etfs while Git retains its existing tree as LKG; fetch-stockanalysis.yml commits the other source-lane and derived state, and the detached persistence job commits only publish evidence",
     strict_gate: true,
-    strict_gate_reason: "first shadow publication of the largest payload in the estate: --tolerate-gate-block turns an unknown or over-threshold cost verdict into exit 0, so an explicitly requested run would report green while having published nothing. The gate-block outcome shard is still written and persisted; only the exit code changes, and the run must be red",
+    strict_gate_reason: "natural publication of the largest payload in the estate: --tolerate-gate-block turns an unknown or over-threshold cost verdict into exit 0, so a scheduled run would report green while having published nothing. The gate-block outcome shard is still written and persisted; only the exit code changes, and the run must be red",
   }),
 });
 

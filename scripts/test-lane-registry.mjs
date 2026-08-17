@@ -256,6 +256,11 @@ function clone(value) {
   // the publish and persistence jobs), with exactly one owner and no retired
   // shadow caller claim.
   {
+    assert.equal(
+      fs.existsSync(path.join(REPO_ROOT, ".github/workflows/stockanalysis-etf-shadow-publish.yml")),
+      false,
+      "the superseded manual ETF shadow publisher must be removed",
+    );
     const etfDetail = registryLaneById("stockanalysis_etf_detail");
     assert.equal(etfDetail.caller_workflows, undefined,
       "the retired shadow publisher must no longer claim the stockanalysis-etf-detail outcome shard");
