@@ -18,16 +18,16 @@ EXPECTED_BASE_OUTPUT_COUNT = 76
 EXPECTED_DERIVED_OUTPUT_COUNT = 5
 CIK_PATTERN = re.compile(r"^\d{10}$")
 SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
-EXPECTED_REGISTRY_SHA256 = "179a2c2e7f6cbbcddaf61d0a2e4766e7952f11dc49f45870f39611e5c8d88664"
+EXPECTED_REGISTRY_SHA256 = "da097617199124382d288fe39c59731adf22b3ed0eddff90bd9bc3c721aa1bb1"
 PINNED_CONTENT_DIGESTS = {
-    "sec13f-base-output-manifest/v1": "165ec1c42070332683ee99b4da8a06e7edfc3a076821a3eac804a93bac7f2c04",
-    "sec13f-cch-cache-manifest/v1": "86acde19a2f6fc76a886026cdac8aaca1f96a73d3436cc67c3ffcaf7b245908c",
-    "sec13f-cch-output-manifest/v1": "a4d4e2a3cb823cdeccf35b30d07803e7c1b9b73c26c3915bb0664f2b8d440ca7",
-    "sec13f-cch-platform-baseline/v1": "e585ec0ecb281cc4a5a7f2bed86e0af69864761955e1dd5649b584775dc8d5bf",
-    "sec13f-cch-fixture-oracle/v1": "e2a941658cc70512a391515aad1dd70449407f233f0d2f7efe7ed71c23b92e09",
-    "sec13f-cch-snapshot/v1": "ed19f742e1a7932c09b7f925b9bd5dd49feac49378b90ebbdd0e6902027dbb0f",
-    "sec13f-platform-derived-manifest/v1": "839ec7a9341cc564c1b47b6ecb6cb7d411125098d6bb7c2209af82c8b121bce0",
-    "sec13f-generator-input/v1": "a1604c3c1362c0b14f5ea518ce939024a5acbefb5e4c4d62e31c8ad86fa87394",
+    "sec13f-base-output-manifest/v1": "66fe7800947af5c003bac7f00159fd5e6cc87d7c8c45396e7d834b2da6b7d756",
+    "sec13f-cch-cache-manifest/v1": "f165c81746bcc2a11d6b205edea12f3b208c25fcdfb93658f48e20bf7f727c72",
+    "sec13f-cch-output-manifest/v1": "46970e8b9cb975e53e462119cd93aeac8b487092972af0cbba6243fac1839e65",
+    "sec13f-cch-platform-baseline/v1": "3f90a66311e0030152e393f45539ca0f579d608fb4d82c9ccaf03dcc84fbe6ab",
+    "sec13f-cch-fixture-oracle/v1": "6364d366f0efd6a60f0f8104c5e22eb712127a8fee971b75f93b0610044d5bf1",
+    "sec13f-cch-snapshot/v1": "b21996c915edfc327511e8c80ec11dc8127f487b19b129e2249c19a46a46af53",
+    "sec13f-platform-derived-manifest/v1": "661f576557378db738dd9c2a5f36154b4e67b5982fd7a2090a3b533bd28d0407",
+    "sec13f-generator-input/v1": "c79cd76b43729caf46ca2420d899f3f7c209a969a250121d93a3387fe3eeba99",
     "sec13f-slice0-fixtures/v1": "2ab5871e167526b74e991854437d98b041546ac76a625c2fb29c97e71b46a0f2",
 }
 
@@ -292,6 +292,44 @@ def validate_generator_input(payload: dict[str, Any], *, registry: dict[str, Any
     }
     if lineage != set(accessions):
         raise ContractError("generator input: accession lineage mismatch")
+    if registry is not None:
+        for investor_id, investor in investors.items():
+            registered = registry["investors"][investor_id]
+            if (
+                investor.get("cik") != registered.get("cik")
+                or investor.get("entity") != registered.get("entity")
+                or investor.get("cik_from") != registered.get("cik_from")
+                or investor.get("cik_history", []) != registered.get("cik_history", [])
+            ):
+                raise ContractError(f"generator input: {investor_id} CIK lineage mismatch")
+            sources = [
+                *registered.get("cik_history", []),
+                {"cik": registered["cik"], "from": registered.get("cik_from")},
+            ]
+            for filing in investor["filings"]:
+                if not registered.get("cik_history"):
+                    continue
+                quarter = filing.get("quarter", "")
+                expected_source = next(
+                    (
+                        source["cik"]
+                        for source in reversed(sources)
+                        if not (source.get("from") and quarter < source["from"])
+                        and not (source.get("through") and quarter > source["through"])
+                    ),
+                    registered["cik"],
+                )
+                if filing.get("source_cik") != expected_source:
+                    raise ContractError(
+                        f"generator input: {investor_id} {quarter} source CIK mismatch"
+                    )
+                if any(
+                    not accession.startswith(f"{expected_source}-")
+                    for accession in filing.get("accession_numbers", [])
+                ):
+                    raise ContractError(
+                        f"generator input: {investor_id} {quarter} synthetic accession CIK mismatch"
+                    )
     case_results = payload.get("case_results")
     if not isinstance(case_results, list) or len(case_results) != 9:
         raise ContractError("generator input: exact nine measured case results are required")

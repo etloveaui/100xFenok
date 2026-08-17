@@ -274,6 +274,7 @@ def build_investor_run(
         filings.append(
             {
                 "quarter": _quarter(report_date),
+                "source_cik": cik,
                 "report_date": report_date,
                 "filing_date": max(filing_date_by_accession[accession] for accession in active),
                 "accession_number": "+".join(active),

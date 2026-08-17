@@ -15,7 +15,7 @@ from archive import ARCHIVE_BASE, SUBMISSIONS_BASE
 from client import SecClient
 from contract import canonical_json
 from input_adapter import prepare_investor_data
-from pipeline import PipelineError, build_investor_run, build_investor_runs
+from pipeline import PipelineError, build_investor_run
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -101,6 +101,38 @@ def _quarter_case(case: dict[str, Any], report_date: str, filing_date: str, star
     return output
 
 
+def _report_quarter(report_date: str) -> str:
+    year, month, _day = (int(part) for part in report_date.split("-"))
+    return f"{year}-Q{((month - 1) // 3) + 1}"
+
+
+def _cik_sources(investor: dict[str, Any]) -> list[dict[str, str]]:
+    return [
+        *investor.get("cik_history", []),
+        {"cik": investor["cik"], "from": investor.get("cik_from")},
+    ]
+
+
+def _case_for_source(case: dict[str, Any], source: dict[str, str]) -> dict[str, Any]:
+    components = []
+    for component in case["components"]:
+        quarter = _report_quarter(component["report_date"])
+        if source.get("from") and quarter < source["from"]:
+            continue
+        if source.get("through") and quarter > source["through"]:
+            continue
+        components.append(deepcopy(component))
+    accessions = {component["accession"] for component in components}
+    return {
+        "components": components,
+        "information_tables": [
+            deepcopy(table)
+            for table in case["information_tables"]
+            if table["accession"] in accessions
+        ],
+    }
+
+
 def _unit_resolver(_parsed: dict[str, Any]) -> dict[str, Any]:
     return {"unit": "thousands", "evidence": "frozen-fixture", "confidence": 1.0}
 
@@ -175,19 +207,43 @@ def build_fixture_input(
         combined["information_tables"].extend(case["information_tables"])
 
     transport = FixtureTransport()
-    for investor in registry["investors"].values():
-        _install_case(transport, cik=investor["cik"], case=combined)
+    source_cases: dict[str, list[tuple[dict[str, str], dict[str, Any]]]] = {}
+    for investor_id, investor in registry["investors"].items():
+        source_cases[investor_id] = []
+        for source in _cik_sources(investor):
+            source_case = _case_for_source(combined, source)
+            if not source_case["components"]:
+                continue
+            _install_case(transport, cik=source["cik"], case=source_case)
+            source_cases[investor_id].append((source, source_case))
     client = SecClient(
         user_agent="Fenok sec13f-fixture@fenok.test",
         transport=transport,
         sleep=lambda _seconds: None,
     )
-    runs = build_investor_runs(
-        client=client,
-        registry=registry,
-        reference_mapping=REFERENCE_MAPPING,
-        unit_resolver=_unit_resolver,
-    )
+    runs: dict[str, dict[str, Any]] = {}
+    for investor_id, investor in registry["investors"].items():
+        filings = []
+        for source, _source_case in source_cases[investor_id]:
+            source_run = build_investor_run(
+                client=client,
+                investor_id=investor_id,
+                investor={**investor, "cik": source["cik"]},
+                reference_mapping=REFERENCE_MAPPING,
+                unit_resolver=_unit_resolver,
+            )
+            filings.extend(source_run["filings"])
+        filings.sort(key=lambda filing: filing["report_date"])
+        if len({filing["quarter"] for filing in filings}) != len(filings):
+            raise AssertionError(f"duplicate fixture lineage quarter: {investor_id}")
+        runs[investor_id] = {
+            "id": investor_id,
+            "name": investor["name"],
+            "entity": investor["entity"],
+            "cik": investor["cik"],
+            "group": investor["group"],
+            "filings": filings,
+        }
     investors_data = prepare_investor_data(registry, runs)
     accessions = sorted(
         {

@@ -14,6 +14,7 @@ from normalization import NormalizationError, apply_weight_filter
 
 EXPECTED_INVESTOR_COUNT = 63
 INVESTOR_ID_PATTERN = re.compile(r"^[a-z0-9_]+$")
+CIK_PATTERN = re.compile(r"^\d{10}$")
 
 
 class InputAdapterError(ValueError):
@@ -40,6 +41,20 @@ def _quarter(report_date: str) -> str:
     except ValueError as error:
         raise InputAdapterError(f"invalid report_date: {report_date}") from error
     return f"{parsed.year}-Q{((parsed.month - 1) // 3) + 1}"
+
+
+def _source_cik_for_quarter(investor: dict[str, Any], quarter: str) -> str:
+    sources = [
+        *investor.get("cik_history", []),
+        {"cik": investor["cik"], "from": investor.get("cik_from")},
+    ]
+    for source in reversed(sources):
+        if source.get("from") and quarter < source["from"]:
+            continue
+        if source.get("through") and quarter > source["through"]:
+            continue
+        return source["cik"]
+    return investor["cik"]
 
 
 def _filing_sort_key(filing: dict[str, Any]) -> tuple[str, str, str]:
@@ -87,7 +102,14 @@ def _normalize_holding(row: dict[str, Any], *, label: str) -> dict[str, Any]:
     return output
 
 
-def _normalize_filing(filing: dict[str, Any], *, investor_id: str, index: int) -> dict[str, Any]:
+def _normalize_filing(
+    filing: dict[str, Any],
+    *,
+    investor_id: str,
+    index: int,
+    default_source_cik: str,
+    preserve_source_cik: bool,
+) -> dict[str, Any]:
     label = f"{investor_id}.filings[{index}]"
     if not isinstance(filing, dict):
         raise InputAdapterError(f"{label} must be an object")
@@ -95,6 +117,14 @@ def _normalize_filing(filing: dict[str, Any], *, investor_id: str, index: int) -
     quarter = _text(filing.get("quarter") or _quarter(report_date), label=f"{label}.quarter")
     if quarter != _quarter(report_date):
         raise InputAdapterError(f"{label}.quarter does not match report_date")
+    source_cik = None
+    if preserve_source_cik:
+        source_cik = _text(
+            filing.get("source_cik", default_source_cik),
+            label=f"{label}.source_cik",
+        )
+        if CIK_PATTERN.fullmatch(source_cik) is None:
+            raise InputAdapterError(f"{label}.source_cik must be exactly 10 digits")
     source_holdings = filing.get("holdings")
     if not isinstance(source_holdings, list) or not source_holdings:
         raise InputAdapterError(f"{label}.holdings must be a non-empty list")
@@ -180,6 +210,8 @@ def _normalize_filing(filing: dict[str, Any], *, investor_id: str, index: int) -
         ),
         "holdings": filtered,
     }
+    if source_cik is not None:
+        output["source_cik"] = source_cik
     output["accession_numbers"] = (
         list(accessions) if isinstance(accessions, list) and accessions else [output["accession_number"]]
     )
@@ -205,18 +237,28 @@ def prepare_investor_data(registry: dict[str, Any], investor_runs: dict[str, Any
         if not isinstance(filings, list) or not filings:
             raise InputAdapterError(f"{investor_id}.filings must be non-empty")
         normalized = [
-            _normalize_filing(row, investor_id=investor_id, index=index)
+            _normalize_filing(
+                row,
+                investor_id=investor_id,
+                index=index,
+                default_source_cik=run["cik"],
+                preserve_source_cik=bool(registered.get("cik_history")),
+            )
             for index, row in enumerate(sorted(filings, key=_filing_sort_key))
         ]
         if len({row["report_date"] for row in normalized}) != len(normalized):
             raise InputAdapterError(f"{investor_id}: duplicate composite report_date")
-        output[investor_id] = {
+        prepared = {
             "name": registered["name"],
             "entity": registered["entity"],
             "cik": registered["cik"],
             "group": registered["group"],
             "filings": normalized,
         }
+        if registered.get("cik_history"):
+            prepared["cik_from"] = registered.get("cik_from")
+            prepared["cik_history"] = deepcopy(registered["cik_history"])
+        output[investor_id] = prepared
     return output
 
 
@@ -238,6 +280,11 @@ def validate_prepared_investor_data(
         registered = investors[investor_id]
         if any(row.get(key) != registered.get(key) for key in ("name", "entity", "cik", "group")):
             raise InputAdapterError(f"{investor_id}: prepared identity mismatch")
+        if (
+            row.get("cik_from") != registered.get("cik_from")
+            or row.get("cik_history", []) != registered.get("cik_history", [])
+        ):
+            raise InputAdapterError(f"{investor_id}: prepared CIK lineage mismatch")
         filings = row.get("filings")
         if not isinstance(filings, list) or not filings or filings != sorted(filings, key=_filing_sort_key):
             raise InputAdapterError(f"{investor_id}: prepared filings are missing or unordered")
@@ -265,5 +312,14 @@ def validate_prepared_investor_data(
             accessions = filing.get("accession_numbers")
             if not isinstance(accessions, list) or not accessions:
                 raise InputAdapterError(f"{label}: accession lineage missing")
+            if registered.get("cik_history"):
+                expected_source_cik = _source_cik_for_quarter(
+                    registered, filing.get("quarter", "")
+                )
+                if filing.get("source_cik") != expected_source_cik:
+                    raise InputAdapterError(
+                        f"{label}: source CIK mismatch "
+                        f"{filing.get('source_cik')} != {expected_source_cik}"
+                    )
         output[investor_id] = deepcopy(row)
     return output
