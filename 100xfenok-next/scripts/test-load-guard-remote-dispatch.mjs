@@ -11,6 +11,7 @@ const APP_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const REPO_ROOT = path.resolve(APP_ROOT, "..");
 const GUARD = path.join(APP_ROOT, "scripts", "load-guard.sh");
 const WORKFLOW = path.join(REPO_ROOT, ".github", "workflows", "remote-heavy-verification.yml");
+const DEPLOY_WORKFLOW = path.join(REPO_ROOT, ".github", "workflows", "deploy-worker.yml");
 const VALID_HEAD = "0123456789abcdef0123456789abcdef01234567";
 const STALE_HEAD = "fedcba9876543210fedcba9876543210fedcba98";
 const NESTED_MARKER = "FENOK_REMOTE_HEAVY_NESTED_EXECUTION";
@@ -281,6 +282,10 @@ assert.match(workflow, /cloudflare-build\) npm run cf:build;;/);
 assert.match(workflow, /contracts\) npm run verify:contracts;;/);
 assert.match(workflow, /sec13f-contract\) npm run qa:sec13f-contract;;/);
 assert.doesNotMatch(workflow, /secrets\.|actions\/upload-artifact|cache:|npm run cf:deploy|wrangler deploy|run:\s*\$\{\{ inputs\./);
+
+const deployWorkflow = fs.readFileSync(DEPLOY_WORKFLOW, "utf8");
+assert.match(deployWorkflow, /name: Build \(OpenNext Cloudflare\)[\s\S]*?run: npm run cf:build[\s\S]*?FENOK_REMOTE_HEAVY_NESTED_EXECUTION: "1"/, "Deploy Worker hosted build must opt into nested execution");
+assert.match(deployWorkflow, /name: Build \(OpenNext Cloudflare\)[\s\S]*?run: npm run cf:build[\s\S]*?FENOK_REMOTE_HEAVY_EXPECTED_REVISION: \$\{\{ github\.sha \}\}/, "Deploy Worker hosted build must bind its checkout revision");
 
 fs.rmSync(root, { recursive: true, force: true });
 process.stdout.write("test-load-guard-remote-dispatch: ok\n");

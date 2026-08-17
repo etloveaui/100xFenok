@@ -150,6 +150,9 @@ jobs:
       - name: Build (OpenNext Cloudflare)
         working-directory: 100xfenok-next
         run: npm run cf:build
+        env:
+          FENOK_REMOTE_HEAVY_NESTED_EXECUTION: "1"
+          FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
 
       - name: Verify Worker bundle budget
         working-directory: 100xfenok-next
