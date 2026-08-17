@@ -31,6 +31,11 @@ import {
   PLANE_ENROLLMENT_PREFIXES,
   PLANE_ENROLLMENT_SCHEMA_VERSION,
 } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
+import {
+  FINAL_WORKER_FIRST_PATTERNS,
+  PRIVATE_PUBLIC_PATHS,
+  deriveWorkerFirstPatterns,
+} from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
 import { derivePublicPlaneEnrollment } from "./lib/plane-enrollment-derivation.mjs";
 import { FAMILIES } from "./publish-cloud-data-generation.mjs";
 
@@ -42,6 +47,13 @@ const MANIFEST_PATH = "public/data/macro/fred-macro.json";
 const SOURCE_SHA = "c".repeat(64);
 const NOW = "2026-08-03T04:00:00.000Z";
 const encoder = new TextEncoder();
+
+function extractRunWorkerFirstPatterns(source) {
+  const match = source.match(/"run_worker_first"\s*:\s*\[([\s\S]*?)\]/u);
+  assert.ok(match, "wrangler run_worker_first array exists");
+  return [...match[1].matchAll(/"((?:\\.|[^"\\])*)"/gu)]
+    .map(([, encoded]) => JSON.parse(`"${encoded}"`));
+}
 
 // --- read-side enrolment is derived from the publisher's FAMILIES table -----
 {
@@ -58,6 +70,26 @@ const encoder = new TextEncoder();
   assert.deepEqual(PLANE_ENROLLMENT_PREFIXES, expected.prefixes, "generated prefix data matches derivation");
   assert.deepEqual([...ENROLLED_PATHS], expected.exact, "worker exact surface matches artifact");
   assert.deepEqual(ENROLLED_PREFIXES, expected.prefixes, "worker prefix surface matches artifact");
+  const wrangler = await readFile(new URL("../100xfenok-next/wrangler.jsonc", import.meta.url), "utf8");
+  assert.deepEqual(
+    extractRunWorkerFirstPatterns(wrangler),
+    FINAL_WORKER_FIRST_PATTERNS,
+    "wrangler Worker-first patterns match the derived authority",
+  );
+  assert.deepEqual(
+    FINAL_WORKER_FIRST_PATTERNS,
+    deriveWorkerFirstPatterns(PLANE_ENROLLMENT_EXACT, PLANE_ENROLLMENT_PREFIXES),
+    "final Worker-first patterns derive from generated enrollment",
+  );
+  assert.equal(FINAL_WORKER_FIRST_PATTERNS.length, 9, "selective Worker-first pattern count");
+  assert.equal(FINAL_WORKER_FIRST_PATTERNS.includes("/data/*"), false, "broad data glob removed");
+  assert.equal(
+    PRIVATE_PUBLIC_PATHS.has("/data/sec-13f/investors/griffin.json"),
+    true,
+    "isolated private Griffin route remains denied",
+  );
+  assert.equal(Object.isFrozen(PRIVATE_PUBLIC_PATHS), true, "private deny authority is immutable");
+  assert.equal(Object.isFrozen(FINAL_WORKER_FIRST_PATTERNS), true, "Worker-first list is immutable");
   assert.equal(expected.exact.length, 610, "exact enrollment count");
   assert.equal(expected.prefixes.length, 1, "prefix enrollment count");
   assert.equal(expectedFamilies.size, 18, "public family claim count");

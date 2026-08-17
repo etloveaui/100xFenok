@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 
 import { buildLaneCommitManifest } from "./build-lane-commit-manifest.mjs";
 import { derivedPrivateFileOutputs } from "./lib/derived-asset-registry.mjs";
+import { PRIVATE_PUBLIC_PATHS } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-routing-authority.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SEC_ROOT = path.join(ROOT, "data/sec-13f");
@@ -156,20 +157,23 @@ for (const privatePath of [
   "/data/sec-13f/investors/griffin.json",
   "/data/computed/sec13f_bridge_index.json",
 ]) {
-  assert.match(
-    worker,
-    new RegExp(`PRIVATE_PUBLIC_PATHS[\\s\\S]*?${privatePath.replaceAll("/", "\\/")}`, "u"),
-    `Worker must declare the private SEC 13F path: ${privatePath}`,
+  assert.equal(
+    PRIVATE_PUBLIC_PATHS.has(privatePath),
+    true,
+    `routing authority must deny the private SEC 13F path: ${privatePath}`,
   );
+  assert.equal(worker.includes(privatePath), false, `Worker must consume, not restate, ${privatePath}`);
 }
 for (const relativePath of derivedPrivateFileOutputs()) {
   const publicPath = `/${relativePath}`;
-  assert.match(
-    worker,
-    new RegExp(publicPath.replaceAll("/", "\\/"), "u"),
-    `Worker private edge guard is missing derived registry output: ${publicPath}`,
-  );
+  assert.equal(PRIVATE_PUBLIC_PATHS.has(publicPath), true, `routing authority missing: ${publicPath}`);
+  assert.equal(worker.includes(publicPath), false, `Worker must consume, not restate, ${publicPath}`);
 }
+assert.match(
+  worker,
+  /from "\.\/scripts\/cloud-data-plane\/cloud-data-plane-routing-authority\.mjs"/u,
+  "Worker must consume the routing authority",
+);
 assert.match(
   worker,
   /if \(PRIVATE_PUBLIC_PATHS\.has\(url\.pathname\)\)\s*\{\s*return new Response\(null,\s*\{\s*status: 404/u,

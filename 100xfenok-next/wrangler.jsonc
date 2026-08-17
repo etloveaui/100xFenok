@@ -11,14 +11,20 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS",
     "html_handling": "none",
-    // Enrolled data assets reach the Worker instead of the asset worker, so
-    // they can be served from the published generation. Every unhealthy
-    // outcome falls back to this same asset directory, which is why enrolling a
-    // path cannot make it less available than it was. The `*` is a deep glob,
-    // so every enrolled path (605 exact + the EDGAR tree) plus any future
-    // family lands in the Worker first without a per-path edit.
+    // These patterns are derived from the generated public enrollment
+    // authority, with the isolated private Griffin deny route retained
+    // explicitly. The `*` is a deep glob. Every unhealthy data-plane outcome
+    // still falls back to this same asset directory.
     "run_worker_first": [
-      "/data/*"
+      "/data/computed/*",
+      "/data/damodaran/*",
+      "/data/edgar-korean-summaries/*",
+      "/data/indices/*",
+      "/data/macro/*",
+      "/data/sentiment/*",
+      "/data/slickcharts/*",
+      "/data/yardney/*",
+      "/data/sec-13f/investors/griffin.json"
     ]
   },
   "observability": {

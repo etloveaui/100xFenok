@@ -113,6 +113,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Verify selective Worker-first routing authority
+        run: node scripts/test-cloud-data-plane-routing-authority.mjs
+
       - name: Install dependencies
         working-directory: 100xfenok-next
         run: npm ci
