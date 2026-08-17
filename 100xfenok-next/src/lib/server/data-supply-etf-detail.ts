@@ -46,6 +46,9 @@ export interface EtfDataSupplyMetadata {
   projection_digest: string;
 }
 
+// Internal comparison evidence only; the public route always serves the shard document.
+export type EtfPlaneShadowParity = "match" | "mismatch" | "unavailable";
+
 export type EtfDetailResolution =
   | { kind: "selected"; payload: JsonRecord; dataSupply: EtfDataSupplyMetadata; projectionDigest: string }
   | {
@@ -54,12 +57,11 @@ export type EtfDetailResolution =
       projectionDigest: string;
       stateObservedAt: string;
     }
-  | { kind: "shard"; document: PublicJsonDocument; projectionDigest: string }
   | {
-      kind: "plane";
-      document: PublicJsonDocument & { bytes: ArrayBuffer };
-      generationId: string;
-      sourceAsOf: string | null;
+      kind: "shard";
+      document: PublicJsonDocument;
+      projectionDigest: string;
+      planeShadowParity: EtfPlaneShadowParity;
     }
   | { kind: "not_found"; projectionDigest: string }
   | { kind: "shard_unavailable"; reason: string; projectionDigest: string | null }
@@ -349,6 +351,13 @@ function isStrictShardEtfPayload(payload: JsonRecord, ticker: string): boolean {
   );
 }
 
+function matchesUtf8Bytes(bytes: ArrayBuffer, raw: string): boolean {
+  const expected = new TextEncoder().encode(raw);
+  const actual = new Uint8Array(bytes);
+  return actual.byteLength === expected.byteLength
+    && actual.every((value, index) => value === expected[index]);
+}
+
 export function mergeEtfDataSupply(payload: JsonRecord, dataSupply: EtfDataSupplyMetadata): JsonRecord {
   if ("data_supply" in payload) throw new Error("DATA_SUPPLY_SCHEMA_COLLISION");
   return { ...payload, data_supply: dataSupply };
@@ -393,30 +402,47 @@ export async function resolveDataSupplyEtfDetail(
     if (shard.kind === "ticker_not_found") {
       return { kind: "not_found", projectionDigest: shard.manifestSha256 };
     }
-    return isStrictShardEtfPayload(shard.document.value, ticker)
-      ? { kind: "shard", document: shard.document, projectionDigest: shard.manifestSha256 }
-      : {
-          kind: "shard_unavailable",
-          reason: "invalid_shard_payload",
-          projectionDigest: shard.manifestSha256,
-        };
-  };
-  const resolvePlaneThenShard = async (): Promise<EtfDetailResolution> => {
-    const plane = await dependencies.readPlanePayload(ticker);
-    if (plane.kind === "ok" && isStrictShardEtfPayload(plane.document.value, ticker)) {
+    if (!isStrictShardEtfPayload(shard.document.value, ticker)) {
       return {
-        kind: "plane",
-        document: plane.document,
-        generationId: plane.generationId,
-        sourceAsOf: plane.sourceAsOf,
+        kind: "shard_unavailable",
+        reason: "invalid_shard_payload",
+        projectionDigest: shard.manifestSha256,
       };
     }
-    return resolveShard();
+
+    const plane = await dependencies.readPlanePayload(ticker).catch(() => ({
+      kind: "unavailable" as const,
+      reason: "plane_shadow_exception",
+    }));
+    if (plane.kind !== "ok") {
+      return {
+        kind: "shard",
+        document: shard.document,
+        projectionDigest: shard.manifestSha256,
+        planeShadowParity: "unavailable",
+      };
+    }
+    if (!isStrictShardEtfPayload(plane.document.value, ticker)) {
+      return {
+        kind: "shard",
+        document: shard.document,
+        projectionDigest: shard.manifestSha256,
+        planeShadowParity: "mismatch",
+      };
+    }
+    return {
+      kind: "shard",
+      document: shard.document,
+      projectionDigest: shard.manifestSha256,
+      planeShadowParity: matchesUtf8Bytes(plane.document.bytes, shard.document.raw)
+        ? "match"
+        : "mismatch",
+    };
   };
   const indexDocument = await dependencies.readIndex();
   if (!indexDocument) {
     if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
-    return resolvePlaneThenShard();
+    return resolveShard();
   }
 
   const parsedIndex = await parseIndex(indexDocument, guard, dependencies.now());
@@ -425,11 +451,11 @@ export async function resolveDataSupplyEtfDetail(
   }
   if (parsedIndex.kind === "invalid") {
     if (enrolled) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
-    return resolvePlaneThenShard();
+    return resolveShard();
   }
   const entries = parsedIndex.entries;
   if (!enrolled) {
-    return resolvePlaneThenShard();
+    return resolveShard();
   }
 
   const parsed = parseEntry(ticker, entries[ticker], guard.indexSha, dependencies.now());
@@ -444,12 +470,19 @@ export async function resolveDataSupplyEtfDetail(
   }
 
   const payloadDocument = await dependencies.readProjectionPayload(ticker);
+  const selectedProvider = parsed.metadata.provider_role === "primary"
+    ? DATA_SUPPLY_ETF_DETAIL_POLICY.providers[0]
+    : DATA_SUPPLY_ETF_DETAIL_POLICY.providers[1];
   if (
     !payloadDocument
     || await sha256Text(payloadDocument.raw) !== parsed.entry.payload_sha256
     || payloadDocument.value.ticker !== ticker
     || payloadDocument.value.asset_type !== "etf"
-    || payloadDocument.value.schema_version !== DATA_SUPPLY_ETF_DETAIL_POLICY.providers[1].schema
+    || payloadDocument.value.schema_version !== selectedProvider.schema
+    || (
+      payloadDocument.value.source !== selectedProvider.name
+      && payloadDocument.value.source_provider !== selectedProvider.name
+    )
     || payloadDocument.value.source_as_of !== parsed.metadata.source_as_of
     || "data_supply" in payloadDocument.value
   ) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };

@@ -26,7 +26,7 @@ function document(value: JsonRecord, raw = JSON.stringify(value)): PublicJsonDoc
 async function fixture(options: {
   ticker?: string;
   enrolledTicker?: string;
-  state?: "fresh_fallback" | "lkg_fallback" | "unavailable";
+  state?: "fresh_primary" | "fresh_fallback" | "lkg_primary" | "lkg_fallback" | "unavailable";
   direct?: JsonRecord | null;
   payload?: JsonRecord | null;
   guardMissing?: boolean;
@@ -37,10 +37,13 @@ async function fixture(options: {
   shardUnavailable?: boolean;
   plane?: JsonRecord | null;
   planeUnavailable?: boolean;
+  planeThrows?: boolean;
+  planeBytesPrefixBom?: boolean;
 }) {
   const ticker = options.ticker ?? "ADIU";
   const enrolledTicker = options.enrolledTicker ?? ticker;
   const unavailable = options.state === "unavailable";
+  const primary = options.state === "fresh_primary" || options.state === "lkg_primary";
   const entry = unavailable
     ? {
         ticker,
@@ -58,8 +61,8 @@ async function fixture(options: {
         ticker,
         enrollment_state: "enrolled",
         resolution_state: options.state ?? "fresh_fallback",
-        provider_role: "fallback",
-        fallback_depth: 1,
+        provider_role: primary ? "primary" : "fallback",
+        fallback_depth: primary ? 0 : 1,
         source_as_of: "2026-07-02T01:57:29Z",
         selected_at: "2026-07-11T00:00:00Z",
         reason_code: "primary_unavailable",
@@ -114,14 +117,16 @@ async function fixture(options: {
     readIndex: async () => options.indexMissing ? null : document(index),
     readProjectionPayload: async () => payloadDoc,
     readPlanePayload: async () => {
+      if (options.planeThrows) throw new Error("fixture plane failure");
       if (options.planeUnavailable || !options.plane) {
         return { kind: "unavailable", reason: "fixture" } as const;
       }
+      const raw = JSON.stringify(options.plane);
       return {
         kind: "ok",
         document: {
-          ...document(options.plane),
-          bytes: new TextEncoder().encode(JSON.stringify(options.plane)).buffer,
+          ...document(options.plane, raw),
+          bytes: new TextEncoder().encode(`${options.planeBytesPrefixBom ? "\uFEFF" : ""}${raw}`).buffer,
         },
         generationId: "stockanalysis-etf-detail-fixture",
         sourceAsOf: "2026-08-16",
@@ -194,6 +199,25 @@ const lkg = await fixture({ state: "lkg_fallback" });
 assert.equal(lkg.kind, "selected");
 if (lkg.kind === "selected") assert.equal(lkg.dataSupply.resolution_state, "lkg_fallback");
 
+const primaryPayload = {
+  schema_version: "stockanalysis/v1",
+  source: "stockanalysis",
+  asset_type: "etf",
+  ticker: "ADIU",
+  fetched_at: "2026-07-02T01:57:29Z",
+  source_as_of: "2026-07-02T01:57:29Z",
+  normalized: { holdings: [] },
+};
+for (const state of ["fresh_primary", "lkg_primary"] as const) {
+  const primary = await fixture({ state, payload: primaryPayload });
+  assert.equal(primary.kind, "selected", `${state} must accept the primary provider schema`);
+}
+const rejectedPrimaryProviderMismatch = await fixture({
+  state: "fresh_primary",
+  payload: { ...primaryPayload, source: "yahoo_finance" },
+});
+assert.equal(rejectedPrimaryProviderMismatch.kind, "error");
+
 const planePayload = {
   schema_version: "stockanalysis/v1",
   source: "stockanalysis",
@@ -202,26 +226,53 @@ const planePayload = {
   fetched_at: "2026-08-16T00:00:00Z",
   name: "미국 대형주 ETF",
 };
-const staticPayload = { ...planePayload, fetched_at: "2026-08-15T00:00:00Z" };
-const planeAuthority = await fixture({
+const staticPayload = { ...planePayload };
+const planeShadowMatch = await fixture({
   ticker: "SPY",
   enrolledTicker: "ADIU",
   plane: planePayload,
   direct: staticPayload,
 });
-assert.equal(planeAuthority.kind, "plane");
-if (planeAuthority.kind === "plane") {
-  assert.equal(planeAuthority.document.value.fetched_at, "2026-08-16T00:00:00Z");
-  assert.equal(planeAuthority.generationId, "stockanalysis-etf-detail-fixture");
+assert.equal(planeShadowMatch.kind, "shard");
+if (planeShadowMatch.kind === "shard") {
+  assert.equal(planeShadowMatch.planeShadowParity, "match");
+  assert.equal(planeShadowMatch.document.value.fetched_at, "2026-08-16T00:00:00Z");
 }
 
-const planeFallback = await fixture({
+const planeShadowMismatch = await fixture({
+  ticker: "SPY",
+  enrolledTicker: "ADIU",
+  plane: planePayload,
+  direct: { ...staticPayload, fetched_at: "2026-08-15T00:00:00Z" },
+});
+assert.equal(planeShadowMismatch.kind, "shard");
+if (planeShadowMismatch.kind === "shard") {
+  assert.equal(planeShadowMismatch.planeShadowParity, "mismatch");
+  assert.equal(planeShadowMismatch.document.value.fetched_at, "2026-08-15T00:00:00Z");
+}
+
+const planeBomMismatch = await fixture({
+  ticker: "SPY",
+  enrolledTicker: "ADIU",
+  plane: planePayload,
+  direct: staticPayload,
+  planeBytesPrefixBom: true,
+});
+assert.equal(planeBomMismatch.kind, "shard");
+if (planeBomMismatch.kind === "shard") {
+  assert.equal(planeBomMismatch.planeShadowParity, "mismatch", "parity compares exact UTF-8 bytes");
+}
+
+const invalidPlaneShadow = await fixture({
   ticker: "SPY",
   enrolledTicker: "ADIU",
   plane: { ...planePayload, source: "unexpected" },
   direct: staticPayload,
 });
-assert.equal(planeFallback.kind, "shard", "invalid plane schema falls back to static LKG shard");
+assert.equal(invalidPlaneShadow.kind, "shard");
+if (invalidPlaneShadow.kind === "shard") {
+  assert.equal(invalidPlaneShadow.planeShadowParity, "mismatch");
+}
 
 const unavailablePlaneFallback = await fixture({
   ticker: "SPY",
@@ -230,6 +281,28 @@ const unavailablePlaneFallback = await fixture({
   direct: staticPayload,
 });
 assert.equal(unavailablePlaneFallback.kind, "shard", "unavailable plane falls back to static LKG shard");
+if (unavailablePlaneFallback.kind === "shard") {
+  assert.equal(unavailablePlaneFallback.planeShadowParity, "unavailable");
+}
+
+const failedPlaneFallback = await fixture({
+  ticker: "SPY",
+  enrolledTicker: "ADIU",
+  planeThrows: true,
+  direct: staticPayload,
+});
+assert.equal(failedPlaneFallback.kind, "shard", "a failed shadow probe cannot break static serving");
+if (failedPlaneFallback.kind === "shard") {
+  assert.equal(failedPlaneFallback.planeShadowParity, "unavailable");
+}
+
+const planeCannotRescueMissingShard = await fixture({
+  ticker: "SPY",
+  enrolledTicker: "ADIU",
+  plane: planePayload,
+  shardMissing: true,
+});
+assert.equal(planeCannotRescueMissingShard.kind, "not_found");
 
 const unavailable = await fixture({ state: "unavailable", payload: null });
 assert.equal(unavailable.kind, "unavailable");
@@ -254,20 +327,11 @@ assert.equal(shardUnavailableResponse.status, 503);
 assert.equal(shardUnavailableResponse.headers.get("Cache-Control"), "no-store");
 assert.equal((await shardUnavailableResponse.json()).error, "STOCKANALYSIS_ETF_SHARD_UNAVAILABLE");
 
-const planeResponseBytes = new TextEncoder().encode(JSON.stringify(planePayload));
-const planeResponse = await buildEtfResponse({
-  kind: "plane",
-  document: {
-    ...document(planePayload),
-    bytes: planeResponseBytes.buffer,
-  },
-  generationId: "stockanalysis-etf-detail-fixture",
-  sourceAsOf: "2026-08-16",
-}, "SPY");
-assert.equal(planeResponse.status, 200);
-assert.equal(planeResponse.headers.get("X-100x-ETF-Detail-Authority"), "cloud-data-plane");
-assert.equal(planeResponse.headers.get("X-Data-Plane-Generation"), "stockanalysis-etf-detail-fixture");
-assert.deepEqual(new Uint8Array(await planeResponse.arrayBuffer()), planeResponseBytes);
+const shadowResponse = await buildEtfResponse(planeShadowMatch, "SPY");
+assert.equal(shadowResponse.status, 200);
+assert.equal(shadowResponse.headers.get("X-100x-ETF-Detail-Authority"), null);
+assert.equal(shadowResponse.headers.get("X-Data-Plane-Generation"), null);
+assert.deepEqual(await shadowResponse.json(), staticPayload);
 
 const absentResponse = await buildEtfResponse({
   kind: "not_found",
@@ -480,6 +544,7 @@ try {
       kind: "shard",
       document: document(JSON.parse(shardRaw), shardRaw),
       projectionDigest: "d".repeat(64),
+      planeShadowParity: "unavailable",
     } as const;
   };
   const firstEtf = await getEtfResponse("SPY", "build-a", resolveShard);
