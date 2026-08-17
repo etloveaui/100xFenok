@@ -57,7 +57,12 @@ dispatch_remote_suite() {
   suite="$(remote_suite_for_command "$@")" || blocked "remote_suite_not_allowlisted" "use_an_allowlisted_heavy_npm_script"
 
   if allow_hosted_nested_execution; then
-    exec "$@" || blocked "nested_exec_failed" "hosted_command_could_not_execute"
+    if ! command -v "$1" >/dev/null 2>&1; then
+      blocked "nested_exec_failed" "hosted_command_could_not_execute"
+    fi
+    "$@"
+    nested_status=$?
+    exit "$nested_status"
   fi
 
   repo_root="$("$GIT_BIN" rev-parse --show-toplevel 2>/dev/null)" || blocked "git_repository_unavailable" "run_from_the_repository_checkout"
