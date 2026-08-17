@@ -12,6 +12,7 @@ on:
           - static-build
           - cloudflare-build
           - contracts
+          - sec13f-contract
       revision:
         description: Exact origin/main commit to verify
         required: true
@@ -71,6 +72,7 @@ jobs:
             static-build) npm run build:static;;
             cloudflare-build) npm run cf:build;;
             contracts) npm run verify:contracts;;
+            sec13f-contract) npm run qa:sec13f-contract;;
             *) echo "unsupported suite" >&2; exit 64;;
           esac
 

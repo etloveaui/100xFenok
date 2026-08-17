@@ -244,9 +244,10 @@ assert.equal(packageJson.scripts["build:runtime"], "bash scripts/load-guard.sh n
 assert.equal(packageJson.scripts["build:static"], "bash scripts/load-guard.sh npm run build:static:steps");
 assert.equal(packageJson.scripts["cf:build"], "bash scripts/load-guard.sh npm run cf:build:steps");
 assert.equal(packageJson.scripts["verify:contracts"], "bash scripts/load-guard.sh npm run qa:registry-contracts");
+assert.equal(packageJson.scripts["qa:sec13f-contract"], "bash scripts/load-guard.sh npm run qa:sec13f-contract:steps");
 
 const workflow = fs.readFileSync(WORKFLOW, "utf8");
-assert.match(workflow, /workflow_dispatch:[\s\S]*?suite:[\s\S]*?type: choice[\s\S]*?options:[\s\S]*?- runtime-build[\s\S]*?- static-build[\s\S]*?- cloudflare-build[\s\S]*?- contracts/);
+assert.match(workflow, /workflow_dispatch:[\s\S]*?suite:[\s\S]*?type: choice[\s\S]*?options:[\s\S]*?- runtime-build[\s\S]*?- static-build[\s\S]*?- cloudflare-build[\s\S]*?- contracts[\s\S]*?- sec13f-contract/);
 assert.match(workflow, /revision:[\s\S]*?required: true[\s\S]*?type: string/);
 assert.match(workflow, /name: Validate requested revision[\s\S]*?working-directory: \./);
 assert.match(workflow, /REVISION: \$\{\{ inputs\.revision \}\}/);
@@ -278,6 +279,7 @@ assert.match(workflow, /runtime-build\) npm run build:runtime;;/);
 assert.match(workflow, /static-build\) npm run build:static;;/);
 assert.match(workflow, /cloudflare-build\) npm run cf:build;;/);
 assert.match(workflow, /contracts\) npm run verify:contracts;;/);
+assert.match(workflow, /sec13f-contract\) npm run qa:sec13f-contract;;/);
 assert.doesNotMatch(workflow, /secrets\.|actions\/upload-artifact|cache:|npm run cf:deploy|wrangler deploy|run:\s*\$\{\{ inputs\./);
 
 fs.rmSync(root, { recursive: true, force: true });
