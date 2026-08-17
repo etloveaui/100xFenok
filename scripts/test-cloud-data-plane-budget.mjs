@@ -257,26 +257,44 @@ const measuredEtfDemand = JSON.parse(fs.readFileSync(
   assert.throws(() => validateCloudDataPlanePolicy(inventedPlanningLine), /keys must be exactly/);
 }
 
-// The ETF manifest measurement is durable local planning evidence, not a live
-// R2 inventory. Bind the fixture to the current candidate scope and keep the
-// monthly arithmetic explicit so peer prose cannot be mistaken for a gate.
+// The ETF manifest measurement is bound to the first successful natural remote
+// generation while the monthly arithmetic remains an explicit planning gate.
 {
   const measurement = measuredEtfDemand._manifest_measurement;
   const scope = buildCandidateScope({ repoRoot: REPO_ROOT, candidateId: "stockanalysis_etf_detail" });
   assert.equal(measurement.schema_version, "cloud-data-plane-manifest-measurement/v1");
-  assert.equal(measurement.status, "measured_local");
-  assert.equal(measurement.measurement_mode, "local_filesystem_dry_run");
-  assert.equal(measurement.remote_readback, "not_verified");
+  assert.equal(measurement.status, "mixed_evidence");
+  assert.equal(measurement.measurement_mode, "local_scope_plus_natural_remote_readback");
   assert.equal(measurement.family_id, "stockanalysis-etf-detail");
-  assert.equal(measurement.source_sha256, "d444965d51f9919cdff6d0df8ce8aad9e03b090eab86f0985ca7f3e462e225e9");
-  assert.equal(measurement.generation_id, "stockanalysis-etf-detail-007ca92a127b27b0");
+  assert.equal(measurement.source_sha256, "f7be79cbf1e1466523e539cb029ed62dcae1437f2ca736ac106c609c181f31fa");
+  assert.equal(measurement.generation_id, "stockanalysis-etf-detail-296c516029d1e494");
   assert.equal(measuredEtfDemand.r2.manifests.count, 1);
   assert.equal(measuredEtfDemand.r2.manifests.bytes, 1_786_095);
   assert.equal(measurement.path_digest, scope.manifest.path_digest);
   assert.equal(measurement.asset_count, scope.manifest.totals.file_count);
   assert.equal(measurement.unique_object_count, scope.manifest.totals.file_count);
   assert.equal(measurement.payload_bytes, scope.manifest.totals.bytes);
+  assert.deepEqual(measurement.remote_readback, {
+    status: "verified",
+    result: "published",
+    pointer_sequence_before: 1,
+    pointer_sequence_after: 2,
+    receipt_state: "promoted",
+    objects_written: 101,
+    objects_already_present: 5505,
+    object_scope: "5605 payload objects plus 1 generation manifest",
+    manifest_bytes: "not_verified",
+    parity: "ok",
+    gate_before: "ok",
+    gate_after: "ok",
+  });
   assert.equal(measurement.manifest_bytes_per_generation, measuredEtfDemand.r2.manifests.bytes);
+  assert.deepEqual(measurement.manifest_bytes_provenance, {
+    status: "measured_local",
+    measured_on: "2026-08-16",
+    measurement_mode: "local_filesystem_dry_run",
+    remote_readback: "not_verified",
+  });
   assert.equal(measurement.monthly_review.generation_count, R2_MANIFEST_PLANNING_ENVELOPE.manifest_count);
   assert.equal(
     measurement.monthly_review.manifest_bytes,
