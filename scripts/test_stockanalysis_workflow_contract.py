@@ -391,16 +391,32 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertNotIn("--deepen", publish)
         self.assertNotIn("git merge-base --is-ancestor", publish)
         self.assertIn("for compare_attempt in 1 2 3", publish)
-        self.assertIn("identical|ahead) COMMIT_REACHABLE=", publish)
-        # Availability and identity are different failures. An unobtainable
-        # comparison is the pre-existing infrastructure fence, never an identity
-        # mismatch, so "we could not ask" can never be reported as "the answer
-        # was no".
-        unknown = 'if [ -z "$COMPARE_STATUS" ]; then'
+        # Only the four documented compare statuses are complete answers, and
+        # the retry loop is where that is decided: an unrecognised value is
+        # discarded so the bounded attempts can recover, rather than being
+        # carried into classification.
+        self.assertIn("identical|ahead|behind|diverged) break ;;", publish)
+        # Classification enumerates both outcomes explicitly and has NO default
+        # arm. A default is exactly how an unknown silently becomes "not
+        # reachable", which is the one misreading this fence must never make.
+        self.assertIn('identical|ahead) COMMIT_REACHABLE="yes" ;;', publish)
+        self.assertIn('behind|diverged) COMMIT_REACHABLE="no" ;;', publish)
+        self.assertNotIn('*) COMMIT_REACHABLE=', publish)
+        # Availability and identity are different failures. An absent or
+        # unrecognised comparison is the pre-existing infrastructure fence,
+        # never an identity mismatch, so "we could not get a documented answer"
+        # can never be reported as "the answer was no".
+        unknown = 'if [ -z "$COMPARE_STATUS" ] || [ -z "$COMMIT_REACHABLE" ]; then'
         self.assertIn(unknown, publish)
-        unknown_block = publish[publish.index(unknown):publish.index("esac", publish.index(unknown))]
+        unknown_block = publish[publish.index(unknown):publish.index("exit 75", publish.index(unknown))]
         self.assertIn('fence_reason=main_readback_infrastructure', unknown_block)
         self.assertNotIn('fence_reason=main_readback_identity', unknown_block)
+        # The unknown fence is decided BEFORE the identity fence, so an
+        # unrecognised status can never fall through to an identity mismatch.
+        self.assertLess(
+            publish.index(unknown),
+            publish.index('fence_reason=main_readback_identity'),
+        )
         # All three proofs gate the confirmation, in order: attempt, then remote
         # reachability, then trailer equality.
         self.assertLess(

@@ -637,23 +637,37 @@ jobs:
               # not on main.
               COMPARE_STATUS=""
               for compare_attempt in 1 2 3; do
-                if COMPARE_STATUS="$(gh api "repos/$GITHUB_REPOSITORY/compare/$PUBLISHED_COMMIT...main" --jq '.status' 2>/dev/null)" \
-                  && [ -n "$COMPARE_STATUS" ]; then
-                  break
-                fi
-                COMPARE_STATUS=""
+                COMPARE_STATUS="$(gh api "repos/$GITHUB_REPOSITORY/compare/$PUBLISHED_COMMIT...main" --jq '.status' 2>/dev/null)" \
+                  || COMPARE_STATUS=""
+                # Only the four documented compare statuses are complete
+                # answers. An unrecognised value is an INCOMPLETE answer, not a
+                # negative one, so it is discarded and the attempt is allowed to
+                # retry rather than being classified. Letting it fall through to
+                # a default arm is how an unknown silently becomes "not
+                # reachable", which is the one misreading this fence must never
+                # make.
+                case "$COMPARE_STATUS" in
+                  identical|ahead|behind|diverged) break ;;
+                  *) COMPARE_STATUS="" ;;
+                esac
                 sleep $((compare_attempt * 2))
               done
-              # Availability and identity are different failures. If no complete
-              # comparison could be obtained the answer is UNKNOWN, and an
-              # unknown must never be reported as a proven mismatch — that is
-              # what the pre-existing infrastructure fence is for.
-              if [ -z "$COMPARE_STATUS" ]; then
+              COMMIT_REACHABLE=""
+              case "$COMPARE_STATUS" in
+                identical|ahead) COMMIT_REACHABLE="yes" ;;
+                behind|diverged) COMMIT_REACHABLE="no" ;;
+              esac
+              # Availability and identity are different failures. An absent or
+              # unrecognised comparison leaves the answer UNKNOWN after the
+              # bounded attempts, and an unknown must never be reported as a
+              # proven mismatch — that is what the pre-existing infrastructure
+              # fence is for. Only behind/diverged can reach the identity fence.
+              if [ -z "$COMPARE_STATUS" ] || [ -z "$COMMIT_REACHABLE" ]; then
                 echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
                 echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
                 echo "fence_reason=main_readback_infrastructure" >> "$GITHUB_OUTPUT"
                 echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
-                echo "remote comparison for $PUBLISHED_COMMIT unavailable after 3 attempts" >&2
+                echo "remote comparison for $PUBLISHED_COMMIT did not yield a documented status after 3 attempts" >&2
                 {
                   echo "### StockAnalysis publish fence"
                   echo "- status: $ACCEPTED_STATUS"
@@ -662,10 +676,6 @@ jobs:
                 } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
                 exit 75
               fi
-              case "$COMPARE_STATUS" in
-                identical|ahead) COMMIT_REACHABLE="yes" ;;
-                *) COMMIT_REACHABLE="no" ;;
-              esac
               # The trailer is read locally by SHA on purpose. Git objects are
               # content-addressed, so the local object at this commit is
               # byte-identical to the remote's, and a second API call would add
