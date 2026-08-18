@@ -49,6 +49,39 @@ export interface EtfDataSupplyMetadata {
 // Internal comparison evidence only; the public route always serves the shard document.
 export type EtfPlaneShadowParity = "match" | "mismatch" | "unavailable";
 
+// ETF authority boundary.
+//
+// The committed static shard is canonical and LKG, and is the only document
+// this resolver ever serves. The private Cloud generation is read solely to
+// compare against it, and never becomes a served payload. That has always been
+// true structurally; naming it gives the decision one site, so a later cutover
+// is a single reviewed change behind its own gate rather than an edit spread
+// across the return paths.
+//
+// Deliberately not a generic reader: one mode, one family, no registry.
+export type EtfAuthorityMode = "static_primary_cloud_shadow";
+
+export const ETF_AUTHORITY_MODE: EtfAuthorityMode = "static_primary_cloud_shadow";
+
+// Receives both candidates so the choice is visible at the point it is made.
+// The switch is exhaustive: adding a mode without deciding what it serves is a
+// compile error, not a silent fallthrough to the Cloud document.
+export function selectServedEtfDocument(
+  mode: EtfAuthorityMode,
+  staticShard: PublicJsonDocument,
+  cloudShadow: PublicJsonDocument | null,
+): PublicJsonDocument {
+  switch (mode) {
+    case "static_primary_cloud_shadow":
+      void cloudShadow;
+      return staticShard;
+    default: {
+      const unhandled: never = mode;
+      throw new Error(`unhandled ETF authority mode: ${String(unhandled)}`);
+    }
+  }
+}
+
 export type EtfDetailResolution =
   | { kind: "selected"; payload: JsonRecord; dataSupply: EtfDataSupplyMetadata; projectionDigest: string }
   | {
@@ -417,7 +450,7 @@ export async function resolveDataSupplyEtfDetail(
     if (plane.kind !== "ok") {
       return {
         kind: "shard",
-        document: shard.document,
+        document: selectServedEtfDocument(ETF_AUTHORITY_MODE, shard.document, null),
         projectionDigest: shard.manifestSha256,
         planeShadowParity: "unavailable",
       };
@@ -425,14 +458,14 @@ export async function resolveDataSupplyEtfDetail(
     if (!isStrictShardEtfPayload(plane.document.value, ticker)) {
       return {
         kind: "shard",
-        document: shard.document,
+        document: selectServedEtfDocument(ETF_AUTHORITY_MODE, shard.document, plane.document),
         projectionDigest: shard.manifestSha256,
         planeShadowParity: "mismatch",
       };
     }
     return {
       kind: "shard",
-      document: shard.document,
+      document: selectServedEtfDocument(ETF_AUTHORITY_MODE, shard.document, plane.document),
       projectionDigest: shard.manifestSha256,
       planeShadowParity: matchesUtf8Bytes(plane.document.bytes, shard.document.raw)
         ? "match"
