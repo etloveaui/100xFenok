@@ -504,6 +504,7 @@ export const CENTRAL_COMMIT_PATHS = [
   "data/metadata",
   "data/computed/signals.json",
   "data/computed/stock_action_index.json",
+  "data/computed/sec13f_bridge_index.json",
   "data/computed/stock_action_summary.json",
   "data/computed/fenok_signals.json",
   "data/computed/fenok_signals_summary.json",

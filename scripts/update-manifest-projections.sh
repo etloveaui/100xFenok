@@ -335,6 +335,17 @@ node scripts/export-computed-signals.mjs
 # --- S5: Build phase2 closeout indexes --------------------------------------
 node scripts/build-phase2-closeout-indexes.mjs
 
+# --- S5b: Refresh the review-only SEC 13F bridge index -----------------------
+# The bridge seals input fingerprints for stock_action_index.json,
+# market_facts/index.json and the market-facts detail set. Update Manifest owns
+# the git copies of all three (CENTRAL_COMMIT_PATHS), so the seal has to be
+# rebuilt here or it goes stale on every computed-signals refresh. Its other
+# owner, build-stocks-analyzer.yml, cannot cover that: pushes made by a
+# workflow do not trigger another workflow, so its own push trigger never fires
+# for these commits and only its daily cron heals the seal.
+node scripts/build-sec13f-bridge-index.mjs
+node scripts/test-sec13f-bridge-index.mjs
+
 # --- S6: Build Fenok stock signals ------------------------------------------
 node scripts/build-fenok-signals.mjs
 
