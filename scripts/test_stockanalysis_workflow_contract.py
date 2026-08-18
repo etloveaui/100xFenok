@@ -352,6 +352,25 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn("readback_confirmation: ${{ steps.publish.outputs.confirmation }}", job_header)
         self.assertEqual(self.text.count("steps.publish.outputs"), 2)
 
+    def test_rollback_rehearsal_is_manual_only_and_cannot_write_git(self) -> None:
+        source = (ROOT / ".github" / "workflows" / "etf-plane-rollback-rehearsal.yml").read_text(encoding="utf-8")
+        # Manual only: no schedule, no push, and a typed confirmation so a
+        # mis-click cannot move a production pointer.
+        self.assertNotIn("schedule:", source)
+        self.assertNotIn("push:", source)
+        self.assertIn("workflow_dispatch:", source)
+        self.assertIn("if: github.event.inputs.confirm == 'ROLLBACK'", source)
+        # Pointer authority only: read-only Git, bounded, and queued behind a
+        # publish rather than racing or cancelling one.
+        self.assertNotIn("contents: write", source)
+        self.assertIn("contents: read", source)
+        self.assertIn("timeout-minutes: 30", source)
+        self.assertIn("group: stockanalysis-etf-detail-publish", source)
+        self.assertIn("cancel-in-progress: false", source)
+        # Existing CLI and existing secrets; no new script.
+        self.assertIn("scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --rollback", source)
+        self.assertIn("secrets.DATA_PLANE_WRITE_KEY", source)
+
     def test_publish_is_non_confirming_on_stale_and_reads_back_current_main(self) -> None:
         publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
         stale_start = publish.index('if [ "$APPLY_STATUS" = "stale" ]; then')
