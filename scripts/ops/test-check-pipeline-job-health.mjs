@@ -13,6 +13,8 @@ import {
   NON_SCHEDULED_WORKFLOW_INCLUSIONS,
   SCHEDULED_WORKFLOW_EXCLUSIONS,
   CADENCE_STATES,
+  PLANE_FRESHNESS_ALARM_REASONS,
+  PLANE_FRESHNESS_MAX_AGE_HOURS,
   PLANE_PUBLISH_ALARM_REASONS,
   PLANE_PUBLISH_OUTCOME_BINDINGS,
   assertDeclaredScheduleGraceContracts,
@@ -21,6 +23,7 @@ import {
   buildWorkflowRunsUrl,
   computeFailureStreak,
   deriveFailureStreakThreshold,
+  deriveFamilyFreshness,
   derivePublishOutcomeProjection,
   deriveWorkflowCadenceProjection,
   deriveWorkflowWatchPolicy,
@@ -105,9 +108,15 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
   result,
   observedAt,
 });
+// Freshness is time-dependent by definition, so every outcome fixture below
+// pins the clock. Left to wall time these contracts would pass today and fail
+// tomorrow for a reason unrelated to the code under test — the fixtures' own
+// records would simply age past the ceiling.
+const FIXTURE_NOW = new Date("2026-08-10T03:00:00Z");
 
 {
   const projection = derivePublishOutcomeProjection({
+    now: FIXTURE_NOW,
     shards: {
       "fred-macro": outcomeShard("fred-macro", [
         outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
@@ -119,13 +128,23 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
   ], projection);
   assert.equal(gated.status, "alarm", "latest gate_blocked outcome must page");
   assert.equal(gated.alarming, true);
-  assert.deepEqual(gated.alarm_reasons, [PLANE_PUBLISH_ALARM_REASONS.gate_blocked]);
+  // Two axes, both true and neither hiding the other: the latest result is a
+  // gate refusal, AND this family has no successful publish on record at all,
+  // which is an unavailable rather than a healthy — there is nothing to serve
+  // honestly and nothing to date staleness from.
+  assert.deepEqual(gated.alarm_reasons, [
+    PLANE_PUBLISH_ALARM_REASONS.gate_blocked,
+    PLANE_FRESHNESS_ALARM_REASONS.unavailable,
+  ]);
   assert.equal(gated.plane_publish_outcome.result, "gate_blocked");
+  assert.equal(gated.plane_publish_outcome.freshness.state, "unavailable");
+  assert.equal(gated.plane_publish_outcome.freshness.last_success_at, null);
 }
 
 {
   for (const failureResult of ["gate_blocked", "failed"]) {
     const projection = derivePublishOutcomeProjection({
+      now: FIXTURE_NOW,
       shards: {
         "fred-macro": outcomeShard("fred-macro", [
           outcomeRecord("fred-macro", failureResult, "2026-08-10T01:00:00Z"),
@@ -149,6 +168,7 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
 
 {
   const projection = derivePublishOutcomeProjection({
+    now: FIXTURE_NOW,
     shards: {
       "fred-macro": outcomeShard("fred-macro", [
         outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
@@ -172,6 +192,7 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
 {
   for (const successResult of ["published", "resumed"]) {
     const projection = derivePublishOutcomeProjection({
+    now: FIXTURE_NOW,
       shards: {
         "fred-macro": outcomeShard("fred-macro", [
           outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
@@ -193,6 +214,7 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
 
 {
   const outOfOrder = derivePublishOutcomeProjection({
+    now: FIXTURE_NOW,
     shards: {
       "fred-macro": outcomeShard("fred-macro", [
         outcomeRecord("fred-macro", "published", "2026-08-10T03:00:00Z"),
@@ -203,6 +225,7 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
   assert.equal(outOfOrder.get("fetch-fred-macro.yml").result, "published", "older array tail must not beat newer evidence");
 
   const equalTimestamp = derivePublishOutcomeProjection({
+    now: FIXTURE_NOW,
     shards: {
       "fred-macro": outcomeShard("fred-macro", [
         outcomeRecord("fred-macro", "failed", "2026-08-10T03:00:00Z"),
@@ -215,6 +238,7 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
 
 {
   const projection = derivePublishOutcomeProjection({
+    now: FIXTURE_NOW,
     shards: {
       "fred-macro": outcomeShard("fred-macro", [
         outcomeRecord("fred-macro", "gate_blocked", "2026-08-10T01:00:00Z"),
@@ -237,6 +261,7 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
 
 {
   const projection = derivePublishOutcomeProjection({
+    now: FIXTURE_NOW,
     shards: {
       sentiment: outcomeShard("sentiment", [
         outcomeRecord("sentiment", "failed", "2026-08-10T03:00:00Z"),
@@ -247,11 +272,66 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
     { file: "fetch-sentiment.yml", status: "ok", alarming: false, alarm_reasons: [] },
   ], projection);
   assert.equal(failed.status, "alarm");
-  assert.deepEqual(failed.alarm_reasons, [PLANE_PUBLISH_ALARM_REASONS.failed]);
+  // Both axes again: the latest result failed, and with no success anywhere in
+  // the history this family has nothing fresh to serve either.
+  assert.deepEqual(failed.alarm_reasons, [
+    PLANE_PUBLISH_ALARM_REASONS.failed,
+    PLANE_FRESHNESS_ALARM_REASONS.unavailable,
+  ]);
+  assert.equal(failed.plane_publish_outcome.freshness.state, "unavailable");
+}
+
+// D3 static-LKG aging, owner-selected: option A with a 60-hour ceiling. The
+// four transitions are pinned here rather than trusted, because the two
+// triggers are independent and a state machine that only ever gets exercised in
+// production is a state machine nobody has read.
+{
+  const at = (hours) => new Date(Date.parse("2026-08-10T00:00:00Z") + hours * 3_600_000).toISOString();
+  const freshnessOf = (records, nowHours) => deriveFamilyFreshness({
+    records: records.map(([hours, result]) => outcomeRecord("sentiment", result, at(hours))),
+    now: new Date(Date.parse(at(nowHours))),
+  });
+
+  const healthy = freshnessOf([[0, "published"], [5, "published"]], 10);
+  assert.equal(healthy.state, "healthy");
+  assert.equal(healthy.consecutive_non_success, 0);
+  assert.equal(healthy.last_success_at, at(5), "last-success timestamp must be reported, not implied");
+
+  // One failed cycle is delayed, not unavailable: the LKG is still served and
+  // the operator is told, which is the whole point of the middle state.
+  const delayed = freshnessOf([[0, "published"], [5, "failed"]], 10);
+  assert.equal(delayed.state, "delayed");
+  assert.equal(delayed.consecutive_non_success, 1);
+  assert.deepEqual(delayed.triggered_by, []);
+
+  const byCount = freshnessOf([[0, "published"], [5, "failed"], [6, "failed"]], 10);
+  assert.equal(byCount.state, "unavailable");
+  assert.deepEqual(byCount.triggered_by, ["consecutive_non_success"]);
+
+  // A cycle that never fired writes no record at all, so the counter cannot see
+  // it. Age is the trigger that catches a true miss, and these two must stay
+  // independent for that reason.
+  const byAge = freshnessOf([[0, "published"]], 61);
+  assert.equal(byAge.state, "unavailable");
+  assert.deepEqual(byAge.triggered_by, ["source_age_hours"]);
+  assert.equal(byAge.consecutive_non_success, 0);
+  assert.ok(byAge.source_age_hours > PLANE_FRESHNESS_MAX_AGE_HOURS);
+  assert.equal(freshnessOf([[0, "published"]], 60).state, "healthy", "the ceiling is exclusive, not off by one");
+
+  // Recovery clears automatically: the next success resets the counter and is
+  // reported as a recovery edge rather than as an indistinguishable healthy.
+  const recovered = freshnessOf([[0, "published"], [5, "failed"], [6, "published"]], 10);
+  assert.equal(recovered.state, "healthy");
+  assert.equal(recovered.recovered, true);
+  assert.equal(recovered.consecutive_non_success, 0);
+  assert.equal(freshnessOf([[0, "published"], [5, "published"]], 10).recovered, false);
+
+  assert.equal(deriveFamilyFreshness({ records: [] }), null, "no history must not manufacture a state");
 }
 
 {
   const malformed = derivePublishOutcomeProjection({
+    now: FIXTURE_NOW,
     shards: {
       "fred-macro": outcomeShard("fred-macro", [
         { family: "fred-macro", result: "gate_blocked" },
@@ -269,6 +349,7 @@ const outcomeRecord = (family, result, observedAt) => buildPublishOutcomeRecord(
   // A shard carrying any other schema_version (or a legacy shape) is not a
   // publish-outcome shard: no projection, no invented alarm.
   const wrongSchema = derivePublishOutcomeProjection({
+    now: FIXTURE_NOW,
     shards: {
       "fred-macro": {
         schema_version: "data-supply-publish-outcome-shard/v1",

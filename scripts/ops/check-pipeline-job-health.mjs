@@ -35,6 +35,80 @@ export const PLANE_PUBLISH_ALARM_REASONS = Object.freeze({
 });
 const PLANE_PUBLISH_SUCCESS_RESULTS = new Set(["published", "resumed"]);
 
+// D3 static-LKG aging, owner-selected 2026-08-18: option A with a maximum-age
+// ceiling. healthy -> delayed on the first non-success -> unavailable at either
+// two consecutive non-successes or an age ceiling breach -> recovered on the
+// next success, which clears automatically.
+//
+// The two triggers are not redundant and neither one subsumes the other. A
+// MISSED cycle writes no record at all, so the consecutive counter can only see
+// cycles that ran and FAILED; a cycle that never fired is visible only as age.
+// The ceiling is therefore the trigger that actually implements "two missed
+// cycles" for true misses, and 60 hours spans roughly two weekday cycles plus
+// the Saturday gap in this family's schedule.
+export const PLANE_FRESHNESS_STATES = Object.freeze(["healthy", "delayed", "unavailable"]);
+export const PLANE_FRESHNESS_ALARM_REASONS = Object.freeze({
+  delayed: "plane_freshness_delayed",
+  unavailable: "plane_freshness_unavailable",
+});
+export const PLANE_FRESHNESS_MAX_AGE_HOURS = 60;
+export const PLANE_FRESHNESS_MISSED_CYCLE_LIMIT = 2;
+
+/**
+ * Derive the D3 freshness state for one family from its own outcome records.
+ * Pure and total: an empty or unreadable history yields a null state rather
+ * than a guess, so a family with no evidence never manufactures an alarm.
+ */
+export function deriveFamilyFreshness({
+  records = [],
+  now = new Date(),
+  maxAgeHours = PLANE_FRESHNESS_MAX_AGE_HOURS,
+  missedCycleLimit = PLANE_FRESHNESS_MISSED_CYCLE_LIMIT,
+} = {}) {
+  if (!Array.isArray(records) || records.length === 0) return null;
+  const ordered = [...records].sort((left, right) => Date.parse(left.observed_at) - Date.parse(right.observed_at));
+  let lastSuccessAt = null;
+  let consecutiveNonSuccess = 0;
+  for (const record of ordered) {
+    if (PLANE_PUBLISH_SUCCESS_RESULTS.has(record.result)) {
+      lastSuccessAt = record.observed_at;
+      consecutiveNonSuccess = 0;
+    } else {
+      consecutiveNonSuccess += 1;
+    }
+  }
+  const nowMs = now instanceof Date ? now.getTime() : Date.parse(now);
+  const successMs = lastSuccessAt === null ? Number.NaN : Date.parse(lastSuccessAt);
+  const sourceAgeHours = Number.isFinite(successMs) && Number.isFinite(nowMs)
+    ? Math.max(0, (nowMs - successMs) / 3_600_000)
+    : null;
+  const ageBreached = sourceAgeHours !== null && sourceAgeHours > maxAgeHours;
+  // No success on record at all is an unavailable, not a healthy: there is
+  // nothing to serve honestly and nothing to date the staleness from.
+  const missBreached = lastSuccessAt === null || consecutiveNonSuccess >= missedCycleLimit;
+  const state = missBreached || ageBreached
+    ? "unavailable"
+    : (consecutiveNonSuccess > 0 ? "delayed" : "healthy");
+  return {
+    state,
+    last_success_at: lastSuccessAt,
+    consecutive_non_success: consecutiveNonSuccess,
+    source_age_hours: sourceAgeHours === null ? null : Math.round(sourceAgeHours * 100) / 100,
+    max_age_hours: maxAgeHours,
+    missed_cycle_limit: missedCycleLimit,
+    // Which trigger fired is reported rather than inferred, because the operator
+    // response to "the producer failed twice" differs from "nothing has run".
+    triggered_by: state === "unavailable"
+      ? [...(missBreached ? ["consecutive_non_success"] : []), ...(ageBreached ? ["source_age_hours"] : [])]
+      : [],
+    // A success that follows a non-success run is the recovery edge. It clears
+    // the warning by construction: the counter is already back to zero above.
+    recovered: consecutiveNonSuccess === 0
+      && ordered.length > 1
+      && !PLANE_PUBLISH_SUCCESS_RESULTS.has(ordered[ordered.length - 2].result),
+  };
+}
+
 // Every exception is a declared policy entry, not an invisible parser escape.
 // Validation below fails closed if an exclusion stops being scheduled or if an
 // inclusion becomes scheduled (and therefore no longer needs special policy).
@@ -276,16 +350,29 @@ function shardForFamily(shards, family) {
 export function derivePublishOutcomeProjection({
   shards = {},
   bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+  now = new Date(),
 } = {}) {
   const projection = new Map();
   for (const [family, binding] of Object.entries(bindings ?? {})) {
-    const latest = latestPublishOutcomeFromShard(shardForFamily(shards, family), family);
+    const shard = shardForFamily(shards, family);
+    const latest = latestPublishOutcomeFromShard(shard, family);
     if (!latest || !binding || typeof binding.workflow !== "string") continue;
+    // The latest record answers "what happened last"; the D3 state needs the
+    // run of records behind it, so freshness is derived from the same validated
+    // shard rather than from a second source that could disagree with it.
+    let records = [];
+    try {
+      validatePublishOutcomeShard(shard, family);
+      records = publishOutcomeRecords(shard) ?? [];
+    } catch {
+      records = [];
+    }
     projection.set(path.basename(binding.workflow), {
       ...latest,
       family,
       lane_id: binding.lane_id,
       workflow: binding.workflow,
+      freshness: deriveFamilyFreshness({ records, now }),
     });
   }
   return projection;
@@ -333,8 +420,25 @@ export function attachPublishOutcomeAlarms(workflows, projection) {
     } else if (PLANE_PUBLISH_SUCCESS_RESULTS.has(outcome?.result)) {
       alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((reason) => !planeReasons.has(reason)));
     }
+    // D3 freshness raises on its own axis. A publish can succeed while the data
+    // it published is already past the ceiling, and a run of non-successes is a
+    // different operator story from the single latest result, so these reasons
+    // are added beside the result reasons rather than replacing them. A healthy
+    // freshness state clears only its own two reasons.
+    const freshnessReasons = new Set(Object.values(PLANE_FRESHNESS_ALARM_REASONS));
+    const freshnessState = outcome?.freshness?.state ?? null;
+    if (freshnessState === "unavailable" || freshnessState === "delayed") {
+      const reason = freshnessState === "unavailable"
+        ? PLANE_FRESHNESS_ALARM_REASONS.unavailable
+        : PLANE_FRESHNESS_ALARM_REASONS.delayed;
+      alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((entry) => !freshnessReasons.has(entry)));
+      alarmReasons.push(reason);
+    } else if (freshnessState === "healthy") {
+      alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((entry) => !freshnessReasons.has(entry)));
+    }
     const planeAlarm = outcome?.result === "gate_blocked" || outcome?.result === "failed";
-    const alarming = workflow?.alarming === true || planeAlarm;
+    const freshnessAlarm = freshnessState === "unavailable" || freshnessState === "delayed";
+    const alarming = workflow?.alarming === true || planeAlarm || freshnessAlarm;
     return {
       ...workflow,
       ...(outcome ? { plane_publish_outcome: outcome } : {}),
