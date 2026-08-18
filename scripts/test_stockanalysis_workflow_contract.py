@@ -415,6 +415,9 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             "github.event.schedule == '50 23 * * 1-5'",
             "github.event.schedule == '20 23 * * 0'",
             "gh workflow run update-manifest.yml",
+            # The job carries no checkout, so gh has no local git remote to
+            # infer the repository from and must be told explicitly.
+            "--repo ${{ github.repository }}",
         ):
             self.assertIn(expected, body)
         self.assertNotIn("etf_cloud_generation=true", body)

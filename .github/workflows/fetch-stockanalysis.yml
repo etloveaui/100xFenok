@@ -783,4 +783,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh workflow run update-manifest.yml --ref main
+          # This job intentionally has no checkout, so gh cannot infer the
+          # repository from a local git remote. Name it explicitly.
+          gh workflow run update-manifest.yml --repo ${{ github.repository }} --ref main
