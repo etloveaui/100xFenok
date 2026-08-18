@@ -29,7 +29,7 @@ remote_suite_for_command() {
     "npm run build:runtime:steps") printf '%s\n' "runtime-build" ;;
     "npm run build:static:steps") printf '%s\n' "static-build" ;;
     "npm run cf:build:steps") printf '%s\n' "cloudflare-build" ;;
-    "npm run qa:registry-contracts:steps") printf '%s\n' "contracts" ;;
+    "npm run qa:registry-contracts") printf '%s\n' "contracts" ;;
     "npm run qa:sec13f-contract:steps") printf '%s\n' "sec13f-contract" ;;
     *) return 1 ;;
   esac
