@@ -6,6 +6,8 @@ import { DATA_SUPPLY_DETECTION_CONFIG } from "../lib/data-supply-detection-confi
 import { TRACKED_CRONS } from "../lib/kpi-contract-constants.mjs";
 import { classifyRuntimeSlots } from "../lib/kpi-runtime-slots.mjs";
 import { PLANE_PUBLISH_OUTCOME_BINDINGS } from "../lib/lane-registry.mjs";
+// The single place a family is registered; import is side-effect free.
+import { FAMILIES } from "../publish-cloud-data-generation.mjs";
 import {
   PUBLISH_OUTCOME_SHARD_SCHEMAS_READABLE,
   normalizePublishOutcomeRecord,
@@ -52,6 +54,10 @@ export const PLANE_FRESHNESS_ALARM_REASONS = Object.freeze({
   unavailable: "plane_freshness_unavailable",
 });
 export const PLANE_FRESHNESS_MAX_AGE_HOURS = 60;
+// How a family's freshness is judged. "age" is the scheduled-producer default;
+// "source_change" belongs to a family that publishes only when its source moves.
+export const PLANE_FRESHNESS_MODE_AGE = "age";
+export const PLANE_FRESHNESS_MODE_SOURCE_CHANGE = "source_change";
 export const PLANE_FRESHNESS_MISSED_CYCLE_LIMIT = 2;
 
 /**
@@ -64,14 +70,19 @@ export function deriveFamilyFreshness({
   now = new Date(),
   maxAgeHours = PLANE_FRESHNESS_MAX_AGE_HOURS,
   missedCycleLimit = PLANE_FRESHNESS_MISSED_CYCLE_LIMIT,
+  mode = PLANE_FRESHNESS_MODE_AGE,
+  canonicalSourceAsOf = null,
 } = {}) {
   if (!Array.isArray(records) || records.length === 0) return null;
+  const sourceChangeMode = mode === PLANE_FRESHNESS_MODE_SOURCE_CHANGE;
   const ordered = [...records].sort((left, right) => Date.parse(left.observed_at) - Date.parse(right.observed_at));
   let lastSuccessAt = null;
+  let lastSuccessSourceAsOf = null;
   let consecutiveNonSuccess = 0;
   for (const record of ordered) {
     if (PLANE_PUBLISH_SUCCESS_RESULTS.has(record.result)) {
       lastSuccessAt = record.observed_at;
+      lastSuccessSourceAsOf = record.source_as_of ?? null;
       consecutiveNonSuccess = 0;
     } else {
       consecutiveNonSuccess += 1;
@@ -82,25 +93,49 @@ export function deriveFamilyFreshness({
   const sourceAgeHours = Number.isFinite(successMs) && Number.isFinite(nowMs)
     ? Math.max(0, (nowMs - successMs) / 3_600_000)
     : null;
-  const ageBreached = sourceAgeHours !== null && sourceAgeHours > maxAgeHours;
+  // A source-change family has no cadence to be late against, so the ceiling is
+  // never applied to it.
+  const ageBreached = !sourceChangeMode && sourceAgeHours !== null && sourceAgeHours > maxAgeHours;
+  const unpublishedSourceChange = sourceChangeMode
+    && typeof canonicalSourceAsOf === "string"
+    && typeof lastSuccessSourceAsOf === "string"
+    ? canonicalSourceAsOf !== lastSuccessSourceAsOf
+    : null;
+  // A clock this mode cannot compare is unavailable, never healthy: an
+  // unanswered question is not a clean bill of health. Either side may be the
+  // missing one - the published clock is nullable by schema.
+  const sourceClockUnknown = sourceChangeMode && unpublishedSourceChange === null;
   // No success on record at all is an unavailable, not a healthy: there is
   // nothing to serve honestly and nothing to date the staleness from.
   const missBreached = lastSuccessAt === null || consecutiveNonSuccess >= missedCycleLimit;
-  const state = missBreached || ageBreached
+  // An unpublished change is pending work, not a missing surface: the published
+  // generation still serves and is still honest, so it is "delayed".
+  const state = missBreached || ageBreached || sourceClockUnknown
     ? "unavailable"
-    : (consecutiveNonSuccess > 0 ? "delayed" : "healthy");
+    : (consecutiveNonSuccess > 0 || unpublishedSourceChange === true ? "delayed" : "healthy");
   return {
     state,
     last_success_at: lastSuccessAt,
     consecutive_non_success: consecutiveNonSuccess,
     source_age_hours: sourceAgeHours === null ? null : Math.round(sourceAgeHours * 100) / 100,
-    max_age_hours: maxAgeHours,
+    // Null in source-change mode: an inapplicable ceiling must not read as one
+    // that merely has not been reached yet.
+    max_age_hours: sourceChangeMode ? null : maxAgeHours,
+    freshness_mode: sourceChangeMode ? PLANE_FRESHNESS_MODE_SOURCE_CHANGE : PLANE_FRESHNESS_MODE_AGE,
+    published_source_as_of: lastSuccessSourceAsOf,
+    canonical_source_as_of: sourceChangeMode ? canonicalSourceAsOf : null,
+    unpublished_source_change: unpublishedSourceChange,
     missed_cycle_limit: missedCycleLimit,
     // Which trigger fired is reported rather than inferred, because the operator
     // response to "the producer failed twice" differs from "nothing has run".
-    triggered_by: state === "unavailable"
-      ? [...(missBreached ? ["consecutive_non_success"] : []), ...(ageBreached ? ["source_age_hours"] : [])]
-      : [],
+    triggered_by: state === "healthy"
+      ? []
+      : [
+        ...(missBreached ? ["consecutive_non_success"] : []),
+        ...(ageBreached ? ["source_age_hours"] : []),
+        ...(unpublishedSourceChange === true ? ["unpublished_source_change"] : []),
+        ...(sourceClockUnknown ? ["source_clock_unknown"] : []),
+      ],
     // A success that follows a non-success run is the recovery edge. It clears
     // the warning by construction: the counter is already back to zero above.
     recovered: consecutiveNonSuccess === 0
@@ -347,10 +382,34 @@ function shardForFamily(shards, family) {
  * publication. The returned Map is intentionally pure/testable and contains
  * only valid latest records.
  */
+/** Declared freshness mode; unknown or malformed falls back to "age" so a
+ * ceiling is never silently disabled. */
+export function freshnessModeForFamily(family, families = FAMILIES) {
+  const declared = families?.[family]?.freshness?.mode;
+  return declared === PLANE_FRESHNESS_MODE_SOURCE_CHANGE
+    ? PLANE_FRESHNESS_MODE_SOURCE_CHANGE
+    : PLANE_FRESHNESS_MODE_AGE;
+}
+
+/** Current source clock for a source-change family, from the file and key its
+ * registry entry already declares. Null when unreadable - an unknown clock
+ * stays unknown and the derivation turns that into unavailable. */
+export function readCanonicalSourceAsOf(family, { families = FAMILIES, repoRoot = REPO_ROOT } = {}) {
+  if (freshnessModeForFamily(family, families) !== PLANE_FRESHNESS_MODE_SOURCE_CHANGE) return null;
+  const entry = families?.[family];
+  const clock = entry?.source_as_of;
+  if (!entry?.root || typeof clock?.file !== "string" || typeof clock?.key !== "string") return null;
+  const document = readJsonOrNull(path.join(repoRoot, entry.root, clock.file));
+  const value = document?.[clock.key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
 export function derivePublishOutcomeProjection({
   shards = {},
   bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
   now = new Date(),
+  sourceClocks = {},
+  families = FAMILIES,
 } = {}) {
   const projection = new Map();
   for (const [family, binding] of Object.entries(bindings ?? {})) {
@@ -372,7 +431,12 @@ export function derivePublishOutcomeProjection({
       family,
       lane_id: binding.lane_id,
       workflow: binding.workflow,
-      freshness: deriveFamilyFreshness({ records, now }),
+      freshness: deriveFamilyFreshness({
+        records,
+        now,
+        mode: freshnessModeForFamily(family, families),
+        canonicalSourceAsOf: sourceClocks?.[family] ?? null,
+      }),
     });
   }
   return projection;
@@ -383,10 +447,13 @@ export function readPublishOutcomeProjection({
   bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
 } = {}) {
   const shards = {};
+  const sourceClocks = {};
   for (const family of Object.keys(bindings ?? {})) {
     shards[family] = readJsonOrNull(path.join(root, `${family}.json`));
+    // I/O stays at the edge; the derivation stays pure over what it is handed.
+    sourceClocks[family] = readCanonicalSourceAsOf(family);
   }
-  return derivePublishOutcomeProjection({ shards, bindings });
+  return derivePublishOutcomeProjection({ shards, bindings, sourceClocks });
 }
 
 function projectedOutcomeForWorkflow(projection, workflowFile) {

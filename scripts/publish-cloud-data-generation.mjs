@@ -556,11 +556,18 @@ export const FAMILIES = {
     root: "data/global-scouter",
     manifest_prefix: "public/data/global-scouter",
     candidate_scope_id: "global_scouter",
+    // Off until the reader lane is admitted. At that point the fallback is the
+    // static LKG, not a second provider: one owner-run export has nothing to
+    // fail over to.
     reader_enrollment: false,
     privacy_class: "public",
     // Global Scouter's source clock is the export's provider date, not the
     // converter acquisition timestamp.
     source_as_of: { file: "core/metadata.json", key: "source_date" },
+    // Source-change driven, not scheduled, so age carries no signal: an export
+    // nobody revised is current, not stale. Freshness asks whether a change is
+    // sitting unpublished; the weekday-sized age ceiling is not applied.
+    freshness: { mode: "source_change" },
     // Measured candidate scope: 1,082 assets / 87,268,011 bytes. The class-A
     // and byte declarations retain >=2x headroom. An all-changed generation
     // measures 3,250 reads (1,083 presence + 1,083 readback + 1,083 parity

@@ -15,6 +15,9 @@ import {
   CADENCE_STATES,
   PLANE_FRESHNESS_ALARM_REASONS,
   PLANE_FRESHNESS_MAX_AGE_HOURS,
+  PLANE_FRESHNESS_MODE_AGE,
+  PLANE_FRESHNESS_MODE_SOURCE_CHANGE,
+  freshnessModeForFamily,
   PLANE_PUBLISH_ALARM_REASONS,
   PLANE_PUBLISH_OUTCOME_BINDINGS,
   assertDeclaredScheduleGraceContracts,
@@ -327,6 +330,79 @@ const FIXTURE_NOW = new Date("2026-08-10T03:00:00Z");
   assert.equal(freshnessOf([[0, "published"], [5, "published"]], 10).recovered, false);
 
   assert.equal(deriveFamilyFreshness({ records: [] }), null, "no history must not manufacture a state");
+}
+
+// A source-change family is judged by whether its export is PUBLISHED, not by
+// how long ago that happened. The ETF-sized ceiling would have reported a
+// permanent unavailable on a family that was perfectly current.
+{
+  const at = (hours) => new Date(Date.parse("2026-08-10T00:00:00Z") + hours * 3_600_000).toISOString();
+  const published = (sourceAsOf, hours = 0) => buildPublishOutcomeRecord({
+    family: "global-scouter",
+    result: "published",
+    observedAt: at(hours),
+    sourceAsOf,
+  });
+  const sourceChangeOf = ({ publishedAsOf, canonical, nowHours }) => deriveFamilyFreshness({
+    records: [published(publishedAsOf)],
+    now: new Date(Date.parse(at(nowHours))),
+    mode: PLANE_FRESHNESS_MODE_SOURCE_CHANGE,
+    canonicalSourceAsOf: canonical,
+  });
+
+  // Far past the age ceiling and still healthy: nothing changed, so nothing is late.
+  const aged = sourceChangeOf({ publishedAsOf: "2026-08-14", canonical: "2026-08-14", nowHours: 500 });
+  assert.equal(aged.state, "healthy");
+  assert.ok(aged.source_age_hours > PLANE_FRESHNESS_MAX_AGE_HOURS, "the fixture must actually outlive the ceiling");
+  assert.deepEqual(aged.triggered_by, []);
+  assert.equal(aged.max_age_hours, null, "an inapplicable ceiling must not be reported as a number");
+  assert.equal(aged.unpublished_source_change, false);
+
+  // A moved export is delayed, not unavailable: the published generation is still
+  // serving and still honest, there is simply newer source sitting behind it.
+  const pending = sourceChangeOf({ publishedAsOf: "2026-08-14", canonical: "2026-08-18", nowHours: 1 });
+  assert.equal(pending.state, "delayed");
+  assert.deepEqual(pending.triggered_by, ["unpublished_source_change"]);
+  assert.equal(pending.published_source_as_of, "2026-08-14");
+  assert.equal(pending.canonical_source_as_of, "2026-08-18");
+
+  // An unreadable clock is unavailable, never healthy: answering an unanswered
+  // question "current" would be the one unsafe guess.
+  const unknown = sourceChangeOf({ publishedAsOf: "2026-08-14", canonical: null, nowHours: 500 });
+  assert.equal(unknown.unpublished_source_change, null);
+  assert.equal(unknown.state, "unavailable");
+  assert.deepEqual(unknown.triggered_by, ["source_clock_unknown"]);
+
+  // The published side is nullable by schema, so it trips the same guard.
+  const unpublishedClock = deriveFamilyFreshness({
+    records: [buildPublishOutcomeRecord({ family: "global-scouter", result: "published", observedAt: at(0) })],
+    now: new Date(Date.parse(at(1))),
+    mode: PLANE_FRESHNESS_MODE_SOURCE_CHANGE,
+    canonicalSourceAsOf: "2026-08-14",
+  });
+  assert.equal(unpublishedClock.state, "unavailable");
+  assert.deepEqual(unpublishedClock.triggered_by, ["source_clock_unknown"]);
+
+  // Only the AGE trigger is withdrawn. A producer that fails twice is still
+  // unavailable, because that is a broken producer rather than a quiet source.
+  const failedTwice = deriveFamilyFreshness({
+    records: [
+      published("2026-08-14"),
+      buildPublishOutcomeRecord({ family: "global-scouter", result: "failed", observedAt: at(1) }),
+      buildPublishOutcomeRecord({ family: "global-scouter", result: "failed", observedAt: at(2) }),
+    ],
+    now: new Date(Date.parse(at(3))),
+    mode: PLANE_FRESHNESS_MODE_SOURCE_CHANGE,
+    canonicalSourceAsOf: "2026-08-14",
+  });
+  assert.equal(failedTwice.state, "unavailable");
+  assert.deepEqual(failedTwice.triggered_by, ["consecutive_non_success"]);
+
+  // The publisher registry decides which families are source-change, so there is
+  // no second table here to drift from it.
+  assert.equal(freshnessModeForFamily("global-scouter"), PLANE_FRESHNESS_MODE_SOURCE_CHANGE);
+  assert.equal(freshnessModeForFamily("stockanalysis-etf-detail"), PLANE_FRESHNESS_MODE_AGE);
+  assert.equal(freshnessModeForFamily("no-such-family"), PLANE_FRESHNESS_MODE_AGE, "an unknown family keeps its ceiling");
 }
 
 {

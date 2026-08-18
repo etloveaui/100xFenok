@@ -11,6 +11,14 @@
 name: Global Scouter Shadow Publish
 
 on:
+  # Source-change driven, deliberately NOT scheduled: the export is owner-run, so
+  # the push that moves the canonical tree IS the event. Persistence writes only
+  # the publish-outcome shard, outside this path, so it cannot retrigger itself.
+  push:
+    branches:
+      - main
+    paths:
+      - 'data/global-scouter/**'
   workflow_dispatch:
     inputs:
       confirm:
@@ -40,7 +48,10 @@ jobs:
     outputs:
       publisher_outcome: ${{ steps.publish_cloud_generation.outcome }}
     steps:
+      # Only a manual run needs the typed confirmation; a push is confirmed by
+      # the commit that moved the tree.
       - name: Refuse an unconfirmed dispatch
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           CONFIRM: ${{ github.event.inputs.confirm }}
         run: |
