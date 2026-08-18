@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-18T02:20:10.061Z",
+  "generated_at": "2026-08-18T03:13:06.705Z",
   "status": "open",
-  "open_incident_count": 8,
+  "open_incident_count": 9,
   "open_incidents": [
     {
       "workflow": "data-plane-serving-probe.yml",
@@ -16,6 +16,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "fenok-edge-daily.yml",
+      "label": "Fenok Edge Daily Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "unrecovered_overdue"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "overdue"
     },
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -167,8 +180,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "attempt_gap"
+      ]
     },
     {
       "file": "fenok-edge-krx-daily.yml",
@@ -496,8 +511,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 24,
-    "overdue": 2,
+    "not_due": 23,
+    "overdue": 3,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -513,12 +528,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32091323186",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32091323186",
-    "observed_at": "2026-08-18T02:20:10.061Z",
-    "event": "workflow_run",
+    "run_id": "32094541938",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32094541938",
+    "observed_at": "2026-08-18T03:13:06.705Z",
+    "event": "schedule",
     "workflows": [
       "data-plane-serving-probe.yml",
+      "fenok-edge-daily.yml",
       "fetch-edgar-filings.yml",
       "fetch-fred-macro.yml",
       "fetch-fred-yardeni.yml",
