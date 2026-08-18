@@ -614,6 +614,45 @@ jobs:
                 } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
                 exit 75
               fi
+              # Identity proof. The attempt verification above proves that the
+              # attempt's shards are present; it does NOT prove that current
+              # origin carries THIS artifact, because attempt rows and artifact
+              # identity are different claims. Two checks close that gap:
+              # the published commit must still be reachable from current main,
+              # and that immutable commit's own artifact-digest trailer must
+              # equal the acquisition digest. Together they bind current origin
+              # to this exact publication rather than to a coincidence.
+              #
+              # The bounded deepen exists because this checkout is shallow: an
+              # ancestry question is unanswerable on a truncated graph, and an
+              # unanswerable question must not read as a confirmed one. The
+              # readback runs seconds after our own push, so the intervening
+              # window is a handful of commits and 50 is generous.
+              git fetch --deepen=50 origin main >/dev/null 2>&1 || true
+              if git merge-base --is-ancestor "$PUBLISHED_COMMIT" HEAD >/dev/null 2>&1; then
+                COMMIT_REACHABLE="yes"
+              else
+                COMMIT_REACHABLE="no"
+              fi
+              COMMIT_ARTIFACT_DIGEST="$(
+                git log -1 --format=%B "$PUBLISHED_COMMIT" 2>/dev/null \
+                  | sed -n 's/^StockAnalysis-Artifact-Digest: //p' | tail -n 1
+              )" || COMMIT_ARTIFACT_DIGEST=""
+              if [ "$COMMIT_REACHABLE" != "yes" ] || [ "$COMMIT_ARTIFACT_DIGEST" != "$ARTIFACT_DIGEST" ]; then
+                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
+                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "fence_reason=main_readback_identity" >> "$GITHUB_OUTPUT"
+                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
+                echo "post-publish identity proof failed: reachable=$COMMIT_REACHABLE trailer_matches_acquisition=$([ "$COMMIT_ARTIFACT_DIGEST" = "$ARTIFACT_DIGEST" ] && echo yes || echo no)" >&2
+                {
+                  echo "### StockAnalysis publish fence"
+                  echo "- status: $ACCEPTED_STATUS"
+                  echo "- confirmation: not_confirmed"
+                  echo "- fence_reason: main_readback_identity"
+                  echo "- commit_reachable: $COMMIT_REACHABLE"
+                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+                exit 75
+              fi
               echo "$READBACK_JSON"
               echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
               echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"

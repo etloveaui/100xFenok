@@ -3353,6 +3353,86 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   const successShard = JSON.parse(await readFile(publishOutcomeShardPath(successRoot, "oecd-cli"), "utf8"));
   assert.deepEqual(successShard.records.map((record) => record.result), ["published", "resumed"]);
 
+  // --- binding legs come from the INJECTED env, never the ambient process ---
+  // An in-process caller passes its own env precisely so the run is reproducible.
+  // Reading process.env instead would let a record silently inherit whatever the
+  // surrounding process carried, and a binding leg that is wrong is worse than
+  // one that is honestly null.
+  const ambientRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-ambient-env-"));
+  const savedAmbient = {
+    commit: process.env.PUBLISH_BINDING_GIT_COMMIT,
+    digest: process.env.PUBLISH_BINDING_ARTIFACT_DIGEST,
+  };
+  process.env.PUBLISH_BINDING_GIT_COMMIT = "d".repeat(40);
+  process.env.PUBLISH_BINDING_ARTIFACT_DIGEST = "sha256:ambient";
+  try {
+    const ambient = await invoke({ outcomesRoot: ambientRoot, createPublishPlaneImpl: memoryFactory });
+    assert.equal(ambient.exitCode, 0);
+    const ambientBinding = JSON.parse(
+      await readFile(publishOutcomeShardPath(ambientRoot, "oecd-cli"), "utf8"),
+    ).records.at(-1).binding;
+    // The identity legs stay null because the injected env carried none, while
+    // the scope legs still bind from the tree that was actually published.
+    // That split is the proof: an ambient read would have filled the first two.
+    assert.equal(ambientBinding.git_commit, null);
+    assert.equal(ambientBinding.artifact_digest, null);
+    assert.ok(ambientBinding.scope_file_count > 0);
+  } finally {
+    for (const [name, value] of [
+      ["PUBLISH_BINDING_GIT_COMMIT", savedAmbient.commit],
+      ["PUBLISH_BINDING_ARTIFACT_DIGEST", savedAmbient.digest],
+    ]) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  }
+  await rm(ambientRoot, { recursive: true, force: true });
+
+  const boundRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-bound-env-"));
+  const bound = await invoke({
+    outcomesRoot: boundRoot,
+    env: {
+      ...liveEnv,
+      PUBLISH_BINDING_GIT_COMMIT: "e".repeat(40),
+      PUBLISH_BINDING_ARTIFACT_DIGEST: "sha256:injected",
+    },
+    createPublishPlaneImpl: memoryFactory,
+  });
+  assert.equal(bound.exitCode, 0);
+  const boundBinding = JSON.parse(
+    await readFile(publishOutcomeShardPath(boundRoot, "oecd-cli"), "utf8"),
+  ).records.at(-1).binding;
+  assert.equal(boundBinding.git_commit, "e".repeat(40));
+  assert.equal(boundBinding.artifact_digest, "sha256:injected");
+  assert.equal(typeof boundBinding.scope_source_sha256, "string");
+  assert.ok(boundBinding.scope_file_count > 0);
+  assert.ok(boundBinding.scope_bytes > 0);
+  // The readback leg is the persist step's to fill; the publisher must not
+  // claim a readback it never performed.
+  assert.equal(boundBinding.origin_readback, null);
+  await rm(boundRoot, { recursive: true, force: true });
+
+  // Identity is bound BEFORE admission, so a FAILED outcome still records
+  // WHICH artifact it refused. Binding only on the success path would leave
+  // exactly the outcomes worth investigating unattributable. (This particular
+  // failure path does reach a manifest, so its scope legs are also present;
+  // the claim under test is that the identity leg survives a non-success
+  // result, not that the scope leg is absent.)
+  const refusedRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-refused-bind-"));
+  const refused = await invoke({
+    outcomesRoot: refusedRoot,
+    env: { PUBLISH_BINDING_ARTIFACT_DIGEST: "sha256:refused" },
+    createPublishPlaneImpl: memoryFactory,
+  });
+  assert.equal(refused.exitCode, 2);
+  const refusedRecord = JSON.parse(
+    await readFile(publishOutcomeShardPath(refusedRoot, "oecd-cli"), "utf8"),
+  ).records.at(-1);
+  assert.equal(refusedRecord.result, "failed");
+  assert.equal(refusedRecord.binding.artifact_digest, "sha256:refused");
+  assert.equal(refusedRecord.binding.git_commit, null);
+  await rm(refusedRoot, { recursive: true, force: true });
+
   const missingRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-missing-env-"));
   const missing = await invoke({ outcomesRoot: missingRoot, env: {}, createPublishPlaneImpl: memoryFactory });
   assert.equal(missing.exitCode, 2);

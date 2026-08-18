@@ -2253,6 +2253,16 @@ export async function runPublisherCli({
     // the step that actually reads current origin.
     binding: null,
   };
+  // The two identity legs are read from the INJECTED env and bound BEFORE
+  // admission, so an outcome that never reaches a manifest — a gate refusal,
+  // an admission mismatch, a thrown failure — still records WHICH artifact it
+  // refused. Binding only on the success path would leave exactly the outcomes
+  // worth investigating unattributable.
+  const bindingIdentity = {
+    gitCommit: env.PUBLISH_BINDING_GIT_COMMIT || null,
+    artifactDigest: env.PUBLISH_BINDING_ARTIFACT_DIGEST || null,
+  };
+  outcomeState.binding = buildPublishOutcomeBinding(bindingIdentity);
   const recordOutcome = (result) => recordPublishOutcome({
     family: args.family,
     result,
@@ -2371,9 +2381,13 @@ export async function runPublisherCli({
     // the caller knows them: inside this job the checkout has been reset to
     // origin/main, so the ambient run commit is not the published tree's
     // commit. Absent env leaves the leg null rather than guessing.
+    //
+    // Enrich the pre-admission identity with the scope of the tree actually
+    // being published. The identity legs are carried forward unchanged rather
+    // than re-read, so the tuple cannot describe one artifact before admission
+    // and a different one after it.
     outcomeState.binding = buildPublishOutcomeBinding({
-      gitCommit: process.env.PUBLISH_BINDING_GIT_COMMIT || null,
-      artifactDigest: process.env.PUBLISH_BINDING_ARTIFACT_DIGEST || null,
+      ...bindingIdentity,
       scopeSourceSha256: manifest.source_sha,
       scopeFileCount: summary.asset_count,
       scopeBytes: summary.total_bytes,

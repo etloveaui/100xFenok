@@ -372,6 +372,39 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn('echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"', publish)
         self.assertIn('fence_reason=main_readback_infrastructure', publish)
         self.assertIn('fence_reason=main_readback_mismatch', publish)
+        # Attempt verification proves the attempt's shards are present; it does
+        # not prove current origin carries THIS artifact. Confirmation may only
+        # be emitted after the published commit is shown reachable from current
+        # main AND that commit's own artifact-digest trailer equals the
+        # acquisition digest, so that "confirmed" is an identity claim rather
+        # than a coincidence of two independent successes.
+        self.assertIn('fence_reason=main_readback_identity', publish)
+        self.assertIn('git merge-base --is-ancestor "$PUBLISHED_COMMIT" HEAD', publish)
+        self.assertIn("sed -n 's/^StockAnalysis-Artifact-Digest: //p'", publish)
+        self.assertIn('[ "$COMMIT_ARTIFACT_DIGEST" != "$ARTIFACT_DIGEST" ]', publish)
+        # An ancestry question is unanswerable on a truncated graph, so the
+        # bounded deepen must precede the reachability test; without it an
+        # unanswerable question would read as a failed one.
+        self.assertIn("git fetch --deepen=50 origin main", publish)
+        self.assertLess(
+            publish.index("git fetch --deepen=50 origin main"),
+            publish.index('git merge-base --is-ancestor "$PUBLISHED_COMMIT" HEAD'),
+        )
+        # Both identity checks gate the confirmation, not the other way round.
+        self.assertLess(
+            publish.index('git merge-base --is-ancestor "$PUBLISHED_COMMIT" HEAD'),
+            publish.index('echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"'),
+        )
+        self.assertLess(
+            publish.index('[ "$COMMIT_ARTIFACT_DIGEST" != "$ARTIFACT_DIGEST" ]'),
+            publish.index('echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"'),
+        )
+        # The identity proof runs only after the attempt proof, so a confirmed
+        # readback carries all three claims rather than replacing one with another.
+        self.assertLess(
+            publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
+            publish.index("git fetch --deepen=50 origin main"),
+        )
         self.assertLess(
             publish.index("git push origin HEAD:main"),
             publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
