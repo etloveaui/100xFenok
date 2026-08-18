@@ -1,47 +1,44 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "gdelt_news_tone",
-  "updated_at": "2026-08-17T15:01:59.098Z",
-  "retry_set": [
-    "news_tone_proxy"
-  ],
+  "updated_at": "2026-08-18T15:13:32.720Z",
+  "retry_set": [],
   "items": {
     "news_tone_proxy": {
       "key": "news_tone_proxy",
-      "resolution_state": "lkg_primary",
-      "retry": true,
-      "updated_at": "2026-08-17T15:01:59.098Z",
+      "resolution_state": "fresh_primary",
+      "retry": false,
+      "updated_at": "2026-08-18T15:13:32.720Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "35b65486bc534811debae7fd59d4f2f2a3ee213dcd178be447ae7ada5e3bfbff",
-        "source_as_of": "2026-08-09T15:01:00.000Z",
-        "run_id": "31320161686",
+        "payload_sha256": "6095812ebd6fc39177d4b62aab43d931dbcb25450947023c3bf92aba8d36f842",
+        "source_as_of": "2026-08-18T15:02:00.000Z",
+        "run_id": "32152350191",
         "run_attempt": 1,
-        "observed_at": "2026-08-09T15:05:37.183Z"
+        "observed_at": "2026-08-18T15:13:32.720Z"
       },
       "last_recovered_failure": {
-        "run_id": "31263448894",
+        "run_id": "32040872375",
         "run_attempt": 1,
-        "observed_at": "2026-08-08T15:02:40.492Z",
+        "observed_at": "2026-08-17T15:01:59.098Z",
         "reason": "schema_drift"
       },
       "current": {
-        "path": "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
-        "payload_sha256": "4f193f41ba6ebf8242ccc4e37ce7cae850cbc4acc9375644c606d6156e1cc8db",
-        "source_as_of": "2026-08-09T15:01:00.000Z"
+        "path": "data/computed/fenok_news_tone_proxy.json",
+        "payload_sha256": "04c000083e3b08acd89efbe0f1efe3779623b5272524416770a6fc5a2997b0c3",
+        "source_as_of": "2026-08-18T15:02:00.000Z"
       },
       "lkg": {
         "path": "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
         "payload_sha256": "4f193f41ba6ebf8242ccc4e37ce7cae850cbc4acc9375644c606d6156e1cc8db",
         "source_as_of": "2026-08-09T15:01:00.000Z"
       },
-      "latest_failure": {
-        "run_id": "32040872375",
-        "run_attempt": 1,
-        "observed_at": "2026-08-17T15:01:59.098Z",
-        "reason": "schema_drift"
-      }
+      "recovered_from_run_id": "32040872375",
+      "recovered_at": "2026-08-18T15:13:32.720Z",
+      "recovery_run_id": "32152350191",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule"
     }
   }
 }
