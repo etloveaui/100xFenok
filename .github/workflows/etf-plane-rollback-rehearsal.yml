@@ -16,18 +16,50 @@ name: ETF Plane Rollback Rehearsal
 on:
   workflow_dispatch:
     inputs:
-      confirm:
-        description: 'Type ROLLBACK to confirm. Any other value does nothing.'
+      operation:
+        description: 'INSPECT reads the pointer and writes nothing. ROLLBACK moves it.'
         required: true
+        type: choice
+        default: INSPECT
+        options:
+          - INSPECT
+          - ROLLBACK
+      confirm:
+        description: 'Required for ROLLBACK only: type ROLLBACK to confirm.'
+        required: false
         default: ''
 
 permissions:
   contents: read
 
 jobs:
+  # Read-only pointer inspection through the existing live-route reader, which
+  # asks the coordinator for the pointer and nothing else.
+  inspect:
+    if: github.event.inputs.operation == 'INSPECT'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Read the live pointer
+        env:
+          DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+        run: node scripts/dev-cloud-data-plane-route-live.mjs
+
   rollback:
-    # A typo cannot move a production pointer.
-    if: github.event.inputs.confirm == 'ROLLBACK'
+    # Both the operation and a typed confirmation. A typo cannot move a
+    # production pointer.
+    if: github.event.inputs.operation == 'ROLLBACK' && github.event.inputs.confirm == 'ROLLBACK'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

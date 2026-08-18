@@ -359,7 +359,15 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertNotIn("schedule:", source)
         self.assertNotIn("push:", source)
         self.assertIn("workflow_dispatch:", source)
-        self.assertIn("if: github.event.inputs.confirm == 'ROLLBACK'", source)
+        self.assertIn(
+            "if: github.event.inputs.operation == 'ROLLBACK' && github.event.inputs.confirm == 'ROLLBACK'",
+            source,
+        )
+        # Inspection is read-only and reuses the existing live-route reader; it
+        # needs no typed confirmation because it cannot change anything.
+        self.assertIn("if: github.event.inputs.operation == 'INSPECT'", source)
+        self.assertIn("node scripts/dev-cloud-data-plane-route-live.mjs", source)
+        self.assertNotIn("--rollback", source.split("if: github.event.inputs.operation == 'INSPECT'", 1)[1].split("rollback:", 1)[0])
         # Pointer authority only: read-only Git, bounded, and queued behind a
         # publish rather than racing or cancelling one.
         self.assertNotIn("contents: write", source)
