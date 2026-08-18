@@ -104,6 +104,40 @@ check("dispatch + empty zero-exit stdout -> proceed-uncertain (Number('')===0 gu
 check("dispatch + malformed status output -> proceed-uncertain", [`--mode`, `dispatch`, ...WF_ONE.split(" ")], { GH_RUN_LIST_CMD: malformedShim }, "proceed-uncertain");
 check("dispatch + status query failure -> proceed-uncertain", [`--mode`, `dispatch`, ...WF_ONE.split(" ")], { GH_RUN_LIST_CMD: failingShim }, "proceed-uncertain");
 
+// --- duplicate-deploy suppression (dispatch mode, exact repo/main/pushed-SHA, pre-start only) ---
+// Suppression must be affirmative: only an existing deploy run for main that is
+// still pre-start AND carries exactly the pushed SHA may suppress a dispatch.
+// Everything else — no match, in_progress, different SHA, malformed SHA, query
+// failure — dispatches.
+const SHA = "0123456789abcdef0123456789abcdef01234567";
+const OTHER_SHA = "89abcdef0123456789abcdef0123456789abcdef";
+// Recovery workflow idle; deploy-worker answers per status, and the shim only
+// counts a hit when the gate embedded the expected SHA in its jq filter, so a
+// gate that forgot to bind the SHA fails these cases.
+const dupShim = (status, sha) => writeShim(tmp, `gh-dup-${status}-${sha.slice(0, 6)}`,
+  `case "$*" in *deploy-worker.yml*${status}*${sha}*) echo 1;; *) echo 0;; esac`);
+
+check("dispatch + queued deploy at the pushed SHA -> skip-duplicate",
+  [`--mode`, `dispatch`, `--pushed-sha`, SHA, ...WF_ONE.split(" ")], { GH_RUN_LIST_CMD: dupShim("queued", SHA) }, "skip-duplicate");
+check("dispatch + pending deploy at the pushed SHA -> skip-duplicate",
+  [`--mode`, `dispatch`, `--pushed-sha`, SHA, ...WF_ONE.split(" ")], { GH_RUN_LIST_CMD: dupShim("pending", SHA) }, "skip-duplicate");
+check("dispatch + pre-start deploy at a DIFFERENT SHA -> proceed",
+  [`--mode`, `dispatch`, `--pushed-sha`, SHA, ...WF_ONE.split(" ")], { GH_RUN_LIST_CMD: dupShim("queued", OTHER_SHA) }, "proceed");
+check("dispatch + in_progress deploy at the pushed SHA -> proceed (may have checked out before the push)",
+  [`--mode`, `dispatch`, `--pushed-sha`, SHA, ...WF_ONE.split(" ")], { GH_RUN_LIST_CMD: dupShim("in_progress", SHA) }, "proceed");
+// Recovery clear, deploy query broken: this is the one that actually exercises
+// duplicate-query fail-open. Using the all-failing shim here would only retest
+// recovery uncertainty, because that check runs first and short-circuits.
+const dupFailShim = writeShim(tmp, "gh-dup-fail", `case "$4" in deploy-worker.yml) exit 1;; *) echo 0;; esac`);
+check("dispatch + duplicate query failure with recovery clear -> proceed (fail open, never suppress on uncertainty)",
+  [`--mode`, `dispatch`, `--pushed-sha`, SHA, ...WF_ONE.split(" ")], { GH_RUN_LIST_CMD: dupFailShim }, "proceed");
+check("dispatch + malformed pushed SHA -> proceed",
+  [`--mode`, `dispatch`, `--pushed-sha`, "not-a-sha", ...WF_ONE.split(" ")], { GH_RUN_LIST_CMD: idleShim }, "proceed");
+check("dispatch + no pushed SHA supplied -> proceed (backward compatible)",
+  [`--mode`, `dispatch`, ...WF_ONE.split(" ")], { GH_RUN_LIST_CMD: idleShim }, "proceed");
+check("dispatch + recovery active outranks duplicate suppression -> skip",
+  [`--mode`, `dispatch`, `--pushed-sha`, SHA, ...WF_ONE.split(" ")], { GH_RUN_LIST_CMD: statusShim("in_progress") }, "skip");
+
 // --- push classification via compare resolver (realistic payload, no commit paths) ---
 const ACTIVE = { GH_RUN_LIST_CMD: statusShim("in_progress") };
 check("push + compare shows data path + recovery active -> skip", [`--mode`, `push`, `--event-name`, `push`, `--event-json`, evPush, ...WF.split(" ")], { ...ACTIVE, GH_COMPARE_CMD: CMP_DATA }, "skip");

@@ -300,20 +300,26 @@ jobs:
         if: steps.check.outputs.changed == 'false'
         run: echo "manifest.json already up to date — nothing to commit"
 
-      - name: Check SlickCharts recovery in flight
+      - name: Check deploy dispatch gate (recovery in flight, duplicate pending deploy)
         id: recovery-gate
         if: steps.commit.outputs.pushed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          pushed_sha="$(git rev-parse HEAD)"
           guard="$(node scripts/check-recovery-deploy-gate.mjs \
             --mode dispatch \
+            --pushed-sha "$pushed_sha" \
             --recovery-workflows slickcharts-history.yml)"
           case "$guard" in
             skip)
               echo "skip=true" >> "$GITHUB_OUTPUT"
               echo "::notice::SlickCharts recovery-family workflow nonterminal; deploy dispatch deferred to the recovery-completion requeue or the daily schedule."
+              ;;
+            skip-duplicate)
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::A deploy run for main is already pre-start at ${pushed_sha}; it checks out at start and therefore carries this commit. Dispatching again would only supersede and cancel it."
               ;;
             proceed-uncertain)
               echo "skip=false" >> "$GITHUB_OUTPUT"

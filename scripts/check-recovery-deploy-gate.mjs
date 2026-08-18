@@ -37,6 +37,11 @@ import fs from "node:fs";
 
 const DATA_SERVING_PREFIXES = ["100xfenok-next/public/data/"];
 const NONTERMINAL_STATUSES = ["queued", "requested", "waiting", "pending", "in_progress"];
+// Pre-start only, deliberately excluding in_progress: a run already executing
+// may have checked out before our push, so suppressing on it could leave the
+// commit unshipped until the next dispatch.
+const PRE_START_STATUSES = ["queued", "requested", "waiting", "pending"];
+const DEPLOY_WORKFLOW = "deploy-worker.yml";
 // GitHub compare API caps the files array at 300 entries; reaching the cap is
 // demonstrated truncation evidence.
 const COMPARE_FILES_CAP = 300;
@@ -46,6 +51,7 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--mode") args.mode = argv[++i];
+    else if (a === "--pushed-sha") args.pushedSha = argv[++i];
     else if (a === "--event-json") args.eventJson = argv[++i];
     else if (a === "--event-name") args.eventName = argv[++i];
     else if (a === "--recovery-workflows")
@@ -72,6 +78,33 @@ function queryStatusCount(workflow, status) {
     console.error(`[recovery-deploy-gate] warning: status query failed for ${workflow} ${status} (${err.message.split("\n")[0]}); uncertainty must be surfaced`);
     return null;
   }
+}
+
+// Returns true / false / null (null = uncertainty -> caller dispatches).
+// True only when this repository already has a deploy run for main, still
+// pre-start, whose head commit is exactly the SHA we just pushed. Such a run
+// checks out at start and therefore carries our commit, so a second dispatch
+// would only supersede and cancel it.
+function duplicateDeployPending(sha) {
+  if (!/^[0-9a-f]{40}$/.test(sha ?? "")) return null;
+  const cmd = process.env.GH_RUN_LIST_CMD || "gh";
+  let uncertain = false;
+  for (const st of PRE_START_STATUSES) {
+    try {
+      const out = execFileSync(
+        cmd,
+        ["run", "list", "--workflow", DEPLOY_WORKFLOW, "--status", st, "--branch", "main", "--limit", "20",
+         "--json", "headSha", "--jq", `[.[] | select(.headSha == "${sha}")] | length`],
+        { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+      ).trim();
+      if (!/^\d+$/.test(out)) throw new Error(`malformed duplicate count: ${JSON.stringify(out)}`);
+      if (Number(out) > 0) return true;
+    } catch (err) {
+      console.error(`[recovery-deploy-gate] warning: duplicate-deploy query failed for ${st} (${err.message.split("\n")[0]}); dispatching rather than suppressing`);
+      uncertain = true;
+    }
+  }
+  return uncertain ? null : false;
 }
 
 // Returns true / false / null (null = provider uncertainty).
@@ -136,7 +169,9 @@ function decide(args) {
 
   if (args.mode === "dispatch") {
     if (active === null) return "proceed-uncertain";
-    return active ? "skip" : "proceed";
+    if (active) return "skip";
+    // Fail open: only an affirmative exact-SHA pre-start match suppresses.
+    return duplicateDeployPending(args.pushedSha) === true ? "skip-duplicate" : "proceed";
   }
 
   // push mode
