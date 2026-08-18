@@ -4,6 +4,11 @@ import {
   buildUnavailableEtfRepresentation,
   canonicalJsonSha256,
   mergeEtfDataSupply,
+  ETF_AUTHORITY_MODE,
+  ETF_STALE_REFUSAL_MAX_AGE_HOURS,
+  etfSourceAgeHours,
+  etfStaleRefusalActive,
+  evaluateEtfStaleRefusal,
   resolveDataSupplyEtfDetail,
   sha256Text,
   validateDataSupplyPolicyRegistryForConsumer,
@@ -579,6 +584,47 @@ try {
   assert.equal(bypassLoads, 1);
 } finally {
   Object.defineProperty(globalThis, "caches", { configurable: true, value: originalCaches });
+}
+
+// D3 A-safety, owner-selected: option A with a 60-hour ceiling, DORMANT until
+// Cloud authority is explicitly cut over. Both halves are pinned here: that the
+// current mode cannot refuse anything, and that the cutover behaviour is real
+// rather than a stub nobody has run. Time is injected; a staleness assertion
+// left on wall time passes today and fails tomorrow for no code reason.
+{
+  const now = new Date("2026-08-18T12:00:00Z");
+  const hoursAgo = (hours: number) => new Date(now.getTime() - hours * 3_600_000).toISOString();
+
+  // Current-mode invariance. The committed shard IS the authority today, so a
+  // refusal would take a healthy authoritative surface offline for being old.
+  assert.equal(etfStaleRefusalActive(), false, "static-primary must never refuse on age");
+  assert.equal(etfStaleRefusalActive(ETF_AUTHORITY_MODE), false);
+  for (const age of [0, 59, 60, 61, 1_000]) {
+    const dormant = evaluateEtfStaleRefusal({ sourceAsOf: hoursAgo(age), now });
+    assert.equal(dormant.refuse, false, `dormant mode must not refuse at ${age}h`);
+    assert.equal(dormant.active, false);
+    // The age is still measured while dormant, so the dormancy is auditable
+    // rather than blind.
+    assert.equal(Math.round(dormant.sourceAgeHours ?? -1), age);
+  }
+
+  // Dormant cutover-mode transitions, exercised directly because no approved
+  // Cloud-authority mode literal exists yet and this lane must not invent one.
+  const underCutover = (age: number) => evaluateEtfStaleRefusal({ sourceAsOf: hoursAgo(age), now, active: true });
+  assert.equal(underCutover(0).refuse, false, "fresh data serves");
+  assert.equal(underCutover(59).refuse, false, "inside the ceiling serves the verified LKG");
+  assert.equal(underCutover(ETF_STALE_REFUSAL_MAX_AGE_HOURS).refuse, false, "the ceiling is exclusive, not off by one");
+  assert.equal(underCutover(61).refuse, true, "past the ceiling returns the typed unavailable path");
+  assert.equal(underCutover(1_000).refuse, true);
+  // Recovery needs no separate branch: a fresh source_as_of is simply inside the
+  // ceiling again, so the next complete natural success clears this by itself.
+  assert.equal(underCutover(0).refuse, false);
+
+  // No source date is not a staleness claim in either direction.
+  assert.equal(evaluateEtfStaleRefusal({ sourceAsOf: null, now, active: true }).refuse, false);
+  assert.equal(etfSourceAgeHours(null, now), null);
+  assert.equal(Math.round(etfSourceAgeHours(hoursAgo(36), now) ?? -1), 36);
+  assert.equal(ETF_STALE_REFUSAL_MAX_AGE_HOURS, 60);
 }
 
 console.log("data-supply ETF API tests passed");

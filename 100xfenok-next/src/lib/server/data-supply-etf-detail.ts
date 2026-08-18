@@ -63,6 +63,52 @@ export type EtfAuthorityMode = "static_primary_cloud_shadow";
 
 export const ETF_AUTHORITY_MODE: EtfAuthorityMode = "static_primary_cloud_shadow";
 
+// D3 static-LKG aging, owner-selected 2026-08-18: option A with a 60-hour
+// ceiling. The serving refusal is DORMANT until Cloud authority is explicitly
+// cut over, and that is not a technicality — under static-primary the committed
+// shard IS the authority, not a fallback, so refusing to serve it for being old
+// would take a healthy authoritative surface offline. That is the opposite of
+// what an aging policy is for.
+//
+// Activation is a predicate over the mode rather than a second mode literal, on
+// purpose. The switch above is exhaustive by design so that adding a mode
+// forces a serving decision; this lane has no authority to make that decision,
+// so it adds no literal. The predicate is false for every mode that exists
+// today, which is what makes current behaviour provably unchanged.
+export const ETF_STALE_REFUSAL_MAX_AGE_HOURS = 60;
+
+export function etfStaleRefusalActive(mode: EtfAuthorityMode = ETF_AUTHORITY_MODE): boolean {
+  return (mode as string) !== "static_primary_cloud_shadow";
+}
+
+// Hours, from the resolver's own clock and the entry's own source_as_of. The
+// metadata keeps reporting whole days; this is the same two inputs read at the
+// granularity the 60-hour ceiling needs, not a second clock or a second source.
+export function etfSourceAgeHours(sourceAsOf: string | null, now: Date): number | null {
+  if (!sourceAsOf) return null;
+  const sourceTime = Date.parse(sourceAsOf);
+  if (!Number.isFinite(sourceTime) || !Number.isFinite(now.getTime())) return null;
+  return Math.max(0, (now.getTime() - sourceTime) / 3_600_000);
+}
+
+export function evaluateEtfStaleRefusal({
+  sourceAsOf,
+  now,
+  active = etfStaleRefusalActive(),
+  maxAgeHours = ETF_STALE_REFUSAL_MAX_AGE_HOURS,
+}: {
+  sourceAsOf: string | null;
+  now: Date;
+  active?: boolean;
+  maxAgeHours?: number;
+}): { refuse: boolean; sourceAgeHours: number | null; active: boolean } {
+  const sourceAgeHours = etfSourceAgeHours(sourceAsOf, now);
+  // The age is computed either way so a dormant run can still report how old
+  // the data was, which is what makes the dormancy auditable rather than blind.
+  if (!active) return { refuse: false, sourceAgeHours, active };
+  return { refuse: sourceAgeHours !== null && sourceAgeHours > maxAgeHours, sourceAgeHours, active };
+}
+
 // Receives both candidates so the choice is visible at the point it is made.
 // The switch is exhaustive: adding a mode without deciding what it serves is a
 // compile error, not a silent fallthrough to the Cloud document.
@@ -494,6 +540,20 @@ export async function resolveDataSupplyEtfDetail(
   const parsed = parseEntry(ticker, entries[ticker], guard.indexSha, dependencies.now());
   if (!parsed) return { kind: "error", code: "DATA_SUPPLY_INDEX_UNAVAILABLE", projectionDigest: guard.indexSha };
   if (parsed.metadata.resolution_state === "unavailable") {
+    return {
+      kind: "unavailable",
+      dataSupply: parsed.metadata,
+      projectionDigest: guard.indexSha,
+      stateObservedAt: parsedIndex.generatedAt,
+    };
+  }
+  // D3 A-safety, dormant under static-primary: etfStaleRefusalActive() is false
+  // today, so this cannot change what is served. Under a future Cloud-authority
+  // mode an over-age entry becomes the SAME typed unavailable the projection
+  // already produces for this family, rather than a new shape every consumer
+  // would have to learn. Only this ETF surface is affected; nothing here can
+  // reach an unrelated route.
+  if (evaluateEtfStaleRefusal({ sourceAsOf: parsed.metadata.source_as_of, now: dependencies.now() }).refuse) {
     return {
       kind: "unavailable",
       dataSupply: parsed.metadata,

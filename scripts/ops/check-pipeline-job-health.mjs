@@ -948,6 +948,26 @@ function buildIssueBody(alarms) {
     if (reasons.includes(PLANE_PUBLISH_ALARM_REASONS.failed)) {
       lines.push("- Plane publication failed after the workflow completed.");
     }
+    // A reason the reader has to decode is not an alarm, it is a puzzle. These
+    // two carry the numbers the operator needs to act: how old the data is, how
+    // many cycles have gone by, and which of the two independent triggers fired.
+    const freshness = alarm.plane_publish_outcome?.freshness ?? null;
+    if (freshness && reasons.some((reason) => Object.values(PLANE_FRESHNESS_ALARM_REASONS).includes(reason))) {
+      lines.push(
+        freshness.state === "unavailable"
+          ? "- Data freshness is UNAVAILABLE: the served surface must not present this family's values as current."
+          : "- Data freshness is DELAYED: the last-known-good value is still served, and the next cycle is expected to clear it.",
+      );
+      lines.push(`- Last successful publication: ${freshness.last_success_at ?? "none on record"}`);
+      lines.push(
+        `- Source age: ${freshness.source_age_hours === null ? "unknown" : `${freshness.source_age_hours}h`}`
+          + ` against a ${freshness.max_age_hours}h ceiling`,
+      );
+      lines.push(`- Consecutive non-success cycles: ${freshness.consecutive_non_success} of ${freshness.missed_cycle_limit}`);
+      if (freshness.triggered_by.length > 0) {
+        lines.push(`- Triggered by: ${freshness.triggered_by.join(", ")}`);
+      }
+    }
     if (reasons.includes("failure_streak")) {
       lines.push(`- Consecutive failures: ${alarm.streak}`);
       lines.push(`- Paging threshold: ${alarm.failure_streak_threshold}`);
