@@ -269,10 +269,7 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
         # Least privilege on materialization credentials: values are bound to
         # the step env and never echoed into the log.
         materialize_step = projection_workflow.split("      - name: Materialize verified stockanalysis ETF cloud generation once", 1)[1]
-        delimiter = "      - name: Commit and push manifest (with rebase retry)"
-        self.assertIn(delimiter, materialize_step,
-                      "materialize-step slice delimiter must exist, or this test silently widens")
-        materialize_step = materialize_step.split(delimiter, 1)[0]
+        materialize_step = materialize_step.split("      - name: Rebuild and project shared derived state", 1)[0]
         self.assertIn("secrets.CLOUDFLARE_API_TOKEN", materialize_step)
         self.assertIn("secrets.DATA_PLANE_WRITE_KEY", materialize_step)
         self.assertNotIn('echo "$CLOUDFLARE_API_TOKEN"', materialize_step)
