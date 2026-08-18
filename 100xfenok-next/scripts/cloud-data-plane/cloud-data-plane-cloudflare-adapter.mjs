@@ -74,6 +74,21 @@ export function createCloudflareCloudDataPlane({ r2Bucket, coordinatorNamespace,
         if (object === null) return null;
         return new Uint8Array(await object.arrayBuffer());
       },
+      // Key plus stored length for every object, paginated. A backend that
+      // reports no size yields null, which never equals a manifest byte count,
+      // so an unmeasurable object fails closed.
+      async list() {
+        const entries = [];
+        let cursor;
+        do {
+          const page = await r2Bucket.list({ cursor });
+          for (const object of page.objects) {
+            entries.push({ key: object.key, bytes: object.size ?? null });
+          }
+          cursor = page.truncated ? page.cursor : undefined;
+        } while (cursor);
+        return entries;
+      },
     },
     ledger: {
       async prepare(receipt) {

@@ -601,6 +601,98 @@ assert.equal(second.pointer.previous.generation_id, "generation-1");
   assert.deepEqual(restored.bytes, encoder.encode(firstValues["public/data/market.json"]));
 }
 
+// Rollback proves its target from the manifest and ONE object listing, never by
+// downloading payload bodies. The listing establishes presence and declared
+// length; the stored bytes are not re-hashed here.
+{
+  const listingPlane = createMemoryCloudDataPlane();
+  await publishGeneration({
+    manifest: firstManifest,
+    payloads: payloadMap(firstManifest, firstValues),
+    expectedPointerSequence: 0,
+    objectStore: listingPlane.objectStore,
+    ledger: listingPlane.ledger,
+    pointerStore: listingPlane.pointerStore,
+    policy: PUBLICATION_POLICY,
+    now: () => NOW,
+    receiptId: "receipt-listing-first",
+  });
+  await publishGeneration({
+    manifest: secondManifest,
+    payloads: payloadMap(secondManifest, secondValues),
+    expectedPointerSequence: 1,
+    objectStore: listingPlane.objectStore,
+    ledger: listingPlane.ledger,
+    pointerStore: listingPlane.pointerStore,
+    policy: PUBLICATION_POLICY,
+    now: () => NOW,
+    receiptId: "receipt-listing-second",
+  });
+  const targetKey = firstManifest.assets[0].object_key;
+
+  // An object the listing does not report is refused before any pointer move.
+  const holedStore = {
+    ...listingPlane.objectStore,
+    async list() {
+      return (await listingPlane.objectStore.list()).filter((entry) => entry.key !== targetKey);
+    },
+  };
+  await assert.rejects(
+    rollbackGeneration({
+      expectedPointerSequence: 2,
+      objectStore: holedStore,
+      ledger: listingPlane.ledger,
+      pointerStore: listingPlane.pointerStore,
+      now: () => NOW,
+      receiptId: "receipt-listing-holed",
+    }),
+    /ROLLBACK_PAYLOAD_INVALID/,
+  );
+  assert.equal((await listingPlane.pointerStore.get()).sequence, 2);
+
+  // A listed length that contradicts the manifest is refused the same way.
+  const shrunkStore = {
+    ...listingPlane.objectStore,
+    async list() {
+      return (await listingPlane.objectStore.list())
+        .map((entry) => (entry.key === targetKey ? { ...entry, bytes: entry.bytes - 1 } : entry));
+    },
+  };
+  await assert.rejects(
+    rollbackGeneration({
+      expectedPointerSequence: 2,
+      objectStore: shrunkStore,
+      ledger: listingPlane.ledger,
+      pointerStore: listingPlane.pointerStore,
+      now: () => NOW,
+      receiptId: "receipt-listing-shrunk",
+    }),
+    /ROLLBACK_PAYLOAD_INVALID/,
+  );
+  assert.equal((await listingPlane.pointerStore.get()).sequence, 2);
+
+  // The healthy path reads exactly one object: the target manifest.
+  const fetched = [];
+  const countingStore = {
+    ...listingPlane.objectStore,
+    async get(key) {
+      fetched.push(key);
+      return listingPlane.objectStore.get(key);
+    },
+  };
+  const listed = await rollbackGeneration({
+    expectedPointerSequence: 2,
+    objectStore: countingStore,
+    ledger: listingPlane.ledger,
+    pointerStore: listingPlane.pointerStore,
+    now: () => NOW,
+    receiptId: "receipt-listing-rollback",
+  });
+  assert.equal(listed.pointer.sequence, 3);
+  assert.equal(listed.pointer.active.generation_id, "generation-1");
+  assert.deepEqual(fetched, ["manifests/generation-1.json"]);
+}
+
 // Rollback uses the promoted pointer receipt to finish after a post-CAS ledger failure.
 {
   const rollbackPlane = createMemoryCloudDataPlane();

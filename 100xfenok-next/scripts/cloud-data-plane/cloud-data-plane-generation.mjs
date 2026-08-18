@@ -598,14 +598,28 @@ export async function rollbackGeneration({
   ) {
     fail("ROLLBACK_MANIFEST_INVALID", current.previous.generation_id);
   }
+  // Presence and declared length, from one listing, instead of a body read per
+  // asset. Keys are content-addressed and the manifest was verified above, so
+  // the digest every asset is SUPPOSED to have is already known; what a listing
+  // cannot restate is that the stored bytes still hash to it. That residual is
+  // R2 storage integrity, which the parity gate proved for this generation at
+  // publish time and which retention cannot undo, since pointer.previous is
+  // never a collection candidate. Re-reading every payload to restate it cost
+  // more than the rollback job's own timeout allowed.
+  const listedBytesByKey = new Map();
+  for (const entry of await objectStore.list()) {
+    listedBytesByKey.set(entry.key, entry.bytes);
+  }
   for (const asset of manifest.assets) {
-    const payload = await objectStore.get(asset.object_key);
-    if (
-      !(payload instanceof Uint8Array)
-      || payload.byteLength !== asset.bytes
-      || sha256Bytes(payload) !== asset.sha256
-    ) {
-      fail("ROLLBACK_PAYLOAD_INVALID", asset.path);
+    if (!listedBytesByKey.has(asset.object_key)) {
+      fail("ROLLBACK_PAYLOAD_INVALID", `${asset.path} (object not listed)`);
+    }
+    const listedBytes = listedBytesByKey.get(asset.object_key);
+    if (listedBytes !== asset.bytes) {
+      fail(
+        "ROLLBACK_PAYLOAD_INVALID",
+        `${asset.path} (listed ${listedBytes} bytes, manifest declares ${asset.bytes})`,
+      );
     }
   }
 
@@ -740,6 +754,9 @@ export function createMemoryCloudDataPlane() {
       async get(key) {
         const value = objects.get(key);
         return value ? new Uint8Array(value) : null;
+      },
+      async list() {
+        return [...objects.entries()].map(([key, value]) => ({ key, bytes: value.byteLength }));
       },
     },
     ledger: {

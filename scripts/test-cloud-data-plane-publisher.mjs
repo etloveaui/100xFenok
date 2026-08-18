@@ -632,6 +632,9 @@ const endpoint = `http://127.0.0.1:${server.address().port}`;
 // the stub note above).
 const r2Counters = { put: 0 };
 const r2Keys = new Set();
+// Stored length per key: the binding's list() reports it, and the rollback
+// contract now checks it instead of downloading every payload.
+const r2Sizes = new Map();
 const r2Binding = {
   async get(key) {
     const bytes = await serverPlane.objectStore.get(key);
@@ -646,6 +649,7 @@ const r2Binding = {
     r2Counters.put += 1;
     await serverPlane.objectStore.putIfAbsent(key, bytes);
     r2Keys.add(key);
+    r2Sizes.set(key, bytes.byteLength);
   },
   async list({ cursor } = {}) {
     const keys = [...r2Keys].sort();
@@ -653,7 +657,7 @@ const r2Binding = {
     const page = keys.slice(start, start + 2); // small pages to exercise pagination
     const next = start + page.length;
     return {
-      objects: page.map((key) => ({ key })),
+      objects: page.map((key) => ({ key, size: r2Sizes.get(key) ?? null })),
       truncated: next < keys.length,
       cursor: next < keys.length ? String(next) : undefined,
     };

@@ -190,7 +190,7 @@ export function createR2RestBucket({
       }
       const nextCursor = body?.result_info?.cursor || undefined;
       return {
-        objects: (body.result ?? []).map((object) => ({ key: object.key })),
+        objects: (body.result ?? []).map((object) => ({ key: object.key, size: object.size ?? null })),
         truncated: Boolean(nextCursor),
         cursor: nextCursor,
       };
