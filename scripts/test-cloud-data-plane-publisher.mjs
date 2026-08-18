@@ -63,8 +63,10 @@ import {
 } from "./publish-cloud-data-generation.mjs";
 import {
   appendPublishOutcome,
+  buildPublishOutcomeBinding,
   buildPublishOutcomeRecord,
   mergePublishOutcomeShards,
+  normalizePublishOutcomeRecord,
   PUBLISH_OUTCOME_MAX_ID_LENGTH,
   PUBLISH_OUTCOME_MAX_RECORDS,
   PUBLISH_OUTCOME_MAX_SERIALIZED_BYTES,
@@ -3240,10 +3242,72 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   validatePublishOutcomeShard(sizeBounded, family);
   assert.ok(sizeBoundedBytes.byteLength <= PUBLISH_OUTCOME_MAX_SERIALIZED_BYTES);
   assert.equal(sizeBounded.records.at(-1).generation_id, oversized.records.at(-1).generation_id);
+  // --- joined-cycle binding: shape, v1 migration and transition identity ----
+  // The binding is the only record field assembled by two different jobs, so
+  // its real failure modes are shape drift and transition duplication rather
+  // than ordinary field validation.
+  const boundRecord = buildPublishOutcomeRecord({
+    family,
+    result: "published",
+    generationId: "bound-generation",
+    observedAt: new Date(base).toISOString(),
+    binding: buildPublishOutcomeBinding({
+      gitCommit: "abc123def4567890abc123def4567890abc123de",
+      artifactDigest: "sha256:artifact",
+      scopeSourceSha256: "f".repeat(64),
+      scopeFileCount: 5605,
+      scopeBytes: 1_028_485_988,
+      originReadback: "confirmed",
+    }),
+  });
+  assert.equal(boundRecord.binding.origin_readback, "confirmed");
+  assert.equal(boundRecord.binding.scope_file_count, 5605);
+  // An all-null tuple says nothing an absent tuple does not, so it collapses
+  // rather than spending bytes in every record of every family.
+  assert.equal(buildPublishOutcomeBinding(), null);
+  assert.equal(buildPublishOutcomeRecord({ family, result: "failed" }).binding, null);
+  // Unknown binding keys and out-of-vocabulary verdicts fail closed, exactly
+  // as unknown record keys already do.
+  assert.throws(
+    () => validatePublishOutcomeShard({
+      schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
+      family,
+      records: [{ ...boundRecord, binding: { ...boundRecord.binding, stray: 1 } }],
+    }, family),
+    /binding keys must be exactly/,
+  );
+  assert.throws(() => buildPublishOutcomeBinding({ originReadback: "maybe" }), /origin_readback/);
+  assert.throws(() => buildPublishOutcomeBinding({ scopeFileCount: -1 }), /scope_file_count/);
+  // A shard written before the binding existed stays readable. Rejecting it
+  // would not fail loudly — it would quietly strand every family that has not
+  // republished since the bump.
+  const legacyRecord = { ...boundRecord };
+  delete legacyRecord.binding;
+  const legacyShard = { schema_version: "plane-publish-outcome-shard/v1", family, records: [legacyRecord] };
+  validatePublishOutcomeShard(legacyShard, family);
+  assert.equal(normalizePublishOutcomeRecord(legacyRecord).binding, null);
+  assert.equal(normalizePublishOutcomeRecord(boundRecord), boundRecord);
+  // The same outcome arriving as an upstream v1 record and a local v2 record
+  // is ONE record. Comparing raw shapes would duplicate the whole history on
+  // the first merge after the bump.
+  const mergedTransition = mergePublishOutcomeShards({
+    family,
+    shards: [
+      legacyShard,
+      {
+        schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA,
+        family,
+        records: [normalizePublishOutcomeRecord(legacyRecord)],
+      },
+    ],
+  });
+  assert.equal(mergedTransition.schema_version, PUBLISH_OUTCOME_SHARD_SCHEMA);
+  assert.equal(mergedTransition.records.length, 1);
+  assert.equal(mergedTransition.records[0].binding, null);
   await rm(root, { recursive: true, force: true });
   await rm(tieRoot, { recursive: true, force: true });
   await rm(sizeRoot, { recursive: true, force: true });
-  console.log("publish-outcome retention ok (100 latest, old/tie ordering, idempotent merge, field/size ceilings)");
+  console.log("publish-outcome retention ok (100 latest, old/tie ordering, idempotent merge, field/size ceilings, v1->v2 binding migration)");
 }
 
 // --- injected CLI integration: published/resumed/failed and JSON stderr ----

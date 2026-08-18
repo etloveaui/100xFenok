@@ -7,7 +7,8 @@ import { TRACKED_CRONS } from "../lib/kpi-contract-constants.mjs";
 import { classifyRuntimeSlots } from "../lib/kpi-runtime-slots.mjs";
 import { PLANE_PUBLISH_OUTCOME_BINDINGS } from "../lib/lane-registry.mjs";
 import {
-  PUBLISH_OUTCOME_SHARD_SCHEMA,
+  PUBLISH_OUTCOME_SHARD_SCHEMAS_READABLE,
+  normalizePublishOutcomeRecord,
   validatePublishOutcomeShard,
 } from "../lib/publish-outcome-shard.mjs";
 
@@ -228,11 +229,15 @@ function readJsonOrNull(filePath) {
 
 function publishOutcomeRecords(shard) {
   if (!shard || typeof shard !== "object" || Array.isArray(shard)) return null;
-  // Only the writer's canonical schema is readable. A different, missing or
-  // legacy schema_version must yield no projection: the alarm must never
+  // Only schemas the writer has actually produced are readable. An unknown or
+  // missing schema_version must yield no projection: the alarm must never
   // reason about shapes the writer does not produce (no invented alarms).
-  if (shard.schema_version !== PUBLISH_OUTCOME_SHARD_SCHEMA) return null;
-  if (Array.isArray(shard.records)) return shard.records;
+  // The readable set deliberately includes the pre-binding schema — narrowing
+  // it to the newest version alone would silently stop projecting every family
+  // that has not republished since the bump, and a blind alarm looks exactly
+  // like a healthy one.
+  if (!PUBLISH_OUTCOME_SHARD_SCHEMAS_READABLE.includes(shard.schema_version)) return null;
+  if (Array.isArray(shard.records)) return shard.records.map(normalizePublishOutcomeRecord);
   return null;
 }
 

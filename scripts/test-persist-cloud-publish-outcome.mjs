@@ -8,7 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { persistPublishOutcome } from "./persist-cloud-publish-outcome.mjs";
+import { completeIncomingBinding, persistPublishOutcome } from "./persist-cloud-publish-outcome.mjs";
 import {
   PLANE_CANONICAL_COMMIT_MODES,
   PLANE_PUBLISH_OUTCOME_BINDINGS,
@@ -16,6 +16,7 @@ import {
 } from "./lib/lane-registry.mjs";
 import {
   appendPublishOutcome,
+  buildPublishOutcomeBinding,
   buildPublishOutcomeRecord,
   PUBLISH_OUTCOME_SHARD_SCHEMA,
   validatePublishOutcomeShard,
@@ -561,6 +562,79 @@ function jobBlockAt(text, index) {
   } finally {
     await rm(temp, { recursive: true, force: true });
   }
+}
+
+// --- Git legs of the joined-cycle tuple ------------------------------------
+// The publisher runs in a job that never sees the Git publication commit or
+// its origin readback, so those two legs are completed here. What makes that
+// safe is the boundary: only records this run produced may be touched.
+{
+  const family = "stockanalysis-etf-detail";
+  const at = (offset) => new Date(Date.parse("2026-08-18T00:00:00.000Z") + offset).toISOString();
+  const persistedRecord = buildPublishOutcomeRecord({
+    family,
+    result: "published",
+    generationId: "already-persisted",
+    observedAt: at(0),
+  });
+  const freshRecord = buildPublishOutcomeRecord({
+    family,
+    result: "published",
+    generationId: "this-run",
+    observedAt: at(1000),
+    binding: buildPublishOutcomeBinding({
+      artifactDigest: "sha256:artifact",
+      scopeSourceSha256: "a".repeat(64),
+      scopeFileCount: 5605,
+      scopeBytes: 1_028_485_988,
+    }),
+  });
+  const shardOf = (records) => ({ schema_version: PUBLISH_OUTCOME_SHARD_SCHEMA, family, records });
+  const headShard = shardOf([persistedRecord]);
+  const incomingShard = shardOf([persistedRecord, freshRecord]);
+  const gitCommit = "b".repeat(40);
+
+  const completed = completeIncomingBinding({
+    incomingShard,
+    headShard,
+    family,
+    gitCommit,
+    originReadback: "confirmed",
+  });
+  validatePublishOutcomeShard(completed, family);
+  // The record already at HEAD is historical evidence and stays byte-identical.
+  assert.deepEqual(completed.records[0], persistedRecord);
+  assert.equal(completed.records[0].binding, null);
+  // This run's record gains exactly the two legs the publisher could not see,
+  // and keeps the three it already had.
+  assert.equal(completed.records[1].binding.git_commit, gitCommit);
+  assert.equal(completed.records[1].binding.origin_readback, "confirmed");
+  assert.equal(completed.records[1].binding.scope_source_sha256, "a".repeat(64));
+  assert.equal(completed.records[1].binding.scope_file_count, 5605);
+  assert.equal(completed.records[1].binding.artifact_digest, "sha256:artifact");
+
+  // Completion fills nulls; it never corrects a value the publisher supplied.
+  const preBound = buildPublishOutcomeRecord({
+    family,
+    result: "published",
+    generationId: "pre-bound",
+    observedAt: at(2000),
+    binding: buildPublishOutcomeBinding({ gitCommit: "c".repeat(40), originReadback: "unavailable" }),
+  });
+  const kept = completeIncomingBinding({
+    incomingShard: shardOf([preBound]),
+    headShard: null,
+    family,
+    gitCommit,
+    originReadback: "confirmed",
+  });
+  assert.equal(kept.records[0].binding.git_commit, "c".repeat(40));
+  assert.equal(kept.records[0].binding.origin_readback, "unavailable");
+
+  // With nothing to bind the helper is an exact no-op, so a caller that has no
+  // Git legs cannot silently rewrite its own evidence.
+  assert.equal(completeIncomingBinding({ incomingShard, headShard, family }), incomingShard);
+  console.log("publish-outcome joined-cycle binding: HEAD records immutable, this-run legs completed, no-op without inputs");
 }
 
 console.log("test-persist-cloud-publish-outcome: ok");

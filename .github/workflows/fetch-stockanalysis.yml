@@ -437,6 +437,13 @@ jobs:
       group: fenok-data-writer-refs/heads/main
       cancel-in-progress: false
       queue: max
+    # The Git publication leg of the joined-cycle tuple. These were already
+    # computed inside the publish step's push/readback loop; exporting them is
+    # what lets a later job bind Cloud publication to the same artifact instead
+    # of re-deriving a weaker claim from ambient run metadata.
+    outputs:
+      published_commit: ${{ steps.publish.outputs.commit }}
+      readback_confirmation: ${{ steps.publish.outputs.confirmation }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -567,11 +574,17 @@ jobs:
               -m "StockAnalysis-Run-Attempt: ${{ github.run_attempt }}" \
               -m "StockAnalysis-Run-ID: ${{ github.run_id }}" \
               -m "StockAnalysis-Artifact-Digest: $ARTIFACT_DIGEST"
+            # Capture the published commit BEFORE the push and the post-push
+            # checkout: the readback resets to origin/main, which by then can
+            # carry other lanes' commits, so HEAD afterwards is not necessarily
+            # this publication. The joined-cycle tuple needs this exact commit.
+            PUBLISHED_COMMIT="$(git rev-parse HEAD)"
             if git push origin HEAD:main; then
               if ! git fetch origin main || ! git checkout -f -B main origin/main; then
                 echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
                 echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
                 echo "fence_reason=main_readback_infrastructure" >> "$GITHUB_OUTPUT"
+                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
                 echo "post-publish main checkout/readback base was unavailable" >&2
                 {
                   echo "### StockAnalysis publish fence"
@@ -591,6 +604,7 @@ jobs:
                 echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
                 echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
                 echo "fence_reason=main_readback_mismatch" >> "$GITHUB_OUTPUT"
+                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
                 echo "post-publish main readback did not confirm the candidate's current attempt shards" >&2
                 {
                   echo "### StockAnalysis publish fence"
@@ -604,6 +618,7 @@ jobs:
               echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
               echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"
               echo "fence_reason=confirmed" >> "$GITHUB_OUTPUT"
+              echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "git push race on attempt ${attempt}; restarting from fresh origin/main"
@@ -684,6 +699,11 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+          # Acquisition leg of the joined-cycle tuple. The Git commit leg is
+          # deliberately absent here: this job does not depend on the Git
+          # publisher, so it cannot see that commit without serializing the two
+          # jobs. The persist step, which does see both, completes it.
+          PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
         run: node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --json
 
       - name: Upload natural stockanalysis-etf-detail outcome shard
@@ -696,7 +716,14 @@ jobs:
           retention-days: 1
 
   persist-stockanalysis-etf-plane:
-    needs: publish-stockanalysis-etf-plane
+    # publish-stockanalysis is a dependency for evidence, not for ordering: it
+    # owns the Git publication commit and the post-push origin readback, and
+    # this is the only job that sees both those and the Cloud outcome. The
+    # admission condition below is unchanged and still keyed on the plane job
+    # alone, so a Git-publisher failure does not suppress outcome persistence.
+    needs:
+      - publish-stockanalysis
+      - publish-stockanalysis-etf-plane
     if: >-
       always() &&
       needs.publish-stockanalysis-etf-plane.result != 'skipped' &&
@@ -737,11 +764,20 @@ jobs:
           test -s "$shard"
 
       - name: Persist natural stockanalysis-etf-detail publish outcome
+        env:
+          # Git legs of the joined-cycle tuple, carried through the environment
+          # rather than interpolated into the command line. Empty means the Git
+          # publisher produced no such value, which the helper reads as "not
+          # attempted" and leaves null.
+          BINDING_GIT_COMMIT: ${{ needs.publish-stockanalysis.outputs.published_commit }}
+          BINDING_ORIGIN_READBACK: ${{ needs.publish-stockanalysis.outputs.readback_confirmation }}
         run: >-
           node scripts/persist-cloud-publish-outcome.mjs
           --family=stockanalysis-etf-detail
           --workflow=.github/workflows/fetch-stockanalysis.yml
           --publisher-outcome=${{ needs.publish-stockanalysis-etf-plane.outputs.publisher_outcome }}
+          --binding-git-commit="$BINDING_GIT_COMMIT"
+          --binding-origin-readback="$BINDING_ORIGIN_READBACK"
 
   # Aggregate projection dispatch: shared projection rebuild fires only when
   # the natural StockAnalysis ETF plane generation was BOTH published and

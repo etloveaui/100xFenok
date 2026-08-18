@@ -335,7 +335,22 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         # Projection dispatch moved OUT of the Git publisher into the aggregate
         # dispatch job (gated on plane publish + persistence); no residual
         # per-step status gate may reappear inside the writer.
-        self.assertNotIn("steps.publish.outputs", self.text)
+        #
+        # This was previously a blanket "the string must not appear anywhere",
+        # which also forbade exporting the publish step's already-computed
+        # commit and readback verdict as job outputs for the joined-cycle
+        # tuple. Exporting evidence and gating execution are different acts and
+        # only the second is the regression this guard exists to catch, so the
+        # assertion now states the intent directly: the writer may not read its
+        # own step outputs, and the ONLY sanctioned references anywhere are the
+        # two job-level evidence exports.
+        publish_job = publish.split("\n  publish-stockanalysis-etf-plane:", 1)[0]
+        job_header, separator, job_steps = publish_job.partition("\n    steps:\n")
+        self.assertTrue(separator, "publish-stockanalysis must declare a steps block")
+        self.assertNotIn("steps.publish.outputs", job_steps)
+        self.assertIn("published_commit: ${{ steps.publish.outputs.commit }}", job_header)
+        self.assertIn("readback_confirmation: ${{ steps.publish.outputs.confirmation }}", job_header)
+        self.assertEqual(self.text.count("steps.publish.outputs"), 2)
 
     def test_publish_is_non_confirming_on_stale_and_reads_back_current_main(self) -> None:
         publish = self.text.split("  publish-stockanalysis:\n", 1)[1]

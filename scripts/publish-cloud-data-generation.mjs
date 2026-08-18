@@ -138,6 +138,7 @@ import { createR2RestBucket } from "./lib/cloud-data-plane-r2-rest.mjs";
 import { createRemoteCoordinatorNamespace } from "./lib/cloud-data-plane-remote-coordinator.mjs";
 import {
   appendPublishOutcome,
+  buildPublishOutcomeBinding,
   buildPublishOutcomeRecord,
 } from "./lib/publish-outcome-shard.mjs";
 
@@ -1865,6 +1866,7 @@ export async function recordPublishOutcome({
       gateBefore: state.gateBefore ?? null,
       gateAfter: state.gateAfter ?? null,
       sourceAsOf: state.sourceAsOf ?? null,
+      binding: state.binding ?? null,
     });
     const outcome = await appendPublishOutcome({ outcomesRoot, family, record });
     return { ok: true, count: outcome.count, shardPath: outcome.shardPath, record };
@@ -2244,6 +2246,12 @@ export async function runPublisherCli({
     gateBefore: null,
     gateAfter: null,
     sourceAsOf: null,
+    // Joined-cycle tuple. The publisher can only see the legs that exist at
+    // write time: the Git commit and acquisition artifact it was handed, and
+    // the content identity of the tree it is publishing. origin_readback is
+    // deliberately left null here and completed by the persist step, which is
+    // the step that actually reads current origin.
+    binding: null,
   };
   const recordOutcome = (result) => recordPublishOutcome({
     family: args.family,
@@ -2358,6 +2366,18 @@ export async function runPublisherCli({
     });
     outcomeState.generationId = manifest.generation_id;
     outcomeState.sourceAsOf = sourceAsOf.value;
+    // Bind the tree being published to the Git commit and acquisition artifact
+    // it came from. Both identities are supplied by the caller because only
+    // the caller knows them: inside this job the checkout has been reset to
+    // origin/main, so the ambient run commit is not the published tree's
+    // commit. Absent env leaves the leg null rather than guessing.
+    outcomeState.binding = buildPublishOutcomeBinding({
+      gitCommit: process.env.PUBLISH_BINDING_GIT_COMMIT || null,
+      artifactDigest: process.env.PUBLISH_BINDING_ARTIFACT_DIGEST || null,
+      scopeSourceSha256: manifest.source_sha,
+      scopeFileCount: summary.asset_count,
+      scopeBytes: summary.total_bytes,
+    });
     const uniqueAssetKeys = new Set(manifest.assets.map((asset) => asset.object_key)).size;
     const plan = {
       assets: summary.asset_count,

@@ -17,7 +17,9 @@ import { writeJsonAtomic } from "./lib/data-supply-attempt-shard.mjs";
 import { canonicalJson } from "./lib/json-canonical.mjs";
 import { PLANE_PUBLISH_OUTCOME_BINDINGS } from "./lib/lane-registry.mjs";
 import {
+  buildPublishOutcomeBinding,
   mergePublishOutcomeShards,
+  normalizePublishOutcomeRecord,
   validatePublishOutcomeShard,
 } from "./lib/publish-outcome-shard.mjs";
 
@@ -25,6 +27,56 @@ const DEFAULT_MANIFEST = "data/admin/lane-commit-manifest.json";
 const DEFAULT_BRANCH = "main";
 const DEFAULT_ATTEMPTS = 5;
 const PUBLISHER_STEP_OUTCOMES = new Set(["success", "failure", "skipped"]);
+const COMMIT_PATTERN = /^[0-9a-f]{7,64}$/;
+// The Git publisher reports confirmed / not_confirmed. The tuple distinguishes
+// "readback ran and could not confirm" from "readback was never attempted", so
+// not_confirmed maps to unavailable and an absent value stays null.
+const ORIGIN_READBACK_INPUTS = new Map([
+  ["confirmed", "confirmed"],
+  ["not_confirmed", "unavailable"],
+]);
+
+/**
+ * Complete the Git legs of the joined-cycle tuple on the records this run
+ * produced. The publisher fills the legs it can see — the acquisition artifact
+ * and the content identity of the tree it published — but it runs in a job
+ * that never sees the Git publication commit or its origin readback, so those
+ * two legs arrive here.
+ *
+ * Only records absent from HEAD are touched. A record already persisted is
+ * historical evidence and is never rewritten, and a leg the publisher already
+ * filled is never overwritten: this completes nulls, it does not correct
+ * values. With neither input supplied it is an exact no-op.
+ */
+export function completeIncomingBinding({
+  incomingShard,
+  headShard = null,
+  family,
+  gitCommit = null,
+  originReadback = null,
+}) {
+  if (gitCommit === null && originReadback === null) return incomingShard;
+  const persisted = new Set(
+    (headShard?.records ?? []).map((record) => canonicalJson(normalizePublishOutcomeRecord(record))),
+  );
+  const records = incomingShard.records.map((stored) => {
+    const record = normalizePublishOutcomeRecord(stored);
+    if (persisted.has(canonicalJson(record))) return record;
+    const current = record.binding;
+    const binding = buildPublishOutcomeBinding({
+      gitCommit: current?.git_commit ?? gitCommit,
+      artifactDigest: current?.artifact_digest ?? null,
+      scopeSourceSha256: current?.scope_source_sha256 ?? null,
+      scopeFileCount: current?.scope_file_count ?? null,
+      scopeBytes: current?.scope_bytes ?? null,
+      originReadback: current?.origin_readback ?? originReadback,
+    });
+    return { ...record, binding };
+  });
+  const completed = { ...incomingShard, records };
+  validatePublishOutcomeShard(completed, family);
+  return completed;
+}
 
 function parseArgs(argv) {
   const args = {
@@ -35,11 +87,15 @@ function parseArgs(argv) {
     manifest: DEFAULT_MANIFEST,
     branch: process.env.GITHUB_REF_NAME || DEFAULT_BRANCH,
     maxAttempts: DEFAULT_ATTEMPTS,
+    bindingGitCommit: null,
+    bindingOriginReadback: null,
   };
   for (const arg of argv) {
     if (arg.startsWith("--family=")) args.family = arg.slice("--family=".length);
     else if (arg.startsWith("--workflow=")) args.workflow = arg.slice("--workflow=".length);
     else if (arg.startsWith("--publisher-outcome=")) args.publisherOutcome = arg.slice("--publisher-outcome=".length);
+    else if (arg.startsWith("--binding-git-commit=")) args.bindingGitCommit = arg.slice("--binding-git-commit=".length) || null;
+    else if (arg.startsWith("--binding-origin-readback=")) args.bindingOriginReadback = arg.slice("--binding-origin-readback=".length) || null;
     else if (arg.startsWith("--repo-root=")) args.repoRoot = arg.slice("--repo-root=".length);
     else if (arg.startsWith("--manifest=")) args.manifest = arg.slice("--manifest=".length);
     else if (arg.startsWith("--branch=")) args.branch = arg.slice("--branch=".length);
@@ -54,6 +110,19 @@ function parseArgs(argv) {
   if (!/^[A-Za-z0-9._/-]+$/.test(args.branch) || args.branch.includes("..")) throw new Error("invalid branch");
   if (!Number.isInteger(args.maxAttempts) || args.maxAttempts < 1 || args.maxAttempts > 10) {
     throw new Error("--max-attempts must be an integer from 1 to 10");
+  }
+  // An empty flag is "the caller had nothing to bind", which is legitimate.
+  // A non-empty value that is not a commit or a known readback verdict is a
+  // caller bug and must fail loudly rather than persist an unreadable leg.
+  if (args.bindingGitCommit !== null && !COMMIT_PATTERN.test(args.bindingGitCommit)) {
+    throw new Error("--binding-git-commit must be a lowercase hex commit id");
+  }
+  if (args.bindingOriginReadback !== null) {
+    const mapped = ORIGIN_READBACK_INPUTS.get(args.bindingOriginReadback);
+    if (!mapped) {
+      throw new Error(`--binding-origin-readback must be one of ${[...ORIGIN_READBACK_INPUTS.keys()].join("|")}`);
+    }
+    args.bindingOriginReadback = mapped;
   }
   args.repoRoot = path.resolve(args.repoRoot);
   args.manifest = path.isAbsolute(args.manifest)
@@ -178,6 +247,8 @@ export function persistPublishOutcome({
   manifestPath = path.join(repoRoot, DEFAULT_MANIFEST),
   branch = process.env.GITHUB_REF_NAME || DEFAULT_BRANCH,
   maxAttempts = DEFAULT_ATTEMPTS,
+  bindingGitCommit = null,
+  bindingOriginReadback = null,
   log = (line) => console.error(line),
 } = {}) {
   if (!PUBLISHER_STEP_OUTCOMES.has(publisherOutcome)) {
@@ -208,12 +279,21 @@ export function persistPublishOutcome({
   if (publisherOutcome === "skipped") {
     throw new Error(`publisher skipped but outcome shard changed for ${family}`);
   }
-  const incomingShard = readShard(absoluteShard, family);
+  const storedShard = readShard(absoluteShard, family);
   const headShard = readHeadShard(repoRoot, shardPath, family);
+  const incomingShard = completeIncomingBinding({
+    incomingShard: storedShard,
+    headShard,
+    family,
+    gitCommit: bindingGitCommit,
+    originReadback: bindingOriginReadback,
+  });
   const savedShard = headShard
     ? mergePublishOutcomeShards({ family, shards: [headShard, incomingShard] })
     : incomingShard;
-  if (canonicalJson(incomingShard) !== canonicalJson(savedShard)) {
+  // Compare against what is actually on disk, not against the completed shard:
+  // completing a binding leg is itself a reason to rewrite the file.
+  if (canonicalJson(storedShard) !== canonicalJson(savedShard)) {
     writeJsonAtomic(absoluteShard, savedShard);
   }
   runGit(repoRoot, ["config", "user.name", "github-actions[bot]"]);
@@ -251,6 +331,8 @@ export async function runPersistenceCli(argv = process.argv.slice(2)) {
     manifestPath: args.manifest,
     branch: args.branch,
     maxAttempts: args.maxAttempts,
+    bindingGitCommit: args.bindingGitCommit,
+    bindingOriginReadback: args.bindingOriginReadback,
   });
 }
 

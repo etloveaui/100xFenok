@@ -19,6 +19,10 @@ import {
 } from "./lib/cloud-data-plane-budget.mjs";
 import { buildCandidateScope } from "./lib/cloud-data-plane-candidate-scope.mjs";
 import { canonicalJson } from "./lib/json-canonical.mjs";
+// The live envelope comes from the shipped publisher policy, not from a
+// restatement of it here: a copy would let the guard and the gate that
+// actually refuses a publication drift apart without either one failing.
+import { FAMILIES } from "./publish-cloud-data-generation.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const FIXTURE_ROOT = path.join(REPO_ROOT, "scripts", "fixtures", "cloud-data-plane-budget");
@@ -274,10 +278,33 @@ const measuredGlobalScouterDemand = JSON.parse(fs.readFileSync(
   assert.equal(measurement.generation_id, "stockanalysis-etf-detail-296c516029d1e494");
   assert.equal(measuredEtfDemand.r2.manifests.count, 1);
   assert.equal(measuredEtfDemand.r2.manifests.bytes, 1_786_095);
-  assert.equal(measurement.path_digest, scope.manifest.path_digest);
-  assert.equal(measurement.asset_count, scope.manifest.totals.file_count);
-  assert.equal(measurement.unique_object_count, scope.manifest.totals.file_count);
-  assert.equal(measurement.payload_bytes, scope.manifest.totals.bytes);
+  // The measurement is SEALED to the generation it names, so its scope half is
+  // checked for internal consistency rather than against today's tree. The two
+  // were previously compared directly, which could only hold on the day of the
+  // seal: the last natural generation rewrote 101 of 5,605 objects and
+  // path_digest sees relative path and byte size, so the equality broke on the
+  // next producer run and stayed broken until someone re-sealed by hand.
+  assert.equal(typeof measurement.path_digest, "string");
+  assert.equal(measurement.path_digest.length, 64);
+  assert.equal(measurement.asset_count, measurement.unique_object_count);
+  assert.ok(measurement.asset_count > 0);
+  assert.ok(measurement.payload_bytes > 0);
+  // The LIVE guard: today's tree is checked against the declared envelope, so
+  // ordinary growth passes and a runaway set still fails closed. The envelope
+  // is read from the shipped publisher policy rather than restated here, so it
+  // cannot drift away from the gate that actually refuses a publication.
+  const etfPolicy = FAMILIES["stockanalysis-etf-detail"].policy;
+  assert.ok(
+    scope.manifest.totals.file_count <= etfPolicy.max_assets,
+    `live ETF scope ${scope.manifest.totals.file_count} exceeds declared max_assets ${etfPolicy.max_assets}`,
+  );
+  assert.ok(
+    scope.manifest.totals.bytes <= etfPolicy.max_total_bytes,
+    `live ETF scope ${scope.manifest.totals.bytes} bytes exceeds declared max_total_bytes ${etfPolicy.max_total_bytes}`,
+  );
+  // A seal that the shipped planner would itself refuse is not a valid seal.
+  assert.ok(measurement.asset_count <= etfPolicy.max_assets);
+  assert.ok(measurement.payload_bytes <= etfPolicy.max_total_bytes);
   assert.deepEqual(measurement.remote_readback, {
     status: "verified",
     result: "published",
