@@ -31,6 +31,7 @@ import {
   deriveExcludedPublicDataFiles,
   deriveExcludedPublicDataRoots,
 } from "../../scripts/lib/lane-routing.mjs";
+import { redactPrivateArtifactPathMirrors } from "../sync-static-overrides.mjs";
 
 const CANONICAL_DATA_PREFIX = "data/";
 const PUBLIC_DATA_PREFIX = "100xfenok-next/public/data/";
@@ -1159,5 +1160,20 @@ if (isMain) {
   const result = process.argv.includes("--etf-shards-only")
     ? syncStockanalysisEtfShardProjection(options)
     : syncPublicData(options);
+  // The canonical copies keep their private-artifact references - the edge
+  // coverage-index builder reads them to open the private manifests - so the
+  // redaction belongs to the projection, immediately after it is written. Doing
+  // it here rather than only in sync-static is the point: sync-static is not in
+  // any producer path, so every regeneration through this script republished the
+  // private tree structure that the mirror guard forbids.
+  //
+  // The base is derived from the destination actually written, not from this
+  // script's own package root, so a run pointed at another tree redacts that
+  // tree and never the real mirror.
+  if (write) {
+    redactPrivateArtifactPathMirrors({
+      rootDir: path.resolve(options.destinationRoot, "..", ".."),
+    });
+  }
   console.log(JSON.stringify(result, null, 2));
 }

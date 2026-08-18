@@ -398,6 +398,67 @@ try {
   assert.notEqual(guardSymlink.status, 0, "guard must reject a symlink at a forbidden root");
   assert.match(guardSymlink.stderr, /public\/data\/yf\/etf-details: forbidden private data-supply root \(symlink\)/);
 
+  // The public-data PRODUCER, not only sync-static, must strip private artifact
+  // paths. sync-static sits in no producer path, so every regeneration through
+  // sync-public-data.mjs republished the private tree structure the mirror guard
+  // forbids. Run the real producer over a fixture and hold both halves of the
+  // contract at once: the served projection is redacted, the canonical copy is
+  // not, because the edge coverage-index builder reads it to open the private
+  // manifests.
+  {
+    const producerMirrors = [
+      "admin/fenok-flow-backfill-index.json",
+      "admin/krx/lkg/bridge.json",
+      "admin/taiwan-data-bridge-index.json",
+      "computed/taiwan-data-bridge-index.json",
+    ];
+    const producerRoot = path.join(fixtureRoot, "producer");
+    const producerSource = path.join(producerRoot, "data");
+    const producerDestination = path.join(producerRoot, "100xfenok-next", "public", "data");
+    const poisoned = {
+      schema: "bridge/1",
+      kept_field: "must survive",
+      private_manifest_file: "_private/admin/taiwan/20260818/manifest.json",
+      note: "raw captures stay under _private/admin/taiwan and never ship",
+    };
+    for (const relativePath of producerMirrors) {
+      const target = path.join(producerSource, relativePath);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, jsonBody(poisoned), "utf8");
+    }
+    fs.mkdirSync(producerDestination, { recursive: true });
+
+    const producer = spawnSync(process.execPath, [
+      fileURLToPath(new URL("./sync-public-data.mjs", import.meta.url)),
+      "--write",
+      "--source", producerSource,
+      "--destination", producerDestination,
+    ], { encoding: "utf8" });
+    assert.equal(producer.status, 0, `producer must succeed: ${producer.stderr}`);
+
+    for (const relativePath of producerMirrors) {
+      const projectedBody = fs.readFileSync(path.join(producerDestination, relativePath), "utf8");
+      const projected = JSON.parse(projectedBody);
+      assert.equal(projected.kept_field, "must survive", `${relativePath}: unrelated fields must survive`);
+      assert.ok(
+        !Object.hasOwn(projected, "private_manifest_file"),
+        `${relativePath}: the private reference key must be dropped`,
+      );
+      assert.ok(
+        !projectedBody.includes("_private/"),
+        `${relativePath}: no private path may reach the served projection`,
+      );
+      assert.match(projected.note, /<private-raw-tree>/);
+
+      const canonicalBody = fs.readFileSync(path.join(producerSource, relativePath), "utf8");
+      assert.ok(
+        canonicalBody.includes("_private/") && canonicalBody.includes("private_manifest_file"),
+        `${relativePath}: the canonical copy must keep its private reference`,
+      );
+    }
+    console.log(`public-data producer redaction ok (${producerMirrors.length} mirrors stripped, canonical intact)`);
+  }
+
   console.log("test-data-supply-public-redaction: ok");
 } finally {
   fs.rmSync(fixtureRoot, { recursive: true, force: true });

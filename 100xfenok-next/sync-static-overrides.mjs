@@ -604,16 +604,25 @@ function stripPrivateArtifactPaths(value) {
   return out;
 }
 
-export function redactPrivateArtifactPathMirrors({ mirrors = PRIVATE_ARTIFACT_PATH_MIRRORS } = {}) {
+// rootDir is injectable because sync-static is no longer the only caller: the
+// public-data producer regenerates these same four mirrors and must redact the
+// tree it just wrote, wherever that tree is. Defaulting to the module rootDir
+// keeps the sync-static step byte-identical.
+export function redactPrivateArtifactPathMirrors({
+  mirrors = PRIVATE_ARTIFACT_PATH_MIRRORS,
+  rootDir: baseDir = rootDir,
+  logger = console.log,
+} = {}) {
+  const resolvedRoot = path.resolve(baseDir);
   const redacted = [];
   for (const relativePath of mirrors) {
-    const filePath = path.join(rootDir, relativePath);
+    const filePath = path.join(resolvedRoot, relativePath);
     if (!fs.existsSync(filePath)) continue;
     const original = fs.readFileSync(filePath, "utf8");
     if (!original.includes("_private/") && !PRIVATE_ARTIFACT_KEYS.some((key) => original.includes(`"${key}"`))) continue;
-    writeJson(relativePath, stripPrivateArtifactPaths(JSON.parse(original)));
+    writeJsonAtomic(filePath, stripPrivateArtifactPaths(JSON.parse(original)));
     redacted.push(relativePath);
-    console.log(`[sync-static-overrides] redacted private artifact paths from ${relativePath}`);
+    logger(`[sync-static-overrides] redacted private artifact paths from ${relativePath}`);
   }
   return redacted;
 }
