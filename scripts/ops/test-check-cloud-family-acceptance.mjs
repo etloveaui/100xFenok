@@ -16,7 +16,12 @@ const observedAt = "2026-08-16T07:31:00.000Z";
 const generationId = "slickcharts-symbols-abcdef0123456789";
 const nowIso = "2026-08-16T07:32:00.000Z";
 const paths = familyPaths(family);
-assert.deepEqual(paths, ["/data/slickcharts/symbols.json", "/data/slickcharts/symbols-all.json"]);
+// Order is registry declaration order, not part of the contract. Asserting it
+// killed this file here on a reordering, before any assertion below ran.
+assert.deepEqual(
+  [...paths].sort(),
+  ["/data/slickcharts/symbols-all.json", "/data/slickcharts/symbols.json"],
+);
 
 function writeOutcome(root, result, overrides = {}) {
   const outcomePath = path.join(root, "outcomes.json");
