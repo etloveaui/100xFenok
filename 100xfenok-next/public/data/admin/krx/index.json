@@ -1,24 +1,26 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "krx",
-  "updated_at": "2026-08-17T11:03:02.449Z",
-  "retry_set": [],
+  "updated_at": "2026-08-18T11:02:16.930Z",
+  "retry_set": [
+    "bridge"
+  ],
   "items": {
     "bridge": {
       "key": "bridge",
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "current": {
-        "path": "data/admin/fenok-edge-korea-krx-daily-index.json",
+        "path": "data/admin/krx/lkg/bridge.json",
         "payload_sha256": "3723729f7cef1198ed49ab5d3ba69eaecc817cf6871080e8dd75cca4e64cb9d1",
         "source_as_of": "2026-08-14"
       },
       "lkg": {
         "path": "data/admin/krx/lkg/bridge.json",
-        "payload_sha256": "98b84069c2330e9600fcaea6cd0896c88a8b5365fa2c4e74c0cc2cdade6fa74b",
-        "source_as_of": "2026-07-23"
+        "payload_sha256": "3723729f7cef1198ed49ab5d3ba69eaecc817cf6871080e8dd75cca4e64cb9d1",
+        "source_as_of": "2026-08-14"
       },
-      "updated_at": "2026-08-17T11:03:02.449Z",
+      "updated_at": "2026-08-18T11:02:16.930Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
@@ -28,16 +30,23 @@
         "run_attempt": 1,
         "observed_at": "2026-08-17T11:03:02.449Z"
       },
-      "recovered_from_run_id": "30252012390",
-      "recovered_at": "2026-07-27T13:26:02.693Z",
-      "recovery_run_id": "30270187601",
-      "recovery_run_attempt": 1,
-      "recovery_event_name": "schedule",
       "last_recovered_failure": {
         "run_id": "30252012390",
         "run_attempt": 1,
         "observed_at": "2026-07-27T09:07:20.006Z",
         "reason": "http_error"
+      },
+      "latest_failure": {
+        "run_id": "32129204121",
+        "run_attempt": 1,
+        "observed_at": "2026-08-18T11:00:41.307Z",
+        "reason": "schema_drift"
+      },
+      "latest_promotion_deferral": {
+        "run_id": "32129204121",
+        "run_attempt": 1,
+        "observed_at": "2026-08-18T11:02:16.930Z",
+        "reason": "recovery_not_advanced_by_provider"
       }
     }
   }

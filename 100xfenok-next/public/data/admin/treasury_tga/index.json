@@ -1,53 +1,44 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "treasury_tga",
-  "updated_at": "2026-08-17T18:24:03.094Z",
-  "retry_set": [
-    "tga"
-  ],
+  "updated_at": "2026-08-18T00:42:06.053Z",
+  "retry_set": [],
   "items": {
     "tga": {
       "key": "tga",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/treasury_tga/lkg/tga.json",
-        "payload_sha256": "b5963886b97bdc12a7164a7174c5b9cb1d95cdf0e351075370232b165ab0a734",
-        "source_as_of": "2026-08-13"
+        "path": "data/macro/tga.json",
+        "payload_sha256": "b822ccd798f7e794c87629a9a75b647f50d5d2cea51f5f8cba3c8388b4f05358",
+        "source_as_of": "2026-08-14"
       },
       "lkg": {
         "path": "data/admin/treasury_tga/lkg/tga.json",
         "payload_sha256": "b5963886b97bdc12a7164a7174c5b9cb1d95cdf0e351075370232b165ab0a734",
         "source_as_of": "2026-08-13"
       },
-      "updated_at": "2026-08-17T18:24:03.094Z",
+      "updated_at": "2026-08-18T00:42:06.053Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "b5963886b97bdc12a7164a7174c5b9cb1d95cdf0e351075370232b165ab0a734",
-        "source_as_of": "2026-08-13",
-        "run_id": "31854431777",
+        "payload_sha256": "b822ccd798f7e794c87629a9a75b647f50d5d2cea51f5f8cba3c8388b4f05358",
+        "source_as_of": "2026-08-14",
+        "run_id": "32085490592",
         "run_attempt": 1,
-        "observed_at": "2026-08-15T00:53:42.997Z"
+        "observed_at": "2026-08-18T00:42:06.053Z"
       },
       "last_recovered_failure": {
-        "run_id": "29747899466",
-        "run_attempt": 1,
-        "observed_at": "2026-07-20T13:50:11.228Z",
-        "reason": "transport_error"
-      },
-      "latest_failure": {
         "run_id": "32002233264",
         "run_attempt": 1,
         "observed_at": "2026-08-17T06:34:59.287Z",
         "reason": "transport_error"
       },
-      "latest_promotion_deferral": {
-        "run_id": "32054696201",
-        "run_attempt": 1,
-        "observed_at": "2026-08-17T18:24:03.094Z",
-        "reason": "recovery_not_advanced_by_provider"
-      }
+      "recovered_from_run_id": "32002233264",
+      "recovered_at": "2026-08-18T00:42:06.053Z",
+      "recovery_run_id": "32085490592",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule"
     }
   }
 }

@@ -1,13 +1,13 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-17T22:46:33.193Z",
+  "generated_at": "2026-08-18T21:43:30.869Z",
   "status": "open",
-  "open_incident_count": 8,
+  "open_incident_count": 12,
   "open_incidents": [
     {
       "workflow": "data-plane-serving-probe.yml",
       "label": "Data Plane Serving Probe",
-      "streak": 5,
+      "streak": 9,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 31966340880,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31966340880",
@@ -16,6 +16,32 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "fenok-edge-daily.yml",
+      "label": "Fenok Edge Daily Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "unrecovered_overdue"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "overdue"
+    },
+    {
+      "workflow": "fetch-damodaran-shadow.yml",
+      "label": "Fetch Damodaran Data",
+      "streak": 2,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "plane_freshness_unavailable"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -32,9 +58,22 @@
       "cadence_status": "overdue"
     },
     {
+      "workflow": "fetch-finra-ats-weekly.yml",
+      "label": "Fetch FINRA ATS OTC Weekly Summary",
+      "streak": 1,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "plane_freshness_unavailable"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
       "workflow": "fetch-fred-macro.yml",
       "label": "Fetch FRED Macro Data",
-      "streak": 7,
+      "streak": 8,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 31474859038,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31474859038",
@@ -60,7 +99,7 @@
     {
       "workflow": "fetch-stockanalysis.yml",
       "label": "Fetch StockAnalysis Data",
-      "streak": 2,
+      "streak": 3,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 31979508924,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31979508924",
@@ -73,15 +112,29 @@
     {
       "workflow": "fetch-yf-finance.yml",
       "label": "Fetch YF Finance Data",
-      "streak": 1,
+      "streak": 3,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
+      "first_failing_run_id": 31986179803,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31986179803",
       "alarm_reasons": [
+        "failure_streak",
         "unrecovered_overdue"
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
+    },
+    {
+      "workflow": "slickcharts-history.yml",
+      "label": "SlickCharts History",
+      "streak": 0,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "plane_freshness_unavailable"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "slickcharts-symbols.yml",
@@ -97,17 +150,17 @@
       "cadence_status": "not_due"
     },
     {
-      "workflow": "validate-workflows.yml",
-      "label": "Validate GitHub Workflows",
-      "streak": 6,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 32013933494,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32013933494",
+      "workflow": "slickcharts-weekly.yml",
+      "label": "SlickCharts Weekly",
+      "streak": 0,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
       "alarm_reasons": [
-        "failure_streak"
+        "plane_freshness_unavailable"
       ],
       "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
+      "cadence_status": "not_due"
     }
   ],
   "watched_workflows": [
@@ -166,8 +219,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "attempt_gap"
+      ]
     },
     {
       "file": "fenok-edge-krx-daily.yml",
@@ -345,7 +400,9 @@
       "event": "schedule",
       "failure_streak_threshold": 2,
       "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_evidence": [],
+      "data_freshness_state": "healthy",
+      "data_freshness_age_hours_at_generation": 21
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -495,8 +552,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 24,
-    "overdue": 2,
+    "not_due": 23,
+    "overdue": 3,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -512,19 +569,23 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32077332741",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32077332741",
-    "observed_at": "2026-08-17T22:46:33.193Z",
+    "run_id": "32189017279",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32189017279",
+    "observed_at": "2026-08-18T21:43:30.869Z",
     "event": "schedule",
     "workflows": [
       "data-plane-serving-probe.yml",
+      "fenok-edge-daily.yml",
+      "fetch-damodaran-shadow.yml",
       "fetch-edgar-filings.yml",
+      "fetch-finra-ats-weekly.yml",
       "fetch-fred-macro.yml",
       "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml",
+      "slickcharts-history.yml",
       "slickcharts-symbols.yml",
-      "validate-workflows.yml"
+      "slickcharts-weekly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
