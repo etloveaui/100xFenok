@@ -4,6 +4,10 @@
 # A developer invocation always queues one of the fixed hosted suites. Only the
 # hosted workflow's explicit nested-execution marker may run the corresponding
 # registered steps locally. CI alone is intentionally not a bypass.
+#
+# --assert-nested exposes that same admission check for the registered heavy
+# bodies. A body prefixed with it cannot run by direct invocation; it runs only
+# under the nested-execution marker its guarded entry sets.
 set -u
 
 if [ "$#" -eq 0 ]; then
@@ -25,7 +29,7 @@ remote_suite_for_command() {
     "npm run build:runtime:steps") printf '%s\n' "runtime-build" ;;
     "npm run build:static:steps") printf '%s\n' "static-build" ;;
     "npm run cf:build:steps") printf '%s\n' "cloudflare-build" ;;
-    "npm run qa:registry-contracts") printf '%s\n' "contracts" ;;
+    "npm run qa:registry-contracts:steps") printf '%s\n' "contracts" ;;
     "npm run qa:sec13f-contract:steps") printf '%s\n' "sec13f-contract" ;;
     *) return 1 ;;
   esac
@@ -96,5 +100,10 @@ dispatch_remote_suite() {
   fi
   printf '{"status":"queued","suite":"%s","revision":"%s"}\n' "$suite" "$head"
 }
+
+if [ "$1" = "--assert-nested" ]; then
+  allow_hosted_nested_execution && exit 0
+  blocked "direct_heavy_body_invocation" "use_the_guarded_entry_or_the_hosted_workflow"
+fi
 
 dispatch_remote_suite "$@"
