@@ -44,11 +44,21 @@ for (const source of [workflowLines, runnerLines]) {
   }
 }
 
-// Both paths must reach the SAME runner (one source of truth).
-assert.equal(exactLineIndices(workflowLines, "run: bash scripts/update-manifest-projections.sh").length, 1,
-  "initial path must invoke the shared runner exactly once");
-assert.equal(exactLineIndices(workflowLines, "bash scripts/update-manifest-projections.sh").length, 1,
-  "retry path must invoke the shared runner exactly once");
+// One call site, inside the commit/retry step. The workflow used to compute the
+// projection twice — once before the writer-critical section and once inside the
+// retry after `git reset --hard origin/main` discarded the first result — so this
+// contract existed to stop the two call sites drifting. With a single call site
+// there is nothing left to drift, and the stronger property is that the shared
+// runner is invoked exactly once and only after the reset.
+assert.equal(exactLineIndices(workflowLines, "run: bash scripts/update-manifest-projections.sh").length, 0,
+  "the pre-commit projection pass must stay deleted; it recomputes under the writer lock for nothing");
+const runnerCallSites = exactLineIndices(workflowLines, "bash scripts/update-manifest-projections.sh");
+assert.equal(runnerCallSites.length, 1,
+  "the shared runner must be invoked exactly once");
+const resetIndices = exactLineIndices(workflowLines, "git reset --hard origin/main");
+assert.equal(resetIndices.length, 1, "the retry loop must reset to origin/main exactly once");
+assert.equal(resetIndices[0] < runnerCallSites[0], true,
+  "the shared runner must run after the reset, so the commit is a function of current origin/main");
 
 // ETF/KPI generation order lives in the runner exactly once.
 const etfBuilds = exactLineIndices(runnerLines, "node scripts/build-fenok-etf-signals.mjs");
