@@ -1025,6 +1025,13 @@ export async function getStockanalysisAssetDocument(
   return readStrictPublicJsonDocument(assetPath);
 }
 
+// Read through the same strict public-JSON loader and cache as every other
+// document this resolver uses. The D3 freshness signal rides an artifact that
+// already exists and is already public; it gets no separate fetch path.
+export async function getAlarmStateDocument() {
+  return readStrictPublicJsonDocument(path.join(PUBLIC_DATA_ROOT, "admin", "alarm-state.json"));
+}
+
 export async function getDataSupplyEtfEnrollmentDocument() {
   return readStrictPublicJsonDocument(path.join(
     PUBLIC_DATA_ROOT,

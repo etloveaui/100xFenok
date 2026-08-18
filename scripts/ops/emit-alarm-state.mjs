@@ -19,6 +19,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const ALARM_STATE_SCHEMA = "alarm-state/v1";
+// The one family with a D3 aging policy. Scoped deliberately: this document
+// stays a workflow-health surface, not a per-family data catalogue.
+export const ETF_FRESHNESS_FAMILY = "stockanalysis-etf-detail";
 const CADENCE_STATES = Object.freeze(["not_due", "overdue", "recovered", "no_declaration", "unknown"]);
 const PUBLIC_CADENCE_EVIDENCE = new Set(["suspected_skip", "attempt_gap"]);
 
@@ -82,6 +85,24 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
     .sort((a, b) => String(a.workflow).localeCompare(String(b.workflow)));
   const queueEvictedRunCount = queueEvictedWorkflows.reduce((sum, row) => sum + row.count, 0);
   const cadence_state_counts = Object.fromEntries(CADENCE_STATES.map((state) => [state, 0]));
+  // The only public artifact whose values derive from the private
+  // publish-outcome shard. Two fields for the one family with a D3 policy: the
+  // derived state, and its age at write time — a duration, not a point in time.
+  // Not published: timestamps, the failure counter, paths, run ids, raw
+  // evidence. The exact last-success time stays in the private operator alarm.
+  const publishedFreshness = (workflow) => {
+    const outcome = workflow?.plane_publish_outcome ?? null;
+    if (outcome?.family !== ETF_FRESHNESS_FAMILY) return {};
+    const freshness = outcome?.freshness ?? null;
+    if (!freshness || typeof freshness.state !== "string") return {};
+    return {
+      data_freshness_state: freshness.state,
+      data_freshness_age_hours_at_generation: freshness.source_age_hours === null
+        ? null
+        : Math.round(freshness.source_age_hours),
+    };
+  };
+
   const watchedWorkflows = workflows.map((w) => {
     const cadence_status = CADENCE_STATES.includes(w?.cadence_status) ? w.cadence_status : "unknown";
     cadence_state_counts[cadence_status] += 1;
@@ -97,6 +118,7 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
       cadence_evidence: Array.isArray(w?.cadence_evidence)
         ? [...new Set(w.cadence_evidence.filter((value) => PUBLIC_CADENCE_EVIDENCE.has(value)))].sort()
         : [],
+      ...publishedFreshness(w),
     };
   });
 

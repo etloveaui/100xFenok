@@ -4,9 +4,8 @@ import {
   buildUnavailableEtfRepresentation,
   canonicalJsonSha256,
   mergeEtfDataSupply,
-  ETF_AUTHORITY_MODE,
-  ETF_STALE_REFUSAL_MAX_AGE_HOURS,
-  etfSourceAgeHours,
+  ETF_FRESHNESS_WORKFLOW_FILE,
+  reconstructEtfFreshness,
   etfStaleRefusalActive,
   evaluateEtfStaleRefusal,
   resolveDataSupplyEtfDetail,
@@ -40,6 +39,8 @@ async function fixture(options: {
   crossbind?: boolean;
   shardMissing?: boolean;
   shardUnavailable?: boolean;
+  staleRefusalActive?: boolean;
+  alarmState?: JsonRecord | null;
   plane?: JsonRecord | null;
   planeUnavailable?: boolean;
   planeThrows?: boolean;
@@ -118,6 +119,8 @@ async function fixture(options: {
 
   return resolveDataSupplyEtfDetail(ticker, {
     now: () => new Date("2026-07-12T00:00:00Z"),
+    staleRefusalActive: () => options.staleRefusalActive === true,
+    readAlarmState: async () => options.alarmState ? document(options.alarmState) : null,
     readEnrollment: async () => options.guardMissing ? null : document(guard),
     readIndex: async () => options.indexMissing ? null : document(index),
     readProjectionPayload: async () => payloadDoc,
@@ -586,45 +589,54 @@ try {
   Object.defineProperty(globalThis, "caches", { configurable: true, value: originalCaches });
 }
 
-// D3 A-safety, owner-selected: option A with a 60-hour ceiling, DORMANT until
-// Cloud authority is explicitly cut over. Both halves are pinned here: that the
-// current mode cannot refuse anything, and that the cutover behaviour is real
-// rather than a stub nobody has run. Time is injected; a staleness assertion
-// left on wall time passes today and fails tomorrow for no code reason.
+// D3 static-LKG aging: dormant until Cloud authority is cut over. Invariants
+// covered here: a signal that cannot be trusted refuses rather than serves, and
+// dormant mode leaves the response shape unmarked. Zero-read is a property of
+// the guard, not something these assertions observe.
 {
-  const now = new Date("2026-08-18T12:00:00Z");
-  const hoursAgo = (hours: number) => new Date(now.getTime() - hours * 3_600_000).toISOString();
+  const alarm = (state: string | null, age: unknown, generatedAt: unknown = "2026-07-12T00:00:00Z") => ({
+    generated_at: generatedAt,
+    watched_workflows: [{
+      file: ETF_FRESHNESS_WORKFLOW_FILE,
+      ...(state === null ? {} : { data_freshness_state: state }),
+      data_freshness_age_hours_at_generation: age,
+    }],
+  });
+  const armed = (alarmState: JsonRecord | null) =>
+    fixture({ state: "fresh_fallback", staleRefusalActive: true, alarmState });
 
-  // Current-mode invariance. The committed shard IS the authority today, so a
-  // refusal would take a healthy authoritative surface offline for being old.
-  assert.equal(etfStaleRefusalActive(), false, "static-primary must never refuse on age");
-  assert.equal(etfStaleRefusalActive(ETF_AUTHORITY_MODE), false);
-  for (const age of [0, 59, 60, 61, 1_000]) {
-    const dormant = evaluateEtfStaleRefusal({ sourceAsOf: hoursAgo(age), now });
-    assert.equal(dormant.refuse, false, `dormant mode must not refuse at ${age}h`);
-    assert.equal(dormant.active, false);
-    // The age is still measured while dormant, so the dormancy is auditable
-    // rather than blind.
-    assert.equal(Math.round(dormant.sourceAgeHours ?? -1), age);
+  // One representative per rejection branch. A present-but-absurd field is not a
+  // lesser problem than a missing one, and a future clock must not be clamped.
+  for (const [label, alarmState] of [
+    ["negative age", alarm("healthy", -1)],
+    ["non-finite age", alarm("healthy", Number.NaN)],
+    ["invalid document clock", alarm("healthy", 12, "not-a-date")],
+    ["document clock later than now", alarm("healthy", 12, "2026-07-13T00:00:00Z")],
+    ["absent signal", null],
+  ] as const) {
+    assert.equal((await armed(alarmState)).kind, "unavailable", `${label} must refuse`);
   }
+  assert.equal(reconstructEtfFreshness(alarm("healthy", 12), new Date(Number.NaN)).ageHours, null, "non-finite now");
+  assert.equal(evaluateEtfStaleRefusal({ state: "healthy", ageHours: Number.NaN, active: true }).verdict, "unavailable");
 
-  // Dormant cutover-mode transitions, exercised directly because no approved
-  // Cloud-authority mode literal exists yet and this lane must not invent one.
-  const underCutover = (age: number) => evaluateEtfStaleRefusal({ sourceAsOf: hoursAgo(age), now, active: true });
-  assert.equal(underCutover(0).refuse, false, "fresh data serves");
-  assert.equal(underCutover(59).refuse, false, "inside the ceiling serves the verified LKG");
-  assert.equal(underCutover(ETF_STALE_REFUSAL_MAX_AGE_HOURS).refuse, false, "the ceiling is exclusive, not off by one");
-  assert.equal(underCutover(61).refuse, true, "past the ceiling returns the typed unavailable path");
-  assert.equal(underCutover(1_000).refuse, true);
-  // Recovery needs no separate branch: a fresh source_as_of is simply inside the
-  // ceiling again, so the next complete natural success clears this by itself.
-  assert.equal(underCutover(0).refuse, false);
+  const dormant = await fixture({ state: "fresh_fallback", alarmState: alarm("unavailable", 900) });
+  assert.ok(
+    dormant.kind === "selected" && !("publication_freshness" in dormant.dataSupply),
+    "dormant must serve unmarked regardless of the signal",
+  );
 
-  // No source date is not a staleness claim in either direction.
-  assert.equal(evaluateEtfStaleRefusal({ sourceAsOf: null, now, active: true }).refuse, false);
-  assert.equal(etfSourceAgeHours(null, now), null);
-  assert.equal(Math.round(etfSourceAgeHours(hoursAgo(36), now) ?? -1), 36);
-  assert.equal(ETF_STALE_REFUSAL_MAX_AGE_HOURS, 60);
+  const delayed = await armed(alarm("delayed", 1));
+  assert.equal(
+    delayed.kind === "selected" ? delayed.dataSupply.publication_freshness : null,
+    "delayed",
+    "an active delayed verdict marks the selected response",
+  );
+  assert.equal((await armed(alarm("healthy", 61))).kind, "unavailable", "past the ceiling refuses");
+  const healthy = await armed(alarm("healthy", 1));
+  assert.ok(
+    healthy.kind === "selected" && !("publication_freshness" in healthy.dataSupply),
+    "a healthy signal serves unmarked, which is also how recovery clears",
+  );
 }
 
 console.log("data-supply ETF API tests passed");

@@ -5,6 +5,7 @@ import {
   getDataSupplyEtfIndexDocument,
   getDataSupplyEtfPayloadDocument,
   getStockanalysisEtfPlaneDocument,
+  getAlarmStateDocument,
   getStockanalysisEtfShardDocument,
   type PublicJsonDocument,
   type StockanalysisEtfPlaneDocumentResult,
@@ -44,6 +45,9 @@ export interface EtfDataSupplyMetadata {
   reason_code: string | null;
   recovery_transition: "unavailable" | null;
   projection_digest: string;
+  // Set only when active and delayed; absent otherwise, so the dormant shape
+  // is unchanged.
+  publication_freshness?: "delayed";
 }
 
 // Internal comparison evidence only; the public route always serves the shard document.
@@ -63,50 +67,72 @@ export type EtfAuthorityMode = "static_primary_cloud_shadow";
 
 export const ETF_AUTHORITY_MODE: EtfAuthorityMode = "static_primary_cloud_shadow";
 
-// D3 static-LKG aging, owner-selected 2026-08-18: option A with a 60-hour
-// ceiling. The serving refusal is DORMANT until Cloud authority is explicitly
-// cut over, and that is not a technicality — under static-primary the committed
-// shard IS the authority, not a fallback, so refusing to serve it for being old
-// would take a healthy authoritative surface offline. That is the opposite of
-// what an aging policy is for.
-//
-// Activation is a predicate over the mode rather than a second mode literal, on
-// purpose. The switch above is exhaustive by design so that adding a mode
-// forces a serving decision; this lane has no authority to make that decision,
-// so it adds no literal. The predicate is false for every mode that exists
-// today, which is what makes current behaviour provably unchanged.
+// D3 static-LKG aging: 60-hour ceiling, dormant until Cloud authority is cut
+// over, because under static-primary the committed shard IS the authority.
+// Activation is a predicate, not a second mode literal: the mode switch is
+// exhaustive, so a literal would force a serving decision this lane cannot make.
 export const ETF_STALE_REFUSAL_MAX_AGE_HOURS = 60;
 
 export function etfStaleRefusalActive(mode: EtfAuthorityMode = ETF_AUTHORITY_MODE): boolean {
   return (mode as string) !== "static_primary_cloud_shadow";
 }
 
-// Hours, from the resolver's own clock and the entry's own source_as_of. The
-// metadata keeps reporting whole days; this is the same two inputs read at the
-// granularity the 60-hour ceiling needs, not a second clock or a second source.
-export function etfSourceAgeHours(sourceAsOf: string | null, now: Date): number | null {
-  if (!sourceAsOf) return null;
-  const sourceTime = Date.parse(sourceAsOf);
-  if (!Number.isFinite(sourceTime) || !Number.isFinite(now.getTime())) return null;
-  return Math.max(0, (now.getTime() - sourceTime) / 3_600_000);
+// Freshness from the alarm document, whose per-family fields derive from the
+// private publish-outcome shard — the only thing advancing solely on this
+// family's successful publish. Neither field is safe alone: the elapsed hours
+// freeze at write time, so pairing them with the document's own generated_at is
+// what makes a stale alarm push age UP rather than down.
+export const ETF_FRESHNESS_WORKFLOW_FILE = "fetch-stockanalysis.yml";
+
+export type EtfFreshnessVerdict = "serve" | "serve_stale_lkg" | "unavailable";
+
+export function reconstructEtfFreshness(
+  alarmState: unknown,
+  now: Date,
+): { state: string | null; ageHours: number | null } {
+  const document = asRecord(alarmState);
+  const watched = Array.isArray(document?.watched_workflows) ? document.watched_workflows : [];
+  const entry = watched
+    .map((row) => asRecord(row))
+    .find((row) => row?.file === ETF_FRESHNESS_WORKFLOW_FILE) ?? null;
+  const state = typeof entry?.data_freshness_state === "string"
+    ? entry.data_freshness_state as string
+    : null;
+  const atGeneration = entry?.data_freshness_age_hours_at_generation;
+  const generatedAt = typeof document?.generated_at === "string"
+    ? Date.parse(document.generated_at as string)
+    : Number.NaN;
+  const sinceGeneration = ((now instanceof Date ? now.getTime() : Number.NaN) - generatedAt) / 3_600_000;
+  const ageHours = typeof atGeneration === "number" ? atGeneration + sinceGeneration : Number.NaN;
+  // A negative value sails under the ceiling and a NaN slips past it, since
+  // NaN > ceiling is false. A future-stamped document is untrustworthy, so it is
+  // rejected rather than clamped. Every term must be finite and non-negative.
+  const usable = Number.isFinite(ageHours) && (atGeneration as number) >= 0 && sinceGeneration >= 0;
+  return { state, ageHours: usable ? ageHours : null };
 }
 
 export function evaluateEtfStaleRefusal({
-  sourceAsOf,
-  now,
+  state,
+  ageHours,
   active = etfStaleRefusalActive(),
   maxAgeHours = ETF_STALE_REFUSAL_MAX_AGE_HOURS,
 }: {
-  sourceAsOf: string | null;
-  now: Date;
+  state: string | null;
+  ageHours: number | null;
   active?: boolean;
   maxAgeHours?: number;
-}): { refuse: boolean; sourceAgeHours: number | null; active: boolean } {
-  const sourceAgeHours = etfSourceAgeHours(sourceAsOf, now);
-  // The age is computed either way so a dormant run can still report how old
-  // the data was, which is what makes the dormancy auditable rather than blind.
-  if (!active) return { refuse: false, sourceAgeHours, active };
-  return { refuse: sourceAgeHours !== null && sourceAgeHours > maxAgeHours, sourceAgeHours, active };
+}): { verdict: EtfFreshnessVerdict; ageHours: number | null; active: boolean } {
+  if (!active) return { verdict: "serve", ageHours, active };
+  // Unreadable state is unavailable, not healthy: a policy that defaults to
+  // "fine" when it cannot see is not a policy.
+  // The evaluator does not trust its own input either.
+  if (state === null || ageHours === null || !Number.isFinite(ageHours) || ageHours < 0) {
+    return { verdict: "unavailable", ageHours, active };
+  }
+  if (state === "unavailable" || ageHours > maxAgeHours) return { verdict: "unavailable", ageHours, active };
+  if (state === "delayed") return { verdict: "serve_stale_lkg", ageHours, active };
+  if (state === "healthy") return { verdict: "serve", ageHours, active };
+  return { verdict: "unavailable", ageHours, active };
 }
 
 // Receives both candidates so the choice is visible at the point it is made.
@@ -156,6 +182,10 @@ export interface EtfDetailResolverDependencies {
   readProjectionPayload: (ticker: string) => Promise<PublicJsonDocument | null>;
   readPlanePayload: (ticker: string) => Promise<StockanalysisEtfPlaneDocumentResult>;
   readShardPayload: (ticker: string) => Promise<StockanalysisEtfShardDocumentResult>;
+  readAlarmState: () => Promise<PublicJsonDocument | null>;
+  // Injectable so the post-cutover path is testable: no approved Cloud-authority
+  // mode literal exists yet.
+  staleRefusalActive: () => boolean;
   now: () => Date;
 }
 
@@ -165,6 +195,8 @@ const DEFAULT_DEPENDENCIES: EtfDetailResolverDependencies = {
   readProjectionPayload: getDataSupplyEtfPayloadDocument,
   readPlanePayload: getStockanalysisEtfPlaneDocument,
   readShardPayload: getStockanalysisEtfShardDocument,
+  readAlarmState: getAlarmStateDocument,
+  staleRefusalActive: () => etfStaleRefusalActive(),
   now: () => new Date(),
 };
 
@@ -547,19 +579,23 @@ export async function resolveDataSupplyEtfDetail(
       stateObservedAt: parsedIndex.generatedAt,
     };
   }
-  // D3 A-safety, dormant under static-primary: etfStaleRefusalActive() is false
-  // today, so this cannot change what is served. Under a future Cloud-authority
-  // mode an over-age entry becomes the SAME typed unavailable the projection
-  // already produces for this family, rather than a new shape every consumer
-  // would have to learn. Only this ETF surface is affected; nothing here can
-  // reach an unrelated route.
-  if (evaluateEtfStaleRefusal({ sourceAsOf: parsed.metadata.source_as_of, now: dependencies.now() }).refuse) {
-    return {
-      kind: "unavailable",
-      dataSupply: parsed.metadata,
-      projectionDigest: guard.indexSha,
-      stateObservedAt: parsedIndex.generatedAt,
-    };
+  // The read sits inside the guard, so dormant mode performs no extra read.
+  // When active, an over-age entry returns the same typed unavailable the
+  // projection already produces, for this ETF surface only.
+  let publicationFreshness: "delayed" | null = null;
+  if (dependencies.staleRefusalActive()) {
+    const alarmDocument = await dependencies.readAlarmState();
+    const signal = reconstructEtfFreshness(alarmDocument?.value ?? null, dependencies.now());
+    const verdict = evaluateEtfStaleRefusal({ ...signal, active: true }).verdict;
+    if (verdict === "unavailable") {
+      return {
+        kind: "unavailable",
+        dataSupply: parsed.metadata,
+        projectionDigest: guard.indexSha,
+        stateObservedAt: parsedIndex.generatedAt,
+      };
+    }
+    if (verdict === "serve_stale_lkg") publicationFreshness = "delayed";
   }
 
   const payloadDocument = await dependencies.readProjectionPayload(ticker);
@@ -583,7 +619,9 @@ export async function resolveDataSupplyEtfDetail(
   return {
     kind: "selected",
     payload: payloadDocument.value,
-    dataSupply: parsed.metadata,
+    dataSupply: publicationFreshness === null
+      ? parsed.metadata
+      : { ...parsed.metadata, publication_freshness: publicationFreshness },
     projectionDigest: guard.indexSha,
   };
 }

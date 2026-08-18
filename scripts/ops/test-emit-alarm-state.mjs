@@ -152,6 +152,26 @@ assert.deepEqual(
   ["push"],
   "the public alarm state must expose every counted automatic event",
 );
+// The alarm document is the runtime-readable carrier for D3 freshness, so the
+// projection of those two fields is asserted rather than assumed.
+{
+  const etfRow = okRow("fetch-stockanalysis.yml", "Fetch StockAnalysis Data");
+  etfRow.plane_publish_outcome = {
+    family: "stockanalysis-etf-detail",
+    freshness: { state: "delayed", source_age_hours: 13.4 },
+  };
+  const projected = buildAlarmState({
+    health: { ...firingHealth, workflows: [...firingHealth.workflows, etfRow] },
+    env: ENV,
+    now: NOW,
+  }).watched_workflows.find((row) => row.file === "fetch-stockanalysis.yml");
+  assert.deepEqual(
+    [projected.data_freshness_state, projected.data_freshness_age_hours_at_generation],
+    ["delayed", 13],
+    "the StockAnalysis row must project the derived freshness state and coarse age",
+  );
+}
+
 assert.deepEqual(firing.excluded_workflows, firingHealth.excluded,
   "declared workflow exclusions and their reasons must remain visible in alarm state");
 
