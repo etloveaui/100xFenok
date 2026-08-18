@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-08-17T21:46:14Z",
+  "generated_at": "2026-08-18T00:12:30Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,37 +17,37 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5582,
+    "candidate_total": 5585,
     "source_breakdown": {
       "etf_universe": 5528,
-      "etf_screener": 5582,
+      "etf_screener": 5585,
       "new_etfs": 100
     },
     "detail_files": 5605,
     "covered_detail_files": 5536,
-    "missing_detail_files": 46,
+    "missing_detail_files": 49,
     "extra_detail_files": 69,
     "stockanalysis_detail_files": 5605,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 99.18,
-    "primary_stockanalysis_pct": 99.18,
+    "coverage_pct": 99.12,
+    "primary_stockanalysis_pct": 99.12,
     "missing_by_source": {
       "etf_universe": 46,
-      "etf_screener": 46,
-      "new_etfs": 38
+      "etf_screener": 49,
+      "new_etfs": 43
     },
     "missing_status_breakdown": {
       "provider_gap_cooldown": 1,
-      "untracked": 45
+      "untracked": 48
     },
     "missing_failure_breakdown": {
       "provider_coverage_gap": 1,
-      "untracked": 45
+      "untracked": 48
     },
     "missing_availability_breakdown": {
       "provider_absent": 1,
-      "unprobed": 45
+      "unprobed": 48
     },
     "pending_tracked": 484,
     "pending_cooldown": 1,
@@ -56,15 +56,15 @@
   },
   "missing_reason_summary": {
     "provider_coverage_gap": 1,
-    "untracked": 45
+    "untracked": 48
   },
   "missing_status_summary": {
     "provider_gap_cooldown": 1,
-    "untracked": 45
+    "untracked": 48
   },
   "missing_availability_summary": {
     "provider_absent": 1,
-    "unprobed": 45
+    "unprobed": 48
   },
   "missing_reason_samples": {
     "provider_coverage_gap": [
@@ -160,6 +160,7 @@
     "RJCA",
     "SCAU",
     "SDUR",
+    "SIC",
     "SITX",
     "SKHA",
     "SKHN",
@@ -169,7 +170,9 @@
     "UMCU",
     "WSMD",
     "XAIW",
-    "YLDY"
+    "YLDY",
+    "ZDIS",
+    "ZINN"
   ],
   "provider_absent_tickers": [
     "DACL"
@@ -285,6 +288,7 @@
       "RJCA",
       "SCAU",
       "SDUR",
+      "SIC",
       "SITX",
       "SKHA",
       "SKHN",
@@ -294,7 +298,9 @@
       "UMCU",
       "WSMD",
       "XAIW",
-      "YLDY"
+      "YLDY",
+      "ZDIS",
+      "ZINN"
     ],
     "missing_provider_gap_cooldown": [
       "DACL"

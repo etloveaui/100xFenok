@@ -1,0 +1,54 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "VNLA",
+  "attempts": [
+    {
+      "run_id": "32082721092",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-08-18T00:01:08Z",
+      "outcome": "failed",
+      "controlled": false,
+      "error": "TimeoutError: The read operation timed out"
+    }
+  ],
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "last_attempt": {
+    "run_id": "32082721092",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "50 23 * * 1-5",
+    "natural": true,
+    "observed_at": "2026-08-18T00:01:08Z",
+    "outcome": "failed",
+    "controlled": false,
+    "error": "TimeoutError: The read operation timed out"
+  },
+  "latest_failure": {
+    "run_id": "32082721092",
+    "run_attempt": 1,
+    "observed_at": "2026-08-18T00:01:08Z",
+    "error": "TimeoutError: The read operation timed out",
+    "controlled": false,
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "33c6f6aa7ba1c9214ce0777b720ec1f78a646a1482e0a367cbf8cbbb0dd28a04",
+    "data_loss": false
+  },
+  "updated_at": "2026-08-18T00:01:08Z",
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/VNLA.json",
+    "payload_sha256": "33c6f6aa7ba1c9214ce0777b720ec1f78a646a1482e0a367cbf8cbbb0dd28a04",
+    "source_as_of": "2026-08-14T20:00:00Z",
+    "fetched_at": "2026-08-16T23:45:09Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/VNLA.json",
+    "payload_sha256": "33c6f6aa7ba1c9214ce0777b720ec1f78a646a1482e0a367cbf8cbbb0dd28a04",
+    "source_as_of": "2026-08-14T20:00:00Z",
+    "fetched_at": "2026-08-16T23:45:09Z"
+  }
+}

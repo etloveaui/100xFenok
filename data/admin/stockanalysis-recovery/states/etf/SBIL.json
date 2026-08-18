@@ -1,0 +1,54 @@
+{
+  "schema_version": "stockanalysis-recovery-state/v1",
+  "artifact_kind": "etf",
+  "entity": "SBIL",
+  "attempts": [
+    {
+      "run_id": "32082721092",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-08-18T00:01:08Z",
+      "outcome": "failed",
+      "controlled": false,
+      "error": "TimeoutError: The read operation timed out"
+    }
+  ],
+  "resolution_state": "lkg_primary",
+  "retry": true,
+  "last_attempt": {
+    "run_id": "32082721092",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "schedule": "50 23 * * 1-5",
+    "natural": true,
+    "observed_at": "2026-08-18T00:01:08Z",
+    "outcome": "failed",
+    "controlled": false,
+    "error": "TimeoutError: The read operation timed out"
+  },
+  "latest_failure": {
+    "run_id": "32082721092",
+    "run_attempt": 1,
+    "observed_at": "2026-08-18T00:01:08Z",
+    "error": "TimeoutError: The read operation timed out",
+    "controlled": false,
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "b73d96e8dfc71283cbafeaf95ec60c51084eacf2f0b62d95b183c59da6381ba8",
+    "data_loss": false
+  },
+  "updated_at": "2026-08-18T00:01:08Z",
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/SBIL.json",
+    "payload_sha256": "b73d96e8dfc71283cbafeaf95ec60c51084eacf2f0b62d95b183c59da6381ba8",
+    "source_as_of": "2026-08-14T20:00:00Z",
+    "fetched_at": "2026-08-16T23:42:32Z"
+  },
+  "current": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/SBIL.json",
+    "payload_sha256": "b73d96e8dfc71283cbafeaf95ec60c51084eacf2f0b62d95b183c59da6381ba8",
+    "source_as_of": "2026-08-14T20:00:00Z",
+    "fetched_at": "2026-08-16T23:42:32Z"
+  }
+}
