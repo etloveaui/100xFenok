@@ -471,6 +471,9 @@ jobs:
         env:
           ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
           ARTIFACT_NAME: ${{ needs.acquire-stockanalysis.outputs.artifact_name }}
+          # Reachability is proven by remote comparison rather than by local
+          # shallow history, so the readback needs an API token.
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -623,17 +626,50 @@ jobs:
               # equal the acquisition digest. Together they bind current origin
               # to this exact publication rather than to a coincidence.
               #
-              # The bounded deepen exists because this checkout is shallow: an
-              # ancestry question is unanswerable on a truncated graph, and an
-              # unanswerable question must not read as a confirmed one. The
-              # readback runs seconds after our own push, so the intervening
-              # window is a handful of commits and 50 is generous.
-              git fetch --deepen=50 origin main >/dev/null 2>&1 || true
-              if git merge-base --is-ancestor "$PUBLISHED_COMMIT" HEAD >/dev/null 2>&1; then
-                COMMIT_REACHABLE="yes"
-              else
-                COMMIT_REACHABLE="no"
+              # Reachability is proven against the REMOTE, not against local
+              # history. A local ancestry test answers from whatever slice of
+              # the graph this shallow checkout happens to hold, and compares
+              # against a HEAD that is already stale, so a burst of commits
+              # between our push and this readback would fence a publication
+              # that actually succeeded. A fixed deepen only moves that cliff;
+              # it does not remove it. The remote comparison answers from the
+              # complete graph, so a negative result means the commit really is
+              # not on main.
+              COMPARE_STATUS=""
+              for compare_attempt in 1 2 3; do
+                if COMPARE_STATUS="$(gh api "repos/$GITHUB_REPOSITORY/compare/$PUBLISHED_COMMIT...main" --jq '.status' 2>/dev/null)" \
+                  && [ -n "$COMPARE_STATUS" ]; then
+                  break
+                fi
+                COMPARE_STATUS=""
+                sleep $((compare_attempt * 2))
+              done
+              # Availability and identity are different failures. If no complete
+              # comparison could be obtained the answer is UNKNOWN, and an
+              # unknown must never be reported as a proven mismatch — that is
+              # what the pre-existing infrastructure fence is for.
+              if [ -z "$COMPARE_STATUS" ]; then
+                echo "status=$ACCEPTED_STATUS" >> "$GITHUB_OUTPUT"
+                echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
+                echo "fence_reason=main_readback_infrastructure" >> "$GITHUB_OUTPUT"
+                echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
+                echo "remote comparison for $PUBLISHED_COMMIT unavailable after 3 attempts" >&2
+                {
+                  echo "### StockAnalysis publish fence"
+                  echo "- status: $ACCEPTED_STATUS"
+                  echo "- confirmation: not_confirmed"
+                  echo "- fence_reason: main_readback_infrastructure"
+                } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+                exit 75
               fi
+              case "$COMPARE_STATUS" in
+                identical|ahead) COMMIT_REACHABLE="yes" ;;
+                *) COMMIT_REACHABLE="no" ;;
+              esac
+              # The trailer is read locally by SHA on purpose. Git objects are
+              # content-addressed, so the local object at this commit is
+              # byte-identical to the remote's, and a second API call would add
+              # a failure mode without adding a fact.
               COMMIT_ARTIFACT_DIGEST="$(
                 git log -1 --format=%B "$PUBLISHED_COMMIT" 2>/dev/null \
                   | sed -n 's/^StockAnalysis-Artifact-Digest: //p' | tail -n 1
@@ -643,12 +679,13 @@ jobs:
                 echo "confirmation=not_confirmed" >> "$GITHUB_OUTPUT"
                 echo "fence_reason=main_readback_identity" >> "$GITHUB_OUTPUT"
                 echo "commit=$PUBLISHED_COMMIT" >> "$GITHUB_OUTPUT"
-                echo "post-publish identity proof failed: reachable=$COMMIT_REACHABLE trailer_matches_acquisition=$([ "$COMMIT_ARTIFACT_DIGEST" = "$ARTIFACT_DIGEST" ] && echo yes || echo no)" >&2
+                echo "post-publish identity proof failed: compare_status=$COMPARE_STATUS reachable=$COMMIT_REACHABLE trailer_matches_acquisition=$([ "$COMMIT_ARTIFACT_DIGEST" = "$ARTIFACT_DIGEST" ] && echo yes || echo no)" >&2
                 {
                   echo "### StockAnalysis publish fence"
                   echo "- status: $ACCEPTED_STATUS"
                   echo "- confirmation: not_confirmed"
                   echo "- fence_reason: main_readback_identity"
+                  echo "- compare_status: $COMPARE_STATUS"
                   echo "- commit_reachable: $COMMIT_REACHABLE"
                 } >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
                 exit 75

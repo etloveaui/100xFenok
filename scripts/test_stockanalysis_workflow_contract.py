@@ -379,31 +379,41 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         # acquisition digest, so that "confirmed" is an identity claim rather
         # than a coincidence of two independent successes.
         self.assertIn('fence_reason=main_readback_identity', publish)
-        self.assertIn('git merge-base --is-ancestor "$PUBLISHED_COMMIT" HEAD', publish)
         self.assertIn("sed -n 's/^StockAnalysis-Artifact-Digest: //p'", publish)
         self.assertIn('[ "$COMMIT_ARTIFACT_DIGEST" != "$ARTIFACT_DIGEST" ]', publish)
-        # An ancestry question is unanswerable on a truncated graph, so the
-        # bounded deepen must precede the reachability test; without it an
-        # unanswerable question would read as a failed one.
-        self.assertIn("git fetch --deepen=50 origin main", publish)
+        # Reachability is proven against the remote, from the complete graph.
+        # A local ancestry test answers from whatever slice a shallow checkout
+        # holds and against an already-stale HEAD, so a burst of commits between
+        # the push and the readback would fence a valid publication. A fixed
+        # deepen only moves that cliff, so neither may reappear.
+        compare = 'gh api "repos/$GITHUB_REPOSITORY/compare/$PUBLISHED_COMMIT...main"'
+        self.assertIn(compare, publish)
+        self.assertNotIn("--deepen", publish)
+        self.assertNotIn("git merge-base --is-ancestor", publish)
+        self.assertIn("for compare_attempt in 1 2 3", publish)
+        self.assertIn("identical|ahead) COMMIT_REACHABLE=", publish)
+        # Availability and identity are different failures. An unobtainable
+        # comparison is the pre-existing infrastructure fence, never an identity
+        # mismatch, so "we could not ask" can never be reported as "the answer
+        # was no".
+        unknown = 'if [ -z "$COMPARE_STATUS" ]; then'
+        self.assertIn(unknown, publish)
+        unknown_block = publish[publish.index(unknown):publish.index("esac", publish.index(unknown))]
+        self.assertIn('fence_reason=main_readback_infrastructure', unknown_block)
+        self.assertNotIn('fence_reason=main_readback_identity', unknown_block)
+        # All three proofs gate the confirmation, in order: attempt, then remote
+        # reachability, then trailer equality.
         self.assertLess(
-            publish.index("git fetch --deepen=50 origin main"),
-            publish.index('git merge-base --is-ancestor "$PUBLISHED_COMMIT" HEAD'),
+            publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
+            publish.index(compare),
         )
-        # Both identity checks gate the confirmation, not the other way round.
         self.assertLess(
-            publish.index('git merge-base --is-ancestor "$PUBLISHED_COMMIT" HEAD'),
+            publish.index(compare),
             publish.index('echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"'),
         )
         self.assertLess(
             publish.index('[ "$COMMIT_ARTIFACT_DIGEST" != "$ARTIFACT_DIGEST" ]'),
             publish.index('echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"'),
-        )
-        # The identity proof runs only after the attempt proof, so a confirmed
-        # readback carries all three claims rather than replacing one with another.
-        self.assertLess(
-            publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
-            publish.index("git fetch --deepen=50 origin main"),
         )
         self.assertLess(
             publish.index("git push origin HEAD:main"),
