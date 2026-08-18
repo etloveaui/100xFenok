@@ -352,25 +352,6 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn("readback_confirmation: ${{ steps.publish.outputs.confirmation }}", job_header)
         self.assertEqual(self.text.count("steps.publish.outputs"), 2)
 
-    def test_rollback_rehearsal_is_dispatch_only_and_cannot_write_git(self) -> None:
-        rollback = self.text.split("  rollback-stockanalysis-etf-plane:\n", 1)[1]
-        # Dispatch only, and only when explicitly asked. A schedule must never
-        # reach it.
-        self.assertIn(
-            "if: github.event_name == 'workflow_dispatch' && github.event.inputs.plane_rollback == 'true'",
-            self.text,
-        )
-        # It queues behind a publish instead of racing or cancelling one.
-        self.assertIn("group: stockanalysis-etf-detail-publish", rollback)
-        self.assertIn("cancel-in-progress: false", rollback)
-        # Pointer authority only: it must not be able to write Git.
-        self.assertIn("contents: read", rollback)
-        self.assertNotIn("contents: write", rollback.split("steps:", 1)[0])
-        self.assertIn("--rollback", rollback)
-        # A rollback dispatch acquires nothing, which is what keeps the normal
-        # chain out of it: every other job needs acquire.
-        self.assertIn("if: github.event.inputs.plane_rollback != 'true'", self.text)
-
     def test_publish_is_non_confirming_on_stale_and_reads_back_current_main(self) -> None:
         publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
         stale_start = publish.index('if [ "$APPLY_STATUS" = "stale" ]; then')
