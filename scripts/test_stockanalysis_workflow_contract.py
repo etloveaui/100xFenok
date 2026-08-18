@@ -366,7 +366,15 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         # Inspection is read-only and reuses the existing live-route reader; it
         # needs no typed confirmation because it cannot change anything.
         self.assertIn("if: github.event.inputs.operation == 'INSPECT'", source)
-        self.assertIn("node scripts/dev-cloud-data-plane-route-live.mjs", source)
+        self.assertIn(
+            "node scripts/dev-cloud-data-plane-route-live.mjs --family stockanalysis-etf-detail",
+            source,
+        )
+        # The reader must send the family header only when a family is given, so
+        # the family-absent call stays byte-identical to the legacy shape.
+        reader = (ROOT / "scripts" / "dev-cloud-data-plane-route-live.mjs").read_text(encoding="utf-8")
+        self.assertIn('const family = flag("family", null);', reader)
+        self.assertIn('if (family) headers["x-data-plane-family"] = family;', reader)
         self.assertNotIn("--rollback", source.split("if: github.event.inputs.operation == 'INSPECT'", 1)[1].split("rollback:", 1)[0])
         # Pointer authority only: read-only Git, bounded, and queued behind a
         # publish rather than racing or cancelling one.

@@ -9,7 +9,7 @@
 //
 // Usage:
 //   DATA_PLANE_WRITE_KEY=... node scripts/dev-cloud-data-plane-route-live.mjs
-//   [--endpoint https://.../internal/cloud-data-plane]
+//   [--endpoint https://.../internal/cloud-data-plane] [--family <name>]
 
 const DEFAULT_ENDPOINT = "https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane";
 
@@ -22,6 +22,11 @@ function flag(name, fallback) {
 }
 
 const endpoint = flag("endpoint", process.env.DATA_PLANE_ENDPOINT ?? DEFAULT_ENDPOINT);
+// Optional, and absent by default on purpose: without it every request stays
+// byte-identical to the legacy shape and reads the route's default instance.
+// With it, the route selects that family's Durable Object, which has its own
+// pointer, ledger and sequence.
+const family = flag("family", null);
 const key = process.env.DATA_PLANE_WRITE_KEY;
 
 if (!key) {
@@ -32,6 +37,7 @@ if (!key) {
 async function call(action, { method = "POST", headerKey = key, body = "{}" } = {}) {
   const headers = { "content-type": "application/json" };
   if (headerKey !== null) headers["x-data-plane-key"] = headerKey;
+  if (family) headers["x-data-plane-family"] = family;
   const response = await fetch(`${endpoint}/${action}`, {
     method,
     headers,
@@ -63,7 +69,10 @@ for (const check of checks) {
   console.log(`${ok ? "ok  " : "FAIL"} ${check.name}: HTTP ${result.status} (expected ${check.expect})${detail}`);
   if (ok && check.expect === 200) {
     const pointer = result.payload?.result ?? null;
-    console.log(`     pointer: ${pointer ? `sequence ${pointer.sequence}, generation ${pointer.active?.generation_id}` : "none yet"}`);
+    console.log(`     instance: ${family ?? "default (no family header)"}`);
+    console.log(`     pointer: ${pointer
+      ? `sequence ${pointer.sequence}, active ${pointer.active?.generation_id}, previous ${pointer.previous?.generation_id ?? "none"}`
+      : "none yet"}`);
   }
 }
 

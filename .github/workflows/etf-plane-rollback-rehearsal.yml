@@ -54,7 +54,7 @@ jobs:
       - name: Read the live pointer
         env:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
-        run: node scripts/dev-cloud-data-plane-route-live.mjs
+        run: node scripts/dev-cloud-data-plane-route-live.mjs --family stockanalysis-etf-detail
 
   rollback:
     # Both the operation and a typed confirmation. A typo cannot move a
