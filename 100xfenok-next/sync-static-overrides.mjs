@@ -551,10 +551,78 @@ function compactFenokEdgePublicMirror() {
   console.log(`[sync-static-overrides] compacted ${relativePath}`);
 }
 
+// Four control-plane bridge/index mirrors reach the served surface carrying the
+// filesystem paths of their private raw artifacts. The payloads never ship —
+// _private/ is gitignored and untracked — but the path structure does, and the
+// public mirror guard has been failing on exactly these four for as long as
+// nothing ran it.
+//
+// These are redacted rather than removed. The canonical data/** copies must keep
+// the fields, because the edge coverage-index builder reads them to open the
+// private manifests, and every other field these four publish stays intact; only
+// the served projection loses the private paths. A key is dropped when its name
+// is a private-artifact reference or when its string value points inside
+// _private/, so a null-valued reference cannot survive as a bare key either.
+const PRIVATE_ARTIFACT_PATH_MIRRORS = Object.freeze([
+  "public/data/admin/fenok-flow-backfill-index.json",
+  "public/data/admin/krx/lkg/bridge.json",
+  "public/data/admin/taiwan-data-bridge-index.json",
+  "public/data/computed/taiwan-data-bridge-index.json",
+]);
+const PRIVATE_ARTIFACT_KEYS = Object.freeze([
+  "private_artifacts",
+  "private_manifest_file",
+  "private_raw_base_dir",
+  "private_storage_ref",
+]);
+
+// A value that IS a private path is a reference and its key is dropped. A value
+// that merely MENTIONS the private tree is prose — one of these files documents
+// the boundary in a sentence, so the sentence asserting the privacy rule is what
+// trips the privacy guard. Redact the token in place there and the statement
+// keeps its meaning without publishing the structure.
+const PRIVATE_PATH_TOKEN = /_private\/[A-Za-z0-9._/<>-]*/g;
+const BARE_PRIVATE_PATH = /^[A-Za-z0-9._/-]*_private\/[A-Za-z0-9._/<>-]*$/;
+
+function stripPrivateArtifactPaths(value) {
+  if (typeof value === "string") {
+    return value.includes("_private/") ? value.replace(PRIVATE_PATH_TOKEN, "<private-raw-tree>") : value;
+  }
+  if (Array.isArray(value)) return value.map(stripPrivateArtifactPaths);
+  if (value === null || typeof value !== "object") return value;
+  const out = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (PRIVATE_ARTIFACT_KEYS.includes(key)) continue;
+    if (typeof entry === "string" && BARE_PRIVATE_PATH.test(entry.trim())) continue;
+    const cleaned = stripPrivateArtifactPaths(entry);
+    // A container whose only contents were private paths is dropped rather than
+    // published as an empty object, which would read as "nothing was here".
+    if (cleaned !== null && typeof cleaned === "object" && !Array.isArray(cleaned)
+      && Object.keys(cleaned).length === 0 && Object.keys(entry).length > 0) continue;
+    out[key] = cleaned;
+  }
+  return out;
+}
+
+export function redactPrivateArtifactPathMirrors({ mirrors = PRIVATE_ARTIFACT_PATH_MIRRORS } = {}) {
+  const redacted = [];
+  for (const relativePath of mirrors) {
+    const filePath = path.join(rootDir, relativePath);
+    if (!fs.existsSync(filePath)) continue;
+    const original = fs.readFileSync(filePath, "utf8");
+    if (!original.includes("_private/") && !PRIVATE_ARTIFACT_KEYS.some((key) => original.includes(`"${key}"`))) continue;
+    writeJson(relativePath, stripPrivateArtifactPaths(JSON.parse(original)));
+    redacted.push(relativePath);
+    console.log(`[sync-static-overrides] redacted private artifact paths from ${relativePath}`);
+  }
+  return redacted;
+}
+
 // Guard so importing this module (fixture tests) does not run the whole override
 // pipeline against the importer's cwd. Executed only when run as the sync-static step.
 if (isMain) {
 removePrivateDataSupplyPublicTrees();
+redactPrivateArtifactPathMirrors();
 removePrivateResearchPublicTrees();
 removePrivateEdgarPublicTree();
 removePrivateFactsetPublicTree();
