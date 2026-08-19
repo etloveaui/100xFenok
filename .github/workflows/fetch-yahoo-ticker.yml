@@ -205,10 +205,22 @@ jobs:
       cancel-in-progress: false
       queue: max
     steps:
+      # Measured 2026-08-19: a full checkout here cost 86s INSIDE the writer lock
+      # to support 2s of persistence, which doubled this lane's total occupancy
+      # rather than reducing it. Persistence reads the lane manifest, rebuilds
+      # the canonical one from the registry and workflows, and writes one shard,
+      # so it needs those paths and not the multi-gigabyte producer trees.
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            100xfenok-next/scripts
+            100xfenok-next/src/lib
+            data/admin
 
       - name: Start from latest main
         run: |
