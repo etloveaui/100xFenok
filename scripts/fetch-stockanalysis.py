@@ -5976,7 +5976,13 @@ def fetch_yahoo_etf_fallback(
                 endpoint_family="yahoo_finance_etf_detail",
                 ticker=ticker,
                 provider_path=f"data/yf/finance/{ticker}.json",
-                provider_schema="yf-finance/v2",
+                # The etf_detail contract, not the finance artifact's own schema.
+                # provider_path names the file that was read, but the observation
+                # is an etf_detail row, and the resolver validates provider_schema
+                # against the etf_detail policy for this provider. yf-finance/v2 is
+                # the stock_detail value; using it here made every failed Yahoo ETF
+                # fallback poison the next resolve with a contract mismatch.
+                provider_schema="yf-etf-detail/v1",
                 reason_code=(
                     "source_date_unavailable"
                     if "source date is unavailable" in str(exc)
