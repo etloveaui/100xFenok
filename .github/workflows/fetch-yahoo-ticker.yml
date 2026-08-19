@@ -19,15 +19,24 @@ permissions:
   contents: write
   actions: write
 
-concurrency:
-  group: fenok-data-writer-refs/heads/main
-  cancel-in-progress: false
-  queue: max
+# The global Git writer lock is taken per JOB rather than per workflow, so the
+# cloud publication - which writes to R2 and the coordinator and never to Git -
+# no longer occupies the lock every other lane queues behind. Measured on the
+# worst observed run (DEC-383): 53s occupancy, 30s of it publication.
 
 jobs:
   fetch-yahoo-ticker:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: write
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
+    outputs:
+      fetch_outcome: ${{ steps.fetch_yahoo.outcome }}
 
     steps:
       - name: Checkout repository
@@ -119,9 +128,52 @@ jobs:
           done
           echo "git push failed after retrying concurrent main updates"
           exit 1
+  # No Git write happens here, so this job deliberately does not take the global
+  # writer group. Its own group still serialises two publications of this family
+  # against each other, because they contend for one R2 keyspace and pointer.
+  publish:
+    needs: fetch-yahoo-ticker
+    if: ${{ always() && needs.fetch-yahoo-ticker.result != 'cancelled' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    concurrency:
+      group: yahoo-ticker-macro-publish
+      cancel-in-progress: false
+      queue: max
+    outputs:
+      publisher_outcome: ${{ steps.publish_cloud_generation.outcome }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            100xfenok-next/scripts
+            100xfenok-next/src/lib
+            data/admin/data-supply-state/publish-outcomes
+            data/macro
+
+      - name: Start from latest main
+        run: |
+          git fetch --depth=1 origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: '20'
+
+      # Both legs of the previous single-job condition are preserved: the fetch
+      # step succeeded AND its job (which includes the Git publication) did too.
+      # A failed push therefore still publishes nothing, and a skipped
+      # publication still reports "skipped" to persistence exactly as before.
       - name: Publish yahoo-ticker-macro generation to the cloud data plane
         id: publish_cloud_generation
-        if: ${{ steps.fetch_yahoo.outcome == 'success' }}
+        if: ${{ needs.fetch-yahoo-ticker.result == 'success' && needs.fetch-yahoo-ticker.outputs.fetch_outcome == 'success' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
@@ -129,6 +181,60 @@ jobs:
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
         run: node scripts/publish-cloud-data-generation.mjs --family=yahoo-ticker-macro --tolerate-gate-block --json
 
+      # The shard is the one thing persistence cannot recompute, so it crosses
+      # the job boundary as an artifact.
+      - name: Upload yahoo-ticker-macro outcome shard
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: yahoo-ticker-macro-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          path: data/admin/data-supply-state/publish-outcomes/yahoo-ticker-macro.json
+          if-no-files-found: error
+          retention-days: 1
+
+  # The second and last holder of the global Git writer lock in this workflow.
+  persist:
+    needs: [fetch-yahoo-ticker, publish]
+    if: ${{ always() && needs.publish.result != 'cancelled' && needs.publish.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+
+      - name: Start from latest main
+        run: |
+          git fetch --depth=1 origin +main:refs/remotes/origin/main
+          git checkout -B main origin/main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: '20'
+
+      - name: Download yahoo-ticker-macro outcome shard
+        uses: actions/download-artifact@v4
+        with:
+          name: yahoo-ticker-macro-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          path: data/admin/data-supply-state/publish-outcomes
+
+      - name: Assert the outcome shard arrived
+        run: |
+          set -euo pipefail
+          shard=data/admin/data-supply-state/publish-outcomes/yahoo-ticker-macro.json
+          if [ ! -s "$shard" ]; then
+            echo "::error::outcome shard $shard is missing or empty; evidence would be lost" >&2
+            exit 1
+          fi
+
       - name: Persist yahoo-ticker-macro publish outcome
         if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=yahoo-ticker-macro --workflow=.github/workflows/fetch-yahoo-ticker.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}
+        run: node scripts/persist-cloud-publish-outcome.mjs --family=yahoo-ticker-macro --workflow=.github/workflows/fetch-yahoo-ticker.yml --publisher-outcome=${{ needs.publish.outputs.publisher_outcome }}
