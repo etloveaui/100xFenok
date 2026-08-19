@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-19T02:34:13.020Z",
+  "generated_at": "2026-08-19T03:14:47.521Z",
   "status": "open",
-  "open_incident_count": 11,
+  "open_incident_count": 10,
   "open_incidents": [
     {
       "workflow": "data-plane-serving-probe.yml",
@@ -16,19 +16,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "no_declaration"
-    },
-    {
-      "workflow": "fenok-edge-daily.yml",
-      "label": "Fenok Edge Daily Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "unrecovered_overdue"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
     },
     {
       "workflow": "fetch-damodaran-shadow.yml",
@@ -206,10 +193,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "attempt_gap"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "fenok-edge-krx-daily.yml",
@@ -539,8 +524,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 23,
-    "overdue": 3,
+    "not_due": 24,
+    "overdue": 2,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -556,13 +541,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32208887798",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32208887798",
-    "observed_at": "2026-08-19T02:34:13.020Z",
-    "event": "workflow_run",
+    "run_id": "32211326631",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32211326631",
+    "observed_at": "2026-08-19T03:14:47.521Z",
+    "event": "schedule",
     "workflows": [
       "data-plane-serving-probe.yml",
-      "fenok-edge-daily.yml",
       "fetch-damodaran-shadow.yml",
       "fetch-edgar-filings.yml",
       "fetch-finra-ats-weekly.yml",
