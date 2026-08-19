@@ -67,14 +67,13 @@ export type EtfAuthorityMode = "static_primary_cloud_shadow";
 
 export const ETF_AUTHORITY_MODE: EtfAuthorityMode = "static_primary_cloud_shadow";
 
-// D3 static-LKG aging: 60-hour ceiling, dormant until Cloud authority is cut
-// over, because under static-primary the committed shard IS the authority.
-// Activation is a predicate, not a second mode literal: the mode switch is
-// exhaustive, so a literal would force a serving decision this lane cannot make.
+// D3 owner-approved option A applies the publication-cycle state and 60-hour
+// ceiling only to enrolled ETFs on the authority-transition surface. Direct
+// unenrolled static shards remain outside P3; authority selection is unchanged.
 export const ETF_STALE_REFUSAL_MAX_AGE_HOURS = 60;
 
-export function etfStaleRefusalActive(mode: EtfAuthorityMode = ETF_AUTHORITY_MODE): boolean {
-  return (mode as string) !== "static_primary_cloud_shadow";
+export function etfStaleRefusalActive(): boolean {
+  return true;
 }
 
 // Freshness from the alarm document, whose per-family fields derive from the
@@ -183,8 +182,7 @@ export interface EtfDetailResolverDependencies {
   readPlanePayload: (ticker: string) => Promise<StockanalysisEtfPlaneDocumentResult>;
   readShardPayload: (ticker: string) => Promise<StockanalysisEtfShardDocumentResult>;
   readAlarmState: () => Promise<PublicJsonDocument | null>;
-  // Injectable so the post-cutover path is testable: no approved Cloud-authority
-  // mode literal exists yet.
+  // Injectable only to isolate the focused refusal branches in contracts.
   staleRefusalActive: () => boolean;
   now: () => Date;
 }
@@ -579,9 +577,9 @@ export async function resolveDataSupplyEtfDetail(
       stateObservedAt: parsedIndex.generatedAt,
     };
   }
-  // The read sits inside the guard, so dormant mode performs no extra read.
-  // When active, an over-age entry returns the same typed unavailable the
-  // projection already produces, for this ETF surface only.
+  // The read sits inside the enrollment guard. Missing, invalid, stale, or
+  // absent alarm state intentionally fails closed through the existing typed-
+  // unavailable response and telemetry path.
   let publicationFreshness: "delayed" | null = null;
   if (dependencies.staleRefusalActive()) {
     const alarmDocument = await dependencies.readAlarmState();

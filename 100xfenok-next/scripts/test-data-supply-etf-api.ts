@@ -589,10 +589,9 @@ try {
   Object.defineProperty(globalThis, "caches", { configurable: true, value: originalCaches });
 }
 
-// D3 static-LKG aging: dormant until Cloud authority is cut over. Invariants
-// covered here: a signal that cannot be trusted refuses rather than serves, and
-// dormant mode leaves the response shape unmarked. Zero-read is a property of
-// the guard, not something these assertions observe.
+// D3 static-LKG aging is active on the public ETF detail resolver. A signal that
+// cannot be trusted refuses rather than serves; healthy publication state keeps
+// the existing selected response unmarked.
 {
   const alarm = (state: string | null, age: unknown, generatedAt: unknown = "2026-07-12T00:00:00Z") => ({
     generated_at: generatedAt,
@@ -604,6 +603,8 @@ try {
   });
   const armed = (alarmState: JsonRecord | null) =>
     fixture({ state: "fresh_fallback", staleRefusalActive: true, alarmState });
+
+  assert.equal(etfStaleRefusalActive(), true, "runtime publication-cycle refusal must be active");
 
   // One representative per rejection branch. A present-but-absurd field is not a
   // lesser problem than a missing one, and a future clock must not be clamped.
@@ -618,12 +619,6 @@ try {
   }
   assert.equal(reconstructEtfFreshness(alarm("healthy", 12), new Date(Number.NaN)).ageHours, null, "non-finite now");
   assert.equal(evaluateEtfStaleRefusal({ state: "healthy", ageHours: Number.NaN, active: true }).verdict, "unavailable");
-
-  const dormant = await fixture({ state: "fresh_fallback", alarmState: alarm("unavailable", 900) });
-  assert.ok(
-    dormant.kind === "selected" && !("publication_freshness" in dormant.dataSupply),
-    "dormant must serve unmarked regardless of the signal",
-  );
 
   const delayed = await armed(alarm("delayed", 1));
   assert.equal(
