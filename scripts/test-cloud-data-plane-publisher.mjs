@@ -281,7 +281,63 @@ async function assertRejectsCode(promise, code) {
   const hungElapsed = Date.now() - hungStarted;
   assert.equal(hungCalls, 3);
   assert.ok(hungElapsed < 5_000, `hung r2-rest fetch escaped its deadline: ${hungElapsed}ms`);
-  console.log("r2-rest shim: 404/200/5xx-retry/429-bounded-retry/other-4xx-no-retry/network-retry/timeout-abort ok");
+
+  // A body that dies AFTER the headers arrive is a transport failure like any
+  // other; undici surfaces it as "terminated" only once the reader is drained.
+  // It stays inside the same three-attempt budget instead of escaping to the
+  // publish parity gate or the family materializer as an unretried failure.
+  let midBodyCalls = 0;
+  const midBodyBucket = createR2RestBucket({
+    accountId: "acct",
+    bucket: "bucket",
+    token: "token",
+    sleepImpl: async () => {},
+    fetchImpl: async () => {
+      midBodyCalls += 1;
+      return midBodyCalls < 3
+        ? new Response(
+          new ReadableStream({ start(controller) { controller.error(new TypeError("terminated")); } }),
+          { status: 200 },
+        )
+        : new Response(bytes, { status: 200 });
+    },
+  });
+  const midBodyObject = await midBodyBucket.get("objects/sha256/mid-body");
+  assert.deepEqual(new Uint8Array(await midBodyObject.arrayBuffer()), bytes);
+  assert.equal(midBodyCalls, 3);
+
+  // A body that stalls after the headers is aborted by the same per-attempt
+  // deadline as a hung request, so the timer cannot be cleared while bytes are
+  // still in flight.
+  let stalledBodyCalls = 0;
+  const stalledBodyBucket = createR2RestBucket({
+    accountId: "acct",
+    bucket: "bucket",
+    token: "token",
+    timeoutMs: 60,
+    sleepImpl: async () => {},
+    fetchImpl: (_url, init) => new Response(
+      new ReadableStream({
+        start(controller) {
+          stalledBodyCalls += 1;
+          init.signal?.addEventListener("abort", () => {
+            controller.error(init.signal.reason ?? new Error("aborted"));
+          });
+        },
+      }),
+      { status: 200 },
+    ),
+  });
+  const stalledStarted = Date.now();
+  await assert.rejects(stalledBodyBucket.get("objects/sha256/stalled-body"), (error) => {
+    assert.equal(error.code, "R2_REST_NETWORK");
+    assert.match(error.message, /timed out after/);
+    return true;
+  });
+  const stalledElapsed = Date.now() - stalledStarted;
+  assert.equal(stalledBodyCalls, 3);
+  assert.ok(stalledElapsed < 5_000, `stalled r2-rest body escaped its deadline: ${stalledElapsed}ms`);
+  console.log("r2-rest shim: 404/200/5xx-retry/429-bounded-retry/other-4xx-no-retry/network-retry/timeout-abort/mid-body-retry/body-deadline ok");
 }
 
 // --- remote coordinator timeout, offline via an injected fetch --------------

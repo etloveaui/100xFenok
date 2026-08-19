@@ -18,7 +18,10 @@
 // every other 4xx is a semantic no-retry. Network errors and 5xx get at most
 // 3 attempts with exponential backoff.
 // Every attempt carries a bounded deadline (default 60s; override with the
-// timeoutMs option). A deadline hit is a network-class failure: it is retried
+// timeoutMs option) that covers the response BODY as well as the request:
+// fetch resolves as soon as headers arrive and hands back a lazy body reader,
+// so a socket that dies mid-body would otherwise escape both the deadline and
+// the retry budget. A deadline hit is a network-class failure: it is retried
 // like any other transport error and finally fails as R2_REST_NETWORK with a
 // timeout-specific message.
 
@@ -63,12 +66,19 @@ function rateLimitDelayMs(response, attempt, url) {
   );
 }
 
+// One attempt is the request AND its full body, both under the same deadline.
+// The body is drained here instead of being handed back as a lazy reader so a
+// mid-body transport reset is raised inside the attempt and retried like any
+// other network error, and so the timer cannot be cleared while bytes are
+// still in flight. Every consumer of get() reads the whole object immediately,
+// so this changes no caller's memory profile.
 async function fetchWithTimeout(fetchImpl, url, init, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     // The deadline wins over any caller-supplied signal; no caller passes one.
-    return await fetchImpl(url, { ...init, signal: controller.signal });
+    const response = await fetchImpl(url, { ...init, signal: controller.signal });
+    return { response, body: await response.arrayBuffer() };
   } catch (error) {
     if (controller.signal.aborted) {
       throw new Error(`r2-rest fetch timed out after ${timeoutMs}ms`);
@@ -79,9 +89,9 @@ async function fetchWithTimeout(fetchImpl, url, init, timeoutMs) {
   }
 }
 
-async function readErrorBody(response) {
+function errorBodyText(body) {
   try {
-    return (await response.text()).slice(0, 500);
+    return new TextDecoder().decode(body).slice(0, 500);
   } catch {
     return "<unreadable body>";
   }
@@ -108,8 +118,9 @@ export function createR2RestBucket({
   const objectsUrl = `${API_BASE}/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucket)}/objects`;
   const authHeaders = { Authorization: `Bearer ${token}` };
 
-  // One HTTP round trip with the shared retry policy. Returns the Response on
-  // any status; network failures and 5xx use the existing three-attempt bound.
+  // One HTTP round trip with the shared retry policy. Returns the Response and
+  // its already-drained body on any status; network failures, mid-body resets
+  // and 5xx use the existing three-attempt bound.
   // HTTP 429 alone gets a longer bounded retry window that honors Retry-After
   // and adds stable per-object jitter, so bounded parallel workers do not
   // immediately collide again. Every other 4xx remains a semantic no-retry.
@@ -118,9 +129,9 @@ export function createR2RestBucket({
     let transientAttempts = 0;
     let rateLimitAttempts = 0;
     while (true) {
-      let response;
+      let attempt;
       try {
-        response = await fetchWithTimeout(fetchImpl, url, init, effectiveTimeoutMs);
+        attempt = await fetchWithTimeout(fetchImpl, url, init, effectiveTimeoutMs);
       } catch (error) {
         lastError = error;
         transientAttempts += 1;
@@ -128,9 +139,10 @@ export function createR2RestBucket({
         await sleepImpl(BACKOFF_BASE_MS * 2 ** (transientAttempts - 1));
         continue;
       }
+      const { response } = attempt;
       if (response.status === 429) {
         rateLimitAttempts += 1;
-        if (rateLimitAttempts >= MAX_RATE_LIMIT_ATTEMPTS) return response;
+        if (rateLimitAttempts >= MAX_RATE_LIMIT_ATTEMPTS) return attempt;
         await sleepImpl(rateLimitDelayMs(response, rateLimitAttempts, url));
         continue;
       }
@@ -141,50 +153,50 @@ export function createR2RestBucket({
           continue;
         }
       }
-      return response;
+      return attempt;
     }
     fail("R2_REST_NETWORK", lastError?.message ?? "request failed without a response");
   }
 
   return {
     async get(key) {
-      const response = await request(`${objectsUrl}/${encodeURIComponent(key)}`, {
+      const { response, body } = await request(`${objectsUrl}/${encodeURIComponent(key)}`, {
         method: "GET",
         headers: authHeaders,
       });
       if (response.status === 404) return null;
       if (!response.ok) {
-        fail("R2_REST_HTTP", `get ${key} http ${response.status}: ${await readErrorBody(response)}`);
+        fail("R2_REST_HTTP", `get ${key} http ${response.status}: ${errorBodyText(body)}`);
       }
       return {
         async arrayBuffer() {
-          return response.arrayBuffer();
+          return body;
         },
       };
     },
 
     async put(key, bytes) {
       const body = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-      const response = await request(`${objectsUrl}/${encodeURIComponent(key)}`, {
+      const { response, body: responseBody } = await request(`${objectsUrl}/${encodeURIComponent(key)}`, {
         method: "PUT",
         headers: { ...authHeaders, "content-type": "application/octet-stream" },
         body,
       });
       if (!response.ok) {
-        fail("R2_REST_HTTP", `put ${key} http ${response.status}: ${await readErrorBody(response)}`);
+        fail("R2_REST_HTTP", `put ${key} http ${response.status}: ${errorBodyText(responseBody)}`);
       }
     },
 
     async list({ cursor } = {}) {
       const query = `?per_page=1000${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
-      const response = await request(`${objectsUrl}${query}`, {
+      const { response, body: responseBody } = await request(`${objectsUrl}${query}`, {
         method: "GET",
         headers: authHeaders,
       });
       if (!response.ok) {
-        fail("R2_REST_HTTP", `list http ${response.status}: ${await readErrorBody(response)}`);
+        fail("R2_REST_HTTP", `list http ${response.status}: ${errorBodyText(responseBody)}`);
       }
-      const body = await response.json();
+      const body = JSON.parse(new TextDecoder().decode(responseBody));
       if (!body?.success) {
         fail("R2_REST_HTTP", `list envelope not successful: ${JSON.stringify(body?.errors ?? null)}`);
       }
