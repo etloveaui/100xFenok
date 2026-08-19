@@ -16,12 +16,12 @@
     },
     "benchmarks": {
       "version": "3.8.0",
-      "updated": "2026-08-07",
+      "updated": "2026-08-14",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 7,
       "schema": true,
-      "description": "Market indices P/E, P/B, ROE - 32,133 records, 2010-01-01 ~ 2026-08-07, 38 sections, 867 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
+      "description": "Market indices P/E, P/B, ROE - 32,171 records, 2010-01-01 ~ 2026-08-14, 38 sections, 868 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     "damodaran": {
       "version": "2.3.0",
@@ -89,12 +89,12 @@
     },
     "yardney": {
       "version": "1.2.0",
-      "updated": "2026-08-07",
+      "updated": "2026-08-14",
       "update_frequency": "weekly",
       "source": "Feno Yardeni: official FRED WAAA/WBAA + Bloomberg-sourced 100x benchmark S&P 500 price/EPS",
       "file_count": 1,
       "schema": false,
-      "description": "Feno Yardeni model — 1,892 records (1990-02-02 ~ 2026-07-31), fair value 6,303.87 (+18.81%); latest benchmark row pending FRED weekly yield"
+      "description": "Feno Yardeni model — 1,894 records (1990-02-02 ~ 2026-08-14), fair value 6,341.71 (+22.77%)"
     },
     "computed": {
       "version": "1.0.0",
@@ -206,6 +206,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-08-19",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the owner-supplied 2026-08-14 EPS workbook: 32,171 records (+38), 2010-01-01 ~ 2026-08-14, 38 sections, 868 data points per index (kosdaq_150 867, hang_seng_tech 607, star50 317); source summaries 2,404 values + 66 nulls. RIM inputs and Feno Yardeni rebuilt from the new us.json; Yardeni advances to 1,894 records through 2026-08-14, latest fair value 6,341.71, premium +22.77%. Fenok RIM remains quarantined (display_ready=false, DEC-302) with non-diverged calibration checks.",
+      "breaking": false
+    },
     {
       "date": "2026-08-17",
       "folder": "sec-13f",

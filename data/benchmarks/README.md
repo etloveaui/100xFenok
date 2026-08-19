@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-01-01 ~ 2026-08-07 (16+ years, 867 data points per index)
+> **Period**: 2010-01-01 ~ 2026-08-14 (16+ years, 868 data points per index)
 > **Version**: 3.8.0
-> **Last Update**: 2026-08-10
+> **Last Update**: 2026-08-19
 
 ---
 
@@ -129,6 +129,7 @@ console.log(summaries.source_summaries.sp500.momentum.best_pe_ratio.ytd); // val
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.8.0 | 2026-08-19 | Weekly data update (2026-08-14 source): 32,171 records (+38), 2010-01-01 ~ 2026-08-14, 38 sections, 868 data points per index (kosdaq_150 867, hang_seng_tech 607, star50 317); source summaries 2,404 values + 66 nulls |
 | 3.8.0 | 2026-08-10 | Weekly data update (2026-08-07 source): 32,133 records (+38), 2010-01-01 ~ 2026-08-07, 38 sections, 867 data points per index (kosdaq_150 866, hang_seng_tech 606, star50 316); source summaries 2,404 values + 66 nulls |
 | 3.8.0 | 2026-08-03 | Weekly data update (2026-07-31 source): 32,095 records (+6), 2010-01-01 ~ 2026-08-02, 38 sections, 866 data points per index; source summaries 2,404 values + 66 nulls |
 | 3.8.0 | 2026-05-25 | Added backward-compatible `source_summaries` with 1W/1M/3M/6M/YTD and yearly changes for px_last, EPS, PER, PBR, and ROE; source coverage: 2,353 non-null values + 52 null placeholders |
