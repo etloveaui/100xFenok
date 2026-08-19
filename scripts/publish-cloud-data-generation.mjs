@@ -1887,31 +1887,48 @@ export async function recordPublishOutcome({
 // createR2RestBucket (byte-locked lib) maps list() to keys only and has no
 // delete; retention needs key+size and DeleteObject, so these two helpers talk
 // to the same account-level REST endpoint directly, mirroring the lib's retry
-// policy (never retry 4xx; network/5xx get 3 attempts with backoff).
+// policy (never retry 4xx; network/5xx get 3 attempts with backoff) and its
+// per-attempt deadline over the request AND its body.
 const R2_API_BASE = "https://api.cloudflare.com/client/v4/accounts";
 const R2_REST_MAX_ATTEMPTS = 3;
 const R2_REST_BACKOFF_BASE_MS = 200;
+const R2_REST_TIMEOUT_MS = 60_000;
 
 async function r2DataPlaneRequest({ accountId, bucket, token, fetchImpl, method, keyPath, query }) {
   const base = `${R2_API_BASE}/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucket)}/objects`;
   const url = `${base}${keyPath ? `/${encodeURIComponent(keyPath)}` : ""}${query ?? ""}`;
   let lastError = null;
   for (let attempt = 1; attempt <= R2_REST_MAX_ATTEMPTS; attempt += 1) {
+    // One attempt is the request AND its body under one deadline. fetch
+    // resolves as soon as headers arrive, so without this the body had no
+    // deadline and no retry: a socket dying mid-body escaped both bounds.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), R2_REST_TIMEOUT_MS);
     let response;
+    let body;
     try {
-      response = await fetchImpl(url, { method, headers: { Authorization: `Bearer ${token}` } });
+      response = await fetchImpl(url, {
+        method,
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      });
+      body = await response.arrayBuffer();
     } catch (error) {
-      lastError = error;
+      lastError = controller.signal.aborted
+        ? new Error(`r2-rest fetch timed out after ${R2_REST_TIMEOUT_MS}ms`)
+        : error;
       if (attempt < R2_REST_MAX_ATTEMPTS) {
         await new Promise((resolve) => setTimeout(resolve, R2_REST_BACKOFF_BASE_MS * 2 ** (attempt - 1)));
       }
       continue;
+    } finally {
+      clearTimeout(timer);
     }
     if (response.status >= 500 && attempt < R2_REST_MAX_ATTEMPTS) {
       await new Promise((resolve) => setTimeout(resolve, R2_REST_BACKOFF_BASE_MS * 2 ** (attempt - 1)));
       continue;
     }
-    return response;
+    return { response, body };
   }
   fail("R2_REST_NETWORK", lastError?.message ?? "request failed without a response");
 }
@@ -1922,13 +1939,13 @@ export async function listR2ObjectsDetailed({ accountId, bucket, token, fetchImp
   let cursor;
   do {
     const query = `?per_page=1000${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
-    const response = await r2DataPlaneRequest({
+    const { response, body: responseBody } = await r2DataPlaneRequest({
       accountId, bucket, token, fetchImpl, method: "GET", query,
     });
     if (!response.ok) {
-      fail("R2_REST_HTTP", `list http ${response.status}: ${(await response.text()).slice(0, 500)}`);
+      fail("R2_REST_HTTP", `list http ${response.status}: ${new TextDecoder().decode(responseBody).slice(0, 500)}`);
     }
-    const body = await response.json();
+    const body = JSON.parse(new TextDecoder().decode(responseBody));
     if (!body?.success) {
       fail("R2_REST_HTTP", `list envelope not successful: ${JSON.stringify(body?.errors ?? null)}`);
     }
@@ -1945,11 +1962,11 @@ export async function listR2ObjectsDetailed({ accountId, bucket, token, fetchImp
 // returns {ok:false, error} so executeRetentionPlan can record the failure.
 export async function deleteR2Object({ accountId, bucket, token, key, fetchImpl = fetch }) {
   try {
-    const response = await r2DataPlaneRequest({
+    const { response, body } = await r2DataPlaneRequest({
       accountId, bucket, token, fetchImpl, method: "DELETE", keyPath: key,
     });
     if (response.ok || response.status === 404) return { ok: true };
-    return { ok: false, error: `http ${response.status}: ${(await response.text()).slice(0, 500)}` };
+    return { ok: false, error: `http ${response.status}: ${new TextDecoder().decode(body).slice(0, 500)}` };
   } catch (error) {
     return { ok: false, error: `${error.code ?? "ERROR"}: ${error.message}` };
   }
