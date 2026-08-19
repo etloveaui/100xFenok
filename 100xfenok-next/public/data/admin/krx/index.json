@@ -1,53 +1,44 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "krx",
-  "updated_at": "2026-08-18T11:02:16.930Z",
-  "retry_set": [
-    "bridge"
-  ],
+  "updated_at": "2026-08-19T10:59:55.227Z",
+  "retry_set": [],
   "items": {
     "bridge": {
       "key": "bridge",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/krx/lkg/bridge.json",
-        "payload_sha256": "3723729f7cef1198ed49ab5d3ba69eaecc817cf6871080e8dd75cca4e64cb9d1",
-        "source_as_of": "2026-08-14"
+        "path": "data/admin/fenok-edge-korea-krx-daily-index.json",
+        "payload_sha256": "bf1c77a4a6947d0262bb21f7475c157ca4f0c30a954e4e39f94db2169f03646a",
+        "source_as_of": "2026-08-18"
       },
       "lkg": {
         "path": "data/admin/krx/lkg/bridge.json",
         "payload_sha256": "3723729f7cef1198ed49ab5d3ba69eaecc817cf6871080e8dd75cca4e64cb9d1",
         "source_as_of": "2026-08-14"
       },
-      "updated_at": "2026-08-18T11:02:16.930Z",
+      "updated_at": "2026-08-19T10:59:55.227Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "3723729f7cef1198ed49ab5d3ba69eaecc817cf6871080e8dd75cca4e64cb9d1",
-        "source_as_of": "2026-08-14",
-        "run_id": "32022579634",
+        "payload_sha256": "bf1c77a4a6947d0262bb21f7475c157ca4f0c30a954e4e39f94db2169f03646a",
+        "source_as_of": "2026-08-18",
+        "run_id": "32245008799",
         "run_attempt": 1,
-        "observed_at": "2026-08-17T11:03:02.449Z"
+        "observed_at": "2026-08-19T10:59:55.227Z"
       },
       "last_recovered_failure": {
-        "run_id": "30252012390",
-        "run_attempt": 1,
-        "observed_at": "2026-07-27T09:07:20.006Z",
-        "reason": "http_error"
-      },
-      "latest_failure": {
         "run_id": "32129204121",
         "run_attempt": 1,
         "observed_at": "2026-08-18T11:00:41.307Z",
         "reason": "schema_drift"
       },
-      "latest_promotion_deferral": {
-        "run_id": "32129204121",
-        "run_attempt": 1,
-        "observed_at": "2026-08-18T11:02:16.930Z",
-        "reason": "recovery_not_advanced_by_provider"
-      }
+      "recovered_from_run_id": "32129204121",
+      "recovered_at": "2026-08-19T10:59:55.227Z",
+      "recovery_run_id": "32245008799",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule"
     }
   }
 }

@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-08-15
+> **Last Updated**: 2026-08-19
 > **Total Files**: 30,493 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
@@ -35,10 +35,10 @@
 
 ### Valuation Data (benchmarks/, damodaran/)
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
-- Benchmarks latest: 32,133 records, 2010-01-01 ~ 2026-08-07, 38 sections (micro_sectors +과창판 STAR50), 867 S&P 500 data points (DEC-275 history-preservation merge)
+- Benchmarks latest: 32,171 records, 2010-01-01 ~ 2026-08-14, 38 sections (micro_sectors +과창판 STAR50), 868 S&P 500 data points (DEC-275 history-preservation merge)
 - Benchmarks v3.8: `summaries.json` includes 1W/1M/3M/6M/YTD and yearly source summaries for price, EPS, PER, PBR, and ROE (2,404 non-null values + 66 null placeholders)
 - Damodaran: industries (96 w/ beta, margins, EVA), extended US industry metrics (11 datasets), non-US regional metrics (7 regions x 17 datasets), ERP (178 countries, Apr 2026), historical ERP (66 years), credit ratings
-- Yardney: Feno Yardeni S&P 500 fair value model, 1,892 weekly public valuation records through 2026-07-31, latest fair value 6,303.87 and premium +18.81%; the 2026-08-07 benchmark row remains pending a matching FRED weekly yield observation; raw bond-yield components are excluded from public payloads
+- Yardney: Feno Yardeni S&P 500 fair value model, 1,894 weekly public valuation records through 2026-08-14, latest fair value 6,341.71 and premium +22.77%; raw bond-yield components are excluded from public payloads
 - RIM inputs: `computed/rim-index/inputs.json` is a preserved quarantined snapshot mirrored to Next public data; automatic RIM execution was retired under DEC-302, and the standalone scripts remain manual research tools rather than a freshness claim
 
 - 60 tracked investors' 13F holdings across 31 quarters through 2026-Q2 where filed
