@@ -89,6 +89,17 @@ function workflowAppliesManifestExcludes(workflowText, workflowRel, stageHelperT
     && stageHelperText.includes('git restore --staged -- "$exclude_path"');
 }
 
+// A workflow that builds its own candidate digest list must derive the skipped
+// paths from the same manifest exclusions the staging step removes. A path that
+// is digested but never committed can never satisfy an origin/main payload
+// readback, so the lane fails on every run until a human edits the file.
+function workflowDerivesCandidateExcludes(workflowText, workflowRel, stageHelperText) {
+  return workflowText.includes("scripts/stage-lane-manifest.sh")
+    && workflowText.includes(`--workflow ${workflowRel}`)
+    && workflowText.includes("--list-excludes")
+    && stageHelperText.includes(".workflows[$workflow].exclude[]?.path");
+}
+
 function workflowAppliesManifestStage(workflowText, workflowRel, stage) {
   return workflowText.includes("scripts/stage-lane-manifest.sh")
     && workflowText.includes(`--workflow ${workflowRel}`)
@@ -207,10 +218,17 @@ for (const workflowRel of writerWorkflows) {
     }
   }
   for (const spec of entry.exclude) {
+    // The exact path or the manifest-driven interface only: a bare basename can
+    // be satisfied by an unrelated file that merely shares its name.
     const represented = sourceText.includes(spec.path)
-      || sourceText.includes(path.posix.basename(spec.path))
       || workflowAppliesManifestExcludes(workflowText, workflowRel, laneStageHelperText);
     assert.ok(represented, `${workflowRel} exclusion is not present in workflow/script source: ${spec.path}`);
+    if (workflowText.includes("candidate-digests.txt")) {
+      assert.ok(
+        workflowDerivesCandidateExcludes(workflowText, workflowRel, laneStageHelperText),
+        `${workflowRel} builds a candidate digest list but does not derive manifest exclusions for ${spec.path}`,
+      );
+    }
   }
 }
 

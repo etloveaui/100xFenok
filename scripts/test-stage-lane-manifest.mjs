@@ -668,4 +668,36 @@ for (const [label, mutate] of [
   assert.deepEqual(cached(fixture.root), []);
 }
 
+{
+  // --list-excludes is the single source of truth a candidate/digest builder
+  // reads, so it must print exactly the manifest exclusions, stage nothing, and
+  // refuse to be combined with a stage argument.
+  const fixture = makeFixture();
+  configureAlwaysStage(
+    fixture,
+    [{ kind: "file", path: "kept.json", required: false }],
+    [
+      { kind: "file", path: "dropped.json", required: false },
+      { kind: "file", path: "nested/also-dropped.json", required: false },
+    ],
+  );
+  const base = [
+    HELPER,
+    "--repo-root", fixture.root,
+    "--manifest", path.join(fixture.root, "data/admin/lane-commit-manifest.json"),
+    "--workflow", WORKFLOW,
+  ];
+  const listed = spawnSync("bash", [...base, "--list-excludes"], { cwd: fixture.root, encoding: "utf8" });
+  assert.equal(listed.status, 0, `${listed.stderr}\n${listed.stdout}`);
+  assert.deepEqual(
+    listed.stdout.split("\n").filter(Boolean),
+    ["dropped.json", "nested/also-dropped.json"],
+    "--list-excludes must print exactly the manifest exclusion paths in order",
+  );
+  assert.deepEqual(cached(fixture.root), [], "--list-excludes must not stage anything");
+
+  const conflict = spawnSync("bash", [...base, "--stage", "always_if_exists", "--list-excludes"], { cwd: fixture.root, encoding: "utf8" });
+  assert.notEqual(conflict.status, 0, "--list-excludes must refuse a stage argument");
+}
+
 console.log("test-stage-lane-manifest: ok");

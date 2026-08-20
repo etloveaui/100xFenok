@@ -398,8 +398,9 @@ jobs:
           mkdir -p "$ART"
           # The candidate roots are exactly the lane manifest's always_if_exists
           # declarations for this workflow plus the legacy hand list, selected
-          # with the same git query the manifest stager uses, so the artifact
-          # and the staging step below cannot disagree about the candidate set.
+          # with the same git query the manifest stager uses, and the exclusions
+          # below are read from that same manifest, so the artifact and the
+          # staging step cannot disagree about the candidate set.
           git ls-files --modified --deleted --others --exclude-standard --deduplicate -z -- \
             data/yf/finance \
             data/yf/quarter_closes.json \
@@ -410,10 +411,18 @@ jobs:
           : > "$ART/candidate-present.z"
           : > "$ART/candidate-deleted.txt"
           : > "$ART/candidate-digests.txt"
+          # The digest set must honour exactly the manifest exclusions the
+          # staging step restores out of the index. A path that is digested but
+          # never committed can never match the origin/main payload readback,
+          # so the lane would fail on every run until a human edits that file.
+          EXCLUDED="$RUNNER_TEMP/yf-candidate-excluded.txt"
+          scripts/stage-lane-manifest.sh \
+            --workflow .github/workflows/fetch-yf-finance.yml \
+            --list-excludes > "$EXCLUDED"
           present=0
           deleted=0
           while IFS= read -r -d '' candidate; do
-            if [ "$candidate" = "data/yf/finance/_summary.json" ]; then
+            if grep -qxF -- "$candidate" "$EXCLUDED"; then
               continue
             fi
             if [ -e "$candidate" ]; then

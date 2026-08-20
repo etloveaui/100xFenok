@@ -6,6 +6,7 @@ MANIFEST=""
 WORKFLOW=""
 STAGE=""
 EXPECTED_DIGEST=""
+LIST_EXCLUDES=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -14,13 +15,25 @@ while [[ $# -gt 0 ]]; do
     --workflow) WORKFLOW=$2; shift 2 ;;
     --stage) STAGE=$2; shift 2 ;;
     --expected-digest) EXPECTED_DIGEST=$2; shift 2 ;;
-    -h|--help) echo 'stage-lane-manifest.sh --workflow <workflow> --stage <stage>'; exit 0 ;;
+    --list-excludes) LIST_EXCLUDES=1; shift ;;
+    -h|--help) echo 'stage-lane-manifest.sh --workflow <workflow> (--stage <stage> | --list-excludes)'; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 
 MANIFEST=${MANIFEST:-$REPO_ROOT/data/admin/lane-commit-manifest.json}
-if [[ -z "$WORKFLOW" || -z "$STAGE" ]]; then echo "workflow and stage are required" >&2; exit 2; fi
+if [[ -z "$WORKFLOW" ]]; then echo "workflow is required" >&2; exit 2; fi
+# --list-excludes is the single read-only source of truth for the exclusion set,
+# so a caller that builds its own candidate list cannot drift from what this
+# script later restores out of the index.
+if [[ $LIST_EXCLUDES -eq 1 ]]; then
+  [[ -z "$STAGE" ]] || { echo "--list-excludes takes no stage" >&2; exit 2; }
+  command -v jq >/dev/null 2>&1 || { echo "lane-manifest requires jq" >&2; exit 1; }
+  [[ -f "$MANIFEST" ]] || { echo "lane-manifest manifest is missing" >&2; exit 1; }
+  jq -r --arg workflow "$WORKFLOW" '.workflows[$workflow].exclude[]?.path' "$MANIFEST"
+  exit 0
+fi
+if [[ -z "$STAGE" ]]; then echo "workflow and stage are required" >&2; exit 2; fi
 case "$STAGE" in
   always_if_exists|success_if_exists|success_verify_not_plan_if_exists|required_on_success) ;;
   *) echo "lane-manifest stage is invalid" >&2; exit 2 ;;
