@@ -1,22 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-20T15:40:31.833Z",
+  "generated_at": "2026-08-20T15:53:06.630Z",
   "status": "open",
-  "open_incident_count": 9,
+  "open_incident_count": 8,
   "open_incidents": [
-    {
-      "workflow": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "streak": 15,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 31987061898,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31987061898",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
     {
       "workflow": "fetch-damodaran-shadow.yml",
       "label": "Fetch Damodaran Data",
@@ -49,10 +36,11 @@
       "label": "Fetch FRED Macro Data",
       "streak": 10,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 31474859038,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31474859038",
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
       "alarm_reasons": [
-        "failure_streak"
+        "plane_freshness_unavailable",
+        "plane_publish_failed"
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
@@ -75,10 +63,9 @@
       "label": "Fetch YF Finance Data",
       "streak": 7,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": 31986179803,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31986179803",
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
       "alarm_reasons": [
-        "failure_streak",
         "unrecovered_overdue"
       ],
       "lost_schedule_slot_count": 0,
@@ -528,12 +515,11 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32387315169",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32387315169",
-    "observed_at": "2026-08-20T15:40:31.833Z",
-    "event": "workflow_dispatch",
+    "run_id": "32388551464",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32388551464",
+    "observed_at": "2026-08-20T15:53:06.630Z",
+    "event": "schedule",
     "workflows": [
-      "data-plane-serving-probe.yml",
       "fetch-damodaran-shadow.yml",
       "fetch-edgar-filings.yml",
       "fetch-fred-macro.yml",
