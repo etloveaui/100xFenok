@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-20T04:58:10.184Z",
+  "generated_at": "2026-08-20T05:51:30.791Z",
   "status": "open",
   "open_incident_count": 9,
   "open_incidents": [
@@ -78,10 +78,11 @@
       "first_failing_run_id": 31986179803,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31986179803",
       "alarm_reasons": [
-        "failure_streak"
+        "failure_streak",
+        "unrecovered_overdue"
       ],
       "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
+      "cadence_status": "overdue"
     },
     {
       "workflow": "slickcharts-history.yml",
@@ -360,7 +361,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 2
+      "data_freshness_age_hours_at_generation": 3
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -403,8 +404,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "global-writer-queue-observer.yml",
@@ -508,8 +511,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 25,
-    "overdue": 1,
+    "not_due": 24,
+    "overdue": 2,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -525,9 +528,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32333681630",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32333681630",
-    "observed_at": "2026-08-20T04:58:10.184Z",
+    "run_id": "32337037591",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32337037591",
+    "observed_at": "2026-08-20T05:51:30.791Z",
     "event": "schedule",
     "workflows": [
       "data-plane-serving-probe.yml",
