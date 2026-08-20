@@ -63,7 +63,22 @@ const workflows = Object.fromEntries(Object.entries(files).map(([key, file]) => 
 
 const INCIDENT_IF =
   "steps.pipeline.outcome == 'failure' && steps.alarm_state.outputs.incident_changed != 'false'";
+// The OPS issue body is the operator's live view of the open incident set and
+// must be rewritten on every firing. Gating the body on incident_changed froze
+// issue #88 at its 2026-07-18 creation snapshot while nine incidents stayed open
+// for roughly a month, so a stable outage was indistinguishable from silence.
+// Editing a body sends no notification, so this cannot reintroduce comment spam;
+// the comment itself stays gated on the transition inside the step.
+const INCIDENT_BODY_IF = "steps.pipeline.outcome == 'failure'";
 const ISSUE_COMMANDS = [/gh issue comment/, /gh issue create/];
+// The pipeline alarm additionally rewrites the body, which the shared budget and
+// telemetry steps do not; those were never gated on a transition to begin with.
+const PIPELINE_ISSUE_COMMANDS = [
+  /gh issue edit "\$existing" --body-file pipeline-job-health-issue\.md/,
+  /gh issue comment/,
+  /gh issue create/,
+  /INCIDENT_CHANGED/,
+];
 const PROBE_ISSUE_COMMANDS = [/gh issue edit/, /gh issue create/, /probe-failures\.md/, /test -s probe-failures\.md/];
 const STEP_CONTRACTS = [
   {
@@ -75,8 +90,8 @@ const STEP_CONTRACTS = [
   },
   { workflow: "pipeline", job: "check", name: "Check pipeline job health", id: "pipeline", bestEffort: true },
   { workflow: "pipeline", job: "check", name: "Emit alarm state", id: "alarm_state", condition: "always()", bestEffort: false },
-  { workflow: "pipeline", job: "check", name: "Prepare issue body", condition: INCIDENT_IF, bestEffort: false },
-  { workflow: "pipeline", job: "check", name: "Open or update OPS issue", condition: INCIDENT_IF, bestEffort: false, contains: ISSUE_COMMANDS },
+  { workflow: "pipeline", job: "check", name: "Prepare issue body", condition: INCIDENT_BODY_IF, bestEffort: false },
+  { workflow: "pipeline", job: "check", name: "Open or update OPS issue", condition: INCIDENT_BODY_IF, bestEffort: false, contains: PIPELINE_ISSUE_COMMANDS },
   {
     workflow: "pipeline", job: "check", name: "Post all-clear on the OPS issue", bestEffort: false,
     condition: "steps.alarm_state.outputs.incident_resolved == 'true'",
