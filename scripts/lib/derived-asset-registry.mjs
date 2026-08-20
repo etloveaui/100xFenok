@@ -797,6 +797,29 @@ function reachableLaneIds(assetId, assetById, memo = new Map(), visiting = new S
   return found;
 }
 
+
+// A partial (sparse) checkout cannot satisfy a whole-registry filesystem
+// assertion: every declared output lives under data/computed, which is 425 MB,
+// and no producer lane checks that out. fetch-edgar-filings failed its emitter
+// contract this way on 2026-08-17 with "declared output is missing:
+// data/computed/entity_graph.json" while the file was present on main. Asking
+// such a lane to check the tree out would be a worse trade than not asserting
+// something it cannot observe. Structural registry validation stays active.
+export function isPartialCheckout(repoRoot = DEFAULT_REPO_ROOT) {
+  try {
+    const gitPath = path.join(repoRoot, ".git");
+    if (!fs.existsSync(gitPath)) return false;
+    const gitDir = fs.statSync(gitPath).isDirectory()
+      ? gitPath
+      : path.resolve(repoRoot, fs.readFileSync(gitPath, "utf8").replace(/^gitdir:\s*/, "").trim());
+    return fs.existsSync(path.join(gitDir, "info", "sparse-checkout"));
+  } catch {
+    // An unreadable git directory is not evidence of a partial checkout; keep
+    // the assertion on so a real missing output still fails.
+    return false;
+  }
+}
+
 export function validateDerivedAssetRegistry(
   registry,
   {
@@ -805,7 +828,7 @@ export function validateDerivedAssetRegistry(
     // KPI fixture mode installs a hard filesystem guard and supplies a
     // synthetic data root. Keep structural registry validation active there,
     // but do not probe the live repository's generated data at module import.
-    checkFilesystem = process.env.KPI_HERMETIC_BOOTSTRAPPED !== "1",
+    checkFilesystem = process.env.KPI_HERMETIC_BOOTSTRAPPED !== "1" && !isPartialCheckout(repoRoot),
   } = {},
 ) {
   exactKeys(registry, ["schema_version", "assets"], "registry");

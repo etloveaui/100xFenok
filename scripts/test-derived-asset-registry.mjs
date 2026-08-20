@@ -316,4 +316,30 @@ function materializeRegistryTree(registry) {
   fs.rmSync(root, { recursive: true, force: true });
 }
 
+{
+  // A sparse checkout cannot observe outputs it never materialised, so the
+  // filesystem assertion must stand down there while still firing in a full
+  // checkout. fetch-edgar-filings failed on 2026-08-17 because it did not.
+  const root = materializeRegistryTree(DERIVED_ASSET_REGISTRY);
+  fs.rmSync(path.join(root, "data", "computed", "signals.json"));
+  fs.mkdirSync(path.join(root, ".git", "info"), { recursive: true });
+
+  assert.throws(
+    () => validateDerivedAssetRegistry(DERIVED_ASSET_REGISTRY, { repoRoot: root }),
+    /declared output is missing/,
+    "a full checkout must still fail on a genuinely missing output",
+  );
+
+  fs.writeFileSync(path.join(root, ".git", "info", "sparse-checkout"), "/scripts/\n");
+  validateDerivedAssetRegistry(DERIVED_ASSET_REGISTRY, { repoRoot: root });
+
+  fs.rmSync(path.join(root, ".git", "info", "sparse-checkout"));
+  assert.throws(
+    () => validateDerivedAssetRegistry(DERIVED_ASSET_REGISTRY, { repoRoot: root }),
+    /declared output is missing/,
+    "removing the sparse marker must restore the assertion",
+  );
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
 console.log("test-derived-asset-registry: ok");
