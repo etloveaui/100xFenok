@@ -1,22 +1,40 @@
 {
   "schema_version": "producer-lkg-index/v2",
   "lane_id": "yahoo_hourly_ticker",
-  "generated_at": "2026-08-20T11:36:54.629Z",
+  "generated_at": "2026-08-20T13:07:03.064Z",
   "keys": [
     "TQQQ.json",
     "SOXL.json"
   ],
   "counts": {
     "keys": 2,
-    "fresh": 2,
-    "lkg": 0,
-    "retry": 0,
+    "fresh": 0,
+    "lkg": 2,
+    "retry": 2,
     "unavailable": 0,
-    "failed": 0,
+    "failed": 2,
     "recovered": 0
   },
-  "retry_keys": [],
-  "lkg_details": [],
+  "retry_keys": [
+    "TQQQ.json",
+    "SOXL.json"
+  ],
+  "lkg_details": [
+    {
+      "key": "TQQQ.json",
+      "payload_sha256": "b5fdd286c9660a9b701dfd49f5d8b48abbffe783130d320efd5bd5e69580603f",
+      "source_as_of": "2026-08-19T20:00:01.000Z",
+      "failure_run_id": "32372444892",
+      "failure_run_attempt": 1
+    },
+    {
+      "key": "SOXL.json",
+      "payload_sha256": "7b0f9da1bb63840898aa9e2e5048d3349b1f4c7294b4ca55bbaa9f147e7b452f",
+      "source_as_of": "2026-08-19T20:00:00.000Z",
+      "failure_run_id": "32372444892",
+      "failure_run_attempt": 1
+    }
+  ],
   "recovery_details": [
     {
       "key": "TQQQ.json",
@@ -39,14 +57,17 @@
   ],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "32364648400",
+    "run_id": "32372444892",
     "run_attempt": 1,
     "event_name": "schedule",
-    "observed_at": "2026-08-20T11:36:54.629Z",
+    "observed_at": "2026-08-20T13:07:03.064Z",
     "attempted": 2,
-    "successes": 2,
-    "failed": 0,
-    "failed_keys": [],
+    "successes": 0,
+    "failed": 2,
+    "failed_keys": [
+      "TQQQ.json",
+      "SOXL.json"
+    ],
     "promotion_deferrals": 0,
     "promotion_deferral_keys": []
   }
