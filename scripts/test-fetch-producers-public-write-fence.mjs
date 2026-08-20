@@ -16,6 +16,12 @@ const PRODUCERS = Object.freeze([
   "scripts/fetch-fred-banking.mjs",
   "scripts/fetch-treasury-tga.mjs",
   "scripts/fetch-yahoo-ticker.mjs",
+  // fred-macro joined the batch on 2026-08-21. Its direct public write was
+  // never staged by its lane or its manifest, and the public mirror contract
+  // asserts that no lane stages the mirror, so the file stayed dirty after
+  // every run and persist-cloud-publish-outcome refused for ten consecutive
+  // runs. sync-public-data.mjs already produces the mirror at build time.
+  "scripts/fetch-fred-macro.mjs",
 ]);
 
 const sources = Object.fromEntries(PRODUCERS.map((relativePath) => [
@@ -34,4 +40,4 @@ assert.doesNotMatch(sources["scripts/fetch-sentiment.mjs"], /\boutputDirs\b/u);
 assert.match(sources["scripts/fetch-yahoo-ticker.mjs"], /export function publishYahooOutputAtomic\(/u);
 assert.doesNotMatch(sources["scripts/fetch-yahoo-ticker.mjs"], /publishYahooOutputPairAtomic/u);
 
-console.log("producer public-write fence: ok (4 canonical-only APIs)");
+console.log(`producer public-write fence: ok (${PRODUCERS.length} canonical-only APIs)`);

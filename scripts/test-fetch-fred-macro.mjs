@@ -44,7 +44,6 @@ function makePaths(root) {
   return {
     repoRoot: root,
     canonicalPath: path.join(root, "data", "macro", "fred-macro.json"),
-    publicPath: path.join(root, "public", "data", "macro", "fred-macro.json"),
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "fred_macro.json"),
   };
 }
@@ -83,7 +82,11 @@ async function runCase(request) {
   });
   assert.deepEqual(calls, FRED_MACRO_SERIES.map((row) => row.id));
   assert.equal(result.ok, true);
-  assert.deepEqual(fs.readFileSync(paths.canonicalPath), fs.readFileSync(paths.publicPath));
+  assert.equal(
+    fs.existsSync(path.join(paths.repoRoot, "100xfenok-next", "public", "data", "macro", "fred-macro.json")),
+    false,
+    "the producer must not write the public mirror; sync-static owns it",
+  );
   const output = readJson(paths.canonicalPath);
   assert.deepEqual(Object.keys(output.series), FRED_MACRO_SERIES.map((row) => row.id));
   assert.equal(shard.schema_version, ATTEMPT_SHARD_SCHEMA);
@@ -134,7 +137,7 @@ async function runCase(request) {
   assert.equal(result.exitCode, 2, "systemic failure remains fatal even with LKG");
   assert.equal(result.corrupt, true);
   assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), canonicalBefore);
-  assert.equal(fs.readFileSync(paths.publicPath, "utf8"), canonicalBefore);
+  assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), canonicalBefore);
   const shard = readJson(paths.attemptShardPath);
   assertValidShard(shard);
   const row = shard.attempts[0];

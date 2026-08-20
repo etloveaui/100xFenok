@@ -152,7 +152,6 @@ function validateControlledFailureKey(controlledFailureKey, eventName) {
 export async function runFredMacro({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "fred-macro.json"),
-  publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", "fred-macro.json"),
   attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "fred_macro.json"),
   apiKey = process.env.FRED_API_KEY,
   request = requestBytes,
@@ -269,8 +268,11 @@ export async function runFredMacro({
       exitCode: 0,
     };
   }
+  // Canonical only. The public mirror is produced by sync-public-data.mjs during
+  // sync-static, and the mirror contract requires that no lane stage it. Writing
+  // it here left an unstaged file dirty after every run, which is what
+  // persist-cloud-publish-outcome refused for ten consecutive runs.
   atomicWrite(canonicalPath, serialized);
-  atomicWrite(publicPath, serialized);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items.fred_macro?.recovered_at === observedAt;
   return { ok: true, reason: "ok", updated: true, attempt, seriesCount: FRED_MACRO_SERIES.length, recovered };
