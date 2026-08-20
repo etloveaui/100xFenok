@@ -33,6 +33,7 @@ jobs:
           sparse-checkout: |
             scripts/ops
             scripts/lib
+            100xfenok-next/scripts/cloud-data-plane
           sparse-checkout-cone-mode: true
 
       - name: Setup Node
@@ -57,17 +58,31 @@ jobs:
           # Keep the full report in the run log, but persist only failing rows
           # and their reasons. Repeating every OK row made one issue exceed a
           # megabyte without adding evidence.
-          awk '
-            /^- FAIL / { emit=1; print; next }
-            /^- / { emit=0 }
-            emit && /^  - / { print }
-          ' probe-report.md > probe-failures.md
-          test -s probe-failures.md
-          {
-            printf '%s\n\n' '[alert] An enrolled data-plane asset is not healthy on the live Worker.'
-            cat probe-failures.md
-            printf '\n%s\n' "Observed by: $RUN_URL"
-          } > probe-issue.md
+          # A crashed probe writes no report at all. Letting awk die on the
+          # missing file turned 15 consecutive module-load crashes into silence
+          # and left this issue stale from 2026-08-16. A probe that could not
+          # run is itself the alert.
+          if [ ! -s probe-report.md ]; then
+            {
+              printf '%s\n\n' '[alert] The data-plane serving probe could not produce a report.'
+              printf '%s\n' 'The probe step failed before writing probe-report.md, so no asset was actually'
+              printf '%s\n' 'checked. Read the "Probe enrolled assets" step log: this is a probe fault,'
+              printf '%s\n' 'not an all-clear.'
+              printf '\n%s\n' "Observed by: $RUN_URL"
+            } > probe-issue.md
+          else
+            awk '
+              /^- FAIL / { emit=1; print; next }
+              /^- / { emit=0 }
+              emit && /^  - / { print }
+            ' probe-report.md > probe-failures.md
+            test -s probe-failures.md
+            {
+              printf '%s\n\n' '[alert] An enrolled data-plane asset is not healthy on the live Worker.'
+              cat probe-failures.md
+              printf '\n%s\n' "Observed by: $RUN_URL"
+            } > probe-issue.md
+          fi
           existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
           if [ -n "$existing" ]; then
             gh issue edit "$existing" --body-file probe-issue.md

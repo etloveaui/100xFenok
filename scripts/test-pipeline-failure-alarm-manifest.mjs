@@ -173,6 +173,40 @@ function jobOf(model, workflow, name) {
   return job;
 }
 
+// The probe runs from a sparse checkout, so every directory its module graph
+// reaches must be listed. On 2026-08-17 e1f7c9f072 colocated the cloud-plane
+// read runtime under 100xfenok-next without updating this list; the probe then
+// died at module load on 15 consecutive runs and its issue went stale, because
+// a crashed probe writes no report. Deriving the requirement from the real
+// import graph makes a future move fail here instead of silently.
+function probeImportDirectories(root, entry) {
+  const seen = new Set();
+  const dirs = new Set();
+  const visit = (file) => {
+    if (seen.has(file) || !fs.existsSync(file)) return;
+    seen.add(file);
+    dirs.add(path.relative(root, path.dirname(file)));
+    for (const match of fs.readFileSync(file, "utf8").matchAll(/from\s+["'](\.[^"']+)["']/g)) {
+      visit(path.resolve(path.dirname(file), match[1]));
+    }
+  };
+  visit(path.join(root, entry));
+  return [...dirs].sort();
+}
+
+function assertProbeSparseCheckoutCoversImports(model, root) {
+  const source = model.probe.source;
+  const block = /sparse-checkout:\s*\|\n([\s\S]*?)\n\s*sparse-checkout-cone-mode:/.exec(source);
+  assert.ok(block, "probe workflow must declare a sparse-checkout block");
+  const declared = block[1].split("\n").map((line) => line.trim()).filter(Boolean);
+  for (const dir of probeImportDirectories(root, "scripts/ops/probe-data-plane-serving.mjs")) {
+    assert.ok(
+      declared.some((entry) => dir === entry || dir.startsWith(`${entry}/`)),
+      `probe sparse-checkout does not cover ${dir}, which its module graph imports`,
+    );
+  }
+}
+
 function assertStepContracts(model) {
   for (const contract of STEP_CONTRACTS) {
     const step = stepOf(model, contract.workflow, contract.name, contract.job);
@@ -283,6 +317,7 @@ function expectJobMutation({ workflow, job, patch, check = assertPipelineTopolog
 }
 
 assertStepContracts(workflows);
+assertProbeSparseCheckoutCoversImports(workflows, root);
 assertPipelineTopology(workflows);
 assertCurrentRunArtifactBinding(workflows);
 assertStaleArtifactGuard(workflows);
