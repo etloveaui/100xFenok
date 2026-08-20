@@ -154,11 +154,17 @@ assert.equal(extensionRows.filter((row) => !row.completeness.per_present).length
 assert.equal(extensionRows.filter((row) => row.completeness.forward_pe_present).length, 76);
 assert.equal(extensionRows.filter((row) => row.completeness.market_facts_price_observed).length, 76);
 assert.equal(extensionRows.filter((row) => row.completeness.bridge_field_floor).length, 76);
-assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "full").length, 38);
-assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "incomplete").length, 38);
+// Re-pinned 2026-08-21 from 38/38. The Yahoo broad-finance lane had not
+// published since 2026-08-16, so these rows were starved of current estimates;
+// restoring publication moved 36 rows from incomplete to full in one refresh.
+// Structural counts are deliberately unchanged - 76 extension rows, 36
+// market-facts-only, 525 no-overlap, 489 unresolved, 601 outside-core - so this
+// is completeness improving, not the graph expanding.
+assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "full").length, 74);
+assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "incomplete").length, 2);
 assert.deepEqual(index.counts.estimate, {
-  extension_full: 38,
-  extension_incomplete: 38,
+  extension_full: 74,
+  extension_incomplete: 2,
   market_facts_only_incomplete: 36,
   unresolved_absent: 489,
   as_of: {
