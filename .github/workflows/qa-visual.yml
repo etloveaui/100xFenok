@@ -1,7 +1,12 @@
 name: QA Visual
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Target to photograph (defaults to the live Worker)'
+        required: false
+        default: 'https://100xfenok.etloveaui.workers.dev'
 
 concurrency:
   group: qa-visual-${{ github.ref }}
@@ -39,16 +44,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate build version
-        run: npm run build:version
-
-      - name: Build app
-        run: NEXT_BUILD_TARGET=cloudflare npx next build
-
-      - name: Run visual QA
+      # This workflow used to build the app itself with a raw
+      # NEXT_BUILD_TARGET=cloudflare next build, a combination no real build
+      # path uses: the runtime build targets runtime and the Cloudflare build
+      # goes through opennextjs-cloudflare. That invocation rotted and by
+      # 2026-08-20 it died in file tracing with "Encountered unexpected file in
+      # NFT list", so the job produced no screenshots at all. The visual config
+      # already skips its local server whenever QA_BASE_URL is set, so the
+      # build and server layers are removed rather than repaired and the run
+      # photographs the deployed site directly.
+      - name: Run visual QA against the deployed site
         env:
           CI: "true"
           PROJECT: ${{ matrix.project }}
+          QA_BASE_URL: ${{ inputs.base_url || 'https://100xfenok.etloveaui.workers.dev' }}
         run: npm run qa:visual -- --project="$PROJECT"
 
       - name: Upload visual report
