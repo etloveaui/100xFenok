@@ -1,23 +1,23 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-08-20T01:57:20Z",
+  "generated_at": "2026-08-20T02:37:20Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6802,
     "fields": 19,
     "multi_candidate_fields": 61624,
     "divergence_rows": 61553,
-    "percent_scale_warnings": 196,
+    "percent_scale_warnings": 197,
     "diagnosis_counts": {
       "agreement": 9147,
-      "scale_mismatch": 196,
-      "sign_divergence": 3002,
-      "stale": 38320,
-      "value_drift": 10888
+      "scale_mismatch": 197,
+      "sign_divergence": 3001,
+      "stale": 38319,
+      "value_drift": 10889
     },
-    "stale_rows": 38320,
-    "scale_mismatch_rows": 196,
-    "sign_divergence_rows": 3002
+    "stale_rows": 38319,
+    "scale_mismatch_rows": 197,
+    "sign_divergence_rows": 3001
   },
   "by_field": {
     "beta": {
@@ -8400,38 +8400,38 @@
       }
     },
     {
-      "ticker": "IGBH",
+      "ticker": "SGOV",
       "asset_type": "etf",
       "field": "return_1y",
       "selected_source": "yf.history_1y",
       "candidate_count": 4,
-      "relative_spread_pct": 100.23571,
+      "relative_spread_pct": 100.256635,
       "values": [
         {
           "source": "yf.history_1y",
-          "value": 5.869084119904574
+          "value": 3.36027276478122
         },
         {
           "source": "stockanalysis.detail.performance",
-          "value": 8.714
+          "value": 3.874
         },
         {
           "source": "stockanalysis.etf_screener.performance",
-          "value": 8.714
+          "value": 3.874
         },
         {
           "source": "yf",
-          "value": -0.02053976
+          "value": -0.009942055
         }
       ],
       "diagnosis": "scale_mismatch",
-      "spread_pct": 100.23571,
-      "fresh_spread_pct": 100.23571,
+      "spread_pct": 100.256635,
+      "fresh_spread_pct": 100.256635,
       "stale_sources": [
         "stockanalysis.detail.performance"
       ],
       "scale_mismatch": true,
-      "scale_factor": 424,
+      "scale_factor": 390,
       "sign_divergence": true,
       "selected_rationale": {
         "selected": "yf.history_1y",
@@ -8441,7 +8441,7 @@
       },
       "freshness": {
         "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 53.0,
+        "stockanalysis.detail.performance": 19.0,
         "yf": 0.0
       }
     }
@@ -13670,47 +13670,6 @@
       }
     },
     {
-      "ticker": "CWVX",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 197.62065,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 55.79665510393159
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -57.15661103979461
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": -57.15661103979461
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 197.62065,
-      "fresh_spread_pct": 197.62065,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 27.0
-      }
-    },
-    {
       "ticker": "LENS",
       "asset_type": "etf",
       "field": "return_1m",
@@ -16357,6 +16316,41 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 50.0
+      }
+    },
+    {
+      "ticker": "BSTU",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 192.75034,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 0.38736129823293425
+        },
+        {
+          "source": "yf",
+          "value": -0.35927892
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 192.75034,
+      "fresh_spread_pct": 192.75034,
+      "stale_sources": [],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
       }
     }
   ]
