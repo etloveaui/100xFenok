@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-08-19T21:45:50Z",
+  "generated_at": "2026-08-20T02:44:06Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,54 +17,54 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5585,
+    "candidate_total": 5599,
     "source_breakdown": {
       "etf_universe": 5528,
-      "etf_screener": 5585,
+      "etf_screener": 5595,
       "new_etfs": 100
     },
     "detail_files": 5605,
-    "covered_detail_files": 5536,
-    "missing_detail_files": 49,
-    "extra_detail_files": 69,
+    "covered_detail_files": 5531,
+    "missing_detail_files": 68,
+    "extra_detail_files": 74,
     "stockanalysis_detail_files": 5605,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 99.12,
-    "primary_stockanalysis_pct": 99.12,
+    "coverage_pct": 98.79,
+    "primary_stockanalysis_pct": 98.79,
     "missing_by_source": {
       "etf_universe": 46,
-      "etf_screener": 49,
-      "new_etfs": 43
+      "etf_screener": 68,
+      "new_etfs": 56
     },
     "missing_status_breakdown": {
-      "provider_gap_cooldown": 1,
-      "untracked": 48
+      "provider_gap_reprobe_due": 1,
+      "untracked": 67
     },
     "missing_failure_breakdown": {
       "provider_coverage_gap": 1,
-      "untracked": 48
+      "untracked": 67
     },
     "missing_availability_breakdown": {
       "provider_absent": 1,
-      "unprobed": 48
+      "unprobed": 67
     },
     "pending_tracked": 484,
-    "pending_cooldown": 1,
+    "pending_cooldown": 0,
     "pending_tracked_missing": 1,
     "provider_coverage_gaps": 3
   },
   "missing_reason_summary": {
     "provider_coverage_gap": 1,
-    "untracked": 48
+    "untracked": 67
   },
   "missing_status_summary": {
-    "provider_gap_cooldown": 1,
-    "untracked": 48
+    "provider_gap_reprobe_due": 1,
+    "untracked": 67
   },
   "missing_availability_summary": {
     "provider_absent": 1,
-    "unprobed": 48
+    "unprobed": 67
   },
   "missing_reason_samples": {
     "provider_coverage_gap": [
@@ -74,34 +74,34 @@
       "ACQQ",
       "ACRT",
       "ACSP",
+      "AINF",
       "ANTW",
+      "ARKY",
+      "AXTQ",
       "BEMD",
       "CGPT",
-      "DEPW",
-      "FTPA",
-      "GAIQ",
-      "HAWG",
-      "HBIL",
-      "JLVP"
+      "COHQ",
+      "COOL",
+      "CROB"
     ]
   },
   "missing_status_samples": {
-    "provider_gap_cooldown": [
+    "provider_gap_reprobe_due": [
       "DACL"
     ],
     "untracked": [
       "ACQQ",
       "ACRT",
       "ACSP",
+      "AINF",
       "ANTW",
+      "ARKY",
+      "AXTQ",
       "BEMD",
       "CGPT",
-      "DEPW",
-      "FTPA",
-      "GAIQ",
-      "HAWG",
-      "HBIL",
-      "JLVP"
+      "COHQ",
+      "COOL",
+      "CROB"
     ]
   },
   "missing_availability_samples": {
@@ -112,46 +112,60 @@
       "ACQQ",
       "ACRT",
       "ACSP",
+      "AINF",
       "ANTW",
+      "ARKY",
+      "AXTQ",
       "BEMD",
       "CGPT",
-      "DEPW",
-      "FTPA",
-      "GAIQ",
-      "HAWG",
-      "HBIL",
-      "JLVP"
+      "COHQ",
+      "COOL",
+      "CROB"
     ]
   },
   "missing_tickers": [
     "ACQQ",
     "ACRT",
     "ACSP",
+    "AINF",
     "ANTW",
+    "ARKY",
+    "AXTQ",
     "BEMD",
     "CGPT",
+    "COHQ",
+    "COOL",
+    "CROB",
     "DACL",
     "DEPW",
+    "FIXX",
+    "FLEL",
+    "FTG",
     "FTPA",
     "GAIQ",
     "HAWG",
     "HBIL",
+    "IACL",
     "JLVP",
     "KEO",
     "LITG",
     "LOFD",
+    "LWLX",
     "LYTE",
+    "METQ",
     "MPDB",
     "MPDY",
     "MPIA",
     "MPIM",
     "MRAX",
     "MTAW",
+    "MUG",
     "MXLL",
     "NCLD",
     "OAIW",
     "OCNL",
     "OPPG",
+    "PCOV",
     "PENU",
     "PHOX",
     "QAU",
@@ -165,11 +179,16 @@
     "SKHA",
     "SKHN",
     "STLL",
+    "STMX",
     "TIH",
     "TSIB",
     "UMCU",
     "WSMD",
     "XAIW",
+    "XCSH",
+    "XVAP",
+    "XVNV",
+    "XVTS",
     "YLDY",
     "ZDIS",
     "ZINN"
@@ -219,6 +238,9 @@
     "IMRA",
     "IMST",
     "IVRS",
+    "IWDL",
+    "IWFL",
+    "IWML",
     "JRE",
     "KRMA",
     "LACG",
@@ -235,6 +257,7 @@
     "PLOO",
     "QHDG",
     "QRFT",
+    "QULL",
     "RAYJ",
     "RMIF",
     "RNWZ",
@@ -243,6 +266,7 @@
     "SAEF",
     "SATG",
     "SBU",
+    "SCDL",
     "SCLS",
     "SOLR",
     "SPCZ",
@@ -255,31 +279,45 @@
       "ACQQ",
       "ACRT",
       "ACSP",
+      "AINF",
       "ANTW",
+      "ARKY",
+      "AXTQ",
       "BEMD",
       "CGPT",
+      "COHQ",
+      "COOL",
+      "CROB",
       "DACL",
       "DEPW",
+      "FIXX",
+      "FLEL",
+      "FTG",
       "FTPA",
       "GAIQ",
       "HAWG",
       "HBIL",
+      "IACL",
       "JLVP",
       "KEO",
       "LITG",
       "LOFD",
+      "LWLX",
       "LYTE",
+      "METQ",
       "MPDB",
       "MPDY",
       "MPIA",
       "MPIM",
       "MRAX",
       "MTAW",
+      "MUG",
       "MXLL",
       "NCLD",
       "OAIW",
       "OCNL",
       "OPPG",
+      "PCOV",
       "PENU",
       "PHOX",
       "QAU",
@@ -287,37 +325,24 @@
       "RAMZ",
       "RJCA",
       "SCAU",
-      "SDUR",
-      "SIC",
-      "SITX",
-      "SKHA",
-      "SKHN",
-      "STLL",
-      "TIH",
-      "TSIB",
-      "UMCU",
-      "WSMD",
-      "XAIW",
-      "YLDY",
-      "ZDIS",
-      "ZINN"
+      "SDUR"
     ],
-    "missing_provider_gap_cooldown": [
+    "missing_provider_gap_reprobe_due": [
       "DACL"
     ],
     "missing_untracked": [
       "ACQQ",
       "ACRT",
       "ACSP",
+      "AINF",
       "ANTW",
+      "ARKY",
+      "AXTQ",
       "BEMD",
       "CGPT",
-      "DEPW",
-      "FTPA",
-      "GAIQ",
-      "HAWG",
-      "HBIL",
-      "JLVP"
+      "COHQ",
+      "COOL",
+      "CROB"
     ],
     "missing_provider_coverage_gap": [
       "DACL"
@@ -363,6 +388,9 @@
       "IMRA",
       "IMST",
       "IVRS",
+      "IWDL",
+      "IWFL",
+      "IWML",
       "JRE",
       "KRMA",
       "LACG",
@@ -370,10 +398,7 @@
       "MAGO",
       "MARB",
       "MSDD",
-      "MSOO",
-      "NVDO",
-      "ORLG",
-      "OSCG"
+      "MSOO"
     ]
   }
 }
