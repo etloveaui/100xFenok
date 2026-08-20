@@ -218,11 +218,11 @@ export const FAMILIES = {
     policy: { max_assets: 64, max_total_bytes: 16_000_000 },
   },
   "fred-macro": {
-    // Source lives under 100xfenok-next (READ ONLY — the standing prohibition
-    // on editing 100xfenok-next/** is unaffected; it is only read as the
-    // publish source) while the manifest path uses the contract's public
-    // prefix, so root and manifest_prefix are deliberately different strings.
-    root: "100xfenok-next/public/data/macro",
+    // Publishes from the canonical file, exactly like every other data/macro
+    // family. It used to read the public mirror instead, which only worked
+    // because the producer wrote that mirror directly; once the producer became
+    // canonical-only the publisher could not find its input at all.
+    root: "data/macro",
     manifest_prefix: "public/data/macro",
     files: ["fred-macro.json"],
     privacy_class: "public",

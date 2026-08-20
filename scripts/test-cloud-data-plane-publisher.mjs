@@ -1147,7 +1147,7 @@ try {
   // edited, only read as the publish source.
   const fredBuild = await buildFamilyManifest({
     familyName: "fred-macro",
-    absRoot: path.join(REPO_ROOT, "100xfenok-next/public/data/macro"),
+    absRoot: path.join(REPO_ROOT, "data/macro"),
     relRoot: "public/data/macro",
     now: () => NOW_1,
   });
@@ -1160,12 +1160,12 @@ try {
   // on-disk size exactly, not any one specific number.
   assert.equal(
     fredAsset.bytes,
-    statSync(path.join(REPO_ROOT, "100xfenok-next/public/data/macro/fred-macro.json")).size,
+    statSync(path.join(REPO_ROOT, "data/macro/fred-macro.json")).size,
   );
   // source_as_of comes from the payload's own top-level "updated", explicitly
   // marked as such — never the acquisition time.
   const fredUpdated = JSON.parse(await readFile(
-    path.join(REPO_ROOT, "100xfenok-next/public/data/macro/fred-macro.json"),
+    path.join(REPO_ROOT, "data/macro/fred-macro.json"),
     "utf8",
   )).updated;
   assert.equal(fredAsset.source_as_of, fredUpdated.slice(0, 10));
