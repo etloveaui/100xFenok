@@ -174,7 +174,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Parse workflow YAML
-        run: ruby scripts/ops/validate-workflow-yaml.rb
+        run: |
+          ruby scripts/ops/validate-workflow-yaml.rb
+          node scripts/test-sparse-checkout-import-coverage.mjs
 
       - name: Validate remote heavy guard contract
         run: node 100xfenok-next/scripts/test-load-guard-remote-dispatch.mjs
