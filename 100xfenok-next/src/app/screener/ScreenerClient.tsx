@@ -2392,7 +2392,7 @@ export default function ScreenerClient({
             신호 분포는 <strong>{heroStats.dominantActionLabel}</strong>{" "}
             <strong>{heroStats.dominantActionCount.toLocaleString("ko-KR")}</strong>개
             <span className="cpw5-verdict__muted">({heroStats.dominantActionRatio}%)</span>가 가장 많고,
-            Short Edge 70+ 종목은 <strong className="text-[var(--c-warn)]">{heroStats.shortEdgeCount.toLocaleString("ko-KR")}</strong>개, Long Edge 70+ 종목은 <strong className="text-[var(--c-positive)]">{heroStats.longEdgeCount.toLocaleString("ko-KR")}</strong>개입니다.
+            Short Edge 70+ 종목은 <strong className="text-[var(--c-warn)]">{heroStats.shortEdgeCount.toLocaleString("ko-KR")}</strong>개, Long Edge 70+ 종목은 <strong className="text-[var(--c-up)]">{heroStats.longEdgeCount.toLocaleString("ko-KR")}</strong>개입니다.
           </p>
           <div className="cpw5-tile-row">
             <div className="cpw5-tile">
