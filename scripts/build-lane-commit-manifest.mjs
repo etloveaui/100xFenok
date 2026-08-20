@@ -214,6 +214,26 @@ export const UPDATE_MANIFEST_MATERIALIZATIONS = [
     trailing_slash: false,
   },
   {
+    // Public-safe aggregate index closes; no per-issuer rows.
+    source: "data/computed/fenok-edge-korea-krx-index-daily.json",
+    destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-index-daily.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
+    // Public-safe KOSDAQ market-level concentration aggregate; no issuer rows.
+    source: "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
+    destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
     source: "data/computed/fenok_occ_options_availability.json",
     destination: "100xfenok-next/public/data/computed/fenok_occ_options_availability.json",
     mode: "cp_file",

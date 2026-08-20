@@ -18,7 +18,7 @@ const helperCall = "node scripts/materialize-update-manifest-routes.mjs";
 // Independent oracle: never derive this map from the manifest generator. A
 // corrupt generator and regenerated artifact must fail here even if they drift
 // together. The map deliberately owns the exact source/destination pairing and
-// materialization semantics for all 42 routes.
+// materialization semantics for all 44 routes.
 const EXPECTED_ROUTES = [
   { source: "data/slickcharts", destination: "100xfenok-next/public/data/slickcharts", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/yf/finance", destination: "100xfenok-next/public/data/yf/finance", mode: "rsync_tree", delete: true, excludes: [] },
@@ -32,6 +32,8 @@ const EXPECTED_ROUTES = [
   { source: "data/indices/sox.json", destination: "100xfenok-next/public/data/indices/sox.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/admin/fenok-edge-korea-krx-daily-index.json", destination: "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/computed/fenok-edge-korea-krx-bridge-history.json", destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/computed/fenok-edge-korea-krx-index-daily.json", destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-index-daily.json", mode: "cp_file", delete: false, excludes: [] },
+  { source: "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json", destination: "100xfenok-next/public/data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/computed/fenok_occ_options_availability.json", destination: "100xfenok-next/public/data/computed/fenok_occ_options_availability.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/computed/market_facts/index.json", destination: "100xfenok-next/public/data/computed/market_facts/index.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/computed/fenok_etf_core_daily_basket_summary.json", destination: "100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json", mode: "cp_file", delete: false, excludes: [] },
@@ -75,8 +77,8 @@ function routeOracleFields(route) {
   };
 }
 
-assert.equal(EXPECTED_ROUTES.length, 42, "route oracle must contain exactly 42 routes");
-assert.equal(manifest.update_manifest.materializations.length, 42, "manifest must contain exactly 42 routes");
+assert.equal(EXPECTED_ROUTES.length, 44, "route oracle must contain exactly 44 routes");
+assert.equal(manifest.update_manifest.materializations.length, 44, "manifest must contain exactly 44 routes");
 assert.deepEqual(manifest.update_manifest.materializations.map(routeOracleFields), EXPECTED_ROUTES);
 for (const route of EXPECTED_ROUTES) {
   assert.ok(
