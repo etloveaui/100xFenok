@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-11T23:32:52Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/QTEC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QTEC.json",
     "payload_sha256": "76935a588c055615314cc24a581e50b150894dca0c95e52b44c5bf735259f80e",
     "quote_as_of": "2026-08-11T20:00:00Z",
     "source_as_of": "2026-08-11"
@@ -38,6 +38,14 @@
     "schedule": "7 22 * * 0-5",
     "shard": "35/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-11T23:32:52Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QTEC.json",
+    "payload_sha256": "76935a588c055615314cc24a581e50b150894dca0c95e52b44c5bf735259f80e",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "QTEC holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
   "ticker": "QTEC",
-  "updated_at": "2026-08-11T23:29:49Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

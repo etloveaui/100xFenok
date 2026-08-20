@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-12T04:20:20Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/SIO.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SIO.json",
     "payload_sha256": "d3bc00ce5fe28d4c9f7ef6620de117c94b40830393c271b5e68dcb5c0b216c8e",
     "quote_as_of": "2026-08-11T19:49:27Z",
     "source_as_of": "2026-08-11"
@@ -38,6 +38,14 @@
     "schedule": "7 2 * * 0-5",
     "shard": "37/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-12T04:20:20Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SIO.json",
+    "payload_sha256": "d3bc00ce5fe28d4c9f7ef6620de117c94b40830393c271b5e68dcb5c0b216c8e",
+    "quote_as_of": "2026-08-11T19:49:27Z",
+    "source_as_of": "2026-08-11"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "SIO holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
   "ticker": "SIO",
-  "updated_at": "2026-08-12T04:17:21Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

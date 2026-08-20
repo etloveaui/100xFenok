@@ -58,15 +58,28 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 690,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-05T23:18:31Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XLP.json",
-    "payload_sha256": "9fa47b08d554871d4193b9e42a83cc8ca3b657efaed7bb95afdd70d6f92dc4a4",
-    "quote_as_of": "2026-08-05T20:00:00Z",
-    "source_as_of": "2026-08-05"
+    "fetched_at": "2026-08-20T15:39:05Z",
+    "history_as_of": "2026-08-20",
+    "path": "data/yf/finance/XLP.json",
+    "payload_sha256": "7a26ed9a5af825933e92e04c6863df5d2caf8b35a3896f19ad3f026956c8c735",
+    "quote_as_of": "2026-08-20T15:38:55Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "dashboard_configuration",
@@ -75,25 +88,18 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for XLP despite available history",
-    "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 805,
-    "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "event_name": "workflow_dispatch",
+    "failures": [],
+    "latency_ms": 690,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -121,18 +127,23 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-05T23:14:16Z",
-    "payload_sha256": "ee1e10311424a118faedf18ead8b929dacc571c4592c45fc9a27137176f2a76f",
-    "quote_as_of": "2026-08-05T20:00:00Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "23c1a94f7789e94f8131dcbefdc008026ad61385b68f88e5b20ff10319a8db69",
+    "quote_as_of": "2026-08-20T15:38:55Z",
     "run_attempt": 1,
-    "run_id": "31055557073",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-08-20"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-20T14:20:12Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "workflow_dispatch",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "32379322022",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 10,
@@ -145,5 +156,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "XLP",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

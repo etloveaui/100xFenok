@@ -3,26 +3,6 @@
     {
       "attempts_used": 1,
       "error": "recovery_not_advanced_by_provider",
-      "event_name": "workflow_dispatch",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "ImportError: `Import lxml` failed. Use pip or conda to install the lxml package.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 2885,
-      "natural": false,
-      "observed_at": "2026-08-12T07:19:10Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31573324569",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 618,
@@ -196,32 +176,45 @@
       "run_id": "32314261503",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 2315,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-19T23:42:54Z",
-    "history_as_of": "2026-08-19",
+    "fetched_at": "2026-08-20T14:29:41Z",
+    "history_as_of": "2026-08-20",
     "path": "data/yf/finance/036800.KQ.json",
-    "payload_sha256": "292eb46123993512e13a4314ff2a96ce0e813061a788c75c036b4015bdb9375f",
-    "quote_as_of": "2026-08-19T06:30:05Z",
-    "source_as_of": "2026-08-19"
+    "payload_sha256": "2b3b787d3c80f02a70d34f505d89743e69f28cdd1dc2acf8a848199ac3608e6e",
+    "quote_as_of": "2026-08-20T06:30:30Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-08-19T23:53:46Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 2315,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32314261503",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-14T23:48:52Z",
@@ -233,15 +226,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-19",
-    "observed_at": "2026-08-19T23:42:29Z",
-    "payload_sha256": "5c169d26f3d251defb239d139f3c7a9afc547827e7a4ae0145302181d0ceb48b",
-    "quote_as_of": "2026-08-19T06:30:05Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "e5ed44580d9a448a94ff5d63c47ac7a97e9f3320a51ea1d5ac8831e879b149df",
+    "quote_as_of": "2026-08-20T06:30:30Z",
     "run_attempt": 1,
-    "run_id": "32314261503",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-19"
+    "source_as_of": "2026-08-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -257,5 +250,5 @@
     "source_as_of": "2026-07-28T06:30:17Z"
   },
   "ticker": "036800.KQ",
-  "updated_at": "2026-08-19T23:53:46Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

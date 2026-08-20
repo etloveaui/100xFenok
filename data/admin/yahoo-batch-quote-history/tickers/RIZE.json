@@ -85,7 +85,7 @@
   "current": {
     "fetched_at": "2026-08-11T15:10:25Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/RIZE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/RIZE.json",
     "payload_sha256": "2e2a65d7a2d619bd61a0bfd9bfd35d282dfe244905396927ebba0ebddde65da8",
     "quote_as_of": "2026-08-11T13:46:08Z",
     "source_as_of": "2026-08-11"
@@ -119,12 +119,12 @@
     "run_id": "31456720047"
   },
   "lkg": {
-    "fetched_at": "2026-08-07T19:10:11Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-11T15:10:25Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/RIZE.json",
-    "payload_sha256": "dce3af64dffa24ad99b3bb01d15ca71f7ab9a116949eb8a8cdba369e11bfbd28",
-    "quote_as_of": "2026-08-07T14:45:01Z",
-    "source_as_of": "2026-08-07"
+    "payload_sha256": "2e2a65d7a2d619bd61a0bfd9bfd35d282dfe244905396927ebba0ebddde65da8",
+    "quote_as_of": "2026-08-11T13:46:08Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -143,19 +143,19 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31505333713",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "RIZE holds LKG because Yahoo source date 2026-06-30 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "RIZE holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "RIZE",
-  "updated_at": "2026-08-11T15:09:25Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

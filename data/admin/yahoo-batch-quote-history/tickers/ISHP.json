@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-12T17:18:44Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/ISHP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ISHP.json",
     "payload_sha256": "e6ed82782431818274d7abf05c03baa8573863d673d9fb48e145b76b172f68b0",
     "quote_as_of": "2026-08-11T20:00:00Z",
     "source_as_of": "2026-08-11"
@@ -51,6 +51,14 @@
     "schedule": "7 16 * * 0-5",
     "shard": "44/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-12T17:18:44Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ISHP.json",
+    "payload_sha256": "e6ed82782431818274d7abf05c03baa8573863d673d9fb48e145b76b172f68b0",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "ISHP holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
   "ticker": "ISHP",
-  "updated_at": "2026-08-12T17:16:04Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

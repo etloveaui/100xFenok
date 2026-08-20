@@ -52,6 +52,20 @@
       "run_id": "31300442711",
       "schedule": "7 6 * * 0-5",
       "shard": "3/72"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for UPRO despite available history",
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 596,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
@@ -67,17 +81,30 @@
     "stockanalysis_etf"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for UPRO despite available history",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-08-09T07:09:35Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 596,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31300442711",
-    "schedule": "7 6 * * 0-5",
-    "shard": "3/72"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for UPRO despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "run_attempt": 1,
+    "run_id": "32379322022"
   },
   "lkg": {
     "fetched_at": "2026-08-09T02:26:20Z",
@@ -113,5 +140,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "UPRO",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

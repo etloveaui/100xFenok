@@ -52,15 +52,28 @@
       "run_id": "31354396475",
       "schedule": "7 2 * * 0-5",
       "shard": "13/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 878,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T04:10:48Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VOX.json",
-    "payload_sha256": "9a18c87ec0919071371dccac4dcbc647779b4db0c41bf37e57d7a7fa0b2814cb",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-20T15:36:34Z",
+    "history_as_of": "2026-08-20",
+    "path": "data/yf/finance/VOX.json",
+    "payload_sha256": "0d2c477e4a7aec2cfb391c6e7065fe53fb84c964f13f63ba532183e3474fc901",
+    "quote_as_of": "2026-08-20T15:31:11Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "global_scouter_etf",
@@ -68,16 +81,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1020,
-    "natural": true,
-    "observed_at": "2026-08-10T04:06:52Z",
+    "latency_ms": 878,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31354396475",
-    "schedule": "7 2 * * 0-5",
-    "shard": "13/72"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-10T04:10:48Z",
@@ -89,18 +102,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T04:06:52Z",
-    "payload_sha256": "cd31dc95aa518d6a079f65fca12789bb646e96567b10daad761e62454cfcc053",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "cf3ad3306ab449eae4cb860e9bc055b8a4fed2d612ca546ea1df38ffb4dc5dde",
+    "quote_as_of": "2026-08-20T15:31:11Z",
     "run_attempt": 1,
-    "run_id": "31354396475",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-20"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -113,5 +126,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "VOX",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

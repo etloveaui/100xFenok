@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-12T08:01:44Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/DFSU.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DFSU.json",
     "payload_sha256": "24d9e6a75c027c33b8ce77a9a2d07a4bd473cf511183bfe924ce50d402bf7d31",
     "quote_as_of": "2026-08-11T19:59:31Z",
     "source_as_of": "2026-08-11"
@@ -64,6 +64,14 @@
     "schedule": "7 6 * * 0-5",
     "shard": "39/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-12T08:01:44Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DFSU.json",
+    "payload_sha256": "24d9e6a75c027c33b8ce77a9a2d07a4bd473cf511183bfe924ce50d402bf7d31",
+    "quote_as_of": "2026-08-11T19:59:31Z",
+    "source_as_of": "2026-08-11"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -76,9 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "DFSU holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
   "ticker": "DFSU",
-  "updated_at": "2026-08-12T07:59:44Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-12T04:19:00Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/CATF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CATF.json",
     "payload_sha256": "4c2d396265eeaf17c6062f3d6ab9cb4ecf21cb306637ac0d20a51e9573c7928b",
     "quote_as_of": "2026-08-11T17:23:24Z",
     "source_as_of": "2026-08-11"
@@ -65,12 +65,12 @@
     "shard": "37/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T18:22:58Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-12T04:19:00Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CATF.json",
-    "payload_sha256": "81e85ffcb5908021fb47f89482052c00b066ae7f0d5b0e57940d2ff166a8e572",
-    "quote_as_of": "2026-07-31T19:47:58Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "4c2d396265eeaf17c6062f3d6ab9cb4ecf21cb306637ac0d20a51e9573c7928b",
+    "quote_as_of": "2026-08-11T17:23:24Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CATF holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CATF holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "CATF",
-  "updated_at": "2026-08-12T04:17:21Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

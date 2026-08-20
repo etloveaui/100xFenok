@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-12T02:41:04Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31557511991",
-      "schedule": "7 0 * * 0-5",
-      "shard": "36/72"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,47 +168,61 @@
       "run_id": "31764357371",
       "schedule": "7 0 * * 0-5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 624,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-14T02:41:36Z",
-    "history_as_of": "2026-08-13",
+    "fetched_at": "2026-08-20T15:23:15Z",
+    "history_as_of": "2026-08-20",
     "path": "data/yf/finance/ONEQ.json",
-    "payload_sha256": "9910a7a9171c1875cbb618b28983b6b2b900a2cba84ad2c9e1c1bdade5bf8f08",
-    "quote_as_of": "2026-08-13T20:00:01Z",
-    "source_as_of": "2026-08-13"
+    "payload_sha256": "51d204d70bede4304c5a1d00fbd1c103b9302d53d62d006cc71926f997b9b1c2",
+    "quote_as_of": "2026-08-20T15:22:27Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
-    "rim_tracker_configuration"
+    "rim_tracker_configuration",
+    "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 855,
-    "natural": true,
-    "observed_at": "2026-08-14T02:41:13Z",
+    "latency_ms": 624,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31764357371",
-    "schedule": "7 0 * * 0-5",
-    "shard": "5/6"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-13",
-    "observed_at": "2026-08-14T02:41:13Z",
-    "payload_sha256": "7cf64a193c025d381a25819d135cd0f53824d4df5f1450a67444393afca64dea",
-    "quote_as_of": "2026-08-13T20:00:01Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "09a63568013a2422651af79926cd072d0187a82f3954680f6acb94dfab9217e4",
+    "quote_as_of": "2026-08-20T15:22:27Z",
     "run_attempt": 1,
-    "run_id": "31764357371",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-13"
+    "source_as_of": "2026-08-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ONEQ",
-  "updated_at": "2026-08-14T02:41:13Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

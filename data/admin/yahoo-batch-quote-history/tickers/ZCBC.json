@@ -44,7 +44,7 @@
   "current": {
     "fetched_at": "2026-08-11T15:10:45Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/ZCBC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ZCBC.json",
     "payload_sha256": "dcd49b0eeb1387258e5b97aa486703b7064b3e60b98515f44af7ffba5e505206",
     "quote_as_of": "2026-08-11T13:46:10Z",
     "source_as_of": "2026-08-11"
@@ -66,12 +66,12 @@
     "shard": "31/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-11T05:22:14Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-08-11T15:10:45Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ZCBC.json",
-    "payload_sha256": "ba1ba2eee8d9ff47ac12bf578e745270f5e92168f35f9d59c08823f5fc495a67",
-    "quote_as_of": "2026-06-29T19:46:34Z",
-    "source_as_of": "2026-06-29T19:46:34Z"
+    "payload_sha256": "dcd49b0eeb1387258e5b97aa486703b7064b3e60b98515f44af7ffba5e505206",
+    "quote_as_of": "2026-08-11T13:46:10Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -85,19 +85,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 30,
-    "classified_at": "2026-08-11T07:21:44Z",
-    "classified_run_id": "31468517777",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ZCBC holds LKG because Yahoo source date 2026-06-29T19:46:34Z is 30 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ZCBC holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29T19:46:34Z"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "ZCBC",
-  "updated_at": "2026-08-11T15:09:25Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

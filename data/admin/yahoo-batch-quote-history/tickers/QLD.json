@@ -52,15 +52,28 @@
       "run_id": "31422533403",
       "schedule": "7 18 * * 0-5",
       "shard": "21/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 618,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T19:13:24Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/QLD.json",
-    "payload_sha256": "17d6287cb71c22dd5d9170b276b792563d62e8ce09caf53f13dec83421c9a63e",
-    "quote_as_of": "2026-08-10T19:13:17Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-08-20T15:26:48Z",
+    "history_as_of": "2026-08-20",
+    "path": "data/yf/finance/QLD.json",
+    "payload_sha256": "9de41d1d2d177ae5a3cf2de05c660908e2ba4791853a59401a403e9c8bee84e3",
+    "quote_as_of": "2026-08-20T15:26:45Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "focus_etf_configuration",
@@ -68,16 +81,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1030,
-    "natural": true,
-    "observed_at": "2026-08-10T19:09:16Z",
+    "latency_ms": 618,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31422533403",
-    "schedule": "7 18 * * 0-5",
-    "shard": "21/72"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-10T19:13:24Z",
@@ -89,18 +102,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T19:09:16Z",
-    "payload_sha256": "afbfa50f09cf0c1b8500b3c0e517d9961d4593addfef7647cafc9dee155e5101",
-    "quote_as_of": "2026-08-10T19:13:17Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "6063361d53abf8b9a3185102a9ecfe66ff8e8e747dee35b44bc48be597d3e5c5",
+    "quote_as_of": "2026-08-20T15:26:45Z",
     "run_attempt": 1,
-    "run_id": "31422533403",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-20"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -113,5 +126,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "QLD",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

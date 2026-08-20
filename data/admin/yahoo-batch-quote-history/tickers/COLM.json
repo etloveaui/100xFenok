@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-04T00:29:57Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30865042195",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "32314261503",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 3173,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-19T23:45:20Z",
-    "history_as_of": "2026-08-19",
+    "fetched_at": "2026-08-20T15:00:59Z",
+    "history_as_of": "2026-08-20",
     "path": "data/yf/finance/COLM.json",
-    "payload_sha256": "7ff54d8b265b8642b5d749b4ff5ef4080f3befc97fa50806221be856cdd8b7a1",
-    "quote_as_of": "2026-08-19T20:00:01Z",
-    "source_as_of": "2026-08-19"
+    "payload_sha256": "6f390b79b6ae943ca3dd34006e3b9e76c82bc1b7944b6a54d41e0a6fb3b6d6fd",
+    "quote_as_of": "2026-08-20T15:00:47Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-08-19T23:47:14Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 3173,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32314261503",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-19",
-    "observed_at": "2026-08-19T23:42:29Z",
-    "payload_sha256": "577646d6a79b87cfcb6593772c43987263d4f5f0b7dd8b951e091bfef799645f",
-    "quote_as_of": "2026-08-19T20:00:01Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "81282b3ebeae252a1c89413379840b295b03c5ac68a9819dabe926811a8ae61f",
+    "quote_as_of": "2026-08-20T15:00:47Z",
     "run_attempt": 1,
-    "run_id": "32314261503",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-19"
+    "source_as_of": "2026-08-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "COLM",
-  "updated_at": "2026-08-19T23:47:14Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

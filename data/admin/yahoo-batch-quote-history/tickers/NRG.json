@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-31T00:59:40Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30593079919",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "32314261503",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 2661,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-19T23:52:55Z",
-    "history_as_of": "2026-08-19",
+    "fetched_at": "2026-08-20T15:21:35Z",
+    "history_as_of": "2026-08-20",
     "path": "data/yf/finance/NRG.json",
-    "payload_sha256": "c8e324e250a3f0f9b84d07f1b268960078a25929d5f6cefc4c935c29ad98c5b1",
-    "quote_as_of": "2026-08-19T20:00:02Z",
-    "source_as_of": "2026-08-19"
+    "payload_sha256": "db713c5b9fede771336ca737a7fba71c0b66f443e5d46aae7061bfd8a4b0371b",
+    "quote_as_of": "2026-08-20T15:20:58Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,32 +197,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 596,
-    "natural": true,
-    "observed_at": "2026-08-19T23:49:43Z",
+    "latency_ms": 2661,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32314261503",
-    "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-19",
-    "observed_at": "2026-08-19T23:49:43Z",
-    "payload_sha256": "74dba119bd7b2381bedb7f68ed48320b8c2e215d3fbe69b93eac05591bea0f6a",
-    "quote_as_of": "2026-08-19T20:00:02Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "80b081c2f10caca83659cf1c3109545eaf0b8c1b30bb6b692cd9220468c75734",
+    "quote_as_of": "2026-08-20T15:20:58Z",
     "run_attempt": 1,
-    "run_id": "32314261503",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-19"
+    "source_as_of": "2026-08-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "NRG",
-  "updated_at": "2026-08-19T23:49:43Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

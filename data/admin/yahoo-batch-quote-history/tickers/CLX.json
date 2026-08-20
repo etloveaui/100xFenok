@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-30T00:50:04Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30502016705",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "31851174388",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 2799,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-14T23:51:10Z",
-    "history_as_of": "2026-08-14",
+    "fetched_at": "2026-08-20T14:59:57Z",
+    "history_as_of": "2026-08-20",
     "path": "data/yf/finance/CLX.json",
-    "payload_sha256": "cc8e6850cfa5be963c683a1af031813af2488a3a2b4e714969d7bac8a4e0e30b",
-    "quote_as_of": "2026-08-14T20:00:02Z",
-    "source_as_of": "2026-08-14"
+    "payload_sha256": "702eed1c7dd52da016ced21661fff4977b06d2e65e179827a41b9e2bf7b222a5",
+    "quote_as_of": "2026-08-20T14:59:34Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,32 +197,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 579,
-    "natural": true,
-    "observed_at": "2026-08-14T23:48:33Z",
+    "latency_ms": 2799,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31851174388",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-14",
-    "observed_at": "2026-08-14T23:48:33Z",
-    "payload_sha256": "6ab1ae4b29df32ec3e1ab50ae8853f40deac1429fa9766503cbb3aefb08e9f24",
-    "quote_as_of": "2026-08-14T20:00:02Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "3176358a166ccf71396fbd26e0759b4186c1813b4528ebe919cbf070fb3ba2d8",
+    "quote_as_of": "2026-08-20T14:59:34Z",
     "run_attempt": 1,
-    "run_id": "31851174388",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-14"
+    "source_as_of": "2026-08-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CLX",
-  "updated_at": "2026-08-14T23:48:33Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

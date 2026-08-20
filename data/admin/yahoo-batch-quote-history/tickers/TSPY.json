@@ -57,7 +57,7 @@
   "current": {
     "fetched_at": "2026-08-12T05:48:32Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/TSPY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TSPY.json",
     "payload_sha256": "1b80e36859485a77aa8ea43ac4dd619cf16f173579525064c33b1e1604f835a2",
     "quote_as_of": "2026-08-11T20:00:00Z",
     "source_as_of": "2026-08-11"
@@ -79,12 +79,12 @@
     "shard": "38/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:35:42Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-12T05:48:32Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/TSPY.json",
-    "payload_sha256": "c63559df74edfa48b6c5182152cf87f25a8d58ceaa0935a45b03c75a087c8a74",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "1b80e36859485a77aa8ea43ac4dd619cf16f173579525064c33b1e1604f835a2",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -98,19 +98,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "TSPY holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "TSPY holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "TSPY",
-  "updated_at": "2026-08-12T05:45:23Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 495,
-      "natural": true,
-      "observed_at": "2026-07-31T01:04:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30593079919",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 577,
@@ -181,15 +168,34 @@
       "run_id": "32314261503",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "HTTPError: Failed to perform, curl: (16) . See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 2454,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-19T23:47:02Z",
-    "history_as_of": "2026-08-19",
+    "fetched_at": "2026-08-20T15:35:37Z",
+    "history_as_of": "2026-08-20",
     "path": "data/yf/finance/UPS.json",
-    "payload_sha256": "cb420682a1fe6964cba9f3e7e68000fc5e9fcc3a4636c4674c9013f0ec9ad3af",
-    "quote_as_of": "2026-08-19T20:03:32Z",
-    "source_as_of": "2026-08-19"
+    "payload_sha256": "695d9a5f88bde4e176496240c7e6315991d5a2560bb025d81d42cc0e16eaf520",
+    "quote_as_of": "2026-08-20T15:35:21Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,32 +203,38 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 1085,
-    "natural": true,
-    "observed_at": "2026-08-19T23:42:29Z",
+    "event_name": "workflow_dispatch",
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "HTTPError: Failed to perform, curl: (16) . See https://curl.se/libcurl/c/libcurl-errors.html first for more details.",
+        "source": "provider_safe_call"
+      }
+    ],
+    "latency_ms": 2454,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32314261503",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-19",
-    "observed_at": "2026-08-19T23:42:29Z",
-    "payload_sha256": "7b3b44fc0edd9d00dfca5555a219521f56857dbac97a6315ba2367e326bbc2da",
-    "quote_as_of": "2026-08-19T20:03:32Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "e2748c604864335c1e922ee4f25aa1a363007dcbd774bf4afcc432507e756798",
+    "quote_as_of": "2026-08-20T15:35:21Z",
     "run_attempt": 1,
-    "run_id": "32314261503",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-19"
+    "source_as_of": "2026-08-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "UPS",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

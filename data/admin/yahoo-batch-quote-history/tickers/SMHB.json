@@ -108,7 +108,7 @@
   "current": {
     "fetched_at": "2026-08-12T05:48:18Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/SMHB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SMHB.json",
     "payload_sha256": "d8f5b1baa416563c7c03a54d646c9d8f278885a45186906d401c3ad847d1937d",
     "quote_as_of": "2026-08-11T19:57:25Z",
     "source_as_of": "2026-08-11"
@@ -130,12 +130,12 @@
     "shard": "38/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T20:22:28Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-12T05:48:18Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/SMHB.json",
-    "payload_sha256": "e493d81bdc32ed77ed326c0e1b97eb9c06aa3baa2294e9ddf374601f99e68468",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "d8f5b1baa416563c7c03a54d646c9d8f278885a45186906d401c3ad847d1937d",
+    "quote_as_of": "2026-08-11T19:57:25Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -149,19 +149,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "SMHB holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "SMHB holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "SMHB",
-  "updated_at": "2026-08-12T05:45:23Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

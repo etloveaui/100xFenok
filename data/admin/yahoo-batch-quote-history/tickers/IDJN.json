@@ -152,7 +152,7 @@
   "current": {
     "fetched_at": "2026-08-11T19:57:44Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/IDJN.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IDJN.json",
     "payload_sha256": "858ebce44f43fbca809293a8f4faf28002171b5909260a975929da42ecf53f90",
     "quote_as_of": "2026-08-11T13:46:05Z",
     "source_as_of": "2026-08-11"
@@ -174,12 +174,12 @@
     "shard": "33/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T07:10:01Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-11T19:57:44Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/IDJN.json",
-    "payload_sha256": "77d59de5bde3bb3a1bf1e6ccf59a83d8e26d63ff699fb8646d63cf06188d6904",
-    "quote_as_of": "2026-07-17T13:52:39Z",
-    "source_as_of": "2026-07-17T13:52:39Z"
+    "payload_sha256": "858ebce44f43fbca809293a8f4faf28002171b5909260a975929da42ecf53f90",
+    "quote_as_of": "2026-08-11T13:46:05Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -193,19 +193,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-08-09T08:59:39Z",
-    "classified_run_id": "31304762930",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "IDJN holds LKG because Yahoo source date 2026-07-17T13:52:39Z is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "IDJN holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-17T13:52:39Z"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "IDJN",
-  "updated_at": "2026-08-11T19:54:36Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

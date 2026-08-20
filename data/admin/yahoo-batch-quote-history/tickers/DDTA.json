@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-12T02:42:23Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/DDTA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DDTA.json",
     "payload_sha256": "3af581e4c7ec51eeebb02c118a3347d718f0dbb18432d955a1ec4ffe5e60db05",
     "quote_as_of": "2026-08-11T17:55:44Z",
     "source_as_of": "2026-08-11"
@@ -65,12 +65,12 @@
     "shard": "36/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-06T10:49:47Z",
-    "history_as_of": "2026-08-05",
+    "fetched_at": "2026-08-12T02:42:23Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DDTA.json",
-    "payload_sha256": "d4eba8c8478409ab51c6086e2931c22593246d937ce8cee155f78acfea924bfb",
-    "quote_as_of": "2026-08-03T18:17:24Z",
-    "source_as_of": "2026-08-03T18:17:24Z"
+    "payload_sha256": "3af581e4c7ec51eeebb02c118a3347d718f0dbb18432d955a1ec4ffe5e60db05",
+    "quote_as_of": "2026-08-11T17:55:44Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-12T00:28:31Z",
-    "classified_run_id": "31548744038",
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DDTA holds LKG because Yahoo source date 2026-08-03T18:17:24Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DDTA holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-03T18:17:24Z"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "DDTA",
-  "updated_at": "2026-08-12T02:41:04Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

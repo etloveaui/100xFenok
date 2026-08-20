@@ -69,7 +69,7 @@
   "current": {
     "fetched_at": "2026-08-12T02:42:13Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/CPRA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CPRA.json",
     "payload_sha256": "b8829f3fbe4649585e2bb11006a00492cd6598803708985c1b4e70beca23bea3",
     "quote_as_of": "2026-08-11T17:19:10Z",
     "source_as_of": "2026-08-11"
@@ -91,12 +91,12 @@
     "shard": "41/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-06T06:43:25Z",
-    "history_as_of": "2026-08-05",
+    "fetched_at": "2026-08-12T02:42:13Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CPRA.json",
-    "payload_sha256": "310fb2b74da95bf63f9d463a7cc5b3720f6696ba25575b83b6873e9cead69c1c",
-    "quote_as_of": "2026-08-03T15:10:20Z",
-    "source_as_of": "2026-08-03T15:10:20Z"
+    "payload_sha256": "b8829f3fbe4649585e2bb11006a00492cd6598803708985c1b4e70beca23bea3",
+    "quote_as_of": "2026-08-11T17:19:10Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -110,19 +110,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-12T00:28:31Z",
-    "classified_run_id": "31548744038",
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CPRA holds LKG because Yahoo source date 2026-08-03T15:10:20Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CPRA holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-03T15:10:20Z"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "CPRA",
-  "updated_at": "2026-08-12T11:11:11Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

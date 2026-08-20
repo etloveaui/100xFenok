@@ -39,15 +39,28 @@
       "run_id": "31210066712",
       "schedule": "7 18 * * 0-5",
       "shard": "69/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 440,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T19:09:40Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/PTIR.json",
-    "payload_sha256": "e1f65df69d73a4763e226bb758fe09c5c99bc46e9fb78f95385af2c47e342840",
-    "quote_as_of": "2026-08-07T19:09:28Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-20T15:26:27Z",
+    "history_as_of": "2026-08-20",
+    "path": "data/yf/finance/PTIR.json",
+    "payload_sha256": "9aab8bb61cf6443e14bd5d0116a3885fc0a984d5ad9feaa06ab752ba7b6f6990",
+    "quote_as_of": "2026-08-20T15:25:50Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "focus_etf_configuration",
@@ -55,16 +68,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 461,
-    "natural": true,
-    "observed_at": "2026-08-07T19:09:09Z",
+    "latency_ms": 440,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31210066712",
-    "schedule": "7 18 * * 0-5",
-    "shard": "69/72"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-07T19:09:40Z",
@@ -76,18 +89,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-07T19:09:09Z",
-    "payload_sha256": "4fa8c3f980f8801dc8f7f90bb94eb3882957d98cc4b7d3266fbdf42794bc3612",
-    "quote_as_of": "2026-08-07T19:09:28Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "eb1af2c6473ab8bd5a0fd400b9cbc844f7d05dc0886b9338cd5aeaa92a19b263",
+    "quote_as_of": "2026-08-20T15:25:50Z",
     "run_attempt": 1,
-    "run_id": "31210066712",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-20"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -100,5 +113,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "PTIR",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

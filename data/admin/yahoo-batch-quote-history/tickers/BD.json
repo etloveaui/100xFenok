@@ -56,7 +56,7 @@
   "current": {
     "fetched_at": "2026-08-11T17:09:53Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/BD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BD.json",
     "payload_sha256": "b7a64e3c371bcbc563f033b663945a588b5d4ad9df4ad79e3d451576fb4b888a",
     "quote_as_of": "2026-08-11T13:46:02Z",
     "source_as_of": "2026-08-11"
@@ -78,12 +78,12 @@
     "shard": "32/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-05T23:14:46Z",
-    "history_as_of": "2026-08-04",
+    "fetched_at": "2026-08-11T17:09:53Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BD.json",
-    "payload_sha256": "9b8755ff865eda1e7d1356dab6df8639d36ec9e928526e5d5114f86c40c08ad2",
-    "quote_as_of": "2026-07-16T16:20:06Z",
-    "source_as_of": "2026-07-16T16:20:06Z"
+    "payload_sha256": "b7a64e3c371bcbc563f033b663945a588b5d4ad9df4ad79e3d451576fb4b888a",
+    "quote_as_of": "2026-08-11T13:46:02Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -97,19 +97,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-08-06T00:14:28Z",
-    "classified_run_id": "31058959670",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BD holds LKG because Yahoo source date 2026-07-16T16:20:06Z is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BD holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-16T16:20:06Z"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "BD",
-  "updated_at": "2026-08-11T17:08:04Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

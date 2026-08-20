@@ -52,15 +52,28 @@
       "run_id": "31354396475",
       "schedule": "7 2 * * 0-5",
       "shard": "13/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 461,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T04:10:01Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/NVDG.json",
-    "payload_sha256": "45536fdcfa31c79dd575113a99635b834a3d77612394814798bc69c92840a0f6",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-20T15:22:12Z",
+    "history_as_of": "2026-08-20",
+    "path": "data/yf/finance/NVDG.json",
+    "payload_sha256": "2c598a5da1d5db8c2e920f89f8ee0fa59f2c5d6e6c2c62c27d377efb77379899",
+    "quote_as_of": "2026-08-20T15:11:13Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "focus_etf_configuration",
@@ -68,16 +81,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 940,
-    "natural": true,
-    "observed_at": "2026-08-10T04:06:52Z",
+    "latency_ms": 461,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31354396475",
-    "schedule": "7 2 * * 0-5",
-    "shard": "13/72"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-08-10T04:10:01Z",
@@ -89,18 +102,18 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T04:06:52Z",
-    "payload_sha256": "4b3aca4d879b438755a03462b094d31e67882c6c38247010a7303b36dade4691",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "3daf5538f6a9ab61ac79349ae873cf1e5601edd80d07266b1b0e68b0ef8a038b",
+    "quote_as_of": "2026-08-20T15:11:13Z",
     "run_attempt": 1,
-    "run_id": "31354396475",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-20"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -113,5 +126,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "NVDG",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

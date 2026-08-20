@@ -57,7 +57,7 @@
   "current": {
     "fetched_at": "2026-08-11T19:58:08Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/NMAY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NMAY.json",
     "payload_sha256": "27215c444cf0edec322fb365db14fd132130d6d50109584b1436e0876ed3d1d3",
     "quote_as_of": "2026-08-11T19:43:07Z",
     "source_as_of": "2026-08-11"
@@ -79,12 +79,12 @@
     "shard": "33/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:04:25Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-11T19:58:08Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/NMAY.json",
-    "payload_sha256": "bc48c698612d5e409227b3d6f28a25f8a017490ab5479d006d58afdf5b81cd65",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "27215c444cf0edec322fb365db14fd132130d6d50109584b1436e0876ed3d1d3",
+    "quote_as_of": "2026-08-11T19:43:07Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -98,19 +98,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "NMAY holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "NMAY holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "NMAY",
-  "updated_at": "2026-08-11T19:54:36Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

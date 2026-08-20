@@ -3,20 +3,6 @@
     {
       "attempts_used": 1,
       "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 470,
-      "natural": true,
-      "observed_at": "2026-08-12T05:45:23Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31567478446",
-      "schedule": "7 4 * * 0-5",
-      "shard": "38/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 4258,
@@ -191,6 +177,20 @@
       "run_id": "32314261503",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 2378,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
@@ -207,16 +207,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "error": "recovery_not_advanced_by_provider",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 523,
-    "natural": true,
-    "observed_at": "2026-08-19T23:42:29Z",
-    "outcome": "fresh",
+    "latency_ms": 2378,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "32314261503",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
+  },
+  "latest_promotion_deferral": {
+    "event_name": "workflow_dispatch",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "provider_history_as_of": "2026-08-19",
+    "provider_quote_as_of": "2026-07-28T06:30:17Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "32379322022"
   },
   "lkg": {
     "fetched_at": "2026-08-19T23:42:56Z",
@@ -252,5 +262,5 @@
     "source_as_of": "2026-07-28T06:30:17Z"
   },
   "ticker": "183300.KQ",
-  "updated_at": "2026-08-19T23:47:14Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-12T02:43:09Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/DJIA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DJIA.json",
     "payload_sha256": "a0d7338d2e064746b537eacf414e725a3f05ae50c70d6677c3c3c5b0a8d1b0ce",
     "quote_as_of": "2026-08-11T19:58:35Z",
     "source_as_of": "2026-08-11"
@@ -65,12 +65,12 @@
     "shard": "36/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T17:33:59Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-12T02:43:09Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DJIA.json",
-    "payload_sha256": "87463a9c256db3f92faf8a94a2036f2de2cbab17bc78adfe6263bba39f743d3b",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "a0d7338d2e064746b537eacf414e725a3f05ae50c70d6677c3c3c5b0a8d1b0ce",
+    "quote_as_of": "2026-08-11T19:58:35Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DJIA holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DJIA holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "DJIA",
-  "updated_at": "2026-08-12T02:41:04Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

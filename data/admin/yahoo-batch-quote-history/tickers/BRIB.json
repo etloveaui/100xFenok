@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-12T05:47:07Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/BRIB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BRIB.json",
     "payload_sha256": "4c687104c36541eeef91ea6d5546493f4a76fcc43dfadf8f5f18a2238a0720a9",
     "quote_as_of": "2026-08-11T19:46:17Z",
     "source_as_of": "2026-08-11"
@@ -65,12 +65,12 @@
     "shard": "38/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-21T23:09:31Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-08-12T05:47:07Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BRIB.json",
-    "payload_sha256": "e17b2ee112a7361f66afb817a7cea67fa805d70c5f591c1995f4bf7fabcf5fb8",
-    "quote_as_of": "2026-07-20T19:55:34Z",
-    "source_as_of": "2026-07-20"
+    "payload_sha256": "4c687104c36541eeef91ea6d5546493f4a76fcc43dfadf8f5f18a2238a0720a9",
+    "quote_as_of": "2026-08-11T19:46:17Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-30T00:35:13Z",
-    "classified_run_id": "30502016705",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BRIB holds LKG because Yahoo source date 2026-07-20 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BRIB holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "BRIB",
-  "updated_at": "2026-08-12T05:45:23Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

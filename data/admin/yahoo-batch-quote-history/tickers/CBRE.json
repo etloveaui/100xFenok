@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-30T00:50:04Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30502016705",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "31851174388",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 2259,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-14T23:51:06Z",
-    "history_as_of": "2026-08-14",
+    "fetched_at": "2026-08-20T14:58:42Z",
+    "history_as_of": "2026-08-20",
     "path": "data/yf/finance/CBRE.json",
-    "payload_sha256": "c95ad45520eb6c957ff42f53593274814ccc03c361b8f4d4f8124b55d7bbd306",
-    "quote_as_of": "2026-08-14T20:03:45Z",
-    "source_as_of": "2026-08-14"
+    "payload_sha256": "3507aa3ebb95b4bb4703b8f14d91116720397c3cbbad16da4e63b199819420fa",
+    "quote_as_of": "2026-08-20T14:58:15Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,16 +197,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 3673,
-    "natural": true,
-    "observed_at": "2026-08-14T23:48:33Z",
+    "latency_ms": 2259,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31851174388",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -236,15 +236,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-14",
-    "observed_at": "2026-08-14T23:48:33Z",
-    "payload_sha256": "4640ead09fc1969e286de682a225a5df03b3957864ec498eca79ab6157204882",
-    "quote_as_of": "2026-08-14T20:03:45Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "80fb80c63a9f8483c996753a87681b734999e56d6001c83dbdd26d97d5bb9480",
+    "quote_as_of": "2026-08-20T14:58:15Z",
     "run_attempt": 1,
-    "run_id": "31851174388",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-14"
+    "source_as_of": "2026-08-20"
   },
   "recovered_at": "2026-07-21T00:18:00Z",
   "recovered_from_run_id": "29622560422",
@@ -255,5 +255,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CBRE",
-  "updated_at": "2026-08-14T23:48:33Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

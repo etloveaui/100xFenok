@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-11T15:12:43Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/XPP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XPP.json",
     "payload_sha256": "43a5f325c6afacc23eff695f9192af03cd02368c2fc8a7d6e7af3942612c4a6d",
     "quote_as_of": "2026-08-11T15:12:34Z",
     "source_as_of": "2026-08-11"
@@ -38,6 +38,14 @@
     "schedule": "7 14 * * 0-5",
     "shard": "31/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-11T15:12:43Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XPP.json",
+    "payload_sha256": "43a5f325c6afacc23eff695f9192af03cd02368c2fc8a7d6e7af3942612c4a6d",
+    "quote_as_of": "2026-08-11T15:12:34Z",
+    "source_as_of": "2026-08-11"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "XPP holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
   "ticker": "XPP",
-  "updated_at": "2026-08-11T15:09:25Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

@@ -188,22 +188,66 @@
       "run_id": "31920599137",
       "schedule": "7 0 * * 0-5",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: 379800.KS: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: 379800.KS: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: 379800.KS: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: 379800.KS: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: 379800.KS: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: 379800.KS: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 564,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-16T01:55:24Z",
-    "history_as_of": "2026-08-14",
+    "fetched_at": "2026-08-20T14:44:19Z",
+    "history_as_of": "2026-08-20",
     "path": "data/yf/finance/379800.KS.json",
-    "payload_sha256": "4d6ea886c3ad2b12f12d94868fa17a1e1fb1412964de339721c809dc314d1fe4",
-    "quote_as_of": "2026-08-14T06:30:26Z",
-    "source_as_of": "2026-08-14"
+    "payload_sha256": "e5db88aeab66d5be105b4da2383b9ae8fd9daa949abff2e28f96c3ad99fac7da",
+    "quote_as_of": "2026-08-20T06:30:09Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
     "focus_etf_configuration"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [
       {
         "attempt": 1,
@@ -236,14 +280,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 1176,
-    "natural": true,
-    "observed_at": "2026-08-16T01:55:14Z",
+    "latency_ms": 564,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31920599137",
-    "schedule": "7 0 * * 0-5",
-    "shard": "0/6"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-07-19T23:00:04Z",
@@ -255,15 +299,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-14",
-    "observed_at": "2026-08-16T01:55:14Z",
-    "payload_sha256": "4249903cb0669ef38982d362d116e257c4402c5f47e142070417b1530f2489a4",
-    "quote_as_of": "2026-08-14T06:30:26Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "3da520b01d79ffb3c43f4dbbae1856d9db93992a2b39a93aef1922953c695fac",
+    "quote_as_of": "2026-08-20T06:30:09Z",
     "run_attempt": 1,
-    "run_id": "31920599137",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-14"
+    "source_as_of": "2026-08-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -279,5 +323,5 @@
     "source_as_of": "2026-07-16"
   },
   "ticker": "379800.KS",
-  "updated_at": "2026-08-16T01:55:14Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

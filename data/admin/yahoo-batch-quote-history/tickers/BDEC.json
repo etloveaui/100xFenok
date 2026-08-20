@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-12T05:47:03Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/BDEC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BDEC.json",
     "payload_sha256": "36a2456374ab9d171490be561713b4b1c93c82bbce8e7ed0c38e42efa753d2bb",
     "quote_as_of": "2026-08-11T19:54:19Z",
     "source_as_of": "2026-08-11"
@@ -65,12 +65,12 @@
     "shard": "38/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:07:40Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-12T05:47:03Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BDEC.json",
-    "payload_sha256": "7503bc77cf3f0107809eabfdfc163c9386b0030ca3990811a5cae73f7fbf1393",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "36a2456374ab9d171490be561713b4b1c93c82bbce8e7ed0c38e42efa753d2bb",
+    "quote_as_of": "2026-08-11T19:54:19Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BDEC holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BDEC holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "BDEC",
-  "updated_at": "2026-08-12T05:45:23Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-12T02:42:59Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/BMSI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BMSI.json",
     "payload_sha256": "d18b24e338ed6d877a1ae823a63e3e82bde0e60c9a8f519905674ccabac3a5e8",
     "quote_as_of": "2026-08-11T13:35:07Z",
     "source_as_of": "2026-08-11"
@@ -65,12 +65,12 @@
     "shard": "36/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T17:33:52Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-12T02:42:59Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BMSI.json",
-    "payload_sha256": "fffd743a24c75ea434e0f5c56754d303f2332b66d9e82f5a31cdd2acc2e85778",
-    "quote_as_of": "2026-07-31T13:39:06Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "d18b24e338ed6d877a1ae823a63e3e82bde0e60c9a8f519905674ccabac3a5e8",
+    "quote_as_of": "2026-08-11T13:35:07Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BMSI holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BMSI holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "BMSI",
-  "updated_at": "2026-08-12T02:41:04Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

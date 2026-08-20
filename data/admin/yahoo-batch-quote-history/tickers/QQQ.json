@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-12T02:41:04Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31557511991",
-      "schedule": "7 0 * * 0-5",
-      "shard": "36/72"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,32 +168,47 @@
       "run_id": "31764357371",
       "schedule": "7 0 * * 0-5",
       "shard": "5/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 851,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "current": {
-    "fetched_at": "2026-08-14T02:41:40Z",
-    "history_as_of": "2026-08-13",
+    "fetched_at": "2026-08-20T15:26:49Z",
+    "history_as_of": "2026-08-20",
     "path": "data/yf/finance/QQQ.json",
-    "payload_sha256": "f4fe2f06a83463bfe533896d9ca7f98f54c09872cf85d46da278597f68f99ad7",
-    "quote_as_of": "2026-08-13T20:00:00Z",
-    "source_as_of": "2026-08-13"
+    "payload_sha256": "889dc0a5f09b153c9c9d3914cb47fdc73e33c68a0e0b755aa073b9e534748a08",
+    "quote_as_of": "2026-08-20T15:26:47Z",
+    "source_as_of": "2026-08-20"
   },
   "discovered_from": [
+    "global_scouter_etf",
     "major_etf_configuration",
-    "rim_tracker_configuration"
+    "rim_tracker_configuration",
+    "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 810,
-    "natural": true,
-    "observed_at": "2026-08-14T02:41:13Z",
+    "latency_ms": 851,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31764357371",
-    "schedule": "7 0 * * 0-5",
-    "shard": "5/6"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "lkg": {
     "fetched_at": "2026-06-28T00:10:34Z",
@@ -218,15 +220,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-08-13",
-    "observed_at": "2026-08-14T02:41:13Z",
-    "payload_sha256": "582f85838cc1d2854e89ad2b466a7c097a85ef764229c2764b3ca1578ce2ad81",
-    "quote_as_of": "2026-08-13T20:00:00Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T14:20:12Z",
+    "payload_sha256": "520935f7831f06498423bb2440423f24678dd21da98c2a610c1774e015133035",
+    "quote_as_of": "2026-08-20T15:26:47Z",
     "run_attempt": 1,
-    "run_id": "31764357371",
+    "run_id": "32379322022",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-13"
+    "source_as_of": "2026-08-20"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -242,5 +244,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "QQQ",
-  "updated_at": "2026-08-14T02:41:13Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

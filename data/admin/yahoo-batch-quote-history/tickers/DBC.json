@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-12T05:47:17Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/DBC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DBC.json",
     "payload_sha256": "5a13c99712dd9180e42d839f33b70bb6366695ab2c32d42b4b57a2c8be17cd61",
     "quote_as_of": "2026-08-11T20:00:00Z",
     "source_as_of": "2026-08-11"
@@ -65,12 +65,12 @@
     "shard": "38/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-28T23:10:37Z",
-    "history_as_of": "2026-07-28",
+    "fetched_at": "2026-08-12T05:47:17Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DBC.json",
-    "payload_sha256": "d5af3254eaab9f16970e40e1ea646c883825f05b7f49da25cc2f7db1a7922f2b",
-    "quote_as_of": "2026-07-28T20:00:00Z",
-    "source_as_of": "2026-07-28"
+    "payload_sha256": "5a13c99712dd9180e42d839f33b70bb6366695ab2c32d42b4b57a2c8be17cd61",
+    "quote_as_of": "2026-08-11T20:00:00Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-06T00:14:28Z",
-    "classified_run_id": "31058959670",
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DBC holds LKG because Yahoo source date 2026-07-28 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DBC holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "DBC",
-  "updated_at": "2026-08-12T05:45:23Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

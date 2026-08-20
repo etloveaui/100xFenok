@@ -121,7 +121,7 @@
   "current": {
     "fetched_at": "2026-08-12T09:26:13Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/PFFL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PFFL.json",
     "payload_sha256": "7bb4b09249f9c9ba514fb9d26ad3bddaa9cc5537923a9d3c314dcef328dea9a6",
     "quote_as_of": "2026-08-11T18:54:59Z",
     "source_as_of": "2026-08-11"
@@ -143,12 +143,12 @@
     "shard": "40/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T20:22:16Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-12T09:26:13Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PFFL.json",
-    "payload_sha256": "81ea005d0aee6d2a794a8c2b4173fe2e407480da0596d647bce978c0b8298ac3",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "7bb4b09249f9c9ba514fb9d26ad3bddaa9cc5537923a9d3c314dcef328dea9a6",
+    "quote_as_of": "2026-08-11T18:54:59Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -162,19 +162,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "PFFL holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "PFFL holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "PFFL",
-  "updated_at": "2026-08-12T09:23:29Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

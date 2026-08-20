@@ -56,7 +56,7 @@
   "current": {
     "fetched_at": "2026-08-11T15:10:58Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/AAPB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AAPB.json",
     "payload_sha256": "2532d6e91e031975531943bc2dd2c8e6def9bf7836d5adae961195a9a1f37b9b",
     "quote_as_of": "2026-08-11T15:06:21Z",
     "source_as_of": "2026-08-11"
@@ -78,12 +78,12 @@
     "shard": "31/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T17:16:49Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-11T15:10:58Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AAPB.json",
-    "payload_sha256": "64aa3282ca5a79d219017db16a4f14014d0b039da1385a414173eb5ca7fa3e31",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "2532d6e91e031975531943bc2dd2c8e6def9bf7836d5adae961195a9a1f37b9b",
+    "quote_as_of": "2026-08-11T15:06:21Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -97,19 +97,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AAPB holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AAPB holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "AAPB",
-  "updated_at": "2026-08-11T15:09:25Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

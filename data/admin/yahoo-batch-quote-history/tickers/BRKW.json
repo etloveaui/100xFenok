@@ -56,7 +56,7 @@
   "current": {
     "fetched_at": "2026-08-12T08:01:31Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/BRKW.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BRKW.json",
     "payload_sha256": "079f1bd371b1a48d439d3b37f328d732a15271e7f12226f87edc207e3ac77069",
     "quote_as_of": "2026-08-11T18:44:58Z",
     "source_as_of": "2026-08-11"
@@ -78,12 +78,12 @@
     "shard": "39/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:09:07Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-12T08:01:31Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BRKW.json",
-    "payload_sha256": "254c54da45fb14187c545eafe921ce613b0860b679abd978ff3792950d0e31c1",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "079f1bd371b1a48d439d3b37f328d732a15271e7f12226f87edc207e3ac77069",
+    "quote_as_of": "2026-08-11T18:44:58Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -97,19 +97,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BRKW holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BRKW holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "BRKW",
-  "updated_at": "2026-08-12T07:59:44Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

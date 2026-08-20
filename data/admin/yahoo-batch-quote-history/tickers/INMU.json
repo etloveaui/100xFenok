@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-11T15:11:43Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/INMU.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/INMU.json",
     "payload_sha256": "c74adcb4548bf6a29f79bf0b3f8dc3ba07759e04ac7fdeed29759161effb6b35",
     "quote_as_of": "2026-08-11T14:57:51Z",
     "source_as_of": "2026-08-11"
@@ -38,6 +38,14 @@
     "schedule": "7 14 * * 0-5",
     "shard": "31/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-11T15:11:43Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/INMU.json",
+    "payload_sha256": "c74adcb4548bf6a29f79bf0b3f8dc3ba07759e04ac7fdeed29759161effb6b35",
+    "quote_as_of": "2026-08-11T14:57:51Z",
+    "source_as_of": "2026-08-11"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "INMU holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
   "ticker": "INMU",
-  "updated_at": "2026-08-11T15:09:25Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

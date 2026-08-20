@@ -44,7 +44,7 @@
   "current": {
     "fetched_at": "2026-08-11T15:10:10Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/NUDG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NUDG.json",
     "payload_sha256": "92d5132605b3d36e50aba129080e692fa6f5e0c4c65171fc8e4e494a043f7e0d",
     "quote_as_of": "2026-08-11T13:46:07Z",
     "source_as_of": "2026-08-11"
@@ -66,12 +66,12 @@
     "shard": "31/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-11T02:27:09Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-08-11T15:10:10Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/NUDG.json",
-    "payload_sha256": "3612495dbcb280ba39a229f89cceb12fca2bbc89fafb75c75af0b61c0fe9054a",
-    "quote_as_of": "2026-06-25T16:45:00Z",
-    "source_as_of": "2026-06-25T16:45:00Z"
+    "payload_sha256": "92d5132605b3d36e50aba129080e692fa6f5e0c4c65171fc8e4e494a043f7e0d",
+    "quote_as_of": "2026-08-11T13:46:07Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -85,19 +85,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 32,
-    "classified_at": "2026-08-11T03:59:23Z",
-    "classified_run_id": "31456720047",
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "NUDG holds LKG because Yahoo source date 2026-06-25T16:45:00Z is 32 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "NUDG holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-25T16:45:00Z"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "NUDG",
-  "updated_at": "2026-08-11T15:09:25Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

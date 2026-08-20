@@ -3,26 +3,6 @@
     {
       "attempts_used": 1,
       "error": "ValueError: provider source timestamp is unavailable for HOLX",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 1257,
-      "natural": true,
-      "observed_at": "2026-08-01T00:39:20Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "30674982988",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: provider source timestamp is unavailable for HOLX",
       "event_name": "workflow_dispatch",
       "failures": [
         {
@@ -284,6 +264,31 @@
       "run_id": "32314261503",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: provider source timestamp is unavailable for HOLX",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 2691,
+      "natural": false,
+      "observed_at": "2026-08-20T14:20:12Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "32379322022",
+      "schedule": "",
+      "shard": ""
     }
   ],
   "discovered_from": [
@@ -292,22 +297,27 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "ValueError: provider source timestamp is unavailable for HOLX",
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [
+      {
+        "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
       {
         "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 692,
-    "natural": true,
-    "observed_at": "2026-08-19T23:42:29Z",
+    "latency_ms": 2691,
+    "natural": false,
+    "observed_at": "2026-08-20T14:20:12Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "32314261503",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "32379322022",
+    "schedule": "",
+    "shard": ""
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -318,23 +328,28 @@
     "failures": [
       {
         "attempt": 1,
+        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-08-19T23:42:29Z",
+    "observed_at": "2026-08-20T14:20:12Z",
     "run_attempt": 1,
-    "run_id": "32314261503"
+    "run_id": "32379322022"
   },
-  "resolution_state": "terminal_provider_unsupported",
-  "retry": false,
+  "resolution_state": "unavailable",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "terminal": {
-    "artifact_generated_at": "2026-08-19T22:46:18.029Z",
+    "artifact_generated_at": "2026-08-20T13:15:57.894Z",
     "artifact_path": "admin/fenok-s1-stock-public-promotion-dry-run.json",
-    "classified_at": "2026-08-19T23:57:48Z",
-    "classified_run_id": "32314261503",
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "evidence": [
       {
         "alias_source": null,
@@ -367,8 +382,8 @@
         "type": "Acquisition"
       }
     ],
-    "evidence_sha256": "53b0c8c86c0a7065af883d182d4bb8614e066276300d1472714e0640bd0ab161"
+    "evidence_sha256": "ced7f490d7bb1cf52c4d2e36b76b672bfa1b09b7c2bc84703a0e81fbac9b1725"
   },
   "ticker": "HOLX",
-  "updated_at": "2026-08-19T23:57:48Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }

@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-12T02:42:49Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/AVXX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AVXX.json",
     "payload_sha256": "5b0ec38d4af1b721da024a9131a67ec8a59b9352a46eb9af962eb70f1f9e3d14",
     "quote_as_of": "2026-08-11T20:00:01Z",
     "source_as_of": "2026-08-11"
@@ -65,12 +65,12 @@
     "shard": "36/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-19T23:03:27Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-12T02:42:49Z",
+    "history_as_of": "2026-08-11",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AVXX.json",
-    "payload_sha256": "1d22355ebe6605d984c94d92d5978d254a4fa19bd4019344b21fae05c860ee9a",
-    "quote_as_of": "2026-07-17T20:00:01Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "5b0ec38d4af1b721da024a9131a67ec8a59b9352a46eb9af962eb70f1f9e3d14",
+    "quote_as_of": "2026-08-11T20:00:01Z",
+    "source_as_of": "2026-08-11"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-28T00:14:11Z",
-    "classified_run_id": "30316637722",
+    "classified_at": "2026-08-20T14:20:12Z",
+    "classified_run_id": "32379322022",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AVXX holds LKG because Yahoo source date 2026-07-17 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AVXX holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-11"
   },
   "ticker": "AVXX",
-  "updated_at": "2026-08-12T02:41:04Z"
+  "updated_at": "2026-08-20T14:20:12Z"
 }
