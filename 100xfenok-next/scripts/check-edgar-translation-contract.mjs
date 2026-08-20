@@ -15,6 +15,7 @@ const RAW_MILLION_KO_RE = /(?:^|[^\d,])((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*�
 const RAW_USD_PARENTHESES_RE = /\(\s*USD\s+[0-9,.]+\s*[BM]\s*\)/gi;
 const LARGE_EOK_AMOUNT_RE = /(?:^|[^\d,])((\d{1,3}(?:,\d{3})+|\d+)억(?:\s*(\d{1,3}(?:,\d{3})*)만)?\s*달러)/g;
 const ISO_UTC_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
+const FOREIGN_FORMS = new Set(["6-K", "20-F", "40-F"]);
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
@@ -36,6 +37,67 @@ function sourcePathFromDataPath(dataPath) {
 
 function normalizeTicker(ticker) {
   return String(ticker ?? "").trim().toUpperCase();
+}
+
+function normalizeCik(cik) {
+  const raw = String(cik ?? "").trim();
+  if (!/^\d+$/.test(raw) || raw.length > 10) return "";
+  return raw.padStart(10, "0");
+}
+
+function accessionDigits(accession) {
+  const normalized = String(accession ?? "").trim();
+  return /^\d{10}-\d{2}-\d{6}$/.test(normalized) ? normalized.replace(/-/g, "") : "";
+}
+
+function secArchiveIdentity(sourceUrl) {
+  try {
+    const parsed = new URL(String(sourceUrl ?? ""));
+    if (parsed.protocol !== "https:" || parsed.hostname !== "www.sec.gov") return null;
+    const match = /^\/Archives\/edgar\/data\/(\d+)\/(\d{18})(?:\/|$)/i.exec(parsed.pathname);
+    if (!match) return null;
+    return { cik: normalizeCik(match[1]), accession: match[2] };
+  } catch {
+    return null;
+  }
+}
+
+function checkForeignFilingIdentity(filing, expectedTicker, label, errors, expectedCik = null) {
+  const form = String(filing?.form ?? "").trim().toUpperCase();
+  if (!FOREIGN_FORMS.has(form)) return;
+  const ticker = normalizeTicker(filing?.ticker);
+  const cik = normalizeCik(filing?.cik);
+  const manifestCik = normalizeCik(expectedCik);
+  const accession = String(filing?.accession ?? "").trim();
+  const accessionId = accessionDigits(accession);
+  const sourceIdentity = secArchiveIdentity(filing?.sourceUrl);
+  if (!ticker || ticker !== normalizeTicker(expectedTicker)) {
+    errors.push(`${label}: foreign filing ticker identity is not bound to manifest ticker`);
+  }
+  if (!cik || cik === "0000000000") errors.push(`${label}: foreign filing requires a non-zero CIK`);
+  if (expectedCik !== null && (!manifestCik || cik !== manifestCik)) {
+    errors.push(`${label}: foreign filing CIK is not bound to manifest CIK`);
+  }
+  if (!accessionId) errors.push(`${label}: foreign filing requires a canonical accession`);
+  if (!sourceIdentity) errors.push(`${label}: foreign filing sourceUrl must be a SEC archive URL`);
+  if (sourceIdentity && (sourceIdentity.cik !== cik || sourceIdentity.accession !== accessionId)) {
+    errors.push(`${label}: foreign filing sourceUrl is not bound to its CIK/accession`);
+  }
+}
+
+function checkForeignEvidenceIdentity(evidence, filing, label, errors) {
+  const form = String(filing?.form ?? "").trim().toUpperCase();
+  if (!FOREIGN_FORMS.has(form)) return;
+  const sourceIdentity = secArchiveIdentity(evidence?.sourceUrl);
+  const filingCik = normalizeCik(filing?.cik);
+  const filingAccession = accessionDigits(filing?.accession);
+  if (!sourceIdentity) {
+    errors.push(`${label}: foreign evidence sourceUrl must be a SEC archive URL`);
+    return;
+  }
+  if (sourceIdentity.cik !== filingCik || sourceIdentity.accession !== filingAccession) {
+    errors.push(`${label}: foreign evidence sourceUrl is not bound to filing CIK/accession`);
+  }
 }
 
 function safePathSlug(value) {
@@ -183,6 +245,7 @@ function checkGenerationCostPolicy(generation, label, errors) {
 }
 
 function validateTranslationArtifact(artifact, filing, ticker, label, errors, sourceEvidenceById = null) {
+  checkForeignFilingIdentity(filing, ticker, label, errors);
   expectEqual(artifact.schemaVersion, 1, `${label}: schemaVersion`, errors);
   expectEqual(artifact.artifactType, TRANSLATION_ARTIFACT_TYPE, `${label}: artifactType`, errors);
   expectEqual(normalizeTicker(artifact.company?.ticker), ticker, `${label}: company.ticker`, errors);
@@ -192,6 +255,22 @@ function validateTranslationArtifact(artifact, filing, ticker, label, errors, so
   expectEqual(artifact.filing?.filingDate, filing.filingDate, `${label}: filing.filingDate`, errors);
   expectEqual(artifact.filing?.periodEnd, filing.periodEnd, `${label}: filing.periodEnd`, errors);
   expectEqual(artifact.filing?.sourceUrl, filing.sourceUrl, `${label}: filing.sourceUrl`, errors);
+  checkForeignFilingIdentity(
+    {
+      ticker: artifact.company?.ticker,
+      cik: artifact.company?.cik,
+      form: artifact.filing?.form,
+      accession: artifact.filing?.accession,
+      sourceUrl: artifact.filing?.sourceUrl,
+    },
+    ticker,
+    `${label}: artifact filing`,
+    errors,
+    filing.cik,
+  );
+  if (FOREIGN_FORMS.has(String(filing?.form ?? "").trim().toUpperCase()) && !sourceEvidenceById) {
+    errors.push(`${label}: foreign translation requires source summary evidence`);
+  }
   if (filing.summaryPath) {
     if (!artifact.sourceSummaryPath) {
       errors.push(`${label}: sourceSummaryPath is required when the manifest has summaryPath`);
@@ -224,6 +303,16 @@ function validateTranslationArtifact(artifact, filing, ticker, label, errors, so
         }
       });
       if (sourceEvidenceById) {
+        for (const anchor of section.sourceAnchors) {
+          if (sourceEvidenceById.has(anchor)) {
+            checkForeignEvidenceIdentity(
+              sourceEvidenceById.get(anchor),
+              filing,
+              `${label}: translationKo.sections[${index}].sourceAnchors/${anchor}`,
+              errors,
+            );
+          }
+        }
         const digest = canonical(evidenceDigestFor(section.sourceAnchors, sourceEvidenceById));
         for (const token of numericTokens(section.bodyKo ?? "")) {
           if (!digest.includes(canonical(token))) {
@@ -305,8 +394,113 @@ function validateFixtureSmoke(errors) {
   validateTranslationArtifact(artifact, filing, "NVDA", "fixture", errors, sourceEvidenceById);
 }
 
+function validateForeignFixtureSmoke(errors) {
+  const fixtures = [
+    {
+      ticker: "BMO",
+      cik: "0000927971",
+      form: "6-K",
+      accession: "0001193125-26-271288",
+      filingDate: "2026-06-15",
+      periodEnd: "2026-06-15",
+      primaryDocument: "bmo-6k.htm",
+      sourceSection: "Foreign report",
+    },
+    {
+      ticker: "ARM",
+      cik: "0001973239",
+      form: "20-F",
+      accession: "0001973239-26-000097",
+      filingDate: "2026-05-26",
+      periodEnd: "2026-03-31",
+      primaryDocument: "arm-20260331.htm",
+      sourceSection: "Item 3.D and Item 5",
+    },
+    {
+      ticker: "SHOP",
+      cik: "0001594805",
+      form: "40-F",
+      accession: "0001594805-26-000001",
+      filingDate: "2026-03-01",
+      periodEnd: "2025-12-31",
+      primaryDocument: "shop-40f.htm",
+      sourceSection: "Risk factors and MD&A",
+    },
+  ];
+  for (const fixture of fixtures) {
+    const archiveAccession = fixture.accession.replace(/-/g, "");
+    const sourceUrl = "https://www.sec.gov/Archives/edgar/data/" + fixture.cik.replace(/^0+/, "") + "/" + archiveAccession + "/" + fixture.primaryDocument;
+    const evidenceId = fixture.form.toLowerCase().replace("-", "_") + "_fixture";
+    const filing = {
+      ...fixture,
+      sourceUrl,
+      summaryPath: "/data/edgar-korean-summaries/pilot/" + evidenceId + "-summary.json",
+    };
+    const artifact = {
+      schemaVersion: 1,
+      artifactType: TRANSLATION_ARTIFACT_TYPE,
+      company: { ticker: fixture.ticker, cik: fixture.cik, name: fixture.ticker + " fixture" },
+      filing: {
+        form: fixture.form,
+        accession: fixture.accession,
+        filingDate: fixture.filingDate,
+        periodEnd: fixture.periodEnd,
+        sourceUrl,
+      },
+      sourceSummaryPath: filing.summaryPath,
+      translationKo: {
+        title: fixture.ticker + " " + fixture.form + " 한글 번역",
+        scopeNote: "AI가 선택 섹션을 한국어로 재구성한 비공식 참고 번역이며, 공식 법률 번역이나 원문 대체물이 아닙니다.",
+        sections: [{
+          id: "foreign_fixture",
+          sourceSection: fixture.sourceSection,
+          titleKo: fixture.sourceSection + " 요약",
+          bodyKo: "공시 원문에 기반한 참고 번역입니다.",
+          sourceAnchors: [evidenceId],
+        }],
+      },
+      generation: {
+        generatedAtUtc: "2026-06-21T00:00:00Z",
+        promptVersion: "fixture-foreign",
+        model: "fixture",
+        costUsedUsd: 0,
+        paidQuotaUsed: false,
+      },
+    };
+    const sourceEvidenceById = new Map([[
+      evidenceId,
+      {
+        id: evidenceId,
+        sourceTextDigest: fixture.form + " source digest",
+        sourceUrl: "https://www.sec.gov/Archives/edgar/data/" + fixture.cik.replace(/^0+/, "") + "/" + archiveAccession + "/exhibit.htm",
+      },
+    ]]);
+    validateTranslationArtifact(artifact, filing, fixture.ticker, "foreign-fixture/" + fixture.form, errors, sourceEvidenceById);
+  }
+  const base = {
+    ticker: "ARM",
+    cik: "0001973239",
+    form: "20-F",
+    accession: "0001973239-26-000097",
+    sourceUrl: "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+  };
+  const rejected = [
+    ["missing ticker", { ...base, ticker: undefined }],
+    ["spoofed ticker", { ...base, ticker: "NVDA" }],
+    ["wrong CIK", { ...base, cik: "0001086888" }],
+    ["malformed CIK", { ...base, cik: "x0001973239" }],
+    ["wrong source URL", { ...base, sourceUrl: "https://example.com/filing" }],
+  ];
+  for (const [name, candidate] of rejected) {
+    const candidateErrors = [];
+    checkForeignFilingIdentity(candidate, "ARM", "translation-fixture-" + name, candidateErrors, "0001973239");
+    if (candidateErrors.length === 0) errors.push("translation fixture " + name + ": foreign identity was not rejected");
+  }
+}
+
 const errors = [];
 validateFixtureSmoke(errors);
+validateForeignFixtureSmoke(errors);
 checkMirror(INDEX_PATH, SOURCE_INDEX_PATH, errors);
 
 const index = existsSync(INDEX_PATH) ? readJson(INDEX_PATH) : { tickers: [], byTicker: {} };
@@ -333,6 +527,7 @@ for (const ticker of tickers) {
   if (filings.length === 0) errors.push(`${ticker}: manifest has no filings`);
   for (const filing of filings) {
     filingCount += 1;
+    checkForeignFilingIdentity(filing, ticker, `${ticker}/${filing.accession}`, errors, manifest.cik);
     if (!filing.translationPath) continue;
     translationCount += 1;
     if (filing.translationStatus !== "ready") {

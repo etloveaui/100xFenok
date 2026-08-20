@@ -28,7 +28,7 @@ on:
       forms:
         description: 'Comma-separated SEC forms'
         required: false
-        default: '10-K,10-Q,8-K,20-F,6-K'
+        default: '10-K,10-Q,8-K,20-F,40-F,6-K'
       sleep:
         description: 'Seconds between SEC submission requests'
         required: false
@@ -93,13 +93,13 @@ jobs:
           INPUT_LIMIT: ${{ github.event.inputs.limit || '50' }}
           INPUT_FULL_UNIVERSE: ${{ github.event.inputs.full_universe || 'false' }}
           INPUT_FILINGS_PER_TICKER: ${{ github.event.inputs.filings_per_ticker || '12' }}
-          INPUT_FORMS: ${{ github.event.inputs.forms || '10-K,10-Q,8-K,20-F,6-K' }}
+          INPUT_FORMS: ${{ github.event.inputs.forms || '10-K,10-Q,8-K,20-F,40-F,6-K' }}
           INPUT_SLEEP: ${{ github.event.inputs.sleep || '0.6' }}
           INPUT_PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
           INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
         run: |
           echo "EDGAR_PLAN_ONLY=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_ENV"
-          ARGS=(--filings-per-ticker "${INPUT_FILINGS_PER_TICKER:-12}" --forms "${INPUT_FORMS:-10-K,10-Q,8-K,20-F,6-K}" --sleep "${INPUT_SLEEP:-0.6}")
+          ARGS=(--filings-per-ticker "${INPUT_FILINGS_PER_TICKER:-12}" --forms "${INPUT_FORMS:-10-K,10-Q,8-K,20-F,40-F,6-K}" --sleep "${INPUT_SLEEP:-0.6}")
           if [ -n "$INPUT_TICKERS" ]; then ARGS+=(--tickers "$INPUT_TICKERS"); fi
           if [ "$INPUT_FULL_UNIVERSE" = "true" ]; then
             ARGS+=(--full-universe)
@@ -109,10 +109,18 @@ jobs:
           if [ "$INPUT_PLAN_ONLY" = "true" ]; then ARGS+=(--plan-only); fi
           node scripts/build-edgar-filing-timeline.mjs "${ARGS[@]}"
 
-      - name: Validate EDGAR summary contracts
+      - name: Materialize EDGAR summary mirror for contract checks
+        if: ${{ env.EDGAR_PLAN_ONLY != 'true' && steps.fetch_edgar.outcome == 'success' }}
+        run: |
+          mkdir -p 100xfenok-next/public/data/edgar-korean-summaries
+          rsync -a --delete data/edgar-korean-summaries/ 100xfenok-next/public/data/edgar-korean-summaries/
+
+      - name: Validate EDGAR summary and translation contracts
         id: verify_edgar
         if: ${{ env.EDGAR_PLAN_ONLY != 'true' && steps.fetch_edgar.outcome == 'success' }}
-        run: npm --prefix 100xfenok-next run qa:edgar-summaries
+        run: |
+          npm --prefix 100xfenok-next run qa:edgar-summaries
+          npm --prefix 100xfenok-next run qa:edgar-translations
 
       - name: Commit and push
         if: ${{ always() }}

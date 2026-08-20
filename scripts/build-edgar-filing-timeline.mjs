@@ -92,6 +92,12 @@ const DEFAULT_PATHS = Object.freeze({
 const SEC_COMPANY_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json";
 const SEC_SUBMISSIONS_BASE_URL = "https://data.sec.gov/submissions";
 const DEFAULT_FORMS = ["10-K", "10-Q", "8-K", "20-F", "40-F", "6-K"];
+const FOREIGN_FORM_SECTION_REQUESTS = Object.freeze({
+  "6-K": Object.freeze(["foreign_report"]),
+  "20-F": Object.freeze(["item_3d", "item_5"]),
+  "40-F": Object.freeze(["risk_factors", "mda"]),
+});
+const FOREIGN_FORMS = new Set(Object.keys(FOREIGN_FORM_SECTION_REQUESTS));
 const DEFAULT_LIMIT = 50;
 const DEFAULT_FILINGS_PER_TICKER = 12;
 const DEFAULT_SLEEP_SECONDS = 0.6;
@@ -156,7 +162,7 @@ Options:
   --limit 50               max universe tickers for phase-1 default
   --full-universe          ignore --limit and scan the full stock universe
   --filings-per-ticker 12  max newly discovered pending filings per ticker
-  --forms 10-K,10-Q,8-K    SEC forms to include
+  --forms 10-K,10-Q,8-K,20-F,40-F,6-K    SEC forms to include
   --sleep 0.6              seconds between SEC requests
   --plan-only              skip data artifacts but still publish attempt telemetry
 `);
@@ -171,8 +177,93 @@ function cik10(value) {
   return text.padStart(10, "0");
 }
 
+function strictCik10(value) {
+  const text = String(value ?? "").trim();
+  if (!/^\d{1,10}$/.test(text)) return null;
+  return text.padStart(10, "0");
+}
+
 function cikNoLeadingZeros(value) {
-  return String(Number.parseInt(String(value ?? "").replace(/\D/g, ""), 10));
+  const digits = String(value ?? "").trim();
+  if (!/^\d+$/.test(digits)) return null;
+  if (!digits) return null;
+  const parsed = Number.parseInt(digits, 10);
+  return Number.isSafeInteger(parsed) ? String(parsed) : null;
+}
+
+function isForeignForm(form) {
+  return FOREIGN_FORMS.has(String(form ?? "").trim().toUpperCase());
+}
+
+function accessionDigits(value) {
+  const accession = String(value ?? "").trim();
+  if (!/^\d{10}-\d{2}-\d{6}$/.test(accession)) return null;
+  return accession.replace(/-/g, "");
+}
+
+function secArchiveIdentity(sourceUrl) {
+  try {
+    const parsed = new URL(String(sourceUrl ?? ""));
+    if (parsed.protocol !== "https:" || parsed.hostname !== "www.sec.gov") return null;
+    const match = /^\/Archives\/edgar\/data\/(\d+)\/(\d{18})(?:\/|$)/i.exec(parsed.pathname);
+    if (!match) return null;
+    return {
+      cik: strictCik10(match[1]),
+      accession: match[2],
+    };
+  } catch {
+    return null;
+  }
+}
+
+function validateForeignFilingIdentity(row, label = "EDGAR foreign filing", expectedTicker = null, expectedCik = null) {
+  const ticker = normalizeTicker(row?.ticker);
+ const form = String(row?.form ?? "").trim().toUpperCase();
+ const cik = strictCik10(row?.cik);
+  const accession = String(row?.accession ?? "").trim();
+  const accessionId = accessionDigits(accession);
+  const sourceUrl = String(row?.sourceUrl ?? "").trim();
+  const sourceIdentity = secArchiveIdentity(sourceUrl);
+  const normalizedExpectedTicker = expectedTicker === null || expectedTicker === undefined ? null : normalizeTicker(expectedTicker);
+  const normalizedExpectedCik = expectedCik === null || expectedCik === undefined ? null : strictCik10(expectedCik);
+ if (!ticker || !form || !cik || cik === "0000000000" || !accessionId || !sourceIdentity) {
+    throw new Error(`${label}: foreign filing identity is incomplete`);
+ }
+  if (!isForeignForm(form)) throw new Error(`${label}: unsupported foreign form ${form}`);
+ if (normalizedExpectedTicker === null || !normalizedExpectedTicker || ticker !== normalizedExpectedTicker) {
+   throw new Error("foreign filing ticker is not bound to expected ticker: " + label);
+ }
+ if (normalizedExpectedCik === null || !normalizedExpectedCik || cik !== normalizedExpectedCik) {
+   throw new Error("foreign filing CIK is not bound to expected CIK: " + label);
+ }
+  if (sourceIdentity.cik !== cik || sourceIdentity.accession !== accessionId) {
+    throw new Error(`${label}: source URL is not bound to CIK ${cik} and accession ${accession}`);
+  }
+  return Object.freeze({ ticker, form, cik, accession, sourceUrl });
+}
+
+function filingIdentityKey(row) {
+  return [
+    normalizeTicker(row?.ticker),
+    String(row?.form ?? "").trim().toUpperCase(),
+    String(row?.accession ?? "").trim(),
+    strictCik10(row?.cik),
+  ].join("|");
+}
+
+function foreignFilingIdentityKey(row) {
+  return isForeignForm(row?.form) ? filingIdentityKey(row) : null;
+}
+
+function assertFilingIdentityCompatibility(first, second, label) {
+  const firstForeign = isForeignForm(first?.form);
+  const secondForeign = isForeignForm(second?.form);
+  if (firstForeign !== secondForeign) {
+    throw new Error("domestic/foreign filing identity conflict: " + label);
+  }
+  if (firstForeign && foreignFilingIdentityKey(first) !== foreignFilingIdentityKey(second)) {
+    throw new Error("conflicting foreign filing identity: " + label);
+  }
 }
 
 function sleep(ms) {
@@ -585,8 +676,10 @@ function filingRowsFromSubmissions({ ticker, companyName, cik, submissions, form
     const filingDate = String(recent.filingDate?.[index] ?? "");
     if (!accession || !primaryDocument || !filingDate) continue;
     const archiveAccession = accession.replace(/-/g, "");
-    const sourceUrl = `https://www.sec.gov/Archives/edgar/data/${cikNoLeadingZeros(cik)}/${archiveAccession}/${primaryDocument}`;
-    rows.push({
+    const archiveCik = cikNoLeadingZeros(cik);
+    if (!archiveCik || !/^\d+$/.test(archiveAccession)) continue;
+    const sourceUrl = `https://www.sec.gov/Archives/edgar/data/${archiveCik}/${archiveAccession}/${primaryDocument}`;
+    const row = {
       ticker,
       companyName,
       cik,
@@ -601,7 +694,12 @@ function filingRowsFromSubmissions({ ticker, companyName, cik, submissions, form
       primaryDocUrl: sourceUrl,
       summaryStatus: "pending",
       translationStatus: "not_available",
-    });
+    };
+    if (isForeignForm(form)) {
+      validateForeignFilingIdentity(row, `${ticker}/${form}/${accession}`, ticker, cik);
+      row.sectionsRequested = [...FOREIGN_FORM_SECTION_REQUESTS[form]];
+    }
+    rows.push(row);
     if (rows.length >= limit) break;
   }
   return rows;
@@ -696,13 +794,42 @@ function applyPersistenceToExistingManifest(manifest) {
 function mergeFilings({ ticker, companyName, cik, existingManifest, discoveredRows, updated }) {
   const byAccession = new Map();
   const existingRows = Array.isArray(existingManifest?.filings) ? existingManifest.filings : [];
+  const hasForeignRows = [...existingRows, ...(Array.isArray(discoveredRows) ? discoveredRows : [])]
+    .some((row) => isForeignForm(row?.form));
+  if (hasForeignRows) {
+    const discoveryCik = strictCik10(cik);
+    const manifestCik = existingManifest?.cik === undefined || existingManifest?.cik === null
+      ? discoveryCik
+      : strictCik10(existingManifest.cik);
+    if (!discoveryCik || !manifestCik || discoveryCik !== manifestCik) {
+      throw new Error("foreign manifest/discovery CIK conflict: " + ticker);
+    }
+  }
 
   for (const row of discoveredRows) {
+    const previousRow = row?.accession ? byAccession.get(row.accession) : null;
+    if (previousRow) assertFilingIdentityCompatibility(previousRow, row, ticker + "/" + row.accession);
+    if (isForeignForm(row?.form)) {
+      validateForeignFilingIdentity(row, `${ticker}/${row.form}/${row.accession}`, ticker, cik);
+      const previous = byAccession.get(row.accession);
+      if (previous && foreignFilingIdentityKey(previous) !== foreignFilingIdentityKey(row)) {
+        throw new Error(`${ticker}/${row.accession}: conflicting foreign filing identity`);
+      }
+    }
     if (row?.accession) byAccession.set(row.accession, row);
   }
 
   for (const row of existingRows) {
     if (!row?.accession) continue;
+    const discoveredRow = byAccession.get(row.accession);
+    if (discoveredRow) assertFilingIdentityCompatibility(discoveredRow, row, ticker + "/" + row.accession);
+    if (isForeignForm(row?.form)) {
+      validateForeignFilingIdentity(row, `${ticker}/${row.form}/${row.accession}`, ticker, cik);
+      const discovered = byAccession.get(row.accession);
+      if (discovered && foreignFilingIdentityKey(discovered) !== foreignFilingIdentityKey(row)) {
+        throw new Error(`${ticker}/${row.accession}: existing foreign filing identity conflicts with SEC discovery`);
+      }
+    }
     const existingReady = isReadySummaryRow(row);
     if (existingReady) {
       byAccession.set(row.accession, row);
@@ -1209,9 +1336,14 @@ export {
   buildEdgarFreshnessMarker,
   edgarMarkerPathFor,
   edgarMarkerSourceAsOf,
+  filingRowsFromSubmissions,
+  FOREIGN_FORM_SECTION_REQUESTS,
+  isForeignForm,
   maxFilingDateAcrossManifests,
   mergeFilings,
   retainLatestFilingDates,
+  secArchiveIdentity,
+  validateForeignFilingIdentity,
   validEdgarFreshnessMarker,
   recoverJsonBundleTransaction,
   writeJsonBundleTransaction,

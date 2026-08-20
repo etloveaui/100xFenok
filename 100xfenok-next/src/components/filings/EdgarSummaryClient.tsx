@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  edgarSecArchiveIdentity,
   edgarFilingsForTicker,
+  isForeignEdgarFilingIdentityBound,
+  isForeignEdgarForm,
   loadEdgarKoreanSummaryCoverage,
   loadEdgarKoreanSummariesForTicker,
   normalizeEdgarTicker,
@@ -150,11 +153,75 @@ const FORM_LABELS_KO: Record<string, string> = {
   "8-K": "주요 이벤트 공시",
   "6-K": "해외 발행사 공시",
   "20-F": "해외 연간보고서",
+  "40-F": "캐나다 연간보고서",
   "13F-HR": "기관 보유 보고",
 };
 
 function formLabel(form: string) {
   return FORM_LABELS_KO[form] ?? "SEC 공시";
+}
+
+function isSummaryReady(filing: EdgarKoreanSummaryFilingEntry) {
+  return Boolean(
+    filing.summaryPath
+    && (filing.summaryStatus === "ready" || !isForeignEdgarForm(filing.form)),
+  );
+}
+
+function assertArtifactIdentity(
+  artifact: EdgarKoreanSummaryArtifact,
+  filing: EdgarKoreanSummaryFilingEntry | null,
+  expectedTicker: string,
+) {
+  if (!filing) throw new Error("요약 공시 식별자를 확인할 수 없습니다.");
+  const same = (left: string | undefined, right: string | undefined) => String(left ?? "") === String(right ?? "");
+  if (normalizeEdgarTicker(artifact.company?.ticker) !== normalizeEdgarTicker(expectedTicker)) {
+    throw new Error("요약 회사 식별자가 종목과 일치하지 않습니다.");
+  }
+  if (normalizeEdgarTicker(artifact.company?.ticker) !== normalizeEdgarTicker(filing.ticker)
+    || !same(artifact.company?.cik, filing.cik)
+    || !same(artifact.filing?.form, filing.form)
+    || !same(artifact.filing?.accession, filing.accession)
+    || !same(artifact.filing?.sourceUrl, filing.sourceUrl)) {
+    throw new Error("요약 공시 식별자가 원문 등록 정보와 일치하지 않습니다.");
+  }
+  const form = String(artifact.filing?.form ?? "").trim().toUpperCase();
+  if (!isForeignEdgarForm(form)) return;
+  const foreignIdentity = {
+    ticker: artifact.company?.ticker,
+    cik: artifact.company?.cik,
+    form: artifact.filing?.form,
+    accession: artifact.filing?.accession,
+    sourceUrl: artifact.filing?.sourceUrl,
+  };
+  if (!isForeignEdgarFilingIdentityBound(foreignIdentity, expectedTicker, filing.cik)) {
+    throw new Error("해외 공시 식별자와 SEC 원문 경로가 연결되지 않았습니다.");
+  }
+  const filingIdentity = edgarSecArchiveIdentity(artifact.filing.sourceUrl);
+  if (!filingIdentity) throw new Error("해외 공시 SEC 원문 경로를 확인할 수 없습니다.");
+  const evidenceRows = Array.isArray(artifact.evidence) ? artifact.evidence : [];
+  if (evidenceRows.length === 0 || !evidenceRows.some((evidence) => evidence.kind === "filing_digest")) {
+    throw new Error("해외 공시 요약에 filing 근거가 없습니다.");
+  }
+  const evidenceIds = new Set(evidenceRows.map((evidence) => evidence.id));
+  for (const evidence of evidenceRows) {
+    const evidenceIdentity = edgarSecArchiveIdentity(evidence.sourceUrl);
+    if (!evidenceIdentity
+      || evidenceIdentity.cik !== filingIdentity.cik
+      || evidenceIdentity.accession !== filingIdentity.accession) {
+      throw new Error("해외 공시 근거 링크가 해당 filing에 연결되지 않았습니다.");
+    }
+  }
+  const bullets = [
+    ...(artifact.summaryKo?.keyPoints ?? []),
+    ...(artifact.summaryKo?.riskChanges ?? []),
+    ...(artifact.summaryKo?.businessChanges ?? []),
+    ...(artifact.summaryKo?.financialHighlights ?? []),
+    ...(artifact.summaryKo?.watchItems ?? []),
+  ];
+  if (bullets.some((bullet) => !Array.isArray(bullet.evidence) || bullet.evidence.some((id) => !evidenceIds.has(id)))) {
+    throw new Error("해외 공시 요약 문장에 연결된 근거가 없습니다.");
+  }
 }
 
 function filingTitle(filing: EdgarKoreanSummaryFilingEntry) {
@@ -171,7 +238,7 @@ function FilingCoverageBanner({
   symbol: string;
   compact?: boolean;
 }) {
-  const readyCount = filings.filter((filing) => Boolean(filing.summaryPath)).length;
+  const readyCount = filings.filter(isSummaryReady).length;
   const updated = filings
     .map((filing) => filing.filingDate)
     .filter(Boolean)
@@ -368,7 +435,7 @@ export default function EdgarSummaryClient({
         if (cancelled) return;
         const nextFilings = edgarFilingsForTicker(manifest, symbol);
         setFilings(nextFilings);
-        setSelectedPath(nextFilings.find((filing) => filing.summaryPath)?.summaryPath ?? null);
+        setSelectedPath(nextFilings.find(isSummaryReady)?.summaryPath ?? null);
       });
     return () => {
       cancelled = true;
@@ -392,6 +459,11 @@ export default function EdgarSummaryClient({
         return response.json() as Promise<EdgarKoreanSummaryArtifact>;
       })
       .then((payload) => {
+        assertArtifactIdentity(
+          payload,
+          filings?.find((filing) => filing.summaryPath === selectedPath) ?? null,
+          symbol,
+        );
         if (!cancelled) setArtifact(payload);
       })
       .catch((nextError: unknown) => {
@@ -400,7 +472,7 @@ export default function EdgarSummaryClient({
     return () => {
       cancelled = true;
     };
-  }, [selectedPath]);
+  }, [filings, selectedPath, symbol]);
 
   const selectedFiling = useMemo(
     () => filings?.find((filing) => filing.summaryPath === selectedPath) ?? filings?.[0] ?? null,
@@ -431,7 +503,7 @@ export default function EdgarSummaryClient({
           <div className="panel-b">
             <p className="text-sm font-semibold text-slate-700">연결된 한글 공시 요약이 없습니다.</p>
             <p className="mt-2 text-sm text-slate-500">
-              {symbol}의 10-K, 10-Q, 8-K 한글 요약이 준비되면 이 탭에 자동으로 표시됩니다.
+              {symbol}의 10-K, 10-Q, 8-K, 6-K, 20-F, 40-F 한글 요약이 준비되면 이 탭에 자동으로 표시됩니다. 준비 전에는 SEC 원문 링크만 제공합니다.
             </p>
             <ExternalSourceLinks ticker={symbol} kind="filing" statusLine="연결된 한글 공시 요약 없음" className="mt-4" />
           </div>
@@ -494,8 +566,8 @@ export default function EdgarSummaryClient({
         <div className="panel-b">
           <div className="grid gap-3">
             {filings.map((filing) => {
-              const selected = Boolean(filing.summaryPath) && filing.summaryPath === selectedPath;
-              const canShowSummary = Boolean(filing.summaryPath);
+              const selected = isSummaryReady(filing) && filing.summaryPath === selectedPath;
+              const canShowSummary = isSummaryReady(filing);
               const canShowTranslation = Boolean(filing.translationPath);
               return (
                 <article

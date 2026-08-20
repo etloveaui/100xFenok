@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   EDGAR_PUBLICATION_JOURNAL_SCHEMA,
+  FOREIGN_FORM_SECTION_REQUESTS,
   applyPersistenceToExistingManifest,
   mergeFilings,
   recoverJsonBundleTransaction,
@@ -44,6 +45,7 @@ function companyTickers() {
   return {
     0: { cik_str: 1045810, ticker: "NVDA", title: "NVIDIA CORP" },
     1: { cik_str: 320193, ticker: "AAPL", title: "APPLE INC" },
+    2: { cik_str: 1973239, ticker: "ARM", title: "ARM HOLDINGS PLC" },
   };
 }
 
@@ -57,6 +59,29 @@ function submissions(form = ["10-Q"]) {
         primaryDocument: ["nvda-20260714.htm"],
         filingDate: ["2026-07-14"],
         reportDate: ["2026-06-30"],
+      },
+    },
+  };
+}
+
+function foreignSubmissions() {
+  return {
+    name: "ARM HOLDINGS PLC",
+    filings: {
+      recent: {
+        form: ["6-K", "20-F", "S-1"],
+        accessionNumber: [
+          "0001973239-26-000060",
+          "0001973239-26-000097",
+          "0001973239-26-000120",
+        ],
+        primaryDocument: [
+          "arm-form6k.htm",
+          "arm-20260331.htm",
+          "arm-s1.htm",
+        ],
+        filingDate: ["2026-06-05", "2026-05-26", "2026-05-20"],
+        reportDate: ["2026-06-05", "2026-03-31", "2026-05-20"],
       },
     },
   };
@@ -92,6 +117,192 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
   assert.deepEqual(
     fs.readFileSync(path.join(paths.summaryRoot, "by-ticker/nvda.json")),
     fs.readFileSync(path.join(paths.publicSummaryRoot, "by-ticker/nvda.json")),
+  );
+}
+
+// Foreign submissions retain a bound ticker/form/CIK/accession/archive URL
+// identity and carry the section contract used by downstream summary QA.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-foreign-"));
+  const paths = pathsFor(root);
+  const result = await runEdgarFilingTimeline({
+    argv: ["--tickers", "ARM", "--forms", "6-K,20-F,40-F", "--sleep", "0"],
+    paths,
+    observedAt: OBSERVED_AT,
+    attemptId: "edgar-filings-test-foreign",
+    request: async (url) => {
+      if (url.includes("company_tickers")) return response(200, companyTickers());
+      return url.includes("CIK0001973239")
+        ? response(200, foreignSubmissions())
+        : response(200, submissions());
+    },
+  });
+  assert.equal(result.ok, true);
+  const manifest = JSON.parse(fs.readFileSync(path.join(paths.summaryRoot, "by-ticker/arm.json"), "utf8"));
+  assert.deepEqual(manifest.filings.map((row) => row.form), ["6-K", "20-F"]);
+  assert.deepEqual(manifest.filings.map((row) => row.sectionsRequested), [
+    FOREIGN_FORM_SECTION_REQUESTS["6-K"],
+    FOREIGN_FORM_SECTION_REQUESTS["20-F"],
+  ]);
+  for (const row of manifest.filings) {
+    assert.equal(row.ticker, "ARM");
+    assert.equal(row.cik, "0001973239");
+    assert.match(row.accession, /^\d{10}-\d{2}-\d{6}$/);
+    assert.match(
+      row.sourceUrl,
+      new RegExp("/Archives/edgar/data/1973239/" + row.accession.replace(/-/g, "") + "/"),
+    );
+    assert.equal(row.summaryStatus, "pending");
+    assert.equal(row.summaryPath, null);
+  }
+}
+
+// A form with no current rows remains an honest pending/empty manifest; the
+// builder must not fabricate a ready 40-F artifact.
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "edgar-emitter-foreign-zero-40f-"));
+  const paths = pathsFor(root);
+  const result = await runEdgarFilingTimeline({
+    argv: ["--tickers", "ARM", "--forms", "40-F", "--sleep", "0"],
+    paths,
+    observedAt: OBSERVED_AT,
+    attemptId: "edgar-filings-test-foreign-zero-40f",
+    request: async (url) => {
+      if (url.includes("company_tickers")) return response(200, companyTickers());
+      return url.includes("CIK0001973239")
+        ? response(200, foreignSubmissions())
+        : response(200, submissions(["40-F"]));
+    },
+  });
+  assert.equal(result.ok, true);
+  const manifest = JSON.parse(fs.readFileSync(path.join(paths.summaryRoot, "by-ticker/arm.json"), "utf8"));
+  assert.deepEqual(manifest.filings, []);
+  assert.equal(manifest.summaryStatus, "pending");
+}
+
+// Foreign identity conflicts fail closed, while a ready row keeps its
+// previously published SEC source URL when discovery returns another exhibit.
+{
+  const accession = "0001973239-26-000060";
+  const archiveAccession = accession.replace(/-/g, "");
+  const primaryUrl = "https://www.sec.gov/Archives/edgar/data/1973239/" + archiveAccession + "/arm-form6k.htm";
+  const exhibitUrl = "https://www.sec.gov/Archives/edgar/data/1973239/" + archiveAccession + "/arm-exhibit.htm";
+  const ready = {
+    ticker: "ARM",
+    companyName: "ARM HOLDINGS PLC",
+    cik: "0001973239",
+    form: "6-K",
+    accession,
+    filingDate: "2026-06-05",
+    periodEnd: "2026-06-05",
+    title: "ARM HOLDINGS PLC 6-K (2026-06-05)",
+    summaryPath: "/data/edgar-korean-summaries/pilot/arm-6-k.json",
+    translationPath: null,
+    sourceUrl: primaryUrl,
+    summaryStatus: "ready",
+    translationStatus: "not_available",
+  };
+  const merged = mergeFilings({
+    ticker: "ARM",
+    companyName: "ARM HOLDINGS PLC",
+    cik: "0001973239",
+    existingManifest: { filings: [ready] },
+    discoveredRows: [{ ...ready, summaryPath: null, sourceUrl: exhibitUrl }],
+    updated: "2026-07-18",
+  });
+  assert.equal(merged.filings[0].sourceUrl, primaryUrl);
+  for (const candidate of [
+    { ...ready, ticker: undefined, summaryPath: null },
+    { ...ready, ticker: "NVDA", summaryPath: null },
+    { ...ready, cik: "0001086888", sourceUrl: "https://www.sec.gov/Archives/edgar/data/1086888/" + archiveAccession + "/other.htm", summaryPath: null },
+    { ...ready, cik: "x0001973239", summaryPath: null },
+    { ...ready, sourceUrl: "https://example.com/filing", summaryPath: null },
+  ]) {
+    assert.throws(
+      () => mergeFilings({
+        ticker: "ARM",
+        companyName: "ARM HOLDINGS PLC",
+        cik: "0001973239",
+        existingManifest: null,
+        discoveredRows: [candidate],
+        updated: "2026-07-18",
+      }),
+      /foreign filing/,
+    );
+  }
+  const domestic = { ...ready, form: "8-K", summaryPath: null };
+  assert.throws(
+    () => mergeFilings({
+      ticker: "ARM",
+      companyName: "ARM HOLDINGS PLC",
+      cik: "0001973239",
+      existingManifest: null,
+      discoveredRows: [ready, domestic],
+      updated: "2026-07-18",
+    }),
+    /domestic\/foreign filing identity conflict/,
+  );
+  assert.throws(
+    () => mergeFilings({
+      ticker: "ARM",
+      companyName: "ARM HOLDINGS PLC",
+      cik: "0001973239",
+      existingManifest: null,
+      discoveredRows: [domestic, ready],
+      updated: "2026-07-18",
+    }),
+    /domestic\/foreign filing identity conflict/,
+  );
+  assert.throws(
+    () => mergeFilings({
+      ticker: "ARM",
+      companyName: "ARM HOLDINGS PLC",
+      cik: "0001973239",
+      existingManifest: { cik: "0001973239", filings: [domestic] },
+      discoveredRows: [ready],
+      updated: "2026-07-18",
+    }),
+    /domestic\/foreign filing identity conflict/,
+  );
+  assert.throws(
+    () => mergeFilings({
+      ticker: "ARM",
+      companyName: "ARM HOLDINGS PLC",
+      cik: "0001973239",
+      existingManifest: { cik: "0001973239", filings: [ready] },
+      discoveredRows: [domestic],
+      updated: "2026-07-18",
+    }),
+    /domestic\/foreign filing identity conflict/,
+  );
+  assert.throws(
+    () => mergeFilings({
+      ticker: "ARM",
+      companyName: "ARM HOLDINGS PLC",
+      cik: "0001973239",
+      existingManifest: { cik: "0001086888", filings: [ready] },
+      discoveredRows: [ready],
+      updated: "2026-07-18",
+    }),
+    /manifest\/discovery CIK conflict/,
+  );
+  assert.throws(
+    () => mergeFilings({
+      ticker: "ARM",
+      companyName: "ARM HOLDINGS PLC",
+      cik: "0001973239",
+      existingManifest: null,
+      discoveredRows: [
+        { ...ready, summaryPath: null },
+        {
+          ...ready,
+          cik: "0001086888",
+          sourceUrl: "https://www.sec.gov/Archives/edgar/data/1086888/" + archiveAccession + "/other.htm",
+        },
+      ],
+      updated: "2026-07-18",
+    }),
+    /conflicting foreign filing identity/,
   );
 }
 
@@ -586,6 +797,8 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
   assert.match(workflow, /node scripts\/test-build-edgar-filing-timeline\.mjs/);
   assert.match(workflow, /node scripts\/test-build-edgar-lkg-recovery\.mjs/);
   assert.match(workflow, /detection-attempts\/edgar_filings\.json/);
+  assert.match(workflow, /10-K,10-Q,8-K,20-F,40-F,6-K/);
+  assert.match(workflow, /qa:edgar-translations/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.doesNotMatch(workflow, /git add -A/);
 }
