@@ -1,47 +1,44 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "gdelt_news_tone",
-  "updated_at": "2026-08-19T15:08:43.595Z",
-  "retry_set": [
-    "news_tone_proxy"
-  ],
+  "updated_at": "2026-08-20T15:15:33.891Z",
+  "retry_set": [],
   "items": {
     "news_tone_proxy": {
       "key": "news_tone_proxy",
-      "resolution_state": "lkg_primary",
-      "retry": true,
-      "updated_at": "2026-08-19T15:08:43.595Z",
+      "resolution_state": "fresh_primary",
+      "retry": false,
+      "updated_at": "2026-08-20T15:15:33.891Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "6095812ebd6fc39177d4b62aab43d931dbcb25450947023c3bf92aba8d36f842",
-        "source_as_of": "2026-08-18T15:02:00.000Z",
-        "run_id": "32152350191",
+        "payload_sha256": "39cb58b4940c6a0b599e64d81c5765d22b8ce5ba2d07c4ab426721b85e0e8f37",
+        "source_as_of": "2026-08-20T15:02:00.000Z",
+        "run_id": "32384983010",
         "run_attempt": 1,
-        "observed_at": "2026-08-18T15:13:32.720Z"
+        "observed_at": "2026-08-20T15:15:33.891Z"
       },
       "last_recovered_failure": {
-        "run_id": "32040872375",
+        "run_id": "32267985593",
         "run_attempt": 1,
-        "observed_at": "2026-08-17T15:01:59.098Z",
-        "reason": "schema_drift"
+        "observed_at": "2026-08-19T15:08:43.595Z",
+        "reason": "rate_limited"
       },
       "current": {
-        "path": "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
-        "payload_sha256": "04c000083e3b08acd89efbe0f1efe3779623b5272524416770a6fc5a2997b0c3",
-        "source_as_of": "2026-08-18T15:02:00.000Z"
+        "path": "data/computed/fenok_news_tone_proxy.json",
+        "payload_sha256": "d18a1e12a6768e2e16f17bd8dc139652e337de0af3c5ff06a39c2fc4270fac35",
+        "source_as_of": "2026-08-20T15:02:00.000Z"
       },
       "lkg": {
         "path": "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
         "payload_sha256": "04c000083e3b08acd89efbe0f1efe3779623b5272524416770a6fc5a2997b0c3",
         "source_as_of": "2026-08-18T15:02:00.000Z"
       },
-      "latest_failure": {
-        "run_id": "32267985593",
-        "run_attempt": 1,
-        "observed_at": "2026-08-19T15:08:43.595Z",
-        "reason": "rate_limited"
-      }
+      "recovered_from_run_id": "32267985593",
+      "recovered_at": "2026-08-20T15:15:33.891Z",
+      "recovery_run_id": "32384983010",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule"
     }
   }
 }
