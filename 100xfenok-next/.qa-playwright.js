@@ -43,40 +43,84 @@ function isExternalUrl(url) {
   }
 }
 
+function extractExplicitExternalEvidence(message) {
+  const text = String(message || "");
+  const urls = text.match(/https?:\/\/[^\s"'<>]+/gi) || [];
+  const hasExternalUrl = urls.some((url) => isExternalUrl(url.replace(/[),.;]+$/g, "")));
+  const hasKnownExternalHost = /(?:api\.allorigins\.win|query1\.finance\.yahoo\.com|fred\.stlouisfed\.org|api\.stlouisfed\.org|fiscaldata\.treasury\.gov|api\.treasury\.gov)/i.test(text);
+  return hasExternalUrl || hasKnownExternalHost;
+}
+
 function isIgnoredRequestFailure(failure) {
   return /ERR_ABORTED|ERR_CANCELED/i.test(failure.errorText || "");
 }
 
+function isSameOriginDataUrl(url) {
+  if (isExternalUrl(url)) return false;
+  return /\/api\//i.test(url) || /\/data\//i.test(url) || /\.json(?:[?#]|$)/i.test(url);
+}
+
 function isCriticalSameOriginDataFailure(failure) {
-  if (isExternalUrl(failure.url)) return false;
+  if (!isSameOriginDataUrl(failure.url)) return false;
   if (isIgnoredRequestFailure(failure)) return false;
-  return (
-    /\/api\//i.test(failure.url) ||
-    /\/data\//i.test(failure.url) ||
-    /\.json(?:[?#]|$)/i.test(failure.url)
-  );
+  return true;
 }
 
 function isExternalFetchNoise(message) {
+  if (!extractExplicitExternalEvidence(message)) return false;
   return (
-    /\[DataFetcher\]\s*FRED/i.test(message) ||
-    /Treasury API 실패/i.test(message) ||
     /TypeError:\s*Failed to fetch/i.test(message) ||
     /api\.allorigins\.win/i.test(message) ||
     /query1\.finance\.yahoo\.com/i.test(message) ||
+    /fred\.stlouisfed\.org/i.test(message) ||
+    /(?:api\.stlouisfed\.org|fiscaldata\.treasury\.gov|api\.treasury\.gov)/i.test(message) ||
     /has been blocked by CORS policy/i.test(message) ||
     /No 'Access-Control-Allow-Origin' header is present/i.test(message) ||
     /Failed to load resource: net::ERR_FAILED/i.test(message)
   );
 }
 
-function isNonBlockingConsoleNoise(message) {
+function responsePath(url) {
+  try {
+    return new URL(url, base).pathname;
+  } catch {
+    return "";
+  }
+}
+
+function isExplicitNonBlockingHttpFailure(failure, route) {
+  if (failure.status !== 404 || route !== "/100x/daily-wrap") return false;
+  return /^\/100x\/daily-wrap\/data\/[^/]+-data\.json$/i.test(responsePath(failure.url));
+}
+
+function isExpectedNegativeRouteResponse(failure, route) {
+  if (route !== "/this-route-should-not-exist") return false;
+  try {
+    return new URL(failure.url, base).pathname === route;
+  } catch {
+    return false;
+  }
+}
+
+function isNonBlockingConsoleNoise(message, route, httpFailures) {
+  // Daily Wrap's dated report data is an explicit, route-scoped optional input.
+  if (/리포트 데이터를 불러오는 데 실패했습니다/i.test(message)) {
+    return route === "/100x/daily-wrap";
+  }
+
+  // A bare browser 404 message has no URL. It is non-blocking only when every
+  // same-origin 404 response observed for this route matches the narrow
+  // Daily Wrap data contract above; all other 404s remain blocking.
+  if (!/Failed to load resource: the server responded with a status of 404/i.test(message)) {
+    return false;
+  }
+  if (route !== "/100x/daily-wrap") return false;
+  const sameOriginHttpFailures = httpFailures.filter(
+    (failure) => !isExternalUrl(failure.url) && failure.status === 404,
+  );
   return (
-    // 404 resource loading failures (Cloudflare "File not found" or Next.js "Not Found")
-    // Covers: daily-wrap data JSON missing, admin sub-frame stubs, etc.
-    /Failed to load resource: the server responded with a status of 404/i.test(message) ||
-    // Daily wrap: JS console.error when today's report data file is missing
-    /리포트 데이터를 불러오는 데 실패했습니다/i.test(message)
+    sameOriginHttpFailures.length > 0 &&
+    sameOriginHttpFailures.every((failure) => isExplicitNonBlockingHttpFailure(failure, route))
   );
 }
 
@@ -150,6 +194,13 @@ const viewports =
 const isDevServer = base.includes(":3000") || process.env.QA_DEV === "1";
 const p2DataStateRouteSet = new Set(p2DataStateRoutes);
 
+const currentHomeRailRoutes = [
+  { name: "home", href: "/" },
+  { name: "market", href: "/market-valuation" },
+  { name: "screener", href: "/screener" },
+  { name: "portfolio", href: "/portfolio" },
+];
+
 if (routes.length === 0) {
   throw new Error("No routes configured. Set QA_ROUTES or use default routes.");
 }
@@ -178,6 +229,265 @@ async function maybeCaptureScreenshot(page, viewport, route) {
   const file = path.join(screenshotDir, screenshotName(viewport, route));
   await page.screenshot({ path: file, fullPage: true });
   return file;
+}
+
+function isRadarFrameUrl(url) {
+  return !isExternalUrl(url) && /\/tools\/macro-monitor\//i.test(responsePath(url));
+}
+
+function isRadarActivityUrl(url) {
+  if (isExternalUrl(url)) return false;
+  const pathname = responsePath(url);
+  return /\/tools\/macro-monitor\//i.test(pathname) || /\/data\/(?:macro|sentiment)\//i.test(pathname);
+}
+
+async function waitForRadarSettle(page, activeRequests, getActivity) {
+  const startedAt = Date.now();
+  const deadline = startedAt + 12000;
+  const quietWindowMs = 800;
+  let lastActivity = getActivity();
+  let lastFrameSignature = "";
+  let quietSince = startedAt;
+  let observedFrameCount = 0;
+  let observedActiveCount = activeRequests.size;
+
+  while (Date.now() < deadline) {
+    const frameSignature = page.frames()
+      .map((frame) => frame.url())
+      .filter(isRadarFrameUrl)
+      .sort()
+      .join("|");
+    const activity = getActivity();
+    if (activity !== lastActivity || frameSignature !== lastFrameSignature) {
+      lastActivity = activity;
+      lastFrameSignature = frameSignature;
+      quietSince = Date.now();
+    }
+    const nestedFrameCount = frameSignature ? frameSignature.split("|").length : 0;
+    observedFrameCount = nestedFrameCount;
+    observedActiveCount = activeRequests.size;
+    if (
+      nestedFrameCount === 5 &&
+      observedActiveCount === 0 &&
+      Date.now() - quietSince >= quietWindowMs
+    ) {
+      return;
+    }
+    await page.waitForTimeout(200);
+  }
+  throw new Error(
+    `radar settle timeout: frames=${observedFrameCount}/5 activeRequests=${observedActiveCount} quietMs=${Math.max(0, Date.now() - quietSince)}/800`,
+  );
+}
+
+async function inspectHomeShell(page) {
+  return page.evaluate((expectedRoutes) => {
+    const visible = (element) => {
+      if (!(element instanceof HTMLElement)) return false;
+      const style = window.getComputedStyle(element);
+      if (style.display === "none" || style.visibility === "hidden") return false;
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    };
+    const roots = Array.from(document.querySelectorAll(".fnk-shell"));
+    const current = Array.from(document.querySelectorAll(".fnk-shell.cp-home-shell"));
+    const legacy = Array.from(document.querySelectorAll("#mainNav"));
+    const shell = current[0] || null;
+    const rail = shell ? Array.from(shell.querySelectorAll(".rail")) : [];
+    const railNav = shell?.querySelector(".rail-nav") || null;
+    const tabbar = shell?.querySelector(".tabbar") || null;
+    const more = tabbar?.querySelector('button[aria-controls="mobile-more-sheet"]') || null;
+    const keyRouteLinks = expectedRoutes.map(({ name, href }) => {
+      const links = railNav
+        ? Array.from(railNav.querySelectorAll("a[href]")).filter((link) => link.getAttribute("href") === href)
+        : [];
+      return { name, href, count: links.length, visibleCount: links.filter(visible).length };
+    });
+    const tabLinks = expectedRoutes.map(({ name, href }) => {
+      const links = tabbar
+        ? Array.from(tabbar.querySelectorAll("a[href]")).filter((link) => link.getAttribute("href") === href)
+        : [];
+      return { name, href, count: links.length, visibleCount: links.filter(visible).length };
+    });
+    const currentRailVisible = current.reduce(
+      (count, node) => count + Array.from(node.querySelectorAll(".rail")).filter(visible).length,
+      0,
+    );
+    const currentTabbarVisible = current.reduce(
+      (count, node) => count + Array.from(node.querySelectorAll(".tabbar")).filter(visible).length,
+      0,
+    );
+    const legacyDesktopVisible = legacy.reduce(
+      (count, node) => count + Array.from(node.querySelectorAll('button[aria-controls="desktop-market-menu"]')).filter(visible).length,
+      0,
+    );
+    const legacyMobileVisible = legacy.reduce(
+      (count, node) => count + Array.from(node.querySelectorAll('button[aria-controls="mobile-navigation-panel"]')).filter(visible).length,
+      0,
+    );
+    const family =
+      roots.length === 1 && current.length === 1 && legacy.length === 0
+        ? "current"
+        : roots.length === 0 && current.length === 0 && legacy.length === 1
+          ? "legacy"
+          : null;
+    const layout =
+      family === "current" && currentRailVisible === 1 && currentTabbarVisible === 0
+        ? "desktop"
+        : family === "current" && currentRailVisible === 0 && currentTabbarVisible === 1
+          ? "mobile"
+          : family === "legacy" && legacyDesktopVisible === 1 && legacyMobileVisible === 0
+            ? "desktop"
+            : family === "legacy" && legacyDesktopVisible === 0 && legacyMobileVisible === 1
+              ? "mobile"
+              : null;
+    return {
+      family,
+      layout,
+      shellRootCount: roots.length,
+      shellVisible: Boolean(shell && visible(shell)),
+      railCount: rail.length,
+      railVisibleCount: rail.filter(visible).length,
+      railNavVisible: Boolean(railNav && visible(railNav)),
+      keyRouteLinks,
+      tabbarCount: tabbar ? 1 : 0,
+      tabbarVisible: Boolean(tabbar && visible(tabbar)),
+      tabCount: tabbar?.querySelectorAll(".tab").length || 0,
+      moreButtonCount: more ? 1 : 0,
+      moreButtonVisible: Boolean(more && visible(more)),
+      initialExpanded: more?.getAttribute("aria-expanded") || null,
+      initialControls: more?.getAttribute("aria-controls") || null,
+      tabLinks,
+      legacyDesktopVisible,
+      legacyMobileVisible,
+    };
+  }, currentHomeRailRoutes);
+}
+
+async function runCurrentHomeMobileInteraction(page, state) {
+  const result = { check: "currentHomeMobileTabs", shellFamily: "current", pass: false, ...state };
+  const tabLinksPass = state.tabLinks.every((link) => link.count === 1 && link.visibleCount === 1);
+  const structurePass =
+    state.family === "current" &&
+    state.layout === "mobile" &&
+    state.shellVisible &&
+    state.tabbarCount === 1 &&
+    state.tabbarVisible &&
+    state.tabCount === 5 &&
+    state.moreButtonCount === 1 &&
+    state.moreButtonVisible &&
+    state.initialExpanded === "false" &&
+    state.initialControls === "mobile-more-sheet" &&
+    tabLinksPass;
+  if (!structurePass) return result;
+
+  try {
+    const more = page.locator('.fnk-shell.cp-home-shell .tabbar button[aria-controls="mobile-more-sheet"]').first();
+    const sheet = page.locator("#mobile-more-sheet").first();
+    await more.click();
+    await sheet.waitFor({ state: "visible", timeout: 3000 });
+    const close = sheet.locator("button.mobile-more-close").first();
+    const openPass =
+      (await more.getAttribute("aria-expanded")) === "true" &&
+      (await sheet.getAttribute("role")) === "dialog" &&
+      (await sheet.getAttribute("aria-modal")) === "true" &&
+      (await close.isVisible()) &&
+      (await sheet.locator(".mobile-more-item").count()) > 0;
+    await close.click();
+    await sheet.waitFor({ state: "detached", timeout: 3000 });
+    const closePass = (await more.getAttribute("aria-expanded")) === "false";
+    result.openPass = openPass;
+    result.closePass = closePass;
+    result.pass = openPass && closePass;
+  } catch (err) {
+    result.error = String(err);
+  }
+  return result;
+}
+
+async function runLegacyHomeMobileChecks(page) {
+  const result = { check: "legacyMobileMenu", shellFamily: "legacy", pass: false };
+  const open = page.locator(
+    'button[aria-controls="mobile-navigation-panel"], button[aria-label="Open menu"], button[aria-label="메뉴 열기"]',
+  ).first();
+  if (!(await open.count()) || !(await open.isVisible())) {
+    result.error = "legacy mobile menu button missing or hidden";
+    return result;
+  }
+  try {
+    const initialExpanded = await open.getAttribute("aria-expanded");
+    await open.click();
+    const panel = page.locator("#mobile-navigation-panel").first();
+    await panel.waitFor({ state: "visible", timeout: 3000 });
+    const overlay = page.locator('button[aria-label="Close mobile menu overlay"]').first();
+    const close = page.locator('button[aria-label="메뉴 닫기"], button[aria-label="Close menu"]').first();
+    const menuState = { panelVisible: await panel.isVisible(), overlayVisible: (await overlay.count()) > 0 };
+    if (menuState.overlayVisible) {
+      await page.mouse.click(12, Math.max(12, Math.floor((await page.evaluate(() => window.innerHeight)) / 2)));
+      await page.waitForTimeout(200);
+    }
+    if (await page.locator("#mobile-navigation-panel").count() && (await close.count())) {
+      await close.click();
+      await page.waitForTimeout(200);
+    }
+    const afterClose = await page.evaluate(() => ({
+      panelVisible: Boolean(document.querySelector("#mobile-navigation-panel")),
+      overlayVisible: Boolean(document.querySelector(".mobile-overlay.visible")),
+      bodyOverflow: document.body.style.overflow || "",
+      bodyPosition: document.body.style.position || "",
+    }));
+    result.initialExpanded = initialExpanded;
+    result.menuState = menuState;
+    result.afterClose = afterClose;
+    result.pass =
+      initialExpanded === "false" &&
+      menuState.panelVisible &&
+      menuState.overlayVisible &&
+      !afterClose.panelVisible &&
+      !afterClose.overlayVisible &&
+      afterClose.bodyOverflow === "" &&
+      afterClose.bodyPosition === "";
+  } catch (err) {
+    result.error = String(err);
+  }
+  return result;
+}
+
+async function runHomeShellChecks(page) {
+  const state = await inspectHomeShell(page);
+  const familyCheck = {
+    check: "homeShellFamily",
+    pass: state.family !== null && state.layout !== null,
+    family: state.family,
+    layout: state.layout,
+    shellRootCount: state.shellRootCount,
+  };
+  if (!familyCheck.pass) return [familyCheck];
+  if (state.family === "current" && state.layout === "desktop") {
+    const keyLinksPass = state.keyRouteLinks.every((link) => link.count === 1 && link.visibleCount === 1);
+    return [
+      familyCheck,
+      {
+        check: "currentHomeDesktopShell",
+        shellFamily: "current",
+        pass:
+          state.shellVisible &&
+          state.railCount === 1 &&
+          state.railVisibleCount === 1 &&
+          state.railNavVisible &&
+          keyLinksPass,
+        railCount: state.railCount,
+        railVisibleCount: state.railVisibleCount,
+        keyRouteLinks: state.keyRouteLinks,
+      },
+    ];
+  }
+  if (state.family === "current") return [familyCheck, await runCurrentHomeMobileInteraction(page, state)];
+  if (state.layout === "desktop") {
+    const dropdownChecks = await runDesktopDropdownChecks(page);
+    return [familyCheck, ...dropdownChecks.map((check) => ({ ...check, shellFamily: "legacy" }))];
+  }
+  return [familyCheck, await runLegacyHomeMobileChecks(page)];
 }
 
 async function prewarmRoutes() {
@@ -465,26 +775,54 @@ async function runDataStateSurfaceChecks(page, route) {
         sameOriginRequestFailureCount: 0,
         externalRequestFailureCount: 0,
         criticalSameOriginDataFailureCount: 0,
+        sameOriginHttpFailureCount: 0,
+        externalHttpFailureCount: 0,
+        criticalSameOriginHttpFailureCount: 0,
         blockingConsoleErrors: [],
         consoleErrors: [],
+        httpFailures: [],
         screenshot: null,
       };
 
       const consoleErrors = [];
       const consoleWarnings = [];
       const requestFailures = [];
+      const httpFailures = [];
+      const activeRadarRequests = new Set();
+      let radarActivity = 0;
 
       page.removeAllListeners("console");
+      page.removeAllListeners("request");
+      page.removeAllListeners("requestfinished");
       page.removeAllListeners("requestfailed");
+      page.removeAllListeners("response");
 
       page.on("console", (msg) => {
         if (msg.type() === "error") consoleErrors.push(msg.text());
         if (msg.type() === "warning") consoleWarnings.push(msg.text());
       });
+      page.on("request", (req) => {
+        if (route === "/radar" && isRadarActivityUrl(req.url())) {
+          activeRadarRequests.add(req);
+          radarActivity += 1;
+        }
+      });
+      page.on("requestfinished", (req) => {
+        if (activeRadarRequests.delete(req)) radarActivity += 1;
+      });
       page.on("requestfailed", (req) => {
+        if (activeRadarRequests.delete(req)) radarActivity += 1;
         requestFailures.push({
           url: req.url(),
           errorText: req.failure()?.errorText || "request_failed",
+        });
+      });
+      page.on("response", (response) => {
+        if (response.status() < 400) return;
+        httpFailures.push({
+          url: response.url(),
+          status: response.status(),
+          resourceType: response.request().resourceType(),
         });
       });
 
@@ -524,6 +862,9 @@ async function runDataStateSurfaceChecks(page, route) {
       if (!item.navigationError) {
         try {
           await page.waitForTimeout(700);
+          if (route === "/radar") {
+            await waitForRadarSettle(page, activeRadarRequests, () => radarActivity);
+          }
           if (expectedInnerShellCleanRoutes.has(route)) {
             await page.waitForTimeout(350);
           }
@@ -644,10 +985,6 @@ async function runDataStateSurfaceChecks(page, route) {
         }
       }
 
-      const blockingConsoleErrors = consoleErrors.filter(
-        (msg) => !isExternalFetchNoise(msg) && !isNonBlockingConsoleNoise(msg) && !isDevServerNoise(msg)
-      );
-      const nonBlockingConsoleErrors = consoleErrors.filter((msg) => isNonBlockingConsoleNoise(msg));
       const externalFetchErrors = consoleErrors.filter((msg) => isExternalFetchNoise(msg));
       const relevantRequestFailures = requestFailures.filter(
         (req) => !isIgnoredRequestFailure(req),
@@ -656,6 +993,22 @@ async function runDataStateSurfaceChecks(page, route) {
       const externalRequestFailures = relevantRequestFailures.filter((req) => isExternalUrl(req.url));
       const criticalSameOriginDataFailures = relevantRequestFailures.filter((req) =>
         isCriticalSameOriginDataFailure(req),
+      );
+      const sameOriginHttpFailures = httpFailures.filter((failure) => !isExternalUrl(failure.url));
+      const externalHttpFailures = httpFailures.filter((failure) => isExternalUrl(failure.url));
+      const criticalSameOriginHttpFailures = sameOriginHttpFailures.filter(
+        (failure) =>
+          !isExplicitNonBlockingHttpFailure(failure, route) &&
+          !isExpectedNegativeRouteResponse(failure, route),
+      );
+      const blockingConsoleErrors = consoleErrors.filter(
+        (msg) =>
+          !isExternalFetchNoise(msg) &&
+          !isNonBlockingConsoleNoise(msg, route, httpFailures) &&
+          !isDevServerNoise(msg),
+      );
+      const nonBlockingConsoleErrors = consoleErrors.filter((msg) =>
+        isNonBlockingConsoleNoise(msg, route, httpFailures),
       );
 
       item.errorCount = consoleErrors.length;
@@ -666,84 +1019,28 @@ async function runDataStateSurfaceChecks(page, route) {
       item.sameOriginRequestFailureCount = sameOriginRequestFailures.length;
       item.externalRequestFailureCount = externalRequestFailures.length;
       item.criticalSameOriginDataFailureCount = criticalSameOriginDataFailures.length;
+      item.sameOriginHttpFailureCount = sameOriginHttpFailures.length;
+      item.externalHttpFailureCount = externalHttpFailures.length;
+      item.criticalSameOriginHttpFailureCount = criticalSameOriginHttpFailures.length;
       item.blockingConsoleErrors = blockingConsoleErrors.slice(0, 3);
       item.consoleErrors = consoleErrors.slice(0, 3);
+      item.httpFailures = httpFailures.slice(0, 8);
       item.criticalSameOriginDataFailures = criticalSameOriginDataFailures.slice(0, 3);
+      item.criticalSameOriginHttpFailures = criticalSameOriginHttpFailures.slice(0, 8);
 
       results.push(item);
 
-      if (route === "/" && vp.name !== "desktop" && !item.navigationError) {
+      if (route === "/" && !item.navigationError) {
         try {
-          const open = page.locator('button[aria-label="Open menu"]').first();
-          const hasOpenButton = (await open.count()) > 0;
-          const isOpenButtonVisible = hasOpenButton ? await open.isVisible() : false;
-
-          if (isOpenButtonVisible) {
-            await open.click();
-            await page.waitForTimeout(200);
-            const menuState = await page.evaluate(() => ({
-              bodyOverflow: document.body.style.overflow || "",
-              bodyPosition: document.body.style.position || "",
-              overlayVisible: document.querySelector(".mobile-overlay.visible") !== null,
-            }));
-
-            const overlay = page.locator('button[aria-label="Close mobile menu overlay"]');
-            const closeButton = page.locator('button[aria-label="Close menu"]');
-            let closeMethod = "overlay-left-click";
-
-            if (await overlay.count()) {
-              await page.mouse.click(12, Math.max(12, Math.floor(vp.height / 2)));
-              await page.waitForTimeout(200);
-            }
-
-            let afterClose = await page.evaluate(() => ({
-              bodyOverflow: document.body.style.overflow || "",
-              bodyPosition: document.body.style.position || "",
-              overlayVisible: document.querySelector(".mobile-overlay.visible") !== null,
-            }));
-
-            if (afterClose.overlayVisible && (await closeButton.count())) {
-              closeMethod = "close-button-fallback";
-              await closeButton.click();
-              await page.waitForTimeout(200);
-              afterClose = await page.evaluate(() => ({
-                bodyOverflow: document.body.style.overflow || "",
-                bodyPosition: document.body.style.position || "",
-                overlayVisible: document.querySelector(".mobile-overlay.visible") !== null,
-              }));
-            }
-
-            results.push({ viewport: vp.name, route: "/", check: "mobileMenuToggle", closeMethod, menuState, afterClose });
-          } else {
-            results.push({
-              viewport: vp.name,
-              route: "/",
-              check: "mobileMenuToggle",
-              skipped: true,
-              reason: hasOpenButton ? "open-button-hidden-on-viewport" : "open-button-not-found",
-            });
-          }
-        } catch (err) {
-          results.push({ viewport: vp.name, route: "/", check: "mobileMenuToggle", error: String(err) });
-        }
-      }
-
-      if (route === "/" && vp.name === "desktop" && !item.navigationError) {
-        try {
-          const dropdownChecks = await runDesktopDropdownChecks(page);
-          dropdownChecks.forEach((check) => {
-            results.push({
-              viewport: vp.name,
-              route: "/",
-              check: "desktopDropdown",
-              ...check,
-            });
+          const homeChecks = await runHomeShellChecks(page);
+          homeChecks.forEach((check) => {
+            results.push({ viewport: vp.name, route: "/", ...check });
           });
         } catch (err) {
           results.push({
             viewport: vp.name,
             route: "/",
-            check: "desktopDropdown",
+            check: "homeShellFamily",
             pass: false,
             error: String(err),
           });
@@ -811,17 +1108,17 @@ async function runDataStateSurfaceChecks(page, route) {
   await browser.close();
 
   const failures = results.filter((r) => {
+    if (
+      r.check === "homeShellFamily" ||
+      r.check === "currentHomeDesktopShell" ||
+      r.check === "currentHomeMobileTabs" ||
+      r.check === "legacyMobileMenu"
+    ) {
+      return r.pass === false;
+    }
     if (r.check === "desktopDropdown") return r.pass === false;
     if (r.check === "stockAnalyzerNativeTabs") return r.pass === false;
     if (r.check && r.check.startsWith("etf") && r.pass === false) return true;
-    if (r.check === "mobileMenuToggle") {
-      if (r.error) return true;
-      if (r.skipped) return false;
-      if (r.afterClose?.overlayVisible) return true;
-      if ((r.afterClose?.bodyOverflow || "") !== "") return true;
-      if ((r.afterClose?.bodyPosition || "") !== "") return true;
-      return false;
-    }
     if (r.navigationError) return true;
     if (r.status && r.status >= 400 && r.route !== "/this-route-should-not-exist") return true;
     if (r.hasHorizontalScroll) return true;
@@ -837,6 +1134,7 @@ async function runDataStateSurfaceChecks(page, route) {
     if (r.check === "p2DataStateVisible") return r.pass === false;
     if (r.linkedChecks && r.linkedChecks.some((c) => c.status >= 400)) return true;
     if ((r.criticalSameOriginDataFailureCount || 0) > 0) return true;
+    if ((r.criticalSameOriginHttpFailureCount || 0) > 0) return true;
     // 404 test route: console errors from the 404 page itself are expected
     if (r.blockingConsoleErrorCount > 0 && r.route !== "/this-route-should-not-exist") return true;
     return false;
