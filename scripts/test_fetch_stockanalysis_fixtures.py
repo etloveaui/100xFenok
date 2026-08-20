@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import io
 import json
@@ -2536,6 +2537,117 @@ module.main()
         finally:
             self.fetcher.OUT_DIR = original_out_dir
             self.fetcher.PUBLIC_DIR = original_public_dir
+
+    def test_etf_classification_reconciles_recovery_hash_without_advancing_lineage(self) -> None:
+        original_dirs = (
+            self.fetcher.OUT_DIR,
+            self.fetcher.PUBLIC_DIR,
+            self.fetcher.STOCKANALYSIS_RECOVERY_ROOT,
+        )
+        original_now = self.fetcher.now_iso
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.fetcher.OUT_DIR = root / "data" / "stockanalysis"
+            self.fetcher.PUBLIC_DIR = root / "public" / "data" / "stockanalysis"
+            self.fetcher.STOCKANALYSIS_RECOVERY_ROOT = (
+                root / "data" / "admin" / "stockanalysis-recovery"
+            )
+            payload = {
+                "schema_version": "stockanalysis/v1",
+                "source": "stockanalysis",
+                "asset_type": "etf",
+                "generated_at": "2026-08-19T07:00:00Z",
+                "source_as_of": None,
+                "source_as_of_reason": "provider publishes no aggregate source date",
+                "fetched_at": "2026-08-19T07:00:00Z",
+                "endpoint": "/etf/",
+                "counts": {"records": 1, "pages": 1},
+                "warnings": [],
+                "pages": [{"page": 1, "path": "/etf/", "record_count": 1}],
+                "records": [{"ticker": "AAA", "name": "AAA ETF", "source_page": 1}],
+            }
+            canonical = self.fetcher.OUT_DIR / "etf_universe.json"
+            self.fetcher.write_json(canonical, payload)
+            store = self.fetcher.StockAnalysisRecoveryStateStore(
+                self.fetcher.STOCKANALYSIS_RECOVERY_ROOT, root
+            )
+            bootstrap_run = {
+                "run_id": "bootstrap",
+                "run_attempt": 1,
+                "event_name": "schedule",
+                "natural": True,
+                "observed_at": "2026-08-19T07:00:00Z",
+            }
+            store.bootstrap_existing(bootstrap_run)
+            store.record_failure(
+                "universe",
+                "etf_universe",
+                "transient failure before recovery",
+                {
+                    "run_id": "universe-failed",
+                    "run_attempt": 1,
+                    "event_name": "schedule",
+                    "natural": True,
+                    "observed_at": "2026-08-19T07:30:00Z",
+                },
+            )
+            lkg_path = store.root / "lkg" / "universe" / "etf_universe.json"
+            lkg_bytes = lkg_path.read_bytes()
+            advanced = {
+                **payload,
+                "generated_at": "2026-08-19T08:00:00Z",
+                "fetched_at": "2026-08-19T08:00:00Z",
+                "counts": {"records": 2, "pages": 1},
+                "pages": [{"page": 1, "path": "/etf/", "record_count": 2}],
+                "records": [
+                    {"ticker": "AAA", "name": "AAA ETF", "source_page": 1},
+                    {"ticker": "BBB", "name": "BBB ETF", "source_page": 1},
+                ],
+            }
+            self.fetcher.write_json(canonical, advanced)
+            store.record_success(
+                "universe",
+                "etf_universe",
+                advanced,
+                {
+                    "run_id": "universe-recovered",
+                    "run_attempt": 1,
+                    "event_name": "schedule",
+                    "natural": True,
+                    "observed_at": "2026-08-19T08:05:00Z",
+                },
+            )
+            state_path = store.root / "states" / "universe" / "etf_universe.json"
+            before = json.loads(state_path.read_text(encoding="utf-8"))
+            stale_sha = before["current"]["payload_sha256"]
+            self.fetcher.now_iso = lambda: "2026-08-20T07:00:00Z"
+            original_argv = sys.argv
+            sys.argv = [
+                "fetch-stockanalysis.py",
+                "--classify-etf-catalogs",
+                "--event-name",
+                "schedule",
+            ]
+            try:
+                self.fetcher.main()
+            finally:
+                sys.argv = original_argv
+                (
+                    self.fetcher.OUT_DIR,
+                    self.fetcher.PUBLIC_DIR,
+                    self.fetcher.STOCKANALYSIS_RECOVERY_ROOT,
+                    self.fetcher.now_iso,
+                ) = (*original_dirs, original_now)
+
+            canonical_bytes = canonical.read_bytes()
+            after = json.loads(state_path.read_text(encoding="utf-8"))
+            expected = json.loads(json.dumps(before))
+            expected["current"]["payload_sha256"] = hashlib.sha256(canonical_bytes).hexdigest()
+            self.assertFalse((root / "public").exists())
+            self.assertNotEqual(stale_sha, expected["current"]["payload_sha256"])
+            self.assertEqual(after, expected)
+            self.assertEqual(lkg_path.read_bytes(), lkg_bytes)
+            self.assertEqual(after["lkg"], before["lkg"])
 
     def test_parse_history_periods_dedupe_and_validation(self) -> None:
         periods = self.fetcher.parse_history_periods("monthly_3y,monthly_3y,monthly_5y")

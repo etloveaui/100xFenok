@@ -17,6 +17,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from stockanalysis_recovery_state import (  # noqa: E402
+    StockAnalysisRecoveryStateError,
     StockAnalysisRecoveryStateStore,
     is_natural_schedule_run,
     payload_source_fields,
@@ -595,6 +596,30 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
         self.assertEqual(recovered["recovered_from_run_id"], "universe-failed")
         recovered_index = self.store.rebuild_index(self.run_context("universe-recovered"))
         self.assertEqual(recovered_index["recovered_universes"], [entity])
+
+    def test_reconcile_current_payload_sha_fails_closed_and_distinguishes_noop(self) -> None:
+        entity = "etf_universe"
+        canonical = self.data_root / "etf_universe.json"
+        write_json(canonical, universe_payload("2026-07-15T07:00:00Z", "AAA"))
+        self.store.bootstrap_existing(self.run_context("bootstrap"))
+
+        self.assertFalse(
+            self.store.reconcile_current_payload_sha256("universe", entity),
+            "matching canonical bytes are a no-op, not a reconciliation failure",
+        )
+        state_path = self.state_root / "states" / "universe" / f"{entity}.json"
+        state_path.unlink()
+        with self.assertRaisesRegex(StockAnalysisRecoveryStateError, "missing recovery state"):
+            self.store.reconcile_current_payload_sha256("universe", entity)
+
+        state_path.write_text("{broken", encoding="utf-8")
+        with self.assertRaisesRegex(StockAnalysisRecoveryStateError, "malformed recovery state"):
+            self.store.reconcile_current_payload_sha256("universe", entity)
+
+        self.store.bootstrap_existing(self.run_context("rebootstrap"))
+        canonical.unlink()
+        with self.assertRaisesRegex(StockAnalysisRecoveryStateError, "canonical payload is unreadable"):
+            self.store.reconcile_current_payload_sha256("universe", entity)
 
     def test_controlled_failure_scope_is_dispatch_only_and_explicit(self) -> None:
         validate_controlled_failure_scope(

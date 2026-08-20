@@ -39,6 +39,10 @@ SYSTEMIC_FAILURE_MARKERS = {
 }
 
 
+class StockAnalysisRecoveryStateError(RuntimeError):
+    """Fail-closed reconciliation error for an expected recovery state."""
+
+
 def _sha256(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
@@ -395,6 +399,47 @@ class StockAnalysisRecoveryStateStore:
         _validate_identity(kind, entity)
         state = _read_json(self._state_path(kind, entity))
         return bool(state and state.get("retry") is True)
+
+    def reconcile_current_payload_sha256(self, kind: str, entity: str) -> bool:
+        """Align only the advertised current digest with canonical raw bytes."""
+        _validate_identity(kind, entity)
+        state_path = self._state_path(kind, entity)
+        if not state_path.is_file():
+            raise StockAnalysisRecoveryStateError(
+                f"missing recovery state for {kind}:{entity}: {state_path}"
+            )
+        try:
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            raise StockAnalysisRecoveryStateError(
+                f"malformed recovery state for {kind}:{entity}: {state_path}"
+            ) from exc
+        except OSError as exc:
+            raise StockAnalysisRecoveryStateError(
+                f"recovery state is unreadable for {kind}:{entity}: {state_path}"
+            ) from exc
+        if not isinstance(state, dict):
+            raise StockAnalysisRecoveryStateError(
+                f"malformed recovery state for {kind}:{entity}: {state_path}"
+            )
+        current = state.get("current")
+        if not isinstance(current, dict):
+            raise StockAnalysisRecoveryStateError(
+                f"recovery state current is missing or malformed for {kind}:{entity}: {state_path}"
+            )
+        canonical_path = self.canonical_path(kind, entity)
+        try:
+            payload_bytes = canonical_path.read_bytes()
+        except OSError as exc:
+            raise StockAnalysisRecoveryStateError(
+                f"canonical payload is unreadable for {kind}:{entity}: {canonical_path}"
+            ) from exc
+        payload_sha256 = _sha256(payload_bytes)
+        if current.get("payload_sha256") == payload_sha256:
+            return False
+        state["current"] = {**current, "payload_sha256": payload_sha256}
+        _atomic_write_json(self._state_path(kind, entity), state)
+        return True
 
     def recovery_candidate_advances(self, kind: str, entity: str, payload: dict) -> bool:
         _validate_identity(kind, entity)

@@ -6223,7 +6223,11 @@ def run_yahoo_etf_fallback_recovery(
     }
 
 
-def classify_existing_etf_catalog(rel_path: str, mirror_public: bool) -> dict | None:
+def classify_existing_etf_catalog(
+    rel_path: str,
+    mirror_public: bool,
+    recovery_store: StockAnalysisRecoveryStateStore | None = None,
+) -> dict | None:
     path = OUT_DIR / rel_path
     if not path.exists():
         return None
@@ -6239,6 +6243,8 @@ def classify_existing_etf_catalog(rel_path: str, mirror_public: bool) -> dict | 
     payload["counts"] = counts
     payload["classification_refreshed_at"] = now_iso()
     write_payload(rel_path, payload, mirror_public)
+    if rel_path == "etf_universe.json" and recovery_store is not None:
+        recovery_store.reconcile_current_payload_sha256("universe", "etf_universe")
     return {
         "path": rel_path,
         "records": len(enriched),
@@ -6246,10 +6252,13 @@ def classify_existing_etf_catalog(rel_path: str, mirror_public: bool) -> dict | 
     }
 
 
-def classify_existing_etf_catalogs(mirror_public: bool) -> dict:
+def classify_existing_etf_catalogs(
+    mirror_public: bool,
+    recovery_store: StockAnalysisRecoveryStateStore | None = None,
+) -> dict:
     results = []
     for rel_path in ("etf_universe.json", "surfaces/etf_screener.json"):
-        result = classify_existing_etf_catalog(rel_path, mirror_public)
+        result = classify_existing_etf_catalog(rel_path, mirror_public, recovery_store)
         if result is not None:
             results.append(result)
     summary = {
@@ -7062,7 +7071,14 @@ def _main() -> None:
         else ()
     )
     if classify_catalogs_requested and no_other_work:
-        classification_summary = classify_existing_etf_catalogs(mirror_public)
+        classification_store = StockAnalysisRecoveryStateStore(
+            STOCKANALYSIS_RECOVERY_ROOT,
+            OUT_DIR.parent.parent,
+        )
+        classification_summary = classify_existing_etf_catalogs(
+            mirror_public,
+            classification_store,
+        )
         print(f"[classify-etf-catalogs] catalogs={len(classification_summary['results'])}", flush=True)
         return
 
@@ -7516,7 +7532,10 @@ def _main() -> None:
     else:
         write_payload("index.json", summary, mirror_public)
     if classify_catalogs_requested:
-        classification_summary = classify_existing_etf_catalogs(mirror_public)
+        classification_summary = classify_existing_etf_catalogs(
+            mirror_public,
+            recovery_store,
+        )
         print(f"[classify-etf-catalogs] catalogs={len(classification_summary['results'])}", flush=True)
     if stop_reason:
         raise SystemExit(2)
