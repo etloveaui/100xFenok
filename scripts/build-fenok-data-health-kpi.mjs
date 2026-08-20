@@ -3032,10 +3032,21 @@ function deployWorkerKpiGateWired() {
     && packageScriptCheck("sync-static", "npm run reconcile:derived")
     && packageScriptCheck("reconcile:derived", "npm run build:fenok-data-health-kpi")
     && packageScriptCheck("reconcile:verify", "npm run qa:fenok-data-health-kpi:artifact")
+    && packageScriptOrderCheck("qa:fenok-data-health-kpi:artifact", [
+      "node scripts/check-fenok-data-health-kpi.mjs --strict",
+      "npm run qa:kpi-last-attempt",
+      "npm run qa:lane-runid",
+    ])
     && packageScriptOrderCheck("cf:build:steps", [
+      "bash scripts/load-guard.sh --assert-nested",
+      "npm run qa:data-supply-policy-registry",
+      "npm run build:version",
       "npm run sync-static",
-      "check-fenok-data-health-kpi.mjs --strict",
+      "npm run qa:routes",
+      "npm run qa:fenok-data-health-kpi:artifact",
+      "npm run qa:tokens",
       "opennextjs-cloudflare build",
+      "node scripts/check-cloudflare-asset-budget.mjs",
     ]);
 }
 
