@@ -2,42 +2,61 @@
   "schema_version": "producer-lkg-key-state/v2",
   "lane_id": "yahoo_hourly_ticker",
   "key": "TQQQ.json",
-  "updated_at": "2026-08-20T01:47:19.962Z",
+  "updated_at": "2026-08-20T21:37:47.077Z",
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/macro/yahoo-ticker.json#/tickers/TQQQ",
-    "payload_sha256": "1c33902aa456f71a5850c6c66ac4d9868f0bbacc5d072877145a0e4e7e0a1d22",
-    "source_as_of": "2026-08-19T20:00:01.000Z"
+    "payload_sha256": "dea5e72af2e77bcaf562b7643ed564eb3539e0c1ff30fb2f3564a1386032b733",
+    "source_as_of": "2026-08-20T20:00:00.000Z"
   },
   "canonical_ref": "data/macro/yahoo-ticker.json#/tickers/TQQQ",
   "lkg": {
     "path": "data/admin/yahoo-hourly-ticker/lkg/TQQQ.json",
-    "payload_sha256": "1c33902aa456f71a5850c6c66ac4d9868f0bbacc5d072877145a0e4e7e0a1d22",
-    "source_as_of": "2026-08-19T20:00:01.000Z"
+    "payload_sha256": "dea5e72af2e77bcaf562b7643ed564eb3539e0c1ff30fb2f3564a1386032b733",
+    "source_as_of": "2026-08-20T20:00:00.000Z"
   },
   "latest_failure": null,
-  "recovered_from_run_id": "29417720099",
-  "recovery_run_id": "29421917838",
+  "recovered_from_run_id": "32372444892",
+  "recovery_run_id": "32382387233",
   "recovery_run_attempt": 1,
   "recovery_event_name": "schedule",
-  "recovered_at": "2026-07-15T14:04:52.506Z",
-  "last_run_id": "32322264179",
+  "recovered_at": "2026-08-20T14:49:04.464Z",
+  "last_run_id": "32420340116",
   "last_run_attempt": 1,
   "last_event_name": "schedule",
   "promotion_contract": "provider_observation/v2",
   "promotion_proof_required": true,
   "provider_observation": {
     "schema_version": "provider_observation/v2",
-    "payload_sha256": "1c33902aa456f71a5850c6c66ac4d9868f0bbacc5d072877145a0e4e7e0a1d22",
-    "candidate_payload_sha256": "1c33902aa456f71a5850c6c66ac4d9868f0bbacc5d072877145a0e4e7e0a1d22",
-    "payload_ref": "data/admin/yahoo-hourly-ticker/provider-observations/1c33902aa456f71a5850c6c66ac4d9868f0bbacc5d072877145a0e4e7e0a1d22.json",
-    "source_as_of": "2026-08-19T20:00:01.000Z",
-    "run_id": "32322264179",
+    "payload_sha256": "dea5e72af2e77bcaf562b7643ed564eb3539e0c1ff30fb2f3564a1386032b733",
+    "candidate_payload_sha256": "dea5e72af2e77bcaf562b7643ed564eb3539e0c1ff30fb2f3564a1386032b733",
+    "payload_ref": "data/admin/yahoo-hourly-ticker/provider-observations/dea5e72af2e77bcaf562b7643ed564eb3539e0c1ff30fb2f3564a1386032b733.json",
+    "source_as_of": "2026-08-20T20:00:00.000Z",
+    "run_id": "32420340116",
     "run_attempt": 1,
     "event_name": "schedule",
-    "observed_at": "2026-08-20T01:47:19.962Z",
-    "recovered_from_run_id": "29417720099"
+    "observed_at": "2026-08-20T21:37:47.077Z",
+    "recovered_from_run_id": "32372444892"
   },
-  "recovery_provenance_contract": "legacy_source_marker/v1"
+  "recovery_observation": {
+    "schema_version": "provider_observation/v2",
+    "payload_sha256": "844d3d0e5cc3b81b368bce17456209a75a34d75cf4a3c224bd85e13de9a766cd",
+    "candidate_payload_sha256": "844d3d0e5cc3b81b368bce17456209a75a34d75cf4a3c224bd85e13de9a766cd",
+    "payload_ref": "data/admin/yahoo-hourly-ticker/provider-observations/844d3d0e5cc3b81b368bce17456209a75a34d75cf4a3c224bd85e13de9a766cd.json",
+    "source_as_of": "2026-08-20T14:49:04.000Z",
+    "run_id": "32382387233",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-08-20T14:49:04.464Z",
+    "recovered_from_run_id": "32372444892"
+  },
+  "last_recovered_failure": {
+    "run_id": "32372444892",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-08-20T13:07:03.064Z",
+    "failure_kind": "schema_drift",
+    "error": "schema_drift"
+  }
 }
