@@ -82,7 +82,7 @@
   "current": {
     "fetched_at": "2026-08-09T16:52:13Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/SUIL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SUIL.json",
     "payload_sha256": "be092da7a64ed1c4324598a6fb79433b70e3e75c75ea19f76961351a0df56cef",
     "quote_as_of": "2026-08-07T14:06:59Z",
     "source_as_of": "2026-08-07"
@@ -104,12 +104,12 @@
     "shard": "8/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-16T00:18:49Z",
-    "history_as_of": "2026-07-15",
+    "fetched_at": "2026-08-09T16:52:13Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/SUIL.json",
-    "payload_sha256": "ea0511773504853c08b9d60ad704bea2912157e224c57fc9da758e633c1977f3",
-    "quote_as_of": "2026-07-15T19:49:55Z",
-    "source_as_of": "2026-07-15"
+    "payload_sha256": "be092da7a64ed1c4324598a6fb79433b70e3e75c75ea19f76961351a0df56cef",
+    "quote_as_of": "2026-08-07T14:06:59Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -123,19 +123,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-07-24T00:27:41Z",
-    "classified_run_id": "30055546565",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "SUIL holds LKG because Yahoo source date 2026-07-15 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "SUIL holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-15"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "SUIL",
-  "updated_at": "2026-08-09T16:47:26Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

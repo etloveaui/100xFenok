@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-10T11:22:51Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/NURE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NURE.json",
     "payload_sha256": "1381b2e7a7d96542dbac77de100e71bb41a1a1d00f83b542afe33e665a38bb23",
     "quote_as_of": "2026-08-07T18:58:22Z",
     "source_as_of": "2026-08-07"
@@ -38,6 +38,14 @@
     "schedule": "7 10 * * 0-5",
     "shard": "17/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-10T11:22:51Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NURE.json",
+    "payload_sha256": "1381b2e7a7d96542dbac77de100e71bb41a1a1d00f83b542afe33e665a38bb23",
+    "quote_as_of": "2026-08-07T18:58:22Z",
+    "source_as_of": "2026-08-07"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "NURE holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
   "ticker": "NURE",
-  "updated_at": "2026-08-10T11:19:59Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-09T14:48:26Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/SCMC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SCMC.json",
     "payload_sha256": "156824fc688dcaf69907a219a06cf8303a2abbc46a25bb2a49714232ec682c57",
     "quote_as_of": "2026-08-07T19:44:42Z",
     "source_as_of": "2026-08-07"
@@ -38,6 +38,14 @@
     "schedule": "7 14 * * 0-5",
     "shard": "7/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-09T14:48:26Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SCMC.json",
+    "payload_sha256": "156824fc688dcaf69907a219a06cf8303a2abbc46a25bb2a49714232ec682c57",
+    "quote_as_of": "2026-08-07T19:44:42Z",
+    "source_as_of": "2026-08-07"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "SCMC holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
   "ticker": "SCMC",
-  "updated_at": "2026-08-09T14:44:24Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

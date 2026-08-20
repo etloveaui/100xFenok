@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-07T03:16:03Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/AMDY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AMDY.json",
     "payload_sha256": "43ca88c06e95edb454716ab3beda4ade2ea4c558c35ae5f12c254250cf380939",
     "quote_as_of": "2026-08-06T20:00:00Z",
     "source_as_of": "2026-08-06"
@@ -65,12 +65,12 @@
     "shard": "60/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-19T23:02:29Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-07T03:16:03Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AMDY.json",
-    "payload_sha256": "161923b03aea99e5648923de49ed9540d3004f7bb384bd447813b2638be3c6fd",
-    "quote_as_of": "2026-07-17T20:00:00Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "43ca88c06e95edb454716ab3beda4ade2ea4c558c35ae5f12c254250cf380939",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-07-28T00:14:11Z",
-    "classified_run_id": "30316637722",
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AMDY holds LKG because Yahoo source date 2026-07-17 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AMDY holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-06"
   },
   "ticker": "AMDY",
-  "updated_at": "2026-08-07T03:14:39Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

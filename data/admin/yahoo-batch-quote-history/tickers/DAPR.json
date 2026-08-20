@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-10T04:08:51Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/DAPR.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DAPR.json",
     "payload_sha256": "ffba06d3a66aaad48ca65040d6b09041c3a82ed8e54363578caa7a53361f6a4c",
     "quote_as_of": "2026-08-07T18:41:22Z",
     "source_as_of": "2026-08-07"
@@ -65,12 +65,12 @@
     "shard": "13/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-20T23:05:51Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-08-10T04:08:51Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DAPR.json",
-    "payload_sha256": "dc358db566102e79303ace1a2c84d1f83268978d56aa6e98c7c0dadbea757bd9",
-    "quote_as_of": "2026-07-20T18:57:33Z",
-    "source_as_of": "2026-07-20"
+    "payload_sha256": "ffba06d3a66aaad48ca65040d6b09041c3a82ed8e54363578caa7a53361f6a4c",
+    "quote_as_of": "2026-08-07T18:41:22Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
-    "classified_at": "2026-07-30T00:35:13Z",
-    "classified_run_id": "30502016705",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DAPR holds LKG because Yahoo source date 2026-07-20 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DAPR holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "DAPR",
-  "updated_at": "2026-08-10T04:06:52Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

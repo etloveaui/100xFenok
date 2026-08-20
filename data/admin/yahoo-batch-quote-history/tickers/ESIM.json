@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-10T02:31:46Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/ESIM.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ESIM.json",
     "payload_sha256": "e700177c85a4a45e18b12090c39f9684470c5c77d8077509697b482eba8addd1",
     "quote_as_of": "2026-08-07T19:59:45Z",
     "source_as_of": "2026-08-07"
@@ -65,12 +65,12 @@
     "shard": "12/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-30T23:35:24Z",
-    "history_as_of": "2026-07-30",
+    "fetched_at": "2026-08-10T02:31:46Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ESIM.json",
-    "payload_sha256": "3ab412f7154d1aee97230f1ca5a924994e3c6bd8875e86aca302e9c4d68b9643",
-    "quote_as_of": "2026-07-30T19:59:59Z",
-    "source_as_of": "2026-07-30"
+    "payload_sha256": "e700177c85a4a45e18b12090c39f9684470c5c77d8077509697b482eba8addd1",
+    "quote_as_of": "2026-08-07T19:59:45Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-10T02:30:39Z",
-    "classified_run_id": "31349898588",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ESIM holds LKG because Yahoo source date 2026-07-30 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ESIM holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-30"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "ESIM",
-  "updated_at": "2026-08-10T02:30:39Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

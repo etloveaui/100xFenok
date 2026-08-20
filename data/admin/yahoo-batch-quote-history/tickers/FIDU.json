@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-11T04:00:33Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/FIDU.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FIDU.json",
     "payload_sha256": "d0c0176df6a2ff3f2cfe1b8d76541af59829355b41e8a41ea21325d9b8da4c46",
     "quote_as_of": "2026-08-10T19:59:51Z",
     "source_as_of": "2026-08-10"
@@ -52,12 +52,12 @@
     "shard": "25/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T18:31:12Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-11T04:00:33Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/FIDU.json",
-    "payload_sha256": "37e08858485e3d8fe9db67723465f284034b29dfdb2a66300fe37f3b88e56c74",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "d0c0176df6a2ff3f2cfe1b8d76541af59829355b41e8a41ea21325d9b8da4c46",
+    "quote_as_of": "2026-08-10T19:59:51Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "FIDU holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "FIDU holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "FIDU",
-  "updated_at": "2026-08-11T03:59:23Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

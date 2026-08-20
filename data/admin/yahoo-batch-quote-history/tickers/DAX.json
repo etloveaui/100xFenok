@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-11T07:22:04Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/DAX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DAX.json",
     "payload_sha256": "15fd7323899b360e8dd643620cbb1154d6069a156c751c31feb20fe435dc3692",
     "quote_as_of": "2026-08-10T20:00:00Z",
     "source_as_of": "2026-08-10"
@@ -65,12 +65,12 @@
     "shard": "35/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T18:50:53Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-11T07:22:04Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DAX.json",
-    "payload_sha256": "cc400e8a02340383cb0a4f5e31dfe1202f85a32f50a98b3611e46297509aa4fe",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "15fd7323899b360e8dd643620cbb1154d6069a156c751c31feb20fe435dc3692",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DAX holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DAX holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "DAX",
-  "updated_at": "2026-08-11T23:29:49Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

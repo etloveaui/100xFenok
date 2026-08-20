@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 493,
-      "natural": true,
-      "observed_at": "2026-07-31T01:08:46Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30593079919",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 746,
       "natural": true,
       "observed_at": "2026-08-01T01:00:13Z",
@@ -184,6 +171,20 @@
       "run_id": "31851174388",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for EA despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 417,
+      "natural": true,
+      "observed_at": "2026-08-19T23:42:29Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "32314261503",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -199,26 +200,29 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
+    "error": "ValueError: quote_as_of is unavailable for EA despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 469,
+    "latency_ms": 417,
     "natural": true,
-    "observed_at": "2026-08-14T23:48:33Z",
+    "observed_at": "2026-08-19T23:42:29Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "31851174388",
+    "run_id": "32314261503",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-14T23:48:33Z",
-    "provider_history_as_of": "2026-08-10",
-    "provider_quote_as_of": "2026-08-04T20:00:00Z",
-    "reason": "recovery_not_advanced_by_provider",
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for EA despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-19T23:42:29Z",
     "run_attempt": 1,
-    "run_id": "31851174388"
+    "run_id": "32314261503"
   },
   "lkg": {
     "fetched_at": "2026-08-12T00:31:05Z",
@@ -254,5 +258,5 @@
     "source_as_of": "2026-08-04T20:00:00Z"
   },
   "ticker": "EA",
-  "updated_at": "2026-08-14T23:48:33Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

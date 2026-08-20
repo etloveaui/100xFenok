@@ -99,7 +99,7 @@
   "current": {
     "fetched_at": "2026-08-10T15:11:29Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/TSPX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TSPX.json",
     "payload_sha256": "450b56a2710e879f1ea4fa2efbc8567e1e02846593f2d3f0ee74dd6f0e7b8baf",
     "quote_as_of": "2026-08-10T13:46:08Z",
     "source_as_of": "2026-08-10"
@@ -121,12 +121,12 @@
     "shard": "19/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T05:17:03Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T15:11:29Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/TSPX.json",
-    "payload_sha256": "79c9006e876d416a519185e911e08033c7c84298fcacfc645a60c08d6a725dee",
-    "quote_as_of": "2026-07-07T19:32:00Z",
-    "source_as_of": "2026-07-07T19:32:00Z"
+    "payload_sha256": "450b56a2710e879f1ea4fa2efbc8567e1e02846593f2d3f0ee74dd6f0e7b8baf",
+    "quote_as_of": "2026-08-10T13:46:08Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -140,19 +140,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 23,
-    "classified_at": "2026-08-09T07:09:35Z",
-    "classified_run_id": "31300442711",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "TSPX holds LKG because Yahoo source date 2026-07-07T19:32:00Z is 23 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "TSPX holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-07T19:32:00Z"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "TSPX",
-  "updated_at": "2026-08-10T15:10:15Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

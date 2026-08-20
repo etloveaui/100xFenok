@@ -57,7 +57,7 @@
   "current": {
     "fetched_at": "2026-08-09T14:48:14Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/QTJA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QTJA.json",
     "payload_sha256": "31b88c8f9e62abfcdcf140d16909385a2a386e449d5787c042d88569c71528f7",
     "quote_as_of": "2026-08-07T16:21:30Z",
     "source_as_of": "2026-08-07"
@@ -79,12 +79,12 @@
     "shard": "7/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:34:25Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-08-09T14:48:14Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/QTJA.json",
-    "payload_sha256": "4d54425a3fd33e65fefc2d4f02f497cc35b5084392743f4bf3ba842481fd7a91",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "31b88c8f9e62abfcdcf140d16909385a2a386e449d5787c042d88569c71528f7",
+    "quote_as_of": "2026-08-07T16:21:30Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -98,19 +98,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "QTJA holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "QTJA holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "QTJA",
-  "updated_at": "2026-08-09T14:44:24Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

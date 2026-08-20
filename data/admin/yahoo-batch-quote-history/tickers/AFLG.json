@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-06T14:34:32Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/AFLG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AFLG.json",
     "payload_sha256": "11759e35de59eac2ff042b662abe26f6cce1e27c80255d3ef23ffb892161b5ad",
     "quote_as_of": "2026-08-06T14:34:18Z",
     "source_as_of": "2026-08-06"
@@ -65,12 +65,12 @@
     "shard": "54/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-19T23:02:01Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-06T14:34:32Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AFLG.json",
-    "payload_sha256": "19e4668b854c390c016877606cc3b5c16279445891fe32019cb1ace1b3f742c8",
-    "quote_as_of": "2026-07-17T19:59:51Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "11759e35de59eac2ff042b662abe26f6cce1e27c80255d3ef23ffb892161b5ad",
+    "quote_as_of": "2026-08-06T14:34:18Z",
+    "source_as_of": "2026-08-06"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-07-28T00:14:11Z",
-    "classified_run_id": "30316637722",
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AFLG holds LKG because Yahoo source date 2026-07-17 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AFLG holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-06"
   },
   "ticker": "AFLG",
-  "updated_at": "2026-08-06T14:33:02Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-09T16:50:29Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/FCSH.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FCSH.json",
     "payload_sha256": "bd304acda2103d522b6e2762237cde277e34e35475892abf4efedd04273c6178",
     "quote_as_of": "2026-08-06T18:14:30Z",
     "source_as_of": "2026-08-06T18:14:30Z"
@@ -51,6 +51,14 @@
     "schedule": "7 16 * * 0-5",
     "shard": "8/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-09T16:50:29Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FCSH.json",
+    "payload_sha256": "bd304acda2103d522b6e2762237cde277e34e35475892abf4efedd04273c6178",
+    "quote_as_of": "2026-08-06T18:14:30Z",
+    "source_as_of": "2026-08-06T18:14:30Z"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06T18:14:30Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "FCSH holds LKG because Yahoo source date 2026-08-06T18:14:30Z is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-06T18:14:30Z"
+  },
   "ticker": "FCSH",
-  "updated_at": "2026-08-09T16:47:26Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

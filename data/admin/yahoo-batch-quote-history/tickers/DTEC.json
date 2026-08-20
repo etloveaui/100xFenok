@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-10T04:07:22Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/DTEC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DTEC.json",
     "payload_sha256": "68578b474e48ec64eebc5d5e3aa9b67e86d957c4b8c9a00c134c5c7d10c94f1f",
     "quote_as_of": "2026-08-07T19:35:10Z",
     "source_as_of": "2026-08-07"
@@ -65,12 +65,12 @@
     "shard": "21/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T18:37:50Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-10T04:07:22Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DTEC.json",
-    "payload_sha256": "1ecb8aacda9a7ee7eac44c47e36897d8c614f37de0012c39896099b6568b8e67",
-    "quote_as_of": "2026-07-30T19:55:00Z",
-    "source_as_of": "2026-07-30T19:55:00Z"
+    "payload_sha256": "68578b474e48ec64eebc5d5e3aa9b67e86d957c4b8c9a00c134c5c7d10c94f1f",
+    "quote_as_of": "2026-08-07T19:35:10Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-10T02:30:39Z",
-    "classified_run_id": "31349898588",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DTEC holds LKG because Yahoo source date 2026-07-30T19:55:00Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DTEC holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-30T19:55:00Z"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "DTEC",
-  "updated_at": "2026-08-10T19:09:16Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

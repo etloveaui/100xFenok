@@ -153,7 +153,7 @@
   "current": {
     "fetched_at": "2026-08-10T17:04:41Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/CIVG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CIVG.json",
     "payload_sha256": "60429261c88df5f4609abe69b582274534a285a070f9b67fa49d524667319f3c",
     "quote_as_of": "2026-08-10T13:46:03Z",
     "source_as_of": "2026-08-10"
@@ -175,12 +175,12 @@
     "shard": "20/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T05:16:29Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T17:04:41Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CIVG.json",
-    "payload_sha256": "307e56fe1d2be8d075f5658fd89e91d7512804c25c77f5e16d157da521fdc9d4",
-    "quote_as_of": "2026-07-08T13:37:49Z",
-    "source_as_of": "2026-07-08T13:37:49Z"
+    "payload_sha256": "60429261c88df5f4609abe69b582274534a285a070f9b67fa49d524667319f3c",
+    "quote_as_of": "2026-08-10T13:46:03Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -194,19 +194,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 22,
-    "classified_at": "2026-08-09T07:09:35Z",
-    "classified_run_id": "31300442711",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CIVG holds LKG because Yahoo source date 2026-07-08T13:37:49Z is 22 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CIVG holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08T13:37:49Z"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "CIVG",
-  "updated_at": "2026-08-10T17:04:11Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

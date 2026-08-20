@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-10T09:50:24Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/TUR.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TUR.json",
     "payload_sha256": "ad06cd3526062c30d0146877b928178c21f402d56285f46a659a2f7eb0b3cc69",
     "quote_as_of": "2026-08-07T20:00:01Z",
     "source_as_of": "2026-08-07"
@@ -38,6 +38,14 @@
     "schedule": "7 8 * * 0-5",
     "shard": "16/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-10T09:50:24Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TUR.json",
+    "payload_sha256": "ad06cd3526062c30d0146877b928178c21f402d56285f46a659a2f7eb0b3cc69",
+    "quote_as_of": "2026-08-07T20:00:01Z",
+    "source_as_of": "2026-08-07"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "TUR holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
   "ticker": "TUR",
-  "updated_at": "2026-08-10T09:46:13Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

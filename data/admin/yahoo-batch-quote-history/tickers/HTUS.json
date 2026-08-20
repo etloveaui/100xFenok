@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-11T07:22:36Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/HTUS.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HTUS.json",
     "payload_sha256": "4691c3acb11b407d345641845a752b044c8ba5933f5b28f505e9cf5439fcb157",
     "quote_as_of": "2026-08-10T19:52:59Z",
     "source_as_of": "2026-08-10"
@@ -65,12 +65,12 @@
     "shard": "30/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-02T23:02:19Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-11T07:22:36Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/HTUS.json",
-    "payload_sha256": "1283c386f9f8e1d2535bab68998b5e3c20f3c86eae0020957903cfca0b6b40e5",
-    "quote_as_of": "2026-07-31T19:59:59Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "4691c3acb11b407d345641845a752b044c8ba5933f5b28f505e9cf5439fcb157",
+    "quote_as_of": "2026-08-10T19:52:59Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "HTUS holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "HTUS holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "HTUS",
-  "updated_at": "2026-08-11T13:36:55Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-09T03:52:45Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/HEMI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HEMI.json",
     "payload_sha256": "be3b5f8561eb04e2e17491a36a439ad7eef10b133283ec08539b232a6b1885d0",
     "quote_as_of": "2026-08-07T14:11:22Z",
     "source_as_of": "2026-08-07"
@@ -52,12 +52,12 @@
     "shard": "1/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-02T23:02:06Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-09T03:52:45Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/HEMI.json",
-    "payload_sha256": "81d7b33ece7d676760cff7824543819ff4fdc49565c4d7947a93822fe37bd6f0",
-    "quote_as_of": "2026-07-29T19:18:08Z",
-    "source_as_of": "2026-07-29T19:18:08Z"
+    "payload_sha256": "be3b5f8561eb04e2e17491a36a439ad7eef10b133283ec08539b232a6b1885d0",
+    "quote_as_of": "2026-08-07T14:11:22Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-07T00:12:01Z",
-    "classified_run_id": "31133672903",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "HEMI holds LKG because Yahoo source date 2026-07-29T19:18:08Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "HEMI holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-29T19:18:08Z"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "HEMI",
-  "updated_at": "2026-08-09T03:52:19Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

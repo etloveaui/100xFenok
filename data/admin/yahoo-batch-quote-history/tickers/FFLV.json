@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-07T15:06:09Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/FFLV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FFLV.json",
     "payload_sha256": "d83236f2509c52559cc926ffbc2f2294376e439fb993fb4787c4a02dfa986b42",
     "quote_as_of": "2026-08-07T14:12:12Z",
     "source_as_of": "2026-08-07"
@@ -51,6 +51,14 @@
     "schedule": "7 14 * * 0-5",
     "shard": "67/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-07T15:06:09Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FFLV.json",
+    "payload_sha256": "d83236f2509c52559cc926ffbc2f2294376e439fb993fb4787c4a02dfa986b42",
+    "quote_as_of": "2026-08-07T14:12:12Z",
+    "source_as_of": "2026-08-07"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "FFLV holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
   "ticker": "FFLV",
-  "updated_at": "2026-08-07T15:04:20Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

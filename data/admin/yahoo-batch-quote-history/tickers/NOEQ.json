@@ -44,7 +44,7 @@
   "current": {
     "fetched_at": "2026-08-10T15:11:13Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/NOEQ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NOEQ.json",
     "payload_sha256": "5dbe6397b59477a6947f32f2ad9f49297fb6ed07f4f355b4720205051ba09391",
     "quote_as_of": "2026-08-10T13:46:06Z",
     "source_as_of": "2026-08-10"
@@ -66,12 +66,12 @@
     "shard": "19/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T04:09:59Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T15:11:13Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/NOEQ.json",
-    "payload_sha256": "6db90698db769d55f695afd965fe151644fb6f6f396803891f1158d40bc4684b",
-    "quote_as_of": "2026-07-09T14:12:50Z",
-    "source_as_of": "2026-07-09T14:12:50Z"
+    "payload_sha256": "5dbe6397b59477a6947f32f2ad9f49297fb6ed07f4f355b4720205051ba09391",
+    "quote_as_of": "2026-08-10T13:46:06Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -85,19 +85,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 22,
-    "classified_at": "2026-08-10T05:42:10Z",
-    "classified_run_id": "31359333130",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "NOEQ holds LKG because Yahoo source date 2026-07-09T14:12:50Z is 22 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "NOEQ holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-09T14:12:50Z"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "NOEQ",
-  "updated_at": "2026-08-10T15:10:15Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

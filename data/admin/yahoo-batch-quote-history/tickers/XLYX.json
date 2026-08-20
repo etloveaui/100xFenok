@@ -108,7 +108,7 @@
   "current": {
     "fetched_at": "2026-08-10T20:55:40Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/XLYX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XLYX.json",
     "payload_sha256": "ff17e05cea8b270907c9bdb3739aca5e53c93ad428c88ed9e445a47c0078d675",
     "quote_as_of": "2026-08-07T16:10:50Z",
     "source_as_of": "2026-08-07"
@@ -130,12 +130,12 @@
     "shard": "22/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-18T00:37:54Z",
-    "history_as_of": "2026-07-16",
+    "fetched_at": "2026-08-10T20:55:40Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XLYX.json",
-    "payload_sha256": "a55711065bd7131b989e5ef6c24febe24b5b6b5b76c3f085e84594897211ec92",
-    "quote_as_of": "2026-07-02T17:16:39Z",
-    "source_as_of": "2026-07-02T17:16:39Z"
+    "payload_sha256": "ff17e05cea8b270907c9bdb3739aca5e53c93ad428c88ed9e445a47c0078d675",
+    "quote_as_of": "2026-08-07T16:10:50Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -149,19 +149,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-18T00:42:07Z",
-    "classified_run_id": "29622560422",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "XLYX holds LKG because Yahoo source date 2026-07-02T17:16:39Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XLYX holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-02T17:16:39Z"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "XLYX",
-  "updated_at": "2026-08-10T20:51:42Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

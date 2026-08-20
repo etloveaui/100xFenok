@@ -5,20 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 630,
-      "natural": true,
-      "observed_at": "2026-08-12T00:28:31Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 615,
       "natural": true,
       "observed_at": "2026-08-12T05:45:23Z",
@@ -199,13 +185,26 @@
       "run_id": "31851174388",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 757,
+      "natural": true,
+      "observed_at": "2026-08-19T23:42:29Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32314261503",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-14T00:11:07Z",
-    "history_as_of": "2026-08-13",
+    "fetched_at": "2026-08-19T23:42:52Z",
+    "history_as_of": "2026-08-19",
     "path": "data/admin/yahoo-batch-quote-history/lkg/000880.KS.json",
-    "payload_sha256": "6483dccd1cfa759b2b55371a6bad87c030128104da7d681f6643afe1bf24f857",
+    "payload_sha256": "6959706a31f20ee20cf0db71a6f6363fe67069f46446d1d28976802fbbf49522",
     "quote_as_of": "2026-07-29T06:30:02Z",
     "source_as_of": "2026-07-29T06:30:02Z"
   },
@@ -215,44 +214,34 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 703,
+    "latency_ms": 757,
     "natural": true,
-    "observed_at": "2026-08-14T23:48:33Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-19T23:42:29Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31851174388",
+    "run_id": "32314261503",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
-  "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-08-14T23:48:33Z",
-    "provider_history_as_of": "2026-08-13",
-    "provider_quote_as_of": "2026-07-29T06:30:02Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "31851174388"
-  },
   "lkg": {
-    "fetched_at": "2026-08-14T00:11:07Z",
-    "history_as_of": "2026-08-13",
+    "fetched_at": "2026-08-19T23:42:52Z",
+    "history_as_of": "2026-08-19",
     "path": "data/admin/yahoo-batch-quote-history/lkg/000880.KS.json",
-    "payload_sha256": "6483dccd1cfa759b2b55371a6bad87c030128104da7d681f6643afe1bf24f857",
+    "payload_sha256": "6959706a31f20ee20cf0db71a6f6363fe67069f46446d1d28976802fbbf49522",
     "quote_as_of": "2026-07-29T06:30:02Z",
     "source_as_of": "2026-07-29T06:30:02Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-13",
-    "observed_at": "2026-08-14T00:10:47Z",
-    "payload_sha256": "ec160138f2f5f9d9236a32979f7059c029dbe3eeddf9be54c5860ebdd87e4ba1",
+    "history_as_of": "2026-08-19",
+    "observed_at": "2026-08-19T23:42:29Z",
+    "payload_sha256": "44069a3df9f8d48cb47f7c8d0d52276a8327565da8e7220a5d3ce56b6fe86402",
     "quote_as_of": "2026-07-29T06:30:02Z",
     "run_attempt": 1,
-    "run_id": "31755913658",
+    "run_id": "32314261503",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-29T06:30:02Z"
   },
@@ -260,15 +249,15 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 12,
-    "classified_at": "2026-08-14T00:14:35Z",
-    "classified_run_id": "31755913658",
+    "age_business_days": 14,
+    "classified_at": "2026-08-19T23:47:14Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "000880.KS holds LKG because Yahoo source date 2026-07-29T06:30:02Z is 12 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "000880.KS holds LKG because Yahoo source date 2026-07-29T06:30:02Z is 14 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-07-29T06:30:02Z"
   },
   "ticker": "000880.KS",
-  "updated_at": "2026-08-14T23:48:33Z"
+  "updated_at": "2026-08-19T23:47:14Z"
 }

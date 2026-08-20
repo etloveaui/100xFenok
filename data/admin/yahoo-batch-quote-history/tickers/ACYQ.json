@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-06T14:34:30Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/ACYQ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ACYQ.json",
     "payload_sha256": "5ec54fcf4e02f4441485c103d5dfd95e405b4a6b769f9f54bfc5bcaf1f34db2a",
     "quote_as_of": "2026-08-06T14:26:44Z",
     "source_as_of": "2026-08-06"
@@ -65,12 +65,12 @@
     "shard": "54/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-19T23:01:55Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-06T14:34:30Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ACYQ.json",
-    "payload_sha256": "de8916588e3d9c882dcc90e79c728d681b1363437834f7188b6b9491f2b339fa",
-    "quote_as_of": "2026-07-17T19:10:43Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "5ec54fcf4e02f4441485c103d5dfd95e405b4a6b769f9f54bfc5bcaf1f34db2a",
+    "quote_as_of": "2026-08-06T14:26:44Z",
+    "source_as_of": "2026-08-06"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-07-28T00:14:11Z",
-    "classified_run_id": "30316637722",
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ACYQ holds LKG because Yahoo source date 2026-07-17 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ACYQ holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-06"
   },
   "ticker": "ACYQ",
-  "updated_at": "2026-08-06T14:33:02Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

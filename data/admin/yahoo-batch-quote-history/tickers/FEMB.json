@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-11T02:25:29Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/FEMB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FEMB.json",
     "payload_sha256": "f957b9368b132bf3ac34b6cc78c2a7d961d084ec2486b911e090f7cf034897f0",
     "quote_as_of": "2026-08-10T20:00:02Z",
     "source_as_of": "2026-08-10"
@@ -65,12 +65,12 @@
     "shard": "25/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T18:24:00Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-11T02:25:29Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/FEMB.json",
-    "payload_sha256": "885c06eb4120d285e1fbdc223789d6995bd12765665cf8a9308cd24c4675b6a2",
-    "quote_as_of": "2026-07-31T20:00:01Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "f957b9368b132bf3ac34b6cc78c2a7d961d084ec2486b911e090f7cf034897f0",
+    "quote_as_of": "2026-08-10T20:00:02Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "FEMB holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "FEMB holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "FEMB",
-  "updated_at": "2026-08-11T03:59:23Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

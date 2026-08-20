@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-11T07:22:41Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/IBLC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IBLC.json",
     "payload_sha256": "db637f91fd2812da7bcbcf0d71589e2d0aa295505c4090ac5cfb6f6615d93783",
     "quote_as_of": "2026-08-10T19:56:57Z",
     "source_as_of": "2026-08-10"
@@ -65,12 +65,12 @@
     "shard": "30/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-02T23:02:41Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-11T07:22:41Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/IBLC.json",
-    "payload_sha256": "76ca2d4b76fe212834b63e30db5d4c8ce3f92424fc2b12f46ad9934f79431027",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "db637f91fd2812da7bcbcf0d71589e2d0aa295505c4090ac5cfb6f6615d93783",
+    "quote_as_of": "2026-08-10T19:56:57Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "IBLC holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "IBLC holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "IBLC",
-  "updated_at": "2026-08-11T13:36:55Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

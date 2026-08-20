@@ -57,7 +57,7 @@
   "current": {
     "fetched_at": "2026-08-10T02:34:39Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/TLDR.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/TLDR.json",
     "payload_sha256": "1b5cff90b7b6bd2ece0d0e283e9733ec32e8a8503d38b1ed4e1b4e5b6ec0cbee",
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
@@ -79,12 +79,12 @@
     "shard": "12/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T09:24:46Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-08-10T02:34:39Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/TLDR.json",
-    "payload_sha256": "3e3994d8c71fc401bfbda3f04da108a3abceddf46b08e88fba904b27bec2ab67",
-    "quote_as_of": "2026-07-08T19:47:31Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "1b5cff90b7b6bd2ece0d0e283e9733ec32e8a8503d38b1ed4e1b4e5b6ec0cbee",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -98,19 +98,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-07-17T00:15:36Z",
-    "classified_run_id": "29544227703",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "TLDR holds LKG because Yahoo source date 2026-07-08 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "TLDR holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-08"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "TLDR",
-  "updated_at": "2026-08-10T02:30:39Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

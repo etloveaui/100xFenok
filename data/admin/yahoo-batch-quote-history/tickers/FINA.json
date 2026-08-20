@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-11T04:00:34Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/FINA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FINA.json",
     "payload_sha256": "330da69de1195542cf7ee87b3bc8f3c02855b5b13127c4e91737210a10d29776",
     "quote_as_of": "2026-08-10T19:27:04Z",
     "source_as_of": "2026-08-10"
@@ -65,12 +65,12 @@
     "shard": "32/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T18:31:14Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-11T04:00:34Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/FINA.json",
-    "payload_sha256": "89144bddccbc68bd18cd959476cbe0a2281d0d2363261e5836b93557c01b14aa",
-    "quote_as_of": "2026-07-31T14:54:41Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "330da69de1195542cf7ee87b3bc8f3c02855b5b13127c4e91737210a10d29776",
+    "quote_as_of": "2026-08-10T19:27:04Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "FINA holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "FINA holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "FINA",
-  "updated_at": "2026-08-11T17:08:04Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

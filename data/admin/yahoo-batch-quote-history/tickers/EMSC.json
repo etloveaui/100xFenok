@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-07T00:56:05Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/EMSC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EMSC.json",
     "payload_sha256": "03792e417349a0fb449792c6482933e3e21e3fb4ff0c504c07e971d90f9a6c7c",
     "quote_as_of": "2026-08-06T20:00:00Z",
     "source_as_of": "2026-08-06"
@@ -65,12 +65,12 @@
     "shard": "70/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-24T23:12:56Z",
-    "history_as_of": "2026-07-24",
+    "fetched_at": "2026-08-07T00:56:05Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EMSC.json",
-    "payload_sha256": "6e8c63792ddc60837c0d548655673a546106086da5cc2f389ab7dda4f7271cf6",
-    "quote_as_of": "2026-07-24T20:00:00Z",
-    "source_as_of": "2026-07-24"
+    "payload_sha256": "03792e417349a0fb449792c6482933e3e21e3fb4ff0c504c07e971d90f9a6c7c",
+    "quote_as_of": "2026-08-06T20:00:00Z",
+    "source_as_of": "2026-08-06"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-04T00:18:08Z",
-    "classified_run_id": "30865042195",
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "EMSC holds LKG because Yahoo source date 2026-07-24 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "EMSC holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-06"
   },
   "ticker": "EMSC",
-  "updated_at": "2026-08-07T00:55:33Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

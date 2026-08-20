@@ -70,7 +70,7 @@
   "current": {
     "fetched_at": "2026-08-09T15:43:08Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/SHY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SHY.json",
     "payload_sha256": "e5e8bfda03acd84238f13fcc3c077ce0a443c998b4e7e7f25991342a9f8c2f4e",
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
@@ -93,12 +93,12 @@
     "shard": "14/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-28T00:13:14Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-08-09T15:43:08Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/SHY.json",
-    "payload_sha256": "ca7ae9d948a51f7ac6f274a6e748cf2b3d35d2641a2b62cf7b73c02a8634afc2",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "e5e8bfda03acd84238f13fcc3c077ce0a443c998b4e7e7f25991342a9f8c2f4e",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -112,19 +112,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "SHY holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "SHY holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "SHY",
-  "updated_at": "2026-08-10T05:42:10Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-09T09:02:31Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/MSOL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MSOL.json",
     "payload_sha256": "387b1e02a7d7138e3946a8d26c63b02652802a384720dad57cbd5062ab967ed3",
     "quote_as_of": "2026-08-07T19:52:57Z",
     "source_as_of": "2026-08-07"
@@ -38,6 +38,14 @@
     "schedule": "7 8 * * 0-5",
     "shard": "4/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-09T09:02:31Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MSOL.json",
+    "payload_sha256": "387b1e02a7d7138e3946a8d26c63b02652802a384720dad57cbd5062ab967ed3",
+    "quote_as_of": "2026-08-07T19:52:57Z",
+    "source_as_of": "2026-08-07"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "MSOL holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
   "ticker": "MSOL",
-  "updated_at": "2026-08-09T08:59:39Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

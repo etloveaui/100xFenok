@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-07T17:04:32Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/IYK.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IYK.json",
     "payload_sha256": "728b093d3926e230068d0f6e1b80dbf48a0a97062759631af2b89d676060ef94",
     "quote_as_of": "2026-08-07T17:00:58Z",
     "source_as_of": "2026-08-07"
@@ -38,6 +38,14 @@
     "schedule": "7 16 * * 0-5",
     "shard": "68/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-07T17:04:32Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IYK.json",
+    "payload_sha256": "728b093d3926e230068d0f6e1b80dbf48a0a97062759631af2b89d676060ef94",
+    "quote_as_of": "2026-08-07T17:00:58Z",
+    "source_as_of": "2026-08-07"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "IYK holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
   "ticker": "IYK",
-  "updated_at": "2026-08-07T17:02:12Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

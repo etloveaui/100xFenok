@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-09T03:53:39Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/APXM.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/APXM.json",
     "payload_sha256": "b8fd87aba8a8aba1bbc539380d788f1f703f13d57c6bcd1b754653d841f5e741",
     "quote_as_of": "2026-08-07T18:47:05Z",
     "source_as_of": "2026-08-07"
@@ -65,12 +65,12 @@
     "shard": "1/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-05T12:12:19Z",
-    "history_as_of": "2026-08-04",
+    "fetched_at": "2026-08-09T03:53:39Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/APXM.json",
-    "payload_sha256": "5849caba0c8b02069828fdbf01b3de15478eca868d3d198b3eaeed85434ac82d",
-    "quote_as_of": "2026-07-22T14:31:31Z",
-    "source_as_of": "2026-07-22T14:31:31Z"
+    "payload_sha256": "b8fd87aba8a8aba1bbc539380d788f1f703f13d57c6bcd1b754653d841f5e741",
+    "quote_as_of": "2026-08-07T18:47:05Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-08-05T14:29:49Z",
-    "classified_run_id": "31015333400",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "APXM holds LKG because Yahoo source date 2026-07-22T14:31:31Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "APXM holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-22T14:31:31Z"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "APXM",
-  "updated_at": "2026-08-09T03:52:19Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-07T09:15:18Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/CAML.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CAML.json",
     "payload_sha256": "471dd47d94c327d57349b2554ee8c203475084586d353b3fb39bad4b466a2a0c",
     "quote_as_of": "2026-08-06T19:59:50Z",
     "source_as_of": "2026-08-06"
@@ -52,12 +52,12 @@
     "shard": "64/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-28T23:09:26Z",
-    "history_as_of": "2026-07-28",
+    "fetched_at": "2026-08-07T09:15:18Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CAML.json",
-    "payload_sha256": "3b04f00e37da6dbf4ad56d08f3596c75556eac121ebc5da18a8c2394658572bc",
-    "quote_as_of": "2026-07-28T19:59:50Z",
-    "source_as_of": "2026-07-28"
+    "payload_sha256": "471dd47d94c327d57349b2554ee8c203475084586d353b3fb39bad4b466a2a0c",
+    "quote_as_of": "2026-08-06T19:59:50Z",
+    "source_as_of": "2026-08-06"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-06T00:14:28Z",
-    "classified_run_id": "31058959670",
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CAML holds LKG because Yahoo source date 2026-07-28 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CAML holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
   "ticker": "CAML",
-  "updated_at": "2026-08-07T09:14:45Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

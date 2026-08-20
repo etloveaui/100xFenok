@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-10T02:31:43Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/BSCZ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BSCZ.json",
     "payload_sha256": "e05248c8f6354ddbaff0d86cdef082d5ab128db1d07e0212f87a14411db6f9d9",
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
@@ -52,12 +52,12 @@
     "shard": "12/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-30T23:35:12Z",
-    "history_as_of": "2026-07-30",
+    "fetched_at": "2026-08-10T02:31:43Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BSCZ.json",
-    "payload_sha256": "a06698f9759cbeb6a7f72687bc0be0ec9fc7c1130f40ff5ecab45945019693c0",
-    "quote_as_of": "2026-07-30T20:00:00Z",
-    "source_as_of": "2026-07-30"
+    "payload_sha256": "e05248c8f6354ddbaff0d86cdef082d5ab128db1d07e0212f87a14411db6f9d9",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-10T02:30:39Z",
-    "classified_run_id": "31349898588",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BSCZ holds LKG because Yahoo source date 2026-07-30 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BSCZ holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-30"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "BSCZ",
-  "updated_at": "2026-08-10T02:30:39Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

@@ -44,7 +44,7 @@
   "current": {
     "fetched_at": "2026-08-10T19:10:50Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/SPYA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SPYA.json",
     "payload_sha256": "7ea41ae8f9b22fffd1322335c27c0753b831064ac7ff389729d024ca32bfe388",
     "quote_as_of": "2026-08-10T13:46:07Z",
     "source_as_of": "2026-08-10"
@@ -66,12 +66,12 @@
     "shard": "21/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T08:03:18Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T19:10:50Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/SPYA.json",
-    "payload_sha256": "fcdb96541b3e64d2a8af911f908e63d8c8209d6d5ee57b23a99299df970e2a9a",
-    "quote_as_of": "2026-06-30T15:16:43Z",
-    "source_as_of": "2026-06-30T15:16:43Z"
+    "payload_sha256": "7ea41ae8f9b22fffd1322335c27c0753b831064ac7ff389729d024ca32bfe388",
+    "quote_as_of": "2026-08-10T13:46:07Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -85,19 +85,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 28,
-    "classified_at": "2026-08-10T09:46:13Z",
-    "classified_run_id": "31376005252",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "SPYA holds LKG because Yahoo source date 2026-06-30T15:16:43Z is 28 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "SPYA holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30T15:16:43Z"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "SPYA",
-  "updated_at": "2026-08-10T19:09:16Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

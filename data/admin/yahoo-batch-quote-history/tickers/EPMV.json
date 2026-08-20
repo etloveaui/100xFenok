@@ -141,7 +141,7 @@
   "current": {
     "fetched_at": "2026-08-10T17:05:00Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/EPMV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EPMV.json",
     "payload_sha256": "93edd5ae900a75860f0256348fbee5ef675c1411262118abf9b176827082f90c",
     "quote_as_of": "2026-08-10T13:46:03Z",
     "source_as_of": "2026-08-10"
@@ -175,12 +175,12 @@
     "run_id": "31147671265"
   },
   "lkg": {
-    "fetched_at": "2026-08-05T19:49:42Z",
-    "history_as_of": "2026-08-05",
+    "fetched_at": "2026-08-10T17:05:00Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EPMV.json",
-    "payload_sha256": "d2077dfb28e49bd80bf5e101af794a792c6af7ff8ea3ce32b1ebe0a4b00339fa",
-    "quote_as_of": "2026-08-05T13:46:04Z",
-    "source_as_of": "2026-08-05"
+    "payload_sha256": "93edd5ae900a75860f0256348fbee5ef675c1411262118abf9b176827082f90c",
+    "quote_as_of": "2026-08-10T13:46:03Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -199,19 +199,19 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31411954324",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 14,
-    "classified_at": "2026-07-21T00:18:00Z",
-    "classified_run_id": "29789662473",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "EPMV holds LKG because Yahoo source date 2026-06-30T19:35:38Z is 14 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "EPMV holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-30T19:35:38Z"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "EPMV",
-  "updated_at": "2026-08-10T17:04:11Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

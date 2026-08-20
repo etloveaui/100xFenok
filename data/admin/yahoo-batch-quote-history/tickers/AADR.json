@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-10T11:21:27Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/AADR.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AADR.json",
     "payload_sha256": "4800b8cd633874a9821fcb0cd9e119ac19496bc29e3551c3e339fcf2746e55cd",
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
@@ -65,12 +65,12 @@
     "shard": "17/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-24T23:13:20Z",
-    "history_as_of": "2026-07-24",
+    "fetched_at": "2026-08-10T11:21:27Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AADR.json",
-    "payload_sha256": "1a05261fcc4c5b5cfff80f9a2f41f32b7b5f8e8a4bed239a295433aa87b437cf",
-    "quote_as_of": "2026-07-24T20:00:00Z",
-    "source_as_of": "2026-07-24"
+    "payload_sha256": "4800b8cd633874a9821fcb0cd9e119ac19496bc29e3551c3e339fcf2746e55cd",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-04T00:18:08Z",
-    "classified_run_id": "30865042195",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AADR holds LKG because Yahoo source date 2026-07-24 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AADR holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "AADR",
-  "updated_at": "2026-08-10T11:19:59Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

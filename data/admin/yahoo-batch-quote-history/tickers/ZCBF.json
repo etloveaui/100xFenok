@@ -99,7 +99,7 @@
   "current": {
     "fetched_at": "2026-08-10T15:11:38Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/ZCBF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ZCBF.json",
     "payload_sha256": "75e092b6c0244f512e23e3d1f4a60b6edefa60f39bf2a1581ed5e979bf063e79",
     "quote_as_of": "2026-08-10T13:46:09Z",
     "source_as_of": "2026-08-10"
@@ -121,12 +121,12 @@
     "shard": "19/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T05:16:38Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T15:11:38Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ZCBF.json",
-    "payload_sha256": "dfa50d7b48bf9685b5678805a159a196d9388bc1a04086c32d93b54304b83ec7",
-    "quote_as_of": "2026-07-22T14:36:47Z",
-    "source_as_of": "2026-07-22T14:36:47Z"
+    "payload_sha256": "75e092b6c0244f512e23e3d1f4a60b6edefa60f39bf2a1581ed5e979bf063e79",
+    "quote_as_of": "2026-08-10T13:46:09Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -140,19 +140,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 12,
-    "classified_at": "2026-08-09T07:09:35Z",
-    "classified_run_id": "31300442711",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ZCBF holds LKG because Yahoo source date 2026-07-22T14:36:47Z is 12 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ZCBF holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-22T14:36:47Z"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "ZCBF",
-  "updated_at": "2026-08-10T15:10:15Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

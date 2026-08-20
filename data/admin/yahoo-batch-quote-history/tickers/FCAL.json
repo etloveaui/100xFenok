@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-11T02:24:42Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/FCAL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FCAL.json",
     "payload_sha256": "44ce664516083837e9c57101e5aa6ed66494aed2d6050a2b9fe96081329c13d4",
     "quote_as_of": "2026-08-10T20:00:02Z",
     "source_as_of": "2026-08-10"
@@ -65,12 +65,12 @@
     "shard": "30/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T17:35:15Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-11T02:24:42Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/FCAL.json",
-    "payload_sha256": "cd9f07d854887bff534f0c2ff10fd012d5192054a06b86687f83c870fe759f90",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "44ce664516083837e9c57101e5aa6ed66494aed2d6050a2b9fe96081329c13d4",
+    "quote_as_of": "2026-08-10T20:00:02Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "FCAL holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "FCAL holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "FCAL",
-  "updated_at": "2026-08-11T13:36:55Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

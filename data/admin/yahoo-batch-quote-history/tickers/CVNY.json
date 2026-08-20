@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-07T11:06:26Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/CVNY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CVNY.json",
     "payload_sha256": "4c2a94b3c520ff04e40186e1637bff550a024fddace9fa81ff45d33679086722",
     "quote_as_of": "2026-08-06T19:33:22Z",
     "source_as_of": "2026-08-06"
@@ -65,12 +65,12 @@
     "shard": "68/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-28T23:10:26Z",
-    "history_as_of": "2026-07-28",
+    "fetched_at": "2026-08-07T11:06:26Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CVNY.json",
-    "payload_sha256": "7bae7f590baec716bfb29372e13570624449daa7a8f88a1db33da35d0b3df41e",
-    "quote_as_of": "2026-07-28T19:59:53Z",
-    "source_as_of": "2026-07-28"
+    "payload_sha256": "4c2a94b3c520ff04e40186e1637bff550a024fddace9fa81ff45d33679086722",
+    "quote_as_of": "2026-08-06T19:33:22Z",
+    "source_as_of": "2026-08-06"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-06T00:14:28Z",
-    "classified_run_id": "31058959670",
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CVNY holds LKG because Yahoo source date 2026-07-28 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CVNY holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-06"
   },
   "ticker": "CVNY",
-  "updated_at": "2026-08-07T17:02:12Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

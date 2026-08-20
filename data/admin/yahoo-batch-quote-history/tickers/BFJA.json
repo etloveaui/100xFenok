@@ -155,7 +155,7 @@
   "current": {
     "fetched_at": "2026-08-10T19:10:07Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/BFJA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BFJA.json",
     "payload_sha256": "8603a0d33f0b9da7bc4ff875d40cb0dd11bd4571b5b38060f8c0e14fded564b5",
     "quote_as_of": "2026-08-10T13:46:02Z",
     "source_as_of": "2026-08-10"
@@ -189,12 +189,12 @@
     "run_id": "31182487397"
   },
   "lkg": {
-    "fetched_at": "2026-08-05T14:30:03Z",
-    "history_as_of": "2026-08-05",
+    "fetched_at": "2026-08-10T19:10:07Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BFJA.json",
-    "payload_sha256": "0ae6c0cf0a8b5351bb102c490081f7d35d7f4ac191ff239395d340c618ed6bd6",
-    "quote_as_of": "2026-08-05T13:46:02Z",
-    "source_as_of": "2026-08-05"
+    "payload_sha256": "8603a0d33f0b9da7bc4ff875d40cb0dd11bd4571b5b38060f8c0e14fded564b5",
+    "quote_as_of": "2026-08-10T13:46:02Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -213,19 +213,19 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31422533403",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-20T23:03:20Z",
-    "classified_run_id": "29785605821",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BFJA holds LKG because Yahoo source date 2026-07-06T15:42:23Z is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BFJA holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-06T15:42:23Z"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "BFJA",
-  "updated_at": "2026-08-10T19:09:16Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

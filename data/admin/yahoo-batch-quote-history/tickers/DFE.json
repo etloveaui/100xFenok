@@ -56,7 +56,7 @@
   "current": {
     "fetched_at": "2026-08-11T03:59:53Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/DFE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DFE.json",
     "payload_sha256": "4f96909f35d3f2aa1a8340250ce2f72a903c515ed9b297379f6ac4a8d5514a72",
     "quote_as_of": "2026-08-10T20:00:00Z",
     "source_as_of": "2026-08-10"
@@ -78,12 +78,12 @@
     "shard": "26/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T18:31:47Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-11T03:59:53Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DFE.json",
-    "payload_sha256": "ebaa24d5950555139a31f1b79810382a4c5132fb812b7b84f37f0d3c3da90456",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "4f96909f35d3f2aa1a8340250ce2f72a903c515ed9b297379f6ac4a8d5514a72",
+    "quote_as_of": "2026-08-10T20:00:00Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -97,19 +97,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DFE holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DFE holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "DFE",
-  "updated_at": "2026-08-11T05:18:59Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

@@ -168,7 +168,7 @@
   "current": {
     "fetched_at": "2026-08-10T19:10:03Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/ASTT.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ASTT.json",
     "payload_sha256": "5d6a0014646e8a925eb483f6127ae4ecb6fa7a16299295e9ad30a0ac29e4430d",
     "quote_as_of": "2026-08-10T13:46:02Z",
     "source_as_of": "2026-08-10"
@@ -202,12 +202,12 @@
     "run_id": "31290251671"
   },
   "lkg": {
-    "fetched_at": "2026-08-05T14:31:01Z",
-    "history_as_of": "2026-08-05",
+    "fetched_at": "2026-08-10T19:10:03Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ASTT.json",
-    "payload_sha256": "c0e0636dcd6f51568dae5f134dc175d509775a9e43a975ad115bd698c560e446",
-    "quote_as_of": "2026-08-05T13:46:02Z",
-    "source_as_of": "2026-08-05"
+    "payload_sha256": "5d6a0014646e8a925eb483f6127ae4ecb6fa7a16299295e9ad30a0ac29e4430d",
+    "quote_as_of": "2026-08-10T13:46:02Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -226,19 +226,19 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31422533403",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-30T00:35:13Z",
-    "classified_run_id": "30502016705",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ASTT holds LKG because Yahoo source date 2026-07-20 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ASTT holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "ASTT",
-  "updated_at": "2026-08-10T19:09:16Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

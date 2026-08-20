@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-09T05:17:54Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/CRBN.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CRBN.json",
     "payload_sha256": "6d0388a51b57cfad7f0b7f15d47155d804bd559c3cf462e269c4839281104656",
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
@@ -65,12 +65,12 @@
     "shard": "2/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-28T23:10:07Z",
-    "history_as_of": "2026-07-28",
+    "fetched_at": "2026-08-09T05:17:54Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CRBN.json",
-    "payload_sha256": "448560508e1ec7c60ea226317c29265f66b9af3e07291c75b2fbdae0b917a3ae",
-    "quote_as_of": "2026-07-28T19:52:03Z",
-    "source_as_of": "2026-07-28"
+    "payload_sha256": "6d0388a51b57cfad7f0b7f15d47155d804bd559c3cf462e269c4839281104656",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-06T00:14:28Z",
-    "classified_run_id": "31058959670",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CRBN holds LKG because Yahoo source date 2026-07-28 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CRBN holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-28"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "CRBN",
-  "updated_at": "2026-08-09T05:15:44Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

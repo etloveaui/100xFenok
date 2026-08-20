@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-10T02:31:36Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/BRSV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BRSV.json",
     "payload_sha256": "dfcba5408e70338049e513b16d96dc83cc811bac2bb183a47ecdfd8e35a33ec5",
     "quote_as_of": "2026-08-07T19:59:01Z",
     "source_as_of": "2026-08-07"
@@ -52,12 +52,12 @@
     "shard": "12/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-30T23:35:05Z",
-    "history_as_of": "2026-07-30",
+    "fetched_at": "2026-08-10T02:31:36Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BRSV.json",
-    "payload_sha256": "32743bfe03e06ca785e76adb0c9efa666cae155f684093f1bb9e48671817302a",
-    "quote_as_of": "2026-07-30T19:59:56Z",
-    "source_as_of": "2026-07-30"
+    "payload_sha256": "dfcba5408e70338049e513b16d96dc83cc811bac2bb183a47ecdfd8e35a33ec5",
+    "quote_as_of": "2026-08-07T19:59:01Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -71,19 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-10T02:30:39Z",
-    "classified_run_id": "31349898588",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BRSV holds LKG because Yahoo source date 2026-07-30 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BRSV holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-30"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "BRSV",
-  "updated_at": "2026-08-10T02:30:39Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

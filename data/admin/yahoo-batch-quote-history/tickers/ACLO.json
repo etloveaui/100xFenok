@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-09T22:45:58Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/ACLO.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ACLO.json",
     "payload_sha256": "7eb625a6e00a34516cca596e99f953858ba045bb0bc1c549c4857810e05ff7d2",
     "quote_as_of": "2026-08-07T19:59:41Z",
     "source_as_of": "2026-08-07"
@@ -65,12 +65,12 @@
     "shard": "11/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-24T23:13:34Z",
-    "history_as_of": "2026-07-24",
+    "fetched_at": "2026-08-09T22:45:58Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ACLO.json",
-    "payload_sha256": "07e956999405436260ac19e3c9e6a85024d788ac4d84f9af33ff4431a87b0614",
-    "quote_as_of": "2026-07-24T19:51:04Z",
-    "source_as_of": "2026-07-24"
+    "payload_sha256": "7eb625a6e00a34516cca596e99f953858ba045bb0bc1c549c4857810e05ff7d2",
+    "quote_as_of": "2026-08-07T19:59:41Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-04T00:18:08Z",
-    "classified_run_id": "30865042195",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ACLO holds LKG because Yahoo source date 2026-07-24 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ACLO holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "ACLO",
-  "updated_at": "2026-08-09T22:44:05Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

@@ -121,7 +121,7 @@
   "current": {
     "fetched_at": "2026-08-09T07:13:46Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/NBIZ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NBIZ.json",
     "payload_sha256": "1c82aca25b98bdf06701e283b4c2b8e1f83a8cd596cd16ae4c3cde7aefff2469",
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
@@ -143,12 +143,12 @@
     "shard": "3/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-18T00:44:50Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-09T07:13:46Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/NBIZ.json",
-    "payload_sha256": "226429e4891c3e9d3561de975df8696b8d745c65f028488af7f91bf1a20325dc",
-    "quote_as_of": "2026-07-17T20:00:00Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "1c82aca25b98bdf06701e283b4c2b8e1f83a8cd596cd16ae4c3cde7aefff2469",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -162,19 +162,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-07-28T00:14:11Z",
-    "classified_run_id": "30316637722",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "NBIZ holds LKG because Yahoo source date 2026-07-17 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "NBIZ holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "NBIZ",
-  "updated_at": "2026-08-09T07:09:35Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

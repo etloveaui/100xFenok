@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-01T01:00:13Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30674982988",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "31851174388",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 663,
+      "natural": true,
+      "observed_at": "2026-08-19T23:49:43Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32314261503",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-15T00:05:25Z",
-    "history_as_of": "2026-08-14",
+    "fetched_at": "2026-08-19T23:53:43Z",
+    "history_as_of": "2026-08-19",
     "path": "data/yf/finance/XOM.json",
-    "payload_sha256": "166454063693d2c6487a53e3b97b6923d5580a5e99c07b07df3a17dcf4de23b2",
-    "quote_as_of": "2026-08-14T20:03:49Z",
-    "source_as_of": "2026-08-14"
+    "payload_sha256": "4adde0600a2100a497cfe7b31b94d115629b9f22f64e53adbb711add1ade4a4f",
+    "quote_as_of": "2026-08-19T20:03:33Z",
+    "source_as_of": "2026-08-19"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -199,14 +199,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 818,
+    "latency_ms": 663,
     "natural": true,
-    "observed_at": "2026-08-15T00:00:59Z",
+    "observed_at": "2026-08-19T23:49:43Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31851174388",
+    "run_id": "32314261503",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 2,
@@ -261,14 +261,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-14",
-    "observed_at": "2026-08-15T00:00:59Z",
-    "payload_sha256": "e03f13ebc935618b84b23e9b653dbcfbdbab54e5ef45f245ef52bd119c6e5f36",
-    "quote_as_of": "2026-08-14T20:03:49Z",
+    "history_as_of": "2026-08-19",
+    "observed_at": "2026-08-19T23:49:43Z",
+    "payload_sha256": "0aec9b169deb9698cfca3829a7740ca27ec20537aece050d273531faeb9cc25f",
+    "quote_as_of": "2026-08-19T20:03:33Z",
     "run_attempt": 1,
-    "run_id": "31851174388",
+    "run_id": "32314261503",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-14"
+    "source_as_of": "2026-08-19"
   },
   "recovered_at": "2026-07-18T00:37:10Z",
   "recovered_from_run_id": "29544227703",
@@ -279,5 +279,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "XOM",
-  "updated_at": "2026-08-15T00:00:59Z"
+  "updated_at": "2026-08-19T23:49:43Z"
 }

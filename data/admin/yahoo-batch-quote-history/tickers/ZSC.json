@@ -126,7 +126,7 @@
   "current": {
     "fetched_at": "2026-08-10T20:52:04Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/ZSC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ZSC.json",
     "payload_sha256": "b8612af330d3b7cea1bb35beb22231e7214d80e661b69e329e695d7a9ed6c179",
     "quote_as_of": "2026-08-10T15:24:53Z",
     "source_as_of": "2026-08-10"
@@ -148,12 +148,12 @@
     "shard": "22/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T03:53:04Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T20:52:04Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ZSC.json",
-    "payload_sha256": "b989926fd5d7d29b40254e9807543178aedec8ef7a40adebd71775cd22cbbe10",
-    "quote_as_of": "2026-07-22T18:50:03Z",
-    "source_as_of": "2026-07-22T18:50:03Z"
+    "payload_sha256": "b8612af330d3b7cea1bb35beb22231e7214d80e661b69e329e695d7a9ed6c179",
+    "quote_as_of": "2026-08-10T15:24:53Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -167,19 +167,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 12,
-    "classified_at": "2026-08-09T05:15:44Z",
-    "classified_run_id": "31296241377",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ZSC holds LKG because Yahoo source date 2026-07-22T18:50:03Z is 12 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ZSC holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-22T18:50:03Z"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "ZSC",
-  "updated_at": "2026-08-10T20:51:42Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-10T09:48:52Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/IBGA.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IBGA.json",
     "payload_sha256": "a52188676c397ffec9d248f88f08ea5fe584de6a6add9724fe4e188dd4b00fdd",
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
@@ -38,6 +38,14 @@
     "schedule": "7 8 * * 0-5",
     "shard": "16/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-10T09:48:52Z",
+    "history_as_of": "2026-08-07",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IBGA.json",
+    "payload_sha256": "a52188676c397ffec9d248f88f08ea5fe584de6a6add9724fe4e188dd4b00fdd",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "IBGA holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-07"
+  },
   "ticker": "IBGA",
-  "updated_at": "2026-08-10T09:46:13Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

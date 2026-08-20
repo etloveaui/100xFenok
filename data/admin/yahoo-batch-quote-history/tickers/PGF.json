@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-11T05:21:38Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/PGF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PGF.json",
     "payload_sha256": "0d4752d61358b664f7ca271bffb0a5ef7c6859046a26f3d765c76b2e41d27d60",
     "quote_as_of": "2026-08-10T19:59:54Z",
     "source_as_of": "2026-08-10"
@@ -38,6 +38,14 @@
     "schedule": "7 4 * * 0-5",
     "shard": "26/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-11T05:21:38Z",
+    "history_as_of": "2026-08-10",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PGF.json",
+    "payload_sha256": "0d4752d61358b664f7ca271bffb0a5ef7c6859046a26f3d765c76b2e41d27d60",
+    "quote_as_of": "2026-08-10T19:59:54Z",
+    "source_as_of": "2026-08-10"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "PGF holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-10"
+  },
   "ticker": "PGF",
-  "updated_at": "2026-08-11T05:18:59Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

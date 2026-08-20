@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-07T03:17:05Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/PWV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PWV.json",
     "payload_sha256": "e3955c2ba5d82648cdcc96fa69e45adf7d2369ea05f5468607e6db77721443e0",
     "quote_as_of": "2026-08-06T19:59:59Z",
     "source_as_of": "2026-08-06"
@@ -38,6 +38,14 @@
     "schedule": "7 0 * * 0-5",
     "shard": "60/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-07T03:17:05Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PWV.json",
+    "payload_sha256": "e3955c2ba5d82648cdcc96fa69e45adf7d2369ea05f5468607e6db77721443e0",
+    "quote_as_of": "2026-08-06T19:59:59Z",
+    "source_as_of": "2026-08-06"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "PWV holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-06"
+  },
   "ticker": "PWV",
-  "updated_at": "2026-08-07T03:14:39Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-10T02:32:08Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/ACES.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ACES.json",
     "payload_sha256": "6c71b02321bffd84ed78275883b8e82c554a34164b696e92cb6da82ce64ea0ff",
     "quote_as_of": "2026-08-07T20:00:00Z",
     "source_as_of": "2026-08-07"
@@ -65,12 +65,12 @@
     "shard": "12/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-19T23:01:50Z",
-    "history_as_of": "2026-07-17",
+    "fetched_at": "2026-08-10T02:32:08Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ACES.json",
-    "payload_sha256": "e2aad394fc74239ab1a1a289d6b5c1cf45a17166e1673f5a59098fc7964f916a",
-    "quote_as_of": "2026-07-17T19:59:54Z",
-    "source_as_of": "2026-07-17"
+    "payload_sha256": "6c71b02321bffd84ed78275883b8e82c554a34164b696e92cb6da82ce64ea0ff",
+    "quote_as_of": "2026-08-07T20:00:00Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-07-28T00:14:11Z",
-    "classified_run_id": "30316637722",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ACES holds LKG because Yahoo source date 2026-07-17 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ACES holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-17"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "ACES",
-  "updated_at": "2026-08-10T02:30:39Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

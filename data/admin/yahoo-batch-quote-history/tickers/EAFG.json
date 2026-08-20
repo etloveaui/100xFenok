@@ -85,7 +85,7 @@
   "current": {
     "fetched_at": "2026-08-10T15:10:48Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/EAFG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EAFG.json",
     "payload_sha256": "22e6bcc8f29071a25187d786c5909f3429abd0d6b9d57b7e884832b9ba7a3e16",
     "quote_as_of": "2026-08-10T13:46:03Z",
     "source_as_of": "2026-08-10"
@@ -119,12 +119,12 @@
     "run_id": "31330182297"
   },
   "lkg": {
-    "fetched_at": "2026-08-07T19:10:27Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-10T15:10:48Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EAFG.json",
-    "payload_sha256": "2ed2271140c0e72cbabe048c3ce03e0f13c0426d7f4e93aa416bd00b6242947c",
-    "quote_as_of": "2026-08-07T13:46:04Z",
-    "source_as_of": "2026-08-07"
+    "payload_sha256": "22e6bcc8f29071a25187d786c5909f3429abd0d6b9d57b7e884832b9ba7a3e16",
+    "quote_as_of": "2026-08-10T13:46:03Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -143,19 +143,19 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31401948552",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-06T00:14:28Z",
-    "classified_run_id": "31058959670",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "EAFG holds LKG because Yahoo source date 2026-07-28T17:58:21Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "EAFG holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-28T17:58:21Z"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "EAFG",
-  "updated_at": "2026-08-10T15:10:15Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

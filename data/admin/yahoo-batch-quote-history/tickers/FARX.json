@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-09T20:43:08Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/FARX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FARX.json",
     "payload_sha256": "fbd5b78e642c8ff3b6ec4edae97583ac2d39ec9867f6f7a3d0e9c4c0e1c3d71e",
     "quote_as_of": "2026-08-06T19:56:22Z",
     "source_as_of": "2026-08-06T19:56:22Z"
@@ -65,12 +65,12 @@
     "shard": "10/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T18:43:48Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-09T20:43:08Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/FARX.json",
-    "payload_sha256": "566ca706e87b1d55151dc031c0d3d2ba024d78ccd7aaaa71bb9566fd18dba234",
-    "quote_as_of": "2026-07-29T15:16:05Z",
-    "source_as_of": "2026-07-29T15:16:05Z"
+    "payload_sha256": "fbd5b78e642c8ff3b6ec4edae97583ac2d39ec9867f6f7a3d0e9c4c0e1c3d71e",
+    "quote_as_of": "2026-08-06T19:56:22Z",
+    "source_as_of": "2026-08-06T19:56:22Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06T19:56:22Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-07T00:12:01Z",
-    "classified_run_id": "31133672903",
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "FARX holds LKG because Yahoo source date 2026-07-29T15:16:05Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "FARX holds LKG because Yahoo source date 2026-08-06T19:56:22Z is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-29T15:16:05Z"
+    "source_as_of": "2026-08-06T19:56:22Z"
   },
   "ticker": "FARX",
-  "updated_at": "2026-08-09T20:40:44Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

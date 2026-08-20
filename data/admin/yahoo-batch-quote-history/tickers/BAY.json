@@ -153,7 +153,7 @@
   "current": {
     "fetched_at": "2026-08-11T21:32:30Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/BAY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BAY.json",
     "payload_sha256": "82aef4612129a5390b3af6a0a2a18be510a7ad59ca97e4cb2b2c837ebacd2ad0",
     "quote_as_of": "2026-08-10T18:16:00Z",
     "source_as_of": "2026-08-10"
@@ -175,12 +175,12 @@
     "shard": "34/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-09T07:10:06Z",
-    "history_as_of": "2026-08-07",
+    "fetched_at": "2026-08-11T21:32:30Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BAY.json",
-    "payload_sha256": "948ab6689d10f4d1e2dc41dc53f311bb5b1ee6fb6fa55fffb3691a97a31144ef",
-    "quote_as_of": "2026-06-25T14:15:07Z",
-    "source_as_of": "2026-06-25T14:15:07Z"
+    "payload_sha256": "82aef4612129a5390b3af6a0a2a18be510a7ad59ca97e4cb2b2c837ebacd2ad0",
+    "quote_as_of": "2026-08-10T18:16:00Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -194,19 +194,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 30,
-    "classified_at": "2026-08-09T08:59:39Z",
-    "classified_run_id": "31304762930",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BAY holds LKG because Yahoo source date 2026-06-25T14:15:07Z is 30 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BAY holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-25T14:15:07Z"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "BAY",
-  "updated_at": "2026-08-11T21:30:39Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

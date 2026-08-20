@@ -108,7 +108,7 @@
   "current": {
     "fetched_at": "2026-08-09T03:53:12Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/WEBX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/WEBX.json",
     "payload_sha256": "cc0c08ece277be1f9e2a587e29044472f5bac7486094b2e7d82230a93f6893b9",
     "quote_as_of": "2026-08-07T15:14:40Z",
     "source_as_of": "2026-08-07"
@@ -130,12 +130,12 @@
     "shard": "1/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-04T23:08:33Z",
-    "history_as_of": "2026-08-03",
+    "fetched_at": "2026-08-09T03:53:12Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/WEBX.json",
-    "payload_sha256": "b1a61647a5b74e00d3eb25b5cf02fd8730b90cc50d87fcf52352b05bb6f3e8ff",
-    "quote_as_of": "2026-06-17T19:43:29Z",
-    "source_as_of": "2026-06-17T19:43:29Z"
+    "payload_sha256": "cc0c08ece277be1f9e2a587e29044472f5bac7486094b2e7d82230a93f6893b9",
+    "quote_as_of": "2026-08-07T15:14:40Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -149,19 +149,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 33,
-    "classified_at": "2026-08-05T00:18:15Z",
-    "classified_run_id": "30962773171",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "WEBX holds LKG because Yahoo source date 2026-06-17T19:43:29Z is 33 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "WEBX holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-17T19:43:29Z"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "WEBX",
-  "updated_at": "2026-08-09T03:52:19Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

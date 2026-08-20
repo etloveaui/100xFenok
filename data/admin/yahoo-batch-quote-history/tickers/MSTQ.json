@@ -57,7 +57,7 @@
   "current": {
     "fetched_at": "2026-08-10T17:07:22Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/MSTQ.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MSTQ.json",
     "payload_sha256": "546ae17fe46f1486459ff57111f02188c2553406caf8c935d3f816115cdfaf2c",
     "quote_as_of": "2026-08-10T13:46:06Z",
     "source_as_of": "2026-08-10"
@@ -79,12 +79,12 @@
     "shard": "20/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:03:48Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-10T17:07:22Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MSTQ.json",
-    "payload_sha256": "3932bb5df27c4134a135cd2cb9fa78810f5d322b969e1017a9c329037d14a067",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "546ae17fe46f1486459ff57111f02188c2553406caf8c935d3f816115cdfaf2c",
+    "quote_as_of": "2026-08-10T13:46:06Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -98,19 +98,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "MSTQ holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "MSTQ holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "MSTQ",
-  "updated_at": "2026-08-10T17:04:11Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

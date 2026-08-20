@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-11T13:39:13Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/GGM.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GGM.json",
     "payload_sha256": "044ac4355d4433890365e8fa836dbe6db1202270da5867f46b2f87ffc24c73d9",
     "quote_as_of": "2026-08-10T19:52:48Z",
     "source_as_of": "2026-08-10"
@@ -65,12 +65,12 @@
     "shard": "30/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-02T23:01:27Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-11T13:39:13Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/GGM.json",
-    "payload_sha256": "aa4ad57c12a96d99d05fc6e48a7516ebd2efb42034d2ae2a0dca670e5ce17d66",
-    "quote_as_of": "2026-07-17T18:27:40Z",
-    "source_as_of": "2026-07-17T18:27:40Z"
+    "payload_sha256": "044ac4355d4433890365e8fa836dbe6db1202270da5867f46b2f87ffc24c73d9",
+    "quote_as_of": "2026-08-10T19:52:48Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 11,
-    "classified_at": "2026-08-03T22:58:08Z",
-    "classified_run_id": "30860500094",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "GGM holds LKG because Yahoo source date 2026-07-17T18:27:40Z is 11 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "GGM holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-17T18:27:40Z"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "GGM",
-  "updated_at": "2026-08-11T13:36:55Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

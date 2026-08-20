@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-11T05:19:12Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/COMT.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/COMT.json",
     "payload_sha256": "15f1668481c3b0f9d0fb7935829fa84c1caecc95b11f1a6e37346b506dcd4fb1",
     "quote_as_of": "2026-08-10T20:00:01Z",
     "source_as_of": "2026-08-10"
@@ -65,12 +65,12 @@
     "shard": "27/72"
   },
   "lkg": {
-    "fetched_at": "2026-08-01T18:36:36Z",
-    "history_as_of": "2026-07-31",
+    "fetched_at": "2026-08-11T05:19:12Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/COMT.json",
-    "payload_sha256": "87af3fd0de49cb47dc3fdbe6e8317e6d16871f1f9470d0d64a647d947b102a08",
-    "quote_as_of": "2026-07-31T20:00:00Z",
-    "source_as_of": "2026-07-31"
+    "payload_sha256": "15f1668481c3b0f9d0fb7935829fa84c1caecc95b11f1a6e37346b506dcd4fb1",
+    "quote_as_of": "2026-08-10T20:00:01Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-11T00:02:00Z",
-    "classified_run_id": "31444023136",
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "COMT holds LKG because Yahoo source date 2026-07-31 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "COMT holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-31"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "COMT",
-  "updated_at": "2026-08-11T07:21:44Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

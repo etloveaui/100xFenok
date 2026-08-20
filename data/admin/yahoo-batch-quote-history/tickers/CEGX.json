@@ -108,7 +108,7 @@
   "current": {
     "fetched_at": "2026-08-07T03:16:09Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/CEGX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CEGX.json",
     "payload_sha256": "fb9f577d8eae6693eca1c49fef74b59b051b299fead1afd85c3e0114730b037f",
     "quote_as_of": "2026-08-06T19:59:39Z",
     "source_as_of": "2026-08-06"
@@ -130,12 +130,12 @@
     "shard": "60/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T11:52:20Z",
-    "history_as_of": "2026-06-17",
+    "fetched_at": "2026-08-07T03:16:09Z",
+    "history_as_of": "2026-08-06",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CEGX.json",
-    "payload_sha256": "e9b993a1e7766371b51f5ae1355f12bd6e65b83b642455580d4449c7a8288924",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-17"
+    "payload_sha256": "fb9f577d8eae6693eca1c49fef74b59b051b299fead1afd85c3e0114730b037f",
+    "quote_as_of": "2026-08-06T19:59:39Z",
+    "source_as_of": "2026-08-06"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -149,19 +149,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 16,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CEGX holds LKG because Yahoo source date 2026-06-17 is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CEGX holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-17"
+    "source_as_of": "2026-08-06"
   },
   "ticker": "CEGX",
-  "updated_at": "2026-08-07T03:14:39Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

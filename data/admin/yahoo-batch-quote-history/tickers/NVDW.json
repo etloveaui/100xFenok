@@ -150,7 +150,7 @@
   "current": {
     "fetched_at": "2026-08-11T05:21:28Z",
     "history_as_of": "2026-08-10",
-    "path": "data/yf/finance/NVDW.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NVDW.json",
     "payload_sha256": "039babdd45d0ff9f2882c01494c9a8b76bdc3e1cab64b95ae727e226e73aced1",
     "quote_as_of": "2026-08-10T19:59:57Z",
     "source_as_of": "2026-08-10"
@@ -203,12 +203,12 @@
     "shard": "26/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:04:47Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-11T05:21:28Z",
+    "history_as_of": "2026-08-10",
     "path": "data/admin/yahoo-batch-quote-history/lkg/NVDW.json",
-    "payload_sha256": "141f6f502371d74176a3d6fd59eb511801da7febbaed43dc361d576df5adfa07",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "039babdd45d0ff9f2882c01494c9a8b76bdc3e1cab64b95ae727e226e73aced1",
+    "quote_as_of": "2026-08-10T19:59:57Z",
+    "source_as_of": "2026-08-10"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -222,19 +222,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-10"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "NVDW holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "NVDW holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-10"
   },
   "ticker": "NVDW",
-  "updated_at": "2026-08-11T05:18:59Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

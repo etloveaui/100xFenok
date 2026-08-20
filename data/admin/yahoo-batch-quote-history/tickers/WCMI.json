@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-06T14:36:31Z",
     "history_as_of": "2026-08-06",
-    "path": "data/yf/finance/WCMI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/WCMI.json",
     "payload_sha256": "9aeb6c548005be2c02ad9dbf599ddbdb5d20354264fe6a13fc7490842aa2fca7",
     "quote_as_of": "2026-08-06T14:36:29Z",
     "source_as_of": "2026-08-06"
@@ -38,6 +38,14 @@
     "schedule": "7 12 * * 0-5",
     "shard": "54/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-06T14:36:31Z",
+    "history_as_of": "2026-08-06",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/WCMI.json",
+    "payload_sha256": "9aeb6c548005be2c02ad9dbf599ddbdb5d20354264fe6a13fc7490842aa2fca7",
+    "quote_as_of": "2026-08-06T14:36:29Z",
+    "source_as_of": "2026-08-06"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 9,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "WCMI holds LKG because Yahoo source date 2026-08-06 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-06"
+  },
   "ticker": "WCMI",
-  "updated_at": "2026-08-06T14:33:02Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }

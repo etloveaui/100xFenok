@@ -108,7 +108,7 @@
   "current": {
     "fetched_at": "2026-08-09T03:54:28Z",
     "history_as_of": "2026-08-07",
-    "path": "data/yf/finance/EWV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EWV.json",
     "payload_sha256": "05e8903051417cda34faf1fd372a485bb07b65e59ee96dcebd7ecf4e7762cfd7",
     "quote_as_of": "2026-08-07T19:16:52Z",
     "source_as_of": "2026-08-07"
@@ -130,12 +130,12 @@
     "shard": "1/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T11:56:01Z",
-    "history_as_of": "2026-06-17",
+    "fetched_at": "2026-08-09T03:54:28Z",
+    "history_as_of": "2026-08-07",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EWV.json",
-    "payload_sha256": "b06b0ff33a4a4ce7cd43c36bae1e4fd12c37d2ea280eed22d56aef3309972848",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-17"
+    "payload_sha256": "05e8903051417cda34faf1fd372a485bb07b65e59ee96dcebd7ecf4e7762cfd7",
+    "quote_as_of": "2026-08-07T19:16:52Z",
+    "source_as_of": "2026-08-07"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -149,19 +149,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-07"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 16,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-08-19T23:42:29Z",
+    "classified_run_id": "32314261503",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "EWV holds LKG because Yahoo source date 2026-06-17 is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "EWV holds LKG because Yahoo source date 2026-08-07 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-17"
+    "source_as_of": "2026-08-07"
   },
   "ticker": "EWV",
-  "updated_at": "2026-08-09T03:52:19Z"
+  "updated_at": "2026-08-19T23:42:29Z"
 }
