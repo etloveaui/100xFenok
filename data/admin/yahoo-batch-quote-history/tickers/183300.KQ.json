@@ -3,20 +3,6 @@
     {
       "attempts_used": 1,
       "error": "recovery_not_advanced_by_provider",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 4258,
-      "natural": false,
-      "observed_at": "2026-08-12T07:19:10Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31573324569",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 532,
@@ -191,13 +177,26 @@
       "run_id": "32379322022",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 513,
+      "natural": true,
+      "observed_at": "2026-08-20T23:45:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32429826829",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-19T23:42:56Z",
-    "history_as_of": "2026-08-19",
+    "fetched_at": "2026-08-20T23:45:26Z",
+    "history_as_of": "2026-08-20",
     "path": "data/admin/yahoo-batch-quote-history/lkg/183300.KQ.json",
-    "payload_sha256": "f94e303ff61dd514d36cf2669ffdb8d27b3e550fed559268718d87b7934d10b9",
+    "payload_sha256": "2176e73b4a89bb051526f0dbb2847bc564110181d04e4741b8c42ee8a5d5f2d6",
     "quote_as_of": "2026-07-28T06:30:17Z",
     "source_as_of": "2026-07-28T06:30:17Z"
   },
@@ -207,44 +206,34 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "recovery_not_advanced_by_provider",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 2378,
-    "natural": false,
-    "observed_at": "2026-08-20T14:20:12Z",
-    "outcome": "failed",
+    "latency_ms": 513,
+    "natural": true,
+    "observed_at": "2026-08-20T23:45:05Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32379322022",
-    "schedule": "",
-    "shard": ""
-  },
-  "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "provider_history_as_of": "2026-08-19",
-    "provider_quote_as_of": "2026-07-28T06:30:17Z",
-    "reason": "recovery_not_advanced_by_provider",
-    "run_attempt": 1,
-    "run_id": "32379322022"
+    "run_id": "32429826829",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-08-19T23:42:56Z",
-    "history_as_of": "2026-08-19",
+    "fetched_at": "2026-08-20T23:45:26Z",
+    "history_as_of": "2026-08-20",
     "path": "data/admin/yahoo-batch-quote-history/lkg/183300.KQ.json",
-    "payload_sha256": "f94e303ff61dd514d36cf2669ffdb8d27b3e550fed559268718d87b7934d10b9",
+    "payload_sha256": "2176e73b4a89bb051526f0dbb2847bc564110181d04e4741b8c42ee8a5d5f2d6",
     "quote_as_of": "2026-07-28T06:30:17Z",
     "source_as_of": "2026-07-28T06:30:17Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-19",
-    "observed_at": "2026-08-19T23:42:29Z",
-    "payload_sha256": "48de8ccaa69ab99fc86ec9413e3cde8b701556310fa5a03337dd79c7713fa456",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-20T23:45:05Z",
+    "payload_sha256": "031a5707222e31c0de28568e7927978425358af1f5f9a34211114783132246cd",
     "quote_as_of": "2026-07-28T06:30:17Z",
     "run_attempt": 1,
-    "run_id": "32314261503",
+    "run_id": "32429826829",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-07-28T06:30:17Z"
   },
@@ -252,15 +241,15 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-08-19T23:47:14Z",
-    "classified_run_id": "32314261503",
+    "age_business_days": 16,
+    "classified_at": "2026-08-20T23:45:51Z",
+    "classified_run_id": "32429826829",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "183300.KQ holds LKG because Yahoo source date 2026-07-28T06:30:17Z is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "183300.KQ holds LKG because Yahoo source date 2026-07-28T06:30:17Z is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-07-28T06:30:17Z"
   },
   "ticker": "183300.KQ",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-08-20T23:45:51Z"
 }

@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 951,
-      "natural": true,
-      "observed_at": "2026-08-05T23:14:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31055557073",
-      "schedule": "7 22 * * 0-5",
-      "shard": "47/72"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -188,6 +175,19 @@
       "run_id": "32379322022",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-20T23:45:51Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "32429826829",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
@@ -204,17 +204,17 @@
     "nasdaq_giw_sox"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "attempts_used": 0,
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 2488,
-    "natural": false,
-    "observed_at": "2026-08-20T14:20:12Z",
-    "outcome": "fresh",
+    "latency_ms": 0,
+    "natural": true,
+    "observed_at": "2026-08-20T23:45:51Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "32379322022",
-    "schedule": "",
-    "shard": ""
+    "run_id": "32429826829",
+    "schedule": "20 23 * * 1-5",
+    "shard": "1/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -263,5 +263,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ARM",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-08-20T23:45:51Z"
 }

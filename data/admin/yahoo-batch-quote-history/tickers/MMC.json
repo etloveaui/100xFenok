@@ -7,26 +7,6 @@
       "failures": [
         {
           "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 550,
-      "natural": true,
-      "observed_at": "2026-08-12T00:28:31Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: provider source timestamp is unavailable for MMC",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
           "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
           "source": "provider_safe_call"
         },
@@ -324,6 +304,26 @@
       "run_id": "32379322022",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: provider source timestamp is unavailable for MMC",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 692,
+      "natural": true,
+      "observed_at": "2026-08-20T23:45:05Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "32429826829",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "discovered_from": [
@@ -332,27 +332,22 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "ValueError: provider source timestamp is unavailable for MMC",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
-      {
-        "attempt": 1,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
-      },
       {
         "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 2927,
-    "natural": false,
-    "observed_at": "2026-08-20T14:20:12Z",
+    "latency_ms": 692,
+    "natural": true,
+    "observed_at": "2026-08-20T23:45:05Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "32379322022",
-    "schedule": "",
-    "shard": ""
+    "run_id": "32429826829",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -363,23 +358,18 @@
     "failures": [
       {
         "attempt": 1,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
-      },
-      {
-        "attempt": 1,
         "error": "KeyError=[redacted]",
         "source": "provider_safe_call"
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-08-20T14:20:12Z",
+    "observed_at": "2026-08-20T23:45:05Z",
     "run_attempt": 1,
-    "run_id": "32379322022"
+    "run_id": "32429826829"
   },
   "resolution_state": "unavailable",
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MMC",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-08-20T23:45:05Z"
 }

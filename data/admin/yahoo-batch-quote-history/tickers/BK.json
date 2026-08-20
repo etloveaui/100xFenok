@@ -36,49 +36,6 @@
       ],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-08-12T07:59:44Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31575211549",
-      "schedule": "7 6 * * 0-5",
-      "shard": "39/72"
-    },
-    {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-08-12T09:23:29Z",
       "outcome": "failed",
       "run_attempt": 1,
@@ -561,6 +518,39 @@
       "run_id": "32379322022",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-20T23:45:05Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "32429826829",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -575,15 +565,10 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 3,
+    "attempts_used": 2,
     "error": "empty payload",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
-      {
-        "attempt": 1,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
-      },
       {
         "attempt": 1,
         "error": "KeyError=[redacted]",
@@ -592,11 +577,6 @@
       {
         "attempt": 1,
         "error": "empty payload"
-      },
-      {
-        "attempt": 2,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
       },
       {
         "attempt": 2,
@@ -609,26 +589,21 @@
       }
     ],
     "latency_ms": 0,
-    "natural": false,
-    "observed_at": "2026-08-20T14:20:12Z",
+    "natural": true,
+    "observed_at": "2026-08-20T23:45:05Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "32379322022",
-    "schedule": "",
-    "shard": ""
+    "run_id": "32429826829",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "latest_failure": {
-    "attempts_used": 3,
+    "attempts_used": 2,
     "data_loss": false,
     "deferred_acquisition": false,
     "error": "empty payload",
     "failure_kind": "transient_provider_miss",
     "failures": [
-      {
-        "attempt": 1,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
-      },
       {
         "attempt": 1,
         "error": "KeyError=[redacted]",
@@ -637,11 +612,6 @@
       {
         "attempt": 1,
         "error": "empty payload"
-      },
-      {
-        "attempt": 2,
-        "error": "AttributeError: 'NoneType' object has no attribute 'tail'",
-        "source": "provider_safe_call"
       },
       {
         "attempt": 2,
@@ -654,9 +624,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-20T14:20:12Z",
+    "observed_at": "2026-08-20T23:45:05Z",
     "run_attempt": 1,
-    "run_id": "32379322022"
+    "run_id": "32429826829"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:55Z",
@@ -680,5 +650,5 @@
     "source_as_of": "2026-07-02"
   },
   "ticker": "BK",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-08-20T23:45:05Z"
 }

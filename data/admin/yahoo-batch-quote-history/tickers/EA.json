@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 441,
-      "natural": false,
-      "observed_at": "2026-08-01T21:07:13Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30718396938",
-      "schedule": "",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 464,
@@ -186,6 +173,20 @@
       "run_id": "32379322022",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for EA despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 525,
+      "natural": true,
+      "observed_at": "2026-08-20T23:45:05Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "32429826829",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -202,16 +203,16 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "ValueError: quote_as_of is unavailable for EA despite available history",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 2750,
-    "natural": false,
-    "observed_at": "2026-08-20T14:20:12Z",
+    "latency_ms": 525,
+    "natural": true,
+    "observed_at": "2026-08-20T23:45:05Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "32379322022",
-    "schedule": "",
-    "shard": ""
+    "run_id": "32429826829",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -221,9 +222,9 @@
     "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-08-20T14:20:12Z",
+    "observed_at": "2026-08-20T23:45:05Z",
     "run_attempt": 1,
-    "run_id": "32379322022"
+    "run_id": "32429826829"
   },
   "lkg": {
     "fetched_at": "2026-08-12T00:31:05Z",
@@ -259,5 +260,5 @@
     "source_as_of": "2026-08-04T20:00:00Z"
   },
   "ticker": "EA",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-08-20T23:45:05Z"
 }
