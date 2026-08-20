@@ -35,7 +35,11 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Pin canonical comparison ref
-        run: git fetch --depth=1 origin main:refs/remotes/origin/main
+        # Force the refspec like every other shallow-fetching workflow. Without
+        # the leading plus a depth-1 fetch cannot prove fast-forward against the
+        # ref actions/checkout already set, so any main movement between
+        # checkout and fetch rejects the update and fails the run outright.
+        run: git fetch --depth=1 origin +main:refs/remotes/origin/main
 
       - name: Setup Node.js
         uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
