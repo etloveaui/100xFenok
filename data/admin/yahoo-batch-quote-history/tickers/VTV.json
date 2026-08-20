@@ -30,13 +30,13 @@
   "current": {
     "fetched_at": "2026-08-11T19:58:59Z",
     "history_as_of": "2026-08-11",
-    "path": "data/yf/finance/VTV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VTV.json",
     "payload_sha256": "899c2bbcd0616efc309e3ebb341d1a7bf7b0b1399af8adfc3d2d2dc7081f4c25",
     "quote_as_of": "2026-08-11T19:58:55Z",
     "source_as_of": "2026-08-11"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
@@ -51,6 +51,14 @@
     "schedule": "7 18 * * 0-5",
     "shard": "33/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-11T19:58:59Z",
+    "history_as_of": "2026-08-11",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VTV.json",
+    "payload_sha256": "899c2bbcd0616efc309e3ebb341d1a7bf7b0b1399af8adfc3d2d2dc7081f4c25",
+    "quote_as_of": "2026-08-11T19:58:55Z",
+    "source_as_of": "2026-08-11"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-11"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-20T01:48:52Z",
+    "classified_run_id": "32322266030",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "VTV holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-11"
+  },
   "ticker": "VTV",
-  "updated_at": "2026-08-11T19:54:36Z"
+  "updated_at": "2026-08-20T01:48:52Z"
 }
