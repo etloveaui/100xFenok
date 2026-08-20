@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-20T15:53:06.630Z",
+  "generated_at": "2026-08-20T16:15:01.073Z",
   "status": "open",
-  "open_incident_count": 8,
+  "open_incident_count": 7,
   "open_incidents": [
     {
       "workflow": "fetch-damodaran-shadow.yml",
@@ -30,20 +30,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
-    },
-    {
-      "workflow": "fetch-fred-macro.yml",
-      "label": "Fetch FRED Macro Data",
-      "streak": 10,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "plane_freshness_unavailable",
-        "plane_publish_failed"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
     },
     {
       "workflow": "fetch-fred-yardeni.yml",
@@ -515,14 +501,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32388551464",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32388551464",
-    "observed_at": "2026-08-20T15:53:06.630Z",
-    "event": "schedule",
+    "run_id": "32390694517",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32390694517",
+    "observed_at": "2026-08-20T16:15:01.073Z",
+    "event": "workflow_run",
     "workflows": [
       "fetch-damodaran-shadow.yml",
       "fetch-edgar-filings.yml",
-      "fetch-fred-macro.yml",
       "fetch-fred-yardeni.yml",
       "fetch-yf-finance.yml",
       "slickcharts-history.yml",
