@@ -72,9 +72,23 @@ export const PATH_SOURCE_AGE_DAYS = Object.freeze({
 // value, not a claim that the source is fresh.
 export const SOURCE_AGE_UNBOUNDED_FAMILIES = Object.freeze(["computed-signals"]);
 const SOURCE_AGE_UNBOUNDED_FAMILY_SET = new Set(SOURCE_AGE_UNBOUNDED_FAMILIES);
+// Each limit is set to the family's own declared cadence plus the grace this
+// file already used elsewhere - 40 days for a monthly producer, matching
+// slickcharts-monthly, and 10 for a weekly one, matching the fred-yardeni and
+// slickcharts-weekly heartbeats. They are deliberately NOT set to whatever
+// would make today's measurement pass: damodaran is 10.7 days old against its
+// 10-day limit and stays red, because its 2026-08-15 run genuinely reported no
+// data change to publish and that staleness is real.
 export const FAMILY_SOURCE_AGE_DAYS = Object.freeze({
   "fred-yardeni": 14,
   "slickcharts-monthly": 40,
+  "slickcharts-history": 40,
+  "slickcharts-weekly": 10,
+  "slickcharts-symbols": 10,
+  damodaran: 10,
+  sentiment: 10,
+  "nasdaq-giw-sox": 10,
+  "us-indices-daily": 10,
 });
 
 // ---- Axis 2: immutable publication-heartbeat policy (days) ----
@@ -83,6 +97,10 @@ export const FAMILY_PUBLISHED_AGE_DAYS = Object.freeze({
   "fred-yardeni": 10,
   "slickcharts-weekly": 10,
   "slickcharts-monthly": 40,
+  // Both are monthly producers whose source axis was already relaxed while this
+  // axis was left at the 7-day default, which no monthly cadence can satisfy.
+  "slickcharts-history": 40,
+  "fdic-tier1": 40,
 });
 
 export function resolveSourceAgeDays({ path, family }) {
