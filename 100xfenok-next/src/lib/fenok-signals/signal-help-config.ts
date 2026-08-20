@@ -117,7 +117,7 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   marketSimilarity: makeDefaultEntry(
     "marketSimilarity",
     "동종군 유사도",
-    "동종 섹터·산업군의 대표 종목들과 움직임이 얼마나 비슷한지 산출한 Fenok 파생 축입니다.",
+    "동종 섹터·산업군의 대표 종목들과 움직임이 얼마나 비슷한지 산출한 Fenok 파생 참고축입니다. Long Edge 평균에서는 제외합니다.",
   ),
   sp500TrackingSimilarity: makeDefaultEntry(
     "sp500TrackingSimilarity",
@@ -137,7 +137,7 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   offExchangeActivityProxy: makeDefaultEntry(
     "offExchangeActivityProxy",
     "장외거래",
-    "미국 금융산업규제청(FINRA) 계열 공개 데이터에서 파생한 장외거래 활동 프록시입니다. 실시간 다크풀 의도 신호로 해석하면 안 됩니다.",
+    "미국 금융산업규제청(FINRA) 계열 공개 데이터에서 파생한 장외거래 활동 참고 프록시입니다. Short Edge 평균에서는 제외하며, 실시간 다크풀 의도 신호로 해석하면 안 됩니다.",
   ),
   shortPressureProxy: {
     key: "shortPressureProxy",
@@ -164,7 +164,7 @@ export const FENOK_SIGNAL_HELP_REGISTRY: Record<
   shortTermRelativeStrength: makeDefaultEntry(
     "shortTermRelativeStrength",
     "상대 강도",
-    "로컬 20일·60일 수익률과 S&P500 ETF(SPY) 대비 상대 강도를 이용한 Fenok 파생 프록시입니다. 예측 신호가 아닙니다.",
+    "20/60 trading-day diagnostic proxy로 로컬 수익률과 S&P500 ETF(SPY) 대비 상대 강도를 이용한 Fenok 파생 프록시입니다. 예측 신호가 아닙니다.",
   ),
 };
 

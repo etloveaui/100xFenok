@@ -2421,7 +2421,7 @@ function OwnershipHeroCp({
       <section className="cpw4-hero" id="guru-section" data-stock-tab-card="ownership-guru" data-smart-money-section="diff">
         <div className="cpw4-hero__top">
           <p className="cpw4-hero__eyebrow" data-smart-money-asof>
-            13F 기관 자금 흐름{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}{holderCount > 0 ? ` · 보유 ${holderCount}곳` : ""}
+            13F 기관 자금 흐름{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}
           </p>
           {hasFlow ? (
             <div className="cpw4-own-net">
@@ -2440,7 +2440,7 @@ function OwnershipHeroCp({
         </h2>
         {hasFlow && flowRatio !== null ? (
           <p className="cpw4-hero__sub">
-            추종 대가 {holderCount > 0 ? `${holderCount}곳` : "다수"} 중 {isNetSell ? "매도" : "매수"} 참여가 우세 — {isNetSell ? "매도" : "매수"} 금액이 {isNetSell ? "매수" : "매도"}의 <b>{flowRatio.toFixed(1)}배</b>에 달합니다.
+            추종 대가 중 {isNetSell ? "매도" : "매수"} 참여가 우세 — {isNetSell ? "매도" : "매수"} 금액이 {isNetSell ? "매수" : "매도"}의 <b>{flowRatio.toFixed(1)}배</b>에 달합니다.
           </p>
         ) : null}
         {hasFlow ? (
@@ -2808,7 +2808,7 @@ function FilingsTimelineCp({ filings, heroFiling }: { filings: EdgarKoreanSummar
     return padX + ((t - minT) / span) * (W - padX - 40);
   };
   const periodicLaneY = 52, eightKLaneY = 102;
-  const isPeriodic = (form: string) => form === "10-K" || form === "10-Q" || form === "20-F";
+  const isPeriodic = (form: string) => form === "10-K" || form === "10-Q" || form === "20-F" || form === "40-F";
 
   return (
     <section data-stock-tab-card="filings-timeline">
@@ -2816,7 +2816,7 @@ function FilingsTimelineCp({ filings, heroFiling }: { filings: EdgarKoreanSummar
       <svg className="cpw4-filing-timeline-svg" viewBox={`0 0 ${W} 150`} preserveAspectRatio="xMidYMid meet">
         <line x1={padX} y1={periodicLaneY} x2={W - 40} y2={periodicLaneY} stroke="var(--cp-divider)" strokeWidth={1} />
         <line x1={padX} y1={eightKLaneY} x2={W - 40} y2={eightKLaneY} stroke="var(--cp-divider)" strokeWidth={1} />
-        <text x={4} y={periodicLaneY + 4} fontSize="11.5" fontWeight="700" fill="var(--cp-text-soft)">10-K/Q</text>
+        <text x={4} y={periodicLaneY + 4} fontSize="11.5" fontWeight="700" fill="var(--cp-text-soft)">정기공시</text>
         <text x={4} y={eightKLaneY + 4} fontSize="11.5" fontWeight="700" fill="var(--cp-text-soft)">8-K 등</text>
         {sorted.map((f) => {
           const x = xFor(f.filingDate);
@@ -2837,7 +2837,7 @@ function FilingsTimelineCp({ filings, heroFiling }: { filings: EdgarKoreanSummar
         })}
       </svg>
       <div className="cpw4-filing-timeline-legend">
-        <span><span className="dot" style={{ background: "var(--cp-chart-line-2)" }} />10-K/10-Q 요약 완료</span>
+        <span><span className="dot" style={{ background: "var(--cp-chart-line-2)" }} />10-K/10-Q/20-F/40-F 요약 완료</span>
         <span><span className="dot" style={{ background: "var(--cp-warning)" }} />8-K 등 요약 완료</span>
         <span><span className="dot" style={{ border: "1.6px dashed var(--cp-neutral)", background: "transparent" }} />요약 대기</span>
       </div>
@@ -2849,22 +2849,22 @@ function FilingsTimelineCp({ filings, heroFiling }: { filings: EdgarKoreanSummar
 // W4 Fenok Edge — overview 탭 full-width 섹션
 // ---------------------------------------------------------------------------
 
-interface EdgeAxisRow { key: string; label: string; score: number | null; inverted: boolean; group: "short" | "long" }
+interface EdgeAxisRow { key: string; label: string; score: number | null; inverted: boolean; group: "short" | "long"; referenceOnly?: boolean }
 
-const EDGE_SHORT_AXES: Array<{ key: keyof FenokSignalsSummaryRecord; label: string; inverted?: boolean }> = [
+const EDGE_SHORT_AXES: Array<{ key: keyof FenokSignalsSummaryRecord; label: string; inverted?: boolean; referenceOnly?: boolean }> = [
   { key: "technicalFlowScore", label: "기술·자금 흐름" },
   { key: "volumeLiquidityTrendScore", label: "거래량·유동성" },
   { key: "shortTermRelativeStrengthScore", label: "단기 상대강도" },
   { key: "netOptionsProxyScore", label: "옵션 활동" },
-  { key: "offExchangeActivityProxyScore", label: "장외거래" },
+  { key: "offExchangeActivityProxyScore", label: "장외거래", referenceOnly: true },
   { key: "shortPressureProxyScore", label: "숏압력 완화", inverted: true },
 ];
-const EDGE_LONG_AXES: Array<{ key: keyof FenokSignalsSummaryRecord; label: string; inverted?: boolean }> = [
+const EDGE_LONG_AXES: Array<{ key: keyof FenokSignalsSummaryRecord; label: string; inverted?: boolean; referenceOnly?: boolean }> = [
   { key: "profitabilityScore", label: "수익성" },
   { key: "growthScore", label: "성장" },
   { key: "upsidePotentialScore", label: "상승 잠재력" },
   { key: "downsidePressureScore", label: "하락 압력(안정)", inverted: true },
-  { key: "marketSimilarityScore", label: "동종군 유사성" },
+  { key: "marketSimilarityScore", label: "동종군 유사성", referenceOnly: true },
   { key: "durabilityProfitabilityScore", label: "내구 수익성" },
 ];
 
@@ -2873,7 +2873,14 @@ function buildEdgeAxes(record: FenokSignalsSummaryRecord, config: typeof EDGE_SH
     const raw = record[c.key];
     const rawScore = isFiniteNumber(raw) ? raw : null;
     const score = rawScore !== null && c.inverted ? Math.max(0, Math.min(100, 100 - rawScore)) : rawScore;
-    return { key: c.key as string, label: c.label, score, inverted: Boolean(c.inverted), group };
+    return {
+      key: c.key as string,
+      label: c.label,
+      score,
+      inverted: Boolean(c.inverted),
+      group,
+      referenceOnly: Boolean(c.referenceOnly),
+    };
   });
 }
 
@@ -2900,16 +2907,13 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
     basisCode: shortTerm.basisCode,
   });
 
-  const compositeVerdict = shortR !== null && longR !== null
-    ? (shortR >= longR + 12 ? "단기 신호가 장기 펀더멘털을 앞섭니다" : longR >= shortR + 12 ? "장기 펀더멘털이 단기 신호를 앞섭니다" : "단기 신호와 장기 펀더멘털이 균형을 이룹니다")
-    : "신호 커버리지가 제한적입니다";
-  const compositeTone: "positive" | "warning" | "neutral" = shortR !== null && longR !== null && Math.abs(shortR - longR) >= 12
-    ? (longR > shortR ? "positive" : "warning")
-    : "neutral";
-
-  const rankedAxes = allAxes.filter((a) => a.score !== null).sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-  const best = rankedAxes[0] ?? null;
-  const worst = rankedAxes[rankedAxes.length - 1] ?? null;
+  const rankedShortAxes = shortAxes.filter((a) => a.score !== null && !a.referenceOnly).sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  const rankedLongAxes = longAxes.filter((a) => a.score !== null && !a.referenceOnly).sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  const bestShort = rankedShortAxes[0] ?? null;
+  const worstShort = rankedShortAxes[rankedShortAxes.length - 1] ?? null;
+  const bestLong = rankedLongAxes[0] ?? null;
+  const worstLong = rankedLongAxes[rankedLongAxes.length - 1] ?? null;
+  const longDirectionalCount = rankedLongAxes.length;
   const asOfLabel = fmtKstMinute(record.asOf);
   const coverage = record.lensCoverageRatio ?? record.coverageRatio;
 
@@ -2925,7 +2929,7 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
     const cx = 130, cy = 122, maxR = 76;
     const points = radarPolygonPoints(axes.map((a) => a.score), cx, cy, maxR);
     return (
-      <svg viewBox="0 0 260 244" role="img" aria-label={`${label} 6축 레이더`}>
+      <svg viewBox="0 0 260 244" role="img" aria-label={`${label} 6축 레이더 · 참고축 포함`}>
         {[1, 0.75, 0.5, 0.25].map((level) => (
           <polygon key={level} points={radarPolygonPoints(axes.map(() => 100 * level), cx, cy, maxR)} fill="none" stroke="var(--cp-divider)" strokeWidth={1} opacity={0.55} />
         ))}
@@ -2943,7 +2947,7 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
           const [x, y] = polarPoint(cx, cy, maxR + 28, (360 / axes.length) * i);
           return (
             <text key={`${a.key}-label`} x={x} y={y} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--cp-text-soft)">
-              {a.label} {a.score !== null ? Math.round(a.score) : "—"}
+              {a.label}{a.referenceOnly ? " (참고)" : ""} {a.score !== null ? Math.round(a.score) : "—"}
             </text>
           );
         })}
@@ -2959,7 +2963,7 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
           const tone = axisToneClass(a.score);
           return (
             <div className="cpw4-edge-axis-row" key={a.key}>
-              <span className="cpw4-edge-axis-name">{a.label}</span>
+              <span className="cpw4-edge-axis-name">{a.label}{a.referenceOnly ? " · 참고" : ""}</span>
               <span className="cpw4-edge-axis-track"><span className={`cpw4-edge-axis-fill cpw4-edge-axis-fill--${tone}`} style={{ width: `${a.score ?? 0}%` }} /></span>
               <span className="cpw4-edge-axis-value">{a.score !== null ? Math.round(a.score) : "—"}</span>
               <span className={`cpw4-edge-axis-tone cpw4-edge-axis-tone--${tone}`}>{axisToneLabel(tone)}</span>
@@ -2975,11 +2979,13 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
       <div className="cpw4-edge-head">
         <div>
           <p className="cpw4-hero__eyebrow">FENOK EDGE · 단기·장기 진단</p>
-          <h2 className="cpw4-hero__verdict" style={{ fontSize: 22 }}>{compositeVerdict}</h2>
-          <span className={`cpw4-badge cpw4-badge--${compositeTone}`}>{compositeTone === "positive" ? "장기 우세" : compositeTone === "warning" ? "단기 우세" : "균형"}</span>
+          <h2 className="cpw4-hero__verdict" style={{ fontSize: 22 }}>단기·장기 독립 진단</h2>
+          <span className="cpw4-badge cpw4-badge--neutral">점수는 서로 합산하지 않음</span>
           <p className="cpw4-hero__sub">
-            {best ? <>최강 신호는 <b>{best.label}</b>({Math.round(best.score ?? 0)}), </> : null}
-            {worst ? <>최약 신호는 <b>{worst.label}</b>({Math.round(worst.score ?? 0)})입니다.</> : null}
+            {bestShort ? <>단기 최강은 <b>{bestShort.label}</b>({Math.round(bestShort.score ?? 0)}), </> : null}
+            {worstShort ? <>단기 최약은 <b>{worstShort.label}</b>({Math.round(worstShort.score ?? 0)}), </> : null}
+            {bestLong ? <>장기 최강은 <b>{bestLong.label}</b>({Math.round(bestLong.score ?? 0)}), </> : null}
+            {worstLong ? <>장기 최약은 <b>{worstLong.label}</b>({Math.round(worstLong.score ?? 0)})입니다.</> : null}
           </p>
         </div>
         <div className="cpw4-edge-head-right">
@@ -3001,7 +3007,7 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
             </svg>
             <div className="cpw4-edge-gauge-value" style={{ bottom: 6 }}><strong>{shortR ?? "—"}</strong><span>/100</span></div>
           </div>
-          <p className="cpw4-edge-score-read"><strong>{shortTermBasis.label}</strong>. {shortTermBasis.comparisonNote} {isFiniteNumber(shortTerm.score) ? <>공통 3축만으로는 {Math.round(shortTerm.score)}입니다. </> : null}{worst && worst.group === "short" ? <>가장 약한 축은 <b>{worst.label}</b>({Math.round(worst.score ?? 0)})입니다.</> : null}</p>
+          <p className="cpw4-edge-score-read"><strong>{shortTermBasis.label}</strong> · {shortTermBasis.windowLabel} · {shortTermBasis.sourceInputCount ?? "—"}/3–5 입력. {shortTermBasis.comparisonNote} {shortTermBasis.exclusionNote} {isFiniteNumber(shortTerm.score) ? <>공통 3축만으로는 {Math.round(shortTerm.score)}입니다. </> : null}{worstShort ? <>가장 약한 축은 <b>{worstShort.label}</b>({Math.round(worstShort.score ?? 0)})입니다.</> : null}</p>
         </div>
 
         <div className="cpw4-edge-score-card cpw4-edge-score-card--long">
@@ -3013,31 +3019,33 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
             </svg>
             <div className="cpw4-edge-gauge-value" style={{ bottom: 6 }}><strong>{longR ?? "—"}</strong><span>/100</span></div>
           </div>
-          <p className="cpw4-edge-score-read">장기 6축 평균 신호입니다. {best && best.group === "long" ? <>가장 강한 축은 <b>{best.label}</b>({Math.round(best.score ?? 0)})입니다.</> : null}</p>
+          <p className="cpw4-edge-score-read">장기 5개 방향성 축 평균 · {longDirectionalCount}/5 축입니다. 동종군 유사성은 참고축이며 평균에서 제외합니다. {bestLong ? <>가장 강한 축은 <b>{bestLong.label}</b>({Math.round(bestLong.score ?? 0)})입니다.</> : null}</p>
         </div>
       </div>
 
-      {best || worst ? (
+      {bestShort || worstShort || bestLong || worstLong ? (
         <div className="cpw4-edge-signal-strip">
-          {best ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--best"><span className="tag">최강 신호</span><div className="body"><span className="name">{best.label}</span></div><span className="val">{Math.round(best.score ?? 0)}</span></div> : null}
-          {worst ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--worst"><span className="tag">최약 신호</span><div className="body"><span className="name">{worst.label}</span></div><span className="val">{Math.round(worst.score ?? 0)}</span></div> : null}
+          {bestShort ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--best"><span className="tag">단기 최강</span><div className="body"><span className="name">{bestShort.label}</span></div><span className="val">{Math.round(bestShort.score ?? 0)}</span></div> : null}
+          {worstShort ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--worst"><span className="tag">단기 최약</span><div className="body"><span className="name">{worstShort.label}</span></div><span className="val">{Math.round(worstShort.score ?? 0)}</span></div> : null}
+          {bestLong ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--best"><span className="tag">장기 최강</span><div className="body"><span className="name">{bestLong.label}</span></div><span className="val">{Math.round(bestLong.score ?? 0)}</span></div> : null}
+          {worstLong ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--worst"><span className="tag">장기 최약</span><div className="body"><span className="name">{worstLong.label}</span></div><span className="val">{Math.round(worstLong.score ?? 0)}</span></div> : null}
         </div>
       ) : null}
 
       <div className="cpw4-edge-radar-row">
         <div className="cpw4-edge-radar-card">
-          <div className="cpw4-edge-radar-head"><div className="cpw4-edge-radar-title cpw4-edge-radar-title--short">SHORT-TERM 6축</div><div className="cpw4-edge-radar-sub">기술·거래·강도·옵션·장외·숏완화</div></div>
+          <div className="cpw4-edge-radar-head"><div className="cpw4-edge-radar-title cpw4-edge-radar-title--short">SHORT-TERM 6축 · 진단 프록시</div><div className="cpw4-edge-radar-sub">기술·거래·강도·옵션·장외 참고·숏완화</div></div>
           <div className="cpw4-edge-radar-svg">{renderRadar(shortAxes, "var(--cp-warning)", "단기")}</div>
         </div>
         <div className="cpw4-edge-radar-card">
-          <div className="cpw4-edge-radar-head"><div className="cpw4-edge-radar-title cpw4-edge-radar-title--long">LONG-TERM 6축</div><div className="cpw4-edge-radar-sub">수익성·성장·상방·하방·동종군·내구</div></div>
+          <div className="cpw4-edge-radar-head"><div className="cpw4-edge-radar-title cpw4-edge-radar-title--long">LONG-TERM 5+참고축</div><div className="cpw4-edge-radar-sub">수익성·성장·상방·하방·동종군 참고·내구</div></div>
           <div className="cpw4-edge-radar-svg">{renderRadar(longAxes, "var(--cp-positive)", "장기")}</div>
         </div>
       </div>
 
       <div className="cpw4-edge-axis-groups">
-        {renderAxisGroup(shortAxes, "short", "단기 축 (SHORT · 6)")}
-        {renderAxisGroup(longAxes, "long", "장기 축 (LONG · 6)")}
+        {renderAxisGroup(shortAxes, "short", "단기 축 (SHORT · 6, 장외 참고)")}
+        {renderAxisGroup(longAxes, "long", "장기 축 (LONG · 5 방향성 + 동종군 참고)")}
       </div>
 
       <div className="cpw4-edge-footnote">

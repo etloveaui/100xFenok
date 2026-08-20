@@ -160,7 +160,7 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "connectionCount", label: "연결", align: "left" },
   // Column id kept for saved sorts and shared URLs; the label says what the cell
   // actually renders, which is the two surviving scores, not a single conviction.
-  { key: "fenokConvictionScore", label: "Fenok 단기·장기", align: "right" },
+  { key: "fenokConvictionScore", label: "Short Edge (단기 정렬) · Long Edge 별도", align: "right" },
   { key: "profitabilityScore", label: "수익성", align: "right" },
   { key: "growthScore", label: "성장", align: "right" },
   { key: "technicalFlowScore", label: "기술/자금", align: "right" },
@@ -198,9 +198,27 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
 ];
 
 const FISCAL_PERIOD_LABELS = ["내년(FY+1)", "2년차(FY+2)", "3년차(FY+3)"] as const;
-const FENOK_EDGE_PROXY_LABEL = "Fenok 파생 신호 · 단기·장기 스코어";
+const FENOK_EDGE_PROXY_LABEL = "Fenok 파생 신호 · Short/Long 별도 점수";
 const FENOK_SIGNAL_DISCLOSURE = "Fenok 파생 신호 · 투자 조언이 아닙니다";
-const FENOK_CONVICTION_DISCLOSURE = "Fenok 4개 신호 같은 비중 요약 · 투자 조언이 아닙니다";
+const FENOK_HORIZON_FILTER_DISCLOSURE = "Long Edge와 Short Edge는 서로 다른 기간의 독립 진단입니다 · 투자 조언이 아닙니다";
+const FENOK_SHORT_EDGE_METHODOLOGY = "Short Edge · 20/60 trading-day 진단 프록시 · N/3–5 입력 · 장외거래는 참고축이며 평균에서 제외";
+const FENOK_LONG_EDGE_METHODOLOGY = "Long Edge · 5개 방향성 축 평균 · present N/5 · 동종군 유사도는 참고축";
+
+export function passesFenokEdgeFilters(
+  stock: Pick<ScreenerStock, "fenokShortTermScore" | "fenokLongTermScore">,
+  shortEdgeMinValue: number | null,
+  longEdgeMinValue: number | null,
+): boolean {
+  if (shortEdgeMinValue !== null) {
+    const short = typeof stock.fenokShortTermScore === "number" ? stock.fenokShortTermScore : null;
+    if (short === null || short < shortEdgeMinValue) return false;
+  }
+  if (longEdgeMinValue !== null) {
+    const long = typeof stock.fenokLongTermScore === "number" ? stock.fenokLongTermScore : null;
+    if (long === null || long < longEdgeMinValue) return false;
+  }
+  return true;
+}
 
 function cx(...parts: Array<string | false | undefined>) {
   return parts.filter(Boolean).join(" ");
@@ -1411,8 +1429,10 @@ export default function ScreenerClient({
   const [profitableOnly, setProfitableOnly] = useState(() => initialFilterValues.profitableOnly ?? false);
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">(() => initialFilterValues.bandFilter ?? "");
   const [actionFilter, setActionFilter] = useState<ActionFilter>(() => coerceActionFilter(initialActionFilter || initialFilterValues.actionFilter));
-  const [fenokEdgeMin, setFenokEdgeMin] = useState<FenokEdgeFilter>(() => coerceFenokEdgeFilter(initialFilterValues.fenokEdgeMin));
-  const [convictionMin, setConvictionMin] = useState<ConvictionFilter>(() => coerceConvictionFilter(initialFilterValues.convictionMin));
+  // The URL keys are retained for old deep links, but each key now maps to one
+  // explicit horizon. No legacy key may select the higher of Short and Long.
+  const [shortEdgeMin, setShortEdgeMin] = useState<FenokEdgeFilter>(() => coerceFenokEdgeFilter(initialFilterValues.fenokEdgeMin));
+  const [longEdgeMin, setLongEdgeMin] = useState<ConvictionFilter>(() => coerceConvictionFilter(initialFilterValues.convictionMin));
   const [connectionFilter, setConnectionFilter] = useState<ConnectionFilter>(() => coerceConnectionFilter(initialConnectionFilter || initialFilterValues.connectionFilter));
   const [sortKey, setSortKey] = useState<ScreenerSortKey>(() => initialFilterValues.sortKey ?? "marketCap");
   const [sortDir, setSortDir] = useState<SortDir>(() => initialFilterValues.sortDir ?? "desc");
@@ -1538,8 +1558,8 @@ export default function ScreenerClient({
       profitableOnly,
       bandFilter,
       actionFilter,
-      fenokEdgeMin,
-      convictionMin,
+      fenokEdgeMin: shortEdgeMin,
+      convictionMin: longEdgeMin,
       connectionFilter,
       sortKey,
       sortDir,
@@ -1573,8 +1593,8 @@ export default function ScreenerClient({
     profitableOnly,
     bandFilter,
     actionFilter,
-    fenokEdgeMin,
-    convictionMin,
+    shortEdgeMin,
+    longEdgeMin,
     connectionFilter,
     sortKey,
     sortDir,
@@ -1601,8 +1621,8 @@ export default function ScreenerClient({
     const roeMinValue = parseFilterNumber(roeMin);
     const opmMinValue = parseFilterNumber(opmMin);
     const return12mMinValue = parseFilterNumber(return12mMin);
-    const fenokEdgeMinValue = parseFilterNumber(fenokEdgeMin);
-    const convictionMinValue = parseFilterNumber(convictionMin);
+    const shortEdgeMinValue = parseFilterNumber(shortEdgeMin);
+    const longEdgeMinValue = parseFilterNumber(longEdgeMin);
 
     return stocks.filter((stock) => {
       if (query && !stock.ticker.toLowerCase().includes(query) && !stock.name.toLowerCase().includes(query)) {
@@ -1616,22 +1636,7 @@ export default function ScreenerClient({
       } else if (actionFilter && stock.actionBucket !== actionFilter) {
         return false;
       }
-      if (fenokEdgeMinValue !== null) {
-        // The retired integrated "Fenok Edge" filter compared a single
-        // upside/downside value. It now applies to the HIGHER of the two
-        // remaining scores (단기/장기) — a stated rule, not a new constant.
-        const short = typeof stock.fenokShortTermScore === "number" ? stock.fenokShortTermScore : -1;
-        const long = typeof stock.fenokLongTermScore === "number" ? stock.fenokLongTermScore : -1;
-        if (Math.max(short, long) < fenokEdgeMinValue) return false;
-      }
-      if (convictionMinValue !== null) {
-        // Was comparing the retired integrated score, which meant it silently
-        // decided which rows the list showed. Same rule as the edge filter
-        // above: the higher of the two surviving scores.
-        const shortC = typeof stock.fenokShortTermConvictionScore === "number" ? stock.fenokShortTermConvictionScore : -1;
-        const longC = typeof stock.fenokLongTermConvictionScore === "number" ? stock.fenokLongTermConvictionScore : -1;
-        if (Math.max(shortC, longC) < convictionMinValue) return false;
-      }
+      if (!passesFenokEdgeFilters(stock, shortEdgeMinValue, longEdgeMinValue)) return false;
       if (connectionFilter && !stock.connection?.flags[connectionFilter]) return false;
       if (perMinValue !== null && (stock.per === null || stock.per < perMinValue)) return false;
       if (perMaxValue !== null && (stock.per === null || stock.per <= 0 || stock.per > perMaxValue)) return false;
@@ -1662,7 +1667,7 @@ export default function ScreenerClient({
       }
       return true;
     });
-  }, [stocks, search, selectedSectors, selectedCountries, perMin, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, dividendYieldMax, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, pegMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, fenokEdgeMin, convictionMin, connectionFilter]);
+  }, [stocks, search, selectedSectors, selectedCountries, perMin, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, dividendYieldMax, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, pegMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, shortEdgeMin, longEdgeMin, connectionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -1676,7 +1681,7 @@ export default function ScreenerClient({
     });
   }, [filtered, sortKey, sortDir]);
 
-  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${fenokEdgeMin}|${convictionMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${shortEdgeMin}|${longEdgeMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -1829,8 +1834,8 @@ export default function ScreenerClient({
     setProfitableOnly(false);
     setBandFilter("");
     setActionFilter("");
-    setFenokEdgeMin("");
-    setConvictionMin("");
+    setShortEdgeMin("");
+    setLongEdgeMin("");
     setConnectionFilter("");
     setSortKey("marketCap");
     setSortDir("desc");
@@ -1862,8 +1867,8 @@ export default function ScreenerClient({
       profitableOnly,
       bandFilter,
       actionFilter,
-      fenokEdgeMin,
-      convictionMin,
+      fenokEdgeMin: shortEdgeMin,
+      convictionMin: longEdgeMin,
       connectionFilter,
       sortKey,
       sortDir,
@@ -1896,8 +1901,8 @@ export default function ScreenerClient({
     setProfitableOnly(next.profitableOnly);
     setBandFilter(next.bandFilter);
     setActionFilter(next.actionFilter);
-    setFenokEdgeMin(coerceFenokEdgeFilter(next.fenokEdgeMin));
-    setConvictionMin(coerceConvictionFilter(next.convictionMin));
+    setShortEdgeMin(coerceFenokEdgeFilter(next.fenokEdgeMin));
+    setLongEdgeMin(coerceConvictionFilter(next.convictionMin));
     setConnectionFilter(next.connectionFilter);
     setSortKey(next.sortKey);
     setSortDir(next.sortDir);
@@ -1951,7 +1956,7 @@ export default function ScreenerClient({
     setSavedPresets((prev) => prev.filter((p) => p.name !== name));
   }
 
-  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMin || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || dividendYieldMax || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || pegMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || fenokEdgeMin || convictionMin || connectionFilter);
+  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMin || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || dividendYieldMax || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || pegMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || shortEdgeMin || longEdgeMin || connectionFilter);
 
   const ACTION_FILTER_LABEL: Record<ActionFilter, string> = {
     "": "",
@@ -2038,11 +2043,11 @@ export default function ScreenerClient({
     ...(actionFilter
       ? [{ active: true, label: `신호: ${ACTION_FILTER_LABEL[actionFilter]}`, clear: () => setActionFilter("") }]
       : []),
-    ...(fenokEdgeMin
-      ? [{ active: true, label: `Fenok Edge ≥ ${fenokEdgeMin}`, clear: () => setFenokEdgeMin("") }]
+    ...(shortEdgeMin
+      ? [{ active: true, label: `Short Edge ≥ ${shortEdgeMin}`, clear: () => setShortEdgeMin("") }]
       : []),
-    ...(convictionMin
-      ? [{ active: true, label: `Fenok 컨빅션 ≥ ${convictionMin}`, clear: () => setConvictionMin("") }]
+    ...(longEdgeMin
+      ? [{ active: true, label: `Long Edge ≥ ${longEdgeMin}`, clear: () => setLongEdgeMin("") }]
       : []),
     ...(connectionFilter
       ? [{ active: true, label: `연결: ${CONNECTION_FILTER_LABEL[connectionFilter]}`, clear: () => setConnectionFilter("" as ConnectionFilter) }]
@@ -2061,7 +2066,7 @@ export default function ScreenerClient({
   const valueCount = Number(Boolean(perMin)) + Number(Boolean(perMax)) + Number(Boolean(forwardPerMax)) + Number(Boolean(pbrMin)) + Number(Boolean(pbrMax)) + Number(Boolean(pegMax)) + Number(Boolean(bandFilter)) + Number(profitableOnly);
   const growthCount =
     Number(Boolean(revenueGrowthMin)) + Number(Boolean(epsGrowthMin)) + Number(Boolean(dividendYieldMin)) + Number(Boolean(dividendYieldMax)) + Number(Boolean(return12mMin)) + Number(Boolean(ret3yMin)) + Number(Boolean(ret5yMin));
-  const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(actionFilter)) + Number(Boolean(fenokEdgeMin)) + Number(Boolean(convictionMin)) + Number(Boolean(connectionFilter));
+  const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(actionFilter)) + Number(Boolean(shortEdgeMin)) + Number(Boolean(longEdgeMin)) + Number(Boolean(connectionFilter));
   const activeFilterCount = scaleCount + valueCount + growthCount + qualityCount;
   const pricedCount = sorted.filter((stock) => stock.price !== null).length;
   const missingPriceCount = Math.max(0, sorted.length - pricedCount);
@@ -2070,13 +2075,10 @@ export default function ScreenerClient({
     const withReturn = sorted.filter((stock) => typeof stock.return12m === "number");
     const upCount = withReturn.filter((stock) => (stock.return12m as number) > 0).length;
     const upRatio = withReturn.length > 0 ? Math.round((upCount / withReturn.length) * 100) : 0;
-    const edgeCount = sorted.filter((stock) => {
-      // Same stated rule as the Edge filter: count by the higher of 단기/장기.
-      const short = typeof stock.fenokShortTermScore === "number" ? stock.fenokShortTermScore : -1;
-      const long = typeof stock.fenokLongTermScore === "number" ? stock.fenokLongTermScore : -1;
-      return Math.max(short, long) >= 70;
-    }).length;
-    const edgeRatio = sorted.length > 0 ? Math.round((edgeCount / sorted.length) * 100) : 0;
+    const shortEdgeCount = sorted.filter((stock) => typeof stock.fenokShortTermScore === "number" && stock.fenokShortTermScore >= 70).length;
+    const longEdgeCount = sorted.filter((stock) => typeof stock.fenokLongTermScore === "number" && stock.fenokLongTermScore >= 70).length;
+    const shortEdgeRatio = sorted.length > 0 ? Math.round((shortEdgeCount / sorted.length) * 100) : 0;
+    const longEdgeRatio = sorted.length > 0 ? Math.round((longEdgeCount / sorted.length) * 100) : 0;
     const actionBucketCounts = sorted.reduce<Record<string, number>>((counts, stock) => {
       const dominantActionBucket = stock.actionBucket?.trim() || "none";
       counts[dominantActionBucket] = (counts[dominantActionBucket] ?? 0) + 1;
@@ -2096,8 +2098,10 @@ export default function ScreenerClient({
     return {
       upRatio,
       returnCount: withReturn.length,
-      edgeCount,
-      edgeRatio,
+      shortEdgeCount,
+      longEdgeCount,
+      shortEdgeRatio,
+      longEdgeRatio,
       hasReturns: withReturn.length > 0,
       actionBucketCounts,
       dominantActionBucket,
@@ -2155,9 +2159,9 @@ export default function ScreenerClient({
     },
     {
       key: "edge70",
-      label: "Fenok Edge 70+",
-      active: fenokEdgeMin === "70",
-      onToggle: () => setFenokEdgeMin((v) => (v === "70" ? "" : "70")),
+      label: "Short Edge 70+",
+      active: shortEdgeMin === "70",
+      onToggle: () => setShortEdgeMin((v) => (v === "70" ? "" : "70")),
     },
   ];
 
@@ -2388,7 +2392,7 @@ export default function ScreenerClient({
             신호 분포는 <strong>{heroStats.dominantActionLabel}</strong>{" "}
             <strong>{heroStats.dominantActionCount.toLocaleString("ko-KR")}</strong>개
             <span className="cpw5-verdict__muted">({heroStats.dominantActionRatio}%)</span>가 가장 많고,
-            Fenok Edge 70+ 종목은 <strong className="text-[var(--c-warn)]">{heroStats.edgeCount.toLocaleString("ko-KR")}</strong>개입니다.
+            Short Edge 70+ 종목은 <strong className="text-[var(--c-warn)]">{heroStats.shortEdgeCount.toLocaleString("ko-KR")}</strong>개, Long Edge 70+ 종목은 <strong className="text-[var(--c-positive)]">{heroStats.longEdgeCount.toLocaleString("ko-KR")}</strong>개입니다.
           </p>
           <div className="cpw5-tile-row">
             <div className="cpw5-tile">
@@ -2404,10 +2408,10 @@ export default function ScreenerClient({
               </span>
             </div>
             <div className="cpw5-tile">
-              <span className="cpw5-tile__label">Fenok Edge 70+</span>
-              <strong className="cpw5-tile__value">{heroStats.edgeCount.toLocaleString("ko-KR")}</strong>
+              <span className="cpw5-tile__label">Short / Long Edge 70+</span>
+              <strong className="cpw5-tile__value">{heroStats.shortEdgeCount.toLocaleString("ko-KR")} / {heroStats.longEdgeCount.toLocaleString("ko-KR")}</strong>
               <span className="cpw5-tile__sub">
-                전체 중 {heroStats.edgeRatio}% · 가격 미확인 {missingPriceCount.toLocaleString("ko-KR")}개
+                Short {heroStats.shortEdgeRatio}% · Long {heroStats.longEdgeRatio}% · 가격 미확인 {missingPriceCount.toLocaleString("ko-KR")}개
               </span>
             </div>
           </div>
@@ -2840,32 +2844,34 @@ export default function ScreenerClient({
                     </select>
                   </label>
                   <label className="cp-screener-field">
-                    <span className="cp-screener-field__label">Fenok Edge</span>
+                    <span className="cp-screener-field__label">Short Edge</span>
                     <select
-                      value={fenokEdgeMin}
-                      onChange={(event) => setFenokEdgeMin(event.target.value as FenokEdgeFilter)}
+                      value={shortEdgeMin}
+                      onChange={(event) => setShortEdgeMin(event.target.value as FenokEdgeFilter)}
                       className="cp-screener-control"
                       title={FENOK_EDGE_PROXY_LABEL}
                     >
-                      <option value="">전체 Edge</option>
+                      <option value="">전체 Short Edge</option>
                       <option value="70">70 이상</option>
                       <option value="60">60 이상</option>
                       <option value="50">50 이상</option>
                     </select>
+                    <small className="text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_SHORT_EDGE_METHODOLOGY}</small>
                   </label>
                   <label className="cp-screener-field">
-                    <span className="cp-screener-field__label">Fenok 컨빅션</span>
+                    <span className="cp-screener-field__label">Long Edge</span>
                     <select
-                      value={convictionMin}
-                      onChange={(event) => setConvictionMin(event.target.value as ConvictionFilter)}
+                      value={longEdgeMin}
+                      onChange={(event) => setLongEdgeMin(event.target.value as ConvictionFilter)}
                       className="cp-screener-control"
-                      title={FENOK_CONVICTION_DISCLOSURE}
+                      title={FENOK_HORIZON_FILTER_DISCLOSURE}
                     >
-                      <option value="">전체 컨빅션</option>
+                      <option value="">전체 Long Edge</option>
                       <option value="70">70 이상</option>
                       <option value="60">60 이상</option>
                       <option value="50">50 이상</option>
                     </select>
+                    <small className="text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_LONG_EDGE_METHODOLOGY}</small>
                   </label>
                   <label className="cp-screener-field">
                     <span className="cp-screener-field__label">연결 범위</span>
@@ -3339,32 +3345,34 @@ export default function ScreenerClient({
                   </select>
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Fenok Edge</span>
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Short Edge</span>
                   <select
-                    value={fenokEdgeMin}
-                    onChange={(event) => setFenokEdgeMin(event.target.value as FenokEdgeFilter)}
+                    value={shortEdgeMin}
+                    onChange={(event) => setShortEdgeMin(event.target.value as FenokEdgeFilter)}
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
                     title={FENOK_EDGE_PROXY_LABEL}
                   >
-                    <option value="">전체 Edge</option>
+                    <option value="">전체 Short Edge</option>
                     <option value="70">70 이상</option>
                     <option value="60">60 이상</option>
                     <option value="50">50 이상</option>
                   </select>
+                  <small className="text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_SHORT_EDGE_METHODOLOGY}</small>
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Fenok 컨빅션</span>
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Long Edge</span>
                   <select
-                    value={convictionMin}
-                    onChange={(event) => setConvictionMin(event.target.value as ConvictionFilter)}
+                    value={longEdgeMin}
+                    onChange={(event) => setLongEdgeMin(event.target.value as ConvictionFilter)}
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
-                    title={FENOK_CONVICTION_DISCLOSURE}
+                    title={FENOK_HORIZON_FILTER_DISCLOSURE}
                   >
-                    <option value="">전체 컨빅션</option>
+                    <option value="">전체 Long Edge</option>
                     <option value="70">70 이상</option>
                     <option value="60">60 이상</option>
                     <option value="50">50 이상</option>
                   </select>
+                  <small className="text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_LONG_EDGE_METHODOLOGY}</small>
                 </label>
                 <label className="flex flex-col gap-1">
                   <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">연결 범위</span>
@@ -3724,7 +3732,7 @@ export default function ScreenerClient({
       </section>
 
       <p className="px-1 text-[11px] text-[var(--c-ink-2)]">
-        데이터: 기업 실적 · 밸류에이션 · 가격/배당 히스토리 · 기관 공시 · 통합 스코어. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
+        데이터: 기업 실적 · 밸류에이션 · 가격/배당 히스토리 · 기관 공시 · Short/Long Edge 점수. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
       </p>
     </div>
   );

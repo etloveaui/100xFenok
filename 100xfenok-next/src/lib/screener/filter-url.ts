@@ -235,7 +235,9 @@ export interface ScreenerFilterState {
   profitableOnly: boolean;
   bandFilter: "" | "cheap" | "fair" | "rich";
   actionFilter: ActionFilter;
+  /** State field retained for saved presets; URL serialization uses shortEdgeMin. */
   fenokEdgeMin: FenokEdgeFilter;
+  /** State field retained for saved presets; URL serialization uses longEdgeMin. */
   convictionMin: ConvictionFilter;
   connectionFilter: ConnectionFilter;
   sortKey: ScreenerSortKey;
@@ -305,8 +307,8 @@ export function parseScreenerFilterState(params: Record<string, string | string[
     profitableOnly: parseBoolParam(params.profitable),
     bandFilter: parseBand(firstParam(params.band)),
     actionFilter: coerceActionFilter(firstParam(params.action)),
-    fenokEdgeMin: coerceFenokEdgeFilter(firstParam(params.fenokEdgeMin)),
-    convictionMin: coerceConvictionFilter(firstParam(params.convictionMin ?? params.convMin)),
+    fenokEdgeMin: coerceFenokEdgeFilter(firstParam(params.shortEdgeMin ?? params.fenokEdgeMin)),
+    convictionMin: coerceConvictionFilter(firstParam(params.longEdgeMin ?? params.convictionMin ?? params.convMin)),
     connectionFilter: coerceConnectionFilter(firstParam(params.connection)),
     sortKey: parseSortKey(firstParam(params.sort)),
     sortDir: firstParam(params.dir) === "asc" ? "asc" : "desc",
@@ -340,8 +342,11 @@ const URL_KEYS = [
   "profitable",
   "band",
   "action",
+  "shortEdgeMin",
+  "longEdgeMin",
   "fenokEdgeMin",
   "convictionMin",
+  "convMin",
   "connection",
   "sort",
   "dir",
@@ -384,8 +389,8 @@ export function serializeScreenerFilterState(state: ScreenerFilterState, preferT
   setIfPresent(params, "profitable", state.profitableOnly ? "1" : "");
   setIfPresent(params, "band", state.bandFilter);
   setIfPresent(params, "action", state.actionFilter);
-  setIfPresent(params, "fenokEdgeMin", state.fenokEdgeMin);
-  setIfPresent(params, "convictionMin", state.convictionMin);
+  setIfPresent(params, "shortEdgeMin", state.fenokEdgeMin);
+  setIfPresent(params, "longEdgeMin", state.convictionMin);
   setIfPresent(params, "connection", state.connectionFilter);
   const isDefaultSort = state.sortKey === "marketCap" && state.sortDir === "desc";
   setIfPresent(params, "sort", isDefaultSort ? "" : state.sortKey);

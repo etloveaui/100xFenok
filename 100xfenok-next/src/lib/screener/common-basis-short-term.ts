@@ -23,10 +23,11 @@ export function commonBasisShortTermView(stock: ScreenerStock): CommonBasisShort
 }
 
 export function screenerSortValue(stock: ScreenerStock, sortKey: ScreenerSortKey): number | string | null | undefined {
-  // The column renders the directional short-term score, so it must order by the
-  // same number. It used to sort by the common-basis figure, which the data
-  // contract calls a composition disclosure — the list then displayed one score
-  // and ranked by another, and this is the default sort for the fenokPicks preset.
+  // The legacy column key renders Short and Long separately but sorts by the
+  // explicitly named Short value. It used to sort by the common-basis figure,
+  // which the data contract calls a composition disclosure — the list then
+  // displayed one score and ranked by another, and this is the default sort for
+  // the fenokPicks preset.
   if (sortKey === "fenokConvictionScore") {
     return stock.fenokShortTermConvictionScore;
   }

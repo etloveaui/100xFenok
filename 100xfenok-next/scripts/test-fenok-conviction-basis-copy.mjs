@@ -19,8 +19,10 @@ assert.deepEqual(shortTermCommonBasisCopy("us", {
   inputCount: 3,
   sourceInputCount: 5,
   basisCode: "us_enriched_v1",
+  windowLabel: "20/60 trading-day 진단 프록시",
+  exclusionNote: "장외거래는 참고축이며 단기 점수 평균에서 제외합니다.",
   label: "미국 · 공통 3개 입력 기준",
-  detail: "미국 종목의 단기 점수는 시장 공통 3개 입력으로 계산합니다. 원천 5개 입력 · 산출 기준 us_enriched_v1.",
+  detail: "미국 종목의 20/60 trading-day 진단 프록시는 시장 공통 3개 입력으로 계산합니다. 원천 5개 입력 · 산출 기준 us_enriched_v1.",
   comparisonNote: "공통 3개 입력을 함께 공개하지만, 현재 축의 통화·벤치마크·고정 척도가 달라 시장 간 직접 비교는 보류합니다.",
 });
 assert.deepEqual(shortTermCommonBasisCopy("KOREA", {
@@ -32,8 +34,10 @@ assert.deepEqual(shortTermCommonBasisCopy("KOREA", {
   inputCount: 3,
   sourceInputCount: 3,
   basisCode: "common_3input_v1",
+  windowLabel: "20/60 trading-day 진단 프록시",
+  exclusionNote: "장외거래는 참고축이며 단기 점수 평균에서 제외합니다.",
   label: "한국 · 공통 3개 입력 기준",
-  detail: "한국 종목의 단기 점수는 시장 공통 3개 입력으로 계산합니다. 원천 3개 입력 · 산출 기준 common_3input_v1.",
+  detail: "한국 종목의 20/60 trading-day 진단 프록시는 시장 공통 3개 입력으로 계산합니다. 원천 3개 입력 · 산출 기준 common_3input_v1.",
   comparisonNote: "공통 3개 입력을 함께 공개하지만, 현재 축의 통화·벤치마크·고정 척도가 달라 시장 간 직접 비교는 보류합니다.",
 });
 assert.deepEqual(shortTermCommonBasisCopy(null), {
@@ -42,8 +46,10 @@ assert.deepEqual(shortTermCommonBasisCopy(null), {
   inputCount: 3,
   sourceInputCount: null,
   basisCode: null,
+  windowLabel: "20/60 trading-day 진단 프록시",
+  exclusionNote: "장외거래는 참고축이며 단기 점수 평균에서 제외합니다.",
   label: "시장 미확인 · 공통 3개 입력 기준",
-  detail: "시장 미확인 종목의 단기 점수는 시장 공통 3개 입력으로 계산합니다.",
+  detail: "시장 미확인 종목의 20/60 trading-day 진단 프록시는 시장 공통 3개 입력으로 계산합니다.",
   comparisonNote: "공통 3개 입력을 함께 공개하지만, 현재 축의 통화·벤치마크·고정 척도가 달라 시장 간 직접 비교는 보류합니다.",
 });
 

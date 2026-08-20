@@ -53,14 +53,8 @@ function signalScoreTone(score: number | null): string {
   return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
 }
 
-function edgeLeadLabel(shortScore: number | null, longScore: number | null): string {
-  if (shortScore === null && longScore === null) return "신호 미확인";
-  if (shortScore !== null && longScore !== null) {
-    if (shortScore >= longScore + 5) return "단기 우세";
-    if (longScore >= shortScore + 5) return "장기 우세";
-    return "단기·장기 균형";
-  }
-  return shortScore !== null ? "단기만 확인" : "장기만 확인";
+function edgeLeadLabel(): string {
+  return "단기·장기 독립 진단";
 }
 
 function formatSignalCoverage(value: number | null | undefined): string {
@@ -364,7 +358,20 @@ interface DetailLongTermAxis extends FenokSignalRadarHexagonAxis {
   coverage: number | null;
   tooltipNote?: string | null;
   invertedDisplay?: boolean;
+  referenceOnly?: boolean;
   meta: { tier: string | null; tone: "up" | "warn" | "down" | "neutral" };
+}
+
+export function rankFenokEdgeAxes<T extends { score: number | null; referenceOnly?: boolean }>(
+  axes: readonly T[],
+  direction: "asc" | "desc",
+  limit: number,
+): T[] {
+  const multiplier = direction === "desc" ? -1 : 1;
+  return [...axes]
+    .filter((axis) => axis.score !== null && !axis.referenceOnly)
+    .sort((left, right) => multiplier * ((left.score ?? 0) - (right.score ?? 0)))
+    .slice(0, limit);
 }
 
 interface DetailLongTermAxisConfig {
@@ -377,6 +384,7 @@ interface DetailLongTermAxisConfig {
   helpKey: FenokSignalHelpKey;
   invertScore?: boolean;
   tooltipNote?: string;
+  referenceOnly?: boolean;
 }
 
 const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
@@ -418,6 +426,7 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
     fullLabel: "동종군 유사도",
     scoreKey: "marketSimilarityScore",
     helpKey: "marketSimilarity",
+    referenceOnly: true,
   },
   {
     key: "durabilityProfitability",
@@ -471,6 +480,7 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
     scoreKey: "offExchangeActivityProxyScore",
     helpKey: "offExchangeActivityProxy",
     tooltipNote: "미국 금융산업규제청(FINRA) 공개 장외 거래 데이터로 만든 보조 신호입니다. 방향성 확정 신호가 아닙니다.",
+    referenceOnly: true,
   },
   {
     key: "shortPressureProxy",
@@ -526,6 +536,7 @@ function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
       tooltipNote: config.tooltipNote ?? null,
       coverage,
       invertedDisplay: Boolean(config.invertScore),
+      referenceOnly: Boolean(config.referenceOnly),
       meta,
     };
   });
@@ -575,7 +586,7 @@ function DetailAxisLegend({ axis }: { axis: DetailLongTermAxis }) {
         ? "낮음"
         : tierText;
   const directionText = directionKo(axis.direction, "미확인");
-  const ariaLabel = `${axis.fullLabel}: ${scoreText}점, ${directionText}, ${tierText}${axis.tooltipNote ? ` · ${axis.tooltipNote}` : ""}`;
+  const ariaLabel = `${axis.fullLabel}${axis.referenceOnly ? " · 참고축" : ""}: ${scoreText}점, ${directionText}, ${tierText}${axis.tooltipNote ? ` · ${axis.tooltipNote}` : ""}`;
   return (
     <div
       aria-label={ariaLabel}
@@ -583,7 +594,7 @@ function DetailAxisLegend({ axis }: { axis: DetailLongTermAxis }) {
     >
       <div className="min-w-0 flex-1">
         <div className="truncate text-[11px] font-black text-[var(--c-ink)]">
-          {axis.fullLabel}
+          {axis.fullLabel}{axis.referenceOnly ? " · 참고축" : ""}
         </div>
         {axis.coverage !== null ? (
           <div className="truncate text-[10px] font-semibold text-[var(--c-ink-2)]">
@@ -2372,9 +2383,9 @@ function w4Initials(ticker: string): string {
 }
 
 // The donut must say which score it is. Unlabelled and solitary beside a
-// 장기 우세 / 단기 우세 verdict it reads as a single integrated score, which is
-// exactly the thing the 2026-08-03 mandate retired — it carried the short-term
-// number while looking like an overall one.
+// cross-horizon heading it reads as a single integrated score, which is exactly
+// the thing the 2026-08-03 mandate retired — it carried the short-term number
+// while looking like an overall one.
 function W4ScoreDonut({ score, label }: { score: number | null; label: string }) {
   const value = w4ClampScore(score);
   return (
@@ -2480,7 +2491,10 @@ export default function StockDetailPanel({
   // The integrated "Fenok Edge" single score (fenokEdgeScore / direction) is
   // retired (owner mandate 2026-08-03): the panel shows the two axes — Short
   // Edge (단기) and Long Edge (장기) — as the substance.
-  const edgeLead = edgeLeadLabel(shortTermConvictionScore, longTermConvictionScore);
+  const edgeLead = edgeLeadLabel();
+  const longDirectionalCount = longTermAxes.filter(
+    (axis) => axis.key !== "marketSimilarity" && axis.score !== null,
+  ).length;
   const signalCoverage = formatSignalCoverage(stock?.fenokSignalCoverageRatio);
   const shortTermBasis = shortTermCommonBasisCopy(stock?.fenokMarketScope, {
     sourceInputCount: shortTerm?.sourceInputCount ?? null,
@@ -2506,7 +2520,7 @@ export default function StockDetailPanel({
               </span>
               <span
                 className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums ${convictionTone(longTermConvictionCall)}`}
-                title="Fenok 장기 6축 종합 점수"
+                title="Fenok 장기 5개 방향성 축 평균 · 동종군 유사도 참고축"
               >
                 <span aria-hidden="true">{longTermConvictionCall ?? "미정"}</span>
                 {longTermConvictionScore ?? "—"}
@@ -2527,7 +2541,7 @@ export default function StockDetailPanel({
                 </span>
               </div>
               <div className="mt-1 text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">
-                {shortTermBasis.label} · {edgeLead}
+                {shortTermBasis.label} · {shortTermBasis.windowLabel} · {shortTermBasis.sourceInputCount ?? "—"}/3–5 입력 · {shortTermBasis.exclusionNote}
               </div>
             </div>
             <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
@@ -2543,7 +2557,7 @@ export default function StockDetailPanel({
                 </span>
               </div>
               <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
-                장기 6축 · {edgeLead}
+                장기 5개 방향성 축 평균 · {longDirectionalCount}/5 축 · 동종군 유사도 참고축
               </div>
             </div>
           </div>
@@ -2616,21 +2630,26 @@ export default function StockDetailPanel({
   );
   }
 
-  const allAxes = [...longTermAxes, ...shortTermAxes];
-  const topAxes = allAxes
-    .filter((axis) => axis.score !== null)
+  const topShortAxes = rankFenokEdgeAxes(shortTermAxes, "desc", 3);
+  const topLongAxes = longTermAxes
+    .filter((axis) => axis.score !== null && axis.key !== "marketSimilarity")
     .sort((left, right) => (right.score ?? 0) - (left.score ?? 0))
     .slice(0, 3);
-  const weakAxis = allAxes
-    .filter((axis) => axis.score !== null)
+  const weakShortAxis = rankFenokEdgeAxes(shortTermAxes, "asc", 1)[0] ?? null;
+  const weakLongAxis = longTermAxes
+    .filter((axis) => axis.score !== null && axis.key !== "marketSimilarity")
     .sort((left, right) => (left.score ?? 0) - (right.score ?? 0))[0] ?? null;
   const detailScore = shortTermConvictionScore;
-  const verdictHeadline = `${edgeLead}${shortTermConvictionCall ? `, 단기 ${shortTermConvictionCall}` : ""}`;
+  const verdictHeadline = edgeLead;
   const verdictCopy = [
     longTermConvictionScore !== null ? `장기 ${longTermConvictionScore}` : "장기 미확인",
     shortTermConvictionScore !== null ? `단기 ${shortTermConvictionScore}` : "단기 미확인",
     signalCoverage,
     shortTermBasis.label,
+    shortTermBasis.windowLabel,
+    `단기 ${shortTermBasis.sourceInputCount ?? "—"}/3–5 입력`,
+    shortTermBasis.exclusionNote,
+    `장기 ${longDirectionalCount}/5 방향성 축`,
   ].join(" · ");
   const etfCompareHref = stock?.connection?.singleStockEtfs?.length
     ? ROUTES.etfCompareTickers(stock.connection.singleStockEtfs.map((link) => link.ticker).slice(0, 4))
@@ -2697,17 +2716,33 @@ export default function StockDetailPanel({
             </div>
 
             <div className="cpw4-top3-grid">
-              {topAxes.length > 0 ? (
-                topAxes.map((axis, index) => <W4AxisCard key={axis.key} axis={axis} rank={index + 1} />)
-              ) : (
+              {topShortAxes.length > 0 ? (
+                <div className="cpw4-axis-group-card">
+                  <h3>단기 강점 축</h3>
+                  {topShortAxes.map((axis, index) => <W4AxisCard key={axis.key} axis={axis} rank={index + 1} />)}
+                </div>
+              ) : null}
+              {topLongAxes.length > 0 ? (
+                <div className="cpw4-axis-group-card">
+                  <h3>장기 강점 축</h3>
+                  {topLongAxes.map((axis, index) => <W4AxisCard key={axis.key} axis={axis} rank={index + 1} />)}
+                </div>
+              ) : null}
+              {topShortAxes.length === 0 && topLongAxes.length === 0 ? (
                 <p className="cpw4-empty-axis">확인된 강점 축이 없습니다.</p>
-              )}
+              ) : null}
             </div>
 
-            {weakAxis ? (
+            {weakShortAxis ? (
               <div className="cpw4-weak-axis-callout">
-                <strong>약점 축 · {weakAxis.fullLabel} {w4ScoreText(weakAxis.score)}</strong>
-                <span>{weakAxis.tooltipNote ?? "점수가 낮은 축은 추가 확인이 필요한 구간입니다."}</span>
+                <strong>단기 약점 축 · {weakShortAxis.fullLabel} {w4ScoreText(weakShortAxis.score)}</strong>
+                <span>{weakShortAxis.tooltipNote ?? "점수가 낮은 축은 추가 확인이 필요한 구간입니다."}</span>
+              </div>
+            ) : null}
+            {weakLongAxis ? (
+              <div className="cpw4-weak-axis-callout">
+                <strong>장기 약점 축 · {weakLongAxis.fullLabel} {w4ScoreText(weakLongAxis.score)}</strong>
+                <span>{weakLongAxis.tooltipNote ?? "점수가 낮은 축은 추가 확인이 필요한 구간입니다."}</span>
               </div>
             ) : null}
 
@@ -2731,8 +2766,8 @@ export default function StockDetailPanel({
 
           <details className="cpw4-axis-detail">
             <summary>
-              <span>12축 전체 보기</span>
-              <small>단기 6축 · 장기 6축 레이더 + 전체 스코어</small>
+              <span>전체 축 보기</span>
+              <small>단기 {shortTermBasis.sourceInputCount ?? "—"}/3–5 입력 · {shortTermBasis.windowLabel} · 장외거래 참고축(평균 제외) · 장기 5개 방향성 축 {longDirectionalCount}/5 + 동종군 참고축</small>
             </summary>
             <div className="cpw4-axis-detail__body">
               <FenokSignalRadarHexagonPair

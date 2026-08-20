@@ -360,18 +360,16 @@ table.cpw4-table tbody tr.emph td { font-weight: 850; color: var(--cp-text-stron
 .cpw4-edge-head-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .cpw4-edge-meta-row { display: flex; gap: 8px; align-items: center; }
 
-.cpw4-edge-hero-row { display: grid; grid-template-columns: 0.86fr 1fr 1fr; gap: 16px; }
+.cpw4-edge-hero-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 900px) { .cpw4-edge-hero-row { grid-template-columns: 1fr; } }
 .cpw4-edge-score-card {
   border: 1px solid var(--cp-border); border-radius: var(--cp-radius-lg);
   padding: 18px 18px 20px; display: flex; flex-direction: column; align-items: center;
   text-align: center; gap: 9px;
 }
-.cpw4-edge-score-card--composite { background: linear-gradient(180deg, var(--cp-surface-muted) 0%, var(--cp-surface) 55%); }
 .cpw4-edge-score-card--short { background: linear-gradient(180deg, var(--cp-warning-soft) 0%, var(--cp-surface) 60%); border-color: color-mix(in srgb, var(--cp-warning) 30%, var(--cp-border)); }
 .cpw4-edge-score-card--long { background: linear-gradient(180deg, var(--cp-positive-soft) 0%, var(--cp-surface) 60%); border-color: color-mix(in srgb, var(--cp-positive) 30%, var(--cp-border)); }
 .cpw4-edge-score-label { font-size: 12px; font-weight: 850; letter-spacing: 0.03em; color: var(--cp-text-muted); text-transform: uppercase; }
-.cpw4-edge-score-card--composite .cpw4-edge-score-label { color: var(--cp-text-strong); }
 .cpw4-edge-score-card--short .cpw4-edge-score-label { color: color-mix(in srgb, var(--cp-warning) 70%, var(--cp-text-strong)); }
 .cpw4-edge-score-card--long .cpw4-edge-score-label { color: color-mix(in srgb, var(--cp-positive) 70%, var(--cp-text-strong)); }
 .cpw4-edge-gauge-wrap { position: relative; width: min(200px, 100%); }
