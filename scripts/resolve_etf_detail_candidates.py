@@ -96,12 +96,14 @@ def latest_recorded_observations(
             candidate_order = (
                 _timestamp_key(row["observed_at"]),
                 row["endpoint_family"] != LEGACY_YAHOO_ENDPOINT_FAMILY,
+                row.get("observation_origin") == "migration",
                 row["event_id"],
             )
             previous_order = (
                 (
                     _timestamp_key(previous["observed_at"]),
                     previous["endpoint_family"] != LEGACY_YAHOO_ENDPOINT_FAMILY,
+                    previous.get("observation_origin") == "migration",
                     previous["event_id"],
                 )
                 if previous is not None
@@ -120,17 +122,35 @@ def _canonicalize_legacy_yahoo_observation(
     observation: Mapping[str, Any],
 ) -> dict[str, Any]:
     row = dict(observation)
-    if not (
+    is_yahoo_etf = (
         row["provider"] == "yahoo_finance"
         and row["domain"] == DOMAIN
+    )
+    legacy_endpoint = (
+        is_yahoo_etf
         and row["endpoint_family"] == LEGACY_YAHOO_ENDPOINT_FAMILY
-    ):
+    )
+    historical_failure_schema = (
+        is_yahoo_etf
+        and row["endpoint_family"] == CANONICAL_YAHOO_ENDPOINT_FAMILY
+        and row["provider_path"] == f"data/yf/finance/{row['entity']}.json"
+        and row["provider_schema"] == "yf-finance/v2"
+        and row["validation_status"] == "invalid"
+        and row.get("payload_available") is False
+        and row["reason_code"] == "normalization_invalid"
+    )
+    if not (legacy_endpoint or historical_failure_schema):
         return row
     source_event_id = row["event_id"]
-    row["endpoint_family"] = CANONICAL_YAHOO_ENDPOINT_FAMILY
+    if legacy_endpoint:
+        row["endpoint_family"] = CANONICAL_YAHOO_ENDPOINT_FAMILY
+        migration = "yahoo_etf_detail_to_yahoo_finance_etf_detail"
+    else:
+        row["provider_schema"] = "yf-etf-detail/v1"
+        migration = "yahoo_finance_failure_schema_to_yf_etf_detail"
     row["observation_origin"] = "migration"
     row["source_observation_event_id"] = source_event_id
-    row["compatibility_migration"] = "yahoo_etf_detail_to_yahoo_finance_etf_detail"
+    row["compatibility_migration"] = migration
     if row["validation_status"] == "invalid" and row.get("payload_available") is False:
         if row["source_as_of"] is not None:
             row["legacy_source_as_of"] = row["source_as_of"]

@@ -181,6 +181,41 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         )
         return manifest
 
+    def historical_yahoo_failure(
+        self,
+        *,
+        entity: str = "SBIL",
+        provider_schema: str = "yf-finance/v2",
+        reason_code: str = "normalization_invalid",
+    ) -> dict:
+        row, _payload = observation(
+            provider="yahoo_finance",
+            entity=entity,
+            source_as_of=None,
+            observed_at="2026-08-18T00:08:06Z",
+            valid=False,
+        )
+        row["provider_path"] = f"data/yf/finance/{entity}.json"
+        row["provider_schema"] = provider_schema
+        row["reason_code"] = reason_code
+        row["failure_detail_sha256"] = (
+            "31c1b6dcf89d4c687612b856570d3abb7414d3aae34e3c37bed64b6c623b9cba"
+        )
+        row["payload_sha256"] = canonical_sha256(
+            {
+                "provider": row["provider"],
+                "endpoint_family": row["endpoint_family"],
+                "domain": row["domain"],
+                "entity": row["entity"],
+                "observed_at": row["observed_at"],
+                "reason_code": row["reason_code"],
+                "failure_detail_sha256": row["failure_detail_sha256"],
+            }
+        )
+        row.pop("event_id")
+        row["event_id"] = deterministic_event_id("observation", row)
+        return row
+
     def cli_args(
         self, manifest: Path, decided_at: str, state_root: Path | None = None
     ) -> list[str]:
@@ -258,6 +293,100 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
                     / f"{entity}.json"
                 )
                 self.assertFalse(pending.exists(), "commit must clear its consumed pending pointer")
+
+    def test_historical_unavailable_yahoo_etf_failure_migrates_schema_contract(self) -> None:
+        historical = self.historical_yahoo_failure()
+        self.store.record_observation(historical)
+        migrated = resolve_etf_detail_candidates._canonicalize_legacy_yahoo_observation(
+            self.store,
+            historical,
+        )
+
+        self.assertEqual(migrated["endpoint_family"], "yahoo_finance_etf_detail")
+        self.assertEqual(migrated["provider_schema"], "yf-etf-detail/v1")
+        self.assertEqual(migrated["observation_origin"], "migration")
+        self.assertEqual(
+            migrated["source_observation_event_id"], historical["event_id"]
+        )
+        self.assertNotEqual(migrated["event_id"], historical["event_id"])
+        self.assertEqual(
+            migrated["compatibility_migration"],
+            "yahoo_finance_failure_schema_to_yf_etf_detail",
+        )
+        self.assertEqual(migrated["payload_sha256"], historical["payload_sha256"])
+        latest = latest_recorded_observations(self.root, ["SBIL"])["SBIL"]
+        self.assertEqual(latest, [migrated])
+
+    def test_historical_sbil_failure_preserves_existing_lkg_without_contract_error(self) -> None:
+        self.publish_pair(
+            "SBIL",
+            "2026-08-12T20:00:00Z",
+            "2026-08-13T00:53:47Z",
+        )
+        resolve_entities(
+            self.store,
+            entities=["SBIL"],
+            decided_at="2026-08-13T00:53:48Z",
+        )
+        primary, _payload = observation(
+            provider="stockanalysis",
+            entity="SBIL",
+            source_as_of=None,
+            observed_at="2026-08-18T00:08:05Z",
+            valid=False,
+        )
+        historical = self.historical_yahoo_failure()
+        self.store.record_observation(primary)
+        self.store.record_observation(historical)
+
+        result = resolve_entities(
+            self.store,
+            entities=["SBIL"],
+            decided_at="2026-08-20T00:21:00Z",
+        )
+
+        self.assertEqual(result["results"][0]["provider"], "yahoo_finance")
+        self.assertEqual(result["results"][0]["resolution_state"], "lkg_fallback")
+        latest = latest_recorded_observations(self.root, ["SBIL"])["SBIL"]
+        migrated = next(row for row in latest if row["provider"] == "yahoo_finance")
+        self.assertEqual(migrated["provider_schema"], "yf-etf-detail/v1")
+        self.assertEqual(
+            migrated["source_observation_event_id"], historical["event_id"]
+        )
+
+    def test_yahoo_schema_migration_refuses_payloads_and_unlisted_failures(self) -> None:
+        valid, _payload = observation(
+            provider="yahoo_finance",
+            entity="VALID",
+            source_as_of="2026-08-18T00:00:00Z",
+            observed_at="2026-08-18T00:20:00Z",
+            valid=True,
+        )
+        valid["provider_schema"] = "yf-finance/v2"
+        valid.pop("event_id")
+        valid["event_id"] = deterministic_event_id("observation", valid)
+        unknown_schema = self.historical_yahoo_failure(
+            entity="UNKNOWN",
+            provider_schema="yf-unknown/v9",
+        )
+        wrong_reason = self.historical_yahoo_failure(
+            entity="REASON",
+            reason_code="schema_invalid",
+        )
+        wrong_path = self.historical_yahoo_failure(entity="PATH")
+        wrong_path["provider_path"] = "data/yf/etf-details/PATH.json"
+        wrong_path.pop("event_id")
+        wrong_path["event_id"] = deterministic_event_id("observation", wrong_path)
+
+        for row in (valid, unknown_schema, wrong_reason, wrong_path):
+            with self.subTest(entity=row["entity"]):
+                self.assertEqual(
+                    resolve_etf_detail_candidates._canonicalize_legacy_yahoo_observation(
+                        self.store,
+                        row,
+                    ),
+                    row,
+                )
 
     def test_observation_history_parses_once_per_run_across_entities(self) -> None:
         for entity, source_as_of in FRESH_FALLBACKS.items():
