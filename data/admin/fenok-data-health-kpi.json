@@ -1,9 +1,9 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-08-20T02:55:15.504Z",
+  "generated_at": "2026-08-20T03:22:04.562Z",
   "status": "degraded",
   "status_label": "저하",
-  "status_message": "14 required lane(s) are not ready; healthy lanes may still publish.",
+  "status_message": "13 required lane(s) are not ready; healthy lanes may still publish.",
   "purpose": "Admin-safe service data health KPI: current data freshness, daily gates, public mirror safety, and automation contracts.",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -38,11 +38,11 @@
       }
     },
     "last_rebuild_context": {
-      "built_at": "2026-08-20T02:55:15.504Z",
-      "run_id": "32324658193",
+      "built_at": "2026-08-20T03:22:04.562Z",
+      "run_id": "32327118219",
       "workflow": "Update Manifest",
       "event_name": "workflow_dispatch",
-      "sha": "04d4b8910b85d5bad88b5be485a6dbc7a2444cc7"
+      "sha": "2baf894f2225a22a0bd8ce135ca36bd4e567bfcf"
     },
     "cadence": {
       "crons_utc": [
@@ -407,15 +407,15 @@
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-08-20T02:55:12.792Z",
+      "evaluated_at": "2026-08-20T03:22:01.808Z",
       "status": "warning",
       "deployment_blocking": false,
       "counts": {
         "scheduled_members": 31,
         "schedule_bindings": 35,
-        "observed": 32,
+        "observed": 34,
         "suspected_skips": 1,
-        "attempt_gaps": 2
+        "attempt_gaps": 0
       },
       "pre_activation_members": [],
       "rows": [
@@ -491,7 +491,7 @@
           "schedule_id": "hourly_at_12",
           "cron": "12 * * * *",
           "calendar_id": "utc",
-          "expected_at": "2026-08-19T20:12:00.000Z",
+          "expected_at": "2026-08-19T21:12:00.000Z",
           "observed_at": "2026-08-20T02:01:59.261Z",
           "state": "observed",
           "producer_status": "ready",
@@ -505,7 +505,7 @@
           "cron": "50 23 * * 1-5",
           "calendar_id": "utc",
           "expected_at": "2026-08-18T23:50:00.000Z",
-          "observed_at": "2026-08-19T21:45:50Z",
+          "observed_at": "2026-08-20T02:44:29Z",
           "state": "observed",
           "producer_status": "ready",
           "producer_reason": "ok"
@@ -518,7 +518,7 @@
           "cron": "20 23 * * 0",
           "calendar_id": "utc",
           "expected_at": "2026-08-16T23:20:00.000Z",
-          "observed_at": "2026-08-19T21:45:50Z",
+          "observed_at": "2026-08-20T02:44:29Z",
           "state": "observed",
           "producer_status": "ready",
           "producer_reason": "ok"
@@ -544,10 +544,10 @@
           "cron": "50 23 * * 1-5",
           "calendar_id": "utc",
           "expected_at": "2026-08-18T23:50:00.000Z",
-          "observed_at": "2026-08-18T00:12:49Z",
-          "state": "attempt_gap",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
+          "observed_at": "2026-08-20T02:44:29Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
         },
         {
           "lane_id": "stockanalysis_etf_detail",
@@ -557,10 +557,10 @@
           "cron": "20 23 * * 0",
           "calendar_id": "utc",
           "expected_at": "2026-08-16T23:20:00.000Z",
-          "observed_at": "2026-08-18T00:12:49Z",
+          "observed_at": "2026-08-20T02:44:29Z",
           "state": "observed",
-          "producer_status": "unavailable",
-          "producer_reason": "unexpected_error"
+          "producer_status": "ready",
+          "producer_reason": "ok"
         },
         {
           "lane_id": "stockanalysis_stock_financial",
@@ -583,10 +583,10 @@
           "cron": "50 23 * * 1-5",
           "calendar_id": "utc",
           "expected_at": "2026-08-18T23:50:00.000Z",
-          "observed_at": "2026-08-18T00:12:49Z",
-          "state": "attempt_gap",
-          "producer_status": "stale",
-          "producer_reason": "stale"
+          "observed_at": "2026-08-20T02:44:29Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
         },
         {
           "lane_id": "stockanalysis_surfaces",
@@ -596,10 +596,10 @@
           "cron": "20 23 * * 0",
           "calendar_id": "utc",
           "expected_at": "2026-08-16T23:20:00.000Z",
-          "observed_at": "2026-08-18T00:12:49Z",
+          "observed_at": "2026-08-20T02:44:29Z",
           "state": "observed",
-          "producer_status": "stale",
-          "producer_reason": "stale"
+          "producer_status": "ready",
+          "producer_reason": "ok"
         },
         {
           "lane_id": "yahoo_ticker_macro",
@@ -608,8 +608,8 @@
           "schedule_id": "hourly_at_05",
           "cron": "5 * * * *",
           "calendar_id": "utc",
-          "expected_at": "2026-08-19T20:05:00.000Z",
-          "observed_at": "2026-08-20T01:47:19.962Z",
+          "expected_at": "2026-08-19T21:05:00.000Z",
+          "observed_at": "2026-08-20T03:07:35.228Z",
           "state": "observed",
           "producer_status": "ready",
           "producer_reason": "ok"
@@ -955,7 +955,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:28Z",
+                "collected_at": "2026-08-20T02:33:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -963,7 +963,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:29Z",
+                "collected_at": "2026-08-20T02:33:34Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -971,7 +971,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:36Z",
+                "collected_at": "2026-08-20T02:33:42Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -979,7 +979,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:22Z",
+                "collected_at": "2026-08-20T02:33:27Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -987,7 +987,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:23Z",
+                "collected_at": "2026-08-20T02:33:28Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -995,7 +995,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:21Z",
+                "collected_at": "2026-08-20T02:33:26Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1003,7 +1003,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:39Z",
+                "collected_at": "2026-08-20T02:33:45Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1011,7 +1011,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:26Z",
+                "collected_at": "2026-08-20T02:33:31Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1019,7 +1019,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:27Z",
+                "collected_at": "2026-08-20T02:33:32Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1027,7 +1027,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:25Z",
+                "collected_at": "2026-08-20T02:33:30Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1035,7 +1035,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:26Z",
+                "collected_at": "2026-08-20T02:33:30Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1043,7 +1043,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:28Z",
+                "collected_at": "2026-08-20T02:33:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1051,7 +1051,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:24Z",
+                "collected_at": "2026-08-20T02:33:29Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1059,7 +1059,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:32Z",
+                "collected_at": "2026-08-20T02:33:37Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1067,7 +1067,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:33Z",
+                "collected_at": "2026-08-20T02:33:38Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1075,7 +1075,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:30Z",
+                "collected_at": "2026-08-20T02:33:35Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1083,7 +1083,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:35Z",
+                "collected_at": "2026-08-20T02:33:40Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1091,7 +1091,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:34Z",
+                "collected_at": "2026-08-20T02:33:39Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1099,7 +1099,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:31Z",
+                "collected_at": "2026-08-20T02:33:36Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1107,7 +1107,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:36Z",
+                "collected_at": "2026-08-20T02:33:41Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1115,7 +1115,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:33Z",
+                "collected_at": "2026-08-20T02:33:38Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1123,7 +1123,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:11Z",
+                "collected_at": "2026-08-20T02:33:13Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1131,7 +1131,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:39Z",
+                "collected_at": "2026-08-20T02:33:44Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
@@ -1144,14 +1144,14 @@
             },
             "dateless_by_provider": {
               "required_count": 23,
-              "collection_fresh_count": 0,
-              "stale_count": 23,
-              "collected_at_floor": "2026-08-18T00:01:11Z",
-              "collection_age_hours": 50.901,
+              "collection_fresh_count": 23,
+              "stale_count": 0,
+              "collected_at_floor": "2026-08-20T02:33:13Z",
+              "collection_age_hours": 0.814,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
-            "state": "collection_stale",
+            "state": "stamped",
             "shape_errors": []
           }
         },
@@ -1210,7 +1210,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:28Z",
+                "collected_at": "2026-08-20T02:33:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1218,7 +1218,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:29Z",
+                "collected_at": "2026-08-20T02:33:34Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1226,7 +1226,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:36Z",
+                "collected_at": "2026-08-20T02:33:42Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1234,7 +1234,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:26Z",
+                "collected_at": "2026-08-20T02:33:31Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1242,7 +1242,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:27Z",
+                "collected_at": "2026-08-20T02:33:32Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1250,7 +1250,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:25Z",
+                "collected_at": "2026-08-20T02:33:30Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1258,7 +1258,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:26Z",
+                "collected_at": "2026-08-20T02:33:30Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1266,7 +1266,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:28Z",
+                "collected_at": "2026-08-20T02:33:33Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1274,7 +1274,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:32Z",
+                "collected_at": "2026-08-20T02:33:37Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1282,7 +1282,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:33Z",
+                "collected_at": "2026-08-20T02:33:38Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1290,7 +1290,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:30Z",
+                "collected_at": "2026-08-20T02:33:35Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1298,7 +1298,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:35Z",
+                "collected_at": "2026-08-20T02:33:40Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1306,7 +1306,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:34Z",
+                "collected_at": "2026-08-20T02:33:39Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1314,7 +1314,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:31Z",
+                "collected_at": "2026-08-20T02:33:36Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1322,7 +1322,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:36Z",
+                "collected_at": "2026-08-20T02:33:41Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1330,7 +1330,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:33Z",
+                "collected_at": "2026-08-20T02:33:38Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
@@ -1343,14 +1343,14 @@
             },
             "dateless_by_provider": {
               "required_count": 16,
-              "collection_fresh_count": 0,
-              "stale_count": 16,
-              "collected_at_floor": "2026-08-18T00:01:25Z",
-              "collection_age_hours": 50.897,
+              "collection_fresh_count": 16,
+              "stale_count": 0,
+              "collected_at_floor": "2026-08-20T02:33:30Z",
+              "collection_age_hours": 0.81,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
-            "state": "collection_stale",
+            "state": "stamped",
             "shape_errors": []
           }
         },
@@ -1371,7 +1371,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:38Z",
+                "collected_at": "2026-08-20T02:33:43Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1379,7 +1379,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:39Z",
+                "collected_at": "2026-08-20T02:33:45Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -1387,7 +1387,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:39Z",
+                "collected_at": "2026-08-20T02:33:44Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
@@ -1400,14 +1400,14 @@
             },
             "dateless_by_provider": {
               "required_count": 3,
-              "collection_fresh_count": 0,
-              "stale_count": 3,
-              "collected_at_floor": "2026-08-18T00:01:38Z",
-              "collection_age_hours": 50.894,
+              "collection_fresh_count": 3,
+              "stale_count": 0,
+              "collected_at_floor": "2026-08-20T02:33:43Z",
+              "collection_age_hours": 0.806,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
-            "state": "collection_stale",
+            "state": "stamped",
             "shape_errors": []
           }
         },
@@ -1606,17 +1606,17 @@
               {
                 "id": "etf_detail:AOA",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:AOM",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:AOR",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:APDB",
@@ -1746,7 +1746,7 @@
               {
                 "id": "etf_detail:AVDV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:AVGC",
@@ -1761,7 +1761,7 @@
               {
                 "id": "etf_detail:AVIV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:AVNV",
@@ -1816,7 +1816,7 @@
               {
                 "id": "etf_detail:BBIN",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:BBUL",
@@ -1831,7 +1831,7 @@
               {
                 "id": "etf_detail:BCD",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:BCEM",
@@ -1841,7 +1841,7 @@
               {
                 "id": "etf_detail:BCI",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:BDCX",
@@ -1971,7 +1971,7 @@
               {
                 "id": "etf_detail:BND",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:BNDW",
@@ -2041,12 +2041,12 @@
               {
                 "id": "etf_detail:BSCR",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:BSCS",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:BSEP",
@@ -2221,12 +2221,12 @@
               {
                 "id": "etf_detail:CLOA",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:CMDY",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:COHC",
@@ -2256,7 +2256,7 @@
               {
                 "id": "etf_detail:COMT",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:COSW",
@@ -2471,17 +2471,17 @@
               {
                 "id": "etf_detail:DFAI",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:DFAX",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:DFIC",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:DFIV",
@@ -2491,7 +2491,7 @@
               {
                 "id": "etf_detail:DFUV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:DGP",
@@ -2501,7 +2501,7 @@
               {
                 "id": "etf_detail:DGRO",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:DGZ",
@@ -2521,12 +2521,12 @@
               {
                 "id": "etf_detail:DISV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:DIVI",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:DJP",
@@ -2661,12 +2661,12 @@
               {
                 "id": "etf_detail:EFA",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:EFV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:EHCC",
@@ -2811,7 +2811,7 @@
               {
                 "id": "etf_detail:FIVA",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:FIZY",
@@ -2826,7 +2826,7 @@
               {
                 "id": "etf_detail:FLDR",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:FLJJ",
@@ -2836,17 +2836,17 @@
               {
                 "id": "etf_detail:FLOT",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:FLRN",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:FLTR",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:FLYT",
@@ -2856,12 +2856,12 @@
               {
                 "id": "etf_detail:FNDF",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:FNDX",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:FNG",
@@ -2991,7 +2991,7 @@
               {
                 "id": "etf_detail:GLD",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:GLDI",
@@ -3111,7 +3111,7 @@
               {
                 "id": "etf_detail:HGER",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:HIGH",
@@ -3146,7 +3146,7 @@
               {
                 "id": "etf_detail:HYLB",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:HYPG",
@@ -3191,17 +3191,17 @@
               {
                 "id": "etf_detail:IBDR",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IBDS",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IBDT",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IBGM",
@@ -3256,7 +3256,7 @@
               {
                 "id": "etf_detail:ICSH",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IDAU",
@@ -3271,7 +3271,7 @@
               {
                 "id": "etf_detail:IDEV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IDJL",
@@ -3281,7 +3281,7 @@
               {
                 "id": "etf_detail:IEFA",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IEMG",
@@ -3291,7 +3291,7 @@
               {
                 "id": "etf_detail:IEUR",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IFEB",
@@ -3311,7 +3311,7 @@
               {
                 "id": "etf_detail:IGSB",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IJAN",
@@ -3326,7 +3326,7 @@
               {
                 "id": "etf_detail:IJR",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IJUL",
@@ -3351,7 +3351,7 @@
               {
                 "id": "etf_detail:INCM",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:INFH",
@@ -3366,7 +3366,7 @@
               {
                 "id": "etf_detail:INTF",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:INYY",
@@ -3411,7 +3411,7 @@
               {
                 "id": "etf_detail:IVLU",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IVV",
@@ -3426,7 +3426,7 @@
               {
                 "id": "etf_detail:IWD",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IWDL",
@@ -3456,17 +3456,17 @@
               {
                 "id": "etf_detail:IWN",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:IXUS",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:JAAA",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:JADB",
@@ -3521,7 +3521,7 @@
               {
                 "id": "etf_detail:JPST",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:JUDB",
@@ -3886,7 +3886,7 @@
               {
                 "id": "etf_detail:MGV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:MIC",
@@ -4071,7 +4071,7 @@
               {
                 "id": "etf_detail:NTSX",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:NUIF",
@@ -4201,7 +4201,7 @@
               {
                 "id": "etf_detail:PAAA",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:PALL",
@@ -4351,7 +4351,7 @@
               {
                 "id": "etf_detail:PULS",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:PWRD",
@@ -4361,7 +4361,7 @@
               {
                 "id": "etf_detail:PXF",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:QBF",
@@ -4471,7 +4471,7 @@
               {
                 "id": "etf_detail:RDVI",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:RGTU",
@@ -4486,7 +4486,7 @@
               {
                 "id": "etf_detail:RLY",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:RMBC",
@@ -4541,17 +4541,17 @@
               {
                 "id": "etf_detail:SCHD",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SCHF",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SCHV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SCJL",
@@ -4566,12 +4566,12 @@
               {
                 "id": "etf_detail:SCUS",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SCYB",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SDD",
@@ -4626,7 +4626,7 @@
               {
                 "id": "etf_detail:SLQD",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SLV",
@@ -4646,7 +4646,7 @@
               {
                 "id": "etf_detail:SMBS",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SMH",
@@ -4756,27 +4756,27 @@
               {
                 "id": "etf_detail:SPDW",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SPGM",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SPHY",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SPSB",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SPSM",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:SPUC",
@@ -5201,7 +5201,7 @@
               {
                 "id": "etf_detail:USHY",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:USML",
@@ -5276,12 +5276,12 @@
               {
                 "id": "etf_detail:VB",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-14"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VBIL",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VBNB",
@@ -5291,7 +5291,7 @@
               {
                 "id": "etf_detail:VBR",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VBX",
@@ -5306,12 +5306,12 @@
               {
                 "id": "etf_detail:VCRM",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VCSH",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VDG",
@@ -5326,7 +5326,7 @@
               {
                 "id": "etf_detail:VEA",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VELL",
@@ -5336,12 +5336,12 @@
               {
                 "id": "etf_detail:VEU",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VGK",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VGT",
@@ -5366,7 +5366,7 @@
               {
                 "id": "etf_detail:VIOV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-14"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VIXM",
@@ -5381,7 +5381,7 @@
               {
                 "id": "etf_detail:VLUE",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VNLA",
@@ -5396,12 +5396,12 @@
               {
                 "id": "etf_detail:VOE",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VONV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VOO",
@@ -5426,7 +5426,7 @@
               {
                 "id": "etf_detail:VSGX",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VSOL",
@@ -5436,32 +5436,32 @@
               {
                 "id": "etf_detail:VSS",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VT",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VTEB",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VTV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VTWO",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VTWV",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VUG",
@@ -5471,7 +5471,7 @@
               {
                 "id": "etf_detail:VUSB",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VWO",
@@ -5481,12 +5481,12 @@
               {
                 "id": "etf_detail:VWOB",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VXUS",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VXX",
@@ -5506,12 +5506,12 @@
               {
                 "id": "etf_detail:VYM",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:VYMI",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:WAGN",
@@ -5796,7 +5796,7 @@
               {
                 "id": "etf_detail:YLD",
                 "stamp_class": "date_bearing",
-                "source_as_of": "2026-08-17"
+                "source_as_of": "2026-08-19"
               },
               {
                 "id": "etf_detail:ZALT",
@@ -5883,7 +5883,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:22Z",
+                "collected_at": "2026-08-20T02:33:27Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -5891,7 +5891,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:23Z",
+                "collected_at": "2026-08-20T02:33:28Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -5899,7 +5899,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:21Z",
+                "collected_at": "2026-08-20T02:33:26Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -5907,7 +5907,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:24Z",
+                "collected_at": "2026-08-20T02:33:29Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               },
               {
@@ -5915,7 +5915,7 @@
                 "stamp_class": "dateless_by_provider",
                 "source_as_of": null,
                 "source_as_of_reason": "provider publishes no aggregate source date",
-                "collected_at": "2026-08-18T00:01:11Z",
+                "collected_at": "2026-08-20T02:33:13Z",
                 "recency_label": "provider publishes no date; recency = collection time"
               }
             ],
@@ -5928,10 +5928,10 @@
             },
             "dateless_by_provider": {
               "required_count": 5,
-              "collection_fresh_count": 0,
-              "stale_count": 5,
-              "collected_at_floor": "2026-08-18T00:01:11Z",
-              "collection_age_hours": 50.901,
+              "collection_fresh_count": 5,
+              "stale_count": 0,
+              "collected_at_floor": "2026-08-20T02:33:13Z",
+              "collection_age_hours": 0.814,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -5994,7 +5994,7 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-08-20T02:54:52.488Z",
+      "source_date": "2026-08-20T03:21:38.067Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
@@ -6010,7 +6010,7 @@
       "calendar": "us_market",
       "max_staleness": 30,
       "required": true,
-      "age": 20.02,
+      "age": 20.46,
       "status": "ready"
     },
     {
@@ -6021,7 +6021,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 91.01,
+      "age": 91.45,
       "status": "ready"
     },
     {
@@ -6032,7 +6032,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 90.45,
+      "age": 90.9,
       "status": "ready"
     },
     {
@@ -6043,7 +6043,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 227.34,
+      "age": 227.78,
       "status": "ready"
     },
     {
@@ -6054,14 +6054,14 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 198.1,
+      "age": 198.55,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-08-20T02:54:47.372Z",
+      "generated_at": "2026-08-20T03:21:32.588Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -6073,25 +6073,25 @@
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-08-20T02:55:05.382Z",
+      "generated_at": "2026-08-20T03:21:54.862Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-08-20T02:54:52.416Z",
+      "generated_at": "2026-08-20T03:21:37.996Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-08-20T02:54:52.488Z",
+      "generated_at": "2026-08-20T03:21:38.067Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-08-20T02:54:37.545Z",
+      "generated_at": "2026-08-20T03:21:22.501Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -6103,7 +6103,7 @@
     },
     {
       "id": "stockanalysis_recovery_state",
-      "generated_at": "2026-08-19T21:45:19Z",
+      "generated_at": "2026-08-20T02:33:10Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -6115,13 +6115,13 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-08-20T02:55:12.792Z",
+      "generated_at": "2026-08-20T03:22:01.808Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "yahoo_hourly_ticker_recovery_state",
-      "generated_at": "2026-08-20T01:47:19.962Z",
+      "generated_at": "2026-08-20T03:07:35.228Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -6134,12 +6134,12 @@
   ],
   "totals": {
     "lanes": 34,
-    "ready": 20,
-    "degraded": 14,
+    "ready": 21,
+    "degraded": 13,
     "warning": 0,
     "blocked": 0,
     "unavailable": 0,
-    "required_not_ready": 14,
+    "required_not_ready": 13,
     "platform_blocking_not_ready": 0
   },
   "lanes": [
@@ -6151,7 +6151,7 @@
       "status_message": "S0 active stocks daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC; daily ready: all active stock source lanes fresh; gated ready: gate blockers empty; blockers: 3 blockers; krx_full_daily_source_ready: 336 / 337 · 2026-08-18; us_class_yf_daily_source_ready: 52 / 60 · 2026-08-14; asia_ex_taiwan_yf_daily_source_ready: 74 / 92 · 2026-08-14. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-20T02:54:47.372Z",
+      "as_of": "2026-08-20T03:21:32.588Z",
       "counts": {
         "active_total": 1181,
         "by_market": [
@@ -6327,22 +6327,22 @@
       "status_message": "S1 candidate promotion gate is not ready: PUBLIC+DAILY+GATED with blocked ledger: NORMALIZED; gate blockers: 2 blockers. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-20T02:53:32.860Z",
+      "as_of": "2026-08-20T03:20:19.690Z",
       "counts": {
-        "denominator": 1189,
+        "denominator": 1194,
         "current_public_stock": 1181,
         "current_public_candidate_overlap": 1181,
-        "s1_gap_total": 8,
+        "s1_gap_total": 13,
         "promotion_count": 0,
-        "blocked_excluded_count": 8,
-        "current_public_candidate_overlap_plus_blocked": 1189
+        "blocked_excluded_count": 13,
+        "current_public_candidate_overlap_plus_blocked": 1194
       },
       "details": {
         "stockanalysis_recovery": {
           "state_present": true,
-          "generated_at": "2026-08-19T21:45:19Z",
-          "current_attempt_ref": "32305305667",
-          "current_attempt_number": 1,
+          "generated_at": "2026-08-20T02:33:10Z",
+          "current_attempt_ref": "32315717133",
+          "current_attempt_number": 2,
           "current_failed_count": 0,
           "tracked_kinds": [
             "financial",
@@ -6680,11 +6680,11 @@
         "stock_denominator_reconciliation": {
           "schema_version": "stock-denominator-reconciliation/v1",
           "status": "ready",
-          "status_message": "Stock denominators reconcile: 1189 canonical daily names, 6774 Yahoo-active names, 4058 retry candidates, and 3 terminal provider-unsupported names; 4058 retries remain actionable after the terminal overlap.",
+          "status_message": "Stock denominators reconcile: 1194 canonical daily names, 6774 Yahoo-active names, 4058 retry candidates, and 3 terminal provider-unsupported names; 4058 retries remain actionable after the terminal overlap.",
           "counts": {
-            "canonical_daily_plan": 1189,
+            "canonical_daily_plan": 1194,
             "yahoo_active_universe": 6774,
-            "yahoo_active_excess": 5585,
+            "yahoo_active_excess": 5580,
             "yahoo_active_untracked": 0,
             "yahoo_active_classified": 6505,
             "retry_debt": 4058,
@@ -6709,7 +6709,7 @@
             },
             "terminal_subset": {
               "terminal_provider_unsupported": 3,
-              "canonical_daily_plan": 1189,
+              "canonical_daily_plan": 1194,
               "ok": true
             }
           },
@@ -6739,7 +6739,7 @@
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-20T02:53:32.860Z",
+          "detail": "2026-08-20T03:20:19.690Z",
           "platform_blocking": false
         },
         {
@@ -6747,7 +6747,7 @@
           "label": "public plus blocked equals denominator",
           "status": "ready",
           "status_label": "정상",
-          "detail": "1,189 / 1,189",
+          "detail": "1,194 / 1,194",
           "platform_blocking": false
         },
         {
@@ -6771,7 +6771,7 @@
           "label": "stock denominator reconciliation",
           "status": "ready",
           "status_label": "정상",
-          "detail": "Stock denominators reconcile: 1189 canonical daily names, 6774 Yahoo-active names, 4058 retry candidates, and 3 terminal provider-unsupported names; 4058 retries remain actionable after the terminal overlap.",
+          "detail": "Stock denominators reconcile: 1194 canonical daily names, 6774 Yahoo-active names, 4058 retry candidates, and 3 terminal provider-unsupported names; 4058 retries remain actionable after the terminal overlap.",
           "platform_blocking": false
         },
         {
@@ -6779,7 +6779,7 @@
           "label": "StockAnalysis stock/financial recovery state",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-19T21:45:19Z",
+          "detail": "2026-08-20T02:33:10Z",
           "platform_blocking": false,
           "required": false,
           "service_gate": false
@@ -6804,15 +6804,15 @@
       "status_message": "ETF public scoring and daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-20T02:54:52.488Z",
+      "as_of": "2026-08-20T03:21:38.067Z",
       "counts": {
         "eligible_etf_count": 4474,
         "scored_public_etf": 4474,
         "fetchable_daily_1y_gap": 93,
         "inception_limited_daily_1y_gap": 743,
         "terminal_limited_daily_1y_gap": 11,
-        "core_selected_count": 96,
-        "core_fresh_selected_count": 96,
+        "core_selected_count": 95,
+        "core_fresh_selected_count": 95,
         "core_stale_selected_count": 0
       },
       "details": {
@@ -6820,9 +6820,9 @@
         "exact_plan_batch_count": 0,
         "stockanalysis_recovery": {
           "state_present": true,
-          "generated_at": "2026-08-19T21:45:19Z",
-          "current_attempt_ref": "32305305667",
-          "current_attempt_number": 1,
+          "generated_at": "2026-08-20T02:33:10Z",
+          "current_attempt_ref": "32315717133",
+          "current_attempt_number": 2,
           "current_failed_count": 0,
           "tracked_kinds": [
             "etf"
@@ -7281,7 +7281,7 @@
           "label": "ETF core daily basket",
           "status": "ready",
           "status_label": "정상",
-          "detail": "96 fresh / 96 selected",
+          "detail": "95 fresh / 95 selected",
           "platform_blocking": false
         },
         {
@@ -7297,7 +7297,7 @@
           "label": "StockAnalysis ETF primary recovery state",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-19T21:45:19Z",
+          "detail": "2026-08-20T02:33:10Z",
           "platform_blocking": false,
           "required": false,
           "service_gate": false
@@ -13944,10 +13944,10 @@
       "label": "Product surface freshness",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "Product surface freshness is not ready: stale surfaces: 4 stale; product surface true-date/collection taxonomy v2: stock_detail:collection_stale, market_events:collection_stale, sectors:collection_stale, etf_center:pending_true_date. Other lanes may publish.",
+      "status_message": "Product surface freshness is not ready: stale surfaces: 4 stale; product surface true-date/collection taxonomy v2: etf_center:pending_true_date. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-20T02:55:05.382Z",
+      "as_of": "2026-08-20T03:21:54.862Z",
       "counts": {
         "surfaces": 7,
         "ready": 1,
@@ -13956,15 +13956,15 @@
         "stale": 4,
         "unavailable": 0,
         "error": 0,
-        "stamp_v2_stamped": 2,
+        "stamp_v2_stamped": 5,
         "stamp_v2_required": 6
       },
       "details": {
         "stockanalysis_recovery": {
           "state_present": true,
-          "generated_at": "2026-08-19T21:45:19Z",
-          "current_attempt_ref": "32305305667",
-          "current_attempt_number": 1,
+          "generated_at": "2026-08-20T02:33:10Z",
+          "current_attempt_ref": "32315717133",
+          "current_attempt_number": 2,
           "current_failed_count": 0,
           "tracked_kinds": [
             "surface"
@@ -13979,7 +13979,7 @@
         "stamp_taxonomy_v2": [
           {
             "id": "stock_detail",
-            "state": "collection_stale"
+            "state": "stamped"
           },
           {
             "id": "market_valuation",
@@ -13987,11 +13987,11 @@
           },
           {
             "id": "market_events",
-            "state": "collection_stale"
+            "state": "stamped"
           },
           {
             "id": "sectors",
-            "state": "collection_stale"
+            "state": "stamped"
           },
           {
             "id": "etf_center",
@@ -14011,7 +14011,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-20T02:55:05.382Z",
+          "detail": "2026-08-20T03:21:54.862Z",
           "platform_blocking": false
         },
         {
@@ -14043,7 +14043,7 @@
           "label": "product surface true-date/collection taxonomy v2",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "stock_detail:collection_stale, market_events:collection_stale, sectors:collection_stale, etf_center:pending_true_date",
+          "detail": "etf_center:pending_true_date",
           "platform_blocking": false
         },
         {
@@ -14051,7 +14051,7 @@
           "label": "StockAnalysis surface recovery state",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-19T21:45:19Z",
+          "detail": "2026-08-20T02:33:10Z",
           "platform_blocking": false,
           "required": false,
           "service_gate": false
@@ -14076,7 +14076,7 @@
       "status_message": "FINRA/OCC source gate is not ready: OCC current delivery: OCC target 2026-08-19 was unavailable (0 usable rows); serving fallback dated 2026-08-18. Current run remains degraded across 3 non-empty batch(es).. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-20T02:54:52.416Z",
+      "as_of": "2026-08-20T03:21:37.996Z",
       "counts": {
         "active_us_total": 751,
         "plain_us_finra_denominator": 691,
@@ -14088,10 +14088,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-08-20T02:54:01.671Z",
+          "signals_generated_at": "2026-08-20T03:20:46.161Z",
           "finra_source_date": "20260819",
           "occ_source_date": "20260818",
-          "coverage_index_generated_at": "2026-08-20T02:54:47.372Z",
+          "coverage_index_generated_at": "2026-08-20T03:21:32.588Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -14131,7 +14131,7 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-20T02:54:52.416Z",
+          "detail": "2026-08-20T03:21:37.996Z",
           "platform_blocking": false
         },
         {
@@ -14184,7 +14184,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-20T02:55:15.945Z",
+      "as_of": "2026-08-20T03:22:04.993Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -14710,7 +14710,7 @@
         ],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-19T21:45:50Z",
+          "observed_at": "2026-08-20T02:44:29Z",
           "outcome": "provider_wait",
           "failure_class": "provider_unsupported"
         },
@@ -14788,9 +14788,9 @@
     {
       "id": "stockanalysis_etf_detail",
       "label": "StockAnalysis per-ticker ETF detail",
-      "status": "degraded",
-      "status_label": "저하",
-      "status_message": "StockAnalysis per-ticker ETF detail is not ready: Detection floor status: unexpected_error; source_as_of null. Other lanes may publish.",
+      "status": "ready",
+      "status_label": "정상",
+      "status_message": "StockAnalysis per-ticker ETF detail is ready.",
       "deployment_blocking": false,
       "required": true,
       "as_of": null,
@@ -14800,9 +14800,9 @@
         "recovery_recovered": [],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-18T00:12:49Z",
-          "outcome": "failed",
-          "failure_class": "unknown"
+          "observed_at": "2026-08-20T02:44:29Z",
+          "outcome": "success",
+          "failure_class": null
         },
         "last_attempt_reason": null
       },
@@ -14810,9 +14810,9 @@
         {
           "id": "detection_floor_status",
           "label": "Detection floor status",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "unexpected_error; source_as_of null",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "ok; source_as_of null",
           "platform_blocking": false
         },
         {
@@ -14824,7 +14824,7 @@
           "platform_blocking": false
         }
       ],
-      "reason": "unexpected_error",
+      "reason": "ok",
       "artifact": {
         "source_as_of": null,
         "source_as_of_reason": "dateless_by_provider"
@@ -14888,7 +14888,7 @@
         "detection_reason": "ok",
         "recovery": {
           "lane_id": "yahoo_hourly_ticker",
-          "generated_at": "2026-08-20T01:47:19.962Z",
+          "generated_at": "2026-08-20T03:07:35.228Z",
           "keys": [
             "TQQQ.json",
             "SOXL.json"
@@ -14926,10 +14926,10 @@
           ],
           "promotion_deferral_details": [],
           "current_attempt": {
-            "run_id": "32322264179",
+            "run_id": "32327027926",
             "run_attempt": 1,
             "event_name": "schedule",
-            "observed_at": "2026-08-20T01:47:19.962Z",
+            "observed_at": "2026-08-20T03:07:35.228Z",
             "attempted": 2,
             "successes": 2,
             "failed": 0,
@@ -14940,7 +14940,7 @@
         },
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-20T01:47:19.962Z",
+          "observed_at": "2026-08-20T03:07:35.228Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -14968,7 +14968,7 @@
           "label": "Recovery current attempt",
           "status": "ready",
           "status_label": "정상",
-          "detail": "run 32322264179",
+          "detail": "run 32327027926",
           "platform_blocking": false
         },
         {
