@@ -2275,11 +2275,11 @@ function runWorkflowBridgeChecks() {
     "derived verification retains the strict KPI artifact gate",
   );
   const syncIndex = packageScripts["cf:build:steps"].indexOf("npm run sync-static");
-  const strictIndex = packageScripts["cf:build:steps"].indexOf("node scripts/check-fenok-data-health-kpi.mjs --strict");
+  const artifactGateIndex = packageScripts["cf:build:steps"].indexOf("npm run qa:fenok-data-health-kpi:artifact");
   const bundleIndex = packageScripts["cf:build:steps"].indexOf("opennextjs-cloudflare build");
   assert.ok(
-    syncIndex >= 0 && strictIndex > syncIndex && bundleIndex > strictIndex,
-    "cf:build reconciles derived data and runs the strict KPI checker before bundling",
+    syncIndex >= 0 && artifactGateIndex > syncIndex && bundleIndex > artifactGateIndex,
+    "cf:build reconciles derived data and runs the full KPI artifact gate before bundling",
   );
 
   // The S13 detection-floor bridge and the S14 KPI build live in the shared
