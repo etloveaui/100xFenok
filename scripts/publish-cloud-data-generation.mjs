@@ -341,6 +341,10 @@ export const FAMILIES = {
   "edgar-korean-summaries": {
     root: "data/edgar-korean-summaries",
     manifest_prefix: "public/data/edgar-korean-summaries",
+    // Internal telemetry and documentation, not data payloads. ops/ holds
+    // batch-skip-log.jsonl, which is JSONL and made validate_public_payload
+    // throw on every publish this family has ever attempted since 2026-06-21.
+    exclude: ["ops/", "README.md"],
     privacy_class: "public",
     source_as_of: { file: "index.json", key: "updated" },
     plan: { class_a: 3690, bytes: 29_900_000 },
@@ -621,6 +625,39 @@ function fail(code, detail) {
   const error = new Error(`${code}:${detail}`);
   error.code = code;
   throw error;
+}
+
+// A family that enumerates by directory sweeps in whatever the lane leaves
+// there. edgar-korean-summaries has never published because of exactly that:
+// its root carries ops/batch-skip-log.jsonl, which is JSONL, and
+// validate_public_payload JSON.parses every asset. The repair is to stop
+// publishing internal telemetry rather than to weaken a validator that exists
+// to keep malformed payloads off the plane for every family.
+//
+// Rules are root-relative. A rule ending in "/" excludes that directory by path
+// SEGMENT, so "ops/" removes ops/... without touching opsimistic/..., and it is
+// rooted at the family root rather than matched at any depth. Anything else is
+// an exact path. An exclusion that matches nothing, or that would leave no
+// assets at all, fails closed - a stale rule sitting quietly is how these lists
+// rot.
+export function applyFamilyExclusions(files, exclude) {
+  if (!exclude || exclude.length === 0) return files;
+  const kept = [];
+  const used = new Set();
+  for (const relative of files) {
+    let excluded = false;
+    for (const rule of exclude) {
+      const hit = rule.endsWith("/")
+        ? relative.startsWith(rule)
+        : relative === rule;
+      if (hit) { excluded = true; used.add(rule); break; }
+    }
+    if (!excluded) kept.push(relative);
+  }
+  const unused = exclude.filter((rule) => !used.has(rule));
+  if (unused.length > 0) fail("FAMILY_EXCLUDE_UNUSED", unused.join(","));
+  if (kept.length === 0) fail("FAMILY_EXCLUDE_EMPTY", exclude.join(","));
+  return kept;
 }
 
 async function walkFiles(absDir, prefix = "") {
@@ -1148,7 +1185,9 @@ export async function buildFamilyManifest({
       ? await filesFromCandidateScope({ candidateScopeId: family.candidate_scope_id, absRoot })
       : null
   );
-  const files = (enrolled ?? await walkFiles(absRoot))
+  // Exclusions apply only to the directory walk: a family that declares an
+  // explicit files list has already chosen its assets deliberately.
+  const files = (enrolled ?? applyFamilyExclusions(await walkFiles(absRoot), family.exclude))
     .sort((left, right) => left.localeCompare(right));
   if (files.length === 0) fail("FAMILY_EMPTY", absRoot);
   const createdAt = now();
