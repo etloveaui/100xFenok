@@ -24,6 +24,8 @@ on:
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
       - 'scripts/ops/test-alarm-blindness.mjs'
       - 'scripts/ops/test-cost-gate-rate-limit.mjs'
+      - 'scripts/ops/test-persist-untracked-byproducts.mjs'
+      - 'scripts/persist-cloud-publish-outcome.mjs'
       - 'scripts/lib/cloudflare-rate-limit.mjs'
       - 'scripts/check-r2-free-tier-usage.mjs'
       - 'data/admin/data-supply-state/publish-outcomes/**'
@@ -110,6 +112,8 @@ on:
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
       - 'scripts/ops/test-alarm-blindness.mjs'
       - 'scripts/ops/test-cost-gate-rate-limit.mjs'
+      - 'scripts/ops/test-persist-untracked-byproducts.mjs'
+      - 'scripts/persist-cloud-publish-outcome.mjs'
       - 'scripts/lib/cloudflare-rate-limit.mjs'
       - 'scripts/check-r2-free-tier-usage.mjs'
       - 'data/admin/data-supply-state/publish-outcomes/**'
@@ -203,6 +207,7 @@ jobs:
           node scripts/ops/test-workflow-credential-wiring.mjs
           node scripts/ops/test-alarm-blindness.mjs
           node scripts/ops/test-cost-gate-rate-limit.mjs
+          node scripts/ops/test-persist-untracked-byproducts.mjs
           node scripts/test-sentiment-artifact-contract-coverage.mjs
           node scripts/test-out-of-band-producer-lanes.mjs
 

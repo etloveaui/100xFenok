@@ -152,6 +152,43 @@ function runGit(repoRoot, args, { allowFailure = false, env = {} } = {}) {
   return result;
 }
 
+// Untracked byproducts and tracked changes are different problems and used to
+// be treated as one. Persistence rebases onto origin before pushing, and a
+// modified or deleted TRACKED file makes that rebase fail, so refusing over one
+// is correct. An UNTRACKED byproduct - Python bytecode, a downloaded matrix
+// artifact - cannot block a rebase, and cannot be committed either because every
+// `git add` here is scoped `-- <shardPath>`. Refusing over one destroyed the
+// record of 18 already-successful publications in 30 days, ten of them
+// consecutive days of fred-macro.
+export const UNTRACKED_BYPRODUCTS_MESSAGE =
+  "lane left undeclared untracked byproducts; the publish outcome was recorded first";
+
+export function classifyUnrelatedDirt(entries, shardPath) {
+  const tracked = [];
+  const untracked = [];
+  for (const entry of entries ?? []) {
+    if (!entry || entry.path === shardPath) continue;
+    if (entry.status === "??") untracked.push(entry.path);
+    else tracked.push(entry.path);
+  }
+  return { tracked, untracked, blocking: tracked.length > 0 };
+}
+
+function statusEntries(repoRoot) {
+  const output = runGit(repoRoot, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]).stdout;
+  const raw = output.split("\0").filter(Boolean);
+  const entries = [];
+  for (let index = 0; index < raw.length; index += 1) {
+    const status = raw[index].slice(0, 2);
+    entries.push({ status, path: raw[index].slice(3) });
+    if (status[0] === "R" || status[0] === "C") {
+      index += 1;
+      if (raw[index]) entries.push({ status, path: raw[index] });
+    }
+  }
+  return entries;
+}
+
 function statusPaths(repoRoot) {
   const output = runGit(repoRoot, ["status", "--porcelain=v1", "-z", "--untracked-files=all"]).stdout;
   const entries = output.split("\0").filter(Boolean);
@@ -263,10 +300,12 @@ export function persistPublishOutcome({
     }
     throw new Error(`publisher ${publisherOutcome} but outcome shard is absent for ${family}`);
   }
-  const changedPaths = statusPaths(repoRoot);
-  const unrelated = changedPaths.filter((candidate) => candidate !== shardPath);
-  if (unrelated.length > 0) {
-    throw new Error(`refusing dirty paths outside owned shard: ${unrelated.join(",")}`);
+  const entries = statusEntries(repoRoot);
+  const changedPaths = entries.map((entry) => entry.path);
+  const dirt = classifyUnrelatedDirt(entries, shardPath);
+  if (dirt.blocking) {
+    // Tracked changes break the rebase below, so nothing can be recorded safely.
+    throw new Error(`refusing dirty paths outside owned shard: ${dirt.tracked.join(",")}`);
   }
   const shardChanged = changedPaths.includes(shardPath);
   if (!shardChanged) {
@@ -314,6 +353,11 @@ export function persistPublishOutcome({
     const pushed = runGit(repoRoot, ["push", "origin", `HEAD:${branch}`], { allowFailure: true });
     if (pushed.status === 0) {
       log(`persisted ${family} publish outcome to ${branch}`);
+      if (dirt.untracked.length > 0) {
+        // The evidence is durable now, so the lane's real defect can be raised
+        // without costing the record. The run still goes red.
+        throw new Error(`${UNTRACKED_BYPRODUCTS_MESSAGE}: ${dirt.untracked.join(",")}`);
+      }
       return { persisted: true, shardPath, attempt };
     }
     log(`publish outcome push race for ${family} on attempt ${attempt}; retrying`);
