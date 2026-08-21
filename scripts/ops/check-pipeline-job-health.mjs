@@ -528,6 +528,7 @@ export function derivePublishOutcomeProjection({
     } catch {
       records = [];
     }
+    const ceilingHours = planeCeilingForFamily(family);
     projection.set(path.basename(binding.workflow), {
       ...latest,
       family,
@@ -536,6 +537,11 @@ export function derivePublishOutcomeProjection({
       freshness: deriveFamilyFreshness({
         records,
         now,
+        // B-386: judged against this producer's own cadence plus its declared
+        // grace, not one flat number calibrated for a single weekday family.
+        // A family with no schedule resolves null and keeps the age axis
+        // unapplied; PLANE_CEILING_UNSCHEDULED_REASONS records which and why.
+        ...(ceilingHours === null ? {} : { maxAgeHours: ceilingHours }),
         mode: freshnessModeForFamily(family, families),
         canonicalSourceAsOf: sourceClocks?.[family] ?? null,
       }),
@@ -697,6 +703,77 @@ function cronMatchesUtcDay(date, parsed) {
   // Match the GitHub/POSIX cron rule and the detection-floor evaluator: when
   // both fields are restricted, either day-of-month or day-of-week may fire.
   return dayMatch || weekdayMatch;
+}
+
+// Families whose publication has no schedule to be late against. An age ceiling
+// is meaningless for them, so the age axis simply does not apply - the same
+// treatment source-change mode already gets. They are declared rather than
+// silently handed a number, because a silent default applied to every family is
+// exactly what B-386 exists to remove.
+export const PLANE_CEILING_UNSCHEDULED_REASONS = Object.freeze({
+  "computed-signals":
+    "driven by workflow_run from its contributing producers rather than by a schedule of its own, so it has no cadence to be late against; its contributors carry the clocks",
+  "global-scouter":
+    "the only family already judged by PLANE_FRESHNESS_MODE_SOURCE_CHANGE, which counts missed source changes instead of applying an age ceiling, so no ceiling is applied to it either way",
+});
+
+// family -> the crons its producer declares, and the grace declared for them.
+// Both come from existing authorities: the detection config owns the schedule
+// and the detection calendar owns the grace. Nothing is hand-copied here.
+export function resolveFamilyCadence(family, {
+  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+  config = DATA_SUPPLY_DETECTION_CONFIG,
+  calendars = null,
+} = {}) {
+  const workflow = bindings?.[family]?.workflow;
+  if (typeof workflow !== "string") return null;
+  const lanes = (config?.lanes ?? []).filter((lane) => lane?.owner_workflow === workflow);
+  let crons = [...new Set(lanes.flatMap((lane) => (
+    (lane.producer_members ?? []).flatMap((member) => member?.schedule ?? [])
+  )))].filter((cron) => typeof cron === "string" && cron.trim() !== "");
+  if (crons.length === 0) {
+    // The detection config declares no lane for this workflow - measured 2026-08-21,
+    // that is true of all five slickcharts publishers. A workflow is the authority
+    // for its own schedule, so read it there; the calendar still owns the grace.
+    const file = path.join(REPO_ROOT, workflow);
+    let yaml = null;
+    try { yaml = fs.readFileSync(file, "utf8"); } catch { return null; }
+    const onBlock = yaml.slice(0, yaml.search(/^jobs:/m) >= 0 ? yaml.search(/^jobs:/m) : yaml.length);
+    crons = [...new Set([...onBlock.matchAll(/-\s*cron:\s*'([^']+)'/g)].map((m) => m[1]))];
+  }
+  if (crons.length === 0) return null;
+
+  const schedules = (calendars ?? readJsonOrNull(DETECTION_CALENDARS_PATH))?.schedules ?? [];
+  let graceHours = null;
+  for (const cron of crons) {
+    const match = schedules.find((entry) => entry?.cron === cron);
+    const grace = match?.grace;
+    if (!grace) continue;
+    // business_days is converted at 24h per day, not 72. The weekend a business
+    // day can span is already carried by maxCronGapHours, which returns 72 for a
+    // weekday-only cron; counting it twice would loosen every weekday lane.
+    const hours = grace.unit === "hours" ? grace.value
+      : grace.unit === "calendar_days" || grace.unit === "business_days" ? grace.value * 24
+      : null;
+    if (hours === null) continue;
+    graceHours = graceHours === null ? hours : Math.max(graceHours, hours);
+  }
+  if (graceHours === null) return null;
+  return { crons: crons.sort(), graceHours };
+}
+
+// The ceiling a family is judged against, or null when it has no schedule.
+// Returns null rather than throwing: one unresolvable family must not take the
+// whole alarm down with it, and the declared-reason contract keeps the null set
+// from growing silently.
+export function planeCeilingForFamily(family, options = {}) {
+  const cadence = resolveFamilyCadence(family, options);
+  if (cadence === null) return null;
+  try {
+    return planeFreshnessCeilingHours(cadence);
+  } catch {
+    return null;
+  }
 }
 
 const cronGapCache = new Map();
