@@ -7,20 +7,19 @@ name: Build Stocks Analyzer
 # from the canonical SEC payload after the provenance guard passes.
 
 on:
-  # The bridge is also derived from committed Stock Action / Market Facts /
-  # SEC 13F inputs that can advance outside this workflow. A push-triggered
-  # lightweight pass keeps its review-only fingerprints current without
-  # rerunning the full analyzer pipeline.
-  push:
-    branches: [main]
-    paths:
-      - 'data/global-scouter/core/stocks_analyzer.json'
-      - 'data/computed/stock_action_index.json'
-      - 'data/computed/market_facts/index.json'
-      - 'data/computed/market_facts/tickers/**'
-      - 'data/sec-13f/by_ticker.json'
-      - 'data/sec-13f/summary.json'
-      - 'data/yf/finance/**'
+  # DEC-360 added a push filter here over seven input families so the
+  # review-only SEC 13F bridge would re-seal when those inputs advanced. It was
+  # removed on 2026-08-21 (B-384) because it could never fire: GitHub does not
+  # start a workflow from a push made with the default GITHUB_TOKEN, and every
+  # producer pushes that way. Measured, this workflow has three push runs in its
+  # entire history, all on 2026-08-16 and all authored by a human.
+  #
+  # It was also wrong by construction rather than merely dead - the push path
+  # ran the bridge builder without the S2/S5 regeneration whose ordering the
+  # test's pinned counts encode, which is the 69-versus-67 disagreement recorded
+  # on B-384. Update Manifest owns both the rebuild and the git copies of all
+  # three sealed inputs, from a full non-sparse checkout; its own script says so
+  # at scripts/update-manifest-projections.sh:343-345.
   schedule:
     - cron: '7 6 * * *'
   workflow_dispatch:
