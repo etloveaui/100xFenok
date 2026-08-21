@@ -95,10 +95,23 @@ const intersection = secTickers.filter((ticker) => core.has(ticker));
 // DEC-325 is an intentional regression pin. DEC-379 expanded the canonical
 // 13F cohort from 60 to 63 investors; these post-reseal counts keep that
 // approved source expansion from silently widening the product surface.
+// Re-pinned 2026-08-21 from 1025/601. The pin did its job and the drift is
+// legitimate: it is exactly one ticker, VGK. Yahoo broad-finance publication
+// resumed at 8149bcc810 and populated data/yf/finance/VGK.json longName, which
+// had been null; loadYfUniverse registers longName as a resolvable company
+// name, and normalizeCompanyName maps both "Vanguard FTSE Europe ETF" and the
+// 13F filings' "VANGUARD FTSE EUROPE ETF" (18 holdings, all previously
+// ticker=null) onto VANGUARD FTSE EUROPE. The prior shortName
+// "Vanguard FTSEEuropean ETF" normalizes to VANGUARD FTSEEUROPEAN and did not
+// collide, which is why those holdings were unmapped until now. Measured:
+// consensus unmapped_count 181 -> 180, alias_count 314 -> 315.
+// core.size and intersection are deliberately NOT re-pinned - VGK is outside
+// the Global Scouter core, so 1066 and 424 holding still is the evidence that
+// this is one resolver mapping and not the graph expanding.
 assert.equal(core.size, 1066, "Global Scouter analyzer core count drifted");
-assert.equal(secTickers.length, 1025, "SEC 13F ticker count drifted");
+assert.equal(secTickers.length, 1026, "SEC 13F ticker count drifted");
 assert.equal(intersection.length, 424, "SEC 13F/core intersection drifted");
-assert.equal(outside.length, 601, "SEC 13F outside-core boundary drifted");
+assert.equal(outside.length, 602, "SEC 13F outside-core boundary drifted");
 
 const expected = new Map();
 for (const ticker of outside) {
@@ -139,12 +152,12 @@ for (const row of index.rows) {
 
 const countClass = (name) => index.rows.filter((row) => row.classification.classes.includes(name)).length;
 assert.equal(countClass("action_plus_market_facts"), 76);
-assert.equal(countClass("market_facts_only"), 36);
-assert.equal(countClass("no_action_index_overlap"), 525);
+assert.equal(countClass("market_facts_only"), 37);
+assert.equal(countClass("no_action_index_overlap"), 526);
 assert.equal(countClass("no_market_facts"), 489);
 assert.equal(countClass("action_index_only"), 0);
 assert.equal(index.counts.sec13f_extension_stock, 76);
-assert.equal(index.counts.sec13f_market_facts_only, 36);
+assert.equal(index.counts.sec13f_market_facts_only, 37);
 assert.equal(index.counts.sec13f_unresolved, 489);
 
 const extensionRows = index.rows.filter((row) => row.classification.type === "sec13f_extension_stock");
@@ -162,15 +175,19 @@ assert.equal(extensionRows.filter((row) => row.completeness.bridge_field_floor).
 // Re-pinned 2026-08-21 from 38/38. The Yahoo broad-finance lane had not
 // published since 2026-08-16, so these rows were starved of current estimates;
 // restoring publication moved 36 rows from incomplete to full in one refresh.
-// Structural counts are deliberately unchanged - 76 extension rows, 36
-// market-facts-only, 525 no-overlap, 489 unresolved, 601 outside-core - so this
-// is completeness improving, not the graph expanding.
+// Structural counts were deliberately unchanged by THAT refresh - 76 extension
+// rows, 36 market-facts-only, 525 no-overlap, 489 unresolved, 601 outside-core.
+// Corrected 2026-08-21: the next Yahoo refresh did move three of them, by one
+// ticker (VGK) and for the resolver reason recorded above - 37
+// market-facts-only, 526 no-overlap, 602 outside-core. Extension rows (76) and
+// unresolved (489) are still unchanged, so this remains completeness and
+// mapping improving, not the graph expanding.
 assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "full").length, 74);
 assert.equal(extensionRows.filter((row) => row.yf_estimates.state === "incomplete").length, 2);
 assert.deepEqual(index.counts.estimate, {
   extension_full: 74,
   extension_incomplete: 2,
-  market_facts_only_incomplete: 36,
+  market_facts_only_incomplete: 37,
   unresolved_absent: 489,
   as_of: {
     bridge_generated_at: index.generated_at,

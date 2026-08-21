@@ -33,11 +33,11 @@
     "analyzer": "e2b3e872a81eb809e580dd00a845dd6e70dbcdfc1eaf0349e2896d1414fd59a7",
     "action_index": "202d59702a1ae56b8cbd4ffeba205b3678593307d2168e669ca2c30ef29cd91e",
     "market_facts": "a0973c4e455c93d89c0ae54d4305cff011b16c063f0721e992501c75af6ee0f1",
-    "sec13f_by_ticker": "8674641fb1bad691c182503406af1868ae850d0e87bdb2f7d1bfaece5fecca21",
+    "sec13f_by_ticker": "9c8e5e5b53d911e7d4863f7279a8d1120fdac7f74375afd18724e3476b9e2a5a",
     "sec13f_summary": "3f377c1223c598fb7c8aaee08a46f9b40fd67b236c4c3360e2b1778c7a5674a1",
     "market_facts_details": {
-      "file_count": 112,
-      "sha256": "84d4eaea2055252c221fedb0d135e4bd1dbe37c6ed44993d00fa619fca9ac83b"
+      "file_count": 113,
+      "sha256": "bea284e2083606aa9ad0ef3d06d5fd991c91f84abd0de6ed424fdcd6c7d7d11c"
     },
     "yf_finance_candidates": {
       "file_count": 76,
@@ -46,26 +46,26 @@
   },
   "graph_invariants": {
     "core_stock_count": 1066,
-    "sec13f_ticker_count": 1025,
+    "sec13f_ticker_count": 1026,
     "core_intersection_count": 424,
     "warning_threshold": 450,
     "graph_mutation_applied": false,
     "public_surface_mutation_applied": false
   },
   "counts": {
-    "sec13f_outside_core": 601,
+    "sec13f_outside_core": 602,
     "action_plus_market_facts": 76,
-    "market_facts_only": 36,
-    "no_action_index_overlap": 525,
+    "market_facts_only": 37,
+    "no_action_index_overlap": 526,
     "no_market_facts": 489,
     "action_index_only": 0,
     "sec13f_extension_stock": 76,
-    "sec13f_market_facts_only": 36,
+    "sec13f_market_facts_only": 37,
     "sec13f_unresolved": 489,
     "estimate": {
       "extension_full": 74,
       "extension_incomplete": 2,
-      "market_facts_only_incomplete": 36,
+      "market_facts_only_incomplete": 37,
       "unresolved_absent": 489,
       "as_of": {
         "bridge_generated_at": "2026-08-21T08:04:02.213Z",
@@ -32391,6 +32391,71 @@
         "action_price_present": false,
         "action_valuation_present": false,
         "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "held",
+        "reason": "missing_global_scouter_core_row",
+        "producer_typed_marker": false,
+        "current_consumer": null,
+        "public_route": null,
+        "live_readback": "not_verified"
+      }
+    },
+    {
+      "ticker": "VGK",
+      "classification": {
+        "type": "sec13f_market_facts_only",
+        "classes": [
+          "market_facts_only",
+          "no_action_index_overlap"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": true,
+        "yf_finance": true
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 453254458
+      },
+      "market_facts": {
+        "asset_type": "etf",
+        "source_as_of": "2026-08-20",
+        "price": {
+          "present": false,
+          "value": null,
+          "confidence": null,
+          "source": null,
+          "as_of": null
+        }
+      },
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": true,
+        "path": "data/yf/finance/VGK.json",
+        "state": "incomplete",
+        "source_as_of": "2026-08-20",
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": true,
         "bridge_field_floor": false,
         "per_present": false,
         "forward_pe_present": false
