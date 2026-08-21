@@ -157,7 +157,7 @@ export function deriveFamilyFreshness({
 // a new scheduled workflow can no longer inherit invisibility by omission.
 export const CADENCE_DECLARATION_EXEMPTIONS = Object.freeze({
   "pipeline-failure-alarm.yml":
-    "self-monitoring would create a recursive alarm loop; its own liveness is evidenced by the generated_at stamp it writes to data/admin/alarm-state.json every run",
+    "self-monitoring would create a recursive alarm loop; its own liveness is evidenced by check-alarm-liveness counting its missed scheduled slots from the independent hourly budget alarm. The earlier claim here - that its generated_at stamp advances every run - was measured false on 2026-08-21 and the check no longer relies on it",
   "data-plane-serving-probe.yml":
     "detector, not a data-supply lane; it publishes no member so the lane-shaped declaration does not fit. Absence is currently unobserved - see BACKLOG B-387",
   "check-sec13f-live-parity.yml":
@@ -172,6 +172,36 @@ export const CADENCE_DECLARATION_EXEMPTIONS = Object.freeze({
     "deployment rather than acquisition; it has no source clock to be overdue against",
   "build-stocks-analyzer.yml":
     "derived-index builder rather than a source lane; its inputs carry the acquisition cadences and it follows them",
+});
+
+// A publish-capable family whose cloud-plane outcome has never been recorded is
+// invisible on the freshness axis, not merely red: derivePublishOutcomeProjection
+// skips any binding with no latest record, so no row reaches the alarm at all.
+// That is why fred-yardeni served source 2026-08-07 for eleven days while
+// appearing only as a failure_streak, and why slickcharts-symbols carries no
+// freshness row despite a 168h cadence.
+//
+// Measured 2026-08-21: 24 bindings, 19 shards, 5 unrecorded. They are NOT one
+// fault - the naive reading, that every unrecorded family is broken, is wrong
+// and would have paged three lanes that simply have not had an opportunity yet.
+// Each reason below is measured, and the split is the point.
+//
+// As with CADENCE_DECLARATION_EXEMPTIONS, listing them here does not make their
+// absence alarm; that would change what the alarm asserts for five families at
+// once and needs the opportunity test that distinguishes the two halves. It
+// removes the silent default so the set cannot grow by omission. Registered as
+// BACKLOG B-391.
+export const PLANE_OUTCOME_UNRECORDED_REASONS = Object.freeze({
+  "fdic-tier1":
+    "no opportunity yet: schedule-gated on cron '0 6 1-7 * 1' plus a schedule_gate eligibility step, and the 2026-08-17 run skipped fetch, publish and persist together, so no cycle has reached the publisher. Its unstaged public mirror is separately open as BACKLOG B-383",
+  "oecd-cli":
+    "no opportunity yet: monthly on cron '0 8 1 * *', last ran 2026-08-03, which predates the persist step introduced by 99b1b484e6 on 2026-08-11. The 2026-09-01 cycle is its first chance to record",
+  "slickcharts-monthly":
+    "no opportunity yet: monthly on cron '0 8 1 * *', last ran 2026-08-10T15:32Z, which predates the persist step introduced by 99b1b484e6 on 2026-08-11. The 2026-09-01 cycle is its first chance to record",
+  "fred-yardeni":
+    "GENUINE INCIDENT, tracked: the 2026-08-15 run acquired and committed successfully while the publish step was skipped by the implicit success() on its step-level if, after a repo-wide public-mirror guard failed on an unrelated family's file. Serving has been frozen at source 2026-08-07 since 2026-08-10 while main has carried 2026-08-14 since 2026-08-19",
+  "slickcharts-symbols":
+    "GENUINE INCIDENT, tracked: the 2026-08-16 run published and proved acceptance, then persistence refused four consumed telemetry directories outside its owned shard. Cleanup landed at 5cb138ba9e; the 2026-08-23T07:30Z run is the natural proof",
 });
 
 export const SCHEDULED_WORKFLOW_EXCLUSIONS = Object.freeze({

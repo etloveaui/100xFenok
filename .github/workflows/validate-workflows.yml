@@ -20,6 +20,8 @@ on:
       - 'scripts/ops/test-emit-alarm-state.mjs'
       - 'scripts/ops/check-alarm-liveness.mjs'
       - 'scripts/ops/test-alarm-liveness.mjs'
+      - 'scripts/ops/test-plane-outcome-recording-coverage.mjs'
+      - 'data/admin/data-supply-state/publish-outcomes/**'
       - 'scripts/check-lane-commit-manifest-inventory.mjs'
       - 'scripts/ops/check-global-writer-queue.mjs'
       - 'scripts/ops/test-check-global-writer-queue.mjs'
@@ -99,6 +101,8 @@ on:
       - 'scripts/ops/test-emit-alarm-state.mjs'
       - 'scripts/ops/check-alarm-liveness.mjs'
       - 'scripts/ops/test-alarm-liveness.mjs'
+      - 'scripts/ops/test-plane-outcome-recording-coverage.mjs'
+      - 'data/admin/data-supply-state/publish-outcomes/**'
       - 'scripts/check-lane-commit-manifest-inventory.mjs'
       - 'scripts/ops/check-global-writer-queue.mjs'
       - 'scripts/ops/test-check-global-writer-queue.mjs'
@@ -185,6 +189,7 @@ jobs:
           node scripts/ops/test-cadence-declaration-coverage.mjs
           node scripts/ops/test-missed-schedule-window.mjs
           node scripts/ops/test-alarm-liveness.mjs
+          node scripts/ops/test-plane-outcome-recording-coverage.mjs
           node scripts/test-sentiment-artifact-contract-coverage.mjs
           node scripts/test-out-of-band-producer-lanes.mjs
 
