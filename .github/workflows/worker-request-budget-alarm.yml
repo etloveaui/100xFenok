@@ -50,15 +50,40 @@ jobs:
       - name: Check pipeline alarm liveness
         id: alarm_liveness
         continue-on-error: true
+        env:
+          # Required. GITHUB_TOKEN is not a default runner variable, and without
+          # it the check cannot read the alarm's run history, returns
+          # "unreadable", and exits 1 - which would fire the surfacing step below
+          # with a message that is false. Asserted by
+          # scripts/ops/test-workflow-credential-wiring.mjs.
+          GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/ops/check-alarm-liveness.mjs
 
       # A tolerated check whose failure reaches nothing is the exact shape that
       # hid the SEC 13F smoke for four days, so this one surfaces itself.
-      - name: Surface a stale pipeline alarm
+      #
+      # Stale and unreadable are surfaced separately on purpose. Collapsing them
+      # is the same defect this program keeps finding - one signal covering two
+      # fault classes - and here the wrong half would assert the alarm is dead
+      # when in fact this check could not measure it. Exit 2 is stale, exit 1 is
+      # unreadable; the step outcome alone cannot tell them apart, so the state
+      # is re-read from the JSON the check printed.
+      - name: Surface a stale or unmeasurable pipeline alarm
         if: steps.alarm_liveness.outcome == 'failure'
         run: |
-          echo "::error::the pipeline alarm has not run recently; every other detector's silence is currently invisible" >&2
+          set -euo pipefail
+          state="$(node scripts/ops/check-alarm-liveness.mjs 2>/dev/null | tail -1 || true)"
+          case "$state" in
+            *'"status":"stale"'*)
+              echo "::error::the pipeline alarm has not run recently; every other detector's silence is currently invisible: ${state}" >&2
+              ;;
+            *)
+              echo "::error::pipeline alarm liveness could not be measured, which is a fault in this check rather than evidence about the alarm: ${state:-no output}" >&2
+              ;;
+          esac
           exit 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Check Worker request budget
         id: budget
