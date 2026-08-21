@@ -584,6 +584,16 @@ function runConfigAndFixtureChecks() {
     "sentiment_crypto",
     "sentiment_vix",
     "sentiment_move",
+    // Added 2026-08-21: the remaining CNN outputs the same producer writes in
+    // the same run. They had no source-family gate, which computed signals
+    // reported as an unresolved warning for cnn-put-call.
+    "sentiment_cnn_put_call",
+    "sentiment_cnn_breadth",
+    "sentiment_cnn_components",
+    "sentiment_cnn_junk_bond",
+    "sentiment_cnn_momentum",
+    "sentiment_cnn_safe_haven",
+    "sentiment_cnn_strength",
   ]);
   assert.deepEqual(sentiment.producer_members[0].artifact_contracts.map((item) => item.path), [
     "data/sentiment/cnn-fear-greed.json",
@@ -591,6 +601,13 @@ function runConfigAndFixtureChecks() {
     "data/sentiment/crypto-fear-greed.json",
     "data/sentiment/vix.json",
     "data/sentiment/move.json",
+    "data/sentiment/cnn-put-call.json",
+    "data/sentiment/cnn-breadth.json",
+    "data/sentiment/cnn-components.json",
+    "data/sentiment/cnn-junk-bond.json",
+    "data/sentiment/cnn-momentum.json",
+    "data/sentiment/cnn-safe-haven.json",
+    "data/sentiment/cnn-strength.json",
   ]);
   const liveLaneIds = DATA_SUPPLY_DETECTION_CONFIG.lanes
     .filter((item) => item.enforcement === "live")

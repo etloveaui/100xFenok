@@ -708,6 +708,39 @@ const config = {
           sourceSelector: maxArrayFieldSource("", "date", "date"),
           assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("move_non_empty", "")],
         }),
+        // The remaining CNN outputs are written by the same producer in the same
+        // run and carry the same {date, ...} row shape, but had no contract, so
+        // they had no source-family freshness gate. computed signals reported
+        // cnn-put-call as unresolved for exactly that reason. aaii.json is
+        // deliberately absent: it has no automated producer (BACKLOG #362).
+        artifact("sentiment_cnn_put_call", "data/sentiment/cnn-put-call.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_put_call_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_breadth", "data/sentiment/cnn-breadth.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_breadth_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_components", "data/sentiment/cnn-components.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_components_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_junk_bond", "data/sentiment/cnn-junk-bond.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_junk_bond_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_momentum", "data/sentiment/cnn-momentum.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_momentum_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_safe_haven", "data/sentiment/cnn-safe-haven.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_safe_haven_non_empty", "")],
+        }),
+        artifact("sentiment_cnn_strength", "data/sentiment/cnn-strength.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [typeAssertion("root_array", "", "array"), minRowsAssertion("cnn_strength_non_empty", "")],
+        }),
       ], "us_trading")],
       endpointContract: endpointAssertion(
         "sentiment_normalized_sources",

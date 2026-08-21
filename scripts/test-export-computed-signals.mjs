@@ -57,14 +57,11 @@ const CNN_PUT_CALL = "data/sentiment/cnn-put-call.json";
         status: "unresolved",
         reason: "no registered source-family freshness/SLA gate",
       },
-      {
-        contributor: CNN_PUT_CALL,
-        source_as_of: "2026-08-10",
-        status: "unresolved",
-        reason: "no registered source-family freshness/SLA gate",
-      },
     ],
-    "only uncovered contributors get non-blocking source-specific warnings",
+    "only uncovered contributors get non-blocking source-specific warnings; "
+      + "cnn-put-call was gated on 2026-08-21 alongside the six other CNN outputs "
+      + "its producer writes, leaving aaii as the sole genuinely ungated contributor "
+      + "because it has no automated producer at all (BACKLOG #362)",
   );
 }
 
@@ -199,7 +196,6 @@ const CNN_PUT_CALL = "data/sentiment/cnn-put-call.json";
     warnings.map(({ contributor, source_as_of, status }) => ({ contributor, source_as_of, status })),
     [
       { contributor: AAII, source_as_of: "2026-08-05", status: "unresolved" },
-      { contributor: CNN_PUT_CALL, source_as_of: "2026-08-10", status: "unresolved" },
     ],
     "covered quarterly contributors stay under the existing source-family authority",
   );
