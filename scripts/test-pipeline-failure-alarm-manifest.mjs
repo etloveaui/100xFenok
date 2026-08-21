@@ -173,6 +173,73 @@ function jobOf(model, workflow, name) {
   return job;
 }
 
+// A continue-on-error step reports conclusion "success" even when it failed, so
+// its outcome is the only thing that can reveal the failure. A tolerant step
+// with no id has no outcome to reference and its result reaches nothing but the
+// run log. That is exactly how the SEC 13F private-route smoke stayed dead from
+// 2026-08-17 to 2026-08-21 underneath an all-PASS issue body. Being tolerant is
+// a legitimate design choice; being unobservable is not, so a log-only step must
+// say so on the record.
+const LOG_ONLY_TOLERANT_STEPS = Object.freeze({
+  "qa-visual.yml::visual":
+    "job-level tolerance: the uploaded screenshot report is the evidence, and a diff against the owner-gated 2026-07-02 baselines is expected rather than a fault",
+  "slickcharts-symbols.yml::Check slickcharts-symbols cloud acceptance":
+    "supplementary evidence for a lane that already persists a publish outcome and is watched by the alarm; measured passing on 2026-08-21 with {\"ok\":true} in the run log",
+  "slickcharts-weekly.yml::Check slickcharts-weekly cloud acceptance":
+    "supplementary evidence for a lane that already persists a publish outcome and is watched by the alarm; measured passing on 2026-08-21 with {\"ok\":true} in the run log",
+});
+
+function tolerantUnits(root) {
+  const dir = path.join(root, ".github", "workflows");
+  const units = [];
+  for (const file of fs.readdirSync(dir).filter((name) => name.endsWith(".yml")).sort()) {
+    const source = fs.readFileSync(path.join(dir, file), "utf8");
+    const lines = source.split("\n");
+    for (let index = 0; index < lines.length; index += 1) {
+      if (!/^\s*continue-on-error:\s*true\s*$/.test(lines[index])) continue;
+      const indent = lines[index].match(/^\s*/)[0].length;
+      // Walk back to whichever owns it: a step's "- name:" or a job key. A
+      // job-level tolerance makes the whole job's failure invisible.
+      let owner = null;
+      for (let back = index - 1; back >= 0; back -= 1) {
+        const step = /^(\s*)-\s+name:\s*(.+?)\s*$/.exec(lines[back]);
+        if (step && step[1].length + 2 <= indent) { owner = { kind: "step", name: step[2] }; break; }
+        const job = /^  ([A-Za-z0-9_-]+):\s*$/.exec(lines[back]);
+        if (job) { owner = { kind: "job", name: job[1] }; break; }
+      }
+      if (!owner) continue;
+      let id = null;
+      if (owner.kind === "step") {
+        for (let scan = index - 6; scan <= index + 6; scan += 1) {
+          const found = /^\s*id:\s*([A-Za-z0-9_-]+)\s*$/.exec(lines[scan] ?? "");
+          if (found) { id = found[1]; break; }
+        }
+      }
+      const observable = Boolean(id) && new RegExp(`steps\\.${id}\\.outcome`).test(source);
+      units.push({ key: `${file}::${owner.name}`, observable });
+    }
+  }
+  return units;
+}
+
+function assertTolerantStepsAreObservable(root) {
+  const units = tolerantUnits(root);
+  assert.ok(units.length > 0, "the tolerant-unit scan found nothing, so it cannot be protecting anything");
+
+  const offenders = units.filter((unit) => !unit.observable && !LOG_ONLY_TOLERANT_STEPS[unit.key]).map((unit) => unit.key);
+  assert.deepEqual(
+    offenders.sort(),
+    [],
+    `a continue-on-error unit must expose its outcome or be recorded as log-only:\n  ${offenders.join("\n  ")}`,
+  );
+
+  // A record that no longer matches a tolerant unit is dead and hides the next one.
+  const live = new Set(units.filter((unit) => !unit.observable).map((unit) => unit.key));
+  for (const key of Object.keys(LOG_ONLY_TOLERANT_STEPS)) {
+    assert.ok(live.has(key), `${key} is recorded as log-only but is no longer an unobservable tolerant unit`);
+  }
+}
+
 function assertStepContracts(model) {
   for (const contract of STEP_CONTRACTS) {
     const step = stepOf(model, contract.workflow, contract.name, contract.job);
@@ -283,6 +350,7 @@ function expectJobMutation({ workflow, job, patch, check = assertPipelineTopolog
 }
 
 assertStepContracts(workflows);
+assertTolerantStepsAreObservable(root);
 assertPipelineTopology(workflows);
 assertCurrentRunArtifactBinding(workflows);
 assertStaleArtifactGuard(workflows);
