@@ -1272,12 +1272,39 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
     result.watched.length,
     "the five-state count must reconcile to the complete watch inventory",
   );
+  // CORRECTED 2026-08-21 (B-394). This used to require the checked-in fixture to
+  // contain at least one overdue row, which made the contract depend on the
+  // fleet being broken: it passed only while some real family was overdue, and
+  // failed the moment the last one was fixed. fetch-yf-finance was that family,
+  // and giving its ETF cron an observation moved it to not_due - the fix landing
+  // is what turned this red.
+  //
+  // What the assertion was for is kept and is exercised deterministically at the
+  // attachWorkflowCadence check above, on a constructed overdue projection. What
+  // remains here is the invariant that does not need an incident to exist: any
+  // overdue row present in the live projection must page, and the state must be
+  // one the projection can actually produce.
   const overdueRows = result.workflows.filter((row) => row.cadence_status === "overdue");
-  assert.ok(overdueRows.length > 0, "the checked-in KPI fixture must exercise overdue cadence");
   assert.ok(
     overdueRows.every((row) => row.status === "alarm"
       && row.alarm_reasons.includes("unrecovered_overdue")),
     "an unrecovered slot beyond declared grace must remain a paging incident",
+  );
+  assert.ok(
+    result.workflows.every((row) => CADENCE_STATES.includes(row.cadence_status)),
+    "every live row must carry a declared cadence state",
+  );
+  // A live row must never be "unknown" without the coverage artifact being
+  // absent outright. An unknown here means the KPI's coverage rows no longer key
+  // to the declared bindings - which is exactly what a member-id change does
+  // before the detection report and KPI are rebuilt, and it silently removes a
+  // workflow from cadence watch rather than alarming.
+  const unknownRows = result.workflows.filter((row) => row.cadence_status === "unknown");
+  assert.deepEqual(
+    unknownRows.map((row) => row.file),
+    [],
+    "a workflow whose declared bindings do not resolve in the KPI coverage drops out of cadence "
+      + "watch silently; rebuild data/admin/data-supply-detection-floor.json and the KPI artifact",
   );
 }
 
