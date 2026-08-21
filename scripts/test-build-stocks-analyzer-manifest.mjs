@@ -12,20 +12,26 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workflow = fs.readFileSync(path.join(root, ".github/workflows/build-stocks-analyzer.yml"), "utf8");
 
-const pushStart = workflow.indexOf("\n  push:\n");
-const scheduleStart = workflow.indexOf("\n  schedule:\n", pushStart);
-assert.ok(pushStart >= 0 && scheduleStart > pushStart, "push trigger must precede schedule trigger");
-const pushBlock = workflow.slice(pushStart, scheduleStart);
-const pushPaths = [...pushBlock.matchAll(/^\s+- '([^']+)'$/gm)].map((match) => match[1]);
-assert.deepEqual(pushPaths, [
-  "data/global-scouter/core/stocks_analyzer.json",
-  "data/computed/stock_action_index.json",
-  "data/computed/market_facts/index.json",
-  "data/computed/market_facts/tickers/**",
-  "data/sec-13f/by_ticker.json",
-  "data/sec-13f/summary.json",
-  "data/yf/finance/**",
-], "push trigger must cover exactly the bridge inputs");
+// UPDATED 2026-08-21 (B-384). This pinned the exact seven push paths DEC-360
+// declared, and required the push trigger to exist at all. The trigger was
+// removed at c2e5f7f528 because it could never fire: GitHub does not start a
+// workflow from a push made with the default GITHUB_TOKEN, and every producer
+// pushes that way. Measured, this workflow had three push runs in its whole
+// history, all on 2026-08-16 and all authored by a human.
+//
+// It was also wrong by construction - the push path ran the bridge builder
+// without the S2/S5 regeneration whose ordering the bridge test's pinned counts
+// encode. Update Manifest owns the rebuild from a full checkout and says so at
+// scripts/update-manifest-projections.sh:343-345.
+//
+// The invariant kept here is the inverse: the trigger must stay gone, so the
+// unreachable shape cannot quietly return.
+const onBlock = workflow.slice(0, workflow.search(/^jobs:/m));
+assert.ok(
+  !/\n  push:\n/.test(onBlock),
+  "build-stocks-analyzer must not regain a push trigger; it can never fire for a producer commit",
+);
+
 assert.match(workflow, /\n  schedule:\n/);
 assert.match(workflow, /\n  workflow_dispatch:\n/);
 for (const stepName of [
