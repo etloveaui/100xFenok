@@ -1,22 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-21T07:12:30.278Z",
+  "generated_at": "2026-08-21T08:02:13.675Z",
   "status": "open",
-  "open_incident_count": 7,
+  "open_incident_count": 4,
   "open_incidents": [
-    {
-      "workflow": "fetch-damodaran-shadow.yml",
-      "label": "Fetch Damodaran Data",
-      "streak": 2,
-      "failure_streak_threshold": 1,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "plane_freshness_unavailable"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -59,19 +46,6 @@
       "cadence_status": "overdue"
     },
     {
-      "workflow": "slickcharts-history.yml",
-      "label": "SlickCharts History",
-      "streak": 0,
-      "failure_streak_threshold": 1,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "plane_freshness_unavailable"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
-    {
       "workflow": "slickcharts-symbols.yml",
       "label": "SlickCharts Symbols",
       "streak": 1,
@@ -83,19 +57,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "slickcharts-weekly.yml",
-      "label": "SlickCharts Weekly",
-      "streak": 0,
-      "failure_streak_threshold": 1,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "plane_freshness_unavailable"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
     }
   ],
   "watched_workflows": [
@@ -103,10 +64,9 @@
       "file": "build-stocks-analyzer.yml",
       "label": "Build Stocks Analyzer",
       "events": [
-        "push",
         "schedule"
       ],
-      "event": null,
+      "event": "schedule",
       "failure_streak_threshold": 2,
       "cadence_status": "no_declaration",
       "cadence_evidence": []
@@ -333,7 +293,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 6
+      "data_freshness_age_hours_at_generation": 7
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -500,18 +460,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32457462035",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32457462035",
-    "observed_at": "2026-08-21T07:12:30.278Z",
+    "run_id": "32461154368",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32461154368",
+    "observed_at": "2026-08-21T08:02:13.675Z",
     "event": "schedule",
     "workflows": [
-      "fetch-damodaran-shadow.yml",
       "fetch-edgar-filings.yml",
       "fetch-fred-yardeni.yml",
       "fetch-yf-finance.yml",
-      "slickcharts-history.yml",
-      "slickcharts-symbols.yml",
-      "slickcharts-weekly.yml"
+      "slickcharts-symbols.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
