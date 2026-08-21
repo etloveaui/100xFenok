@@ -1,9 +1,23 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-21T15:52:22.212Z",
+  "generated_at": "2026-08-21T16:56:16.107Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 8,
   "open_incidents": [
+    {
+      "workflow": "fetch-defillama.yml",
+      "label": "Fetch DefiLlama Stablecoins Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "plane_freshness_delayed",
+        "plane_publish_gate_blocked"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -56,6 +70,20 @@
       "first_failing_run_url": null,
       "alarm_reasons": [
         "plane_outcome_unrecorded"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-yahoo-ticker.yml",
+      "label": "Fetch Yahoo Finance Ticker Snapshot",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "plane_freshness_delayed",
+        "plane_publish_gate_blocked"
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
@@ -322,7 +350,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 14
+      "data_freshness_age_hours_at_generation": 16
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -487,15 +515,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32499775085",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32499775085",
-    "observed_at": "2026-08-21T15:52:22.212Z",
+    "run_id": "32505354955",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32505354955",
+    "observed_at": "2026-08-21T16:56:16.107Z",
     "event": "schedule",
     "workflows": [
+      "fetch-defillama.yml",
       "fetch-edgar-filings.yml",
       "fetch-fenok-news-tone.yml",
       "fetch-fred-yardeni.yml",
       "fetch-oecd-cli.yml",
+      "fetch-yahoo-ticker.yml",
       "slickcharts-monthly.yml",
       "slickcharts-symbols.yml"
     ],
