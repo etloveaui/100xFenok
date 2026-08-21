@@ -21,6 +21,17 @@
 // alarm's own scheduled slots that passed with no run - the same rule, and the
 // same two-slot tolerance, the alarm applies to the detectors it watches.
 //
+// Scope, stated rather than implied. This counts slots since the alarm's most
+// recent run of ANY event, workflow_run included, so it answers "is the alarm
+// running at all" and NOT "is the alarm's schedule healthy". Those differ: on
+// 2026-08-21 the alarm's scheduled slots were dropped and it survived because an
+// unrelated workflow_run fired it, which this check would have called live. That
+// is deliberate. Measured the same day, GitHub dropped every hourly slot
+// fleet-wide for about two hours - five hourly workflows, zero scheduled runs
+// between 23:45Z and 01:45Z - so a schedule-only rule would fire on every hourly
+// detector at once on ordinary scheduler weather. Detectors were still being run
+// throughout by their workflow_run triggers.
+//
 // Two properties are deliberate and are asserted by test-alarm-liveness.mjs:
 //   - The cadence is read from the alarm's own workflow, never hand-copied, so a
 //     reschedule carries this rule with it.

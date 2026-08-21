@@ -157,7 +157,7 @@ export function deriveFamilyFreshness({
 // a new scheduled workflow can no longer inherit invisibility by omission.
 export const CADENCE_DECLARATION_EXEMPTIONS = Object.freeze({
   "pipeline-failure-alarm.yml":
-    "self-monitoring would create a recursive alarm loop; its own liveness is evidenced by check-alarm-liveness counting its missed scheduled slots from the independent hourly budget alarm. The earlier claim here - that its generated_at stamp advances every run - was measured false on 2026-08-21 and the check no longer relies on it",
+    "self-monitoring would create a recursive alarm loop; its own liveness is evidenced by check-alarm-liveness counting the slots its own cron has passed since its most recent run of any event, hosted in the hourly budget alarm. Two earlier claims here were measured false on 2026-08-21 and are corrected: its generated_at stamp does NOT advance every run, and the host is not independent of it - both share the GitHub scheduler, which dropped every hourly slot fleet-wide for about two hours that morning",
   "data-plane-serving-probe.yml":
     "detector, not a data-supply lane; it publishes no member so the lane-shaped declaration does not fit. Absence is currently unobserved - see BACKLOG B-387",
   "check-sec13f-live-parity.yml":
@@ -195,9 +195,9 @@ export const PLANE_OUTCOME_UNRECORDED_REASONS = Object.freeze({
   "fdic-tier1":
     "no opportunity yet: schedule-gated on cron '0 6 1-7 * 1' plus a schedule_gate eligibility step, and the 2026-08-17 run skipped fetch, publish and persist together, so no cycle has reached the publisher. Its unstaged public mirror is separately open as BACKLOG B-383",
   "oecd-cli":
-    "no opportunity yet: monthly on cron '0 8 1 * *', last ran 2026-08-03, which predates the persist step introduced by 99b1b484e6 on 2026-08-11. The 2026-09-01 cycle is its first chance to record",
+    "GENUINE INCIDENT, reclassified 2026-08-21 by measurement: this was first recorded as awaiting a monthly turn, which was misleading. Its scheduled path has never once completed - the only schedule run in retained history, 2026-08-01T09:45:49Z, was cancelled - and every success it has is a workflow_dispatch, including the 2026-08-03 run originally cited. A lane that only ever runs by hand is not waiting for its cadence",
   "slickcharts-monthly":
-    "no opportunity yet: monthly on cron '0 8 1 * *', last ran 2026-08-10T15:32Z, which predates the persist step introduced by 99b1b484e6 on 2026-08-11. The 2026-09-01 cycle is its first chance to record",
+    "GENUINE INCIDENT, reclassified 2026-08-21 by measurement: same shape as oecd-cli and same original error. Its 2026-08-01T09:57:19Z scheduled run was cancelled and its 2026-07-01T11:16:10Z scheduled run failed, so the scheduled path has never completed; the 2026-08-10 run originally cited was a workflow_dispatch",
   "fred-yardeni":
     "GENUINE INCIDENT, tracked: the 2026-08-15 run acquired and committed successfully while the publish step was skipped by the implicit success() on its step-level if, after a repo-wide public-mirror guard failed on an unrelated family's file. Serving has been frozen at source 2026-08-07 since 2026-08-10 while main has carried 2026-08-14 since 2026-08-19",
   "slickcharts-symbols":
