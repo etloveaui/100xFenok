@@ -699,6 +699,73 @@ function cronMatchesUtcDay(date, parsed) {
   return dayMatch || weekdayMatch;
 }
 
+const cronGapCache = new Map();
+
+// The longest wait a HEALTHY producer can have between two runs, walking the
+// same 400-year Gregorian cycle deriveFailureStreakThreshold uses so weekday-
+// only and day-of-month declarations are exact without a second period table.
+//
+// The worst case is the right one: a family is late against its longest healthy
+// interval, never its shortest. A weekday-only cron's longest wait is the
+// weekend, so "0 22 * * 1-5" is 72 hours and not 24.
+//
+// Throws rather than returning a default. A family whose cadence cannot be
+// resolved must fail closed - silently defaulting is exactly how a single flat
+// ceiling came to be applied to cadences spanning one hour to a month.
+export function maxCronGapHours(declarations) {
+  if (!Array.isArray(declarations) || declarations.length === 0) {
+    throw new Error("cadence gap requires at least one declared cron");
+  }
+  const crons = [...new Set(declarations.map((entry) => (
+    typeof entry === "string" ? entry : entry?.cron
+  )))].sort();
+  if (crons.some((cron) => typeof cron !== "string" || cron.trim() === "")) {
+    throw new Error("declared cadence has an invalid cron");
+  }
+  const cacheKey = crons.join("\u0000");
+  if (cronGapCache.has(cacheKey)) return cronGapCache.get(cacheKey);
+
+  const parsedCrons = crons.map(parseDeclaredCron);
+  let firstOccurrence = null;
+  let previousOccurrence = null;
+  let maxGapMs = 0;
+  for (let dayOffset = 0; dayOffset < GREGORIAN_CYCLE_DAYS; dayOffset += 1) {
+    const dayEpoch = GREGORIAN_CYCLE_START_MS + dayOffset * 86_400_000;
+    const date = new Date(dayEpoch);
+    const minuteOffsets = new Set();
+    for (const parsed of parsedCrons) {
+      if (!cronMatchesUtcDay(date, parsed)) continue;
+      for (const hour of parsed.hour) {
+        for (const minute of parsed.minute) minuteOffsets.add(hour * 60 + minute);
+      }
+    }
+    for (const minuteOffset of [...minuteOffsets].sort((a, b) => a - b)) {
+      const occurrence = dayEpoch + minuteOffset * 60_000;
+      if (firstOccurrence === null) firstOccurrence = occurrence;
+      else maxGapMs = Math.max(maxGapMs, occurrence - previousOccurrence);
+      previousOccurrence = occurrence;
+    }
+  }
+  if (firstOccurrence === null) throw new Error("declared cadence produces no occurrence in a Gregorian cycle");
+  // The wrap from the last occurrence of one cycle to the first of the next.
+  const cycleMs = GREGORIAN_CYCLE_DAYS * 86_400_000;
+  maxGapMs = Math.max(maxGapMs, (firstOccurrence + cycleMs) - previousOccurrence);
+  const hours = maxGapMs / 3_600_000;
+  cronGapCache.set(cacheKey, hours);
+  return hours;
+}
+
+// A family is stale when it has missed its own longest healthy interval plus
+// the grace already declared for it - the same rule the serving-probe axis was
+// corrected to on 2026-08-21. Both inputs are required; there is no default,
+// because a default is what this replaces.
+export function planeFreshnessCeilingHours({ crons, graceHours } = {}) {
+  if (!Number.isFinite(graceHours) || graceHours < 0) {
+    throw new Error("plane freshness ceiling requires a declared non-negative grace");
+  }
+  return maxCronGapHours(crons) + graceHours;
+}
+
 const failureThresholdCache = new Map();
 
 /**
