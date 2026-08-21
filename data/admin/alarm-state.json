@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-21T11:46:47.608Z",
+  "generated_at": "2026-08-21T13:15:41.953Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 5,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -27,23 +27,37 @@
       "first_failing_run_id": 31252801134,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31252801134",
       "alarm_reasons": [
-        "failure_streak"
+        "failure_streak",
+        "plane_outcome_unrecorded"
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
     },
     {
-      "workflow": "fetch-yf-finance.yml",
-      "label": "Fetch YF Finance Data",
+      "workflow": "fetch-oecd-cli.yml",
+      "label": "Fetch OECD CLI Shadow",
       "streak": 0,
-      "failure_streak_threshold": 2,
+      "failure_streak_threshold": 1,
       "first_failing_run_id": null,
       "first_failing_run_url": null,
       "alarm_reasons": [
-        "unrecovered_overdue"
+        "plane_outcome_unrecorded"
       ],
       "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "slickcharts-monthly.yml",
+      "label": "SlickCharts Monthly",
+      "streak": 1,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "plane_outcome_unrecorded"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
     },
     {
       "workflow": "slickcharts-symbols.yml",
@@ -53,7 +67,8 @@
       "first_failing_run_id": 31935105871,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31935105871",
       "alarm_reasons": [
-        "failure_streak"
+        "failure_streak",
+        "plane_outcome_unrecorded"
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
@@ -293,7 +308,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 10
+      "data_freshness_age_hours_at_generation": 12
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -336,10 +351,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "global-writer-queue-observer.yml",
@@ -443,8 +456,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 25,
-    "overdue": 1,
+    "not_due": 26,
+    "overdue": 0,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -460,14 +473,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32478623837",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32478623837",
-    "observed_at": "2026-08-21T11:46:47.608Z",
+    "run_id": "32485756706",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32485756706",
+    "observed_at": "2026-08-21T13:15:41.953Z",
     "event": "schedule",
     "workflows": [
       "fetch-edgar-filings.yml",
       "fetch-fred-yardeni.yml",
-      "fetch-yf-finance.yml",
+      "fetch-oecd-cli.yml",
+      "slickcharts-monthly.yml",
       "slickcharts-symbols.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
