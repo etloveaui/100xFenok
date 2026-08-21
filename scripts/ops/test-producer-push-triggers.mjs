@@ -47,14 +47,59 @@ function pushPathBlock(source) {
 // wrong. Flagging every push filter over data/** caught five workflows, and a
 // path alone cannot tell a trigger that is dead from one that is a convenience
 // for human pushes - build-stocks-analyzer's own three push runs were human.
-// Only the case actually measured is enforced here; the other four are
-// registered as B-395 rather than ripped out unmeasured.
+//
+// B-395 measured the other four on 2026-08-21 and removed NONE of them. Each is
+// declared below with what its run history actually says, so the next person
+// inherits the measurement instead of the question. The declaration is not a
+// blanket exemption: a FIFTH workflow growing this shape fails until someone
+// measures it, and a declared workflow that no longer carries the filter fails
+// as a stale entry.
+const PRODUCER_PATH_PUSH_FILTER_REASONS = Object.freeze({
+  "deploy-worker.yml":
+    "ALIVE, human-push convenience. 1,318 push runs; the newest 100 are all actor etloveaui, most recently 'fix(ui): use defined Edge score token' on 2026-08-20. A person changing the site expects a redeploy, and producer commits reach it only through Update Manifest, never through this filter",
+  "update-manifest.yml":
+    "ALIVE, human-push convenience. 2,372 push runs, the newest being this session's own SEC 13F re-pin on 2026-08-21. Thirteen of the newest hundred carry producer-shaped 'data:' messages but every one was pushed by a person; a GITHUB_TOKEN push cannot start a workflow, so a run existing IS the proof it was human",
+  "validate-workflows.yml":
+    "ALIVE, and it is the gate itself. 445 push runs. Its filter covers pinned data fixtures - publish-outcome shards, the bridge index, lane and metadata manifests - which is exactly the case the header above calls legitimate: a person editing a fixture should re-run the gate. Blunting the gate is worth one extra step of caution, so this entry is deliberate rather than incidental",
+  "global-scouter-shadow-publish.yml":
+    "NO OPPORTUNITY YET - measured, and specifically NOT dead. Its whole history is one run, a workflow_dispatch on 2026-08-17T09:11:21Z, and the workflow itself only landed at fe5fd69dc9 on 2026-08-17T09:09:55Z. Since then five commits touched data/global-scouter/**, and all five are build-stocks-analyzer producer commits that structurally cannot fire it; zero human pushes have occurred. Its header states the design - the export is owner-run, so the owner's push IS the event - so the trigger is reachable and has simply had no turn. RE-MEASURE RATHER THAN TRUST THIS once an owner export lands: the path is producer-dominated, which is the same ambiguity B-395 exists for",
+});
+
+// Only build-stocks-analyzer is enforced as removed; the four above are
+// enforced as DECLARED. That split is the point of B-395.
 let inspected = 0;
+const producerPathFilters = new Set();
 for (const name of fs.readdirSync(WORKFLOW_DIR).filter((n) => n.endsWith(".yml"))) {
-  if (pushPathBlock(fs.readFileSync(path.join(WORKFLOW_DIR, name), "utf8"))) inspected += 1;
+  const block = pushPathBlock(fs.readFileSync(path.join(WORKFLOW_DIR, name), "utf8"));
+  if (!block) continue;
+  inspected += 1;
+  if (block.split("\n").some((line) => PRODUCER_WRITTEN.test(line))) producerPathFilters.add(name);
 }
 // The parser must see something, or every assertion below is vacuous.
 assert.ok(inspected >= 1, `no push-path blocks were parsed at all (${inspected})`);
+assert.ok(
+  producerPathFilters.size >= 1,
+  `no producer-path push filters were parsed at all (${producerPathFilters.size})`,
+);
+
+// Undeclared growth fails. This is the half that stops the shape returning.
+for (const name of producerPathFilters) {
+  assert.ok(
+    Object.hasOwn(PRODUCER_PATH_PUSH_FILTER_REASONS, name),
+    `${name} filters on: push over producer-written data paths and is undeclared. `
+      + "Measure its push-run history and authorship, then declare it or remove the filter - "
+      + "a path pattern alone cannot tell a dead trigger from a human-push convenience (B-395)",
+  );
+}
+
+// Stale declarations fail too, or the list decays into a blanket exemption.
+for (const name of Object.keys(PRODUCER_PATH_PUSH_FILTER_REASONS)) {
+  assert.ok(
+    producerPathFilters.has(name),
+    `${name} is declared as carrying a producer-path push filter but no longer does; `
+      + "remove the declaration rather than leaving a reason nothing matches",
+  );
+}
 
 const analyzer = fs.readFileSync(path.join(WORKFLOW_DIR, "build-stocks-analyzer.yml"), "utf8");
 const analyzerOn = analyzer.slice(0, analyzer.search(/^jobs:/m));
@@ -89,4 +134,7 @@ assert.ok(
   "Update Manifest must keep a full checkout; a sparse cone would build the bridge from a partial tree",
 );
 
-console.log(`test-producer-push-triggers: ok (${inspected} push-path blocks inspected, 1 enforced)`);
+console.log(
+  `test-producer-push-triggers: ok (${inspected} push-path blocks inspected, `
+    + `${producerPathFilters.size} over producer paths, all declared, 1 enforced as removed)`,
+);
