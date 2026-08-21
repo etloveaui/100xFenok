@@ -64,7 +64,11 @@ export const PUBLISH_OUTCOME_RESULTS = Object.freeze([
 
 const FAMILY_PATTERN = /^[a-z][a-z0-9_-]{0,95}$/;
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
-const GATE_VERDICTS = Object.freeze(["ok", "warn", "blocked"]);
+// "unverified" was added 2026-08-21: the gate could not complete its
+// measurement, which is different from measuring a breach and had been recorded
+// as "blocked" alongside it. Widening the enum leaves every existing record
+// valid.
+export const GATE_VERDICTS = Object.freeze(["ok", "warn", "blocked", "unverified"]);
 const RECORD_KEYS = Object.freeze([
   "family",
   "result",

@@ -23,6 +23,9 @@ on:
       - 'scripts/ops/test-plane-outcome-recording-coverage.mjs'
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
       - 'scripts/ops/test-alarm-blindness.mjs'
+      - 'scripts/ops/test-cost-gate-rate-limit.mjs'
+      - 'scripts/lib/cloudflare-rate-limit.mjs'
+      - 'scripts/check-r2-free-tier-usage.mjs'
       - 'data/admin/data-supply-state/publish-outcomes/**'
       - 'scripts/check-lane-commit-manifest-inventory.mjs'
       - 'scripts/ops/check-global-writer-queue.mjs'
@@ -106,6 +109,9 @@ on:
       - 'scripts/ops/test-plane-outcome-recording-coverage.mjs'
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
       - 'scripts/ops/test-alarm-blindness.mjs'
+      - 'scripts/ops/test-cost-gate-rate-limit.mjs'
+      - 'scripts/lib/cloudflare-rate-limit.mjs'
+      - 'scripts/check-r2-free-tier-usage.mjs'
       - 'data/admin/data-supply-state/publish-outcomes/**'
       - 'scripts/check-lane-commit-manifest-inventory.mjs'
       - 'scripts/ops/check-global-writer-queue.mjs'
@@ -196,6 +202,7 @@ jobs:
           node scripts/ops/test-plane-outcome-recording-coverage.mjs
           node scripts/ops/test-workflow-credential-wiring.mjs
           node scripts/ops/test-alarm-blindness.mjs
+          node scripts/ops/test-cost-gate-rate-limit.mjs
           node scripts/test-sentiment-artifact-contract-coverage.mjs
           node scripts/test-out-of-band-producer-lanes.mjs
 

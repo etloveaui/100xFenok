@@ -26,10 +26,19 @@
 // timeout-specific message.
 
 const API_BASE = "https://api.cloudflare.com/client/v4/accounts";
-const MAX_ATTEMPTS = 3;
-const MAX_RATE_LIMIT_ATTEMPTS = 8;
-const BACKOFF_BASE_MS = 200;
-const MAX_RATE_LIMIT_BACKOFF_MS = 10_000;
+// The rate-limit policy is shared with the cost gate that runs immediately
+// before this write path; see scripts/lib/cloudflare-rate-limit.mjs.
+import {
+  BACKOFF_BASE_MS,
+  MAX_ATTEMPTS,
+  MAX_RATE_LIMIT_ATTEMPTS,
+  MAX_RATE_LIMIT_BACKOFF_MS,
+  rateLimitDelayMs,
+  retryAfterMs,
+  sleep,
+  stableJitterMs,
+} from "./cloudflare-rate-limit.mjs";
+
 const DEFAULT_FETCH_TIMEOUT_MS = 60_000;
 
 function fail(code, detail) {
@@ -38,33 +47,9 @@ function fail(code, detail) {
   throw error;
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
-function stableJitterMs(value) {
-  let hash = 0;
-  for (const char of String(value)) hash = ((hash * 33) + char.charCodeAt(0)) >>> 0;
-  return hash % 251;
-}
 
-function retryAfterMs(response) {
-  const raw = response.headers.get("retry-after");
-  if (!raw) return null;
-  const seconds = Number(raw);
-  if (Number.isFinite(seconds) && seconds >= 0) return Math.ceil(seconds * 1000);
-  const instant = Date.parse(raw);
-  return Number.isFinite(instant) ? Math.max(0, instant - Date.now()) : null;
-}
 
-function rateLimitDelayMs(response, attempt, url) {
-  const exponential = Math.min(BACKOFF_BASE_MS * 2 ** (attempt - 1), MAX_RATE_LIMIT_BACKOFF_MS);
-  const requested = retryAfterMs(response) ?? 0;
-  return Math.min(
-    Math.max(requested, exponential) + stableJitterMs(url),
-    MAX_RATE_LIMIT_BACKOFF_MS,
-  );
-}
 
 // One attempt is the request AND its full body, both under the same deadline.
 // The body is drained here instead of being handed back as a lazy reader so a

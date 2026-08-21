@@ -1828,9 +1828,17 @@ function runCostGate({ planClassA, planClassB, planBytes, env }) {
   });
 }
 
-function gateVerdict(gate) {
+// The gate answers three different things and used to record two of them the
+// same way. "blocked" means it measured a breach; "unverified" means it could
+// not measure at all, which was every block in recorded history up to
+// 2026-08-21. Both still stop publication - see gateBlocksPublication - but the
+// record now says which happened.
+export const GATE_MEASUREMENT_UNVERIFIED_EXIT = 3;
+
+export function gateVerdict(gate) {
   if (gate.code === 0) return "ok";
   if (gate.code === 1) return "warn";
+  if (gate.code === GATE_MEASUREMENT_UNVERIFIED_EXIT) return "unverified";
   return "blocked";
 }
 
@@ -1980,6 +1988,9 @@ export function familyDeclaresStrictGate(familyName) {
   return Boolean(PLANE_PUBLISHER_EXCEPTIONS[familyName]?.strict_gate);
 }
 
+// Unchanged on purpose: an unverifiable measurement still blocks, for strict and
+// tolerant families alike. Fail-closed is the safe default and relaxing it is an
+// owner decision, not a side effect of making the signal honest.
 export function gateBlocksPublication({ gateCode, strictGate }) {
   return strictGate ? gateCode !== 0 : (gateCode !== 0 && gateCode !== 1);
 }

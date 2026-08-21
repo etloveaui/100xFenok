@@ -21,6 +21,23 @@
 const ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID ?? "aeeb5ea3affe55a2219d08ea02dad9e1";
 const TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  BACKOFF_BASE_MS,
+  MAX_ATTEMPTS,
+  MAX_RATE_LIMIT_ATTEMPTS,
+  rateLimitDelayMs,
+  sleep,
+} from "./lib/cloudflare-rate-limit.mjs";
+
+// Exit 2 used to mean BOTH "an axis is at or above 90% of the free allowance"
+// and "the measurement could not be trusted", so the ledger could not tell a
+// real overrun from an unreadable one and gateVerdict folded both into
+// "blocked". They are separate answers and now carry separate codes. Whether an
+// unverifiable measurement should still block publication is unchanged: it does.
+const MEASUREMENT_UNVERIFIED_EXIT = 3;
+
 const DEFAULT_FETCH_TIMEOUT_MS = 60_000;
 const FETCH_TIMEOUT_MS = (() => {
   const raw = Number(process.env.R2_MEASURE_FETCH_TIMEOUT_MS);
@@ -163,14 +180,44 @@ async function fetchUsage(bounds) {
 const INVENTORY_PAGE_SIZE = 1000;
 const INVENTORY_MAX_PAGES = 100; // 100k objects; the current estate is ~31.7k
 
-async function cf(path) {
-  const response = await fetchWithTimeout(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}${path}`, {
-    headers: { Authorization: `Bearer ${TOKEN}` },
-  });
-  if (!response.ok) throw new Error(`cf ${path} http ${response.status}`);
-  const body = await response.json();
-  if (!body.success) throw new Error(`cf ${path}: ${JSON.stringify(body.errors)}`);
-  return body;
+// fetchInventory walks the whole estate on EVERY publish of EVERY family, so
+// this is roughly 32 sequential control-plane calls per publish and the gate is
+// a large part of why it gets rate limited. Without a retry a single 429
+// anywhere in that chain threw and failed the gate closed: measured 2026-08-21,
+// all six cost-gate blocks in recorded history were exactly that, and none was
+// a budget breach. The policy honoured here is the same one the write path that
+// runs immediately after this has always used.
+// Exported with injectable transport and sleep so the retry can be exercised
+// rather than inferred. A structural check that the 429 branch exists passed
+// with that branch disabled, which is the vacuous-contract shape this whole
+// programme keeps finding.
+export async function cf(path, { transport = fetchWithTimeout, sleepImpl = sleep } = {}) {
+  const url = `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}${path}`;
+  let rateLimitAttempts = 0;
+  let transientAttempts = 0;
+  for (;;) {
+    const response = await transport(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
+    if (response.status === 429) {
+      rateLimitAttempts += 1;
+      if (rateLimitAttempts > MAX_RATE_LIMIT_ATTEMPTS) {
+        throw new Error(`cf ${path} http 429 after ${MAX_RATE_LIMIT_ATTEMPTS} rate-limited attempts`);
+      }
+      await sleepImpl(rateLimitDelayMs(response, rateLimitAttempts, url));
+      continue;
+    }
+    if (response.status >= 500) {
+      transientAttempts += 1;
+      if (transientAttempts >= MAX_ATTEMPTS) {
+        throw new Error(`cf ${path} http ${response.status} after ${MAX_ATTEMPTS} attempts`);
+      }
+      await sleepImpl(BACKOFF_BASE_MS * 2 ** (transientAttempts - 1));
+      continue;
+    }
+    if (!response.ok) throw new Error(`cf ${path} http ${response.status}`);
+    const body = await response.json();
+    if (!body.success) throw new Error(`cf ${path}: ${JSON.stringify(body.errors)}`);
+    return body;
+  }
 }
 
 // Walk every bucket and sum real object bytes. Throws so the caller fails closed;
@@ -344,8 +391,8 @@ async function main() {
     summary = summarise(account, bounds, inv);
     buckets = inv;
   } catch (error) {
-    console.error(`check-r2-free-tier-usage: measurement failed (${error.message}) — treating as fail, not as ok`);
-    process.exit(2);
+    console.error(`check-r2-free-tier-usage: measurement failed (${error.message}) — reporting unverified, never ok`);
+    process.exit(MEASUREMENT_UNVERIFIED_EXIT);
   }
   // Storage now comes from the object listing, so an empty analytics dataset is
   // no longer blindness. The remaining blind case is a listing we could not
@@ -390,4 +437,10 @@ async function main() {
   process.exit(verdict === "fail" ? 2 : verdict === "warn" ? 1 : 0);
 }
 
-await main();
+// Guarded so the module can be imported. Without this, `await main()` ran on
+// import: it scans the live Cloudflare account and then calls process.exit, so
+// the module was untestable and any future importer would have triggered a real
+// account walk as a side effect.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await main();
+}
