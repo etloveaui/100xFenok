@@ -149,8 +149,13 @@ assert.equal(index.counts.sec13f_unresolved, 489);
 
 const extensionRows = index.rows.filter((row) => row.classification.type === "sec13f_extension_stock");
 assert.equal(extensionRows.length, 76);
-assert.equal(extensionRows.filter((row) => row.completeness.per_present).length, 69);
-assert.equal(extensionRows.filter((row) => !row.completeness.per_present).length, 7);
+// Re-pinned 2026-08-21 from 69/7 after reproducing the projection stack's own
+// order. The bridge must be built from the action index that S5 regenerates
+// from the market facts S2 regenerates; building it against the committed
+// market facts instead yields 69 and disagrees with every CI run, which is how
+// an incorrect 69 was briefly committed at 172ead1bc8.
+assert.equal(extensionRows.filter((row) => row.completeness.per_present).length, 67);
+assert.equal(extensionRows.filter((row) => !row.completeness.per_present).length, 9);
 assert.equal(extensionRows.filter((row) => row.completeness.forward_pe_present).length, 76);
 assert.equal(extensionRows.filter((row) => row.completeness.market_facts_price_observed).length, 76);
 assert.equal(extensionRows.filter((row) => row.completeness.bridge_field_floor).length, 76);
