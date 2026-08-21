@@ -269,8 +269,11 @@ function workflowMetadata(file, source) {
     .map((row) => row.key);
   const triggers = [...new Set([...inlineTriggers, ...blockTriggers])];
   const scheduled = triggers.includes("schedule");
+  // Carried so a watched workflow can be measured against its own declared
+  // schedule; a slot that never became a run leaves no other evidence.
+  const crons = [...source.matchAll(/^\s*-\s*cron:\s*["']([^"']+)["']\s*$/gm)].map((match) => match[1]);
 
-  return { file, label: unquoteYamlScalar(nameMatch[1]), scheduled, triggers };
+  return { file, label: unquoteYamlScalar(nameMatch[1]), scheduled, triggers, crons };
 }
 
 function validateReason(kind, file, reason) {
@@ -335,13 +338,13 @@ export function deriveWorkflowWatchPolicy({
 
   const watched = rows
     .filter((row) => (row.scheduled && !(row.file in scheduledExclusions)) || row.file in nonScheduledInclusions)
-    .map(({ file, label, triggers }) => {
+    .map(({ file, label, triggers, crons }) => {
       const events = inclusionConfigs.get(file)?.events
         ?? triggers.filter((event) => event !== "workflow_dispatch");
       if (events.length === 0) {
         throw new Error(`${file}: watched workflow has no countable automatic event`);
       }
-      return { file, label, events };
+      return { file, label, events, crons: crons ?? [] };
     })
     .sort((a, b) => a.file.localeCompare(b.file));
   const excluded = Object.entries(scheduledExclusions)
@@ -918,6 +921,75 @@ export function isQueueEvictedRun(jobs) {
   return jobs.every((job) => job?.conclusion === "cancelled" && (job?.steps?.length ?? 0) === 0);
 }
 
+// A slot that ran and produced nothing is already visible as a lost slot. A slot
+// that never became a run at all is not: there is no object to inspect, and the
+// run list is fetched with status=completed. Elapsed time since the newest
+// counted run, measured against the workflow's own cron, is the only evidence
+// available for that case.
+//
+// Scope is deliberately the detectors. A workflow that follows its producers
+// rather than owning a clock - Update Manifest, Deploy Worker,
+// build-stocks-analyzer - has no schedule of its own to be late against, which
+// is exactly why those three are recorded in CADENCE_DECLARATION_EXEMPTIONS as
+// having no cadence declaration.
+export const MISSED_WINDOW_WORKFLOWS = new Set([
+  "data-plane-serving-probe.yml",
+  "check-sec13f-live-parity.yml",
+  "global-writer-queue-observer.yml",
+  "worker-request-budget-alarm.yml",
+]);
+
+// GitHub drops scheduled runs routinely, so one skipped slot is normal and two
+// consecutive ones are not. Measured 2026-08-21T01:30Z, the hourly observers had
+// missed exactly two while daily and six-hourly lanes ran normally.
+//
+// This counts SLOTS, not elapsed multiples. Elapsed time was the first attempt
+// and it silently failed the very case it was written for: those observers last
+// ran at 23:35Z against an hourly cron, so at 01:30Z only 1.91 intervals had
+// elapsed and a 2x elapsed rule missed it by 0.09h - while the 00:11 and 01:11
+// slots had both plainly passed unrun.
+export const MISSED_WINDOW_MULTIPLIER = 2;
+
+// Scheduled instants strictly after `since` and at or before `now`, for the
+// coarse cadence classes cronIntervalHours recognises.
+export function missedSlotCount(cron, sinceMs, nowMs) {
+  const intervalHours = cronIntervalHours(cron);
+  if (intervalHours === null || !Number.isFinite(sinceMs) || !Number.isFinite(nowMs)) return null;
+  const fields = cron.trim().split(/\s+/);
+  const minute = Number(fields[0]);
+  if (!Number.isInteger(minute) || minute < 0 || minute > 59) return null;
+  const stepMs = intervalHours * 3_600_000;
+  // Walk from the slot at or before `since` forward, so a slot is counted only
+  // once it has actually passed.
+  const start = new Date(sinceMs);
+  const anchor = Date.UTC(
+    start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(),
+    start.getUTCHours(), minute, 0, 0,
+  );
+  let slot = anchor <= sinceMs ? anchor + stepMs : anchor;
+  let missed = 0;
+  while (slot <= nowMs && missed <= 1000) { missed += 1; slot += stepMs; }
+  return missed;
+}
+
+// Coarse by design: the question is only "how many hours between slots", so a
+// cadence class is enough and a full cron model would add precision this rule
+// never uses.
+export function cronIntervalHours(cron) {
+  if (typeof cron !== "string") return null;
+  const fields = cron.trim().split(/\s+/);
+  if (fields.length !== 5) return null;
+  const [, hour, dayOfMonth, , dayOfWeek] = fields;
+  if (dayOfMonth !== "*") return 24 * 31;
+  if (dayOfWeek !== "*") return 24 * 7;
+  const stepped = /^\*\/(\d+)$/.exec(hour);
+  if (stepped) {
+    const step = Number(stepped[1]);
+    return Number.isFinite(step) && step > 0 ? step : null;
+  }
+  return hour === "*" ? 1 : 24;
+}
+
 export function isLostScheduledSlot(run) {
   return run?.event === "schedule"
     && (run?.jobs_empty === true || run?.queue_evicted === true);
@@ -927,7 +999,7 @@ export function isLostScheduledSlot(run) {
  * Evaluate a single watched workflow from its completed-run list.
  * Returns a per-workflow status object; never throws.
  */
-export function evaluateWorkflow(workflow, runs) {
+export function evaluateWorkflow(workflow, runs, { now = Date.now() } = {}) {
   const countedRuns = runs.filter((run) => {
     if (run?.event === "workflow_dispatch") return false;
     return !Array.isArray(workflow.events) || !run?.event || workflow.events.includes(run.event);
@@ -978,6 +1050,27 @@ export function evaluateWorkflow(workflow, runs) {
   const alarmReasons = [];
   if (streak >= failureStreakThreshold && !streakRecovered) alarmReasons.push("failure_streak");
   if (lostScheduledSlots.length > 0) alarmReasons.push("lost_schedule_slot");
+
+  // The newest counted run's timestamp was previously computed and discarded.
+  const latestStartedAt = latest?.run_started_at || latest?.created_at || null;
+  const intervals = (Array.isArray(workflow.crons) ? workflow.crons : [])
+    .map(cronIntervalHours)
+    .filter((value) => Number.isFinite(value) && value > 0);
+  // The most frequent schedule is the honest bound when a workflow has several.
+  const intervalHours = intervals.length > 0 ? Math.min(...intervals) : null;
+  let missedWindowHours = null;
+  let missedSlots = null;
+  if (MISSED_WINDOW_WORKFLOWS.has(workflow.file) && intervalHours !== null && latestStartedAt) {
+    const sinceMs = Date.parse(latestStartedAt);
+    const tightestCron = (Array.isArray(workflow.crons) ? workflow.crons : [])
+      .find((cron) => cronIntervalHours(cron) === intervalHours) ?? null;
+    missedSlots = tightestCron === null ? null : missedSlotCount(tightestCron, sinceMs, now);
+    if (Number.isFinite(missedSlots) && missedSlots >= MISSED_WINDOW_MULTIPLIER) {
+      missedWindowHours = (now - sinceMs) / 3_600_000;
+    }
+  }
+  if (missedWindowHours !== null) alarmReasons.push("missed_schedule_window");
+
   const base = {
     file: workflow.file,
     label: workflow.label,
@@ -986,6 +1079,9 @@ export function evaluateWorkflow(workflow, runs) {
     alarming: alarmReasons.length > 0,
     alarm_reasons: alarmReasons,
     latestRunUrl: latest?.html_url || null,
+    latest_run_started_at: latestStartedAt,
+    missed_schedule_window_hours: missedWindowHours === null ? null : Number(missedWindowHours.toFixed(2)),
+    missed_schedule_slot_count: missedSlots,
     queue_evicted_run_urls: evictedRunUrls,
     lost_schedule_slot_count: lostScheduledSlots.length,
     resolved_lost_schedule_slot_count: resolvedLostSlotCount,
@@ -1032,6 +1128,13 @@ function buildIssueBody(alarms) {
       for (const url of alarm.lost_schedule_slot_run_urls ?? []) {
         lines.push(`- Lost scheduled run URL: ${url}`);
       }
+    }
+    if (reasons.includes("missed_schedule_window")) {
+      lines.push(`- Scheduled slots passed with no run: ${alarm.missed_schedule_slot_count ?? "unknown"}`);
+      lines.push(`- Last run started: ${alarm.latest_run_started_at ?? "unknown"}`
+        + ` (${alarm.missed_schedule_window_hours ?? "unknown"}h ago)`);
+      lines.push("- This detector did not merely fail, it did not run. Check whether its schedule"
+        + " is still being served, then whether the workflow is disabled.");
     }
     if (reasons.includes("unrecovered_overdue")) {
       lines.push("- Declared cadence remains overdue after its documented grace.");

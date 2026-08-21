@@ -28,6 +28,27 @@ jobs:
         with:
           node-version: 22
 
+      # Who observes the observer. The pipeline alarm excludes itself from its
+      # own watch list to avoid recursion, so if it stops running nothing says
+      # so and every other detector's silence goes with it. This reads only the
+      # generated_at stamp the alarm persists, so it cannot depend on the
+      # machinery it is checking. Hosted here because this workflow is hourly,
+      # independent of the alarm, and already owns an issue-reporting path.
+      # Limitation, stated rather than hidden: if BOTH hourly schedules are
+      # dropped at once, as happened on 2026-08-21, this is silent too.
+      - name: Check pipeline alarm liveness
+        id: alarm_liveness
+        continue-on-error: true
+        run: node scripts/ops/check-alarm-liveness.mjs
+
+      # A tolerated check whose failure reaches nothing is the exact shape that
+      # hid the SEC 13F smoke for four days, so this one surfaces itself.
+      - name: Surface a stale pipeline alarm
+        if: steps.alarm_liveness.outcome == 'failure'
+        run: |
+          echo "::error::the pipeline alarm has not run recently; every other detector's silence is currently invisible" >&2
+          exit 1
+
       - name: Check Worker request budget
         id: budget
         continue-on-error: true
