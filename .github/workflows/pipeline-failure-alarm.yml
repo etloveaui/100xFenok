@@ -189,13 +189,17 @@ jobs:
           # [skip ci] keeps this ops-metadata commit from re-triggering the
           # pipeline it is reporting on.
           set -euo pipefail
-          test -f pipeline-alarm-state/base.sha256
-          test -f pipeline-alarm-state/alarm-state.json
+          for required in pipeline-alarm-state/base.sha256 pipeline-alarm-state/alarm-state.json; do
+            if [ ! -f "$required" ]; then
+              echo "::error::alarm-state artifact is incomplete: ${required} is missing; the detector produced no usable state" >&2
+              exit 1
+            fi
+          done
 
           base_fingerprint="$(tr -d '\r\n' < pipeline-alarm-state/base.sha256)"
           if [ "$base_fingerprint" != missing ] \
             && ! printf '%s\n' "$base_fingerprint" | grep -Eq '^[0-9a-f]{64}$'; then
-            echo "invalid alarm-state base fingerprint artifact" >&2
+            echo "::error::alarm-state base fingerprint artifact is malformed; the detector wrote an unusable base" >&2
             exit 1
           fi
 
@@ -208,9 +212,39 @@ jobs:
           else
             current_fingerprint=missing
           fi
+          # A newer writer landed while this run waited for the global writer
+          # lock. Refusing is correct - a stale document must not overwrite a
+          # newer one - and it used to exit 1, which turned a guard behaving
+          # correctly into 4 of the last 5 job failures and shared one error
+          # line with three genuine faults. Nothing is lost by standing down:
+          # every incident field is recomputed from the live API each run and
+          # the OPS issue was already written by the check job.
+          #
+          # One field is not recomputed. last_resolved_at is carried forward by
+          # the emitter rather than derived, so if this run were the only
+          # observer of an open -> clear transition it would vanish. Carry that
+          # one field, then stand down without raising an error.
           if [ "$base_fingerprint" != "$current_fingerprint" ]; then
-            echo "alarm-state base changed before persistence; refusing stale overwrite" >&2
-            exit 1
+            carry="$(node scripts/ops/carry-alarm-resolution.mjs \
+              pipeline-alarm-state/alarm-state.json data/admin/alarm-state.json)"
+            if [ "$carry" = carried ]; then
+              git config user.name "github-actions[bot]"
+              git config user.email "github-actions[bot]@users.noreply.github.com"
+              git add data/admin/alarm-state.json
+              git commit -m "ops: carry alarm resolution timestamp [skip ci]"
+              for attempt in 1 2 3; do
+                if git push origin HEAD:main; then break; fi
+                if [ "$attempt" = 3 ]; then
+                  echo "::error::alarm-state resolution carry could not be pushed; last_resolved_at may be lost" >&2
+                  exit 1
+                fi
+                sleep $((attempt * 3))
+              done
+              echo "::notice::alarm-state superseded by a newer writer on main; carried last_resolved_at forward"
+            else
+              echo "::notice::alarm-state superseded by a newer writer on main; nothing to persist (${carry})"
+            fi
+            exit 0
           fi
 
           cp pipeline-alarm-state/alarm-state.json data/admin/alarm-state.json
@@ -231,13 +265,17 @@ jobs:
             fi
             sleep $((attempt * 3))
           done
-          echo "alarm-state persistence push failed after bounded retries" >&2
+          echo "::error::alarm-state persistence push failed after bounded retries; the OPS issue remains the primary incident record" >&2
           exit 1
 
       # The commit is best-effort with respect to the already-reported issue,
-      # but its failure remains a visible job error for operators and retries.
+      # but a genuine failure remains a visible job error. This no longer
+      # asserts a cause: the persist step above now emits its own ::error:: per
+      # fault, and a compare-and-swap refusal - which was 4 of the last 5
+      # failures and is a guard working correctly - stands down there instead of
+      # reaching here at all.
       - name: Surface alarm-state persistence failure
         if: steps.persist.outcome == 'failure'
         run: |
-          echo "::error::alarm-state Git persistence failed after incident reporting; the OPS issue remains the primary incident record"
+          echo "::error::alarm-state persistence failed; see the Commit alarm state step for which fault"
           exit 1
