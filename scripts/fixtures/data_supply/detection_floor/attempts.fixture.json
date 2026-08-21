@@ -169,12 +169,30 @@
       "decode": "ok",
       "payload": "non_empty",
       "assertions": [
-        { "id": "stock_financial_requested", "passed": true },
-        { "id": "stock_financial_stock_ok", "passed": true },
-        { "id": "stock_financial_financial_ok", "passed": true },
-        { "id": "stock_financial_failed", "passed": true },
-        { "id": "stock_financial_tickers", "passed": true },
-        { "id": "stock_financial_pairs", "passed": true }
+        {
+          "id": "stock_financial_requested",
+          "passed": true
+        },
+        {
+          "id": "stock_financial_stock_ok",
+          "passed": true
+        },
+        {
+          "id": "stock_financial_financial_ok",
+          "passed": true
+        },
+        {
+          "id": "stock_financial_failed",
+          "passed": true
+        },
+        {
+          "id": "stock_financial_tickers",
+          "passed": true
+        },
+        {
+          "id": "stock_financial_pairs",
+          "passed": true
+        }
       ],
       "candidates": 1,
       "retry_count": 0,
@@ -288,7 +306,12 @@
       "rate_limited": false,
       "decode": "ok",
       "payload": "non_empty",
-      "assertions": [{ "id": "sdmx_cli_rows", "passed": true }]
+      "assertions": [
+        {
+          "id": "sdmx_cli_rows",
+          "passed": true
+        }
+      ]
     },
     {
       "lane_id": "krx",
@@ -302,7 +325,12 @@
       "rate_limited": false,
       "decode": "ok",
       "payload": "non_empty",
-      "assertions": [{ "id": "krx_bridge_contract", "passed": true }],
+      "assertions": [
+        {
+          "id": "krx_bridge_contract",
+          "passed": true
+        }
+      ],
       "candidates": 31,
       "retry_count": 0,
       "latency_ms": 1000,
@@ -550,8 +578,31 @@
     },
     {
       "lane_id": "yahoo_batch_quote_history",
-      "member_id": null,
-      "attempt_id": "gh-fixture-1-yahoo-batch",
+      "member_id": "stock",
+      "attempt_id": "gh-fixture-1-yahoo-batch-stock",
+      "observed_at": "2026-07-11T00:00:00Z",
+      "execution": "returned",
+      "exception_kind": null,
+      "http_status": null,
+      "auth": "not_applicable",
+      "rate_limited": false,
+      "decode": "ok",
+      "payload": "non_empty",
+      "assertions": [
+        {
+          "id": "current_attempt_completed",
+          "passed": true
+        }
+      ],
+      "candidates": 1,
+      "retry_count": 0,
+      "latency_ms": 1,
+      "outcome": "success"
+    },
+    {
+      "lane_id": "yahoo_batch_quote_history",
+      "member_id": "etf",
+      "attempt_id": "gh-fixture-1-yahoo-batch-etf",
       "observed_at": "2026-07-11T00:00:00Z",
       "execution": "returned",
       "exception_kind": null,

@@ -57,7 +57,7 @@ const statusOf = (row) => tupleStatus({
 
 // --- The measured incident: 10 of 1194 failed and 3 succeeded ---------------
 {
-  const row = toYahooBatchAttemptRow(index({ attempted: 1194, successes: 3, failed: 10, skipped: 1181 }));
+  const row = toYahooBatchAttemptRow(index({ attempted: 1194, successes: 3, failed: 10, skipped: 1181 }), "stock");
   assert.equal(statusOf(row), "drift", "a mostly-working batch must not read as a dead producer");
   assert.notEqual(statusOf(row), "unavailable");
   assert.equal(row.decode, "ok", "data was decoded; saying otherwise is false");
@@ -80,14 +80,14 @@ const statusOf = (row) => tupleStatus({
 
 // --- Nothing came back at all: still an error -------------------------------
 {
-  const row = toYahooBatchAttemptRow(index({ attempted: 12, successes: 0, failed: 10, skipped: 2 }));
+  const row = toYahooBatchAttemptRow(index({ attempted: 12, successes: 0, failed: 10, skipped: 2 }), "stock");
   assert.equal(row.outcome, "error", "zero successes with failures is a real producer failure");
   assert.equal(statusOf(row), "unavailable");
 }
 
 // --- A clean batch is still clean -------------------------------------------
 {
-  const row = toYahooBatchAttemptRow(index({ attempted: 100, successes: 100, failed: 0, skipped: 0 }));
+  const row = toYahooBatchAttemptRow(index({ attempted: 100, successes: 100, failed: 0, skipped: 0 }), "stock");
   assert.equal(row.outcome, "success");
   assert.equal(statusOf(row), "ready", "a batch with no failures must stay ready");
   assert.ok(
@@ -98,14 +98,14 @@ const statusOf = (row) => tupleStatus({
 
 // --- Nothing to do is unchanged ---------------------------------------------
 {
-  const row = toYahooBatchAttemptRow(index({ attempted: 0, successes: 0, failed: 0, skipped: 0 }));
+  const row = toYahooBatchAttemptRow(index({ attempted: 0, successes: 0, failed: 0, skipped: 0 }), "stock");
   assert.equal(row.outcome, "no_fallback_candidates");
   assert.equal(statusOf(row), "ready");
 }
 
 // --- All skipped, none attempted to fetch, is not a failure -----------------
 {
-  const row = toYahooBatchAttemptRow(index({ attempted: 50, successes: 0, failed: 0, skipped: 50 }));
+  const row = toYahooBatchAttemptRow(index({ attempted: 50, successes: 0, failed: 0, skipped: 50 }), "stock");
   assert.equal(statusOf(row), "ready", "a batch where every ticker was already fresh is healthy");
 }
 
@@ -113,9 +113,9 @@ const statusOf = (row) => tupleStatus({
 // A ratio would be a tuned threshold, and the standing rule is that a limit is
 // never set to whatever makes the current measurement pass.
 {
-  const barely = toYahooBatchAttemptRow(index({ attempted: 1000, successes: 1, failed: 999, skipped: 0 }));
+  const barely = toYahooBatchAttemptRow(index({ attempted: 1000, successes: 1, failed: 999, skipped: 0 }), "stock");
   assert.equal(statusOf(barely), "drift", "one success is still data returned; drift, not ready, not dead");
-  const none = toYahooBatchAttemptRow(index({ attempted: 1000, successes: 0, failed: 1000, skipped: 0 }));
+  const none = toYahooBatchAttemptRow(index({ attempted: 1000, successes: 0, failed: 1000, skipped: 0 }), "stock");
   assert.equal(statusOf(none), "unavailable");
 }
 

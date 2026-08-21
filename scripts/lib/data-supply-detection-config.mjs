@@ -34,6 +34,21 @@ const SLICKCHARTS_MEMBER_IDS = Object.freeze([
   "symbols",
 ]);
 
+// B-394: composite membership is DECLARED per lane rather than hardcoded to the
+// one lane that happened to have it. Member ids stay pinned, so a member
+// appearing or disappearing is still a conscious edit. The two shapes are kept
+// apart because they are genuinely different: slickcharts is a detection
+// composite across five sibling workflows and therefore has no single owner,
+// while yahoo_batch_quote_history is ONE workflow with two crons, so its
+// members share that owner workflow.
+const COMPOSITE_LANE_MEMBERS = Object.freeze({
+  slickcharts: Object.freeze({ members: SLICKCHARTS_MEMBER_IDS, sharedOwnerWorkflow: false }),
+  yahoo_batch_quote_history: Object.freeze({
+    members: Object.freeze(["stock", "etf"]),
+    sharedOwnerWorkflow: true,
+  }),
+});
+
 const STOCKANALYSIS_STOCK_FINANCIAL_TICKERS = Object.freeze([
   "AAPL",
   "NVDA",
@@ -1197,25 +1212,42 @@ const config = {
     lane({
       id: "yahoo_batch_quote_history",
       label: "Yahoo batch quote/history",
-      // One stock slot plus one ETF slot. These keys must stay
-      // identical to the workflow's own `on.schedule`, or the detection
-      // observer cannot attribute a missed slot; see
+      // B-394: one stock slot and one ETF slot, now declared as two MEMBERS
+      // rather than one member holding both crons. The producer already
+      // separated them - it writes index.json for the stock cron and
+      // index-core-etf.json for the ETF cron, each with its own run_id and
+      // schedule - but a single member could only carry one observation, so
+      // the ETF slot never saw one and raised unrecovered_overdue.
+      //
+      // These keys must stay identical to the workflow's own `on.schedule`,
+      // or the detection observer cannot attribute a missed slot; see
       // test-fetch-cron-attempt-coverage.mjs, which derives them from the
       // workflow file rather than trusting this list.
-      members: [registryMember("yahoo_batch_quote_history", [
-        "20 23 * * 1-5",
-        "7 0 * * 0-5",
-      ], [
-        artifact("yahoo_batch_quote_history_index", "data/admin/yahoo-batch-quote-history/index.json", {
-          schemaVersion: schemaVersion("/schema_version", "yahoo-batch-quote-history-index/v1"),
-          sourceSelector: pointerSource("/generated_at", "rfc3339"),
-          assertions: [
-            exactAssertion("lane_identity", "/lane_id", "yahoo_batch_quote_history"),
-            typeAssertion("counts_object", "/counts", "object"),
-            typeAssertion("current_attempt_object", "/current_attempt", "object"),
-          ],
-        }),
-      ])],
+      monitoringMode: "composite",
+      members: [
+        member("stock", ".github/workflows/fetch-yf-finance.yml", ["20 23 * * 1-5"], [
+          artifact("yahoo_batch_quote_history_index", "data/admin/yahoo-batch-quote-history/index.json", {
+            schemaVersion: schemaVersion("/schema_version", "yahoo-batch-quote-history-index/v1"),
+            sourceSelector: pointerSource("/generated_at", "rfc3339"),
+            assertions: [
+              exactAssertion("lane_identity", "/lane_id", "yahoo_batch_quote_history"),
+              typeAssertion("counts_object", "/counts", "object"),
+              typeAssertion("current_attempt_object", "/current_attempt", "object"),
+            ],
+          }),
+        ], "utc", undefined, registryLaneById("yahoo_batch_quote_history").activated_at),
+        member("etf", ".github/workflows/fetch-yf-finance.yml", ["7 0 * * 0-5"], [
+          artifact("yahoo_batch_quote_history_etf_index", "data/admin/yahoo-batch-quote-history/index-core-etf.json", {
+            schemaVersion: schemaVersion("/schema_version", "yahoo-batch-quote-history-index/v1"),
+            sourceSelector: pointerSource("/generated_at", "rfc3339"),
+            assertions: [
+              exactAssertion("lane_identity", "/lane_id", "yahoo_batch_quote_history"),
+              typeAssertion("counts_object", "/counts", "object"),
+              typeAssertion("current_attempt_object", "/current_attempt", "object"),
+            ],
+          }),
+        ], "utc", undefined, registryLaneById("yahoo_batch_quote_history").activated_at),
+      ],
       endpointContract: endpointAssertion(
         "yfinance_batch_library",
         typeAssertion("current_attempt_completed", "/current_attempt/attempted", "number"),
@@ -1574,10 +1606,22 @@ function validateLane(laneValue, index) {
     if (laneValue.producer_members.some((memberValue) => memberValue.workflow !== null || memberValue.cadence_declaration !== null || memberValue.schedule.length !== 0)) {
       fail(`${context} fabricates an owner or cadence`);
     }
-  } else if (laneValue.id === "slickcharts") {
-    if (laneValue.owner_workflow !== null || laneValue.monitoring_mode !== "composite") fail(`${context} must be composite`);
+  } else if (Object.hasOwn(COMPOSITE_LANE_MEMBERS, laneValue.id)) {
+    const declared = COMPOSITE_LANE_MEMBERS[laneValue.id];
+    if (laneValue.monitoring_mode !== "composite") fail(`${context} must be composite`);
+    if (declared.sharedOwnerWorkflow) {
+      if (laneValue.owner_workflow === null) fail(`${context} composite shares one owner workflow and must name it`);
+      if (laneValue.producer_members.some((memberValue) => memberValue.workflow !== laneValue.owner_workflow)) {
+        fail(`${context} every member must bind to the lane's own owner workflow`);
+      }
+    } else if (laneValue.owner_workflow !== null) {
+      fail(`${context} must be composite`);
+    }
+    if (laneValue.producer_members.some((memberValue) => memberValue.cadence_declaration === null)) {
+      fail(`${context} every composite member must carry an evidence-backed cadence declaration`);
+    }
     const actualIds = laneValue.producer_members.map((memberValue) => memberValue.id);
-    if (canonicalJson(actualIds) !== canonicalJson(SLICKCHARTS_MEMBER_IDS)) fail(`${context} has the wrong five members`);
+    if (canonicalJson(actualIds) !== canonicalJson(declared.members)) fail(`${context} has the wrong members`);
   } else {
     if (laneValue.producer_members.length !== 1 || laneValue.producer_members[0].id !== laneValue.id) {
       fail(`${context} must have exactly one canonical member`);

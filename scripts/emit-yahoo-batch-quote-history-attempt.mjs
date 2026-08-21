@@ -8,8 +8,8 @@ import { fileURLToPath } from "node:url";
 
 import {
   buildAttemptRow,
-  buildSingleLaneShard,
   libraryTuple,
+  mergeCompositeShard,
   writeJsonAtomic,
 } from "./lib/data-supply-attempt-shard.mjs";
 
@@ -17,7 +17,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 const LANE_ID = "yahoo_batch_quote_history";
 const INDEX_SCHEMA = "yahoo-batch-quote-history-index/v1";
-const DEFAULT_INDEX_PATH = path.join(REPO_ROOT, "data/admin/yahoo-batch-quote-history/index.json");
+// B-394. The producer already separates its two crons: the stock lane writes
+// index.json and the ETF lane writes index-core-etf.json, each stamping its own
+// run_id and its own schedule. Only this emitter did not know, so it read the
+// stock index on every run - an ETF run re-emitted the stock row unchanged,
+// produced no diff, committed nothing, and the ETF cadence slot never saw an
+// observation. That, not a misclassified partial failure, is what raised
+// unrecovered_overdue on fetch-yf-finance.
+export const YAHOO_BATCH_MEMBERS = Object.freeze(["stock", "etf"]);
+export const MEMBER_INDEX_PATHS = Object.freeze({
+  stock: path.join(REPO_ROOT, "data/admin/yahoo-batch-quote-history/index.json"),
+  etf: path.join(REPO_ROOT, "data/admin/yahoo-batch-quote-history/index-core-etf.json"),
+});
+const DEFAULT_INDEX_PATH = MEMBER_INDEX_PATHS.stock;
 const DEFAULT_ATTEMPT_SHARD_PATH = path.join(
   REPO_ROOT,
   "data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history.json",
@@ -37,7 +49,8 @@ function requireTimestamp(value, label) {
   return value;
 }
 
-export function toYahooBatchAttemptRow(index) {
+export function toYahooBatchAttemptRow(index, memberId) {
+  if (!YAHOO_BATCH_MEMBERS.includes(memberId)) throw new Error(`unknown Yahoo batch member: ${memberId}`);
   if (!index || index.schema_version !== INDEX_SCHEMA || !index.current_attempt || typeof index.current_attempt !== "object") {
     throw new Error("Yahoo batch index/current_attempt contract is invalid");
   }
@@ -54,7 +67,7 @@ export function toYahooBatchAttemptRow(index) {
   if (failed > attempted || successes > attempted || skipped > attempted || successes + failed + skipped !== attempted) {
     throw new Error("current_attempt totals do not close");
   }
-  const attemptId = `gh-${runId}-${runAttempt}-yahoo-batch`;
+  const attemptId = `gh-${runId}-${runAttempt}-yahoo-batch-${memberId}`;
   let tuple;
   if (attempted === 0) {
     tuple = libraryTuple({
@@ -112,25 +125,73 @@ export function toYahooBatchAttemptRow(index) {
   }
   return buildAttemptRow({
     laneId: LANE_ID,
-    memberId: null,
+    memberId,
     tuple,
     attemptId,
     observedAt,
   });
 }
 
-export function emitYahooBatchQuoteHistoryAttempt({
-  indexPath = DEFAULT_INDEX_PATH,
-  attemptShardPath = DEFAULT_ATTEMPT_SHARD_PATH,
-} = {}) {
-  let index;
+function readIndex(indexPath) {
   try {
-    index = JSON.parse(fs.readFileSync(indexPath, "utf8"));
+    return JSON.parse(fs.readFileSync(indexPath, "utf8"));
   } catch (error) {
     throw new Error(`Yahoo batch index is unreadable: ${error.message}`);
   }
-  const row = toYahooBatchAttemptRow(index);
-  writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
+}
+
+// Which member ran is not passed in and is not inferred from the cron string,
+// because a workflow_dispatch has no cron and a re-run must still attribute to
+// the same member. The index that this run wrote identifies itself: it carries
+// the run_id and run_attempt that produced it. Fail closed when neither does,
+// rather than defaulting to the stock lane, which is the bug being fixed.
+export function resolveYahooBatchMember({
+  indexPaths = MEMBER_INDEX_PATHS,
+  runId = process.env.GITHUB_RUN_ID ?? null,
+  runAttempt = process.env.GITHUB_RUN_ATTEMPT ?? null,
+} = {}) {
+  if (runId === null) throw new Error("GITHUB_RUN_ID is required to attribute a Yahoo batch attempt");
+  const attempt = runAttempt === null ? null : String(runAttempt);
+  const matches = YAHOO_BATCH_MEMBERS.filter((memberId) => {
+    const current = readIndex(indexPaths[memberId])?.current_attempt;
+    if (String(current?.run_id ?? "") !== String(runId)) return false;
+    return attempt === null || String(current?.run_attempt ?? "") === attempt;
+  });
+  if (matches.length !== 1) {
+    throw new Error(
+      `run ${runId} attempt ${attempt ?? "any"} matches ${matches.length} Yahoo batch indexes `
+        + `(${matches.join(", ") || "none"}); refusing to attribute the attempt`,
+    );
+  }
+  return matches[0];
+}
+
+export function emitYahooBatchQuoteHistoryAttempt({
+  memberId = resolveYahooBatchMember(),
+  indexPath = MEMBER_INDEX_PATHS[memberId],
+  attemptShardPath = DEFAULT_ATTEMPT_SHARD_PATH,
+} = {}) {
+  const row = toYahooBatchAttemptRow(readIndex(indexPath), memberId);
+  const onDisk = fs.existsSync(attemptShardPath)
+    ? JSON.parse(fs.readFileSync(attemptShardPath, "utf8"))
+    : null;
+  // One-time migration only. Before B-394 this lane wrote a single-member shard
+  // whose one row carries member_id null, which cannot merge into a composite.
+  // Discarding exactly that shape is safe - the row it holds is re-derived from
+  // the same index on this very run - and anything else still fails closed
+  // inside mergeCompositeShard rather than being silently dropped.
+  const legacySingleMember = Array.isArray(onDisk?.attempts)
+    && onDisk.attempts.length === 1
+    && onDisk.attempts[0]?.member_id === null;
+  const baseShard = legacySingleMember ? null : onDisk;
+  // The member that did not run keeps its previous row, so one slot's
+  // observation never erases the other's.
+  writeJsonAtomic(attemptShardPath, mergeCompositeShard({
+    laneId: LANE_ID,
+    memberIds: YAHOO_BATCH_MEMBERS,
+    baseShard,
+    row,
+  }));
   return row;
 }
 
@@ -139,9 +200,12 @@ function parseArgs(argv) {
   for (let index = 0; index < argv.length; index += 2) {
     const flag = argv[index];
     const value = argv[index + 1];
-    if (!new Set(["--index", "--attempt-shard"]).has(flag) || typeof value !== "string") {
-      throw new Error("usage: emit-yahoo-batch-quote-history-attempt.mjs [--index <path>] [--attempt-shard <path>]");
+    if (!new Set(["--index", "--attempt-shard", "--member"]).has(flag) || typeof value !== "string") {
+      throw new Error(
+        "usage: emit-yahoo-batch-quote-history-attempt.mjs [--member <stock|etf>] [--index <path>] [--attempt-shard <path>]",
+      );
     }
+    if (flag === "--member") options.memberId = value;
     if (flag === "--index") options.indexPath = path.resolve(value);
     if (flag === "--attempt-shard") options.attemptShardPath = path.resolve(value);
   }
@@ -150,5 +214,5 @@ function parseArgs(argv) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const row = emitYahooBatchQuoteHistoryAttempt(parseArgs(process.argv.slice(2)));
-  process.stdout.write(`Yahoo batch attempt shard: ${row.attempt_id}\n`);
+  process.stdout.write(`Yahoo batch attempt shard: ${row.member_id} ${row.attempt_id}\n`);
 }

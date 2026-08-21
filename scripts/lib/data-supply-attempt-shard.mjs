@@ -136,6 +136,23 @@ export function unobservedTuple() {
   };
 }
 
+// The unobserved filler is transport-shaped. A library lane's rows carry
+// candidates/retry_count/latency_ms/outcome, and the evidence contract requires
+// all four present and NULL when execution is unobserved; the HTTP-shaped filler
+// omits them entirely and fails the exact-keys check. This was latent until
+// B-394 made a library lane composite - slickcharts, the only composite until
+// now, is HTTP - so the gap was in mergeCompositeShard rather than in either
+// lane.
+export function unobservedLibraryTuple() {
+  return {
+    ...unobservedTuple(),
+    candidates: null,
+    retry_count: null,
+    latency_ms: null,
+    outcome: null,
+  };
+}
+
 export function tupleStatus(tuple) {
   if (tuple?.execution === "unobserved") return "unobserved";
   if (tuple?.execution === "threw") return "unavailable";
@@ -234,10 +251,14 @@ export function mergeCompositeShard({ laneId, memberIds, baseShard, row }) {
 
   let attempts;
   if (baseShard === null || baseShard === undefined) {
+    const laneConfig = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((candidate) => candidate.id === laneId);
+    const filler = laneConfig?.endpoint_contract?.transport === "library"
+      ? unobservedLibraryTuple
+      : unobservedTuple;
     attempts = memberIds.map((memberId) => buildAttemptRow({
       laneId,
       memberId,
-      tuple: unobservedTuple(),
+      tuple: filler(),
     }));
   } else {
     validateAttemptShard(baseShard, laneId);

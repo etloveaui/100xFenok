@@ -4,21 +4,49 @@
   "attempts": [
     {
       "lane_id": "yahoo_batch_quote_history",
-      "member_id": null,
-      "attempt_id": "gh-32429826829-1-yahoo-batch",
+      "member_id": "stock",
+      "attempt_id": "gh-32429826829-1-yahoo-batch-stock",
       "observed_at": "2026-08-20T23:46:53Z",
       "execution": "returned",
       "exception_kind": null,
       "http_status": null,
       "auth": "not_applicable",
       "rate_limited": false,
-      "decode": "not_attempted",
-      "payload": "not_available",
-      "assertions": [],
+      "decode": "ok",
+      "payload": "non_empty",
+      "assertions": [
+        {
+          "id": "current_attempt_completed",
+          "passed": false
+        }
+      ],
       "candidates": 1194,
       "retry_count": 0,
       "latency_ms": 0,
-      "outcome": "error"
+      "outcome": "success"
+    },
+    {
+      "lane_id": "yahoo_batch_quote_history",
+      "member_id": "etf",
+      "attempt_id": "gh-32437842189-1-yahoo-batch-etf",
+      "observed_at": "2026-08-21T01:54:26Z",
+      "execution": "returned",
+      "exception_kind": null,
+      "http_status": null,
+      "auth": "not_applicable",
+      "rate_limited": false,
+      "decode": "ok",
+      "payload": "non_empty",
+      "assertions": [
+        {
+          "id": "current_attempt_completed",
+          "passed": true
+        }
+      ],
+      "candidates": 22,
+      "retry_count": 0,
+      "latency_ms": 0,
+      "outcome": "success"
     }
   ]
 }
