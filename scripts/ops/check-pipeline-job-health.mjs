@@ -147,6 +147,33 @@ export function deriveFamilyFreshness({
 // Every exception is a declared policy entry, not an invisible parser escape.
 // Validation below fails closed if an exclusion stops being scheduled or if an
 // inclusion becomes scheduled (and therefore no longer needs special policy).
+// A scheduled workflow with no data-supply cadence declaration is invisible when
+// it STOPS: the alarm records its failures but has no expectation to compare an
+// absence against. Six of these are the platform's own detectors and
+// publishers, which is why the 2026-08-20 incidents were all "the check was
+// dead" rather than "the data was wrong". Listing them here does not make their
+// silence alarm - that would change what the alarm asserts for eight workflows
+// at once - but it makes the gap a recorded decision instead of a default, and
+// a new scheduled workflow can no longer inherit invisibility by omission.
+export const CADENCE_DECLARATION_EXEMPTIONS = Object.freeze({
+  "pipeline-failure-alarm.yml":
+    "self-monitoring would create a recursive alarm loop; its own liveness is evidenced by the generated_at stamp it writes to data/admin/alarm-state.json every run",
+  "data-plane-serving-probe.yml":
+    "detector, not a data-supply lane; it publishes no member so the lane-shaped declaration does not fit. Absence is currently unobserved - see BACKLOG B-387",
+  "check-sec13f-live-parity.yml":
+    "detector, not a data-supply lane; absence is currently unobserved - see BACKLOG B-387",
+  "global-writer-queue-observer.yml":
+    "observer, not a data-supply lane; measured 2026-08-21 to have missed two consecutive hourly slots with no report - see BACKLOG B-387",
+  "worker-request-budget-alarm.yml":
+    "alarm, not a data-supply lane; measured 2026-08-21 to have missed two consecutive hourly slots with no report - see BACKLOG B-387",
+  "update-manifest.yml":
+    "shared projection publisher rather than a source lane; it owns no acquisition cadence of its own and is driven by the producers that do",
+  "deploy-worker.yml":
+    "deployment rather than acquisition; it has no source clock to be overdue against",
+  "build-stocks-analyzer.yml":
+    "derived-index builder rather than a source lane; its inputs carry the acquisition cadences and it follows them",
+});
+
 export const SCHEDULED_WORKFLOW_EXCLUSIONS = Object.freeze({
   "pipeline-failure-alarm.yml": "self-monitoring would create a recursive alarm loop",
 });

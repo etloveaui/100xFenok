@@ -178,6 +178,7 @@ jobs:
           ruby scripts/ops/validate-workflow-yaml.rb
           node scripts/test-sparse-checkout-import-coverage.mjs
           node scripts/ops/test-probe-limits-match-cadence.mjs
+          node scripts/ops/test-cadence-declaration-coverage.mjs
 
       - name: Validate remote heavy guard contract
         run: node 100xfenok-next/scripts/test-load-guard-remote-dispatch.mjs
