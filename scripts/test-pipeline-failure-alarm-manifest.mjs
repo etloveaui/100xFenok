@@ -126,7 +126,14 @@ const STEP_CONTRACTS = [
       /scripts\/stage-lane-manifest\.sh[\s\S]*--stage always_if_exists/,
       /git add data\/admin\/alarm-state\.json/,
       /git fetch --depth=1 origin main/,
-      /alarm-state base changed before persistence; refusing stale overwrite/,
+      // Anchored on the compare-and-swap guard itself rather than on its
+      // message. The old wording was pinned here and broke when a909021b21
+      // changed what happens on refusal; the invariant this protects is that
+      // the guard exists, not how it phrases itself.
+      /if \[ "\$base_fingerprint" != "\$current_fingerprint" \]/,
+      // A correct refusal stands down instead of failing the job, after
+      // carrying the one field that is not recomputed each run.
+      /carry-alarm-resolution\.mjs/,
     ],
   },
   {
