@@ -13,22 +13,49 @@
       "outcome": "failed",
       "controlled": false,
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "run_id": "32432598821",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-08-21T00:27:15Z",
+      "outcome": "recovered",
+      "controlled": false
     }
   ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "last_attempt": {
-    "run_id": "30413281647",
+    "run_id": "32432598821",
     "run_attempt": 1,
     "event_name": "schedule",
     "schedule": "50 23 * * 1-5",
     "natural": true,
-    "observed_at": "2026-07-29T01:11:03Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    "observed_at": "2026-08-21T00:27:15Z",
+    "outcome": "recovered",
+    "controlled": false
   },
-  "latest_failure": {
+  "updated_at": "2026-08-21T00:27:15Z",
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/AJUL.json",
+    "payload_sha256": "47ee80ec93e128a446b99aabc507dc44cdfb521c203685a497835144b58c0e62",
+    "source_as_of": "2026-07-02T00:00:00Z",
+    "fetched_at": "2026-07-15T14:33:32Z"
+  },
+  "current": {
+    "path": "data/stockanalysis/etfs/AJUL.json",
+    "payload_sha256": "14011dce8e52a5206344b079c23845e9265fefaa5c2e9b3695a0af6b217bddc5",
+    "source_as_of": "2026-08-20T20:00:00Z",
+    "fetched_at": "2026-08-21T00:27:51Z"
+  },
+  "recovered_from_run_id": "30413281647",
+  "recovered_at": "2026-08-21T00:27:15Z",
+  "recovery_run_id": "32432598821",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "last_recovered_failure": {
     "run_id": "30413281647",
     "run_attempt": 1,
     "observed_at": "2026-07-29T01:11:03Z",
@@ -37,18 +64,5 @@
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "47ee80ec93e128a446b99aabc507dc44cdfb521c203685a497835144b58c0e62",
     "data_loss": false
-  },
-  "updated_at": "2026-07-29T01:11:03Z",
-  "lkg": {
-    "path": "data/admin/stockanalysis-recovery/lkg/etf/AJUL.json",
-    "payload_sha256": "47ee80ec93e128a446b99aabc507dc44cdfb521c203685a497835144b58c0e62",
-    "source_as_of": "2026-07-02T00:00:00Z",
-    "fetched_at": "2026-07-15T14:33:32Z"
-  },
-  "current": {
-    "path": "data/admin/stockanalysis-recovery/lkg/etf/AJUL.json",
-    "payload_sha256": "47ee80ec93e128a446b99aabc507dc44cdfb521c203685a497835144b58c0e62",
-    "source_as_of": "2026-07-02T00:00:00Z",
-    "fetched_at": "2026-07-15T14:33:32Z"
   }
 }

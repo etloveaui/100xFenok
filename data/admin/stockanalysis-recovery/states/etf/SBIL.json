@@ -13,22 +13,49 @@
       "outcome": "failed",
       "controlled": false,
       "error": "TimeoutError: The read operation timed out"
+    },
+    {
+      "run_id": "32432598821",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-08-21T00:27:15Z",
+      "outcome": "recovered",
+      "controlled": false
     }
   ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "last_attempt": {
-    "run_id": "32082721092",
+    "run_id": "32432598821",
     "run_attempt": 1,
     "event_name": "schedule",
     "schedule": "50 23 * * 1-5",
     "natural": true,
-    "observed_at": "2026-08-18T00:01:08Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "TimeoutError: The read operation timed out"
+    "observed_at": "2026-08-21T00:27:15Z",
+    "outcome": "recovered",
+    "controlled": false
   },
-  "latest_failure": {
+  "updated_at": "2026-08-21T00:27:15Z",
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/SBIL.json",
+    "payload_sha256": "b73d96e8dfc71283cbafeaf95ec60c51084eacf2f0b62d95b183c59da6381ba8",
+    "source_as_of": "2026-08-14T20:00:00Z",
+    "fetched_at": "2026-08-16T23:42:32Z"
+  },
+  "current": {
+    "path": "data/stockanalysis/etfs/SBIL.json",
+    "payload_sha256": "2def56308e7db1cd80ab2667fbb55606f8b2e167da6f6e1a7193349b50700d8a",
+    "source_as_of": "2026-08-20T20:00:00Z",
+    "fetched_at": "2026-08-21T00:34:10Z"
+  },
+  "recovered_from_run_id": "32082721092",
+  "recovered_at": "2026-08-21T00:27:15Z",
+  "recovery_run_id": "32432598821",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "last_recovered_failure": {
     "run_id": "32082721092",
     "run_attempt": 1,
     "observed_at": "2026-08-18T00:01:08Z",
@@ -37,18 +64,5 @@
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "b73d96e8dfc71283cbafeaf95ec60c51084eacf2f0b62d95b183c59da6381ba8",
     "data_loss": false
-  },
-  "updated_at": "2026-08-18T00:01:08Z",
-  "lkg": {
-    "path": "data/admin/stockanalysis-recovery/lkg/etf/SBIL.json",
-    "payload_sha256": "b73d96e8dfc71283cbafeaf95ec60c51084eacf2f0b62d95b183c59da6381ba8",
-    "source_as_of": "2026-08-14T20:00:00Z",
-    "fetched_at": "2026-08-16T23:42:32Z"
-  },
-  "current": {
-    "path": "data/admin/stockanalysis-recovery/lkg/etf/SBIL.json",
-    "payload_sha256": "b73d96e8dfc71283cbafeaf95ec60c51084eacf2f0b62d95b183c59da6381ba8",
-    "source_as_of": "2026-08-14T20:00:00Z",
-    "fetched_at": "2026-08-16T23:42:32Z"
   }
 }
