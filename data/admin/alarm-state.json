@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-21T14:57:57.665Z",
+  "generated_at": "2026-08-21T15:52:22.212Z",
   "status": "open",
-  "open_incident_count": 5,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -15,6 +15,20 @@
         "failure_streak",
         "plane_freshness_unavailable",
         "plane_publish_failed"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-fenok-news-tone.yml",
+      "label": "Fetch Fenok GDELT News Tone Proxy",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "plane_freshness_delayed",
+        "plane_publish_gate_blocked"
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
@@ -473,12 +487,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32494823439",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32494823439",
-    "observed_at": "2026-08-21T14:57:57.665Z",
+    "run_id": "32499775085",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32499775085",
+    "observed_at": "2026-08-21T15:52:22.212Z",
     "event": "schedule",
     "workflows": [
       "fetch-edgar-filings.yml",
+      "fetch-fenok-news-tone.yml",
       "fetch-fred-yardeni.yml",
       "fetch-oecd-cli.yml",
       "slickcharts-monthly.yml",
