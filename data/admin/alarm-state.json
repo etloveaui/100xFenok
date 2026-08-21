@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-20T23:44:49.252Z",
+  "generated_at": "2026-08-21T01:12:43.740Z",
   "status": "open",
-  "open_incident_count": 7,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fetch-damodaran-shadow.yml",
@@ -43,19 +43,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "fetch-yf-finance.yml",
-      "label": "Fetch YF Finance Data",
-      "streak": 7,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "unrecovered_overdue"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
     },
     {
       "workflow": "slickcharts-history.yml",
@@ -334,7 +321,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 21
+      "data_freshness_age_hours_at_generation": 22
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -377,10 +364,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "global-writer-queue-observer.yml",
@@ -484,8 +469,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 24,
-    "overdue": 2,
+    "not_due": 25,
+    "overdue": 1,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -501,15 +486,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32429787895",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32429787895",
-    "observed_at": "2026-08-20T23:44:49.252Z",
-    "event": "schedule",
+    "run_id": "32435369267",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32435369267",
+    "observed_at": "2026-08-21T01:12:43.740Z",
+    "event": "workflow_run",
     "workflows": [
       "fetch-damodaran-shadow.yml",
       "fetch-edgar-filings.yml",
       "fetch-fred-yardeni.yml",
-      "fetch-yf-finance.yml",
       "slickcharts-history.yml",
       "slickcharts-symbols.yml",
       "slickcharts-weekly.yml"
