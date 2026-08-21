@@ -25,6 +25,8 @@ on:
       - 'scripts/ops/test-alarm-blindness.mjs'
       - 'scripts/ops/test-cost-gate-rate-limit.mjs'
       - 'scripts/ops/test-persist-untracked-byproducts.mjs'
+      - 'scripts/ops/test-yahoo-batch-partial-attempt.mjs'
+      - 'scripts/emit-yahoo-batch-quote-history-attempt.mjs'
       - 'scripts/persist-cloud-publish-outcome.mjs'
       - 'scripts/lib/cloudflare-rate-limit.mjs'
       - 'scripts/check-r2-free-tier-usage.mjs'
@@ -113,6 +115,8 @@ on:
       - 'scripts/ops/test-alarm-blindness.mjs'
       - 'scripts/ops/test-cost-gate-rate-limit.mjs'
       - 'scripts/ops/test-persist-untracked-byproducts.mjs'
+      - 'scripts/ops/test-yahoo-batch-partial-attempt.mjs'
+      - 'scripts/emit-yahoo-batch-quote-history-attempt.mjs'
       - 'scripts/persist-cloud-publish-outcome.mjs'
       - 'scripts/lib/cloudflare-rate-limit.mjs'
       - 'scripts/check-r2-free-tier-usage.mjs'
@@ -208,6 +212,8 @@ jobs:
           node scripts/ops/test-alarm-blindness.mjs
           node scripts/ops/test-cost-gate-rate-limit.mjs
           node scripts/ops/test-persist-untracked-byproducts.mjs
+          node scripts/ops/test-yahoo-batch-partial-attempt.mjs
+          node scripts/test-emit-yahoo-batch-quote-history-attempt.mjs
           node scripts/test-sentiment-artifact-contract-coverage.mjs
           node scripts/test-out-of-band-producer-lanes.mjs
 

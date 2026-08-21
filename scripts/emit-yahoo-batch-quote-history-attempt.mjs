@@ -64,12 +64,40 @@ export function toYahooBatchAttemptRow(index) {
       outcome: "no_fallback_candidates",
       payload: "empty",
     });
-  } else if (failed > 0) {
+  } else if (failed > 0 && successes === 0) {
+    // Nothing came back. This is a real producer failure.
     tuple = libraryTuple({
       candidates: attempted,
       retryCount: 0,
       latencyMs: 0,
       outcome: "error",
+    });
+  } else if (failed > 0) {
+    // Partial success. This used to take the branch above, so ten bad tickers
+    // out of 1194 recorded the whole lane as a producer that returned nothing -
+    // measured on run 32429826829, where successes were 3, skipped 1181 and the
+    // ten failures are individually known provider-coverage gaps. On a batch
+    // this size `failed > 0` is close to always true, so that rule could
+    // essentially never report health.
+    //
+    // No schema change was needed: tupleStatus already maps outcome "success"
+    // with a failed assertion to "drift", which is neither ready nor
+    // unavailable. The failure count rides on the assertion so it stays visible.
+    tuple = libraryTuple({
+      candidates: attempted,
+      retryCount: 0,
+      latencyMs: 0,
+      outcome: "success",
+      decode: "ok",
+      payload: "non_empty",
+      // The lane's declared assertion, failed. The detection floor requires the
+      // assertion id set to match the lane's endpoint_contract exactly, so the
+      // signal is this id with passed false rather than a new one; and it
+      // reserves failure_entity/failure_detail for thrown executions, so the
+      // counts are not carried here. They live in
+      // data/admin/yahoo-batch-quote-history/index.json, which the same run
+      // commits, and drift is the pointer to go read them.
+      assertions: [{ id: "current_attempt_completed", passed: false }],
     });
   } else {
     tuple = libraryTuple({
