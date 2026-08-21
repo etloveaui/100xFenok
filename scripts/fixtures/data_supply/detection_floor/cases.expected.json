@@ -72,15 +72,15 @@
     "attempt_fixture_schema": "data-supply-detection-attempts/v1",
     "calendar_fixture_schema": "data-supply-detection-calendars/v1",
     "expected_report": {
-      "config_digest": "13ebc767dab3beff13c49a2d81c99fc4c8f05d8daf1d3f9a72e22f50b06de72e",
+      "config_digest": "bcc547798cd52c9fab42e14fc404f78e18ba265a3f9acecd2bf63b5cf14271c2",
       "counts": {
         "drift": 0,
         "producer_members_drift": 0,
-        "producer_members_ready": 29,
+        "producer_members_ready": 30,
         "producer_members_stale": 0,
         "producer_members_unavailable": 2,
         "producer_members_unobserved": 3,
-        "ready": 25,
+        "ready": 26,
         "stale": 0,
         "unavailable": 2,
         "unobserved": 3
@@ -659,6 +659,30 @@
         },
         {
           "affected_surface_ids": [
+            "market_valuation"
+          ],
+          "artifact": {
+            "age": 1,
+            "reason": "ok",
+            "source_as_of": "2026-07-10",
+            "status": "ready",
+            "unit": "calendar_days"
+          },
+          "endpoint": {
+            "observed_at": null,
+            "reason": "declared_cadence",
+            "status": "ready"
+          },
+          "enforcement": "shadow",
+          "id": "sentiment_aaii",
+          "kpi_required": false,
+          "label": "AAII investor sentiment survey (owner-run Apps Script)",
+          "monitoring_mode": "artifact_only",
+          "reason": "declared_cadence",
+          "status": "ready"
+        },
+        {
+          "affected_surface_ids": [
             "market_valuation",
             "sectors",
             "dashboard"
@@ -904,20 +928,20 @@
           "status": "ready"
         }
       ],
-      "logical_lane_count": 30,
+      "logical_lane_count": 31,
       "monitoring_mode_counts": {
-        "artifact_only": 3,
+        "artifact_only": 4,
         "composite": 1,
         "post_fetch_artifact": 26
       },
-      "producer_member_count": 34,
+      "producer_member_count": 35,
       "schema_version": "data-supply-detection-floor/v1"
     },
     "id": "all_valid_at_fixed_now",
     "now": "2026-07-11T00:00:00Z",
-    "report_file_sha256": "fdd8937fcf370ec0a9e96221774c2f98da9b2dd0c9c1006b0e6c5de8487310e1"
+    "report_file_sha256": "f510930c7a3a4acec723e837ec99ff84319413d606c445265d122db5e404e60d"
   },
-  "config_digest": "13ebc767dab3beff13c49a2d81c99fc4c8f05d8daf1d3f9a72e22f50b06de72e",
+  "config_digest": "bcc547798cd52c9fab42e14fc404f78e18ba265a3f9acecd2bf63b5cf14271c2",
   "config_digest_input": {
     "canonicalization": "recursive-sorted-object-keys-preserved-array-order-utf8",
     "enforcement": "shadow",
@@ -992,7 +1016,7 @@
     ],
     "schema_version": "data-supply-detection-config/v1"
   },
-  "logical_lane_count": 30,
+  "logical_lane_count": 31,
   "privacy_exclusions": [
     "raw_response_bodies",
     "credentials",
@@ -1007,7 +1031,7 @@
     "promotion_pointers",
     "state_transitions"
   ],
-  "producer_member_count": 34,
+  "producer_member_count": 35,
   "reason_cases": [
     {
       "expected_reason": "transport_error",
@@ -1046,7 +1070,7 @@
       "id": "unobserved"
     }
   ],
-  "registry_digest": "e0277c63abb693874204117235f839c1afceaeeb799a38ee2576854dee26461d",
+  "registry_digest": "71e01248e4a45c94edc3f3753ef0bb8716dc7ef5f916ff332e38cdf87ac6d1f5",
   "schema_version": "data-supply-detection-expected/v1",
   "slickcharts_member_ids": [
     "daily",

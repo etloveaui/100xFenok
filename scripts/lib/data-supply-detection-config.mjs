@@ -970,6 +970,34 @@ const config = {
       visibility: "admin_only",
     }),
     lane({
+      id: "sentiment_aaii",
+      label: "AAII investor sentiment survey (owner-run Apps Script)",
+      ownerWorkflow: null,
+      monitoringMode: "artifact_only",
+      // The payload is a bare array of survey rows with no metadata block, so
+      // there is no update_frequency to assert weekly against. The cadence rests
+      // on the owner ruling that keeps acquisition Apps-Script owned; the source
+      // clock still comes from the newest survey date in the rows.
+      members: [externalMember("sentiment_aaii", {
+        kind: "owner_contract",
+        evidence: "backlog/b-362/aaii-gas-owned",
+      }, [
+        artifact("sentiment_aaii_survey", "data/sentiment/aaii.json", {
+          sourceSelector: maxArrayFieldSource("", "date", "date"),
+          assertions: [
+            typeAssertion("sentiment_aaii_root_array", "", "array"),
+            minRowsAssertion("sentiment_aaii_non_empty", ""),
+          ],
+        }),
+      ])],
+      endpointContract: endpoint("converter_payload"),
+      // Weekly publication with the same grace the probe uses for weekly
+      // families. Measured history: 32 commits from 2025-12-29 to 2026-08-13,
+      // 28 on a Thursday, five gaps longer than a week.
+      freshnessPolicy: freshness({ fold: "oldest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
+      affectedSurfaceIds: ["market_valuation"],
+    }),
+    lane({
       id: "benchmarks",
       label: "Bloomberg benchmark converter payloads",
       ownerWorkflow: null,

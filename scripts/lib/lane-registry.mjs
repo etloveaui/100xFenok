@@ -148,6 +148,7 @@ const providers = [
   { id: "stockanalysis", label: "StockAnalysis", class: "external_data" },
   { id: "cnn_fear_and_greed", label: "CNN Fear & Greed", class: "external_data" },
   { id: "cftc", label: "CFTC", class: "external_data" },
+  { id: "aaii", label: "AAII Investor Sentiment Survey", class: "external_data" },
   { id: "alternative_me", label: "Alternative.me", class: "external_data" },
   { id: "nasdaq_indexes", label: "Nasdaq Indexes", class: "external_data" },
   { id: "oecd", label: "OECD", class: "external_data" },
@@ -845,6 +846,41 @@ const lanes = [
       + "production Mona data is unaffected; documented at "
       + "100xfenok-next/src/features/mona-vnext/storage/objectStore.ts and "
       + "100xfenok-next/docs/admin-live-skill-bridge.md:82-108",
+  }),
+  record({
+    id: "sentiment_aaii",
+    label: "AAII investor sentiment survey (owner-run Apps Script)",
+    owner_workflow: null,
+    provider_members: null,
+    provider_refs: [{ provider_id: "aaii", role: "source", members: null }],
+    store_kind: "artifact_only",
+    lane_class: "detection_floor",
+    // Measured 2026-08-21 from the repository's own commit history: 32 commits
+    // between 2025-12-29 and 2026-08-13, 28 of them on a Thursday. The
+    // published survey date travels in each row, so the payload is its own
+    // cadence evidence.
+    // The payload carries no update_frequency field to assert against, so the
+    // cadence rests on the owner ruling that keeps acquisition Apps-Script
+    // owned rather than on a fabricated metadata block.
+    cadence: {
+      kind: "weekly",
+      provenance: { kind: "owner_contract", evidence: "backlog/b-362/aaii-gas-owned" },
+    },
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: null,
+    detection_attempt: null,
+    canonical_outputs: ["data/sentiment/aaii.json"],
+    public_mirror: ["100xfenok-next/public/data/sentiment/aaii.json"],
+    commit_shards: [],
+    recovery_store: null,
+    // Split out of the sentiment lane, which declares a daily cadence and
+    // fetch-sentiment.yml as its owner. That workflow does not write this file:
+    // an owner-run Apps Script does, so the file was attributed to a producer
+    // that never touches it and five missed weeks between 2026-01 and 2026-08
+    // went unobserved. Owner ruling BACKLOG #362 keeps acquisition GAS-owned,
+    // so this lane observes the cadence rather than claiming to run it.
+    declared_exception: "owner-run Apps Script has no GitHub attempt shard; cadence is evidenced by the latest survey date carried in the payload",
   }),
   record({
     id: "benchmarks",

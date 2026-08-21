@@ -27,15 +27,16 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 // Not a data series: it describes the others.
 const NON_SERIES_OUTPUTS = new Set(["schema.json"]);
 
-// aaii.json needs no exemption entry: the producer does not declare it as an
-// output at all, which is the same fact stated at the source. Its data is
-// spreadsheet/import based with no robust free JSON source and the owner ruled
-// its status quo in BACKLOG #362, so it has no automated cadence to gate. This
-// assertion pins that, so if aaii ever gains a producer it stops being silently
-// out of scope and has to be gated like everything else.
-const UNAUTOMATED_UNDECLARED = Object.freeze({
+// aaii.json is not written by fetch-sentiment, so it is absent from this
+// producer's declared outputs. It is NOT ungated: measured history showed a real
+// weekly cadence from an owner-run Apps Script - 32 commits between 2025-12-29
+// and 2026-08-13, 28 of them on a Thursday - so it now carries its own
+// sentiment_aaii lane with an owner_contract cadence. This assertion keeps the
+// two facts consistent: this producer must not start writing it, and it must
+// stay gated by that separate lane.
+const OUT_OF_BAND_OUTPUTS = Object.freeze({
   "aaii.json":
-    "spreadsheet/import based with no robust free JSON source; owner ruled the status quo in BACKLOG #362",
+    "owner-run Apps Script, not fetch-sentiment; gated by the sentiment_aaii lane under BACKLOG #362",
 });
 
 function gatedPaths() {
@@ -66,23 +67,24 @@ assert.deepEqual(
 
 // A file recorded as having no automated producer must stay that way; gaining
 // one silently would leave it ungated.
-for (const name of Object.keys(UNAUTOMATED_UNDECLARED)) {
+for (const name of Object.keys(OUT_OF_BAND_OUTPUTS)) {
   assert.ok(
     !declaredOutputs.includes(name),
-    `${name} is now a declared producer output and must be gated rather than recorded as unautomated`,
+    `${name} is now written by fetch-sentiment and belongs to that lane rather than its own`,
   );
   assert.ok(
-    !gated.has(`data/sentiment/${name}`),
-    `${name} is gated despite being recorded as having no automated producer; reconcile the two`,
+    gated.has(`data/sentiment/${name}`),
+    `${name} has an out-of-band producer and must stay gated by its own lane`,
   );
 }
 
-// Every gated sentiment path must still be a file the producer writes.
+// Every gated sentiment path must be written by SOME declared producer: either
+// fetch-sentiment, or an out-of-band one recorded above.
 for (const gatedPath of [...gated].filter((entry) => entry.startsWith("data/sentiment/"))) {
   const name = path.basename(gatedPath);
   assert.ok(
-    declaredOutputs.includes(name),
-    `${gatedPath} is gated but the sentiment producer does not declare writing it`,
+    declaredOutputs.includes(name) || OUT_OF_BAND_OUTPUTS[name],
+    `${gatedPath} is gated but no declared producer writes it`,
   );
   assert.ok(
     fs.existsSync(path.join(REPO_ROOT, gatedPath)),
@@ -93,5 +95,5 @@ for (const gatedPath of [...gated].filter((entry) => entry.startsWith("data/sent
 console.log(
   `sentiment artifact contract coverage: ok (${declaredOutputs.length} declared outputs, `
     + `${declaredOutputs.filter((n) => gated.has(`data/sentiment/${n}`)).length} gated, `
-    + `${Object.keys(UNAUTOMATED_UNDECLARED).length} unautomated, ${NON_SERIES_OUTPUTS.size} non-series)`,
+    + `${Object.keys(OUT_OF_BAND_OUTPUTS).length} out-of-band, ${NON_SERIES_OUTPUTS.size} non-series)`,
 );

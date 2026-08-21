@@ -50,18 +50,12 @@ const CNN_PUT_CALL = "data/sentiment/cnn-put-call.json";
   assert.equal(payload.schema_version, "1.0.0");
   assert.deepEqual(
     payload.source_freshness_warnings,
-    [
-      {
-        contributor: AAII,
-        source_as_of: "2026-08-10",
-        status: "unresolved",
-        reason: "no registered source-family freshness/SLA gate",
-      },
-    ],
-    "only uncovered contributors get non-blocking source-specific warnings; "
-      + "cnn-put-call was gated on 2026-08-21 alongside the six other CNN outputs "
-      + "its producer writes, leaving aaii as the sole genuinely ungated contributor "
-      + "because it has no automated producer at all (BACKLOG #362)",
+    [],
+    "no consumed contributor is uncovered any more: the six remaining CNN outputs were "
+      + "gated on 2026-08-21 alongside cnn-put-call, and aaii gained its own sentiment_aaii "
+      + "lane once its history showed a real weekly Apps-Script cadence rather than no "
+      + "producer at all. An empty list is the honest state, not a suppressed one, and the "
+      + "warning path stays exercised below with a deliberately unregistered path.",
   );
 }
 
@@ -187,17 +181,21 @@ const CNN_PUT_CALL = "data/sentiment/cnn-put-call.json";
 }
 
 {
+  // Every real contributor is gated as of 2026-08-21, so the uncovered case is
+  // exercised with a deliberately unregistered path. Without it this assertion
+  // would only ever prove the empty list and the warning path would be dead.
+  const UNREGISTERED = "data/sentiment/__not-in-any-lane__.json";
   const warnings = sourceFreshnessWarnings([
     { name: AAII, as_of: "2026-08-05" },
     { name: CNN_PUT_CALL, as_of: "2026-08-10" },
     { name: BOGZ, as_of: "2025-10-01" },
+    { name: UNREGISTERED, as_of: "2026-08-01" },
   ]);
   assert.deepEqual(
     warnings.map(({ contributor, source_as_of, status }) => ({ contributor, source_as_of, status })),
-    [
-      { contributor: AAII, source_as_of: "2026-08-05", status: "unresolved" },
-    ],
-    "covered quarterly contributors stay under the existing source-family authority",
+    [{ contributor: UNREGISTERED, source_as_of: "2026-08-01", status: "unresolved" }],
+    "covered contributors stay under their source-family authority while a genuinely "
+      + "unregistered path still raises its non-blocking warning",
   );
 }
 
