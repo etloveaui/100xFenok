@@ -31,6 +31,7 @@ on:
       - 'scripts/ops/test-producer-push-triggers.mjs'
       - 'scripts/ops/test-plane-ceiling-matches-cadence.mjs'
       - 'scripts/ops/test-plane-ceiling-wiring.mjs'
+      - 'scripts/test-persist-cloud-publish-outcome.mjs'
       - 'scripts/update-manifest-projections.sh'
       - 'scripts/publish-cloud-data-generation.mjs'
       - 'scripts/ops/carry-alarm-resolution.mjs'
@@ -129,6 +130,7 @@ on:
       - 'scripts/ops/test-producer-push-triggers.mjs'
       - 'scripts/ops/test-plane-ceiling-matches-cadence.mjs'
       - 'scripts/ops/test-plane-ceiling-wiring.mjs'
+      - 'scripts/test-persist-cloud-publish-outcome.mjs'
       - 'scripts/update-manifest-projections.sh'
       - 'scripts/publish-cloud-data-generation.mjs'
       - 'scripts/ops/carry-alarm-resolution.mjs'
@@ -287,6 +289,7 @@ jobs:
           node scripts/test-update-manifest-materializations.mjs
           node scripts/test-update-manifest-central-staging.mjs
           node scripts/test-lane-commit-manifest-parity.mjs
+          node scripts/test-persist-cloud-publish-outcome.mjs
           node scripts/test-update-manifest-materializations.mjs
           node scripts/test-sec13f-retention-web-contract.mjs
           node scripts/test-sec13f-bridge-index.mjs

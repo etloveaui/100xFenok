@@ -1791,6 +1791,13 @@ export const PLATFORM_PUBLISHER_LANE_IDS = Object.freeze({
 export const PLANE_CANONICAL_COMMIT_MODES = Object.freeze([
   "immediately_preceding",
   "earlier_same_job",
+  // Added 2026-08-21 for B-393 rather than reusing external_authority, which
+  // would have passed while stating something false. external_authority means
+  // no job in THIS workflow performs the canonical write; here one does, and
+  // the publish job's `needs` edge is what orders it. Reusing the wrong mode
+  // would also have stayed green if that edge were ever deleted, which is the
+  // failure the mode exists to catch.
+  "earlier_sibling_job",
   "external_authority",
 ]);
 
@@ -1832,6 +1839,14 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
     non_blocking_publisher: false,
     detached_persistence: true,
     reason: "DEC-340 mirrored the symbols acceptance check onto the weekly member, so the same non-blocking check sits between publish and persistence",
+  }),
+  "yahoo-ticker-macro": Object.freeze({
+    workflow: ".github/workflows/fetch-yahoo-ticker.yml",
+    non_blocking_publisher: false,
+    detached_persistence: true,
+    reason: "B-393: the workflow was deliberately restructured into fetch-yahoo-ticker, publish and persist jobs so that only persistence takes the global Git writer lock, which the registry already had vocabulary for. It was never given this entry, so the contract sliced the step after publication - the outcome-shard upload - and asserted the persist command against it. The contract was working correctly: it detected an undeclared structural change",
+    canonical_commit: "earlier_sibling_job",
+    canonical_commit_reason: "the canonical write is 'Commit and push' in the fetch-yahoo-ticker job, and the publish job declares needs: fetch-yahoo-ticker, so ordering is guaranteed by the job graph rather than by step adjacency. This is not external_authority: this workflow does own its canonical commit",
   }),
   "stockanalysis-etf-detail": Object.freeze({
     workflow: ".github/workflows/fetch-stockanalysis.yml",

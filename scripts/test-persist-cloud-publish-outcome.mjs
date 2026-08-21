@@ -194,6 +194,29 @@ function jobBlockAt(text, index) {
         const commitIndex = publishJobText.indexOf("- name: Commit");
         assert.ok(commitIndex >= 0 && commitIndex < publishJobText.indexOf("- name: Publish"),
           `${family} declares earlier_same_job, so its publish job must still contain a Commit step before publication`);
+      } else if (canonicalCommit === "earlier_sibling_job") {
+        // The canonical write lives in a sibling job of THIS workflow, ordered
+        // by the publish job's needs edge. Assert both halves: the publisher
+        // does no canonical write itself, and the job it waits on does one.
+        assert.equal((publishJobText.match(/- name: Commit/g) ?? []).length, 0,
+          `${family} declares earlier_sibling_job, so its publish job must contain no Commit step`);
+        // publishJobText starts at the job's steps, which is after `needs:`.
+        // The heading-based slice is the whole job, which is what this needs.
+        const wholePublishJob = jobBlockAt(workflowText, publishStepStart);
+        const needsMatch = /\n    needs:\s*(\[[^\]]*\]|[a-z][a-z0-9_-]*)/.exec(wholePublishJob);
+        assert.ok(needsMatch, `${family} declares earlier_sibling_job, so its publish job must declare needs`);
+        const needed = needsMatch[1].startsWith("[")
+          ? needsMatch[1].slice(1, -1).split(",").map((name) => name.trim()).filter(Boolean)
+          : [needsMatch[1].trim()];
+        const committing = needed.filter((name) => {
+          const at = workflowText.search(new RegExp(`^  ${escapeRegExp(name)}:\\s*$`, "m"));
+          return at >= 0 && /- name: Commit/.test(jobBlockAt(workflowText, at));
+        });
+        assert.ok(
+          committing.length >= 1,
+          `${family} declares earlier_sibling_job, so a job its publisher needs must contain the canonical `
+            + `Commit step; needs [${needed.join(", ")}] contains none`,
+        );
       } else {
         // external_authority: another workflow owns the canonical tree, so this
         // publish job must perform no canonical Git write of its own.
@@ -223,10 +246,26 @@ function jobBlockAt(text, index) {
     const publishJob = jobBlockAt(workflowText, workflowText.indexOf("  publish:"));
     const persistJob = jobBlockAt(workflowText, workflowText.indexOf("  persist:"));
     const trigger = workflowText.slice(workflowText.indexOf("on:"), workflowText.indexOf("permissions:"));
+    // CORRECTED 2026-08-21 (B-393). This block asserted the publisher was
+    // caller-only, and that was true when both it and the workflow landed
+    // together at fe5fd69dc9 on 2026-08-17T09:09:55Z. 52fae95fd9 made it
+    // source-change driven on 2026-08-18T23:38:10Z and did not update the
+    // assertion, so this file had been red for two days - unnoticed precisely
+    // because it runs in no workflow, which is the other half of B-393.
+    //
+    // The shipped design is coherent and is what is asserted now: a push moves
+    // the canonical tree and IS the confirmation, so the typed confirmation is
+    // scoped to manual runs. Asserting that scoping is what makes the push
+    // trigger safe to have; a bare regex relaxation would have asserted nothing.
     assert.match(trigger, /workflow_dispatch:/);
-    assert.doesNotMatch(trigger, /schedule:|workflow_run:|push:|pull_request:/);
+    assert.doesNotMatch(trigger, /schedule:|workflow_run:|pull_request:/);
+    assert.match(trigger, /^\s{2}push:\n\s+branches:\n\s+- main\n\s+paths:\n\s+- 'data\/global-scouter\/\*\*'/m,
+      "the declared push trigger must stay exactly as measured for BACKLOG B-395");
     assert.match(workflowText, /confirm must be exactly PUBLISH-SHADOW/);
     assert.match(workflowText, /if \[ \"\$CONFIRM\" != \"PUBLISH-SHADOW\" \]; then/);
+    assert.match(workflowText,
+      /- name: Refuse an unconfirmed dispatch\n\s+if: \$\{\{ github\.event_name == 'workflow_dispatch' \}\}/,
+      "the typed confirmation must be scoped to manual runs, or every push run fails on an empty input");
     assert.match(publishJob, /group: global-scouter-shadow-publish/);
     assert.doesNotMatch(publishJob, /group: fenok-data-writer-refs\/heads\/main/);
     assert.match(persistJob, /group: fenok-data-writer-refs\/heads\/main/);
