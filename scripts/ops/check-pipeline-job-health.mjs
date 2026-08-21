@@ -34,7 +34,20 @@ export const CADENCE_STATES = Object.freeze(["not_due", "overdue", "recovered", 
 export const PLANE_PUBLISH_ALARM_REASONS = Object.freeze({
   gate_blocked: "plane_publish_gate_blocked",
   failed: "plane_publish_failed",
+  // B-391. A publish-capable family that has never recorded an outcome produces
+  // no projection row at all, so it reached the alarm not as a red but as
+  // nothing. Absence now alarms - for the families measured as genuine
+  // incidents, never for one that has had no opportunity.
+  outcome_unrecorded: "plane_outcome_unrecorded",
 });
+// The two admissible classifications. A family with no recorded outcome is
+// either broken or has not had its turn, and that difference is DECLARED as a
+// field rather than inferred from how the reason happens to be worded - keying
+// an alarm off a regex over prose is the same defect as pinning an error string.
+export const PLANE_OUTCOME_UNRECORDED_CLASSIFICATIONS = Object.freeze([
+  "incident",
+  "awaiting_opportunity",
+]);
 const PLANE_PUBLISH_SUCCESS_RESULTS = new Set(["published", "resumed"]);
 
 // D3 static-LKG aging, owner-selected 2026-08-18: option A with a maximum-age
@@ -192,16 +205,31 @@ export const CADENCE_DECLARATION_EXEMPTIONS = Object.freeze({
 // removes the silent default so the set cannot grow by omission. Registered as
 // BACKLOG B-391.
 export const PLANE_OUTCOME_UNRECORDED_REASONS = Object.freeze({
-  "fdic-tier1":
-    "no opportunity yet: schedule-gated on cron '0 6 1-7 * 1' plus a schedule_gate eligibility step, and the 2026-08-17 run skipped fetch, publish and persist together, so no cycle has reached the publisher. Its unstaged public mirror is separately open as BACKLOG B-383",
-  "oecd-cli":
-    "GENUINE INCIDENT, reclassified 2026-08-21 by measurement: this was first recorded as awaiting a monthly turn, which was misleading. Its scheduled path has never once completed - the only schedule run in retained history, 2026-08-01T09:45:49Z, was cancelled - and every success it has is a workflow_dispatch, including the 2026-08-03 run originally cited. A lane that only ever runs by hand is not waiting for its cadence",
-  "slickcharts-monthly":
-    "GENUINE INCIDENT, reclassified 2026-08-21 by measurement: same shape as oecd-cli and same original error. Its 2026-08-01T09:57:19Z scheduled run was cancelled and its 2026-07-01T11:16:10Z scheduled run failed, so the scheduled path has never completed; the 2026-08-10 run originally cited was a workflow_dispatch",
-  "fred-yardeni":
-    "GENUINE INCIDENT, tracked: the 2026-08-15 run acquired and committed successfully while the publish step was skipped by the implicit success() on its step-level if, after a repo-wide public-mirror guard failed on an unrelated family's file. Serving has been frozen at source 2026-08-07 since 2026-08-10 while main has carried 2026-08-14 since 2026-08-19",
-  "slickcharts-symbols":
-    "GENUINE INCIDENT, tracked: the 2026-08-16 run published and proved acceptance, then persistence refused four consumed telemetry directories outside its owned shard. Cleanup landed at 5cb138ba9e; the 2026-08-23T07:30Z run is the natural proof",
+  "fdic-tier1": Object.freeze({
+    classification: "awaiting_opportunity",
+    reason:
+      "no opportunity yet: schedule-gated on cron '0 6 1-7 * 1' plus a schedule_gate eligibility step, and the 2026-08-17 run skipped fetch, publish and persist together, so no cycle has reached the publisher. Its unstaged public mirror is separately open as BACKLOG B-383",
+  }),
+  "oecd-cli": Object.freeze({
+    classification: "incident",
+    reason:
+      "GENUINE INCIDENT, reclassified 2026-08-21 by measurement: this was first recorded as awaiting a monthly turn, which was misleading. Its scheduled path has never once completed - the only schedule run in retained history, 2026-08-01T09:45:49Z, was cancelled - and every success it has is a workflow_dispatch, including the 2026-08-03 run originally cited. A lane that only ever runs by hand is not waiting for its cadence",
+  }),
+  "slickcharts-monthly": Object.freeze({
+    classification: "incident",
+    reason:
+      "GENUINE INCIDENT, reclassified 2026-08-21 by measurement: same shape as oecd-cli and same original error. Its 2026-08-01T09:57:19Z scheduled run was cancelled and its 2026-07-01T11:16:10Z scheduled run failed, so the scheduled path has never completed; the 2026-08-10 run originally cited was a workflow_dispatch",
+  }),
+  "fred-yardeni": Object.freeze({
+    classification: "incident",
+    reason:
+      "GENUINE INCIDENT, tracked: the 2026-08-15 run acquired and committed successfully while the publish step was skipped by the implicit success() on its step-level if, after a repo-wide public-mirror guard failed on an unrelated family's file. Serving has been frozen at source 2026-08-07 since 2026-08-10 while main has carried 2026-08-14 since 2026-08-19",
+  }),
+  "slickcharts-symbols": Object.freeze({
+    classification: "incident",
+    reason:
+      "GENUINE INCIDENT, tracked: the 2026-08-16 run published and proved acceptance, then persistence refused four consumed telemetry directories outside its owned shard. Cleanup landed at 5cb138ba9e; the 2026-08-23T07:30Z run is the natural proof",
+  }),
 });
 
 // The alarm used to fail open. Any GitHub API failure marked that workflow
@@ -574,10 +602,34 @@ function projectedOutcomeForWorkflow(projection, workflowFile) {
  * result. A successful publish removes only the two additive plane reasons;
  * all canonical failure, schedule, and cadence reasons remain untouched.
  */
-export function attachPublishOutcomeAlarms(workflows, projection) {
+// B-391: which workflow files carry a family whose absence is a real incident.
+// Derived from the bindings and the classification field, never from a list of
+// file names, so adding a binding cannot quietly opt out of it.
+export function unrecordedIncidentWorkflowFiles({
+  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+  reasons = PLANE_OUTCOME_UNRECORDED_REASONS,
+} = {}) {
+  const files = new Map();
+  for (const [family, binding] of Object.entries(bindings ?? {})) {
+    if (reasons?.[family]?.classification !== "incident") continue;
+    if (typeof binding?.workflow !== "string") continue;
+    const file = path.basename(binding.workflow);
+    if (!files.has(file)) files.set(file, []);
+    files.get(file).push(family);
+  }
+  return files;
+}
+
+export function attachPublishOutcomeAlarms(workflows, projection, {
+  unrecordedIncidents = unrecordedIncidentWorkflowFiles(),
+} = {}) {
   if (!Array.isArray(workflows)) return workflows;
   return workflows.map((workflow) => {
     const outcome = projectedOutcomeForWorkflow(projection, workflow?.file);
+    // Absence, not a result. The runtime condition is the MISSING row, not the
+    // static list: a family that starts recording stops alarming here on its
+    // own, and the coverage contract separately forces its reason to be removed.
+    const unrecordedFamilies = outcome ? [] : (unrecordedIncidents.get(workflow?.file) ?? []);
     const alarmReasons = Array.isArray(workflow?.alarm_reasons)
       ? [...new Set(workflow.alarm_reasons)]
       : [];
@@ -611,12 +663,20 @@ export function attachPublishOutcomeAlarms(workflows, projection) {
     } else if (freshnessState === "healthy") {
       alarmReasons.splice(0, alarmReasons.length, ...alarmReasons.filter((entry) => !freshnessReasons.has(entry)));
     }
-    const planeAlarm = outcome?.result === "gate_blocked" || outcome?.result === "failed";
+    if (unrecordedFamilies.length > 0
+      && !alarmReasons.includes(PLANE_PUBLISH_ALARM_REASONS.outcome_unrecorded)) {
+      alarmReasons.push(PLANE_PUBLISH_ALARM_REASONS.outcome_unrecorded);
+    }
+    const planeAlarm = outcome?.result === "gate_blocked" || outcome?.result === "failed"
+      || unrecordedFamilies.length > 0;
     const freshnessAlarm = freshnessState === "unavailable" || freshnessState === "delayed";
     const alarming = workflow?.alarming === true || planeAlarm || freshnessAlarm;
     return {
       ...workflow,
       ...(outcome ? { plane_publish_outcome: outcome } : {}),
+      ...(unrecordedFamilies.length > 0
+        ? { plane_outcome_unrecorded_families: [...unrecordedFamilies].sort() }
+        : {}),
       status: alarming ? "alarm" : workflow.status,
       alarming,
       alarm_reasons: alarmReasons,
