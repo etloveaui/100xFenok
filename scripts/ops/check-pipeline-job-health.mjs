@@ -204,6 +204,48 @@ export const PLANE_OUTCOME_UNRECORDED_REASONS = Object.freeze({
     "GENUINE INCIDENT, tracked: the 2026-08-16 run published and proved acceptance, then persistence refused four consumed telemetry directories outside its owned shard. Cleanup landed at 5cb138ba9e; the 2026-08-23T07:30Z run is the natural proof",
 });
 
+// The alarm used to fail open. Any GitHub API failure marked that workflow
+// "unknown", unknowns are not alarms, and the final exit was
+// `alarms.length > 0 ? ALERT_EXIT : 0` - so a run that could not read a single
+// workflow exited 0 and the workflow, which gates all reporting on a failing
+// step, reported nothing. An API outage made all 34 watched workflows
+// unreadable and the alarm said everything was fine.
+//
+// The original intent is correct and is kept: a transient API failure must
+// never itself alarm. What was missing is a bound. A transient failure hits one
+// workflow; blindness is correlated and hits most at once. A minority of
+// unknowns therefore stays as quiet as before, and a majority means the alarm's
+// "ok" describes a minority of what it claims to watch, which is not evidence
+// of health. Majority rather than a tuned number: it is the point at which
+// "everything I watch is fine" stops being mostly true.
+export const BLINDNESS_REASON =
+  "the alarm could not evaluate a majority of the workflows it watches, so its result is not evidence of health";
+
+export function classifyAlarmBlindness({ watched, unknown } = {}) {
+  const blind = { blind: true, reason: BLINDNESS_REASON };
+  if (!Number.isInteger(watched) || !Number.isInteger(unknown)) return blind;
+  if (watched <= 0) return blind;            // asserting health over nothing
+  if (unknown < 0 || unknown > watched) return blind;
+  return unknown * 2 > watched ? blind : { blind: false, reason: null };
+}
+
+export function buildBlindnessBody({ watched, unknown, unknownWorkflows }) {
+  const lines = [
+    "[alert] The pipeline alarm could not see.",
+    "",
+    `${unknown} of ${watched} watched workflows could not be evaluated, so this run's`,
+    "result does not assert that the pipeline is healthy - only that the alarm was",
+    "unable to look. A minority of unreadable workflows is tolerated as transient;",
+    "a majority is reported because it cannot be.",
+    "",
+    "Unreadable workflows:",
+  ];
+  for (const workflow of unknownWorkflows) {
+    lines.push(`- ${workflow.file}: ${workflow.message ?? "no message"}`);
+  }
+  return lines.join("\n");
+}
+
 export const SCHEDULED_WORKFLOW_EXCLUSIONS = Object.freeze({
   "pipeline-failure-alarm.yml": "self-monitoring would create a recursive alarm loop",
 });
@@ -1346,6 +1388,11 @@ export async function main() {
       ),
     };
     writeJson(resultPath, result);
+    // Deliberately exit 0. This path is reached only when GITHUB_REPOSITORY is
+    // empty, which the Actions runner always sets, so in CI it is unreachable -
+    // it exists for running this script by hand offline. Making a local
+    // invocation alarm would be noise, and the real fail-open defect was the API
+    // path below, which is now bounded by classifyAlarmBlindness.
     console.error(`[unknown] ${result.message}`);
     process.exit(0);
   }
@@ -1396,9 +1443,29 @@ export async function main() {
   const unknowns = classifiedWorkflows.filter((w) => w.status === "unknown");
   const status = alarms.length > 0 ? "alarm" : unknowns.length > 0 ? "unknown" : "ok";
 
-  const result = { ...base, status, workflows: classifiedWorkflows };
+  const blindness = classifyAlarmBlindness({
+    watched: classifiedWorkflows.length,
+    unknown: unknowns.length,
+  });
+  const result = {
+    ...base,
+    status: blindness.blind ? "blind" : status,
+    blind: blindness.blind,
+    blind_reason: blindness.reason,
+    workflows: classifiedWorkflows,
+  };
   if (alarms.length > 0) {
     result.issueBody = buildIssueBody(alarms);
+  }
+  if (blindness.blind) {
+    const blindBody = buildBlindnessBody({
+      watched: classifiedWorkflows.length,
+      unknown: unknowns.length,
+      unknownWorkflows: unknowns,
+    });
+    // Blindness leads: an incident list assembled while most of the estate was
+    // unreadable must not be presented as the whole picture.
+    result.issueBody = result.issueBody ? `${blindBody}\n\n---\n\n${result.issueBody}` : blindBody;
   }
   writeJson(resultPath, result);
 
@@ -1408,7 +1475,7 @@ export async function main() {
       .join(" "),
   );
 
-  process.exit(alarms.length > 0 ? ALERT_EXIT : 0);
+  process.exit(alarms.length > 0 || blindness.blind ? ALERT_EXIT : 0);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

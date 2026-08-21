@@ -22,6 +22,7 @@ on:
       - 'scripts/ops/test-alarm-liveness.mjs'
       - 'scripts/ops/test-plane-outcome-recording-coverage.mjs'
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
+      - 'scripts/ops/test-alarm-blindness.mjs'
       - 'data/admin/data-supply-state/publish-outcomes/**'
       - 'scripts/check-lane-commit-manifest-inventory.mjs'
       - 'scripts/ops/check-global-writer-queue.mjs'
@@ -104,6 +105,7 @@ on:
       - 'scripts/ops/test-alarm-liveness.mjs'
       - 'scripts/ops/test-plane-outcome-recording-coverage.mjs'
       - 'scripts/ops/test-workflow-credential-wiring.mjs'
+      - 'scripts/ops/test-alarm-blindness.mjs'
       - 'data/admin/data-supply-state/publish-outcomes/**'
       - 'scripts/check-lane-commit-manifest-inventory.mjs'
       - 'scripts/ops/check-global-writer-queue.mjs'
@@ -193,6 +195,7 @@ jobs:
           node scripts/ops/test-alarm-liveness.mjs
           node scripts/ops/test-plane-outcome-recording-coverage.mjs
           node scripts/ops/test-workflow-credential-wiring.mjs
+          node scripts/ops/test-alarm-blindness.mjs
           node scripts/test-sentiment-artifact-contract-coverage.mjs
           node scripts/test-out-of-band-producer-lanes.mjs
 
