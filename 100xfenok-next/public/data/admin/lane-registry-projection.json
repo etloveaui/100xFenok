@@ -1,6 +1,6 @@
 {
   "schema_version": "lane-registry-projection/v2",
-  "generated_at": "2026-08-22T03:32:08.017Z",
+  "generated_at": "2026-08-22T04:06:19.237Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
   "lane_count": 34,
@@ -157,14 +157,14 @@
             "unit": "hours",
             "value": 6
           },
-          "latest_expected_slot": "2026-08-22T03:05:00.000Z",
-          "next_expected_slot": "2026-08-22T04:05:00.000Z",
+          "latest_expected_slot": "2026-08-22T04:05:00.000Z",
+          "next_expected_slot": "2026-08-22T05:05:00.000Z",
           "status": "overdue"
         },
         "latest_attempt": {
-          "observed_at": "2026-08-22T03:03:26.745Z",
-          "outcome": "success",
-          "failure_class": null
+          "observed_at": "2026-08-22T03:53:28.703Z",
+          "outcome": "failed",
+          "failure_class": "assertion"
         },
         "source": {
           "source_date": "2026-08-21T20:00:00.000Z",
@@ -173,8 +173,8 @@
           "sla": null
         },
         "recovery": {
-          "state": "retained_lkg",
-          "retry_count": 0,
+          "state": "retry_pending",
+          "retry_count": 2,
           "recovered_at": "2026-08-20T14:49:04.464Z",
           "lkg_source_date": "2026-08-21T20:00:00.000Z"
         },
