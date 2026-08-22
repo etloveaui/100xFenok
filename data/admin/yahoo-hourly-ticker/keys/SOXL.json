@@ -1,62 +1,35 @@
 {
-  "schema_version": "producer-lkg-key-state/v2",
+  "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "yahoo_hourly_ticker",
   "key": "SOXL.json",
-  "updated_at": "2026-08-22T03:03:26.745Z",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "updated_at": "2026-08-22T03:53:28.703Z",
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "current": {
-    "path": "data/macro/yahoo-ticker.json#/tickers/SOXL",
+    "path": "data/admin/yahoo-hourly-ticker/lkg/SOXL.json",
     "payload_sha256": "a6b73ea0d51be6c8fb781afc7dc8a05be755e5c915d7913d7aee2985b1b88aaa",
     "source_as_of": "2026-08-21T20:00:00.000Z"
   },
-  "canonical_ref": "data/macro/yahoo-ticker.json#/tickers/SOXL",
   "lkg": {
     "path": "data/admin/yahoo-hourly-ticker/lkg/SOXL.json",
     "payload_sha256": "a6b73ea0d51be6c8fb781afc7dc8a05be755e5c915d7913d7aee2985b1b88aaa",
     "source_as_of": "2026-08-21T20:00:00.000Z"
   },
-  "latest_failure": null,
+  "canonical_ref": "data/macro/yahoo-ticker.json#/tickers/SOXL",
+  "latest_failure": {
+    "run_id": "32550197278",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-08-22T03:53:28.703Z",
+    "failure_kind": "schema_drift",
+    "error": "schema_drift"
+  },
   "recovered_from_run_id": "32372444892",
   "recovery_run_id": "32382387233",
   "recovery_run_attempt": 1,
   "recovery_event_name": "schedule",
   "recovered_at": "2026-08-20T14:49:04.464Z",
-  "last_run_id": "32547916953",
+  "last_run_id": "32550197278",
   "last_run_attempt": 1,
-  "last_event_name": "schedule",
-  "promotion_contract": "provider_observation/v2",
-  "promotion_proof_required": true,
-  "provider_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "a6b73ea0d51be6c8fb781afc7dc8a05be755e5c915d7913d7aee2985b1b88aaa",
-    "candidate_payload_sha256": "a6b73ea0d51be6c8fb781afc7dc8a05be755e5c915d7913d7aee2985b1b88aaa",
-    "payload_ref": "data/admin/yahoo-hourly-ticker/provider-observations/a6b73ea0d51be6c8fb781afc7dc8a05be755e5c915d7913d7aee2985b1b88aaa.json",
-    "source_as_of": "2026-08-21T20:00:00.000Z",
-    "run_id": "32547916953",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-08-22T03:03:26.745Z",
-    "recovered_from_run_id": "32372444892"
-  },
-  "recovery_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "7875dd86df30b6f5b7ef170a5997941088f377ab2968306a91bf794be09636e4",
-    "candidate_payload_sha256": "7875dd86df30b6f5b7ef170a5997941088f377ab2968306a91bf794be09636e4",
-    "payload_ref": "data/admin/yahoo-hourly-ticker/provider-observations/7875dd86df30b6f5b7ef170a5997941088f377ab2968306a91bf794be09636e4.json",
-    "source_as_of": "2026-08-20T14:49:04.000Z",
-    "run_id": "32382387233",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-08-20T14:49:04.464Z",
-    "recovered_from_run_id": "32372444892"
-  },
-  "last_recovered_failure": {
-    "run_id": "32372444892",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-08-20T13:07:03.064Z",
-    "failure_kind": "schema_drift",
-    "error": "schema_drift"
-  }
+  "last_event_name": "schedule"
 }
