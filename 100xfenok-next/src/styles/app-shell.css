@@ -120,7 +120,7 @@
 .fnk-shell .content{margin-left:var(--rail-w); padding:calc(var(--topbar-h) + var(--ticker-h) + var(--s5)) var(--s6) var(--s10); max-width:1320px; overflow-x:hidden}
 
   /* ───────────── TYPEAHEAD PREVIEW DRAWER ───────────── */
-.fnk-shell .typeahead-preview{position:fixed; top:calc(var(--topbar-h) + var(--ticker-h) + var(--s4)); right:var(--s6); z-index:45; width:min(380px,calc(100vw - var(--rail-w) - 48px)); max-height:calc(100dvh - var(--topbar-h) - var(--ticker-h) - 40px); overflow:auto; border:1px solid var(--c-line); border-radius:12px; background:color-mix(in srgb,var(--c-panel) 96%,transparent); box-shadow:var(--sh-pop); backdrop-filter:blur(16px) saturate(1.2)}
+.fnk-shell .typeahead-preview{position:fixed; top:calc(var(--topbar-h) + var(--ticker-h) + var(--s4)); right:var(--s6); z-index:45; width:min(380px,calc(100vw - var(--rail-w) - 48px)); max-height:calc(100dvh - var(--topbar-h) - var(--ticker-h) - 40px); overflow:auto; border:1px solid var(--c-line); border-radius:var(--cp-radius-md); background:color-mix(in srgb,var(--c-panel) 96%,transparent); box-shadow:var(--sh-pop); backdrop-filter:blur(16px) saturate(1.2)}
 .fnk-shell .typeahead-preview__head{position:sticky; top:0; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:var(--s3); padding:12px var(--s4); border-bottom:1px solid var(--c-line-2); background:inherit}
 .fnk-shell .typeahead-preview__title{min-width:0; display:grid; gap:1px}
 .fnk-shell .typeahead-preview__title span{font-size:11px; font-weight:800; color:var(--c-ink-3)}
@@ -150,7 +150,7 @@
 .fnk-shell .panel-foot{padding:10px var(--panel-pad); border-top:1px solid var(--c-line-2); font-size:12px; color:var(--c-ink-2)}
 
 .fnk-shell .seg{display:flex; gap:2px; background:var(--c-surface-2); border:1px solid var(--c-line); border-radius:10px; padding:2px}
-.fnk-shell .seg button{background:transparent; border:0; color:var(--c-ink-3); padding:5px 12px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:.14s}
+.fnk-shell .seg button{background:transparent; border:0; color:var(--c-ink-3); padding:5px 12px; border-radius:var(--cp-radius-sm); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:.14s}
 .fnk-shell .seg button.on{background:var(--c-ink); color:#fff}
 
   /* ─── top signal bar (3-second read) ─── */
@@ -184,7 +184,7 @@
 .fnk-shell .row:hover{background:var(--c-surface-2)}
 
   /* watchlist */
-.fnk-shell .wl .av{width:30px; height:30px; border-radius:8px; background:var(--c-ink); color:#fff; font-size:11px; font-weight:700; display:grid; place-items:center; flex:none}
+.fnk-shell .wl .av{width:30px; height:30px; border-radius:var(--cp-radius-sm); background:var(--c-ink); color:#fff; font-size:11px; font-weight:700; display:grid; place-items:center; flex:none}
 .fnk-shell .wl .nm{font-size:15px; font-weight:700}
 .fnk-shell .wl .sub{font-size:12px; color:var(--c-ink-3)}
 .fnk-shell .wl .pc{margin-left:auto; font-size:15px; font-weight:700; text-align:right}
@@ -207,7 +207,7 @@
 .fnk-shell .db-bar{position:absolute; top:0; bottom:0; border-radius:5px}
 .fnk-shell .db-bar.eps{background:var(--c-up)} .fnk-shell .db-bar.per{background:var(--c-mult)}
 .fnk-shell .db-row .dv{font-size:13px; font-weight:600; color:var(--c-ink-2); text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
-.fnk-shell .ti-why{display:flex; min-width:0; align-items:center; gap:var(--s2); flex-wrap:wrap; font-size:12.5px; line-height:1.45; color:var(--c-ink-3); margin-top:8px; overflow-wrap:anywhere}
+.fnk-shell .ti-why{display:flex; min-width:0; align-items:center; gap:var(--s2); flex-wrap:wrap; font-size:13px; line-height:1.45; color:var(--c-ink-3); margin-top:8px; overflow-wrap:anywhere}
 .fnk-shell .ti-why .tag{flex:none; max-width:100%; font-size:11px; font-weight:700; color:var(--c-up); background:var(--c-up-soft); border-radius:var(--r-pill); padding:3px 9px; white-space:normal; overflow-wrap:break-word}
 
   /* sectors */
@@ -385,7 +385,7 @@
   .fnk-shell .mobile-more-close:hover{background:var(--c-surface-2)}
   .fnk-shell .mobile-more-close svg{width:20px; height:20px}
   .fnk-shell .mobile-more-list{display:grid; gap:2px; overflow-y:auto; overscroll-behavior:contain}
-  .fnk-shell .mobile-more-item{display:flex; min-height:48px; align-items:center; gap:var(--s3); padding:0 var(--s3); border-radius:12px; color:var(--c-ink); font-size:15px; font-weight:700}
+  .fnk-shell .mobile-more-item{display:flex; min-height:48px; align-items:center; gap:var(--s3); padding:0 var(--s3); border-radius:var(--cp-radius-md); color:var(--c-ink); font-size:15px; font-weight:700}
   .fnk-shell .mobile-more-item:hover{background:var(--c-surface-2)}
   .fnk-shell .mobile-more-item.on{background:var(--c-brand-soft); color:var(--c-brand)}
   .fnk-shell .mobile-more-icon{width:24px; height:24px; color:var(--c-ink-3)}
@@ -397,7 +397,7 @@
   .fnk-shell .data-shell-title{font-size:21px}
   .fnk-shell .data-shell-head-actions{width:100%; justify-content:flex-start; margin-left:0}
   .fnk-shell .stock-entity-in{flex-wrap:wrap; gap:var(--s3); padding:var(--s4) var(--s4) 0}
-  .fnk-shell .stock-logo{width:46px; height:46px; border-radius:12px; font-size:20px}
+  .fnk-shell .stock-logo{width:46px; height:46px; border-radius:var(--cp-radius-md); font-size:20px}
   .fnk-shell .stock-name h1{font-size:21px}
   .fnk-shell .stock-price{width:100%; margin-left:0; justify-content:flex-start; align-items:baseline}
   .fnk-shell .stock-price .big{font-size:28px}
