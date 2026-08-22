@@ -1,9 +1,22 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-22T09:47:13.767Z",
+  "generated_at": "2026-08-22T10:13:19.494Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 7,
   "open_incidents": [
+    {
+      "workflow": "deploy-worker.yml",
+      "label": "Deploy Worker (Cloudflare)",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 32557050196,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32557050196",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -487,11 +500,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32565788228",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32565788228",
-    "observed_at": "2026-08-22T09:47:13.767Z",
-    "event": "schedule",
+    "run_id": "32566956090",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32566956090",
+    "observed_at": "2026-08-22T10:13:19.494Z",
+    "event": "workflow_run",
     "workflows": [
+      "deploy-worker.yml",
       "fetch-edgar-filings.yml",
       "fetch-fenok-news-tone.yml",
       "fetch-fred-yardeni.yml",
