@@ -3,8 +3,6 @@
 @source not "../../data";
 @import "../styles/overview-widgets.css";
 @import "../styles/heatmap.css";
-@import "../styles/footer.css";
-@import "../styles/navigation.css";
 @import "../styles/route-embed.css";
 @import "../styles/legacy-widgets.css";
 @import "../styles/design-v2.css";
@@ -796,7 +794,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.2rem 0.5rem;
-  border-radius: 9999px;
+  border-radius: 999px;
   font-size: 0.625rem;
   font-weight: 700;
 }
@@ -931,13 +929,6 @@ main {
    version, the product shell, or any immersive (chrome-less full-screen) route is
    active. Immersive routes opt in via [data-immersive-route] — currently winddown*
    and /ib (data-immersive-route="ib"). */
-body.design-v2 [data-v1-chrome],
-body.design-v3 [data-v1-chrome],
-body.design-v4 [data-v1-chrome],
-body.fnk-shell-on [data-v1-chrome],
-body:has([data-immersive-route]) [data-v1-chrome] { display: none !important; }
-body.fnk-shell-on .app-mobile-dock,
-body:has([data-immersive-route]) .app-mobile-dock { display: none !important; }
 body.design-v2 main,
 body.design-v3 main,
 body.design-v4 main,

@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
-import WorkbenchView from "@/components/workbench/WorkbenchView";
-import { EXPLORE_META_TITLE } from "@/lib/product-nav";
+import { permanentRedirect } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: EXPLORE_META_TITLE,
-  description: "시장 신호·체온계·일정·섹터·종목까지 오늘 시장을 30초에 훑는 탐색 화면.",
+  title: "워크벤치 | 100xFenok",
+  description: "워크벤치 화면으로 이동합니다.",
 };
 
+// /explore rendered the same WorkbenchView as /workbench with only a surface prop
+// differing, so it was a duplicate URL for one screen. The rail's 홈 item never
+// pointed here (EXPLORE_ROUTE is the home route), leaving this reachable only from
+// two orphaned links. Redirecting keeps those working while removing the duplicate.
 export default function ExplorePage() {
-  return <WorkbenchView surface="explore" />;
+  permanentRedirect(ROUTES.workbench);
 }
