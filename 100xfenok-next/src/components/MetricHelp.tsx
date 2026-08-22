@@ -46,7 +46,7 @@ export default function MetricHelp({
           id={tooltipId}
           role="tooltip"
           className={cx(
-            "pointer-events-none absolute top-5 z-30 w-56 rounded-md border border-slate-200 bg-white px-2.5 py-2 text-left text-[11px] font-semibold leading-4 text-slate-600 opacity-0 shadow-lg transition group-hover/metric-help:opacity-100 group-focus-within/metric-help:opacity-100",
+            "pointer-events-none absolute top-5 z-30 w-56 rounded-md border border-slate-200 bg-white px-2.5 py-2 text-left text-[11px] font-semibold whitespace-normal leading-4 text-slate-600 opacity-0 shadow-lg transition group-hover/metric-help:opacity-100 group-focus-within/metric-help:opacity-100",
             align === "right" ? "right-0" : "left-0",
           )}
         >

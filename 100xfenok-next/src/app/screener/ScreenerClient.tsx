@@ -3597,7 +3597,7 @@ export default function ScreenerClient({
           </div>
         ) : null}
 
-        <div className={canvasPlusPreview ? "cp-screener-results-mobile space-y-3 md:hidden" : "space-y-3 md:hidden"}>
+        <div className={canvasPlusPreview ? "cp-screener-results-mobile space-y-3 min-[921px]:hidden" : "space-y-3 min-[921px]:hidden"}>
           {pageRows.map((stock) => {
             const expanded = expandedTicker === stock.ticker;
             const detailId = `screener-mobile-detail-${stock.ticker}`;
@@ -3620,7 +3620,7 @@ export default function ScreenerClient({
           ) : null}
         </div>
 
-        <div className={canvasPlusPreview ? "cp-screener-results-body hidden md:block" : "hidden md:block"}>
+        <div className={canvasPlusPreview ? "cp-screener-results-body hidden min-[921px]:block" : "hidden min-[921px]:block"}>
           {viewMode === "card" ? (
             <div
               data-screener-card-grid
