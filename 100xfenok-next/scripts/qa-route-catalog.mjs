@@ -30,7 +30,7 @@ export const ADMIN_CANONICAL_REDIRECT_ROUTES = [
 
 // ---- Smoke test page routes (stockanalysis API surface) ----
 export const SMOKE_PAGE_ROUTES = [
-  "/explore",
+  "/workbench",
   "/etfs",
   "/etfs?type=leveraged",
   "/etfs?type=single-stock",
@@ -75,7 +75,7 @@ export const PLAYWRIGHT_ROUTES = [
   vrDeepLinkRoute,
   "/posts",
   postsDeepLinkRoute,
-  "/explore",
+  "/workbench",
   "/screener",
   "/stock/NVDA",
   "/market-valuation",
@@ -96,7 +96,7 @@ export const PLAYWRIGHT_ROUTES = [
 
 // ---- P2 data-state route subset (used by playwright p2-browser mode) ----
 export const P2_DATA_STATE_ROUTES = [
-  "/explore",
+  "/workbench",
   "/screener",
   "/stock/NVDA",
   "/stock/ZZZZ",

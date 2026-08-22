@@ -207,8 +207,8 @@ function renderContractHash(sites) {
 
 export function validateRenderManifest(manifest, reader = read) {
   assert.equal(manifest.schema_version, "ink4-render-sites/v2");
-  assert.equal(manifest.site_count, 121, "77 original + 44 residual render lines must stay pinned");
-  assert.equal(manifest.consumer_count, 122, "77 original + 45 residual consumers must stay classified");
+  assert.equal(manifest.site_count, 113, "121 minus the 8 sites on the superseded chrome removed 2026-08-22");
+  assert.equal(manifest.consumer_count, 114, "122 minus the 8 consumers on the superseded chrome removed 2026-08-22");
   assert.equal(manifest.sites.length, manifest.site_count, "render manifest denominator drifted");
   assert.deepEqual(
     manifest.surfaces,
@@ -223,7 +223,7 @@ export function validateRenderManifest(manifest, reader = read) {
   }, {});
   assert.deepEqual(
     roles,
-    { body_text: 110, non_text: 8, mixed_text_non_text: 1, inactive_control: 2 },
+    { body_text: 106, non_text: 4, mixed_text_non_text: 1, inactive_control: 2 },
     "text, non-text, or inactive-control classification drifted",
   );
 

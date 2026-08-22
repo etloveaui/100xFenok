@@ -23,7 +23,6 @@ const CSS_TARGETS = [
 ];
 const W1_CSS_TARGETS = [
   "src/styles/design-v2.css",
-  "src/styles/footer.css",
   "src/styles/overview-widgets.css",
   "src/styles/market-wrap-v2.css",
 ];
@@ -333,8 +332,6 @@ const globals = readFileSync(join(ROOT, "src/app/globals.css"), "utf8");
 const layout = readFileSync(join(ROOT, "src/app/layout.tsx"), "utf8");
 const themeC = readFileSync(join(ROOT, "src/styles/theme-c.css"), "utf8");
 const appShell = readFileSync(join(ROOT, "src/styles/app-shell.css"), "utf8");
-const footer = readFileSync(join(ROOT, "src/styles/footer.css"), "utf8");
-const navigation = readFileSync(join(ROOT, "src/styles/navigation.css"), "utf8");
 const marketChartFrame = readFileSync(join(ROOT, "src/lib/market-valuation/charts/MarketChartFrame.tsx"), "utf8");
 const marketChartEngine = readFileSync(join(ROOT, "src/lib/market-valuation/charts/MarketChartEngineClient.tsx"), "utf8");
 const failures = [];
@@ -526,25 +523,6 @@ for (const required of [
 ]) {
   if (!appShell.includes(required)) {
     failures.push(`W4 dark shell contract missing: ${required}`);
-  }
-}
-for (const required of [
-  '[data-theme="dark"] [data-v1-chrome="footer"] .bg-white\\/95',
-  "background-color: color-mix(in srgb, var(--fnk-color-card) 95%, transparent) !important;",
-  '[data-theme="dark"] [data-v1-chrome="footer"] .text-slate-800',
-]) {
-  if (!footer.includes(required)) {
-    failures.push(`W4 dark footer contract missing: ${required}`);
-  }
-}
-for (const required of [
-  '[data-theme="dark"] #mainNav',
-  "background: color-mix(in srgb, var(--fnk-color-card) 94%, transparent) !important;",
-  "#mainNav .brand-text",
-  "#mainNav .dropdown-menu",
-]) {
-  if (!navigation.includes(required)) {
-    failures.push(`W4 dark navigation contract missing: ${required}`);
   }
 }
 if (!marketChartFrame.includes("bg-[var(--c-panel)]")) {
