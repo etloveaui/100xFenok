@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 561,
-      "natural": false,
-      "observed_at": "2026-08-01T21:18:35Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30718396938",
-      "schedule": "",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 911,
@@ -181,30 +168,43 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1020,
+      "natural": true,
+      "observed_at": "2026-08-21T23:55:50Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T14:20:47Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-21T23:56:01Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/0001.HK.json",
-    "payload_sha256": "6bd0be0f31e399de202f107b6e51625e6011062f334c6815c6412f4d5abb7a29",
-    "quote_as_of": "2026-08-20T08:09:07Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "aab82d6f2dcba29495195861da381190b71eec9e1c83d331224edeab4289d3a1",
+    "quote_as_of": "2026-08-21T08:08:06Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 1020,
     "natural": true,
-    "observed_at": "2026-08-20T23:46:34Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-21T23:55:50Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
   },
@@ -260,15 +260,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "f116ee8422d3616cbe44f37b66efcac75f5d82f7264fdf795ef2226dda72c760",
-    "quote_as_of": "2026-08-20T08:09:07Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-21T23:55:50Z",
+    "payload_sha256": "f4eb4f8bbbd1b886befa014312f5f42043e4290bd0b8dcacd68a262c80e521bf",
+    "quote_as_of": "2026-08-21T08:08:06Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "recovered_at": "2026-07-18T00:37:10Z",
   "recovered_from_run_id": "29544227703",
@@ -279,5 +279,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "0001.HK",
-  "updated_at": "2026-08-20T23:46:34Z"
+  "updated_at": "2026-08-21T23:55:50Z"
 }

@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 393,
-      "natural": false,
-      "observed_at": "2026-08-01T21:18:35Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30718396938",
-      "schedule": "",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 636,
@@ -181,48 +168,61 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 510,
+      "natural": true,
+      "observed_at": "2026-08-22T00:00:17Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:08:35Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-22T00:03:02Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/FFIV.json",
-    "payload_sha256": "b6c93f6e6e621e2e08b7bc8e3c43050b36f7b7b4186397317377b83ef3896723",
-    "quote_as_of": "2026-08-20T15:08:10Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "b3e0ec49a17d5515a5b16097f8b4c9f49d8072276c4112438cdcc127fc4d9225",
+    "quote_as_of": "2026-08-21T20:00:01Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 510,
     "natural": true,
-    "observed_at": "2026-08-20T23:46:34Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "d84db28cd158a5014d73204a926175c2f6fb6ca86ca2a9e7fb49a1a572dc6321",
-    "quote_as_of": "2026-08-20T15:08:10Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "payload_sha256": "72b8988cb3f933f23056c7ebceb93dd39aa04f6df132e3b268da91b661457fd7",
+    "quote_as_of": "2026-08-21T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "FFIV",
-  "updated_at": "2026-08-20T23:46:34Z"
+  "updated_at": "2026-08-22T00:00:17Z"
 }

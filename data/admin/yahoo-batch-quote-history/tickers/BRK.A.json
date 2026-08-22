@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 418,
-      "natural": false,
-      "observed_at": "2026-08-01T21:14:53Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30718396938",
-      "schedule": "",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 654,
@@ -181,32 +168,45 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 667,
+      "natural": true,
+      "observed_at": "2026-08-22T00:00:17Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T14:57:39Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-22T00:02:28Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/BRK.A.json",
-    "payload_sha256": "e7ff310e1df8ab362a3d176bac313dc480308ba25e2ef34b75cf3a3130f4656a",
-    "quote_as_of": "2026-08-20T14:48:47Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "f1cf960e9f945760a92c60a1fc04eaf48865de200529daec7017cd6c3dedaf79",
+    "quote_as_of": "2026-08-21T20:00:22Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 667,
     "natural": true,
-    "observed_at": "2026-08-20T23:46:34Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -230,15 +230,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "d3593c63881c4be62804c3e1cb74ee5125fd88ba851df08378ed0bc0b5b5b0bd",
-    "quote_as_of": "2026-08-20T14:48:47Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "payload_sha256": "65ac9db470396e66e0714672db2493665833b7c2879bc192844db1c8798fa1fe",
+    "quote_as_of": "2026-08-21T20:00:22Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "recovered_at": "2026-07-17T00:15:36Z",
   "recovered_from_run_id": "29460793523",
@@ -249,5 +249,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "BRK.A",
-  "updated_at": "2026-08-20T23:46:34Z"
+  "updated_at": "2026-08-22T00:00:17Z"
 }

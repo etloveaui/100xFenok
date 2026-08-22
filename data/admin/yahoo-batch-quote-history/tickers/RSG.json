@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-04T00:32:20Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30865042195",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,32 +168,45 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 595,
+      "natural": true,
+      "observed_at": "2026-08-22T00:00:17Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:28:46Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-22T00:04:03Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/RSG.json",
-    "payload_sha256": "aac65b6fefc210b0ab552c37a9b4637c6598ac5fd50e30d81ed458239f47bacc",
-    "quote_as_of": "2026-08-20T15:28:37Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "97bcc57773b0ad2c5184e2a055d5e5146cdc1f695f730c2a6adf5b4d75a94f5e",
+    "quote_as_of": "2026-08-21T20:00:02Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 595,
     "natural": true,
-    "observed_at": "2026-08-20T23:46:17Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-06-28T00:12:17Z",
@@ -218,15 +218,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "887a58a8d278a64fdc6149ac17728227fc5d063b548f2e0a1f39539197111903",
-    "quote_as_of": "2026-08-20T15:28:37Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "payload_sha256": "dbaf101a9a3270dca7f310020d49c766d709e93be7167dcdbb94bf650d178ee1",
+    "quote_as_of": "2026-08-21T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -242,5 +242,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "RSG",
-  "updated_at": "2026-08-20T23:46:17Z"
+  "updated_at": "2026-08-22T00:00:17Z"
 }

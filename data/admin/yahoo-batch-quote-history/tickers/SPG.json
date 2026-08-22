@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 691,
-      "natural": true,
-      "observed_at": "2026-08-05T00:27:30Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30962773171",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,32 +168,45 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 706,
+      "natural": true,
+      "observed_at": "2026-08-21T23:55:50Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:30:51Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-22T00:00:00Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/SPG.json",
-    "payload_sha256": "9c596af45c74a44604bfe7ce570b7c3048e264d2df206d01f666b8da05bedac2",
-    "quote_as_of": "2026-08-20T15:29:54Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "02f1f946e735322460a7beb3a81dc2c8af8fba57c6138c7b0cc930445ff913fa",
+    "quote_as_of": "2026-08-21T20:00:02Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 706,
     "natural": true,
-    "observed_at": "2026-08-20T23:45:51Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-21T23:55:50Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:35:41Z",
@@ -218,15 +218,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "66c1a0b40a72ef9b892f1f01c465a013d991404450126f011586d0bda5df4dee",
-    "quote_as_of": "2026-08-20T15:29:54Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-21T23:55:50Z",
+    "payload_sha256": "1feda610895f05c6a6512c6a7cfa73fc362d96fe7f82a9a822b3ad5b09130294",
+    "quote_as_of": "2026-08-21T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -242,5 +242,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "SPG",
-  "updated_at": "2026-08-20T23:45:51Z"
+  "updated_at": "2026-08-21T23:55:50Z"
 }

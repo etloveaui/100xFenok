@@ -82,7 +82,7 @@
   "current": {
     "fetched_at": "2026-08-12T13:44:18Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/KOLD.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KOLD.json",
     "payload_sha256": "eaf7bca9ed102ae5293fab87e17bfb92110d5b70a9e38d789146d11fec307289",
     "quote_as_of": "2026-08-12T13:44:16Z",
     "source_as_of": "2026-08-12"
@@ -104,12 +104,12 @@
     "shard": "42/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T15:41:30Z",
-    "history_as_of": "2026-06-18",
+    "fetched_at": "2026-08-12T13:44:18Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/KOLD.json",
-    "payload_sha256": "1e5205b518672a12c660b75a4675f335316200dd9dccf296bec881b7c2edddf8",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-18"
+    "payload_sha256": "eaf7bca9ed102ae5293fab87e17bfb92110d5b70a9e38d789146d11fec307289",
+    "quote_as_of": "2026-08-12T13:44:16Z",
+    "source_as_of": "2026-08-12"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -123,19 +123,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 15,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "KOLD holds LKG because Yahoo source date 2026-06-18 is 15 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "KOLD holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-18"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "KOLD",
-  "updated_at": "2026-08-12T13:41:31Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

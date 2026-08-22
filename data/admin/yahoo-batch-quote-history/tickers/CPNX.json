@@ -69,7 +69,7 @@
   "current": {
     "fetched_at": "2026-08-12T19:17:26Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/CPNX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CPNX.json",
     "payload_sha256": "76635dd3f6b046250f0bac2640f21c826fbb1246f01994ac9c1b284a189dc0de",
     "quote_as_of": "2026-08-12T14:36:04Z",
     "source_as_of": "2026-08-12"
@@ -91,12 +91,12 @@
     "shard": "45/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-18T11:53:12Z",
-    "history_as_of": "2026-06-17",
+    "fetched_at": "2026-08-12T19:17:26Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/CPNX.json",
-    "payload_sha256": "4336699a149f676677deb6fd3b7d4b030376cf7d802ec5bad112fcc19ffec23a",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-17"
+    "payload_sha256": "76635dd3f6b046250f0bac2640f21c826fbb1246f01994ac9c1b284a189dc0de",
+    "quote_as_of": "2026-08-12T14:36:04Z",
+    "source_as_of": "2026-08-12"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -110,19 +110,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 16,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "CPNX holds LKG because Yahoo source date 2026-06-17 is 16 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "CPNX holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-17"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "CPNX",
-  "updated_at": "2026-08-12T19:14:55Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

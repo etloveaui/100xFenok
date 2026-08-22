@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-04T00:32:20Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30865042195",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,32 +168,45 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 714,
+      "natural": true,
+      "observed_at": "2026-08-21T23:55:50Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:24:41Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-21T23:59:39Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/PEP.json",
-    "payload_sha256": "9f883622f1c449cabfbac5426dec4f85936d034a12c05f88e2ef14c4bceb3849",
-    "quote_as_of": "2026-08-20T15:24:37Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "2073e73277be21a9fdb832bccdfd0a73cc1f8549376f598e1ace8cb677fd76a2",
+    "quote_as_of": "2026-08-21T20:00:00Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 714,
     "natural": true,
-    "observed_at": "2026-08-20T23:45:51Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-21T23:55:50Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:50:04Z",
@@ -218,15 +218,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "b6110be4bf8ce92760662580c8781fb58a8bdb7b92b72461e6744f5c7ee16d4a",
-    "quote_as_of": "2026-08-20T15:24:37Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-21T23:55:50Z",
+    "payload_sha256": "781ea017e959e7df373a5a821253c4853b9254a34c1fe0c70adcbea86d0625b9",
+    "quote_as_of": "2026-08-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -242,5 +242,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "PEP",
-  "updated_at": "2026-08-20T23:45:51Z"
+  "updated_at": "2026-08-21T23:55:50Z"
 }

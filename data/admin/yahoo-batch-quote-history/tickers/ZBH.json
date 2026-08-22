@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-08-01T21:07:13Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30718396938",
-      "schedule": "",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,31 +168,44 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 662,
+      "natural": true,
+      "observed_at": "2026-08-21T23:51:53Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:39:40Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-21T23:55:49Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/ZBH.json",
-    "payload_sha256": "5bb2f3fb00ead4afd0237a2b7102097936417eb42301db55d6904de8dd36f06f",
-    "quote_as_of": "2026-08-20T15:38:49Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "d73d27d83a7287bbfeb410ebfdd122c8fdbb99a5d2bf007c1e53793c59d32e62",
+    "quote_as_of": "2026-08-21T20:00:03Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 662,
     "natural": true,
-    "observed_at": "2026-08-20T23:46:53Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-21T23:51:53Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "2/5"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:47:30Z",
@@ -217,15 +217,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "972881429048c7dd1204e36c6bb7cafba4e613cb5d3d6c9a1d0d9a9b694f80af",
-    "quote_as_of": "2026-08-20T15:38:49Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-21T23:51:53Z",
+    "payload_sha256": "ebfafc7313ca5073c0b736dde8faa7ad792c6917b4c4ac93d21ba39f8b8df1fe",
+    "quote_as_of": "2026-08-21T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -241,5 +241,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "ZBH",
-  "updated_at": "2026-08-20T23:46:53Z"
+  "updated_at": "2026-08-21T23:51:53Z"
 }

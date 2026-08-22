@@ -43,7 +43,7 @@
   "current": {
     "fetched_at": "2026-08-12T15:10:15Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/DBAW.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DBAW.json",
     "payload_sha256": "f31bb161d758d841512893ef5a504a3724a26cc41365a6f49b782c4c3d918521",
     "quote_as_of": "2026-08-12T15:05:16Z",
     "source_as_of": "2026-08-12"
@@ -65,12 +65,12 @@
     "shard": "43/72"
   },
   "lkg": {
-    "fetched_at": "2026-07-20T23:05:57Z",
-    "history_as_of": "2026-07-20",
+    "fetched_at": "2026-08-12T15:10:15Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/DBAW.json",
-    "payload_sha256": "cef4e75f39652d310c2420cfc506260f6eab679dbad3a76b9ada1a9ef5380ce6",
-    "quote_as_of": "2026-07-20T19:57:52Z",
-    "source_as_of": "2026-07-20"
+    "payload_sha256": "f31bb161d758d841512893ef5a504a3724a26cc41365a6f49b782c4c3d918521",
+    "quote_as_of": "2026-08-12T15:05:16Z",
+    "source_as_of": "2026-08-12"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -84,19 +84,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 8,
-    "classified_at": "2026-07-30T00:35:13Z",
-    "classified_run_id": "30502016705",
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "DBAW holds LKG because Yahoo source date 2026-07-20 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "DBAW holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-20"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "DBAW",
-  "updated_at": "2026-08-12T15:08:24Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

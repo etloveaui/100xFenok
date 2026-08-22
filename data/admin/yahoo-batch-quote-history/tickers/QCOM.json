@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 477,
-      "natural": false,
-      "observed_at": "2026-08-01T21:22:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30718396938",
-      "schedule": "",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 727,
@@ -181,15 +168,28 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 618,
+      "natural": true,
+      "observed_at": "2026-08-22T00:00:17Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:26:46Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-22T00:03:57Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/QCOM.json",
-    "payload_sha256": "e647bbc832c37380ed86ada65bb20d6854c66b53a9c47be81ecf6fbf4e556094",
-    "quote_as_of": "2026-08-20T15:26:42Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "dd57e03d0d838aeeb3326acae520edbc307cdfcae5500dc6acdc3f6be913f377",
+    "quote_as_of": "2026-08-21T20:00:00Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,33 +197,33 @@
     "nasdaq_giw_sox"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 618,
     "natural": true,
-    "observed_at": "2026-08-20T23:46:17Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "d91c0cadbb79a3a7f77078c887c528ad6d095eb87fc6382a5198f76cd5344e86",
-    "quote_as_of": "2026-08-20T15:26:42Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "payload_sha256": "9855535d63c1dd014ec20a4dd6259594d182e392ba9c360e9a4f2305f374ffb2",
+    "quote_as_of": "2026-08-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "QCOM",
-  "updated_at": "2026-08-20T23:46:17Z"
+  "updated_at": "2026-08-22T00:00:17Z"
 }

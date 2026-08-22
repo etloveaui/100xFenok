@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-04T00:32:20Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30865042195",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 674,
+      "natural": true,
+      "observed_at": "2026-08-21T23:55:50Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:25:42Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-21T23:59:42Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/PNW.json",
-    "payload_sha256": "ae8d8d19cbb238191aba5f2e40d9e2acba173c628957a6fe5698b927851ac5f7",
-    "quote_as_of": "2026-08-20T15:25:10Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "eefb6fefdd5dc294a398c1054c6459ced6430d0d348082fedbf89faac5a9f70b",
+    "quote_as_of": "2026-08-21T20:03:44Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 674,
     "natural": true,
-    "observed_at": "2026-08-20T23:45:51Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-21T23:55:50Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "ce1438e9322cab78eec9af5259e992c71b9fb1c2f41001e67a938d3fde5a6f41",
-    "quote_as_of": "2026-08-20T15:25:10Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-21T23:55:50Z",
+    "payload_sha256": "449cf1ad04e2e4632ad5f428b8d5b9022a41a162661e4ca687fa2a0a0eeed3ff",
+    "quote_as_of": "2026-08-21T20:03:44Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "PNW",
-  "updated_at": "2026-08-20T23:45:51Z"
+  "updated_at": "2026-08-21T23:55:50Z"
 }

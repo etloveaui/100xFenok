@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 574,
-      "natural": false,
-      "observed_at": "2026-08-01T21:07:13Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30718396938",
-      "schedule": "",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 470,
@@ -181,15 +168,28 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 565,
+      "natural": true,
+      "observed_at": "2026-08-22T00:00:17Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:22:40Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-22T00:03:45Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/NXPI.json",
-    "payload_sha256": "9d312adc6afcdb35067dd3afe2c029d6359125f1058add873fe956640ff125de",
-    "quote_as_of": "2026-08-20T15:22:24Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "1a94852a680ee48e35a4f8318e0d5c0c3987c635d82fa13af7b137d91821b1b3",
+    "quote_as_of": "2026-08-21T20:00:00Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,33 +197,33 @@
     "nasdaq_giw_sox"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 565,
     "natural": true,
-    "observed_at": "2026-08-20T23:46:17Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "9378c1423f61d68221b9ecaebd467f7c25b59e8b531202478d0068ad6a84bdd9",
-    "quote_as_of": "2026-08-20T15:22:24Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "payload_sha256": "bb5092053e504e240c0c65cced8df17630fa4ac8352519370e7ca6dfb0e15e8a",
+    "quote_as_of": "2026-08-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "NXPI",
-  "updated_at": "2026-08-20T23:46:17Z"
+  "updated_at": "2026-08-22T00:00:17Z"
 }

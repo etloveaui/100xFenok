@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-05T17:51:24Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31031814422",
-      "schedule": "7 16 * * 0-5",
-      "shard": "44/72"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,32 +168,45 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 589,
+      "natural": true,
+      "observed_at": "2026-08-22T00:00:17Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:35:00Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-22T00:04:21Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/UAA.json",
-    "payload_sha256": "a60b77f12debcfc9b156fe3f64a5fd59a044e2081fc43573f1aafb1d25f663bf",
-    "quote_as_of": "2026-08-20T15:34:55Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "ccfc5bd7e9b18e4fec41136b269c80b58743225f8f758a38f747050042d207a2",
+    "quote_as_of": "2026-08-21T20:00:03Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 589,
     "natural": true,
-    "observed_at": "2026-08-20T23:46:17Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:38:54Z",
@@ -218,15 +218,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "9b116156c2419e019be6bc68b16e2ef44cd02305511b09b80a08bf86b2ff186a",
-    "quote_as_of": "2026-08-20T15:34:55Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-22T00:00:17Z",
+    "payload_sha256": "ab3376d261b16b9b4b8d160d271d93bca399ede4d41be947711b06d99a2f7943",
+    "quote_as_of": "2026-08-21T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -242,5 +242,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "UAA",
-  "updated_at": "2026-08-20T23:46:17Z"
+  "updated_at": "2026-08-22T00:00:17Z"
 }

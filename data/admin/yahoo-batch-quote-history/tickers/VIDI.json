@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-12T20:58:26Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/VIDI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VIDI.json",
     "payload_sha256": "4f37b8f86e7083c8262cc207414ca1b24d7318a80e33fa5bade8e9108610bc48",
     "quote_as_of": "2026-08-12T19:50:00Z",
     "source_as_of": "2026-08-12"
@@ -51,6 +51,14 @@
     "schedule": "7 20 * * 0-5",
     "shard": "46/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-12T20:58:26Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VIDI.json",
+    "payload_sha256": "4f37b8f86e7083c8262cc207414ca1b24d7318a80e33fa5bade8e9108610bc48",
+    "quote_as_of": "2026-08-12T19:50:00Z",
+    "source_as_of": "2026-08-12"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "VIDI holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-12"
+  },
   "ticker": "VIDI",
-  "updated_at": "2026-08-12T20:54:05Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

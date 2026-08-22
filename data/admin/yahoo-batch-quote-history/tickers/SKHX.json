@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-12T17:19:21Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/SKHX.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SKHX.json",
     "payload_sha256": "7786fd6e9c6a994a837d78031e9f87125a1b783a8b24c2f0cb5d66a2920bff17",
     "quote_as_of": "2026-08-12T17:19:20Z",
     "source_as_of": "2026-08-12"
@@ -51,6 +51,14 @@
     "schedule": "7 16 * * 0-5",
     "shard": "44/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-12T17:19:21Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SKHX.json",
+    "payload_sha256": "7786fd6e9c6a994a837d78031e9f87125a1b783a8b24c2f0cb5d66a2920bff17",
+    "quote_as_of": "2026-08-12T17:19:20Z",
+    "source_as_of": "2026-08-12"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "SKHX holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-12"
+  },
   "ticker": "SKHX",
-  "updated_at": "2026-08-12T17:16:04Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

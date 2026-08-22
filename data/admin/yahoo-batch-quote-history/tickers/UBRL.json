@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-12T13:45:12Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/UBRL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/UBRL.json",
     "payload_sha256": "7ab64c121a7f3afcb4fc9d6aef5c9a8033f3d88cbb60acfccda57db7585e2784",
     "quote_as_of": "2026-08-12T13:42:52Z",
     "source_as_of": "2026-08-12"
@@ -51,6 +51,14 @@
     "schedule": "7 12 * * 0-5",
     "shard": "42/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-12T13:45:12Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/UBRL.json",
+    "payload_sha256": "7ab64c121a7f3afcb4fc9d6aef5c9a8033f3d88cbb60acfccda57db7585e2784",
+    "quote_as_of": "2026-08-12T13:42:52Z",
+    "source_as_of": "2026-08-12"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "UBRL holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-12"
+  },
   "ticker": "UBRL",
-  "updated_at": "2026-08-12T13:41:31Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

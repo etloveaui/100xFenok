@@ -197,7 +197,7 @@
   "current": {
     "fetched_at": "2026-08-12T17:16:24Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/GEVC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/GEVC.json",
     "payload_sha256": "0c5b28e1286573aed15c120a55b3316f5f83799d192b1cafe124245f0541684e",
     "quote_as_of": "2026-08-12T13:46:05Z",
     "source_as_of": "2026-08-12"
@@ -231,12 +231,12 @@
     "run_id": "31557511991"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T17:05:06Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-08-12T17:16:24Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/GEVC.json",
-    "payload_sha256": "a2feb2e6a78a18d0ccb62c4e476d406eb58e1b5ce05c0864ad0bde40dec20a2a",
-    "quote_as_of": "2026-08-10T13:46:04Z",
-    "source_as_of": "2026-08-10"
+    "payload_sha256": "0c5b28e1286573aed15c120a55b3316f5f83799d192b1cafe124245f0541684e",
+    "quote_as_of": "2026-08-12T13:46:05Z",
+    "source_as_of": "2026-08-12"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -255,19 +255,19 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31620820614",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-09T05:15:44Z",
-    "classified_run_id": "31296241377",
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "GEVC holds LKG because Yahoo source date 2026-07-29T16:46:45Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "GEVC holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-29T16:46:45Z"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "GEVC",
-  "updated_at": "2026-08-12T17:16:04Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

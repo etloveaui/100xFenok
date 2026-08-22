@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 411,
-      "natural": false,
-      "observed_at": "2026-08-01T21:07:13Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30718396938",
-      "schedule": "",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 619,
@@ -181,48 +168,61 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 727,
+      "natural": true,
+      "observed_at": "2026-08-21T23:49:38Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:33:25Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-21T23:51:33Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/TMUS.json",
-    "payload_sha256": "5fb7a8071a12f74eff40a4d2612e2d119a7b59635a8e4be5ee7c0e949c788202",
-    "quote_as_of": "2026-08-20T15:33:19Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "485dcca857c7ec58a0f20a6f43495ad90b0b1941d21fcf3c4526752afdad7dfb",
+    "quote_as_of": "2026-08-21T20:00:00Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 727,
     "natural": true,
-    "observed_at": "2026-08-20T23:46:53Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-21T23:49:38Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32537807621",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "1/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "a98d74889c8fb395a511f99ffc648aa7c3b2b6b4aa592099bc5f7fca168e6062",
-    "quote_as_of": "2026-08-20T15:33:19Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-21T23:49:38Z",
+    "payload_sha256": "6c5012ca6c03fe80524ed0d443b90f5b44d663370b4e07c6c586dd41c5aa7992",
+    "quote_as_of": "2026-08-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "TMUS",
-  "updated_at": "2026-08-20T23:46:53Z"
+  "updated_at": "2026-08-21T23:49:38Z"
 }

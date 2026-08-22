@@ -56,7 +56,7 @@
   "current": {
     "fetched_at": "2026-08-12T19:17:09Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/BNOV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/BNOV.json",
     "payload_sha256": "8696fde99c463b8ddf09bfe23cf9f7d3948661f3a88273d625cebc28cbd9ae1b",
     "quote_as_of": "2026-08-12T16:44:25Z",
     "source_as_of": "2026-08-12"
@@ -78,12 +78,12 @@
     "shard": "45/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-29T23:08:52Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-12T19:17:09Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/BNOV.json",
-    "payload_sha256": "c696b94acc98b1aad241ccbed5007915a17c308cd54119aa81baacf0fbbbcf79",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "8696fde99c463b8ddf09bfe23cf9f7d3948661f3a88273d625cebc28cbd9ae1b",
+    "quote_as_of": "2026-08-12T16:44:25Z",
+    "source_as_of": "2026-08-12"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -97,19 +97,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "BNOV holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "BNOV holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "BNOV",
-  "updated_at": "2026-08-12T19:14:55Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

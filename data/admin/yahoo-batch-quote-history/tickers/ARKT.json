@@ -141,7 +141,7 @@
   "current": {
     "fetched_at": "2026-08-12T15:09:19Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/ARKT.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ARKT.json",
     "payload_sha256": "978f5b33e3c6cd1851652da441067d7c768812244507fa83dde52ca9eb553e47",
     "quote_as_of": "2026-08-12T13:46:02Z",
     "source_as_of": "2026-08-12"
@@ -175,12 +175,12 @@
     "run_id": "31544436443"
   },
   "lkg": {
-    "fetched_at": "2026-08-06T14:33:52Z",
-    "history_as_of": "2026-08-05",
+    "fetched_at": "2026-08-12T15:09:19Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ARKT.json",
-    "payload_sha256": "951d754d4eea6a674d1e0a56bccd304c1f5a7846114270c6cd66f668d29d6622",
-    "quote_as_of": "2026-08-06T13:46:02Z",
-    "source_as_of": "2026-08-05"
+    "payload_sha256": "978f5b33e3c6cd1851652da441067d7c768812244507fa83dde52ca9eb553e47",
+    "quote_as_of": "2026-08-12T13:46:02Z",
+    "source_as_of": "2026-08-12"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -199,19 +199,19 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31610461024",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-04T00:18:08Z",
-    "classified_run_id": "30865042195",
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "ARKT holds LKG because Yahoo source date 2026-07-24 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "ARKT holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-24"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "ARKT",
-  "updated_at": "2026-08-12T15:08:24Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

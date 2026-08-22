@@ -30,7 +30,7 @@
   "current": {
     "fetched_at": "2026-08-12T17:19:25Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/SOXY.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SOXY.json",
     "payload_sha256": "2218fbadf38bd3d4803b7acf99cb77948b1811f8fab56e661cd993f3cded3137",
     "quote_as_of": "2026-08-12T16:28:24Z",
     "source_as_of": "2026-08-12"
@@ -51,6 +51,14 @@
     "schedule": "7 16 * * 0-5",
     "shard": "44/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-12T17:19:25Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SOXY.json",
+    "payload_sha256": "2218fbadf38bd3d4803b7acf99cb77948b1811f8fab56e661cd993f3cded3137",
+    "quote_as_of": "2026-08-12T16:28:24Z",
+    "source_as_of": "2026-08-12"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -63,9 +71,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "SOXY holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-12"
+  },
   "ticker": "SOXY",
-  "updated_at": "2026-08-12T17:16:04Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

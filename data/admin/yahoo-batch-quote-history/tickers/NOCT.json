@@ -57,7 +57,7 @@
   "current": {
     "fetched_at": "2026-08-12T17:18:58Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/NOCT.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/NOCT.json",
     "payload_sha256": "daf0a3a15d04287d6c1a5c8c8528167fac5b14f42573fcd0f471958e78f5d49d",
     "quote_as_of": "2026-08-12T14:47:46Z",
     "source_as_of": "2026-08-12"
@@ -79,12 +79,12 @@
     "shard": "44/72"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:04:31Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-08-12T17:18:58Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/NOCT.json",
-    "payload_sha256": "7e74db18eed0ac0ac976c68b0607a024dffe13f4f664e29ba7497bd272372afb",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "daf0a3a15d04287d6c1a5c8c8528167fac5b14f42573fcd0f471958e78f5d49d",
+    "quote_as_of": "2026-08-12T14:47:46Z",
+    "source_as_of": "2026-08-12"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -98,19 +98,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "NOCT holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "NOCT holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "NOCT",
-  "updated_at": "2026-08-12T17:16:04Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

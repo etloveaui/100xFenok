@@ -77,31 +77,57 @@
       "run_id": "31526744910",
       "schedule": "7 18 * * 0-5",
       "shard": "33/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1638,
+      "natural": true,
+      "observed_at": "2026-08-21T23:43:33Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-21T23:51:53Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "32537807621",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T19:58:06Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MTUL.json",
-    "payload_sha256": "a043204cf0ccead5c1a733ca8732b5b55a1ff2b928b2bf203045140e46018b29",
-    "quote_as_of": "2026-08-11T13:46:07Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-08-21T23:43:51Z",
+    "history_as_of": "2026-08-20",
+    "path": "data/yf/finance/MTUL.json",
+    "payload_sha256": "63923f23f4354341f981ffa22b17108f1a6966f103085028ba2990facd55f661",
+    "quote_as_of": "2026-08-18T19:42:01Z",
+    "source_as_of": "2026-08-18T19:42:01Z"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 968,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-11T19:54:36Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-21T23:51:53Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31526744910",
-    "schedule": "7 18 * * 0-5",
-    "shard": "33/72"
+    "run_id": "32537807621",
+    "schedule": "20 23 * * 1-5",
+    "shard": "2/5"
   },
   "lkg": {
     "fetched_at": "2026-08-11T19:58:06Z",
@@ -114,17 +140,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-11T19:54:36Z",
-    "payload_sha256": "1f9c5fb01d432c7b99fada521a8d0548fd1c2975feb8ba64b16112c652a3be8f",
-    "quote_as_of": "2026-08-11T13:46:07Z",
+    "history_as_of": "2026-08-20",
+    "observed_at": "2026-08-21T23:43:33Z",
+    "payload_sha256": "d4c51d2815179f75fc5b2eb2f8aabb4c6944ee56ee077ffe003aa004ed61b797",
+    "quote_as_of": "2026-08-18T19:42:01Z",
     "run_attempt": 1,
-    "run_id": "31526744910",
+    "run_id": "32537807621",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-08-18T19:42:01Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -137,5 +163,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "MTUL",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-08-21T23:51:53Z"
 }

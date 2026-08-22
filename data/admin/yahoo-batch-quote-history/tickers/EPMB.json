@@ -127,7 +127,7 @@
   "current": {
     "fetched_at": "2026-08-12T15:09:47Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/EPMB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/EPMB.json",
     "payload_sha256": "b542c2beb190759b80a2074b96b4bb7b45b9934db8396d01e85dbf593bba5c8a",
     "quote_as_of": "2026-08-12T13:46:04Z",
     "source_as_of": "2026-08-12"
@@ -161,12 +161,12 @@
     "run_id": "31562660637"
   },
   "lkg": {
-    "fetched_at": "2026-08-05T19:49:40Z",
-    "history_as_of": "2026-08-05",
+    "fetched_at": "2026-08-12T15:09:47Z",
+    "history_as_of": "2026-08-12",
     "path": "data/admin/yahoo-batch-quote-history/lkg/EPMB.json",
-    "payload_sha256": "64d91bba0e5f285b1fec4066913e55240d54119ba0ea4d989d0b52ff1c2d5aa4",
-    "quote_as_of": "2026-08-05T13:46:04Z",
-    "source_as_of": "2026-08-05"
+    "payload_sha256": "b542c2beb190759b80a2074b96b4bb7b45b9934db8396d01e85dbf593bba5c8a",
+    "quote_as_of": "2026-08-12T13:46:04Z",
+    "source_as_of": "2026-08-12"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -185,19 +185,19 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31610461024",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-07-22T00:47:32Z",
-    "classified_run_id": "29879427185",
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "EPMB holds LKG because Yahoo source date 2026-07-13T18:32:06Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "EPMB holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-07-13T18:32:06Z"
+    "source_as_of": "2026-08-12"
   },
   "ticker": "EPMB",
-  "updated_at": "2026-08-12T15:08:24Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }

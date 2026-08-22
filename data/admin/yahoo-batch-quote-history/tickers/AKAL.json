@@ -17,7 +17,7 @@
   "current": {
     "fetched_at": "2026-08-12T19:16:54Z",
     "history_as_of": "2026-08-12",
-    "path": "data/yf/finance/AKAL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AKAL.json",
     "payload_sha256": "d4b80525a0601839f8996e3e80f4a1235b89ab1902560c8f138e485cd2f65391",
     "quote_as_of": "2026-08-12T17:41:44Z",
     "source_as_of": "2026-08-12"
@@ -38,6 +38,14 @@
     "schedule": "7 18 * * 0-5",
     "shard": "45/72"
   },
+  "lkg": {
+    "fetched_at": "2026-08-12T19:16:54Z",
+    "history_as_of": "2026-08-12",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AKAL.json",
+    "payload_sha256": "d4b80525a0601839f8996e3e80f4a1235b89ab1902560c8f138e485cd2f65391",
+    "quote_as_of": "2026-08-12T17:41:44Z",
+    "source_as_of": "2026-08-12"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -50,9 +58,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-12"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-21T23:43:33Z",
+    "classified_run_id": "32537807621",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "AKAL holds LKG because Yahoo source date 2026-08-12 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-12"
+  },
   "ticker": "AKAL",
-  "updated_at": "2026-08-12T19:14:55Z"
+  "updated_at": "2026-08-21T23:43:33Z"
 }
