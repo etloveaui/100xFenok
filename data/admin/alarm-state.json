@@ -1,22 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-22T10:13:19.494Z",
+  "generated_at": "2026-08-22T10:44:53.604Z",
   "status": "open",
-  "open_incident_count": 7,
+  "open_incident_count": 5,
   "open_incidents": [
-    {
-      "workflow": "deploy-worker.yml",
-      "label": "Deploy Worker (Cloudflare)",
-      "streak": 2,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 32557050196,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32557050196",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -42,20 +29,6 @@
       "alarm_reasons": [
         "plane_freshness_delayed",
         "plane_publish_gate_blocked"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
-    {
-      "workflow": "fetch-fred-yardeni.yml",
-      "label": "Fetch FRED Yardeni Data",
-      "streak": 2,
-      "failure_streak_threshold": 1,
-      "first_failing_run_id": 31252801134,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31252801134",
-      "alarm_reasons": [
-        "failure_streak",
-        "plane_outcome_unrecorded"
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
@@ -335,7 +308,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 9
+      "data_freshness_age_hours_at_generation": 10
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -500,15 +473,13 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32566956090",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32566956090",
-    "observed_at": "2026-08-22T10:13:19.494Z",
-    "event": "workflow_run",
+    "run_id": "32568340531",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32568340531",
+    "observed_at": "2026-08-22T10:44:53.604Z",
+    "event": "schedule",
     "workflows": [
-      "deploy-worker.yml",
       "fetch-edgar-filings.yml",
       "fetch-fenok-news-tone.yml",
-      "fetch-fred-yardeni.yml",
       "fetch-oecd-cli.yml",
       "slickcharts-monthly.yml",
       "slickcharts-symbols.yml"
