@@ -272,6 +272,29 @@ table.cpw4-table tbody tr.emph td { font-weight: 900; color: var(--cp-text-stron
 .cpw4-holder-row .right { text-align: right; }
 .cpw4-holder-row { padding: 10px 2px; border-bottom: 1px solid var(--cp-divider); }
 .cpw4-holder-row:last-child { border-bottom: none; }
+
+/* Below 520px the six fixed tracks (28+84+108+78) plus five 12px gaps need 362px,
+   while the available width is the viewport minus 60 - so the right-hand columns
+   were clipped from 418px down, and both .fnk-shell .content and html set
+   overflow-x:hidden, which made them unreachable rather than scrollable. Dropping
+   the bar alone does not help: it is 1fr and already yields to 0. The fixed 298px
+   is the bottleneck, so this tier shrinks the fixed tracks and lets the name and
+   bar absorb what is left. All six columns survive; the header and row share one
+   template so they cannot drift apart. */
+@media (max-width: 520px) {
+  .cpw4-holder-cols,
+  .cpw4-holder-row {
+    grid-template-columns: 22px minmax(0, 1.3fr) minmax(0, 0.7fr) 52px 64px 52px;
+    gap: 5px;
+  }
+  .cpw4-holder-cols { padding-left: 0; padding-right: 0; }
+  .cpw4-holder-row { padding-left: 0; padding-right: 0; }
+  .cpw4-holder-cols span { font-size: 10px; }
+  .cpw4-holder-pct { font-size: 12px; }
+  .cpw4-holder-shares,
+  .cpw4-holder-quarter { font-size: 11px; }
+}
+
 .cpw4-holder-rank { width: 24px; height: 24px; border-radius: 50%; background: var(--cp-surface-strong); color: var(--cp-text-muted); font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center; }
 .cpw4-holder-rank--top { background: var(--cp-accent-soft); color: var(--cp-accent-strong); }
 .cpw4-holder-name { font-size: 13px; font-weight: 800; color: var(--cp-text-strong); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

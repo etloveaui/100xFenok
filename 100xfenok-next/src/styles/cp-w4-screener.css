@@ -143,10 +143,14 @@
 }
 
 .cpw4-saved-preset-menu {
-  right: auto;
-  left: 0;
+  /* The shared .cp-screener-preset-menu anchors right:0 with a
+     width:min(320px, 100vw - 32px) clamp. This sheet imports after it, so a
+     left:0 override won and hung the panel off the right edge on phones, where
+     .fnk-shell .content and html both set overflow-x:hidden and it could not be
+     reached. The anchor sits right of centre at every width, so right:0 is
+     correct on both. min-width:280px also fought the clamp below 312px. */
   top: calc(100% + 8px);
-  min-width: 280px;
+  min-width: 0;
   z-index: 20;
 }
 
@@ -357,6 +361,16 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+/* The table/card toggle only does anything in the desktop results branch, which
+   starts at 921px (ScreenerClient.tsx `hidden min-[921px]:block`). Below that the
+   mobile card list renders and ignores viewMode, so the control was visible,
+   focusable and inert. This bound MUST stay paired with that 921 boundary. */
+@media (max-width: 920px) {
+  [data-screener-view-mode-control] {
+    display: none;
+  }
 }
 
 .cpw4-column-chip,
