@@ -1,62 +1,43 @@
 {
-  "schema_version": "producer-lkg-key-state/v2",
+  "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "yahoo_hourly_ticker",
   "key": "SOXL.json",
-  "updated_at": "2026-08-21T21:34:53.731Z",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "updated_at": "2026-08-22T21:31:44.101Z",
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "current": {
-    "path": "data/macro/yahoo-ticker.json#/tickers/SOXL",
-    "payload_sha256": "66c6649b7c4cb4d62cf034dea13b21f852cc8cff81661be84131baf813fc3cba",
+    "path": "data/admin/yahoo-hourly-ticker/lkg/SOXL.json",
+    "payload_sha256": "a6b73ea0d51be6c8fb781afc7dc8a05be755e5c915d7913d7aee2985b1b88aaa",
+    "source_as_of": "2026-08-21T20:00:00.000Z"
+  },
+  "lkg": {
+    "path": "data/admin/yahoo-hourly-ticker/lkg/SOXL.json",
+    "payload_sha256": "a6b73ea0d51be6c8fb781afc7dc8a05be755e5c915d7913d7aee2985b1b88aaa",
     "source_as_of": "2026-08-21T20:00:00.000Z"
   },
   "canonical_ref": "data/macro/yahoo-ticker.json#/tickers/SOXL",
-  "lkg": {
-    "path": "data/admin/yahoo-hourly-ticker/lkg/SOXL.json",
-    "payload_sha256": "66c6649b7c4cb4d62cf034dea13b21f852cc8cff81661be84131baf813fc3cba",
-    "source_as_of": "2026-08-21T20:00:00.000Z"
+  "latest_failure": {
+    "run_id": "32567963043",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-08-22T10:34:45.704Z",
+    "failure_kind": "schema_drift",
+    "error": "schema_drift"
   },
-  "latest_failure": null,
   "recovered_from_run_id": "32372444892",
   "recovery_run_id": "32382387233",
   "recovery_run_attempt": 1,
   "recovery_event_name": "schedule",
   "recovered_at": "2026-08-20T14:49:04.464Z",
-  "last_run_id": "32529149601",
+  "last_run_id": "32599840802",
   "last_run_attempt": 1,
   "last_event_name": "schedule",
-  "promotion_contract": "provider_observation/v2",
-  "promotion_proof_required": true,
-  "provider_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "66c6649b7c4cb4d62cf034dea13b21f852cc8cff81661be84131baf813fc3cba",
-    "candidate_payload_sha256": "66c6649b7c4cb4d62cf034dea13b21f852cc8cff81661be84131baf813fc3cba",
-    "payload_ref": "data/admin/yahoo-hourly-ticker/provider-observations/66c6649b7c4cb4d62cf034dea13b21f852cc8cff81661be84131baf813fc3cba.json",
+  "latest_promotion_deferral": {
+    "run_id": "32599840802",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-08-22T21:31:44.101Z",
     "source_as_of": "2026-08-21T20:00:00.000Z",
-    "run_id": "32529149601",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-08-21T21:34:53.731Z",
-    "recovered_from_run_id": "32372444892"
-  },
-  "recovery_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "7875dd86df30b6f5b7ef170a5997941088f377ab2968306a91bf794be09636e4",
-    "candidate_payload_sha256": "7875dd86df30b6f5b7ef170a5997941088f377ab2968306a91bf794be09636e4",
-    "payload_ref": "data/admin/yahoo-hourly-ticker/provider-observations/7875dd86df30b6f5b7ef170a5997941088f377ab2968306a91bf794be09636e4.json",
-    "source_as_of": "2026-08-20T14:49:04.000Z",
-    "run_id": "32382387233",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-08-20T14:49:04.464Z",
-    "recovered_from_run_id": "32372444892"
-  },
-  "last_recovered_failure": {
-    "run_id": "32372444892",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-08-20T13:07:03.064Z",
-    "failure_kind": "schema_drift",
-    "error": "schema_drift"
+    "reason": "recovery_not_advanced_by_provider"
   }
 }
