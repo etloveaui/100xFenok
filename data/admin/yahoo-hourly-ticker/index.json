@@ -1,7 +1,7 @@
 {
   "schema_version": "producer-lkg-index/v2",
   "lane_id": "yahoo_hourly_ticker",
-  "generated_at": "2026-08-22T03:53:28.703Z",
+  "generated_at": "2026-08-22T04:43:39.802Z",
   "keys": [
     "TQQQ.json",
     "SOXL.json"
@@ -12,7 +12,7 @@
     "lkg": 2,
     "retry": 2,
     "unavailable": 0,
-    "failed": 2,
+    "failed": 0,
     "recovered": 0
   },
   "retry_keys": [
@@ -55,20 +55,39 @@
       "source_as_of": "2026-08-21T20:00:00.000Z"
     }
   ],
-  "promotion_deferral_details": [],
+  "promotion_deferral_details": [
+    {
+      "key": "TQQQ.json",
+      "run_id": "32552448646",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "observed_at": "2026-08-22T04:43:39.802Z",
+      "source_as_of": "2026-08-21T20:00:00.000Z",
+      "reason": "recovery_not_advanced_by_provider"
+    },
+    {
+      "key": "SOXL.json",
+      "run_id": "32552448646",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "observed_at": "2026-08-22T04:43:39.802Z",
+      "source_as_of": "2026-08-21T20:00:00.000Z",
+      "reason": "recovery_not_advanced_by_provider"
+    }
+  ],
   "current_attempt": {
-    "run_id": "32550197278",
+    "run_id": "32552448646",
     "run_attempt": 1,
     "event_name": "schedule",
-    "observed_at": "2026-08-22T03:53:28.703Z",
+    "observed_at": "2026-08-22T04:43:39.802Z",
     "attempted": 2,
     "successes": 0,
-    "failed": 2,
-    "failed_keys": [
+    "failed": 0,
+    "failed_keys": [],
+    "promotion_deferrals": 2,
+    "promotion_deferral_keys": [
       "TQQQ.json",
       "SOXL.json"
-    ],
-    "promotion_deferrals": 0,
-    "promotion_deferral_keys": []
+    ]
   }
 }
