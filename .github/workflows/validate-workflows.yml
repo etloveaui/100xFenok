@@ -96,6 +96,9 @@ on:
       - 'scripts/test-edge-axis-label-budget.mjs'
       - 'scripts/test-sitemap-coverage.mjs'
       - 'scripts/test-redirect-declaration-site.mjs'
+      - 'scripts/test-manifest-halves-agree.mjs'
+      - 'data/manifest.json'
+      - '100xfenok-next/public/data/manifest.json'
       - '100xfenok-next/next.config.ts'
       - '100xfenok-next/src/lib/routes.ts'
       - '100xfenok-next/src/lib/fenok-signals/edge-axis-labels.mjs'
@@ -202,6 +205,9 @@ on:
       - 'scripts/test-edge-axis-label-budget.mjs'
       - 'scripts/test-sitemap-coverage.mjs'
       - 'scripts/test-redirect-declaration-site.mjs'
+      - 'scripts/test-manifest-halves-agree.mjs'
+      - 'data/manifest.json'
+      - '100xfenok-next/public/data/manifest.json'
       - '100xfenok-next/next.config.ts'
       - '100xfenok-next/src/lib/routes.ts'
       - '100xfenok-next/src/lib/fenok-signals/edge-axis-labels.mjs'
@@ -289,6 +295,10 @@ jobs:
       - name: Validate redirect declaration site (adapter gate)
         run: |
           node scripts/test-redirect-declaration-site.mjs
+
+      - name: Validate manifest halves agree (self-consistency gate)
+        run: |
+          node scripts/test-manifest-halves-agree.mjs
 
       - name: Validate public-mirror coverage (frozen-mirror gate)
         run: |
