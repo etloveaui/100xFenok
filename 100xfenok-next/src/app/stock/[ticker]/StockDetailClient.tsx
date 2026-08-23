@@ -1421,20 +1421,17 @@ function StockEstimatesPanel({
           { key: "annual" as const, label: "연간" },
           { key: "quarterly" as const, label: "분기" },
         ].map((item) => (
-          <button
+          <CpButton
             key={item.key}
-            type="button"
+            density="compact"
+            variant={granularity === item.key ? "primary" : "ghost"}
             data-stock-estimates-granularity={item.key}
             aria-pressed={granularity === item.key}
             onClick={() => setGranularity(item.key)}
-            className={`min-h-11 rounded-md px-3 text-[11px] font-black transition ${
-              granularity === item.key
-                ? "bg-white text-slate-950 shadow-sm"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
+            className="!min-h-11 px-3 !text-[11px]"
           >
             {item.label}
-          </button>
+          </CpButton>
         ))}
       </div>
       {granularity === "annual" ? (
