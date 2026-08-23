@@ -1428,7 +1428,7 @@ function StockEstimatesPanel({
             data-stock-estimates-granularity={item.key}
             aria-pressed={granularity === item.key}
             onClick={() => setGranularity(item.key)}
-            className="!min-h-11 px-3 !text-[11px]"
+            className="!min-h-[44px] px-3 !text-[11px]"
           >
             {item.label}
           </CpButton>
