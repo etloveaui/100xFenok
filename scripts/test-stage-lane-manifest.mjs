@@ -519,7 +519,10 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   // 4 -> 5 on 2026-08-14: yahoo_batch_quote_history declared an attempt shard
   // that no stage owned, so it had never been committed once; registry
   // derivation now supplies it.
-  assert.match(always.stdout, /stage_selected=5 staged_index_total=5/);
+  // 5 -> 6 on 2026-08-24: the same gap, same lane, this time the publish-outcome
+  // shard. 38af5b1b94 added it to commit_shards only, and workflow_policies is
+  // what staging actually reads.
+  assert.match(always.stdout, /stage_selected=6 staged_index_total=6/);
   assert.deepEqual(cached(fixture.root), fixture.materialized.always.sort());
   assert.equal(
     cached(fixture.root).includes("data/yf/finance/_summary.json"),
@@ -535,7 +538,7 @@ assertTrackedFileFromGlobBelowIgnoredParentStillStages();
   }
   const trackedAlways = run(tracked.root, "always_if_exists", [], YF_FINANCE_WORKFLOW);
   assert.equal(trackedAlways.status, 0, `${trackedAlways.stderr}\n${trackedAlways.stdout}`);
-  assert.match(trackedAlways.stdout, /stage_selected=5 staged_index_total=5/);
+  assert.match(trackedAlways.stdout, /stage_selected=6 staged_index_total=6/);
   assert.deepEqual(cached(tracked.root), tracked.materialized.always.sort());
 }
 

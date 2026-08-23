@@ -67,7 +67,7 @@ function jobBlockAt(text, index) {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
   assert.ok(PLANE_PUBLISH_OUTCOME_BINDINGS["global-scouter"],
     "Global Scouter caller publication must be authorized by the registry");
-  assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 24,
+  assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 25,
     "the authorized publisher set is an exact registry contract");
   for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
     const workflowText = fs.readFileSync(path.join(REPO_ROOT, binding.workflow), "utf8");

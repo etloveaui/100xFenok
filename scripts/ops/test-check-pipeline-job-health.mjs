@@ -61,7 +61,8 @@ function writeWorkflow(root, file, source) {
 // 20+ row copy that can omit a new publisher. Lane-owned publishers must name
 // a real lane. A lane-less publisher must be explicitly declared as a platform
 // publisher (the computed-signals coordinator case).
-assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 24);
+// 24 -> 25 on 2026-08-24: the yahoo-finance shadow family declared at 38af5b1b94.
+assert.equal(Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length, 25);
 for (const [family, binding] of Object.entries(PLANE_PUBLISH_OUTCOME_BINDINGS)) {
   assert.ok(LANE_REGISTRY.workflow_policies[binding.workflow], `${family} workflow policy must be declared`);
   assert.ok(
