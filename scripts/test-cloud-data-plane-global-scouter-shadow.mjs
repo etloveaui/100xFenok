@@ -195,4 +195,24 @@ assert.throws(
   /FAMILY_NOT_AUTHORIZED.*global-scouter/,
 );
 
-console.log("Global Scouter publisher/reader contract ok (dynamic scope, cross-stamped source clock, bounded prefix enrollment, dry-run evidence, auth gate)");
+const rollbackWorkflow = fs.readFileSync(
+  path.join(REPO_ROOT, ".github/workflows/global-scouter-rollback-rehearsal.yml"),
+  "utf8",
+);
+assert.match(rollbackWorkflow, /workflow_dispatch:/);
+assert.doesNotMatch(rollbackWorkflow, /(?:^|\n)\s*(?:push|schedule):/);
+assert.match(rollbackWorkflow, /if: github\.event\.inputs\.confirm == 'ROLLBACK_AND_RESTORE'/);
+assert.match(rollbackWorkflow, /group: global-scouter-publish/);
+assert.match(rollbackWorkflow, /cancel-in-progress: false/);
+assert.doesNotMatch(rollbackWorkflow, /contents: write/);
+assert.equal(
+  rollbackWorkflow.match(/--family=global-scouter --rollback --json/g)?.length,
+  2,
+  "the rehearsal must roll back once and restore with the same validated operation",
+);
+assert.match(rollbackWorkflow, /if: \$\{\{ always\(\) && steps\.rollback\.outcome == 'success' \}\}/);
+assert.match(rollbackWorkflow, /result\.active_generation_after !== process\.argv\[3\]/);
+assert.match(rollbackWorkflow, /steps\.restore\.outcome == 'success'/);
+assert.match(rollbackWorkflow, /x-data-plane-generation/);
+
+console.log("Global Scouter publisher/reader contract ok (dynamic scope, cross-stamped source clock, bounded prefix enrollment, dry-run evidence, auth gate, live rollback-and-restore entry)");
