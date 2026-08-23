@@ -279,6 +279,12 @@ assert.deepEqual(yfFinance.stages.always_if_exists, [
   { kind: "file", path: "data/yf/quarter_closes.json", required: true },
   { kind: "directory", path: "data/admin/yahoo-batch-quote-history", required: true },
   { kind: "directory", path: "data/yf/estimates-archive", required: true },
+  // The publish-outcome shard is a conscious 2026-08-24 addition. It repeats the
+  // 2026-08-14 attempt-shard gap on this same lane: the shard was declared in
+  // commit_shards but no stage owned the path, so the plane binding above could
+  // never have been satisfied. Peer lanes all carry it in their policy; this one
+  // did not.
+  { kind: "file", path: "data/admin/data-supply-state/publish-outcomes/yahoo-finance.json", required: false },
   { kind: "file", path: "data/admin/data-supply-state/detection-attempts/yahoo_batch_quote_history.json", required: false },
 ]);
 assert.deepEqual(yfFinance.stages.success_if_exists, []);

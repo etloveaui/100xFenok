@@ -1644,6 +1644,7 @@ workflow_policies[".github/workflows/fetch-yf-finance.yml"] = lanePolicy(".githu
     commitSpec("data/yf/quarter_closes.json", "file", true),
     commitSpec("data/admin/yahoo-batch-quote-history", "directory", true),
     commitSpec("data/yf/estimates-archive", "directory", true),
+    commitSpec(publishOutcomeShard("yahoo-finance"), "file"),
   ],
 }, [
   commitSpec("data/yf/finance/_summary.json", "file"),
