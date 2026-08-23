@@ -31,7 +31,10 @@ const MANIFEST_PREFIX = "public/data/global-scouter/";
 // The independent walk below is what the assertions should have been comparing
 // against all along: it enumerates and stats the canonical scope itself, so the
 // publisher is still checked against something computed separately from it.
-const MEASURED_ASSETS_FALLBACK = 1_082;
+// No asset-count constant. A count is the same stale fixture the byte total was:
+// a legitimate universe add or removal is healthy and would fail it. The family
+// boundary is its roots, its four exact exclusions and its allowed file types,
+// and those are what the assertions below check.
 const DERIVED_CORE_FILES = [
   "core/per_bands_index.json",
   "core/revision_movers.json",
@@ -68,14 +71,13 @@ const MEASURED_BYTES = expectedFiles.reduce(
   0,
 );
 const MEASURED_CLASS_B_READS = (MEASURED_ASSETS + 1) * 3 + 1;
-// The count is structural - it is the scope minus the four derived core files -
-// so a change here means the family boundary moved and deserves a look, unlike
-// the byte total which moves every week by design.
-assert.equal(
-  MEASURED_ASSETS,
-  MEASURED_ASSETS_FALLBACK,
-  `global-scouter scope moved from ${MEASURED_ASSETS_FALLBACK} to ${MEASURED_ASSETS} assets; confirm the family boundary changed on purpose before updating this`,
-);
+// The boundary is a shape, not a number: exactly one README and every other
+// included file JSON. A universe that gains or loses tickers stays inside it.
+const readmeFiles = expectedFiles.filter((file) => file.endsWith("README.md"));
+assert.equal(readmeFiles.length, 1, `expected exactly one README in scope, got ${readmeFiles.length}`);
+const nonJson = expectedFiles.filter((file) => !file.endsWith(".json") && !file.endsWith("README.md"));
+assert.deepEqual(nonJson, [], `scope admits only JSON plus one README; found ${nonJson.join(", ")}`);
+assert.ok(MEASURED_ASSETS > 0, "scope must not be empty");
 assert.deepEqual(scope.manifest.totals, { file_count: MEASURED_ASSETS, bytes: MEASURED_BYTES });
 assert.equal(new Set(expectedFiles).size, expectedFiles.length);
 assert.deepEqual(scope.manifest.excluded.map((row) => row.path), DERIVED_CORE_FILES.map((file) => `data/global-scouter/${file}`));
@@ -92,9 +94,40 @@ assert.equal(built.summary.total_bytes, MEASURED_BYTES);
 // reason as the byte total: a weekly source makes last week's date a guaranteed
 // future failure. What is asserted is that it HAS one and that it came from the
 // family index, which is the behaviour the contract exists to protect.
-assert.match(built.sourceAsOf.value, /^\d{4}-\d{2}-\d{2}$/);
+// Reading core/metadata.json here would be self-comparison wearing a disguise:
+// that file IS the family's declared clock ({file: "core/metadata.json", key:
+// "source_date"}), so the publisher and the assertion would be quoting the same
+// line. An earlier attempt did exactly that and a mutation proved it - changing
+// the date moved both sides and the test stayed green.
+//
+// The real cross-check is that the converter stamps the same export date into
+// five artifacts written separately. Agreement across them is evidence; one of
+// them agreeing with itself is not.
+const CROSS_STAMPED = [
+  "core/metadata.json",
+  "core/stocks_index.json",
+  "core/dashboard.json",
+  "etfs/index.json",
+  "indicators/economic.json",
+];
+const stampedDates = new Map(
+  CROSS_STAMPED.map((file) => {
+    const json = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "data/global-scouter", file), "utf8"));
+    return [file, json.source_date ?? json.source_as_of ?? json.as_of ?? null];
+  }),
+);
+for (const [file, value] of stampedDates) {
+  assert.match(String(value), /^\d{4}-\d{2}-\d{2}$/, `${file} must carry an export date, got ${JSON.stringify(value)}`);
+}
+const distinct = new Set(stampedDates.values());
+assert.equal(
+  distinct.size,
+  1,
+  `the export date disagrees across artifacts written by the same run: ${[...stampedDates].map(([f, v]) => `${f}=${v}`).join(", ")}`,
+);
+const EXPECTED_SOURCE_AS_OF = [...distinct][0];
+assert.equal(built.sourceAsOf.value, EXPECTED_SOURCE_AS_OF);
 assert.equal(built.sourceAsOf.origin, "family-index");
-const EXPECTED_SOURCE_AS_OF = built.sourceAsOf.value;
 assert.deepEqual(
   built.manifest.assets.map((asset) => asset.path.slice(MANIFEST_PREFIX.length)),
   expectedFiles,
@@ -131,8 +164,9 @@ assert.equal(enrollment.exact.some(([, family]) => family === FAMILY_NAME), fals
 assert.equal(enrollment.prefixes.some(({ family }) => family === FAMILY_NAME), false);
 assert.equal(FAMILY.reader_enrollment, false);
 assert.ok(FAMILY.plan.class_a >= MEASURED_ASSETS * 2, "class-A plan must be >=2x measured assets");
-// The read model itself is the invariant, not the number it currently produces.
-assert.equal(MEASURED_CLASS_B_READS, (MEASURED_ASSETS + 1) * 3 + 1, "all-changed read model is presence + readback + parity + resume");
+// The previous line here asserted MEASURED_CLASS_B_READS against the identical
+// expression that defines it, which proves nothing. The real invariant is the
+// plan headroom immediately below.
 assert.ok(FAMILY.plan.class_b >= MEASURED_CLASS_B_READS * 2, "class-B plan must be >=2x measured reads");
 assert.ok(FAMILY.plan.bytes >= MEASURED_BYTES * 2, "byte plan must be >=2x measured bytes");
 
