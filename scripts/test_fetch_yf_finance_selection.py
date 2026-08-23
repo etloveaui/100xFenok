@@ -3018,8 +3018,14 @@ assert callable(namespace["load_universe"])
         self.assertNotIn("GITHUB_RUN_NUMBER", run_step)
         self.assertIn("controlled_failure_tickers", workflow)
         self.assertIn("--controlled-failure-tickers", run_step)
-        self.assertIn("steps.fetch_batch.outcome == 'failure'", failure_dispatch)
-        self.assertIn("steps.quarter_closes.outcome == 'failure'", failure_dispatch)
+        # The job split moved acquisition into its own job, so the dispatch reads
+        # the acquire job's outputs rather than sibling step outcomes. Assert the
+        # producing half too: without it this passes while the outputs are gone
+        # and every condition silently evaluates empty.
+        self.assertIn("fetch_outcome: ${{ steps.fetch_batch.outcome }}", workflow)
+        self.assertIn("quarter_closes_outcome: ${{ steps.quarter_closes.outcome }}", workflow)
+        self.assertIn("needs.acquire-yf-finance.outputs.fetch_outcome == 'failure'", failure_dispatch)
+        self.assertIn("needs.acquire-yf-finance.outputs.quarter_closes_outcome == 'failure'", failure_dispatch)
         self.assertIn("steps.persist_yahoo_state.outcome == 'success'", failure_dispatch)
         self.assertIn("steps.persist_yahoo_state.outputs.persisted == 'true'", failure_dispatch)
         self.assertIn('persisted=true', candidate_step)
