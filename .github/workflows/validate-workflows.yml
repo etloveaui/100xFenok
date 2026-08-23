@@ -94,6 +94,8 @@ on:
       - 'scripts/test-materialize-site-metadata.mjs'
       - 'scripts/test-site-metadata-canonical-only.mjs'
       - 'scripts/test-edge-axis-label-budget.mjs'
+      - 'scripts/test-sitemap-coverage.mjs'
+      - '100xfenok-next/src/lib/routes.ts'
       - '100xfenok-next/src/lib/fenok-signals/edge-axis-labels.mjs'
       - '100xfenok-next/src/app/stock/[ticker]/StockDetailClient.tsx'
       - '100x/data/metadata/**'
@@ -196,6 +198,8 @@ on:
       - 'scripts/test-materialize-site-metadata.mjs'
       - 'scripts/test-site-metadata-canonical-only.mjs'
       - 'scripts/test-edge-axis-label-budget.mjs'
+      - 'scripts/test-sitemap-coverage.mjs'
+      - '100xfenok-next/src/lib/routes.ts'
       - '100xfenok-next/src/lib/fenok-signals/edge-axis-labels.mjs'
       - '100xfenok-next/src/app/stock/[ticker]/StockDetailClient.tsx'
       - '100x/data/metadata/**'
@@ -273,6 +277,10 @@ jobs:
       - name: Validate radar label budget (extent gate)
         run: |
           node scripts/test-edge-axis-label-budget.mjs
+
+      - name: Validate sitemap coverage (declared-exclusion gate)
+        run: |
+          node scripts/test-sitemap-coverage.mjs
 
       - name: Validate public-mirror coverage (frozen-mirror gate)
         run: |

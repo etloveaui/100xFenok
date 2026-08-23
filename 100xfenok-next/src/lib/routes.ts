@@ -109,6 +109,27 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
   ROUTES.stockAnalyzerNative,
 ] as const satisfies readonly ProductRoutePath[];
 
+/**
+ * Why a product route is deliberately absent from the sitemap.
+ *
+ * Every string path in `ROUTES` must be either in `SITEMAP_PRODUCT_ROUTES` or
+ * here — `test-sitemap-coverage.mjs` fails the build otherwise. Before this
+ * existed, five routes were missing from the sitemap and nothing anywhere said
+ * whether that was a decision or an oversight; two carried a reason in a code
+ * comment that no check could read, and three carried none at all.
+ *
+ * A reason of `undecided` is a real state, not a placeholder to be ignored: it
+ * means the route serves publicly and nobody has chosen whether it should be
+ * indexed. Measured 2026-08-23 — all three return 200 live.
+ */
+export const SITEMAP_EXCLUSIONS: Partial<Record<RouteKey, string>> = {
+  briefing: "Legacy alias. Redirects to home (307 verified live 2026-08-23) and must not appear as a separate product.",
+  marketLegacy: "Legacy bookmark target. Redirects to ROUTES.market — verified live 2026-08-23, though as a 200 with a meta refresh rather than the 308 the source requests; see BACKLOG B-404.",
+  infiniteBuying: "undecided — serves 200 live and is reachable, but nobody has chosen whether it should be indexed. See BACKLOG B-403.",
+  stockAnalyzer: "undecided — serves 200 live and is reachable, but nobody has chosen whether it should be indexed. See BACKLOG B-403.",
+  stockAnalyzerNative: "undecided — serves 200 live and is reachable, but nobody has chosen whether it should be indexed. See BACKLOG B-403.",
+};
+
 export const SITEMAP_PRODUCT_ROUTES = [
   { path: ROUTES.home, changeFrequency: "daily", priority: 1 },
   { path: ROUTES.explore, changeFrequency: "daily", priority: 0.9 },
