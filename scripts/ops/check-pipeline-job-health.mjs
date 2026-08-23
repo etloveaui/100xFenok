@@ -220,16 +220,6 @@ export const PLANE_OUTCOME_UNRECORDED_REASONS = Object.freeze({
     reason:
       "GENUINE INCIDENT, reclassified 2026-08-21 by measurement: same shape as oecd-cli and same original error. Its 2026-08-01T09:57:19Z scheduled run was cancelled and its 2026-07-01T11:16:10Z scheduled run failed, so the scheduled path has never completed; the 2026-08-10 run originally cited was a workflow_dispatch",
   }),
-  "fred-yardeni": Object.freeze({
-    classification: "incident",
-    reason:
-      "GENUINE INCIDENT, tracked: the 2026-08-15 run acquired and committed successfully while the publish step was skipped by the implicit success() on its step-level if, after a repo-wide public-mirror guard failed on an unrelated family's file. Serving has been frozen at source 2026-08-07 since 2026-08-10 while main has carried 2026-08-14 since 2026-08-19",
-  }),
-  "slickcharts-symbols": Object.freeze({
-    classification: "incident",
-    reason:
-      "GENUINE INCIDENT, tracked: the 2026-08-16 run published and proved acceptance, then persistence refused four consumed telemetry directories outside its owned shard. Cleanup landed at 5cb138ba9e; the 2026-08-23T07:30Z run is the natural proof",
-  }),
 });
 
 // The alarm used to fail open. Any GitHub API failure marked that workflow
