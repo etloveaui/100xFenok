@@ -8,7 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { completeIncomingBinding, persistPublishOutcome } from "./persist-cloud-publish-outcome.mjs";
+import { completeIncomingBinding, persistPublishOutcome, runPersistenceCli } from "./persist-cloud-publish-outcome.mjs";
 import {
   PLANE_CANONICAL_COMMIT_MODES,
   PLANE_PUBLISH_OUTCOME_BINDINGS,
@@ -317,6 +317,30 @@ function jobBlockAt(text, index) {
     ["-rf artifacts/attempt-dividends-*", "-rf artifacts/attempt-returns-*"],
     "slickcharts-history cleanup must not remove broader runner paths",
   );
+  const currentOriginWorkflows = new Set([
+    ".github/workflows/slickcharts-daily.yml", ".github/workflows/slickcharts-weekly.yml",
+    ".github/workflows/slickcharts-monthly.yml", ".github/workflows/slickcharts-history.yml",
+    ".github/workflows/slickcharts-symbols.yml", ".github/workflows/fetch-damodaran-shadow.yml",
+    ".github/workflows/fetch-oecd-cli.yml", ".github/workflows/fetch-fdic.yml",
+    ".github/workflows/fetch-finra-ats-weekly.yml",
+  ]);
+  const optedInWorkflows = [];
+  for (const file of fs.readdirSync(path.join(REPO_ROOT, ".github/workflows")).filter((name) => name.endsWith(".yml"))) {
+    const workflow = `.github/workflows/${file}`;
+    const optedIn = fs.readFileSync(path.join(REPO_ROOT, workflow), "utf8").includes("--binding-from-current-origin");
+    if (optedIn) optedInWorkflows.push(workflow);
+    if (currentOriginWorkflows.has(workflow) || workflow.endsWith("fetch-yahoo-ticker.yml")) {
+      assert.equal(optedIn, currentOriginWorkflows.has(workflow), `${workflow} current-origin opt-in mismatch`);
+    }
+  }
+  assert.deepEqual(optedInWorkflows.sort(), [...currentOriginWorkflows].sort(), "only same-job callers may opt in");
+  await assert.rejects(
+    () => runPersistenceCli([
+      "--family=oecd-cli", "--workflow=.github/workflows/fetch-oecd-cli.yml", "--publisher-outcome=success",
+      "--binding-git-commit=", "--binding-origin-readback=", "--binding-from-current-origin",
+    ]),
+    /cannot combine with explicit binding inputs/,
+  );
   console.log(`publish-outcome workflow contract: ${Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length}/${Object.keys(PLANE_PUBLISH_OUTCOME_BINDINGS).length} ordered, always-persisted, exact-owned`);
 }
 
@@ -386,6 +410,7 @@ function jobBlockAt(text, index) {
       family: "oecd-cli",
       records: [generationA],
     }, null, 2)}\n`);
+    const publisherHeadA = run("git", ["rev-parse", "HEAD"], workerA);
     await appendPublishOutcome({
       outcomesRoot: path.join(workerB, OUTCOME_ROOT),
       family: "oecd-cli",
@@ -403,6 +428,7 @@ function jobBlockAt(text, index) {
       publisherOutcome: "success",
       repoRoot: workerA,
       manifestPath: MANIFEST_PATH,
+      bindingFromCurrentOrigin: true,
       log: () => {},
     });
     assert.equal(first.persisted, true);
@@ -429,6 +455,11 @@ function jobBlockAt(text, index) {
       "generation-a",
       "generation-b",
     ]);
+    const generationARecord = finalShard.records.find((record) => record.generation_id === "generation-a");
+    assert.equal(generationARecord.binding.git_commit, publisherHeadA,
+      "absent binding flags must bind the current HEAD when origin confirms it");
+    assert.equal(generationARecord.binding.origin_readback, "confirmed",
+      "absent binding flags must record confirmed origin readback");
     const finalSentiment = await readFile(path.join(verify, OUTCOME_ROOT, "sentiment.json"), "utf8");
     assert.equal(finalSentiment, await readFile(path.join(seed, OUTCOME_ROOT, "sentiment.json"), "utf8"));
 
@@ -559,6 +590,27 @@ function jobBlockAt(text, index) {
     // The push-exhaustion case installs a rejecting pre-receive hook; remove
     // it before the coordinator case so later pushes reach the origin.
     await rm(rejectHook, { force: true });
+
+    const unpublishedHead = run("git", ["rev-parse", "HEAD"], workerPushFail);
+    await appendPublishOutcome({
+      outcomesRoot: path.join(workerPushFail, OUTCOME_ROOT), family: "oecd-cli",
+      record: buildPublishOutcomeRecord({ family: "oecd-cli", result: "published", generationId: "generation-unpublished-head" }),
+    });
+    assert.throws(
+      () => persistPublishOutcome({
+        family: "oecd-cli",
+        workflow: ".github/workflows/fetch-oecd-cli.yml",
+        publisherOutcome: "success",
+        repoRoot: workerPushFail,
+        manifestPath: MANIFEST_PATH,
+        bindingFromCurrentOrigin: true,
+        log: () => {},
+      }),
+      /cannot confirm HEAD .* origin\/main/,
+      "a non-origin HEAD must fail closed before outcome persistence",
+    );
+    assert.equal(run("git", ["rev-parse", "HEAD"], workerPushFail), unpublishedHead,
+      "fail-closed binding must not create an outcome commit");
 
     // Coordinator authorization: only the owned outcome shard may commit.
     // Exercise the real tracked-file states the exporter/cleanup can produce:

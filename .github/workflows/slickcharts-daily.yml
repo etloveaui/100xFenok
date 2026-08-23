@@ -237,4 +237,4 @@ jobs:
 
       - name: Persist slickcharts-daily publish outcome
         if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=slickcharts-daily --workflow=.github/workflows/slickcharts-daily.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}
+        run: node scripts/persist-cloud-publish-outcome.mjs --family=slickcharts-daily --workflow=.github/workflows/slickcharts-daily.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin

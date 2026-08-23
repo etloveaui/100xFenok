@@ -145,4 +145,4 @@ jobs:
 
       - name: Persist damodaran publish outcome
         if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=damodaran --workflow=.github/workflows/fetch-damodaran-shadow.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}
+        run: node scripts/persist-cloud-publish-outcome.mjs --family=damodaran --workflow=.github/workflows/fetch-damodaran-shadow.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin

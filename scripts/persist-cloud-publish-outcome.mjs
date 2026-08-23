@@ -79,6 +79,7 @@ export function completeIncomingBinding({
 }
 
 function parseArgs(argv) {
+  const bindingInputProvided = argv.some((arg) => arg.startsWith("--binding-git-commit=") || arg.startsWith("--binding-origin-readback="));
   const args = {
     family: null,
     workflow: null,
@@ -89,6 +90,7 @@ function parseArgs(argv) {
     maxAttempts: DEFAULT_ATTEMPTS,
     bindingGitCommit: null,
     bindingOriginReadback: null,
+    bindingFromCurrentOrigin: false,
   };
   for (const arg of argv) {
     if (arg.startsWith("--family=")) args.family = arg.slice("--family=".length);
@@ -96,6 +98,7 @@ function parseArgs(argv) {
     else if (arg.startsWith("--publisher-outcome=")) args.publisherOutcome = arg.slice("--publisher-outcome=".length);
     else if (arg.startsWith("--binding-git-commit=")) args.bindingGitCommit = arg.slice("--binding-git-commit=".length) || null;
     else if (arg.startsWith("--binding-origin-readback=")) args.bindingOriginReadback = arg.slice("--binding-origin-readback=".length) || null;
+    else if (arg === "--binding-from-current-origin") args.bindingFromCurrentOrigin = true;
     else if (arg.startsWith("--repo-root=")) args.repoRoot = arg.slice("--repo-root=".length);
     else if (arg.startsWith("--manifest=")) args.manifest = arg.slice("--manifest=".length);
     else if (arg.startsWith("--branch=")) args.branch = arg.slice("--branch=".length);
@@ -105,6 +108,9 @@ function parseArgs(argv) {
   if (!args.family || !args.workflow) throw new Error("--family and --workflow are required");
   if (!PUBLISHER_STEP_OUTCOMES.has(args.publisherOutcome)) {
     throw new Error("--publisher-outcome must be success, failure, or skipped");
+  }
+  if (args.bindingFromCurrentOrigin && bindingInputProvided) {
+    throw new Error("--binding-from-current-origin cannot combine with explicit binding inputs");
   }
   if (!/^[A-Za-z0-9._/-]+$/.test(args.workflow) || args.workflow.includes("..")) throw new Error("invalid workflow path");
   if (!/^[A-Za-z0-9._/-]+$/.test(args.branch) || args.branch.includes("..")) throw new Error("invalid branch");
@@ -286,6 +292,7 @@ export function persistPublishOutcome({
   maxAttempts = DEFAULT_ATTEMPTS,
   bindingGitCommit = null,
   bindingOriginReadback = null,
+  bindingFromCurrentOrigin = false,
   log = (line) => console.error(line),
 } = {}) {
   if (!PUBLISHER_STEP_OUTCOMES.has(publisherOutcome)) {
@@ -317,6 +324,20 @@ export function persistPublishOutcome({
   }
   if (publisherOutcome === "skipped") {
     throw new Error(`publisher skipped but outcome shard changed for ${family}`);
+  }
+  if (bindingFromCurrentOrigin) {
+    if (bindingGitCommit !== null || bindingOriginReadback !== null) {
+      throw new Error("--binding-from-current-origin cannot combine with explicit binding inputs");
+    }
+    runGit(repoRoot, ["fetch", "origin", branch]);
+    bindingGitCommit = runGit(repoRoot, ["rev-parse", "HEAD"]).stdout.trim();
+    const ancestor = runGit(repoRoot, ["merge-base", "--is-ancestor", "HEAD", `origin/${branch}`], { allowFailure: true });
+    if (ancestor.status !== 0) {
+      const detail = boundedDiagnostic(ancestor.stderr || ancestor.stdout);
+      throw new Error(`cannot confirm HEAD ${bindingGitCommit} is equal to or an ancestor of origin/${branch}`
+        + (detail ? `: ${detail}` : ""));
+    }
+    bindingOriginReadback = "confirmed";
   }
   const storedShard = readShard(absoluteShard, family);
   const headShard = readHeadShard(repoRoot, shardPath, family);
@@ -377,6 +398,7 @@ export async function runPersistenceCli(argv = process.argv.slice(2)) {
     maxAttempts: args.maxAttempts,
     bindingGitCommit: args.bindingGitCommit,
     bindingOriginReadback: args.bindingOriginReadback,
+    bindingFromCurrentOrigin: args.bindingFromCurrentOrigin,
   });
 }
 

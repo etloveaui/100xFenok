@@ -102,4 +102,4 @@ jobs:
 
       - name: Persist OECD publish outcome
         if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=oecd-cli --workflow=.github/workflows/fetch-oecd-cli.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}
+        run: node scripts/persist-cloud-publish-outcome.mjs --family=oecd-cli --workflow=.github/workflows/fetch-oecd-cli.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin
