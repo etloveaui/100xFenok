@@ -66,6 +66,9 @@ class FetchYfFinanceSelectionTest(unittest.TestCase):
         self.fetcher.YAHOO_BATCH_STATE_ROOT = self.root / "data" / "admin" / "yahoo-batch-quote-history"
         self.fetcher.DATA_SUPPLY_STATE_ROOT = self.root / "data" / "admin" / "data-supply-state" / "v1"
         self.fetcher.DATA_SUPPLY_PROVIDER_TRUTH_ROOT = self.root
+        self.fetcher._ESTIMATE_ARCHIVE = self.fetcher.EstimateArchive(
+            self.root / "data" / "yf" / "estimates-archive"
+        )
         self.fetcher.STOCK_UNIVERSE_DIR.mkdir(parents=True)
 
     def tearDown(self) -> None:
