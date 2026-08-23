@@ -206,6 +206,9 @@ const DEFAULT_PUBLISH_OUTCOMES_ROOT = path.join(
 //                    with NO source candidate at all is an availability
 //                    observation, so its validated fetched_at is the truthful
 //                    observation clock; malformed source candidates still fail.
+//                    { per_asset_key } reads the named top-level key from every
+//                    enrolled JSON payload, stores each asset's own date and
+//                    reports the conservative minimum for the family.
 // P5+ adds more families here.
 export const FAMILIES = {
   "oecd-cli": {
@@ -534,6 +537,25 @@ export const FAMILIES = {
     plan: { class_a: 12_000, class_b: 34_000, bytes: 2_200_000_000 },
     policy: { max_assets: 7_000, max_total_bytes: 1_300_000_000 },
   },
+  "yahoo-finance": {
+    // Shadow-only first slice. quarter_closes has a different source clock and
+    // stays outside this family; _summary is an uncommitted local receipt.
+    root: "data/yf/finance",
+    manifest_prefix: "public/data/yf/finance",
+    exclude: ["_summary.json"],
+    reader_enrollment: false,
+    privacy_class: "public",
+    source_as_of: { per_asset_resolver: "yahoo_finance_source_timestamp" },
+    // Measured 2026-08-24: 6,579 tracked payloads / about 326 MB. Plans retain
+    // at least 2x write/byte headroom; policy leaves bounded universe growth.
+    plan: { class_a: 14_000, class_b: 40_000, bytes: 700_000_000 },
+    policy: { max_assets: 8_000, max_total_bytes: 450_000_000 },
+    validate_public_payload({ bytes }) {
+      const value = JSON.parse(new TextDecoder().decode(bytes));
+      return value && typeof value === "object" && !Array.isArray(value)
+        && !Object.keys(value).some((key) => /token|secret|password|cookie|authorization|api[_-]?key|credential|private[_-]?key/i.test(key));
+    },
+  },
   "computed-signals": {
     root: "data/computed",
     manifest_prefix: "public/data/computed",
@@ -719,6 +741,7 @@ export function toIsoDay(value) {
 }
 
 const STOCKANALYSIS_DETAIL_SOURCE_RESOLVER = "stockanalysis_detail_source_timestamp";
+const YAHOO_FINANCE_SOURCE_RESOLVER = "yahoo_finance_source_timestamp";
 const STOCKANALYSIS_MONTHS = new Map([
   ["jan", 1], ["january", 1],
   ["feb", 2], ["february", 2],
@@ -873,6 +896,42 @@ function stockAnalysisDetailSourceObservation(payload) {
     : { day: observationDay, origin: "acquisition-observation" };
 }
 
+function yahooFinanceSourceObservation(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const present = (value) => value !== undefined && value !== null && value !== "";
+  if (present(payload.source_as_of)) {
+    const day = stockAnalysisCollectionDay(payload.source_as_of);
+    return day === null ? null : { day, origin: "source" };
+  }
+  const data = payload.data && typeof payload.data === "object" ? payload.data : {};
+  const histories = [data.history_1y, data.history_unadjusted].filter(Array.isArray);
+  const historyCandidates = [
+    ...(present(payload.history_as_of) ? [payload.history_as_of] : []),
+    ...histories.flatMap((rows) => rows.map((row) => row?.date)),
+  ];
+  const historyDays = historyCandidates.map(stockAnalysisCollectionDay).filter(Boolean).sort();
+  const quoteCandidate = present(payload.quote_as_of)
+    ? payload.quote_as_of
+    : data.info?.regularMarketTime;
+  const quoteDay = typeof quoteCandidate === "number"
+    ? stockAnalysisEpochTimestamp(quoteCandidate)?.slice(0, 10) ?? null
+    : stockAnalysisCollectionDay(quoteCandidate);
+  const historyDay = historyDays.at(-1) ?? null;
+  if (historyCandidates.length > 0 && historyDay === null) return null;
+  if (present(quoteCandidate) && quoteDay === null) return null;
+  const sourceDay = historyDay && (!quoteDay || historyDay <= quoteDay) ? historyDay : quoteDay;
+  if (sourceDay !== null) return { day: sourceDay, origin: "source" };
+  const observationDay = stockAnalysisCollectionDay(payload.fetched_at);
+  return observationDay === null
+    ? null
+    : { day: observationDay, origin: "acquisition-observation" };
+}
+
+const PER_ASSET_SOURCE_RESOLVERS = new Map([
+  [STOCKANALYSIS_DETAIL_SOURCE_RESOLVER, stockAnalysisDetailSourceObservation],
+  [YAHOO_FINANCE_SOURCE_RESOLVER, yahooFinanceSourceObservation],
+]);
+
 // Resolve the family's SOURCE time for the manifest's source_as_of field.
 //   - { file, key }: read key from the JSON file at <root>/<file>; the value
 //     must be date-like (fail FAMILY_ASOF_INVALID otherwise).
@@ -1004,7 +1063,8 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
     return { value: values[0], origin: "per-asset", perAsset };
   }
   if (config.per_asset_resolver !== undefined) {
-    if (config.per_asset_resolver !== STOCKANALYSIS_DETAIL_SOURCE_RESOLVER) {
+    const resolveAssetSource = PER_ASSET_SOURCE_RESOLVERS.get(config.per_asset_resolver);
+    if (!resolveAssetSource) {
       fail(
         "FAMILY_ASOF_INVALID",
         `unsupported per-asset source_as_of resolver: ${JSON.stringify(config.per_asset_resolver)}`,
@@ -1027,11 +1087,11 @@ export function resolveSourceAsOf({ family, payloads, createdIsoDay, relRoot = n
       }
       const relative = enrolledPath.slice(relRoot.length + 1);
       const json = decodeJson(bytes);
-      const resolved = stockAnalysisDetailSourceObservation(json);
+      const resolved = resolveAssetSource(json);
       if (resolved === null) {
         fail(
           "FAMILY_ASOF_INVALID",
-          `${relative} has no valid StockAnalysis detail source or availability-observation timestamp`,
+          `${relative} has no valid ${config.per_asset_resolver} source or availability-observation timestamp`,
         );
       }
       if (resolved.origin === "acquisition-observation") observationFallbackCount += 1;

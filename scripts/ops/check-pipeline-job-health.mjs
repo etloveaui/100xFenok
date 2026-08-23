@@ -205,6 +205,11 @@ export const CADENCE_DECLARATION_EXEMPTIONS = Object.freeze({
 // removes the silent default so the set cannot grow by omission. Registered as
 // BACKLOG B-391.
 export const PLANE_OUTCOME_UNRECORDED_REASONS = Object.freeze({
+  "yahoo-finance": Object.freeze({
+    classification: "awaiting_opportunity",
+    reason:
+      "new shadow family declared 2026-08-24 after the latest landed Yahoo cycle; its first eligible publish occurs after the next natural fetch-yf-finance run on cron '20 23 * * 1-5' lands changed finance payloads and confirms origin readback. The anti-rot test requires removing this entry as soon as that first outcome shard exists",
+  }),
   "fdic-tier1": Object.freeze({
     classification: "awaiting_opportunity",
     reason:

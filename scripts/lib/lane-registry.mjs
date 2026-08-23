@@ -1219,6 +1219,7 @@ const lanes = [
     commit_shards: [
       attemptShard("yahoo_batch_quote_history"),
       "data/admin/yahoo-batch-quote-history",
+      publishOutcomeShard("yahoo-finance"),
     ],
     recovery_store: "data/admin/yahoo-batch-quote-history/index.json",
     kpi_recovery_shape: "direct",
