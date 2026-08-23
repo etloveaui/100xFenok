@@ -55,6 +55,25 @@ const nextConfig: NextConfig = {
         destination: "/stock/NVDA?tab=filings",
         permanent: false,
       },
+      // Measured 2026-08-23: a redirect declared HERE is served as a real HTTP
+      // redirect, and the same redirect written only as redirect() inside a page
+      // component is not - the adapter renders that page and emits 200 with a
+      // meta refresh in the body. /briefing and /filings/nvda-10k above proved
+      // the working half; /market and /live-bench were the failing half, and
+      // neither the redirect/permanentRedirect choice nor an exported metadata
+      // object made any difference. A 200 is indexable and a redirect is not, so
+      // the difference is not cosmetic. Their page components stay in place and
+      // are simply never reached, exactly like the two above.
+      {
+        source: "/market",
+        destination: "/market-valuation",
+        permanent: true,
+      },
+      {
+        source: "/live-bench",
+        destination: "/admin/live",
+        permanent: false,
+      },
       {
         source: "/vr/vr-complete-system.html",
         destination: "/vr/?path=vr/vr-complete-system.html",
