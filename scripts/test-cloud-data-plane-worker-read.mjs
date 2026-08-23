@@ -81,7 +81,7 @@ function extractRunWorkerFirstPatterns(source) {
     deriveWorkerFirstPatterns(PLANE_ENROLLMENT_EXACT, PLANE_ENROLLMENT_PREFIXES),
     "final Worker-first patterns derive from generated enrollment",
   );
-  assert.equal(FINAL_WORKER_FIRST_PATTERNS.length, 9, "selective Worker-first pattern count");
+  assert.equal(FINAL_WORKER_FIRST_PATTERNS.length, 10, "selective Worker-first pattern count");
   assert.equal(FINAL_WORKER_FIRST_PATTERNS.includes("/data/*"), false, "broad data glob removed");
   assert.equal(
     PRIVATE_PUBLIC_PATHS.has("/data/sec-13f/investors/griffin.json"),
@@ -91,11 +91,11 @@ function extractRunWorkerFirstPatterns(source) {
   assert.equal(Object.isFrozen(PRIVATE_PUBLIC_PATHS), true, "private deny authority is immutable");
   assert.equal(Object.isFrozen(FINAL_WORKER_FIRST_PATTERNS), true, "Worker-first list is immutable");
   assert.equal(expected.exact.length, 610, "exact enrollment count");
-  assert.equal(expected.prefixes.length, 1, "prefix enrollment count");
-  assert.equal(expectedFamilies.size, 18, "public family claim count");
-  assert.equal(publicFamilies.length, 19, "publisher public family count (one shadow reader exclusion)");
-  assert.equal(expectedFamilies.has("global-scouter"), false, "Global Scouter remains reader-unenrolled");
-  assert.equal(isEnrolledPath("/data/global-scouter/core/metadata.json"), false, "Global Scouter reader path remains unenrolled");
+  assert.equal(expected.prefixes.length, 2, "prefix enrollment count");
+  assert.equal(expectedFamilies.size, 19, "public family claim count");
+  assert.equal(publicFamilies.length, 19, "all publisher public families are reader-enrolled");
+  assert.equal(expectedFamilies.has("global-scouter"), true, "Global Scouter is reader-enrolled");
+  assert.equal(isEnrolledPath("/data/global-scouter/core/metadata.json"), true, "Global Scouter reader path is enrolled");
   assert.equal(privateFamilies.length, 5, "publisher private family count");
   for (const [familyName] of privateFamilies) {
     assert.equal(expectedFamilies.has(familyName), false, `private family ${familyName} absent`);
@@ -103,7 +103,13 @@ function extractRunWorkerFirstPatterns(source) {
     assert.equal(ENROLLED_PREFIXES.some(({ family }) => family === familyName), false, `private family ${familyName} prefix absent`);
   }
   assert.equal([...ENROLLED_PATHS.keys()].some((pathname) => pathname.includes("stockanalysis")), false, "stockanalysis path absent");
-  assert.equal(expected.prefixes[0].prefix, "/data/edgar-korean-summaries/");
+  assert.deepEqual(
+    expected.prefixes.map(({ prefix, family }) => [prefix, family]),
+    [
+      ["/data/edgar-korean-summaries/", "edgar-korean-summaries"],
+      ["/data/global-scouter/", "global-scouter"],
+    ],
+  );
 
   assert.throws(
     () => derivePublicPlaneEnrollment({ bad: { manifest_prefix: "public/data/bad", files: [], privacy_class: "unknown" } }),
@@ -248,6 +254,9 @@ try {
     "deep tree child enrolled",
   );
   assert.equal(familyForPath("/data/edgar-korean-summaries/2026/08/10/x.json"), "edgar-korean-summaries");
+  assert.equal(isEnrolledPath("/data/global-scouter/core/metadata.json"), true, "Global Scouter tree child enrolled");
+  assert.equal(familyForPath("/data/global-scouter/stocks/detail/AAPL.json"), "global-scouter");
+  assert.equal(isEnrolledPath("/data/global-scouter-evil/core/metadata.json"), false, "Global Scouter sibling not enrolled");
   assert.equal(isEnrolledPath("/data/edgar-korean-summaries-evil/index.json"), false, "sibling directory not enrolled");
   assert.equal(isEnrolledPath("/data/edgar-korean-summariesx/index.json"), false, "near-prefix sibling not enrolled");
   assert.equal(isEnrolledPath("/data/edgar-korean-summaries"), false, "bare tree root not enrolled");

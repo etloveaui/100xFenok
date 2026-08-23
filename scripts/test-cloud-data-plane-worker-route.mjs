@@ -377,12 +377,16 @@ try {
   assert.equal(await unenrolled.text(), "application handler");
   assert.equal(unenrolled.headers.get("x-data-plane-published-at"), null, "application response gains no plane heartbeat");
 
-  // Global Scouter is public for publication but explicitly reader-unenrolled
-  // during the caller-only shadow phase, so its read path stays application-owned.
-  const globalShadow = await readGet("/data/global-scouter/core/metadata.json");
-  assert.equal(globalShadow.status, 200);
-  assert.equal(await globalShadow.text(), "application handler");
-  assert.equal(globalShadow.headers.get("x-data-plane-published-at"), null);
+  // Global Scouter is prefix-enrolled. Before its family pointer resolves, it
+  // must use the bundled Git LKG rather than the application handler.
+  const globalBeforePublish = await readGet("/data/global-scouter/core/metadata.json");
+  assert.equal(globalBeforePublish.status, 200);
+  assert.equal(await globalBeforePublish.text(), "assets fallback");
+  assert.equal(globalBeforePublish.headers.get("x-data-plane-published-at"), null);
+
+  const globalNearMiss = await readGet("/data/global-scouter-evil/core/metadata.json");
+  assert.equal(globalNearMiss.status, 200);
+  assert.equal(await globalNearMiss.text(), "application handler");
 
   // Siblings of enrolled trees must not match the bounded prefixes.
   const nearMiss = await readGet("/data/edgar-korean-summaries-evil/index.json");
@@ -503,10 +507,52 @@ try {
   assert.equal(await edgarMissing.text(), "assets fallback");
   assert.equal(edgarMissing.headers.get("x-data-plane-published-at"), null, "fallback gains no plane heartbeat");
 
+  // Global Scouter cutover: an owner-export asset resolves from its family
+  // generation, while one of the four separately materialized core files is
+  // absent from that generation and therefore stays on the bundled Git LKG.
+  const globalPlane = createCloudflareCloudDataPlane({
+    r2Bucket,
+    coordinatorNamespace: createRouteCoordinatorNamespace(worker, WRITE_KEY, "global-scouter"),
+  });
+  const globalValues = {
+    "public/data/global-scouter/core/metadata.json": "{\"source_date\":\"2026-08-21\"}\n",
+  };
+  const globalManifest = buildManifest(
+    "global-scouter-read-1",
+    Object.entries(globalValues).map(([path, text]) => ({ path, text })),
+  );
+  const globalPublished = await publishGeneration({
+    manifest: globalManifest,
+    payloads: new Map(Object.entries(globalValues).map(([p, t]) => [p, encoder.encode(t)])),
+    expectedPointerSequence: 0,
+    objectStore: globalPlane.objectStore,
+    ledger: globalPlane.ledger,
+    pointerStore: globalPlane.pointerStore,
+    policy: POLICY,
+  });
+  assert.equal(globalPublished.pointer.sequence, 1);
+
+  const globalServed = await readGet("/data/global-scouter/core/metadata.json");
+  assert.equal(globalServed.status, 200);
+  assert.equal(globalServed.headers.get("x-data-plane-generation"), "global-scouter-read-1");
+  assert.equal(await globalServed.text(), globalValues["public/data/global-scouter/core/metadata.json"]);
+
+  for (const derivedPath of [
+    "/data/global-scouter/core/per_bands_index.json",
+    "/data/global-scouter/core/revision_movers.json",
+    "/data/global-scouter/core/slick_index.json",
+    "/data/global-scouter/core/stocks_analyzer.json",
+  ]) {
+    const derivedCoreFallback = await readGet(derivedPath);
+    assert.equal(derivedCoreFallback.status, 200, derivedPath);
+    assert.equal(await derivedCoreFallback.text(), "assets fallback", derivedPath);
+    assert.equal(derivedCoreFallback.headers.get("x-data-plane-generation"), null, derivedPath);
+  }
+
   console.log("test-cloud-data-plane-worker-route: ok"
     + " (refusal, publish, error transit, per-family pointer isolation,"
     + " and read-side enrolled serving with ASSETS fallback for unresolved,"
-    + " unenrolled, and tree-near-miss paths)");
+    + " separately materialized, unenrolled, and tree-near-miss paths)");
 } finally {
   await worker.dispose();
   await unconfigured.dispose();

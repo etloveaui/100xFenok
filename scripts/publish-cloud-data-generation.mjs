@@ -554,16 +554,14 @@ export const FAMILIES = {
     },
   },
   "global-scouter": {
-    // Shadow caller-only publication: the canonical export is public, but its
-    // read-side enrollment remains deliberately off until the independent
-    // reader/projection lane is admitted.
+    // The owner-run export is public and reader-enrolled after two successful
+    // real generations established a previous-pointer rollback target. The
+    // static Git mirror remains the fail-closed LKG whenever the plane cannot
+    // resolve an integrity-checked payload.
     root: "data/global-scouter",
     manifest_prefix: "public/data/global-scouter",
     candidate_scope_id: "global_scouter",
-    // Off until the reader lane is admitted. At that point the fallback is the
-    // static LKG, not a second provider: one owner-run export has nothing to
-    // fail over to.
-    reader_enrollment: false,
+    reader_enrollment: true,
     privacy_class: "public",
     // Global Scouter's source clock is the export's provider date, not the
     // converter acquisition timestamp.
@@ -572,10 +570,10 @@ export const FAMILIES = {
     // nobody revised is current, not stale. Freshness asks whether a change is
     // sitting unpublished; the weekday-sized age ceiling is not applied.
     freshness: { mode: "source_change" },
-    // Measured candidate scope: 1,082 assets / 87,268,011 bytes. The class-A
-    // and byte declarations retain >=2x headroom. An all-changed generation
-    // measures 3,250 reads (1,083 presence + 1,083 readback + 1,083 parity
-    // + 1 resume); class-B is conservatively rounded to 7,000 (>=2x).
+    // The weekly scope moves with the owner export, so tests measure it rather
+    // than pinning one week's byte/count fixture. These declarations retain
+    // at least 2x headroom for the current candidate and its all-changed read
+    // model (presence + readback + parity + resume).
     plan: { class_a: 2_200, class_b: 7_000, bytes: 180_000_000 },
     policy: { max_assets: 1_300, max_total_bytes: 110_000_000 },
     validate_public_payload({ asset, bytes }) {

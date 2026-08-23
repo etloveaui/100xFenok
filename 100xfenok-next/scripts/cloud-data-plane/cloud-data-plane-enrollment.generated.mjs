@@ -613,6 +613,7 @@ export const PLANE_ENROLLMENT_EXACT = Object.freeze([
 ]);
 export const PLANE_ENROLLMENT_PREFIXES = Object.freeze([
   {"prefix":"/data/edgar-korean-summaries/","family":"edgar-korean-summaries"},
+  {"prefix":"/data/global-scouter/","family":"global-scouter"},
 ]);
 export const PLANE_ENROLLMENT_PRIVATE_DENY = Object.freeze([
   "/data/computed/etf_action_index.json",

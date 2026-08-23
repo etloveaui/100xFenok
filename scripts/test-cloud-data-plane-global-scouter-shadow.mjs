@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Focused proof for the Global Scouter caller-only shadow publication. This is
-// intentionally offline: the dry-run uses the default registry admission and
-// never constructs a Cloudflare plane.
+// Focused proof for Global Scouter publication and bounded reader enrollment.
+// This is intentionally offline: the dry-run uses the default registry
+// admission and never constructs a Cloudflare plane.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -73,9 +73,9 @@ const MEASURED_BYTES = expectedFiles.reduce(
 const MEASURED_CLASS_B_READS = (MEASURED_ASSETS + 1) * 3 + 1;
 // The boundary is a shape, not a number: exactly one README and every other
 // included file JSON. A universe that gains or loses tickers stays inside it.
-const readmeFiles = expectedFiles.filter((file) => file.endsWith("README.md"));
+const readmeFiles = expectedFiles.filter((file) => file === "README.md");
 assert.equal(readmeFiles.length, 1, `expected exactly one README in scope, got ${readmeFiles.length}`);
-const nonJson = expectedFiles.filter((file) => !file.endsWith(".json") && !file.endsWith("README.md"));
+const nonJson = expectedFiles.filter((file) => !file.endsWith(".json") && file !== "README.md");
 assert.deepEqual(nonJson, [], `scope admits only JSON plus one README; found ${nonJson.join(", ")}`);
 assert.ok(MEASURED_ASSETS > 0, "scope must not be empty");
 assert.deepEqual(scope.manifest.totals, { file_count: MEASURED_ASSETS, bytes: MEASURED_BYTES });
@@ -161,8 +161,11 @@ assert.equal(validator({ asset: readmeAsset, bytes: new Uint8Array([0xff]) }), f
 
 const enrollment = derivePublicPlaneEnrollment(FAMILIES);
 assert.equal(enrollment.exact.some(([, family]) => family === FAMILY_NAME), false);
-assert.equal(enrollment.prefixes.some(({ family }) => family === FAMILY_NAME), false);
-assert.equal(FAMILY.reader_enrollment, false);
+assert.deepEqual(
+  enrollment.prefixes.filter(({ family }) => family === FAMILY_NAME),
+  [{ prefix: "/data/global-scouter/", family: FAMILY_NAME }],
+);
+assert.equal(FAMILY.reader_enrollment, true);
 assert.ok(FAMILY.plan.class_a >= MEASURED_ASSETS * 2, "class-A plan must be >=2x measured assets");
 // The previous line here asserted MEASURED_CLASS_B_READS against the identical
 // expression that defines it, which proves nothing. The real invariant is the
@@ -192,4 +195,4 @@ assert.throws(
   /FAMILY_NOT_AUTHORIZED.*global-scouter/,
 );
 
-console.log("Global Scouter shadow publisher contract ok (scope, source clock, 1,081 JSON + README validation, reader exclusion, dry-run evidence, auth gate)");
+console.log("Global Scouter publisher/reader contract ok (dynamic scope, cross-stamped source clock, bounded prefix enrollment, dry-run evidence, auth gate)");
