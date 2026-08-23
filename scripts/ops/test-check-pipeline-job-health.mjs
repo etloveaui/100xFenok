@@ -97,7 +97,7 @@ assert.match(
 );
 assert.match(
   globalScouterWorkflow,
-  /node scripts\/persist-cloud-publish-outcome\.mjs --family=global-scouter --workflow=\.github\/workflows\/global-scouter-shadow-publish\.yml --publisher-outcome=/,
+  /node scripts\/persist-cloud-publish-outcome\.mjs\s+--family=global-scouter\s+--workflow=\.github\/workflows\/global-scouter-shadow-publish\.yml\s+--publisher-outcome=/,
   "Global Scouter caller must persist its exact outcome binding",
 );
 
