@@ -33,7 +33,7 @@ import { renderYfTab, loadIndustryBenchmarks, resolveIndustryBench, formatMoney,
 import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
 import MetricHelp from "@/components/MetricHelp";
-import { formatSignedPercent } from "@/lib/format";
+import { formatDateish, formatSignedPercent } from "@/lib/format";
 import { DATA_STATE_LABELS, makeDataState } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
@@ -518,10 +518,6 @@ function fmtShares(value: unknown): string {
   if (typeof value === "string" && value.trim()) return value.trim();
   if (!isFiniteNumber(value)) return "—";
   return value.toLocaleString(undefined, { maximumFractionDigits: value >= 1000 ? 0 : 2 });
-}
-function fmtDateish(value: unknown): string {
-  if (typeof value !== "string" || !value.trim()) return "—";
-  return value.trim();
 }
 function fmtKstMinute(value: string | null | undefined): string | null {
   if (typeof value !== "string" || !value.trim()) return null;
@@ -3321,8 +3317,8 @@ export default function StockDetailClient({
       const price = factNumber(marketFacts, "price") ?? (isFiniteNumber(quote.p) ? quote.p : null) ?? etfSurface.price;
       const changePct = factNumber(marketFacts, "change_pct") ?? (isFiniteNumber(quote.cp) ? quote.cp : null) ?? etfSurface.changePct;
       const category = identity.category ?? cleanSurfaceText(etfOverview.category) ?? etfSurface.category;
-      const delayText = fmtDateish(quote.u) !== "—"
-        ? fmtDateish(quote.u)
+      const delayText = formatDateish(quote.u) !== "—"
+        ? formatDateish(quote.u)
         : etfSurface.inceptionDate
           ? `신규 ETF ${etfSurface.inceptionDate}`
           : "데이터 지연 가능";
@@ -4291,7 +4287,7 @@ function EtfDataPanel({
   const supplyPresentation = getEtfDataSupplyPresentation(dataSupply);
   const detailStatus = typeof data?.detail_status === "string" ? data.detail_status : null;
   const supplyStatusText = supplyPresentation.label
-    ? `${supplyPresentation.label}${supplyPresentation.sourceDate ? ` · ${fmtDateish(supplyPresentation.sourceDate)}` : ""}${supplyPresentation.ageDays !== null ? ` · ${supplyPresentation.ageDays}일 경과` : ""}`
+    ? `${supplyPresentation.label}${supplyPresentation.sourceDate ? ` · ${formatDateish(supplyPresentation.sourceDate)}` : ""}${supplyPresentation.ageDays !== null ? ` · ${supplyPresentation.ageDays}일 경과` : ""}`
     : null;
   const detailStatusText = supplyStatusText ?? (detailStatus === "surface_only"
     ? "보유 구성 확인 전 · 신규 상장 정보로 요약 표시"
@@ -4308,7 +4304,7 @@ function EtfDataPanel({
     ?? null;
 
   const cards = [
-    { label: "가격", value: price !== null ? formatMoney(price, currency) : "—", note: fmtDateish(quote.u) },
+    { label: "가격", value: price !== null ? formatMoney(price, currency) : "—", note: formatDateish(quote.u) },
     { label: "당일 변화", value: fmtEtfSignedPct(changePct), note: rawText(quote.ex) },
     { label: "운용자산", value: totalAssets !== null ? formatCompactMoney(totalAssets, currency) : rawText(overview.aum), note: "운용자산" },
     { label: "NAV", value: rawText(overview.nav), note: "순자산가치" },
@@ -4316,7 +4312,7 @@ function EtfDataPanel({
     { label: "배당률", value: dividendYield !== null ? fmtEtfPct(dividendYield) : rawText(overview.dividendYield), note: "분배금 기준" },
     { label: "베타", value: beta !== null ? beta.toFixed(2) : rawText(overview.beta), note: "민감도" },
     { label: "설정일", value: rawText(overview.inception), note: "Inception" },
-    { label: "표시 종목", value: `${holdings.length.toLocaleString()} / ${holdingCount.toLocaleString()}`, note: fmtDateish(holdingsUpdated) },
+    { label: "표시 종목", value: `${holdings.length.toLocaleString()} / ${holdingCount.toLocaleString()}`, note: formatDateish(holdingsUpdated) },
     { label: "표시 비중 합계", value: holdings.length > 0 ? fmtEtfPct(totalWeight) : "—", note: "표시 항목 기준" },
   ].filter((card) => card.value !== "—");
 
@@ -4379,7 +4375,7 @@ function EtfDataPanel({
       <SectionCard title="보유·스왑 구성">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
           <span>{ticker} · {holdings.length.toLocaleString()}개 표시</span>
-          <span>{fmtDateish(holdingsUpdated) !== "—" ? `기준 ${fmtDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
+          <span>{formatDateish(holdingsUpdated) !== "—" ? `기준 ${formatDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
         </div>
         <EtfHoldingsTable holdings={holdings} currency={currency} />
       </SectionCard>

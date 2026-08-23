@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import TickerChip from "@/components/TickerChip";
-import { formatSignedPercent } from "@/lib/format";
+import { formatDateOnly, formatSignedPercent } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { MAX_COMPARE_TICKERS, buildCompareCsv, isFiniteNumber, pairOverlaps, parseTickers } from "./etfCompareOverlap";
 import type { EtfCompareRow, EtfPayload, PairOverlap } from "./etfCompareOverlap";
@@ -29,11 +29,6 @@ function rawText(value: unknown): string {
   return "—";
 }
 
-function fmtDateish(value: unknown): string {
-  if (typeof value !== "string" || !value.trim()) return "—";
-  const text = value.trim();
-  return /^\d{4}-\d{2}-\d{2}/.test(text) ? text.slice(0, 10) : text;
-}
 
 function parsePercentPoints(value: unknown): number | null {
   if (isFiniteNumber(value)) return value;
@@ -91,7 +86,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareClientRow }) {
   const performance = row.data?.normalized?.performance ?? {};
   const holdings = Array.isArray(row.data?.normalized?.holdings) ? row.data.normalized.holdings : [];
   const holdingCount = row.data?.normalized?.holding_count ?? holdings.length;
-  const holdingsDate = fmtDateish(row.data?.normalized?.holdings_updated);
+  const holdingsDate = formatDateOnly(row.data?.normalized?.holdings_updated);
   const expenseRatio = parsePercentPoints(overview.expenseRatio);
   const dividendYield = parsePercentPoints(overview.dividendYield);
   const aum = rawText(overview.aum);
@@ -118,7 +113,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareClientRow }) {
       {row.failed ? <p className="mt-2 text-[10px] font-bold text-red-700">상세 데이터를 불러오지 못했습니다.</p> : null}
       {supplyPresentation.label ? (
         <p className="mt-2 text-[10px] font-bold text-amber-800" data-etf-data-supply-state={dataSupply?.resolution_state}>
-          {supplyPresentation.label}{supplyPresentation.sourceDate ? ` · ${fmtDateish(supplyPresentation.sourceDate)}` : ""}{supplyPresentation.ageDays !== null ? ` · ${supplyPresentation.ageDays}일 경과` : ""}
+          {supplyPresentation.label}{supplyPresentation.sourceDate ? ` · ${formatDateOnly(supplyPresentation.sourceDate)}` : ""}{supplyPresentation.ageDays !== null ? ` · ${supplyPresentation.ageDays}일 경과` : ""}
         </p>
       ) : null}
     </div>
@@ -214,7 +209,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
   const rows = useMemo(() => (loading ? [] : loadState.rows), [loading, loadState.rows]);
   const overlaps = useMemo(() => pairOverlaps(rows), [rows]);
   const asOfDates = useMemo(() => {
-    return rows.map((row) => fmtDateish(row.data?.normalized?.holdings_updated));
+    return rows.map((row) => formatDateOnly(row.data?.normalized?.holdings_updated));
   }, [rows]);
   const hasUnknownAsOf = asOfDates.length === 0 || asOfDates.some((date) => date === "—");
   const distinctAsOfDates = [...new Set(asOfDates.filter((date) => date !== "—"))];

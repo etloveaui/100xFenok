@@ -12,6 +12,7 @@ import {
 } from "@/lib/connected/connected-loaders";
 import { stockConnectionFreshnessState, type StockConnectionFreshnessSource } from "@/lib/data-entity-graph/freshness";
 import { ROUTES } from "@/lib/routes";
+import { formatDateish } from "@/lib/format";
 import type {
   StockConnectionEntry,
   StockServiceEtfLink,
@@ -32,10 +33,6 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
-function fmtDateish(value: unknown): string {
-  if (typeof value !== "string" || !value.trim()) return "—";
-  return value.trim();
-}
 
 function buildSingleStockEtfHref(links: StockServiceEtfLink[]): string | null {
   const tickers = links.map((link) => link.ticker).filter(Boolean);
@@ -173,7 +170,7 @@ export function ConnectedView({
     ?? singleStockEtfs.find((etf) => typeof etf.as_of?.etf_universe === "string")?.as_of?.etf_universe
     ?? null;
   const etfProvenanceDetails = [
-    etfAsOf ? `기준 ${fmtDateish(etfAsOf)}` : null,
+    etfAsOf ? `기준 ${formatDateish(etfAsOf)}` : null,
     singleStockEtfs.length ? `분류 신뢰도 high ${highConfidenceEtfs}/${singleStockEtfs.length}` : null,
   ];
   const connected = [

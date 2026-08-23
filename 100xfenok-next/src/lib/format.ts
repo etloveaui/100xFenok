@@ -264,3 +264,30 @@ export function formatElapsedKo(days: unknown, empty = "—"): string {
   if (whole < 365) return `${Math.floor(whole / 30.44)}개월`;
   return `${Math.max(1, Math.floor(whole / 365.25)).toLocaleString("ko-KR")}년`;
 }
+
+/**
+ * A date-ish value as the payload gave it, trimmed, with a dash for nothing.
+ *
+ * Four identical-looking copies of this lived in four components, and they were
+ * not identical: three returned the raw string and one sliced an ISO value to
+ * its date, so the same field rendered `2026-08-22T00:00:00Z` on one page and
+ * `2026-08-22` on another. Consolidating them here preserves each call site's
+ * current output exactly - the ones that sliced now say so by calling
+ * `formatDateOnly` - so the divergence is a visible choice at one call site
+ * instead of an invisible one in four function bodies.
+ *
+ * The two are NOT interchangeable and the difference is not cosmetic. Several
+ * call sites pass a pipeline `generated_at`, where the time is real information;
+ * slicing that to a date would report a run as older and vaguer than it was.
+ */
+export function formatDateish(value: unknown, empty = "—"): string {
+  if (typeof value !== "string" || !value.trim()) return empty;
+  return value.trim();
+}
+
+/** As `formatDateish`, but an ISO value is reported as its calendar date only. */
+export function formatDateOnly(value: unknown, empty = "—"): string {
+  if (typeof value !== "string" || !value.trim()) return empty;
+  const text = value.trim();
+  return /^\d{4}-\d{2}-\d{2}/.test(text) ? text.slice(0, 10) : text;
+}

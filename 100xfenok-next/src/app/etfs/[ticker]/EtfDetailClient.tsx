@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import WatchStar from "@/components/WatchStar";
-import { formatSignedPercent, formatCurrency, formatCurrencyCompact, formatDecimal, formatInteger, formatMultiple, type Currency } from "@/lib/format";
+import { formatCurrency, formatCurrencyCompact, formatDateish, formatDecimal, formatInteger, formatMultiple, formatSignedPercent, type Currency } from "@/lib/format";
 import TickerSurfaceEventsCard from "@/app/stock/[ticker]/TickerSurfaceEventsCard";
 import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
@@ -443,10 +443,6 @@ function downloadHoldingsCsv(symbol: string, holdings: EtfHolding[], holdingsUpd
   window.URL.revokeObjectURL(url);
 }
 
-function fmtDateish(value: unknown): string {
-  if (typeof value !== "string" || !value.trim()) return "—";
-  return value.trim();
-}
 
 
 function fmtPercentPoints(value: MaybeNumber) {
@@ -872,7 +868,7 @@ function EtfPeerCollectionsSection({
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[10px] font-bold text-[var(--c-ink-3)]">
         <span>단일종목·레버리지 연결과 겹침 비교는 상위 25개 표시 항목 기준입니다.</span>
-        <span>생성 {fmtDateish(data.generatedAt)}</span>
+        <span>생성 {formatDateish(data.generatedAt)}</span>
       </div>
     </SectionCard>
   );
@@ -1369,7 +1365,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
         title: dataSupplyPresentation.label,
         description: [
           dataSupplyPresentation.description ?? "ETF 세부 데이터 공급 상태를 확인해 주세요.",
-          dataSupplyPresentation.sourceDate ? `원래 기준일 ${fmtDateish(dataSupplyPresentation.sourceDate)}` : null,
+          dataSupplyPresentation.sourceDate ? `원래 기준일 ${formatDateish(dataSupplyPresentation.sourceDate)}` : null,
           dataSupplyPresentation.ageDays !== null ? `현재 기준 ${dataSupplyPresentation.ageDays}일 경과` : null,
         ].filter(Boolean).join(" · "),
       }
@@ -1390,7 +1386,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
   const website = typeof overview.etf_website === "string" && overview.etf_website.trim() ? overview.etf_website.trim() : null;
   const inceptionDate = rawText(overview.inception);
   const sharesOutstanding = rawText(overview.sharesOut);
-  const quoteDate = fmtDateish(quote.u);
+  const quoteDate = formatDateish(quote.u);
   const updateDate = factDate(marketFacts, "price")
     ?? (quoteDate !== "—" ? quoteDate : null)
     ?? dataSupply?.source_as_of
@@ -1402,7 +1398,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
         classification.underlying ? `분류 기초 ${classification.underlying}` : null,
         underlyingService?.stockTicker ? `기초 종목 ${underlyingService.stockTicker}` : null,
         underlyingService?.link.resolution_source ? `해결 출처 ${underlyingService.link.resolution_source}` : null,
-        fmtDateish(updateDate) !== "—" ? `기준 ${fmtDateish(updateDate)}` : null,
+        formatDateish(updateDate) !== "—" ? `기준 ${formatDateish(updateDate)}` : null,
       ]
     : [];
 
@@ -1434,7 +1430,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     history.length === 0 ? "가격 히스토리" : null,
   ].filter((item): item is string => Boolean(item));
   const metrics = [
-    { label: "가격", value: formatCurrency(price, currency as Currency), note: fmtDateish(updateDate) },
+    { label: "가격", value: formatCurrency(price, currency as Currency), note: formatDateish(updateDate) },
     { label: "당일 변화", value: fmtSignedPercentPoints(changePct), note: metricValue(quote.ex, exchange) },
     { label: "운용자산", value: totalAssets !== null ? formatCurrencyCompact(totalAssets, currency as Currency) : rawText(overview.aum), note: "총 운용자산" },
     { label: "보수율", value: expenseRatio !== null ? fmtPercentPoints(expenseRatio) : rawText(overview.expenseRatio), note: "총보수" },
@@ -1446,13 +1442,13 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
     { label: "PER", value: trailingPe !== null ? formatDecimal(trailingPe, { digits: 1 }) : rawText(overview.peRatio), note: "최근 실적 기준" },
     { label: "52주 고가", value: isFiniteNumber(quote.h52) ? formatCurrency(quote.h52, currency as Currency) : "—", note: "최근 52주 고점" },
     { label: "52주 저가", value: isFiniteNumber(quote.l52) ? formatCurrency(quote.l52, currency as Currency) : "—", note: "최근 52주 저점" },
-    { label: "보유 항목", value: `${holdings.length.toLocaleString("ko-KR")} / ${holdingCount.toLocaleString("ko-KR")}`, note: fmtDateish(holdingsUpdated) },
+    { label: "보유 항목", value: `${holdings.length.toLocaleString("ko-KR")} / ${holdingCount.toLocaleString("ko-KR")}`, note: formatDateish(holdingsUpdated) },
     { label: "표시 비중 합계", value: holdings.length > 0 ? fmtPercentPoints(totalWeight) : "—", note: "표시 항목 기준" },
   ].filter((metric) => metric.value !== "—");
   const etfSignalScores = etfSignals?.row?.scores ?? {};
   const etfSignalCount = etfSignals?.row?.scored_signal_count;
   const etfSignalDetails = [
-    etfSignals?.generated_at ? `생성 ${fmtDateish(etfSignals.generated_at)}` : null,
+    etfSignals?.generated_at ? `생성 ${formatDateish(etfSignals.generated_at)}` : null,
     etfSignals?.formula_version ? `공식 ${etfSignals.formula_version}` : null,
     isFiniteNumber(etfSignalCount) ? `${etfSignalCount}개 항목` : null,
   ].filter((item): item is string => Boolean(item));
@@ -1625,7 +1621,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           <div className="stock-price" data-etf-detail-price="true">
             <span className="big num">{formatCurrency(price, currency as Currency)}</span>
             {changePct !== null ? <span className={`stock-chip num ${changePct >= 0 ? "up" : "down"}`}>{fmtSignedPercentPoints(changePct)}</span> : null}
-            <span className="delay">{fmtDateish(updateDate)}</span>
+            <span className="delay">{formatDateish(updateDate)}</span>
           </div>
         </div>
       </section>
@@ -1721,7 +1717,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
           <SectionCard title="보유·스왑 구성" desc={`${symbol} · ${formatInteger(holdings.length)}개 표시`} marker="holdings">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
               <span>{formatInteger(holdingCount)}개 원장 중 표시 가능한 항목</span>
-              <span>{fmtDateish(holdingsUpdated) !== "—" ? `기준 ${fmtDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
+              <span>{formatDateish(holdingsUpdated) !== "—" ? `기준 ${formatDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
               <button
                 type="button"
                 onClick={() => downloadHoldingsCsv(symbol, holdings, holdingsUpdated)}
