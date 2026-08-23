@@ -7,6 +7,7 @@ import {
   buildShortTermConvictionComposite,
   shortTermConvictionCallFromScore,
 } from "../../scripts/lib/fenok-proxy-formula-contract.mjs";
+import { EDGE_AXIS_SPOKE_LABELS } from "../src/lib/fenok-signals/edge-axis-labels.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(__dirname, "..");
@@ -379,8 +380,20 @@ function requireUiContracts(errors) {
     if (!shortPressureBlock) {
       errors.push(`${file}: shortPressureProxy hexagon axis must render as inverted safety display`);
     }
-    if (!text.includes('spokeLabel: "숏완화"')) {
-      errors.push(`${file}: shortPressureProxy spoke label must render as compact Korean copy '숏완화'`);
+    // The compact copy contract is anchored on the shared label map rather than
+    // on this file's text. It used to require the literal `spokeLabel: "숏완화"`
+    // here, which is a contract pinned to a string in one file - the same defect
+    // shape this repo has recorded twice before - and it turned CI red the moment
+    // the twelve labels were consolidated into one source.
+    if (EDGE_AXIS_SPOKE_LABELS.shortPressureProxyScore !== "숏완화") {
+      errors.push(
+        `edge-axis-labels.mjs: shortPressureProxy spoke label must render as compact Korean copy '숏완화'`,
+      );
+    }
+    if (!text.includes("requireSpokeLabel(config.scoreKey)")) {
+      errors.push(
+        `${file}: hexagon spoke labels must read the shared map, not a local copy`,
+      );
     }
     if (!text.includes("getDisplaySignalHelpBands(helpKey, invertedDisplay)")) {
       errors.push(`${file}: signal help bands must use display-aware inverted bands`);

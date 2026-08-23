@@ -6,6 +6,7 @@ import DataStateNotice from "@/components/DataStateNotice";
 import { type FenokSignalRadarHexagonAxis } from "@/components/screener/FenokSignalRadarHexagon";
 import { FenokSignalRadarHexagonPair } from "@/components/screener/FenokSignalRadarHexagonPair";
 import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover";
+import { edgeAxisSpokeLabel } from "@/lib/fenok-signals/edge-axis-labels.mjs";
 import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
 import { getDisplaySignalHelpBands, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
 import { directionKo } from "@/lib/fenok-signals/direction-ko";
@@ -347,6 +348,14 @@ interface MarketFactsData {
   source_files?: Record<string, string | null>;
 }
 
+function requireSpokeLabel(scoreKey: string): string {
+  const label = edgeAxisSpokeLabel(scoreKey);
+  if (label === null) {
+    throw new Error(`edge axis ${scoreKey} has no spoke label in the shared map`);
+  }
+  return label;
+}
+
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
@@ -376,7 +385,6 @@ export function rankFenokEdgeAxes<T extends { score: number | null; referenceOnl
 
 interface DetailLongTermAxisConfig {
   key: string;
-  spokeLabel: string;
   fullLabel: string;
   scoreKey: keyof ScreenerStock;
   directionKey?: keyof ScreenerStock;
@@ -390,7 +398,6 @@ interface DetailLongTermAxisConfig {
 const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   {
     key: "profitability",
-    spokeLabel: "수익성",
     fullLabel: "수익성",
     scoreKey: "profitabilityScore",
     directionKey: "profitabilityDirection",
@@ -398,7 +405,6 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "growth",
-    spokeLabel: "성장",
     fullLabel: "성장",
     scoreKey: "growthScore",
     directionKey: "growthDirection",
@@ -406,14 +412,12 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "upsidePotential",
-    spokeLabel: "상방",
     fullLabel: "상승 잠재력",
     scoreKey: "upsidePotentialScore",
     helpKey: "upsidePotential",
   },
   {
     key: "downsidePressure",
-    spokeLabel: "하방",
     fullLabel: "하락 압력 완화",
     scoreKey: "downsidePressureScore",
     helpKey: "downsidePressure",
@@ -422,7 +426,6 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "marketSimilarity",
-    spokeLabel: "동종군",
     fullLabel: "동종군 유사도",
     scoreKey: "marketSimilarityScore",
     helpKey: "marketSimilarity",
@@ -430,7 +433,6 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "durabilityProfitability",
-    spokeLabel: "내구",
     fullLabel: "내구 수익성",
     scoreKey: "durabilityProfitabilityScore",
     coverageKey: "durabilityProfitabilityCoverage",
@@ -441,7 +443,6 @@ const DETAIL_LONG_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
 const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   {
     key: "technicalFlow",
-    spokeLabel: "기술",
     fullLabel: "기술·자금 흐름",
     scoreKey: "technicalFlowScore",
     directionKey: "technicalFlowDirection",
@@ -449,7 +450,6 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "volumeLiquidityTrend",
-    spokeLabel: "거래",
     fullLabel: "거래량·유동성 추세",
     scoreKey: "volumeLiquidityTrendScore",
     directionKey: "volumeLiquidityTrendDirection",
@@ -458,7 +458,6 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "shortTermRelativeStrength",
-    spokeLabel: "강도",
     fullLabel: "단기 상대 강도",
     scoreKey: "shortTermRelativeStrengthScore",
     directionKey: "shortTermRelativeStrengthDirection",
@@ -467,7 +466,6 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "netOptionsProxy",
-    spokeLabel: "옵션",
     fullLabel: "옵션 활동 프록시",
     scoreKey: "netOptionsProxyScore",
     helpKey: "netOptionsProxy",
@@ -475,7 +473,6 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "offExchangeActivityProxy",
-    spokeLabel: "장외",
     fullLabel: "장외거래 활동 프록시",
     scoreKey: "offExchangeActivityProxyScore",
     helpKey: "offExchangeActivityProxy",
@@ -484,7 +481,6 @@ const DETAIL_SHORT_TERM_AXIS_CONFIG: DetailLongTermAxisConfig[] = [
   },
   {
     key: "shortPressureProxy",
-    spokeLabel: "숏완화",
     fullLabel: "숏압력 완화",
     scoreKey: "shortPressureProxyScore",
     helpKey: "shortPressureProxy",
@@ -527,7 +523,7 @@ function buildDetailLongTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
     const meta = deriveDetailAxisMeta(score, config.helpKey, Boolean(config.invertScore));
     return {
       key: config.key,
-      label: config.spokeLabel,
+      label: requireSpokeLabel(config.scoreKey),
       fullLabel: config.fullLabel,
       score,
       direction: explicitDirection ?? meta.direction,
@@ -561,7 +557,7 @@ function buildDetailShortTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
     const meta = deriveDetailAxisMeta(score, config.helpKey, Boolean(config.invertScore));
     return {
       key: config.key,
-      label: config.spokeLabel,
+      label: requireSpokeLabel(config.scoreKey),
       fullLabel: config.fullLabel,
       score,
       direction: explicitDirection ?? meta.direction,

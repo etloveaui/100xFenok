@@ -46,6 +46,11 @@ import {
   loadFenokSignalsSummaryMap,
   type FenokSignalsSummaryRecord,
 } from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
+import {
+  EDGE_RADAR_GEOMETRY,
+  edgeAxisRadarLines,
+  edgeAxisSpokeLabel,
+} from "@/lib/fenok-signals/edge-axis-labels.mjs";
 import { commonBasisSignalSummaryView } from "@/lib/fenok-signals/common-basis-signal-summary";
 import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import {
@@ -2849,7 +2854,7 @@ function FilingsTimelineCp({ filings, heroFiling }: { filings: EdgarKoreanSummar
 // W4 Fenok Edge — overview 탭 full-width 섹션
 // ---------------------------------------------------------------------------
 
-interface EdgeAxisRow { key: string; label: string; score: number | null; inverted: boolean; group: "short" | "long"; referenceOnly?: boolean }
+interface EdgeAxisRow { key: string; label: string; spokeLabel: string; score: number | null; inverted: boolean; group: "short" | "long"; referenceOnly?: boolean }
 
 const EDGE_SHORT_AXES: Array<{ key: keyof FenokSignalsSummaryRecord; label: string; inverted?: boolean; referenceOnly?: boolean }> = [
   { key: "technicalFlowScore", label: "기술·자금 흐름" },
@@ -2873,9 +2878,14 @@ function buildEdgeAxes(record: FenokSignalsSummaryRecord, config: typeof EDGE_SH
     const raw = record[c.key];
     const rawScore = isFiniteNumber(raw) ? raw : null;
     const score = rawScore !== null && c.inverted ? Math.max(0, Math.min(100, 100 - rawScore)) : rawScore;
+    const spokeLabel = edgeAxisSpokeLabel(c.key as string);
+    if (spokeLabel === null) {
+      throw new Error(`edge axis ${String(c.key)} has no spoke label in the shared map`);
+    }
     return {
       key: c.key as string,
       label: c.label,
+      spokeLabel,
       score,
       inverted: Boolean(c.inverted),
       group,
@@ -2926,10 +2936,11 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
   const longGauge = semiGauge(longR);
 
   function renderRadar(axes: EdgeAxisRow[], color: string, label: string) {
-    const cx = 130, cy = 122, maxR = 76;
+    const { cx, cy, maxR, viewBoxWidth, viewBoxHeight, labelRingOffset, fontSizePx, valueLineDy } =
+      EDGE_RADAR_GEOMETRY;
     const points = radarPolygonPoints(axes.map((a) => a.score), cx, cy, maxR);
     return (
-      <svg viewBox="0 0 260 244" role="img" aria-label={`${label} 6축 레이더 · 참고축 포함`}>
+      <svg viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`} role="img" aria-label={`${label} 6축 레이더 · 참고축 포함`}>
         {[1, 0.75, 0.5, 0.25].map((level) => (
           <polygon key={level} points={radarPolygonPoints(axes.map(() => 100 * level), cx, cy, maxR)} fill="none" stroke="var(--cp-divider)" strokeWidth={1} opacity={0.55} />
         ))}
@@ -2944,10 +2955,12 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
           return <circle key={a.key} cx={x} cy={y} r={3} fill={color} />;
         })}
         {axes.map((a, i) => {
-          const [x, y] = polarPoint(cx, cy, maxR + 28, (360 / axes.length) * i);
+          const [x, y] = polarPoint(cx, cy, maxR + labelRingOffset, (360 / axes.length) * i);
+          const [name, value] = edgeAxisRadarLines(a.spokeLabel, Boolean(a.referenceOnly), a.score);
           return (
-            <text key={`${a.key}-label`} x={x} y={y} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--cp-text-soft)">
-              {a.label}{a.referenceOnly ? " (참고)" : ""} {a.score !== null ? Math.round(a.score) : "—"}
+            <text key={`${a.key}-label`} x={x} y={y} textAnchor="middle" fontSize={fontSizePx} fontWeight="700" fill="var(--cp-text-soft)">
+              <tspan x={x}>{name}</tspan>
+              <tspan x={x} dy={valueLineDy}>{value}</tspan>
             </text>
           );
         })}
