@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-08-23T02:06:26Z",
+  "generated_at": "2026-08-23T02:26:29Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6802,
@@ -9,11 +9,11 @@
     "divergence_rows": 61555,
     "percent_scale_warnings": 198,
     "diagnosis_counts": {
-      "agreement": 9003,
+      "agreement": 9004,
       "scale_mismatch": 198,
       "sign_divergence": 3009,
       "stale": 38472,
-      "value_drift": 10873
+      "value_drift": 10872
     },
     "stale_rows": 38472,
     "scale_mismatch_rows": 198,
@@ -2013,47 +2013,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 37.0
-      }
-    },
-    {
-      "ticker": "BEG",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 199.220434,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -26.47942457546121
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 26.273
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 26.273
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 199.220434,
-      "fresh_spread_pct": 199.220434,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 63.0
       }
     },
     {
@@ -4129,6 +4088,43 @@
       "freshness": {
         "stockanalysis.quote": 54.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "FOPC",
+      "asset_type": "etf",
+      "field": "return_3m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 197.94098,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -0.4689532609289077
+        },
+        {
+          "source": "stockanalysis.detail.history",
+          "value": 0.47881209793982543
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 197.94098,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.detail.history"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 2,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.history": 49.0
       }
     }
   ],
@@ -12666,47 +12662,6 @@
       }
     },
     {
-      "ticker": "BEG",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 199.220434,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -26.47942457546121
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 26.273
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 26.273
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 199.220434,
-      "fresh_spread_pct": 199.220434,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 63.0
-      }
-    },
-    {
       "ticker": "PFFA",
       "asset_type": "etf",
       "field": "return_1m",
@@ -14260,6 +14215,47 @@
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 50.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "BEG",
+      "asset_type": "etf",
+      "field": "return_1m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 196.511094,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -25.356359828097926
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 26.273
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 26.273
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 196.511094,
+      "fresh_spread_pct": 196.511094,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 64.0
       }
     },
     {
