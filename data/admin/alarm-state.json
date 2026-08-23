@@ -1,9 +1,22 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-22T23:39:38.700Z",
+  "generated_at": "2026-08-23T02:03:19.647Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 5,
   "open_incidents": [
+    {
+      "workflow": "data-plane-serving-probe.yml",
+      "label": "Data Plane Serving Probe",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -294,7 +307,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 23
+      "data_freshness_age_hours_at_generation": 25
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -459,11 +472,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32605737559",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32605737559",
-    "observed_at": "2026-08-22T23:39:38.700Z",
+    "run_id": "32611795865",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32611795865",
+    "observed_at": "2026-08-23T02:03:19.647Z",
     "event": "schedule",
     "workflows": [
+      "data-plane-serving-probe.yml",
       "fetch-edgar-filings.yml",
       "fetch-oecd-cli.yml",
       "slickcharts-monthly.yml",
