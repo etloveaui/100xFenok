@@ -63,6 +63,7 @@
       "100xfenok-next/public/data/slickcharts",
       "100xfenok-next/public/data/yf/finance",
       "100xfenok-next/public/data/stockanalysis",
+      "100xfenok-next/public/data/yf/quarter_closes.json",
       "100xfenok-next/public/data/indices/README.md",
       "100xfenok-next/public/data/indices/schema.json",
       "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
@@ -134,6 +135,15 @@
         "required": true,
         "source": "data/stockanalysis",
         "trailing_slash": true
+      },
+      {
+        "delete": false,
+        "destination": "100xfenok-next/public/data/yf/quarter_closes.json",
+        "excludes": [],
+        "mode": "cp_file",
+        "required": true,
+        "source": "data/yf/quarter_closes.json",
+        "trailing_slash": false
       },
       {
         "delete": false,
@@ -2412,6 +2422,11 @@
           {
             "kind": "directory",
             "path": "100xfenok-next/public/data/stockanalysis",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/yf/quarter_closes.json",
             "required": false
           },
           {

@@ -130,6 +130,15 @@ export const UPDATE_MANIFEST_MATERIALIZATIONS = [
     trailing_slash: true,
   },
   {
+    source: "data/yf/quarter_closes.json",
+    destination: "100xfenok-next/public/data/yf/quarter_closes.json",
+    mode: "cp_file",
+    delete: false,
+    excludes: [],
+    required: true,
+    trailing_slash: false,
+  },
+  {
     source: "data/indices/README.md",
     destination: "100xfenok-next/public/data/indices/README.md",
     mode: "cp_file",

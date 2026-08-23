@@ -18,11 +18,12 @@ const helperCall = "node scripts/materialize-update-manifest-routes.mjs";
 // Independent oracle: never derive this map from the manifest generator. A
 // corrupt generator and regenerated artifact must fail here even if they drift
 // together. The map deliberately owns the exact source/destination pairing and
-// materialization semantics for all 44 routes.
+// materialization semantics for all 45 routes.
 const EXPECTED_ROUTES = [
   { source: "data/slickcharts", destination: "100xfenok-next/public/data/slickcharts", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/yf/finance", destination: "100xfenok-next/public/data/yf/finance", mode: "rsync_tree", delete: true, excludes: [] },
   { source: "data/stockanalysis", destination: "100xfenok-next/public/data/stockanalysis", mode: "rsync_tree", delete: true, excludes: ["etfs"] },
+  { source: "data/yf/quarter_closes.json", destination: "100xfenok-next/public/data/yf/quarter_closes.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/indices/README.md", destination: "100xfenok-next/public/data/indices/README.md", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/indices/schema.json", destination: "100xfenok-next/public/data/indices/schema.json", mode: "cp_file", delete: false, excludes: [] },
   { source: "data/indices/nasdaq-giw-sox-constituents.json", destination: "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json", mode: "cp_file", delete: false, excludes: [] },
@@ -77,8 +78,8 @@ function routeOracleFields(route) {
   };
 }
 
-assert.equal(EXPECTED_ROUTES.length, 44, "route oracle must contain exactly 44 routes");
-assert.equal(manifest.update_manifest.materializations.length, 44, "manifest must contain exactly 44 routes");
+assert.equal(EXPECTED_ROUTES.length, 45, "route oracle must contain exactly 45 routes");
+assert.equal(manifest.update_manifest.materializations.length, 45, "manifest must contain exactly 45 routes");
 assert.deepEqual(manifest.update_manifest.materializations.map(routeOracleFields), EXPECTED_ROUTES);
 for (const route of EXPECTED_ROUTES) {
   assert.ok(
