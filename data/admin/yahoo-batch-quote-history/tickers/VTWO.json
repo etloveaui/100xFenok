@@ -12,31 +12,44 @@
       "run_id": "31296241377",
       "schedule": "7 4 * * 0-5",
       "shard": "2/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 676,
+      "natural": true,
+      "observed_at": "2026-08-23T01:57:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32611566838",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T05:20:29Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VTWO.json",
-    "payload_sha256": "b61127d4f5ad7cd427925e1241eb60f89a431e4cab092515e554f8ef452adf8f",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-23T01:57:57Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/VTWO.json",
+    "payload_sha256": "ab58d1754363f1d2b096e435a91c4d5b14c513ceb08fc202884c612b548a7f10",
+    "quote_as_of": "2026-08-21T20:00:01Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1238,
+    "latency_ms": 676,
     "natural": true,
-    "observed_at": "2026-08-09T05:15:44Z",
+    "observed_at": "2026-08-23T01:57:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31296241377",
-    "schedule": "7 4 * * 0-5",
-    "shard": "2/72"
+    "run_id": "32611566838",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-09T05:20:29Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T05:15:44Z",
-    "payload_sha256": "4ba6f84f11ea9ae1c90eb15e712d4312740eff804ed88ee064f1f162f19ced57",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-23T01:57:37Z",
+    "payload_sha256": "195e4ed67f35df361738087c11e2153598649c11af4c92066daa9c40f2252355",
+    "quote_as_of": "2026-08-21T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "31296241377",
+    "run_id": "32611566838",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-21"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "VTWO",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-23T01:57:37Z"
 }

@@ -25,31 +25,44 @@
       "run_id": "31210066712",
       "schedule": "7 18 * * 0-5",
       "shard": "69/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 653,
+      "natural": true,
+      "observed_at": "2026-08-23T01:57:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32611566838",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T19:11:45Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/INCM.json",
-    "payload_sha256": "e2c5db441cb42b28e48d4498bb6118f8b2736fd945b1d7339655720595451fdd",
-    "quote_as_of": "2026-08-07T19:10:38Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-23T01:57:54Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/INCM.json",
+    "payload_sha256": "a70ce49ec583111078ac4250ce9813f490c245c3af2cd88d6d5809bdd9b6b5ae",
+    "quote_as_of": "2026-08-21T20:00:00Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 474,
+    "latency_ms": 653,
     "natural": true,
-    "observed_at": "2026-08-07T19:09:09Z",
+    "observed_at": "2026-08-23T01:57:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31210066712",
-    "schedule": "7 18 * * 0-5",
-    "shard": "69/72"
+    "run_id": "32611566838",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-07T19:11:45Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-07T19:09:09Z",
-    "payload_sha256": "5709f3ae70ff94c080f73b7cd772c7cd180153e12b7d79ac28b646efa7950092",
-    "quote_as_of": "2026-08-07T19:10:38Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-23T01:57:37Z",
+    "payload_sha256": "40be8b4bce23df0756fb289d86feccf29256a5da0f220b2eb894ab30c84619e3",
+    "quote_as_of": "2026-08-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31210066712",
+    "run_id": "32611566838",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-21"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "INCM",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-23T01:57:37Z"
 }

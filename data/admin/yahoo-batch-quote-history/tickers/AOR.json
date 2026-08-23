@@ -38,31 +38,44 @@
       "run_id": "31319162316",
       "schedule": "7 14 * * 0-5",
       "shard": "7/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 769,
+      "natural": true,
+      "observed_at": "2026-08-23T01:57:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32611566838",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T14:46:12Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AOR.json",
-    "payload_sha256": "738e2d1127c590c361d376a0aca5d5356646a0188eeb0dfd58f1b5872ed4356f",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-23T01:58:01Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/AOR.json",
+    "payload_sha256": "4821d3a992ba7310a248d43d82ae78fc0314fdb81688390fe78e201431051afd",
+    "quote_as_of": "2026-08-21T20:00:00Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 795,
+    "latency_ms": 769,
     "natural": true,
-    "observed_at": "2026-08-09T14:44:24Z",
+    "observed_at": "2026-08-23T01:57:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31319162316",
-    "schedule": "7 14 * * 0-5",
-    "shard": "7/72"
+    "run_id": "32611566838",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-09T14:46:12Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T14:44:24Z",
-    "payload_sha256": "31c7641e561fac673d0c3d080ea4a83cacf55cc75622da684abe883e095fce02",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-23T01:57:37Z",
+    "payload_sha256": "244613a015364d4d1a583211d7f5fc79e04444f3baa4f34a546abf68b9cbdf17",
+    "quote_as_of": "2026-08-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31319162316",
+    "run_id": "32611566838",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-21"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "AOR",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-23T01:57:37Z"
 }

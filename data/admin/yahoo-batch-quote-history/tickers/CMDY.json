@@ -38,31 +38,44 @@
       "run_id": "31324627429",
       "schedule": "7 16 * * 0-5",
       "shard": "8/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 735,
+      "natural": true,
+      "observed_at": "2026-08-23T01:57:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32611566838",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T16:49:51Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CMDY.json",
-    "payload_sha256": "21cee038dbaa15297c403c18ef893dd45cb263750e8a1a5d0201b0c67fee024e",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-23T01:58:23Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/CMDY.json",
+    "payload_sha256": "1c3f4e02c1c633b81b9ab243b46f4e539224cb709be549f79edda71df3b55e15",
+    "quote_as_of": "2026-08-21T19:59:51Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1113,
+    "latency_ms": 735,
     "natural": true,
-    "observed_at": "2026-08-09T16:47:26Z",
+    "observed_at": "2026-08-23T01:57:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31324627429",
-    "schedule": "7 16 * * 0-5",
-    "shard": "8/72"
+    "run_id": "32611566838",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-09T16:49:51Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T16:47:26Z",
-    "payload_sha256": "ce61ccc374624284cf5e6e67bc45d8acbf10c91f190ea32882a3dbc5d6342d9f",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-23T01:57:37Z",
+    "payload_sha256": "558f5f26a298ee156f0466cb0f45c5b879fdc5c212a820f7d7e9966d098729fc",
+    "quote_as_of": "2026-08-21T19:59:51Z",
     "run_attempt": 1,
-    "run_id": "31324627429",
+    "run_id": "32611566838",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-21"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "CMDY",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-23T01:57:37Z"
 }

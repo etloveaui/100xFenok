@@ -12,31 +12,44 @@
       "run_id": "31319162316",
       "schedule": "7 14 * * 0-5",
       "shard": "7/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 722,
+      "natural": true,
+      "observed_at": "2026-08-23T01:57:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32611566838",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T14:48:28Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SCYB.json",
-    "payload_sha256": "1faabc49caf70cd75a9e13e309230be9bc7ddb5be21cfd6e9ef7c4408ce84630",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-23T01:58:05Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/SCYB.json",
+    "payload_sha256": "2ac0477687ff7799fbe120bf6f505ba527dfab69c87d25d5c8c20a1dcdca4447",
+    "quote_as_of": "2026-08-21T20:00:00Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 794,
+    "latency_ms": 722,
     "natural": true,
-    "observed_at": "2026-08-09T14:44:24Z",
+    "observed_at": "2026-08-23T01:57:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31319162316",
-    "schedule": "7 14 * * 0-5",
-    "shard": "7/72"
+    "run_id": "32611566838",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-09T14:48:28Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T14:44:24Z",
-    "payload_sha256": "dee7ee1219f3912ee3cf682b80b65e034abb6e5c137bebd92848a3f9f45c5029",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-23T01:57:37Z",
+    "payload_sha256": "ce600ede8badab9c3b95d7d2d2449c29498038daa89a46951f7854fd4e530f63",
+    "quote_as_of": "2026-08-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31319162316",
+    "run_id": "32611566838",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-21"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "SCYB",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-23T01:57:37Z"
 }

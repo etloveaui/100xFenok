@@ -25,31 +25,44 @@
       "run_id": "31151738848",
       "schedule": "7 4 * * 0-5",
       "shard": "62/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 698,
+      "natural": true,
+      "observed_at": "2026-08-23T01:57:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32611566838",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T05:49:29Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AVIV.json",
-    "payload_sha256": "f293f852c1ee80e3b8f02a386a2ba6aedfb637a947a1c727d3b48371ac804e3b",
-    "quote_as_of": "2026-08-06T20:00:00Z",
-    "source_as_of": "2026-08-06"
+    "fetched_at": "2026-08-23T01:57:47Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/AVIV.json",
+    "payload_sha256": "48a9769a781406257749676cd4abf432b2a5f4dc211b8de9cebc7936cfea75f3",
+    "quote_as_of": "2026-08-21T20:00:00Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 603,
+    "latency_ms": 698,
     "natural": true,
-    "observed_at": "2026-08-07T05:49:05Z",
+    "observed_at": "2026-08-23T01:57:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31151738848",
-    "schedule": "7 4 * * 0-5",
-    "shard": "62/72"
+    "run_id": "32611566838",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-07T05:49:29Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T05:49:05Z",
-    "payload_sha256": "a534e7fcf55a6cdd3eff2115894132298a04747c4013c464b31ea0f7462cbe56",
-    "quote_as_of": "2026-08-06T20:00:00Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-23T01:57:37Z",
+    "payload_sha256": "a49dd064b7f9238c9844f9eeeaad5913a3af5184c3a6f412b3c0ca9f2c7527d7",
+    "quote_as_of": "2026-08-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31151738848",
+    "run_id": "32611566838",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-08-21"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "AVIV",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-23T01:57:37Z"
 }

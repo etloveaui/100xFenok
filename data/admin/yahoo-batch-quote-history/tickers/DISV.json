@@ -38,31 +38,44 @@
       "run_id": "31200268852",
       "schedule": "7 16 * * 0-5",
       "shard": "68/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 637,
+      "natural": true,
+      "observed_at": "2026-08-23T01:57:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32611566838",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T17:03:53Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DISV.json",
-    "payload_sha256": "8b3f461a0aa799e8cf00ced17146b2d8991eb53e4618d430db566f3dfffadbaa",
-    "quote_as_of": "2026-08-07T17:03:27Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-23T01:57:52Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/DISV.json",
+    "payload_sha256": "1d28fdbdbc6fb2f45501bc5399b93bea6579e40f6cbe53a0da67d354045a7d60",
+    "quote_as_of": "2026-08-21T19:59:53Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 633,
+    "latency_ms": 637,
     "natural": true,
-    "observed_at": "2026-08-07T17:02:12Z",
+    "observed_at": "2026-08-23T01:57:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31200268852",
-    "schedule": "7 16 * * 0-5",
-    "shard": "68/72"
+    "run_id": "32611566838",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-07T17:03:53Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-07T17:02:12Z",
-    "payload_sha256": "d254064e8b6bec2266d533f5afadd5ce7676859ef4795febcd7921575012fdf1",
-    "quote_as_of": "2026-08-07T17:03:27Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-23T01:57:37Z",
+    "payload_sha256": "953ff5aa3e71c925d4e8f204114f463a07244317ab8a9992c7c2353a4c469b87",
+    "quote_as_of": "2026-08-21T19:59:53Z",
     "run_attempt": 1,
-    "run_id": "31200268852",
+    "run_id": "32611566838",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-21"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "DISV",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-23T01:57:37Z"
 }

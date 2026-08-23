@@ -38,31 +38,44 @@
       "run_id": "31401948552",
       "schedule": "7 14 * * 0-5",
       "shard": "19/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 646,
+      "natural": true,
+      "observed_at": "2026-08-23T01:57:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32611566838",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T15:11:55Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AJUL.json",
-    "payload_sha256": "1c148263c6fbb4c5af433ed80b73ddeec394e0f284ccdf62d1dac01e4a8726f0",
-    "quote_as_of": "2026-08-10T13:59:19Z",
-    "source_as_of": "2026-08-10"
+    "fetched_at": "2026-08-23T01:58:34Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/AJUL.json",
+    "payload_sha256": "c0eecc0c613df3a19396da7953fe094c0518905131f846c79d3b006a198119aa",
+    "quote_as_of": "2026-08-21T19:39:59Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 427,
+    "latency_ms": 646,
     "natural": true,
-    "observed_at": "2026-08-10T15:10:15Z",
+    "observed_at": "2026-08-23T01:57:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31401948552",
-    "schedule": "7 14 * * 0-5",
-    "shard": "19/72"
+    "run_id": "32611566838",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-10T15:11:55Z",
@@ -75,17 +88,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-10T15:10:15Z",
-    "payload_sha256": "2d05fa5c8571a846dbc69f9e8069442e128c30b234962ebefe841f72a4ec9726",
-    "quote_as_of": "2026-08-10T13:59:19Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-23T01:57:37Z",
+    "payload_sha256": "75ffa47dd40edcf28470c5d9fd957af53a4b9f728b08b317f05284d39d333f6f",
+    "quote_as_of": "2026-08-21T19:39:59Z",
     "run_attempt": 1,
-    "run_id": "31401948552",
+    "run_id": "32611566838",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-21"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -98,5 +111,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "AJUL",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-23T01:57:37Z"
 }

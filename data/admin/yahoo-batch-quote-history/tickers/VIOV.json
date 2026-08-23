@@ -12,31 +12,44 @@
       "run_id": "31143656628",
       "schedule": "7 0 * * 0-5",
       "shard": "60/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 871,
+      "natural": true,
+      "observed_at": "2026-08-23T01:57:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32611566838",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T03:17:43Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VIOV.json",
-    "payload_sha256": "ce6fec83c3da9d5695184a316c953ae82381cfd0fd0dc4922a91b3c63a093607",
-    "quote_as_of": "2026-08-06T19:59:32Z",
-    "source_as_of": "2026-08-06"
+    "fetched_at": "2026-08-23T01:57:39Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/VIOV.json",
+    "payload_sha256": "574edb96c598fc65955b5d4d58ac351122fa55b85459eafc9ca21982403784c1",
+    "quote_as_of": "2026-08-21T20:00:00Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 692,
+    "latency_ms": 871,
     "natural": true,
-    "observed_at": "2026-08-07T03:14:39Z",
+    "observed_at": "2026-08-23T01:57:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31143656628",
+    "run_id": "32611566838",
     "schedule": "7 0 * * 0-5",
-    "shard": "60/72"
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-07T03:17:43Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T03:14:39Z",
-    "payload_sha256": "9bd03fae1ae5e7b77f7181a252c74d902e407898317bb324f915faea49e23099",
-    "quote_as_of": "2026-08-06T19:59:32Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-23T01:57:37Z",
+    "payload_sha256": "9d0e629521c6e698755d338c603b6617f74cbfc3290aa670ef198eeac0b69305",
+    "quote_as_of": "2026-08-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31143656628",
+    "run_id": "32611566838",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-08-21"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "VIOV",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-23T01:57:37Z"
 }

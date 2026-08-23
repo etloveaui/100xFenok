@@ -12,31 +12,44 @@
       "run_id": "31359333130",
       "schedule": "7 4 * * 0-5",
       "shard": "14/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 733,
+      "natural": true,
+      "observed_at": "2026-08-23T01:57:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32611566838",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-10T05:45:47Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SPGM.json",
-    "payload_sha256": "21fc83cd2a2e61ef7bc4a270250b9b2510f54c6e93ca457056a50614e3b6a91f",
-    "quote_as_of": "2026-08-07T19:58:57Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-23T01:58:33Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/SPGM.json",
+    "payload_sha256": "a4df90cb316ac1697b36863937e242c758cf07ba7292f361c499f4f3cefe259e",
+    "quote_as_of": "2026-08-21T19:59:53Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 717,
+    "latency_ms": 733,
     "natural": true,
-    "observed_at": "2026-08-10T05:42:10Z",
+    "observed_at": "2026-08-23T01:57:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31359333130",
-    "schedule": "7 4 * * 0-5",
-    "shard": "14/72"
+    "run_id": "32611566838",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-10T05:45:47Z",
@@ -49,17 +62,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-10T05:42:10Z",
-    "payload_sha256": "e86931d79f8597eab54189d0387111699d6caa9963a3a0bf5937520d4531244c",
-    "quote_as_of": "2026-08-07T19:58:57Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-23T01:57:37Z",
+    "payload_sha256": "9c03b5b59f1a4e5831657cd9ae7c2c11e049960b00b8f8cc46f5c5535ebbc892",
+    "quote_as_of": "2026-08-21T19:59:53Z",
     "run_attempt": 1,
-    "run_id": "31359333130",
+    "run_id": "32611566838",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-21"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -72,5 +85,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "SPGM",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-08-23T01:57:37Z"
 }
