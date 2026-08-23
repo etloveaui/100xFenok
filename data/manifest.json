@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-08-22",
+  "last_updated": "2026-08-23",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -34,12 +34,12 @@
     },
     "global-scouter": {
       "version": "2.4.0",
-      "updated": "2026-08-14",
+      "updated": "2026-08-21",
       "update_frequency": "on-demand",
       "source": "Global Scouter Tool",
       "file_count": 1084,
       "schema": true,
-      "description": "Stock screening (1,066), ETFs (22), indicators (1,072 records) from the owner's weekly Global Scouter export"
+      "description": "Stock screening (1,066), ETFs (22), indicators (1,073 records) from the owner's weekly Global Scouter export"
     },
     "indices": {
       "version": "2.0.0",
@@ -206,6 +206,11 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-08-23",
+      "folder": "global-scouter",
+      "change": "Weekly refresh from the 2026-08-21 export: 1,066 stocks (0 net, same ticker set), 1,073 indicators (+1), 22 ETFs, per_bands 98.2% (1,047); stocks_analyzer, per_bands_index, slick_index and revision_movers rebuilt."
+    },
     {
       "date": "2026-08-19",
       "folder": "benchmarks",

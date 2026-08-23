@@ -31,7 +31,7 @@ global-scouter/
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (22 items)
 ├── indicators/              # v2.1.0
-│   └── economic.json        # Economic indicators (1,072 records)
+│   └── economic.json        # Economic indicators (1,073 records)
 ├── raw/                     # v2.3.0
     ├── manifest.json        # Raw layer file catalog
     ├── companies_a_company.json
@@ -193,6 +193,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.4.0 | 2026-08-23 | Weekly data refresh (2026-08-21 source): 1,066 stocks (0 net, same ticker set), 1,073 indicators (+1), 22 ETFs, per_bands 98.2% (1,047), 9 raw files; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
 | 2.4.0 | 2026-08-16 | Weekly data refresh (2026-08-14 source): 1,066 stocks (0 net, same ticker set), 1,072 indicators (+1), 22 ETFs, per_bands 98.2% (1,047), 9 raw files; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
 | 2.4.0 | 2026-08-09 | Weekly data refresh (2026-08-07 source): 1,066 stocks (-1), 1,071 indicators (+1), 22 ETFs, per_bands 98.0% (1,045), 9 raw files; removed EA because it is absent from the new source index; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
 | 2.4.0 | 2026-08-02 | Weekly data refresh (2026-07-31 source): 1,067 stocks (+2), 1,070 indicators (+1), 22 ETFs, per_bands 98.0% (1,046), 9 raw files; added Kioxia Holdings (285A.T) and CXMT A (688825.SS), zero symbols dropped; both new names carry provider-truth null current price (Tokyo/Shanghai) and CXMT carries honest null forward data with a `market_cap_not_comparable` quality annotation; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
@@ -228,4 +229,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-08-16*
+*Last Updated: 2026-08-23*
