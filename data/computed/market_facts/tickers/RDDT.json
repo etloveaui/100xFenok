@@ -2,7 +2,7 @@
   "schema_version": "market-facts/v1",
   "ticker": "RDDT",
   "asset_type": "stock",
-  "generated_at": "2026-08-22T00:18:08Z",
+  "generated_at": "2026-08-23T09:31:12Z",
   "source_as_of": "2026-08-21",
   "source_as_of_scope": "selected_price_fact",
   "source_as_of_reason": null,
@@ -36,9 +36,16 @@
           "as_of": "2026-08-21",
           "fetched_at": "2026-08-21T23:59:48Z",
           "confidence": "observed"
+        },
+        {
+          "value": 153.29,
+          "source": "slickcharts",
+          "as_of": "2026-08-23",
+          "fetched_at": null,
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "previous_close": {
       "value": 150.31,
@@ -140,9 +147,16 @@
           "as_of": "2026-08-21",
           "fetched_at": "2026-08-21T23:59:48Z",
           "confidence": "observed"
+        },
+        {
+          "value": 29490000000.0,
+          "source": "slickcharts",
+          "as_of": "2026-08-23",
+          "fetched_at": null,
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "trailing_pe": {
       "value": 35.648834,
@@ -161,9 +175,16 @@
           "as_of": "2026-08-21",
           "fetched_at": "2026-08-21T23:59:48Z",
           "confidence": "observed"
+        },
+        {
+          "value": 35.64,
+          "source": "slickcharts",
+          "as_of": "2026-08-23",
+          "fetched_at": null,
+          "confidence": "observed"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "forward_pe": {
       "value": 15.823499,
@@ -184,6 +205,38 @@
           "as_of": "2026-08-21",
           "fetched_at": "2026-08-21T23:59:48Z",
           "confidence": "observed"
+        },
+        {
+          "value": 21.72,
+          "source": "slickcharts",
+          "as_of": "2026-08-23",
+          "fetched_at": null,
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "dividend_yield": {
+      "value": 0.0,
+      "source": "slickcharts",
+      "as_of": "2026-08-23",
+      "fetched_at": null,
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 0.0,
+          "source": "slickcharts",
+          "as_of": "2026-08-23",
+          "fetched_at": null,
+          "confidence": "observed",
+          "unit": "percent_points"
         }
       ],
       "candidate_count": 1
@@ -326,14 +379,14 @@
     "stockanalysis": false,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": false,
-    "slickcharts": false
+    "slickcharts": true
   },
   "source_files": {
     "yf": "yf/finance/RDDT.json",
     "stockanalysis": null,
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": null,
-    "slickcharts": null
+    "slickcharts": "slickcharts/stocks/RDDT.json"
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
