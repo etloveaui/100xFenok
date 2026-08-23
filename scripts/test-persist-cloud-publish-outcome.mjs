@@ -271,6 +271,12 @@ function jobBlockAt(text, index) {
     assert.match(persistJob, /group: fenok-data-writer-refs\/heads\/main/);
     assert.match(workflowText, /node-version: '22'/g);
     assert.match(workflowText, /Start from latest main/);
+    assert.match(publishJob, /Capture exact published checkout[\s\S]*id: source_identity[\s\S]*git rev-parse HEAD/);
+    assert.match(
+      publishJob,
+      /PUBLISH_BINDING_GIT_COMMIT: \$\{\{ steps\.source_identity\.outputs\.git_commit \}\}/,
+      "publisher must bind the generation to the checkout it actually reads",
+    );
     assert.match(workflowText, /node scripts\/publish-cloud-data-generation\.mjs --family=global-scouter --json/);
     assert.doesNotMatch(workflowText.split("\n").filter((line) => /^\s*(run:|- run:)/.test(line)).join("\n"), /--tolerate-gate-block/);
     assert.match(workflowText, /Upload global-scouter outcome shard\n\s*if: \$\{\{ always\(\) \}\}/);
@@ -278,6 +284,21 @@ function jobBlockAt(text, index) {
     assert.match(workflowText, /Download global-scouter outcome shard/);
     assert.match(workflowText, /if: \$\{\{ always\(\) && needs\.publish\.result != 'cancelled' \}\}/);
     assert.match(workflowText, /Persist global-scouter publish outcome\n\s*if: \$\{\{ always\(\) \}\}/);
+    assert.match(persistJob, /Confirm published checkout from current origin[\s\S]*repos\/\$GITHUB_REPOSITORY\/compare\/\$BINDING_GIT_COMMIT\.\.\.main/);
+    assert.match(persistJob, /--binding-git-commit="\$BINDING_GIT_COMMIT"/);
+    assert.match(persistJob, /--binding-origin-readback="\$BINDING_ORIGIN_READBACK"/);
+    assert.match(
+      persistJob,
+      /Enforce confirmed Global Scouter origin binding\n\s*if: \$\{\{ always\(\) \}\}/,
+      "unconfirmed readback must fail only after the outcome persistence attempt",
+    );
+    const readbackIndex = persistJob.indexOf("- name: Confirm published checkout from current origin");
+    const persistenceIndex = persistJob.indexOf("- name: Persist global-scouter publish outcome");
+    const enforcementIndex = persistJob.indexOf("- name: Enforce confirmed Global Scouter origin binding");
+    assert.ok(
+      readbackIndex >= 0 && readbackIndex < persistenceIndex && persistenceIndex < enforcementIndex,
+      "Global Scouter must measure readback, persist its verdict, then enforce it",
+    );
   }
 
   const slickchartsHistory = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/slickcharts-history.yml"), "utf8");
