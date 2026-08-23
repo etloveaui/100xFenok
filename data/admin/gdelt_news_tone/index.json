@@ -1,14 +1,16 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "gdelt_news_tone",
-  "updated_at": "2026-08-22T14:57:04.361Z",
-  "retry_set": [],
+  "updated_at": "2026-08-23T14:58:52.473Z",
+  "retry_set": [
+    "news_tone_proxy"
+  ],
   "items": {
     "news_tone_proxy": {
       "key": "news_tone_proxy",
-      "resolution_state": "fresh_primary",
-      "retry": false,
-      "updated_at": "2026-08-22T14:57:04.361Z",
+      "resolution_state": "lkg_primary",
+      "retry": true,
+      "updated_at": "2026-08-23T14:58:52.473Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
@@ -25,20 +27,21 @@
         "reason": "rate_limited"
       },
       "current": {
-        "path": "data/computed/fenok_news_tone_proxy.json",
+        "path": "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
         "payload_sha256": "81dace8f4bf3ae9a8e0f13cb35f15236a59c4bed1917ebcdbe632c73350d4db2",
         "source_as_of": "2026-08-22T14:47:00.000Z"
       },
       "lkg": {
         "path": "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
-        "payload_sha256": "04c000083e3b08acd89efbe0f1efe3779623b5272524416770a6fc5a2997b0c3",
-        "source_as_of": "2026-08-18T15:02:00.000Z"
+        "payload_sha256": "81dace8f4bf3ae9a8e0f13cb35f15236a59c4bed1917ebcdbe632c73350d4db2",
+        "source_as_of": "2026-08-22T14:47:00.000Z"
       },
-      "recovered_from_run_id": "32267985593",
-      "recovered_at": "2026-08-20T15:15:33.891Z",
-      "recovery_run_id": "32384983010",
-      "recovery_run_attempt": 1,
-      "recovery_event_name": "schedule"
+      "latest_failure": {
+        "run_id": "32647071216",
+        "run_attempt": 1,
+        "observed_at": "2026-08-23T14:58:52.473Z",
+        "reason": "schema_drift"
+      }
     }
   }
 }
