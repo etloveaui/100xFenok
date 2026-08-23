@@ -406,6 +406,46 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         )
         self.store.commit_prepared("etf_detail", transaction_id)
 
+    def test_a_schema_failure_names_the_entity_it_failed_on(self) -> None:
+        """The 2026-08-19 incident must not be able to recur unattributable.
+
+        Run 32199589521 killed the ETF publishing lane with the bare string
+        "resolver observation provider contract mismatch". No entity appeared
+        anywhere near the traceback, three cycles ran before anyone looked, and
+        the offending observation was gone by then. A peer audit counted 211
+        fixed-string raises across data_supply_state and data_supply_resolver,
+        so editing messages one by one is the wrong repair; the entity is
+        attached once, here, at the only call site on this path that knows it.
+        """
+
+        class ExplodingResolver:
+            def __init__(self, *args, **kwargs) -> None:
+                pass
+
+            def resolve_etf_detail_with_outcome(self, **kwargs):
+                raise SchemaError("resolver observation provider contract mismatch")
+
+        with mock.patch.object(
+            resolve_etf_detail_candidates, "DataSupplyResolver", ExplodingResolver
+        ), mock.patch.object(
+            resolve_etf_detail_candidates,
+            "_canonical_latest_observations",
+            lambda store, rows, entity: [{"placeholder": True}],
+        ):
+            with self.assertRaises(SchemaError) as caught:
+                resolve_etf_detail_candidates.resolve_with_single_retry(
+                    self.store,
+                    entity="SBIL",
+                    decided_at="2026-08-19T00:18:42Z",
+                    latest_rows={},
+                )
+
+        message = str(caught.exception)
+        self.assertIn("resolver observation provider contract mismatch", message)
+        self.assertIn("entity=SBIL", message)
+        self.assertIn("2026-08-19T00:18:42Z", message)
+        self.assertIsInstance(caught.exception.__cause__, SchemaError)
+
     def test_same_provider_refresh_is_one_predicate_not_two(self) -> None:
         """The producer and the guard must not disagree about the same rule.
 

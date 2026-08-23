@@ -227,6 +227,19 @@ def resolve_with_single_retry(
         except ConcurrencyError:
             if attempt == 1:
                 raise
+        except SchemaError as exc:
+            # The state and resolver modules raise fixed strings: a peer audit
+            # counted 211 such sites across the two files, and none names the
+            # entity it failed on. On 2026-08-19 that cost the whole ETF
+            # publishing lane - run 32199589521 died on "resolver observation
+            # provider contract mismatch" with no entity anywhere near the
+            # traceback, three cycles have run since, and the offending
+            # observation is gone. The incident can never be attributed.
+            #
+            # Editing 211 messages is the wrong repair. This is the one place on
+            # the path that already knows the entity, so attaching it here makes
+            # every one of them attributable without touching any of them.
+            raise SchemaError(f"{exc} [entity={entity} decided_at={decided_at}]") from exc
     raise AssertionError("unreachable")
 
 
