@@ -243,3 +243,24 @@ export function formatCompactMoney(value: unknown, currency: unknown = "USD"): s
     return `${symbol}${formatCompactNumber(v)}`;
   }
 }
+
+/**
+ * An elapsed span, written at the granularity a reader actually uses.
+ *
+ * The market-valuation strip rendered `currentStaleDays` raw, so a series whose
+ * last computable date is genuinely fifteen years old printed "마지막 계산 가능일
+ * 5628일 전". The number was correct; the unit was not, and a four-digit day
+ * count is the tell that nobody chose it. Capping the value was rejected - that
+ * would hide real staleness, which this project treats as fabrication - so the
+ * span is reported at the scale it belongs to and nothing is lost.
+ */
+export function formatElapsedKo(days: unknown, empty = "—"): string {
+  const value = finiteNumber(days);
+  if (value === null || value < 0) return empty;
+  const whole = Math.round(value);
+  if (whole < 60) return `${whole.toLocaleString("ko-KR")}일`;
+  // Floor rather than round at each boundary, so a span never reads as a unit it
+  // has not reached: 364 days is 11개월, not the 12개월 a reader hears as a year.
+  if (whole < 365) return `${Math.floor(whole / 30.44)}개월`;
+  return `${Math.max(1, Math.floor(whole / 365.25)).toLocaleString("ko-KR")}년`;
+}

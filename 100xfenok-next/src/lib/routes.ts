@@ -109,45 +109,6 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
   ROUTES.stockAnalyzerNative,
 ] as const satisfies readonly ProductRoutePath[];
 
-export const PRIMARY_PRODUCT_ROUTES = [
-  ROUTES.home,
-  ROUTES.explore,
-  ROUTES.workbench,
-  ROUTES.market,
-  ROUTES.regime,
-  ROUTES.sectors,
-  ROUTES.etfs,
-  ROUTES.screener,
-  ROUTES.superinvestors,
-  ROUTES.portfolio,
-  ROUTES.macroChart,
-] as const satisfies readonly ProductRoutePath[];
-
-export const DOCK_PRODUCT_ROUTES = [
-  ROUTES.home,
-  ROUTES.workbench,
-  ROUTES.market,
-  ROUTES.alphaScout,
-  ROUTES.sectors,
-  ROUTES.etfs,
-  "/etfs/",
-  ROUTES.explore,
-  ROUTES.screener,
-  ROUTES.superinvestors,
-  ROUTES.portfolio,
-  ROUTES.posts,
-  "/posts/",
-  ROUTES.macroChart,
-  ROUTES.multichart,
-  ROUTES.radar,
-  ROUTES.stockAnalyzer,
-  ROUTES.stockAnalyzerNative,
-  ROUTES.dailyWrap,
-  ROUTES.ib,
-  ROUTES.infiniteBuying,
-  ROUTES.vr,
-] as const satisfies readonly ProductRoutePath[];
-
 export const SITEMAP_PRODUCT_ROUTES = [
   { path: ROUTES.home, changeFrequency: "daily", priority: 1 },
   { path: ROUTES.explore, changeFrequency: "daily", priority: 0.9 },
@@ -182,14 +143,6 @@ export function isRouteOrChild(pathname: string, route: ProductRoutePath): boole
   const normalized = normalizePathname(pathname);
   const target = normalizePathname(route);
   return normalized === target || normalized.startsWith(`${target}/`);
-}
-
-export function isDockRoutePath(pathname: string): boolean {
-  const normalized = normalizePathname(pathname);
-  return DOCK_PRODUCT_ROUTES.some((route) => {
-    if (route.endsWith("/")) return normalized.startsWith(route.slice(0, -1) + "/");
-    return normalized === route;
-  });
 }
 
 export function withQuery(

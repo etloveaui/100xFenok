@@ -2374,7 +2374,12 @@ export default function ScreenerClient({
         </section>
       )}
 
-      {canvasPlusPreview ? (
+      {/* A verdict is a statement ABOUT a result set. With no rows there is
+          nothing to state, and the old guard - canvasPlusPreview alone - let the
+          sentence render as "현재 0개 중 가격 확인 0개 (0%)" with the dominant-signal
+          slot falling back to a raw bucket value. The empty state below already
+          says the honest thing. */}
+      {canvasPlusPreview && sorted.length > 0 ? (
         <section className="cpw5-verdict" data-canvas-plus-screener-verdict="true">
           <p className="cpw5-verdict__sentence">
             현재 <strong>{sorted.length.toLocaleString("ko-KR")}</strong>개 중 가격 확인{" "}

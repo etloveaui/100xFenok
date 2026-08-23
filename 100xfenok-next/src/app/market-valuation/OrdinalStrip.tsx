@@ -17,6 +17,7 @@
 // of its own median" is the one claim every row can make honestly.
 
 import type { BenchmarkOrdinalGroup, BenchmarkOrdinalRow, BenchmarkWindowId } from "@/lib/market-valuation/benchmarkOrdinals";
+import { formatElapsedKo } from "@/lib/format";
 
 const VIEW_W = 720;
 const NAME_W = 150;
@@ -140,7 +141,7 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
     .map((r) => ({
       name: displayName(r),
       reason: r.pe.currentStaleDays !== null && r.pe.currentStaleDays > 45
-        ? `선행 이익 추정치로 배수를 계산할 수 없습니다 (마지막 계산 가능일 ${r.pe.currentStaleDays}일 전)`
+        ? `선행 이익 추정치로 배수를 계산할 수 없습니다 (마지막 계산 가능일 ${formatElapsedKo(r.pe.currentStaleDays)} 전)`
         : "배수를 계산할 수 없습니다",
     }));
 
