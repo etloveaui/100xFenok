@@ -21,9 +21,17 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const FAMILY_NAME = "global-scouter";
 const FAMILY = FAMILIES[FAMILY_NAME];
 const MANIFEST_PREFIX = "public/data/global-scouter/";
-const MEASURED_ASSETS = 1_082;
-const MEASURED_BYTES = 87_268_011;
-const MEASURED_CLASS_B_READS = (MEASURED_ASSETS + 1) * 3 + 1;
+// DERIVED, not pinned. These were literals - 1,082 assets and 87,268,011 bytes
+// from the 2026-08-14 export - and global-scouter is a WEEKLY source, so the
+// byte total moves every refresh and the literal went red the moment the
+// 2026-08-21 export landed. A contract pinned to this week's number is a
+// contract that fails on next week's healthy data, which is the same defect
+// shape this repo has already recorded for an error message and a symbol list.
+//
+// The independent walk below is what the assertions should have been comparing
+// against all along: it enumerates and stats the canonical scope itself, so the
+// publisher is still checked against something computed separately from it.
+const MEASURED_ASSETS_FALLBACK = 1_082;
 const DERIVED_CORE_FILES = [
   "core/per_bands_index.json",
   "core/revision_movers.json",
@@ -53,9 +61,22 @@ function independentScopeFiles(scope) {
 }
 
 const scope = buildCandidateScope({ repoRoot: REPO_ROOT, candidateId: "global_scouter" });
-assert.deepEqual(scope.manifest.totals, { file_count: MEASURED_ASSETS, bytes: MEASURED_BYTES });
 const expectedFiles = independentScopeFiles(scope);
-assert.equal(expectedFiles.length, MEASURED_ASSETS);
+const MEASURED_ASSETS = expectedFiles.length;
+const MEASURED_BYTES = expectedFiles.reduce(
+  (total, file) => total + fs.statSync(path.join(REPO_ROOT, "data/global-scouter", file)).size,
+  0,
+);
+const MEASURED_CLASS_B_READS = (MEASURED_ASSETS + 1) * 3 + 1;
+// The count is structural - it is the scope minus the four derived core files -
+// so a change here means the family boundary moved and deserves a look, unlike
+// the byte total which moves every week by design.
+assert.equal(
+  MEASURED_ASSETS,
+  MEASURED_ASSETS_FALLBACK,
+  `global-scouter scope moved from ${MEASURED_ASSETS_FALLBACK} to ${MEASURED_ASSETS} assets; confirm the family boundary changed on purpose before updating this`,
+);
+assert.deepEqual(scope.manifest.totals, { file_count: MEASURED_ASSETS, bytes: MEASURED_BYTES });
 assert.equal(new Set(expectedFiles).size, expectedFiles.length);
 assert.deepEqual(scope.manifest.excluded.map((row) => row.path), DERIVED_CORE_FILES.map((file) => `data/global-scouter/${file}`));
 
@@ -67,8 +88,13 @@ const built = await buildFamilyManifest({
 });
 assert.equal(built.summary.asset_count, MEASURED_ASSETS);
 assert.equal(built.summary.total_bytes, MEASURED_BYTES);
-assert.equal(built.sourceAsOf.value, "2026-08-14");
+// The clock is read from the family index rather than pinned, for the same
+// reason as the byte total: a weekly source makes last week's date a guaranteed
+// future failure. What is asserted is that it HAS one and that it came from the
+// family index, which is the behaviour the contract exists to protect.
+assert.match(built.sourceAsOf.value, /^\d{4}-\d{2}-\d{2}$/);
 assert.equal(built.sourceAsOf.origin, "family-index");
+const EXPECTED_SOURCE_AS_OF = built.sourceAsOf.value;
 assert.deepEqual(
   built.manifest.assets.map((asset) => asset.path.slice(MANIFEST_PREFIX.length)),
   expectedFiles,
@@ -79,7 +105,7 @@ assert.equal(
   false,
   "derived core outputs are not part of the caller publication",
 );
-assert.ok(built.manifest.assets.every((asset) => asset.source_as_of === "2026-08-14"));
+assert.ok(built.manifest.assets.every((asset) => asset.source_as_of === EXPECTED_SOURCE_AS_OF));
 
 const validator = FAMILY.validate_public_payload;
 let accepted = 0;
@@ -105,7 +131,8 @@ assert.equal(enrollment.exact.some(([, family]) => family === FAMILY_NAME), fals
 assert.equal(enrollment.prefixes.some(({ family }) => family === FAMILY_NAME), false);
 assert.equal(FAMILY.reader_enrollment, false);
 assert.ok(FAMILY.plan.class_a >= MEASURED_ASSETS * 2, "class-A plan must be >=2x measured assets");
-assert.equal(MEASURED_CLASS_B_READS, 3_250, "all-changed read model is presence + readback + parity + resume");
+// The read model itself is the invariant, not the number it currently produces.
+assert.equal(MEASURED_CLASS_B_READS, (MEASURED_ASSETS + 1) * 3 + 1, "all-changed read model is presence + readback + parity + resume");
 assert.ok(FAMILY.plan.class_b >= MEASURED_CLASS_B_READS * 2, "class-B plan must be >=2x measured reads");
 assert.ok(FAMILY.plan.bytes >= MEASURED_BYTES * 2, "byte plan must be >=2x measured bytes");
 
