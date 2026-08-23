@@ -12,6 +12,7 @@ from data_supply_state import (
     DataSupplyStateStore,
     SchemaError,
     build_selection,
+    is_same_provider_refresh,
     restate_selection,
     validate_observation,
 )
@@ -319,12 +320,9 @@ class DataSupplyResolver:
         next_current[entity] = selected
         next_lkg = dict(active["lkg"])
         changed = prior != selected
-        same_provider_refresh = (
-            prior is not None
-            and selected["provider"] == prior["provider"]
-            and transition in {"primary_refresh", "fallback_refresh"}
-        )
-        if changed and prior is not None and not same_provider_refresh:
+        if changed and prior is not None and not is_same_provider_refresh(
+            prior, selected, transition
+        ):
             next_lkg[entity] = self.store.preserve_current_as_provider_lkg(
                 domain,
                 entity,

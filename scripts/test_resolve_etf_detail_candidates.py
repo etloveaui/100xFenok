@@ -18,6 +18,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from data_supply_state import (
     DataSupplyStateStore,
+    build_selection,
     IntegrityError,
     SchemaError,
     canonical_json_bytes,
@@ -353,6 +354,111 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         self.assertEqual(
             migrated["source_observation_event_id"], historical["event_id"]
         )
+
+    def seed_legacy_migration_lkg_fallback(self, entity: str, source_as_of: str) -> None:
+        """Reproduce what the legacy migration leaves behind.
+
+        The migration seeds `current` with a `lkg_fallback` selection and no
+        LKG entry at all, because an initial selection may not inject one.
+        Measured 2026-08-23 on the live etf_detail generation: 351 of 687
+        entities sit in exactly this shape.
+        """
+
+        row, payload = observation(
+            provider="yahoo_finance",
+            entity=entity,
+            source_as_of=source_as_of,
+            observed_at=source_as_of,
+            valid=True,
+        )
+        self.store.store_provider_object(observation=row, payload=payload)
+        self.store.record_observation(row)
+        lkg_ref = self.store.store_provider_lkg(
+            provider="yahoo_finance",
+            domain="etf_detail",
+            entity=entity,
+            payload=payload,
+            meaningful_transition=True,
+            expected_latest_sha256=None,
+        )
+        selected = build_selection(
+            row,
+            selected_at=source_as_of,
+            resolution_state="lkg_fallback",
+            reason_code="legacy_migration_fallback_lkg",
+            fallback_depth=2,
+            payload_ref_kind="provider_lkg",
+            payload_ref_path=lkg_ref["path"],
+        )
+        active = self.store.read_active_domain("etf_detail")
+        transaction_id = self.store.prepare_transition(
+            domain="etf_detail",
+            entity=entity,
+            current={entity: selected},
+            lkg={},
+            recovery={entity: {"consecutive_green": 0, "last_transition": "legacy_migration"}},
+            candidate_observations=[row],
+            expected_active_transaction_id=active["transaction_id"],
+            transition="legacy_migration",
+            reason_code="legacy_migration_fallback_lkg",
+            recovery_green_count=0,
+            decided_at=source_as_of,
+        )
+        self.store.commit_prepared("etf_detail", transaction_id)
+
+    def test_same_provider_refresh_is_one_predicate_not_two(self) -> None:
+        """The producer and the guard must not disagree about the same rule.
+
+        data_supply_resolver decided whether to preserve an LKG using three
+        conditions; data_supply_state validated the same decision using five,
+        adding two resolution_state conditions the producer never had. Any
+        state in that gap is unpublishable by construction.
+        """
+
+        import data_supply_resolver
+        import data_supply_state
+
+        self.assertIs(
+            data_supply_resolver.is_same_provider_refresh,
+            data_supply_state.is_same_provider_refresh,
+            "the resolver must call the state module's predicate, not its own copy",
+        )
+        fresh = {"provider": "yahoo_finance", "resolution_state": "fresh_fallback"}
+        legacy = {"provider": "yahoo_finance", "resolution_state": "lkg_fallback"}
+        self.assertTrue(
+            data_supply_state.is_same_provider_refresh(fresh, fresh, "fallback_refresh")
+        )
+        self.assertFalse(
+            data_supply_state.is_same_provider_refresh(legacy, fresh, "fallback_refresh"),
+            "a non-fresh prior is not a same-provider refresh, so an LKG is required",
+        )
+
+    def test_legacy_migration_lkg_fallback_can_still_take_a_fallback_refresh(self) -> None:
+        """The 351-entity live population must be able to publish.
+
+        Seeded at lkg_fallback with no LKG, the next fresh fallback observation
+        drives transition=fallback_refresh with the same provider. The producer
+        read that as a same-provider refresh and preserved no LKG; the guard
+        read the same transition as NOT a same-provider refresh and demanded
+        one. The run died with 'a changed current selection must preserve prior
+        current as LKG'.
+        """
+
+        entity = "ABXB"
+        self.seed_legacy_migration_lkg_fallback(entity, "2026-08-01T00:00:00Z")
+        self.publish_pair(entity, "2026-08-20T00:00:00Z", "2026-08-20T00:10:00Z")
+        result = resolve_entities(
+            self.store,
+            entities=[entity],
+            decided_at="2026-08-20T01:00:00Z",
+        )
+        selection = self.store.read_active_domain("etf_detail")["current"][entity]
+        self.assertEqual(selection["resolution_state"], "fresh_fallback")
+        self.assertIsNotNone(
+            self.store.read_active_domain("etf_detail")["lkg"].get(entity),
+            "leaving lkg_fallback must preserve the prior selection as LKG",
+        )
+        self.assertTrue(result["results"])
 
     def test_yahoo_schema_migration_refuses_payloads_and_unlisted_failures(self) -> None:
         valid, _payload = observation(

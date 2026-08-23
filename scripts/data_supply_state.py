@@ -35,6 +35,36 @@ ETF_DETAIL_EMERGENCY_LKG_TTL_DAYS = _ETF_DETAIL_POLICY.emergency_lkg_ttl_days
 _HEX64 = re.compile(r"^[0-9a-f]{64}$")
 _COMPONENT = re.compile(r"^[A-Za-z0-9._-]+$")
 _SELECTION_STATES = {"fresh_primary", "fresh_fallback", "lkg_primary", "lkg_fallback"}
+
+
+_SAME_PROVIDER_REFRESH_STATES = {"fresh_primary", "fresh_fallback"}
+_SAME_PROVIDER_REFRESH_TRANSITIONS = {"primary_refresh", "fallback_refresh"}
+
+
+def is_same_provider_refresh(
+    prior_selection: Mapping[str, Any] | None,
+    next_selection: Mapping[str, Any] | None,
+    transition: str,
+) -> bool:
+    """Decide whether a transition may carry its LKG forward untouched.
+
+    This is the ONLY definition. data_supply_resolver once carried its own
+    three-condition copy that omitted both resolution_state conditions, so a
+    prior sitting in any of the six non-fresh states - lkg_fallback most of
+    all - was read as a same-provider refresh by the producer and as a
+    provider change by this guard. The producer then preserved no LKG and the
+    guard rejected the transition it had just been handed. Do not reintroduce
+    a second copy; call this.
+    """
+
+    if prior_selection is None or next_selection is None:
+        return False
+    return (
+        prior_selection["provider"] == next_selection["provider"]
+        and prior_selection["resolution_state"] in _SAME_PROVIDER_REFRESH_STATES
+        and next_selection["resolution_state"] in _SAME_PROVIDER_REFRESH_STATES
+        and transition in _SAME_PROVIDER_REFRESH_TRANSITIONS
+    )
 _PAYLOAD_REF_KINDS = {"provider_truth", "provider_object", "provider_lkg"}
 
 
@@ -1355,13 +1385,7 @@ class DataSupplyStateStore:
                         raise SchemaError("an initial selection cannot inject an LKG")
                 else:
                     next_selected = next_current[entity]
-                    same_provider_refresh = (
-                        prior_selected["provider"] == next_selected["provider"]
-                        and prior_selected["resolution_state"] in {"fresh_primary", "fresh_fallback"}
-                        and next_selected["resolution_state"] in {"fresh_primary", "fresh_fallback"}
-                        and transition in {"primary_refresh", "fallback_refresh"}
-                    )
-                    if same_provider_refresh:
+                    if is_same_provider_refresh(prior_selected, next_selected, transition):
                         if proposed_lkg != prior_lkg.get(entity):
                             raise SchemaError("same-provider refresh cannot mutate LKG")
                     else:
