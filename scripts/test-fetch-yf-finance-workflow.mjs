@@ -107,7 +107,7 @@ for (const forbidden of ["git add", "git commit", "git push", "git pull", "gh wo
 // exclusion. The markers are proven inside the publish persist step's own
 // span, so an earlier pack-step condition cannot satisfy this assertion.
 {
-  const persistStep = extractStepSpan(publishJob, "Persist fetched Yahoo source data");
+  const persistStep = extractStepSpan(publishJob, "Commit and push fetched Yahoo source data");
   const persistMarkers = [
     "if: ${{ always() && env.YF_PLAN_ONLY != 'true' }}",
     "scripts/stage-lane-manifest.sh",

@@ -2933,7 +2933,7 @@ assert callable(namespace["load_universe"])
     def test_workflow_persists_candidates_before_public_promotion(self) -> None:
         workflow = YF_WORKFLOW_PATH.read_text(encoding="utf-8")
         quarter_start = workflow.index("      - name: Refresh owned Yahoo quarter-close source")
-        candidate_start = workflow.index("      - name: Persist fetched Yahoo source data")
+        candidate_start = workflow.index("      - name: Commit and push fetched Yahoo source data")
         failure_dispatch_start = workflow.index("      - name: Publish failed Yahoo attempt evidence")
         shared_dispatch_start = workflow.index("      - name: Dispatch shared projection rebuild")
         candidate_step = workflow[candidate_start:failure_dispatch_start]

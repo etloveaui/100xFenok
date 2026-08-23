@@ -1815,6 +1815,16 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
     detached_persistence: false,
     reason: "DEC-280 restored continue-on-error on the Damodaran cloud publish so Git stays authoritative when the plane is unavailable; the publish-outcome diagnostic is preserved and its persistence step remains mandatory",
   }),
+  "yahoo-finance": Object.freeze({
+    workflow: ".github/workflows/fetch-yf-finance.yml",
+    non_blocking_publisher: false,
+    detached_persistence: false,
+    conditional_persistence: true,
+    canonical_commit: "earlier_same_job",
+    canonical_commit_reason: "the canonical write is 'Commit and push fetched Yahoo source data' in this same publish job; only the origin readback runs between that push and publication, so the commit is this job's own and merely not adjacent",
+    reason:
+      "the shadow publisher runs only after the Git origin readback confirms, so an unconfirmed readback means no generation was published and there is no outcome to persist; persistence still begins at always() so a failed or blocked publish on a confirmed readback is recorded",
+  }),
   "fdic-tier1": Object.freeze({
     workflow: ".github/workflows/fetch-fdic.yml",
     non_blocking_publisher: false,
