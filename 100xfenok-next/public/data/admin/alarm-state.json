@@ -1,9 +1,23 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-22T20:44:23.468Z",
+  "generated_at": "2026-08-23T23:40:54.966Z",
   "status": "open",
-  "open_incident_count": 4,
+  "open_incident_count": 6,
   "open_incidents": [
+    {
+      "workflow": "fetch-defillama.yml",
+      "label": "Fetch DefiLlama Stablecoins Data",
+      "streak": 7,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 32652415015,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32652415015",
+      "alarm_reasons": [
+        "failure_streak",
+        "plane_freshness_unavailable"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -33,6 +47,33 @@
       "cadence_status": "not_due"
     },
     {
+      "workflow": "fetch-stockanalysis.yml",
+      "label": "Fetch StockAnalysis Data",
+      "streak": 1,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "unrecovered_overdue"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "overdue"
+    },
+    {
+      "workflow": "fetch-yahoo-ticker.yml",
+      "label": "Fetch Yahoo Finance Ticker Snapshot",
+      "streak": 7,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 32652231625,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32652231625",
+      "alarm_reasons": [
+        "failure_streak",
+        "plane_freshness_unavailable"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
       "workflow": "slickcharts-monthly.yml",
       "label": "SlickCharts Monthly",
       "streak": 1,
@@ -40,20 +81,6 @@
       "first_failing_run_id": null,
       "first_failing_run_url": null,
       "alarm_reasons": [
-        "plane_outcome_unrecorded"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
-    {
-      "workflow": "slickcharts-symbols.yml",
-      "label": "SlickCharts Symbols",
-      "streak": 1,
-      "failure_streak_threshold": 1,
-      "first_failing_run_id": 31935105871,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31935105871",
-      "alarm_reasons": [
-        "failure_streak",
         "plane_outcome_unrecorded"
       ],
       "lost_schedule_slot_count": 0,
@@ -291,10 +318,12 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": [],
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "attempt_gap"
+      ],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 20
+      "data_freshness_age_hours_at_generation": 47
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -442,8 +471,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 26,
-    "overdue": 0,
+    "not_due": 25,
+    "overdue": 1,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -459,15 +488,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32597464960",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32597464960",
-    "observed_at": "2026-08-22T20:44:23.468Z",
+    "run_id": "32674219690",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32674219690",
+    "observed_at": "2026-08-23T23:40:54.966Z",
     "event": "schedule",
     "workflows": [
+      "fetch-defillama.yml",
       "fetch-edgar-filings.yml",
       "fetch-oecd-cli.yml",
-      "slickcharts-monthly.yml",
-      "slickcharts-symbols.yml"
+      "fetch-stockanalysis.yml",
+      "fetch-yahoo-ticker.yml",
+      "slickcharts-monthly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },

@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-08-22T21:40:57Z",
+  "generated_at": "2026-08-23T23:51:36Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,37 +17,37 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5601,
+    "candidate_total": 5605,
     "source_breakdown": {
-      "etf_universe": 5528,
-      "etf_screener": 5596,
+      "etf_universe": 5558,
+      "etf_screener": 5605,
       "new_etfs": 100
     },
     "detail_files": 5605,
-    "covered_detail_files": 5529,
-    "missing_detail_files": 72,
-    "extra_detail_files": 76,
+    "covered_detail_files": 5518,
+    "missing_detail_files": 87,
+    "extra_detail_files": 87,
     "stockanalysis_detail_files": 5605,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 98.71,
-    "primary_stockanalysis_pct": 98.71,
+    "coverage_pct": 98.45,
+    "primary_stockanalysis_pct": 98.45,
     "missing_by_source": {
-      "etf_universe": 46,
-      "etf_screener": 72,
-      "new_etfs": 69
+      "etf_universe": 87,
+      "etf_screener": 87,
+      "new_etfs": 71
     },
     "missing_status_breakdown": {
       "provider_gap_reprobe_due": 1,
-      "untracked": 71
+      "untracked": 86
     },
     "missing_failure_breakdown": {
       "provider_coverage_gap": 1,
-      "untracked": 71
+      "untracked": 86
     },
     "missing_availability_breakdown": {
       "provider_absent": 1,
-      "unprobed": 71
+      "unprobed": 86
     },
     "pending_tracked": 484,
     "pending_cooldown": 0,
@@ -56,15 +56,15 @@
   },
   "missing_reason_summary": {
     "provider_coverage_gap": 1,
-    "untracked": 71
+    "untracked": 86
   },
   "missing_status_summary": {
     "provider_gap_reprobe_due": 1,
-    "untracked": 71
+    "untracked": 86
   },
   "missing_availability_summary": {
     "provider_absent": 1,
-    "unprobed": 71
+    "unprobed": 86
   },
   "missing_reason_samples": {
     "provider_coverage_gap": [
@@ -79,10 +79,10 @@
       "ANTW",
       "ARKY",
       "AXTQ",
+      "BBLS",
       "BEMD",
       "CGPT",
-      "COHQ",
-      "COOL"
+      "COHQ"
     ]
   },
   "missing_status_samples": {
@@ -98,10 +98,10 @@
       "ANTW",
       "ARKY",
       "AXTQ",
+      "BBLS",
       "BEMD",
       "CGPT",
-      "COHQ",
-      "COOL"
+      "COHQ"
     ]
   },
   "missing_availability_samples": {
@@ -117,10 +117,10 @@
       "ANTW",
       "ARKY",
       "AXTQ",
+      "BBLS",
       "BEMD",
       "CGPT",
-      "COHQ",
-      "COOL"
+      "COHQ"
     ]
   },
   "missing_tickers": [
@@ -132,6 +132,7 @@
     "ANTW",
     "ARKY",
     "AXTQ",
+    "BBLS",
     "BEMD",
     "CGPT",
     "COHQ",
@@ -144,16 +145,24 @@
     "FTG",
     "FTPA",
     "GAIQ",
+    "GCLO",
+    "GEEQ",
     "HAWG",
     "HBIL",
+    "HIAI",
+    "HXA",
+    "HXC",
+    "HXE",
     "IACL",
     "JLVP",
     "KAIT",
     "KEO",
+    "KSMH",
     "LITG",
     "LOFD",
     "LWLX",
     "LYTE",
+    "MEGX",
     "METQ",
     "MPDB",
     "MPDY",
@@ -177,6 +186,7 @@
     "ROBX",
     "SCAU",
     "SDUR",
+    "SEPQ",
     "SIC",
     "SITX",
     "SKHA",
@@ -186,9 +196,14 @@
     "TIH",
     "TSIB",
     "UMCU",
+    "USGX",
+    "USLX",
+    "USMX",
+    "USSX",
     "WSMD",
     "XAIW",
     "XCSH",
+    "XQBT",
     "XVAP",
     "XVNV",
     "XVTS",
@@ -208,7 +223,9 @@
     "ADFI",
     "AEMS",
     "AGRH",
+    "AOTS",
     "AXPG",
+    "BCHI",
     "BELT",
     "BITK",
     "BLCN",
@@ -219,6 +236,7 @@
     "COIO",
     "CRED",
     "CZAR",
+    "DEFI",
     "DNNG",
     "EAOA",
     "EAOK",
@@ -251,6 +269,7 @@
     "LCDL",
     "MAGO",
     "MARB",
+    "MGKX",
     "MSDD",
     "MSOO",
     "MTUL",
@@ -258,6 +277,8 @@
     "ORLG",
     "OSCG",
     "PAAU",
+    "PCCE",
+    "PCGG",
     "PJBF",
     "PLOO",
     "QHDG",
@@ -276,9 +297,14 @@
     "SOLR",
     "SPCZ",
     "TSLO",
+    "TUGN",
     "UPSG",
     "USML",
-    "USRD"
+    "USRD",
+    "VBX",
+    "VOOX",
+    "XVO",
+    "XVUG"
   ],
   "samples": {
     "missing": [
@@ -290,6 +316,7 @@
       "ANTW",
       "ARKY",
       "AXTQ",
+      "BBLS",
       "BEMD",
       "CGPT",
       "COHQ",
@@ -302,16 +329,24 @@
       "FTG",
       "FTPA",
       "GAIQ",
+      "GCLO",
+      "GEEQ",
       "HAWG",
       "HBIL",
+      "HIAI",
+      "HXA",
+      "HXC",
+      "HXE",
       "IACL",
       "JLVP",
       "KAIT",
       "KEO",
+      "KSMH",
       "LITG",
       "LOFD",
       "LWLX",
       "LYTE",
+      "MEGX",
       "METQ",
       "MPDB",
       "MPDY",
@@ -322,16 +357,7 @@
       "MUG",
       "MXLL",
       "NCLD",
-      "OAIW",
-      "OCNL",
-      "OPPG",
-      "PCOV",
-      "PENU",
-      "PHOX",
-      "QAU",
-      "QQAU",
-      "RAMZ",
-      "RJCA"
+      "OAIW"
     ],
     "missing_provider_gap_reprobe_due": [
       "DACL"
@@ -345,10 +371,10 @@
       "ANTW",
       "ARKY",
       "AXTQ",
+      "BBLS",
       "BEMD",
       "CGPT",
-      "COHQ",
-      "COOL"
+      "COHQ"
     ],
     "missing_provider_coverage_gap": [
       "DACL"
@@ -360,7 +386,9 @@
       "ADFI",
       "AEMS",
       "AGRH",
+      "AOTS",
       "AXPG",
+      "BCHI",
       "BELT",
       "BITK",
       "BLCN",
@@ -371,6 +399,7 @@
       "COIO",
       "CRED",
       "CZAR",
+      "DEFI",
       "DNNG",
       "EAOA",
       "EAOK",
@@ -401,10 +430,7 @@
       "KRMA",
       "LACG",
       "LCDL",
-      "MAGO",
-      "MARB",
-      "MSDD",
-      "MSOO"
+      "MAGO"
     ]
   }
 }
