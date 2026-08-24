@@ -67,7 +67,7 @@ const scheduledMembers = DATA_SUPPLY_DETECTION_CONFIG.lanes
   .flatMap((lane) => lane.producer_members)
   .filter((member) => member.cadence_declaration?.kind === "github_workflow" && member.schedule.length > 0);
 const scheduleBindings = scheduledMembers.reduce((sum, member) => sum + member.schedule.length, 0);
-assert.equal(scheduledMembers.length, 31);
+assert.equal(scheduledMembers.length, 32);
 assert.equal(scheduleBindings, 35);
 
 // Schedule parity. The detection config declares when a lane is expected to
@@ -129,9 +129,16 @@ assert.deepEqual(
   "fetch-yf-finance.yml schedules and Yahoo detection calendar must stay exactly in sync",
 );
 
-// The lane this regression exists for: one stock slot plus one ETF slot.
-const yahooMember = scheduledMembers.find((member) => member.id === "yahoo_batch_quote_history");
-assert.deepEqual(yahooMember.schedule, ["20 23 * * 1-5", "7 0 * * 0-5"]);
+// The lane this regression exists for: one stock slot plus one ETF slot,
+// carried by two members since the B-394 stock/etf split.
+const yahooLane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((lane) => lane.id === "yahoo_batch_quote_history");
+assert.deepEqual(
+  yahooLane.producer_members.map((member) => ({ id: member.id, schedule: member.schedule })),
+  [
+    { id: "stock", schedule: ["20 23 * * 1-5"] },
+    { id: "etf", schedule: ["7 0 * * 0-5"] },
+  ],
+);
 assert.equal(
   DATA_SUPPLY_DETECTION_CONFIG.lanes.find((lane) => lane.id === "damodaran")
     ?.producer_members[0]?.activated_at,
@@ -150,7 +157,7 @@ assert.equal(coverage.schema_version, "fetch-cron-attempt-coverage/v1");
 assert.equal(coverage.mode, "shadow");
 assert.equal(coverage.deployment_blocking, false);
 assert.deepEqual(coverage.counts, {
-  scheduled_members: 31,
+  scheduled_members: 32,
   schedule_bindings: 31,
   observed: 26,
   suspected_skips: 3,
@@ -175,7 +182,7 @@ assert.deepEqual(coverage.pre_activation_members, [
   },
   {
     lane_id: "yahoo_batch_quote_history",
-    member_id: "yahoo_batch_quote_history",
+    member_id: "stock",
     workflow: ".github/workflows/fetch-yf-finance.yml",
     cron: "20 23 * * 1-5",
     activated_at: "2026-08-01T01:00:13Z",
@@ -185,7 +192,7 @@ assert.deepEqual(coverage.pre_activation_members, [
   // occurrence after activation is Sunday at 00:07 UTC.
   {
     lane_id: "yahoo_batch_quote_history",
-    member_id: "yahoo_batch_quote_history",
+    member_id: "etf",
     workflow: ".github/workflows/fetch-yf-finance.yml",
     cron: "7 0 * * 0-5",
     activated_at: "2026-08-01T01:00:13Z",
@@ -287,7 +294,7 @@ const missingReportCoverage = buildFetchCronAttemptCoverage({
 assert.equal(missingReportCoverage.deployment_blocking, false);
 assert.equal(missingReportCoverage.status, "warning");
 assert.deepEqual(missingReportCoverage.counts, {
-  scheduled_members: 31,
+  scheduled_members: 32,
   schedule_bindings: 31,
   observed: 0,
   suspected_skips: 31,
