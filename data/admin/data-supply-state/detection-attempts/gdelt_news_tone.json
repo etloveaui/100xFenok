@@ -5,21 +5,24 @@
     {
       "lane_id": "gdelt_news_tone",
       "member_id": null,
-      "attempt_id": "gdelt-news-tone-20260823t145852473z-81e46871",
-      "observed_at": "2026-08-23T14:58:52.473Z",
+      "attempt_id": "gdelt-news-tone-20260824t152153897z-1af56aa5",
+      "observed_at": "2026-08-24T15:21:53.897Z",
       "execution": "returned",
       "exception_kind": null,
-      "http_status": 200,
+      "http_status": 429,
       "auth": "not_applicable",
-      "rate_limited": false,
-      "decode": "ok",
-      "payload": "non_empty",
+      "rate_limited": true,
+      "decode": "not_attempted",
+      "payload": "not_available",
       "assertions": [
         {
           "id": "articles_array",
           "passed": false
         }
-      ]
+      ],
+      "retry_reason": "rate_limited",
+      "retry_count": 2,
+      "retry_wait_ms": 19500
     }
   ]
 }
