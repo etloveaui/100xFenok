@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-08-24T02:04:18Z",
+  "generated_at": "2026-08-24T03:23:30Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6803,
@@ -11,13 +11,13 @@
     "diagnosis_counts": {
       "agreement": 11084,
       "scale_mismatch": 198,
-      "sign_divergence": 3008,
+      "sign_divergence": 3009,
       "stale": 36225,
-      "value_drift": 11043
+      "value_drift": 11042
     },
     "stale_rows": 36225,
     "scale_mismatch_rows": 198,
-    "sign_divergence_rows": 3008
+    "sign_divergence_rows": 3009
   },
   "by_field": {
     "beta": {
@@ -6384,6 +6384,52 @@
       }
     },
     {
+      "ticker": "BILS",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 4,
+      "relative_spread_pct": 101.290053,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 3.8986296768912694
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 3.868
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 3.868
+        },
+        {
+          "source": "yf",
+          "value": -0.0502944
+        }
+      ],
+      "diagnosis": "scale_mismatch",
+      "spread_pct": 101.290053,
+      "fresh_spread_pct": 101.290053,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": true,
+      "scale_factor": 78,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 21.0,
+        "yf": 0.0
+      }
+    },
+    {
       "ticker": "CLIP",
       "asset_type": "etf",
       "field": "return_1y",
@@ -7153,52 +7199,6 @@
       "freshness": {
         "yf": 0.0,
         "stockanalysis.detail.performance": 50.0
-      }
-    },
-    {
-      "ticker": "BILS",
-      "asset_type": "etf",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 4,
-      "relative_spread_pct": 100.903575,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 3.8985540182066734
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 3.868
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 3.868
-        },
-        {
-          "source": "yf",
-          "value": -0.035226345
-        }
-      ],
-      "diagnosis": "scale_mismatch",
-      "spread_pct": 100.903575,
-      "fresh_spread_pct": 100.903575,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": true,
-      "scale_factor": 111,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 20.0,
-        "yf": 0.0
       }
     },
     {
