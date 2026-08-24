@@ -1,26 +1,13 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-24T01:54:11.962Z",
+  "generated_at": "2026-08-24T03:20:23.222Z",
   "status": "open",
-  "open_incident_count": 7,
+  "open_incident_count": 3,
   "open_incidents": [
-    {
-      "workflow": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
-      "streak": 2,
+      "streak": 3,
       "failure_streak_threshold": 1,
       "first_failing_run_id": 31351108376,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31351108376",
@@ -46,32 +33,6 @@
       "cadence_status": "not_due"
     },
     {
-      "workflow": "fetch-treasury-tga.yml",
-      "label": "Fetch Treasury TGA Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "unrecovered_overdue"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
-    },
-    {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
       "workflow": "slickcharts-monthly.yml",
       "label": "SlickCharts Monthly",
       "streak": 1,
@@ -83,19 +44,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -332,7 +280,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 1
+      "data_freshness_age_hours_at_generation": 3
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -342,10 +290,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "fetch-us-indices-daily.yml",
@@ -482,8 +428,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 25,
-    "overdue": 1,
+    "not_due": 26,
+    "overdue": 0,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -499,18 +445,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32681162342",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32681162342",
-    "observed_at": "2026-08-24T01:54:11.962Z",
-    "event": "workflow_run",
+    "run_id": "32685999397",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32685999397",
+    "observed_at": "2026-08-24T03:20:23.222Z",
+    "event": "schedule",
     "workflows": [
-      "data-plane-serving-probe.yml",
       "fetch-edgar-filings.yml",
       "fetch-oecd-cli.yml",
-      "fetch-treasury-tga.yml",
-      "global-writer-queue-observer.yml",
-      "slickcharts-monthly.yml",
-      "worker-request-budget-alarm.yml"
+      "slickcharts-monthly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
