@@ -71,6 +71,7 @@ const EXPECTED_LANE_IDS = [
   "admin_live_voice_logs",
   "mona_production_study_state",
   "mona_vnext_kv",
+  "sentiment_aaii",
   "benchmarks",
   "global_scouter",
   "damodaran",
@@ -82,8 +83,8 @@ const EXPECTED_LANE_IDS = [
   "gdelt_news_tone",
   "yahoo_batch_quote_history",
 ];
-assert.equal(projection.lanes.length, 33, "projection must carry all 33 registry lanes");
-assert.equal(projection.lane_count, 33);
+assert.equal(projection.lanes.length, 34, "projection must carry all 34 registry lanes");
+assert.equal(projection.lane_count, 34);
 assert.deepEqual(
   projection.lanes.map(({ id }) => id),
   EXPECTED_LANE_IDS,

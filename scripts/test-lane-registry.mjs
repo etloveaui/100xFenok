@@ -423,7 +423,7 @@ function clone(value) {
         store_kind: "payload",
         lane_class: "detection_floor",
         cadence: { kind: "weekly" },
-        enforcement: "shadow",
+        enforcement: "live",
         privacy_class: "private",
         public_mirror_allowed: false,
         roots: {

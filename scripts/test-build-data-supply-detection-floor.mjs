@@ -520,8 +520,8 @@ function runConfigAndFixtureChecks() {
   assert.equal(yahooPrivateOptions.kpi_required, true);
   assert.deepEqual(yahooPrivateOptions.producer_members[0].schedule, ["10 1 * * 2-6"]);
   const finraAtsWeekly = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "finra_ats_weekly");
-  assert.equal(finraAtsWeekly.enforcement, "shadow");
-  assert.equal(finraAtsWeekly.kpi_required, false);
+  assert.equal(finraAtsWeekly.enforcement, "live");
+  assert.equal(finraAtsWeekly.kpi_required, true);
   assert.deepEqual(finraAtsWeekly.producer_members[0].schedule, ["17 11 * * 3"]);
   assert.deepEqual(
     finraAtsWeekly.endpoint_contract.assertions.map((item) => item.id),
@@ -637,6 +637,7 @@ function runConfigAndFixtureChecks() {
     "edgar_filings",
     "damodaran",
     "finra_short_volume",
+    "finra_ats_weekly",
     "occ_options_volume",
     "yahoo_private_options",
     "apewisdom_attention",

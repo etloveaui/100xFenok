@@ -1056,6 +1056,7 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "edgar_filings",
     "damodaran",
     "finra_short_volume",
+    "finra_ats_weekly",
     "occ_options_volume",
     "yahoo_private_options",
     "apewisdom_attention",
@@ -1065,19 +1066,22 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   const report = (laneId = null, overrides = {}) => {
     const value = structuredClone(JSON.parse(fs.readFileSync(DETECTION_EXPECTED, "utf8")).baseline.expected_report);
     // The canonical baseline keeps ApeWisdom and GDELT honestly unobserved
-    // because their fixtures have no attempt rows. ETF detail is also
-    // unavailable in the fixture artifact set. Adapter unit cases need an
-    // all-ready live projection, so synthesize only those rows.
-    for (const id of ["apewisdom_attention", "gdelt_news_tone", "stockanalysis_etf_detail"]) {
+    // because their fixtures have no attempt rows. ETF detail and the FINRA
+    // ATS weekly marker are also unavailable in the fixture artifact set.
+    // Adapter unit cases need an all-ready live projection, so synthesize only
+    // those rows.
+    for (const id of ["apewisdom_attention", "gdelt_news_tone", "stockanalysis_etf_detail", "finra_ats_weekly"]) {
       const proxy = value.lanes.find((item) => item.id === id);
       proxy.status = "ready";
       proxy.reason = "ok";
       proxy.endpoint = { status: "ready", reason: "ok", observed_at: value.generated_at };
-      if (id === "stockanalysis_etf_detail") {
+      if (id === "stockanalysis_etf_detail" || id === "finra_ats_weekly") {
         proxy.artifact = {
           age: 0,
           reason: "ok",
-          source_as_of: null,
+          // ETF detail is declared dateless by provider; the FINRA weekly
+          // marker carries a /source_as_of source basis.
+          source_as_of: id === "finra_ats_weekly" ? value.generated_at : null,
           status: "ready",
           unit: "calendar_days",
         };
@@ -2304,12 +2308,16 @@ console.log("# KPI v2 runtime self-proof fixtures");
   writeReadyRecoveryIndex(tmp, "us-indices-daily", "us_indices_daily", ["sp500.json", "nasdaq.json", "nasdaq100.json", "sox.json"]);
   writeReadySlickchartsComposite(tmp, "2026-07-14T11:00:00Z", slickchartsLiveRoot);
   const { root, public: pub } = runBuilder(tmp, {}, now, { slickchartsRepoRoot: slickchartsLiveRoot });
-  assert.equal(root.totals.lanes, 34);
+  // 35 since finra_ats_weekly promoted to live enforcement: the KPI root now
+  // carries its detection-floor lane row.
+  assert.equal(root.totals.lanes, 35);
   for (const laneConfig of DATA_SUPPLY_DETECTION_CONFIG.lanes.filter((item) => item.enforcement === "live")) {
     const mapped = root.lanes.find((item) => item.id === laneConfig.id);
     const sourceRow = installedReport.lanes.find((item) => item.id === laneConfig.id);
     const baselineUnobserved = ["apewisdom_attention", "gdelt_news_tone"].includes(laneConfig.id);
-    const baselineUnavailable = laneConfig.id === "stockanalysis_etf_detail";
+    // The fixture artifact set has no ETF-detail payloads and no FINRA ATS
+    // weekly marker, so both live lanes surface as honestly degraded.
+    const baselineUnavailable = ["stockanalysis_etf_detail", "finra_ats_weekly"].includes(laneConfig.id);
     assert.equal(mapped.status, baselineUnobserved || baselineUnavailable ? "degraded" : "ready");
     assert.equal(mapped.reason, baselineUnobserved ? "workflow_unobserved" : baselineUnavailable ? "missing_artifact" : "ok");
     assert.equal(mapped.artifact.source_as_of, sourceRow.artifact.source_as_of);
@@ -2338,8 +2346,11 @@ console.log("# KPI v2 runtime self-proof fixtures");
   // The live ETF-detail lane declares two natural schedule slots. This fixed
   // fixture has no attempt row for either slot, so both bindings remain visible
   // as gaps rather than being silently dropped.
+  // 32 scheduled members since B-394 split yahoo_batch_quote_history into a
+  // stock and an etf member; both are pre-activation at this fixture's clock,
+  // so bindings stay at 31.
   assert.deepEqual(rootCronShadow.counts, {
-    scheduled_members: 31,
+    scheduled_members: 32,
     schedule_bindings: 31,
     observed: 26,
     suspected_skips: 3,
