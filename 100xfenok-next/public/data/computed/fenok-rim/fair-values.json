@@ -1,22 +1,22 @@
 {
   "schema_version": "fenok-rim-index/v7",
-  "generated_at": "2026-08-19T04:38:43.356Z",
+  "generated_at": "2026-08-24T23:34:40.404Z",
   "method": "fenok_rim_forward_book_compounding_residual_income",
   "display_note": "상대적 매력도 지표이며 목표가가 아님. 컨센서스 변화에 따라 언제든 크게 바뀔 수 있음.",
   "weekly_exports": [
     {
       "label": "benchmark workbook",
-      "as_of": "2026-08-14",
-      "age_days": 5,
+      "as_of": "2026-08-21",
+      "age_days": 4,
       "late": false,
-      "note": "benchmark workbook export is 5 days old, within the weekly window"
+      "note": "benchmark workbook export is 4 days old, within the weekly window"
     },
     {
       "label": "global scouter",
-      "as_of": "2026-08-14",
-      "age_days": 5,
+      "as_of": "2026-08-21",
+      "age_days": 4,
       "late": false,
-      "note": "global scouter export is 5 days old, within the weekly window"
+      "note": "global scouter export is 4 days old, within the weekly window"
     }
   ],
   "index_math_pinned": true,
@@ -40,23 +40,23 @@
       "name": "S&P 500",
       "status": "NULL",
       "computation_status": "ready",
-      "as_of": "2026-08-14",
-      "px_last": 7785.76,
-      "pbr": 5.9159,
+      "as_of": "2026-08-21",
+      "px_last": 7674.37,
+      "pbr": 5.8313,
       "book_value": 1316.07,
       "roe_path": [
-        0.2983
+        0.297
       ],
       "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
-      "roe_observed": 0.2983,
-      "roe_median_5y": 0.2348,
+      "roe_observed": 0.297,
+      "roe_median_5y": 0.2349,
       "roe_cap": {
         "applied": false,
         "multiple": 2.3,
-        "note": "spot 0.2983 is 1.27x its 5-year median, inside the 2.3x bound"
+        "note": "spot 0.297 is 1.26x its 5-year median, inside the 2.3x bound"
       },
       "retention": 0.6891,
-      "retention_source": "sheet payout 0.3109 (2026-08-03) [drift check: our derived payout 0.2066, -33.5% off]",
+      "retention_source": "sheet payout 0.3109 (2026-08-03) [drift check: our derived payout 0.2037, -34.5% off]",
       "payout_basis_comparison": {
         "sheet_anchor": {
           "value": 0.3109,
@@ -65,7 +65,7 @@
           "reason": "manual anchor; no sustainable refresh rule"
         },
         "forward_current": {
-          "value": 0.206635,
+          "value": 0.203727,
           "basis": "current index dividend yield / forward benchmark earnings yield",
           "production_eligible": false,
           "reason": "forward denominator is observable but the model role has not passed held-out bounded validation"
@@ -107,15 +107,15 @@
         }
       },
       "erp_center": 0.05,
-      "erp_source": "sheet 2026-08-03; Damodaran US 5.03% agrees to 3bp [drift check: Damodaran US 0.0503, workbook April 1, 2026, 141 days old]",
-      "risk_free": 0.0468,
+      "erp_source": "sheet 2026-08-03; Damodaran US 5.03% agrees to 3bp [drift check: Damodaran US 0.0503, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0469,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
-      "discount_rate": 0.102208,
+      "discount_rate": 0.102264,
       "discount_extrapolation": {
-        "gap": 0.004799999999999999,
+        "gap": 0.004899999999999995,
         "outside": true,
         "beyondTolerance": false,
-        "note": "risk-free 0.0468 is 48bp above the fitted band 0.035~0.042 — within tolerance"
+        "note": "risk-free 0.0469 is 49bp above the fitted band 0.035~0.042 — within tolerance"
       },
       "publication": {
         "status": "NULL",
@@ -130,19 +130,19 @@
       "diagnostic": {
         "rate_current": {
           "erp_center": 0.05,
-          "risk_free": 0.0468,
-          "fair_value": 9322.02,
-          "upside_pct": 19.73,
-          "upside_min_pct": 12.79,
-          "upside_max_pct": 26.9
+          "risk_free": 0.0469,
+          "fair_value": 9222.06,
+          "upside_pct": 20.17,
+          "upside_min_pct": 13.18,
+          "upside_max_pct": 27.39
         },
         "rate_scenario_35": {
           "erp_center": 0.05,
           "risk_free": 0.035,
-          "fair_value": 10562.82,
-          "upside_pct": 35.67,
-          "upside_min_pct": 27.94,
-          "upside_max_pct": 43.65
+          "fair_value": 10461.18,
+          "upside_pct": 36.31,
+          "upside_min_pct": 28.53,
+          "upside_max_pct": 44.36
         }
       }
     },
@@ -151,23 +151,23 @@
       "name": "나스닥 100",
       "status": "NULL",
       "computation_status": "ready",
-      "as_of": "2026-08-14",
-      "px_last": 30046.14,
-      "pbr": 9.3915,
-      "book_value": 3199.29,
+      "as_of": "2026-08-21",
+      "px_last": 29308.86,
+      "pbr": 9.161,
+      "book_value": 3199.31,
       "roe_path": [
-        0.4289
+        0.4286
       ],
       "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
-      "roe_observed": 0.4289,
+      "roe_observed": 0.4286,
       "roe_median_5y": 0.3157,
       "roe_cap": {
         "applied": false,
         "multiple": 2.3,
-        "note": "spot 0.4289 is 1.36x its 5-year median, inside the 2.3x bound"
+        "note": "spot 0.4286 is 1.36x its 5-year median, inside the 2.3x bound"
       },
       "retention": 0.7435,
-      "retention_source": "sheet payout 0.2565 (2026-08-03) [drift check: our derived payout 0.0956, -62.7% off]",
+      "retention_source": "sheet payout 0.2565 (2026-08-03) [drift check: our derived payout 0.0953, -62.9% off]",
       "payout_basis_comparison": {
         "sheet_anchor": {
           "value": 0.2565,
@@ -176,7 +176,7 @@
           "reason": "manual anchor; no sustainable refresh rule"
         },
         "forward_current": {
-          "value": 0.095641,
+          "value": 0.095284,
           "basis": "current index dividend yield / forward benchmark earnings yield",
           "production_eligible": false,
           "reason": "forward denominator is observable but the model role has not passed held-out bounded validation"
@@ -218,15 +218,15 @@
         }
       },
       "erp_center": 0.055,
-      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 141 days old]",
-      "risk_free": 0.0468,
+      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0469,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
-      "discount_rate": 0.102208,
+      "discount_rate": 0.102264,
       "discount_extrapolation": {
-        "gap": 0.004799999999999999,
+        "gap": 0.004899999999999995,
         "outside": true,
         "beyondTolerance": false,
-        "note": "risk-free 0.0468 is 48bp above the fitted band 0.035~0.042 — within tolerance"
+        "note": "risk-free 0.0469 is 49bp above the fitted band 0.035~0.042 — within tolerance"
       },
       "publication": {
         "status": "NULL",
@@ -241,19 +241,19 @@
       "diagnostic": {
         "rate_current": {
           "erp_center": 0.055,
-          "risk_free": 0.0468,
-          "fair_value": 61715.01,
-          "upside_pct": 105.4,
-          "upside_min_pct": 95.73,
-          "upside_max_pct": 115.38
+          "risk_free": 0.0469,
+          "fair_value": 61496.94,
+          "upside_pct": 109.82,
+          "upside_min_pct": 99.94,
+          "upside_max_pct": 120.03
         },
         "rate_scenario_35": {
           "erp_center": 0.055,
           "risk_free": 0.035,
-          "fair_value": 69789.59,
-          "upside_pct": 132.27,
-          "upside_min_pct": 121.46,
-          "upside_max_pct": 143.43
+          "fair_value": 69614.93,
+          "upside_pct": 137.52,
+          "upside_min_pct": 126.46,
+          "upside_max_pct": 148.94
         }
       }
     },
@@ -262,20 +262,20 @@
       "name": "나스닥 종합",
       "status": "NULL",
       "computation_status": "ready",
-      "as_of": "2026-08-14",
-      "px_last": 26729.16,
-      "pbr": 8.0007,
-      "book_value": 3340.85,
+      "as_of": "2026-08-21",
+      "px_last": 26180.46,
+      "pbr": 7.8355,
+      "book_value": 3341.26,
       "roe_path": [
-        0.3192
+        0.3252
       ],
       "roe_path_source": "spot forward ROE held constant (no consensus grid for this index)",
-      "roe_observed": 0.3192,
+      "roe_observed": 0.3252,
       "roe_median_5y": 0.2286,
       "roe_cap": {
         "applied": false,
         "multiple": 2.3,
-        "note": "spot 0.3192 is 1.4x its 5-year median, inside the 2.3x bound"
+        "note": "spot 0.3252 is 1.42x its 5-year median, inside the 2.3x bound"
       },
       "retention": 0.782,
       "retention_source": "sheet payout 0.218 (2026-08-03) [drift check unavailable: our derived payout is missing or out of bounds]",
@@ -304,15 +304,15 @@
       },
       "payout_candidate_band": null,
       "erp_center": 0.055,
-      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 141 days old]",
-      "risk_free": 0.0468,
+      "erp_source": "sheet 2026-08-03 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0469,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
-      "discount_rate": 0.102208,
+      "discount_rate": 0.102264,
       "discount_extrapolation": {
-        "gap": 0.004799999999999999,
+        "gap": 0.004899999999999995,
         "outside": true,
         "beyondTolerance": false,
-        "note": "risk-free 0.0468 is 48bp above the fitted band 0.035~0.042 — within tolerance"
+        "note": "risk-free 0.0469 is 49bp above the fitted band 0.035~0.042 — within tolerance"
       },
       "publication": {
         "status": "NULL",
@@ -327,19 +327,19 @@
       "diagnostic": {
         "rate_current": {
           "erp_center": 0.055,
-          "risk_free": 0.0468,
-          "fair_value": 31259.84,
-          "upside_pct": 16.95,
-          "upside_min_pct": 10.04,
-          "upside_max_pct": 24.11
+          "risk_free": 0.0469,
+          "fair_value": 32743.46,
+          "upside_pct": 25.07,
+          "upside_min_pct": 17.77,
+          "upside_max_pct": 32.63
         },
         "rate_scenario_35": {
           "erp_center": 0.055,
           "risk_free": 0.035,
-          "fair_value": 35549.51,
-          "upside_pct": 33,
-          "upside_min_pct": 25.28,
-          "upside_max_pct": 41
+          "fair_value": 37264.16,
+          "upside_pct": 42.34,
+          "upside_min_pct": 34.18,
+          "upside_max_pct": 50.79
         }
       }
     },
@@ -348,20 +348,20 @@
       "name": "러셀 2000",
       "status": "NULL",
       "computation_status": "ready",
-      "as_of": "2026-08-14",
-      "px_last": 3068.42,
-      "pbr": 2.7189,
-      "book_value": 1128.55,
+      "as_of": "2026-08-21",
+      "px_last": 3017.87,
+      "pbr": 2.6187,
+      "book_value": 1152.43,
       "roe_path": [
-        0.0904
+        0.0343
       ],
       "roe_path_source": "spot forward ROE held constant (no consensus grid for this index)",
-      "roe_observed": 0.0904,
-      "roe_median_5y": 0.0899,
+      "roe_observed": 0.0343,
+      "roe_median_5y": 0.0896,
       "roe_cap": {
         "applied": false,
         "multiple": 2.3,
-        "note": "spot 0.0904 is 1.01x its 5-year median, inside the 2.3x bound"
+        "note": "spot 0.0343 is 0.38x its 5-year median, inside the 2.3x bound"
       },
       "retention": 0.955,
       "retention_source": "sheet payout 0.045 (2025-12-09 grid, implied by the captured cells) [drift check unavailable: our derived payout is missing or out of bounds]",
@@ -390,15 +390,15 @@
       },
       "payout_candidate_band": null,
       "erp_center": 0.045,
-      "erp_source": "sheet 2025-12-09 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 141 days old]",
-      "risk_free": 0.0468,
+      "erp_source": "sheet 2025-12-09 [drift check: Damodaran US 0.0503, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0469,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
-      "discount_rate": 0.102208,
+      "discount_rate": 0.102264,
       "discount_extrapolation": {
-        "gap": 0.004799999999999999,
+        "gap": 0.004899999999999995,
         "outside": true,
         "beyondTolerance": false,
-        "note": "risk-free 0.0468 is 48bp above the fitted band 0.035~0.042 — within tolerance"
+        "note": "risk-free 0.0469 is 49bp above the fitted band 0.035~0.042 — within tolerance"
       },
       "publication": {
         "status": "NULL",
@@ -413,19 +413,19 @@
       "diagnostic": {
         "rate_current": {
           "erp_center": 0.045,
-          "risk_free": 0.0468,
-          "fair_value": 1103.88,
-          "upside_pct": -64.02,
-          "upside_min_pct": -69.6,
-          "upside_max_pct": -58.15
+          "risk_free": 0.0469,
+          "fair_value": 379.09,
+          "upside_pct": -87.44,
+          "upside_min_pct": -91.12,
+          "upside_max_pct": -83.54
         },
         "rate_scenario_35": {
           "erp_center": 0.045,
           "risk_free": 0.035,
-          "fair_value": 1326.46,
-          "upside_pct": -56.77,
-          "upside_min_pct": -62.98,
-          "upside_max_pct": -50.23
+          "fair_value": 493.39,
+          "upside_pct": -83.65,
+          "upside_min_pct": -87.74,
+          "upside_max_pct": -79.33
         }
       }
     },
@@ -434,20 +434,20 @@
       "name": "코스피",
       "status": "NULL",
       "computation_status": "ready",
-      "as_of": "2026-08-14",
-      "px_last": 6977.94,
-      "pbr": 1.7403,
-      "book_value": 4009.62,
+      "as_of": "2026-08-21",
+      "px_last": 6912.95,
+      "pbr": 1.717,
+      "book_value": 4026.18,
       "roe_path": [
         0.2341
       ],
       "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
-      "roe_observed": 0.3085,
+      "roe_observed": 0.3112,
       "roe_median_5y": 0.1018,
       "roe_cap": {
         "applied": true,
         "multiple": 2.3,
-        "note": "spot 0.3085 is 3.03x its 5-year median of 0.1018; capped to 0.2341 at the 2.3x bound"
+        "note": "spot 0.3112 is 3.06x its 5-year median of 0.1018; capped to 0.2341 at the 2.3x bound"
       },
       "retention": 0.6211,
       "retention_source": "sheet payout 0.3789 (2026-08-03) [drift check: our derived payout 0.0653, -82.8% off]",
@@ -503,15 +503,15 @@
         }
       },
       "erp_center": 0.12,
-      "erp_source": "sheet 2026-08-03; reproduces his published 10,000~12,000 under the solved formula (10,074), whereas Damodaran 5.49% gives 15,634 [drift check: Damodaran KR 0.0549, workbook April 1, 2026, 141 days old]",
-      "risk_free": 0.0431,
-      "risk_free_source": "observed KRX KTS 10Y benchmark government bond 0.04313 (as of 2026-08-14, fenok-edge-korea lane, daily)",
-      "discount_rate": 0.100153,
+      "erp_source": "sheet 2026-08-03; reproduces his published 10,000~12,000 under the solved formula (10,074), whereas Damodaran 5.49% gives 15,634 [drift check: Damodaran KR 0.0549, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0438,
+      "risk_free_source": "observed KRX KTS 10Y benchmark government bond 0.04376 (as of 2026-08-21, fenok-edge-korea lane, daily)",
+      "discount_rate": 0.100506,
       "discount_extrapolation": {
-        "gap": 0.001129999999999999,
+        "gap": 0.0017599999999999977,
         "outside": true,
         "beyondTolerance": false,
-        "note": "risk-free 0.0431 is 11bp above the fitted band 0.035~0.042 — within tolerance"
+        "note": "risk-free 0.0438 is 18bp above the fitted band 0.035~0.042 — within tolerance"
       },
       "publication": {
         "status": "NULL",
@@ -526,19 +526,19 @@
       "diagnostic": {
         "rate_current": {
           "erp_center": 0.12,
-          "risk_free": 0.0431,
-          "fair_value": 10329.33,
-          "upside_pct": 48.03,
-          "upside_min_pct": 33.94,
-          "upside_max_pct": 62.58
+          "risk_free": 0.0438,
+          "fair_value": 10288.41,
+          "upside_pct": 48.83,
+          "upside_min_pct": 34.63,
+          "upside_max_pct": 63.5
         },
         "rate_scenario_35": {
           "erp_center": 0.12,
           "risk_free": 0.035,
-          "fair_value": 11468.58,
-          "upside_pct": 64.35,
-          "upside_min_pct": 49.23,
-          "upside_max_pct": 79.98
+          "fair_value": 11515.95,
+          "upside_pct": 66.59,
+          "upside_min_pct": 51.26,
+          "upside_max_pct": 82.43
         }
       }
     },
@@ -547,23 +547,23 @@
       "name": "필라델피아 반도체",
       "status": "NULL",
       "computation_status": "ready",
-      "as_of": "2026-08-14",
-      "px_last": 12417.05,
-      "pbr": 11.4318,
+      "as_of": "2026-08-21",
+      "px_last": 11740.37,
+      "pbr": 10.8088,
       "book_value": 1086.19,
       "roe_path": [
         0.5336
       ],
       "roe_path_source": "weekly consensus grid (rim-index) — vendor index-level aggregate ROE (best_eps / book), used as published",
-      "roe_observed": 0.5468,
+      "roe_observed": 0.5505,
       "roe_median_5y": 0.232,
       "roe_cap": {
         "applied": true,
         "multiple": 2.3,
-        "note": "spot 0.5468 is 2.36x its 5-year median of 0.232; capped to 0.5336 at the 2.3x bound"
+        "note": "spot 0.5505 is 2.37x its 5-year median of 0.232; capped to 0.5336 at the 2.3x bound"
       },
-      "retention": 0.8865,
-      "retention_source": "observed derived payout_ratio 0.1135 — no sheet anchor for this index",
+      "retention": 0.8877,
+      "retention_source": "observed derived payout_ratio 0.1124 — no sheet anchor for this index",
       "payout_basis_comparison": {
         "sheet_anchor": {
           "value": null,
@@ -572,7 +572,7 @@
           "reason": "manual anchor; no sustainable refresh rule"
         },
         "forward_current": {
-          "value": 0.113512,
+          "value": 0.11235,
           "basis": "current index dividend yield / forward benchmark earnings yield",
           "production_eligible": false,
           "reason": "forward denominator is observable but the model role has not passed held-out bounded validation"
@@ -616,15 +616,15 @@
         }
       },
       "erp_center": 0.055,
-      "erp_source": "estimated: NASDAQ-family centre, no dedicated sheet [drift check: Damodaran US 0.0503, workbook April 1, 2026, 141 days old]",
-      "risk_free": 0.0468,
+      "erp_source": "estimated: NASDAQ-family centre, no dedicated sheet [drift check: Damodaran US 0.0503, workbook April 1, 2026, 146 days old]",
+      "risk_free": 0.0469,
       "risk_free_source": "observed US 10Y (FRED DGS10 via rim-index, daily)",
-      "discount_rate": 0.102208,
+      "discount_rate": 0.102264,
       "discount_extrapolation": {
-        "gap": 0.004799999999999999,
+        "gap": 0.004899999999999995,
         "outside": true,
         "beyondTolerance": false,
-        "note": "risk-free 0.0468 is 48bp above the fitted band 0.035~0.042 — within tolerance"
+        "note": "risk-free 0.0469 is 49bp above the fitted band 0.035~0.042 — within tolerance"
       },
       "publication": {
         "status": "NULL",
@@ -640,19 +640,19 @@
       "diagnostic": {
         "rate_current": {
           "erp_center": 0.055,
-          "risk_free": 0.0468,
-          "fair_value": 59388.84,
-          "upside_pct": 378.28,
-          "upside_min_pct": 357.32,
-          "upside_max_pct": 399.94
+          "risk_free": 0.0469,
+          "fair_value": 59508.64,
+          "upside_pct": 406.87,
+          "upside_min_pct": 384.64,
+          "upside_max_pct": 429.84
         },
         "rate_scenario_35": {
           "erp_center": 0.055,
           "risk_free": 0.035,
-          "fair_value": 67257.14,
-          "upside_pct": 441.65,
-          "upside_min_pct": 418.12,
-          "upside_max_pct": 465.96
+          "fair_value": 67464.34,
+          "upside_pct": 474.64,
+          "upside_min_pct": 449.65,
+          "upside_max_pct": 500.44
         }
       }
     }
@@ -665,10 +665,10 @@
         "evidence_id": "rim-df8e2e5aa81bfca036c8b547",
         "evidence_label": "RIM",
         "status": "constraint_satisfied",
-        "computed": 105.4,
+        "computed": 109.82,
         "published": 30,
         "target_kind": "lower_bound",
-        "floor_multiple": 3.5133333333333336,
+        "floor_multiple": 3.6606666666666663,
         "published_as_of": "2026-04-18",
         "source": "https://yellow.kr/blog/economy-board/?mod=document&uid=1606"
       },
@@ -677,7 +677,7 @@
         "evidence_id": "rim-7041d3d1604bd6d9b5683c04",
         "evidence_label": "RIM",
         "status": "within_tolerance",
-        "computed": 48.03,
+        "computed": 48.83,
         "published": [
           49.5,
           49.5

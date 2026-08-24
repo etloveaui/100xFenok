@@ -4,9 +4,9 @@
     "model_version": "feno_yardeni_fred_v1",
     "description": "Feno Yardeni Bond PER to S&P 500 Fair Value",
     "frequency": "weekly",
-    "date_range": "1990-02-02 ~ 2026-08-14",
-    "total_records": 1894,
-    "generated_at": "2026-08-22T10:22:00.157Z",
+    "date_range": "1990-02-02 ~ 2026-08-21",
+    "total_records": 1895,
+    "generated_at": "2026-08-24T23:34:36.376Z",
     "generated_by": "build-feno-yardeni-model.mjs",
     "calculation_source": "FRED series/observations API corporate bond yields plus 100x benchmark S&P 500 price/EPS; benchmark EPS/SPX currently comes from the existing Bloomberg-sourced benchmarks pipeline; pre-benchmark history preserved from verified seed.",
     "source_components": {
@@ -14,12 +14,12 @@
         {
           "series_id": "WAAA",
           "label": "Moody's Seasoned Aaa Corporate Bond Yield",
-          "latest_date": "2026-08-14"
+          "latest_date": "2026-08-21"
         },
         {
           "series_id": "WBAA",
           "label": "Moody's Seasoned Baa Corporate Bond Yield",
-          "latest_date": "2026-08-14"
+          "latest_date": "2026-08-21"
         }
       ],
       "spx_eps_input": {
@@ -30,8 +30,8 @@
           "best_eps"
         ],
         "source": "Bloomberg Terminal",
-        "version": "2026-08-14",
-        "generated": "2026-08-19T13:37:39.265393"
+        "version": "2026-08-21",
+        "generated": "2026-08-25T08:34:01.441308"
       },
       "preserved_seed_input": {
         "file": "data/yardney/yardney_model.json",
@@ -47,12 +47,12 @@
     "last_update": {
       "mode": "feno_yardeni_rebuild",
       "seed_preserved_records": 1026,
-      "computed_records": 868,
+      "computed_records": 869,
       "skipped_benchmark_records": 0,
       "skipped_benchmark_dates_sample": [],
       "first_computed_date": "2010-01-01",
-      "last_computed_date": "2026-08-14",
-      "last_public_date": "2026-08-14"
+      "last_computed_date": "2026-08-21",
+      "last_public_date": "2026-08-21"
     },
     "columns": {
       "date": "Weekly Friday date",
@@ -15158,66 +15158,74 @@
     {
       "date": "2026-06-26",
       "spx": 7354.02,
-      "eps": 368.7193,
+      "eps": 368.8234,
       "bond_per": 17.42,
-      "fair_value": 6423.09,
-      "premium_pct": 14.49
+      "fair_value": 6424.9,
+      "premium_pct": 14.46
     },
     {
       "date": "2026-07-03",
       "spx": 7483.24,
-      "eps": 370.6841,
+      "eps": 370.7959,
       "bond_per": 17.32,
-      "fair_value": 6420.25,
-      "premium_pct": 16.56
+      "fair_value": 6422.18,
+      "premium_pct": 16.52
     },
     {
       "date": "2026-07-10",
       "spx": 7575.39,
-      "eps": 371.1782,
+      "eps": 371.2769,
       "bond_per": 16.99,
-      "fair_value": 6306.32,
-      "premium_pct": 20.12
+      "fair_value": 6307.99,
+      "premium_pct": 20.09
     },
     {
       "date": "2026-07-17",
       "spx": 7457.69,
-      "eps": 374.4098,
+      "eps": 374.5194,
       "bond_per": 16.81,
-      "fair_value": 6293.83,
-      "premium_pct": 18.49
+      "fair_value": 6295.67,
+      "premium_pct": 18.46
     },
     {
       "date": "2026-07-24",
       "spx": 7411.98,
-      "eps": 378.9182,
+      "eps": 379.3284,
       "bond_per": 16.56,
-      "fair_value": 6274.89,
-      "premium_pct": 18.12
+      "fair_value": 6281.68,
+      "premium_pct": 17.99
     },
     {
       "date": "2026-07-31",
       "spx": 7489.72,
-      "eps": 383.6803,
+      "eps": 383.9668,
       "bond_per": 16.43,
-      "fair_value": 6303.87,
-      "premium_pct": 18.81
+      "fair_value": 6308.57,
+      "premium_pct": 18.72
     },
     {
       "date": "2026-08-07",
       "spx": 7757.64,
-      "eps": 386.143,
+      "eps": 386.3441,
       "bond_per": 16.49,
-      "fair_value": 6367.5,
-      "premium_pct": 21.83
+      "fair_value": 6370.81,
+      "premium_pct": 21.77
     },
     {
       "date": "2026-08-14",
       "spx": 7785.76,
-      "eps": 387.8722,
+      "eps": 388.1895,
       "bond_per": 16.35,
-      "fair_value": 6341.71,
-      "premium_pct": 22.77
+      "fair_value": 6346.9,
+      "premium_pct": 22.67
+    },
+    {
+      "date": "2026-08-21",
+      "spx": 7674.37,
+      "eps": 389.8141,
+      "bond_per": 16.3,
+      "fair_value": 6353.97,
+      "premium_pct": 20.78
     }
   ]
 }

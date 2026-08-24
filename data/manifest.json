@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-08-24",
+  "last_updated": "2026-08-25",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -16,12 +16,12 @@
     },
     "benchmarks": {
       "version": "3.8.0",
-      "updated": "2026-08-14",
+      "updated": "2026-08-21",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 7,
       "schema": true,
-      "description": "Market indices P/E, P/B, ROE - 32,171 records, 2010-01-01 ~ 2026-08-14, 38 sections, 868 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
+      "description": "Market indices P/E, P/B, ROE - 32,209 records, 2010-01-01 ~ 2026-08-21, 38 sections, 869 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     "damodaran": {
       "version": "2.3.0",
@@ -206,6 +206,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-08-25",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the owner-supplied 20260824 EPS workbook (data through 2026-08-21): 32,209 records (+38), 2010-01-01 ~ 2026-08-21, 38 sections, 869 data points per index (kosdaq_150 868, hang_seng_tech 608, star50 318); source summaries 2,403 values + 67 nulls. RIM inputs and Feno Yardeni rebuilt from the new us.json; Yardeni advances to 1,895 records through 2026-08-21, latest fair value 6,353.97, premium +20.78%. Fenok RIM remains quarantined (display_ready=false, DEC-302) with non-diverged calibration checks.",
+      "breaking": false
+    },
     {
       "date": "2026-08-23",
       "folder": "global-scouter",
