@@ -58,7 +58,6 @@ function makePaths(root) {
   return {
     repoRoot: root,
     canonicalPath: path.join(root, "data", "macro", "fdic-tier1.json"),
-    publicPath: path.join(root, "public", "data", "macro", "fdic-tier1.json"),
     attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "fdic_tier1.json"),
   };
 }
@@ -149,7 +148,6 @@ function assertValidShard(shard) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-persistence-migration-"));
   const paths = makePaths(root);
   fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
   const legacy = {
     updated: "2026-07-14T14:55:51.727Z",
     source: "FDIC",
@@ -161,7 +159,6 @@ function assertValidShard(shard) {
   };
   const legacyBytes = `${JSON.stringify(legacy, null, 2)}\n`;
   fs.writeFileSync(paths.canonicalPath, legacyBytes);
-  fs.writeFileSync(paths.publicPath, legacyBytes);
 
   assert.throws(
     () => runFdicPersistenceMigration({ ...paths, eventName: "schedule" }),
@@ -171,7 +168,6 @@ function assertValidShard(shard) {
   const result = runFdicPersistenceMigration({ ...paths, eventName: "workflow_dispatch" });
   assert.equal(result.ok, true);
   assert.equal(result.updated, true);
-  assert.deepEqual(fs.readFileSync(paths.canonicalPath), fs.readFileSync(paths.publicPath));
   const migrated = readJson(paths.canonicalPath);
   assert.deepEqual(migrated.data, legacy.data, "in-bound current data is byte-value preserved");
   assert.deepEqual(migrated.persistence_policy, FDIC_PERSISTENCE_POLICY);
@@ -184,7 +180,6 @@ function assertValidShard(shard) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-persistence-migration-rollback-"));
   const paths = makePaths(root);
   fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
   const canonicalBytes = `${JSON.stringify({
     updated: "2026-07-14T14:55:51.727Z",
     source: "FDIC",
@@ -192,22 +187,18 @@ function assertValidShard(shard) {
     data: [{ date: "2026-03-31", value: 15, banks: 2 }],
   }, null, 2)}\n`;
   fs.writeFileSync(paths.canonicalPath, canonicalBytes);
-  fs.writeFileSync(paths.publicPath, canonicalBytes);
-  let writes = 0;
   assert.throws(
     () => runFdicPersistenceMigration({
       ...paths,
       eventName: "workflow_dispatch",
       write: (targetPath, bytes) => {
-        writes += 1;
-        if (writes === 2) throw new Error("injected public write failure");
         fs.writeFileSync(targetPath, bytes);
+        throw new Error("injected canonical write failure");
       },
     }),
-    /injected public write failure/,
+    /injected canonical write failure/,
   );
   assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), canonicalBytes, "canonical rollback is byte-identical");
-  assert.equal(fs.readFileSync(paths.publicPath, "utf8"), canonicalBytes, "public rollback is byte-identical");
 }
 
 {
@@ -366,7 +357,6 @@ function assertValidShard(shard) {
   });
   assert.equal(result.ok, true);
   assert.deepEqual(calls, QUARTERS);
-  assert.deepEqual(fs.readFileSync(paths.canonicalPath), fs.readFileSync(paths.publicPath));
   const output = readJson(paths.canonicalPath);
   assert.equal(output.source, "FDIC");
   assert.deepEqual(output.data.map((row) => row.value), [13, 15]);
@@ -391,10 +381,8 @@ function assertValidShard(shard) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-lkg-test-"));
   const paths = makePaths(root);
   fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.publicPath), { recursive: true });
   const lkg = `${JSON.stringify({ marker: "lkg" }, null, 2)}\n`;
   fs.writeFileSync(paths.canonicalPath, lkg);
-  fs.writeFileSync(paths.publicPath, lkg);
   const result = await runFdicTier1({
     ...paths,
     quarters: QUARTERS,
@@ -409,7 +397,6 @@ function assertValidShard(shard) {
   assert.equal(result.reason, "http_error");
   assert.equal(result.exitCode, 2, "a transient failure without a valid canonical LKG is fatal");
   assert.equal(fs.readFileSync(paths.canonicalPath, "utf8"), lkg);
-  assert.equal(fs.readFileSync(paths.publicPath, "utf8"), lkg);
   const shard = readJson(paths.attemptShardPath);
   assertValidShard(shard);
   assert.equal(shard.attempts[0].http_status, 500);

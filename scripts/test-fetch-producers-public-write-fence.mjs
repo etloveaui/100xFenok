@@ -22,6 +22,9 @@ const PRODUCERS = Object.freeze([
   // every run and persist-cloud-publish-outcome refused for ten consecutive
   // runs. sync-public-data.mjs already produces the mirror at build time.
   "scripts/fetch-fred-macro.mjs",
+  // The tracked FDIC twin is already retired; the producer must leave its
+  // generated public URL to the same generic sync boundary.
+  "scripts/fetch-fdic-tier1.mjs",
 ]);
 
 const sources = Object.fromEntries(PRODUCERS.map((relativePath) => [

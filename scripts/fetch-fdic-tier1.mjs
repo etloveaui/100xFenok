@@ -264,7 +264,6 @@ export function migrateFdicPersistenceDocument(document) {
 
 export function runFdicPersistenceMigration({
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "fdic-tier1.json"),
-  publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", "fdic-tier1.json"),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
   read = (targetPath) => fs.readFileSync(targetPath),
   write = (targetPath, bytes) => atomicWrite(targetPath, bytes),
@@ -273,10 +272,6 @@ export function runFdicPersistenceMigration({
     throw new Error("FDIC persistence migration requires workflow_dispatch");
   }
   const canonicalBefore = Buffer.from(read(canonicalPath));
-  const publicBefore = Buffer.from(read(publicPath));
-  if (!canonicalBefore.equals(publicBefore)) {
-    throw new Error("FDIC persistence migration requires byte-identical canonical and public mirrors");
-  }
   let source;
   try {
     source = JSON.parse(canonicalBefore.toString("utf8"));
@@ -295,24 +290,14 @@ export function runFdicPersistenceMigration({
   }
 
   const bytes = Buffer.from(`${JSON.stringify(migrated.document, null, 2)}\n`);
-  const targets = [
-    { targetPath: canonicalPath, before: canonicalBefore },
-    { targetPath: publicPath, before: publicBefore },
-  ];
   try {
-    for (const target of targets) write(target.targetPath, bytes);
+    write(canonicalPath, bytes);
   } catch (error) {
-    const rollbackErrors = [];
-    for (const target of targets) {
-      try {
-        atomicWrite(target.targetPath, target.before);
-      } catch (rollbackError) {
-        rollbackErrors.push(rollbackError);
-      }
-    }
-    if (rollbackErrors.length > 0) {
+    try {
+      atomicWrite(canonicalPath, canonicalBefore);
+    } catch (rollbackError) {
       throw new AggregateError(
-        [error, ...rollbackErrors],
+        [error, rollbackError],
         `FDIC persistence migration failed and rollback was incomplete: ${error.message}`,
       );
     }
@@ -338,7 +323,6 @@ function controlledFailureQuarter(controlledFailureKey, eventName, quarters) {
 export async function runFdicTier1({
   repoRoot = REPO_ROOT,
   canonicalPath = path.join(REPO_ROOT, "data", "macro", "fdic-tier1.json"),
-  publicPath = path.join(REPO_ROOT, "100xfenok-next", "public", "data", "macro", "fdic-tier1.json"),
   attemptShardPath = path.join(REPO_ROOT, "data", "admin", "data-supply-state", "detection-attempts", "fdic_tier1.json"),
   quarters = generateQuarters(),
   probeQuarter = null,
@@ -500,7 +484,6 @@ export async function runFdicTier1({
     };
   }
   atomicWrite(canonicalPath, serialized);
-  atomicWrite(publicPath, serialized);
   const success = lkgStore.recordSuccess({ artifacts: promotable, run });
   const recovered = success.state.items.fdic_tier1?.recovered_at === observedAt;
   return { ok: true, reason: "ok", updated: true, attempt, quarters: data.length, recovered, probe };
