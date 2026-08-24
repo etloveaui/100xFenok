@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-24T03:20:23.222Z",
+  "generated_at": "2026-08-24T03:47:12.437Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -28,6 +28,20 @@
       "first_failing_run_url": null,
       "alarm_reasons": [
         "plane_outcome_unrecorded"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-yahoo-ticker.yml",
+      "label": "Fetch Yahoo Finance Ticker Snapshot",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "plane_freshness_delayed",
+        "plane_publish_gate_blocked"
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
@@ -445,13 +459,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32685999397",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32685999397",
-    "observed_at": "2026-08-24T03:20:23.222Z",
-    "event": "schedule",
+    "run_id": "32687548913",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32687548913",
+    "observed_at": "2026-08-24T03:47:12.437Z",
+    "event": "workflow_run",
     "workflows": [
       "fetch-edgar-filings.yml",
       "fetch-oecd-cli.yml",
+      "fetch-yahoo-ticker.yml",
       "slickcharts-monthly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
