@@ -383,7 +383,9 @@ jobs:
           python scripts/validate-slickcharts-integrity.py --skip-public
 
       - name: Exercise controlled composite degradation
+        id: controlled_degradation
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.controlled_failure_after_fetch }}
+        continue-on-error: true
         run: |
           echo "::error::Controlled SlickCharts history composite failure"
           exit 1
@@ -397,6 +399,7 @@ jobs:
             --outcome "${{ needs.scrape-returns.result }}" \
             --outcome "${{ needs.scrape-dividends.result }}" \
             --outcome "${{ job.status }}" \
+            --outcome "${{ steps.controlled_degradation.outcome }}" \
             --row "$RUNNER_TEMP/slickcharts-history-row.json"
 
       - name: Finalize SlickCharts composite recovery
@@ -444,7 +447,7 @@ jobs:
 
       - name: Publish slickcharts-history generation to the cloud data plane
         id: publish_cloud_generation
-        if: ${{ needs.scrape-returns.result == 'success' && needs.scrape-dividends.result == 'success' }}
+        if: ${{ needs.scrape-returns.result == 'success' && needs.scrape-dividends.result == 'success' && steps.controlled_degradation.outcome != 'failure' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1

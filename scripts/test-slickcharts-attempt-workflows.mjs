@@ -180,6 +180,21 @@ for (const member of ["history", "symbols"]) {
       < projectionValidation.indexOf("python scripts/validate-slickcharts-integrity.py --skip-public"),
     "history must rebuild the ephemeral membership projection before strict validation",
   );
+  assert.match(
+    history,
+    /- name: Exercise controlled composite degradation\n\s+id: controlled_degradation\n\s+if:.*controlled_failure_after_fetch.*\n\s+continue-on-error: true/,
+    "history controlled degradation must remain observable while allowing handled LKG finalization to exit cleanly",
+  );
+  assert.match(
+    history,
+    /--outcome "\$\{\{ job\.status \}\}" \\\n\s+--outcome "\$\{\{ steps\.controlled_degradation\.outcome \}\}"/,
+    "history attempt emission must retain the controlled failure outcome after the job recovers",
+  );
+  assert.match(
+    history,
+    /if: \$\{\{ needs\.scrape-returns\.result == 'success' && needs\.scrape-dividends\.result == 'success' && steps\.controlled_degradation\.outcome != 'failure' \}\}/,
+    "history controlled degradation must never publish a cloud generation",
+  );
   const fullHistoryPublish = history.slice(history.indexOf("- name: Commit and push changes"));
   assert.match(
     fullHistoryPublish,
