@@ -12,6 +12,8 @@ import path from "node:path";
 import {
   buildAlarmState,
   alarmStateUnchanged,
+  alarmStateResolved,
+  incidentIdentitiesChanged,
   writeAlarmStateMirrors,
   writeWorkflowOutputs,
   ALARM_STATE_SCHEMA,
@@ -202,6 +204,14 @@ assert.equal(resolved.status, "clear", "quiet health resolves to clear");
 assert.equal(resolved.open_incident_count, 0, "no open incidents once clear");
 assert.equal(resolved.last_resolved_at, "2026-07-19T13:00:00.000Z", "transition open->clear stamps last_resolved_at");
 assert.ok(resolved.last_firing && resolved.last_firing.run_id === "123456", "last_firing history preserved across resolution");
+const unknownResolved = buildAlarmState({
+  health: quietHealth,
+  prior: unknownState(),
+  env: ENV,
+  now: new Date("2026-07-19T13:00:00Z"),
+});
+assert.equal(unknownResolved.last_resolved_at, "2026-07-19T13:00:00.000Z",
+  "unknown -> clear stamps last_resolved_at for the all-clear message");
 
 // --- Clear stays clear: last_resolved_at is not re-stamped every quiet run ---
 const stillClear = buildAlarmState({ health: quietHealth, prior: resolved, env: ENV, now: new Date("2026-07-19T14:00:00Z") });
@@ -228,7 +238,11 @@ assert.equal(stillClear.last_resolved_at, "2026-07-19T13:00:00.000Z", "clear->cl
   assert.equal(emitter.alarmStateResolved(null, resolved), false,
     "a first-ever clear run has nothing to announce as resolved");
   assert.equal(emitter.alarmStateResolved(firing, unknownState()), false,
-    "open -> unknown is not a resolution; unknown health must never read as an all-clear");
+    "open -> unknown is not a resolution; unknown health is not clear");
+  assert.equal(emitter.alarmStateResolved(unknownState(), resolved), true,
+    "unknown -> clear must be announceable as an all-clear");
+  assert.equal(emitter.alarmStateResolved({ status: "blind" }, resolved), true,
+    "blind -> clear must be announceable as an all-clear");
 }
 
 function unknownState() {
@@ -343,6 +357,8 @@ for (const state of [firing, resolved, unknown]) {
     alarmStateUnchanged(openNow, repeat),
     "a re-report of an identical incident must be treated as unchanged",
   );
+  assert.equal(incidentIdentitiesChanged(openNow, repeat), false,
+    "a repeated incident must not notify");
 
   // --- transitions that MUST still be written ---
   const worse = buildAlarmState({
@@ -358,6 +374,8 @@ for (const state of [firing, resolved, unknown]) {
     now: NOW,
   });
   assert.ok(!alarmStateUnchanged(openNow, worse), "a growing streak must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, worse), false,
+    "streak churn must not notify");
 
   const secondWorkflow = buildAlarmState({
     health: {
@@ -372,6 +390,10 @@ for (const state of [firing, resolved, unknown]) {
     now: NOW,
   });
   assert.ok(!alarmStateUnchanged(openNow, secondWorkflow), "a second alarming workflow must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, secondWorkflow), true,
+    "adding a workflow incident must notify");
+  assert.equal(incidentIdentitiesChanged(secondWorkflow, openNow), true,
+    "removing a workflow incident must notify");
 
   const differentFirstFailure = buildAlarmState({
     health: {
@@ -386,9 +408,39 @@ for (const state of [firing, resolved, unknown]) {
     now: NOW,
   });
   assert.ok(!alarmStateUnchanged(openNow, differentFirstFailure), "a different first-failing run must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, differentFirstFailure), false,
+    "run evidence churn must not notify");
 
   const resolved = buildAlarmState({ health: quietHealth, prior: openNow, env: ENV, now: new Date("2026-07-19T13:00:00Z") });
   assert.ok(!alarmStateUnchanged(openNow, resolved), "resolution must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, resolved), false,
+    "a clear result must not set incident_changed");
+  assert.equal(alarmStateResolved(openNow, resolved), true,
+    "open -> clear remains announceable through incident_resolved");
+
+  const counterChurn = structuredClone(openNow);
+  counterChurn.open_incidents[0].streak += 1;
+  counterChurn.open_incidents[0].lost_schedule_slot_count += 2;
+  counterChurn.open_incidents[0].first_failing_run_id = 424242;
+  counterChurn.open_incidents[0].first_failing_run_url = "https://gh/run/424242";
+  counterChurn.watched_workflows[0].failure_streak_threshold = 1;
+  counterChurn.watched_workflows[0].cadence_status = "overdue";
+  counterChurn.watched_workflows[0].data_freshness_age_hours_at_generation = 99;
+  assert.equal(incidentIdentitiesChanged(openNow, counterChurn), false,
+    "counter, age, URL, and watch-policy churn must not notify");
+  assert.equal(alarmStateUnchanged(openNow, counterChurn), false,
+    "the same churn must still persist in the full alarm state");
+
+  const reasonAdded = structuredClone(openNow);
+  reasonAdded.open_incidents[0].alarm_reasons = ["failure_streak", "lost_schedule_slot"];
+  assert.equal(incidentIdentitiesChanged(openNow, reasonAdded), true,
+    "adding an incident reason must notify");
+  assert.equal(incidentIdentitiesChanged(reasonAdded, openNow), true,
+    "removing an incident reason must notify");
+  const reasonOrderOnly = structuredClone(openNow);
+  reasonOrderOnly.open_incidents[0].alarm_reasons = ["lost_schedule_slot", "failure_streak"];
+  assert.equal(incidentIdentitiesChanged(reasonAdded, reasonOrderOnly), false,
+    "reason ordering alone must not notify");
 
   const watchListChanged = buildAlarmState({
     health: { ...firingHealth, workflows: [...firingHealth.workflows, okRow("fenok-edge-daily.yml", "Fenok Edge Daily Data")] },
@@ -397,6 +449,8 @@ for (const state of [firing, resolved, unknown]) {
     now: NOW,
   });
   assert.ok(!alarmStateUnchanged(openNow, watchListChanged), "a change to the watched-workflow set must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, watchListChanged), false,
+    "a watch-list-only change must not notify");
 
   const exclusionChanged = buildAlarmState({
     health: {
@@ -409,9 +463,26 @@ for (const state of [firing, resolved, unknown]) {
   });
   assert.ok(!alarmStateUnchanged(openNow, exclusionChanged),
     "a change to an explicit exclusion policy must be written");
+  assert.equal(incidentIdentitiesChanged(openNow, exclusionChanged), false,
+    "an exclusion-policy-only change must not notify");
 
   // A first-ever emission has no prior and must always be written.
   assert.ok(!alarmStateUnchanged(null, openNow), "a first emission must be written");
+  assert.equal(incidentIdentitiesChanged(null, openNow), true,
+    "the first open incident must notify");
+
+  assert.equal(incidentIdentitiesChanged(null, unknown), true,
+    "a first unknown result must surface operator blindness");
+  const unknownRepeat = structuredClone(unknown);
+  unknownRepeat.generated_at = "2026-07-19T12:30:00.000Z";
+  assert.equal(incidentIdentitiesChanged(unknown, unknownRepeat), false,
+    "unchanged blindness must not notify repeatedly");
+  assert.equal(incidentIdentitiesChanged(unknown, resolved), false,
+    "any clear result must remain silent on incident_changed");
+  assert.equal(incidentIdentitiesChanged(null, resolved), false,
+    "a first clear result must remain silent on incident_changed");
+  assert.equal(alarmStateResolved(unknown, resolved), true,
+    "unknown -> clear must use incident_resolved for the all-clear");
 }
 
 // GITHUB_OUTPUT is machinery, not best-effort persistence. An unwritable

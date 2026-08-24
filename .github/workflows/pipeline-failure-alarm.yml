@@ -66,10 +66,9 @@ jobs:
       # cannot compute state or publish transition outputs, the step itself turns
       # the run red and later reporting/persistence stays skipped.
 
-      # Comment only on a state transition. An unresolved incident is re-reported
-      # on every trigger, which put 9 identical comments on the OPS issue between
-      # 04:53 and 06:35 on 2026-07-22. incident_changed is false only when nothing
-      # the alarm asserts has moved. A direct emitter/output failure turns this
+      # Comment only when the operator-visible incident identities change. Full
+      # state and body detail still refresh, but counters, ages, run evidence and
+      # watch-policy churn do not create another comment. A direct emitter/output failure turns this
       # run red and blocks both reporting and persistence, so the next run
       # retries from the prior canonical state.
       - name: Prepare issue body
@@ -125,7 +124,7 @@ jobs:
             exit 0
           fi
           gh issue comment "$existing" --body "$(printf '%s\n' \
-            '[all-clear] Consecutive pipeline job failures have cleared.' \
+            '[all-clear] The pipeline alarm has cleared.' \
             '' \
             'Alarm state is now `clear`. The resolution timestamp and the incident that' \
             'preceded it are in `data/admin/alarm-state.json` (`last_resolved_at`,' \

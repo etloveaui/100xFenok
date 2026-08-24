@@ -139,9 +139,9 @@ export function buildAlarmState({ health, prior = null, env = {}, now = new Date
       }
     : (prior?.last_firing ?? null);
 
-  // last_resolved_at: stamp the transition open -> clear; otherwise preserve.
+  // last_resolved_at: stamp an alarm/uncertain -> clear transition; otherwise preserve.
   let lastResolvedAt = prior?.last_resolved_at ?? null;
-  if (status === "clear" && prior?.status === "open") lastResolvedAt = at;
+  if (status === "clear" && ["open", "unknown", "blind"].includes(prior?.status)) lastResolvedAt = at;
 
   return {
     schema_version: ALARM_STATE_SCHEMA,
@@ -214,19 +214,65 @@ export function alarmStateUnchanged(prior, next) {
   return a !== null && a === significantAlarmState(next);
 }
 
+// The persisted document carries operator-useful detail that changes while one
+// incident remains open: counters, ages, run evidence, and watch policy. Keep
+// those changes for state/body refresh, but do not use them to notify an issue
+// commenter. An incident identity is the workflow plus its reason set. Unknown
+// workflows are included because a change in alarm blindness is operator-visible.
+function incidentIdentityProjection(state) {
+  if (!state || typeof state !== "object") return null;
+  const openIncidents = Array.isArray(state.open_incidents)
+    ? state.open_incidents
+      .map((incident) => ({
+        workflow: incident?.workflow ?? null,
+        alarm_reasons: Array.isArray(incident?.alarm_reasons)
+          ? [...new Set(incident.alarm_reasons)].sort()
+          : [],
+      }))
+      .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+    : [];
+  const unknownWorkflows = Array.isArray(state.unknown_workflows)
+    ? state.unknown_workflows
+      .map((workflow) => ({
+        workflow: workflow?.workflow ?? null,
+        status: workflow?.status ?? null,
+      }))
+      .sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))
+    : [];
+  const healthUncertain = state.status === "unknown" || state.status === "blind";
+  if (openIncidents.length === 0 && unknownWorkflows.length === 0 && !healthUncertain) return null;
+  return {
+    open_incidents: openIncidents,
+    unknown_workflows: unknownWorkflows,
+    health_uncertain: healthUncertain,
+  };
+}
+
 /**
- * True only on the open -> clear transition, so a recovery can be ANNOUNCED and
- * not merely recorded. `buildAlarmState` already stamps `last_resolved_at`, but
- * the alarm's notification channel is gated on the failing path, which means the
- * OPS issue collects alerts and is never told the incident ended; a reader cannot
- * separate a live outage from a finished one.
+ * Compare only the identities that should trigger a new OPS issue comment.
+ * Full alarm-state equality remains owned by alarmStateUnchanged so counters,
+ * ages, run evidence, and policy changes still persist and refresh the body.
+ * Resolution has its own output and must not be reported as a new incident.
+ */
+export function incidentIdentitiesChanged(prior, next) {
+  if (next?.status === "clear") return false;
+
+  const nextProjection = incidentIdentityProjection(next);
+  const priorProjection = incidentIdentityProjection(prior);
+  return JSON.stringify(priorProjection) !== JSON.stringify(nextProjection);
+}
+
+/**
+ * True when an open alarm or an uncertain/blind read recovers to clear, so the
+ * recovery can be ANNOUNCED and not merely recorded. `buildAlarmState` already
+ * stamps `last_resolved_at`, but the alarm's notification channel is gated on
+ * the failing path, which means the OPS issue collects alerts and is never told
+ * the incident ended; a reader cannot separate a live outage from a finished one.
  *
- * `status` is the honest three-value vocabulary, so an `unknown` read can never
- * be announced as an all-clear, and a first-ever clear run (no prior document)
- * has nothing to announce.
+ * A first-ever clear run (no prior document) has nothing to announce.
  */
 export function alarmStateResolved(prior, next) {
-  return prior?.status === "open" && next?.status === "clear";
+  return ["open", "unknown", "blind"].includes(prior?.status) && next?.status === "clear";
 }
 
 export function writeAlarmStateMirrors({ state, outPath, publicOutPath }) {
@@ -258,14 +304,12 @@ function main() {
   const unchanged = alarmStateUnchanged(prior, state);
   const emitted = unchanged ? prior : state;
   writeAlarmStateMirrors({ state: emitted, outPath });
-  // Published so the workflow can gate the OPS issue comment on it. Suppressing
-  // the redundant commit without suppressing the comment would have left the
-  // louder half of the churn in place: 9 comments on issue #88 between 04:53 and
-  // 06:35 on 2026-07-22, all restating one unchanged incident.
-  const incidentChanged = unchanged ? "false" : "true";
+  // Published separately from full state equality: the latest state remains
+  // available for body refresh, while only identity changes notify the issue.
+  const incidentChanged = incidentIdentitiesChanged(prior, state) ? "true" : "false";
   // Published alongside `incident_changed` so the notification channel can post an
   // all-clear instead of leaving the OPS issue reading as a live outage forever.
-  // The workflow gating that consumes this is a separate change and is not made here.
+  // The workflow consumes this output on its all-clear path.
   const incidentResolved = alarmStateResolved(prior, emitted) ? "true" : "false";
   if (process.env.GITHUB_OUTPUT) {
     // Output publication is machinery, not best-effort persistence: without
