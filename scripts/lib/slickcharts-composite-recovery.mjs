@@ -4,6 +4,29 @@ import path from "node:path";
 
 import { canonicalJson } from "./json-canonical.mjs";
 
+// Lane opt-in to the shared first-attempt structured workflow_dispatch
+// recovery policy (isEligibleRecoveryRun in data-supply-lkg-store.mjs).
+const ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY = true;
+
+// Local mirror of the shared eligibility predicate from
+// data-supply-lkg-store.mjs (isNaturalScheduleRun,
+// hasStructuredGithubRunBinding, isEligibleRecoveryRun). A static import of
+// that module is impossible here: lane-registry.mjs:699 reads
+// SLICKCHARTS_MEMBER_PATHS at module-evaluation time inside the
+// data-supply-lkg-store import graph (data-supply-attempt-shard.mjs ->
+// data-supply-detection-config.mjs -> lane-registry.mjs -> this module),
+// so the edge would TDZ-crash every entry point. Keep this mirror
+// byte-identical in behavior to the shared predicate.
+function isEligibleRecoveryRun(run, allowBoundWorkflowDispatchRecovery = false) {
+  const natural = run?.eventName === "schedule" && Number(run?.runAttempt ?? 1) === 1;
+  if (natural) return true;
+  if (allowBoundWorkflowDispatchRecovery !== true) return false;
+  if (run?.eventName !== "workflow_dispatch" || Number(run?.runAttempt ?? 0) !== 1) return false;
+  if (typeof run?.runId !== "string" || run.runId.length === 0) return false;
+  const numeric = Number(run.runId);
+  return Number.isInteger(numeric) && numeric > 0 && String(numeric) === run.runId.trim();
+}
+
 export const SLICKCHARTS_COMPOSITE_SCHEMA = "slickcharts-composite-lkg-index/v1";
 export const SLICKCHARTS_COMPOSITE_LANE_ID = "slickcharts";
 export const SLICKCHARTS_COMPOSITE_MEMBERS = Object.freeze([
@@ -506,7 +529,13 @@ export function finalizeSlickchartsCompositeRecovery({
   const row = JSON.parse(fs.readFileSync(rowPath, "utf8"));
   if (row.lane_id !== SLICKCHARTS_COMPOSITE_LANE_ID || row.member_id !== member) fail("attempt row identity is invalid");
   const prior = structuredClone(index.members[member]);
-  const natural = run.event_name === "schedule" && run.run_attempt === 1;
+  // Natural schedule attempt 1, or (lane opt-in) a bound first-attempt
+  // workflow_dispatch with a numeric nonzero GITHUB_RUN_ID.
+  const natural = isEligibleRecoveryRun({
+    eventName: run.event_name,
+    runAttempt: run.run_attempt,
+    runId: run.run_id == null ? run.run_id : String(run.run_id),
+  }, ALLOW_BOUND_WORKFLOW_DISPATCH_RECOVERY);
   let publishData = false;
   let exitCode = 0;
   let decision;

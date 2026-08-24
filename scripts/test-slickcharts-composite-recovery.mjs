@@ -74,6 +74,7 @@ function receipt(target, providerDate, responseSha256 = "a".repeat(64)) {
 function finalize(member, {
   eventName = "schedule",
   runAttempt = 1,
+  runId = null,
   providerDate = "2026-08-01T00:00:00.000Z",
   passed = true,
   fullRun = true,
@@ -101,7 +102,7 @@ function finalize(member, {
     receiptTargets: [receiptPath],
     statusPath,
     run: {
-      run_id: String(runCounter),
+      run_id: runId ?? String(runCounter),
       run_attempt: runAttempt,
       event_name: eventName,
       observed_at: `2026-08-${String(Math.min(runCounter - 99, 28)).padStart(2, "0")}T00:00:00.000Z`,
@@ -217,12 +218,37 @@ assert.equal(result.index.retained_composite.generation_id, generationBeforeFail
 assert.deepEqual(inspectSlickchartsMemberBundle(root, "weekly"), weeklyBefore);
 const failureRunId = result.index.members.weekly.last_failure.run.run_id;
 
-// Dispatch and scheduled retry attempt 2 cannot promote a recovery even with a
-// newer receipt, and an attempt-1 observation must advance the provider floor.
+// The lane opts into the shared first-attempt structured workflow_dispatch
+// recovery policy: a bound (numeric nonzero run id) first-attempt dispatch is
+// admitted like a natural schedule run and still faces the provider gates.
+// Synthetic run ids, retry attempts, and stale observations cannot promote.
 write("data/slickcharts/sp500.json", { candidate: "dispatch" });
 result = finalize("weekly", { eventName: "workflow_dispatch", providerDate: "2026-08-03T00:00:00.000Z" });
+assert.equal(result.status.decision, "recovery_requires_advancing_provider_content");
+assert.equal(result.index.members.weekly.resolution_state, "lkg_primary");
+
+write("data/slickcharts/sp500.json", { candidate: "dispatch-synthetic-run-id" });
+result = finalize("weekly", {
+  eventName: "workflow_dispatch",
+  runId: "slickcharts-manual-recovery-run",
+  providerDate: "2026-08-03T00:00:00.000Z",
+  responseSha256: "b".repeat(64),
+});
 assert.equal(result.status.decision, "recovery_requires_natural_schedule_attempt_1");
 assert.equal(result.index.members.weekly.resolution_state, "lkg_primary");
+
+write("data/slickcharts/sp500.json", { candidate: "dispatch-attempt-2" });
+result = finalize("weekly", {
+  eventName: "workflow_dispatch",
+  runAttempt: 2,
+  providerDate: "2026-08-03T00:00:00.000Z",
+  responseSha256: "b".repeat(64),
+});
+assert.equal(result.status.decision, "recovery_requires_natural_schedule_attempt_1");
+
+write("data/slickcharts/sp500.json", { candidate: "dispatch-stale-provider-time" });
+result = finalize("weekly", { eventName: "workflow_dispatch", providerDate: "2026-08-01T00:00:00.000Z" });
+assert.equal(result.status.decision, "recovery_requires_advancing_provider_time");
 
 write("data/slickcharts/sp500.json", { candidate: "attempt-2" });
 result = finalize("weekly", { runAttempt: 2, providerDate: "2026-08-03T00:00:00.000Z" });
@@ -248,6 +274,25 @@ assert.deepEqual(result.index.retry_members, []);
 assert.equal(result.index.members.weekly.last_recovery.recovered_from_run_id, failureRunId);
 assert.equal(result.index.members.weekly.last_recovery.recovery_run_attempt, 1);
 assert.equal(result.index.members.weekly.last_recovery.recovery_event_name, "schedule");
+
+// A bound first-attempt workflow_dispatch with an advancing provider
+// observation recovers exactly like a natural schedule run.
+const dispatchFailure = failMember("weekly", "2026-08-06T00:00:00.000Z");
+assert.equal(dispatchFailure.status.decision, "retained_lkg");
+const dispatchFailureRunId = dispatchFailure.index.members.weekly.last_failure.run.run_id;
+write("data/slickcharts/sp500.json", { candidate: "dispatch-recovery" });
+result = finalize("weekly", {
+  eventName: "workflow_dispatch",
+  providerDate: "2026-08-07T00:00:00.000Z",
+  responseSha256: "c".repeat(64),
+});
+assert.equal(result.status.decision, "recovered_and_promoted");
+assert.equal(result.status.publish_data, true);
+assert.equal(result.index.composite_state, "ready");
+assert.deepEqual(result.index.retry_members, []);
+assert.equal(result.index.members.weekly.last_recovery.recovered_from_run_id, dispatchFailureRunId);
+assert.equal(result.index.members.weekly.last_recovery.recovery_run_attempt, 1);
+assert.equal(result.index.members.weekly.last_recovery.recovery_event_name, "workflow_dispatch");
 
 // Every workflow-owned path contract uses the same all-or-nothing rollback.
 for (const [offset, member] of ["daily", "monthly", "history", "symbols"].entries()) {
