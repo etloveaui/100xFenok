@@ -1477,6 +1477,15 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     lkg_source_as_of: "2026-03-31",
     source_as_of: "2026-06-30",
   }], "FINRA bound first-attempt dispatch recovery under the finra-ats root projects");
+  const finraDispatchCheckerErrors = [];
+  checkDetectionFloorLane(finraDispatchLane, finraDispatchCheckerErrors, liveConfigs.find((item) => item.id === "finra_ats_weekly"));
+  assert.deepEqual(finraDispatchCheckerErrors, [], "checker accepts FINRA bound dispatch recovery evidence");
+  const finraSyntheticLane = structuredClone(finraDispatchLane);
+  finraSyntheticLane.details.recovery_recovered[0].recovery_run_id = "0123";
+  const finraSyntheticCheckerErrors = [];
+  checkDetectionFloorLane(finraSyntheticLane, finraSyntheticCheckerErrors, liveConfigs.find((item) => item.id === "finra_ats_weekly"));
+  assert.ok(finraSyntheticCheckerErrors.some((message) => /recovery_recovered is malformed/.test(message)),
+    "checker rejects a non-canonical FINRA dispatch run id");
 
   const finraSyntheticDispatch = structuredClone(finraDispatchRecovered);
   finraSyntheticDispatch.items["weekly-summary"].recovery_run_id = "0123";

@@ -45,6 +45,7 @@ import {
   validateProducerRecoveryAttempt,
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../../scripts/lib/data-supply-detection-config.mjs";
+import { hasStructuredGithubRunBinding } from "../../scripts/lib/data-supply-lkg-store.mjs";
 import { buildFetchCronAttemptCoverage } from "../../scripts/build-data-supply-detection-floor.mjs";
 import { inspectSlickchartsCompositeLiveIntegrity } from "../../scripts/lib/slickcharts-composite-recovery.mjs";
 
@@ -338,6 +339,13 @@ function isDetectionSourceStamp(value) {
     && Number.isFinite(new Date(value).getTime());
 }
 
+// Checker-local mirror of BOUND_DISPATCH_RECOVERY_LANES in
+// scripts/build-fenok-data-health-kpi.mjs (not exported there; the checker
+// keeps its own canonical copy by policy): owner-approved FINRA exception —
+// finra_ats_weekly may prove recovery via a bound first-attempt
+// workflow_dispatch run; every other lane stays natural-schedule-only.
+const BOUND_DISPATCH_RECOVERY_LANE_IDS = Object.freeze(new Set(["finra_ats_weekly"]));
+
 export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   const laneId = expectedConfig?.id ?? lane?.id ?? "<unknown>";
   const sourceAsOf = lane?.artifact?.source_as_of;
@@ -380,7 +388,13 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
       && typeof item.recovered_from_run_id === "string" && item.recovered_from_run_id !== ""
       && typeof item.recovery_run_id === "string" && item.recovery_run_id !== ""
       && item.recovery_run_id !== item.recovered_from_run_id
-      && item.recovery_run_attempt === 1 && item.recovery_event_name === "schedule"
+      && item.recovery_run_attempt === 1
+      && (item.recovery_event_name === "schedule"
+        || (BOUND_DISPATCH_RECOVERY_LANE_IDS.has(laneId) && hasStructuredGithubRunBinding({
+          eventName: item.recovery_event_name,
+          runAttempt: item.recovery_run_attempt,
+          runId: item.recovery_run_id,
+        })))
       && isDetectionSourceStamp(item.recovered_at)
       && isDetectionSourceStamp(item.lkg_source_as_of)
       && isDetectionSourceStamp(item.source_as_of)
