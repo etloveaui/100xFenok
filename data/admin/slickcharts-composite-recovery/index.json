@@ -1,9 +1,9 @@
 {
   "schema_version": "slickcharts-composite-lkg-index/v1",
   "lane_id": "slickcharts",
-  "generated_at": "2026-08-23T09:13:55.923Z",
-  "state_revision": 95,
-  "composite_state": "ready",
+  "generated_at": "2026-08-24T06:07:28.000Z",
+  "state_revision": 97,
+  "composite_state": "degraded_lkg",
   "active_composite": {
     "generation_id": "e3481f0dd16d9e6e5dd1869d8d918d649e802ceda106be0b08ac2a04bddfdc2a",
     "members": {
@@ -15,8 +15,20 @@
     },
     "commit_sha": null
   },
-  "retained_composite": null,
-  "retry_members": [],
+  "retained_composite": {
+    "generation_id": "e3481f0dd16d9e6e5dd1869d8d918d649e802ceda106be0b08ac2a04bddfdc2a",
+    "members": {
+      "daily": "73f6794ca364b693cbb3bc4ac9b88af177fc9f9eb1577fab5c2006095a7c74a3",
+      "weekly": "91194a416f73470667a28a8b53bddef99c14ad157de7db92784482b5b5285808",
+      "monthly": "c83134b6c33ea215495137cdf191f4786845d54c93cc01007774f48b402d4733",
+      "history": "da7902727cc96cb97af39790d81f617988bc77b37e634bfaf58f069ca3830eba",
+      "symbols": "e757bec1dda35657348031585f530ad60a53890b60cc76135d1ca2a98a9f97e9"
+    },
+    "commit_sha": null
+  },
+  "retry_members": [
+    "history"
+  ],
   "members": {
     "daily": {
       "resolution_state": "fresh_primary",
@@ -276,8 +288,8 @@
       "last_recovery": null
     },
     "history": {
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "bundle": {
         "contract_sha256": "8af72e3ad3dcec8dd256e4f8816a64c74d690595bbed3597cac504364f8e1393",
         "file_count": 544,
@@ -3021,7 +3033,17 @@
         "observed_at": "2026-08-23T09:13:53.574Z",
         "head_sha": "06424e7681cebb4bdd89f1deaa986bd5e010fed3"
       },
-      "last_failure": null,
+      "last_failure": {
+        "run": {
+          "run_id": "32694623148",
+          "run_attempt": 1,
+          "event_name": "workflow_dispatch",
+          "observed_at": "2026-08-24T06:07:26.161Z",
+          "head_sha": "18da841c624a67e46572efa8d109b6368ede9733"
+        },
+        "attempt_id": "gh-32694623148-1-history",
+        "retained_generation_id": "e3481f0dd16d9e6e5dd1869d8d918d649e802ceda106be0b08ac2a04bddfdc2a"
+      },
       "last_recovery": null
     },
     "symbols": {
@@ -3065,12 +3087,12 @@
     }
   },
   "current_attempt": {
-    "run_id": "32630017013",
+    "run_id": "32694623148",
     "run_attempt": 1,
     "event_name": "workflow_dispatch",
-    "observed_at": "2026-08-23T09:13:53.574Z",
+    "observed_at": "2026-08-24T06:07:26.161Z",
     "member_id": "history",
-    "decision": "candidate_promoted",
-    "base_member_state_sha256": "63fbe90c157f4dac1548d4c3af3e24a249b52dd34a72efe132b24532eb28b0c7"
+    "decision": "retained_lkg",
+    "base_member_state_sha256": "7cd8b1f07b5c504bb010d89c20393369519f4ab46938dbdfcc93ea3ab67c93d7"
   }
 }
