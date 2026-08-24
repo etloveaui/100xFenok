@@ -7,6 +7,7 @@ import {
   validateDetectionReport,
 } from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
+import { hasStructuredGithubRunBinding } from "./lib/data-supply-lkg-store.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 import {
   SLICKCHARTS_COMPOSITE_MEMBERS,
@@ -748,6 +749,7 @@ function validateRecoveryState(state, laneId) {
 export function projectRecoveryRetrySet(state, laneId) {
   const validated = validateRecoveryState(state, laneId);
   if (validated === null) return [];
+  const expectedLkgRoot = BOUND_DISPATCH_RECOVERY_LANES.get(laneId)?.admin_root ?? laneId;
   const { retrySet } = validated;
   return retrySet.map((key) => {
     const item = state.items[key];
@@ -777,7 +779,7 @@ export function projectRecoveryRetrySet(state, laneId) {
       const current = item.current;
       const lkg = item.lkg;
       if (!current || !lkg
-        || current.path !== `data/admin/${laneId}/lkg/${key}.json`
+        || current.path !== `data/admin/${expectedLkgRoot}/lkg/${key}.json`
         || lkg.path !== current.path
         || !/^[0-9a-f]{64}$/.test(current.payload_sha256 ?? "")
         || lkg.payload_sha256 !== current.payload_sha256
@@ -808,9 +810,21 @@ export function formatRecoveryRetryEvidence(items) {
   }).join("; ");
 }
 
+// Owner-approved FINRA exception: finra_ats_weekly proves recovery via a bound
+// first-attempt workflow_dispatch run (shared LaneLkgStore opt-in) in addition
+// to the natural schedule path, and its recovery state lives under the
+// approved admin storage root data/admin/finra-ats, which deliberately differs
+// from the lane id. Every other lane keeps natural-schedule-only proof and the
+// data/admin/<laneId> root.
+const BOUND_DISPATCH_RECOVERY_LANES = Object.freeze(new Map([
+  ["finra_ats_weekly", Object.freeze({ admin_root: "finra-ats" })],
+]));
+
 export function projectRecoveryRecoveredSet(state, laneId) {
   const validated = validateRecoveryState(state, laneId);
   if (validated === null) return [];
+  const laneException = BOUND_DISPATCH_RECOVERY_LANES.get(laneId);
+  const expectedLkgRoot = laneException?.admin_root ?? laneId;
   return Object.entries(validated.state.items)
     .map(([key, item]) => {
       const naturalProofFields = [
@@ -834,12 +848,17 @@ export function projectRecoveryRecoveredSet(state, laneId) {
         || typeof item.recovery_run_id !== "string" || item.recovery_run_id === ""
         || item.recovery_run_id === item.recovered_from_run_id
         || item.recovery_run_attempt !== 1
-        || item.recovery_event_name !== "schedule"
+        || (item.recovery_event_name !== "schedule"
+          && !(laneException !== undefined && hasStructuredGithubRunBinding({
+            eventName: item.recovery_event_name,
+            runAttempt: item.recovery_run_attempt,
+            runId: item.recovery_run_id,
+          })))
         || !isDetectionSourceStamp(item.recovered_at)
         || !current || typeof current.path !== "string" || current.path === ""
         || !/^[0-9a-f]{64}$/.test(current.payload_sha256 ?? "")
         || !isDetectionSourceStamp(current.source_as_of)
-        || !lkg || lkg.path !== `data/admin/${laneId}/lkg/${key}.json`
+        || !lkg || lkg.path !== `data/admin/${expectedLkgRoot}/lkg/${key}.json`
         || !/^[0-9a-f]{64}$/.test(lkg.payload_sha256 ?? "")
         || !isDetectionSourceStamp(lkg.source_as_of)
         || Date.parse(current.source_as_of) <= Date.parse(lkg.source_as_of)

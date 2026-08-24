@@ -1295,6 +1295,45 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   checkDetectionFloorLane(tgaRecoveryLane, tgaRecoveryCheckerErrors, liveConfigs.find((item) => item.id === "treasury_tga"));
   assert.deepEqual(tgaRecoveryCheckerErrors, []);
 
+  const finraRetry = structuredClone(fdicRecovery);
+  finraRetry.lane_id = "finra_ats_weekly";
+  finraRetry.retry_set = ["weekly-summary"];
+  finraRetry.items = {
+    "weekly-summary": {
+      ...structuredClone(fdicRecovery.items.fdic_tier1),
+      key: "weekly-summary",
+      current: {
+        path: "data/admin/finra-ats/lkg/weekly-summary.json",
+        payload_sha256: "a".repeat(64),
+        source_as_of: "2026-03-31",
+      },
+      lkg: {
+        path: "data/admin/finra-ats/lkg/weekly-summary.json",
+        payload_sha256: "a".repeat(64),
+        source_as_of: "2026-03-31",
+      },
+    },
+  };
+  const finraRetryLane = buildDetectionFloorLanes(report(), { finra_ats_weekly: finraRetry })
+    .find((item) => item.id === "finra_ats_weekly");
+  assert.deepEqual(finraRetryLane.details.recovery_retry_set, [{
+    key: "weekly-summary",
+    resolution_state: "lkg_primary",
+    failure_run_id: "4001",
+    promotion_deferral_reason: null,
+    promotion_deferral_run_id: null,
+    recovered_from_run_id: null,
+  }], "FINRA retained retry under the approved finra-ats root projects");
+
+  const finraRetryWrongRoot = structuredClone(finraRetry);
+  finraRetryWrongRoot.items["weekly-summary"].current.path = "data/admin/finra_ats_weekly/lkg/weekly-summary.json";
+  finraRetryWrongRoot.items["weekly-summary"].lkg.path = "data/admin/finra_ats_weekly/lkg/weekly-summary.json";
+  assert.throws(
+    () => buildDetectionFloorLanes(report(), { finra_ats_weekly: finraRetryWrongRoot }),
+    /retained LKG.*malformed/i,
+    "FINRA retained LKG outside the approved finra-ats root is rejected",
+  );
+
   const fdicRecovered = structuredClone(fdicRecovery);
   fdicRecovered.updated_at = "2026-07-16T01:00:00.000Z";
   fdicRecovered.retry_set = [];
@@ -1402,6 +1441,57 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     () => buildDetectionFloorLanes(report(), { fdic_tier1: explicitDispatchRecovery }),
     /recovery provenance.*malformed/i,
     "explicit dispatch recovery cannot be projected as natural proof",
+  );
+
+  const finraDispatchRecovered = structuredClone(fdicRecovered);
+  finraDispatchRecovered.lane_id = "finra_ats_weekly";
+  finraDispatchRecovered.items = {
+    "weekly-summary": {
+      ...structuredClone(fdicRecovered.items.fdic_tier1),
+      key: "weekly-summary",
+      current: {
+        path: "data/admin/finra-ats/current/weekly-summary.json",
+        payload_sha256: "b".repeat(64),
+        source_as_of: "2026-06-30",
+      },
+      lkg: {
+        path: "data/admin/finra-ats/lkg/weekly-summary.json",
+        payload_sha256: "a".repeat(64),
+        source_as_of: "2026-03-31",
+      },
+      recovery_run_id: "16400000001",
+      recovery_event_name: "workflow_dispatch",
+    },
+  };
+  const finraDispatchLane = buildDetectionFloorLanes(report(), { finra_ats_weekly: finraDispatchRecovered })
+    .find((item) => item.id === "finra_ats_weekly");
+  assert.deepEqual(finraDispatchLane.details.recovery_recovered, [{
+    key: "weekly-summary",
+    resolution_state: "fresh_primary",
+    retry: false,
+    recovered_from_run_id: "4001",
+    recovery_run_id: "16400000001",
+    recovery_run_attempt: 1,
+    recovery_event_name: "workflow_dispatch",
+    recovered_at: "2026-07-16T01:00:00.000Z",
+    lkg_source_as_of: "2026-03-31",
+    source_as_of: "2026-06-30",
+  }], "FINRA bound first-attempt dispatch recovery under the finra-ats root projects");
+
+  const finraSyntheticDispatch = structuredClone(finraDispatchRecovered);
+  finraSyntheticDispatch.items["weekly-summary"].recovery_run_id = "0123";
+  assert.throws(
+    () => buildDetectionFloorLanes(report(), { finra_ats_weekly: finraSyntheticDispatch }),
+    /recovery provenance.*malformed/i,
+    "a non-canonical dispatch run id is never FINRA recovery proof",
+  );
+
+  const finraWrongRoot = structuredClone(finraDispatchRecovered);
+  finraWrongRoot.items["weekly-summary"].lkg.path = "data/admin/finra_ats_weekly/lkg/weekly-summary.json";
+  assert.throws(
+    () => buildDetectionFloorLanes(report(), { finra_ats_weekly: finraWrongRoot }),
+    /recovery provenance.*malformed/i,
+    "FINRA LKG evidence outside the approved finra-ats admin root is rejected",
   );
 
   const projectedRecovered = projectPublicKpi({
