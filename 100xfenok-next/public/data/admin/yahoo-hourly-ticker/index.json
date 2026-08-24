@@ -1,93 +1,53 @@
 {
   "schema_version": "producer-lkg-index/v2",
   "lane_id": "yahoo_hourly_ticker",
-  "generated_at": "2026-08-23T23:31:37.495Z",
+  "generated_at": "2026-08-24T21:38:52.221Z",
   "keys": [
     "TQQQ.json",
     "SOXL.json"
   ],
   "counts": {
     "keys": 2,
-    "fresh": 0,
-    "lkg": 2,
-    "retry": 2,
+    "fresh": 2,
+    "lkg": 0,
+    "retry": 0,
     "unavailable": 0,
     "failed": 0,
     "recovered": 0
   },
-  "retry_keys": [
-    "TQQQ.json",
-    "SOXL.json"
-  ],
-  "lkg_details": [
-    {
-      "key": "TQQQ.json",
-      "payload_sha256": "b141087a459486e226c5671c88d13865c8f3afc2b08a27f19cb615098c23561e",
-      "source_as_of": "2026-08-21T20:00:00.000Z",
-      "failure_run_id": "32567963043",
-      "failure_run_attempt": 1
-    },
-    {
-      "key": "SOXL.json",
-      "payload_sha256": "a6b73ea0d51be6c8fb781afc7dc8a05be755e5c915d7913d7aee2985b1b88aaa",
-      "source_as_of": "2026-08-21T20:00:00.000Z",
-      "failure_run_id": "32567963043",
-      "failure_run_attempt": 1
-    }
-  ],
+  "retry_keys": [],
+  "lkg_details": [],
   "recovery_details": [
     {
       "key": "TQQQ.json",
-      "recovered_from_run_id": "32372444892",
-      "recovery_run_id": "32382387233",
+      "recovered_from_run_id": "32567963043",
+      "recovery_run_id": "32741560825",
       "recovery_run_attempt": 1,
       "recovery_event_name": "schedule",
-      "recovered_at": "2026-08-20T14:49:04.464Z",
-      "source_as_of": "2026-08-21T20:00:00.000Z"
+      "recovered_at": "2026-08-24T14:54:20.066Z",
+      "source_as_of": "2026-08-24T20:00:00.000Z"
     },
     {
       "key": "SOXL.json",
-      "recovered_from_run_id": "32372444892",
-      "recovery_run_id": "32382387233",
+      "recovered_from_run_id": "32567963043",
+      "recovery_run_id": "32741560825",
       "recovery_run_attempt": 1,
       "recovery_event_name": "schedule",
-      "recovered_at": "2026-08-20T14:49:04.464Z",
-      "source_as_of": "2026-08-21T20:00:00.000Z"
+      "recovered_at": "2026-08-24T14:54:20.066Z",
+      "source_as_of": "2026-08-24T20:00:00.000Z"
     }
   ],
-  "promotion_deferral_details": [
-    {
-      "key": "TQQQ.json",
-      "run_id": "32673855130",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "observed_at": "2026-08-23T23:31:37.495Z",
-      "source_as_of": "2026-08-21T20:00:00.000Z",
-      "reason": "foreign_writer_conflict"
-    },
-    {
-      "key": "SOXL.json",
-      "run_id": "32673855130",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "observed_at": "2026-08-23T23:31:37.495Z",
-      "source_as_of": "2026-08-21T20:00:00.000Z",
-      "reason": "recovery_not_advanced_by_provider"
-    }
-  ],
+  "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "32673855130",
+    "run_id": "32780591545",
     "run_attempt": 1,
     "event_name": "schedule",
-    "observed_at": "2026-08-23T23:31:37.495Z",
+    "observed_at": "2026-08-24T21:38:52.221Z",
     "attempted": 2,
-    "successes": 0,
+    "successes": 2,
     "failed": 0,
     "failed_keys": [],
-    "promotion_deferrals": 2,
-    "promotion_deferral_keys": [
-      "TQQQ.json",
-      "SOXL.json"
-    ]
+    "promotion_deferrals": 0,
+    "promotion_deferral_keys": []
   }
 }
