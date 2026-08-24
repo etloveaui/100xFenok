@@ -276,7 +276,6 @@ const adoptionContracts: Array<[string, string[]]> = [
   ["src/app/etfs/etfSurfaceData.ts", ["return formatCurrency(value, \"USD\");", "return formatCompactNumber(value);"]],
   ["src/app/etfs/new/NewEtfsList.tsx", ["return formatCurrency(value, \"USD\");", "return \"—\";"]],
   ["src/app/explore/etfUniverseUtils.ts", ["return formatInteger(value);", "formatMultiple(factor"]],
-  ["src/app/explore/SlickchartsDiscoveryCard.tsx", ["return formatCurrency(value, \"USD\");"]],
   ["src/app/explore/StockWorkbenchCard.tsx", ["return formatCurrency(value, \"USD\");", "return formatInteger(value);"]],
   ["src/app/explore/ExploreHotTopics.tsx", ["return formatCurrencyCompact(value, \"USD\");"]],
   ["src/app/sectors/SectorsClient.tsx", ["formatDecimal(value, { digits: 1 })"]],
