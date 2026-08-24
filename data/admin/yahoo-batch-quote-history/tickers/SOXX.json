@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-12T02:41:04Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31557511991",
-      "schedule": "7 0 * * 0-5",
-      "shard": "36/72"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,34 +168,45 @@
       "run_id": "32379322022",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 885,
+      "natural": true,
+      "observed_at": "2026-08-24T01:55:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32681249468",
+      "schedule": "7 0 * * 0-5",
+      "shard": "1/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:30:43Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-24T01:56:07Z",
+    "history_as_of": "2026-08-21",
     "path": "data/yf/finance/SOXX.json",
-    "payload_sha256": "4e084e2b636c52812b7f7dd646539b5d6b3898ccfde601d04719235453f46a95",
-    "quote_as_of": "2026-08-20T15:30:40Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "2e860fefc646db19030dc8fcdc3964ab168ab2ea245e638579b34d68e52d5013",
+    "quote_as_of": "2026-08-21T20:00:00Z",
+    "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "global_scouter_etf",
     "major_etf_configuration",
-    "rim_tracker_configuration",
-    "stockanalysis_etf"
+    "rim_tracker_configuration"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 692,
-    "natural": false,
-    "observed_at": "2026-08-20T14:20:12Z",
+    "latency_ms": 885,
+    "natural": true,
+    "observed_at": "2026-08-24T01:55:37Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32379322022",
-    "schedule": "",
-    "shard": ""
+    "run_id": "32681249468",
+    "schedule": "7 0 * * 0-5",
+    "shard": "1/6"
   },
   "lkg": {
     "fetched_at": "2026-06-28T00:14:11Z",
@@ -220,15 +218,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "68dd1590c1b59f43afc09c8adcece991410a16fb57ef47f1a49eb710156b7c5c",
-    "quote_as_of": "2026-08-20T15:30:40Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-24T01:55:37Z",
+    "payload_sha256": "7d60f406adf2c2db681ea344abf50d7f62aaf7e284991a852937be4ce00bde69",
+    "quote_as_of": "2026-08-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32681249468",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -244,5 +242,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "SOXX",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-08-24T01:55:37Z"
 }
