@@ -693,7 +693,15 @@ function atsLkgStore(repoRoot) {
   // The registry lane id is finra_ats_weekly while the approved admin storage
   // root is the human-facing data/admin/finra-ats/. Keep the state lane id for
   // KPI attribution, but bind every on-disk recovery path to that approved root.
-  const store = new LaneLkgStore({ repoRoot, laneId: FINRA_ATS_LANE_ID });
+  // FINRA ATS opts into recovery promotion for authentic first-attempt
+  // workflow_dispatch runs only; eligibility stays inside the shared
+  // LaneLkgStore predicate (numeric GitHub run id, attempt 1, provider
+  // source_as_of advancement).
+  const store = new LaneLkgStore({
+    repoRoot,
+    laneId: FINRA_ATS_LANE_ID,
+    allowBoundWorkflowDispatchRecovery: true,
+  });
   store.adminRoot = path.join(repoRoot, "data", "admin", "finra-ats");
   store.lkgRoot = path.join(store.adminRoot, "lkg");
   store.statePath = path.join(store.adminRoot, "index.json");

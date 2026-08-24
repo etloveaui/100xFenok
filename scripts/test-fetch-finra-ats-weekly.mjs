@@ -163,7 +163,7 @@ function attemptSink(rows) {
   return (input) => { rows.push(input); return input; };
 }
 
-async function runSuccess(root, { eventName = "schedule", request = null, observedAt = OBSERVED_AT, attempts = [], referenceDate = REFERENCE_DATE } = {}) {
+async function runSuccess(root, { eventName = "schedule", request = null, observedAt = OBSERVED_AT, attempts = [], referenceDate = REFERENCE_DATE, runId = null, runAttempt = 1 } = {}) {
   const targets = summaryTargets(referenceDate);
   const mock = request ? { request, calls: [] } : makeRequestMock(successResponses(targets));
   const result = await run({
@@ -172,7 +172,8 @@ async function runSuccess(root, { eventName = "schedule", request = null, observ
     clientId: "client-id",
     clientSecret: "client-secret",
     eventName,
-    runId: `run-${eventName}-${observedAt}`.replaceAll(/[^a-z0-9_-]/gi, "-").toLowerCase(),
+    runId: runId ?? `run-${eventName}-${observedAt}`.replaceAll(/[^a-z0-9_-]/gi, "-").toLowerCase(),
+    runAttempt,
     observedAt,
     referenceDate,
     attemptWriter: attemptSink(attempts),
@@ -912,7 +913,9 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   assert.equal(Object.hasOwn(marker, "rows"), false);
 }
 
-// Recovery promotion stays schedule-only after a retained failure.
+// Recovery promotion accepts natural schedule runs plus bound first-attempt
+// workflow_dispatch runs (numeric GitHub run id, attempt 1, provider
+// advancement); every other dispatch shape stays rejected.
 {
   const root = makeRoot("recovery-gate");
   await runSuccess(root);
@@ -922,16 +925,45 @@ assert.throws(() => parsePaginationTotal({ "record-total": "not-a-number" }), /r
   const failed = makeRequestMock(failedResponses);
   await run({ repoRoot: root, request: failed.request, clientId: "id", clientSecret: "secret", eventName: "schedule", runId: "failure", observedAt: "2026-07-25T01:00:00.000Z", referenceDate: REFERENCE_DATE, attemptWriter: attemptSink([]) });
   const markerBefore = fs.readFileSync(markerPathFor(root));
-  const dispatched = await runSuccess(root, { eventName: "workflow_dispatch", observedAt: "2026-07-26T01:00:00.000Z" });
-  assert.equal(dispatched.result.promoted, false);
-  assert.equal(dispatched.result.reason, "recovery_requires_schedule");
+  const synthetic = await runSuccess(root, { eventName: "workflow_dispatch", observedAt: "2026-07-26T01:00:00.000Z" });
+  assert.equal(synthetic.result.promoted, false);
+  assert.equal(synthetic.result.reason, "recovery_requires_schedule", "a synthetic run id never binds a dispatch recovery");
+  const secondAttempt = await runSuccess(root, { eventName: "workflow_dispatch", runId: "20260726", runAttempt: 2, observedAt: "2026-07-26T02:00:00.000Z" });
+  assert.equal(secondAttempt.result.reason, "recovery_requires_schedule", "a dispatch retry attempt never binds a recovery");
+  const stale = await runSuccess(root, { eventName: "workflow_dispatch", runId: "20260727", observedAt: "2026-07-27T01:00:00.000Z" });
+  assert.equal(stale.result.reason, "recovery_not_advanced_by_provider", "a bound dispatch without provider advancement stays rejected");
   assert.deepEqual(fs.readFileSync(markerPathFor(root)), markerBefore);
+  const dispatched = await runSuccess(root, {
+    eventName: "workflow_dispatch",
+    runId: "20260731",
+    observedAt: "2026-07-31T01:00:00.000Z",
+    referenceDate: new Date("2026-07-31T12:00:00.000Z"),
+  });
+  assert.equal(dispatched.result.promoted, true, "a bound first-attempt dispatch with newer provider data promotes");
+  assert.equal(dispatched.result.recovered, true);
+  const recovered = readJson(path.join(root, "data/admin/finra-ats/index.json"));
+  assert.equal(recovered.items["weekly-summary"].recovery_event_name, "workflow_dispatch");
+}
+
+// A retained failure still promotes on an advancing natural first-attempt
+// schedule run; the dispatch opt-in never displaces the schedule path.
+{
+  const root = makeRoot("recovery-gate-schedule");
+  await runSuccess(root);
+  const targets = summaryTargets(REFERENCE_DATE);
+  const failedResponses = successResponses(targets);
+  failedResponses.T1 = [{ statusCode: 500, headers: {}, body: "server error" }];
+  const failed = makeRequestMock(failedResponses);
+  await run({ repoRoot: root, request: failed.request, clientId: "id", clientSecret: "secret", eventName: "schedule", runId: "failure", observedAt: "2026-07-25T01:00:00.000Z", referenceDate: REFERENCE_DATE, attemptWriter: attemptSink([]) });
   const scheduled = await runSuccess(root, {
     eventName: "schedule",
     observedAt: "2026-07-31T01:00:00.000Z",
     referenceDate: new Date("2026-07-31T12:00:00.000Z"),
   });
-  assert.equal(scheduled.result.promoted, true, "only a natural schedule run may promote an advanced recovery");
+  assert.equal(scheduled.result.promoted, true, "an advancing natural schedule run still promotes a retained recovery");
+  assert.equal(scheduled.result.recovered, true);
+  const recovered = readJson(path.join(root, "data/admin/finra-ats/index.json"));
+  assert.equal(recovered.items["weekly-summary"].recovery_event_name, "schedule");
 }
 
 // An incomplete partition is a returned empty-payload tuple whose http_status
