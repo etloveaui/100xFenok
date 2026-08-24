@@ -59,7 +59,7 @@ check("deploy-worker recovery-gate job grants contents: read + actions: read", (
 });
 check("deploy-worker has the check-then-start race re-check step", () => {
   assert.match(deployYml, /Re-check recovery gate \(check-then-start race\)/);
-  assert.match(deployYml, /SUPERSEDED=true/);
+  assert.match(deployYml, /DEPLOY_DEFERRED=true/);
 });
 check("update-manifest recovery gate names only the surviving slickcharts-history.yml", () => {
   const args = recoveryWorkflowArgs(manifestYml);

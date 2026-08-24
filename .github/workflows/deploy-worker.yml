@@ -11,13 +11,17 @@
 # 29502469123 uploaded its bundle and was superseded before its smokes ran —
 # the live Worker served an UNVERIFIED bundle for ~15h while CI recorded no
 # green):
-#   - build-verify is supersession-friendly (cancel-in-progress: true): a newer
+#   - build-verify is cancellation-friendly (cancel-in-progress: true): a newer
 #     push cancels a stale build cheaply, before anything can ship.
-#   - deploy is cancellation-atomic (cancel-in-progress: false): once a run
-#     reaches upload, it always finishes its smokes. Newer runs queue, and a
-#     queued deploy skips itself BEFORE upload if a newer run is already active
-#     (scripts/check-deploy-supersession.mjs) — skipping never happens after
-#     an upload, so a deploy is never interrupted mid-flight.
+#   - deploy is cancellation-atomic against newer runs (cancel-in-progress:
+#     false): once a run reaches upload, a newer deploy cannot automatically
+#     cancel its smokes. Queued deploy jobs are
+#     serialized by the concurrency group; every admitted candidate reaches
+#     the pre-upload live/source fence, where a stale or out-of-order
+#     candidate fails truthfully (check-deploy-source-fence.mjs). No
+#     pre-smoke green skip exists: an active skip gate was removed because
+#     under continuous data commits it starved deploys, and any pre-smoke
+#     skip signal can green-skip on an upload whose smokes later fail.
 #   - every bundle carries deploy-provenance.json declaring the run
 #     that shipped it; the deploy job asserts the CURRENT live bundle's
 #     provenance before (loud, non-blocking) and after (blocking) upload
@@ -184,7 +188,6 @@ jobs:
       cancel-in-progress: false
     env:
       QA_ADMIN_SMOKE_AVAILABLE: ${{ (secrets.QA_ADMIN_PASSWORD != '' || secrets.QA_ADMIN_SESSION_COOKIE != '') && 'true' || 'false' }}
-      GITHUB_WORKFLOW_FILE_NAME: deploy-worker.yml
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -221,17 +224,11 @@ jobs:
             echo "EXPECTED_KPI_SHA256=$(sha256sum "$expected_kpi_path" | awk '{print $1}')"
           } >> "$GITHUB_ENV"
 
-      - name: Skip deploy if superseded by a newer run
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/check-deploy-supersession.mjs
-
       - name: Re-check recovery gate (check-then-start race)
         # A recovery may have become nonterminal after the recovery-gate job
-        # ran. Reuse the existing SUPERSEDED semantics so every downstream step
-        # already keyed on it skips without new cancellation logic. The gate is
-        # fail-open on provider uncertainty (warning), matching the job gate.
-        if: ${{ env.SUPERSEDED != 'true' }}
+        # ran. DEPLOY_DEFERRED=true makes every downstream step skip without
+        # new cancellation logic. The gate is fail-open on provider
+        # uncertainty (warning), matching the job gate.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -243,8 +240,8 @@ jobs:
             --recovery-workflows slickcharts-history.yml)"
           case "$guard" in
             skip)
-              echo "SUPERSEDED=true" >> "$GITHUB_ENV"
-              echo "::notice::Recovery became nonterminal after the gate job; deploy deferred (same semantics as supersession)."
+              echo "DEPLOY_DEFERRED=true" >> "$GITHUB_ENV"
+              echo "::notice::Recovery became nonterminal after the gate job; deploy deferred to the recovery-completion requeue or the daily schedule."
               ;;
             proceed-uncertain)
               echo "::warning::Recovery re-check uncertain; proceeding with strict KPI as the fail-close backstop."
@@ -257,7 +254,7 @@ jobs:
           esac
 
       - name: Verify Cloudflare token presence
-        if: ${{ env.SUPERSEDED != 'true' }}
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -267,13 +264,13 @@ jobs:
           fi
 
       - name: Check live deploy provenance (pre-deploy)
-        if: ${{ env.SUPERSEDED != 'true' }}
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-live-deploy-provenance.mjs --pre
 
       - name: Deploy to Cloudflare Workers
-        if: ${{ env.SUPERSEDED != 'true' }}
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         working-directory: 100xfenok-next
         run: |
           set -euo pipefail
@@ -446,7 +443,7 @@ jobs:
           DEPLOY_REMEDIATION_INPUT: ${{ inputs.remediate_unprovenanced_live || false }}
 
       - name: Smoke data health KPI
-        if: ${{ env.SUPERSEDED != 'true' }}
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         working-directory: 100xfenok-next
         run: |
           set -euo pipefail
@@ -512,5 +509,5 @@ jobs:
           node ../scripts/check-live-deploy-provenance.mjs --post
 
       - name: Smoke SEC 13F private boundary
-        if: ${{ env.SUPERSEDED != 'true' }}
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         run: node scripts/test-sec13f-live-privacy.mjs --base-url https://100xfenok.etloveaui.workers.dev

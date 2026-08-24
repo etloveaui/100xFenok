@@ -18,9 +18,7 @@ import {
   classifyLiveProvenance,
   evaluateDeploySourceFence,
   evaluatePostObservation,
-  filterRunsByHeadBranch,
   isDeployProvenance,
-  selectNewerActiveRun,
 } from "./lib/deploy-provenance.mjs";
 import {
   DEPLOY_SOURCE_FENCE_CANONICAL_LIVE_BASE_URL,
@@ -168,86 +166,6 @@ assert.equal(weird.annotation, "warning");
 
 assert.throws(() => classifyLiveProvenance({ ...classifyBase, currentRunId: "" }), /currentRunId/);
 assert.throws(() => classifyLiveProvenance({ ...classifyBase, expectedBuildId: "" }), /expectedBuildId/);
-
-// --- selectNewerActiveRun ---------------------------------------------------
-
-const runRow = (id, runNumber, status) => ({ id, run_number: runNumber, status });
-
-// no runs -> not superseded
-assert.equal(selectNewerActiveRun({ currentRunId: "1", currentRunNumber: 10, runs: [] }), null);
-
-// self is excluded even when listed
-assert.equal(
-  selectNewerActiveRun({ currentRunId: "1", currentRunNumber: 10, runs: [runRow("1", 10, "in_progress")] }),
-  null,
-);
-
-// older active runs do not supersede
-assert.equal(
-  selectNewerActiveRun({ currentRunId: "1", currentRunNumber: 10, runs: [runRow("2", 9, "in_progress")] }),
-  null,
-);
-
-// a COMPLETED newer run (even failed) does not supersede — this run still ships
-assert.equal(
-  selectNewerActiveRun({ currentRunId: "1", currentRunNumber: 10, runs: [runRow("2", 11, "completed")] }),
-  null,
-);
-
-// the queue-draining case: newest active run supersedes this one
-const newer = selectNewerActiveRun({
-  currentRunId: "1",
-  currentRunNumber: 10,
-  runs: [
-    runRow("2", 12, "in_progress"),
-    runRow("3", 11, "queued"),
-    runRow("4", 9, "in_progress"),
-    runRow("5", 13, "completed"),
-  ],
-});
-assert.equal(newer.id, "3", "lowest-numbered newer ACTIVE run supersedes (deterministic)");
-
-// every active status qualifies
-for (const status of ["queued", "in_progress", "pending", "waiting", "requested"]) {
-  const found = selectNewerActiveRun({
-    currentRunId: "1",
-    currentRunNumber: 10,
-    runs: [runRow("9", 11, status)],
-  });
-  assert.equal(found?.id, "9", `status ${status} must count as active`);
-}
-
-assert.throws(() => selectNewerActiveRun({ currentRunId: "1", currentRunNumber: NaN, runs: [] }), /currentRunNumber/);
-assert.throws(() => selectNewerActiveRun({ currentRunId: "1", currentRunNumber: 1, runs: null }), /array/);
-
-// --- filterRunsByHeadBranch (review condition: non-main never supersedes) ---
-
-const branchedRuns = [
-  { ...runRow("2", 12, "in_progress"), head_branch: "km/fix-361" },
-  { ...runRow("3", 11, "queued"), head_branch: "main" },
-  { ...runRow("4", 13, "in_progress"), head_branch: null },
-];
-const mainOnly = filterRunsByHeadBranch(branchedRuns, "main");
-assert.deepEqual(mainOnly.map((run) => run.id), ["3"], "only head_branch === 'main' runs survive");
-
-// a newer active NON-main run must not supersede; a main run still does
-const branchScoped = selectNewerActiveRun({
-  currentRunId: "1",
-  currentRunNumber: 10,
-  runs: filterRunsByHeadBranch(branchedRuns, "main"),
-});
-assert.equal(branchScoped.id, "3");
-assert.equal(
-  selectNewerActiveRun({
-    currentRunId: "1",
-    currentRunNumber: 10,
-    runs: filterRunsByHeadBranch([{ ...runRow("2", 12, "in_progress"), head_branch: "km/fix-361" }], "main"),
-  }),
-  null,
-  "non-main dispatch run must not skip a main deploy",
-);
-assert.throws(() => filterRunsByHeadBranch(null, "main"), /array/);
-assert.throws(() => filterRunsByHeadBranch([], ""), /branch name/);
 
 // --- evaluateDeploySourceFence --------------------------------------------
 
@@ -977,6 +895,17 @@ assert.equal(
   "only the deploy checkout should fetch full history for the source-lineage fence",
 );
 assert.match(deployJob, /uses: actions\/checkout@v4\s+with:\s+fetch-depth: 0/);
+
+// active supersession is REMOVED: no gate script, no pre-smoke skip signal.
+// Every admitted deploy job proceeds (serialized by the concurrency group) to
+// the pre-upload source fence, which alone rejects stale candidates.
+assert.equal(
+  fs.existsSync(path.join(repoRoot, "scripts", "check-deploy-supersession.mjs")),
+  false,
+  "the supersession gate script must stay deleted",
+);
+assert.doesNotMatch(deployJob, /check-deploy-supersession/, "no step may invoke a supersession gate");
+assert.doesNotMatch(deployJob, /SUPERSEDED/, "no step may read or write the retired SUPERSEDED signal");
 const liveProvenanceFetchPosition = deployJob.indexOf("live-deploy-provenance-source-fence.json");
 const sourceFencePosition = deployJob.indexOf("check-deploy-source-fence.mjs");
 const uploadPosition = deployJob.indexOf("npx wrangler deploy");

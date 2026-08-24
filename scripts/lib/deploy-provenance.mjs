@@ -4,12 +4,10 @@
 // BEFORE its smokes leaves the live Worker serving a bundle no smoke ever
 // verified, while the CI ledger records no green (BACKLOG #361, incident
 // 2026-07-16: cancelled run 29502469123 served ~15h unverified). This module is
-// the pure-logic core for three call sites:
+// the pure-logic core for two call sites:
 //   1. scripts/write-deploy-provenance.mjs — stamps run identity into the bundle
 //   2. scripts/check-live-deploy-provenance.mjs — classifies the CURRENT live
 //      bundle's provenance before (and after) a deploy
-//   3. scripts/check-deploy-supersession.mjs — decides whether a queued deploy
-//      job may skip itself because a newer run exists
 //
 // Contract rules (DEC-264/DEC-266):
 //   - Detection never blocks remediation: an unverified live bundle is named
@@ -183,33 +181,6 @@ export function classifyLiveProvenance({
       `live bundle belongs to run ${liveProvenance.run_id} `
       + `(conclusion: ${String(liveRunConclusion)}); treating as unproven`,
   };
-}
-
-// Given the workflow's recent runs, decide whether THIS run's deploy job may
-// skip itself because a newer run is active (queued supersession: the deploy
-// job is cancel-in-progress:false, so skipping must happen BEFORE any upload,
-// never after — a superseded skip is only ever a no-op).
-// Returns the newest active run object, or null when this run is the newest
-// active one. "Active" = not completed; a completed newer run (even failed) is
-// ignored so this run still ships its bundle.
-const ACTIVE_RUN_STATUSES = new Set([
-  "queued",
-  "in_progress",
-  "pending",
-  "waiting",
-  "requested",
-]);
-
-// Supersession candidates are branch-scoped: a run dispatched from a non-main
-// branch must never skip a main deploy (review condition for #361).
-export function filterRunsByHeadBranch(runs, branch) {
-  if (!Array.isArray(runs)) {
-    throw new Error("filterRunsByHeadBranch requires an array of runs");
-  }
-  if (typeof branch !== "string" || branch.length === 0) {
-    throw new Error("filterRunsByHeadBranch requires a branch name");
-  }
-  return runs.filter((run) => run && run.head_branch === branch);
 }
 
 // Fail closed unless the downloaded artifact belongs to this workflow run,
@@ -460,25 +431,4 @@ export function evaluatePostObservation({ currentRunId, expectedBuildId, liveBui
     };
   }
   return { match: true, kind: "match", detail: "live bundle declared by this run" };
-}
-
-export function selectNewerActiveRun({ currentRunId, currentRunNumber, runs }) {
-  if (!Number.isFinite(currentRunNumber)) {
-    throw new Error("selectNewerActiveRun requires a numeric currentRunNumber");
-  }
-  if (!Array.isArray(runs)) {
-    throw new Error("selectNewerActiveRun requires an array of runs");
-  }
-  let best = null;
-  for (const run of runs) {
-    if (!run || typeof run !== "object") continue;
-    if (String(run.id) === String(currentRunId)) continue;
-    if (typeof run.run_number !== "number") continue;
-    if (run.run_number <= currentRunNumber) continue;
-    if (!ACTIVE_RUN_STATUSES.has(run.status)) continue;
-    if (best === null || run.run_number < best.run_number) {
-      best = run;
-    }
-  }
-  return best;
 }
