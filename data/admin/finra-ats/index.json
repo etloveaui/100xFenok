@@ -1,36 +1,39 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "finra_ats_weekly",
-  "updated_at": "2026-08-24T13:48:35.166Z",
-  "retry_set": [
-    "weekly-summary"
-  ],
+  "updated_at": "2026-08-24T13:51:03.237Z",
+  "retry_set": [],
   "items": {
     "weekly-summary": {
       "key": "weekly-summary",
-      "resolution_state": "lkg_primary",
-      "retry": true,
-      "updated_at": "2026-08-24T13:48:35.166Z",
+      "resolution_state": "fresh_primary",
+      "retry": false,
+      "updated_at": "2026-08-24T13:51:03.237Z",
       "current": {
-        "path": "data/admin/finra-ats/lkg/weekly-summary.json",
-        "payload_sha256": "441dbf12abef8866075c87718a7b954bd59d266a0bafeb4ea40eeb166ed8fa87",
-        "source_as_of": "2026-07-13"
+        "path": "data/admin/finra-ats/current/weekly-summary.json",
+        "payload_sha256": "82d2f528fc5a9b1958fea21e9f308b88cb2688853ee531e216ea069948d798a3",
+        "source_as_of": "2026-07-20"
       },
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "441dbf12abef8866075c87718a7b954bd59d266a0bafeb4ea40eeb166ed8fa87",
-        "source_as_of": "2026-07-13",
-        "run_id": "32248942354",
+        "payload_sha256": "82d2f528fc5a9b1958fea21e9f308b88cb2688853ee531e216ea069948d798a3",
+        "source_as_of": "2026-07-20",
+        "run_id": "32735040078",
         "run_attempt": 1,
-        "observed_at": "2026-08-19T11:51:36.232Z"
+        "observed_at": "2026-08-24T13:51:03.237Z"
       },
       "lkg": {
         "path": "data/admin/finra-ats/lkg/weekly-summary.json",
         "payload_sha256": "441dbf12abef8866075c87718a7b954bd59d266a0bafeb4ea40eeb166ed8fa87",
         "source_as_of": "2026-07-13"
       },
-      "latest_failure": {
+      "recovered_from_run_id": "32734808909",
+      "recovered_at": "2026-08-24T13:51:03.237Z",
+      "recovery_run_id": "32735040078",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "workflow_dispatch",
+      "last_recovered_failure": {
         "run_id": "32734808909",
         "run_attempt": 1,
         "observed_at": "2026-08-24T13:48:35.166Z",
