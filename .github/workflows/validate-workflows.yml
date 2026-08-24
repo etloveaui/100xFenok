@@ -41,6 +41,8 @@ on:
       - 'scripts/check-r2-free-tier-usage.mjs'
       - 'data/admin/data-supply-state/publish-outcomes/**'
       - 'scripts/check-lane-commit-manifest-inventory.mjs'
+      - 'scripts/check-lane-registry-commit-shards.mjs'
+      - 'scripts/test-check-lane-registry-commit-shards.mjs'
       - 'scripts/ops/check-global-writer-queue.mjs'
       - 'scripts/ops/test-check-global-writer-queue.mjs'
       - 'scripts/fetch-sentiment.mjs'
@@ -143,6 +145,8 @@ on:
       - 'scripts/check-r2-free-tier-usage.mjs'
       - 'data/admin/data-supply-state/publish-outcomes/**'
       - 'scripts/check-lane-commit-manifest-inventory.mjs'
+      - 'scripts/check-lane-registry-commit-shards.mjs'
+      - 'scripts/test-check-lane-registry-commit-shards.mjs'
       - 'scripts/ops/check-global-writer-queue.mjs'
       - 'scripts/ops/test-check-global-writer-queue.mjs'
       - 'scripts/fetch-sentiment.mjs'
@@ -268,7 +272,9 @@ jobs:
           echo "PASS concurrency-schema guard enforces GitHub's queue contract"
 
       - name: Validate lane manifest staging
-        run: npm --prefix 100xfenok-next run qa:lane-manifest-staging
+        run: |
+          npm --prefix 100xfenok-next run qa:lane-manifest-staging
+          node scripts/test-check-lane-registry-commit-shards.mjs
 
       - name: Validate manifest halves agree (self-consistency gate)
         run: |

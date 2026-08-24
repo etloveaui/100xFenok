@@ -362,4 +362,30 @@ scripts/publish-slickcharts-attempt.sh \
   assert.ok(reorderedResult.missing_in_workflow.length > 0, "reordered flags must lose manifest-driven coverage");
 }
 
+// Every primary owner must carry every admin shard its lanes declare. This is
+// the fleet gate; the focused cases above prove that its helper evidence fails
+// closed instead of borrowing another workflow's policy.
+function assertOwnerFleet(registry) {
+  for (const workflowRel of [...new Set(registry.lanes
+    .map((lane) => lane.owner_workflow)
+    .filter(Boolean))].sort()) {
+    const workflowText = fs.readFileSync(path.join(REPO_ROOT, workflowRel), "utf8");
+    const result = checkWorkflowCommitShardsAgainstRegistry({
+      workflowText,
+      workflowRel,
+      registry,
+      repoRoot: REPO_ROOT,
+    });
+    assert.equal(result.ok, true, `${workflowRel}: ${JSON.stringify(result)}`);
+  }
+}
+assertOwnerFleet(LANE_REGISTRY);
+
+const missingYahooOutcome = structuredClone(LANE_REGISTRY);
+const yahooWorkflow = ".github/workflows/fetch-yf-finance.yml";
+missingYahooOutcome.workflow_policies[yahooWorkflow].stages.always_if_exists =
+  missingYahooOutcome.workflow_policies[yahooWorkflow].stages.always_if_exists
+    .filter(({ path: pathValue }) => pathValue !== "data/admin/data-supply-state/publish-outcomes/yahoo-finance.json");
+assert.throws(() => assertOwnerFleet(missingYahooOutcome), /yahoo-finance\.json/);
+
 console.log("test-check-lane-registry-commit-shards: ok");
