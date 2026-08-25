@@ -1,9 +1,22 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-24T23:41:48.237Z",
+  "generated_at": "2026-08-25T20:51:42.976Z",
   "status": "open",
-  "open_incident_count": 3,
+  "open_incident_count": 4,
   "open_incidents": [
+    {
+      "workflow": "fenok-edge-daily.yml",
+      "label": "Fenok Edge Daily Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "unrecovered_overdue"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "overdue"
+    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -101,8 +114,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "attempt_gap"
+      ]
     },
     {
       "file": "fenok-edge-krx-daily.yml",
@@ -280,7 +295,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 23
+      "data_freshness_age_hours_at_generation": 19
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -428,8 +443,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 26,
-    "overdue": 0,
+    "not_due": 25,
+    "overdue": 1,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -445,11 +460,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "32790334128",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32790334128",
-    "observed_at": "2026-08-24T23:41:48.237Z",
+    "run_id": "32897515857",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/32897515857",
+    "observed_at": "2026-08-25T20:51:42.976Z",
     "event": "schedule",
     "workflows": [
+      "fenok-edge-daily.yml",
       "fetch-edgar-filings.yml",
       "fetch-oecd-cli.yml",
       "slickcharts-monthly.yml"
