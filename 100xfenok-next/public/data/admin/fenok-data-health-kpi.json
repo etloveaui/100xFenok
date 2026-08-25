@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-08-25T02:00:26.815Z",
+  "generated_at": "2026-08-25T03:15:34.789Z",
   "status": "degraded",
   "status_label": "저하",
   "status_message": "12 required lane(s) are not ready; healthy lanes may still publish.",
@@ -21,16 +21,16 @@
   },
   "runtime": {
     "projection": "kpi_runtime_projection.v2",
-    "built_at": "2026-08-24T11:28:11.783Z",
-    "evaluated_at": "2026-08-25T02:00:26.815Z",
+    "built_at": "2026-08-25T03:15:34.789Z",
+    "evaluated_at": "2026-08-25T03:15:34.789Z",
     "verdict": "degraded",
     "slot_status": "degraded",
-    "status_message": "4 retained missed slot(s) recovered by later authoritative ready full snapshot(s).",
+    "status_message": "3 retained missed slot(s) recovered by later authoritative ready full snapshot(s).",
     "publication_halted": false,
     "deployment_blocking": false,
     "fresh": true,
-    "missed_slot_count": 4,
-    "recovered_missed_slot_count": 4,
+    "missed_slot_count": 3,
+    "recovered_missed_slot_count": 3,
     "unrecovered_missed_slot_count": 0,
     "blocking_unrecovered_missed_slot_count": 0,
     "lane_local_unrecovered_missed_slot_count": 0,
@@ -38,19 +38,21 @@
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-08-25T02:00:23.420Z",
-      "status": "ready",
+      "evaluated_at": "2026-08-25T03:15:32.124Z",
+      "status": "warning",
       "deployment_blocking": false,
       "counts": {
         "scheduled_members": 32,
         "schedule_bindings": 35,
-        "observed": 35,
+        "observed": 34,
         "suspected_skips": 0,
-        "attempt_gaps": 0
+        "attempt_gaps": 1
       },
       "pre_activation_lane_ids": [],
       "suspected_skip_lane_ids": [],
-      "attempt_gap_lane_ids": []
+      "attempt_gap_lane_ids": [
+        "occ_options_volume"
+      ]
     }
   },
   "source_sla": [
@@ -316,7 +318,7 @@
               "collection_fresh_count": 23,
               "stale_count": 0,
               "collected_at_floor": "2026-08-25T00:04:00Z",
-              "collection_age_hours": 1.941,
+              "collection_age_hours": 3.193,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -515,7 +517,7 @@
               "collection_fresh_count": 16,
               "stale_count": 0,
               "collected_at_floor": "2026-08-25T00:04:17Z",
-              "collection_age_hours": 1.936,
+              "collection_age_hours": 3.188,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -572,7 +574,7 @@
               "collection_fresh_count": 3,
               "stale_count": 0,
               "collected_at_floor": "2026-08-25T00:04:31Z",
-              "collection_age_hours": 1.932,
+              "collection_age_hours": 3.184,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -5100,7 +5102,7 @@
               "collection_fresh_count": 5,
               "stale_count": 0,
               "collected_at_floor": "2026-08-25T00:04:00Z",
-              "collection_age_hours": 1.941,
+              "collection_age_hours": 3.193,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -5163,7 +5165,7 @@
     {
       "source_id": "etf_daily1y_readiness_admin",
       "freshness_basis": ".generated_at",
-      "source_date": "2026-08-25T02:00:02.993Z",
+      "source_date": "2026-08-25T03:15:15.850Z",
       "unit": "hours",
       "calendar": "wall_clock",
       "max_staleness": 50,
@@ -5179,7 +5181,7 @@
       "calendar": "us_market",
       "max_staleness": 30,
       "required": true,
-      "age": 26.01,
+      "age": 27.26,
       "status": "ready"
     },
     {
@@ -5190,7 +5192,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 42.33,
+      "age": 43.59,
       "status": "ready"
     },
     {
@@ -5201,7 +5203,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 41.93,
+      "age": 43.18,
       "status": "ready"
     },
     {
@@ -5212,7 +5214,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 346.42,
+      "age": 347.67,
       "status": "ready"
     },
     {
@@ -5223,14 +5225,14 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 40.78,
+      "age": 42.03,
       "status": "ready"
     }
   ],
   "source_artifacts": [
     {
       "id": "fenok_edge_coverage_index",
-      "generated_at": "2026-08-25T01:59:57.827Z",
+      "generated_at": "2026-08-25T03:15:11.810Z",
       "public_mirror": true,
       "public_safe": true
     },
@@ -5242,25 +5244,25 @@
     },
     {
       "id": "product_surface_coverage",
-      "generated_at": "2026-08-25T02:00:16.044Z",
+      "generated_at": "2026-08-25T03:15:26.306Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "s0_finra_occ_mapping_ledger",
-      "generated_at": "2026-08-25T02:00:02.922Z",
+      "generated_at": "2026-08-25T03:15:15.795Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_daily1y_readiness_admin",
-      "generated_at": "2026-08-25T02:00:02.993Z",
+      "generated_at": "2026-08-25T03:15:15.850Z",
       "public_mirror": false,
       "public_safe": false
     },
     {
       "id": "etf_core_daily_basket_admin",
-      "generated_at": "2026-08-25T01:59:48.039Z",
+      "generated_at": "2026-08-25T03:15:04.166Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -5278,13 +5280,13 @@
     },
     {
       "id": "occ_options_availability",
-      "generated_at": "2026-08-22T02:19:57.235Z",
+      "generated_at": "2026-08-25T03:00:20.782Z",
       "public_mirror": true,
       "public_safe": true
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-08-25T02:00:23.420Z",
+      "generated_at": "2026-08-25T03:15:32.124Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -5317,10 +5319,10 @@
       "label": "S0 active stocks daily gate",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "S0 active stocks daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC; daily ready: all active stock source lanes fresh; gated ready: gate blockers empty; blockers: 3 blockers; krx_full_daily_source_ready: 336 / 337 · 2026-08-21; finra_full_us_source_ready: 691 / 692 · 2026-08-21; occ_full_us_source_ready: 691 / 692 · 2026-08-20. Other lanes may publish.",
+      "status_message": "S0 active stocks daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC; daily ready: all active stock source lanes fresh; gated ready: gate blockers empty; blockers: 2 blockers; krx_full_daily_source_ready: 336 / 337 · 2026-08-21; occ_full_us_source_ready: 691 / 692 · 2026-08-20. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-25T01:59:57.827Z",
+      "as_of": "2026-08-25T03:15:11.810Z",
       "counts": {
         "active_total": 1182,
         "by_market": [
@@ -5399,7 +5401,7 @@
           "label": "blockers",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "3 blockers",
+          "detail": "2 blockers",
           "platform_blocking": false
         },
         {
@@ -5419,16 +5421,16 @@
         {
           "id": "finra_full_us_source_ready",
           "label": "finra_full_us_source_ready",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "691 / 692 · 2026-08-21",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "692 / 692 · 2026-08-24",
           "platform_blocking": false,
-          "source_date": "2026-08-21",
-          "age_days": 4,
+          "source_date": "2026-08-24",
+          "age_days": 1,
           "max_age_days": 4,
-          "covered_count": 691,
+          "covered_count": 692,
           "denominator": 692,
-          "missing_count": 1
+          "missing_count": 0
         },
         {
           "id": "occ_full_us_source_ready",
@@ -5496,7 +5498,7 @@
       "status_message": "S1 candidate promotion gate is not ready: PUBLIC+DAILY+GATED with blocked ledger: NORMALIZED; gate blockers: 2 blockers. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-25T01:58:44.721Z",
+      "as_of": "2026-08-25T03:14:13.227Z",
       "counts": {
         "denominator": 1202,
         "current_public_stock": 1182,
@@ -5910,7 +5912,7 @@
           "label": "promotion artifact",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-25T01:58:44.721Z",
+          "detail": "2026-08-25T03:14:13.227Z",
           "platform_blocking": false
         },
         {
@@ -5975,7 +5977,7 @@
       "status_message": "ETF public scoring and daily gate is not ready: PUBLIC+DAILY+GATED: PUBLIC. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-25T02:00:02.993Z",
+      "as_of": "2026-08-25T03:15:15.850Z",
       "counts": {
         "eligible_etf_count": 4496,
         "scored_public_etf": 4496,
@@ -13698,9 +13700,9 @@
         "recovery_policy": "Retry active failures first on the next natural Yahoo run; promote fresh automatically on success.",
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-24T23:58:12Z",
-          "outcome": "failed",
-          "failure_class": "assertion"
+          "observed_at": "2026-08-25T01:49:33Z",
+          "outcome": "success",
+          "failure_class": null
         },
         "last_attempt_reason": null
       },
@@ -14142,7 +14144,7 @@
       "status_message": "Product surface freshness is not ready: stale surfaces: 4 stale; product surface true-date/collection taxonomy v2: etf_center:pending_true_date. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-25T02:00:16.044Z",
+      "as_of": "2026-08-25T03:15:26.306Z",
       "counts": {
         "surfaces": 7,
         "ready": 1,
@@ -14206,7 +14208,7 @@
           "label": "product-surface-coverage",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-25T02:00:16.044Z",
+          "detail": "2026-08-25T03:15:26.306Z",
           "platform_blocking": false
         },
         {
@@ -14268,14 +14270,14 @@
       "label": "FINRA/OCC source gate",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "FINRA/OCC source gate is not ready: plain US FINRA: 691 / 692; plain US OCC: 691 / 692; OCC current delivery: OCC target 2026-08-21 was unavailable (0 usable rows); serving fallback dated 2026-08-20. Current run remains degraded across 3 non-empty batch(es).. Other lanes may publish.",
+      "status_message": "FINRA/OCC source gate is not ready: plain US OCC: 691 / 692; OCC current delivery: OCC target 2026-08-24 is unavailable (0 usable rows); no fallback in the allowed window was usable. Current run has an unavailable non-empty batch.. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-25T02:00:02.922Z",
+      "as_of": "2026-08-25T03:15:15.795Z",
       "counts": {
         "active_us_total": 752,
         "plain_us_finra_denominator": 692,
-        "plain_us_finra_source_ready": 691,
+        "plain_us_finra_source_ready": 692,
         "plain_us_occ_denominator": 692,
         "plain_us_occ_source_ready": 691,
         "non_plain_daily_ready": 60,
@@ -14283,10 +14285,10 @@
       },
       "details": {
         "source_dates": {
-          "signals_generated_at": "2026-08-25T01:59:12.292Z",
-          "finra_source_date": "20260821",
+          "signals_generated_at": "2026-08-25T03:14:35.819Z",
+          "finra_source_date": "20260824",
           "occ_source_date": "20260820",
-          "coverage_index_generated_at": "2026-08-25T01:59:57.827Z",
+          "coverage_index_generated_at": "2026-08-25T03:15:11.810Z",
           "flow_backfill_index_generated_at": "2026-06-29T12:34:33.046Z"
         },
         "action_policy": [
@@ -14307,15 +14309,15 @@
           }
         ],
         "occ_current_attempt": {
-          "attempt_ref": "32544867276",
+          "attempt_ref": "32799605730",
           "attempt_number": 1,
-          "observed_at": "2026-08-22T02:19:57.651Z",
-          "target_source_date": "2026-08-21",
-          "served_source_date": "2026-08-20",
-          "status": "degraded_walkback",
-          "fallback_active": true,
-          "selected_symbol_count": 692,
-          "message": "OCC target 2026-08-21 was unavailable (0 usable rows); serving fallback dated 2026-08-20. Current run remains degraded across 3 non-empty batch(es)."
+          "observed_at": "2026-08-25T03:00:21.068Z",
+          "target_source_date": "2026-08-24",
+          "served_source_date": null,
+          "status": "unavailable",
+          "fallback_active": false,
+          "selected_symbol_count": 693,
+          "message": "OCC target 2026-08-24 is unavailable (0 usable rows); no fallback in the allowed window was usable. Current run has an unavailable non-empty batch."
         },
         "last_attempt": null,
         "last_attempt_reason": "lane has no recovery store"
@@ -14326,15 +14328,15 @@
           "label": "ledger acceptance",
           "status": "ready",
           "status_label": "정상",
-          "detail": "2026-08-25T02:00:02.922Z",
+          "detail": "2026-08-25T03:15:15.795Z",
           "platform_blocking": false
         },
         {
           "id": "finra_plain_us_ready",
           "label": "plain US FINRA",
-          "status": "blocked",
-          "status_label": "차단",
-          "detail": "691 / 692",
+          "status": "ready",
+          "status_label": "정상",
+          "detail": "692 / 692",
           "platform_blocking": false
         },
         {
@@ -14350,7 +14352,7 @@
           "label": "OCC current delivery",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "OCC target 2026-08-21 was unavailable (0 usable rows); serving fallback dated 2026-08-20. Current run remains degraded across 3 non-empty batch(es).",
+          "detail": "OCC target 2026-08-24 is unavailable (0 usable rows); no fallback in the allowed window was usable. Current run has an unavailable non-empty batch.",
           "platform_blocking": false
         },
         {
@@ -14379,7 +14381,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-25T02:00:27.266Z",
+      "as_of": "2026-08-25T03:15:35.148Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -14848,7 +14850,7 @@
         ],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-24T23:49:40.922Z",
+          "observed_at": "2026-08-25T02:03:16.487Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -15768,7 +15770,7 @@
       "status_message": "FINRA short volume is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-21",
+      "as_of": "2026-08-24",
       "counts": {},
       "details": {
         "recovery_retry_set": [],
@@ -15783,12 +15785,12 @@
             "recovery_event_name": "schedule",
             "recovered_at": "2026-07-28T03:46:05.233Z",
             "lkg_source_as_of": "2026-07-24",
-            "source_as_of": "2026-08-21"
+            "source_as_of": "2026-08-24"
           }
         ],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-22T02:04:24.469Z",
+          "observed_at": "2026-08-25T02:53:02.850Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -15800,7 +15802,7 @@
           "label": "Detection floor status",
           "status": "ready",
           "status_label": "정상",
-          "detail": "ok; source_as_of 2026-08-21",
+          "detail": "ok; source_as_of 2026-08-24",
           "platform_blocking": false
         },
         {
@@ -15814,7 +15816,7 @@
       ],
       "reason": "ok",
       "artifact": {
-        "source_as_of": "2026-08-21"
+        "source_as_of": "2026-08-24"
       }
     },
     {
@@ -15879,7 +15881,7 @@
       "label": "OCC options volume",
       "status": "degraded",
       "status_label": "저하",
-      "status_message": "OCC options volume is not ready: LKG retry set empty: occ_options_volume lkg_primary after run 32544867276. Other lanes may publish.",
+      "status_message": "OCC options volume is not ready: Detection floor status: workflow_unobserved; source_as_of 2026-08-20; LKG retry set empty: occ_options_volume lkg_primary after run 32799605730. Other lanes may publish.",
       "deployment_blocking": false,
       "required": true,
       "as_of": "2026-08-20",
@@ -15889,7 +15891,7 @@
           {
             "key": "occ_options_volume",
             "resolution_state": "lkg_primary",
-            "failure_run_id": "32544867276",
+            "failure_run_id": "32799605730",
             "promotion_deferral_reason": null,
             "promotion_deferral_run_id": null,
             "recovered_from_run_id": null
@@ -15898,8 +15900,8 @@
         "recovery_recovered": [],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-22T02:19:58.889Z",
-          "outcome": "success",
+          "observed_at": null,
+          "outcome": "unobserved",
           "failure_class": null
         },
         "last_attempt_reason": null
@@ -15908,9 +15910,9 @@
         {
           "id": "detection_floor_status",
           "label": "Detection floor status",
-          "status": "ready",
-          "status_label": "정상",
-          "detail": "ok; source_as_of 2026-08-20",
+          "status": "blocked",
+          "status_label": "차단",
+          "detail": "workflow_unobserved; source_as_of 2026-08-20",
           "platform_blocking": false
         },
         {
@@ -15918,11 +15920,11 @@
           "label": "LKG retry set empty",
           "status": "blocked",
           "status_label": "차단",
-          "detail": "occ_options_volume lkg_primary after run 32544867276",
+          "detail": "occ_options_volume lkg_primary after run 32799605730",
           "platform_blocking": false
         }
       ],
-      "reason": "ok",
+      "reason": "workflow_unobserved",
       "artifact": {
         "source_as_of": "2026-08-20"
       }
@@ -15935,7 +15937,7 @@
       "status_message": "Yahoo private options availability is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-08-22T02:22:43.540Z",
+      "as_of": "2026-08-25T03:04:33.152Z",
       "counts": {},
       "details": {
         "recovery_retry_set": [],
@@ -15950,12 +15952,12 @@
             "recovery_event_name": "schedule",
             "recovered_at": "2026-07-28T04:34:53.087Z",
             "lkg_source_as_of": "2026-07-25T04:41:45.391Z",
-            "source_as_of": "2026-08-22T02:22:43.540Z"
+            "source_as_of": "2026-08-25T03:04:33.152Z"
           }
         ],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-08-22T02:22:43.540Z",
+          "observed_at": "2026-08-25T03:04:33.152Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -15967,7 +15969,7 @@
           "label": "Detection floor status",
           "status": "ready",
           "status_label": "정상",
-          "detail": "ok; source_as_of 2026-08-22T02:22:43.540Z",
+          "detail": "ok; source_as_of 2026-08-25T03:04:33.152Z",
           "platform_blocking": false
         },
         {
@@ -15981,7 +15983,7 @@
       ],
       "reason": "ok",
       "artifact": {
-        "source_as_of": "2026-08-22T02:22:43.540Z"
+        "source_as_of": "2026-08-25T03:04:33.152Z"
       }
     },
     {
@@ -16125,7 +16127,7 @@
       "check_id": "blockers_empty",
       "status": "blocked",
       "label": "blockers",
-      "detail": "3 blockers",
+      "detail": "2 blockers",
       "required": true
     },
     {
@@ -16134,14 +16136,6 @@
       "status": "blocked",
       "label": "krx_full_daily_source_ready",
       "detail": "336 / 337 · 2026-08-21",
-      "required": true
-    },
-    {
-      "lane_id": "stock_s0_active_daily_gate",
-      "check_id": "finra_full_us_source_ready",
-      "status": "blocked",
-      "label": "finra_full_us_source_ready",
-      "detail": "691 / 692 · 2026-08-21",
       "required": true
     },
     {
@@ -16294,6 +16288,14 @@
       "status": "blocked",
       "label": "stale surfaces",
       "detail": "4 stale",
+      "required": true
+    },
+    {
+      "lane_id": "product_surface_freshness",
+      "check_id": "stamp_taxonomy_v2_ready",
+      "status": "blocked",
+      "label": "product surface true-date/collection taxonomy v2",
+      "detail": "etf_center:pending_true_date",
       "required": true
     }
   ]
