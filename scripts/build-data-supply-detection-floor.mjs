@@ -91,6 +91,14 @@ const FAILURE_DIAGNOSTIC_KEYS = Object.freeze([
   "failure_entity",
   "failure_detail",
 ]);
+const EVENT_PROVENANCE_KEYS = Object.freeze([
+  "event_name",
+  "run_id",
+  "run_attempt",
+]);
+export const ATTEMPT_HISTORY_LANE_IDS = Object.freeze(new Set([
+  "oecd_cli",
+]));
 const HTTP_RETRY_ATTEMPT_KEYS = Object.freeze([
   ...ATTEMPT_KEYS,
   ...HTTP_RETRY_KEYS,
@@ -1068,7 +1076,7 @@ export function validateConfigCalendarBindings(config, calendars) {
   return true;
 }
 
-export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION_CONFIG) {
+export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION_CONFIG, { allowHistory = false } = {}) {
   exactKeys(document, ["schema_version", "attempts"], "attempt evidence");
   if (!new Set([LEGACY_ATTEMPT_SCHEMA, ATTEMPT_SCHEMA]).has(document.schema_version)
     || !Array.isArray(document.attempts)) {
@@ -1088,17 +1096,32 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     if (hasFailureEntity !== hasFailureDetail) {
       fail("schema_error", `attempts[${index}] failure diagnostic must contain both entity and detail`);
     }
+    const hasEventProvenance = Object.hasOwn(row, "event_name")
+      || Object.hasOwn(row, "run_id")
+      || Object.hasOwn(row, "run_attempt");
+    if (hasEventProvenance) {
+      if (!Object.hasOwn(row, "event_name") || !Object.hasOwn(row, "run_id") || !Object.hasOwn(row, "run_attempt")) {
+        fail("schema_error", `attempts[${index}] event provenance must contain event_name, run_id, and run_attempt`);
+      }
+      if (typeof row.event_name !== "string" || !IDENTIFIER.test(row.event_name)
+        || typeof row.run_id !== "string" || !/^[a-zA-Z0-9_-]{1,96}$/.test(row.run_id)
+        || !Number.isSafeInteger(row.run_attempt) || row.run_attempt < 1) {
+        fail("schema_error", `attempts[${index}] event provenance fields are invalid`);
+      }
+    }
     const failureDiagnosticKeys = diagnosticSchema && hasFailureEntity ? FAILURE_DIAGNOSTIC_KEYS : [];
-    exactKeys(row, libraryTransport
+    const eventProvenanceKeys = hasEventProvenance ? EVENT_PROVENANCE_KEYS : [];
+    exactKeys(row, (libraryTransport
       ? LIBRARY_ATTEMPT_KEYS
-        .concat(failureDiagnosticKeys)
       : (hasHttpRetryEvidence ? HTTP_RETRY_ATTEMPT_KEYS : ATTEMPT_KEYS)
-        .concat(failureDiagnosticKeys), `attempts[${index}]`);
+    )
+      .concat(failureDiagnosticKeys)
+      .concat(eventProvenanceKeys), `attempts[${index}]`);
     const composite = lane.monitoring_mode === "composite";
     const memberIds = new Set(lane.producer_members.map((member) => member.id));
     if (composite ? !memberIds.has(row.member_id) : row.member_id !== null) fail("schema_error", `invalid attempt member for ${lane.id}`);
     const key = `${row.lane_id}:${row.member_id ?? "_lane"}`;
-    if (seen.has(key)) fail("schema_error", `duplicate attempt ${key}`);
+    if (!allowHistory && seen.has(key)) fail("schema_error", `duplicate attempt ${key}`);
     seen.add(key);
     if (!new Set(["unobserved", "returned", "threw"]).has(row.execution)) fail("schema_error", `${key} execution is invalid`);
     if (!new Set([null, "transport", "unexpected"]).has(row.exception_kind)) fail("schema_error", `${key} exception_kind is invalid`);
@@ -1239,14 +1262,17 @@ export function validateAttemptShard(document, expectedLaneId, config = DATA_SUP
   }
   const lane = config.lanes.find((candidate) => candidate.id === expectedLaneId);
   if (!lane) fail("schema_error", `unknown attempt shard lane ${expectedLaneId}`);
-  if (!Array.isArray(document.attempts) || document.attempts.some((row) => row?.lane_id !== expectedLaneId)) {
+  if (!Array.isArray(document.attempts) || document.attempts.length === 0 || document.attempts.some((row) => row?.lane_id !== expectedLaneId)) {
     fail("schema_error", `${expectedLaneId} shard contains cross-lane evidence`);
   }
-  validateAttemptEvidence({ schema_version: evidenceSchema, attempts: document.attempts }, config);
+  const allowHistory = lane.allows_history === true || ATTEMPT_HISTORY_LANE_IDS.has(expectedLaneId);
+  validateAttemptEvidence({ schema_version: evidenceSchema, attempts: document.attempts }, config, { allowHistory });
   const expectedMembers = lane.monitoring_mode === "composite"
     ? lane.producer_members.map((member) => member.id)
     : [null];
-  const actualMembers = document.attempts.map((row) => row.member_id);
+  const actualMembers = allowHistory
+    ? [...new Set(document.attempts.map((row) => row.member_id))]
+    : document.attempts.map((row) => row.member_id);
   if (canonicalJson(actualMembers) !== canonicalJson(expectedMembers)) {
     fail("schema_error", `${expectedLaneId} shard must contain every member exactly once in config order`);
   }
@@ -1281,7 +1307,23 @@ export function loadAttemptShards({
     const filePath = path.join(root.real, entry.name);
     const document = readJsonStrict(filePath, [root]);
     validateAttemptShard(document, laneId, config);
-    byLane.set(laneId, document.attempts);
+    const lane = config.lanes.find((candidate) => candidate.id === laneId);
+    const allowHistory = lane?.allows_history === true || ATTEMPT_HISTORY_LANE_IDS.has(laneId);
+    if (allowHistory) {
+      const expectedMembers = lane.monitoring_mode === "composite"
+        ? lane.producer_members.map((member) => member.id)
+        : [null];
+      const latestAttempts = expectedMembers.map((memberId) => {
+        const memberRows = document.attempts.filter((row) => row.member_id === memberId);
+        const observed = memberRows
+          .filter((row) => row?.observed_at && typeof row.observed_at === "string")
+          .sort((a, b) => Date.parse(b.observed_at) - Date.parse(a.observed_at));
+        return observed[0] ?? memberRows.find((row) => row?.execution === "unobserved") ?? memberRows[0] ?? null;
+      }).filter(Boolean);
+      byLane.set(laneId, latestAttempts);
+    } else {
+      byLane.set(laneId, document.attempts);
+    }
   }
   if (!pathInfoMatches(root)) fail("unsafe_path", "attempt shard root identity changed during merge");
   const merged = {

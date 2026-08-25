@@ -198,7 +198,16 @@ export function foldWorstTuples(tuples) {
   });
 }
 
-export function buildAttemptRow({ laneId, memberId, tuple, attemptId = null, observedAt = null }) {
+export function buildAttemptRow({
+  laneId,
+  memberId,
+  tuple,
+  attemptId = null,
+  observedAt = null,
+  eventName = null,
+  runId = null,
+  runAttempt = null,
+}) {
   if (!tuple || typeof tuple !== "object") throw new Error("attempt tuple is required");
   const unobserved = tuple.execution === "unobserved";
   const row = {
@@ -228,6 +237,11 @@ export function buildAttemptRow({ laneId, memberId, tuple, attemptId = null, obs
   if (Object.hasOwn(tuple, "failure_detail")) {
     row.failure_entity = tuple.failure_entity;
     row.failure_detail = tuple.failure_detail;
+  }
+  if (!unobserved && eventName !== null && eventName !== undefined) {
+    row.event_name = String(eventName);
+    row.run_id = String(runId ?? attemptId);
+    row.run_attempt = Number(runAttempt ?? 1);
   }
   validateAttemptEvidence({ schema_version: ATTEMPT_SCHEMA, attempts: [row] });
   return row;

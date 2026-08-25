@@ -6,16 +6,22 @@ import os from "node:os";
 import path from "node:path";
 
 import {
+  OECD_MAX_ATTEMPT_HISTORY,
   OECD_MAX_MONTHS_PER_SERIES,
   OECD_PERSISTENCE_POLICY,
   OECD_SERIES,
   evaluateOecdProviderProgress,
   parseOecdCsv,
+  recordOecdAttempt,
   retainLatestOecdMonths,
   runOecdCliShadow,
   validOecdPayload,
 } from "./fetch-oecd-cli.mjs";
-import { classifyAttempt } from "./build-data-supply-detection-floor.mjs";
+import {
+  classifyAttempt,
+  validateAttemptShard,
+} from "./build-data-supply-detection-floor.mjs";
+import { buildAttemptRow, returnedTuple } from "./lib/data-supply-attempt-shard.mjs";
 import { LaneLkgStore } from "./lib/data-supply-lkg-store.mjs";
 
 const header = "REF_AREA,TIME_PERIOD,OBS_VALUE\n";
@@ -414,6 +420,179 @@ assert.throws(() => parseOecdCsv(`${header}${rows}\nXXX,2026-06,100\n`), /unknow
     "2026-07-01",
     "per-series progress must recover even when the scalar maximum is unchanged",
   );
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
+{
+  assert.equal(OECD_MAX_ATTEMPT_HISTORY, 24, "default OECD attempt history cap must be 24");
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "oecd-cli-attempt-history-"));
+  const attemptShardPath = path.join(root, "oecd_cli.json");
+
+  // 1. Single attempt with scheduled event provenance
+  const row1 = buildAttemptRow({
+    laneId: "oecd_cli",
+    memberId: null,
+    tuple: returnedTuple({
+      httpStatus: 200,
+      decode: "ok",
+      payload: "non_empty",
+      assertions: [{ id: "sdmx_cli_rows", passed: true }],
+    }),
+    attemptId: "gh-1001-1-oecd-cli",
+    observedAt: "2026-08-01T08:00:00Z",
+    eventName: "schedule",
+    runId: "1001",
+    runAttempt: 1,
+  });
+  assert.equal(row1.event_name, "schedule");
+  assert.equal(row1.run_id, "1001");
+  assert.equal(row1.run_attempt, 1);
+
+  const shard1 = recordOecdAttempt({ attemptShardPath, row: row1 });
+  assert.equal(validateAttemptShard(shard1, "oecd_cli"), true);
+  assert.equal(shard1.attempts.length, 1);
+  assert.equal(shard1.attempts[0].event_name, "schedule");
+  assert.equal(shard1.attempts[0].run_id, "1001");
+  assert.equal(shard1.attempts[0].run_attempt, 1);
+
+  // 2. Dispatch run appends and records event_name="workflow_dispatch"
+  const row2 = buildAttemptRow({
+    laneId: "oecd_cli",
+    memberId: null,
+    tuple: returnedTuple({
+      httpStatus: 200,
+      decode: "ok",
+      payload: "non_empty",
+      assertions: [{ id: "sdmx_cli_rows", passed: true }],
+    }),
+    attemptId: "gh-1002-1-oecd-cli",
+    observedAt: "2026-08-02T10:00:00Z",
+    eventName: "workflow_dispatch",
+    runId: "1002",
+    runAttempt: 1,
+  });
+  const shard2 = recordOecdAttempt({ attemptShardPath, row: row2 });
+  assert.equal(validateAttemptShard(shard2, "oecd_cli"), true);
+  assert.equal(shard2.attempts.length, 2);
+  assert.equal(shard2.attempts[0].attempt_id, "gh-1002-1-oecd-cli", "newest observed_at must be first");
+  assert.equal(shard2.attempts[0].event_name, "workflow_dispatch");
+  assert.equal(shard2.attempts[1].attempt_id, "gh-1001-1-oecd-cli");
+  assert.equal(shard2.attempts[1].event_name, "schedule");
+
+  // 3. Re-running the same attempt_id updates in place, preserving length
+  const row2Retry = buildAttemptRow({
+    laneId: "oecd_cli",
+    memberId: null,
+    tuple: returnedTuple({
+      httpStatus: 200,
+      decode: "ok",
+      payload: "non_empty",
+      assertions: [{ id: "sdmx_cli_rows", passed: true }],
+    }),
+    attemptId: "gh-1002-1-oecd-cli",
+    observedAt: "2026-08-02T10:05:00Z",
+    eventName: "workflow_dispatch",
+    runId: "1002",
+    runAttempt: 2,
+  });
+  const shard2Updated = recordOecdAttempt({ attemptShardPath, row: row2Retry });
+  assert.equal(validateAttemptShard(shard2Updated, "oecd_cli"), true);
+  assert.equal(shard2Updated.attempts.length, 2, "re-running same attempt_id must not duplicate rows");
+  assert.equal(shard2Updated.attempts[0].run_attempt, 2);
+  assert.equal(shard2Updated.attempts[0].observed_at, "2026-08-02T10:05:00Z");
+
+  // 4. Bounded history eviction with custom small cap
+  for (let i = 3; i <= 10; i += 1) {
+    const day = String(i).padStart(2, "0");
+    const row = buildAttemptRow({
+      laneId: "oecd_cli",
+      memberId: null,
+      tuple: returnedTuple({
+        httpStatus: 200,
+        decode: "ok",
+        payload: "non_empty",
+        assertions: [{ id: "sdmx_cli_rows", passed: true }],
+      }),
+      attemptId: `gh-10${day}-1-oecd-cli`,
+      observedAt: `2026-08-${day}T08:00:00Z`,
+      eventName: i % 2 === 0 ? "schedule" : "workflow_dispatch",
+      runId: `10${day}`,
+      runAttempt: 1,
+    });
+    recordOecdAttempt({ attemptShardPath, row, maxAttempts: 5 });
+  }
+  const cappedShard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+  assert.equal(validateAttemptShard(cappedShard, "oecd_cli"), true);
+  assert.equal(cappedShard.attempts.length, 5, "attempts must be capped at maxAttempts=5");
+  assert.equal(cappedShard.attempts[0].attempt_id, "gh-1010-1-oecd-cli", "newest attempt retained at top");
+  assert.equal(cappedShard.attempts[4].attempt_id, "gh-1006-1-oecd-cli", "oldest within bound retained at bottom");
+
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
+{
+  // 5. Full runOecdCliShadow records event provenance and retains history across runs
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "oecd-cli-shadow-history-"));
+  const paths = {
+    repoRoot: root,
+    shadowPath: path.join(root, "data", "admin", "oecd_cli", "shadow", "oecd-cli.json"),
+    parityReportPath: path.join(root, "data", "admin", "oecd_cli", "parity-report.json"),
+    attemptShardPath: path.join(root, "data", "admin", "data-supply-state", "detection-attempts", "oecd_cli.json"),
+    canonicalPath: path.join(root, "data", "macro", "activity-surveys.json"),
+  };
+  fs.mkdirSync(path.dirname(paths.canonicalPath), { recursive: true });
+  fs.writeFileSync(paths.canonicalPath, "canonical\n");
+
+  // Run 1: schedule
+  await runOecdCliShadow({
+    ...paths,
+    request: async () => ({ statusCode: 200, body: `${header}${rows}\n` }),
+    observedAt: "2026-07-01T08:00:00Z",
+    attemptId: "gh-701-1-oecd-cli",
+    runId: "701",
+    runAttempt: 1,
+    eventName: "schedule",
+  });
+
+  // Run 2: dispatch controlled failure
+  await runOecdCliShadow({
+    ...paths,
+    request: async () => { throw new Error("controlled failure"); },
+    observedAt: "2026-07-15T12:00:00Z",
+    attemptId: "gh-702-1-oecd-cli",
+    runId: "702",
+    runAttempt: 1,
+    eventName: "workflow_dispatch",
+    controlledFailure: true,
+  });
+
+  // Run 3: schedule recovery
+  const advancedRows = Object.entries(OECD_SERIES)
+    .map(([code, key], index) => `${code},2026-07,${code === "KOR" ? "102.9698" : 101 + index / 100}`)
+    .join("\n");
+  await runOecdCliShadow({
+    ...paths,
+    request: async () => ({ statusCode: 200, body: `${header}${advancedRows}\n` }),
+    observedAt: "2026-08-01T08:00:00Z",
+    attemptId: "gh-703-1-oecd-cli",
+    runId: "703",
+    runAttempt: 1,
+    eventName: "schedule",
+  });
+
+  const shard = JSON.parse(fs.readFileSync(paths.attemptShardPath, "utf8"));
+  assert.equal(validateAttemptShard(shard, "oecd_cli"), true);
+  assert.equal(shard.attempts.length, 3, "shard must accumulate bounded attempt history across runs");
+  assert.deepEqual(
+    shard.attempts.map((a) => ({ attempt_id: a.attempt_id, event_name: a.event_name, run_id: a.run_id, run_attempt: a.run_attempt })),
+    [
+      { attempt_id: "gh-703-1-oecd-cli", event_name: "schedule", run_id: "703", run_attempt: 1 },
+      { attempt_id: "gh-702-1-oecd-cli", event_name: "workflow_dispatch", run_id: "702", run_attempt: 1 },
+      { attempt_id: "gh-701-1-oecd-cli", event_name: "schedule", run_id: "701", run_attempt: 1 },
+    ],
+    "attempt rows must prove scheduled vs dispatch provenance and run identity in descending order",
+  );
+
   fs.rmSync(root, { recursive: true, force: true });
 }
 

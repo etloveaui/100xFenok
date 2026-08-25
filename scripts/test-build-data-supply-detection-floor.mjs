@@ -1119,6 +1119,52 @@ function runAttemptShardChecks(artifactRoot) {
   incomplete.attempts.pop();
   assertThrowsCode(() => validateAttemptShard(incomplete, "slickcharts"), "schema_error");
 
+  const duplicateStandard = shardDocument("treasury_tga");
+  duplicateStandard.attempts.push({ ...duplicateStandard.attempts[0], attempt_id: "gh-duplicate-1-treasury-tga" });
+  assertThrowsCode(() => validateAttemptShard(duplicateStandard, "treasury_tga"), "schema_error");
+
+  const duplicateHistory = {
+    schema_version: "data-supply-detection-attempt-shard/v2",
+    lane_id: "oecd_cli",
+    attempts: [
+      {
+        lane_id: "oecd_cli",
+        member_id: null,
+        attempt_id: "gh-2-1-oecd-cli",
+        observed_at: "2026-08-02T08:00:00Z",
+        event_name: "schedule",
+        run_id: "2",
+        run_attempt: 1,
+        execution: "returned",
+        exception_kind: null,
+        http_status: 200,
+        auth: "not_applicable",
+        rate_limited: false,
+        decode: "ok",
+        payload: "non_empty",
+        assertions: [{ id: "sdmx_cli_rows", passed: true }],
+      },
+      {
+        lane_id: "oecd_cli",
+        member_id: null,
+        attempt_id: "gh-1-1-oecd-cli",
+        observed_at: "2026-08-01T08:00:00Z",
+        event_name: "schedule",
+        run_id: "1",
+        run_attempt: 1,
+        execution: "returned",
+        exception_kind: null,
+        http_status: 200,
+        auth: "not_applicable",
+        rate_limited: false,
+        decode: "ok",
+        payload: "non_empty",
+        assertions: [{ id: "sdmx_cli_rows", passed: true }],
+      },
+    ],
+  };
+  assert.equal(validateAttemptShard(duplicateHistory, "oecd_cli"), true);
+
   const mismatched = makeOwnedRoot();
   writeShard(mismatched, "treasury_tga", shardDocument("fred_macro"));
   assertThrowsCode(() => loadAttemptShards({ shardRoot: mismatched.raw }), "schema_error");

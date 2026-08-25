@@ -13,6 +13,10 @@ import {
   transportError,
   writeJsonAtomic,
 } from "./lib/data-supply-attempt-shard.mjs";
+import {
+  ATTEMPT_SHARD_SCHEMA,
+  validateAttemptShard,
+} from "./build-data-supply-detection-floor.mjs";
 import { boundedDiagnosticDetail } from "./lib/diagnostic-detail.mjs";
 import {
   LaneLkgStore,
@@ -318,6 +322,37 @@ function restoreFiles(snapshot) {
   }
 }
 
+export const OECD_MAX_ATTEMPT_HISTORY = 24;
+
+export function recordOecdAttempt({
+  attemptShardPath,
+  row,
+  maxAttempts = OECD_MAX_ATTEMPT_HISTORY,
+}) {
+  let existingAttempts = [];
+  if (fs.existsSync(attemptShardPath)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+      if (Array.isArray(existing?.attempts)) {
+        existingAttempts = existing.attempts.filter((item) => item && typeof item === "object" && item.attempt_id !== row.attempt_id);
+      }
+    } catch {
+      existingAttempts = [];
+    }
+  }
+  const attempts = [row, ...existingAttempts]
+    .sort((a, b) => Date.parse(b.observed_at) - Date.parse(a.observed_at))
+    .slice(0, maxAttempts);
+  const shard = {
+    schema_version: ATTEMPT_SHARD_SCHEMA,
+    lane_id: LANE_ID,
+    attempts,
+  };
+  validateAttemptShard(shard, LANE_ID);
+  writeJsonAtomic(attemptShardPath, shard);
+  return shard;
+}
+
 export async function runOecdCliShadow({
   repoRoot = REPO_ROOT,
   shadowPath = path.join(REPO_ROOT, "data/admin/oecd_cli/shadow/oecd-cli.json"),
@@ -331,6 +366,7 @@ export async function runOecdCliShadow({
   runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT || 1),
   eventName = process.env.GITHUB_EVENT_NAME || "local",
   controlledFailure = process.env.INPUT_CONTROLLED_FAILURE === "true",
+  maxAttemptHistory = OECD_MAX_ATTEMPT_HISTORY,
   lkgStoreFactory = ({ repoRoot: storeRoot, laneId }) => new LaneLkgStore({
     repoRoot: storeRoot,
     laneId,
@@ -359,8 +395,17 @@ export async function runOecdCliShadow({
     failureDetail = boundedDiagnosticDetail(error);
     tuple = threwTuple(transportError(error) ? "transport" : "unexpected");
   }
-  let row = buildAttemptRow({ laneId: LANE_ID, memberId: null, tuple, attemptId, observedAt });
-  writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
+  let row = buildAttemptRow({
+    laneId: LANE_ID,
+    memberId: null,
+    tuple,
+    attemptId,
+    observedAt,
+    eventName,
+    runId: String(runId),
+    runAttempt: Number(runAttempt),
+  });
+  recordOecdAttempt({ attemptShardPath, row, maxAttempts: maxAttemptHistory });
   const run = { runId: String(runId), runAttempt: Number(runAttempt), eventName, observedAt };
   const store = lkgStoreFactory({ repoRoot, laneId: LANE_ID });
   const artifact = {
@@ -376,8 +421,11 @@ export async function runOecdCliShadow({
       tuple: threwTuple("unexpected"),
       attemptId,
       observedAt,
+      eventName,
+      runId: String(runId),
+      runAttempt: Number(runAttempt),
     });
-    writeJsonAtomic(attemptShardPath, buildSingleLaneShard({ laneId: LANE_ID, row }));
+    recordOecdAttempt({ attemptShardPath, row, maxAttempts: maxAttemptHistory });
     store.recordFailure({
       artifacts: [artifact],
       run,
