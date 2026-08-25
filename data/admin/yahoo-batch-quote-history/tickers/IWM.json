@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-12T02:41:04Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31557511991",
-      "schedule": "7 0 * * 0-5",
-      "shard": "36/72"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,33 +168,45 @@
       "run_id": "32379322022",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1202,
+      "natural": true,
+      "observed_at": "2026-08-25T01:49:33Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32798910056",
+      "schedule": "7 0 * * 0-5",
+      "shard": "2/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:14:40Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-25T01:49:59Z",
+    "history_as_of": "2026-08-24",
     "path": "data/yf/finance/IWM.json",
-    "payload_sha256": "3d334802c14d3224142bd804f27f85a6dc9aeb3771fa184f23d283d93822ca0c",
-    "quote_as_of": "2026-08-20T15:14:39Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "b4521cacdb31dd71cabc11a23f1a5c63493eed705840a877dc0d0863943e1e50",
+    "quote_as_of": "2026-08-24T20:00:00Z",
+    "source_as_of": "2026-08-24"
   },
   "discovered_from": [
     "major_etf_configuration",
-    "rim_tracker_configuration",
-    "stockanalysis_etf"
+    "rim_tracker_configuration"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 691,
-    "natural": false,
-    "observed_at": "2026-08-20T14:20:12Z",
+    "latency_ms": 1202,
+    "natural": true,
+    "observed_at": "2026-08-25T01:49:33Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32379322022",
-    "schedule": "",
-    "shard": ""
+    "run_id": "32798910056",
+    "schedule": "7 0 * * 0-5",
+    "shard": "2/6"
   },
   "lkg": {
     "fetched_at": "2026-06-27T23:59:24Z",
@@ -219,15 +218,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "e71f798b045fae6157e265de4b14eab9eb012c4dc4c5c9a3d79f35de00fa123d",
-    "quote_as_of": "2026-08-20T15:14:39Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-24",
+    "observed_at": "2026-08-25T01:49:33Z",
+    "payload_sha256": "4ac4212b6accd1b83a027f08f93fc91899c00dac708a7bb2dd02c61488faf9fa",
+    "quote_as_of": "2026-08-24T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32798910056",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-24"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -243,5 +242,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "IWM",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-08-25T01:49:33Z"
 }

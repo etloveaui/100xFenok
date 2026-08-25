@@ -1,34 +1,34 @@
 {
   "active_universe_scope": "core_etf",
   "counts": {
-    "active": 150,
+    "active": 149,
     "failed": 1,
-    "fresh": 146,
-    "lkg": 4,
+    "fresh": 144,
+    "lkg": 5,
     "pending_acquisition": 0,
     "pending_history": 0,
-    "retry": 4,
-    "stale": 4,
+    "retry": 5,
+    "stale": 5,
     "terminal": 0,
     "unavailable": 0,
     "untracked": 0
   },
   "current_attempt": {
-    "attempted": 21,
+    "attempted": 28,
     "errors": [],
     "event_name": "schedule",
     "failed": 0,
-    "fetch_attempts": 21,
+    "fetch_attempts": 28,
     "natural": true,
     "promotion_deferral_symbols": [],
     "promotion_deferrals": 0,
     "run_attempt": 1,
-    "run_id": "32681249468",
+    "run_id": "32798910056",
     "schedule": "7 0 * * 0-5",
     "skipped": 0,
-    "successes": 21
+    "successes": 28
   },
-  "generated_at": "2026-08-24T01:55:37Z",
+  "generated_at": "2026-08-25T01:49:33Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
     "attempts_used": 1,
@@ -71,6 +71,17 @@
       "failure_observed_at": null,
       "failure_run_id": null,
       "max_source_age_business_days": 6,
+      "payload_sha256": "1d799a142431f0e5777b3e64d487067c872766d7d22955b38a1d8eb6fd79c54e",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-14",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "RLY"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": null,
+      "failure_run_id": null,
+      "max_source_age_business_days": 6,
       "payload_sha256": "4e4c9d636f3ac55a6f4c1af550cb3704c8aee109250bd695932baa79cea67ebb",
       "source_age_business_days": 7,
       "source_as_of": "2026-08-12",
@@ -92,10 +103,11 @@
   "lkg_symbols": [
     "DFAI",
     "DGRO",
+    "RLY",
     "SPHY",
     "UPRO"
   ],
-  "message": "Yahoo quote/history: fresh=146, lkg=4, pending_history=0, unavailable=0, pending_acquisition=0, terminal=0, retry=4, failed=1, source_stale=4. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
+  "message": "Yahoo quote/history: fresh=144, lkg=5, pending_history=0, unavailable=0, pending_acquisition=0, terminal=0, retry=5, failed=1, source_stale=5. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
   "oldest_source_as_of": "2026-08-07",
   "oldest_source_ticker": "UPRO",
   "pending_acquisition_details": [],
@@ -106,6 +118,7 @@
   "retry_symbols": [
     "DFAI",
     "DGRO",
+    "RLY",
     "SPHY",
     "UPRO"
   ],
@@ -137,6 +150,15 @@
       "source_as_of": "2026-08-12",
       "symbols": [
         "SPHY"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-08-14",
+      "symbols": [
+        "RLY"
       ]
     }
   ],
