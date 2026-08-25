@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-04T00:29:57Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "30865042195",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,32 +168,45 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 632,
+      "natural": true,
+      "observed_at": "2026-08-24T23:41:40Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32790347813",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:16:40Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-24T23:45:17Z",
+    "history_as_of": "2026-08-24",
     "path": "data/yf/finance/LLY.json",
-    "payload_sha256": "ef22be6e76d75c1852858550f64d5f276ee692c208338ea408dad39e5f739a74",
-    "quote_as_of": "2026-08-20T15:16:36Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "05d071ea13a2c120f4a87d3b5c98506874f0ae8aafd8c379f0ab83e1f49408f3",
+    "quote_as_of": "2026-08-24T20:04:22Z",
+    "source_as_of": "2026-08-24"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 632,
     "natural": true,
-    "observed_at": "2026-08-20T23:46:53Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-24T23:41:40Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32790347813",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "0/5"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:45:30Z",
@@ -218,15 +218,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "949ff5a45e095174aad8a4c6a6971dda71e5e0ee6c4d6abc99f027c9bb561751",
-    "quote_as_of": "2026-08-20T15:16:36Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-24",
+    "observed_at": "2026-08-24T23:41:40Z",
+    "payload_sha256": "a4348e9ef18aea3a2eaab82c7ce852c8d7ba7bf29fe647d15e10211dc424678e",
+    "quote_as_of": "2026-08-24T20:04:22Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32790347813",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-24"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -242,5 +242,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "LLY",
-  "updated_at": "2026-08-20T23:46:53Z"
+  "updated_at": "2026-08-24T23:41:40Z"
 }

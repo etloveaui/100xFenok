@@ -2,32 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 380,
-      "natural": false,
-      "observed_at": "2026-08-01T21:11:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30718396938",
-      "schedule": "",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 494,
-      "natural": true,
-      "observed_at": "2026-08-04T00:26:09Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30865042195",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 603,
@@ -181,15 +155,41 @@
       "run_id": "32429826829",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 496,
+      "natural": true,
+      "observed_at": "2026-08-24T23:41:40Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32790347813",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-24T23:46:25Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "32790347813",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:20:43Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-24T23:45:29Z",
+    "history_as_of": "2026-08-24",
     "path": "data/yf/finance/NBIS.json",
-    "payload_sha256": "ad71ea4d1c90c44fa64945c594d7ace2f5947f4b239a440ae517328d2b7245fd",
-    "quote_as_of": "2026-08-20T15:20:40Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "03a41907558a74c03ee3df50ac337374579ece773d6e0cf754e3da25a0d790b0",
+    "quote_as_of": "2026-08-24T20:00:00Z",
+    "source_as_of": "2026-08-24"
   },
   "discovered_from": [
     "market_facts"
@@ -200,28 +200,28 @@
     "failures": [],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-20T23:46:34Z",
+    "observed_at": "2026-08-24T23:46:25Z",
     "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "32429826829",
+    "run_id": "32790347813",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "1/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "da45351b35ebc8ce8ab295207e4b83a81e288a3e04e00bcccc807ffcf69224d3",
-    "quote_as_of": "2026-08-20T15:20:40Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-24",
+    "observed_at": "2026-08-24T23:41:40Z",
+    "payload_sha256": "a3bd292e98c5de9ae3a79a02a361b66536f25a1d1ae46a202098a1c04098f156",
+    "quote_as_of": "2026-08-24T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32790347813",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-24"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "NBIS",
-  "updated_at": "2026-08-20T23:46:34Z"
+  "updated_at": "2026-08-24T23:46:25Z"
 }

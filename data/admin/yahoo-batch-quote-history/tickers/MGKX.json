@@ -156,31 +156,57 @@
       "run_id": "31515819191",
       "schedule": "7 16 * * 0-5",
       "shard": "32/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 531,
+      "natural": true,
+      "observed_at": "2026-08-24T23:41:40Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32790347813",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-24T23:54:05Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "32790347813",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T17:08:36Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MGKX.json",
-    "payload_sha256": "8aa24c7cdf2ccafbaecda5ea13002a49d32f51fab92949166e25772c58592a9c",
-    "quote_as_of": "2026-08-11T13:46:06Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-08-24T23:42:00Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/MGKX.json",
+    "payload_sha256": "6fe7975ae3c24a0567dae956c832aaca9445aff13f52b96b0067a9792d816a79",
+    "quote_as_of": "2026-08-20T19:11:29Z",
+    "source_as_of": "2026-08-20T19:11:29Z"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 636,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-11T17:08:04Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-24T23:54:05Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31515819191",
-    "schedule": "7 16 * * 0-5",
-    "shard": "32/72"
+    "run_id": "32790347813",
+    "schedule": "20 23 * * 1-5",
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-08-11T17:08:36Z",
@@ -193,17 +219,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-11T17:08:04Z",
-    "payload_sha256": "fe0593f2cc3a0d89a522443a291f639ca7f43b436d968e417197a873656f2695",
-    "quote_as_of": "2026-08-11T13:46:06Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-24T23:41:40Z",
+    "payload_sha256": "1cc03e16897b495efb933f480719b4c5b19300073ef096b363b63342c2450fd1",
+    "quote_as_of": "2026-08-20T19:11:29Z",
     "run_attempt": 1,
-    "run_id": "31515819191",
+    "run_id": "32790347813",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-08-20T19:11:29Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -216,5 +242,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "MGKX",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-08-24T23:54:05Z"
 }

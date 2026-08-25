@@ -5,33 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 504,
-      "natural": true,
-      "observed_at": "2026-08-10T20:51:42Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31430923656",
-      "schedule": "7 20 * * 0-5",
-      "shard": "22/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 710,
-      "natural": true,
-      "observed_at": "2026-08-11T09:13:07Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31476569032",
-      "schedule": "7 8 * * 0-5",
-      "shard": "28/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 763,
       "natural": true,
       "observed_at": "2026-08-11T13:36:55Z",
@@ -199,40 +172,59 @@
       "run_id": "31648785047",
       "schedule": "7 22 * * 0-5",
       "shard": "47/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 578,
+      "natural": true,
+      "observed_at": "2026-08-24T23:41:40Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32790347813",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-24T23:49:48Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "32790347813",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T09:23:54Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/XVO.json",
-    "payload_sha256": "41e37fd6318e7fb9f447dce1ed6960fcc1cf7f50544d158db39c1b60f8e40c7e",
-    "quote_as_of": "2026-06-03T16:59:52Z",
-    "source_as_of": "2026-06-03T16:59:52Z"
+    "fetched_at": "2026-08-24T23:42:01Z",
+    "history_as_of": "2026-08-21",
+    "path": "data/yf/finance/XVO.json",
+    "payload_sha256": "f431d06978297582f25ef6c648949c02c412a4a07112d4fff168ca9c232d7bc1",
+    "quote_as_of": "2026-08-20T17:02:13Z",
+    "source_as_of": "2026-08-20T17:02:13Z"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for XVO despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
-    "failures": [
-      {
-        "attempt": 1,
-        "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-        "source": "provider_safe_call"
-      }
-    ],
-    "latency_ms": 441,
+    "failures": [],
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-12T22:55:30Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-24T23:49:48Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31648785047",
-    "schedule": "7 22 * * 0-5",
-    "shard": "47/72"
+    "run_id": "32790347813",
+    "schedule": "20 23 * * 1-5",
+    "shard": "2/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -261,17 +253,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T09:23:29Z",
-    "payload_sha256": "0289583cc7fb0be6f22d660d82f515c5391f13967814ce43a89c7e2c3cd61341",
-    "quote_as_of": "2026-06-03T16:59:52Z",
+    "history_as_of": "2026-08-21",
+    "observed_at": "2026-08-24T23:41:40Z",
+    "payload_sha256": "371e644da85a69131c18d1fdb302008c8e0f8019b61fe3ce0b3d99c2309cad24",
+    "quote_as_of": "2026-08-20T17:02:13Z",
     "run_attempt": 1,
-    "run_id": "31582524321",
+    "run_id": "32790347813",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-06-03T16:59:52Z"
+    "source_as_of": "2026-08-20T17:02:13Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-24T23:41:40Z",
+  "recovered_from_run_id": "31648785047",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "32790347813",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 48,
@@ -284,5 +281,5 @@
     "source_as_of": "2026-06-03T16:59:52Z"
   },
   "ticker": "XVO",
-  "updated_at": "2026-08-12T22:55:30Z"
+  "updated_at": "2026-08-24T23:49:48Z"
 }
