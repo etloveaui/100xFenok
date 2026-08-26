@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-12T02:41:04Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31557511991",
-      "schedule": "7 0 * * 0-5",
-      "shard": "36/72"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,60 @@
       "run_id": "32379322022",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1362,
+      "natural": true,
+      "observed_at": "2026-08-26T01:55:21Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32920661778",
+      "schedule": "7 0 * * 0-5",
+      "shard": "3/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-20T15:07:34Z",
-    "history_as_of": "2026-08-20",
+    "fetched_at": "2026-08-26T01:55:42Z",
+    "history_as_of": "2026-08-25",
     "path": "data/yf/finance/EWY.json",
-    "payload_sha256": "2ed60d5d21414a8d88fe573ef5ab05f16ee0a2ba8b68f0b6a22b3d489d72886f",
-    "quote_as_of": "2026-08-20T15:07:33Z",
-    "source_as_of": "2026-08-20"
+    "payload_sha256": "11f9001a164d47be81a5bd671d5536bcbc0fe7ebf112bd90812a2b453ff5f1ad",
+    "quote_as_of": "2026-08-25T20:00:00Z",
+    "source_as_of": "2026-08-25"
   },
   "discovered_from": [
-    "rim_tracker_configuration",
-    "stockanalysis_etf"
+    "rim_tracker_configuration"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 615,
-    "natural": false,
-    "observed_at": "2026-08-20T14:20:12Z",
+    "latency_ms": 1362,
+    "natural": true,
+    "observed_at": "2026-08-26T01:55:21Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32379322022",
-    "schedule": "",
-    "shard": ""
+    "run_id": "32920661778",
+    "schedule": "7 0 * * 0-5",
+    "shard": "3/6"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-08-20",
-    "observed_at": "2026-08-20T14:20:12Z",
-    "payload_sha256": "f0584536b6e00e8cc787aacd2ce884f7beb454adea645b7e4409c15b2ebbd3b9",
-    "quote_as_of": "2026-08-20T15:07:33Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-08-25",
+    "observed_at": "2026-08-26T01:55:21Z",
+    "payload_sha256": "aff7e811aa128c15e61556b78058730b6d6b5e065ad78425de16dc34df28227e",
+    "quote_as_of": "2026-08-25T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "32379322022",
+    "run_id": "32920661778",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-20"
+    "source_as_of": "2026-08-25"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "EWY",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-08-26T01:55:21Z"
 }
