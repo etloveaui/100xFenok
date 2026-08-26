@@ -5,34 +5,6 @@
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 604,
-      "natural": true,
-      "observed_at": "2026-08-12T00:43:18Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 825,
-      "natural": true,
-      "observed_at": "2026-08-12T05:45:23Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31567478446",
-      "schedule": "7 4 * * 0-5",
-      "shard": "38/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 906,
       "natural": true,
       "observed_at": "2026-08-12T07:59:44Z",
@@ -186,15 +158,41 @@
       "run_id": "32790347813",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 855,
+      "natural": true,
+      "observed_at": "2026-08-25T23:43:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32911905308",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-25T23:49:10Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "32911905308",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-24T23:44:02Z",
-    "history_as_of": "2026-08-24",
+    "fetched_at": "2026-08-25T23:46:12Z",
+    "history_as_of": "2026-08-25",
     "path": "data/yf/finance/AAPL.json",
-    "payload_sha256": "a44aa7644e7e30a0778614a1774e138f5604ce4976e71b69392a4122bd40121c",
-    "quote_as_of": "2026-08-24T20:00:01Z",
-    "source_as_of": "2026-08-24"
+    "payload_sha256": "65ab6f8ddd0fd7549c327b91d4ddfef4a3c6df7422688fe7f9cbeaade08b4a8d",
+    "quote_as_of": "2026-08-25T20:00:01Z",
+    "source_as_of": "2026-08-25"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -202,17 +200,17 @@
     "portfolio_configuration"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 548,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-24T23:41:40Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-25T23:49:10Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "1/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -237,14 +235,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-24",
-    "observed_at": "2026-08-24T23:41:40Z",
-    "payload_sha256": "161c03a11b8323be105dd838feaa1248bf9a0c267c8c74714427a9be1e599a23",
-    "quote_as_of": "2026-08-24T20:00:01Z",
+    "history_as_of": "2026-08-25",
+    "observed_at": "2026-08-25T23:43:27Z",
+    "payload_sha256": "2884c92d38a716a537fa752671d09c02ca8bee9d8859db56c37092c98b6f7318",
+    "quote_as_of": "2026-08-25T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-24"
+    "source_as_of": "2026-08-25"
   },
   "recovered_at": "2026-08-12T13:41:31Z",
   "recovered_from_run_id": "31590557839",
@@ -255,5 +253,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AAPL",
-  "updated_at": "2026-08-24T23:41:40Z"
+  "updated_at": "2026-08-25T23:49:10Z"
 }

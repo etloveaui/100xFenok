@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 908,
-      "natural": true,
-      "observed_at": "2026-08-07T01:46:07Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31138989349",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 393,
       "natural": true,
       "observed_at": "2026-08-07T23:52:29Z",
@@ -181,12 +168,26 @@
       "run_id": "32790347813",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 771,
+      "natural": true,
+      "observed_at": "2026-08-25T23:43:27Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "32911905308",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
     "fetched_at": "2026-08-24T23:51:49Z",
     "history_as_of": "2026-08-24",
-    "path": "data/yf/finance/AVB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AVB.json",
     "payload_sha256": "b6b2221a99f69fbebc0f8341c8c79da1d4c80cb439d66f433e648c48646ac54c",
     "quote_as_of": "2026-08-14T20:00:03Z",
     "source_as_of": "2026-08-14T20:00:03Z"
@@ -196,16 +197,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 521,
+    "latency_ms": 771,
     "natural": true,
-    "observed_at": "2026-08-24T23:49:48Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-25T23:43:27Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "0/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-25T23:43:27Z",
+    "run_attempt": 1,
+    "run_id": "32911905308"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-24T23:51:49Z",
+    "history_as_of": "2026-08-24",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AVB.json",
+    "payload_sha256": "b6b2221a99f69fbebc0f8341c8c79da1d4c80cb439d66f433e648c48646ac54c",
+    "quote_as_of": "2026-08-14T20:00:03Z",
+    "source_as_of": "2026-08-14T20:00:03Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -219,9 +241,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-14T20:00:03Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-08-25T23:43:27Z",
+    "classified_run_id": "32911905308",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "AVB holds LKG because Yahoo source date 2026-08-14T20:00:03Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-14T20:00:03Z"
+  },
   "ticker": "AVB",
-  "updated_at": "2026-08-24T23:49:48Z"
+  "updated_at": "2026-08-25T23:43:27Z"
 }

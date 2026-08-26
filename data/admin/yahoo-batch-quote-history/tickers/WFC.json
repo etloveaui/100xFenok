@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 861,
-      "natural": true,
-      "observed_at": "2026-08-07T02:06:09Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31138989349",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,30 +168,43 @@
       "run_id": "32790347813",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1367,
+      "natural": true,
+      "observed_at": "2026-08-25T23:54:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32911905308",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-24T23:46:19Z",
-    "history_as_of": "2026-08-24",
+    "fetched_at": "2026-08-26T00:00:01Z",
+    "history_as_of": "2026-08-25",
     "path": "data/yf/finance/WFC.json",
-    "payload_sha256": "e5d41d1a6f997703d9545a2cd094bdd7d2798a57480aa06aa7bb0dec20fc9048",
-    "quote_as_of": "2026-08-24T20:04:05Z",
-    "source_as_of": "2026-08-24"
+    "payload_sha256": "185d9582814be3412a099c1f9e94419ed4ed4b4996ced3680fb689955c28f4db",
+    "quote_as_of": "2026-08-25T20:04:14Z",
+    "source_as_of": "2026-08-25"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 1367,
     "natural": true,
-    "observed_at": "2026-08-24T23:54:05Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-25T23:54:55Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
   },
@@ -261,14 +261,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-24",
-    "observed_at": "2026-08-24T23:41:40Z",
-    "payload_sha256": "42ad1cb5342791f714dc6612abba93f2cf2ee5808c4b6f8b8b96a830632c64c1",
-    "quote_as_of": "2026-08-24T20:04:05Z",
+    "history_as_of": "2026-08-25",
+    "observed_at": "2026-08-25T23:54:55Z",
+    "payload_sha256": "fcd69d7ef074c08b62355e466d4ae691c887a94737d079b618f7ca481d682350",
+    "quote_as_of": "2026-08-25T20:04:14Z",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-24"
+    "source_as_of": "2026-08-25"
   },
   "recovered_at": "2026-07-18T00:37:10Z",
   "recovered_from_run_id": "29544227703",
@@ -279,5 +279,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "WFC",
-  "updated_at": "2026-08-24T23:54:05Z"
+  "updated_at": "2026-08-25T23:54:55Z"
 }

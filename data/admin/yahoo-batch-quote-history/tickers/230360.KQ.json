@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 654,
-      "natural": true,
-      "observed_at": "2026-08-12T13:41:31Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31602424796",
-      "schedule": "7 12 * * 0-5",
-      "shard": "42/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for 230360.KQ despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 348,
       "natural": true,
       "observed_at": "2026-08-12T15:08:24Z",
@@ -409,6 +395,39 @@
       "run_id": "32790347813",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-25T23:43:27Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "32911905308",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -448,10 +467,10 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-24T23:41:40Z",
+    "observed_at": "2026-08-25T23:43:27Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -482,9 +501,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-24T23:41:40Z",
+    "observed_at": "2026-08-25T23:43:27Z",
     "run_attempt": 1,
-    "run_id": "32790347813"
+    "run_id": "32911905308"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:48:17Z",
@@ -508,5 +527,5 @@
     "source_as_of": "2026-06-10T06:30:30Z"
   },
   "ticker": "230360.KQ",
-  "updated_at": "2026-08-24T23:41:40Z"
+  "updated_at": "2026-08-25T23:43:27Z"
 }

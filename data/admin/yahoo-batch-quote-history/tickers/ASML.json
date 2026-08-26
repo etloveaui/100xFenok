@@ -1,32 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 737,
-      "natural": true,
-      "observed_at": "2026-08-06T00:31:18Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31058959670",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 813,
-      "natural": true,
-      "observed_at": "2026-08-07T02:01:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31138989349",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +155,41 @@
       "run_id": "32790347813",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 771,
+      "natural": true,
+      "observed_at": "2026-08-25T23:43:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32911905308",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-25T23:49:10Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "32911905308",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-24T23:44:13Z",
-    "history_as_of": "2026-08-24",
+    "fetched_at": "2026-08-25T23:46:26Z",
+    "history_as_of": "2026-08-25",
     "path": "data/yf/finance/ASML.json",
-    "payload_sha256": "f8fe20347b9ef8bb91fa2a856464e40d0c98d157c2749f603a64273db2684913",
-    "quote_as_of": "2026-08-24T20:00:01Z",
-    "source_as_of": "2026-08-24"
+    "payload_sha256": "402fe30908a977a48c65df2d4038148be972bbbd5b8b989b5207d20a2fe47302",
+    "quote_as_of": "2026-08-25T20:00:01Z",
+    "source_as_of": "2026-08-25"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,17 +197,17 @@
     "nasdaq_giw_sox"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 625,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-24T23:41:40Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-25T23:49:10Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "1/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-24",
-    "observed_at": "2026-08-24T23:41:40Z",
-    "payload_sha256": "5256bf6a23547cb4ea3dc1221c396667f48e9b9c7662c7714a38ab8fcd76c0e0",
-    "quote_as_of": "2026-08-24T20:00:01Z",
+    "history_as_of": "2026-08-25",
+    "observed_at": "2026-08-25T23:43:27Z",
+    "payload_sha256": "48d988b6f5cd5332c8a593adbc5629dce417a77b92e03b52f517d9e1669226b8",
+    "quote_as_of": "2026-08-25T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-24"
+    "source_as_of": "2026-08-25"
   },
   "recovered_at": "2026-07-31T00:55:40Z",
   "recovered_from_run_id": "30502016705",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ASML",
-  "updated_at": "2026-08-24T23:41:40Z"
+  "updated_at": "2026-08-25T23:49:10Z"
 }

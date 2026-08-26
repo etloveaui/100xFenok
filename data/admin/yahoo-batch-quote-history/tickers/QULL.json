@@ -2,20 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 434,
-      "natural": true,
-      "observed_at": "2026-08-11T23:29:49Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31544436443",
-      "schedule": "7 22 * * 0-5",
-      "shard": "35/72"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 529,
@@ -189,13 +175,26 @@
       "run_id": "32790347813",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 702,
+      "natural": true,
+      "observed_at": "2026-08-25T23:54:55Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32911905308",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-24T23:57:43Z",
-    "history_as_of": "2026-08-21",
-    "path": "data/yf/finance/QULL.json",
-    "payload_sha256": "9fca03db0e2f3faef974ff4cb8ab2b69d1d4e722274364349032d0a64ba2ef31",
+    "fetched_at": "2026-08-25T23:59:18Z",
+    "history_as_of": "2026-08-24",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/QULL.json",
+    "payload_sha256": "ab99b3a43caa7843137ed2a86daf385e7feaba57a6f1889cdefc64b3e6486d05",
     "quote_as_of": "2026-08-17T19:30:16Z",
     "source_as_of": "2026-08-17T19:30:16Z"
   },
@@ -206,48 +205,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 496,
+    "latency_ms": 702,
     "natural": true,
-    "observed_at": "2026-08-24T23:54:05Z",
+    "observed_at": "2026-08-25T23:54:55Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
   },
   "lkg": {
-    "fetched_at": "2026-08-12T04:18:33Z",
-    "history_as_of": "2026-08-11",
+    "fetched_at": "2026-08-25T23:59:18Z",
+    "history_as_of": "2026-08-24",
     "path": "data/admin/yahoo-batch-quote-history/lkg/QULL.json",
-    "payload_sha256": "5fd9231ead6648d1422026a7ea4f61a5d54fc4d31893ca75968efe3d914d64d0",
-    "quote_as_of": "2026-06-11T15:15:38Z",
-    "source_as_of": "2026-06-11T15:15:38Z"
+    "payload_sha256": "ab99b3a43caa7843137ed2a86daf385e7feaba57a6f1889cdefc64b3e6486d05",
+    "quote_as_of": "2026-08-17T19:30:16Z",
+    "source_as_of": "2026-08-17T19:30:16Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-21",
-    "observed_at": "2026-08-24T23:54:05Z",
-    "payload_sha256": "aa0686a412bdbe053a2969d394076a78213d405a9f051f58147c28d917be2f24",
+    "history_as_of": "2026-08-24",
+    "observed_at": "2026-08-25T23:54:55Z",
+    "payload_sha256": "db238b7cb1a1d1c29f68e752abf97fe2e1c4fe467299f93fa406bac37e31c2a3",
     "quote_as_of": "2026-08-17T19:30:16Z",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-17T19:30:16Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 42,
-    "classified_at": "2026-08-12T05:45:23Z",
-    "classified_run_id": "31567478446",
+    "age_business_days": 7,
+    "classified_at": "2026-08-26T00:00:08Z",
+    "classified_run_id": "32911905308",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "QULL holds LKG because Yahoo source date 2026-06-11T15:15:38Z is 42 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "QULL holds LKG because Yahoo source date 2026-08-17T19:30:16Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-11T15:15:38Z"
+    "source_as_of": "2026-08-17T19:30:16Z"
   },
   "ticker": "QULL",
-  "updated_at": "2026-08-24T23:54:05Z"
+  "updated_at": "2026-08-26T00:00:08Z"
 }

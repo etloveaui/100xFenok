@@ -5,34 +5,6 @@
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 888,
-      "natural": true,
-      "observed_at": "2026-08-12T13:41:31Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31602424796",
-      "schedule": "7 12 * * 0-5",
-      "shard": "42/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 566,
-      "natural": true,
-      "observed_at": "2026-08-12T15:08:24Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31610461024",
-      "schedule": "7 14 * * 0-5",
-      "shard": "43/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "recovery_not_advanced_by_provider",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 757,
       "natural": true,
       "observed_at": "2026-08-12T17:16:04Z",
@@ -189,32 +161,58 @@
       "run_id": "32790347813",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1265,
+      "natural": true,
+      "observed_at": "2026-08-25T23:43:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32911905308",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-25T23:54:55Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "32911905308",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-24T23:42:02Z",
-    "history_as_of": "2026-08-24",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/000880.KS.json",
-    "payload_sha256": "93a21069a9ee759e4e71b07452152236031e1aa6f288e64c03251996aa2e6aa1",
-    "quote_as_of": "2026-07-29T06:30:02Z",
-    "source_as_of": "2026-07-29T06:30:02Z"
+    "fetched_at": "2026-08-25T23:43:46Z",
+    "history_as_of": "2026-08-25",
+    "path": "data/yf/finance/000880.KS.json",
+    "payload_sha256": "3954efff31ed5c61b72d0b90bc2349c88741898b1956086dfb37466d418d18be",
+    "quote_as_of": "2026-08-25T06:30:12Z",
+    "source_as_of": "2026-08-25"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 586,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-24T23:41:40Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-25T23:54:55Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-08-24T23:42:02Z",
@@ -227,17 +225,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-24",
-    "observed_at": "2026-08-24T23:41:40Z",
-    "payload_sha256": "66158fe1f51e66bb12fe0855166aece7f3f477ac63158355b007a5b3823c05c9",
-    "quote_as_of": "2026-07-29T06:30:02Z",
+    "history_as_of": "2026-08-25",
+    "observed_at": "2026-08-25T23:43:27Z",
+    "payload_sha256": "b6ef497f3c0b5b87fe274110d0bba366b8f124839706d1938224e2cf2e4041c1",
+    "quote_as_of": "2026-08-25T06:30:12Z",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-07-29T06:30:02Z"
+    "source_as_of": "2026-08-25"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 17,
@@ -250,5 +248,5 @@
     "source_as_of": "2026-07-29T06:30:02Z"
   },
   "ticker": "000880.KS",
-  "updated_at": "2026-08-24T23:46:25Z"
+  "updated_at": "2026-08-25T23:54:55Z"
 }

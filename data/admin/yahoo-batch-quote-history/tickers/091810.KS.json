@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 562,
-      "natural": true,
-      "observed_at": "2026-08-05T00:27:30Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30962773171",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 603,
       "natural": true,
       "observed_at": "2026-08-06T00:19:10Z",
@@ -182,13 +169,26 @@
       "run_id": "32790347813",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 712,
+      "natural": true,
+      "observed_at": "2026-08-25T23:43:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "32911905308",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-24T23:42:03Z",
-    "history_as_of": "2026-08-24",
+    "fetched_at": "2026-08-25T23:43:48Z",
+    "history_as_of": "2026-08-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/091810.KS.json",
-    "payload_sha256": "bfe27ee7d69204520d825ccbd6a16fefe5f8603709e0ddf4deff2f53b687b41d",
+    "payload_sha256": "69884ebc890c80ed1b6eaefaaa608629121a31e24500774e9a19eba643ba2269",
     "quote_as_of": "2026-08-06T06:30:24Z",
     "source_as_of": "2026-08-06T06:30:24Z"
   },
@@ -200,32 +200,32 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 524,
+    "latency_ms": 712,
     "natural": true,
-    "observed_at": "2026-08-24T23:41:40Z",
+    "observed_at": "2026-08-25T23:43:27Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-08-24T23:42:03Z",
-    "history_as_of": "2026-08-24",
+    "fetched_at": "2026-08-25T23:43:48Z",
+    "history_as_of": "2026-08-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/091810.KS.json",
-    "payload_sha256": "bfe27ee7d69204520d825ccbd6a16fefe5f8603709e0ddf4deff2f53b687b41d",
+    "payload_sha256": "69884ebc890c80ed1b6eaefaaa608629121a31e24500774e9a19eba643ba2269",
     "quote_as_of": "2026-08-06T06:30:24Z",
     "source_as_of": "2026-08-06T06:30:24Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-24",
-    "observed_at": "2026-08-24T23:41:40Z",
-    "payload_sha256": "0f56e74bb083f30b13596af0579b48be95fe8ca681f1e5b2acb1bcd943db2807",
+    "history_as_of": "2026-08-25",
+    "observed_at": "2026-08-25T23:43:27Z",
+    "payload_sha256": "5793424b514ece3c845833df4db504285df830396320a83467c6933cbe36f921",
     "quote_as_of": "2026-08-06T06:30:24Z",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "32911905308",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-06T06:30:24Z"
   },
@@ -233,15 +233,15 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 11,
-    "classified_at": "2026-08-24T23:46:25Z",
-    "classified_run_id": "32790347813",
+    "age_business_days": 12,
+    "classified_at": "2026-08-25T23:49:10Z",
+    "classified_run_id": "32911905308",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "091810.KS holds LKG because Yahoo source date 2026-08-06T06:30:24Z is 11 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "091810.KS holds LKG because Yahoo source date 2026-08-06T06:30:24Z is 12 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-08-06T06:30:24Z"
   },
   "ticker": "091810.KS",
-  "updated_at": "2026-08-24T23:46:25Z"
+  "updated_at": "2026-08-25T23:49:10Z"
 }
