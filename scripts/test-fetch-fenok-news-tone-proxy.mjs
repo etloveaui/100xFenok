@@ -733,19 +733,36 @@ for (const firstFailure of [
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, WORKFLOW_REL), "utf8");
   const producer = fs.readFileSync(path.join(REPO_ROOT, "scripts", "fetch-fenok-news-tone-proxy.mjs"), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
+    "utf8",
+  ));
   assert.match(workflow, /node scripts\/test-fetch-fenok-news-tone-proxy\.mjs/);
   assert.match(workflow, /node scripts\/fetch-fenok-news-tone-proxy\.mjs/);
   assert.match(workflow, /controlled_failure/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE/);
   assert.match(workflow, /--reference-only --retries 2 --retry-backoff-ms 6500/);
-  assert.match(workflow, new RegExp(`detection-attempts/${LANE_ID}\\.json`));
-  assert.match(workflow, /data\/computed\/fenok_news_tone_proxy\.json/);
+  assert.deepEqual(
+    manifest.workflows[WORKFLOW_REL].stages.success_if_exists,
+    [
+      {
+        kind: "file",
+        path: "data/computed/fenok_news_tone_proxy.json",
+        required: true,
+      },
+      {
+        kind: "file",
+        path: "data/computed/fenok_news_tone_proxy_history.json",
+        required: true,
+      },
+    ],
+    "successful News Tone fetch must require both computed outputs",
+  );
   assert.match(
     producer,
     /main\(\)[\s\S]*?\.then\(\(exitCode\) => \{[\s\S]*?process\.exitCode = exitCode;/,
     "the executable entrypoint must map main's returned status onto the process",
   );
-  assert.match(workflow, /data\/computed\/fenok_news_tone_proxy_history\.json/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);

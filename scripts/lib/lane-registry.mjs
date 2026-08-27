@@ -1607,8 +1607,8 @@ workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = lanePolicy(".
     commitSpec("data/admin/gdelt_news_tone/lkg/news_tone_proxy.json", "file"),
   ],
   success_if_exists: [
-    commitSpec("data/computed/fenok_news_tone_proxy.json", "file"),
-    commitSpec("data/computed/fenok_news_tone_proxy_history.json", "file"),
+    commitSpec("data/computed/fenok_news_tone_proxy.json", "file", true),
+    commitSpec("data/computed/fenok_news_tone_proxy_history.json", "file", true),
   ],
 });
 workflow_policies[".github/workflows/fetch-sentiment.yml"] = lanePolicy(".github/workflows/fetch-sentiment.yml", {

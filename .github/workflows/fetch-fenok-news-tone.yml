@@ -83,17 +83,10 @@ jobs:
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-fenok-news-tone.yml \
             --stage always_if_exists
-          SHARD="data/admin/data-supply-state/detection-attempts/gdelt_news_tone.json"
-          if [[ -f "$SHARD" ]]; then
-            git add -- "$SHARD"
-          fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-fenok-news-tone.yml \
               --stage success_if_exists
-            git add -- \
-              data/computed/fenok_news_tone_proxy.json \
-              data/computed/fenok_news_tone_proxy_history.json
           fi
           if git diff --staged --quiet; then
             echo "No GDELT news tone changes to publish"
