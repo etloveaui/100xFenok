@@ -1628,7 +1628,7 @@ workflow_policies[".github/workflows/fetch-sentiment.yml"] = lanePolicy(".github
     commitSpec("data/admin/sentiment/source-observations/crypto.json", "file"),
   ],
   success_if_exists: [
-    commitSpec("data/sentiment/*.json", "glob"),
+    commitSpec("data/sentiment/*.json", "glob", true),
   ],
 });
 workflow_policies[".github/workflows/fetch-us-indices-daily.yml"] = lanePolicy(".github/workflows/fetch-us-indices-daily.yml", {

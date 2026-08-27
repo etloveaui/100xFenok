@@ -217,7 +217,7 @@ assert.deepEqual(sentiment.stages.always_if_exists, [
   },
 ]);
 assert.deepEqual(sentiment.stages.success_if_exists, [
-  { kind: "glob", path: "data/sentiment/*.json", required: false },
+  { kind: "glob", path: "data/sentiment/*.json", required: true },
 ]);
 assert.deepEqual(sentiment.exclude, []);
 
@@ -338,7 +338,7 @@ assert.deepEqual(fredYardeni.stages.always_if_exists, [
   { kind: "file", path: "data/admin/fred_yardeni/lkg/yardney_model.json", required: false },
 ]);
 assert.deepEqual(fredYardeni.stages.success_if_exists, [
-  { kind: "file", path: "data/yardney/yardney_model.json", required: false },
+  { kind: "file", path: "data/yardney/yardney_model.json", required: true },
 ]);
 assert.deepEqual(fredYardeni.exclude, []);
 
@@ -367,7 +367,7 @@ assert.deepEqual(fdicTier1.stages.always_if_exists, [
   { kind: "file", path: "data/admin/fdic_tier1/lkg/fdic_tier1.json", required: false },
 ]);
 assert.deepEqual(fdicTier1.stages.success_if_exists, [
-  { kind: "file", path: "data/macro/fdic-tier1.json", required: false },
+  { kind: "file", path: "data/macro/fdic-tier1.json", required: true },
 ]);
 assert.deepEqual(fdicTier1.exclude, []);
 

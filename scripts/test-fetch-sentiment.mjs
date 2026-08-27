@@ -527,17 +527,48 @@ async function runCase(root, {
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-sentiment.yml"), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
+    "utf8",
+  ));
+  const stages = manifest.workflows[".github/workflows/fetch-sentiment.yml"].stages;
+  const manualGitAdds = [...workflow.matchAll(/^\s*git add -- (.+)$/gmu)]
+    .map((match) => match[1].trim());
   assert.match(workflow, /controlled_failure_source/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_SOURCE/);
-  assert.match(workflow, /data\/admin\/sentiment\/index\.json/);
-  assert.match(workflow, /data\/admin\/sentiment\/current\/\*\.json/);
-  assert.match(workflow, /data\/admin\/sentiment\/lkg\/\*\.json/);
-  assert.match(workflow, /data\/admin\/sentiment\/source-observations\/crypto\.json/);
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
   assert.match(workflow, /--stage success_if_exists/);
   assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.match(workflow, /- name: Commit sentiment data\n\s+if: \$\{\{ always\(\) \}\}/);
+  assert.deepEqual(stages, {
+    always_if_exists: [
+      {
+        kind: "file",
+        path: "data/admin/data-supply-state/detection-attempts/sentiment.json",
+        required: false,
+      },
+      {
+        kind: "file",
+        path: "data/admin/data-supply-state/publish-outcomes/sentiment.json",
+        required: false,
+      },
+      { kind: "file", path: "data/admin/sentiment/index.json", required: false },
+      { kind: "glob", path: "data/admin/sentiment/current/*.json", required: false },
+      { kind: "glob", path: "data/admin/sentiment/lkg/*.json", required: false },
+      {
+        kind: "file",
+        path: "data/admin/sentiment/source-observations/crypto.json",
+        required: false,
+      },
+    ],
+    required_on_success: [],
+    success_if_exists: [
+      { kind: "glob", path: "data/sentiment/*.json", required: true },
+    ],
+    success_verify_not_plan_if_exists: [],
+  });
+  assert.deepEqual(manualGitAdds, [], "sentiment staging must be manifest-owned");
   assert.doesNotMatch(workflow, /git add -A/);
 }
 
