@@ -444,10 +444,19 @@ function runLane(root, { gen, failures, request, run, controlledFailureKey = "" 
   assert.deepEqual(gate.lanes, ["edgar_filings"], "the registry must attribute this lane to fetch-edgar-filings.yml");
   assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflowText, /--stage always_if_exists/);
-  assert.match(
-    workflowText,
-    /if \[ "\$\{EDGAR_PLAN_ONLY:-false\}" != "true" \] && \[ "\$FETCH_OUTCOME" = "success" \] && \[ "\$VERIFY_OUTCOME" = "success" \]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists[\s\S]*?git add --/,
-    "EDGAR directories must be manifest-staged inside the verified non-plan success branch",
+  const successBranch = workflowText.match(
+    /if \[ "\$\{EDGAR_PLAN_ONLY:-false\}" != "true" \] && \[ "\$FETCH_OUTCOME" = "success" \] && \[ "\$VERIFY_OUTCOME" = "success" \]; then([\s\S]*?)\n\s+fi/,
+  )?.[1] ?? "";
+  assert.deepEqual(
+    {
+      legacy_admin_loop: /for SHARD in[\s\S]*?data\/admin\/edgar_filings\/lkg\/edgar_filings\.json; do/.test(workflowText),
+      verified_success_directory_rail: /scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists[\s\S]*?git add --[\s\S]*?data\/edgar[\s\S]*?data\/edgar-korean-summaries/.test(successBranch),
+    },
+    {
+      legacy_admin_loop: false,
+      verified_success_directory_rail: true,
+    },
+    "EDGAR admin staging must be manifest-owned while directory deletion staging remains manual",
   );
 }
 
