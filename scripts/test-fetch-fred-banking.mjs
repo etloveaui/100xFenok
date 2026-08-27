@@ -562,26 +562,28 @@ function assertValidShard(shard) {
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fred-banking.yml"), "utf8");
   const producer = fs.readFileSync(new URL("./fetch-fred-banking.mjs", import.meta.url), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"), "utf8"));
+  const canonicalSpecs = manifest.workflows[".github/workflows/fetch-fred-banking.yml"].stages.success_if_exists
+    .map(({ path: pathValue, required }) => ({ path: pathValue, required }));
   assert.match(producer, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
   assert.match(workflow, /node scripts\/test-fetch-fred-banking\.mjs/);
   assert.match(workflow, /node scripts\/fetch-fred-banking\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
   assert.doesNotMatch(workflow, /git add -A/);
-  assert.match(workflow, /detection-attempts\/fred_banking\.json/);
   assert.match(workflow, /controlled_failure_key/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
-  assert.match(workflow, /data\/admin\/fred_banking\/index\.json/);
-  assert.match(workflow, /data\/admin\/fred_banking\/lkg\/daily\.json/);
-  assert.match(workflow, /data\/admin\/fred_banking\/lkg\/weekly\.json/);
-  assert.match(workflow, /data\/admin\/fred_banking\/lkg\/monthly\.json/);
-  assert.match(workflow, /data\/admin\/fred_banking\/lkg\/quarterly\.json/);
-  assert.match(workflow, /data\/macro\/fred-banking-monthly\.json/);
   assert.doesNotMatch(workflow, /100xfenok-next\/public\/data\/macro\/fred-banking/);
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
   assert.match(workflow, /--stage success_if_exists/);
   assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.match(workflow, /- name: Commit and push owned FRED banking data\n\s+if: \$\{\{ always\(\) \}\}/);
+  assert.deepEqual(canonicalSpecs, [
+    { path: "data/macro/fred-banking-daily.json", required: false },
+    { path: "data/macro/fred-banking-weekly.json", required: false },
+    { path: "data/macro/fred-banking-monthly.json", required: false },
+    { path: "data/macro/fred-banking-quarterly.json", required: false },
+  ], "FRED banking canonical staging remains optional and manifest-owned");
 }
 
 

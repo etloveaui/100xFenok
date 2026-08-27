@@ -80,40 +80,13 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          SHARD="data/admin/data-supply-state/detection-attempts/fred_banking.json"
-          # Phase 1: consume the generated policy while retaining the legacy
-          # hand list as parity defense until this workflow's natural proof.
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-fred-banking.yml \
             --stage always_if_exists
-          if [[ -f "$SHARD" ]]; then
-            git add -- "$SHARD"
-          fi
-          if [[ -f data/admin/fred_banking/index.json ]]; then
-            git add -- data/admin/fred_banking/index.json
-          fi
-          for LKG_FILE in \
-            data/admin/fred_banking/lkg/daily.json \
-            data/admin/fred_banking/lkg/weekly.json \
-            data/admin/fred_banking/lkg/monthly.json \
-            data/admin/fred_banking/lkg/quarterly.json; do
-            if [[ -f "$LKG_FILE" ]]; then
-              git add -- "$LKG_FILE"
-            fi
-          done
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-fred-banking.yml \
               --stage success_if_exists
-            for CANONICAL_FILE in \
-              data/macro/fred-banking-daily.json \
-              data/macro/fred-banking-weekly.json \
-              data/macro/fred-banking-monthly.json \
-              data/macro/fred-banking-quarterly.json; do
-              if [[ -f "$CANONICAL_FILE" ]]; then
-                git add -- "$CANONICAL_FILE"
-              fi
-            done
           fi
           if git diff --staged --quiet; then
             echo "No FRED banking changes to publish"
