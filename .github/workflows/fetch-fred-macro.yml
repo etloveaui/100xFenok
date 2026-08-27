@@ -76,26 +76,13 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          SHARD="data/admin/data-supply-state/detection-attempts/fred_macro.json"
-          # Phase 1: consume the generated policy while retaining the legacy
-          # hand list as parity defense until this workflow's natural proof.
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-fred-macro.yml \
             --stage always_if_exists
-          if [[ -f "$SHARD" ]]; then
-            git add -- "$SHARD"
-          fi
-          if [[ -f data/admin/fred_macro/index.json ]]; then
-            git add -- data/admin/fred_macro/index.json
-          fi
-          if [[ -f data/admin/fred_macro/lkg/fred_macro.json ]]; then
-            git add -- data/admin/fred_macro/lkg/fred_macro.json
-          fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-fred-macro.yml \
               --stage success_if_exists
-            git add -- data/macro/fred-macro.json
           fi
           if git diff --staged --quiet; then
             echo "No FRED macro changes to publish"

@@ -377,21 +377,22 @@ for (const failure of [
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fred-macro.yml"), "utf8");
   const producer = fs.readFileSync(new URL("./fetch-fred-macro.mjs", import.meta.url), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"), "utf8"));
+  const canonicalSpec = manifest.workflows[".github/workflows/fetch-fred-macro.yml"].stages.success_if_exists
+    .find((spec) => spec.path === "data/macro/fred-macro.json");
   assert.match(producer, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
   assert.match(workflow, /node scripts\/test-fetch-fred-macro\.mjs/);
   assert.match(workflow, /node scripts\/fetch-fred-macro\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
   assert.doesNotMatch(workflow, /git add -A/);
-  assert.match(workflow, /detection-attempts\/fred_macro\.json/);
   assert.match(workflow, /controlled_failure_key/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
-  assert.match(workflow, /data\/admin\/fred_macro\/index\.json/);
-  assert.match(workflow, /data\/admin\/fred_macro\/lkg\/fred_macro\.json/);
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
   assert.match(workflow, /--stage success_if_exists/);
   assert.match(workflow, /FETCH_OUTCOME.*success[\s\S]*--stage success_if_exists/);
   assert.match(workflow, /- name: Commit and push macro FRED data\n\s+if: \$\{\{ always\(\) \}\}/);
+  assert.equal(canonicalSpec?.required, true, "successful FRED fetch must require the canonical payload");
 }
 
 
