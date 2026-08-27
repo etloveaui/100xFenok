@@ -626,6 +626,13 @@ function assertValidShard(shard) {
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fdic.yml"), "utf8");
   const producer = fs.readFileSync(new URL("./fetch-fdic-tier1.mjs", import.meta.url), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
+    "utf8",
+  ));
+  const canonicalSpec = manifest.workflows[".github/workflows/fetch-fdic.yml"]
+    .stages.success_if_exists
+    .find((spec) => spec.path === "data/macro/fdic-tier1.json");
   assert.match(producer, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
   assert.match(producer, /probeQuarter:\s*latestClosedQuarter\(new Date\(observedAt\)\)/,
     "the real CLI path must probe the latest fully closed quarter");
@@ -633,13 +640,15 @@ function assertValidShard(shard) {
   assert.match(workflow, /node scripts\/fetch-fdic-tier1\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
   assert.doesNotMatch(workflow, /git add -A/);
-  assert.match(workflow, /detection-attempts\/fdic_tier1\.json/);
   assert.match(workflow, /controlled_failure_key/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
+  assert.equal(
+    canonicalSpec?.required,
+    true,
+    "successful FDIC Tier-1 fetch must require the canonical payload",
+  );
   assert.match(workflow, /persistence_migration_only:/);
   assert.match(workflow, /INPUT_PERSISTENCE_MIGRATION_ONLY:/);
-  assert.match(workflow, /data\/admin\/fdic_tier1\/index\.json/);
-  assert.match(workflow, /data\/admin\/fdic_tier1\/lkg\/fdic_tier1\.json/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) && \(github\.event_name != 'schedule' \|\| steps\.schedule_gate\.outputs\.eligible == 'true'\) \}\}/);
 }
 
@@ -659,8 +668,8 @@ function assertValidShard(shard) {
   assert.match(workflowText, /--stage always_if_exists/);
   assert.match(
     workflowText,
-    /if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists[\s\S]*?git add --/,
-    "canonical and public FDIC outputs must be manifest-staged only on fetch success, alongside the legacy hand list",
+    /if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists/,
+    "canonical FDIC output must be manifest-staged only on fetch success",
   );
 }
 

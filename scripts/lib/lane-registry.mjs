@@ -1463,6 +1463,13 @@ const workflow_policies = Object.fromEntries(
     ]),
 );
 
+workflow_policies[".github/workflows/fetch-fdic.yml"].stages.success_if_exists =
+  workflow_policies[".github/workflows/fetch-fdic.yml"].stages.success_if_exists.map((spec) => (
+    spec.path === "data/macro/fdic-tier1.json"
+      ? commitSpec(spec.path, spec.kind, true)
+      : spec
+  ));
+
 workflow_policies[".github/workflows/fetch-fred-macro.yml"].stages.success_if_exists =
   workflow_policies[".github/workflows/fetch-fred-macro.yml"].stages.success_if_exists.map((spec) => (
     spec.path === "data/macro/fred-macro.json"
