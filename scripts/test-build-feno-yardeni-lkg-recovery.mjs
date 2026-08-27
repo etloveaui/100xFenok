@@ -412,6 +412,13 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
 // --- Lane Registry ⇄ commit-shard completeness gate (#366 step 4) -----------
 {
   const workflowText = fs.readFileSync(new URL("../.github/workflows/fetch-fred-yardeni.yml", import.meta.url), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(
+    new URL("../data/admin/lane-commit-manifest.json", import.meta.url),
+    "utf8",
+  ));
+  const canonicalSpec = manifest.workflows[".github/workflows/fetch-fred-yardeni.yml"]
+    .stages.success_if_exists
+    .find((spec) => spec.path === "data/yardney/yardney_model.json");
   const gate = checkWorkflowCommitShardsAgainstRegistry({
     workflowText,
     workflowRel: ".github/workflows/fetch-fred-yardeni.yml",
@@ -421,12 +428,15 @@ async function runLane(root, { series, request, run, controlledFailureKey = "" }
   assert.deepEqual(gate.undeclared_in_workflow, [],
     `allowlist paths with no registry record: ${JSON.stringify(gate.undeclared_in_workflow)}`);
   assert.deepEqual(gate.lanes, ["fred_yardeni"], "the registry must attribute this lane to fetch-fred-yardeni.yml");
-  assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/);
-  assert.match(workflowText, /--stage always_if_exists/);
   assert.match(
     workflowText,
-    /if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists[\s\S]*?git add --/,
-    "canonical and public Yardeni outputs must be manifest-staged only on success, alongside the legacy hand list",
+    /scripts\/stage-lane-manifest\.sh[\s\S]*?--stage always_if_exists[\s\S]*?if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists/,
+    "Yardeni outputs must use manifest staging, with canonical staging gated on success",
+  );
+  assert.equal(
+    canonicalSpec?.required,
+    true,
+    "successful Yardeni fetch must require the canonical payload",
   );
 }
 

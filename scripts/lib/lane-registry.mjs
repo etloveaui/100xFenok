@@ -1470,6 +1470,13 @@ workflow_policies[".github/workflows/fetch-fred-macro.yml"].stages.success_if_ex
       : spec
   ));
 
+workflow_policies[".github/workflows/fetch-fred-yardeni.yml"].stages.success_if_exists =
+  workflow_policies[".github/workflows/fetch-fred-yardeni.yml"].stages.success_if_exists.map((spec) => (
+    spec.path === "data/yardney/yardney_model.json"
+      ? commitSpec(spec.path, spec.kind, true)
+      : spec
+  ));
+
 workflow_policies[".github/workflows/fetch-treasury-tga.yml"].stages.success_if_exists =
   workflow_policies[".github/workflows/fetch-treasury-tga.yml"].stages.success_if_exists.map((spec) => (
     spec.path === "data/macro/tga.json"
