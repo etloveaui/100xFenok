@@ -11,7 +11,7 @@ Keep the existing lane registry, generated commit manifest, and shared staging h
 - Remove the two guarded manual recovery-state `git add` blocks after the always-stage helper.
 - Remove the four manual public-safe output `git add` commands after the success-stage helper.
 - Keep both helper calls, the success guard, emitter, walkback, recovery exit behavior, commit/rebase/push, and manifest-reconciliation dispatch unchanged.
-- Replace five staging-path literal assertions with one exact generated-manifest assertion.
+- Replace five staging-path literal assertions with one exact staging-control assertion that covers the generated manifest and requires zero manual `git add` commands.
 - Keep the detection-attempt assertion because it validates emitter wiring rather than duplicate staging.
 
 ## Why no registry change
@@ -42,7 +42,7 @@ No registry, generated manifest, helper, producer, data, privacy metadata, publi
 
 ## Verification
 
-- Add the exact manifest assertion first and prove the current test contract fails because the manual-path literals still define the old wiring expectation.
+- Add the combined staging-control assertion first and prove it fails because the workflow still contains six manual `git add` commands.
 - Run manifest parity, JavaScript syntax, exact workflow-diff checks, tracked/nonignored path checks, and the existing direct workflow test.
 - Use only a bounded temporary Git fixture if needed to reconfirm optional and required file behavior.
 - Obtain independent read-only review of the actual two-file diff.
