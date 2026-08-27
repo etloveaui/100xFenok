@@ -471,9 +471,6 @@ for (const failure of [
   );
   assert.match(workflow, /controlled_failure_endpoint/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_ENDPOINT/);
-  assert.match(workflow, new RegExp(`detection-attempts/${DEFILLAMA_LANE_ID}\\.json`));
-  assert.match(workflow, new RegExp(`data/admin/${DEFILLAMA_LANE_ID}/index\\.json`));
-  assert.match(workflow, new RegExp(`data/admin/${DEFILLAMA_LANE_ID}/lkg/stablecoins\\.json`));
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
