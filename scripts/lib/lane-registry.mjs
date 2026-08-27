@@ -1505,6 +1505,13 @@ workflow_policies[".github/workflows/fetch-yahoo-ticker.yml"].stages.success_if_
       : spec
   ));
 
+workflow_policies[".github/workflows/fetch-fenok-private-options.yml"].stages.success_if_exists =
+  workflow_policies[".github/workflows/fetch-fenok-private-options.yml"].stages.success_if_exists.map((spec) => (
+    spec.path === "data/computed/fenok_yahoo_private_options_availability.json"
+      ? commitSpec(spec.path, spec.kind, true)
+      : spec
+  ));
+
 // Shared SlickCharts publisher callers have their own path policy. The helper
 // still owns the actual staging operation; these entries are shadow/check-only
 // until each caller is migrated independently.

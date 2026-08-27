@@ -185,8 +185,12 @@ assert.deepEqual(privateOptions.stages.always_if_exists, [
     required: false,
   },
 ]);
-assert.deepEqual(privateOptions.stages.success_if_exists.map((entry) => entry.path), [
-  "data/computed/fenok_yahoo_private_options_availability.json",
+assert.deepEqual(privateOptions.stages.success_if_exists, [
+  {
+    kind: "file",
+    path: "data/computed/fenok_yahoo_private_options_availability.json",
+    required: true,
+  },
 ]);
 assert.deepEqual(privateOptions.exclude, []);
 
