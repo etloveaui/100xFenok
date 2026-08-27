@@ -238,29 +238,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Manifest-native staging (parity defense) plus the explicit legacy
-          # hand list. Stages the admin bridge index AND the Slice 1 public-safe
-          # bounded bridge history, aggregate index closes, and Slice 2 KOSDAQ
-          # top-10 market-cap aggregate (data/computed; no issuer rows).
+          # The generated manifest owns recovery-state and public-safe output
+          # staging; raw private KRX payloads remain outside this commit boundary.
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fenok-edge-krx-daily.yml \
             --stage always_if_exists
-          # Keep recovery state on the always path: a retained failure must
-          # persist even though canonical/computed payloads are success-only.
-          if [ -f data/admin/krx/index.json ]; then
-            git add -- data/admin/krx/index.json
-          fi
-          if [ -f data/admin/krx/lkg/bridge.json ]; then
-            git add -- data/admin/krx/lkg/bridge.json
-          fi
           if [ "$KRX_FETCH_OUTCOME" = "success" ]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fenok-edge-krx-daily.yml \
               --stage success_if_exists
-            git add -- data/admin/fenok-edge-korea-krx-daily-index.json
-            git add -- data/computed/fenok-edge-korea-krx-bridge-history.json
-            git add -- data/computed/fenok-edge-korea-krx-index-daily.json
-            git add -- data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json
           fi
           git diff --staged --quiet || git commit -m "chore: update fenok edge krx daily data"
           for attempt in $(seq 1 5); do

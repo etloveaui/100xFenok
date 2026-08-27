@@ -14,6 +14,13 @@ import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-
 
 const workflowText = fs.readFileSync(new URL("../.github/workflows/fenok-edge-krx-daily.yml", import.meta.url), "utf8");
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const manifest = JSON.parse(fs.readFileSync(
+  path.join(repoRoot, "data", "admin", "lane-commit-manifest.json"),
+  "utf8",
+));
+const stages = manifest.workflows[".github/workflows/fenok-edge-krx-daily.yml"].stages;
+const manualGitAdds = [...workflowText.matchAll(/^\s*git add -- (.+)$/gmu)]
+  .map((match) => match[1].trim());
 const gate = checkWorkflowCommitShardsAgainstRegistry({
   workflowText,
   workflowRel: ".github/workflows/fenok-edge-krx-daily.yml",
@@ -27,14 +34,33 @@ assert.deepEqual(gate.undeclared_in_workflow, [],
 assert.deepEqual(gate.allowlist_count, 4,
   "the KRX workflow commits attempt, bridge, recovery index, and retained bridge LKG on its admin allowlist");
 
-// Slice 1 (owner grant 2026-07-19): the workflow also commits the public-safe
-// aggregate index closes and stages it manifest-natively alongside the hand list.
-assert.match(workflowText, /data\/computed\/fenok-edge-korea-krx-index-daily\.json/,
-  "the KRX workflow must commit the Slice 1 public index closes");
-assert.match(workflowText, /data\/computed\/fenok-edge-korea-krx-bridge-history\.json/,
-  "the KRX workflow must commit the bounded public-safe bridge history");
-assert.match(workflowText, /data\/computed\/fenok-edge-korea-krx-kosdaq-market-cap-aggregate\.json/,
-  "the KRX workflow must commit the aggregate-only Slice 2 KOSDAQ market-cap summary");
+// Public-safe output ownership and helper-only staging are one manifest contract.
+assert.deepEqual(
+  {
+    manifest_stages: [
+      ...stages.always_if_exists.map(({ kind, path: pathValue, required }) => ["always", kind, pathValue, required]),
+      ...stages.success_if_exists.map(({ kind, path: pathValue, required }) => ["success", kind, pathValue, required]),
+      ["required_on_success", stages.required_on_success.length],
+      ["success_verify_not_plan", stages.success_verify_not_plan_if_exists.length],
+    ],
+    manual_git_adds: manualGitAdds,
+  },
+  {
+    manifest_stages: [
+      ["always", "file", "data/admin/data-supply-state/detection-attempts/krx.json", false],
+      ["always", "file", "data/admin/krx/index.json", false],
+      ["always", "file", "data/admin/krx/lkg/bridge.json", false],
+      ["success", "file", "data/admin/fenok-edge-korea-krx-daily-index.json", true],
+      ["success", "file", "data/computed/fenok-edge-korea-krx-bridge-history.json", true],
+      ["success", "file", "data/computed/fenok-edge-korea-krx-index-daily.json", true],
+      ["success", "file", "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json", true],
+      ["required_on_success", 0],
+      ["success_verify_not_plan", 0],
+    ],
+    manual_git_adds: [],
+  },
+  "KRX staging must be manifest-owned with no duplicate manual adds",
+);
 assert.match(workflowText, /scripts\/stage-lane-manifest\.sh/,
   "the KRX workflow must stage via the lane manifest (parity defense)");
 assert.match(workflowText, /controlled_failure:/,
@@ -43,10 +69,6 @@ assert.match(workflowText, /INPUT_CONTROLLED_FAILURE/);
 assert.match(workflowText, /--controlled-failure/);
 assert.match(workflowText, /--stage always_if_exists/);
 assert.match(workflowText, /--stage success_if_exists/);
-assert.match(workflowText, /git add -- data\/admin\/krx\/index\.json/,
-  "recovery state must persist on failed and successful attempts");
-assert.match(workflowText, /git add -- data\/admin\/krx\/lkg\/bridge\.json/,
-  "retained bridge bytes must persist on the always path");
 assert.match(workflowText, /emit-fenok-krx-attempt\.mjs/);
 assert.match(workflowText, /steps\.krx_fetch\.outputs\.attempt_outcome \|\| steps\.krx_fetch\.outcome/,
   "degraded LKG retention must emit failure evidence even when the fetch step exits zero");
