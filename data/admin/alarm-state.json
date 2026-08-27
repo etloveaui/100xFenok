@@ -1,22 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-27T10:52:11.754Z",
+  "generated_at": "2026-08-27T13:13:41.683Z",
   "status": "open",
   "open_incident_count": 5,
   "open_incidents": [
-    {
-      "workflow": "fetch-defillama.yml",
-      "label": "Fetch DefiLlama Stablecoins Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "unrecovered_overdue"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
-    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -46,6 +33,32 @@
       "cadence_status": "not_due"
     },
     {
+      "workflow": "fetch-treasury-tga.yml",
+      "label": "Fetch Treasury TGA Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "unrecovered_overdue"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "overdue"
+    },
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
       "workflow": "slickcharts-monthly.yml",
       "label": "SlickCharts Monthly",
       "streak": 1,
@@ -57,19 +70,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
-      "streak": 2,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 33023180363,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33023180363",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -160,10 +160,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "fetch-edgar-filings.yml",
@@ -308,7 +306,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 4
+      "data_freshness_age_hours_at_generation": 7
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -318,8 +316,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-us-indices-daily.yml",
@@ -473,16 +473,16 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33064725983",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33064725983",
-    "observed_at": "2026-08-27T10:52:11.754Z",
+    "run_id": "33075530874",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33075530874",
+    "observed_at": "2026-08-27T13:13:41.683Z",
     "event": "workflow_run",
     "workflows": [
-      "fetch-defillama.yml",
       "fetch-edgar-filings.yml",
       "fetch-oecd-cli.yml",
-      "slickcharts-monthly.yml",
-      "worker-request-budget-alarm.yml"
+      "fetch-treasury-tga.yml",
+      "global-writer-queue-observer.yml",
+      "slickcharts-monthly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
