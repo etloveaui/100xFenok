@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-08-27T06:38:44Z",
+  "generated_at": "2026-08-27T10:30:03Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6803,
@@ -11,13 +11,13 @@
     "diagnosis_counts": {
       "agreement": 11104,
       "scale_mismatch": 193,
-      "sign_divergence": 2969,
+      "sign_divergence": 2970,
       "stale": 36221,
-      "value_drift": 11079
+      "value_drift": 11078
     },
     "stale_rows": 36221,
     "scale_mismatch_rows": 193,
-    "sign_divergence_rows": 2969
+    "sign_divergence_rows": 2970
   },
   "by_field": {
     "beta": {
@@ -2791,6 +2791,47 @@
       }
     },
     {
+      "ticker": "TQQQ",
+      "asset_type": "etf",
+      "field": "return_1m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 198.783748,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 14.473683639776336
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": -14.297647222608934
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": -14.297647222608934
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 198.783748,
+      "fresh_spread_pct": 198.783748,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 29.0
+      }
+    },
+    {
       "ticker": "EMGF",
       "asset_type": "etf",
       "field": "return_1m",
@@ -4085,43 +4126,6 @@
       "freshness": {
         "stockanalysis.quote": 54.0,
         "yf": 0.0
-      }
-    },
-    {
-      "ticker": "FOPC",
-      "asset_type": "etf",
-      "field": "return_3m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 2,
-      "relative_spread_pct": 197.94098,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -0.4689532609289077
-        },
-        {
-          "source": "stockanalysis.detail.history",
-          "value": 0.47881209793982543
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 197.94098,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "stockanalysis.detail.history"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 2,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.history": 49.0
       }
     }
   ],
@@ -7537,6 +7541,52 @@
       }
     },
     {
+      "ticker": "SGOV",
+      "asset_type": "etf",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 4,
+      "relative_spread_pct": 100.754161,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 3.9509305227293234
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 3.874
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 3.874
+        },
+        {
+          "source": "yf",
+          "value": -0.029796362
+        }
+      ],
+      "diagnosis": "scale_mismatch",
+      "spread_pct": 100.754161,
+      "fresh_spread_pct": 100.754161,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": true,
+      "scale_factor": 133,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 26.0,
+        "yf": 0.0
+      }
+    },
+    {
       "ticker": "LITZ",
       "asset_type": "etf",
       "field": "return_1m",
@@ -8371,47 +8421,6 @@
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 36.0,
         "yf": 3.0
-      }
-    },
-    {
-      "ticker": "CCSO",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 100.31318,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 2.7114487102624167
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": -0.008491727641981542
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": -0.008491727641981542
-        }
-      ],
-      "diagnosis": "scale_mismatch",
-      "spread_pct": 100.31318,
-      "fresh_spread_pct": 100.31318,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": true,
-      "scale_factor": 319,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 50.0
       }
     }
   ],
@@ -12964,6 +12973,47 @@
       }
     },
     {
+      "ticker": "TQQQ",
+      "asset_type": "etf",
+      "field": "return_1m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 198.783748,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 14.473683639776336
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": -14.297647222608934
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": -14.297647222608934
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 198.783748,
+      "fresh_spread_pct": 198.783748,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 29.0
+      }
+    },
+    {
       "ticker": "EMGF",
       "asset_type": "etf",
       "field": "return_1m",
@@ -16274,48 +16324,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 49.0
-      }
-    },
-    {
-      "ticker": "TALV",
-      "asset_type": "etf",
-      "field": "change",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 3,
-      "relative_spread_pct": 192.857907,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 0.14
-        },
-        {
-          "source": "yf",
-          "value": -0.13000107
-        },
-        {
-          "source": "yf.derived",
-          "value": -0.052599999999998204
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 192.857907,
-      "fresh_spread_pct": 59.538795,
-      "stale_sources": [
-        "stockanalysis.quote"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 55.0,
-        "yf": 0.0,
-        "yf.derived": 0.0
       }
     }
   ]
