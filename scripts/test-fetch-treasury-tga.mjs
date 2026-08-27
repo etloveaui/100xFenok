@@ -691,13 +691,22 @@ await assert.rejects(
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-treasury-tga.yml"), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
+    "utf8",
+  ));
+  const canonicalSpec = manifest.workflows[".github/workflows/fetch-treasury-tga.yml"]
+    .stages.success_if_exists
+    .find((spec) => spec.path === "data/macro/tga.json");
   assert.match(workflow, /node scripts\/fetch-treasury-tga\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
-  assert.match(workflow, /data\/admin\/data-supply-state\/detection-attempts\/treasury_tga\.json/);
   assert.match(workflow, /controlled_failure_key/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
-  assert.match(workflow, /data\/admin\/treasury_tga\/index\.json/);
-  assert.match(workflow, /data\/admin\/treasury_tga\/lkg\/tga\.json/);
+  assert.equal(
+    canonicalSpec?.required,
+    true,
+    "successful Treasury TGA fetch must require the canonical payload",
+  );
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
   assert.match(workflow, /--stage success_if_exists/);

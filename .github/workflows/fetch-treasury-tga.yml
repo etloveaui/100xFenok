@@ -71,26 +71,13 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          SHARD="data/admin/data-supply-state/detection-attempts/treasury_tga.json"
-          # Phase 1: consume the generated policy while retaining the legacy
-          # hand list as parity defense until this workflow's natural proof.
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-treasury-tga.yml \
             --stage always_if_exists
-          if [[ -f "$SHARD" ]]; then
-            git add -- "$SHARD"
-          fi
-          if [[ -f data/admin/treasury_tga/index.json ]]; then
-            git add -- data/admin/treasury_tga/index.json
-          fi
-          if [[ -f data/admin/treasury_tga/lkg/tga.json ]]; then
-            git add -- data/admin/treasury_tga/lkg/tga.json
-          fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-treasury-tga.yml \
               --stage success_if_exists
-            git add -- data/macro/tga.json
           fi
           if git diff --staged --quiet; then
             echo "No Treasury TGA changes to publish"
