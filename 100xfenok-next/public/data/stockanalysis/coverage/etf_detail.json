@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-08-27T00:52:19Z",
+  "generated_at": "2026-08-27T05:19:35Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,37 +17,37 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5607,
+    "candidate_total": 5617,
     "source_breakdown": {
       "etf_universe": 5558,
-      "etf_screener": 5603,
+      "etf_screener": 5612,
       "new_etfs": 100
     },
     "detail_files": 5605,
     "covered_detail_files": 5518,
-    "missing_detail_files": 89,
+    "missing_detail_files": 99,
     "extra_detail_files": 87,
     "stockanalysis_detail_files": 5605,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 98.41,
-    "primary_stockanalysis_pct": 98.41,
+    "coverage_pct": 98.24,
+    "primary_stockanalysis_pct": 98.24,
     "missing_by_source": {
       "etf_universe": 87,
-      "etf_screener": 89,
-      "new_etfs": 77
+      "etf_screener": 98,
+      "new_etfs": 83
     },
     "missing_status_breakdown": {
       "provider_gap_reprobe_due": 1,
-      "untracked": 88
+      "untracked": 98
     },
     "missing_failure_breakdown": {
       "provider_coverage_gap": 1,
-      "untracked": 88
+      "untracked": 98
     },
     "missing_availability_breakdown": {
       "provider_absent": 1,
-      "unprobed": 88
+      "unprobed": 98
     },
     "pending_tracked": 484,
     "pending_cooldown": 0,
@@ -56,15 +56,15 @@
   },
   "missing_reason_summary": {
     "provider_coverage_gap": 1,
-    "untracked": 88
+    "untracked": 98
   },
   "missing_status_summary": {
     "provider_gap_reprobe_due": 1,
-    "untracked": 88
+    "untracked": 98
   },
   "missing_availability_summary": {
     "provider_absent": 1,
-    "unprobed": 88
+    "unprobed": 98
   },
   "missing_reason_samples": {
     "provider_coverage_gap": [
@@ -155,6 +155,7 @@
     "HXE",
     "IACL",
     "JLVP",
+    "JULV",
     "KAIT",
     "KEO",
     "KSMH",
@@ -172,6 +173,9 @@
     "MRAX",
     "MTAW",
     "MUG",
+    "MUNF",
+    "MUNH",
+    "MUNJ",
     "MXLL",
     "NCLD",
     "OAIW",
@@ -180,6 +184,7 @@
     "PCOV",
     "PENU",
     "PHOX",
+    "PSOX",
     "QAU",
     "QQAU",
     "RAMZ",
@@ -196,6 +201,8 @@
     "STLL",
     "STMX",
     "TIH",
+    "TIPF",
+    "TIPH",
     "TSIB",
     "UMCU",
     "USGX",
@@ -208,9 +215,12 @@
     "XQBT",
     "XVAP",
     "XVNV",
+    "XVSP",
     "XVTS",
     "XWNG",
     "YLDY",
+    "YRAM",
+    "ZCSH",
     "ZDIS",
     "ZINN"
   ],
@@ -341,6 +351,7 @@
       "HXE",
       "IACL",
       "JLVP",
+      "JULV",
       "KAIT",
       "KEO",
       "KSMH",
@@ -358,8 +369,7 @@
       "MRAX",
       "MTAW",
       "MUG",
-      "MXLL",
-      "NCLD"
+      "MUNF"
     ],
     "missing_provider_gap_reprobe_due": [
       "DACL"
