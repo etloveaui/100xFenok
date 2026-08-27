@@ -507,14 +507,23 @@ await assert.rejects(() => runNasdaqGiwSox({
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-nasdaq-giw-sox.yml"), "utf8");
   const producer = fs.readFileSync(new URL("./fetch-nasdaq-giw-sox-constituents.mjs", import.meta.url), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
+    "utf8",
+  ));
+  const canonicalSpec = manifest.workflows[".github/workflows/fetch-nasdaq-giw-sox.yml"]
+    .stages.success_if_exists
+    .find((spec) => spec.path === "data/indices/nasdaq-giw-sox-constituents.json");
   assert.match(producer, /diagnosticSuffix\(result\.failure_detail\)/, "CLI failures must append bounded diagnostic detail");
   assert.match(workflow, /node scripts\/test-fetch-nasdaq-giw-sox-constituents\.mjs/);
   assert.match(workflow, /controlled_failure_key/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_KEY/);
   assert.match(workflow, /if: \$\{\{ always\(\) \}\}/);
-  assert.match(workflow, /detection-attempts\/nasdaq_giw_sox\.json/);
-  assert.match(workflow, /data\/admin\/nasdaq_giw_sox\/index\.json/);
-  assert.match(workflow, /data\/admin\/nasdaq_giw_sox\/lkg\/constituents\.json/);
+  assert.equal(
+    canonicalSpec?.required,
+    true,
+    "successful Nasdaq GIW SOX fetch must require the canonical payload",
+  );
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
   assert.match(workflow, /--stage success_if_exists/);

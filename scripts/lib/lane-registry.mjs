@@ -1477,6 +1477,13 @@ workflow_policies[".github/workflows/fetch-fred-yardeni.yml"].stages.success_if_
       : spec
   ));
 
+workflow_policies[".github/workflows/fetch-nasdaq-giw-sox.yml"].stages.success_if_exists =
+  workflow_policies[".github/workflows/fetch-nasdaq-giw-sox.yml"].stages.success_if_exists.map((spec) => (
+    spec.path === "data/indices/nasdaq-giw-sox-constituents.json"
+      ? commitSpec(spec.path, spec.kind, true)
+      : spec
+  ));
+
 workflow_policies[".github/workflows/fetch-treasury-tga.yml"].stages.success_if_exists =
   workflow_policies[".github/workflows/fetch-treasury-tga.yml"].stages.success_if_exists.map((spec) => (
     spec.path === "data/macro/tga.json"
