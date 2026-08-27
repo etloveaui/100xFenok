@@ -84,28 +84,19 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          SHARD="data/admin/data-supply-state/detection-attempts/yahoo_ticker_macro.json"
-          STATE_ROOT="data/admin/yahoo-hourly-ticker"
           RECOVERY_EXIT=0
           if [[ "$FETCH_OUTCOME" != "success" ]]; then
             RECOVERY_EXIT=2
           fi
-          # Phase 1: consume the generated policy while retaining the legacy
-          # hand list as parity defense until this workflow's natural proof.
+          # The generated policy owns attempt, recovery-state, and success
+          # output staging.
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-yahoo-ticker.yml \
             --stage always_if_exists
-          if [[ -f "$SHARD" ]]; then
-            git add -- "$SHARD"
-          fi
-          if [[ -d "$STATE_ROOT" ]]; then
-            git add -- "$STATE_ROOT"
-          fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-yahoo-ticker.yml \
               --stage success_if_exists
-            git add -- data/macro/yahoo-ticker.json
           fi
           if git diff --staged --quiet; then
             echo "No Yahoo ticker changes to publish"

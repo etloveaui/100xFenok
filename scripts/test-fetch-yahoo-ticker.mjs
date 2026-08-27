@@ -636,12 +636,32 @@ for (const mutate of [
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-yahoo-ticker.yml"), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
+    "utf8",
+  ));
   assert.match(workflow, /node scripts\/fetch-yahoo-ticker\.mjs/);
   assert.doesNotMatch(workflow, /node << ['"]?EOF/);
-  assert.match(workflow, /detection-attempts\/yahoo_ticker_macro\.json/);
   assert.match(workflow, /controlled_failure_tickers/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE_TICKERS/);
-  assert.match(workflow, /data\/admin\/yahoo-hourly-ticker/);
+  const stages = manifest.workflows[".github/workflows/fetch-yahoo-ticker.yml"].stages;
+  assert.deepEqual(
+    [
+      ...stages.always_if_exists.map(({ kind, path: pathValue, required }) => ["always", kind, pathValue, required]),
+      ...stages.success_if_exists.map(({ kind, path: pathValue, required }) => ["success", kind, pathValue, required]),
+      ["required_on_success", stages.required_on_success.length],
+      ["success_verify_not_plan", stages.success_verify_not_plan_if_exists.length],
+    ],
+    [
+      ["always", "file", "data/admin/data-supply-state/detection-attempts/yahoo_ticker_macro.json", false],
+      ["always", "file", "data/admin/data-supply-state/publish-outcomes/yahoo-ticker-macro.json", false],
+      ["always", "directory", "data/admin/yahoo-hourly-ticker", false],
+      ["success", "file", "data/macro/yahoo-ticker.json", true],
+      ["required_on_success", 0],
+      ["success_verify_not_plan", 0],
+    ],
+    "Yahoo ticker staging must keep admin state optional and require the canonical output",
+  );
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
   assert.match(workflow, /scripts\/stage-lane-manifest\.sh/);
   assert.match(workflow, /--stage always_if_exists/);
