@@ -1,12 +1,12 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-08-26T00:26:49Z",
+  "generated_at": "2026-08-27T00:51:47Z",
   "counts": {
     "tracked": 211,
-    "fresh": 95,
-    "lkg": 115,
+    "fresh": 94,
+    "lkg": 116,
     "unavailable": 1,
-    "retry": 116,
+    "retry": 117,
     "failed": 1,
     "recovered": 0,
     "promotion_deferred": 0
@@ -14,10 +14,10 @@
   "counts_by_kind": {
     "stock": {
       "tracked": 49,
-      "fresh": 17,
-      "lkg": 32,
+      "fresh": 16,
+      "lkg": 33,
       "unavailable": 0,
-      "retry": 32
+      "retry": 33
     },
     "financial": {
       "tracked": 43,
@@ -136,6 +136,10 @@
     {
       "artifact_kind": "stock",
       "entity": "MS"
+    },
+    {
+      "artifact_kind": "stock",
+      "entity": "MSFT"
     },
     {
       "artifact_kind": "stock",
@@ -733,6 +737,16 @@
       "source_as_of": "2026-08-14T00:00:00Z",
       "failure_run_id": "31800430906",
       "failure_observed_at": "2026-08-14T12:30:35Z",
+      "data_loss": false
+    },
+    {
+      "artifact_kind": "stock",
+      "entity": "MSFT",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "84ded3f52dd4a58544269a00782c8c61b9ba8e7ad27e72db4fec3c16d1bb7d0a",
+      "source_as_of": "2026-08-25T20:00:00Z",
+      "failure_run_id": "33028144067",
+      "failure_observed_at": "2026-08-27T00:51:47Z",
       "data_loss": false
     },
     {
@@ -1699,6 +1713,7 @@
     "LRCX",
     "MA",
     "MS",
+    "MSFT",
     "MU",
     "NFLX",
     "ORCL",
@@ -1805,149 +1820,94 @@
   "recovered_etfs": [],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "32914970542",
+    "run_id": "33028144067",
     "run_attempt": 1,
     "event_name": "schedule",
-    "schedule": "50 23 * * 1-5",
+    "schedule": "20 21 * * *",
     "natural": true,
-    "attempted": 26,
-    "successes": 25,
+    "attempted": 15,
+    "successes": 14,
     "failed": 1,
     "recovered": 0,
     "promotion_deferred": 0,
     "errors": [
       {
-        "artifact_kind": "etf",
-        "entity": "AKAF",
-        "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings",
+        "artifact_kind": "stock",
+        "entity": "MSFT",
+        "error": "URLError: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1010)>",
         "controlled": false,
         "data_loss": false
       }
     ],
     "success_rows": [
       {
-        "artifact_kind": "surface",
-        "entity": "actions_recent",
+        "artifact_kind": "stock",
+        "entity": "AAPL",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "actions_splits",
+        "artifact_kind": "stock",
+        "entity": "AMZN",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "earnings_calendar",
+        "artifact_kind": "stock",
+        "entity": "GOOGL",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "etf_provider_blackrock",
+        "artifact_kind": "stock",
+        "entity": "JPM",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "etf_provider_proshares",
+        "artifact_kind": "stock",
+        "entity": "META",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "etf_screener",
+        "artifact_kind": "stock",
+        "entity": "NVDA",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "industries",
+        "artifact_kind": "stock",
+        "entity": "TSLA",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "industries_all",
+        "artifact_kind": "financial",
+        "entity": "AAPL",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "industry_semiconductors",
+        "artifact_kind": "financial",
+        "entity": "AMZN",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "ipos_calendar",
+        "artifact_kind": "financial",
+        "entity": "GOOGL",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "ipos_filings",
+        "artifact_kind": "financial",
+        "entity": "JPM",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "ipos_recent",
+        "artifact_kind": "financial",
+        "entity": "META",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "ipos_statistics",
+        "artifact_kind": "financial",
+        "entity": "NVDA",
         "outcome": "fresh"
       },
       {
-        "artifact_kind": "surface",
-        "entity": "ipos_withdrawn",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "list_bitcoin_etfs",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_active",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_afterhours",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers_month",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers_week",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_losers",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_losers_ytd",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_premarket",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "new_etfs",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "sector_technology",
+        "artifact_kind": "financial",
+        "entity": "TSLA",
         "outcome": "fresh"
       }
     ],
