@@ -1595,8 +1595,8 @@ workflow_policies[".github/workflows/fetch-fenok-apewisdom.yml"] = lanePolicy(".
     commitSpec("data/admin/apewisdom_attention/lkg/social_attention_proxy.json", "file"),
   ],
   success_if_exists: [
-    commitSpec("data/computed/fenok_social_attention_proxy.json", "file"),
-    commitSpec("data/computed/fenok_social_attention_proxy_history.json", "file"),
+    commitSpec("data/computed/fenok_social_attention_proxy.json", "file", true),
+    commitSpec("data/computed/fenok_social_attention_proxy_history.json", "file", true),
   ],
 });
 workflow_policies[".github/workflows/fetch-fenok-news-tone.yml"] = lanePolicy(".github/workflows/fetch-fenok-news-tone.yml", {

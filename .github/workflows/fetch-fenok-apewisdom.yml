@@ -77,17 +77,10 @@ jobs:
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-fenok-apewisdom.yml \
             --stage always_if_exists
-          SHARD="data/admin/data-supply-state/detection-attempts/apewisdom_attention.json"
-          if [[ -f "$SHARD" ]]; then
-            git add -- "$SHARD"
-          fi
           if [[ "$FETCH_OUTCOME" == "success" ]]; then
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-fenok-apewisdom.yml \
               --stage success_if_exists
-            git add -- \
-              data/computed/fenok_social_attention_proxy.json \
-              data/computed/fenok_social_attention_proxy_history.json
           fi
           if git diff --staged --quiet; then
             echo "No ApeWisdom attention changes to publish"
