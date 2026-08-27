@@ -129,13 +129,26 @@
       "run_id": "32911905308",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 643,
+      "natural": true,
+      "observed_at": "2026-08-27T04:34:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33039718885",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-25T23:58:54Z",
-    "history_as_of": "2026-08-24",
-    "path": "data/yf/finance/MTUL.json",
-    "payload_sha256": "6cf9a3675ab15dd6789fad7a991d8445b6557e65c2bfd84d64288a8c746fbe8b",
+    "fetched_at": "2026-08-27T04:34:56Z",
+    "history_as_of": "2026-08-25",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MTUL.json",
+    "payload_sha256": "e82c70e7ae3db9f13921a5dc3b513853d83f3d18d07db36cc6ff6d0afa804975",
     "quote_as_of": "2026-08-18T19:42:01Z",
     "source_as_of": "2026-08-18T19:42:01Z"
   },
@@ -146,48 +159,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 696,
+    "latency_ms": 643,
     "natural": true,
-    "observed_at": "2026-08-25T23:54:55Z",
+    "observed_at": "2026-08-27T04:34:06Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32911905308",
+    "run_id": "33039718885",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-08-11T19:58:06Z",
-    "history_as_of": "2026-08-11",
+    "fetched_at": "2026-08-27T04:34:56Z",
+    "history_as_of": "2026-08-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MTUL.json",
-    "payload_sha256": "a043204cf0ccead5c1a733ca8732b5b55a1ff2b928b2bf203045140e46018b29",
-    "quote_as_of": "2026-08-11T13:46:07Z",
-    "source_as_of": "2026-08-11"
+    "payload_sha256": "e82c70e7ae3db9f13921a5dc3b513853d83f3d18d07db36cc6ff6d0afa804975",
+    "quote_as_of": "2026-08-18T19:42:01Z",
+    "source_as_of": "2026-08-18T19:42:01Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-24",
-    "observed_at": "2026-08-25T23:54:55Z",
-    "payload_sha256": "f265f73c03f7fb3c9dd6dccabeb1b208682d39d2b97eac0eb7cb8c7cce4c0dec",
+    "history_as_of": "2026-08-25",
+    "observed_at": "2026-08-27T04:34:06Z",
+    "payload_sha256": "e301b4db97cdf0e8f036829b896b349da0c337ed3f6290827800900e2943fc2a",
     "quote_as_of": "2026-08-18T19:42:01Z",
     "run_attempt": 1,
-    "run_id": "32911905308",
+    "run_id": "33039718885",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-18T19:42:01Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
+    "classified_at": "2026-08-27T04:39:28Z",
+    "classified_run_id": "33039718885",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "MTUL holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "MTUL holds LKG because Yahoo source date 2026-08-18T19:42:01Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-08-18T19:42:01Z"
   },
   "ticker": "MTUL",
-  "updated_at": "2026-08-25T23:54:55Z"
+  "updated_at": "2026-08-27T04:39:28Z"
 }

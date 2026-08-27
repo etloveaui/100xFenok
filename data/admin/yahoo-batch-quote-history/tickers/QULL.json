@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 529,
-      "natural": true,
-      "observed_at": "2026-08-12T04:17:21Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31562660637",
-      "schedule": "7 2 * * 0-5",
-      "shard": "37/72"
-    },
-    {
-      "attempts_used": 1,
       "error": "foreign_writer_conflict",
       "event_name": "schedule",
       "failures": [],
@@ -188,13 +175,26 @@
       "run_id": "32911905308",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 587,
+      "natural": true,
+      "observed_at": "2026-08-27T04:34:06Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33039718885",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-25T23:59:18Z",
-    "history_as_of": "2026-08-24",
+    "fetched_at": "2026-08-27T04:34:57Z",
+    "history_as_of": "2026-08-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/QULL.json",
-    "payload_sha256": "ab99b3a43caa7843137ed2a86daf385e7feaba57a6f1889cdefc64b3e6486d05",
+    "payload_sha256": "14389c54c256ac51a38d440be28f83c4d88b5b139a9e8b42c59b2b96450dc94c",
     "quote_as_of": "2026-08-17T19:30:16Z",
     "source_as_of": "2026-08-17T19:30:16Z"
   },
@@ -205,32 +205,32 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 702,
+    "latency_ms": 587,
     "natural": true,
-    "observed_at": "2026-08-25T23:54:55Z",
+    "observed_at": "2026-08-27T04:34:06Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32911905308",
+    "run_id": "33039718885",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-08-25T23:59:18Z",
-    "history_as_of": "2026-08-24",
+    "fetched_at": "2026-08-27T04:34:57Z",
+    "history_as_of": "2026-08-25",
     "path": "data/admin/yahoo-batch-quote-history/lkg/QULL.json",
-    "payload_sha256": "ab99b3a43caa7843137ed2a86daf385e7feaba57a6f1889cdefc64b3e6486d05",
+    "payload_sha256": "14389c54c256ac51a38d440be28f83c4d88b5b139a9e8b42c59b2b96450dc94c",
     "quote_as_of": "2026-08-17T19:30:16Z",
     "source_as_of": "2026-08-17T19:30:16Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-24",
-    "observed_at": "2026-08-25T23:54:55Z",
-    "payload_sha256": "db238b7cb1a1d1c29f68e752abf97fe2e1c4fe467299f93fa406bac37e31c2a3",
+    "history_as_of": "2026-08-25",
+    "observed_at": "2026-08-27T04:34:06Z",
+    "payload_sha256": "f0c2f5fede10de32dbf166ce2b3df2a40a4f6816e0bd1ba37e9371ba953602b9",
     "quote_as_of": "2026-08-17T19:30:16Z",
     "run_attempt": 1,
-    "run_id": "32911905308",
+    "run_id": "33039718885",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-17T19:30:16Z"
   },
@@ -238,15 +238,15 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-26T00:00:08Z",
-    "classified_run_id": "32911905308",
+    "age_business_days": 8,
+    "classified_at": "2026-08-27T04:39:28Z",
+    "classified_run_id": "33039718885",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "QULL holds LKG because Yahoo source date 2026-08-17T19:30:16Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "QULL holds LKG because Yahoo source date 2026-08-17T19:30:16Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
     "source_as_of": "2026-08-17T19:30:16Z"
   },
   "ticker": "QULL",
-  "updated_at": "2026-08-26T00:00:08Z"
+  "updated_at": "2026-08-27T04:39:28Z"
 }

@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 754,
-      "natural": true,
-      "observed_at": "2026-08-05T00:23:02Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30962773171",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 681,
       "natural": true,
       "observed_at": "2026-08-06T00:31:18Z",
@@ -181,6 +168,20 @@
       "run_id": "32790347813",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for EQR despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1083,
+      "natural": true,
+      "observed_at": "2026-08-27T04:34:06Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33039718885",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -196,16 +197,29 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for EQR despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 535,
+    "latency_ms": 1083,
     "natural": true,
-    "observed_at": "2026-08-24T23:41:40Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-27T04:34:06Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "32790347813",
+    "run_id": "33039718885",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for EQR despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-27T04:34:06Z",
+    "run_attempt": 1,
+    "run_id": "33039718885"
   },
   "lkg": {
     "fetched_at": "2026-08-24T23:44:47Z",
@@ -241,5 +255,5 @@
     "source_as_of": "2026-08-17T20:00:03Z"
   },
   "ticker": "EQR",
-  "updated_at": "2026-08-26T00:00:08Z"
+  "updated_at": "2026-08-27T04:34:06Z"
 }
