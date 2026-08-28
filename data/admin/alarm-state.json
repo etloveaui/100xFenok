@@ -1,22 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-28T12:16:45.615Z",
+  "generated_at": "2026-08-28T14:34:52.846Z",
   "status": "open",
   "open_incident_count": 7,
   "open_incidents": [
-    {
-      "workflow": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
     {
       "workflow": "fetch-defillama.yml",
       "label": "Fetch DefiLlama Stablecoins Data",
@@ -25,6 +12,7 @@
       "first_failing_run_id": null,
       "first_failing_run_url": null,
       "alarm_reasons": [
+        "plane_freshness_unavailable",
         "unrecovered_overdue"
       ],
       "lost_schedule_slot_count": 0,
@@ -59,6 +47,32 @@
       "cadence_status": "not_due"
     },
     {
+      "workflow": "fetch-treasury-tga.yml",
+      "label": "Fetch Treasury TGA Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "plane_freshness_unavailable"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-yahoo-ticker.yml",
+      "label": "Fetch Yahoo Finance Ticker Snapshot",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "plane_freshness_unavailable"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
       "workflow": "global-writer-queue-observer.yml",
       "label": "Global Writer Queue Observability",
       "streak": 0,
@@ -83,19 +97,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
-      "streak": 1,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 33144386145,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33144386145",
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -334,7 +335,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 4
+      "data_freshness_age_hours_at_generation": 6
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -499,18 +500,18 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33170292559",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33170292559",
-    "observed_at": "2026-08-28T12:16:45.615Z",
+    "run_id": "33180679429",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33180679429",
+    "observed_at": "2026-08-28T14:34:52.846Z",
     "event": "workflow_run",
     "workflows": [
-      "data-plane-serving-probe.yml",
       "fetch-defillama.yml",
       "fetch-edgar-filings.yml",
       "fetch-oecd-cli.yml",
+      "fetch-treasury-tga.yml",
+      "fetch-yahoo-ticker.yml",
       "global-writer-queue-observer.yml",
-      "slickcharts-monthly.yml",
-      "worker-request-budget-alarm.yml"
+      "slickcharts-monthly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
