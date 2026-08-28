@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-07T23:55:57Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31228360458",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "33039718885",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 601,
+      "natural": true,
+      "observed_at": "2026-08-28T07:10:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33149671509",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-27T04:55:26Z",
-    "history_as_of": "2026-08-26",
+    "fetched_at": "2026-08-28T07:14:01Z",
+    "history_as_of": "2026-08-27",
     "path": "data/yf/finance/MRSH.json",
-    "payload_sha256": "483fb73d53cc4919c3c6c8e4fd7a2c0ba15869f7ccb52e52d66217a8e01de3cf",
-    "quote_as_of": "2026-08-26T20:00:02Z",
-    "source_as_of": "2026-08-26"
+    "payload_sha256": "93cec9e91fb51980a5e29c5872e4fb2caca43e1ff7b432ff0c0d5847cd5927f2",
+    "quote_as_of": "2026-08-27T20:00:02Z",
+    "source_as_of": "2026-08-27"
   },
   "discovered_from": [
     "market_facts"
@@ -198,12 +198,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1140,
+    "latency_ms": 601,
     "natural": true,
-    "observed_at": "2026-08-27T04:50:56Z",
+    "observed_at": "2026-08-28T07:10:49Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33149671509",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
   },
@@ -230,14 +230,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-26",
-    "observed_at": "2026-08-27T04:50:56Z",
-    "payload_sha256": "f9ad89cb412daa35cd79e4a1186dee161587a04a09821e2c2ebd16fd127f8d0e",
-    "quote_as_of": "2026-08-26T20:00:02Z",
+    "history_as_of": "2026-08-27",
+    "observed_at": "2026-08-28T07:10:49Z",
+    "payload_sha256": "7af5240c9d65dbe710680013ee52d6b2b0226fed22d1fc7bdfa7eebda77283b6",
+    "quote_as_of": "2026-08-27T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33149671509",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-26"
+    "source_as_of": "2026-08-27"
   },
   "recovered_at": "2026-07-28T00:14:11Z",
   "recovered_from_run_id": "30135937225",
@@ -248,5 +248,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MRSH",
-  "updated_at": "2026-08-27T04:50:56Z"
+  "updated_at": "2026-08-28T07:10:49Z"
 }

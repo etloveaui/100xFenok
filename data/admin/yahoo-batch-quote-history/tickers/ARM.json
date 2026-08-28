@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 400,
-      "natural": true,
-      "observed_at": "2026-08-12T00:32:27Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for ARM despite available history",
       "event_name": "schedule",
       "failures": [
@@ -188,15 +175,28 @@
       "run_id": "33039718885",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 530,
+      "natural": true,
+      "observed_at": "2026-08-28T07:10:49Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33149671509",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-27T04:53:40Z",
-    "history_as_of": "2026-08-26",
+    "fetched_at": "2026-08-28T07:12:50Z",
+    "history_as_of": "2026-08-27",
     "path": "data/yf/finance/ARM.json",
-    "payload_sha256": "ccfcacc8d6ca02976f17ea121674e73325ce912ddd24a7a067a9565e0b0982ac",
-    "quote_as_of": "2026-08-26T20:00:01Z",
-    "source_as_of": "2026-08-26"
+    "payload_sha256": "6bdf262463539b5e4a64a938ef287e9ab9a1324fe388cc1d3f4c13217308169b",
+    "quote_as_of": "2026-08-27T20:00:01Z",
+    "source_as_of": "2026-08-27"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -207,12 +207,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 954,
+    "latency_ms": 530,
     "natural": true,
-    "observed_at": "2026-08-27T04:50:56Z",
+    "observed_at": "2026-08-28T07:10:49Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33149671509",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
   },
@@ -245,14 +245,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-26",
-    "observed_at": "2026-08-27T04:50:56Z",
-    "payload_sha256": "5d4cdee0473e14216ed2fd131b993f5c1dcbe62ca50030b9ed0ba38bbc319b82",
-    "quote_as_of": "2026-08-26T20:00:01Z",
+    "history_as_of": "2026-08-27",
+    "observed_at": "2026-08-28T07:10:49Z",
+    "payload_sha256": "08bc125a060ac82b3d2870f98747aa02586817414d9e09e1863dd2886447c2b5",
+    "quote_as_of": "2026-08-27T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33149671509",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-26"
+    "source_as_of": "2026-08-27"
   },
   "recovered_at": "2026-08-13T00:06:17Z",
   "recovered_from_run_id": "31648785047",
@@ -263,5 +263,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ARM",
-  "updated_at": "2026-08-27T04:50:56Z"
+  "updated_at": "2026-08-28T07:10:49Z"
 }

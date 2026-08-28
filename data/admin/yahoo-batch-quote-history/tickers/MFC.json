@@ -2,26 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for MFC despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 678,
-      "natural": true,
-      "observed_at": "2026-08-12T22:55:30Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31648785047",
-      "schedule": "7 22 * * 0-5",
-      "shard": "47/72"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 558,
@@ -188,15 +168,28 @@
       "run_id": "33039718885",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 601,
+      "natural": true,
+      "observed_at": "2026-08-28T07:06:28Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33149671509",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-27T04:49:29Z",
-    "history_as_of": "2026-08-26",
+    "fetched_at": "2026-08-28T07:09:47Z",
+    "history_as_of": "2026-08-27",
     "path": "data/yf/finance/MFC.json",
-    "payload_sha256": "e10ad054c5ef24839dab7c6364dc384262b75ad26c09ac99b7ae1d62ff998fe2",
-    "quote_as_of": "2026-08-26T20:00:02Z",
-    "source_as_of": "2026-08-26"
+    "payload_sha256": "89e5d75cde96f4a916c69fe90b9d88f247d4b7f75cbd3a50bf37ab8b4c318f1e",
+    "quote_as_of": "2026-08-27T20:00:02Z",
+    "source_as_of": "2026-08-27"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,12 +199,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 986,
+    "latency_ms": 601,
     "natural": true,
-    "observed_at": "2026-08-27T04:45:03Z",
+    "observed_at": "2026-08-28T07:06:28Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33149671509",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
@@ -244,14 +237,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-26",
-    "observed_at": "2026-08-27T04:45:03Z",
-    "payload_sha256": "a3825e30536dd9f7b1185ecfd018951a0fa5d51b1e02dd23670bca895065235f",
-    "quote_as_of": "2026-08-26T20:00:02Z",
+    "history_as_of": "2026-08-27",
+    "observed_at": "2026-08-28T07:06:28Z",
+    "payload_sha256": "aa211bd845bb6a7c45180c4ed6185dfdd014f385997a55f01495ad1c16408458",
+    "quote_as_of": "2026-08-27T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33149671509",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-26"
+    "source_as_of": "2026-08-27"
   },
   "recovered_at": "2026-08-13T00:06:17Z",
   "recovered_from_run_id": "31648785047",
@@ -272,5 +265,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "MFC",
-  "updated_at": "2026-08-27T04:45:03Z"
+  "updated_at": "2026-08-28T07:06:28Z"
 }

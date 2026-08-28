@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 625,
-      "natural": true,
-      "observed_at": "2026-08-12T17:16:04Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31620820614",
-      "schedule": "7 16 * * 0-5",
-      "shard": "44/72"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 1074,
       "natural": true,
       "observed_at": "2026-08-12T19:14:55Z",
@@ -195,6 +181,39 @@
       "run_id": "33039718885",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-28T06:58:20Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33149671509",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -209,16 +228,35 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
+    "attempts_used": 2,
+    "error": "empty payload",
     "event_name": "schedule",
-    "failures": [],
-    "latency_ms": 796,
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
+      }
+    ],
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-27T04:34:06Z",
+    "observed_at": "2026-08-28T06:58:20Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33149671509",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -236,16 +274,35 @@
     "run_id": "29318385532"
   },
   "latest_failure": {
-    "attempts_used": 1,
+    "attempts_used": 2,
     "data_loss": false,
     "deferred_acquisition": false,
-    "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
+    "error": "empty payload",
     "failure_kind": "transient_provider_miss",
-    "failures": [],
+    "failures": [
+      {
+        "attempt": 1,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 1,
+        "error": "empty payload"
+      },
+      {
+        "attempt": 2,
+        "error": "KeyError=[redacted]",
+        "source": "provider_safe_call"
+      },
+      {
+        "attempt": 2,
+        "error": "empty payload"
+      }
+    ],
     "lkg_status": "retained",
-    "observed_at": "2026-08-27T04:34:06Z",
+    "observed_at": "2026-08-28T06:58:20Z",
     "run_attempt": 1,
-    "run_id": "33039718885"
+    "run_id": "33149671509"
   },
   "lkg": {
     "fetched_at": "2026-07-15T00:10:47Z",
@@ -271,5 +328,5 @@
     "source_as_of": "2026-06-25T06:30:30Z"
   },
   "ticker": "012510.KS",
-  "updated_at": "2026-08-27T04:34:06Z"
+  "updated_at": "2026-08-28T06:58:20Z"
 }

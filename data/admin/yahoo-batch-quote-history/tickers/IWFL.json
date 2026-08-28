@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 519,
-      "natural": true,
-      "observed_at": "2026-08-05T08:49:49Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "30990520626",
-      "schedule": "7 6 * * 0-5",
-      "shard": "39/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 804,
       "natural": true,
       "observed_at": "2026-08-09T03:52:19Z",
@@ -187,6 +174,20 @@
       "run_id": "33039718885",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 450,
+      "natural": true,
+      "observed_at": "2026-08-28T06:58:20Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33149671509",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -202,16 +203,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 614,
+    "latency_ms": 450,
     "natural": true,
-    "observed_at": "2026-08-27T04:34:06Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-28T06:58:20Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33149671509",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-28T06:58:20Z",
+    "provider_history_as_of": "2026-08-25",
+    "provider_quote_as_of": "2026-08-18T17:06:40Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "33149671509"
   },
   "lkg": {
     "fetched_at": "2026-08-27T04:34:59Z",
@@ -247,5 +258,5 @@
     "source_as_of": "2026-08-18T17:06:40Z"
   },
   "ticker": "IWFL",
-  "updated_at": "2026-08-27T04:39:28Z"
+  "updated_at": "2026-08-28T06:58:20Z"
 }

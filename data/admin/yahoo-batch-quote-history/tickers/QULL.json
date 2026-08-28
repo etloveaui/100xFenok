@@ -2,20 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "foreign_writer_conflict",
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 495,
-      "natural": true,
-      "observed_at": "2026-08-12T05:45:23Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31567478446",
-      "schedule": "7 4 * * 0-5",
-      "shard": "38/72"
-    },
-    {
-      "attempts_used": 1,
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
@@ -188,6 +174,20 @@
       "run_id": "33039718885",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 445,
+      "natural": true,
+      "observed_at": "2026-08-28T06:58:20Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33149671509",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -203,16 +203,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 587,
+    "latency_ms": 445,
     "natural": true,
-    "observed_at": "2026-08-27T04:34:06Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-28T06:58:20Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33149671509",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
+  },
+  "latest_promotion_deferral": {
+    "event_name": "schedule",
+    "observed_at": "2026-08-28T06:58:20Z",
+    "provider_history_as_of": "2026-08-25",
+    "provider_quote_as_of": "2026-08-17T19:30:16Z",
+    "reason": "recovery_not_advanced_by_provider",
+    "run_attempt": 1,
+    "run_id": "33149671509"
   },
   "lkg": {
     "fetched_at": "2026-08-27T04:34:57Z",
@@ -248,5 +258,5 @@
     "source_as_of": "2026-08-17T19:30:16Z"
   },
   "ticker": "QULL",
-  "updated_at": "2026-08-27T04:39:28Z"
+  "updated_at": "2026-08-28T06:58:20Z"
 }

@@ -1,32 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 489,
-      "natural": true,
-      "observed_at": "2026-08-07T23:59:02Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31228360458",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 612,
-      "natural": true,
-      "observed_at": "2026-08-11T00:02:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31444023136",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -182,35 +156,60 @@
       "run_id": "33039718885",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 655,
+      "natural": true,
+      "observed_at": "2026-08-28T06:58:20Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33149671509",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-08-28T07:10:49Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "33149671509",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-25T23:53:23Z",
-    "history_as_of": "2026-08-25",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/JNJ.json",
-    "payload_sha256": "4dffb326a7a5df772c5f45333f14729f1e76dcd7b781f5b404ee8c819d1def28",
-    "quote_as_of": "2026-08-25T20:00:02Z",
-    "source_as_of": "2026-08-25"
+    "fetched_at": "2026-08-28T06:59:23Z",
+    "history_as_of": "2026-08-27",
+    "path": "data/yf/finance/JNJ.json",
+    "payload_sha256": "7793fde0b6fd21a3c6c0a584cbeafbba2b81b68ed2ac4fa73f3f67590ac34df0",
+    "quote_as_of": "2026-08-27T20:00:02Z",
+    "source_as_of": "2026-08-27"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1217,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-27T04:50:56Z",
-    "outcome": "failed",
+    "observed_at": "2026-08-28T07:10:49Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33149671509",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -233,17 +232,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-25",
-    "observed_at": "2026-08-25T23:49:33Z",
-    "payload_sha256": "e2936efb230688a09872d549e3a4c19f60dda206d85f06f57767ed6f8f66ed14",
-    "quote_as_of": "2026-08-25T20:00:02Z",
+    "history_as_of": "2026-08-27",
+    "observed_at": "2026-08-28T06:58:20Z",
+    "payload_sha256": "7d251096b6d3c2b79e38ceb55ccf080a42af268d566863c086a0ee0ee1d07057",
+    "quote_as_of": "2026-08-27T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "32911905308",
+    "run_id": "33149671509",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-25"
+    "source_as_of": "2026-08-27"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-28T06:58:20Z",
+  "recovered_from_run_id": "33039718885",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "33149671509",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -256,5 +260,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "JNJ",
-  "updated_at": "2026-08-27T04:50:56Z"
+  "updated_at": "2026-08-28T07:10:49Z"
 }
