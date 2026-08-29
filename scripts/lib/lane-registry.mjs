@@ -1862,7 +1862,8 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
     workflow: ".github/workflows/fetch-damodaran-shadow.yml",
     non_blocking_publisher: true,
     detached_persistence: false,
-    reason: "DEC-280 restored continue-on-error on the Damodaran cloud publish so Git stays authoritative when the plane is unavailable; the publish-outcome diagnostic is preserved and its persistence step remains mandatory",
+    conditional_persistence: true,
+    reason: "DEC-280 keeps the Damodaran cloud publisher non-blocking so Git stays authoritative when the plane is unavailable; persistence still begins at always() for every attempted publish, while a backup occurrence proven satisfied by the primary skips both the publisher and a fabricated plane outcome",
   }),
   "yahoo-finance": Object.freeze({
     workflow: ".github/workflows/fetch-yf-finance.yml",
