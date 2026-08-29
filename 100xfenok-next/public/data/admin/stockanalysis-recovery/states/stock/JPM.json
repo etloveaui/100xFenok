@@ -4,17 +4,6 @@
   "entity": "JPM",
   "attempts": [
     {
-      "run_id": "31843688447",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 21 * * *",
-      "natural": true,
-      "observed_at": "2026-08-14T21:46:31Z",
-      "outcome": "failed",
-      "controlled": false,
-      "error": "ValueError: financial candidate is required for stock pair: JPM; ValueError: financial statement below field floor: ratios annual rows=15"
-    },
-    {
       "run_id": "31910027994",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -143,24 +132,34 @@
       "observed_at": "2026-08-29T03:13:00Z",
       "outcome": "fresh",
       "controlled": false
+    },
+    {
+      "run_id": "33280832319",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-08-29T23:24:21Z",
+      "outcome": "fresh",
+      "controlled": false
     }
   ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/stocks/JPM.json",
-    "payload_sha256": "8ab7ddeb74e362fa4ae9428e23d9c9225075678fbc0a0288d48afb50d1f9aa95",
+    "payload_sha256": "0ef8808eb6795fa345f902feac5d483feeb0b114d8d35c7d9123c46160027834",
     "source_as_of": "2026-08-28T20:00:00Z",
-    "fetched_at": "2026-08-29T03:13:13Z"
+    "fetched_at": "2026-08-29T23:24:43Z"
   },
-  "updated_at": "2026-08-29T03:13:00Z",
+  "updated_at": "2026-08-29T23:24:21Z",
   "last_attempt": {
-    "run_id": "33230763299",
+    "run_id": "33280832319",
     "run_attempt": 1,
     "event_name": "schedule",
     "schedule": "20 21 * * *",
     "natural": true,
-    "observed_at": "2026-08-29T03:13:00Z",
+    "observed_at": "2026-08-29T23:24:21Z",
     "outcome": "fresh",
     "controlled": false
   },
