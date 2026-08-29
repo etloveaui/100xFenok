@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 474,
-      "natural": true,
-      "observed_at": "2026-08-12T00:28:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 519,
       "natural": true,
       "observed_at": "2026-08-13T00:19:00Z",
@@ -181,12 +168,26 @@
       "run_id": "33149671509",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 589,
+      "natural": true,
+      "observed_at": "2026-08-29T04:12:42Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33233193884",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
     "fetched_at": "2026-08-28T07:02:06Z",
     "history_as_of": "2026-08-27",
-    "path": "data/yf/finance/INTC.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/INTC.json",
     "payload_sha256": "29a82c1b913a5fecf61a4f1c803015f4c3bcc520bd7a25fa8aecb7d9bf2b8d9c",
     "quote_as_of": "2026-08-27T20:00:01Z",
     "source_as_of": "2026-08-27"
@@ -198,16 +199,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 596,
+    "latency_ms": 589,
     "natural": true,
-    "observed_at": "2026-08-28T06:58:20Z",
-    "outcome": "fresh",
+    "observed_at": "2026-08-29T04:12:42Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33233193884",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-08-29T04:12:42Z",
+    "run_attempt": 1,
+    "run_id": "33233193884"
+  },
+  "lkg": {
+    "fetched_at": "2026-08-28T07:02:06Z",
+    "history_as_of": "2026-08-27",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/INTC.json",
+    "payload_sha256": "29a82c1b913a5fecf61a4f1c803015f4c3bcc520bd7a25fa8aecb7d9bf2b8d9c",
+    "quote_as_of": "2026-08-27T20:00:01Z",
+    "source_as_of": "2026-08-27"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -221,9 +243,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-27"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "INTC",
-  "updated_at": "2026-08-28T06:58:20Z"
+  "updated_at": "2026-08-29T04:12:42Z"
 }

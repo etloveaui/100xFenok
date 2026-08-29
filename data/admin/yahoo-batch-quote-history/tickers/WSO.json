@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-11T00:08:41Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31444023136",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,32 +168,45 @@
       "run_id": "33039718885",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 637,
+      "natural": true,
+      "observed_at": "2026-08-29T04:12:42Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33233193884",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-27T04:39:24Z",
-    "history_as_of": "2026-08-26",
+    "fetched_at": "2026-08-29T04:17:38Z",
+    "history_as_of": "2026-08-28",
     "path": "data/yf/finance/WSO.json",
-    "payload_sha256": "91f9f8f1eaae75b1893f772fd07117104a090b492cc7ca1bad7016df9996f313",
-    "quote_as_of": "2026-08-26T20:00:03Z",
-    "source_as_of": "2026-08-26"
+    "payload_sha256": "331bdc5e16ea9d9095c3c3de9458e27643c8044370217a34ca070b51718de9fb",
+    "quote_as_of": "2026-08-28T20:00:03Z",
+    "source_as_of": "2026-08-28"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 637,
     "natural": true,
-    "observed_at": "2026-08-27T04:56:50Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-08-29T04:12:42Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33233193884",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -237,14 +237,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-26",
-    "observed_at": "2026-08-27T04:34:06Z",
-    "payload_sha256": "d1c7fd44c95eb6d4d609132b26c4c3ba34e827be6c725f60c0c9a1e497806d36",
-    "quote_as_of": "2026-08-26T20:00:03Z",
+    "history_as_of": "2026-08-28",
+    "observed_at": "2026-08-29T04:12:42Z",
+    "payload_sha256": "fd0faf685384e15985f7a4179f4a489baef0fc6f3967a60ff1aa54dfdb343f56",
+    "quote_as_of": "2026-08-28T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "33039718885",
+    "run_id": "33233193884",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-26"
+    "source_as_of": "2026-08-28"
   },
   "recovered_at": "2026-07-24T00:27:41Z",
   "recovered_from_run_id": "29968542251",
@@ -255,5 +255,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "WSO",
-  "updated_at": "2026-08-27T04:56:50Z"
+  "updated_at": "2026-08-29T04:12:42Z"
 }

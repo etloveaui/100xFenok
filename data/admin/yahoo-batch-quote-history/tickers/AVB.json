@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 460,
-      "natural": true,
-      "observed_at": "2026-08-12T00:32:27Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -184,6 +171,20 @@
       "run_id": "33149671509",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 556,
+      "natural": true,
+      "observed_at": "2026-08-29T04:12:42Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33233193884",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -202,12 +203,12 @@
     "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 560,
+    "latency_ms": 556,
     "natural": true,
-    "observed_at": "2026-08-28T06:58:20Z",
+    "observed_at": "2026-08-29T04:12:42Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33233193884",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -219,9 +220,9 @@
     "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-08-28T06:58:20Z",
+    "observed_at": "2026-08-29T04:12:42Z",
     "run_attempt": 1,
-    "run_id": "33149671509"
+    "run_id": "33233193884"
   },
   "lkg": {
     "fetched_at": "2026-08-24T23:51:49Z",
@@ -257,5 +258,5 @@
     "source_as_of": "2026-08-14T20:00:03Z"
   },
   "ticker": "AVB",
-  "updated_at": "2026-08-28T06:58:20Z"
+  "updated_at": "2026-08-29T04:12:42Z"
 }
