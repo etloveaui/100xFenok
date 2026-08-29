@@ -11,6 +11,7 @@ import { buildMethodologyAxis } from "./methodologyAxis";
 import MethodologyBar from "./MethodologyBar";
 import OrdinalStrip from "./OrdinalStrip";
 import { useBenchmarkOrdinals } from "@/hooks/useBenchmarkOrdinals";
+import type { BenchmarkOrdinalHorizon } from "@/lib/market-valuation/benchmarkOrdinals";
 
 import type {
   MarketBondPulse,
@@ -325,19 +326,54 @@ function MethodologyPanel() {
 // The cardinal panel above answers "how far from today's price". This answers
 // the other half — "where is each index in its OWN history" — which is the only
 // question all 38 can answer on one comparable scale.
+const ORDINAL_HORIZON_QUERY: Record<BenchmarkOrdinalHorizon, string> = {
+  all: "all",
+  w5: "5y",
+  w10: "10y",
+};
+
+function readOrdinalHorizon(): BenchmarkOrdinalHorizon {
+  if (typeof window === "undefined") return "w10";
+  const value = new URLSearchParams(window.location.search).get("history");
+  if (value === "all") return "all";
+  if (value === "5y") return "w5";
+  return "w10";
+}
+
+function ordinalHorizonLabel(horizon: BenchmarkOrdinalHorizon): string {
+  return horizon === "all" ? "전체 역사" : horizon === "w5" ? "5년" : "10년";
+}
+
 function OrdinalPanel() {
   const { state, view } = useBenchmarkOrdinals();
+  const [horizon, setHorizon] = useState<BenchmarkOrdinalHorizon>("w10");
+
+  useEffect(() => {
+    const syncFromLocation = () => setHorizon(readOrdinalHorizon());
+    syncFromLocation();
+    window.addEventListener("popstate", syncFromLocation);
+    return () => window.removeEventListener("popstate", syncFromLocation);
+  }, []);
+
+  const handleHorizonChange = (next: BenchmarkOrdinalHorizon) => {
+    setHorizon(next);
+    const params = new URLSearchParams(window.location.search);
+    params.set("history", ORDINAL_HORIZON_QUERY[next]);
+    const query = params.toString();
+    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
+    window.history.replaceState(window.history.state, "", nextUrl);
+  };
 
   if (state === "pending") {
     return (
-      <PanelShell title="지수 38개 · 자기 역사 대비 위치" subtitle="선행 PER 백분위">
+      <PanelShell title="지수 38개 · 자기 역사 대비 위치" subtitle={`선행 PER 백분위 · ${ordinalHorizonLabel(horizon)}`}>
         <EmptyPanel label={DATA_STATE_LABELS.pending} />
       </PanelShell>
     );
   }
   if (state !== "ready" || !view || view.status !== "ready") {
     return (
-      <PanelShell title="지수 38개 · 자기 역사 대비 위치" subtitle="선행 PER 백분위">
+      <PanelShell title="지수 38개 · 자기 역사 대비 위치" subtitle={`선행 PER 백분위 · ${ordinalHorizonLabel(horizon)}`}>
         <EmptyPanel label={DATA_STATE_LABELS.unavailable} />
       </PanelShell>
     );
@@ -346,11 +382,16 @@ function OrdinalPanel() {
   return (
     <PanelShell
       title="지수 38개 · 자기 역사 대비 위치"
-      subtitle="선행 PER 백분위 · 위 패널과 같은 지수는 굵게"
+      subtitle={`선행 PER 백분위 · ${ordinalHorizonLabel(horizon)} · 위 패널과 같은 지수는 굵게`}
       asOf={view.asOf}
     >
       <div className="px-[var(--panel-pad)] py-3">
-        <OrdinalStrip groups={view.groups} highlightIds={ORDINAL_HIGHLIGHT_IDS} />
+        <OrdinalStrip
+          groups={view.groups}
+          highlightIds={ORDINAL_HIGHLIGHT_IDS}
+          horizon={horizon}
+          onHorizonChange={handleHorizonChange}
+        />
         {view.groups.filter((group) => group.refusal).map((group) => (
           <p key={group.id} className="mt-2 text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
             {group.label}: 표시할 수 없습니다 ({group.refusal})

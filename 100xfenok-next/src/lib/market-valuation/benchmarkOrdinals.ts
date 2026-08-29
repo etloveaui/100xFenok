@@ -33,6 +33,8 @@ export const BENCHMARK_ORDINAL_WINDOWS = [
 
 export type BenchmarkWindowId = (typeof BENCHMARK_ORDINAL_WINDOWS)[number]["id"];
 
+export type BenchmarkOrdinalHorizon = "all" | "w5" | "w10";
+
 export const BENCHMARK_ORDINAL_GROUPS = [
   { id: "us", file: "/data/benchmarks/us.json", label: "미국 지수" },
   { id: "us_sectors", file: "/data/benchmarks/us_sectors.json", label: "미국 섹터" },
@@ -55,6 +57,8 @@ export interface OrdinalMetric {
   currentStaleDays: number | null;
   /** Percentile rank of `current` within the history (0–100), rounded. */
   percentile: number | null;
+  /** Arithmetic mean of the same accepted history used for the percentile. */
+  average: number | null;
   /** Population z-score of `current` within the history. */
   zScore: number | null;
   /**
@@ -70,6 +74,8 @@ export interface OrdinalMetric {
 export interface WindowedMetric {
   /** Percentile of `current` within the window (same strict-below definition); null when the window is refused or the history is too short to rank. */
   percentile: number | null;
+  /** Arithmetic mean of the same accepted window population; null when refused or too short. */
+  average: number | null;
   /** True when the section's data does not reach back the full window length. */
   truncated: boolean;
   /** Actual data span behind the window in years (asOf − earliest dated row), rounded to 1 decimal; equals the requested length when not truncated. */
@@ -116,6 +122,14 @@ export interface BenchmarkOrdinalGroup {
 export type BenchmarkOrdinalsView =
   | { status: "ready"; groups: BenchmarkOrdinalGroup[]; asOf: string | null }
   | { status: "refused"; reason: string };
+
+export interface BenchmarkHorizonReading {
+  percentile: number | null;
+  average: number | null;
+  points: number;
+  truncated: boolean;
+  spanYears: number | null;
+}
 
 interface RawRow {
   date?: unknown;
@@ -166,6 +180,13 @@ export function zScorePopulation(series: readonly number[], current: number | nu
   const std = Math.sqrt(squared / series.length);
   if (std === 0) return null;
   return (current - mean) / std;
+}
+
+function arithmeticMean(series: readonly number[]): number | null {
+  if (series.length === 0) return null;
+  let sum = 0;
+  for (const value of series) sum += value;
+  return sum / series.length;
 }
 
 function lastFinite(values: readonly number[]): number | null {
@@ -244,6 +265,7 @@ export function windowedMetricFromRows(
   const enough = windowValues.length >= BENCHMARK_ORDINAL_MIN_HISTORY;
   return {
     percentile: truncated || !enough ? null : percentileRank(windowValues, current),
+    average: truncated || !enough ? null : arithmeticMean(windowValues),
     truncated,
     spanYears: Math.round(spanYears * 10) / 10,
     points: windowValues.length,
@@ -268,11 +290,12 @@ function metricFromSeries(
   // Windows are computed for the forward-PE metric only (owner ruling scope:
   // the 38-index forward-PE panel). pb/roe carry an explicit "not computed"
   // placeholder — spanYears null, never a fake number.
-  const notComputed = (): WindowedMetric => ({ percentile: null, truncated: false, spanYears: null, points: 0 });
+  const notComputed = (): WindowedMetric => ({ percentile: null, average: null, truncated: false, spanYears: null, points: 0 });
   return {
     current,
     currentStaleDays: fresh.staleDays,
     percentile: enough ? percentileRank(clean, current) : null,
+    average: enough ? arithmeticMean(clean) : null,
     zScore: enough ? zScorePopulation(clean, current) : null,
     windows: { w3: notComputed(), w5: notComputed(), w10: notComputed() },
   };
@@ -317,7 +340,7 @@ function buildGroup(
 
   for (const [id, rawSection] of Object.entries(sections as Record<string, RawSection>)) {
     if (!rawSection || typeof rawSection !== "object") continue;
-    const data = readSectionRows(rawSection);
+    const data = readSectionRows(rawSection).filter((row) => isIsoDay(row.date));
     if (data.length === 0) continue;
 
     let asOf: string | null = null;
@@ -328,6 +351,7 @@ function buildGroup(
     const peSeries = data.map((row) => row.best_pe_ratio);
     const pbSeries = data.map((row) => row.px_to_book_ratio);
     const roeSeries = data.map((row) => row.roe);
+    const acceptedPePoints = peSeries.filter(isFiniteNumber).length;
     const rowDates = data.map((row) => (typeof row.date === "string" ? row.date : null));
     const asOfMsForRows = asOf !== null ? msOfDay(asOf) : null;
     const pe = metricFromSeries(peSeries as unknown[] as readonly number[], rowDates, asOfMsForRows);
@@ -373,7 +397,7 @@ function buildGroup(
       roe,
       earningsYield: isFiniteNumber(pe.current) && pe.current !== 0 ? 1 / pe.current : null,
       spxPremium,
-      points: data.length,
+      points: acceptedPePoints,
     });
   }
 
@@ -407,4 +431,27 @@ export function readBenchmarkOrdinals(
     if (group.asOf !== null && (asOf === null || group.asOf < asOf)) asOf = group.asOf;
   }
   return { status: "ready", groups, asOf };
+}
+
+export function benchmarkHorizonReading(
+  row: BenchmarkOrdinalRow,
+  horizon: BenchmarkOrdinalHorizon,
+): BenchmarkHorizonReading {
+  if (horizon === "all") {
+    return {
+      percentile: row.pe.percentile,
+      average: row.pe.average,
+      points: row.points,
+      truncated: false,
+      spanYears: null,
+    };
+  }
+  const window = row.pe.windows[horizon];
+  return {
+    percentile: window.percentile,
+    average: window.average,
+    points: window.points,
+    truncated: window.truncated,
+    spanYears: window.spanYears,
+  };
 }

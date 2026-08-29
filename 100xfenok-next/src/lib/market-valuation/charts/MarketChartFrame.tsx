@@ -238,7 +238,7 @@ export function MarketChartFrame({
         <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {title && (
-              <figcaption className="truncate text-sm font-extrabold text-slate-800">
+              <figcaption className="truncate text-sm font-extrabold text-[var(--c-ink)]">
                 {title}
               </figcaption>
             )}
@@ -263,8 +263,8 @@ export function MarketChartFrame({
                     aria-pressed={active}
                     className={
                       active
-                        ? "rounded-md bg-[var(--c-brand)] px-2 py-1 text-[11px] font-bold text-white"
-                        : "rounded-md bg-[var(--c-surface-2)] px-2 py-1 text-[11px] font-bold text-[var(--c-ink-2)] hover:bg-[var(--c-line-2)]"
+                        ? "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md bg-[var(--c-brand)] px-3 py-1 text-[11px] font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)]"
+                        : "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md bg-[var(--c-surface-2)] px-3 py-1 text-[11px] font-bold text-[var(--c-ink-2)] hover:bg-[var(--c-line-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)]"
                     }
                   >
                     {range.label}
@@ -289,8 +289,8 @@ export function MarketChartFrame({
                 aria-pressed={!off}
                 className={
                   off
-                    ? "inline-flex min-h-7 max-w-full min-w-0 items-center gap-1 rounded-full border border-[var(--c-line)] px-2 py-0.5 text-left text-[10px] font-bold leading-tight text-[var(--c-ink-3)] sm:text-[11px]"
-                    : "inline-flex min-h-7 max-w-full min-w-0 items-center gap-1 rounded-full border border-[var(--c-line)] px-2 py-0.5 text-left text-[10px] font-bold leading-tight text-[var(--c-ink-2)] sm:text-[11px]"
+                    ? "inline-flex min-h-11 min-w-11 max-w-full items-center gap-1 rounded-full border border-[var(--c-line)] px-3 py-1 text-left text-[10px] font-bold leading-tight text-[var(--c-ink-3)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)] sm:text-[11px]"
+                    : "inline-flex min-h-11 min-w-11 max-w-full items-center gap-1 rounded-full border border-[var(--c-line)] px-3 py-1 text-left text-[10px] font-bold leading-tight text-[var(--c-ink-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)] sm:text-[11px]"
                 }
               >
                 <span

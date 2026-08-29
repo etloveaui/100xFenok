@@ -387,10 +387,165 @@
    green pole is stepped darker than the shell token so the pair clears the
    6–8 floor band (ΔE 7.9) with position and printed values as the required
    secondary encoding. */
-.mv-ordinal { min-width: 0; }
+.mv-ordinal { min-width: 0; display: grid; gap: 12px; }
 .mv-ordinal-chart { min-width: 0; }
 .mv-ordinal svg { display: block; overflow: visible; }
 .mv-ordinal-mobile { display: none; }
+.mv-ordinal-desktop-a11y {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.mv-ordinal-controls {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.mv-ordinal-horizon-selector {
+  display: inline-flex;
+  max-width: 100%;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--c-line-2);
+  border-radius: 0.75rem;
+  background: var(--c-surface-2);
+}
+
+.mv-ordinal-horizon-button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  color: var(--c-ink-2);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.mv-ordinal-horizon-button[aria-pressed="true"] {
+  border-color: var(--c-brand);
+  color: var(--c-brand);
+  background: var(--c-panel);
+}
+
+.mv-ordinal-horizon-button:hover {
+  border-color: var(--c-line);
+}
+
+.mv-ordinal-horizon-button:focus-visible,
+.mv-ordinal-explanation summary:focus-visible {
+  outline: 2px solid var(--c-brand);
+  outline-offset: 2px;
+}
+
+.mv-ordinal-summary {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px 10px;
+  color: var(--c-ink-2);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.mv-ordinal-summary strong {
+  color: var(--c-ink);
+}
+
+.mv-ordinal-explanation {
+  border-top: 1px solid var(--c-line-2);
+  border-bottom: 1px solid var(--c-line-2);
+}
+
+.mv-ordinal-explanation summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  padding: 7px 0;
+  color: var(--c-ink-2);
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.mv-ordinal-explanation > div {
+  display: grid;
+  gap: 3px;
+  padding: 0 0 8px;
+  color: var(--c-ink-3);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.mv-ordinal-explanation p {
+  margin: 0;
+}
+
+.ordinal-withheld {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  color: var(--c-ink-3);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.ordinal-withheld strong {
+  color: var(--c-ink-2);
+  font-weight: 900;
+}
+
+.ordinal-withheld ul {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.mv-ordinal-mobile-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  color: var(--c-ink-2);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.mv-ordinal-mobile-metrics strong {
+  color: var(--c-ink);
+  font-weight: 900;
+}
+
+.mv-ordinal-meter {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--c-line-2);
+}
+
+.mv-ordinal-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c-brand);
+}
 
 [data-theme="dark"] .mv-ordinal { min-width: 0; }
 
@@ -399,6 +554,10 @@
      the same readings as semantic text, with the direction stated explicitly. */
   .mv-methodology-chart,
   .mv-ordinal-chart {
+    display: none;
+  }
+
+  .mv-ordinal-desktop-a11y {
     display: none;
   }
 
@@ -519,6 +678,24 @@
 
   .mv-ordinal-mobile {
     gap: 10px;
+  }
+
+  .mv-ordinal-controls {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .mv-ordinal-horizon-selector {
+    width: 100%;
+  }
+
+  .mv-ordinal-horizon-button {
+    flex: 1 1 0;
+    min-width: 44px;
+  }
+
+  .mv-ordinal-summary {
+    justify-content: flex-start;
   }
 
   .mv-ordinal-mobile-group {

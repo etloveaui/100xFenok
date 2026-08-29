@@ -1,5 +1,7 @@
 "use client";
 
+import { useId } from "react";
+
 // Thirty-eight indices, one question: where does each sit in its OWN history?
 //
 // Percentile is the only measure on this page that is comparable across all of
@@ -16,13 +18,13 @@
 // The 50 line is not decoration. It is the index's own median, and "which side
 // of its own median" is the one claim every row can make honestly.
 
-import type { BenchmarkOrdinalGroup, BenchmarkOrdinalRow, BenchmarkWindowId } from "@/lib/market-valuation/benchmarkOrdinals";
+import { benchmarkHorizonReading, type BenchmarkOrdinalGroup, type BenchmarkOrdinalHorizon, type BenchmarkOrdinalRow } from "@/lib/market-valuation/benchmarkOrdinals";
 import { formatElapsedKo } from "@/lib/format";
 
 const VIEW_W = 720;
 const NAME_W = 150;
-const VALUE_W = 74;
-const ROW_H = 28;
+const VALUE_W = 170;
+const ROW_H = 36;
 const GROUP_GAP = 12;
 const HEAD_H = 24;
 const AXIS_H = 22;
@@ -30,46 +32,36 @@ const DOT_R = 4.5;
 
 const PE = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 1 });
 
-/**
- * Trailing-window readout for one row: "10y 56 · 5y 37 · 3y 17". A window the
- * data cannot span is REFUSED and shows its ACTUAL held span instead of a
- * number ("10y 6y" = the 10y window holds only ~6y) — missing is missing,
- * never substituted. A dash means the window exists but is too short to rank.
- */
-function windowReadout(row: BenchmarkOrdinalRow): { text: string; hasSpan: boolean } {
-  const w = row.pe.windows;
-  const parts: string[] = [];
-  let hasSpan = false;
-  const order: Array<[BenchmarkWindowId, string]> = [
-    ["w10", "10y"], ["w5", "5y"], ["w3", "3y"],
-  ];
-  for (const [id, label] of order) {
-    const m = w[id];
-    if (m.percentile !== null) {
-      parts.push(`${label} ${m.percentile}`);
-    } else if (m.truncated && m.spanYears !== null) {
-      parts.push(`${label} ${m.spanYears}y`);
-      hasSpan = true;
-    } else {
-      parts.push(`${label} —`);
-    }
-  }
-  return { text: parts.join(" · "), hasSpan };
-}
-
-/** Windows straddle the index's own median: some percentiles ≥ 50, some < 50. */
-function windowsStraddleMedian(row: BenchmarkOrdinalRow): boolean {
-  const pcts = [row.pe.windows.w3.percentile, row.pe.windows.w5.percentile, row.pe.windows.w10.percentile]
-    .filter((p): p is number => p !== null);
-  return pcts.some((p) => p >= 50) && pcts.some((p) => p < 50);
-}
-
 function ordinalMeaning(pct: number): string {
   if (pct >= 80) return "역사상 고평가 구간";
   if (pct >= 60) return "자기 역사보다 높은 편";
   if (pct > 40) return "자기 역사 중앙값 근처";
   if (pct > 20) return "자기 역사보다 낮은 편";
   return "역사상 저평가 구간";
+}
+
+const HORIZONS: ReadonlyArray<{ id: BenchmarkOrdinalHorizon; label: string }> = [
+  { id: "all", label: "전체" },
+  { id: "w5", label: "5년" },
+  { id: "w10", label: "10년" },
+];
+
+function horizonLabel(horizon: BenchmarkOrdinalHorizon): string {
+  return HORIZONS.find((item) => item.id === horizon)?.label ?? "10년";
+}
+
+function deltaFromAverage(current: number | null, average: number | null): number | null {
+  if (current === null || average === null || average === 0) return null;
+  return (current / average - 1) * 100;
+}
+
+function formatSignedPercent(value: number | null): string {
+  if (value === null) return "평균 대비 —";
+  return `평균 대비 ${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
+}
+
+function formatAverage(value: number | null): string {
+  return value === null ? "평균 —" : `평균 ${PE.format(value)}배`;
 }
 
 // §H rule 2: no raw index ids reach users. The benchmark payload names carry
@@ -123,7 +115,7 @@ function dotColor(pct: number): string {
 
 interface Placed {
   group: BenchmarkOrdinalGroup;
-  rows: BenchmarkOrdinalRow[];
+  rows: Array<{ row: BenchmarkOrdinalRow; reading: ReturnType<typeof benchmarkHorizonReading> }>;
   top: number;
 }
 
@@ -131,26 +123,37 @@ export interface OrdinalStripProps {
   groups: BenchmarkOrdinalGroup[];
   /** Indices to call out by name because another method also speaks about them. */
   highlightIds?: string[];
+  horizon: BenchmarkOrdinalHorizon;
+  onHorizonChange: (horizon: BenchmarkOrdinalHorizon) => void;
 }
 
-export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStripProps) {
-  const usable = groups
-    .map((group) => ({ group, rows: group.rows.filter((r) => r.pe.percentile !== null) }))
+export default function OrdinalStrip({ groups, highlightIds = [], horizon, onHorizonChange }: OrdinalStripProps) {
+  const descriptionId = useId();
+  const entries = groups.map((group) => ({
+    group,
+    rows: group.rows.map((row) => ({ row, reading: benchmarkHorizonReading(row, horizon) })),
+  }));
+  const usable = entries
+    .map((entry) => ({ ...entry, rows: entry.rows.filter(({ reading }) => reading.percentile !== null) }))
     .filter((entry) => entry.rows.length > 0);
-  if (usable.length === 0) return null;
+  const allRows = entries.flatMap((entry) => entry.rows);
+  const rankableCount = allRows.filter(({ reading }) => reading.percentile !== null).length;
+  const lowCount = allRows.filter(({ reading }) => reading.percentile !== null && reading.percentile <= 40).length;
+  const middleCount = allRows.filter(({ reading }) => reading.percentile !== null && reading.percentile >= 41 && reading.percentile <= 59).length;
+  const highCount = allRows.filter(({ reading }) => reading.percentile !== null && reading.percentile >= 60).length;
 
-  // An index that cannot be placed on this axis is NAMED rather than dropped in
-  // silence. us_biotech is the live case: its forward EPS is negative, so no
-  // multiple exists and the strip has no position to plot - but a reader
-  // counting rows would otherwise just find one missing.
-  const withheld = groups
-    .flatMap((group) => group.rows)
-    .filter((r) => r.pe.percentile === null)
-    .map((r) => ({
-      name: displayName(r),
-      reason: r.pe.currentStaleDays !== null && r.pe.currentStaleDays > 45
-        ? `선행 이익 추정치로 배수를 계산할 수 없습니다 (마지막 계산 가능일 ${formatElapsedKo(r.pe.currentStaleDays)} 전)`
-        : "배수를 계산할 수 없습니다",
+  const withheld = allRows
+    .filter(({ reading }) => reading.percentile === null)
+    .map(({ row, reading }) => ({
+      id: row.id,
+      name: displayName(row),
+      reason: row.pe.current === null
+        ? row.pe.currentStaleDays !== null && row.pe.currentStaleDays > 45
+          ? `선행 이익 추정치로 배수를 계산할 수 없습니다 (마지막 계산 가능일 ${formatElapsedKo(row.pe.currentStaleDays)} 전)`
+          : "현재 선행 PER을 계산할 수 없습니다"
+        : reading.truncated && reading.spanYears !== null
+          ? `${horizonLabel(horizon)} 데이터는 실제 ${reading.spanYears}년, ${reading.points}개 주간 관측만 있어 순위를 계산하지 않습니다 (전체 역사로 대신 계산하지 않습니다)`
+          : `${horizonLabel(horizon)} 데이터가 ${reading.points}개 관측으로 부족해 순위를 계산하지 않습니다`,
     }));
 
   const placed: Placed[] = [];
@@ -170,9 +173,40 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
 
   return (
     <div className="mv-ordinal">
-      <div className="mv-ordinal-chart">
+      <div className="mv-ordinal-controls">
+        <div className="mv-ordinal-horizon-selector" role="group" aria-label="역사 기간 선택">
+          {HORIZONS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className="mv-ordinal-horizon-button"
+              aria-pressed={horizon === item.id}
+              onClick={() => onHorizonChange(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <div className="mv-ordinal-summary" aria-live="polite" aria-atomic="true">
+          <strong>{horizonLabel(horizon)} 기준 순위 가능 {rankableCount}/38</strong>
+          <span>낮은 편 {lowCount}</span>
+          <span>중앙권 {middleCount}</span>
+          <span>높은 편 {highCount}</span>
+        </div>
+      </div>
+      <details className="mv-ordinal-explanation">
+        <summary>백분위와 평균 읽는 법</summary>
+        <div>
+          <p>백분위는 선택한 기간의 선행 PER 중 현재값보다 낮았던 관측치의 비율입니다.</p>
+          <p>50은 자기 역사 중앙값입니다. 평균은 같은 관측 모집단의 산술 평균입니다.</p>
+          <p>기간을 채우지 못한 창은 실제 보유 기간 또는 허용된 관측치 수를 표시하며, 전체 역사로 대신 계산하지 않습니다.</p>
+        </div>
+      </details>
+
+      {usable.length > 0 ? <div className="mv-ordinal-chart">
         <svg viewBox={`0 0 ${VIEW_W} ${height}`} width="100%" height={height} role="img"
-          aria-label="지수별 선행 PER 백분위 — 자기 역사 전체와 10년·5년·3년 창, 창이 중앙값을 가로지르는 지수 표시">
+          aria-label={`지수별 선행 PER 백분위 — ${horizonLabel(horizon)} 기준`}
+          aria-describedby={descriptionId}>
           {ticks.map((tick) => (
             <g key={tick}>
               <line
@@ -195,22 +229,17 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
           <text x={x(100)} y={HEAD_H - 14} textAnchor="end" fontSize={10} fontWeight={800} fill="var(--c-chart-ord-rich)">
             역사상 고평가
           </text>
-          <text x={VIEW_W - 6} y={HEAD_H - 14} textAnchor="end" fontSize={8.5} fill="var(--c-ink-3)">
-            행 아래 10y·5y·3y = 창 백분위 · ⇅ = 창이 중앙값을 가로지름 · 이탤릭 "10y 6y" = 10년 창에 보유 약 6년
-          </text>
-
           {placed.map(({ group, rows, top }) => (
             <g key={group.id}>
               <text x={0} y={top + 9} fontSize={10} fontWeight={800} fill="var(--c-ink-3)">
                 {group.label}
               </text>
-              {rows.map((row, index) => {
+              {rows.map(({ row, reading }, index) => {
                 const y = top + 14 + index * ROW_H + ROW_H / 2;
-                const pct = row.pe.percentile as number;
+                const pct = reading.percentile as number;
                 const marked = highlight.has(row.id);
-                const straddle = windowsStraddleMedian(row);
-                const windows = windowReadout(row);
-                const titleText = `${displayName(row)} · 선행 PER ${row.pe.current === null ? "없음" : PE.format(row.pe.current)} · 자기 역사 ${pct}번째 백분위 · ${row.points}주 기준 · 창 10y/5y/3y: ${windows.text}${straddle ? " · 창이 중앙값을 가로지름" : ""}`;
+                const delta = deltaFromAverage(row.pe.current, reading.average);
+                const titleText = `${displayName(row)} · ${horizonLabel(horizon)} 선행 PER ${row.pe.current === null ? "없음" : PE.format(row.pe.current)} · ${pct}번째 백분위 · ${formatAverage(reading.average)} · ${formatSignedPercent(delta)} · ${reading.points}개 관측`;
                 return (
                   <g key={row.id}>
                     <title>{titleText}</title>
@@ -219,17 +248,7 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
                       fontWeight={marked ? 800 : 600}
                       fill={marked ? "var(--c-ink)" : "var(--c-ink-2)"}
                     >
-                      {straddle ? "⇅ " : ""}{displayName(row)}
-                    </text>
-                    {/* Trailing-window readout (10y/5y/3y) under the name; a span
-                        figure like "10y 6y" is the ACTUAL data held for a refused
-                        window, never a percentile. */}
-                    <text
-                      x={NAME_W - 10} y={y + 10} textAnchor="end" fontSize={8.5}
-                      fill={windows.hasSpan ? "var(--c-ink-3)" : "var(--c-ink-3)"}
-                      fontStyle={windows.hasSpan ? "italic" : undefined}
-                    >
-                      {windows.text}
+                      {displayName(row)}
                     </text>
                     {/* A hairline from the median to the dot: the eye reads the
                         direction and the distance without needing the colour. */}
@@ -243,7 +262,10 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
                       x={VIEW_W - 6} y={y - 6} textAnchor="end" fontSize={10}
                       fontWeight={marked ? 800 : 600} fill="var(--c-ink-2)"
                     >
-                      {row.pe.current === null ? "배수 없음" : `${PE.format(row.pe.current)}배`} · {pct}
+                      {row.pe.current === null ? "배수 없음" : `${PE.format(row.pe.current)}배`} · {pct} · {reading.points}개 관측
+                    </text>
+                    <text x={VIEW_W - 6} y={y + 10} textAnchor="end" fontSize={8.5} fill="var(--c-ink-3)">
+                      {formatAverage(reading.average)} · {formatSignedPercent(delta)}
                     </text>
                   </g>
                 );
@@ -251,7 +273,19 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
             </g>
           ))}
         </svg>
-      </div>
+      </div> : null}
+
+      <ul id={descriptionId} className="mv-ordinal-desktop-a11y">
+        {usable.flatMap(({ rows }) => rows).map(({ row, reading }) => {
+          const pct = reading.percentile as number;
+          const delta = deltaFromAverage(row.pe.current, reading.average);
+          return (
+            <li key={row.id}>
+              {displayName(row)} · {horizonLabel(horizon)} · 현재 선행 PER {row.pe.current === null ? "없음" : `${PE.format(row.pe.current)}배`} · {pct}번째 백분위 · {formatAverage(reading.average)} · {formatSignedPercent(delta)} · {reading.points}개 주간 관측
+            </li>
+          );
+        })}
+      </ul>
 
       <div className="mv-ordinal-mobile">
         <p className="mv-ordinal-mobile-kicker">휴대폰용 요약 · 자기 역사 대비</p>
@@ -259,22 +293,22 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
           <section key={group.id} className="mv-ordinal-mobile-group">
             <h3>{group.label}</h3>
             <ul>
-              {rows.map((row) => {
-                const pct = row.pe.percentile as number;
-                const straddle = windowsStraddleMedian(row);
-                const windows = windowReadout(row);
+              {rows.map(({ row, reading }) => {
+                const pct = reading.percentile as number;
+                const delta = deltaFromAverage(row.pe.current, reading.average);
                 return (
                   <li key={row.id} className="mv-ordinal-mobile-item">
                     <div className="mv-ordinal-mobile-head">
-                      <strong>{straddle ? "⇅ " : ""}{displayName(row)}</strong>
+                      <strong>{displayName(row)}</strong>
                       <span>{pct}번째 백분위</span>
                     </div>
-                    <p>
-                      <span>현재 선행 PER</span>{" "}
-                      <strong>{row.pe.current === null ? "배수 없음" : `${PE.format(row.pe.current)}배`}</strong>
-                      <span> · {ordinalMeaning(pct)}</span>
-                    </p>
-                    <small>{windows.text} · {row.points}주 기준{row.asOf ? ` · 기준일 ${row.asOf}` : ""}</small>
+                    <div className="mv-ordinal-meter" aria-hidden="true"><span style={{ width: `${pct}%` }} /></div>
+                    <div className="mv-ordinal-mobile-metrics">
+                      <span>현재 <strong>{row.pe.current === null ? "배수 없음" : `${PE.format(row.pe.current)}배`}</strong></span>
+                      <span>{formatAverage(reading.average)}</span>
+                      <span>{formatSignedPercent(delta)}</span>
+                    </div>
+                    <p>{ordinalMeaning(pct)} · {reading.points}개 주간 관측{row.asOf ? ` · 기준일 ${row.asOf}` : ""}</p>
                   </li>
                 );
               })}
@@ -283,9 +317,10 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
         ))}
       </div>
       {withheld.length > 0 ? (
-        <p className="ordinal-withheld">
-          {withheld.map((w) => `${w.name}: ${w.reason}`).join(" · ")}
-        </p>
+        <div className="ordinal-withheld">
+          <strong>{horizonLabel(horizon)} 기준 확인이 필요한 지수</strong>
+          <ul>{withheld.map((w) => <li key={w.id}>{w.name}: {w.reason}</li>)}</ul>
+        </div>
       ) : null}
     </div>
   );

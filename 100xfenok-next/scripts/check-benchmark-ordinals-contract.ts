@@ -113,7 +113,7 @@ assert(spx !== undefined, "sp500 row must exist");
 assert(spx!.asOf === longDates[longDates.length - 1], "row asOf must be the last ROW date, not the envelope version/generated");
 assert(spx!.asOf !== FAKE_METADATA.version && spx!.asOf !== "2021-01-01", "envelope stamps must never surface as as-of");
 assert(spx!.spxPremium === null, "the sp500 row itself must carry no premium");
-assert(spx!.points === longDates.length, "points must count the section's rows");
+assert(spx!.points === longDates.length, "points must count accepted finite dated PE observations");
 
 const usGroup = single.groups.find((g) => g.id === "us");
 assert(usGroup !== null && usGroup!.asOf === longDates[longDates.length - 2], "group asOf must be the MIN of its sections' last-row dates");
@@ -172,7 +172,10 @@ if (shortView.status !== "ready") throw new Error("unreachable");
 const tiny = shortView.groups.find((g) => g.id === "developed")?.rows.find((r) => r.id === "tiny");
 assert(tiny !== undefined, "short section must render");
 assert(tiny!.pe.current !== null, "short history keeps the current value");
-assert(tiny!.pe.percentile === null && tiny!.pe.zScore === null, `histories under ${BENCHMARK_ORDINAL_MIN_HISTORY} rows must not rank`);
+assert(
+  tiny!.pe.percentile === null && tiny!.pe.average === null && tiny!.pe.zScore === null,
+  `histories under ${BENCHMARK_ORDINAL_MIN_HISTORY} accepted observations must not rank or publish an average`,
+);
 
 const badClockFixture = payload({
   badclock: {
@@ -187,7 +190,12 @@ const badClockView = readBenchmarkOrdinals({ msci: badClockFixture });
 assert(badClockView.status === "ready", "a malformed trailing date must not refuse the section");
 if (badClockView.status !== "ready") throw new Error("unreachable");
 const badClock = badClockView.groups.find((g) => g.id === "msci")?.rows.find((r) => r.id === "badclock");
+const badClockPeValues = longDates.slice(0, -1).map((_, i) => 10 + 0.1 * i);
 assert(badClock?.asOf === longDates[longDates.length - 2], "an impossible calendar day must never become the as-of");
+assert(badClock?.pe.current !== 99, "an impossible trailing date must not supply the current PE");
+assert(badClock?.pe.current === badClockPeValues[badClockPeValues.length - 1], "current PE must come from the last valid dated row");
+assert(badClock !== undefined && badClock.pe.average !== null && near(badClock.pe.average, mean(badClockPeValues)), "all-history PE average must exclude the impossible trailing date");
+assert(badClock?.points === badClockPeValues.length, "row points must count accepted finite dated PE observations only");
 
 // --- trailing windows: boundary, truncation refusal, definition ----------------
 
