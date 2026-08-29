@@ -210,11 +210,6 @@ export const PLANE_OUTCOME_UNRECORDED_REASONS = Object.freeze({
     reason:
       "new shadow family declared 2026-08-24 after the latest landed Yahoo cycle; its first eligible publish occurs after the next natural fetch-yf-finance run on cron '20 23 * * 1-5' lands changed finance payloads and confirms origin readback. The anti-rot test requires removing this entry as soon as that first outcome shard exists",
   }),
-  "fdic-tier1": Object.freeze({
-    classification: "awaiting_opportunity",
-    reason:
-      "transition awaiting its first post-change outcome: the owner-approved recovery dispatch runs after the release-aware workflow lands, then cron '0 6 * * 1' and cron '0 6 * * 4' provide continuing opportunities. Remove this entry as soon as the first outcome shard exists",
-  }),
   "oecd-cli": Object.freeze({
     classification: "incident",
     reason:

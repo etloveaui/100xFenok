@@ -17,8 +17,9 @@
 // the same day: neither has ever completed a SCHEDULED run, their only ones
 // having been cancelled or failed while every success is a workflow_dispatch,
 // and a lane that only ever runs by hand is not waiting for its cadence. The
-// split is 4 genuine incidents against 1 awaiting - fdic-tier1, whose schedule
-// gate legitimately no-ops - so absence now alarms (B-391) with no false row.
+// measured split was four genuine incidents against one awaiting opportunity.
+// The anti-rot contract below is expected to shrink that set as first outcomes
+// land, so the current awaiting workflow is derived instead of pinned here.
 //
 // Every declared binding must either have recorded an outcome or carry a
 // measured reason why it has not, and that reason must classify itself. The anti-rot half matters as much as the coverage half - a reason
@@ -180,13 +181,17 @@ for (const family of awaiting) {
   const awaitingFiles = Object.entries(PLANE_OUTCOME_UNRECORDED_REASONS)
     .filter(([, entry]) => entry.classification === "awaiting_opportunity")
     .map(([family]) => family);
-  assert.ok(awaitingFiles.length > 0, "no awaiting family to exercise; the silence check would be vacuous");
-  const silent = attachPublishOutcomeAlarms(
-    [{ file: "fetch-fdic.yml", alarm_reasons: [], alarming: false }],
-    new Map(),
-  );
-  assert.deepEqual(silent[0].alarm_reasons, [], "an awaiting family must not be paged");
-  assert.equal(silent[0].alarming, false);
+  if (awaitingFiles.length > 0) {
+    const awaitingWorkflow = path.basename(
+      PLANE_PUBLISH_OUTCOME_BINDINGS[awaitingFiles[0]].workflow,
+    );
+    const silent = attachPublishOutcomeAlarms(
+      [{ file: awaitingWorkflow, alarm_reasons: [], alarming: false }],
+      new Map(),
+    );
+    assert.deepEqual(silent[0].alarm_reasons, [], "an awaiting family must not be paged");
+    assert.equal(silent[0].alarming, false);
+  }
 }
 
 console.log(
