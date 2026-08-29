@@ -815,22 +815,29 @@ function SecondaryIndexTable({ indices }: { indices: MarketIndexValuation[] }) {
         </div>
         {secondary.map((index) => {
           const meta = valuationMeta(index.pe.percentile);
+          const indexLabel = SECONDARY_INDEX_LABELS_KO[index.id] ?? "지수";
+          const peValue = formatDecimal(index.pe.current, { digits: 1 });
+          const pbValue = formatDecimal(index.pb.current, { digits: 2 });
+          const roeValue = index.roe === null ? "—" : formatPercent(index.roe * 100, 1);
+          const rangeValue = index.pe.percentile === null
+            ? meta.label
+            : `${meta.label} ${index.pe.percentile}%ile`;
           return (
             <div key={index.id} className="cpw5-mv-index-row" role="row">
-              <span role="cell">
-                <strong>{SECONDARY_INDEX_LABELS_KO[index.id] ?? "지수"}</strong>
+              <span role="cell" data-label="지수" aria-label={`${indexLabel} ${index.nameEn}`}>
+                <strong>{indexLabel}</strong>
                 <small>{index.nameEn}</small>
               </span>
-              <span role="cell" className="tabular-nums">
-                {formatDecimal(index.pe.current, { digits: 1 })}
+              <span role="cell" data-label="Fwd P/E" className="tabular-nums" aria-label={`Fwd P/E ${peValue}`}>
+                {peValue}
               </span>
-              <span role="cell" className="tabular-nums">
-                {formatDecimal(index.pb.current, { digits: 2 })}
+              <span role="cell" data-label="P/B" className="tabular-nums" aria-label={`P/B ${pbValue}`}>
+                {pbValue}
               </span>
-              <span role="cell" className="tabular-nums">
-                {index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}
+              <span role="cell" data-label="ROE" className="tabular-nums" aria-label={`ROE ${roeValue}`}>
+                {roeValue}
               </span>
-              <span role="cell">
+              <span role="cell" data-label="구간" aria-label={`구간 ${rangeValue}`}>
                 <em>{meta.label}</em>
                 {index.pe.percentile !== null ? <small>{index.pe.percentile}%ile</small> : null}
               </span>

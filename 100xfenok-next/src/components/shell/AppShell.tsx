@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type Ref } from "react";
 import BrandLogo from "@/components/BrandLogo";
 import ConnectedView from "@/components/connected/ConnectedView";
 import TransitionLink from "@/components/TransitionLink";
@@ -23,6 +23,7 @@ import {
 } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 import type { DataState } from "@/lib/data-state";
+import { useModal } from "@/hooks/useModal";
 
 /**
  * Product shell (v3 design handoff): desktop = left rail + global top bar +
@@ -295,6 +296,11 @@ const NAV_GROUPS: NavGroup[] = NAV_GROUP_ORDER.map((label) => ({
   items: NAV.filter((item) => item.group === label),
 })).filter((group) => group.items.length > 0);
 
+const MORE_NAV_GROUPS: NavGroup[] = NAV_GROUPS.map((group) => ({
+  label: group.label,
+  items: group.items.filter((item) => MORE_TAB_IDS.includes(item.id)),
+})).filter((group) => group.items.length > 0);
+
 function navById(id: ShellPage): NavItem {
   return NAV.find((item) => item.id === id)!;
 }
@@ -363,24 +369,18 @@ function SearchIcon() {
   );
 }
 
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-      <path d="M6 8a4 4 0 018 0c0 3 1 4.2 1.6 4.8H4.4C5 12.2 6 11 6 8z" strokeLinejoin="round" />
-      <path d="M8.4 15.5a1.7 1.7 0 003.2 0" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function TypeaheadPreviewDrawer({
   ticker,
   onClose,
+  panelRef,
 }: {
   ticker: string;
   onClose: () => void;
+  panelRef: Ref<HTMLDivElement>;
 }) {
   const [entry, setEntry] = useState<StockConnectionEntry | null | undefined>(undefined);
   const [services, setServices] = useState<StockServicesEntry | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -404,26 +404,24 @@ function TypeaheadPreviewDrawer({
   }, [ticker]);
 
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+    closeButtonRef.current?.focus();
+  }, []);
 
   return (
-    <aside
+    <div
+      ref={panelRef}
       className="typeahead-preview"
       data-testid="typeahead-preview"
       role="dialog"
-      aria-label={`${ticker} 연결 미리보기`}
+      aria-modal="true"
+      aria-labelledby="typeahead-preview-title"
     >
       <div className="typeahead-preview__head">
         <div className="typeahead-preview__title">
           <span>연결 미리보기</span>
-          <strong>{ticker}</strong>
+          <strong id="typeahead-preview-title">{ticker}</strong>
         </div>
-        <button type="button" className="typeahead-preview__close" onClick={onClose} aria-label="미리보기 닫기">
+        <button ref={closeButtonRef} type="button" className="typeahead-preview__close" onClick={onClose} aria-label="미리보기 닫기">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
@@ -445,7 +443,7 @@ function TypeaheadPreviewDrawer({
           전체 보기
         </TransitionLink>
       </div>
-    </aside>
+    </div>
   );
 }
 
@@ -491,15 +489,20 @@ export default function AppShell({
   children: ReactNode;
 }) {
   const [searching, setSearching] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const [typeaheadPreviewTicker, setTypeaheadPreviewTicker] = useState<string | null>(null);
   const [status, setStatus] = useState<{ dot: string; text: string }>(() => marketStatusKST());
+  const moreModal = useModal("mobile-more");
+  const previewModal = useModal("typeahead-preview");
+  const moreOpen = moreModal.isOpen;
+  const moreCloseRef = useRef<HTMLButtonElement>(null);
   const navActive = active && NAV.some((item) => item.id === active) ? active : "explore";
 
   const handleTypeaheadStockPreview = (ticker: string) => {
+    moreModal.close();
     setTypeaheadPreviewTicker(ticker);
+    previewModal.open();
     setSearching(false);
-    setMoreOpen(false);
   };
 
   useEffect(() => {
@@ -512,13 +515,39 @@ export default function AppShell({
   }, []);
 
   useEffect(() => {
-    if (!moreOpen) return undefined;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMoreOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    if (!moreOpen) return;
+    moreCloseRef.current?.focus();
   }, [moreOpen]);
+
+  useEffect(() => {
+    if (previewModal.isOpen || !typeaheadPreviewTicker) return;
+    setTypeaheadPreviewTicker(null);
+  }, [previewModal.isOpen, typeaheadPreviewTicker]);
+
+  useEffect(() => {
+    const update = () => {
+      const next = window.scrollY > 480;
+      setShowScrollTop((current) => (current === next ? current : next));
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+
+  const closeTypeaheadPreview = () => {
+    previewModal.close();
+    setTypeaheadPreviewTicker(null);
+  };
+
+  const openMore = () => {
+    closeTypeaheadPreview();
+    moreModal.open();
+  };
+
+  const scrollToTop = () => {
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    window.scrollTo({ top: 0, left: 0, behavior });
+  };
 
   return (
     <>
@@ -530,18 +559,23 @@ export default function AppShell({
             100x <b>Fenok</b>
           </span>
         </TransitionLink>
-        <nav className="rail-nav">
-          {NAV_GROUPS.map((group) => (
-            <div key={group.label} className="rail-group">
-              <div className="rail-sect">{group.label}</div>
+        <nav className="rail-nav" aria-label="사이트 메뉴">
+          {NAV_GROUPS.map((group, groupIndex) => (
+            <section key={group.label} className="rail-group" aria-labelledby={`rail-group-${groupIndex}`}>
+              <h2 id={`rail-group-${groupIndex}`} className="rail-sect">{group.label}</h2>
               {group.items.map((n) => {
                 return (
-                  <TransitionLink key={n.id} href={n.href} className={`rail-item ${n.id === navActive ? "on" : ""}`}>
+                  <TransitionLink
+                    key={n.id}
+                    href={n.href}
+                    className={`rail-item ${n.id === navActive ? "on" : ""}`}
+                    aria-current={n.id === navActive ? "page" : undefined}
+                  >
                     {n.icon} {n.label}
                   </TransitionLink>
                 );
               })}
-            </div>
+            </section>
           ))}
         </nav>
       </aside>
@@ -565,9 +599,15 @@ export default function AppShell({
             </span>
           ) : null}
           <AppShellFreshnessPill state={freshness} />
-          <button className="ic-btn" aria-label="알림">
-            <BellIcon />
-          </button>
+          <TransitionLink
+            href={ROUTES.dailyWrap}
+            className="ic-btn"
+            aria-label="Daily Wrap"
+            aria-current={navActive === "dailyWrap" ? "page" : undefined}
+          >
+            {navById("dailyWrap").icon}
+            <span className="sr-only">Daily Wrap</span>
+          </TransitionLink>
         </div>
       </header>
 
@@ -598,15 +638,22 @@ export default function AppShell({
           ) : null}
           <AppShellFreshnessPill state={freshness} />
           <span className="grow" />
-          <button className="ic-btn" aria-label="검색" onClick={() => setSearching((v) => !v)}>
+          <button
+            className="ic-btn"
+            aria-label={searching ? "검색 닫기" : "검색 열기"}
+            aria-expanded={searching}
+            aria-controls="mobile-search"
+            onClick={() => setSearching((v) => !v)}
+          >
             <SearchIcon />
           </button>
         </div>
-        <div className="msearch">
+        <div id="mobile-search" className="msearch">
           <div className="gs2">
             <SearchIcon />
             <TickerTypeahead
               placeholder="종목명, 티커 검색"
+              focusOnOpen={searching}
               className="min-w-0 flex-1 bg-transparent text-[15px] outline-none"
               formClass="flex w-full items-center"
               onStockSelect={handleTypeaheadStockPreview}
@@ -619,16 +666,20 @@ export default function AppShell({
       </header>
 
       <div className="content">{children}</div>
-      {typeaheadPreviewTicker ? (
-        <TypeaheadPreviewDrawer
-          key={typeaheadPreviewTicker}
-          ticker={typeaheadPreviewTicker}
-          onClose={() => setTypeaheadPreviewTicker(null)}
-        />
+      {typeaheadPreviewTicker && previewModal.isOpen ? (
+        <div className="typeahead-preview-layer">
+          <button type="button" className="typeahead-preview-backdrop" aria-label="미리보기 닫기" onClick={closeTypeaheadPreview} />
+          <TypeaheadPreviewDrawer
+            key={typeaheadPreviewTicker}
+            ticker={typeaheadPreviewTicker}
+            onClose={closeTypeaheadPreview}
+            panelRef={previewModal.modalProps.ref}
+          />
+        </div>
       ) : null}
 
       {/* mobile bottom tab bar */}
-      <nav className="tabbar">
+      <nav className="tabbar" aria-label="주요 메뉴">
         {PRIMARY_TAB_IDS.map((id) => {
           const n = id === "more" ? MORE_TAB : navById(id);
           if (id === "more") {
@@ -640,7 +691,7 @@ export default function AppShell({
                 aria-expanded={moreOpen}
                 aria-controls="mobile-more-sheet"
                 aria-haspopup="dialog"
-                onClick={() => setMoreOpen((v) => !v)}
+                onClick={() => (moreOpen ? moreModal.close() : openMore())}
                 className={`tab ${moreActive ? "on" : ""}`}
               >
                 {n.icon} {n.label}
@@ -659,34 +710,54 @@ export default function AppShell({
           );
         })}
       </nav>
+      <button
+        type="button"
+        className="scroll-top"
+        aria-label="페이지 맨 위로 이동"
+        onClick={scrollToTop}
+        hidden={!showScrollTop}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M6 14l6-6 6 6" />
+          <path d="M12 8v10" />
+        </svg>
+      </button>
       {moreOpen ? (
-        <div id="mobile-more-sheet" className="mobile-more-sheet" role="dialog" aria-modal="true" aria-label="더보기 메뉴">
-          <div className="mobile-more-backdrop" onClick={() => setMoreOpen(false)} aria-hidden="true" />
-          <div className="mobile-more-panel">
+        <div id="mobile-more-sheet" className="mobile-more-sheet">
+          <div className="mobile-more-backdrop" onClick={moreModal.close} aria-hidden="true" />
+          <div
+            className="mobile-more-panel"
+            {...moreModal.modalProps}
+            aria-labelledby="mobile-more-title"
+          >
             <div className="mobile-more-header">
-              <span>더보기</span>
-              <button type="button" onClick={() => setMoreOpen(false)} className="mobile-more-close" aria-label="닫기">
+              <span id="mobile-more-title">더보기</span>
+              <button ref={moreCloseRef} type="button" onClick={moreModal.close} className="mobile-more-close" aria-label="닫기">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
             </div>
             <nav className="mobile-more-list" aria-label="추가 메뉴">
-              {MORE_TAB_IDS.map((id) => {
-                const n = navById(id);
-                return (
-                  <TransitionLink
-                    key={id}
-                    href={n.href}
-                    className={`mobile-more-item ${id === navActive ? "on" : ""}`}
-                    onClick={() => setMoreOpen(false)}
-                    aria-current={id === navActive ? "page" : undefined}
-                  >
-                    <span className="mobile-more-icon">{n.icon}</span>
-                    <span className="mobile-more-label">{n.label}</span>
-                  </TransitionLink>
-                );
-              })}
+              {MORE_NAV_GROUPS.map((group, groupIndex) => (
+                <section key={group.label} className="mobile-more-group" aria-labelledby={`mobile-more-group-${groupIndex}`}>
+                  <h2 id={`mobile-more-group-${groupIndex}`} className="mobile-more-group-title">{group.label}</h2>
+                  <div className="mobile-more-group-items">
+                    {group.items.map((n) => (
+                      <TransitionLink
+                        key={n.id}
+                        href={n.href}
+                        className={`mobile-more-item ${n.id === navActive ? "on" : ""}`}
+                        onClick={moreModal.close}
+                        aria-current={n.id === navActive ? "page" : undefined}
+                      >
+                        <span className="mobile-more-icon">{n.icon}</span>
+                        <span className="mobile-more-label">{n.label}</span>
+                      </TransitionLink>
+                    ))}
+                  </div>
+                </section>
+              ))}
             </nav>
           </div>
         </div>

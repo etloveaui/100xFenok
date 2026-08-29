@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import TickerChip from "@/components/TickerChip";
 import { ROUTES } from "@/lib/routes";
@@ -109,6 +109,8 @@ function matchGurus(query: string, gurus: GuruRow[]): GuruRow[] {
 
 interface TickerTypeaheadProps {
   placeholder?: string;
+  label?: string;
+  focusOnOpen?: boolean;
   className?: string;
   onSubmit?: (value: string) => void;
   onStockSelect?: (ticker: string) => void;
@@ -120,6 +122,8 @@ interface TickerTypeaheadProps {
 
 export default function TickerTypeahead({
   placeholder = "티커 또는 투자자 검색…",
+  label = "종목명 또는 티커 검색",
+  focusOnOpen = false,
   className = "",
   onSubmit,
   onStockSelect,
@@ -129,6 +133,9 @@ export default function TickerTypeahead({
   formClass = "",
 }: TickerTypeaheadProps) {
   const router = useRouter();
+  const idSeed = useId().replace(/[^a-zA-Z0-9_-]/g, "") || "instance";
+  const inputId = `ticker-input-${idSeed}`;
+  const listboxId = `ticker-listbox-${idSeed}`;
   const [value, setValue] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -136,6 +143,7 @@ export default function TickerTypeahead({
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const optionRefs = useRef<Array<HTMLLIElement | null>>([]);
   const debounceRef = useRef<number>(0);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -216,7 +224,18 @@ export default function TickerTypeahead({
   }, []);
 
   const selectableItems = suggestions.filter((s) => s.type !== "divider");
-  const activeId = activeIdx >= 0 && activeIdx < selectableItems.length ? selectableItems[activeIdx].key : undefined;
+  const activeId = activeIdx >= 0 && activeIdx < selectableItems.length
+    ? `${listboxId}-option-${activeIdx}`
+    : undefined;
+
+  useEffect(() => {
+    if (!open || activeIdx < 0) return;
+    optionRefs.current[activeIdx]?.scrollIntoView?.({ block: "nearest" });
+  }, [activeIdx, open]);
+
+  useEffect(() => {
+    if (focusOnOpen) inputRef.current?.focus();
+  }, [focusOnOpen]);
 
   const doSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -226,13 +245,15 @@ export default function TickerTypeahead({
   return (
     <div ref={wrapRef} className="relative w-full">
       <form onSubmit={doSubmit} className={formClass}>
+        <label htmlFor={inputId} className="sr-only">{label}</label>
         <input
           ref={inputRef}
+          id={inputId}
           role="combobox"
           aria-expanded={open}
           aria-haspopup="listbox"
           aria-autocomplete="list"
-          aria-controls="ticker-listbox"
+          aria-controls={listboxId}
           aria-activedescendant={activeId ?? undefined}
           value={value}
           onChange={onChange}
@@ -251,7 +272,7 @@ export default function TickerTypeahead({
       {open ? (
         <ul
           ref={listRef}
-          id="ticker-listbox"
+          id={listboxId}
           role="listbox"
           className="absolute left-0 top-full z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg"
         >
@@ -267,12 +288,13 @@ export default function TickerTypeahead({
               return (
                 <li
                   key={s.key}
-                  id={s.key}
+                  id={`${listboxId}-option-${selIdx}`}
+                  ref={(node) => { optionRefs.current[selIdx] = node; }}
                   role="option"
                   aria-selected={isActive}
                   onClick={() => selectItem(s)}
                   onMouseEnter={() => setActiveIdx(selIdx)}
-                  className={`flex cursor-pointer items-center gap-2 px-4 py-2 text-sm ${isActive ? "bg-slate-100" : ""}`}
+                  className={`flex min-h-11 cursor-pointer items-center gap-2 px-4 py-2 text-sm ${isActive ? "bg-slate-100" : ""}`}
                 >
                   {s.type === "stock" && s.stock ? (
                     <>

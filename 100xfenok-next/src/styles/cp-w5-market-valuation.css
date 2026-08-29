@@ -325,7 +325,9 @@
    L 0.43–0.77 / chroma ≥ 0.1 / CVD ΔE 27.9 / contrast ≥ 3:1, and the dark pair
    is stepped for the dark surface rather than flipped, ΔE 26.7. */
 .mv-methodology { display: grid; gap: 6px; min-width: 0; }
+.mv-methodology-chart { min-width: 0; }
 .mv-methodology svg { display: block; overflow: visible; }
+.mv-methodology-mobile { display: none; }
 
 .mv-methodology-legend {
   display: flex; flex-wrap: wrap; gap: 4px 14px;
@@ -355,6 +357,17 @@
   width: 100%; border-collapse: collapse; font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
+.mv-methodology-table-scroll {
+  min-width: 0; max-width: 100%; overflow-x: auto;
+  overscroll-behavior-inline: contain; scrollbar-width: thin;
+}
+.mv-methodology-table-scroll:focus-visible {
+  outline: 2px solid var(--c-brand); outline-offset: 3px;
+}
+.mv-methodology-scroll-cue {
+  display: none; margin: 0; color: var(--c-ink-3); font-size: 10px; font-weight: 800;
+  line-height: 1.5; letter-spacing: 0.02em;
+}
 .mv-methodology-table th,
 .mv-methodology-table td { padding: 3px 8px 3px 0; text-align: left; white-space: nowrap; }
 .mv-methodology-table th { font-weight: 800; color: var(--c-ink); }
@@ -375,6 +388,241 @@
    6–8 floor band (ΔE 7.9) with position and printed values as the required
    secondary encoding. */
 .mv-ordinal { min-width: 0; }
+.mv-ordinal-chart { min-width: 0; }
 .mv-ordinal svg { display: block; overflow: visible; }
+.mv-ordinal-mobile { display: none; }
 
 [data-theme="dark"] .mv-ordinal { min-width: 0; }
+
+@media (max-width: 680px) {
+  /* The 720-unit figures remain the desktop analytical view. Phone users get
+     the same readings as semantic text, with the direction stated explicitly. */
+  .mv-methodology-chart,
+  .mv-ordinal-chart {
+    display: none;
+  }
+
+  .mv-methodology-mobile,
+  .mv-ordinal-mobile {
+    display: grid;
+  }
+
+  .mv-methodology-mobile {
+    gap: 7px;
+  }
+
+  .mv-methodology-mobile-kicker,
+  .mv-ordinal-mobile-kicker {
+    margin: 0;
+    color: var(--c-ink-3);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+  }
+
+  .mv-methodology-mobile-list,
+  .mv-ordinal-mobile-group > ul {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .mv-methodology-mobile-item,
+  .mv-ordinal-mobile-item {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+    padding: 10px 11px;
+    border: 1px solid var(--c-line-2);
+    border-radius: 0.8rem;
+    background: var(--c-surface-2);
+  }
+
+  .mv-methodology-mobile-head {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .mv-methodology-mobile-head strong,
+  .mv-ordinal-mobile-head strong {
+    min-width: 0;
+    color: var(--c-ink);
+    font-size: 12px;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+  }
+
+  .mv-methodology-mobile-head small,
+  .mv-ordinal-mobile-item > small {
+    color: var(--c-ink-3);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .mv-methodology-mobile-readings {
+    display: grid;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .mv-methodology-mobile-readings li {
+    display: grid;
+    grid-template-columns: minmax(94px, 0.7fr) minmax(0, 1fr);
+    gap: 2px 8px;
+    min-width: 0;
+    align-items: baseline;
+    padding-top: 6px;
+    border-top: 1px solid var(--c-line-2);
+  }
+
+  .mv-methodology-mobile-readings li > span {
+    min-width: 0;
+    color: var(--c-ink-2);
+    font-size: 10px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
+
+  .mv-methodology-mobile-readings li > strong {
+    min-width: 0;
+    color: var(--c-ink);
+    font-size: 12px;
+    font-weight: 900;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .mv-methodology-mobile-readings li > small {
+    grid-column: 1 / -1;
+    color: var(--c-ink-3);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .mv-methodology-table {
+    min-width: 560px;
+  }
+
+  .mv-methodology-legend,
+  .mv-methodology-table-scroll,
+  .mv-methodology-scroll-cue {
+    display: none;
+  }
+
+  .mv-ordinal-mobile {
+    gap: 10px;
+  }
+
+  .mv-ordinal-mobile-group {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .mv-ordinal-mobile-group h3 {
+    margin: 0;
+    color: var(--c-ink-2);
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .mv-ordinal-mobile-head {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .mv-ordinal-mobile-head span {
+    flex: 0 0 auto;
+    color: var(--c-ink-2);
+    font-size: 11px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .mv-ordinal-mobile-item p {
+    margin: 0;
+    color: var(--c-ink-2);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .mv-ordinal-mobile-item p strong {
+    color: var(--c-ink);
+    font-weight: 900;
+  }
+
+  .ordinal-withheld {
+    margin-top: 2px;
+    line-height: 1.5;
+  }
+
+  .cpw5-mv-index-head {
+    display: none;
+  }
+
+  .cpw5-mv-index-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+    padding: 10px 11px;
+  }
+
+  .cpw5-mv-index-row > [role="cell"] {
+    display: grid;
+    grid-template-columns: minmax(76px, 0.42fr) minmax(0, 1fr);
+    gap: 5px 8px;
+    min-width: 0;
+    align-items: baseline;
+    padding-top: 6px;
+    border-top: 1px solid var(--cp-divider);
+  }
+
+  .cpw5-mv-index-row > [role="cell"]::before {
+    content: attr(data-label);
+    color: var(--cp-text-soft);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+  }
+
+  .cpw5-mv-index-row > [role="cell"]:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .cpw5-mv-index-row > [role="cell"]:first-child::before {
+    grid-row: 1 / span 2;
+  }
+
+  .cpw5-mv-index-row > [role="cell"]:first-child > strong,
+  .cpw5-mv-index-row > [role="cell"]:first-child > small {
+    grid-column: 2;
+  }
+
+  .cpw5-mv-index-row > [role="cell"]:last-child > small {
+    grid-column: 2;
+    text-align: right;
+  }
+
+  .cpw5-mv-index-row > [role="cell"] > strong,
+  .cpw5-mv-index-row > [role="cell"] > small,
+  .cpw5-mv-index-row > [role="cell"] > em {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .cpw5-mv-index-row > [role="cell"] > em {
+    text-align: right;
+  }
+}

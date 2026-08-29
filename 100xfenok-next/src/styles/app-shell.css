@@ -123,11 +123,15 @@
 .fnk-shell .typeahead-preview{position:fixed; top:calc(var(--topbar-h) + var(--ticker-h) + var(--s4)); right:var(--s6); z-index:45; width:min(380px,calc(100vw - var(--rail-w) - 48px)); max-height:calc(100dvh - var(--topbar-h) - var(--ticker-h) - 40px); overflow:auto; border:1px solid var(--c-line); border-radius:var(--cp-radius-md); background:color-mix(in srgb,var(--c-panel) 96%,transparent); box-shadow:var(--sh-pop); backdrop-filter:blur(16px) saturate(1.2)}
 .fnk-shell .typeahead-preview__head{position:sticky; top:0; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:var(--s3); padding:12px var(--s4); border-bottom:1px solid var(--c-line-2); background:inherit}
 .fnk-shell .typeahead-preview__title{min-width:0; display:grid; gap:1px}
+.fnk-shell .typeahead-preview-layer{position:fixed; inset:0; z-index:45; pointer-events:none}
+.fnk-shell .typeahead-preview-backdrop{position:absolute; inset:0; width:100%; height:100%; border:0; background:rgba(15,23,42,.24); cursor:pointer; pointer-events:auto}
 .fnk-shell .typeahead-preview__title span{font-size:11px; font-weight:800; color:var(--c-ink-3)}
 .fnk-shell .typeahead-preview__title strong{font-size:18px; line-height:1.2; font-weight:800; color:var(--c-ink)}
 .fnk-shell .typeahead-preview__close{width:40px; height:40px; flex:none; display:grid; place-items:center; border:1px solid transparent; border-radius:10px; background:transparent; color:var(--c-ink-2); cursor:pointer}
 .fnk-shell .typeahead-preview__close:hover{background:var(--c-surface-2); border-color:var(--c-line)}
+.fnk-shell .typeahead-preview__close:focus-visible{outline:2px solid var(--c-brand); outline-offset:2px}
 .fnk-shell .typeahead-preview__close svg{width:20px; height:20px}
+.fnk-shell .typeahead-preview{pointer-events:auto}
 .fnk-shell .typeahead-preview__body{padding:0}
 .fnk-shell .typeahead-preview__body .panel.stock-section{border:0; border-radius:0; box-shadow:none; background:transparent}
 .fnk-shell .typeahead-preview__body .panel-h{padding:12px var(--s4)}
@@ -323,6 +327,13 @@
 .fnk-shell .scroll-hint-x:focus-visible{outline:2px solid var(--c-brand); outline-offset:2px}
 .fnk-shell .scroll-hint-x::after{content:""; position:sticky; right:0; top:0; float:right; width:22px; min-height:1px; height:100%; pointer-events:none; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.96))}
 
+  /* ───────────── SHARED SCROLL AFFORDANCE ───────────── */
+.fnk-shell .scroll-top{position:fixed; right:var(--s6); bottom:var(--s6); z-index:39; width:44px; height:44px; display:grid; place-items:center; border:1px solid var(--c-line); border-radius:50%; background:color-mix(in srgb,var(--c-panel) 94%,transparent); color:var(--c-ink-2); box-shadow:var(--sh-md); cursor:pointer; transition:opacity .16s,transform .16s,background .16s}
+.fnk-shell .scroll-top:hover{background:var(--c-panel); color:var(--c-brand); transform:translateY(-2px)}
+.fnk-shell .scroll-top:focus-visible{outline:2px solid var(--c-brand); outline-offset:3px}
+.fnk-shell .scroll-top svg{width:19px; height:19px}
+.fnk-shell .scroll-top[hidden]{display:none}
+
   /* ───────────── RESPONSIVE: tablet+ ───────────── */
   @media(min-width:1024px){
   .fnk-shell .signalbar .sb-grid{grid-template-columns:1.1fr 1.4fr}
@@ -344,19 +355,21 @@
   @media(max-width:1023px){
   .fnk-shell .rail, .fnk-shell .topbar, .fnk-shell .ticker{display:none}
   .fnk-shell .content{margin-left:0; padding:calc(var(--appbar-h) + var(--safe-t) + var(--ticker-h) + var(--s4)) var(--s4) calc(var(--tabbar-h) + var(--safe-b) + var(--s5)); max-width:none}
+  .fnk-shell .appbar.searching ~ .content{padding-top:calc(var(--appbar-h) + var(--safe-t) + var(--ticker-h) + var(--s4) + 48px)}
   .fnk-shell .typeahead-preview{top:calc(var(--safe-t) + var(--appbar-h) + var(--ticker-h) + var(--s3)); left:var(--s3); right:var(--s3); width:auto; max-height:calc(100dvh - var(--safe-t) - var(--appbar-h) - var(--ticker-h) - var(--tabbar-h) - var(--s6))}
 
   .fnk-shell .appbar{display:flex; position:fixed; top:0; left:0; right:0; z-index:40; flex-direction:column; background:rgba(242,244,246,.9); backdrop-filter:blur(16px) saturate(1.4); border-bottom:1px solid var(--c-line); padding-top:var(--safe-t)}
-  .fnk-shell .appbar-main{height:var(--appbar-h); display:flex; align-items:center; gap:var(--s3); padding:0 var(--s4)}
+  .fnk-shell .appbar-main{height:var(--appbar-h); min-width:0; display:flex; align-items:center; gap:var(--s3); padding:0 var(--s4)}
   .fnk-shell .appbar .back{width:44px; height:44px; border-radius:10px; background:none; border:0; color:var(--c-ink-2); display:grid; place-items:center; flex:none}
   .fnk-shell .appbar .back:hover{background:var(--c-surface-2)}
   .fnk-shell .appbar .back svg{width:22px; height:22px}
   .fnk-shell .appbar-logo{display:inline-flex; align-items:center; justify-content:center; flex:none}
-  .fnk-shell .appbar .title{font-size:19px; font-weight:700; letter-spacing:-.02em}
-  .fnk-shell .appbar .mstat{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:var(--c-ink-2)}
+  .fnk-shell .appbar .title{min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:19px; font-weight:700; letter-spacing:-.02em}
+  .fnk-shell .appbar .mstat{display:inline-flex; min-width:0; max-width:26vw; flex:0 1 auto; align-items:center; gap:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600; color:var(--c-ink-2)}
   .fnk-shell .appbar .mstat .dot{width:6px; height:6px; border-radius:50%; background:var(--c-neutral)}
-  .fnk-shell .appbar .grow{flex:1}
-  .fnk-shell .appbar .ic-btn{width:44px; height:44px}
+  .fnk-shell .appbar [data-app-shell-freshness]{min-width:0; max-width:30vw; flex:0 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .fnk-shell .appbar .grow{min-width:0; flex:1 1 0}
+  .fnk-shell .appbar .ic-btn{width:44px; height:44px; flex:0 0 44px}
   .fnk-shell .appbar .ic-btn svg{width:20px; height:20px}
     /* mobile ticker under header */
   .fnk-shell .mticker{height:var(--ticker-h); overflow:hidden; display:flex; align-items:center; border-top:1px solid var(--c-line-2)}
@@ -384,13 +397,17 @@
   .fnk-shell .mobile-more-close{width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:10px; background:transparent; color:var(--c-ink-2)}
   .fnk-shell .mobile-more-close:hover{background:var(--c-surface-2)}
   .fnk-shell .mobile-more-close svg{width:20px; height:20px}
-  .fnk-shell .mobile-more-list{display:grid; gap:2px; overflow-y:auto; overscroll-behavior:contain}
+  .fnk-shell .mobile-more-list{display:flex; min-height:0; flex-direction:column; gap:var(--s4); overflow-y:auto; overscroll-behavior:contain}
+  .fnk-shell .mobile-more-group{display:grid; gap:var(--s2)}
+  .fnk-shell .mobile-more-group-title{padding:0 var(--s3); color:var(--c-ink-3); font-size:11px; font-weight:800; letter-spacing:.1em}
+  .fnk-shell .mobile-more-group-items{display:grid; gap:2px}
   .fnk-shell .mobile-more-item{display:flex; min-height:48px; align-items:center; gap:var(--s3); padding:0 var(--s3); border-radius:var(--cp-radius-md); color:var(--c-ink); font-size:15px; font-weight:700}
   .fnk-shell .mobile-more-item:hover{background:var(--c-surface-2)}
   .fnk-shell .mobile-more-item.on{background:var(--c-brand-soft); color:var(--c-brand)}
   .fnk-shell .mobile-more-icon{width:24px; height:24px; color:var(--c-ink-3)}
   .fnk-shell .mobile-more-icon svg{width:24px; height:24px}
   .fnk-shell .mobile-more-item.on .mobile-more-icon{color:var(--c-brand)}
+  .fnk-shell .scroll-top{right:var(--s4); bottom:calc(var(--tabbar-h) + var(--safe-b) + var(--s3))}
 
   .fnk-shell .panel-h{padding:13px var(--s4)}
   .fnk-shell .data-shell-header{align-items:flex-start; padding:var(--s4)}
@@ -456,3 +473,10 @@
 [data-theme="dark"] .fnk-shell .bg-white\/70{background-color:color-mix(in srgb,var(--c-panel) 72%,transparent)}
 [data-theme="dark"] .fnk-shell .border-white{border-color:var(--c-panel)}
 [data-theme="dark"] .fnk-shell .scroll-hint-x::after{background:linear-gradient(90deg,transparent,var(--c-panel))}
+
+@media (prefers-reduced-motion: reduce){
+  .fnk-shell .ticker-track{animation:none}
+  .fnk-shell *,
+  .fnk-shell *::before,
+  .fnk-shell *::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.01ms !important}
+}

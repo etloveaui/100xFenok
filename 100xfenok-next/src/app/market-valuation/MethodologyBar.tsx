@@ -70,6 +70,29 @@ function horizonOf(axes: MethodologyAxisView[], lens: string): string {
   return "";
 }
 
+function readingMeaning(reading: MethodologyReading): string {
+  if (reading.kind === "band") {
+    if (reading.highPct < 0) return "현재가보다 낮은 범위";
+    if (reading.lowPct > 0) return "현재가보다 높은 범위";
+    return "현재가를 포함하는 범위";
+  }
+  if (reading.lowPct < 0) return "현재가보다 낮은 수준";
+  if (reading.lowPct > 0) return "현재가보다 높은 수준";
+  return "현재가와 같은 수준";
+}
+
+function readingValue(reading: MethodologyReading): string {
+  return reading.kind === "band"
+    ? `${PERCENT_1.format(reading.lowPct)} ~ ${PERCENT_1.format(reading.highPct)}`
+    : PERCENT_1.format(reading.lowPct);
+}
+
+function readingLevel(reading: MethodologyReading): string {
+  return reading.kind === "band"
+    ? `${LEVEL.format(reading.impliedLow)} ~ ${LEVEL.format(reading.impliedHigh)}`
+    : LEVEL.format(reading.impliedLow);
+}
+
 function Mark({
   reading,
   x,
@@ -186,79 +209,104 @@ export default function MethodologyBar({ axes, withheldRows = [] }: MethodologyC
 
   return (
     <div className="mv-methodology">
-      <svg
-        viewBox={`0 0 ${VIEW_W} ${height}`}
-        width="100%"
-        height={height}
-        role="img"
-        aria-label={`지수별 현재가 대비 업사이드. ${spoken}`}
-      >
-        {ticks.map((tick) => (
-          <g key={tick}>
-            <line
-              x1={x(tick)} x2={x(tick)} y1={HEAD_H - 4} y2={HEAD_H + plotH}
-              stroke="var(--c-line-2)" strokeWidth={1}
-            />
-            <text
-              x={x(tick)} y={height - 9} textAnchor="middle"
-              fontSize={10} fontWeight={700} fill="var(--c-ink-3)"
-            >
-              {PERCENT.format(tick)}
-            </text>
-          </g>
-        ))}
-
-        {/* The anchor rule. One line for every row: today's price is the shared
-            reference, not a per-row artefact. */}
-        <line
-          x1={zeroX} x2={zeroX} y1={HEAD_H - 10} y2={HEAD_H + plotH}
-          stroke="var(--c-ink-3)" strokeWidth={2}
-        />
-        <text
-          x={zeroX} y={HEAD_H - 14} textAnchor="middle"
-          fontSize={10} fontWeight={800} fill="var(--c-ink-2)"
+      <div className="mv-methodology-chart">
+        <svg
+          viewBox={`0 0 ${VIEW_W} ${height}`}
+          width="100%"
+          height={height}
+          role="img"
+          aria-label={`지수별 현재가 대비 업사이드. ${spoken}`}
         >
-          오늘 가격
-        </text>
-
-        {drawable.map((axis, rowIndex) => {
-          const mid = HEAD_H + rowIndex * ROW_H + ROW_H / 2;
-          return (
-            <g key={axis.indexId}>
+          {ticks.map((tick) => (
+            <g key={tick}>
+              <line
+                x1={x(tick)} x2={x(tick)} y1={HEAD_H - 4} y2={HEAD_H + plotH}
+                stroke="var(--c-line-2)" strokeWidth={1}
+              />
               <text
-                x={LABEL_W - 10} y={mid + 3} textAnchor="end"
-                fontSize={11} fontWeight={800} fill="var(--c-ink)"
-              >
-                {axis.label}
-              </text>
-              <text
-                x={VIEW_W - 6} y={mid + 3} textAnchor="end"
+                x={x(tick)} y={height - 9} textAnchor="middle"
                 fontSize={10} fontWeight={700} fill="var(--c-ink-3)"
               >
-                {LEVEL.format(axis.anchorPrice)}
+                {PERCENT.format(tick)}
               </text>
-              {axis.readings.map((reading) => (
-                <Mark
-                  key={reading.lens}
-                  reading={reading}
-                  x={x}
-                  mid={mid}
-                  color={colorOf(reading.lens)}
-                  clipAt={isClipped(axis) ? VIEW_W - PAD_R - 26 : null}
-                />
-              ))}
-              {isClipped(axis) ? (
-                <text
-                  x={VIEW_W - PAD_R - 20} y={mid + 3} textAnchor="start"
-                  fontSize={10} fontWeight={800} fill="var(--c-ink-2)"
-                >
-                  ▸ 축 밖
-                </text>
-              ) : null}
             </g>
-          );
-        })}
-      </svg>
+          ))}
+
+          {/* The anchor rule. One line for every row: today's price is the shared
+              reference, not a per-row artefact. */}
+          <line
+            x1={zeroX} x2={zeroX} y1={HEAD_H - 10} y2={HEAD_H + plotH}
+            stroke="var(--c-ink-3)" strokeWidth={2}
+          />
+          <text
+            x={zeroX} y={HEAD_H - 14} textAnchor="middle"
+            fontSize={10} fontWeight={800} fill="var(--c-ink-2)"
+          >
+            오늘 가격
+          </text>
+
+          {drawable.map((axis, rowIndex) => {
+            const mid = HEAD_H + rowIndex * ROW_H + ROW_H / 2;
+            return (
+              <g key={axis.indexId}>
+                <text
+                  x={LABEL_W - 10} y={mid + 3} textAnchor="end"
+                  fontSize={11} fontWeight={800} fill="var(--c-ink)"
+                >
+                  {axis.label}
+                </text>
+                <text
+                  x={VIEW_W - 6} y={mid + 3} textAnchor="end"
+                  fontSize={10} fontWeight={700} fill="var(--c-ink-3)"
+                >
+                  {LEVEL.format(axis.anchorPrice)}
+                </text>
+                {axis.readings.map((reading) => (
+                  <Mark
+                    key={reading.lens}
+                    reading={reading}
+                    x={x}
+                    mid={mid}
+                    color={colorOf(reading.lens)}
+                    clipAt={isClipped(axis) ? VIEW_W - PAD_R - 26 : null}
+                  />
+                ))}
+                {isClipped(axis) ? (
+                  <text
+                    x={VIEW_W - PAD_R - 20} y={mid + 3} textAnchor="start"
+                    fontSize={10} fontWeight={800} fill="var(--c-ink-2)"
+                  >
+                    ▸ 축 밖
+                  </text>
+                ) : null}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      <div className="mv-methodology-mobile">
+        <p className="mv-methodology-mobile-kicker">휴대폰용 요약 · 현재가 기준</p>
+        <ul className="mv-methodology-mobile-list">
+          {drawable.map((axis) => (
+            <li key={axis.indexId} className="mv-methodology-mobile-item">
+              <div className="mv-methodology-mobile-head">
+                <strong>{axis.label}</strong>
+                <small>현재가 {LEVEL.format(axis.anchorPrice)} · 기준일 {axis.anchorAsOf}</small>
+              </div>
+              <ul className="mv-methodology-mobile-readings">
+                {axis.readings.map((reading) => (
+                  <li key={reading.lens}>
+                    <span>{reading.lens}</span>
+                    <strong>{readingValue(reading)}</strong>
+                    <small>{readingMeaning(reading)} · 수준 {readingLevel(reading)} · {reading.horizon}</small>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       <ul className="mv-methodology-legend">
         {lensOrder.map((lens, index) => (
@@ -273,35 +321,39 @@ export default function MethodologyBar({ axes, withheldRows = [] }: MethodologyC
       {/* The numbers in full, for anyone the figure does not serve. The column
           heads carry the lens names: the legend sits above the figure, and a
           table read on its own would otherwise be unlabelled numbers. */}
-      <table className="mv-methodology-table">
-        <thead>
-          <tr>
-            <th scope="col">지수</th>
-            {lensOrder.map((lens) => <th key={lens} scope="col">{lens}</th>)}
-            <th scope="col">기준일</th>
-          </tr>
-        </thead>
-        <tbody>
-          {drawable.map((axis) => (
-            <tr key={axis.indexId}>
-              <th scope="row">{axis.label}</th>
-              {lensOrder.map((lens) => {
-                const reading = axis.readings.find((r) => r.lens === lens);
-                return (
-                  <td key={lens}>
-                    {reading
-                      ? reading.kind === "band"
-                        ? `${PERCENT_1.format(reading.lowPct)} ~ ${PERCENT_1.format(reading.highPct)}`
-                        : PERCENT_1.format(reading.lowPct)
-                      : "—"}
-                  </td>
-                );
-              })}
-              <td className="mv-asof">{axis.anchorAsOf}</td>
+      <div
+        className="mv-methodology-table-scroll"
+        role="region"
+        tabIndex={0}
+        aria-label="방법론별 상세 표. 좌우로 스크롤해 전체 열을 확인하세요."
+      >
+        <table className="mv-methodology-table">
+          <thead>
+            <tr>
+              <th scope="col">지수</th>
+              {lensOrder.map((lens) => <th key={lens} scope="col">{lens}</th>)}
+              <th scope="col">기준일</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {drawable.map((axis) => (
+              <tr key={axis.indexId}>
+                <th scope="row">{axis.label}</th>
+                {lensOrder.map((lens) => {
+                  const reading = axis.readings.find((r) => r.lens === lens);
+                  return (
+                    <td key={lens}>
+                      {reading ? readingValue(reading) : "—"}
+                    </td>
+                  );
+                })}
+                <td className="mv-asof">{axis.anchorAsOf}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mv-methodology-scroll-cue" aria-hidden="true">↔ 좌우로 밀어 상세 표 전체 보기</p>
 
       {withheldRows.map((row) => (
         <p key={row.label} className="mv-withheld">

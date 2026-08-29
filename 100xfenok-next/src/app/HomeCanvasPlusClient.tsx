@@ -19,6 +19,7 @@ import type { TradesRankingData, TradesRankingRow } from "@/lib/superinvestors/t
 
 type RegimeTone = "positive" | "negative" | "warning" | "neutral";
 type GatewayTone = "accent" | RegimeTone;
+type GatewayIcon = "report" | "screener" | "etf" | "portfolio";
 type IndexSymbol = "SPY" | "QQQ" | "DIA";
 
 type RegimeSummary = {
@@ -105,7 +106,7 @@ const GATEWAY_TILES = [
     detail: "티커를 바로 열어 가격, 밸류에이션, 신호를 한 화면에서 확인합니다.",
     href: ROUTES.stock("NVDA"),
     tone: "accent",
-    icon: "⌕",
+    icon: "report",
   },
   {
     label: "스크리너",
@@ -114,7 +115,7 @@ const GATEWAY_TILES = [
     detail: "밸류, 성장, 퀄리티, 모멘텀 조건으로 후보 종목을 좁힙니다.",
     href: ROUTES.screener,
     tone: "positive",
-    icon: "▦",
+    icon: "screener",
   },
   {
     label: "ETF",
@@ -123,7 +124,7 @@ const GATEWAY_TILES = [
     detail: "ETF 분류, 테마, 보유 구조를 비교하며 시장 노출을 점검합니다.",
     href: ROUTES.etfs,
     tone: "neutral",
-    icon: "◌",
+    icon: "etf",
   },
   {
     label: "포트폴리오",
@@ -132,7 +133,7 @@ const GATEWAY_TILES = [
     detail: "관심 종목과 보유 비중을 시장 흐름과 함께 다시 봅니다.",
     href: ROUTES.portfolio,
     tone: "warning",
-    icon: "◫",
+    icon: "portfolio",
   },
 ] satisfies ReadonlyArray<{
   label: string;
@@ -141,7 +142,7 @@ const GATEWAY_TILES = [
   detail: string;
   href: string;
   tone: GatewayTone;
-  icon: string;
+  icon: GatewayIcon;
 }>;
 
 function formatDatePart(value: string | null | undefined): string {
@@ -431,7 +432,13 @@ function CpMarketDashboardBand({
         <span className="cp-market-band__meta">시세 수집 {updatedAt}</span>
       </header>
 
-      <div className="cp-market-band__cards">
+      <div
+        className="cp-market-band__cards"
+        role="region"
+        tabIndex={0}
+        aria-label="시장 지수 카드. 좌우로 스크롤해 SPY, QQQ, DIA를 확인하세요."
+        aria-describedby="cp-market-band-scroll-cue"
+      >
         {indexCards.map((card) => {
           const tone = card.isLive ? ((card.changePercent ?? 0) >= 0 ? "positive" : "negative") : "neutral";
           return (
@@ -465,6 +472,9 @@ function CpMarketDashboardBand({
           );
         })}
       </div>
+      <p className="cp-market-band__scroll-cue" id="cp-market-band-scroll-cue">
+        옆으로 밀어 다음 지수 보기 <span aria-hidden="true">→</span>
+      </p>
     </section>
   );
 }
@@ -486,23 +496,55 @@ function CpFenokEdgePanel({
   const radius = 47;
   const circumference = 2 * Math.PI * radius;
   const gaugeOffset = circumference * (1 - regime.confidence / 100);
+  const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
+  const breadthRatio = dashboard.sectorUp / breadthTotal;
+  const stressReliefScore = (1 - dashboard.stressScore) * 100;
+  const rawStressScore = Math.round(dashboard.stressScore * 100);
   const forces = [
     {
+      key: "sentiment",
       label: "투자 심리",
       value: Math.round(dashboard.fearGreedScore),
+      score: dashboard.fearGreedScore,
+      weight: 45,
+      contribution: dashboard.fearGreedScore * 0.45,
+      scoreLabel: `반영 ${Math.round(dashboard.fearGreedScore)}점`,
       detail: dashboard.fearGreedLabel,
+      tone: "accent",
     },
     {
+      key: "breadth",
       label: "섹터 확산",
       value: regime.breadth,
+      score: breadthRatio * 100,
+      weight: 35,
+      contribution: breadthRatio * 35,
+      scoreLabel: `반영 ${Math.round(breadthRatio * 100)}점`,
       detail: `${dashboard.sectorUp}개 상승`,
+      tone: "positive",
     },
     {
-      label: "시장 스트레스",
-      value: Math.round(dashboard.stressScore * 100),
-      detail: dashboard.stressLabel,
+      key: "stress",
+      label: "스트레스 완화",
+      value: Math.round(stressReliefScore),
+      score: stressReliefScore,
+      weight: 20,
+      contribution: stressReliefScore * 0.2,
+      scoreLabel: `반영 ${Math.round(stressReliefScore)}점`,
+      detail: `현재 스트레스 ${rawStressScore}점 · 낮을수록 유리 · ${dashboard.stressLabel}`,
+      tone: "warning",
     },
   ];
+  const contributionTotal = forces.reduce((total, force) => total + force.contribution, 0);
+  let contributionOffset = 0;
+  const contributionSegments = forces.map((force) => {
+    const segment = { ...force, x: contributionOffset };
+    contributionOffset += force.contribution;
+    return segment;
+  });
+  const contributionAriaLabel = forces
+    .map((force) => `${force.label} 가중치 ${force.weight}%, ${force.contribution.toFixed(1)}점 기여`)
+    .join(". ");
 
   return (
     <section className="cp-edge-panel" aria-label="Fenok Edge 시각화">
@@ -542,17 +584,59 @@ function CpFenokEdgePanel({
 
         <div className="cp-edge-forces">
           {forces.map((force) => (
-            <div className="cp-edge-force" key={force.label}>
+            <div className="cp-edge-force" key={force.key}>
               <div className="cp-edge-force__label">
                 <span>{force.label}</span>
-                <strong>{force.value}</strong>
+                <strong>{force.value}점</strong>
               </div>
               <div className="cp-edge-force__track" aria-hidden="true">
-                <span style={{ width: `${clamp(force.value, 0, 100)}%` }} />
+                <span style={{ width: `${clamp(force.score, 0, 100)}%` }} />
               </div>
-              <p>{force.detail}</p>
+              <div className="cp-edge-force__meta">
+                <span>가중치 {force.weight}%</span>
+                <strong>기여 {force.contribution.toFixed(1)}점</strong>
+              </div>
+              <p className="cp-edge-force__detail">
+                <span>{force.detail}</span>
+                <span>{force.scoreLabel}</span>
+              </p>
             </div>
           ))}
+
+          <div className="cp-edge-contribution" aria-label="Fenok Edge 점수 기여도">
+            <div className="cp-edge-contribution__header">
+              <span>점수 기여도</span>
+              <strong>{contributionTotal.toFixed(1)} / 100점</strong>
+            </div>
+            <svg
+              className="cp-edge-contribution__strip"
+              viewBox="0 0 100 10"
+              role="img"
+              aria-label={contributionAriaLabel}
+            >
+              <title>Fenok Edge 점수 기여도</title>
+              <rect className="cp-edge-contribution__strip-track" x="0" y="0" width="100" height="10" rx="5" />
+              {contributionSegments.map((force) => (
+                <rect
+                  className="cp-edge-contribution__segment"
+                  data-tone={force.tone}
+                  key={force.key}
+                  x={force.x}
+                  y="0"
+                  width={Math.max(force.contribution, 0)}
+                  height="10"
+                />
+              ))}
+            </svg>
+            <ul className="cp-edge-contribution__legend" aria-label="요소별 기여점">
+              {forces.map((force) => (
+                <li key={force.key}>
+                  <span>{force.label}</span>
+                  <strong>{force.contribution.toFixed(1)}점</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -611,6 +695,43 @@ function CpSectorHeatmap({
   );
 }
 
+function CpGatewayIcon({ icon }: { icon: GatewayIcon }) {
+  if (icon === "report") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="10.5" cy="10.5" r="5.25" />
+        <path d="m15 15 4 4M8 10.5h5M10.5 8v5" />
+      </svg>
+    );
+  }
+
+  if (icon === "screener") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z" />
+        <path d="M8 8h8" />
+      </svg>
+    );
+  }
+
+  if (icon === "etf") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="4" y="5" width="16" height="6" rx="2" />
+        <rect x="4" y="13" width="16" height="6" rx="2" />
+        <path d="M8 8h8M8 16h5" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="4" y="7" width="16" height="12" rx="2" />
+      <path d="M9 7V5h6v2M4 12h16M10 12v2h4v-2" />
+    </svg>
+  );
+}
+
 function CpGatewayCard({ tile }: { tile: (typeof GATEWAY_TILES)[number] }) {
   return (
     <TransitionLink
@@ -620,7 +741,9 @@ function CpGatewayCard({ tile }: { tile: (typeof GATEWAY_TILES)[number] }) {
     >
       <article className="cp-gateway-card" data-tone={tile.tone} data-cp-feature-tile>
         <div className="cp-gateway-card__topline">
-          <span className="cp-gateway-card__icon" aria-hidden="true">{tile.icon}</span>
+          <span className="cp-gateway-card__icon" aria-hidden="true">
+            <CpGatewayIcon icon={tile.icon} />
+          </span>
           <span>{tile.label}</span>
         </div>
         <h2>{tile.title}</h2>

@@ -64,6 +64,14 @@ function windowsStraddleMedian(row: BenchmarkOrdinalRow): boolean {
   return pcts.some((p) => p >= 50) && pcts.some((p) => p < 50);
 }
 
+function ordinalMeaning(pct: number): string {
+  if (pct >= 80) return "역사상 고평가 구간";
+  if (pct >= 60) return "자기 역사보다 높은 편";
+  if (pct > 40) return "자기 역사 중앙값 근처";
+  if (pct > 20) return "자기 역사보다 낮은 편";
+  return "역사상 저평가 구간";
+}
+
 // §H rule 2: no raw index ids reach users. The benchmark payload names carry
 // their Bloomberg ticker in parentheses — and one of them carries a typo in the
 // source ("Ressell 2000") — so a display name is either mapped here or has its
@@ -162,86 +170,118 @@ export default function OrdinalStrip({ groups, highlightIds = [] }: OrdinalStrip
 
   return (
     <div className="mv-ordinal">
-      <svg viewBox={`0 0 ${VIEW_W} ${height}`} width="100%" height={height} role="img"
-        aria-label="지수별 선행 PER 백분위 — 자기 역사 전체와 10년·5년·3년 창, 창이 중앙값을 가로지르는 지수 표시">
-        {ticks.map((tick) => (
-          <g key={tick}>
-            <line
-              x1={x(tick)} x2={x(tick)} y1={HEAD_H - 8} y2={plotBottom}
-              stroke={tick === 50 ? "var(--c-ink-3)" : "var(--c-line-2)"}
-              strokeWidth={tick === 50 ? 1.5 : 1}
-              strokeDasharray={tick === 50 ? "4 3" : undefined}
-            />
-            <text x={x(tick)} y={height - 7} textAnchor="middle" fontSize={10} fontWeight={700} fill="var(--c-ink-3)">
-              {tick}
-            </text>
-          </g>
-        ))}
-        <text x={x(0)} y={HEAD_H - 14} textAnchor="start" fontSize={10} fontWeight={800} fill="var(--c-chart-ord-cheap)">
-          역사상 저평가
-        </text>
-        <text x={x(50)} y={HEAD_H - 14} textAnchor="middle" fontSize={10} fontWeight={700} fill="var(--c-ink-3)">
-          자기 역사 중앙값
-        </text>
-        <text x={x(100)} y={HEAD_H - 14} textAnchor="end" fontSize={10} fontWeight={800} fill="var(--c-chart-ord-rich)">
-          역사상 고평가
-        </text>
-        <text x={VIEW_W - 6} y={HEAD_H - 14} textAnchor="end" fontSize={8.5} fill="var(--c-ink-3)">
-          행 아래 10y·5y·3y = 창 백분위 · ⇅ = 창이 중앙값을 가로지름 · 이탤릭 "10y 6y" = 10년 창에 보유 약 6년
-        </text>
+      <div className="mv-ordinal-chart">
+        <svg viewBox={`0 0 ${VIEW_W} ${height}`} width="100%" height={height} role="img"
+          aria-label="지수별 선행 PER 백분위 — 자기 역사 전체와 10년·5년·3년 창, 창이 중앙값을 가로지르는 지수 표시">
+          {ticks.map((tick) => (
+            <g key={tick}>
+              <line
+                x1={x(tick)} x2={x(tick)} y1={HEAD_H - 8} y2={plotBottom}
+                stroke={tick === 50 ? "var(--c-ink-3)" : "var(--c-line-2)"}
+                strokeWidth={tick === 50 ? 1.5 : 1}
+                strokeDasharray={tick === 50 ? "4 3" : undefined}
+              />
+              <text x={x(tick)} y={height - 7} textAnchor="middle" fontSize={10} fontWeight={700} fill="var(--c-ink-3)">
+                {tick}
+              </text>
+            </g>
+          ))}
+          <text x={x(0)} y={HEAD_H - 14} textAnchor="start" fontSize={10} fontWeight={800} fill="var(--c-chart-ord-cheap)">
+            역사상 저평가
+          </text>
+          <text x={x(50)} y={HEAD_H - 14} textAnchor="middle" fontSize={10} fontWeight={700} fill="var(--c-ink-3)">
+            자기 역사 중앙값
+          </text>
+          <text x={x(100)} y={HEAD_H - 14} textAnchor="end" fontSize={10} fontWeight={800} fill="var(--c-chart-ord-rich)">
+            역사상 고평가
+          </text>
+          <text x={VIEW_W - 6} y={HEAD_H - 14} textAnchor="end" fontSize={8.5} fill="var(--c-ink-3)">
+            행 아래 10y·5y·3y = 창 백분위 · ⇅ = 창이 중앙값을 가로지름 · 이탤릭 "10y 6y" = 10년 창에 보유 약 6년
+          </text>
 
-        {placed.map(({ group, rows, top }) => (
-          <g key={group.id}>
-            <text x={0} y={top + 9} fontSize={10} fontWeight={800} fill="var(--c-ink-3)">
-              {group.label}
-            </text>
-            {rows.map((row, index) => {
-              const y = top + 14 + index * ROW_H + ROW_H / 2;
-              const pct = row.pe.percentile as number;
-              const marked = highlight.has(row.id);
-              const straddle = windowsStraddleMedian(row);
-              const windows = windowReadout(row);
-              const titleText = `${displayName(row)} · 선행 PER ${row.pe.current === null ? "없음" : PE.format(row.pe.current)} · 자기 역사 ${pct}번째 백분위 · ${row.points}주 기준 · 창 10y/5y/3y: ${windows.text}${straddle ? " · 창이 중앙값을 가로지름" : ""}`;
-              return (
-                <g key={row.id}>
-                  <title>{titleText}</title>
-                  <text
-                    x={NAME_W - 10} y={y - 6} textAnchor="end" fontSize={10.5}
-                    fontWeight={marked ? 800 : 600}
-                    fill={marked ? "var(--c-ink)" : "var(--c-ink-2)"}
-                  >
-                    {straddle ? "⇅ " : ""}{displayName(row)}
-                  </text>
-                  {/* Trailing-window readout (10y/5y/3y) under the name; a span
-                      figure like "10y 6y" is the ACTUAL data held for a refused
-                      window, never a percentile. */}
-                  <text
-                    x={NAME_W - 10} y={y + 10} textAnchor="end" fontSize={8.5}
-                    fill={windows.hasSpan ? "var(--c-ink-3)" : "var(--c-ink-3)"}
-                    fontStyle={windows.hasSpan ? "italic" : undefined}
-                  >
-                    {windows.text}
-                  </text>
-                  {/* A hairline from the median to the dot: the eye reads the
-                      direction and the distance without needing the colour. */}
-                  <line
-                    x1={x(50)} x2={x(pct)} y1={y - 9} y2={y - 9}
-                    stroke="var(--c-line)" strokeWidth={1.5}
-                  />
-                  <circle cx={x(pct)} cy={y - 9} r={DOT_R + 1.5} fill="var(--c-panel)" />
-                  <circle cx={x(pct)} cy={y - 9} r={DOT_R} fill={dotColor(pct)} />
-                  <text
-                    x={VIEW_W - 6} y={y - 6} textAnchor="end" fontSize={10}
-                    fontWeight={marked ? 800 : 600} fill="var(--c-ink-2)"
-                  >
-                    {row.pe.current === null ? "배수 없음" : `${PE.format(row.pe.current)}배`} · {pct}
-                  </text>
-                </g>
-              );
-            })}
-          </g>
+          {placed.map(({ group, rows, top }) => (
+            <g key={group.id}>
+              <text x={0} y={top + 9} fontSize={10} fontWeight={800} fill="var(--c-ink-3)">
+                {group.label}
+              </text>
+              {rows.map((row, index) => {
+                const y = top + 14 + index * ROW_H + ROW_H / 2;
+                const pct = row.pe.percentile as number;
+                const marked = highlight.has(row.id);
+                const straddle = windowsStraddleMedian(row);
+                const windows = windowReadout(row);
+                const titleText = `${displayName(row)} · 선행 PER ${row.pe.current === null ? "없음" : PE.format(row.pe.current)} · 자기 역사 ${pct}번째 백분위 · ${row.points}주 기준 · 창 10y/5y/3y: ${windows.text}${straddle ? " · 창이 중앙값을 가로지름" : ""}`;
+                return (
+                  <g key={row.id}>
+                    <title>{titleText}</title>
+                    <text
+                      x={NAME_W - 10} y={y - 6} textAnchor="end" fontSize={10.5}
+                      fontWeight={marked ? 800 : 600}
+                      fill={marked ? "var(--c-ink)" : "var(--c-ink-2)"}
+                    >
+                      {straddle ? "⇅ " : ""}{displayName(row)}
+                    </text>
+                    {/* Trailing-window readout (10y/5y/3y) under the name; a span
+                        figure like "10y 6y" is the ACTUAL data held for a refused
+                        window, never a percentile. */}
+                    <text
+                      x={NAME_W - 10} y={y + 10} textAnchor="end" fontSize={8.5}
+                      fill={windows.hasSpan ? "var(--c-ink-3)" : "var(--c-ink-3)"}
+                      fontStyle={windows.hasSpan ? "italic" : undefined}
+                    >
+                      {windows.text}
+                    </text>
+                    {/* A hairline from the median to the dot: the eye reads the
+                        direction and the distance without needing the colour. */}
+                    <line
+                      x1={x(50)} x2={x(pct)} y1={y - 9} y2={y - 9}
+                      stroke="var(--c-line)" strokeWidth={1.5}
+                    />
+                    <circle cx={x(pct)} cy={y - 9} r={DOT_R + 1.5} fill="var(--c-panel)" />
+                    <circle cx={x(pct)} cy={y - 9} r={DOT_R} fill={dotColor(pct)} />
+                    <text
+                      x={VIEW_W - 6} y={y - 6} textAnchor="end" fontSize={10}
+                      fontWeight={marked ? 800 : 600} fill="var(--c-ink-2)"
+                    >
+                      {row.pe.current === null ? "배수 없음" : `${PE.format(row.pe.current)}배`} · {pct}
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
+          ))}
+        </svg>
+      </div>
+
+      <div className="mv-ordinal-mobile">
+        <p className="mv-ordinal-mobile-kicker">휴대폰용 요약 · 자기 역사 대비</p>
+        {usable.map(({ group, rows }) => (
+          <section key={group.id} className="mv-ordinal-mobile-group">
+            <h3>{group.label}</h3>
+            <ul>
+              {rows.map((row) => {
+                const pct = row.pe.percentile as number;
+                const straddle = windowsStraddleMedian(row);
+                const windows = windowReadout(row);
+                return (
+                  <li key={row.id} className="mv-ordinal-mobile-item">
+                    <div className="mv-ordinal-mobile-head">
+                      <strong>{straddle ? "⇅ " : ""}{displayName(row)}</strong>
+                      <span>{pct}번째 백분위</span>
+                    </div>
+                    <p>
+                      <span>현재 선행 PER</span>{" "}
+                      <strong>{row.pe.current === null ? "배수 없음" : `${PE.format(row.pe.current)}배`}</strong>
+                      <span> · {ordinalMeaning(pct)}</span>
+                    </p>
+                    <small>{windows.text} · {row.points}주 기준{row.asOf ? ` · 기준일 ${row.asOf}` : ""}</small>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
         ))}
-      </svg>
+      </div>
       {withheld.length > 0 ? (
         <p className="ordinal-withheld">
           {withheld.map((w) => `${w.name}: ${w.reason}`).join(" · ")}

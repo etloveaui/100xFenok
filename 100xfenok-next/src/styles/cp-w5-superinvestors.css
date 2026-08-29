@@ -48,6 +48,112 @@
   overflow-wrap: anywhere;
 }
 
+/* Dense tables remain available at desktop widths; narrow screens use the
+   same rows as labeled cards so every metric and action remains discoverable. */
+.cpw5-super-desktop-table {
+  display: block;
+  min-width: 0;
+}
+
+.cpw5-super-mobile-cards {
+  display: none;
+  min-width: 0;
+}
+
+.cpw5-super-mobile-card {
+  min-width: 0;
+  border: 1px solid var(--c-line);
+  border-radius: var(--cp-radius-lg);
+  background: var(--c-panel);
+  padding: 12px;
+  box-shadow: var(--sh-sm);
+}
+
+.cpw5-super-mobile-card:focus-within {
+  border-color: var(--c-brand);
+}
+
+.cpw5-super-mobile-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.cpw5-super-mobile-card__field {
+  min-width: 0;
+  border: 1px solid var(--c-line-2);
+  border-radius: var(--cp-radius-md);
+  background: var(--c-surface-2);
+  padding: 8px 10px;
+}
+
+.cpw5-super-mobile-card__field--wide {
+  grid-column: 1 / -1;
+}
+
+.cpw5-super-mobile-card__field dt {
+  overflow: hidden;
+  color: var(--c-ink-3);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cpw5-super-mobile-card__field dd {
+  min-width: 0;
+  margin-top: 3px;
+  color: var(--c-ink);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.cpw5-super-mobile-card :is(a, button) {
+  touch-action: manipulation;
+}
+
+.cpw5-super-mobile-card :is(a, button):focus-visible {
+  outline: 2px solid var(--c-brand);
+  outline-offset: 2px;
+}
+
+.cpw5-super-desktop-table.scroll-hint-x::after {
+  background: linear-gradient(90deg, transparent, var(--c-panel));
+}
+
+.cpw5-super-tabs-scroll {
+  min-width: 0;
+}
+
+.cpw5-super-tabs-scroll::after {
+  background: linear-gradient(90deg, transparent, var(--c-panel));
+}
+
+.cpw5-super-tabs {
+  min-width: max-content;
+}
+
+/* The selected-context projection in globals.css orders direct tablists after
+   the landing/overview blocks; retain that order after adding the scroll rail. */
+[data-superinvestor-page][data-superinvestor-selected-context="true"] > .cpw5-super-tabs-scroll {
+  order: 3;
+}
+
+@media (max-width: 767px) {
+  .cpw5-super-desktop-table {
+    display: none;
+  }
+
+  .cpw5-super-mobile-cards {
+    display: grid;
+    gap: 8px;
+  }
+}
+
 /* Desktop: band beside tiles (brief D), insight cards row spans both columns.
    Mobile keeps source order (tiles -> band -> insights, brief E) via grid-template-areas
    rows, so no `order` override is needed below this breakpoint. */

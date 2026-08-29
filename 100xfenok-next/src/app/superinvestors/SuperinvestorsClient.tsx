@@ -61,6 +61,56 @@ const SUPERINVESTOR_TABS: Array<TabItem<SuperInvestorsTab>> = [
   SUPERINVESTOR_TAB_ITEMS.gurus,
   SUPERINVESTOR_TAB_ITEMS.insights,
 ];
+const SUPERINVESTOR_TAB_IDS = new Set<SuperInvestorsTab>(Object.keys(SUPERINVESTOR_TAB_ITEMS) as SuperInvestorsTab[]);
+
+type SuperinvestorUrlState = {
+  tab: SuperInvestorsTab;
+  ticker: string;
+  guru: string | null;
+};
+
+function readSuperinvestorUrlState(): SuperinvestorUrlState {
+  if (typeof window === "undefined") {
+    return { tab: "consensus", ticker: "", guru: null };
+  }
+  const params = new URLSearchParams(window.location.search);
+  const rawTab = params.get("tab") as SuperInvestorsTab | null;
+  const ticker = normalizeForEntityKey(params.get("ticker") ?? params.get("symbol") ?? "");
+  const guru = params.get("guru")?.trim() || null;
+  const tab = rawTab && SUPERINVESTOR_TAB_IDS.has(rawTab)
+    ? rawTab
+    : ticker
+      ? "by-ticker"
+      : guru
+        ? "gurus"
+        : "consensus";
+  return { tab, ticker, guru };
+}
+
+function syncSuperinvestorUrl({ tab, ticker, guru }: SuperinvestorUrlState) {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  if (tab === "consensus") params.delete("tab");
+  else params.set("tab", tab);
+
+  const canonicalTicker = normalizeForEntityKey(ticker);
+  if (tab === "by-ticker" && canonicalTicker) {
+    params.set("ticker", canonicalTicker);
+    params.delete("symbol");
+  } else {
+    params.delete("ticker");
+    params.delete("symbol");
+  }
+
+  const canonicalGuru = guru?.trim() ?? "";
+  if (tab === "gurus" && canonicalGuru) params.set("guru", canonicalGuru);
+  else params.delete("guru");
+
+  const queryString = params.toString();
+  const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`;
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextUrl !== currentUrl) window.history.replaceState(window.history.state, "", nextUrl);
+}
 
 const ChartLoading = () => (
   <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-3)]">
@@ -303,6 +353,50 @@ function SkeletonCards({ count = 6 }: { count?: number }) {
   );
 }
 
+function LatestHoldingsMobileCards({ rows }: { rows: InvestorHolding[] }) {
+  return (
+    <div
+      className="cpw5-super-mobile-cards"
+      role="list"
+      aria-label="최신 보유 종목 모바일 요약"
+    >
+      {rows.map((h) => (
+        <article
+          key={`${h.ticker}-${h.cusip}-mobile`}
+          data-superinvestor-guru-holding-card
+          data-superinvestor-guru-holding-card-ticker={h.ticker ?? ""}
+          data-superinvestor-guru-holding-row
+          data-superinvestor-guru-holding-ticker={h.ticker ?? ""}
+          role="listitem"
+          className="cpw5-super-mobile-card"
+        >
+          <div className="flex min-w-0 items-start justify-between gap-2">
+            {h.ticker ? <TickerChip ticker={h.ticker} variant="pill" className="min-h-11 shrink-0" /> : null}
+            <div className="min-w-0 text-right">
+              <p className="truncate text-sm font-black text-slate-900">{h.name}</p>
+              {h.sector ? <p className="truncate text-[10px] font-semibold text-[var(--c-ink-3)]">{h.sector}</p> : null}
+            </div>
+          </div>
+          <dl className="cpw5-super-mobile-card__metrics mt-3">
+            <div className="cpw5-super-mobile-card__field">
+              <dt>비중</dt>
+              <dd className="orbitron tabular-nums">{formatPercent(h.weight, { digits: 2 })}</dd>
+            </div>
+            <div className="cpw5-super-mobile-card__field">
+              <dt>주식수</dt>
+              <dd className="orbitron tabular-nums">{formatCompactNumber(h.shares)}</dd>
+            </div>
+            <div className="cpw5-super-mobile-card__field cpw5-super-mobile-card__field--wide">
+              <dt>시가총액</dt>
+              <dd className="orbitron tabular-nums">{formatCurrencyCompact(h.market_value, "USD")}</dd>
+            </div>
+          </dl>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
   const rows = useMemo(() => {
     // Filings carry one row per share class / CUSIP — aggregate by ticker.
@@ -328,55 +422,57 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
   }
 
   return (
-    <div
-      data-superinvestor-guru-top-holdings
-      className="scroll-hint-x -mx-1 px-1"
-      role="region"
-      tabIndex={0}
-      aria-label="최신 보유 종목 표 가로 스크롤"
-    >
-      <table className="w-full min-w-[480px] text-xs">
-        <thead>
-          <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
-            <th className="px-2 py-2 text-left">티커</th>
-            <th className="px-2 py-2 text-left">종목</th>
-            <th className="px-2 py-2 text-right">비중</th>
-            <th className="px-2 py-2 text-right">주식수</th>
-            <th className="px-2 py-2 text-right">시가총액</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((h) => (
-            <tr
-              key={`${h.ticker}-${h.cusip}`}
-              data-superinvestor-guru-holding-row
-              data-superinvestor-guru-holding-ticker={h.ticker ?? ""}
-              className="border-b border-slate-100 last:border-b-0"
-            >
-              <td className="px-2 py-2">
-                {h.ticker ? (
-                  <TickerChip ticker={h.ticker} variant="pill" className="min-h-11" />
-                ) : (
-                  <span className="text-[var(--c-ink-3)]">—</span>
-                )}
-              </td>
-              <td className="px-2 py-2">
-                <span className="block max-w-[200px] truncate font-semibold text-slate-700">{h.name}</span>
-                {h.sector ? <span className="text-[10px] text-[var(--c-ink-3)]">{h.sector}</span> : null}
-              </td>
-              <td className="px-2 py-2 text-right">
-                <span className="orbitron tabular-nums font-bold text-slate-900">{formatPercent(h.weight, { digits: 2 })}</span>
-              </td>
-              <td className="px-2 py-2 text-right">
-                <span className="orbitron tabular-nums text-slate-700">{formatCompactNumber(h.shares)}</span>
-              </td>
-              <td className="px-2 py-2 text-right">
-                <span className="orbitron tabular-nums text-slate-700">{formatCurrencyCompact(h.market_value, "USD")}</span>
-              </td>
+    <div data-superinvestor-guru-top-holdings className="space-y-2">
+      <LatestHoldingsMobileCards rows={rows} />
+      <div
+        className="cpw5-super-desktop-table scroll-hint-x -mx-1 px-1"
+        role="region"
+        tabIndex={0}
+        aria-label="최신 보유 종목 표 가로 스크롤"
+      >
+        <table className="w-full min-w-[480px] text-xs">
+          <thead>
+            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+              <th className="px-2 py-2 text-left">티커</th>
+              <th className="px-2 py-2 text-left">종목</th>
+              <th className="px-2 py-2 text-right">비중</th>
+              <th className="px-2 py-2 text-right">주식수</th>
+              <th className="px-2 py-2 text-right">시가총액</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((h) => (
+              <tr
+                key={`${h.ticker}-${h.cusip}`}
+                data-superinvestor-guru-desktop-holding-row
+                data-superinvestor-guru-desktop-holding-ticker={h.ticker ?? ""}
+                className="border-b border-slate-100 last:border-b-0"
+              >
+                <td className="px-2 py-2">
+                  {h.ticker ? (
+                    <TickerChip ticker={h.ticker} variant="pill" className="min-h-11" />
+                  ) : (
+                    <span className="text-[var(--c-ink-3)]">—</span>
+                  )}
+                </td>
+                <td className="px-2 py-2">
+                  <span className="block max-w-[200px] truncate font-semibold text-slate-700">{h.name}</span>
+                  {h.sector ? <span className="text-[10px] text-[var(--c-ink-3)]">{h.sector}</span> : null}
+                </td>
+                <td className="px-2 py-2 text-right">
+                  <span className="orbitron tabular-nums font-bold text-slate-900">{formatPercent(h.weight, { digits: 2 })}</span>
+                </td>
+                <td className="px-2 py-2 text-right">
+                  <span className="orbitron tabular-nums text-slate-700">{formatCompactNumber(h.shares)}</span>
+                </td>
+                <td className="px-2 py-2 text-right">
+                  <span className="orbitron tabular-nums text-slate-700">{formatCurrencyCompact(h.market_value, "USD")}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -432,6 +528,8 @@ function GuruDetailPanel({
       data-superinvestor-guru-quarter={latestQuarter}
       data-superinvestor-guru-report-date={reportDate}
       data-superinvestor-guru-filing-date={filingDate}
+      tabIndex={-1}
+      aria-label={`${summary.name} 포트폴리오 상세`}
       className="mt-3 rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4"
     >
       <div data-superinvestor-guru-profile-hero className="mb-3 grid gap-2 sm:grid-cols-3">
@@ -654,6 +752,96 @@ function KpiCard({
 
 type AmountColor = "emerald" | "rose";
 
+function TradeRankingMobileCard({
+  row,
+  totalAmount,
+  amountColor,
+  side,
+  actionLabel,
+}: {
+  row: TradesRankingRow;
+  totalAmount: number;
+  amountColor: AmountColor;
+  side: "bought" | "sold";
+  actionLabel: (r: TradesRankingRow) => string | undefined;
+}) {
+  const canonicalSector = normalizeSuperSector(row.sector_gics ?? row.sector, row.sector);
+  const amountTextClass = amountColor === "emerald" ? "text-emerald-700" : "text-rose-700";
+  const shareScopeLabel = side === "bought" ? "매수 상위권 내 비중" : "매도 상위권 내 비중";
+  return (
+    <article
+      data-superinvestor-trades-card
+      data-superinvestor-trades-card-side={side}
+      data-superinvestor-trades-card-ticker={row.ticker}
+      data-superinvestor-trades-row
+      data-superinvestor-trades-side={side}
+      data-superinvestor-trades-ticker={row.ticker}
+      role="listitem"
+      className="cpw5-super-mobile-card"
+    >
+      <div className="flex min-w-0 items-start gap-2">
+        <span className="orbitron shrink-0 pt-2 text-xs font-bold text-[var(--c-ink-3)]">#{row.rank}</span>
+        <TransitionLink
+          href={ROUTES.stock(row.ticker)}
+          data-superinvestor-trades-card-action
+          data-superinvestor-trades-card-stock-link
+          data-superinvestor-trades-action
+          data-superinvestor-trades-stock-link
+          className="inline-flex min-h-11 min-w-0 flex-1 flex-col justify-center rounded-xl border border-slate-200 bg-white px-3 py-1 transition hover:border-brand-interactive hover:text-brand-interactive"
+        >
+          <span className="truncate text-sm font-black text-slate-900">{row.name}</span>
+          <span className="mt-0.5 text-[10px] font-black text-brand-interactive">{row.ticker}</span>
+        </TransitionLink>
+      </div>
+      <dl className="cpw5-super-mobile-card__metrics mt-3">
+        <div className="cpw5-super-mobile-card__field">
+          <dt>섹터</dt>
+          <dd className="flex min-w-0 items-center gap-1">
+            <span
+              className="h-1.5 w-1.5 shrink-0 rounded-full"
+              style={{ backgroundColor: sectorColor(canonicalSector) }}
+            />
+            <span className="truncate">{sectorLabelKo(canonicalSector)}</span>
+          </dd>
+        </div>
+        <div className="cpw5-super-mobile-card__field">
+          <dt>{shareScopeLabel}</dt>
+          <dd className={`orbitron tabular-nums ${amountTextClass}`}>
+            {formatTradeShare(row.amount, totalAmount)}
+          </dd>
+        </div>
+        <div className="cpw5-super-mobile-card__field">
+          <dt>투자자</dt>
+          <dd className="orbitron tabular-nums text-slate-900">
+            {row.investors_count}
+            {actionLabel(row) ? <span className="ml-1 font-sans text-[10px] font-semibold text-[var(--c-ink-3)]">{actionLabel(row)}</span> : null}
+          </dd>
+        </div>
+        <div className="cpw5-super-mobile-card__field">
+          <dt>{amountColor === "emerald" ? "TOP 매수자" : "TOP 매도자"}</dt>
+          <dd className="min-w-0">
+            {row.top_investor?.id ? (
+              <TransitionLink
+                href={ROUTES.superinvestorsGuru(row.top_investor.id)}
+                data-superinvestor-trades-card-action
+                data-superinvestor-trades-card-investor-link
+                data-superinvestor-trades-action
+                data-superinvestor-trades-investor-link
+                className="inline-flex min-h-11 max-w-full items-center rounded-xl border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                title={row.top_investor.name}
+              >
+                <span className="truncate">{row.top_investor.name}</span>
+              </TransitionLink>
+            ) : (
+              <span className="font-bold text-slate-700">—</span>
+            )}
+          </dd>
+        </div>
+      </dl>
+    </article>
+  );
+}
+
 function TradeRankingPanel({
   title,
   rows,
@@ -695,12 +883,28 @@ function TradeRankingPanel({
     >
       <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
       <div
+        className="cpw5-super-mobile-cards mt-3"
+        role="list"
+        aria-label={`${title} 모바일 요약`}
+      >
+        {visibleRows.map((row) => (
+          <TradeRankingMobileCard
+            key={`${row.ticker}-${row.rank}-mobile`}
+            row={row}
+            totalAmount={totalAmount}
+            amountColor={amountColor}
+            side={side}
+            actionLabel={actionLabel}
+          />
+        ))}
+      </div>
+      <div
         data-superinvestor-trades-region
         data-superinvestor-trades-side={side}
-        className="cpw5-super-trades-region scroll-hint-x mt-3 -mx-1 px-1"
+        className="cpw5-super-desktop-table cpw5-super-trades-region scroll-hint-x mt-3 -mx-1 px-1"
         role="region"
         tabIndex={0}
-        aria-label={`${title} 표`}
+        aria-label={`${title} 표 가로 스크롤`}
       >
         <table className="cpw5-super-trades-table w-full min-w-0 table-fixed text-xs">
           <colgroup>
@@ -727,9 +931,9 @@ function TradeRankingPanel({
               return (
                 <tr
                   key={`${r.ticker}-${r.rank}`}
-                  data-superinvestor-trades-row
-                  data-superinvestor-trades-side={side}
-                  data-superinvestor-trades-ticker={r.ticker}
+                  data-superinvestor-trades-desktop-row
+                  data-superinvestor-trades-desktop-side={side}
+                  data-superinvestor-trades-desktop-ticker={r.ticker}
                   className="border-b border-slate-100 last:border-b-0"
                 >
                   <td className="min-w-0 px-1 py-2 sm:px-2">
@@ -738,8 +942,8 @@ function TradeRankingPanel({
                   <td className="min-w-0 px-1 py-2 sm:px-2">
                     <TransitionLink
                       href={ROUTES.stock(r.ticker)}
-                      data-superinvestor-trades-action
-                      data-superinvestor-trades-stock-link
+                      data-superinvestor-trades-desktop-action
+                      data-superinvestor-trades-desktop-stock-link
                       className="inline-flex min-h-11 w-full min-w-0 max-w-full flex-col justify-center rounded-xl border border-slate-200 bg-white px-2 py-1 transition hover:border-brand-interactive hover:text-brand-interactive"
                     >
                       <span className="block max-w-full truncate font-bold text-slate-900">{r.name}</span>
@@ -770,8 +974,8 @@ function TradeRankingPanel({
                     {r.top_investor?.id ? (
                       <TransitionLink
                         href={ROUTES.superinvestorsGuru(r.top_investor.id)}
-                        data-superinvestor-trades-action
-                        data-superinvestor-trades-investor-link
+                        data-superinvestor-trades-desktop-action
+                        data-superinvestor-trades-desktop-investor-link
                         className="inline-flex min-h-11 w-full min-w-0 max-w-full items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
                         title={r.top_investor.name}
                       >
@@ -842,6 +1046,25 @@ export default function SuperinvestorsClient({
     setSearch(initialSearch);
     setExpandedGuru(initialGuru);
   }, [initialTab, initialSearch, initialGuru]);
+
+  // Keep shareable context canonical without adding a history entry for every
+  // tab click or keystroke. The same-page URL is the source of truth on reload
+  // and when a browser navigation returns to this route.
+  useEffect(() => {
+    syncSuperinvestorUrl({ tab, ticker: search, guru: expandedGuru });
+  }, [expandedGuru, search, tab]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handlePopState = () => {
+      const next = readSuperinvestorUrlState();
+      setTab(next.tab);
+      setSearch(next.ticker);
+      setExpandedGuru(next.guru);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   // Open the total-portfolio treemap by default on desktop only (mobile stays collapsed).
   useEffect(() => {
@@ -1039,6 +1262,20 @@ export default function SuperinvestorsClient({
   const highConvictionNewRows = convictionEntries?.high_conviction_new?.slice(0, 3) ?? [];
   const topConvictionHoldRows = convictionEntries?.top_conviction_hold?.slice(0, 3) ?? [];
 
+  function focusSuperinvestorTab(nextTab: SuperInvestorsTab) {
+    if (typeof window === "undefined") return;
+    window.requestAnimationFrame(() => {
+      document.getElementById(`${tabsId}-tab-${nextTab}`)?.focus();
+    });
+  }
+
+  function focusGuruPanel(id: string) {
+    if (typeof window === "undefined") return;
+    window.requestAnimationFrame(() => {
+      document.getElementById(`superinvestor-guru-profile-${id}`)?.focus();
+    });
+  }
+
   return (
     <div
       className="data-shell-page"
@@ -1214,7 +1451,10 @@ export default function SuperinvestorsClient({
             />
             <button
               type="button"
-              onClick={() => setTab("insights")}
+              onClick={() => {
+                setTab("insights");
+                focusSuperinvestorTab("insights");
+              }}
               className="mt-2 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
             >
               인사이트 탭에서 더 보기
@@ -1235,7 +1475,10 @@ export default function SuperinvestorsClient({
             />
             <button
               type="button"
-              onClick={() => setTab("insights")}
+              onClick={() => {
+                setTab("insights");
+                focusSuperinvestorTab("insights");
+              }}
               className="mt-2 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
             >
               인사이트 탭에서 더 보기
@@ -1479,28 +1722,36 @@ export default function SuperinvestorsClient({
       ) : null}
 
       {/* Tabs */}
-      <Tabs
-        idBase={tabsId}
-        items={SUPERINVESTOR_TABS}
-        value={tab}
-        onValueChange={(next) => {
-          setTab(next);
-          setSearch("");
-          setExpandedGuru(null);
-        }}
-        ariaLabel="거장 보유 현황 분류"
-        className="flex flex-wrap items-center gap-2 border-b border-[var(--c-line)] pb-1"
-        getTabClassName={(_, selected) => cx(
-          "relative inline-flex min-h-9 items-center px-3 text-[11px] font-black uppercase tracking-[0.12em] transition",
-          selected ? "text-[var(--c-brand)]" : "text-[var(--c-ink-3)] hover:text-[var(--c-ink)]",
-        )}
-        renderLabel={(item, selected) => (
-          <>
-            {item.label}
-            {selected ? <span className="absolute bottom-[-5px] left-0 right-0 h-[2px] rounded-full bg-[var(--c-brand)]" /> : null}
-          </>
-        )}
-      />
+      <div
+        className="cpw5-super-tabs-scroll scroll-hint-x -mx-1 px-1"
+        role="region"
+        tabIndex={0}
+        aria-label="거장 보유 현황 탭 가로 스크롤"
+      >
+        <Tabs
+          idBase={tabsId}
+          items={SUPERINVESTOR_TABS}
+          value={tab}
+          onValueChange={(next) => {
+            setTab(next);
+            setSearch("");
+            setExpandedGuru(null);
+            focusSuperinvestorTab(next);
+          }}
+          ariaLabel="거장 보유 현황 분류"
+          className="cpw5-super-tabs flex min-w-max flex-nowrap items-center gap-2 border-b border-[var(--c-line)] pb-1"
+          getTabClassName={(_, selected) => cx(
+            "relative inline-flex min-h-11 shrink-0 touch-manipulation items-center px-3 text-[11px] font-black uppercase tracking-[0.12em] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-interactive",
+            selected ? "text-[var(--c-brand)]" : "text-[var(--c-ink-3)] hover:text-[var(--c-ink)]",
+          )}
+          renderLabel={(item, selected) => (
+            <>
+              {item.label}
+              {selected ? <span className="absolute bottom-[-5px] left-0 right-0 h-[2px] rounded-full bg-[var(--c-brand)]" /> : null}
+            </>
+          )}
+        />
+      </div>
 
       {/* Consensus */}
       <TabPanel idBase={tabsId} item={SUPERINVESTOR_TAB_ITEMS.consensus} active={tab === "consensus"} className="space-y-3">
@@ -1577,14 +1828,14 @@ export default function SuperinvestorsClient({
             <button
               type="button"
               onClick={() => setConsensusSortDir((d) => (d === "desc" ? "asc" : "desc"))}
-              className="inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+              className="inline-flex min-h-11 touch-manipulation items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
             >
               보유 투자자 수 {consensusSortDir === "desc" ? "내림차순" : "오름차순"}
             </button>
           </div>
 
           <div className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[var(--sh-sm)] sm:p-3", !dataReady && "opacity-60")}>
-            <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="공통 보유 종목 표 가로 스크롤">
+            <div className="cpw5-super-desktop-table scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="공통 보유 종목 표 가로 스크롤">
               <table className="w-full min-w-[720px] text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
@@ -1668,6 +1919,7 @@ export default function SuperinvestorsClient({
                               onClick={() => {
                                 setSearch(row.ticker);
                                 setTab("by-ticker");
+                                focusSuperinvestorTab("by-ticker");
                               }}
                               className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-7"
                             >
@@ -1680,6 +1932,106 @@ export default function SuperinvestorsClient({
                   )}
                 </tbody>
               </table>
+            </div>
+
+            <div
+              className="cpw5-super-mobile-cards"
+              role="list"
+              aria-label="공통 보유 종목 모바일 요약"
+            >
+              {!dataReady ? (
+                Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="cpw5-super-mobile-card" aria-hidden="true">
+                    <div className="h-5 w-1/3 rounded bg-slate-200" />
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <div className="h-10 rounded bg-slate-100" />
+                      <div className="h-10 rounded bg-slate-100" />
+                    </div>
+                  </div>
+                ))
+              ) : pageRows.length === 0 ? (
+                <EmptyState title="결과가 없습니다" desc="검색어를 바꾸거나 필터를 초기화해 주세요." />
+              ) : (
+                pageRows.map((row, idx) => {
+                  const rank = safePage * PAGE_SIZE + idx + 1;
+                  const holders = uniqueHolders(row.holders_list);
+                  const enhanced = enhancedConsensus?.enhanced_consensus?.[row.ticker];
+                  return (
+                    <article
+                      key={`${row.ticker}-mobile`}
+                      data-superinvestor-consensus-card
+                      data-superinvestor-consensus-card-ticker={row.ticker}
+                      role="listitem"
+                      className="cpw5-super-mobile-card"
+                    >
+                      <div className="flex min-w-0 items-center justify-between gap-2">
+                        <span className="orbitron shrink-0 text-xs font-bold text-[var(--c-ink-3)]">#{rank}</span>
+                        <TickerChip ticker={row.ticker} variant="pill" className="min-h-11" />
+                      </div>
+                      <dl className="cpw5-super-mobile-card__metrics mt-3">
+                        <div className="cpw5-super-mobile-card__field">
+                          <dt>보유자</dt>
+                          <dd className="orbitron tabular-nums text-brand-interactive">{holders.length}명</dd>
+                        </div>
+                        <div className="cpw5-super-mobile-card__field">
+                          <dt>주식 기준</dt>
+                          <dd>
+                            {enhanced ? (
+                              <span className="orbitron tabular-nums text-slate-900">
+                                {classSummary(enhanced)} · {formatPercent(enhanced.equity_score, { digits: 0 })}
+                              </span>
+                            ) : (
+                              <span className="text-slate-300">—</span>
+                            )}
+                          </dd>
+                        </div>
+                        {enhanced ? (
+                          <div className="cpw5-super-mobile-card__field cpw5-super-mobile-card__field--wide">
+                            <dt>확신 점수</dt>
+                            <dd>
+                              <div className="h-1.5 rounded-full bg-slate-100">
+                                <div
+                                  className="h-1.5 rounded-full bg-brand-interactive"
+                                  style={{ width: `${Math.max(0, Math.min(1, enhanced.equity_score)) * 100}%` }}
+                                />
+                              </div>
+                            </dd>
+                          </div>
+                        ) : null}
+                      </dl>
+                      <div className="mt-3">
+                        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">보유자 목록</p>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {holders.slice(0, 8).map((holder) => (
+                            <span
+                              key={holder}
+                              className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-1 text-[10px] font-black uppercase tracking-wide text-slate-700"
+                            >
+                              {holder}
+                            </span>
+                          ))}
+                          {holders.length > 8 ? (
+                            <span className="inline-flex items-center rounded-md bg-slate-50 px-1.5 py-1 text-[10px] font-black text-slate-500">
+                              +{holders.length - 8}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearch(row.ticker);
+                          setTab("by-ticker");
+                          focusSuperinvestorTab("by-ticker");
+                        }}
+                        className="mt-3 inline-flex min-h-11 w-full touch-manipulation items-center justify-center rounded-full border border-slate-200 bg-white px-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
+                      >
+                        보유 보기
+                      </button>
+                    </article>
+                  );
+                })
+              )}
             </div>
 
             {dataReady && pageCount > 1 ? (
@@ -1808,7 +2160,11 @@ export default function SuperinvestorsClient({
                     <div className="mt-4 flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={() => setExpandedGuru(isOpen ? null : id)}
+                        onClick={() => {
+                          const nextGuru = isOpen ? null : id;
+                          setExpandedGuru(nextGuru);
+                          if (nextGuru) focusGuruPanel(nextGuru);
+                        }}
                         aria-pressed={isOpen}
                         className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
                       >
@@ -1926,11 +2282,83 @@ export default function SuperinvestorsClient({
               </div>
               <div
                 data-superinvestor-ticker-holders
-                className="scroll-hint-x -mx-1 px-1"
-                role="region"
-                tabIndex={0}
-                aria-label="종목별 보유자 표 가로 스크롤"
+                className="space-y-3"
               >
+                <div
+                  className="cpw5-super-mobile-cards"
+                  role="list"
+                  aria-label="종목별 보유자 모바일 요약"
+                >
+                  {byTickerHolderRows.map((h) => (
+                    <article
+                      key={`${h.investor}-mobile`}
+                      data-superinvestor-ticker-holder-card
+                      data-superinvestor-ticker-holder-card-investor={h.investor}
+                      data-superinvestor-ticker-holder-row
+                      data-superinvestor-ticker-holder-investor={h.investor}
+                      role="listitem"
+                      className="cpw5-super-mobile-card"
+                    >
+                      <div className="flex min-w-0 items-start justify-between gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">보유자</span>
+                        <TransitionLink
+                          href={ROUTES.superinvestorsGuru(h.investor)}
+                          data-superinvestor-ticker-holder-card-link
+                          data-superinvestor-ticker-holder-link
+                          data-superinvestor-ticker-investor-link
+                          className="inline-flex min-h-11 max-w-[75%] items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+                          title={h.investor}
+                        >
+                          <span className="truncate">{h.investor}</span>
+                        </TransitionLink>
+                      </div>
+                      <dl className="cpw5-super-mobile-card__metrics mt-3">
+                        <div className="cpw5-super-mobile-card__field">
+                          <dt>비중</dt>
+                          <dd className="orbitron tabular-nums">{formatPercent(h.weight, { digits: 2 })}</dd>
+                        </div>
+                        <div className="cpw5-super-mobile-card__field">
+                          <dt>평가액</dt>
+                          <dd className="orbitron tabular-nums">{formatCurrencyCompact(h.market_value, "USD")}</dd>
+                        </div>
+                        <div className="cpw5-super-mobile-card__field">
+                          <dt>주식수</dt>
+                          <dd className="orbitron tabular-nums">{formatCompactNumber(h.shares)}</dd>
+                        </div>
+                        <div className="cpw5-super-mobile-card__field">
+                          <dt>전체 비중</dt>
+                          <dd className="orbitron tabular-nums text-slate-500">
+                            {formatPercent(h.shares / (byTickerEntry.total_shares || 1), { digits: 1 })}
+                          </dd>
+                        </div>
+                        <div className="cpw5-super-mobile-card__field cpw5-super-mobile-card__field--wide">
+                          <dt>보유 구분</dt>
+                          <dd className="flex min-w-0 flex-wrap gap-1">
+                            {(h.classes_held ?? []).slice(0, 2).map((item) => (
+                              <span key={item} className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-slate-600">
+                                {item}
+                              </span>
+                            ))}
+                            {(h.position_types ?? []).map((item) => (
+                              <span key={item} className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-amber-700">
+                                {item}
+                              </span>
+                            ))}
+                            {!(h.classes_held?.length || h.position_types?.length) ? (
+                              <span className="text-[10px] font-bold text-slate-300">—</span>
+                            ) : null}
+                          </dd>
+                        </div>
+                      </dl>
+                    </article>
+                  ))}
+                </div>
+                <div
+                  className="cpw5-super-desktop-table scroll-hint-x -mx-1 px-1"
+                  role="region"
+                  tabIndex={0}
+                  aria-label="종목별 보유자 표 가로 스크롤"
+                >
                 <table className="w-full min-w-[820px] table-fixed text-sm">
                   <colgroup>
                     <col className="w-[190px]" />
@@ -1954,14 +2382,14 @@ export default function SuperinvestorsClient({
                     {byTickerHolderRows.map((h) => (
                       <tr
                         key={h.investor}
-                        data-superinvestor-ticker-holder-row
-                        data-superinvestor-ticker-holder-investor={h.investor}
+                        data-superinvestor-ticker-desktop-holder-row
+                        data-superinvestor-ticker-desktop-holder-investor={h.investor}
                         className="border-b border-slate-100 last:border-b-0"
                       >
                         <td className="px-3 py-3">
                           <TransitionLink
                             href={ROUTES.superinvestorsGuru(h.investor)}
-                            data-superinvestor-ticker-holder-link
+                            data-superinvestor-ticker-desktop-holder-link
                             className="inline-flex min-h-11 max-w-full items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black uppercase tracking-wide text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
                             title={h.investor}
                           >
@@ -2003,6 +2431,7 @@ export default function SuperinvestorsClient({
                     ))}
                   </tbody>
                 </table>
+              </div>
               </div>
               <div className="flex justify-end">
                 <TransitionLink
