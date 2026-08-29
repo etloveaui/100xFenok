@@ -827,11 +827,19 @@ const OPERATIONAL_DISPATCH_RECOVERY_LANES = Object.freeze(new Set([
   "fdic_tier1",
 ]));
 
+// The KRX workflow may walk backward across provider dates inside one natural
+// run. A failed date followed by a healthy prior date restores service in that
+// same run, but it is not an independent strict-grid recovery observation.
+const OPERATIONAL_SAME_RUN_RECOVERY_LANES = Object.freeze(new Set([
+  "krx",
+]));
+
 export function projectRecoveryRecoveredSet(state, laneId) {
   const validated = validateRecoveryState(state, laneId);
   if (validated === null) return [];
   const laneException = BOUND_DISPATCH_RECOVERY_LANES.get(laneId);
   const operationalDispatch = OPERATIONAL_DISPATCH_RECOVERY_LANES.has(laneId);
+  const operationalSameRun = OPERATIONAL_SAME_RUN_RECOVERY_LANES.has(laneId);
   const expectedLkgRoot = laneException?.admin_root ?? laneId;
   return Object.entries(validated.state.items)
     .map(([key, item]) => {
@@ -855,11 +863,12 @@ export function projectRecoveryRecoveredSet(state, laneId) {
         runAttempt: item?.recovery_run_attempt,
         runId: item?.recovery_run_id,
       });
+      const sameRunRecovery = item?.recovery_run_id === item?.recovered_from_run_id;
       if (!item || item.key !== key
         || item.resolution_state !== "fresh_primary" || item.retry !== false
         || typeof item.recovered_from_run_id !== "string" || item.recovered_from_run_id === ""
         || typeof item.recovery_run_id !== "string" || item.recovery_run_id === ""
-        || item.recovery_run_id === item.recovered_from_run_id
+        || (sameRunRecovery && !operationalSameRun)
         || item.recovery_run_attempt !== 1
         || (item.recovery_event_name !== "schedule"
           && !((laneException !== undefined || operationalDispatch) && boundDispatch))
@@ -879,6 +888,7 @@ export function projectRecoveryRecoveredSet(state, laneId) {
         throw new Error(`detection floor ${laneId} recovery provenance ${key} is malformed`);
       }
       if (operationalDispatch && item.recovery_event_name === "workflow_dispatch") return null;
+      if (operationalSameRun && sameRunRecovery) return null;
       return {
         key,
         resolution_state: item.resolution_state,

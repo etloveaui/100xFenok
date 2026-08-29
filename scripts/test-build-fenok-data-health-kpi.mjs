@@ -1445,6 +1445,41 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
     "owner-approved FDIC dispatch recovery restores service but cannot be projected as natural proof",
   );
 
+  const krxSameRunWalkback = structuredClone(fdicRecovered);
+  krxSameRunWalkback.lane_id = "krx";
+  krxSameRunWalkback.items = {
+    bridge: {
+      ...structuredClone(fdicRecovered.items.fdic_tier1),
+      key: "bridge",
+      current: {
+        path: "data/admin/fenok-edge-korea-krx-daily-index.json",
+        payload_sha256: "b".repeat(64),
+        source_as_of: "2026-06-30",
+      },
+      lkg: {
+        path: "data/admin/krx/lkg/bridge.json",
+        payload_sha256: "a".repeat(64),
+        source_as_of: "2026-03-31",
+      },
+      recovered_from_run_id: "5001",
+      recovery_run_id: "5001",
+      recovery_event_name: "schedule",
+      last_recovered_failure: {
+        run_id: "5001",
+        run_attempt: 1,
+        observed_at: "2026-07-15T01:00:00.000Z",
+        reason: "schema_drift",
+      },
+    },
+  };
+  const krxSameRunLane = buildDetectionFloorLanes(report(), { krx: krxSameRunWalkback })
+    .find((item) => item.id === "krx");
+  assert.deepEqual(
+    krxSameRunLane.details.recovery_recovered,
+    [],
+    "KRX intra-run date walkback restores service but cannot be projected as independent natural recovery proof",
+  );
+
   const finraDispatchRecovered = structuredClone(fdicRecovered);
   finraDispatchRecovered.lane_id = "finra_ats_weekly";
   finraDispatchRecovered.items = {
