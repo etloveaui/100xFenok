@@ -10,16 +10,21 @@
 //    (`metadata.version` / `metadata.generated`) already disagree with the
 //    newest observations, so a badge keyed on them would print the wrong
 //    day. This check feeds fake envelope stamps and demands row dates back.
+// 3. A horizon reading carries the arithmetic average from the same accepted
+//    population as its percentile, and a refused window stays null rather than
+//    falling back to all-history.
 
 import fs from "node:fs";
 import path from "node:path";
 
 import {
   BENCHMARK_ORDINAL_MIN_HISTORY,
+  benchmarkHorizonReading,
   percentileRank,
   readBenchmarkOrdinals,
   zScorePopulation,
   type BenchmarkGroupId,
+  type BenchmarkOrdinalHorizon,
 } from "../src/lib/market-valuation/benchmarkOrdinals";
 
 function assert(condition: unknown, message: string): void {
@@ -27,6 +32,11 @@ function assert(condition: unknown, message: string): void {
 }
 
 const near = (a: number, b: number, tol = 1e-9) => Math.abs(a - b) <= tol;
+
+function mean(values: readonly number[]): number {
+  assert(values.length > 0, "mean fixture must have at least one accepted value");
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
 
 // --- metric primitives -------------------------------------------------------
 
@@ -66,6 +76,18 @@ function weeklyDates(count: number, end = "2026-01-30"): string[] {
   return out;
 }
 
+function acceptedRampValues(dates: readonly string[], peStart: number, peStep: number, years: number): number[] {
+  const asOfMs = Date.parse(`${dates[dates.length - 1]}T00:00:00Z`);
+  const windowStartMs = asOfMs - years * 365.25 * 86_400_000;
+  return dates
+    .map((date, i) => ({ date, value: peStart + peStep * i }))
+    .filter(({ date }) => {
+      const rowMs = Date.parse(`${date}T00:00:00Z`);
+      return rowMs > windowStartMs && rowMs <= asOfMs;
+    })
+    .map(({ value }) => value);
+}
+
 // Fake envelope stamps that MUST never reach a badge.
 const FAKE_METADATA = { version: "2020-12-31", generated: "2021-01-01T00:00:00", update_frequency: "weekly" };
 
@@ -100,6 +122,9 @@ assert(usGroup !== null && usGroup!.asOf === longDates[longDates.length - 2], "g
 assert(spx!.pe.percentile === Math.round(((longDates.length - 1) / longDates.length) * 100), "percentile must rank the current PE within the section's own history");
 assert(spx!.pe.zScore !== null && spx!.pe.zScore > 0, "a record-high PE must carry a positive z-score");
 assert(spx!.earningsYield !== null && near(spx!.earningsYield, 1 / spx!.pe.current!), "earnings yield must be 1/PE");
+assert(spx!.pe.average !== null && near(spx!.pe.average, mean(longDates.map((_, i) => 15 + 0.1 * i))), "all-history PE average must be the arithmetic mean of the accepted ramp");
+assert(spx!.pb.average !== null && near(spx!.pb.average, mean(longDates.map((_, i) => 2 + i * 0.01))), "all-history P/B average must be the arithmetic mean of the accepted ramp");
+assert(spx!.roe.average !== null && near(spx!.roe.average, mean(longDates.map((_, i) => 0.15 + i * 0.001))), "all-history ROE average must be the arithmetic mean of the accepted ramp");
 
 // --- sector premium: same-date SPX base or nothing --------------------------------
 
@@ -186,7 +211,28 @@ assert(
 );
 assert(w6.w10.truncated === true, "10y window on a 6y series must be refused (truncated)");
 assert(w6.w10.percentile === null, "a refused window must never print a percentile");
+assert(w6.w10.average === null, "a refused window must never print an average");
 assert(w6.w10.spanYears !== null && w6.w10.spanYears < 10 && w6.w10.spanYears >= 5.9, `refused window must state the actual span (~6y), got ${w6.w10.spanYears}`);
+const sixYFiveYearValues = acceptedRampValues(sixYDates, 15, 0.1, 5);
+assert(w6.w5.points === sixYFiveYearValues.length, "5y window points must equal the exact accepted ramp population");
+assert(w6.w5.average !== null && near(w6.w5.average, mean(sixYFiveYearValues)), "6y fixture 5y average must use the exact accepted 5y window population");
+
+const allHorizon: BenchmarkOrdinalHorizon = "all";
+const allReading = benchmarkHorizonReading(sixYRow!, allHorizon);
+assert(allReading.percentile === sixYRow!.pe.percentile, "all-history selector must use the row PE percentile");
+assert(allReading.average === sixYRow!.pe.average, "all-history selector must use the row PE average");
+assert(allReading.points === sixYRow!.points, "all-history selector must use the row observation points");
+assert(allReading.truncated === false && allReading.spanYears === null, "all-history selector must carry non-window metadata");
+const selectedW5 = benchmarkHorizonReading(sixYRow!, "w5");
+assert(selectedW5.percentile === w6.w5.percentile, "w5 selector must use the exact w5 percentile");
+assert(selectedW5.average === w6.w5.average, "w5 selector must use the exact w5 average");
+assert(selectedW5.points === w6.w5.points, "w5 selector must use the exact w5 points");
+assert(selectedW5.truncated === w6.w5.truncated && selectedW5.spanYears === w6.w5.spanYears, "w5 selector must use the exact w5 window metadata");
+const selectedW10 = benchmarkHorizonReading(sixYRow!, "w10");
+assert(sixYRow!.pe.percentile !== null, "6y fixture all-history percentile must remain available for selector refusal proof");
+assert(selectedW10.percentile === w6.w10.percentile && selectedW10.average === null, "truncated w10 selector must keep percentile and average null");
+assert(selectedW10.points === w6.w10.points, "w10 selector must use the exact w10 points");
+assert(selectedW10.truncated === true && selectedW10.spanYears === w6.w10.spanYears, "truncated w10 selector must preserve refusal metadata");
 
 // A full ~10y weekly series: the 10y window must rank (not truncated).
 const tenYDates = weeklyDates(10 * 52 + 6);
@@ -200,6 +246,9 @@ const w10 = tenYRow!.pe.windows;
 assert(w10.w10.truncated === false, "a full 10y series must NOT be refused");
 assert(w10.w10.percentile !== null, "a full 10y series must rank its 10y window");
 assert(w10.w10.spanYears === 10, "a non-refused window reports its requested length");
+const tenYValues = acceptedRampValues(tenYDates, 15, 0.1, 10);
+assert(w10.w10.points === tenYValues.length, "full 10y window points must equal the exact accepted ramp population");
+assert(w10.w10.average !== null && near(w10.w10.average, mean(tenYValues)), "full 10y average must be the arithmetic mean of the accepted 10y window");
 assert(
   w10.w10.percentile === Math.round(((10 * 52 + 5) / (10 * 52 + 6)) * 100),
   "10y window percentile must count strictly-below values inside the window",
