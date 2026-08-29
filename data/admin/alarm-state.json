@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-29T18:08:31.895Z",
+  "generated_at": "2026-08-29T18:37:25.386Z",
   "status": "open",
-  "open_incident_count": 7,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fetch-damodaran-shadow.yml",
@@ -70,19 +70,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     },
     {
       "workflow": "slickcharts-monthly.yml",
@@ -499,17 +486,16 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33267363914",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33267363914",
-    "observed_at": "2026-08-29T18:08:31.895Z",
-    "event": "workflow_run",
+    "run_id": "33268679468",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33268679468",
+    "observed_at": "2026-08-29T18:37:25.386Z",
+    "event": "schedule",
     "workflows": [
       "fetch-damodaran-shadow.yml",
       "fetch-edgar-filings.yml",
       "fetch-fred-yardeni.yml",
       "fetch-oecd-cli.yml",
       "fetch-yf-finance.yml",
-      "global-writer-queue-observer.yml",
       "slickcharts-monthly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
