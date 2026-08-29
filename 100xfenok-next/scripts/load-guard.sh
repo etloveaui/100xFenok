@@ -107,9 +107,9 @@ dispatch_remote_suite() {
 
   if [ "$source_ref" = "main" ]; then
     remote_result="$("$GIT_BIN" -C "$repo_root" ls-remote --exit-code origin refs/heads/main 2>/dev/null)" \
-      || blocked "origin_main_unavailable" "use_a_clean_current_origin_checkout"
+      || blocked "origin_ref_unavailable" "push_the_selected_branch_and_retry"
   elif ! remote_result="$("$GIT_BIN" -C "$repo_root" ls-remote --exit-code origin "$remote_ref" 2>/dev/null)"; then
-    blocked "origin_main_unavailable" "use_a_clean_current_origin_checkout"
+    blocked "origin_ref_unavailable" "push_the_selected_branch_and_retry"
   fi
   remote_line_count="$(printf '%s\n' "$remote_result" | awk 'NF { count += 1 } END { print count + 0 }')"
   remote_head="$(printf '%s\n' "$remote_result" | awk 'NF { print $1; exit }')"
@@ -117,10 +117,10 @@ dispatch_remote_suite() {
   if [ "$remote_line_count" -ne 1 ] \
     || [[ ! "$remote_head" =~ ^[0-9a-f]{40}$ ]] \
     || [ "$remote_name" != "$remote_ref" ]; then
-    blocked "origin_main_revision_invalid" "use_a_clean_current_origin_checkout"
+    blocked "origin_ref_revision_invalid" "push_the_selected_branch_and_retry"
   fi
   if [ "$head" != "$remote_head" ]; then
-    blocked "HEAD_stale_against_origin_main" "use_a_clean_current_origin_checkout"
+    blocked "HEAD_stale_against_origin_ref" "push_the_selected_branch_and_retry"
   fi
   if ! command -v "$GH_BIN" >/dev/null 2>&1; then
     blocked "gh_unavailable" "install_or_authenticate_gh"

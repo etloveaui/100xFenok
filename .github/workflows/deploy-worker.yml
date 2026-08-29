@@ -109,7 +109,6 @@ jobs:
     concurrency:
       group: workers-100xfenok-main-deploy
       cancel-in-progress: false
-      queue: single
     env:
       QA_ADMIN_SMOKE_AVAILABLE: ${{ (secrets.QA_ADMIN_PASSWORD != '' || secrets.QA_ADMIN_SESSION_COOKIE != '') && 'true' || 'false' }}
     steps:
