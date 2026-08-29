@@ -25,6 +25,10 @@ blocked() {
 }
 
 remote_suite_for_command() {
+  if [ "$#" -eq 2 ] && [ "$1" = "--npm-script" ]; then
+    printf '%s\n' "npm-script"
+    return 0
+  fi
   case "$*" in
     "npm run build:runtime:steps") printf '%s\n' "runtime-build" ;;
     "npm run build:static:steps") printf '%s\n' "static-build" ;;
@@ -58,8 +62,18 @@ allow_hosted_nested_execution() {
 }
 
 dispatch_remote_suite() {
-  local suite repo_root head remote_result remote_head worktree_status
+  local suite npm_script source_ref remote_ref repo_root head remote_result remote_head remote_name remote_line_count worktree_status
   suite="$(remote_suite_for_command "$@")" || blocked "remote_suite_not_allowlisted" "use_an_allowlisted_heavy_npm_script"
+
+  npm_script=""
+  if [ "$suite" = "npm-script" ]; then
+    npm_script="$2"
+    if [[ ! "$npm_script" =~ ^(build|test|qa|check|verify|lint|typecheck)(:[A-Za-z0-9._-]+)*$ ]] \
+      && [ "$npm_script" != "reconcile:verify" ] \
+      && [ "$npm_script" != "sync-static" ]; then
+      blocked "remote_npm_script_invalid" "use_one_build_test_qa_check_verify_lint_typecheck_or_registered_projection_script"
+    fi
+  fi
 
   if allow_hosted_nested_execution; then
     if ! command -v "$1" >/dev/null 2>&1; then
@@ -81,12 +95,28 @@ dispatch_remote_suite() {
     blocked "HEAD_revision_invalid" "use_a_clean_current_origin_checkout"
   fi
 
-  if ! remote_result="$("$GIT_BIN" -C "$repo_root" ls-remote --exit-code origin refs/heads/main 2>/dev/null)"; then
+  source_ref="${FENOK_REMOTE_HEAVY_REF:-main}"
+  if [[ ! "$source_ref" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*[A-Za-z0-9._-]$ ]] \
+    || [[ "$source_ref" == *..* ]] \
+    || [[ "$source_ref" == *//* ]] \
+    || [[ "$source_ref" == */.* ]] \
+    || [[ "$source_ref" == *.lock ]]; then
+    blocked "remote_ref_invalid" "use_a_simple_pushed_branch_name"
+  fi
+  remote_ref="refs/heads/$source_ref"
+
+  if [ "$source_ref" = "main" ]; then
+    remote_result="$("$GIT_BIN" -C "$repo_root" ls-remote --exit-code origin refs/heads/main 2>/dev/null)" \
+      || blocked "origin_main_unavailable" "use_a_clean_current_origin_checkout"
+  elif ! remote_result="$("$GIT_BIN" -C "$repo_root" ls-remote --exit-code origin "$remote_ref" 2>/dev/null)"; then
     blocked "origin_main_unavailable" "use_a_clean_current_origin_checkout"
   fi
-  if [[ "$remote_result" =~ ^([0-9a-f]{40})[[:space:]]+refs/heads/main$ ]]; then
-    remote_head="${BASH_REMATCH[1]}"
-  else
+  remote_line_count="$(printf '%s\n' "$remote_result" | awk 'NF { count += 1 } END { print count + 0 }')"
+  remote_head="$(printf '%s\n' "$remote_result" | awk 'NF { print $1; exit }')"
+  remote_name="$(printf '%s\n' "$remote_result" | awk 'NF { print $2; exit }')"
+  if [ "$remote_line_count" -ne 1 ] \
+    || [[ ! "$remote_head" =~ ^[0-9a-f]{40}$ ]] \
+    || [ "$remote_name" != "$remote_ref" ]; then
     blocked "origin_main_revision_invalid" "use_a_clean_current_origin_checkout"
   fi
   if [ "$head" != "$remote_head" ]; then
@@ -95,7 +125,14 @@ dispatch_remote_suite() {
   if ! command -v "$GH_BIN" >/dev/null 2>&1; then
     blocked "gh_unavailable" "install_or_authenticate_gh"
   fi
-  if ! "$GH_BIN" workflow run "$REMOTE_WORKFLOW" --ref main -f "suite=$suite" -f "revision=$head" >/dev/null; then
+  if [ "$suite" = "npm-script" ]; then
+    if ! "$GH_BIN" workflow run "$REMOTE_WORKFLOW" --ref "$source_ref" -f "suite=$suite" -f "script=$npm_script" -f "revision=$head" >/dev/null; then
+      blocked "workflow_dispatch_failed" "retry_gh_workflow_dispatch"
+    fi
+    printf '{"status":"queued","suite":"%s","script":"%s","revision":"%s"}\n' "$suite" "$npm_script" "$head"
+    return 0
+  fi
+  if ! "$GH_BIN" workflow run "$REMOTE_WORKFLOW" --ref "$source_ref" -f "suite=$suite" -f "revision=$head" >/dev/null; then
     blocked "workflow_dispatch_failed" "retry_gh_workflow_dispatch"
   fi
   printf '{"status":"queued","suite":"%s","revision":"%s"}\n' "$suite" "$head"

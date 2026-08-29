@@ -69,6 +69,7 @@
     "check:admin-redirects": "node scripts/generate-admin-redirects.mjs --check",
     "gen:admin-redirects": "node scripts/generate-admin-redirects.mjs --write",
     "build": "npm run build:runtime",
+    "remote:verify": "bash scripts/load-guard.sh --npm-script",
     "build:runtime": "bash scripts/load-guard.sh npm run build:runtime:steps",
     "build:runtime:steps": "bash scripts/load-guard.sh --assert-nested && npm run qa:data-supply-policy-registry && npm run build:version && npm run sync-static && npm run qa:fenok-edge-build-target && npm run qa:routes && npm run qa:tokens && NEXT_BUILD_TARGET=${NEXT_BUILD_TARGET:-runtime} next build",
     "build:static": "bash scripts/load-guard.sh npm run build:static:steps",

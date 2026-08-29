@@ -13,8 +13,13 @@ on:
           - cloudflare-build
           - contracts
           - sec13f-contract
+          - npm-script
+      script:
+        description: Exact package.json script for one hosted-only verification
+        required: false
+        type: string
       revision:
-        description: Exact origin/main commit to verify
+        description: Exact pushed commit to verify
         required: true
         type: string
 
@@ -22,8 +27,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: remote-heavy-verification-${{ github.ref }}-${{ inputs.suite }}
+  group: remote-heavy-verification
   cancel-in-progress: false
+  queue: max
 
 jobs:
   verify:
@@ -56,6 +62,28 @@ jobs:
         with:
           node-version: 22
 
+      - name: Validate requested package script
+        if: ${{ inputs.suite == 'npm-script' }}
+        env:
+          SCRIPT: ${{ inputs.script }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$SCRIPT" =~ ^(build|test|qa|check|verify|lint|typecheck)(:[A-Za-z0-9._-]+)*$ ]] \
+            && [ "$SCRIPT" != "reconcile:verify" ] \
+            && [ "$SCRIPT" != "sync-static" ]; then
+            echo "script must be one exact hosted verification package script" >&2
+            exit 64
+          fi
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const script = process.env.SCRIPT;
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (!pkg.scripts || typeof pkg.scripts[script] !== 'string') {
+            process.stderr.write(`unknown package script: ${script}\n`);
+            process.exit(64);
+          }
+          NODE
+
       - name: Install dependencies
         run: npm ci
 
@@ -63,6 +91,7 @@ jobs:
         id: verification
         env:
           SUITE: ${{ inputs.suite }}
+          SCRIPT: ${{ inputs.script }}
           FENOK_REMOTE_HEAVY_NESTED_EXECUTION: "1"
           FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ inputs.revision }}
         run: |
@@ -73,6 +102,7 @@ jobs:
             cloudflare-build) npm run cf:build;;
             contracts) npm run verify:contracts;;
             sec13f-contract) npm run qa:sec13f-contract;;
+            npm-script) npm run "$SCRIPT";;
             *) echo "unsupported suite" >&2; exit 64;;
           esac
 
@@ -86,6 +116,7 @@ jobs:
           RUN_ATTEMPT: ${{ github.run_attempt }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           SUITE: ${{ inputs.suite }}
+          SCRIPT: ${{ inputs.script }}
           REVISION: ${{ inputs.revision }}
           WORKFLOW: ${{ github.workflow }}
           WORKFLOW_REF: ${{ github.workflow_ref }}
@@ -104,6 +135,7 @@ jobs:
             printf 'run_attempt=%s\n' "$RUN_ATTEMPT"
             printf 'run_url=%s\n' "$RUN_URL"
             printf 'suite=%s\n' "$SUITE"
+            printf 'script=%s\n' "$SCRIPT"
             printf 'revision=%s\n' "$REVISION"
             printf 'workflow=%s\n' "$WORKFLOW"
             printf 'workflow_ref=%s\n' "$WORKFLOW_REF"
