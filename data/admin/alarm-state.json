@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-29T14:12:06.408Z",
+  "generated_at": "2026-08-29T14:33:53.698Z",
   "status": "open",
-  "open_incident_count": 8,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "data-plane-serving-probe.yml",
@@ -72,19 +72,6 @@
       "cadence_status": "not_due"
     },
     {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
       "workflow": "slickcharts-monthly.yml",
       "label": "SlickCharts Monthly",
       "streak": 1,
@@ -96,19 +83,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -510,19 +484,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33256872456",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33256872456",
-    "observed_at": "2026-08-29T14:12:06.408Z",
-    "event": "workflow_run",
+    "run_id": "33257847271",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33257847271",
+    "observed_at": "2026-08-29T14:33:53.698Z",
+    "event": "schedule",
     "workflows": [
       "data-plane-serving-probe.yml",
       "deploy-worker.yml",
       "fetch-edgar-filings.yml",
       "fetch-oecd-cli.yml",
       "fetch-yf-finance.yml",
-      "global-writer-queue-observer.yml",
-      "slickcharts-monthly.yml",
-      "worker-request-budget-alarm.yml"
+      "slickcharts-monthly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
