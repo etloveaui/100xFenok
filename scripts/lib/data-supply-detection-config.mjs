@@ -419,12 +419,12 @@ const config = {
     lane({
       id: "fdic_tier1",
       label: "FDIC Tier 1 capital",
-      members: [registryMember("fdic_tier1", ["0 6 1-7 * 1"], [
+      members: [registryMember("fdic_tier1", ["0 6 * * 1", "0 6 * * 4"], [
         artifact("fdic_tier1", "data/macro/fdic-tier1.json", {
           sourceSelector: maxArrayFieldSource("/data", "date", "date"),
           assertions: [exactAssertion("source_fdic", "/source", "FDIC"), typeAssertion("data_array", "/data", "array"), minRowsAssertion("data_non_empty", "/data")],
         }),
-      ], "us_federal_business")],
+      ])],
       endpointContract: endpoint("fdic_bankfind", "bank_data_array", "/data", "array", "http"),
       freshnessPolicy: freshness({
         fold: "latest",

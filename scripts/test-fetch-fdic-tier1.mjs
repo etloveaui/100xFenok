@@ -18,7 +18,7 @@ import {
   runFdicTier1,
 } from "./fetch-fdic-tier1.mjs";
 import { checkWorkflowCommitShardsAgainstRegistry } from "./check-lane-registry-commit-shards.mjs";
-import { isFirstMonday, isFdicScheduleOccurrence, scheduleEligible } from "./guard-fdic-first-monday.mjs";
+import { projectRecoveryRecoveredSet } from "./build-fenok-data-health-kpi.mjs";
 
 const OBSERVED_AT = "2026-07-14T12:34:56.000Z";
 const ATTEMPT_ID = "fdic-tier1-20260714t123456000z-test";
@@ -26,19 +26,16 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const QUARTERS = ["20251231", "20260331"];
 
 {
-  assert.equal(isFirstMonday("2026-08-03T06:00:00Z"), true, "first Monday is eligible");
-  assert.equal(isFirstMonday("2026-08-10T06:00:00Z"), false, "second Monday is not eligible");
-  assert.equal(isFirstMonday("2026-08-04T06:00:00Z"), false, "first Tuesday is not eligible");
-  assert.equal(isFirstMonday("2026-09-07T06:00:00Z"), true, "Labor Day is still the first Monday date");
-  assert.equal(isFdicScheduleOccurrence("2026-08-03T06:00:00Z"), true, "non-holiday first Monday is eligible");
-  assert.equal(isFdicScheduleOccurrence("2026-09-07T06:00:00Z"), false, "federal holiday is skipped");
-  assert.equal(scheduleEligible({ eventName: "schedule", now: "2026-08-10T06:00:00Z" }), false);
-  assert.equal(scheduleEligible({ eventName: "schedule", now: "2026-09-07T06:00:00Z" }), false, "holiday schedule is skipped");
-  assert.equal(scheduleEligible({ eventName: "workflow_dispatch", now: "2026-08-10T06:00:00Z" }), true, "manual dispatch stays available");
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fdic.yml"), "utf8");
-  assert.match(workflow, /cron:\s*['"]0 6 1-7 \* 1['"]/);
-  assert.match(workflow, /guard-fdic-first-monday\.mjs/);
-  assert.match(workflow, /steps\.schedule_gate\.outputs\.eligible/);
+  assert.match(workflow, /cron:\s*['"]0 6 \* \* 1['"]/);
+  assert.match(workflow, /cron:\s*['"]0 6 \* \* 4['"]/);
+  assert.doesNotMatch(workflow, /0 6 1-7 \* 1/);
+  assert.doesNotMatch(workflow, /guard-fdic-first-monday\.mjs|steps\.schedule_gate\.outputs\.eligible/);
+  assert.match(workflow, /owner_approved_recovery:/);
+  assert.match(workflow, /INPUT_OWNER_APPROVED_RECOVERY:/);
+  const lane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === "fdic_tier1");
+  assert.deepEqual(lane.producer_members[0].schedule, ["0 6 * * 1", "0 6 * * 4"]);
+  assert.equal(lane.producer_members[0].cadence_calendar, "utc");
 }
 
 function expectedAssertionIds(laneId) {
@@ -649,7 +646,8 @@ function assertValidShard(shard) {
   );
   assert.match(workflow, /persistence_migration_only:/);
   assert.match(workflow, /INPUT_PERSISTENCE_MIGRATION_ONLY:/);
-  assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) && \(github\.event_name != 'schedule' \|\| steps\.schedule_gate\.outputs\.eligible == 'true'\) \}\}/);
+  assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
+  assert.match(workflow, /steps\.fetch_fdic\.outputs\.updated == 'true'/);
 }
 
 // Lane Registry ⇄ commit-shard completeness gate (#366 step 4).
@@ -670,6 +668,165 @@ function assertValidShard(shard) {
     workflowText,
     /if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]*?scripts\/stage-lane-manifest\.sh[\s\S]*?--stage success_if_exists/,
     "canonical FDIC output must be manifest-staged only on fetch success",
+  );
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-current-skip-"));
+  const paths = makePaths(root);
+  const currentQuarters = ["20260331", "20260630"];
+  await runFdicTier1({
+    ...paths,
+    quarters: currentQuarters,
+    request: async (_url, quarter) => response(200, fdicRows(quarter === "20260630" ? 16 : 14)),
+    eventName: "schedule",
+    observedAt: "2026-08-31T06:00:00.000Z",
+    attemptId: "fdic-tier1-current-baseline",
+    runId: "40000000001",
+    sleep: async () => {},
+  });
+  const before = fs.readFileSync(paths.canonicalPath);
+  let requests = 0;
+  const skipped = await runFdicTier1({
+    ...paths,
+    quarters: currentQuarters,
+    request: async (_url, quarter) => {
+      requests += 1;
+      return response(200, fdicRows(quarter === "20260630" ? 16 : 14));
+    },
+    eventName: "schedule",
+    observedAt: "2026-09-03T06:00:00.000Z",
+    attemptId: "fdic-tier1-current-backup",
+    runId: "40000000002",
+    sleep: async () => {},
+  });
+  assert.equal(skipped.ok, true);
+  assert.equal(skipped.reason, "already_current");
+  assert.equal(skipped.updated, false);
+  assert.equal(requests, 1, "a current backup run probes only the latest quarter");
+  assert.deepEqual(fs.readFileSync(paths.canonicalPath), before, "a current backup run must not rewrite canonical data");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-release-wait-"));
+  const paths = makePaths(root);
+  await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    request: async (_url, quarter) => response(200, fdicRows(quarter === QUARTERS[0] ? 12 : 14)),
+    eventName: "schedule",
+    observedAt: "2026-07-02T06:00:00.000Z",
+    attemptId: "fdic-tier1-release-wait-baseline",
+    runId: "40000000006",
+    sleep: async () => {},
+  });
+  const before = fs.readFileSync(paths.canonicalPath);
+  const calls = [];
+  const waiting = await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    probeQuarter: "20260630",
+    request: async (_url, quarter) => {
+      calls.push(quarter);
+      return response(200, { data: [] });
+    },
+    eventName: "schedule",
+    observedAt: "2026-07-06T06:00:00.000Z",
+    attemptId: "fdic-tier1-release-wait-probe",
+    runId: "40000000007",
+    sleep: async () => {},
+  });
+  assert.equal(waiting.ok, true);
+  assert.equal(waiting.reason, "provider_wait");
+  assert.equal(waiting.updated, false);
+  assert.deepEqual(waiting.probe, {
+    quarter: "20260630",
+    status: "not_yet_published",
+    reason: "empty_payload",
+  });
+  assert.deepEqual(calls, ["20260630"], "a backup slot checks only the new closed quarter while the provider has not published it");
+  assert.deepEqual(fs.readFileSync(paths.canonicalPath), before, "provider wait must not rewrite current canonical data");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-release-ready-"));
+  const paths = makePaths(root);
+  await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    request: async (_url, quarter) => response(200, fdicRows(quarter === QUARTERS[0] ? 12 : 14)),
+    eventName: "schedule",
+    observedAt: "2026-07-02T06:00:00.000Z",
+    attemptId: "fdic-tier1-release-ready-baseline",
+    runId: "40000000008",
+    sleep: async () => {},
+  });
+  const calls = [];
+  const advanced = await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    probeQuarter: "20260630",
+    request: async (_url, quarter) => {
+      calls.push(quarter);
+      return response(200, fdicRows(quarter === "20260630" ? 16 : 14));
+    },
+    eventName: "schedule",
+    observedAt: "2026-07-09T06:00:00.000Z",
+    attemptId: "fdic-tier1-release-ready-probe",
+    runId: "40000000009",
+    sleep: async () => {},
+  });
+  assert.equal(advanced.ok, true);
+  assert.equal(advanced.updated, true);
+  assert.equal(calls.filter((quarter) => quarter === "20260630").length, 1, "the release probe is reused during promotion");
+  assert.equal(readJson(paths.canonicalPath).data.at(-1).date, "2026-06-30");
+}
+
+{
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "fetch-fdic-tier1-owner-recovery-"));
+  const paths = makePaths(root);
+  await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    request: async (_url, quarter) => response(200, fdicRows(quarter === QUARTERS[0] ? 12 : 14)),
+    eventName: "schedule",
+    observedAt: "2026-07-13T06:00:00.000Z",
+    attemptId: "fdic-tier1-owner-baseline",
+    runId: "40000000003",
+    sleep: async () => {},
+  });
+  await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    request: async (_url, quarter) => response(200, fdicRows(quarter === QUARTERS[0] ? 12 : 14)),
+    controlledFailureKey: "latest",
+    eventName: "workflow_dispatch",
+    observedAt: "2026-07-14T06:00:00.000Z",
+    attemptId: "fdic-tier1-owner-failure",
+    runId: "40000000004",
+    sleep: async () => {},
+  });
+  const recovered = await runFdicTier1({
+    ...paths,
+    quarters: QUARTERS,
+    probeQuarter: "20260630",
+    request: async (_url, quarter) => response(200, fdicRows(quarter === "20260630" ? 16 : 14)),
+    eventName: "workflow_dispatch",
+    ownerApprovedRecovery: true,
+    observedAt: "2026-08-29T12:00:00.000Z",
+    attemptId: "fdic-tier1-owner-recovery",
+    runId: "40000000005",
+    runAttempt: 1,
+    sleep: async () => {},
+  });
+  assert.equal(recovered.ok, true);
+  assert.equal(recovered.recovered, true);
+  const state = readJson(path.join(root, "data", "admin", "fdic_tier1", "index.json"));
+  assert.equal(state.items.fdic_tier1.recovery_event_name, "workflow_dispatch");
+  assert.deepEqual(
+    projectRecoveryRecoveredSet(state, "fdic_tier1"),
+    [],
+    "owner-approved operational recovery must not earn natural schedule evidence",
   );
 }
 

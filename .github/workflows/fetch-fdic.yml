@@ -4,7 +4,8 @@ name: Fetch FDIC Tier1 Data
 
 on:
   schedule:
-    - cron: '0 6 1-7 * 1'
+    - cron: '0 6 * * 1'
+    - cron: '0 6 * * 4'
   workflow_dispatch:
     inputs:
       persistence_migration_only:
@@ -17,6 +18,11 @@ on:
         required: false
         default: ''
         type: string
+      owner_approved_recovery:
+        description: 'Explicit owner approval for one provider-advancing manual recovery; never grants natural-run credit'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -50,32 +56,25 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Enforce FDIC first-Monday schedule contract
-        id: schedule_gate
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-        run: node scripts/guard-fdic-first-monday.mjs
-
       - name: Test FDIC Tier1 producer contracts
-        if: ${{ github.event_name != 'schedule' || steps.schedule_gate.outputs.eligible == 'true' }}
         run: node scripts/test-fetch-fdic-tier1.mjs
 
       - name: Fetch FDIC Tier1 data and persist attempt evidence
         id: fetch_fdic
-        if: ${{ github.event_name != 'schedule' || steps.schedule_gate.outputs.eligible == 'true' }}
         env:
           INPUT_PERSISTENCE_MIGRATION_ONLY: ${{ github.event.inputs.persistence_migration_only || 'false' }}
           INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
+          INPUT_OWNER_APPROVED_RECOVERY: ${{ github.event.inputs.owner_approved_recovery || 'false' }}
         run: node scripts/fetch-fdic-tier1.mjs
 
       - name: Verify output
-        if: ${{ (github.event_name != 'schedule' || steps.schedule_gate.outputs.eligible == 'true') && steps.fetch_fdic.outcome == 'success' }}
+        if: ${{ steps.fetch_fdic.outcome == 'success' && steps.fetch_fdic.outputs.updated == 'true' }}
         run: |
           head -20 data/macro/fdic-tier1.json
           echo "Total lines: $(wc -l < data/macro/fdic-tier1.json)"
 
       - name: Commit and push
-        if: ${{ always() && (github.event_name != 'schedule' || steps.schedule_gate.outputs.eligible == 'true') }}
+        if: ${{ always() }}
         env:
           GH_TOKEN: ${{ github.token }}
           FETCH_OUTCOME: ${{ steps.fetch_fdic.outcome }}
@@ -115,7 +114,7 @@ jobs:
           exit 1
       - name: Publish fdic-tier1 generation to the cloud data plane
         id: publish_cloud_generation
-        if: ${{ (github.event_name != 'schedule' || steps.schedule_gate.outputs.eligible == 'true') && steps.fetch_fdic.outcome == 'success' }}
+        if: ${{ steps.fetch_fdic.outcome == 'success' && steps.fetch_fdic.outputs.updated == 'true' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
@@ -124,5 +123,5 @@ jobs:
         run: node scripts/publish-cloud-data-generation.mjs --family=fdic-tier1 --tolerate-gate-block --json
 
       - name: Persist fdic-tier1 publish outcome
-        if: ${{ always() && (github.event_name != 'schedule' || steps.schedule_gate.outputs.eligible == 'true') }}
+        if: ${{ always() }}
         run: node scripts/persist-cloud-publish-outcome.mjs --family=fdic-tier1 --workflow=.github/workflows/fetch-fdic.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin

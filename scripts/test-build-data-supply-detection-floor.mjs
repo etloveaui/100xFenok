@@ -971,44 +971,27 @@ function runConfigAndFixtureChecks() {
   assert.equal(validateCalendars(canonicalCalendars), undefined);
   assert.equal(validateConfigCalendarBindings(DATA_SUPPLY_DETECTION_CONFIG, canonicalCalendars), true);
   {
-    const fdicSchedule = canonicalCalendars.schedules.find((row) => row.id === "monthly_first_monday_federal");
-    assert.equal(fdicSchedule.day_weekday_mode, "and", "FDIC cadence must mean first Monday, not POSIX day/weekday OR");
-    const firstMondayObserved = "2026-08-03T06:00:00Z";
-    const afterSecondMonday = "2026-08-11T06:00:00Z";
+    const fdicMonday = canonicalCalendars.schedules.find((row) => row.id === "weekly_0600_mon_utc");
+    const fdicThursday = canonicalCalendars.schedules.find((row) => row.id === "weekly_0600_thu_utc");
+    assert.equal(fdicMonday.cron, "0 6 * * 1");
+    assert.equal(fdicThursday.cron, "0 6 * * 4");
+    assert.equal(fdicMonday.calendar_id, "utc");
+    assert.equal(fdicThursday.calendar_id, "utc");
     assert.equal(
       evaluateAttemptCadence(
-        firstMondayObserved,
-        [fdicSchedule.cron],
-        fdicSchedule.calendar_id,
-        afterSecondMonday,
+        "2026-09-03T06:00:00Z",
+        [fdicMonday.cron, fdicThursday.cron],
+        "utc",
+        "2026-09-04T06:00:00Z",
         canonicalCalendars,
       ).reason,
       "ok",
-      "the second Monday must not replace the first-Monday occurrence",
+      "the Thursday backup occurrence must keep the FDIC lane current",
     );
     assert.equal(
-      evaluateAttemptCadence(
-        firstMondayObserved,
-        [fdicSchedule.cron],
-        fdicSchedule.calendar_id,
-        "2026-09-15T06:00:00Z",
-        canonicalCalendars,
-      ).reason,
-      "ok",
-      "a federal holiday must not create a September FDIC occurrence",
-    );
-    const posixCalendar = clone(canonicalCalendars);
-    posixCalendar.schedules.find((row) => row.id === fdicSchedule.id).day_weekday_mode = "or";
-    assert.equal(
-      evaluateAttemptCadence(
-        firstMondayObserved,
-        [fdicSchedule.cron],
-        fdicSchedule.calendar_id,
-        afterSecondMonday,
-        posixCalendar,
-      ).reason,
-      "stale",
-      "the regression must distinguish explicit intersection from POSIX OR",
+      canonicalCalendars.schedules.some((row) => row.id === "monthly_first_monday_federal"),
+      false,
+      "the monthly holiday-aware schedule must not survive the release-aware cadence",
     );
   }
   const missingCadenceContract = clone(canonicalCalendars);

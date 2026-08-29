@@ -126,13 +126,21 @@
       }
     },
     {
-      "id": "monthly_first_monday_federal",
-      "cron": "0 6 1-7 * 1",
-      "calendar_id": "us_federal_business",
-      "day_weekday_mode": "and",
+      "id": "weekly_0600_mon_utc",
+      "cron": "0 6 * * 1",
+      "calendar_id": "utc",
       "grace": {
         "unit": "calendar_days",
-        "value": 7
+        "value": 2
+      }
+    },
+    {
+      "id": "weekly_0600_thu_utc",
+      "cron": "0 6 * * 4",
+      "calendar_id": "utc",
+      "grace": {
+        "unit": "calendar_days",
+        "value": 2
       }
     },
     {

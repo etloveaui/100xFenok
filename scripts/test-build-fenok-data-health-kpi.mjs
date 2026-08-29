@@ -1437,10 +1437,12 @@ assert.equal(PRODUCT_SURFACE_SLA?.max_staleness, 10, "weekly ETF universe cadenc
   );
   const explicitDispatchRecovery = structuredClone(fdicRecovered);
   explicitDispatchRecovery.items.fdic_tier1.recovery_event_name = "workflow_dispatch";
-  assert.throws(
-    () => buildDetectionFloorLanes(report(), { fdic_tier1: explicitDispatchRecovery }),
-    /recovery provenance.*malformed/i,
-    "explicit dispatch recovery cannot be projected as natural proof",
+  const explicitDispatchLane = buildDetectionFloorLanes(report(), { fdic_tier1: explicitDispatchRecovery })
+    .find((item) => item.id === "fdic_tier1");
+  assert.deepEqual(
+    explicitDispatchLane.details.recovery_recovered,
+    [],
+    "owner-approved FDIC dispatch recovery restores service but cannot be projected as natural proof",
   );
 
   const finraDispatchRecovered = structuredClone(fdicRecovered);

@@ -213,7 +213,7 @@ export const PLANE_OUTCOME_UNRECORDED_REASONS = Object.freeze({
   "fdic-tier1": Object.freeze({
     classification: "awaiting_opportunity",
     reason:
-      "no opportunity yet: schedule-gated on cron '0 6 1-7 * 1' plus a schedule_gate eligibility step, and the 2026-08-17 run skipped fetch, publish and persist together, so no cycle has reached the publisher. Its unstaged public mirror is separately open as BACKLOG B-383",
+      "transition awaiting its first post-change outcome: the owner-approved recovery dispatch runs after the release-aware workflow lands, then cron '0 6 * * 1' and cron '0 6 * * 4' provide continuing opportunities. Remove this entry as soon as the first outcome shard exists",
   }),
   "oecd-cli": Object.freeze({
     classification: "incident",

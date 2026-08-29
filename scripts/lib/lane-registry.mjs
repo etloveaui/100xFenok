@@ -1879,7 +1879,7 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
     non_blocking_publisher: false,
     detached_persistence: false,
     conditional_persistence: true,
-    reason: "DEC-336 first-Monday schedule gate can skip the run before any publish, so persistence carries the same eligibility guard; it still runs under always() for every eligible run and there is no outcome to persist for an ineligible one",
+    reason: "FDIC persistence runs under always() for every Monday/Thursday occurrence; an attempted cloud publish is recorded, while a no-change or provider-wait probe skips the publisher and therefore creates no new plane outcome",
   }),
   "slickcharts-history": Object.freeze({
     workflow: ".github/workflows/slickcharts-history.yml",

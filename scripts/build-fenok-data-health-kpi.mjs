@@ -820,10 +820,18 @@ const BOUND_DISPATCH_RECOVERY_LANES = Object.freeze(new Map([
   ["finra_ats_weekly", Object.freeze({ admin_root: "finra-ats" })],
 ]));
 
+// FDIC may use one explicitly owner-approved, first-attempt dispatch to restore
+// currently available provider data. That recovery restores service state but
+// never enters the natural scheduled-recovery evidence set.
+const OPERATIONAL_DISPATCH_RECOVERY_LANES = Object.freeze(new Set([
+  "fdic_tier1",
+]));
+
 export function projectRecoveryRecoveredSet(state, laneId) {
   const validated = validateRecoveryState(state, laneId);
   if (validated === null) return [];
   const laneException = BOUND_DISPATCH_RECOVERY_LANES.get(laneId);
+  const operationalDispatch = OPERATIONAL_DISPATCH_RECOVERY_LANES.has(laneId);
   const expectedLkgRoot = laneException?.admin_root ?? laneId;
   return Object.entries(validated.state.items)
     .map(([key, item]) => {
@@ -842,6 +850,11 @@ export function projectRecoveryRecoveredSet(state, laneId) {
       const current = item?.current;
       const lkg = item?.lkg;
       const lastFailure = item?.last_recovered_failure;
+      const boundDispatch = hasStructuredGithubRunBinding({
+        eventName: item?.recovery_event_name,
+        runAttempt: item?.recovery_run_attempt,
+        runId: item?.recovery_run_id,
+      });
       if (!item || item.key !== key
         || item.resolution_state !== "fresh_primary" || item.retry !== false
         || typeof item.recovered_from_run_id !== "string" || item.recovered_from_run_id === ""
@@ -849,11 +862,7 @@ export function projectRecoveryRecoveredSet(state, laneId) {
         || item.recovery_run_id === item.recovered_from_run_id
         || item.recovery_run_attempt !== 1
         || (item.recovery_event_name !== "schedule"
-          && !(laneException !== undefined && hasStructuredGithubRunBinding({
-            eventName: item.recovery_event_name,
-            runAttempt: item.recovery_run_attempt,
-            runId: item.recovery_run_id,
-          })))
+          && !((laneException !== undefined || operationalDispatch) && boundDispatch))
         || !isDetectionSourceStamp(item.recovered_at)
         || !current || typeof current.path !== "string" || current.path === ""
         || !/^[0-9a-f]{64}$/.test(current.payload_sha256 ?? "")
@@ -869,6 +878,7 @@ export function projectRecoveryRecoveredSet(state, laneId) {
         || Date.parse(item.recovered_at) < Date.parse(lastFailure.observed_at)) {
         throw new Error(`detection floor ${laneId} recovery provenance ${key} is malformed`);
       }
+      if (operationalDispatch && item.recovery_event_name === "workflow_dispatch") return null;
       return {
         key,
         resolution_state: item.resolution_state,
