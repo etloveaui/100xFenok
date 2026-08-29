@@ -2,8 +2,8 @@ name: Fetch Damodaran Data
 
 on:
   schedule:
-    # UTC Saturday 11:17 = KST Saturday 20:17, after the Yardeni weekly slot.
-    - cron: '17 11 * * 6'
+    # UTC Saturday 11:17/23:17 = KST Saturday 20:17 primary / Sunday 08:17 backup.
+    - cron: '17 11,23 * * 6'
   workflow_dispatch:
     inputs:
       controlled_failure:
@@ -18,6 +18,7 @@ on:
         default: false
 
 permissions:
+  actions: read
   contents: write
 
 env:
@@ -54,29 +55,42 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Decide Damodaran primary or backup execution
+        id: backup_gate
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_EVENT_SCHEDULE: ${{ github.event.schedule || '' }}
+        run: node scripts/guard-damodaran-backup.mjs
+
       - name: Setup Python
+        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Test owner guard and workflow contract
+        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
         run: node scripts/test-fetch-damodaran-shadow.mjs
 
       - name: Install converter dependencies
+        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
         run: python -m pip install -r scripts/lib/damodaran_shadow_converter/requirements.txt
 
       - name: Test ERP source-date canonicalization
+        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
         run: python scripts/lib/damodaran_shadow_converter/test_erp_source_date.py
 
       - name: Fetch and guard Damodaran payloads
         id: fetch
+        if: ${{ steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run' }}
         env:
           INPUT_CONTROLLED_FAILURE: ${{ github.event.inputs.controlled_failure || 'false' }}
           INPUT_OWNER_APPROVED_RECOVERY: ${{ github.event.inputs.owner_approved_recovery || 'false' }}
         run: node scripts/fetch-damodaran-shadow.mjs
 
       - name: Preserve Damodaran guard report
-        if: ${{ always() }}
+        if: ${{ always() && (steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run') }}
         uses: actions/upload-artifact@v4
         with:
           name: damodaran-owner-guard-${{ github.run_id }}-${{ github.run_attempt }}
@@ -88,13 +102,16 @@ jobs:
         if: ${{ always() }}
         env:
           FETCH_OUTCOME: ${{ steps.fetch.outcome }}
+          BACKUP_ACTION: ${{ steps.backup_gate.outputs.action }}
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           RECOVERY_EXIT=0
-          if [[ "$FETCH_OUTCOME" != "success" ]]; then RECOVERY_EXIT=2; fi
+          if [[ "$BACKUP_ACTION" == "skip" ]]; then RECOVERY_EXIT=0
+          elif [[ "$FETCH_OUTCOME" != "success" ]]; then RECOVERY_EXIT=2
+          fi
           scripts/stage-lane-manifest.sh \
             --workflow .github/workflows/fetch-damodaran-shadow.yml \
             --stage always_if_exists
@@ -144,5 +161,5 @@ jobs:
         run: node scripts/publish-cloud-data-generation.mjs --family=damodaran --tolerate-gate-block --json
 
       - name: Persist damodaran publish outcome
-        if: ${{ always() }}
+        if: ${{ always() && (steps.backup_gate.outcome != 'success' || steps.backup_gate.outputs.action == 'run') }}
         run: node scripts/persist-cloud-publish-outcome.mjs --family=damodaran --workflow=.github/workflows/fetch-damodaran-shadow.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin

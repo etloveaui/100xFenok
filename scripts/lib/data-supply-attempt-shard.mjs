@@ -157,7 +157,7 @@ export function tupleStatus(tuple) {
   if (tuple?.execution === "unobserved") return "unobserved";
   if (tuple?.execution === "threw") return "unavailable";
   if (tuple?.execution !== "returned") throw new Error(`unknown tuple execution: ${tuple?.execution}`);
-  if (tuple.outcome === "no_fallback_candidates") return "ready";
+  if (tuple.outcome === "no_fallback_candidates" || tuple.outcome === "primary_succeeded_skip") return "ready";
   if (tuple.outcome === "success") {
     return tuple.assertions.some((assertion) => assertion.passed === false) ? "drift" : "ready";
   }

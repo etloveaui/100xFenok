@@ -342,10 +342,11 @@ function failedAssertion(row) {
   return Array.isArray(row?.assertions) && row.assertions.some((assertion) => assertion?.passed === false);
 }
 
-function normalizeAttempt(row) {
+export function normalizeAttempt(row) {
   if (!row) return { observed_at: null, outcome: "unobserved", failure_class: null };
   const observedAt = safeIso(row.observed_at, { allowDate: false });
   if (row.execution === "unobserved") return { observed_at: observedAt, outcome: "unobserved", failure_class: null };
+  if (row.outcome === "primary_succeeded_skip") return { observed_at: observedAt, outcome: "success", failure_class: null };
   const providerUnsupported = [row.exception_kind, row.retry_reason, row.outcome].includes("provider_unsupported");
   if (providerUnsupported) return { observed_at: observedAt, outcome: "provider_wait", failure_class: "provider_unsupported" };
   if (row.outcome === "no_fallback_candidates") return { observed_at: observedAt, outcome: "provider_wait", failure_class: "provider_unsupported" };

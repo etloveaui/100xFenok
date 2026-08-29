@@ -25,6 +25,10 @@ import {
 } from "./fetch-damodaran-shadow.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const BACKUP_GATE_PATH = path.join(REPO_ROOT, "scripts", "guard-damodaran-backup.mjs");
+const BackupGate = fs.existsSync(BACKUP_GATE_PATH)
+  ? await import("./guard-damodaran-backup.mjs")
+  : {};
 
 function fixture() {
   return {
@@ -544,12 +548,206 @@ function activeRetryFixture(prefix) {
 }
 
 {
+  assert.equal(
+    typeof BackupGate.decideDamodaranExecution,
+    "function",
+    "backup execution decision must be exported",
+  );
+  assert.equal(
+    typeof BackupGate.emitBackupSkipAttempt,
+    "function",
+    "backup skip evidence emitter must be exported",
+  );
+  assert.equal(
+    typeof BackupGate.resolveDamodaranExecution,
+    "function",
+    "backup API orchestration must be exported",
+  );
+  assert.equal(BackupGate.DAMODARAN_COMBINED_CRON, "17 11,23 * * 6");
+
+  const primary = {
+    id: 101,
+    event: "schedule",
+    status: "completed",
+    conclusion: "success",
+    created_at: "2026-08-29T11:18:00Z",
+  };
+  const failedPrimary = { ...primary, id: 103, conclusion: "failure" };
+  const priorWeekPrimary = { ...primary, id: 99, created_at: "2026-08-22T11:18:00Z" };
+  const backup = {
+    id: 102,
+    event: "schedule",
+    status: "in_progress",
+    conclusion: null,
+    created_at: "2026-08-29T23:20:00Z",
+  };
+  const delayedBackup = { ...backup, id: 104, created_at: "2026-08-30T00:20:00Z" };
+
+  assert.deepStrictEqual(
+    BackupGate.decideDamodaranExecution({ eventName: "workflow_dispatch" }),
+    { action: "run", reason: "manual_dispatch" },
+  );
+  assert.deepStrictEqual(
+    BackupGate.decideDamodaranExecution({
+      eventName: "schedule",
+      eventSchedule: BackupGate.DAMODARAN_COMBINED_CRON,
+      currentRunId: "101",
+      runs: [primary],
+    }),
+    { action: "run", reason: "primary_occurrence" },
+  );
+  assert.deepStrictEqual(
+    BackupGate.decideDamodaranExecution({
+      eventName: "schedule",
+      eventSchedule: BackupGate.DAMODARAN_COMBINED_CRON,
+      currentRunId: "102",
+      runs: [backup, primary],
+    }),
+    { action: "skip", reason: "primary_succeeded", primaryRunId: "101" },
+  );
+  assert.deepStrictEqual(
+    BackupGate.decideDamodaranExecution({
+      eventName: "schedule",
+      eventSchedule: BackupGate.DAMODARAN_COMBINED_CRON,
+      currentRunId: "104",
+      runs: [delayedBackup, primary],
+    }),
+    { action: "skip", reason: "primary_succeeded", primaryRunId: "101" },
+    "a delayed backup must remain in the preceding UTC Saturday cycle",
+  );
+  for (const runs of [
+    [backup],
+    [backup, failedPrimary],
+    [backup, priorWeekPrimary],
+    null,
+  ]) {
+    assert.deepStrictEqual(
+      BackupGate.decideDamodaranExecution({
+        eventName: "schedule",
+        eventSchedule: BackupGate.DAMODARAN_COMBINED_CRON,
+        currentRunId: "102",
+        runs,
+      }),
+      {
+        action: "run",
+        reason: runs === null ? "run_history_unavailable" : "primary_missing_or_failed",
+      },
+    );
+  }
+  assert.deepStrictEqual(
+    BackupGate.decideDamodaranExecution({
+      eventName: "schedule",
+      eventSchedule: "17 11 * * 6",
+      currentRunId: "102",
+      runs: [backup, primary],
+    }),
+    { action: "run", reason: "schedule_contract_mismatch" },
+  );
+  assert.deepStrictEqual(
+    BackupGate.decideDamodaranExecution({
+      eventName: "schedule",
+      eventSchedule: BackupGate.DAMODARAN_COMBINED_CRON,
+      currentRunId: "missing",
+      runs: [backup, primary],
+    }),
+    { action: "run", reason: "current_run_unavailable" },
+  );
+
+  let manualFetchCalls = 0;
+  assert.deepStrictEqual(
+    await BackupGate.resolveDamodaranExecution({
+      eventName: "workflow_dispatch",
+      fetchRuns: async () => {
+        manualFetchCalls += 1;
+        return [];
+      },
+    }),
+    { action: "run", reason: "manual_dispatch" },
+  );
+  assert.equal(manualFetchCalls, 0, "manual dispatch must not spend an Actions API request");
+  assert.deepStrictEqual(
+    await BackupGate.resolveDamodaranExecution({
+      eventName: "schedule",
+      eventSchedule: BackupGate.DAMODARAN_COMBINED_CRON,
+      currentRunId: "102",
+      fetchRuns: async () => { throw new Error("injected API outage"); },
+    }),
+    { action: "run", reason: "run_history_unavailable" },
+    "Actions API uncertainty must fail open to provider acquisition",
+  );
+  assert.deepStrictEqual(
+    await BackupGate.resolveDamodaranExecution({
+      eventName: "schedule",
+      eventSchedule: BackupGate.DAMODARAN_COMBINED_CRON,
+      currentRunId: "102",
+      fetchRuns: async () => [backup, primary],
+    }),
+    { action: "skip", reason: "primary_succeeded", primaryRunId: "101" },
+  );
+
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "damodaran-backup-skip-"));
+  const attemptShardPath = path.join(root, "damodaran.json");
+  const row = BackupGate.emitBackupSkipAttempt({
+    attemptShardPath,
+    observedAt: "2026-08-29T23:20:01Z",
+    runId: "102",
+    runAttempt: 1,
+    eventName: "schedule",
+  });
+  const shard = JSON.parse(fs.readFileSync(attemptShardPath, "utf8"));
+  assert.equal(validateAttemptShard(shard, "damodaran"), true);
+  assert.equal(row.outcome, "primary_succeeded_skip");
+  assert.equal(row.candidates, 0);
+  assert.equal(row.retry_count, 0);
+  assert.equal(row.latency_ms, 0);
+  assert.equal(row.decode, "not_attempted");
+  assert.equal(row.payload, "empty");
+  assert.equal(row.event_name, "schedule");
+  assert.equal(row.run_id, "102");
+  const nonScheduleSkip = structuredClone(shard);
+  nonScheduleSkip.attempts[0].event_name = "workflow_dispatch";
+  assert.throws(
+    () => validateAttemptShard(nonScheduleSkip, "damodaran"),
+    /schema_error/,
+    "a primary-success skip must be natural schedule evidence",
+  );
+  assert.deepStrictEqual(classifyAttempt(row), {
+    status: "ready",
+    reason: "ok",
+    observed_at: "2026-08-29T23:20:01Z",
+  });
+  const [LaneRegistryProjection, HealthKpi] = await Promise.all([
+    import("./build-lane-registry-projection.mjs"),
+    import("./build-fenok-data-health-kpi.mjs"),
+  ]);
+  assert.equal(typeof LaneRegistryProjection.normalizeAttempt, "function");
+  assert.equal(typeof HealthKpi.normalizeDetectionAttempt, "function");
+  const normalizedSkip = {
+    observed_at: "2026-08-29T23:20:01Z",
+    outcome: "success",
+    failure_class: null,
+  };
+  assert.deepStrictEqual(LaneRegistryProjection.normalizeAttempt(row), normalizedSkip);
+  assert.deepStrictEqual(HealthKpi.normalizeDetectionAttempt(row), normalizedSkip);
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
+{
   const workflowPath = path.join(REPO_ROOT, ".github", "workflows", "fetch-damodaran-shadow.yml");
   const workflow = fs.readFileSync(workflowPath, "utf8");
 
   assert.match(workflow, /name:\s*Fetch Damodaran Data/);
   assert.match(workflow, /DAMODARAN_SHADOW_REPORT:\s*data\/admin\/damodaran\/owner-guard\.json/);
-  assert.match(workflow, /cron:\s*['"]17 11 \* \* 6['"]/);
+  assert.match(workflow, /cron:\s*['"]17 11,23 \* \* 6['"]/);
+  assert.match(workflow, /permissions:[\s\S]+actions:\s*read[\s\S]+contents:\s*write/);
+  assert.match(workflow, /- name: Decide Damodaran primary or backup execution[\s\S]+id:\s*backup_gate/);
+  assert.match(workflow, /GH_TOKEN:\s*\$\{\{ github\.token \}\}/);
+  assert.match(workflow, /node scripts\/guard-damodaran-backup\.mjs/);
+  assert.match(
+    workflow,
+    /steps\.backup_gate\.outcome != 'success' \|\| steps\.backup_gate\.outputs\.action == 'run'/,
+    "expensive steps must fail open when the backup gate fails",
+  );
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /controlled_failure:/);
   assert.match(workflow, /INPUT_CONTROLLED_FAILURE:/);
@@ -601,7 +799,10 @@ function activeRetryFixture(prefix) {
     /PYTHONDONTWRITEBYTECODE:\s*['"]1['"]/
   );
   assert.match(workflow, /uses:\s*actions\/upload-artifact@v4/);
-  assert.match(workflow, /if:\s*\$\{\{ always\(\) \}\}[\s\S]+damodaran-owner-guard/);
+  assert.match(
+    workflow,
+    /if:\s*\$\{\{ always\(\) && \(steps\.backup_gate\.outcome != 'success' \|\| steps\.backup_gate\.outputs\.action == 'run'\) \}\}[\s\S]+damodaran-owner-guard/,
+  );
   // Post-slice-2 contract (#377): the lane no longer mirrors to the public
   // mirror — canonical staging + plane publish only.
   assert.doesNotMatch(workflow, /rsync[^\n]*100xfenok-next\/public\/data/);
@@ -618,15 +819,26 @@ function activeRetryFixture(prefix) {
   assert.match(workflow, /id:\s*fetch/);
   assert.doesNotMatch(workflow, /id:\s*mirror/);
   assert.match(workflow, /FETCH_OUTCOME:\s*\$\{\{ steps\.fetch\.outcome \}\}/);
+  assert.match(workflow, /BACKUP_ACTION:\s*\$\{\{ steps\.backup_gate\.outputs\.action \}\}/);
+  assert.match(workflow, /if \[\[ "\$BACKUP_ACTION" == "skip" \]\]; then RECOVERY_EXIT=0/);
   assert.match(
     workflow,
     /if \[\[ "\$FETCH_OUTCOME" == "success" \]\]; then[\s\S]+--stage required_on_success/,
   );
   assert.match(workflow, /if:\s*\$\{\{ always\(\) \}\}[\s\S]+--stage always_if_exists/);
-  // continue-on-error is allowed ONLY on the plane publish step (non-blocking
-  // by design, matching the pilot pattern); nowhere else.
-  assert.equal((workflow.match(/continue-on-error:/g) ?? []).length, 1);
+  // continue-on-error is allowed only on the fail-open backup gate and the
+  // non-blocking cloud publication step.
+  assert.equal((workflow.match(/continue-on-error:/g) ?? []).length, 2);
+  assert.match(
+    workflow,
+    /- name: Decide Damodaran primary or backup execution[\s\S]+continue-on-error: true/,
+  );
   assert.match(workflow, /- name: Publish damodaran generation[\s\S]+continue-on-error: true/);
+  assert.match(
+    workflow,
+    /- name: Persist damodaran publish outcome[\s\S]+if:\s*\$\{\{ always\(\) && \(steps\.backup_gate\.outcome != 'success' \|\| steps\.backup_gate\.outputs\.action == 'run'\) \}\}/,
+    "a safe backup skip must not manufacture a cloud publish outcome",
+  );
   assert.doesNotMatch(workflow, /git add/);
   assert.match(workflow, /PUBLISHED=false/);
   assert.match(workflow, /PUBLISHED=true/);

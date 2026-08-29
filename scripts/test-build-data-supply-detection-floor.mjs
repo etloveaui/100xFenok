@@ -556,7 +556,7 @@ function runConfigAndFixtureChecks() {
   assert.deepEqual(damodaran.producer_members[0].cadence_declaration,
     { kind: "github_workflow", evidence: ".github/workflows/fetch-damodaran-shadow.yml" });
   assert.equal(damodaran.producer_members[0].workflow, ".github/workflows/fetch-damodaran-shadow.yml");
-  assert.deepEqual(damodaran.producer_members[0].schedule, ["17 11 * * 6"]);
+  assert.deepEqual(damodaran.producer_members[0].schedule, ["17 11,23 * * 6"]);
   assert.equal(damodaran.producer_members[0].cadence_calendar, "utc");
   assert.equal(damodaran.producer_members[0].activated_at, "2026-07-19T15:05:41Z");
   assert.equal(damodaran.endpoint_contract.transport, "library");

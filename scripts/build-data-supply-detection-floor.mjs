@@ -1179,7 +1179,7 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
         if (!Number.isSafeInteger(row.candidates) || row.candidates < 0
           || !Number.isSafeInteger(row.retry_count) || row.retry_count < 0
           || !Number.isFinite(row.latency_ms) || row.latency_ms < 0
-          || !new Set(["success", "no_fallback_candidates", "not_attempted", "error"]).has(row.outcome)) {
+          || !new Set(["success", "no_fallback_candidates", "primary_succeeded_skip", "not_attempted", "error"]).has(row.outcome)) {
           fail("schema_error", `${key} library evidence is invalid`);
         }
         if (row.execution === "threw") {
@@ -1189,11 +1189,14 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
             || row.decode !== "not_attempted" || row.payload !== "not_available" || row.assertions.length) {
             fail("schema_error", `${key} threw library tuple is contradictory`);
           }
-        } else if (row.outcome === "no_fallback_candidates") {
+        } else if (row.outcome === "no_fallback_candidates" || row.outcome === "primary_succeeded_skip") {
           if (row.candidates !== 0 || row.retry_count !== 0 || row.latency_ms !== 0
             || row.exception_kind !== null || row.auth !== "not_applicable" || row.rate_limited
             || row.decode !== "not_attempted" || row.payload !== "empty" || row.assertions.length) {
             fail("schema_error", `${key} empty-candidate library tuple is contradictory`);
+          }
+          if (row.outcome === "primary_succeeded_skip" && row.event_name !== "schedule") {
+            fail("schema_error", `${key} primary-success skip requires scheduled event provenance`);
           }
         } else if (row.outcome === "success") {
           if (row.candidates < 1 || row.exception_kind !== null
@@ -1337,7 +1340,9 @@ export function loadAttemptShards({
 export function classifyAttempt(row) {
   if (!row || row.execution === "unobserved") return reasonResult("workflow_unobserved", { observed_at: null });
   if (row.execution === "threw") return reasonResult(row.exception_kind === "transport" ? "transport_error" : "unexpected_error", { observed_at: row.observed_at });
-  if (row.outcome === "no_fallback_candidates") return reasonResult("ok", { observed_at: row.observed_at });
+  if (row.outcome === "no_fallback_candidates" || row.outcome === "primary_succeeded_skip") {
+    return reasonResult("ok", { observed_at: row.observed_at });
+  }
   if (row.outcome === "not_attempted") return reasonResult("unexpected_error", { observed_at: row.observed_at });
   if (row.outcome === "error") return reasonResult("unexpected_error", { observed_at: row.observed_at });
   if (row.outcome === "success") {

@@ -36,6 +36,7 @@ assert.equal(maxCronGapHours(["0 */6 * * *"]), 6, "six-hourly");
 assert.equal(maxCronGapHours(["12 * * * *"]), 1, "hourly");
 assert.equal(maxCronGapHours(["0 22 * * 1-5"]), 72, "weekday-only spans the weekend");
 assert.equal(maxCronGapHours(["17 11 * * 6"]), 168, "weekly");
+assert.equal(maxCronGapHours(["17 11,23 * * 6"]), 156, "weekly primary plus backup");
 assert.equal(maxCronGapHours(["0 8 1 * *"]), 744, "monthly must use the longest month");
 
 // Day-of-month and day-of-week are OR in cron, so a 1-7 + Monday declaration
@@ -69,6 +70,7 @@ assert.equal(
 assert.equal(planeFreshnessCeilingHours({ crons: ["0 */6 * * *"], graceHours: 6 }), 12);
 assert.equal(planeFreshnessCeilingHours({ crons: ["0 8 * * *"], graceHours: 24 }), 48);
 assert.equal(planeFreshnessCeilingHours({ crons: ["17 11 * * 6"], graceHours: 48 }), 216);
+assert.equal(planeFreshnessCeilingHours({ crons: ["17 11,23 * * 6"], graceHours: 48 }), 204);
 assert.equal(planeFreshnessCeilingHours({ crons: ["0 8 1 * *"], graceHours: 168 }), 912);
 
 // Fail closed rather than default.
@@ -92,6 +94,7 @@ assert.ok(monthly > 60, `a monthly lane must end up looser than the flat ceiling
 // caught here rather than in production.
 assert.equal(deriveFailureStreakThreshold(["12 * * * *"]), 2, "fast cadence keeps the noise guard");
 assert.equal(deriveFailureStreakThreshold(["17 11 * * 6"]), 1, "weekly pages on the first failure");
+assert.equal(deriveFailureStreakThreshold(["17 11,23 * * 6"]), 2, "backup cadence keeps the noise guard");
 assert.equal(deriveFailureStreakThreshold(["0 8 1 * *"]), 1, "monthly pages on the first failure");
 
 console.log("test-plane-ceiling-matches-cadence: ok");

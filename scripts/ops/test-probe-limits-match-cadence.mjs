@@ -80,6 +80,7 @@ assert.deepEqual(
 // The cadence reader must be able to distinguish the classes it depends on.
 assert.equal(cadenceDays("0 9 1 * *"), 31);
 assert.equal(cadenceDays("17 11 * * 6"), 7);
+assert.equal(cadenceDays("17 11,23 * * 6"), 7);
 assert.equal(cadenceDays("0 8 * * *"), 1);
 assert.equal(cadenceDays("0 6 1-7 * 1"), 31);
 

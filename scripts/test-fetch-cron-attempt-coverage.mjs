@@ -68,7 +68,7 @@ const scheduledMembers = DATA_SUPPLY_DETECTION_CONFIG.lanes
   .filter((member) => member.cadence_declaration?.kind === "github_workflow" && member.schedule.length > 0);
 const scheduleBindings = scheduledMembers.reduce((sum, member) => sum + member.schedule.length, 0);
 assert.equal(scheduledMembers.length, 32);
-assert.equal(scheduleBindings, 35);
+assert.equal(scheduleBindings, 36);
 
 // Schedule parity. The detection config declares when a lane is expected to
 // run, and the observer attributes a missed slot against that declaration. If
@@ -158,8 +158,8 @@ assert.equal(coverage.mode, "shadow");
 assert.equal(coverage.deployment_blocking, false);
 assert.deepEqual(coverage.counts, {
   scheduled_members: 32,
-  schedule_bindings: 31,
-  observed: 26,
+  schedule_bindings: 32,
+  observed: 27,
   suspected_skips: 3,
   attempt_gaps: 2,
 });
@@ -176,7 +176,7 @@ assert.deepEqual(coverage.pre_activation_members, [
     lane_id: "damodaran",
     member_id: "damodaran",
     workflow: ".github/workflows/fetch-damodaran-shadow.yml",
-    cron: "17 11 * * 6",
+    cron: "17 11,23 * * 6",
     activated_at: "2026-07-19T15:05:41Z",
     first_eligible_at: "2026-07-25T11:17:00.000Z",
   },
@@ -295,9 +295,9 @@ assert.equal(missingReportCoverage.deployment_blocking, false);
 assert.equal(missingReportCoverage.status, "warning");
 assert.deepEqual(missingReportCoverage.counts, {
   scheduled_members: 32,
-  schedule_bindings: 31,
+  schedule_bindings: 32,
   observed: 0,
-  suspected_skips: 31,
+  suspected_skips: 32,
   attempt_gaps: 0,
 });
 

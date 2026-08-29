@@ -1191,10 +1191,13 @@ function failedDetectionAssertion(row) {
   return Array.isArray(row?.assertions) && row.assertions.some((assertion) => assertion?.passed === false);
 }
 
-function normalizeDetectionAttempt(row) {
+export function normalizeDetectionAttempt(row) {
   if (!row) return { observed_at: null, outcome: "unobserved", failure_class: null };
   const observedAt = isDetectionSourceStamp(row.observed_at) ? row.observed_at : null;
   if (row.execution === "unobserved") return { observed_at: observedAt, outcome: "unobserved", failure_class: null };
+  if (row.outcome === "primary_succeeded_skip") {
+    return { observed_at: observedAt, outcome: "success", failure_class: null };
+  }
   const providerUnsupported = [row.exception_kind, row.retry_reason, row.outcome].includes("provider_unsupported");
   if (providerUnsupported || row.outcome === "no_fallback_candidates") {
     return { observed_at: observedAt, outcome: "provider_wait", failure_class: "provider_unsupported" };

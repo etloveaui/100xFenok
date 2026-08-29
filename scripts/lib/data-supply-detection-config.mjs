@@ -1066,7 +1066,7 @@ const config = {
     lane({
       id: "damodaran",
       label: "Damodaran owner-guard producer",
-      members: [registryMember("damodaran", ["17 11 * * 6"], [
+      members: [registryMember("damodaran", ["17 11,23 * * 6"], [
         artifact("damodaran_owner_guard", "data/admin/damodaran/owner-guard.json", {
           schemaVersion: schemaVersion("/schema_version", "damodaran-owner-guard/v1"),
           sourceSelector: pointerSource("/fetched_at", "rfc3339"),
