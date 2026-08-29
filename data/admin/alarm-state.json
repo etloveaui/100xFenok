@@ -1,9 +1,22 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-29T13:39:01.450Z",
+  "generated_at": "2026-08-29T14:12:06.408Z",
   "status": "open",
   "open_incident_count": 8,
   "open_incidents": [
+    {
+      "workflow": "data-plane-serving-probe.yml",
+      "label": "Data Plane Serving Probe",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
     {
       "workflow": "deploy-worker.yml",
       "label": "Deploy Worker (Cloudflare)",
@@ -31,19 +44,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "fetch-fdic.yml",
-      "label": "Fetch FDIC Tier1 Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "unrecovered_overdue"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
     },
     {
       "workflow": "fetch-oecd-cli.yml",
@@ -221,10 +221,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "fetch-fenok-apewisdom.yml",
@@ -347,7 +345,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 8
+      "data_freshness_age_hours_at_generation": 9
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -495,8 +493,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 25,
-    "overdue": 1,
+    "not_due": 26,
+    "overdue": 0,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -512,14 +510,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33255465905",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33255465905",
-    "observed_at": "2026-08-29T13:39:01.450Z",
+    "run_id": "33256872456",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33256872456",
+    "observed_at": "2026-08-29T14:12:06.408Z",
     "event": "workflow_run",
     "workflows": [
+      "data-plane-serving-probe.yml",
       "deploy-worker.yml",
       "fetch-edgar-filings.yml",
-      "fetch-fdic.yml",
       "fetch-oecd-cli.yml",
       "fetch-yf-finance.yml",
       "global-writer-queue-observer.yml",
