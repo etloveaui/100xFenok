@@ -33,6 +33,10 @@ const QUARTERS = ["20251231", "20260331"];
   assert.doesNotMatch(workflow, /guard-fdic-first-monday\.mjs|steps\.schedule_gate\.outputs\.eligible/);
   assert.match(workflow, /owner_approved_recovery:/);
   assert.match(workflow, /INPUT_OWNER_APPROVED_RECOVERY:/);
+  assert.match(
+    workflow,
+    /if: \$\{\{ always\(\) && steps\.publish_cloud_generation\.outcome != 'skipped' \}\}/,
+  );
   const lane = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((row) => row.id === "fdic_tier1");
   assert.deepEqual(lane.producer_members[0].schedule, ["0 6 * * 1", "0 6 * * 4"]);
   assert.equal(lane.producer_members[0].cadence_calendar, "utc");

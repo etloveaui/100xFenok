@@ -123,5 +123,5 @@ jobs:
         run: node scripts/publish-cloud-data-generation.mjs --family=fdic-tier1 --tolerate-gate-block --json
 
       - name: Persist fdic-tier1 publish outcome
-        if: ${{ always() }}
+        if: ${{ always() && steps.publish_cloud_generation.outcome != 'skipped' }}
         run: node scripts/persist-cloud-publish-outcome.mjs --family=fdic-tier1 --workflow=.github/workflows/fetch-fdic.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }} --binding-from-current-origin
