@@ -7,23 +7,22 @@
 #   - daily schedule -> picks up bot-authored data refreshes into the bundle
 #   - workflow_dispatch -> manual deploy
 #
-# Cancellation safety (BACKLOG #361, incident 2026-07-16: cancelled run
+# Cancellation and storage safety (BACKLOG #361, incident 2026-07-16: cancelled run
 # 29502469123 uploaded its bundle and was superseded before its smokes ran —
 # the live Worker served an UNVERIFIED bundle for ~15h while CI recorded no
 # green):
-#   - build-verify is cancellation-friendly (cancel-in-progress: true): a newer
-#     push cancels a stale build cheaply, before anything can ship.
-#   - deploy is cancellation-atomic against newer runs (cancel-in-progress:
-#     false): once a run reaches upload, a newer deploy cannot automatically
-#     cancel its smokes. Queued deploy jobs are
-#     serialized by the concurrency group; every admitted candidate reaches
+#   - build and deploy stay in one non-canceling hosted job. This removes the
+#     650+ MiB Actions artifact boundary and preserves the exact built bytes
+#     through deployment and smoke checks without a second dependency install.
+#   - one run executes while only the newest pending run is retained. Every
+#     admitted candidate reaches
 #     the pre-upload live/source fence, where a stale or out-of-order
 #     candidate fails truthfully (check-deploy-source-fence.mjs). No
 #     pre-smoke green skip exists: an active skip gate was removed because
 #     under continuous data commits it starved deploys, and any pre-smoke
 #     skip signal can green-skip on an upload whose smokes later fail.
 #   - every bundle carries deploy-provenance.json declaring the run
-#     that shipped it; the deploy job asserts the CURRENT live bundle's
+#     that shipped it; the same job asserts the CURRENT live bundle's
 #     provenance before (loud, non-blocking) and after (blocking) upload
 #     (scripts/check-live-deploy-provenance.mjs).
 name: Deploy Worker (Cloudflare)
@@ -101,16 +100,23 @@ jobs:
               ;;
           esac
 
-  build-verify:
+  build-deploy:
     needs: [recovery-gate]
     if: ${{ needs.recovery-gate.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 80
     concurrency:
-      group: workers-100xfenok-main-build
-      cancel-in-progress: true
+      group: workers-100xfenok-main-deploy
+      cancel-in-progress: false
+      queue: single
+    env:
+      QA_ADMIN_SMOKE_AVAILABLE: ${{ (secrets.QA_ADMIN_PASSWORD != '' || secrets.QA_ADMIN_SESSION_COOKIE != '') && 'true' || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -168,47 +174,6 @@ jobs:
       - name: Stamp deploy provenance
         run: node scripts/write-deploy-provenance.mjs --assets-dir 100xfenok-next/.open-next/assets
 
-      - name: Upload built bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: open-next-bundle-${{ github.run_id }}
-          path: 100xfenok-next/.open-next
-          include-hidden-files: true
-          overwrite: true
-          retention-days: 1
-          if-no-files-found: error
-
-  deploy:
-    needs: [build-verify]
-    runs-on: ubuntu-latest
-    environment: production
-    timeout-minutes: 35
-    concurrency:
-      group: workers-100xfenok-main-deploy
-      cancel-in-progress: false
-    env:
-      QA_ADMIN_SMOKE_AVAILABLE: ${{ (secrets.QA_ADMIN_PASSWORD != '' || secrets.QA_ADMIN_SESSION_COOKIE != '') && 'true' || 'false' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        working-directory: 100xfenok-next
-        run: npm ci
-
-      - name: Download built bundle
-        uses: actions/download-artifact@v4
-        with:
-          name: open-next-bundle-${{ github.run_id }}
-          path: 100xfenok-next/.open-next
-
       - name: Resolve expected bundle identity
         working-directory: 100xfenok-next
         run: |
@@ -216,7 +181,7 @@ jobs:
           expected_build_id_path=".open-next/assets/BUILD_ID"
           expected_kpi_path=".open-next/assets/data/admin/fenok-data-health-kpi.json"
           if [ ! -s "$expected_build_id_path" ] || [ ! -f "$expected_kpi_path" ]; then
-            echo "::error::Cannot establish deploy identity from the downloaded artifact."
+            echo "::error::Cannot establish deploy identity from the current hosted build."
             exit 1
           fi
           {
