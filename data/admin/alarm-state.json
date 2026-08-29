@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-29T13:18:55.136Z",
+  "generated_at": "2026-08-29T13:39:01.450Z",
   "status": "open",
-  "open_incident_count": 9,
+  "open_incident_count": 8,
   "open_incidents": [
     {
       "workflow": "deploy-worker.yml",
@@ -18,19 +18,6 @@
       "cadence_status": "no_declaration"
     },
     {
-      "workflow": "fetch-defillama.yml",
-      "label": "Fetch DefiLlama Stablecoins Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "unrecovered_overdue"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
-    },
-    {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
       "streak": 3,
@@ -44,6 +31,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-fdic.yml",
+      "label": "Fetch FDIC Tier1 Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "unrecovered_overdue"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "overdue"
     },
     {
       "workflow": "fetch-oecd-cli.yml",
@@ -96,19 +96,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "update-manifest.yml",
-      "label": "Update Manifest",
-      "streak": 4,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 33180166327,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33180166327",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     },
     {
       "workflow": "worker-request-budget-alarm.yml",
@@ -212,10 +199,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "fetch-edgar-filings.yml",
@@ -236,8 +221,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "unknown",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "fetch-fenok-apewisdom.yml",
@@ -508,11 +495,11 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 24,
+    "not_due": 25,
     "overdue": 1,
     "recovered": 0,
     "no_declaration": 8,
-    "unknown": 1
+    "unknown": 0
   },
   "excluded_workflows": [
     {
@@ -525,19 +512,18 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33254607623",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33254607623",
-    "observed_at": "2026-08-29T13:18:55.136Z",
+    "run_id": "33255465905",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33255465905",
+    "observed_at": "2026-08-29T13:39:01.450Z",
     "event": "workflow_run",
     "workflows": [
       "deploy-worker.yml",
-      "fetch-defillama.yml",
       "fetch-edgar-filings.yml",
+      "fetch-fdic.yml",
       "fetch-oecd-cli.yml",
       "fetch-yf-finance.yml",
       "global-writer-queue-observer.yml",
       "slickcharts-monthly.yml",
-      "update-manifest.yml",
       "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
