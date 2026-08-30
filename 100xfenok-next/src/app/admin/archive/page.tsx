@@ -42,7 +42,7 @@ const archiveCopy: Record<string, { label: string; description: string; icon: st
 export default function AdminArchivePage() {
   return (
     <main className="container mx-auto px-4 py-5">
-      <section className="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-900 via-brand-navy to-brand-interactive p-5 text-white shadow-[0_26px_55px_-38px_rgba(2,6,23,0.92)]">
+      <section className="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-900 via-brand-navy to-brand-interactive p-5 text-white shadow-[var(--shadow-card-dark)]">
         <Link href="/admin" className="text-sm font-semibold text-white/75 transition hover:text-white">
           ← Admin Hub
         </Link>
@@ -61,7 +61,7 @@ export default function AdminArchivePage() {
             <Link
               key={surface.href}
               href={surface.href}
-              className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-interactive hover:shadow-[0_18px_34px_-30px_rgba(15,23,42,0.7)]"
+              className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-interactive hover:shadow-[var(--sh-sm)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
