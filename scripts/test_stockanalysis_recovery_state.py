@@ -621,6 +621,33 @@ class StockAnalysisRecoveryStateTest(unittest.TestCase):
         with self.assertRaisesRegex(StockAnalysisRecoveryStateError, "canonical payload is unreadable"):
             self.store.reconcile_current_payload_sha256("universe", entity)
 
+    def test_reconcile_current_payload_sha_preserves_degraded_lkg_binding(self) -> None:
+        entity = "etf_universe"
+        canonical = self.data_root / "etf_universe.json"
+        payload = universe_payload("2026-07-15T07:00:00Z", "AAA")
+        write_json(canonical, payload)
+        self.store.bootstrap_existing(self.run_context("bootstrap"))
+        self.store.record_failure(
+            "universe",
+            entity,
+            "controlled failure",
+            self.run_context("controlled-failure"),
+            controlled=True,
+        )
+
+        reclassified = {**payload, "classification_refreshed_at": "2026-07-15T08:00:00Z"}
+        write_json(canonical, reclassified)
+
+        self.assertFalse(
+            self.store.reconcile_current_payload_sha256("universe", entity),
+            "a degraded current pointer must remain bound to its retained LKG",
+        )
+        state = json.loads(
+            (self.state_root / "states" / "universe" / f"{entity}.json").read_text()
+        )
+        self.assertEqual(state["current"], state["lkg"])
+        self.assertTrue(self.store.valid_retained_lkg("universe", entity, state))
+
     def test_controlled_failure_scope_is_dispatch_only_and_explicit(self) -> None:
         validate_controlled_failure_scope(
             {"AAPL"}, {"AAPL", "MSFT"}, {"actions_recent"}, {"actions_recent", "earnings_calendar"},

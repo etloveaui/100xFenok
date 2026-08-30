@@ -114,6 +114,33 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         ):
             self.assertNotIn(unexpected, body)
 
+    def test_universe_controlled_failure_profile_is_isolated(self) -> None:
+        proof_profile = re.search(
+            r'if \[ "\$UNIVERSE_FAILURE_PROOF" = "true" \]; then(?P<body>.*?)\n\s*elif \[ "\$ETF_DETAIL_FAILURE_PROOF"',
+            self.text,
+            flags=re.DOTALL,
+        )
+        self.assertIsNotNone(proof_profile)
+        body = proof_profile.group("body")
+        for expected in (
+            "--discover-etf-universe",
+            "--universe-only",
+            "--stocks-only",
+            "--controlled-failure-surfaces etf_universe",
+            "--limit-etfs 0",
+        ):
+            self.assertIn(expected, body)
+        for unexpected in (
+            "--endpoint-canary",
+            "--classify-etf-catalogs",
+            "--fetch-surfaces",
+            "--etfs=",
+            "--stocks ",
+            "--fetch-financials",
+        ):
+            self.assertNotIn(unexpected, body)
+        self.assertIn('UNIVERSE_FAILURE_PROOF="true"', self.text)
+
     def test_each_known_schedule_has_an_exact_recovery_scope_and_unknown_fails_closed(self) -> None:
         for schedule, scope in (
             ("20 21 * * *", "stock,financial"),
