@@ -2473,16 +2473,16 @@ console.log("# KPI v2 runtime self-proof fixtures");
   // fixture has no attempt row for either slot, so both bindings remain visible
   // as gaps rather than being silently dropped.
   // 32 scheduled members since B-394 split yahoo_batch_quote_history into a
-  // stock and an etf member; both are pre-activation at this fixture's clock,
-  // so bindings stay at 31.
+  // stock and an etf member. The later Damodaran same-day backup schedule adds
+  // one observed binding to this fixed fixture.
   assert.deepEqual(rootCronShadow.counts, {
     scheduled_members: 32,
-    schedule_bindings: 31,
-    observed: 26,
+    schedule_bindings: 32,
+    observed: 27,
     suspected_skips: 3,
     attempt_gaps: 2,
   });
-  assert.equal(rootCronShadow.rows.length, 31);
+  assert.equal(rootCronShadow.rows.length, 32);
   assert.deepEqual(publicCronShadow.pre_activation_lane_ids, ["damodaran", "oecd_cli", "yahoo_batch_quote_history"]);
   assert.deepEqual(publicCronShadow.suspected_skip_lane_ids, ["apewisdom_attention", "finra_ats_weekly", "gdelt_news_tone"]);
   // The public projection names the gap lane, which is the point: a scheduled
