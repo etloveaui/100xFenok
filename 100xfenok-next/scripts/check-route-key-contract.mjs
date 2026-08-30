@@ -6,6 +6,7 @@ import { spawnSync } from "node:child_process";
 
 const APP_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const TSX_BIN = path.join(APP_ROOT, "node_modules", ".bin", process.platform === "win32" ? "tsx.cmd" : "tsx");
+const RETIREMENT_ONLY = process.argv.includes("--retirement-only");
 
 const REQUIRED_ROUTE_KEYS = [
   "explore",
@@ -274,6 +275,19 @@ function sourceBlock(source, startToken, endToken) {
   return source.slice(start, end < 0 ? source.length : end);
 }
 
+function assertRetiredPublicNavigationContracts(shellSource, errors) {
+  const navSource = sourceBlock(shellSource, "const NAV: NavItem[] = [", "const MORE_TAB:");
+  const moreTabSource = sourceBlock(shellSource, "const MORE_TAB_IDS: ShellPage[] = [", "const NAV_GROUP_ORDER");
+  assert(navSource.length > 0, "AppShell public NAV block is missing", errors);
+  assert(moreTabSource.length > 0, "AppShell mobile More block is missing", errors);
+  for (const id of RETIRED_PUBLIC_NAV_IDS) {
+    assert(!navSource.includes(`id: "${id}"`), `AppShell public NAV must not expose ${id}`, errors);
+    assert(!moreTabSource.includes(`"${id}"`), `AppShell mobile More must not expose ${id}`, errors);
+  }
+  assert(!shellSource.includes('href={ROUTES.dailyWrap}'), "AppShell must not expose the Daily Wrap topbar shortcut", errors);
+  assert(!shellSource.includes('aria-label="Daily Wrap"'), "AppShell must not expose a Daily Wrap topbar label", errors);
+}
+
 function assertRouteScopeClassificationAck(errors) {
   const ack = ROUTE_SCOPE_CLASSIFICATION_ACK;
   const label = ack.schema_version;
@@ -350,10 +364,7 @@ function assertRouteIaContracts(errors) {
   const explorePageSource = readAppSource("src/app/explore/page.tsx");
   const workbenchPageSource = readAppSource("src/app/workbench/page.tsx");
   const stockDetailSource = readAppSource("src/app/stock/[ticker]/StockDetailClient.tsx");
-  const navSource = sourceBlock(shellSource, "const NAV: NavItem[] = [", "const MORE_TAB:");
-  const moreTabSource = sourceBlock(shellSource, "const MORE_TAB_IDS: ShellPage[] = [", "const NAV_GROUP_ORDER");
-  assert(navSource.length > 0, "AppShell public NAV block is missing", errors);
-  assert(moreTabSource.length > 0, "AppShell mobile More block is missing", errors);
+  assertRetiredPublicNavigationContracts(shellSource, errors);
 
   assertSourceTokens(productNavSource, [
     "EXPLORE_ROUTE = ROUTES.home",
@@ -382,12 +393,6 @@ function assertRouteIaContracts(errors) {
     '"etfs"',
     '"superinvestors"',
   ], "AppShell PRO IA", errors);
-  for (const id of RETIRED_PUBLIC_NAV_IDS) {
-    assert(!navSource.includes(`id: "${id}"`), `AppShell public NAV must not expose ${id}`, errors);
-    assert(!moreTabSource.includes(`"${id}"`), `AppShell mobile More must not expose ${id}`, errors);
-  }
-  assert(!shellSource.includes('href={ROUTES.dailyWrap}'), "AppShell must not expose the Daily Wrap topbar shortcut", errors);
-  assert(!shellSource.includes('aria-label="Daily Wrap"'), "AppShell must not expose a Daily Wrap topbar label", errors);
   assert(!shellSource.includes('| "briefing"'), "AppShell PRO IA: briefing alias must not be a shell nav page", errors);
   assertSourceTokens(nextConfigSource, [
     'source: "/briefing"',
@@ -457,6 +462,16 @@ assert(routesSource.includes("export const ROUTES"), "src/lib/routes.ts must exp
 
 for (const key of REQUIRED_ROUTE_KEYS) {
   assert(Boolean(routeExports.routes?.[key]), `ROUTES.${key} is missing`, errors);
+}
+
+if (RETIREMENT_ONLY) {
+  assertRetiredPublicNavigationContracts(
+    fs.readFileSync(path.join(APP_ROOT, "src", "components", "shell", "AppShell.tsx"), "utf8"),
+    errors,
+  );
+  if (errors.length) fail(`${errors.length} violation(s)`, errors);
+  console.log("[qa:routes] retired public navigation contract OK");
+  process.exit(0);
 }
 
 assertRouteIaContracts(errors);
