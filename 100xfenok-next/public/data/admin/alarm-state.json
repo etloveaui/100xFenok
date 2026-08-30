@@ -1,22 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-29T21:49:05.360Z",
+  "generated_at": "2026-08-30T12:59:31.049Z",
   "status": "open",
   "open_incident_count": 6,
   "open_incidents": [
-    {
-      "workflow": "fetch-damodaran-shadow.yml",
-      "label": "Fetch Damodaran Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "unrecovered_overdue"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
-    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -83,6 +70,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
+    },
+    {
+      "workflow": "validate-workflows.yml",
+      "label": "Validate GitHub Workflows",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 33298849608,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33298849608",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -162,10 +162,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "fetch-defillama.yml",
@@ -321,7 +319,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 16
+      "data_freshness_age_hours_at_generation": 32
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -469,8 +467,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 25,
-    "overdue": 1,
+    "not_due": 26,
+    "overdue": 0,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -486,17 +484,17 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33276948311",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33276948311",
-    "observed_at": "2026-08-29T21:49:05.360Z",
+    "run_id": "33312858700",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33312858700",
+    "observed_at": "2026-08-30T12:59:31.049Z",
     "event": "schedule",
     "workflows": [
-      "fetch-damodaran-shadow.yml",
       "fetch-edgar-filings.yml",
       "fetch-fred-yardeni.yml",
       "fetch-oecd-cli.yml",
       "fetch-yf-finance.yml",
-      "slickcharts-monthly.yml"
+      "slickcharts-monthly.yml",
+      "validate-workflows.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },

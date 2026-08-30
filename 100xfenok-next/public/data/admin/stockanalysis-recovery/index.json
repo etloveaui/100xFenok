@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-08-29T23:24:21Z",
+  "generated_at": "2026-08-30T13:11:44Z",
   "counts": {
     "tracked": 211,
-    "fresh": 95,
-    "lkg": 115,
+    "fresh": 94,
+    "lkg": 116,
     "unavailable": 1,
-    "retry": 116,
-    "failed": 0,
+    "retry": 117,
+    "failed": 1,
     "recovered": 0,
     "promotion_deferred": 0
   },
@@ -42,10 +42,10 @@
     },
     "universe": {
       "tracked": 1,
-      "fresh": 1,
-      "lkg": 0,
+      "fresh": 0,
+      "lkg": 1,
       "unavailable": 0,
-      "retry": 0
+      "retry": 1
     }
   },
   "retry_artifacts": [
@@ -512,6 +512,10 @@
     {
       "artifact_kind": "etf",
       "entity": "XLII"
+    },
+    {
+      "artifact_kind": "universe",
+      "entity": "etf_universe"
     }
   ],
   "degraded_details": [
@@ -1674,6 +1678,16 @@
       "failure_run_id": "30315163373",
       "failure_observed_at": "2026-07-27T23:46:39Z",
       "data_loss": false
+    },
+    {
+      "artifact_kind": "universe",
+      "entity": "etf_universe",
+      "resolution_state": "lkg_primary",
+      "payload_sha256": "ea5ff2fe30f8e4199365a9ea94c6007339f6b95e44dcf035626db98166dc598b",
+      "source_as_of": null,
+      "failure_run_id": "33313424368",
+      "failure_observed_at": "2026-08-30T13:11:44Z",
+      "data_loss": false
     }
   ],
   "degraded_tickers": [
@@ -1711,7 +1725,9 @@
     "XOM"
   ],
   "degraded_surfaces": [],
-  "degraded_universes": [],
+  "degraded_universes": [
+    "etf_universe"
+  ],
   "degraded_etfs": [
     "AKAF",
     "AMDW",
@@ -1805,99 +1821,26 @@
   "recovered_etfs": [],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "33280832319",
+    "run_id": "33313424368",
     "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "20 21 * * *",
-    "natural": true,
-    "attempted": 16,
-    "successes": 16,
-    "failed": 0,
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "attempted": 1,
+    "successes": 0,
+    "failed": 1,
     "recovered": 0,
     "promotion_deferred": 0,
-    "errors": [],
-    "success_rows": [
+    "errors": [
       {
-        "artifact_kind": "stock",
-        "entity": "AAPL",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "AMZN",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "GOOGL",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "JPM",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "META",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "MSFT",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "NVDA",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "TSLA",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "AAPL",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "AMZN",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "GOOGL",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "JPM",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "META",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "MSFT",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "NVDA",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "TSLA",
-        "outcome": "fresh"
+        "artifact_kind": "universe",
+        "entity": "etf_universe",
+        "error": "RuntimeError: controlled failure injection for universe:etf_universe",
+        "controlled": true,
+        "data_loss": false
       }
     ],
+    "success_rows": [],
     "promotion_deferrals": []
   }
 }

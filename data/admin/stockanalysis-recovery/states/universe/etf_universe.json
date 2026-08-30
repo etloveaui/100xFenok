@@ -83,32 +83,44 @@
       "observed_at": "2026-08-23T23:41:03Z",
       "outcome": "fresh",
       "controlled": false
+    },
+    {
+      "run_id": "33313424368",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "schedule": "",
+      "natural": false,
+      "observed_at": "2026-08-30T13:11:44Z",
+      "outcome": "failed",
+      "controlled": true,
+      "error": "RuntimeError: controlled failure injection for universe:etf_universe"
     }
   ],
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "current": {
-    "path": "data/stockanalysis/etf_universe.json",
-    "payload_sha256": "ea5ff2fe30f8e4199365a9ea94c6007339f6b95e44dcf035626db98166dc598b",
+    "path": "data/admin/stockanalysis-recovery/lkg/universe/etf_universe.json",
+    "payload_sha256": "151cfbe91d2e01f0c1985e5887d5d088585068f730e21da34d659c5f825090b5",
     "source_as_of": null,
     "fetched_at": "2026-08-23T23:41:24Z"
   },
-  "updated_at": "2026-08-23T23:41:03Z",
+  "updated_at": "2026-08-30T13:11:44Z",
   "last_attempt": {
-    "run_id": "32674249390",
+    "run_id": "33313424368",
     "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "20 23 * * 0",
-    "natural": true,
-    "observed_at": "2026-08-23T23:41:03Z",
-    "outcome": "fresh",
-    "controlled": false
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "observed_at": "2026-08-30T13:11:44Z",
+    "outcome": "failed",
+    "controlled": true,
+    "error": "RuntimeError: controlled failure injection for universe:etf_universe"
   },
   "lkg": {
     "path": "data/admin/stockanalysis-recovery/lkg/universe/etf_universe.json",
-    "payload_sha256": "359e2a9e795d7916d796f5a0cec9f1599ccaac7dce5d71f27a34790d624b4a08",
+    "payload_sha256": "ea5ff2fe30f8e4199365a9ea94c6007339f6b95e44dcf035626db98166dc598b",
     "source_as_of": null,
-    "fetched_at": "2026-07-16T09:37:42Z"
+    "fetched_at": "2026-08-23T23:41:24Z"
   },
   "recovered_from_run_id": "29558385830",
   "recovered_at": "2026-07-17T23:53:18Z",
@@ -120,6 +132,16 @@
     "controlled": true,
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "359e2a9e795d7916d796f5a0cec9f1599ccaac7dce5d71f27a34790d624b4a08",
+    "data_loss": false
+  },
+  "latest_failure": {
+    "run_id": "33313424368",
+    "run_attempt": 1,
+    "observed_at": "2026-08-30T13:11:44Z",
+    "error": "RuntimeError: controlled failure injection for universe:etf_universe",
+    "controlled": true,
+    "had_canonical_before_failure": true,
+    "expected_payload_sha256": "ea5ff2fe30f8e4199365a9ea94c6007339f6b95e44dcf035626db98166dc598b",
     "data_loss": false
   }
 }
