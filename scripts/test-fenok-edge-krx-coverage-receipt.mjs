@@ -33,12 +33,22 @@ const receipt = buildKrxIssuerDailyCoverageReceipt({
   bridgeDocument: bridge,
   activeUniverseCodes: activeCodes,
   coveredCodes: ["005930", "000660", "123456", "NOT-A-KRX-ROW"],
+  activeUniverseRows: rows,
+  coveredCodesByMarket: {
+    KRX: ["005930", "000660", "NOT-A-KRX-ROW"],
+    KOSDAQ: ["123456"],
+  },
   proofManifestSha256: "a".repeat(64),
 });
+assert.equal(receipt.schema_version, "fenok_krx_issuer_daily_coverage_receipt/v2");
 assert.equal(receipt.schema_version, KRX_ISSUER_DAILY_RECEIPT_SCHEMA);
 assert.equal(receipt.covered_count, 3);
 assert.equal(receipt.denominator, 3);
 assert.equal(receipt.missing_count, 0);
+assert.deepEqual(receipt.market_coverage, {
+  KRX: { covered_count: 2, denominator: 2, missing_count: 0 },
+  KOSDAQ: { covered_count: 1, denominator: 1, missing_count: 0 },
+});
 assert.equal(receipt.status, "ready");
 assert.equal(receipt.raw_public, false);
 assert.equal(receipt.per_issuer_rows, false);
@@ -50,9 +60,24 @@ const boundBridge = { ...bridge, issuer_daily_coverage_receipt: receipt };
 const valid = validateKrxIssuerDailyCoverageReceipt({
   bridgeDocument: boundBridge,
   activeUniverseCodes: activeCodes,
+  activeUniverseRows: rows,
 });
 assert.equal(valid.ok, true);
 assert.equal(valid.receipt.source_date, "2026-08-14");
+
+const { market_coverage: _marketCoverage, ...legacyReceipt } = receipt;
+const legacyBridge = {
+  ...bridge,
+  issuer_daily_coverage_receipt: {
+    ...legacyReceipt,
+    schema_version: "fenok_krx_issuer_daily_coverage_receipt/v1",
+  },
+};
+assert.equal(validateKrxIssuerDailyCoverageReceipt({
+  bridgeDocument: legacyBridge,
+  activeUniverseCodes: activeCodes,
+  activeUniverseRows: rows,
+}).ok, true);
 
 const tamperedBridge = {
   ...boundBridge,
@@ -61,6 +86,7 @@ const tamperedBridge = {
 assert.equal(validateKrxIssuerDailyCoverageReceipt({
   bridgeDocument: tamperedBridge,
   activeUniverseCodes: activeCodes,
+  activeUniverseRows: rows,
 }).ok, false);
 const badStatusBridge = {
   ...boundBridge,
@@ -69,6 +95,22 @@ const badStatusBridge = {
 assert.equal(validateKrxIssuerDailyCoverageReceipt({
   bridgeDocument: badStatusBridge,
   activeUniverseCodes: activeCodes,
+  activeUniverseRows: rows,
+}).ok, false);
+const badMarketCoverageBridge = {
+  ...boundBridge,
+  issuer_daily_coverage_receipt: {
+    ...receipt,
+    market_coverage: {
+      ...receipt.market_coverage,
+      KOSDAQ: { covered_count: 0, denominator: 1, missing_count: 0 },
+    },
+  },
+};
+assert.equal(validateKrxIssuerDailyCoverageReceipt({
+  bridgeDocument: badMarketCoverageBridge,
+  activeUniverseCodes: activeCodes,
+  activeUniverseRows: rows,
 }).ok, false);
 
 assert.deepEqual(

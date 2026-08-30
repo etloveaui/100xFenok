@@ -207,6 +207,10 @@ assert.deepEqual(
   assert.equal(bridge.issuer_daily_coverage_receipt.covered_count, 3);
   assert.equal(bridge.issuer_daily_coverage_receipt.denominator, 3);
   assert.equal(bridge.issuer_daily_coverage_receipt.missing_count, 0);
+  assert.deepEqual(bridge.issuer_daily_coverage_receipt.market_coverage, {
+    KRX: { covered_count: 2, denominator: 2, missing_count: 0 },
+    KOSDAQ: { covered_count: 1, denominator: 1, missing_count: 0 },
+  });
   assert.equal(bridge.issuer_daily_coverage_receipt.raw_public, false);
   assert.equal(bridge.issuer_daily_coverage_receipt.per_issuer_rows, false);
   assert.equal(Object.hasOwn(bridge.issuer_daily_coverage_receipt, "covered_codes"), false);
