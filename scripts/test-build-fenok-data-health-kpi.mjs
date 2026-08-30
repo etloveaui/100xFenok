@@ -4,8 +4,8 @@
  *
  * Runs the real builder CLI against temp data roots with an injected clock and
  * GitHub/origin envelope env, then asserts the runtime block, slot accounting,
- * source SLA, and public projection. Also spawns the checker to prove exit codes
- * (warn-only Phase A) and reuses the checker's own validation functions.
+ * source SLA, and public projection. Also runs the checker's production entry
+ * to prove exit codes (warn-only Phase A) and reuses its validation functions.
  */
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -64,6 +64,7 @@ const {
   projectRequiredSourceStatuses,
   validateProducerRecoveryAttempt,
   RECOVERY_STATE_SOURCES,
+  executeKpiBuild,
 } = await import("./build-fenok-data-health-kpi.mjs");
 const {
   SOURCE_SLA_DEF,
@@ -81,6 +82,7 @@ const {
   checkDetectionFloorLane,
   checkRecoveryStateSources,
   checkSourceStatusProjections,
+  executeCheckerRun,
 } = await import("../100xfenok-next/scripts/check-fenok-data-health-kpi.mjs");
 const { checkRimInputsCanonicalHealth } = await import("./check-fenok-data-health-kpi.mjs");
 const { projectFenokDataHealthKpiPublicMirror } = await import("../100xfenok-next/sync-static-overrides.mjs");
@@ -93,7 +95,6 @@ const { bootstrapSlickchartsCompositeIndex } = await import("./lib/slickcharts-c
 const { registerKpiFixtureRoot } = await import("./lib/kpi-fixture-hermetic-fs-guard.mjs");
 
 const BUILDER = path.join(__dirname, "build-fenok-data-health-kpi.mjs");
-const CHECKER = path.join(__dirname, "..", "100xfenok-next", "scripts", "check-fenok-data-health-kpi.mjs");
 const UPDATE_MANIFEST_WORKFLOW = path.join(__dirname, "..", ".github", "workflows", "update-manifest.yml");
 const DETECTION_EXPECTED = path.join(__dirname, "fixtures", "data_supply", "detection_floor", "cases.expected.json");
 const DETECTION_CALENDARS = path.join(__dirname, "fixtures", "data_supply", "detection_floor", "calendars.fixture.json");
@@ -2158,19 +2159,16 @@ function runBuilder(tmp, env, nowIso, {
   let status = 0;
   let failureOutput = "";
   try {
-    execFileSync("node", [
-      BUILDER,
-      "--data-root",
-      tmp,
-      "--slickcharts-repo-root",
+    executeKpiBuild({
+      dataRoot: tmp,
       slickchartsRepoRoot,
-    ], {
+      nowIso,
       env: { ...baseEnv(), ...env, KPI_FAKE_NOW: nowIso },
-      stdio: ["ignore", "pipe", "pipe"],
+      scriptStartMs: Date.now(),
     });
   } catch (error) {
-    status = error.status ?? 1;
-    failureOutput = `${error.stderr?.toString?.() ?? ""}\n${error.stdout?.toString?.() ?? ""}`.trim();
+    status = 1;
+    failureOutput = error?.stack ?? error?.message ?? String(error);
   }
   assert.equal(status, expectExit, `builder exit ${status} != ${expectExit}${failureOutput ? `\n${failureOutput}` : ""}`);
   if (expectExit !== 0) return { exit: status }; // build hard-failed: no output to read
@@ -2185,29 +2183,21 @@ function runChecker(tmp, nowIso, {
   context = "deploy",
   slickchartsRepoRoot = HERMETIC_FIXTURE_ROOT,
 } = {}) {
-  const args = [
-    CHECKER,
-    "--data-root",
-    tmp,
-    "--slickcharts-repo-root",
-    slickchartsRepoRoot,
-  ];
-  if (strict) args.push("--strict");
-  args.push(`--context=${context}`);
   try {
-    execFileSync("node", args, {
-      env: { ...baseEnv(), KPI_FAKE_NOW: nowIso },
-      stdio: ["ignore", "pipe", "pipe"],
+    const result = executeCheckerRun({
+      dataRoot: tmp,
+      slickchartsRepoRoot,
+      nowIso,
+      strict,
+      context,
     });
-    return { exit: 0 };
+    return { exit: result.exit, stderr: result.stderr };
   } catch (error) {
-    const stderr = String(error.stderr ?? "");
-    const stdout = String(error.stdout ?? "");
-    // Surface the child's real failure in CI logs — a swallowed checker error
+    const stderr = error?.stack ?? error?.message ?? String(error);
+    // Surface the checker's real failure in CI logs — a swallowed checker error
     // turns an exit-code assertion into an undiagnosable AssertionError.
-    console.error(`[runChecker exit=${error.status ?? 1}] stderr:\n${stderr.slice(0, 2048)}`);
-    if (stdout) console.error(`[runChecker] stdout:\n${stdout.slice(0, 2048)}`);
-    return { exit: error.status ?? 1, stderr };
+    console.error(`[runChecker exit=1] stderr:\n${stderr.slice(0, 2048)}`);
+    return { exit: 1, stderr };
   }
 }
 
