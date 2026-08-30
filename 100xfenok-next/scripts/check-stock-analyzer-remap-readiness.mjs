@@ -2,10 +2,10 @@
 /**
  * Stock Analyzer remap readiness guard.
  *
- * The current product contract intentionally keeps /tools/stock-analyzer on
- * the legacy iframe while the native dashboard remains a preview route. This
- * script makes that state explicit and lists the gates that must close before
- * the default route can be flipped.
+ * The retained implementation intentionally keeps the legacy iframe and the
+ * native preview separate, even when both public roots are retired into the
+ * authenticated admin archive. This script makes that state explicit and
+ * lists the gates that must close before any future default-route flip.
  */
 
 import fs from "node:fs";
@@ -21,7 +21,8 @@ const FILES = {
   contractReadme: "src/lib/stock-analyzer/README.md",
   routeCatalog: "scripts/qa-route-catalog.mjs",
   mobileUx: "scripts/check-mobile-ux-contract.mjs",
-  appShell: "src/components/shell/AppShell.tsx",
+  retiredRoutes: "src/lib/retired-public-routes.ts",
+  adminArchive: "src/app/admin/archive/page.tsx",
   dataAsset: "public/data/global-scouter/core/stocks_analyzer.json",
 };
 
@@ -74,11 +75,10 @@ const CHECKS = [
     ],
   },
   {
-    id: "qa-catalog-still-maps-default-route-to-legacy-iframe",
+    id: "qa-catalog-keeps-retained-legacy-iframe-contract",
     file: "routeCatalog",
     required: [
       '"/tools/stock-analyzer": "/tools/stock_analyzer/stock_analyzer.html"',
-      '"/tools/stock-analyzer/native"',
     ],
   },
   {
@@ -92,11 +92,20 @@ const CHECKS = [
     ],
   },
   {
-    id: "navigation-still-points-at-default-stock-analyzer-route",
-    file: "appShell",
+    id: "retirement-registry-routes-both-stock-surfaces-to-screener",
+    file: "retiredRoutes",
     required: [
-      "stockAnalyzer",
-      "ROUTES.stockAnalyzer",
+      'href: "/tools/stock-analyzer"',
+      '{ source: "/tools/stock-analyzer", destination: "/screener" }',
+      '{ source: "/tools/stock-analyzer/native", destination: "/screener" }',
+    ],
+  },
+  {
+    id: "admin-archive-keeps-retained-stock-analyzer-access",
+    file: "adminArchive",
+    required: [
+      "RETIRED_PUBLIC_SURFACES",
+      "[ROUTES.stockAnalyzer]",
     ],
   },
 ];
