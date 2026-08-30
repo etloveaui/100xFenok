@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-30T11:22:39.928Z",
+  "generated_at": "2026-08-30T12:26:08.437Z",
   "status": "open",
-  "open_incident_count": 7,
+  "open_incident_count": 8,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -83,6 +83,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
+    },
+    {
+      "workflow": "validate-workflows.yml",
+      "label": "Validate GitHub Workflows",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 33298849608,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33298849608",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     },
     {
       "workflow": "worker-request-budget-alarm.yml",
@@ -332,7 +345,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 30
+      "data_freshness_age_hours_at_generation": 31
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -497,9 +510,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33308684655",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33308684655",
-    "observed_at": "2026-08-30T11:22:39.928Z",
+    "run_id": "33311371058",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33311371058",
+    "observed_at": "2026-08-30T12:26:08.437Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-edgar-filings.yml",
@@ -508,6 +521,7 @@
       "fetch-yf-finance.yml",
       "global-writer-queue-observer.yml",
       "slickcharts-monthly.yml",
+      "validate-workflows.yml",
       "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
