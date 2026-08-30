@@ -226,7 +226,7 @@ assert.equal(
   "the home card must narrow game progress before rendering receipt totals",
 );
 assert.equal(
-  routeContract.includes("page_route_count: 57")
+  routeContract.includes("page_route_count: 58")
     && routeContract.includes("out_of_scope_count: 15"),
   true,
   "the authenticated game route must be acknowledged by the route-scope count",

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { RETIRED_PUBLIC_SURFACES } from "@/lib/retired-public-routes";
+import { ROUTES } from "@/lib/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -11,27 +12,27 @@ export const metadata: Metadata = {
 };
 
 const archiveCopy: Record<string, { label: string; description: string; icon: string }> = {
-  "/tools/stock-analyzer": {
+  [ROUTES.stockAnalyzer]: {
     label: "종목 분석기",
     description: "기존 종목 분석 화면을 관리자 전용으로 확인합니다.",
     icon: "fa-chart-line",
   },
-  "/alpha-scout": {
+  [ROUTES.alphaScout]: {
     label: "알파 스카우트",
     description: "보관된 알파 리포트와 탐색 화면을 확인합니다.",
     icon: "fa-binoculars",
   },
-  "/posts": {
+  [ROUTES.posts]: {
     label: "분석 아카이브",
     description: "기존 분석 글과 발행 기록을 관리자 전용으로 엽니다.",
     icon: "fa-newspaper",
   },
-  "/100x/daily-wrap": {
+  [ROUTES.dailyWrap]: {
     label: "데일리 랩",
     description: "보관된 시장 데일리 랩 화면을 확인합니다.",
     icon: "fa-calendar-days",
   },
-  "/workbench": {
+  [ROUTES.workbench]: {
     label: "워크벤치",
     description: "기존 데이터 작업 화면을 관리자 전용으로 확인합니다.",
     icon: "fa-screwdriver-wrench",
