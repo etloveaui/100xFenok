@@ -72,10 +72,8 @@ jobs:
           node scripts/build-13f-factor-radar-v2.mjs
           node scripts/build-guru-holders-index.mjs
 
-      - name: Build and verify the review-only 13F bridge index
-        run: |
-          node scripts/build-sec13f-bridge-index.mjs
-          node scripts/test-sec13f-bridge-index.mjs
+      - name: Build the review-only 13F bridge index from the regenerated tree
+        run: node scripts/build-sec13f-bridge-index.mjs
 
       - name: Build revision movers + industry benchmarks
         if: github.event_name != 'push'
@@ -105,6 +103,7 @@ jobs:
           echo "Total stocks: $(node -e "console.log(JSON.parse(require('fs').readFileSync('data/global-scouter/core/stocks_analyzer.json','utf8')).count)")"
 
       - name: Commit and push
+        id: publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -133,6 +132,7 @@ jobs:
             data/calendar/prev-values.json
           if git diff --staged --quiet; then
             echo "No stocks analyzer or 13F analytics changes to publish"
+            echo "bridge_review_ready=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
@@ -149,14 +149,16 @@ jobs:
             fi
             # The bridge fingerprints every input listed in the trigger. A
             # successful rebase may advance one of those inputs, so rebuild
-            # and verify after the rebase, then amend before attempting push.
+            # after the rebase and amend before attempting push. The full
+            # review contract runs after publication so its count pin cannot
+            # block production output.
             node scripts/build-sec13f-bridge-index.mjs
-            node scripts/test-sec13f-bridge-index.mjs
             git add data/computed/sec13f_bridge_index.json
             if ! git diff --staged --quiet; then
               git commit --amend --no-edit
             fi
             if git push; then
+              echo "bridge_review_ready=true" >> "$GITHUB_OUTPUT"
               if [[ "$GITHUB_EVENT_NAME" != "push" ]]; then
                 gh workflow run update-manifest.yml --ref main -f rebuild_slickcharts=true
               fi
@@ -167,3 +169,7 @@ jobs:
           done
           echo "git push failed after retrying concurrent main updates"
           exit 1
+
+      - name: Verify the review-only 13F bridge index against the regenerated tree
+        if: ${{ always() && steps.publish.outputs.bridge_review_ready == 'true' }}
+        run: node scripts/test-sec13f-bridge-index.mjs
