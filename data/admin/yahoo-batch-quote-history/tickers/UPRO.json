@@ -66,35 +66,46 @@
       "run_id": "32379322022",
       "schedule": "",
       "shard": ""
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1191,
+      "natural": true,
+      "observed_at": "2026-08-30T05:17:41Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33294307368",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T02:26:20Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/UPRO.json",
-    "payload_sha256": "d7a20b92adc51c7cbdd5e797f517099df6a4e9722bce9eef35008b044f4a780c",
-    "quote_as_of": "2026-08-07T20:00:00Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-08-30T05:17:53Z",
+    "history_as_of": "2026-08-28",
+    "path": "data/yf/finance/UPRO.json",
+    "payload_sha256": "a61a3196b3b6bac52fd2cc3c8688b3d0f7f6a3a1780fa28d144a48973e2969af",
+    "quote_as_of": "2026-08-28T20:00:00Z",
+    "source_as_of": "2026-08-28"
   },
   "discovered_from": [
-    "focus_etf_configuration",
-    "stockanalysis_etf"
+    "focus_etf_configuration"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for UPRO despite available history",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 596,
-    "natural": false,
-    "observed_at": "2026-08-20T14:20:12Z",
-    "outcome": "failed",
+    "latency_ms": 1191,
+    "natural": true,
+    "observed_at": "2026-08-30T05:17:41Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "32379322022",
-    "schedule": "",
-    "shard": ""
+    "run_id": "33294307368",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -117,17 +128,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T02:25:42Z",
-    "payload_sha256": "97c56dfe986c5334122ed0a30c2e1c2631de469b4660ce91512c61a32af60acd",
-    "quote_as_of": "2026-08-07T20:00:00Z",
+    "history_as_of": "2026-08-28",
+    "observed_at": "2026-08-30T05:17:41Z",
+    "payload_sha256": "662abaa7391cfbbb93779467926d22e084cef39846bb322cb501bd3edfb26ba1",
+    "quote_as_of": "2026-08-28T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31290251671",
+    "run_id": "33294307368",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-08-28"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-08-30T05:17:41Z",
+  "recovered_from_run_id": "32379322022",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "33294307368",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -140,5 +156,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "UPRO",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-08-30T05:17:41Z"
 }

@@ -25,15 +25,28 @@
       "run_id": "31631524598",
       "schedule": "7 18 * * 0-5",
       "shard": "45/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1396,
+      "natural": true,
+      "observed_at": "2026-08-30T05:17:41Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33294307368",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T19:19:31Z",
-    "history_as_of": "2026-08-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SPHY.json",
-    "payload_sha256": "4e4c9d636f3ac55a6f4c1af550cb3704c8aee109250bd695932baa79cea67ebb",
-    "quote_as_of": "2026-08-12T19:19:28Z",
-    "source_as_of": "2026-08-12"
+    "fetched_at": "2026-08-30T05:17:48Z",
+    "history_as_of": "2026-08-28",
+    "path": "data/yf/finance/SPHY.json",
+    "payload_sha256": "c8e0a835b81abbcc321c720edf4be15512e5f9d90976cb675e03dc604fc797fc",
+    "quote_as_of": "2026-08-28T20:00:00Z",
+    "source_as_of": "2026-08-28"
   },
   "discovered_from": [
     "core_daily_basket"
@@ -42,14 +55,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1145,
+    "latency_ms": 1396,
     "natural": true,
-    "observed_at": "2026-08-12T19:14:55Z",
+    "observed_at": "2026-08-30T05:17:41Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31631524598",
-    "schedule": "7 18 * * 0-5",
-    "shard": "45/72"
+    "run_id": "33294307368",
+    "schedule": "7 0 * * 0-5",
+    "shard": "0/6"
   },
   "lkg": {
     "fetched_at": "2026-08-12T19:19:31Z",
@@ -62,17 +75,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-12",
-    "observed_at": "2026-08-12T19:14:55Z",
-    "payload_sha256": "3c5bcce693d1a0156c0465a874971850c5259d5074c459d62ce88edeb735c1f7",
-    "quote_as_of": "2026-08-12T19:19:28Z",
+    "history_as_of": "2026-08-28",
+    "observed_at": "2026-08-30T05:17:41Z",
+    "payload_sha256": "d39f180cd2904f4d40126a1af42d9b56fcd7554ac97083516f8e51549a909e48",
+    "quote_as_of": "2026-08-28T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31631524598",
+    "run_id": "33294307368",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-12"
+    "source_as_of": "2026-08-28"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -85,5 +98,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "SPHY",
-  "updated_at": "2026-08-21T01:54:26Z"
+  "updated_at": "2026-08-30T05:17:41Z"
 }
