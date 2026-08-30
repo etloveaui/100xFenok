@@ -1178,12 +1178,20 @@ function buildDerivedRimInputs(manifest, config) {
 function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, activeUniverseRows }) {
   const activeUniverseCodes = activeKrxUniverseCodes(activeUniverseRows);
   const coveredCodes = new Set();
+  const coveredCodesByMarket = {
+    KRX: new Set(),
+    KOSDAQ: new Set(),
+  };
   for (const file of manifest.files ?? []) {
     if (!file.path || !REQUIRED_DAILY_ISSUER_ENDPOINTS.has(file.api_id) || file.status !== "success" || Number(file.row_count) <= 0) continue;
+    const market = file.api_id === "ksq_bydd_trd" ? "KOSDAQ" : "KRX";
     const payload = readOptionalJson(resolveRepoPath(file.path));
     for (const row of Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : []) {
       const code = String(row?.ISU_CD ?? "").replace(/[^0-9A-Z]/giu, "").slice(0, 6).toUpperCase();
-      if (code) coveredCodes.add(code);
+      if (code) {
+        coveredCodes.add(code);
+        coveredCodesByMarket[market].add(code);
+      }
     }
   }
   const proofManifestPath = path.join(config.outputRoot, "manifest.json");
@@ -1195,6 +1203,8 @@ function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, act
     bridgeDocument,
     activeUniverseCodes,
     coveredCodes,
+    activeUniverseRows,
+    coveredCodesByMarket,
     proofManifestSha256,
   });
 }

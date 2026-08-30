@@ -555,6 +555,7 @@ const koreaRawProofAvailable = hasManifestPayload(koreaProofManifest) && koreaPr
 const koreaReceiptValidation = validateKrxIssuerDailyCoverageReceipt({
   bridgeDocument: koreaBridge,
   activeUniverseCodes: krUniverseCodes,
+  activeUniverseRows: koreaRows,
 });
 const koreaCountedSourceYmd = koreaRawProofAvailable ? ymd(koreaProofDates.at(-1)) : null;
 const koreaLatestCalendarDailyHistoryRows = (koreaLatestCalendarManifest.files ?? [])
