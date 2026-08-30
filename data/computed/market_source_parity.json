@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-08-30T00:24:22Z",
+  "generated_at": "2026-08-30T06:44:46Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6803,
@@ -11,13 +11,13 @@
     "diagnosis_counts": {
       "agreement": 10615,
       "scale_mismatch": 194,
-      "sign_divergence": 2989,
+      "sign_divergence": 2988,
       "stale": 36670,
-      "value_drift": 11100
+      "value_drift": 11101
     },
     "stale_rows": 36670,
     "scale_mismatch_rows": 194,
-    "sign_divergence_rows": 2989
+    "sign_divergence_rows": 2988
   },
   "by_field": {
     "beta": {
@@ -14254,47 +14254,6 @@
       }
     },
     {
-      "ticker": "BEG",
-      "asset_type": "etf",
-      "field": "return_1m",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 3,
-      "relative_spread_pct": 196.511094,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -25.356359828097926
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 26.273
-        },
-        {
-          "source": "stockanalysis.etf_screener.performance",
-          "value": 26.273
-        }
-      ],
-      "diagnosis": "sign_divergence",
-      "spread_pct": 196.511094,
-      "fresh_spread_pct": 196.511094,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 64.0
-      }
-    },
-    {
       "ticker": "POW",
       "asset_type": "etf",
       "field": "return_1m",
@@ -16342,6 +16301,47 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "yf": 0.0
+      }
+    },
+    {
+      "ticker": "RJMI",
+      "asset_type": "etf",
+      "field": "return_1m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 3,
+      "relative_spread_pct": 192.818982,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -1.4377660366814564
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 1.549
+        },
+        {
+          "source": "stockanalysis.etf_screener.performance",
+          "value": 1.549
+        }
+      ],
+      "diagnosis": "sign_divergence",
+      "spread_pct": 192.818982,
+      "fresh_spread_pct": 192.818982,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 50.0
       }
     }
   ]
