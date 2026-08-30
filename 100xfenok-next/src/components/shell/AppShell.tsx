@@ -19,7 +19,6 @@ import {
   CHART_ROUTE,
   EXPLORE_NAV_LABEL,
   EXPLORE_ROUTE,
-  WORKBENCH_NAV_LABEL,
 } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
 import type { DataState } from "@/lib/data-state";
@@ -197,67 +196,6 @@ const NAV: NavItem[] = [
       </svg>
     ),
   },
-  {
-    id: "workbench",
-    group: "더보기",
-    label: WORKBENCH_NAV_LABEL,
-    href: ROUTES.workbench,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <circle cx="10" cy="10" r="7.5" />
-        <path d="M13.2 6.8l-2 4.4-4.4 2 2-4.4z" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "dailyWrap",
-    group: "더보기",
-    label: "Daily Wrap",
-    href: ROUTES.dailyWrap,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <rect x="3" y="3.5" width="14" height="13" rx="2" />
-        <path d="M6 7h8M6 10h5M6 13h7" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "posts",
-    group: "더보기",
-    label: "아카이브",
-    href: ROUTES.posts,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <path d="M5 3.5h7l3 3v10H5z" strokeLinejoin="round" />
-        <path d="M12 3.5v4h4M7.5 10.5h5M7.5 13.5h4" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "alphaScout",
-    group: "더보기",
-    label: "Alpha Scout (미리보기)",
-    href: ROUTES.alphaScout,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <circle cx="8.5" cy="8.5" r="4.8" />
-        <path d="M12 12l4 4M14.5 4.5l.7 1.4 1.5.2-1.1 1.1.3 1.5-1.4-.7-1.4.7.3-1.5-1.1-1.1 1.5-.2z" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "stockAnalyzer",
-    group: "더보기",
-    label: "종목분석 (레거시)",
-    href: ROUTES.stockAnalyzer,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <rect x="3" y="3.5" width="14" height="13" rx="2" />
-        <path d="M6.2 12.8l2.3-2.7 2 1.8 3.3-4.2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M6 15h8" strokeLinecap="round" />
-      </svg>
-    ),
-  },
 ];
 
 const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
@@ -276,13 +214,8 @@ const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
 const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"];
 const MORE_TAB_IDS: ShellPage[] = [
   "chart",
-  "workbench",
   "ib",
   "vr",
-  "dailyWrap",
-  "posts",
-  "alphaScout",
-  "stockAnalyzer",
   "regime",
   "sectors",
   "etfs",
@@ -599,15 +532,6 @@ export default function AppShell({
             </span>
           ) : null}
           <AppShellFreshnessPill state={freshness} />
-          <TransitionLink
-            href={ROUTES.dailyWrap}
-            className="ic-btn"
-            aria-label="Daily Wrap"
-            aria-current={navActive === "dailyWrap" ? "page" : undefined}
-          >
-            {navById("dailyWrap").icon}
-            <span className="sr-only">Daily Wrap</span>
-          </TransitionLink>
         </div>
       </header>
 

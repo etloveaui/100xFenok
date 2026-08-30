@@ -13,6 +13,11 @@ import {
   isSafeSlugSegments,
   resolveAdminLegacyCandidates,
 } from "../src/lib/admin-legacy-candidates";
+import {
+  RETIRED_PUBLIC_SURFACES,
+  getRetiredPublicDestination,
+  isRetiredPublicDeepLink,
+} from "../src/lib/retired-public-routes";
 import { resolvePostCandidates } from "../src/lib/post-candidates";
 import { resolvePostPublicPathBySlug } from "../src/lib/server/posts";
 import {
@@ -114,10 +119,205 @@ function assertMiddlewareSourceContracts(source: string): void {
     /resolvePostCandidates\(slug\)\.some\(\(candidate\) => postHtmlFileSet\.has\(candidate\)\)/,
     "posts 404 decision must use candidate membership",
   );
+  assert.match(
+    source,
+    /const retiredDestination = getRetiredPublicDestination\(pathname\);/,
+    "retired public roots must use the shared route registry",
+  );
+  assert.match(
+    source,
+    /NextResponse\.redirect\(targetUrl, 307\)/,
+    "anonymous retired-root requests must use a temporary redirect",
+  );
+  assert.match(
+    source,
+    /targetUrl\.search = "";/,
+    "anonymous retired-root redirects must clear the query string",
+  );
+  assert.match(
+    source,
+    /const preservedRetiredDeepLink = isRetiredPublicDeepLink\(\s*pathname,\s*request\.nextUrl\.searchParams,?\s*\);/s,
+    "retired-root middleware must evaluate content selectors before redirecting",
+  );
+  assert.match(
+    source,
+    /retiredDestination\s*&&\s*!preservedRetiredDeepLink\s*&&\s*!\(await hasAdminSession\(\)\)/s,
+    "only non-preserved retired roots may redirect anonymously",
+  );
+  assert.match(
+    source,
+    /if \(retiredDestination \|\| preservedRetiredDeepLink\)/,
+    "preserved retired deep links must continue with noindex",
+  );
 }
 
 const canonicalPost = POST_HTML_FILES[0];
 const extensionlessPost = canonicalPost.replace(/\.html$/, "");
+
+assert.equal(RETIRED_PUBLIC_SURFACES.length, 5);
+assert.deepEqual(
+  RETIRED_PUBLIC_SURFACES.flatMap((surface) => surface.routes)
+    .map(({ source, destination }) => [source, destination])
+    .sort(([left], [right]) => left.localeCompare(right)),
+  [
+    ["/100x/daily-wrap", "/"],
+    ["/alpha-scout", "/"],
+    ["/explore", "/"],
+    ["/posts", "/"],
+    ["/tools/stock-analyzer", "/screener"],
+    ["/tools/stock-analyzer/native", "/screener"],
+    ["/workbench", "/"],
+  ],
+  "retired public registry must expose the seven exact root mappings",
+);
+assert.equal(getRetiredPublicDestination("/tools/stock-analyzer"), "/screener");
+assert.equal(getRetiredPublicDestination("/tools/stock-analyzer/native/"), "/screener");
+assert.equal(getRetiredPublicDestination("/alpha-scout"), "/");
+assert.equal(getRetiredPublicDestination("/posts/"), "/");
+assert.equal(getRetiredPublicDestination("/posts////"), "/");
+assert.equal(getRetiredPublicDestination("/100x/daily-wrap"), "/");
+assert.equal(getRetiredPublicDestination("/workbench"), "/");
+assert.equal(getRetiredPublicDestination("/explore"), "/");
+assert.equal(getRetiredPublicDestination("/posts/example.html"), null);
+assert.equal(getRetiredPublicDestination("/posts/example.html/"), null);
+assert.equal(getRetiredPublicDestination("/tools/stock-analyzer/native/preview"), null);
+assert.equal(getRetiredPublicDestination("/alpha-scout/reports/2025.html"), null);
+assert.equal(getRetiredPublicDestination("/posts/2026-02-21.html"), null);
+assert.equal(getRetiredPublicDestination("/100x/daily-wrap/2025-08-29.html"), null);
+assert.equal(getRetiredPublicDestination("/workbench/data"), null);
+assert.equal(getRetiredPublicDestination("/explore/data"), null);
+
+assert.equal(
+  isRetiredPublicDeepLink(
+    "/alpha-scout",
+    new URLSearchParams("report=2025-08-24_100x-alpha-scout.html"),
+  ),
+  true,
+);
+assert.equal(
+  isRetiredPublicDeepLink(
+    "/alpha-scout/",
+    new URLSearchParams("path=alpha-scout%2Freports%2F2025-08-24_100x-alpha-scout.html"),
+  ),
+  true,
+);
+assert.equal(
+  isRetiredPublicDeepLink(
+    "/alpha-scout",
+    new URLSearchParams("path=alpha-scout%252Freports%252F2025-08-24.html"),
+  ),
+  true,
+);
+assert.equal(
+  isRetiredPublicDeepLink(
+    "/alpha-scout",
+    new URLSearchParams("report=2025-08-24_100x-alpha-scout.html&v2=1"),
+  ),
+  true,
+);
+assert.equal(isRetiredPublicDeepLink("/alpha-scout", new URLSearchParams("report=")), false);
+assert.equal(
+  isRetiredPublicDeepLink("/alpha-scout", new URLSearchParams("report=.hidden.html")),
+  false,
+);
+assert.equal(
+  isRetiredPublicDeepLink("/alpha-scout", new URLSearchParams("report=../secret.html")),
+  false,
+);
+assert.equal(
+  isRetiredPublicDeepLink("/alpha-scout", new URLSearchParams("report=report.txt")),
+  false,
+);
+assert.equal(
+  isRetiredPublicDeepLink(
+    "/alpha-scout",
+    new URLSearchParams("path=alpha-scout%2Freports%2F..%2Fsecret.html"),
+  ),
+  false,
+);
+assert.equal(
+  isRetiredPublicDeepLink(
+    "/alpha-scout",
+    new URLSearchParams("path=alpha-scout%252Freports%252F..%252Fsecret.html"),
+  ),
+  false,
+);
+assert.equal(
+  isRetiredPublicDeepLink(
+    "/alpha-scout",
+    new URLSearchParams("report=%252Ehidden.html"),
+  ),
+  false,
+);
+assert.equal(
+  isRetiredPublicDeepLink(
+    "/alpha-scout",
+    new URLSearchParams("path=alpha-scout%2Freports%2F2025-08-24.html&v2=1"),
+  ),
+  true,
+);
+assert.equal(
+  isRetiredPublicDeepLink("/posts", new URLSearchParams("path=posts%2F2026-02-21_tariff-ruling-comprehensive.html")),
+  true,
+);
+assert.equal(
+  isRetiredPublicDeepLink("/posts/", new URLSearchParams("path=posts%2F..%2Fsecret.html")),
+  false,
+);
+assert.equal(
+  isRetiredPublicDeepLink("/posts", new URLSearchParams("path=posts%2Freports%2Fmissing.txt")),
+  false,
+);
+assert.equal(
+  isRetiredPublicDeepLink("/100x/daily-wrap", new URLSearchParams("date=2025-08-29")),
+  true,
+);
+assert.equal(
+  isRetiredPublicDeepLink("/100x/daily-wrap/", new URLSearchParams("date=2025-8-29")),
+  false,
+);
+assert.equal(
+  isRetiredPublicDeepLink("/100x/daily-wrap", new URLSearchParams("date=2025-08-29&v2=1")),
+  true,
+);
+assert.equal(
+  isRetiredPublicDeepLink("/100x/daily-wrap", new URLSearchParams("v2=1")),
+  false,
+);
+for (const pathname of [
+  "/tools/stock-analyzer",
+  "/tools/stock-analyzer/native",
+  "/workbench",
+  "/explore",
+  "/alpha-scout",
+  "/posts",
+  "/100x/daily-wrap",
+]) {
+  assert.equal(
+    isRetiredPublicDeepLink(pathname, new URLSearchParams()),
+    false,
+    `${pathname} plain root must not be preserved`,
+  );
+}
+for (const pathname of [
+  "/tools/stock-analyzer",
+  "/tools/stock-analyzer/native",
+  "/workbench",
+  "/explore",
+  "/alpha-scout",
+  "/posts",
+  "/100x/daily-wrap",
+]) {
+  assert.equal(
+    isRetiredPublicDeepLink(pathname, new URLSearchParams("v1=1")),
+    false,
+    `${pathname} preview-only query must not preserve the retired root`,
+  );
+}
+assert.equal(
+  isRetiredPublicDeepLink("/posts", new URLSearchParams("utm_source=archive")),
+  false,
+);
 
 assert.deepEqual(resolvePostCandidates(["nested"]), ["nested.html", "nested/index.html"]);
 assert.deepEqual(resolvePostCandidates(["already.html"]), ["already.html"]);
@@ -172,6 +372,7 @@ assert.deepEqual(
   "ADMIN_CONCRETE_ROUTES must equal the app/admin page tree minus catch-all routes",
 );
 assert.deepEqual(sourceAdminRoutes(middlewareSource), expectedConcreteAdminRoutes());
+assert.equal(getAdminNotFoundRewrite(request("/admin/archive/")), null);
 assert.equal(getAdminNotFoundRewrite(request("/admin/live/")), null);
 assert.equal(getAdminNotFoundRewrite(request("/admin/data%2Dlab")), null);
 assert.equal(getAdminNotFoundRewrite(request("/admin/design%2Dgallery")), null);

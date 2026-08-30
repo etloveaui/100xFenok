@@ -22,9 +22,9 @@ const POSTS_DETAIL_BOUNDARY_CHIPS = [
 ] as const;
 
 const POSTS_DETAIL_OWNER_LINKS = [
-  { key: "archive", label: "전체 아카이브", href: ROUTES.posts },
-  { key: "alpha-scout", label: "Alpha Scout", href: ROUTES.alphaScout },
-  { key: "daily-wrap", label: "Daily Wrap", href: ROUTES.dailyWrap },
+  { key: "home", label: "Home", href: ROUTES.home },
+  { key: "market-valuation", label: "Market Valuation", href: ROUTES.market },
+  { key: "screener", label: "Screener", href: ROUTES.screener },
 ] as const;
 
 interface PostLegacyPageProps {

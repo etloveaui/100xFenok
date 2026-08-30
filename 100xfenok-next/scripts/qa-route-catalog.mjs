@@ -15,6 +15,7 @@ export const tabSentimentRoute = "/?tab=sentiment";
 // This list is the only source for the generated block in public/_redirects.
 export const ADMIN_CANONICAL_REDIRECT_ROUTES = [
   "/admin",
+  "/admin/archive",
   "/admin/data-lab",
   "/admin/design-gallery",
   "/admin/design-lab",
@@ -30,7 +31,6 @@ export const ADMIN_CANONICAL_REDIRECT_ROUTES = [
 
 // ---- Smoke test page routes (stockanalysis API surface) ----
 export const SMOKE_PAGE_ROUTES = [
-  "/explore",
   "/etfs",
   "/etfs?type=leveraged",
   "/etfs?type=single-stock",
@@ -65,17 +65,12 @@ export const PLAYWRIGHT_ROUTES = [
   tabLiquidityRoute,
   tabSentimentRoute,
   "/market",
-  "/alpha-scout",
-  alphaReportDeepLinkRoute,
   "/multichart",
   "/radar",
   "/ib",
   "/infinite-buying",
   "/vr",
   vrDeepLinkRoute,
-  "/posts",
-  postsDeepLinkRoute,
-  "/explore",
   "/screener",
   "/stock/NVDA",
   "/market-valuation",
@@ -86,17 +81,13 @@ export const PLAYWRIGHT_ROUTES = [
   "/etfs/SPY",
   "/etfs/ADIU",
   "/market/events",
-  "/100x/daily-wrap",
   ...ADMIN_CANONICAL_REDIRECT_ROUTES,
   designLabNativeRoute,
-  "/tools/stock-analyzer",
-  "/tools/stock-analyzer/native",
   "/this-route-should-not-exist",
 ];
 
 // ---- P2 data-state route subset (used by playwright p2-browser mode) ----
 export const P2_DATA_STATE_ROUTES = [
-  "/explore",
   "/screener",
   "/stock/NVDA",
   "/stock/ZZZZ",

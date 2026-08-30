@@ -11,6 +11,10 @@ import {
 } from "@/lib/admin-legacy-candidates";
 import { resolvePostCandidates } from "@/lib/post-candidates";
 import {
+  getRetiredPublicDestination,
+  isRetiredPublicDeepLink,
+} from "@/lib/retired-public-routes";
+import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
@@ -264,6 +268,7 @@ function rateLimitResponse(): NextResponse {
 // page.tsx`; adding an admin page without adding it here 404s that new page.
 export const ADMIN_CONCRETE_ROUTES = new Set<string>([
   "/admin",
+  "/admin/archive",
   "/admin/data-lab",
   "/admin/design-gallery",
   "/admin/design-lab",
@@ -492,6 +497,25 @@ export async function middleware(request: NextRequest) {
     }
     return authenticated;
   };
+
+  const retiredDestination = getRetiredPublicDestination(pathname);
+  const preservedRetiredDeepLink = isRetiredPublicDeepLink(
+    pathname,
+    request.nextUrl.searchParams,
+  );
+  if (
+    retiredDestination &&
+    !preservedRetiredDeepLink &&
+    !(await hasAdminSession())
+  ) {
+    const targetUrl = request.nextUrl.clone();
+    targetUrl.pathname = retiredDestination;
+    targetUrl.search = "";
+    return withNoindexHeader(NextResponse.redirect(targetUrl, 307));
+  }
+  if (retiredDestination || preservedRetiredDeepLink) {
+    return withNoindexHeader(NextResponse.next());
+  }
 
   if (!normalizedAdminPath && !normalizedTravelPath) {
     if (isProtectedAdminStaticAssetPath(pathname) && !(await hasAdminSession())) {

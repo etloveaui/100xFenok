@@ -118,22 +118,25 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
  * whether that was a decision or an oversight; two carried a reason in a code
  * comment that no check could read, and three carried none at all.
  *
- * A reason of `undecided` is a real state, not a placeholder to be ignored: it
- * means the route serves publicly and nobody has chosen whether it should be
- * indexed. Measured 2026-08-23 — all three return 200 live.
+ * A reason of `retired` is a real state, not a placeholder to be ignored: it
+ * means the route implementation remains preserved for the authenticated
+ * archive while the public root is no longer promoted or indexed.
  */
 export const SITEMAP_EXCLUSIONS: Partial<Record<RouteKey, string>> = {
   briefing: "Legacy alias. Redirects to home (307 verified live 2026-08-23) and must not appear as a separate product.",
   marketLegacy: "Legacy bookmark target. Redirects to ROUTES.market — verified live 2026-08-23, though as a 200 with a meta refresh rather than the 308 the source requests; see BACKLOG B-404.",
   infiniteBuying: "undecided — serves 200 live and is reachable, but nobody has chosen whether it should be indexed. See BACKLOG B-403.",
-  stockAnalyzer: "undecided — serves 200 live and is reachable, but nobody has chosen whether it should be indexed. See BACKLOG B-403.",
-  stockAnalyzerNative: "undecided — serves 200 live and is reachable, but nobody has chosen whether it should be indexed. See BACKLOG B-403.",
+  explore: "retired — compatibility alias preserved for the authenticated archive; the public root is Home.",
+  workbench: "retired — implementation preserved for the authenticated archive and removed from public discovery.",
+  posts: "retired — archive implementation and historical permalinks are preserved without public root promotion.",
+  alphaScout: "retired — report HTML and JSON assets are preserved without public root promotion.",
+  dailyWrap: "retired — dated reports, viewer, and data assets are preserved without public root promotion.",
+  stockAnalyzer: "retired — legacy analyzer implementation and shared data are preserved without public root promotion.",
+  stockAnalyzerNative: "retired — native preview implementation and shared data are preserved without public root promotion.",
 };
 
 export const SITEMAP_PRODUCT_ROUTES = [
   { path: ROUTES.home, changeFrequency: "daily", priority: 1 },
-  { path: ROUTES.explore, changeFrequency: "daily", priority: 0.9 },
-  { path: ROUTES.workbench, changeFrequency: "daily", priority: 0.9 },
   { path: ROUTES.market, changeFrequency: "daily", priority: 0.9 },
   { path: ROUTES.marketStructure, changeFrequency: "daily", priority: 0.8 },
   { path: ROUTES.regime, changeFrequency: "daily", priority: 0.8 },
@@ -145,12 +148,9 @@ export const SITEMAP_PRODUCT_ROUTES = [
   { path: ROUTES.screener, changeFrequency: "daily", priority: 0.9 },
   { path: ROUTES.superinvestors, changeFrequency: "weekly", priority: 0.8 },
   { path: ROUTES.portfolio, changeFrequency: "weekly", priority: 0.7 },
-  { path: ROUTES.posts, changeFrequency: "weekly", priority: 0.7 },
-  { path: ROUTES.alphaScout, changeFrequency: "weekly", priority: 0.7 },
   { path: ROUTES.ib, changeFrequency: "monthly", priority: 0.7 },
   { path: ROUTES.vr, changeFrequency: "monthly", priority: 0.6 },
   { path: ROUTES.radar, changeFrequency: "daily", priority: 0.7 },
-  { path: ROUTES.dailyWrap, changeFrequency: "daily", priority: 0.7 },
   { path: ROUTES.macroChart, changeFrequency: "daily", priority: 0.75 },
   { path: ROUTES.multichart, changeFrequency: "weekly", priority: 0.6 },
 ] as const;

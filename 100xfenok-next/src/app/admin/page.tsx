@@ -58,6 +58,13 @@ const adminLinks = [
     icon: "fa-calculator",
     badge: "TRADING",
   },
+  {
+    href: "/admin/archive",
+    title: "Public Archive",
+    description: "공개 경로에서 보관한 레거시 화면을 관리자 전용으로 엽니다.",
+    icon: "fa-box-archive",
+    badge: "ARCHIVE",
+  },
 ];
 
 export default function AdminRootPage() {
