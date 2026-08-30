@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-08-29",
+  "last_updated": "2026-08-30",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -34,12 +34,12 @@
     },
     "global-scouter": {
       "version": "2.4.0",
-      "updated": "2026-08-21",
+      "updated": "2026-08-28",
       "update_frequency": "on-demand",
       "source": "Global Scouter Tool",
       "file_count": 1084,
       "schema": true,
-      "description": "Stock screening (1,066), ETFs (22), indicators (1,073 records) from the owner's weekly Global Scouter export"
+      "description": "Stock screening (1,066), ETFs (22), indicators (1,074 records) from the owner's weekly Global Scouter export"
     },
     "indices": {
       "version": "2.0.0",
@@ -206,6 +206,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-08-30",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the 2026-08-28 export: 1,066 stocks (0 net, same ticker set), 1,074 indicators (+1), 22 ETFs, per_bands 98.2% (1,047), and 9 raw files; downstream analyzer and revision artifacts follow the existing hosted rebuild path.",
+      "breaking": false
+    },
     {
       "date": "2026-08-25",
       "folder": "benchmarks",
@@ -930,9 +937,9 @@
       "path": "/data/global-scouter/",
       "schemaVersion": "2.3.0",
       "fileCount": 1084,
-      "lastUpdated": "2026-08-21",
+      "lastUpdated": "2026-08-28",
       "lastUpdatedReason": null,
-      "notes": "Stock screening (1,066), ETFs (22), indicators (1,073 records) from the owner's weekly Global Scouter export"
+      "notes": "Stock screening (1,066), ETFs (22), indicators (1,074 records) from the owner's weekly Global Scouter export"
     },
     {
       "name": "macro",
