@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-30T21:14:14.116Z",
+  "generated_at": "2026-08-30T23:36:02.049Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 7,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -78,6 +78,19 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 33298849608,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33298849608",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 33335125618,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33335125618",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -319,7 +332,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 40
+      "data_freshness_age_hours_at_generation": 42
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -484,9 +497,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33335749757",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33335749757",
-    "observed_at": "2026-08-30T21:14:14.116Z",
+    "run_id": "33342135308",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33342135308",
+    "observed_at": "2026-08-30T23:36:02.049Z",
     "event": "schedule",
     "workflows": [
       "fetch-edgar-filings.yml",
@@ -494,7 +507,8 @@
       "fetch-oecd-cli.yml",
       "fetch-yf-finance.yml",
       "slickcharts-monthly.yml",
-      "validate-workflows.yml"
+      "validate-workflows.yml",
+      "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
