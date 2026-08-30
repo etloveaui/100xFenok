@@ -142,10 +142,10 @@ assert.equal(fs.existsSync(localMarker), false, "low load must still queue the r
 for (const [label, extraEnv, expectedReason, expectedAction] of [
   ["tracked dirty", { FAKE_STATUS: " M tracked.js\\n" }, "dirty_worktree", "use_a_clean_current_origin_checkout"],
   ["untracked", { FAKE_STATUS: "?? generated.txt\\n" }, "dirty_worktree", "use_a_clean_current_origin_checkout"],
-  ["remote stale", { FAKE_REMOTE_HEAD: STALE_HEAD }, "HEAD_stale_against_origin_main", "use_a_clean_current_origin_checkout"],
-  ["remote unavailable", { FAKE_REMOTE_UNAVAILABLE: "1" }, "origin_main_unavailable", "use_a_clean_current_origin_checkout"],
-  ["remote malformed", { FAKE_REMOTE_MALFORMED: "1" }, "origin_main_revision_invalid", "use_a_clean_current_origin_checkout"],
-  ["remote multiple", { FAKE_REMOTE_MULTIPLE: "1" }, "origin_main_revision_invalid", "use_a_clean_current_origin_checkout"],
+  ["remote stale", { FAKE_REMOTE_HEAD: STALE_HEAD }, "HEAD_stale_against_origin_ref", "push_the_selected_branch_and_retry"],
+  ["remote unavailable", { FAKE_REMOTE_UNAVAILABLE: "1" }, "origin_ref_unavailable", "push_the_selected_branch_and_retry"],
+  ["remote malformed", { FAKE_REMOTE_MALFORMED: "1" }, "origin_ref_revision_invalid", "push_the_selected_branch_and_retry"],
+  ["remote multiple", { FAKE_REMOTE_MULTIPLE: "1" }, "origin_ref_revision_invalid", "push_the_selected_branch_and_retry"],
   ["gh unavailable", {}, "gh_unavailable", "install_or_authenticate_gh"],
   ["dispatch failure", { FAKE_GH_FAILURE: "1" }, "workflow_dispatch_failed", "retry_gh_workflow_dispatch"],
 ]) {
