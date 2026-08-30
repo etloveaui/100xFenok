@@ -44,6 +44,7 @@ function assertAdminRedirectWiring(packageScripts, deployWorkflow) {
 
 assert.deepEqual(ADMIN_CANONICAL_REDIRECT_ROUTES, [
   "/admin",
+  "/admin/archive",
   "/admin/data-lab",
   "/admin/design-gallery",
   "/admin/design-lab",

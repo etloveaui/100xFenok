@@ -9,6 +9,7 @@ const TSX_BIN = path.join(APP_ROOT, "node_modules", ".bin", process.platform ===
 
 const REQUIRED_ROUTE_KEYS = [
   "explore",
+  "workbench",
   "market",
   "sectors",
   "etfs",
@@ -20,8 +21,20 @@ const REQUIRED_ROUTE_KEYS = [
   "stock",
   "etf",
   "posts",
+  "alphaScout",
+  "dailyWrap",
+  "stockAnalyzer",
+  "stockAnalyzerNative",
   "multichart",
   "radar",
+];
+
+const RETIRED_PUBLIC_NAV_IDS = [
+  "workbench",
+  "dailyWrap",
+  "posts",
+  "alphaScout",
+  "stockAnalyzer",
 ];
 
 const ROUTE_SCOPE_CLASSIFICATION_ACK = {
@@ -254,6 +267,13 @@ function assertSourceTokens(source, tokens, label, errors) {
   }
 }
 
+function sourceBlock(source, startToken, endToken) {
+  const start = source.indexOf(startToken);
+  if (start < 0) return "";
+  const end = source.indexOf(endToken, start + startToken.length);
+  return source.slice(start, end < 0 ? source.length : end);
+}
+
 function assertRouteScopeClassificationAck(errors) {
   const ack = ROUTE_SCOPE_CLASSIFICATION_ACK;
   const label = ack.schema_version;
@@ -330,6 +350,10 @@ function assertRouteIaContracts(errors) {
   const explorePageSource = readAppSource("src/app/explore/page.tsx");
   const workbenchPageSource = readAppSource("src/app/workbench/page.tsx");
   const stockDetailSource = readAppSource("src/app/stock/[ticker]/StockDetailClient.tsx");
+  const navSource = sourceBlock(shellSource, "const NAV: NavItem[] = [", "const MORE_TAB:");
+  const moreTabSource = sourceBlock(shellSource, "const MORE_TAB_IDS: ShellPage[] = [", "const NAV_GROUP_ORDER");
+  assert(navSource.length > 0, "AppShell public NAV block is missing", errors);
+  assert(moreTabSource.length > 0, "AppShell mobile More block is missing", errors);
 
   assertSourceTokens(productNavSource, [
     "EXPLORE_ROUTE = ROUTES.home",
@@ -348,21 +372,22 @@ function assertRouteIaContracts(errors) {
     'id: "explore"',
     'label: EXPLORE_NAV_LABEL',
     "href: EXPLORE_ROUTE",
-    'id: "workbench"',
-    'group: "더보기"',
-    "href: ROUTES.workbench",
-    'label: WORKBENCH_NAV_LABEL',
     'id: "chart"',
     "href: CHART_ROUTE",
     "label: CHART_NAV_LABEL",
     'const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"]',
     "const MORE_TAB_IDS: ShellPage[] = [",
     '"chart"',
-    '"workbench"',
     '"sectors"',
     '"etfs"',
     '"superinvestors"',
   ], "AppShell PRO IA", errors);
+  for (const id of RETIRED_PUBLIC_NAV_IDS) {
+    assert(!navSource.includes(`id: "${id}"`), `AppShell public NAV must not expose ${id}`, errors);
+    assert(!moreTabSource.includes(`"${id}"`), `AppShell mobile More must not expose ${id}`, errors);
+  }
+  assert(!shellSource.includes('href={ROUTES.dailyWrap}'), "AppShell must not expose the Daily Wrap topbar shortcut", errors);
+  assert(!shellSource.includes('aria-label="Daily Wrap"'), "AppShell must not expose a Daily Wrap topbar label", errors);
   assert(!shellSource.includes('| "briefing"'), "AppShell PRO IA: briefing alias must not be a shell nav page", errors);
   assertSourceTokens(nextConfigSource, [
     'source: "/briefing"',

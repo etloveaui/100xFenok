@@ -17,7 +17,6 @@
   },
   "core_routes": [
     { "path": "/", "label": "Home / Dashboard" },
-    { "path": "/explore", "label": "Explore / Navigation Hub" },
     { "path": "/market-valuation", "label": "Market Valuation Radar" },
     { "path": "/market-valuation/structure", "label": "Market Structure Details" },
     { "path": "/regime", "label": "Market Regime Indicators" },
@@ -32,17 +31,12 @@
     { "path": "/portfolio", "label": "Client-Side Portfolio Planner" },
     { "path": "/macro-chart", "label": "Macro Charting Tool" },
     { "path": "/multichart", "label": "Multichart Interface" },
-    { "path": "/stock/{ticker}", "label": "Dynamic Stock Details" },
-    { "path": "/tools/stock-analyzer/native", "label": "Stock Analyzer Native View" },
-    { "path": "/workbench", "label": "Workbench Workspace (Status: pending owner decision per Flag 2)" }
+    { "path": "/stock/{ticker}", "label": "Dynamic Stock Details" }
   ],
   "legacy_bridge_routes": [
-    { "path": "/posts", "label": "Analysis Narrative Archive" },
-    { "path": "/alpha-scout", "label": "Alpha Scout Weekly Analysis Reports" },
     { "path": "/ib", "label": "Infinite Buying Trading Helper App" },
     { "path": "/infinite-buying", "label": "Infinite Buying Strategy Guide" },
-    { "path": "/vr", "label": "Value Rebalancing Strategy Guide" },
-    { "path": "/100x/daily-wrap", "label": "100x Daily Wrap Archive Viewer" }
+    { "path": "/vr", "label": "Value Rebalancing Strategy Guide" }
   ],
   "key_data_surfaces": {
     "stockanalysis_core": [
@@ -97,7 +91,6 @@ LLM_GUIDE_END --><html lang="ko">
     <h2>Ambiguity Flags</h2>
     <ul>
       <li><strong>Flag 1: routes.ts Dynamic Slugs:</strong> <code>routes.ts</code> contains dynamic parameter functions like <code>stock(ticker)</code> and <code>etf(ticker)</code>. Crawler maps use <code>/stock/{ticker}</code> and <code>/etfs/{ticker}</code> wildcard patterns.</li>
-      <li><strong>Flag 2: workbench Route Status:</strong> <code>ROUTES.workbench</code> resolves to <code>/workbench</code>, but the route remains pending final owner decision. It is listed in <code>core_routes</code> with an explicit status note.</li>
     </ul>
   </main>
 </body>

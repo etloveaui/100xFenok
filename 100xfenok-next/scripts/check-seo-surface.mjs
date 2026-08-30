@@ -21,6 +21,7 @@ const siteUrl = read("src/lib/site-url.ts");
 const stockPage = read("src/app/stock/[ticker]/page.tsx");
 const etfPage = read("src/app/etfs/[ticker]/page.tsx");
 const routes = read("src/lib/routes.ts");
+const llmGuide = read("public/llm-guide.html");
 
 assert(
   !nextConfig.includes('source: "/travel/:path*"'),
@@ -63,7 +64,7 @@ assert(
   "sitemap.ts must build from SITEMAP_PRODUCT_ROUTES via canonicalUrl",
   errors,
 );
-const sitemapStart = routes.indexOf("SITEMAP_PRODUCT_ROUTES");
+const sitemapStart = routes.indexOf("export const SITEMAP_PRODUCT_ROUTES");
 const sitemapBlock =
   sitemapStart >= 0 ? routes.slice(sitemapStart, routes.indexOf("]", sitemapStart)) : "";
 assert(sitemapBlock.length > 0, "lib/routes.ts must define SITEMAP_PRODUCT_ROUTES", errors);
@@ -84,13 +85,28 @@ for (const forbidden of [
 }
 for (const key of [
   "ROUTES.home",
-  "ROUTES.explore",
   "ROUTES.market",
   "ROUTES.etfs",
   "ROUTES.screener",
   "ROUTES.superinvestors",
 ]) {
   assert(sitemapBlock.includes(key), `SITEMAP_PRODUCT_ROUTES missing ${key}`, errors);
+}
+const retiredRouteKeys = [
+  "explore",
+  "workbench",
+  "posts",
+  "alphaScout",
+  "dailyWrap",
+  "stockAnalyzer",
+  "stockAnalyzerNative",
+];
+const exclusionsStart = routes.indexOf("export const SITEMAP_EXCLUSIONS");
+const exclusionsBlock =
+  exclusionsStart >= 0 ? routes.slice(exclusionsStart, sitemapStart >= 0 ? sitemapStart : routes.length) : "";
+for (const key of retiredRouteKeys) {
+  assert(!sitemapBlock.includes(`ROUTES.${key}`), `SITEMAP_PRODUCT_ROUTES must exclude ROUTES.${key}`, errors);
+  assert(exclusionsBlock.includes(`${key}:`), `SITEMAP_EXCLUSIONS missing ${key}`, errors);
 }
 for (const required of [
   'home: "/"',
@@ -99,8 +115,34 @@ for (const required of [
   'etfs: "/etfs"',
   'screener: "/screener"',
   'superinvestors: "/superinvestors"',
+  'workbench: "/workbench"',
+  'posts: "/posts"',
+  'alphaScout: "/alpha-scout"',
+  'dailyWrap: "/100x/daily-wrap"',
+  'stockAnalyzer: "/tools/stock-analyzer"',
+  'stockAnalyzerNative: "/tools/stock-analyzer/native"',
 ]) {
   assert(routes.includes(required), `ROUTES SSOT missing ${required}`, errors);
+}
+for (const pathName of [
+  "/explore",
+  "/tools/stock-analyzer/native",
+  "/workbench",
+  "/posts",
+  "/alpha-scout",
+  "/100x/daily-wrap",
+]) {
+  assert(!llmGuide.includes(`"path": "${pathName}"`), `public LLM guide must not promote ${pathName}`, errors);
+}
+assert(!llmGuide.includes("Flag 2: workbench Route Status"), "public LLM guide must not retain the Workbench ambiguity flag", errors);
+for (const required of [
+  "/alpha-scout/data/reports-index.json",
+  "/alpha-scout/data/metadata/*.json",
+  "/alpha-scout/reports/data/*.json",
+  "/100x/data/reports-index.json",
+  "/100x/daily-wrap/data/*-data.json",
+]) {
+  assert(llmGuide.includes(required), `public LLM guide must preserve raw data documentation for ${required}`, errors);
 }
 assert(stockPage.includes("canonicalPath(ROUTES.stock(symbol))"), "stock detail metadata must set canonical URL", errors);
 assert(etfPage.includes("canonicalPath(ROUTES.etf(symbol))"), "ETF detail metadata must set canonical URL", errors);

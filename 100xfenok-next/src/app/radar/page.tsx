@@ -26,8 +26,8 @@ const RADAR_BOUNDARY_CHIPS = [
 
 const RADAR_OWNER_LINKS = [
   { key: 'macro-chart', label: 'Macro Chart', href: ROUTES.macroChart },
-  { key: 'workbench', label: 'Workbench', href: ROUTES.workbench },
-  { key: 'explore', label: 'Explore', href: ROUTES.explore },
+  { key: 'market-events', label: 'Market Events', href: ROUTES.marketEvents },
+  { key: 'market-valuation', label: 'Market Valuation', href: ROUTES.market },
 ] as const;
 
 const RADAR_CATEGORY_LINKS = [
