@@ -343,7 +343,13 @@ function deriveRuntimeSlotLedger({ priorRuntime, slotKey, nowIso, v2ActivatedAt 
   };
 }
 
-export function buildRuntime({ nowIso, env, priorRuntime, snapshotStatus }) {
+export function buildRuntime({
+  nowIso,
+  env,
+  priorRuntime,
+  snapshotStatus,
+  scriptStartMs = SCRIPT_START_MS,
+}) {
   const github = readGithubContext(env);
   const origin = readOriginEnvelope(env);
   const jobStartedAtIso = env.KPI_JOB_STARTED_AT || nowIso;
@@ -403,7 +409,7 @@ export function buildRuntime({ nowIso, env, priorRuntime, snapshotStatus }) {
     };
   }
 
-  const durationMs = Date.now() - SCRIPT_START_MS;
+  const durationMs = Date.now() - scriptStartMs;
   const producerContext = {
     built_at: nowIso,
     duration_ms: durationMs,
@@ -2985,9 +2991,13 @@ function buildProductSurfaceLane(productCoverage, stockanalysisRecovery) {
   });
 }
 
-export function buildFinraOccLane(ledger, occAvailability = null) {
+export function buildFinraOccLane(
+  ledger,
+  occAvailability = null,
+  { publicDataRoot = PUBLIC_DATA_ROOT } = {},
+) {
   const counts = ledger?.counts || {};
-  const publicLedgerExists = exists("data/admin/fenok-s0-finra-occ-mapping-ledger.json", PUBLIC_DATA_ROOT);
+  const publicLedgerExists = exists("data/admin/fenok-s0-finra-occ-mapping-ledger.json", publicDataRoot);
   const occAttempt = occAvailability?.current_attempt;
   const occAttemptReady = ["ready_current", "no_selected_scope"].includes(occAttempt?.status);
   const publicOccAttempt = occAttempt && typeof occAttempt === "object" ? {
@@ -3115,9 +3125,9 @@ function buildAutomationLane() {
   });
 }
 
-function buildPublicMirrorLane(rimInputs) {
-  const rimPublicText = readText("data/computed/rim-index/inputs.json", PUBLIC_DATA_ROOT);
-  const coveragePublicText = readText("data/admin/fenok-edge-coverage-index.json", PUBLIC_DATA_ROOT);
+function buildPublicMirrorLane(rimInputs, { publicDataRoot = PUBLIC_DATA_ROOT } = {}) {
+  const rimPublicText = readText("data/computed/rim-index/inputs.json", publicDataRoot);
+  const coveragePublicText = readText("data/admin/fenok-edge-coverage-index.json", publicDataRoot);
   const forbidden = ["_private/", "\"private_manifest_file\"", "\"manifest_file\""];
   const publicText = `${rimPublicText}\n${coveragePublicText}`;
   return lane("public_mirror_safety", "Public mirror safety", [
@@ -3128,8 +3138,8 @@ function buildPublicMirrorLane(rimInputs) {
   ], {
     details: {
       rim_public_mirror_policy: rimInputs?.public_mirror_policy ?? null,
-      full_finra_occ_ledger_public: exists("data/admin/fenok-s0-finra-occ-mapping-ledger.json", PUBLIC_DATA_ROOT),
-      full_etf_daily1y_readiness_public: exists("data/admin/fenok-edge-etf-daily1y-readiness.json", PUBLIC_DATA_ROOT),
+      full_finra_occ_ledger_public: exists("data/admin/fenok-s0-finra-occ-mapping-ledger.json", publicDataRoot),
+      full_etf_daily1y_readiness_public: exists("data/admin/fenok-edge-etf-daily1y-readiness.json", publicDataRoot),
     },
   });
 }
@@ -3476,46 +3486,63 @@ export function loadCommittedDetectionAttemptDetails(lanes, { dataRoot = DATA_RO
   return details;
 }
 
-export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, recoverySources = RECOVERY_STATE_SOURCES) {
-  const coverageIndex = readJson("admin/fenok-edge-coverage-index.json");
-  const stockPromotionDryRun = readJson("admin/fenok-s1-stock-public-promotion-dry-run.json");
-  const rimInputs = readJson("computed/rim-index/inputs.json") || readJson("computed/rim-index/inputs.json", PUBLIC_DATA_ROOT);
-  const rimFiveCanonicalHealth = readRimFiveCanonicalHealth();
-  const productCoverage = readJson("admin/product-surface-coverage.json");
-  const finraOccLedger = readJson("admin/fenok-s0-finra-occ-mapping-ledger.json");
-  const etfDaily1y = readJson("admin/fenok-edge-etf-daily1y-readiness.json");
-  const etfFetchablePlan = readJson("admin/fenok-edge-etf-daily1y-fetchable-plan.json");
-  const etfCoreBasket = readJson("admin/fenok-etf-core-daily-basket.json");
-  const yahooBatchState = readJson(recoverySources.direct.yahoo_batch_quote_history);
-  const stockanalysisRecovery = readJson(recoverySources.direct.stockanalysis_recovery);
-  const nasdaqGiwSoxRecovery = readOptionalJsonStrict(recoverySources.direct.nasdaq_giw_sox);
-  const occAvailability = readJson("computed/fenok_occ_options_availability.json");
-  const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json");
+export function buildPayload(
+  nowIso,
+  priorRuntime,
+  priorProductSurfacePending,
+  recoverySources = RECOVERY_STATE_SOURCES,
+  {
+    dataRoot = DATA_ROOT,
+    publicDataRoot = PUBLIC_DATA_ROOT,
+    slickchartsRepoRoot = SLICKCHARTS_REPO_ROOT,
+    env = process.env,
+    scriptStartMs = SCRIPT_START_MS,
+  } = {},
+) {
+  const coverageIndex = readJson("admin/fenok-edge-coverage-index.json", dataRoot);
+  const stockPromotionDryRun = readJson("admin/fenok-s1-stock-public-promotion-dry-run.json", dataRoot);
+  const rimInputs = readJson("computed/rim-index/inputs.json", dataRoot)
+    || readJson("computed/rim-index/inputs.json", publicDataRoot);
+  const rimFiveCanonicalHealth = readRimFiveCanonicalHealth({ dataRoot, publicDataRoot });
+  const productCoverage = readJson("admin/product-surface-coverage.json", dataRoot);
+  const finraOccLedger = readJson("admin/fenok-s0-finra-occ-mapping-ledger.json", dataRoot);
+  const etfDaily1y = readJson("admin/fenok-edge-etf-daily1y-readiness.json", dataRoot);
+  const etfFetchablePlan = readJson("admin/fenok-edge-etf-daily1y-fetchable-plan.json", dataRoot);
+  const etfCoreBasket = readJson("admin/fenok-etf-core-daily-basket.json", dataRoot);
+  const yahooBatchState = readJson(recoverySources.direct.yahoo_batch_quote_history, dataRoot);
+  const stockanalysisRecovery = readJson(recoverySources.direct.stockanalysis_recovery, dataRoot);
+  const nasdaqGiwSoxRecovery = readOptionalJsonStrict(recoverySources.direct.nasdaq_giw_sox, dataRoot);
+  const occAvailability = readJson("computed/fenok_occ_options_availability.json", dataRoot);
+  const detectionFloor = readOptionalJsonStrict("admin/data-supply-detection-floor.json", dataRoot);
   const generalRecoveryStates = Object.fromEntries(
     recoverySources.general_lane_ids
       .map((laneId) => [
         laneId,
-        readOptionalJsonStrict(recoverySources.general_paths?.[laneId] ?? `admin/${laneId}/index.json`),
+        readOptionalJsonStrict(
+          recoverySources.general_paths?.[laneId] ?? `admin/${laneId}/index.json`,
+          dataRoot,
+        ),
       ]),
   );
   const detectionRecovery = Object.fromEntries(
     Object.entries(recoverySources.nonstandard)
-      .map(([laneId, sourcePath]) => [laneId, readOptionalJsonStrict(sourcePath)]),
+      .map(([laneId, sourcePath]) => [laneId, readOptionalJsonStrict(sourcePath, dataRoot)]),
   );
   const slickchartsTreasuryState = readOptionalJsonStrict(
     "admin/slickcharts-daily-delivery/keys/treasury.json",
+    dataRoot,
   );
   const recoveryStates = { ...generalRecoveryStates, ...detectionRecovery };
   const requiredSourceStatuses = projectRequiredSourceStatuses({
     sentimentState: recoveryStates.sentiment ?? null,
     slickchartsTreasuryState,
   });
-  const slickchartsDelivery = assessSlickChartsDelivery(nowIso);
+  const slickchartsDelivery = assessSlickChartsDelivery(nowIso, { dataRoot });
 
   const detectionFloorLanes = buildDetectionFloorLanes(
     detectionFloor,
     recoveryStates,
-    { slickchartsRepoRoot: SLICKCHARTS_REPO_ROOT },
+    { slickchartsRepoRoot },
   );
   for (const [laneId, sourceStatuses] of Object.entries(requiredSourceStatuses)) {
     const target = detectionFloorLanes.find((item) => item.id === laneId);
@@ -3534,12 +3561,12 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
     buildSlickChartsDeliveryLane(nowIso, { assessment: slickchartsDelivery }),
     buildRimLane(rimInputs, nasdaqGiwSoxRecovery, rimFiveCanonicalHealth),
     buildProductSurfaceLane(productCoverage, stockanalysisRecovery),
-    buildFinraOccLane(finraOccLedger, occAvailability),
+    buildFinraOccLane(finraOccLedger, occAvailability, { publicDataRoot }),
     buildAutomationLane(),
-    buildPublicMirrorLane(rimInputs),
+    buildPublicMirrorLane(rimInputs, { publicDataRoot }),
     ...detectionFloorLanes,
   ];
-  const committedDetectionAttemptDetails = loadCommittedDetectionAttemptDetails(lanes);
+  const committedDetectionAttemptDetails = loadCommittedDetectionAttemptDetails(lanes, { dataRoot });
   // #365 P2: last_attempt is uniform across every lane. Detection-floor lanes set
   // it from their committed detection shard; the remaining composite/platform
   // lanes have no recovery store -> honest null + reason (never fabricated).
@@ -3577,9 +3604,10 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
   });
   const runtime = buildRuntime({
     nowIso,
-    env: process.env,
+    env,
     priorRuntime,
     snapshotStatus: deploymentIntegrity.status,
+    scriptStartMs,
   });
   runtime.fetch_cron_skip_detection = buildFetchCronAttemptCoverage({
     report: detectionFloor,
@@ -3628,8 +3656,8 @@ export function buildPayload(nowIso, priorRuntime, priorProductSurfacePending, r
   };
 }
 
-function readPriorKpiDoc() {
-  const priorPath = path.join(DATA_ROOT, KPI_REL_PATH);
+function readPriorKpiDoc({ dataRoot = DATA_ROOT } = {}) {
+  const priorPath = path.join(dataRoot, KPI_REL_PATH);
   let text;
   try {
     text = fs.readFileSync(priorPath, "utf8");
@@ -3716,20 +3744,48 @@ function writeJsonAtomic(absPath, payload) {
   fs.renameSync(tmp, absPath);
 }
 
-export function buildKpiDocuments(nowIso = resolveNow()) {
-  const priorDoc = readPriorKpiDoc();
-  const rootDoc = buildPayload(nowIso, priorRuntimeOf(priorDoc), priorProductSurfacePendingOf(priorDoc));
+export function buildKpiDocuments(nowIso = resolveNow(), {
+  dataRoot = DATA_ROOT,
+  publicDataRoot = PUBLIC_DATA_ROOT,
+  slickchartsRepoRoot = SLICKCHARTS_REPO_ROOT,
+  env = process.env,
+  scriptStartMs = SCRIPT_START_MS,
+} = {}) {
+  const priorDoc = readPriorKpiDoc({ dataRoot });
+  const rootDoc = buildPayload(
+    nowIso,
+    priorRuntimeOf(priorDoc),
+    priorProductSurfacePendingOf(priorDoc),
+    RECOVERY_STATE_SOURCES,
+    { dataRoot, publicDataRoot, slickchartsRepoRoot, env, scriptStartMs },
+  );
   const publicDoc = projectPublicKpi(rootDoc, nowIso);
   return { rootDoc, publicDoc };
 }
 
-function main() {
-  const nowIso = resolveNow();
-  const { rootDoc, publicDoc } = buildKpiDocuments(nowIso);
-  writeJsonAtomic(path.join(DATA_ROOT, KPI_REL_PATH), rootDoc);
-  writeJsonAtomic(path.join(PUBLIC_DATA_ROOT, KPI_REL_PATH), publicDoc);
+export function executeKpiBuild({
+  dataRoot: dataRootArg = DATA_ROOT_ARG,
+  slickchartsRepoRoot = SLICKCHARTS_REPO_ROOT,
+  nowIso = resolveNow(),
+  env = process.env,
+  scriptStartMs = SCRIPT_START_MS,
+} = {}) {
+  const resolvedRoot = dataRootArg ? path.resolve(dataRootArg) : null;
+  const dataRoot = resolvedRoot ? path.join(resolvedRoot, "data") : DATA_ROOT;
+  const publicDataRoot = resolvedRoot
+    ? path.join(resolvedRoot, "public", "data")
+    : PUBLIC_DATA_ROOT;
+  const { rootDoc, publicDoc } = buildKpiDocuments(nowIso, {
+    dataRoot,
+    publicDataRoot,
+    slickchartsRepoRoot,
+    env,
+    scriptStartMs,
+  });
+  writeJsonAtomic(path.join(dataRoot, KPI_REL_PATH), rootDoc);
+  writeJsonAtomic(path.join(publicDataRoot, KPI_REL_PATH), publicDoc);
 
-  console.log(JSON.stringify({
+  const summary = {
     ok: rootDoc.deployment_integrity?.status === "ready",
     schema_version: rootDoc.schema_version,
     status: rootDoc.status,
@@ -3742,7 +3798,13 @@ function main() {
     producer_slot_key: rootDoc.runtime?.producer_context?.slot_key ?? null,
     missed_slot_count: rootDoc.runtime?.slots?.missed_slot_keys?.length ?? 0,
     source_sla_stale: rootDoc.source_sla.filter((s) => s.status === "stale").map((s) => s.source_id),
-  }, null, 2));
+  };
+  return { rootDoc, publicDoc, summary };
+}
+
+function main() {
+  const { summary } = executeKpiBuild();
+  console.log(JSON.stringify(summary, null, 2));
 }
 
 const isMain = process.argv[1]

@@ -101,8 +101,7 @@ function getArg(flag) {
   return idx >= 0 && idx + 1 < process.argv.length ? process.argv[idx + 1] : null;
 }
 
-function resolvePaths() {
-  const dataRoot = getArg("--data-root");
+function resolvePaths(dataRoot = getArg("--data-root")) {
   if (dataRoot) {
     return {
       rootKpiPath: path.join(dataRoot, "data", "admin", "fenok-data-health-kpi.json"),
@@ -460,7 +459,12 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   }
 }
 
-export function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
+export function checkRecoveryStateSources(
+  rootDoc,
+  rootKpiPath,
+  errors,
+  { slickchartsRepoRoot = null } = {},
+) {
   const adminRoot = path.dirname(rootKpiPath);
   const lanesById = new Map((rootDoc?.lanes || []).map((lane) => [lane?.id, lane]));
   for (const laneId of ["fred_macro", "fred_banking", "fdic_tier1", "treasury_tga"]) {
@@ -504,7 +508,7 @@ export function checkRecoveryStateSources(rootDoc, rootKpiPath, errors) {
       let liveIntegrity = { valid: false, mismatches: [{ member: "composite", reason: "state_missing" }] };
       if (expected !== null) {
         try {
-          const injectedRepoRoot = getArg("--slickcharts-repo-root");
+          const injectedRepoRoot = slickchartsRepoRoot ?? getArg("--slickcharts-repo-root");
           liveIntegrity = inspectSlickchartsCompositeLiveIntegrity(
             injectedRepoRoot ? path.resolve(injectedRepoRoot) : path.resolve(adminRoot, "..", ".."),
             state,
@@ -1477,7 +1481,16 @@ export function freshnessReport(rootDoc, nowIso) {
   };
 }
 
-function validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso, context, strict = false }) {
+export function validateV2({
+  rootDoc,
+  publicDoc,
+  rootKpiPath,
+  publicKpiPath,
+  nowIso,
+  context,
+  strict = false,
+  slickchartsRepoRoot = null,
+}) {
   const errors = [];
   const warnings = [];
   validateCoreShape(rootDoc, errors, SCHEMA_VERSION_V2, warnings);
@@ -1487,34 +1500,51 @@ function validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso, co
   checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context, strict });
   checkFetchCronSourceParity(rootDoc, rootKpiPath, { errors, warnings });
   checkSourceSla(rootDoc, { errors, warnings }, nowIso);
-  checkRecoveryStateSources(rootDoc, rootKpiPath, errors);
+  checkRecoveryStateSources(rootDoc, rootKpiPath, errors, { slickchartsRepoRoot });
   checkPublicProjection(rootDoc, publicDoc, { errors, warnings });
   const report = { schema: SCHEMA_VERSION_V2, freshness: freshnessReport(rootDoc, nowIso) };
   return { errors, warnings, report };
 }
 
-function main() {
-  const { rootKpiPath, publicKpiPath } = resolvePaths();
-  const nowIso = resolveNow();
+export function executeCheckerRun({
+  dataRoot = getArg("--data-root"),
+  slickchartsRepoRoot = getArg("--slickcharts-repo-root"),
+  nowIso = resolveNow(),
+  context = getArg("--context") ?? "deploy",
+  strict = process.argv.includes("--strict"),
+} = {}) {
+  const { rootKpiPath, publicKpiPath } = resolvePaths(dataRoot);
   const rootDoc = readJson(rootKpiPath);
   const publicDoc = readJson(publicKpiPath);
-  const context = getArg("--context") ?? "deploy";
-  const strict = process.argv.includes("--strict");
 
   const version = rootDoc?.schema_version;
   const result = version === SCHEMA_VERSION_V2
-    ? validateV2({ rootDoc, publicDoc, rootKpiPath, publicKpiPath, nowIso, context, strict })
+    ? validateV2({
+      rootDoc,
+      publicDoc,
+      rootKpiPath,
+      publicKpiPath,
+      nowIso,
+      context,
+      strict,
+      slickchartsRepoRoot,
+    })
     : validateV1({ rootDoc, publicDoc, publicKpiPath });
 
-  for (const warning of result.warnings) console.warn(`::warning:: fenok KPI [warn-only] ${warning}`);
-
+  const stderrLines = result.warnings
+    .map((warning) => `::warning:: fenok KPI [warn-only] ${warning}`);
   if (result.errors.length) {
-    console.error("fenok data health KPI check failed");
-    for (const error of result.errors) console.error(`- ${error}`);
-    process.exit(1);
+    stderrLines.push("fenok data health KPI check failed");
+    stderrLines.push(...result.errors.map((error) => `- ${error}`));
+    return {
+      exit: 1,
+      stdout: "",
+      stderr: `${stderrLines.join("\n")}\n`,
+      ...result,
+    };
   }
 
-  console.log(JSON.stringify({
+  const summary = {
     ok: true,
     schema_version: rootDoc.schema_version,
     generated_at: rootDoc.generated_at,
@@ -1522,7 +1552,21 @@ function main() {
     lanes: rootDoc.totals?.lanes ?? rootDoc.lanes.length,
     warnings: result.warnings.length,
     report: result.report,
-  }, null, 2));
+  };
+  return {
+    exit: 0,
+    stdout: `${JSON.stringify(summary, null, 2)}\n`,
+    stderr: stderrLines.length ? `${stderrLines.join("\n")}\n` : "",
+    summary,
+    ...result,
+  };
+}
+
+function main() {
+  const result = executeCheckerRun();
+  if (result.stderr) process.stderr.write(result.stderr);
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.exit !== 0) process.exit(result.exit);
 }
 
 const isMain = process.argv[1]
