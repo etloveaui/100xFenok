@@ -382,7 +382,7 @@ function OrdinalPanel() {
   return (
     <PanelShell
       title="지수 38개 · 자기 역사 대비 위치"
-      subtitle={`선행 PER 백분위 · ${ordinalHorizonLabel(horizon)} · 위 패널과 같은 지수는 굵게`}
+      subtitle={`선행 PER 백분위 · ${ordinalHorizonLabel(horizon)} 기준 · 굵게 표시: 위 패널 공통`}
       asOf={view.asOf}
     >
       <div className="px-[var(--panel-pad)] py-3">

@@ -137,6 +137,7 @@ export default function OrdinalStrip({ groups, highlightIds = [], horizon, onHor
     .map((entry) => ({ ...entry, rows: entry.rows.filter(({ reading }) => reading.percentile !== null) }))
     .filter((entry) => entry.rows.length > 0);
   const allRows = entries.flatMap((entry) => entry.rows);
+  const totalCount = allRows.length;
   const rankableCount = allRows.filter(({ reading }) => reading.percentile !== null).length;
   const lowCount = allRows.filter(({ reading }) => reading.percentile !== null && reading.percentile <= 40).length;
   const middleCount = allRows.filter(({ reading }) => reading.percentile !== null && reading.percentile >= 41 && reading.percentile <= 59).length;
@@ -188,18 +189,18 @@ export default function OrdinalStrip({ groups, highlightIds = [], horizon, onHor
           ))}
         </div>
         <div className="mv-ordinal-summary" aria-live="polite" aria-atomic="true">
-          <strong>{horizonLabel(horizon)} 기준 순위 가능 {rankableCount}/38</strong>
-          <span>낮은 편 {lowCount}</span>
-          <span>중앙권 {middleCount}</span>
-          <span>높은 편 {highCount}</span>
+          {rankableCount < totalCount ? <strong>표시 {rankableCount}/{totalCount}</strong> : null}
+          <span>낮은 편 <strong>{lowCount}</strong></span>
+          <span>중앙권 <strong>{middleCount}</strong></span>
+          <span>높은 편 <strong>{highCount}</strong></span>
         </div>
       </div>
       <details className="mv-ordinal-explanation">
-        <summary>백분위와 평균 읽는 법</summary>
+        <summary>지표 읽는 법</summary>
         <div>
           <p>백분위는 선택한 기간의 선행 PER 중 현재값보다 낮았던 관측치의 비율입니다.</p>
           <p>50은 자기 역사 중앙값입니다. 평균은 같은 관측 모집단의 산술 평균입니다.</p>
-          <p>기간을 채우지 못한 창은 실제 보유 기간 또는 허용된 관측치 수를 표시하며, 전체 역사로 대신 계산하지 않습니다.</p>
+          <p>관측 수는 순위를 계산할 수 없는 경우에만 사유와 함께 표시하며, 전체 역사로 대신 계산하지 않습니다.</p>
         </div>
       </details>
 
@@ -229,6 +230,9 @@ export default function OrdinalStrip({ groups, highlightIds = [], horizon, onHor
           <text x={x(100)} y={HEAD_H - 14} textAnchor="end" fontSize={10} fontWeight={800} fill="var(--c-chart-ord-rich)">
             역사상 고평가
           </text>
+          <text x={VIEW_W - 6} y={HEAD_H - 14} textAnchor="end" fontSize={9} fontWeight={800} fill="var(--c-ink-3)">
+            백분위 · 현재 PER
+          </text>
           {placed.map(({ group, rows, top }) => (
             <g key={group.id}>
               <text x={0} y={top + 9} fontSize={10} fontWeight={800} fill="var(--c-ink-3)">
@@ -239,7 +243,7 @@ export default function OrdinalStrip({ groups, highlightIds = [], horizon, onHor
                 const pct = reading.percentile as number;
                 const marked = highlight.has(row.id);
                 const delta = deltaFromAverage(row.pe.current, reading.average);
-                const titleText = `${displayName(row)} · ${horizonLabel(horizon)} 선행 PER ${row.pe.current === null ? "없음" : PE.format(row.pe.current)} · ${pct}번째 백분위 · ${formatAverage(reading.average)} · ${formatSignedPercent(delta)} · ${reading.points}개 관측`;
+                const titleText = `${displayName(row)} · ${horizonLabel(horizon)} 선행 PER ${row.pe.current === null ? "없음" : PE.format(row.pe.current)} · ${pct}번째 백분위 · ${formatAverage(reading.average)} · ${formatSignedPercent(delta)}`;
                 return (
                   <g key={row.id}>
                     <title>{titleText}</title>
@@ -262,9 +266,9 @@ export default function OrdinalStrip({ groups, highlightIds = [], horizon, onHor
                       x={VIEW_W - 6} y={y - 6} textAnchor="end" fontSize={10}
                       fontWeight={marked ? 800 : 600} fill="var(--c-ink-2)"
                     >
-                      {row.pe.current === null ? "배수 없음" : `${PE.format(row.pe.current)}배`} · {pct} · {reading.points}개 관측
+                      {pct}백분위 · {row.pe.current === null ? "배수 없음" : `${PE.format(row.pe.current)}배`}
                     </text>
-                    <text x={VIEW_W - 6} y={y + 10} textAnchor="end" fontSize={8.5} fill="var(--c-ink-3)">
+                    <text x={VIEW_W - 6} y={y + 10} textAnchor="end" fontSize={9} fill="var(--c-ink-3)">
                       {formatAverage(reading.average)} · {formatSignedPercent(delta)}
                     </text>
                   </g>
@@ -281,14 +285,13 @@ export default function OrdinalStrip({ groups, highlightIds = [], horizon, onHor
           const delta = deltaFromAverage(row.pe.current, reading.average);
           return (
             <li key={row.id}>
-              {displayName(row)} · {horizonLabel(horizon)} · 현재 선행 PER {row.pe.current === null ? "없음" : `${PE.format(row.pe.current)}배`} · {pct}번째 백분위 · {formatAverage(reading.average)} · {formatSignedPercent(delta)} · {reading.points}개 주간 관측
+              {displayName(row)} · {horizonLabel(horizon)} · 현재 선행 PER {row.pe.current === null ? "없음" : `${PE.format(row.pe.current)}배`} · {pct}번째 백분위 · {formatAverage(reading.average)} · {formatSignedPercent(delta)}
             </li>
           );
         })}
       </ul>
 
       <div className="mv-ordinal-mobile">
-        <p className="mv-ordinal-mobile-kicker">휴대폰용 요약 · 자기 역사 대비</p>
         {usable.map(({ group, rows }) => (
           <section key={group.id} className="mv-ordinal-mobile-group">
             <h3>{group.label}</h3>
@@ -296,19 +299,29 @@ export default function OrdinalStrip({ groups, highlightIds = [], horizon, onHor
               {rows.map(({ row, reading }) => {
                 const pct = reading.percentile as number;
                 const delta = deltaFromAverage(row.pe.current, reading.average);
+                const marked = highlight.has(row.id);
                 return (
-                  <li key={row.id} className="mv-ordinal-mobile-item">
+                  <li key={row.id} className={`mv-ordinal-mobile-item${marked ? " is-highlighted" : ""}`}>
                     <div className="mv-ordinal-mobile-head">
-                      <strong>{displayName(row)}</strong>
-                      <span>{pct}번째 백분위</span>
+                      <div className="mv-ordinal-mobile-identity">
+                        <strong>{displayName(row)}</strong>
+                        <small>{ordinalMeaning(pct)}</small>
+                      </div>
+                      <span className="mv-ordinal-mobile-percentile"><strong>{pct}</strong><small>백분위</small></span>
                     </div>
-                    <div className="mv-ordinal-meter" aria-hidden="true"><span style={{ width: `${pct}%` }} /></div>
+                    <div className="mv-ordinal-meter" aria-hidden="true">
+                      <span className="mv-ordinal-meter-median" />
+                      <span
+                        className="mv-ordinal-meter-distance"
+                        style={{ left: `${Math.min(pct, 50)}%`, width: `${Math.abs(pct - 50)}%` }}
+                      />
+                      <span className="mv-ordinal-meter-dot" style={{ left: `${pct}%`, background: dotColor(pct) }} />
+                    </div>
                     <div className="mv-ordinal-mobile-metrics">
                       <span>현재 <strong>{row.pe.current === null ? "배수 없음" : `${PE.format(row.pe.current)}배`}</strong></span>
                       <span>{formatAverage(reading.average)}</span>
-                      <span>{formatSignedPercent(delta)}</span>
+                      <span className="mv-ordinal-mobile-delta">{formatSignedPercent(delta)}</span>
                     </div>
-                    <p>{ordinalMeaning(pct)} · {reading.points}개 주간 관측{row.asOf ? ` · 기준일 ${row.asOf}` : ""}</p>
                   </li>
                 );
               })}
