@@ -15,8 +15,14 @@ function normalizePath(value) {
   return path.resolve(value);
 }
 
-function isWithin(candidate, root) {
-  return candidate === root || candidate.startsWith(`${root}${path.sep}`);
+function isWithinAllowedRoot(candidate) {
+  let cursor = candidate;
+  while (true) {
+    const parent = path.dirname(cursor);
+    if (ALLOWED_ROOTS.has(cursor) && (cursor === candidate || parent !== cursor)) return true;
+    if (parent === cursor) return false;
+    cursor = parent;
+  }
 }
 
 function containsDataSegment(candidate) {
@@ -46,7 +52,7 @@ export function assertKpiFixtureDataReadAllowed(candidate, operation = "read") {
     // Missing paths are checked lexically. Existing symlink targets are checked above.
   }
   if (candidates.every((pathToCheck) => !containsDataSegment(pathToCheck))) return;
-  if (candidates.every((pathToCheck) => [...ALLOWED_ROOTS].some((root) => isWithin(pathToCheck, root)))) return;
+  if (candidates.every(isWithinAllowedRoot)) return;
   const error = new Error(
     `KPI fixture hermeticity violation: ${operation} refused outside declared fixture roots: ${normalized}`,
   );
