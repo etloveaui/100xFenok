@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-29T21:49:05.360Z",
+  "generated_at": "2026-08-30T00:26:30.348Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 7,
   "open_incidents": [
     {
       "workflow": "fetch-damodaran-shadow.yml",
@@ -83,6 +83,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 33276679454,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33276679454",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -321,7 +334,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 16
+      "data_freshness_age_hours_at_generation": 19
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -486,9 +499,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33276948311",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33276948311",
-    "observed_at": "2026-08-29T21:49:05.360Z",
+    "run_id": "33283239075",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33283239075",
+    "observed_at": "2026-08-30T00:26:30.348Z",
     "event": "schedule",
     "workflows": [
       "fetch-damodaran-shadow.yml",
@@ -496,7 +509,8 @@
       "fetch-fred-yardeni.yml",
       "fetch-oecd-cli.yml",
       "fetch-yf-finance.yml",
-      "slickcharts-monthly.yml"
+      "slickcharts-monthly.yml",
+      "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
