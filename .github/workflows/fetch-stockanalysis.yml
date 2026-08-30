@@ -195,6 +195,7 @@ jobs:
           INPUT_STOCK_LIMIT="0"
           INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="false"
           INPUT_ISOLATED_STOCK_SCHEDULE="false"
+          UNIVERSE_FAILURE_PROOF="false"
           ETF_DETAIL_FAILURE_PROOF="false"
           YAHOO_ETF_FAILURE_PROOF="false"
           if [ "$EVENT_NAME" = "schedule" ]; then
@@ -253,6 +254,9 @@ jobs:
             if [ "${INPUT_FETCH_FINANCIALS:-true}" = "true" ]; then
               INPUT_REQUIRE_STOCK_FINANCIAL_PAIR="true"
             fi
+            if [ "${INPUT_CONTROLLED_FAILURE_SURFACES:-}" = "etf_universe" ]; then
+              UNIVERSE_FAILURE_PROOF="true"
+            fi
             case "${INPUT_CONTROLLED_FAILURE_SURFACES:-}" in
               *[eE][tT][fF]_[dD][eE][tT][aA][iI][lL]:*)
                 ETF_DETAIL_FAILURE_PROOF="true"
@@ -300,7 +304,9 @@ jobs:
           if [ "${INPUT_CORE_BASKET_REFRESH:-false}" = "true" ]; then
             INPUT_ETFS="$(node -e 'const fs = require("fs"); const payload = JSON.parse(fs.readFileSync("data/admin/fenok-etf-core-daily-basket.json", "utf8")); const tickers = Array.isArray(payload.daily_refresh_universe?.tickers) ? payload.daily_refresh_universe.tickers : (Array.isArray(payload.rows) ? payload.rows.map((row) => row && row.ticker) : []); const seen = new Set(); const out = []; for (const raw of tickers) { const ticker = String(raw || "").trim().toUpperCase(); if (ticker && !seen.has(ticker)) { seen.add(ticker); out.push(ticker); } } if (!out.length) { console.error("Core Basket refresh requested, but no tickers were found"); process.exit(1); } process.stdout.write(out.join(","));')"
           fi
-          if [ "$ETF_DETAIL_FAILURE_PROOF" = "true" ] || [ "$YAHOO_ETF_FAILURE_PROOF" = "true" ]; then
+          if [ "$UNIVERSE_FAILURE_PROOF" = "true" ]; then
+            ARGS="--sleep ${INPUT_SLEEP:-0.25} --discover-etf-universe --universe-only --stocks-only --controlled-failure-surfaces etf_universe --limit-etfs 0"
+          elif [ "$ETF_DETAIL_FAILURE_PROOF" = "true" ] || [ "$YAHOO_ETF_FAILURE_PROOF" = "true" ]; then
             ARGS="--sleep ${INPUT_SLEEP:-0.25} --etfs=${INPUT_ETFS} --controlled-failure-surfaces $INPUT_CONTROLLED_FAILURE_SURFACES --limit-etfs 1"
             if [ "${INPUT_YF_ETF_FALLBACK:-true}" = "true" ]; then
               ARGS="$ARGS --yf-etf-fallback"

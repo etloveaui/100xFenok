@@ -401,7 +401,7 @@ class StockAnalysisRecoveryStateStore:
         return bool(state and state.get("retry") is True)
 
     def reconcile_current_payload_sha256(self, kind: str, entity: str) -> bool:
-        """Align only the advertised current digest with canonical raw bytes."""
+        """Align a fresh current digest with canonical raw bytes."""
         _validate_identity(kind, entity)
         state_path = self._state_path(kind, entity)
         if not state_path.is_file():
@@ -427,6 +427,12 @@ class StockAnalysisRecoveryStateStore:
             raise StockAnalysisRecoveryStateError(
                 f"recovery state current is missing or malformed for {kind}:{entity}: {state_path}"
             )
+        if state.get("retry") is True and state.get("resolution_state") == "lkg_primary":
+            if not self.valid_retained_lkg(kind, entity, state):
+                raise StockAnalysisRecoveryStateError(
+                    f"degraded recovery state lost retained LKG binding for {kind}:{entity}: {state_path}"
+                )
+            return False
         canonical_path = self.canonical_path(kind, entity)
         try:
             payload_bytes = canonical_path.read_bytes()
