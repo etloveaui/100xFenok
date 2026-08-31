@@ -1,26 +1,13 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-08-31T05:46:20.144Z",
+  "generated_at": "2026-08-31T08:58:36.419Z",
   "status": "open",
-  "open_incident_count": 9,
+  "open_incident_count": 8,
   "open_incidents": [
-    {
-      "workflow": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
-      "streak": 3,
+      "streak": 4,
       "failure_streak_threshold": 1,
       "first_failing_run_id": 31351108376,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/31351108376",
@@ -74,16 +61,28 @@
     {
       "workflow": "fetch-yf-finance.yml",
       "label": "Fetch YF Finance Data",
-      "streak": 2,
+      "streak": 3,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 33149671509,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33149671509",
       "alarm_reasons": [
-        "failure_streak",
-        "unrecovered_overdue"
+        "failure_streak"
       ],
       "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     },
     {
       "workflow": "slickcharts-monthly.yml",
@@ -105,19 +104,6 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 33298849608,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33298849608",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
-      "streak": 3,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 33335125618,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33335125618",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -359,7 +345,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 3
+      "data_freshness_age_hours_at_generation": 7
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -402,10 +388,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "global-writer-queue-observer.yml",
@@ -509,8 +493,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 25,
-    "overdue": 1,
+    "not_due": 26,
+    "overdue": 0,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -526,20 +510,19 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33361569490",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33361569490",
-    "observed_at": "2026-08-31T05:46:20.144Z",
-    "event": "schedule",
+    "run_id": "33375235360",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33375235360",
+    "observed_at": "2026-08-31T08:58:36.419Z",
+    "event": "workflow_run",
     "workflows": [
-      "data-plane-serving-probe.yml",
       "fetch-edgar-filings.yml",
       "fetch-fred-yardeni.yml",
       "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml",
+      "global-writer-queue-observer.yml",
       "slickcharts-monthly.yml",
-      "validate-workflows.yml",
-      "worker-request-budget-alarm.yml"
+      "validate-workflows.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
