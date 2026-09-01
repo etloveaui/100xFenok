@@ -1,42 +1,35 @@
 {
-  "schema_version": "producer-lkg-key-state/v2",
+  "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "us_indices_daily",
   "key": "nasdaq100.json",
-  "updated_at": "2026-09-01T00:56:38.113Z",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "updated_at": "2026-09-01T23:43:23.364Z",
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "current": {
-    "path": "data/indices/nasdaq100.json",
+    "path": "data/admin/us-indices-daily/lkg/nasdaq100.json",
     "payload_sha256": "b6d6e4f657b70fb89f1133b3d05fa77f7fe5e3222ef71a63e1a4bd4e9a6914d4",
     "source_as_of": "2026-08-31"
   },
-  "canonical_ref": "data/indices/nasdaq100.json",
   "lkg": {
     "path": "data/admin/us-indices-daily/lkg/nasdaq100.json",
     "payload_sha256": "b6d6e4f657b70fb89f1133b3d05fa77f7fe5e3222ef71a63e1a4bd4e9a6914d4",
     "source_as_of": "2026-08-31"
   },
-  "latest_failure": null,
+  "canonical_ref": "data/indices/nasdaq100.json",
+  "latest_failure": {
+    "run_id": "33572150472",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-09-01T23:43:23.364Z",
+    "failure_kind": "schema_drift",
+    "error": "Error: Yahoo chart row must have a valid date and finite positive value for ^NDX"
+  },
   "recovered_from_run_id": null,
   "recovery_run_id": null,
   "recovery_run_attempt": null,
   "recovery_event_name": null,
   "recovered_at": null,
-  "last_run_id": "33456677231",
+  "last_run_id": "33572150472",
   "last_run_attempt": 1,
-  "last_event_name": "schedule",
-  "promotion_contract": "provider_observation/v2",
-  "promotion_proof_required": true,
-  "provider_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "55608acb1e022f62f86aba15498b98cbce80e8257e68cf3292d3f3b9626971b0",
-    "candidate_payload_sha256": "b6d6e4f657b70fb89f1133b3d05fa77f7fe5e3222ef71a63e1a4bd4e9a6914d4",
-    "payload_ref": "data/admin/us-indices-daily/provider-observations/55608acb1e022f62f86aba15498b98cbce80e8257e68cf3292d3f3b9626971b0.json",
-    "source_as_of": "2026-08-31",
-    "run_id": "33456677231",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-09-01T00:56:38.113Z",
-    "recovered_from_run_id": null
-  }
+  "last_event_name": "schedule"
 }
