@@ -1,9 +1,9 @@
 {
   "schema_version": "slickcharts-composite-lkg-index/v1",
   "lane_id": "slickcharts",
-  "generated_at": "2026-09-01T11:22:25.359Z",
-  "state_revision": 121,
-  "composite_state": "ready",
+  "generated_at": "2026-09-01T13:08:41.994Z",
+  "state_revision": 123,
+  "composite_state": "degraded_lkg",
   "active_composite": {
     "generation_id": "6582d99faa345bebc33056284c9d568a881156d8a5d94c46d355cb288995cc47",
     "members": {
@@ -15,8 +15,20 @@
     },
     "commit_sha": null
   },
-  "retained_composite": null,
-  "retry_members": [],
+  "retained_composite": {
+    "generation_id": "6582d99faa345bebc33056284c9d568a881156d8a5d94c46d355cb288995cc47",
+    "members": {
+      "daily": "c2f0d88830255a9eafb2c9a915373c0b901025e90f23f382fe1c499a7a5a1bdb",
+      "weekly": "b1842b71f808c194469b7ae7800f57babb0f72ccf59ed2642d8a96e9da7ac001",
+      "monthly": "c83134b6c33ea215495137cdf191f4786845d54c93cc01007774f48b402d4733",
+      "history": "8fe898a54775362786e2d8b53876962eaec4e07cc4113bd0e069ce960449dbac",
+      "symbols": "b5b14b757cde2f6e1f58ba8269fb4bd7819ab81a195a2eeedd66993b80d774a6"
+    },
+    "commit_sha": null
+  },
+  "retry_members": [
+    "monthly"
+  ],
   "members": {
     "daily": {
       "resolution_state": "fresh_primary",
@@ -132,8 +144,8 @@
       "last_recovery": null
     },
     "monthly": {
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "bundle": {
         "contract_sha256": "13b21c402e2cda3542e249b29228aa12f132c4ca6f9381fd5b508d45cf696d64",
         "file_count": 21,
@@ -264,14 +276,14 @@
       },
       "last_failure": {
         "run": {
-          "run_id": "30718943842",
+          "run_id": "33511415594",
           "run_attempt": 1,
-          "event_name": "workflow_dispatch",
-          "observed_at": "2026-08-01T21:22:51.495Z",
-          "head_sha": "b9ee591f3422b64fa9bff115de3d476a7a564545"
+          "event_name": "schedule",
+          "observed_at": "2026-09-01T13:08:40.777Z",
+          "head_sha": "a37dc0c632fdec611de3e9b9e7b2032d93dc9dac"
         },
-        "attempt_id": "gh-30718943842-1-monthly",
-        "retained_generation_id": "160bd124605cb6e6e8cbcaae4472588a0a3e5a5b222f51fe9531aff786e831c0"
+        "attempt_id": "gh-33511415594-1-monthly",
+        "retained_generation_id": "6582d99faa345bebc33056284c9d568a881156d8a5d94c46d355cb288995cc47"
       },
       "last_recovery": null
     },
@@ -3082,12 +3094,12 @@
     }
   },
   "current_attempt": {
-    "run_id": "33501941519",
+    "run_id": "33511415594",
     "run_attempt": 1,
     "event_name": "schedule",
-    "observed_at": "2026-09-01T11:22:20.659Z",
-    "member_id": "daily",
-    "decision": "candidate_promoted",
-    "base_member_state_sha256": "cf3b921c7afb0f1458936345cf3890dc0bcf381c58cf8a7722149e1779e6b08a"
+    "observed_at": "2026-09-01T13:08:40.777Z",
+    "member_id": "monthly",
+    "decision": "retained_lkg",
+    "base_member_state_sha256": "21948976893f7af22bc99542da5bcc50bb0285f01aa22349f264f3f031748b53"
   }
 }
