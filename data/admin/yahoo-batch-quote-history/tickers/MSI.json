@@ -2,26 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for MSI despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 1003,
-      "natural": true,
-      "observed_at": "2026-08-12T22:55:30Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31648785047",
-      "schedule": "7 22 * * 0-5",
-      "shard": "47/72"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 640,
@@ -188,15 +168,28 @@
       "run_id": "33149671509",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 734,
+      "natural": true,
+      "observed_at": "2026-09-01T02:05:58Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33460327385",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-28T07:14:02Z",
-    "history_as_of": "2026-08-27",
+    "fetched_at": "2026-09-01T02:09:27Z",
+    "history_as_of": "2026-08-31",
     "path": "data/yf/finance/MSI.json",
-    "payload_sha256": "7c3aaa4b0450a0b82c59c0f414faaa0c30490fbf6a582316485312fc5777fdeb",
-    "quote_as_of": "2026-08-27T20:00:02Z",
-    "source_as_of": "2026-08-27"
+    "payload_sha256": "4e32850f2cc2d3d9ce70018b9b6f91a078182a63340162c77ec1a434ffb8f294",
+    "quote_as_of": "2026-08-31T20:00:03Z",
+    "source_as_of": "2026-08-31"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,12 +199,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 654,
+    "latency_ms": 734,
     "natural": true,
-    "observed_at": "2026-08-28T07:10:49Z",
+    "observed_at": "2026-09-01T02:05:58Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
   },
@@ -244,14 +237,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-27",
-    "observed_at": "2026-08-28T07:10:49Z",
-    "payload_sha256": "c47a91691192e6a54e0439d3193be156fb7023c669a2a5c9dc0ced102187b421",
-    "quote_as_of": "2026-08-27T20:00:02Z",
+    "history_as_of": "2026-08-31",
+    "observed_at": "2026-09-01T02:05:58Z",
+    "payload_sha256": "bf501f066a260c8f48c21c84c40d69a13f66118e71adb3d06475ad1cb66ceb0a",
+    "quote_as_of": "2026-08-31T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-27"
+    "source_as_of": "2026-08-31"
   },
   "recovered_at": "2026-08-13T00:06:17Z",
   "recovered_from_run_id": "31648785047",
@@ -272,5 +265,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "MSI",
-  "updated_at": "2026-08-28T07:10:49Z"
+  "updated_at": "2026-09-01T02:05:58Z"
 }

@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 502,
-      "natural": true,
-      "observed_at": "2026-07-15T00:10:40Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "29378156187",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 677,
       "natural": true,
       "observed_at": "2026-07-16T00:24:49Z",
@@ -186,13 +173,26 @@
       "run_id": "33149671509",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 877,
+      "natural": true,
+      "observed_at": "2026-09-01T01:52:51Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33460327385",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-28T07:10:37Z",
-    "history_as_of": "2026-08-26",
-    "path": "data/yf/finance/VBX.json",
-    "payload_sha256": "b7086f6e08f427b16f315f72213c4dc0b2e202d3d63069909ea471018471fe88",
+    "fetched_at": "2026-09-01T01:53:09Z",
+    "history_as_of": "2026-08-27",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VBX.json",
+    "payload_sha256": "bcfadb787d863817b29b3c48895b8a7b16d33f6696dee86a2054382b73d8eb88",
     "quote_as_of": "2026-08-20T19:41:32Z",
     "source_as_of": "2026-08-20T19:41:32Z"
   },
@@ -203,48 +203,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 451,
+    "latency_ms": 877,
     "natural": true,
-    "observed_at": "2026-08-28T07:06:28Z",
+    "observed_at": "2026-09-01T01:52:51Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T19:10:53Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-09-01T01:53:09Z",
+    "history_as_of": "2026-08-27",
     "path": "data/admin/yahoo-batch-quote-history/lkg/VBX.json",
-    "payload_sha256": "4a3fa208e498469557e78cb45562d968b1976533a6dcf79c3aef9c6fa6ea7f86",
-    "quote_as_of": "2026-08-10T16:05:03Z",
-    "source_as_of": "2026-08-10"
+    "payload_sha256": "bcfadb787d863817b29b3c48895b8a7b16d33f6696dee86a2054382b73d8eb88",
+    "quote_as_of": "2026-08-20T19:41:32Z",
+    "source_as_of": "2026-08-20T19:41:32Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-26",
-    "observed_at": "2026-08-28T07:06:28Z",
-    "payload_sha256": "ee893691f7cac42eec9b6cac95d82e0badc405b999d55c88686be1a33093bf16",
+    "history_as_of": "2026-08-27",
+    "observed_at": "2026-09-01T01:52:51Z",
+    "payload_sha256": "a3a3ccb8a33703cbca84d89915eb2b0964bbfc49f3bd0390b47893a7bc32b451",
     "quote_as_of": "2026-08-20T19:41:32Z",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-20T19:41:32Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
+    "age_business_days": 8,
+    "classified_at": "2026-09-01T01:58:29Z",
+    "classified_run_id": "33460327385",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "VBX holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "VBX holds LKG because Yahoo source date 2026-08-20T19:41:32Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-20T19:41:32Z"
   },
   "ticker": "VBX",
-  "updated_at": "2026-08-28T07:06:28Z"
+  "updated_at": "2026-09-01T01:58:29Z"
 }

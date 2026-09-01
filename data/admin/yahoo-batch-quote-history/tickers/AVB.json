@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-12T13:41:31Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31602424796",
-      "schedule": "7 12 * * 0-5",
-      "shard": "42/72"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -185,6 +172,20 @@
       "run_id": "33233193884",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 644,
+      "natural": true,
+      "observed_at": "2026-09-01T01:52:51Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33460327385",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -203,12 +204,12 @@
     "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 556,
+    "latency_ms": 644,
     "natural": true,
-    "observed_at": "2026-08-29T04:12:42Z",
+    "observed_at": "2026-09-01T01:52:51Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33233193884",
+    "run_id": "33460327385",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -220,9 +221,9 @@
     "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-08-29T04:12:42Z",
+    "observed_at": "2026-09-01T01:52:51Z",
     "run_attempt": 1,
-    "run_id": "33233193884"
+    "run_id": "33460327385"
   },
   "lkg": {
     "fetched_at": "2026-08-24T23:51:49Z",
@@ -258,5 +259,5 @@
     "source_as_of": "2026-08-14T20:00:03Z"
   },
   "ticker": "AVB",
-  "updated_at": "2026-08-29T04:12:42Z"
+  "updated_at": "2026-09-01T01:52:51Z"
 }

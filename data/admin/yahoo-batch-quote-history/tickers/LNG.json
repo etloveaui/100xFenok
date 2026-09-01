@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 448,
-      "natural": true,
-      "observed_at": "2026-08-12T00:43:18Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for LNG despite available history",
       "event_name": "schedule",
       "failures": [
@@ -188,15 +175,28 @@
       "run_id": "33149671509",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 555,
+      "natural": true,
+      "observed_at": "2026-09-01T02:10:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33460327385",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-28T07:13:52Z",
-    "history_as_of": "2026-08-27",
+    "fetched_at": "2026-09-01T02:12:43Z",
+    "history_as_of": "2026-08-31",
     "path": "data/yf/finance/LNG.json",
-    "payload_sha256": "615d549ea910308facd90bf4535fe3abd57b0e7da3733fc66162dcfa265d4b2e",
-    "quote_as_of": "2026-08-27T20:00:02Z",
-    "source_as_of": "2026-08-27"
+    "payload_sha256": "4e27d16ce8f2885fea085e8c3961bc0a036f652a49878afcde06a3b86b602cb3",
+    "quote_as_of": "2026-08-31T20:00:02Z",
+    "source_as_of": "2026-08-31"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,14 +206,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 496,
+    "latency_ms": 555,
     "natural": true,
-    "observed_at": "2026-08-28T07:10:49Z",
+    "observed_at": "2026-09-01T02:10:13Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-27",
-    "observed_at": "2026-08-28T07:10:49Z",
-    "payload_sha256": "d972c1505373ad583b3b511c52ca8b5661f9b3af901f27718bcdc6499dbc06dc",
-    "quote_as_of": "2026-08-27T20:00:02Z",
+    "history_as_of": "2026-08-31",
+    "observed_at": "2026-09-01T02:10:13Z",
+    "payload_sha256": "58a1e1ff2fbe2a9efaa70949c0c1e1dc71bdae29ed551cf3261e88a1f7ca4179",
+    "quote_as_of": "2026-08-31T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-27"
+    "source_as_of": "2026-08-31"
   },
   "recovered_at": "2026-08-13T00:06:17Z",
   "recovered_from_run_id": "31648785047",
@@ -262,5 +262,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "LNG",
-  "updated_at": "2026-08-28T07:10:49Z"
+  "updated_at": "2026-09-01T02:10:13Z"
 }

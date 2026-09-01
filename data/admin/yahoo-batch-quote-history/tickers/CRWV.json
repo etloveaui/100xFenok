@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 439,
-      "natural": true,
-      "observed_at": "2026-08-12T00:28:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for CRWV despite available history",
       "event_name": "schedule",
       "failures": [
@@ -188,15 +175,28 @@
       "run_id": "33149671509",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 535,
+      "natural": true,
+      "observed_at": "2026-09-01T02:01:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33460327385",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-28T07:05:50Z",
-    "history_as_of": "2026-08-27",
+    "fetched_at": "2026-09-01T02:04:03Z",
+    "history_as_of": "2026-08-31",
     "path": "data/yf/finance/CRWV.json",
-    "payload_sha256": "7cf6ec5d1e81d158fe146e7aaaaf6a116ac1bafc0469d04d7831a91b24ceee4e",
-    "quote_as_of": "2026-08-27T20:00:01Z",
-    "source_as_of": "2026-08-27"
+    "payload_sha256": "a99ae1d6befa8ac30724914ad192fcbe527b8edeb68316d59884d6df6c90a223",
+    "quote_as_of": "2026-08-31T20:00:01Z",
+    "source_as_of": "2026-08-31"
   },
   "discovered_from": [
     "market_facts"
@@ -205,14 +205,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 503,
+    "latency_ms": 535,
     "natural": true,
-    "observed_at": "2026-08-28T07:03:25Z",
+    "observed_at": "2026-09-01T02:01:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -243,14 +243,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-27",
-    "observed_at": "2026-08-28T07:03:25Z",
-    "payload_sha256": "08781a03620a571fa4e2087c538523dae1b319c4b00fd0002c7f365022935f3b",
-    "quote_as_of": "2026-08-27T20:00:01Z",
+    "history_as_of": "2026-08-31",
+    "observed_at": "2026-09-01T02:01:44Z",
+    "payload_sha256": "156fa43cced11f4dad49d3292f9b979256c3da6adf59becdfd942faa03a39fb3",
+    "quote_as_of": "2026-08-31T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-27"
+    "source_as_of": "2026-08-31"
   },
   "recovered_at": "2026-08-13T00:06:17Z",
   "recovered_from_run_id": "31648785047",
@@ -261,5 +261,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CRWV",
-  "updated_at": "2026-08-28T07:03:25Z"
+  "updated_at": "2026-09-01T02:01:44Z"
 }

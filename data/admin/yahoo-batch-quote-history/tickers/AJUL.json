@@ -69,13 +69,13 @@
   "current": {
     "fetched_at": "2026-08-24T01:55:39Z",
     "history_as_of": "2026-08-21",
-    "path": "data/yf/finance/AJUL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AJUL.json",
     "payload_sha256": "e416ce598c00f2b41adbfacb1b61b1c0eae31ec0a46e597658fe14781b15d72b",
     "quote_as_of": "2026-08-21T19:39:59Z",
     "source_as_of": "2026-08-21"
   },
   "discovered_from": [
-    "core_daily_basket"
+    "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
@@ -91,12 +91,12 @@
     "shard": "1/6"
   },
   "lkg": {
-    "fetched_at": "2026-08-10T15:11:55Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-08-24T01:55:39Z",
+    "history_as_of": "2026-08-21",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AJUL.json",
-    "payload_sha256": "1c148263c6fbb4c5af433ed80b73ddeec394e0f284ccdf62d1dac01e4a8726f0",
-    "quote_as_of": "2026-08-10T13:59:19Z",
-    "source_as_of": "2026-08-10"
+    "payload_sha256": "e416ce598c00f2b41adbfacb1b61b1c0eae31ec0a46e597658fe14781b15d72b",
+    "quote_as_of": "2026-08-21T19:39:59Z",
+    "source_as_of": "2026-08-21"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -110,19 +110,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-21"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
+    "classified_at": "2026-09-01T01:52:51Z",
+    "classified_run_id": "33460327385",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "AJUL holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "AJUL holds LKG because Yahoo source date 2026-08-21 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-21"
   },
   "ticker": "AJUL",
-  "updated_at": "2026-08-24T01:55:37Z"
+  "updated_at": "2026-09-01T01:52:51Z"
 }

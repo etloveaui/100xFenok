@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 479,
-      "natural": true,
-      "observed_at": "2026-08-12T00:32:27Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for PSA despite available history",
       "event_name": "schedule",
       "failures": [
@@ -188,15 +175,28 @@
       "run_id": "33149671509",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 635,
+      "natural": true,
+      "observed_at": "2026-09-01T02:01:44Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33460327385",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-28T07:10:09Z",
-    "history_as_of": "2026-08-27",
+    "fetched_at": "2026-09-01T02:05:14Z",
+    "history_as_of": "2026-08-31",
     "path": "data/yf/finance/PSA.json",
-    "payload_sha256": "1b55f38484f7fa428d1ce1f15add2f7052f7e6feeb1cdb751100b86eab25c1a8",
-    "quote_as_of": "2026-08-27T20:00:02Z",
-    "source_as_of": "2026-08-27"
+    "payload_sha256": "420245cab84435502fa1a417a836739d7df27a34813f124decbdfa098c8bd256",
+    "quote_as_of": "2026-08-31T20:00:02Z",
+    "source_as_of": "2026-08-31"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,12 +206,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 598,
+    "latency_ms": 635,
     "natural": true,
-    "observed_at": "2026-08-28T07:06:28Z",
+    "observed_at": "2026-09-01T02:01:44Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
@@ -244,14 +244,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-27",
-    "observed_at": "2026-08-28T07:06:28Z",
-    "payload_sha256": "d0664be9379575594a91cd53a611e610106dad09bd8adfb28c5bd87f43bf0a27",
-    "quote_as_of": "2026-08-27T20:00:02Z",
+    "history_as_of": "2026-08-31",
+    "observed_at": "2026-09-01T02:01:44Z",
+    "payload_sha256": "deb6dd67b6be2bb161a40e7d305dd47fc45d4f23ff96e28022210ad71c699905",
+    "quote_as_of": "2026-08-31T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-27"
+    "source_as_of": "2026-08-31"
   },
   "recovered_at": "2026-08-13T00:06:17Z",
   "recovered_from_run_id": "31648785047",
@@ -272,5 +272,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "PSA",
-  "updated_at": "2026-08-28T07:06:28Z"
+  "updated_at": "2026-09-01T02:01:44Z"
 }

@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-14T00:26:44Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29295146902",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -182,13 +169,26 @@
       "run_id": "33149671509",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 621,
+      "natural": true,
+      "observed_at": "2026-09-01T01:52:51Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33460327385",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-28T07:18:11Z",
-    "history_as_of": "2026-08-26",
-    "path": "data/yf/finance/MGKX.json",
-    "payload_sha256": "16a13c49f9181d4f864b19c10a8386de48a64d2eaa8a8e5e0378b9f36f08269d",
+    "fetched_at": "2026-09-01T01:53:11Z",
+    "history_as_of": "2026-08-27",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/MGKX.json",
+    "payload_sha256": "3900cd18618a0c923b3685c8610b92df0597f44095cff616d83e43819cce382e",
     "quote_as_of": "2026-08-20T19:11:29Z",
     "source_as_of": "2026-08-20T19:11:29Z"
   },
@@ -199,48 +199,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 461,
+    "latency_ms": 621,
     "natural": true,
-    "observed_at": "2026-08-28T07:14:59Z",
+    "observed_at": "2026-09-01T01:52:51Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-08-11T17:08:36Z",
-    "history_as_of": "2026-08-11",
+    "fetched_at": "2026-09-01T01:53:11Z",
+    "history_as_of": "2026-08-27",
     "path": "data/admin/yahoo-batch-quote-history/lkg/MGKX.json",
-    "payload_sha256": "8aa24c7cdf2ccafbaecda5ea13002a49d32f51fab92949166e25772c58592a9c",
-    "quote_as_of": "2026-08-11T13:46:06Z",
-    "source_as_of": "2026-08-11"
+    "payload_sha256": "3900cd18618a0c923b3685c8610b92df0597f44095cff616d83e43819cce382e",
+    "quote_as_of": "2026-08-20T19:11:29Z",
+    "source_as_of": "2026-08-20T19:11:29Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-26",
-    "observed_at": "2026-08-28T07:14:59Z",
-    "payload_sha256": "08ce434d756bfc1bf8cb5924f0dc82b158ffcbde49aaef7d046427d1c332064c",
+    "history_as_of": "2026-08-27",
+    "observed_at": "2026-09-01T01:52:51Z",
+    "payload_sha256": "3cd7446319ed91e3d0a0b03c389dba7a6bbab3c6deb4aabb746f13b270ef6e0b",
     "quote_as_of": "2026-08-20T19:11:29Z",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-20T19:11:29Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-20T14:20:12Z",
-    "classified_run_id": "32379322022",
+    "age_business_days": 8,
+    "classified_at": "2026-09-01T01:58:29Z",
+    "classified_run_id": "33460327385",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "MGKX holds LKG because Yahoo source date 2026-08-11 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "MGKX holds LKG because Yahoo source date 2026-08-20T19:11:29Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-08-20T19:11:29Z"
   },
   "ticker": "MGKX",
-  "updated_at": "2026-08-28T07:14:59Z"
+  "updated_at": "2026-09-01T01:58:29Z"
 }

@@ -142,13 +142,26 @@
       "run_id": "33149671509",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 597,
+      "natural": true,
+      "observed_at": "2026-09-01T01:52:51Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33460327385",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-28T07:10:39Z",
-    "history_as_of": "2026-08-26",
-    "path": "data/yf/finance/VOOX.json",
-    "payload_sha256": "9eb38750705feede5e9c798dbc753bc6bd6192f8efb7721a5154a315aee8e789",
+    "fetched_at": "2026-09-01T01:53:10Z",
+    "history_as_of": "2026-08-27",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VOOX.json",
+    "payload_sha256": "509b8eeb68381c8ccfba9d1f585b4c6feb80f551e3567fdf39579113397f4eb7",
     "quote_as_of": "2026-08-20T18:53:33Z",
     "source_as_of": "2026-08-20T18:53:33Z"
   },
@@ -159,48 +172,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 459,
+    "latency_ms": 597,
     "natural": true,
-    "observed_at": "2026-08-28T07:06:28Z",
+    "observed_at": "2026-09-01T01:52:51Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "0/5"
   },
   "lkg": {
-    "fetched_at": "2026-08-11T07:23:02Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-09-01T01:53:10Z",
+    "history_as_of": "2026-08-27",
     "path": "data/admin/yahoo-batch-quote-history/lkg/VOOX.json",
-    "payload_sha256": "a7ae399defb4eee45c0ab20400b0c141c238b2a65daef2d56e97abfec7348c94",
-    "quote_as_of": "2026-08-10T18:15:38Z",
-    "source_as_of": "2026-08-10"
+    "payload_sha256": "509b8eeb68381c8ccfba9d1f585b4c6feb80f551e3567fdf39579113397f4eb7",
+    "quote_as_of": "2026-08-20T18:53:33Z",
+    "source_as_of": "2026-08-20T18:53:33Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-26",
-    "observed_at": "2026-08-28T07:06:28Z",
-    "payload_sha256": "30285b1b0bcbf04608d4c24f7c86e0417cdf7d77316eadee22429bf61388ef2d",
+    "history_as_of": "2026-08-27",
+    "observed_at": "2026-09-01T01:52:51Z",
+    "payload_sha256": "b94d208ffa6fb9cd22ed8d79a7c7872f1a2c02439467377ba86ec3c25e01cafb",
     "quote_as_of": "2026-08-20T18:53:33Z",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-08-20T18:53:33Z"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 7,
-    "classified_at": "2026-08-19T23:42:29Z",
-    "classified_run_id": "32314261503",
+    "age_business_days": 8,
+    "classified_at": "2026-09-01T01:58:29Z",
+    "classified_run_id": "33460327385",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "VOOX holds LKG because Yahoo source date 2026-08-10 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "VOOX holds LKG because Yahoo source date 2026-08-20T18:53:33Z is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-08-10"
+    "source_as_of": "2026-08-20T18:53:33Z"
   },
   "ticker": "VOOX",
-  "updated_at": "2026-08-28T07:06:28Z"
+  "updated_at": "2026-09-01T01:58:29Z"
 }

@@ -2,26 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for ARM despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 487,
-      "natural": true,
-      "observed_at": "2026-08-12T22:55:30Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31648785047",
-      "schedule": "7 22 * * 0-5",
-      "shard": "47/72"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 522,
@@ -188,15 +168,28 @@
       "run_id": "33149671509",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 521,
+      "natural": true,
+      "observed_at": "2026-09-01T02:10:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33460327385",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-28T07:12:50Z",
-    "history_as_of": "2026-08-27",
+    "fetched_at": "2026-09-01T02:12:22Z",
+    "history_as_of": "2026-08-31",
     "path": "data/yf/finance/ARM.json",
-    "payload_sha256": "6bdf262463539b5e4a64a938ef287e9ab9a1324fe388cc1d3f4c13217308169b",
-    "quote_as_of": "2026-08-27T20:00:01Z",
-    "source_as_of": "2026-08-27"
+    "payload_sha256": "2325c76997b474c2c708fd626395fc15b63c4b78f471dd61db631a39f501f6b9",
+    "quote_as_of": "2026-08-31T20:00:01Z",
+    "source_as_of": "2026-08-31"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -207,14 +200,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 530,
+    "latency_ms": 521,
     "natural": true,
-    "observed_at": "2026-08-28T07:10:49Z",
+    "observed_at": "2026-09-01T02:10:13Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -245,14 +238,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-27",
-    "observed_at": "2026-08-28T07:10:49Z",
-    "payload_sha256": "08bc125a060ac82b3d2870f98747aa02586817414d9e09e1863dd2886447c2b5",
-    "quote_as_of": "2026-08-27T20:00:01Z",
+    "history_as_of": "2026-08-31",
+    "observed_at": "2026-09-01T02:10:13Z",
+    "payload_sha256": "ad98b2991d68b14e542b4fd70b27c29c47bc5ab072e7344d4c270caa02256ac4",
+    "quote_as_of": "2026-08-31T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "33149671509",
+    "run_id": "33460327385",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-27"
+    "source_as_of": "2026-08-31"
   },
   "recovered_at": "2026-08-13T00:06:17Z",
   "recovered_from_run_id": "31648785047",
@@ -263,5 +256,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ARM",
-  "updated_at": "2026-08-28T07:10:49Z"
+  "updated_at": "2026-09-01T02:10:13Z"
 }

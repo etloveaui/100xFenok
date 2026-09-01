@@ -76,7 +76,7 @@
   "current": {
     "fetched_at": "2026-08-20T15:39:05Z",
     "history_as_of": "2026-08-20",
-    "path": "data/yf/finance/XLP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/XLP.json",
     "payload_sha256": "7a26ed9a5af825933e92e04c6863df5d2caf8b35a3896f19ad3f026956c8c735",
     "quote_as_of": "2026-08-20T15:38:55Z",
     "source_as_of": "2026-08-20"
@@ -118,12 +118,12 @@
     "run_id": "31648785047"
   },
   "lkg": {
-    "fetched_at": "2026-08-05T23:18:31Z",
-    "history_as_of": "2026-08-05",
+    "fetched_at": "2026-08-20T15:39:05Z",
+    "history_as_of": "2026-08-20",
     "path": "data/admin/yahoo-batch-quote-history/lkg/XLP.json",
-    "payload_sha256": "9fa47b08d554871d4193b9e42a83cc8ca3b657efaed7bb95afdd70d6f92dc4a4",
-    "quote_as_of": "2026-08-05T20:00:00Z",
-    "source_as_of": "2026-08-05"
+    "payload_sha256": "7a26ed9a5af825933e92e04c6863df5d2caf8b35a3896f19ad3f026956c8c735",
+    "quote_as_of": "2026-08-20T15:38:55Z",
+    "source_as_of": "2026-08-20"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -142,19 +142,19 @@
   "recovery_event_name": "workflow_dispatch",
   "recovery_run_attempt": 1,
   "recovery_run_id": "32379322022",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 8,
+    "classified_at": "2026-09-01T01:52:51Z",
+    "classified_run_id": "33460327385",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "XLP holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "XLP holds LKG because Yahoo source date 2026-08-20 is 8 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-08-20"
   },
   "ticker": "XLP",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-09-01T01:52:51Z"
 }
