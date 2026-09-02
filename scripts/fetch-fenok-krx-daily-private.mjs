@@ -1292,6 +1292,20 @@ function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, act
     });
     console.log(`KRX_PRIVATE_ISSUER_COVERAGE_GAP ${JSON.stringify(diagnostic)}`);
   }
+  if (receipt) {
+    console.log(`KRX_ISSUER_DAILY_COVERAGE_RECEIPT ${JSON.stringify({
+      schema_version: receipt.schema_version,
+      source_date: receipt.source_date,
+      covered_count: receipt.covered_count,
+      denominator: receipt.denominator,
+      missing_count: receipt.missing_count,
+      market_coverage: receipt.market_coverage,
+      listing_status_filter: receipt.listing_status_filter,
+      status: receipt.status,
+      raw_public: receipt.raw_public,
+      per_issuer_rows: receipt.per_issuer_rows,
+    })}`);
+  }
   return receipt;
 }
 
