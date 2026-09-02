@@ -16,12 +16,12 @@
     },
     "benchmarks": {
       "version": "3.8.0",
-      "updated": "2026-08-21",
+      "updated": "2026-08-28",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 7,
       "schema": true,
-      "description": "Market indices P/E, P/B, ROE - 32,209 records, 2010-01-01 ~ 2026-08-21, 38 sections, 869 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
+      "description": "Market indices P/E, P/B, ROE - 32,247 records, 2010-01-01 ~ 2026-08-28, 38 sections, 870 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     "damodaran": {
       "version": "2.3.0",
@@ -206,6 +206,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-09-02",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the owner-supplied 20260831 EPS workbook (data through 2026-08-28): 32,247 records (+38), 2010-01-01 ~ 2026-08-28, 38 sections, 870 data points per index (kosdaq_150 869, hang_seng_tech 609, star50 319); source summaries 2,404 values + 66 nulls. RIM index and Fenok RIM regeneration is closed per DEC-302/DEC-326 (owner-ordered, reopening requires an owner-level restore) and is not run for this or future weekly refreshes. Feno Yardeni rebuild is dispatched separately via the hosted fetch-fred-yardeni.yml workflow (DEC-403 local-execution restriction).",
+      "breaking": false
+    },
     {
       "date": "2026-08-30",
       "folder": "global-scouter",
@@ -910,9 +917,9 @@
       "path": "/data/benchmarks/",
       "schemaVersion": "3.8.0",
       "fileCount": 7,
-      "lastUpdated": "2026-08-21",
+      "lastUpdated": "2026-08-28",
       "lastUpdatedReason": null,
-      "notes": "Market indices P/E, P/B, ROE - 32,209 records, 2010-01-01 ~ 2026-08-21, 38 sections, 869 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
+      "notes": "Market indices P/E, P/B, ROE - 32,247 records, 2010-01-01 ~ 2026-08-28, 38 sections, 870 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     {
       "name": "damodaran",

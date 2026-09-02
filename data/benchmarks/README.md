@@ -1,9 +1,9 @@
 # Benchmarks Data
 
 > **Source**: Bloomberg Terminal (weekly update)
-> **Period**: 2010-01-01 ~ 2026-08-21 (16+ years, 869 data points per index)
+> **Period**: 2010-01-01 ~ 2026-08-28 (16+ years, 870 data points per index)
 > **Version**: 3.8.0
-> **Last Update**: 2026-08-25
+> **Last Update**: 2026-09-02
 
 ---
 
@@ -17,7 +17,7 @@
 | `developed.json` | Developed Markets | `euro_stoxx_50`, `topix`, `hong_kong`, `nikkei` |
 | `emerging.json` | Emerging Markets | `shanghai`, `india_sensex`, `kospi`, `brazil`, `vietnam`, `hang_seng_h` |
 | `msci.json` | MSCI Indices | `world`, `developed`, `emerging`, `china`, `india`, `korea` |
-| `summaries.json` | Momentum, Yearly Returns, Source Summaries | 38 sections × price legacy views + 2,403 metric summary values |
+| `summaries.json` | Momentum, Yearly Returns, Source Summaries | 38 sections × price legacy views + 2,404 metric summary values |
 
 ---
 
@@ -129,6 +129,7 @@ console.log(summaries.source_summaries.sp500.momentum.best_pe_ratio.ytd); // val
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.8.0 | 2026-09-02 | Weekly data update (2026-08-28 source): 32,247 records (+38), 2010-01-01 ~ 2026-08-28, 38 sections, 870 data points per index (kosdaq_150 869, hang_seng_tech 609, star50 319); source summaries 2,404 values + 66 nulls |
 | 3.8.0 | 2026-08-25 | Weekly data update (2026-08-21 source): 32,209 records (+38), 2010-01-01 ~ 2026-08-21, 38 sections, 869 data points per index (kosdaq_150 868, hang_seng_tech 608, star50 318); source summaries 2,403 values + 67 nulls |
 | 3.8.0 | 2026-08-19 | Weekly data update (2026-08-14 source): 32,171 records (+38), 2010-01-01 ~ 2026-08-14, 38 sections, 868 data points per index (kosdaq_150 867, hang_seng_tech 607, star50 317); source summaries 2,404 values + 66 nulls |
 | 3.8.0 | 2026-08-10 | Weekly data update (2026-08-07 source): 32,133 records (+38), 2010-01-01 ~ 2026-08-07, 38 sections, 867 data points per index (kosdaq_150 866, hang_seng_tech 606, star50 316); source summaries 2,404 values + 66 nulls |
