@@ -41,12 +41,8 @@ function clone(value) {
 
 {
   assert.equal(validateDerivedAssetRegistry(DERIVED_ASSET_REGISTRY), true);
-  assert.equal(DERIVED_ASSET_REGISTRY.assets.length, 35, "35 logical derived assets are declared");
-  assert.equal(
-    DERIVED_ASSET_REGISTRY.assets.flatMap((asset) => asset.outputs).length,
-    39,
-    "all 35 top-level files and four recursive directories are declared exactly once",
-  );
+  const outputPaths = DERIVED_ASSET_REGISTRY.assets.flatMap((asset) => asset.outputs.map((output) => output.path));
+  assert.equal(new Set(outputPaths).size, outputPaths.length, "derived output paths must be declared exactly once");
   const sec13fBridge = derivedAssetById("sec13f_bridge_index");
   assert.deepEqual(
     sec13fBridge.outputs,

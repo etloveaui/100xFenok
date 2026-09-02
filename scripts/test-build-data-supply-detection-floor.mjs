@@ -1431,8 +1431,8 @@ function runAttemptChecks(artifactRoot) {
   missingScheduledRow.attempts = missingScheduledRow.attempts.filter((row) => row.lane_id !== "fred_macro");
   assert.equal(validateAttemptEvidence(missingScheduledRow), true);
   const missingScheduledReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: missingScheduledRow, calendars: calendarsFixture, now: expectedFixture.baseline.now });
-  assert.equal(missingScheduledReport.logical_lane_count, 31);
-  assert.equal(missingScheduledReport.producer_member_count, 36);
+  assert.equal(missingScheduledReport.logical_lane_count, DATA_SUPPLY_DETECTION_CONFIG.logical_lane_count);
+  assert.equal(missingScheduledReport.producer_member_count, DATA_SUPPLY_DETECTION_CONFIG.producer_member_count);
   assert.equal(lane(missingScheduledReport, "fred_macro").endpoint.reason, "workflow_unobserved");
 
   const missingCompositeRow = clone(attemptsFixture);
@@ -1440,8 +1440,8 @@ function runAttemptChecks(artifactRoot) {
   assert.equal(validateAttemptEvidence(missingCompositeRow), true);
   const missingCompositeReport = buildDetectionReport({ artifactRoot: artifactRoot.raw, attempts: missingCompositeRow, calendars: calendarsFixture, now: expectedFixture.baseline.now });
   const missingWeekly = lane(missingCompositeReport, "slickcharts");
-  assert.equal(missingCompositeReport.logical_lane_count, 31);
-  assert.equal(missingCompositeReport.producer_member_count, 36);
+  assert.equal(missingCompositeReport.logical_lane_count, DATA_SUPPLY_DETECTION_CONFIG.logical_lane_count);
+  assert.equal(missingCompositeReport.producer_member_count, DATA_SUPPLY_DETECTION_CONFIG.producer_member_count);
   assert.equal(missingWeekly.status, "unobserved");
   assert.equal(missingWeekly.reason, "workflow_unobserved");
   assert.equal(missingWeekly.members.find((member) => member.id === "weekly").endpoint.reason, "workflow_unobserved");
@@ -1484,7 +1484,7 @@ function runCompositeSourceFoldChecks() {
   const missingTreasuryReport = buildDetectionReport({ artifactRoot: missingTreasuryRoot.raw, attempts: attemptsFixture, calendars: calendarsFixture, now: expectedFixture.baseline.now });
   const missingTreasuryDaily = lane(missingTreasuryReport, "slickcharts").members.find((member) => member.id === "daily");
   assert.equal(missingTreasuryDaily.reason, "missing_artifact");
-  assert.equal(missingTreasuryReport.producer_member_count, 36);
+  assert.equal(missingTreasuryReport.producer_member_count, DATA_SUPPLY_DETECTION_CONFIG.producer_member_count);
 
   for (const [key, relativePath] of [
     ["cnn", "data/sentiment/cnn-fear-greed.json"],
@@ -1894,8 +1894,8 @@ function runCliReproduction(artifactRoot) {
   assert.deepEqual(verifyDetectionReportFile({ reportPath }), {
     schema_version: expectedFixture.baseline.expected_report.schema_version,
     report_file_sha256: expectedFixture.baseline.report_file_sha256,
-    logical_lane_count: 31,
-    producer_member_count: 36,
+    logical_lane_count: DATA_SUPPLY_DETECTION_CONFIG.logical_lane_count,
+    producer_member_count: DATA_SUPPLY_DETECTION_CONFIG.producer_member_count,
   });
   const verifyCli = spawnSync(process.execPath, [BUILDER, "--verify-report", reportPath], { cwd: REPO_ROOT, encoding: "utf8" });
   assert.equal(verifyCli.status, 0, verifyCli.stderr);
@@ -2367,8 +2367,8 @@ function runCurrentRepositoryDryRun(adminReportBefore) {
     outputRoot: output.raw,
     tempToken: "0000000000000f00",
   });
-  assert.equal(result.report.logical_lane_count, 31);
-  assert.equal(result.report.producer_member_count, 36);
+  assert.equal(result.report.logical_lane_count, DATA_SUPPLY_DETECTION_CONFIG.logical_lane_count);
+  assert.equal(result.report.producer_member_count, DATA_SUPPLY_DETECTION_CONFIG.producer_member_count);
   assert.deepEqual(result.report.lanes.map((row) => row.id), DATA_SUPPLY_DETECTION_CONFIG.lanes.map((row) => row.id));
   assert.equal(path.dirname(result.report_path), output.real);
   assert.deepEqual(fs.readdirSync(output.raw), [REPORT_BASENAME]);

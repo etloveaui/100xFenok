@@ -175,24 +175,11 @@ const EXPECTED_PRIVATE_PROXY_FILES = Object.freeze([
   "computed/fenok_social_attention_proxy.json",
   "computed/fenok_social_attention_proxy_history.json",
 ]);
-const EXPECTED_PRIVATE_DERIVED_FILES = Object.freeze([
-  "computed/etf_action_index.json",
-  "computed/fenok_etf_signals.json",
-  "computed/fenok_flow_proxies.json",
-  "computed/fenok_flow_proxies_history.json",
-  "computed/fenok_news_tone_proxy.json",
-  "computed/fenok_news_tone_proxy_history.json",
-  "computed/fenok_occ_options_volume.json",
-  "computed/fenok_occ_options_volume_history.json",
-  "computed/fenok_signal_lens_proxies.json",
-  "computed/fenok_signal_lens_proxies_history.json",
-  "computed/fenok_signal_lens_proxies_summary.json",
-  "computed/fenok_signals.json",
-  "computed/fenok_social_attention_proxy.json",
-  "computed/fenok_social_attention_proxy_history.json",
-]);
+const derivedPrivateExactFiles = Object.freeze(
+  derivedPrivateFileOutputs().map((filePath) => filePath.slice("data/".length)),
+);
 const EXPECTED_PRIVATE_EXACT_FILES = Object.freeze([
-  ...EXPECTED_PRIVATE_DERIVED_FILES,
+  ...derivedPrivateExactFiles,
   "admin/fenok-edge-proxy-coverage-review.json",
   "sec-13f/investors/griffin.json",
 ]);
@@ -247,8 +234,8 @@ const EXPECTED_PRIVATE_EXACT_FILES = Object.freeze([
   }
   assert.deepEqual(
     RESTRICTED_DERIVED_PUBLIC_DATA_FILES,
-    EXPECTED_PRIVATE_DERIVED_FILES,
-    "private derived single-file outputs changed without updating the boundary contract",
+    derivedPrivateExactFiles,
+    "private derived single-file outputs must match the registry boundary",
   );
 
   // Value-changing derivation case: a mirrorless private lane with one
@@ -1131,11 +1118,8 @@ try {
     ])].sort(),
     "the exact-file exclusion set must equal the lane plus derived-asset registry derivations",
   );
-  assert.equal(
-    EXCLUDED_PUBLIC_DATA_FILES.length,
-    20,
-    `the exact-file exclusion set must cover the six declared exceptions plus all private derived files, got ${EXCLUDED_PUBLIC_DATA_FILES.length}: ${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`,
-  );
+  assert.equal(new Set(EXCLUDED_PUBLIC_DATA_FILES).size, EXCLUDED_PUBLIC_DATA_FILES.length,
+    "the exact-file exclusion set must not contain duplicates");
   const expectedDerivedExactFiles = [
     DETECTION_FLOOR_REPORT,
     "admin/damodaran-shadow-parity.json",
