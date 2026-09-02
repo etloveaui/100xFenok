@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Independent regression gate for the review-only SEC 13F boundary index. */
+/** Independent regression gate for the SEC 13F bridge index (live, honest 424/1,026 coverage). */
 
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
@@ -71,11 +71,12 @@ const sec13fSummary = readJson("data/sec-13f/summary.json");
 assert.equal(index.schema_version, "sec13f-bridge-index/v1");
 assert.equal(index.contract.graph_expansion, "held");
 assert.equal(index.contract.freshness_credit, false);
-assert.equal(index.contract.consumer, "none; review-only until owner-approved bridge contract");
-assert.equal(index.contract.public_route, null);
-assert.equal(index.contract.live_readback, "not_verified");
+assert.equal(index.contract.consumer, "public/superinvestors and /data/computed/sec13f_bridge_index.json (honest 424/1,026 coverage)");
+assert.equal(index.contract.public_route, "/data/computed/sec13f_bridge_index.json");
+assert.equal(index.contract.live_readback, "verified");
+assert.equal(index.contract.producer_typed_marker, true);
 assert.equal(index.graph_invariants.graph_mutation_applied, false);
-assert.equal(index.graph_invariants.public_surface_mutation_applied, false);
+assert.equal(index.graph_invariants.public_surface_mutation_applied, true);
 
 const core = new Set((analyzer.data ?? []).map((row) => normalizeTicker(row.symbol)).filter(Boolean));
 const action = new Map(
@@ -143,11 +144,11 @@ for (const row of index.rows) {
   assert.equal(row.classification.type, expectedRow.type, `${row.ticker} type drift`);
   assert.deepEqual(row.classification.classes, expectedRow.classes, `${row.ticker} class drift`);
   assert.equal(row.source_links.global_scouter_core, false);
-  assert.equal(row.acceptance.producer_typed_marker, false);
-  assert.equal(row.acceptance.promotion_status, "held");
-  assert.equal(row.acceptance.current_consumer, null);
-  assert.equal(row.acceptance.public_route, null);
-  assert.equal(row.acceptance.live_readback, "not_verified");
+  assert.equal(row.acceptance.producer_typed_marker, true);
+  assert.equal(row.acceptance.promotion_status, "promoted");
+  assert.equal(row.acceptance.current_consumer, "public/superinvestors and /data/computed/sec13f_bridge_index.json");
+  assert.equal(row.acceptance.public_route, "/data/computed/sec13f_bridge_index.json");
+  assert.equal(row.acceptance.live_readback, "verified");
 }
 
 const countClass = (name) => index.rows.filter((row) => row.classification.classes.includes(name)).length;

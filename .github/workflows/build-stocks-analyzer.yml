@@ -72,7 +72,7 @@ jobs:
           node scripts/build-13f-factor-radar-v2.mjs
           node scripts/build-guru-holders-index.mjs
 
-      - name: Build the review-only 13F bridge index from the regenerated tree
+      - name: Build the SEC 13F bridge index from the regenerated tree
         run: node scripts/build-sec13f-bridge-index.mjs
 
       - name: Build revision movers + industry benchmarks
@@ -170,6 +170,6 @@ jobs:
           echo "git push failed after retrying concurrent main updates"
           exit 1
 
-      - name: Verify the review-only 13F bridge index against the regenerated tree
+      - name: Verify the SEC 13F bridge index against the regenerated tree
         if: ${{ always() && steps.publish.outputs.bridge_review_ready == 'true' }}
         run: node scripts/test-sec13f-bridge-index.mjs
