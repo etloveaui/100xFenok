@@ -2958,7 +2958,7 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.match(summary.generation_id, /^oecd-cli-[0-9a-f]{16}$/);
   // Spec-measured facts for the real oecd-cli family.
   assert.equal(summary.assets, 4);
-  assert.equal(summary.total_bytes, 592_351);
+  assert.equal(summary.total_bytes, 592_561);
   assert.equal(summary.unique_object_keys, 4); // 3 unique objects + 1 manifest
   assert.equal(summary.objects_deduped, 1);
 

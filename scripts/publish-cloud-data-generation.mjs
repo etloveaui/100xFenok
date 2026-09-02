@@ -216,7 +216,7 @@ export const FAMILIES = {
     privacy_class: "private",
     // The lane's LKG state index records when the family data was acquired.
     source_as_of: { file: "index.json", key: "updated_at" },
-    // Gate declaration: >= 2x the measured 4 PutObject / 592,351 bytes.
+    // Gate declaration: >= 2x the measured 4 PutObject / 592,561 bytes.
     plan: { class_a: 40, bytes: 1_200_000 },
     policy: { max_assets: 64, max_total_bytes: 16_000_000 },
   },
