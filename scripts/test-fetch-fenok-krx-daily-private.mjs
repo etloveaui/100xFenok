@@ -195,6 +195,7 @@ assert.deepEqual(
     activeUniverseRows: [
       { ticker: "005930", market: "KRX" },
       { ticker: "000660", market: "KRX" },
+      { ticker: "035420.KS", ticker_normalized: "035420", company: "NAVER", market: "KRX" },
       { ticker: "123456", market: "KOSDAQ" },
     ],
   });
@@ -205,15 +206,24 @@ assert.deepEqual(
   assert.equal(bridge.derived_rim_inputs.kospi_weights.rows[0].weight_pct, 66.6666666667);
   assert.equal(bridge.derived_rim_inputs.korea_10y.value, 0.04241);
   assert.equal(bridge.issuer_daily_coverage_receipt.covered_count, 3);
-  assert.equal(bridge.issuer_daily_coverage_receipt.denominator, 3);
-  assert.equal(bridge.issuer_daily_coverage_receipt.missing_count, 0);
+  assert.equal(bridge.issuer_daily_coverage_receipt.denominator, 4);
+  assert.equal(bridge.issuer_daily_coverage_receipt.missing_count, 1);
   assert.deepEqual(bridge.issuer_daily_coverage_receipt.market_coverage, {
-    KRX: { covered_count: 2, denominator: 2, missing_count: 0 },
+    KRX: { covered_count: 2, denominator: 3, missing_count: 1 },
     KOSDAQ: { covered_count: 1, denominator: 1, missing_count: 0 },
   });
   assert.equal(bridge.issuer_daily_coverage_receipt.raw_public, false);
   assert.equal(bridge.issuer_daily_coverage_receipt.per_issuer_rows, false);
   assert.equal(Object.hasOwn(bridge.issuer_daily_coverage_receipt, "covered_codes"), false);
+  const privateDiagnostic = JSON.parse(fs.readFileSync(
+    path.join(tmpDir, "diagnostics", "issuer-daily-coverage-gap.json"),
+    "utf8",
+  ));
+  assert.deepEqual(privateDiagnostic.missing_issuers, [
+    { code: "035420", company: "NAVER", market: "KRX", ticker: "035420.KS" },
+  ]);
+  assert.equal(JSON.stringify(bridge).includes("035420"), false);
+  assert.equal(JSON.stringify(bridge).includes("NAVER"), false);
   assert.equal(JSON.stringify(bridge).includes("TDD_CLSPRC"), false);
   assert.equal(JSON.stringify(bridge).includes("LIST_SHRS"), false);
   fs.rmSync(tmpDir, { recursive: true, force: true });
