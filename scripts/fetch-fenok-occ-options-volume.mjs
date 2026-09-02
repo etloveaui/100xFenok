@@ -44,6 +44,7 @@ const OCC_CACHE_DIR = path.join(privateRoot, "occ_options_volume");
 const OUTPUT_FILE = "computed/fenok_occ_options_volume.json";
 const HISTORY_FILE = "computed/fenok_occ_options_volume_history.json";
 const AVAILABILITY_FILE = "computed/fenok_occ_options_availability.json";
+const PUBLIC_AVAILABILITY_FILE = "100xfenok-next/public/data/computed/fenok_occ_options_availability.json";
 const OCC_LANE_ID = "occ_options_volume";
 const OCC_LKG_KEY = "occ_options_volume";
 const CONTROLLED_FAILURE_LANE_IDS = Object.freeze([OCC_LANE_ID, "finra_short_volume"]);
@@ -695,6 +696,13 @@ function writeJson(relPath, payload) {
   const abs = path.join(dataRoot, relPath);
   ensureDir(abs);
   fs.writeFileSync(abs, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+}
+
+function writePublicSlimAvailability(availability) {
+  const { rows, side_attempts, ...slim } = availability ?? {};
+  const abs = path.join(repoRoot, PUBLIC_AVAILABILITY_FILE);
+  ensureDir(abs);
+  fs.writeFileSync(abs, `${JSON.stringify(slim, null, 2)}\n`, "utf8");
 }
 
 function sleep(ms) {
@@ -2104,6 +2112,7 @@ async function build(args, {
       const availability = mergeAvailabilitySnapshot(readJson(AVAILABILITY_FILE, null), availabilitySnapshot);
       if (!args.noWrite && (result.side_attempts.length > 0 || result.ticker_availability.length > 0)) {
         writeJson(AVAILABILITY_FILE, availability);
+        writePublicSlimAvailability(availability);
       }
       const usableRows = result.rows.filter((row) => row.options_activity_proxy.total_volume > 0);
       if (usableRows.length === 0) {
@@ -2149,7 +2158,9 @@ async function build(args, {
         }
         let wrote = false;
         if (!args.noWrite && tickers.length > 0) {
-          writeJson(AVAILABILITY_FILE, { ...availability, current_attempt: currentAttempt });
+          const availabilityWithCurrentAttempt = { ...availability, current_attempt: currentAttempt };
+          writeJson(AVAILABILITY_FILE, availabilityWithCurrentAttempt);
+          writePublicSlimAvailability(availabilityWithCurrentAttempt);
           if (previousOutput) {
             writeJson(OUTPUT_FILE, {
               ...previousOutput,
@@ -2325,6 +2336,7 @@ async function build(args, {
         writeJson(OUTPUT_FILE, outputSnapshot);
         writeJson(HISTORY_FILE, history);
         writeJson(AVAILABILITY_FILE, availabilityWithAttempt);
+        writePublicSlimAvailability(availabilityWithAttempt);
       }
       if (outputSnapshot.current_attempt.status === "degraded_walkback") {
         console.log(`::warning:: ${outputSnapshot.current_attempt.message}`);
