@@ -2,7 +2,7 @@
   "schema_version": "raw-color-allowlist/v2",
   "scope": "src/**/*.{css,ts,tsx}",
   "policy": "Each listed literal is the current approved occurrence count and each file must carry category metadata. Unknown literals, higher counts, stale counts, or uncategorized files fail qa:tokens; refresh after intentional tokenization.",
-  "generated_from": "Current source scan via scripts/generate-raw-color-allowlist.mjs (2026-08-22 KST)",
+  "generated_from": "Current source scan via scripts/generate-raw-color-allowlist.mjs (2026-09-03 KST)",
   "category_definitions": {
     "token-source": "Design-token source files where raw literals define the token vocabulary.",
     "style-island": "Legacy or isolated CSS surface pending a later token migration wave.",
@@ -12,8 +12,8 @@
     "product-theme": "Current immersive product surface with an intentional self-contained palette.",
     "p4-delete": "Retire or preview surface scheduled for deletion, not migration."
   },
-  "total_allowed_occurrences": 693,
-  "file_count": 25,
+  "total_allowed_occurrences": 846,
+  "file_count": 41,
   "file_categories": {
     "src/app/admin/design-gallery/page.tsx": {
       "category": "p4-delete",
@@ -59,6 +59,62 @@
       "category": "p4-delete",
       "note": "Retire/preview surface kept on a temporary allowlist until P4 deletion."
     },
+    "src/components/ui/Bar.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/Button.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/CommandPalette.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/EdgeMark.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/EmptyState.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/EvidenceRail.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/Panel.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/PanelHeader.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/Pill.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/Row.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/Skeleton.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/StaleState.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/Stat.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
+    "src/components/ui/Tile.tsx": {
+      "category": "product-theme",
+      "note": "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1."
+    },
     "src/features/stock-analyzer/charts/chart-manager.ts": {
       "category": "chart-exception",
       "note": "Chart/canvas palette literals require a runtime token bridge before migration."
@@ -66,6 +122,10 @@
     "src/features/stock-analyzer/components/stock-analyzer-charts.tsx": {
       "category": "chart-exception",
       "note": "Chart/canvas palette literals require a runtime token bridge before migration."
+    },
+    "src/lib/chart-theme.ts": {
+      "category": "chart-exception",
+      "note": "Light System chart palette bridge — literals intentionally mapped to lightweight-charts + chart.js."
     },
     "src/lib/market-valuation/charts/chartTheme.ts": {
       "category": "chart-exception",
@@ -106,6 +166,10 @@
     "src/styles/legacy-widgets.css": {
       "category": "style-island",
       "note": "Legacy isolated surface pending a later token migration wave."
+    },
+    "src/styles/light-system.css": {
+      "category": "token-source",
+      "note": "100x Light System token vocabulary (surfaces, radii, spacing, heatmap, chart)."
     },
     "src/styles/route-embed.css": {
       "category": "style-island",
@@ -293,6 +357,111 @@
       "rgba(2,6,23,0.92)": 2,
       "rgba(27,115,211,0.1)": 1
     },
+    "src/components/ui/Bar.tsx": {
+      "#1B73D3": 1,
+      "#f1f5f9": 1
+    },
+    "src/components/ui/Button.tsx": {
+      "#155fae": 1,
+      "#1B73D3": 4,
+      "#334155": 1,
+      "#475569": 1,
+      "#e2e8f0": 3,
+      "#f1f5f9": 1,
+      "#f8fafc": 1
+    },
+    "src/components/ui/CommandPalette.tsx": {
+      "#0f172a": 1,
+      "#334155": 2,
+      "#475569": 1,
+      "#64748b": 4,
+      "#94a3b8": 4,
+      "#e2e8f0": 5,
+      "#f8fafc": 4,
+      "rgba(15,23,42,0.18)": 1
+    },
+    "src/components/ui/EdgeMark.tsx": {
+      "#0f172a": 2,
+      "#1aa86f": 1,
+      "#e2e8f0": 1,
+      "#e84a5a": 1
+    },
+    "src/components/ui/EmptyState.tsx": {
+      "#0f172a": 1,
+      "#64748b": 1
+    },
+    "src/components/ui/EvidenceRail.tsx": {
+      "#155fae": 1,
+      "#1aa86f": 1,
+      "#1B73D3": 1,
+      "#334155": 4,
+      "#64748b": 1,
+      "#94a3b8": 1,
+      "#e84a5a": 1,
+      "#f1f5f9": 1,
+      "#f2a93b": 1,
+      "#fafbfc": 1
+    },
+    "src/components/ui/Panel.tsx": {
+      "#64748b": 1,
+      "#e2e8f0": 3,
+      "#ffffff": 3
+    },
+    "src/components/ui/PanelHeader.tsx": {
+      "#0f172a": 1,
+      "#64748b": 1,
+      "#e2e8f0": 1,
+      "#ffffff": 1
+    },
+    "src/components/ui/Pill.tsx": {
+      "#166534": 1,
+      "#475569": 1,
+      "#991b1b": 1,
+      "#b9791a": 1,
+      "#bbf7d0": 1,
+      "#e2e8f0": 1,
+      "#f0fdf4": 1,
+      "#f2a93b": 1,
+      "#fecdd3": 1,
+      "#fef2f2": 1,
+      "#fffbeb": 1,
+      "#ffffff": 1
+    },
+    "src/components/ui/Row.tsx": {
+      "#f1f5f9": 1,
+      "#f8fafc": 3
+    },
+    "src/components/ui/Skeleton.tsx": {
+      "#e2e8f0": 1,
+      "#f1f5f9": 7
+    },
+    "src/components/ui/StaleState.tsx": {
+      "#155fae": 1,
+      "#1B73D3": 1,
+      "#64748b": 1,
+      "#fde68a": 1,
+      "#fffbeb": 1
+    },
+    "src/components/ui/Stat.tsx": {
+      "#0f172a": 1,
+      "#64748b": 2,
+      "#e2e8f0": 3,
+      "#eafaf2": 1
+    },
+    "src/components/ui/Tile.tsx": {
+      "#0f172a": 1,
+      "#1B73D3": 1,
+      "#334155": 1,
+      "#d6f1df": 2,
+      "#e2e8f0": 1,
+      "#e6f6eb": 2,
+      "#f4fbf6": 2,
+      "#feebec": 2,
+      "#ffcdce": 2,
+      "#ffdbdc": 3,
+      "#fff7f7": 1,
+      "#ffffff": 1
+    },
     "src/features/stock-analyzer/charts/chart-manager.ts": {
       "#0EA5E9": 1,
       "#14B8A6": 1,
@@ -308,6 +477,15 @@
       "rgba(27, 115, 211, 0.75)": 1,
       "rgba(34, 197, 94, 0.75)": 1,
       "rgba(99, 102, 241, 0.75)": 1
+    },
+    "src/lib/chart-theme.ts": {
+      "#191919": 1,
+      "#1aa86f": 1,
+      "#1B73D3": 1,
+      "#D6DCDE": 1,
+      "#e2e8f0": 1,
+      "#e84a5a": 1,
+      "#ffffff": 1
     },
     "src/lib/market-valuation/charts/chartTheme.ts": {
       "black": 1,
@@ -386,23 +564,24 @@
     "src/styles/canvas-plus.css": {
       "#0f172a": 1,
       "#0f8f53": 1,
-      "#10a35a": 1,
       "#111827": 1,
+      "#191919": 2,
+      "#1aa86f": 2,
       "#1b6bff": 1,
-      "#1f78ff": 1,
+      "#1B73D3": 1,
       "#2684ff": 1,
       "#637083": 1,
       "#64748b": 1,
-      "#758696": 1,
       "#7a3ff2": 1,
-      "#8792a2": 1,
       "#8a94a6": 1,
       "#bec9d6": 1,
       "#c88912": 1,
+      "#D6DCDE": 1,
       "#d9e1ea": 1,
-      "#e05a3a": 2,
-      "#e5ebf2": 1,
+      "#e05a3a": 1,
+      "#e2e8f0": 1,
       "#e6ebf2": 1,
+      "#e84a5a": 2,
       "#e9eef4": 1,
       "#f2f5f8": 1,
       "#f7f8fb": 1,
@@ -456,43 +635,40 @@
       "rgba(37, 99, 235, 0.14)": 1
     },
     "src/styles/heatmap.css": {
-      "#0f172a": 2,
-      "#15803d": 1,
-      "#166534": 5,
-      "#16a34a": 3,
+      "#0f172a": 11,
+      "#166534": 3,
+      "#16a34a": 1,
       "#1d4ed8": 1,
-      "#22c55e": 2,
+      "#22c55e": 1,
       "#2563eb": 1,
-      "#475569": 6,
-      "#4ade80": 1,
+      "#475569": 5,
       "#60a5fa": 1,
       "#64748b": 1,
-      "#86efac": 1,
       "#92400e": 1,
-      "#991b1b": 4,
-      "#b91c1c": 1,
-      "#bbf7d0": 3,
+      "#991b1b": 2,
+      "#bbf7d0": 2,
       "#bfdbfe": 1,
-      "#cbd5e1": 6,
+      "#cbd5e1": 5,
+      "#d6f1df": 2,
       "#dbe5f2": 2,
-      "#dc2626": 2,
-      "#dcfce7": 1,
       "#e2e8f0": 3,
-      "#ef4444": 1,
+      "#e6f6eb": 3,
       "#eff6ff": 1,
       "#f0fdf4": 2,
       "#f1f5f9": 1,
+      "#f4fbf6": 3,
       "#f59e0b": 1,
-      "#f87171": 1,
-      "#f8fafc": 5,
+      "#f8fafc": 6,
       "#fbbf24": 1,
-      "#fca5a5": 1,
       "#fde68a": 1,
-      "#fecaca": 2,
-      "#fee2e2": 1,
+      "#fecaca": 1,
+      "#feebec": 3,
       "#fef2f2": 1,
+      "#ffcdce": 2,
+      "#ffdbdc": 2,
+      "#fff7f7": 1,
       "#fffbeb": 1,
-      "#ffffff": 8,
+      "#ffffff": 4,
       "rgba(148, 163, 184, 0.25)": 1,
       "rgba(15, 23, 42, 0.35)": 2,
       "rgba(255, 255, 255, 0.3)": 1
@@ -582,6 +758,25 @@
       "rgba(99, 102, 241, 0.1)": 2,
       "rgba(99, 102, 241, 0.4)": 1,
       "white": 1
+    },
+    "src/styles/light-system.css": {
+      "#0f172a": 2,
+      "#191919": 1,
+      "#1aa86f": 1,
+      "#1B73D3": 1,
+      "#64748b": 1,
+      "#D6DCDE": 1,
+      "#d6f1df": 1,
+      "#e2e8f0": 2,
+      "#e6f6eb": 1,
+      "#e84a5a": 1,
+      "#f4fbf6": 1,
+      "#f8fafc": 2,
+      "#feebec": 1,
+      "#ffcdce": 1,
+      "#ffdbdc": 1,
+      "#fff7f7": 1,
+      "#ffffff": 2
     },
     "src/styles/route-embed.css": {
       "#0f172a": 2,

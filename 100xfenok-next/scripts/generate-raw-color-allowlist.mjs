@@ -159,6 +159,27 @@ function categoryForPath(relPath) {
     };
   }
 
+  if (relPath === "src/styles/light-system.css") {
+    return {
+      category: "token-source",
+      note: "100x Light System token vocabulary (surfaces, radii, spacing, heatmap, chart).",
+    };
+  }
+
+  if (relPath === "src/lib/chart-theme.ts") {
+    return {
+      category: "chart-exception",
+      note: "Light System chart palette bridge — literals intentionally mapped to lightweight-charts + chart.js.",
+    };
+  }
+
+  if (relPath.startsWith("src/components/ui/")) {
+    return {
+      category: "product-theme",
+      note: "100x Light System UI primitives (Panel, Pill, etc.) — intentional self-contained palette for wave 1.",
+    };
+  }
+
   throw new Error(`Uncategorized raw color file: ${relPath}`);
 }
 
