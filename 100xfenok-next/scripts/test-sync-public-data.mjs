@@ -1202,8 +1202,8 @@ try {
   const expectedDirectExcludedRoots = EXCLUDED_PUBLIC_DATA_ROOTS.filter((root) =>
     !RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS.some((policy) => root.startsWith(`${policy.relativeRoot}/`))
   );
-  assert.equal(rehearsal.excludedSourceFiles, 18);
-  assert.equal(rehearsal.removedDestinationExactFiles, 18);
+  assert.equal(rehearsal.excludedSourceFiles, 17);
+  assert.equal(rehearsal.removedDestinationExactFiles, 17);
   assert.deepEqual([...rehearsal.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...rehearsal.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
   assert.equal(rehearsal.excludedSourceRoots, expectedDirectExcludedRoots.length);
@@ -1219,10 +1219,10 @@ try {
   const result = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(result.filesCopied, 4);
   assert.equal(result.excludedSourceRoots, expectedDirectExcludedRoots.length);
-  assert.equal(result.excludedSourceFiles, 18);
+  assert.equal(result.excludedSourceFiles, 17);
   assert.equal(result.removedDestinationRoots, EXCLUDED_PUBLIC_DATA_ROOTS.length);
   assert.equal(result.removedDestinationFiles, EXCLUDED_PUBLIC_DATA_ROOTS.length);
-  assert.equal(result.removedDestinationExactFiles, 18);
+  assert.equal(result.removedDestinationExactFiles, 17);
   assert.deepEqual([...result.excludedSourceFilePaths].sort(), expectedExcludedExactFiles);
   assert.deepEqual([...result.removedDestinationExactFilePaths].sort(), expectedExcludedExactFiles);
   assert.equal(fs.readFileSync(path.join(destinationRoot, "safe/keep.json"), "utf8"), '{"safe":true}\n');
@@ -1256,7 +1256,7 @@ try {
   const rerun = syncPublicData({ sourceRoot, destinationRoot, logger: () => {} });
   assert.equal(rerun.filesCopied, 4);
   assert.equal(rerun.excludedSourceRoots, expectedDirectExcludedRoots.length);
-  assert.equal(rerun.excludedSourceFiles, 18);
+  assert.equal(rerun.excludedSourceFiles, 17);
   assert.equal(rerun.removedDestinationRoots, 0);
   assert.equal(rerun.removedDestinationFiles, 0);
   assert.equal(rerun.removedDestinationExactFiles, 0);
