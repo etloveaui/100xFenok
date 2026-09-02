@@ -46,6 +46,9 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const LANE_DIGEST_PATH = path.join(REPO_ROOT, "scripts/fixtures/lane-registry/registry.expected.json");
 const DERIVED_DIGEST_PATH = path.join(REPO_ROOT, "scripts/fixtures/derived-asset-registry/registry.expected.json");
 const POLICY_DIGEST_PATH = path.join(REPO_ROOT, "scripts/fixtures/data_supply/policy_registry/registry.expected.json");
+const UPDATE_MANIFEST_WORKFLOW_PATH = path.join(REPO_ROOT, ".github/workflows/update-manifest.yml");
+const TRIGGER_START_MARKER = "# BEGIN GENERATED lane-commit-manifest trigger_paths";
+const TRIGGER_END_MARKER = "# END GENERATED lane-commit-manifest trigger_paths";
 
 function parseMode(args) {
   if (args.length === 0) return "write";
@@ -70,6 +73,43 @@ function projectionNow() {
 
 function tempPath(tempRoot, canonicalPath) {
   return path.join(tempRoot, path.relative(REPO_ROOT, canonicalPath));
+}
+
+function updateManifestTriggerPaths() {
+  const workflow = fs.readFileSync(UPDATE_MANIFEST_WORKFLOW_PATH, "utf8");
+  const start = workflow.indexOf(TRIGGER_START_MARKER);
+  const end = workflow.indexOf(TRIGGER_END_MARKER, start);
+  if (start < 0 || end < 0) throw new Error("update-manifest trigger_paths markers are missing");
+  return workflow.slice(start + TRIGGER_START_MARKER.length, end)
+    .split("\n")
+    .map((line) => line.match(/^\s*-\s+(['"])(.*?)\1\s*$/u)?.[2] ?? null)
+    .filter((line) => line !== null);
+}
+
+function orderedDifference(left, right) {
+  const available = new Map();
+  for (const value of right) available.set(value, (available.get(value) ?? 0) + 1);
+  return left.filter((value) => {
+    const count = available.get(value) ?? 0;
+    if (count === 0) return true;
+    available.set(value, count - 1);
+    return false;
+  });
+}
+
+function assertUpdateManifestTriggerParity(expected) {
+  const actual = updateManifestTriggerPaths();
+  if (JSON.stringify(actual) === JSON.stringify(expected)) return;
+  const missing = orderedDifference(expected, actual);
+  const extra = orderedDifference(actual, expected);
+  const render = (paths) => paths.length > 0
+    ? paths.map((triggerPath) => `  - '${triggerPath}'`).join("\n")
+    : "  (none)";
+  throw new Error(
+    `update-manifest trigger_paths drift\nmissing trigger lines:\n${render(missing)}`
+    + `\nextra trigger lines:\n${render(extra)}`
+    + (missing.length === 0 && extra.length === 0 ? "\norder differs from lane-commit manifest" : ""),
+  );
 }
 
 async function emitAll(outputFor) {
@@ -149,6 +189,8 @@ async function main() {
     if (stale.length > 0) {
       throw new Error(`generated pins are stale: ${stale.map((filePath) => path.relative(REPO_ROOT, filePath)).join(", ")}`);
     }
+    const projectedManifest = JSON.parse(fs.readFileSync(tempPath(tempRoot, LANE_COMMIT_MANIFEST_PATH), "utf8"));
+    assertUpdateManifestTriggerParity(projectedManifest.update_manifest.trigger_paths);
     console.log(`qa:pins ok (${generatedPaths().length} byte-identical projections)`);
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
