@@ -503,13 +503,11 @@ function runConfigAndFixtureChecks() {
   assert.doesNotMatch(fs.readFileSync(CONFIG_MODULE, "utf8"), networkPattern);
   assert.equal(validateDetectionConfig(DATA_SUPPLY_DETECTION_CONFIG), true);
   assert.equal(Object.isFrozen(DATA_SUPPLY_DETECTION_CONFIG), true);
-  // 30 since 2026-08-14: stockanalysis_etf_detail gained its own detection row
-  // so the 5,605-file per-ticker ETF payload tree has an owning lane.
-  assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.length, 31);
-  // 36 since 2026-08-21 (B-394): yahoo_batch_quote_history became composite,
-  // splitting its one member that held both crons into a stock member and an
-  // etf member, so each cron slot can carry its own observation.
-  assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.flatMap((item) => item.producer_members).length, 36);
+  assert.equal(DATA_SUPPLY_DETECTION_CONFIG.lanes.length, DATA_SUPPLY_DETECTION_CONFIG.logical_lane_count);
+  assert.equal(
+    DATA_SUPPLY_DETECTION_CONFIG.lanes.flatMap((item) => item.producer_members).length,
+    DATA_SUPPLY_DETECTION_CONFIG.producer_member_count,
+  );
   const stockFinancial = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "stockanalysis_stock_financial");
   assert.equal(stockFinancial.enforcement, "live");
   assert.equal(stockFinancial.kpi_required, true);
@@ -713,7 +711,10 @@ function runConfigAndFixtureChecks() {
   const oecdCli = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "oecd_cli");
   assert.equal(oecdCli.enforcement, "live");
   assert.equal(oecdCli.kpi_required, true);
-  assert.deepEqual(oecdCli.producer_members[0].schedule, ["0 8 1 * *"]);
+  const oecdWorkflow = fs.readFileSync(path.join(REPO_ROOT, oecdCli.producer_members[0].workflow), "utf8");
+  const oecdWorkflowCrons = [...oecdWorkflow.matchAll(/^\s*-\s*cron:\s*["']([^"']+)["']\s*$/gmu)]
+    .map((match) => match[1]);
+  assert.deepEqual(oecdCli.producer_members[0].schedule, oecdWorkflowCrons);
   assert.equal(oecdCli.producer_members[0].artifact_contracts[0].path, "data/admin/oecd_cli/shadow/oecd-cli.json");
   const krx = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === "krx");
   assert.equal(krx.enforcement, "live");
