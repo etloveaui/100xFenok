@@ -23,6 +23,7 @@ import {
 import {
   activeKrxUniverseCodes,
   buildKrxIssuerDailyCoverageReceipt,
+  normalizeKrxCoverageCode,
 } from "./lib/fenok-edge-krx-coverage-receipt.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -1199,7 +1200,7 @@ function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, act
   const proofManifestSha256 = createHash("sha256")
     .update(fs.readFileSync(proofManifestPath))
     .digest("hex");
-  return buildKrxIssuerDailyCoverageReceipt({
+  const receipt = buildKrxIssuerDailyCoverageReceipt({
     bridgeDocument,
     activeUniverseCodes,
     coveredCodes,
@@ -1207,6 +1208,50 @@ function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, act
     coveredCodesByMarket,
     proofManifestSha256,
   });
+  if (receipt?.missing_count > 0) {
+    const normalizedCoveredCodesByMarket = Object.fromEntries(
+      Object.entries(coveredCodesByMarket).map(([market, codes]) => [market, new Set(codes)]),
+    );
+    const missingByIdentity = new Map();
+    for (const row of Array.isArray(activeUniverseRows) ? activeUniverseRows : []) {
+      if (row?.market !== "KRX" && row?.market !== "KOSDAQ") continue;
+      const code = normalizeKrxCoverageCode(row?.ticker_normalized ?? row?.ticker);
+      if (!code || normalizedCoveredCodesByMarket[row.market]?.has(code)) continue;
+      const identity = `${row.market}:${code}`;
+      if (!missingByIdentity.has(identity)) {
+        missingByIdentity.set(identity, {
+          code,
+          company: row?.company ?? null,
+          market: row.market,
+          ticker: row?.ticker ?? null,
+        });
+      }
+    }
+    const missingIssuers = [...missingByIdentity.values()]
+      .sort((a, b) => `${a.market}:${a.code}`.localeCompare(`${b.market}:${b.code}`));
+    if (missingIssuers.length !== receipt.missing_count) {
+      throw new Error(`KRX private issuer diagnostic count mismatch: expected=${receipt.missing_count} actual=${missingIssuers.length}`);
+    }
+    const diagnostic = {
+      schema_version: "fenok_krx_private_issuer_coverage_gap/v1",
+      generated_at: bridgeDocument.generated_at,
+      source_date: bridgeDocument.as_of,
+      run_id: bridgeDocument.latest_run.run_id,
+      covered_count: receipt.covered_count,
+      denominator: receipt.denominator,
+      missing_count: receipt.missing_count,
+      missing_issuers: missingIssuers,
+      raw_public: false,
+    };
+    const diagnosticPath = path.join(config.outputRoot, "diagnostics", "issuer-daily-coverage-gap.json");
+    ensureDir(path.dirname(diagnosticPath));
+    fs.writeFileSync(diagnosticPath, `${JSON.stringify(diagnostic, null, 2)}\n`, {
+      encoding: "utf8",
+      mode: 0o600,
+    });
+    console.log(`KRX_PRIVATE_ISSUER_COVERAGE_GAP ${JSON.stringify(diagnostic)}`);
+  }
+  return receipt;
 }
 
 function buildBridgeIndex(manifest, groupManifests, config, options = {}) {
