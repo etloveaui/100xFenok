@@ -1,7 +1,7 @@
 {
   "schema_version": "product-surface-coverage/v2",
   "source_stamp_version": 2,
-  "generated_at": "2026-09-02T18:46:01.647Z",
+  "generated_at": "2026-09-02T21:58:06.077Z",
   "source": "local DataPack coverage files",
   "raw_policy": {
     "public_mirror_allowed": true,
@@ -75,8 +75,8 @@
     "surfaces": 7,
     "ready": 1,
     "partial": 0,
-    "stale": 2,
-    "pending": 4,
+    "stale": 1,
+    "pending": 5,
     "unavailable": 0,
     "error": 0
   },
@@ -92,7 +92,7 @@
     "sec13fJson": 81,
     "edgarByTicker": 204,
     "slickchartsJson": 579,
-    "dataUsageRootJson": 24738,
+    "dataUsageRootJson": 24740,
     "dataUsagePublicJson": 11049
   },
   "surfaces": [
@@ -408,7 +408,7 @@
           "collection_fresh_count": 23,
           "stale_count": 0,
           "collected_at_floor": "2026-09-02T04:32:55Z",
-          "collection_age_hours": 14.219,
+          "collection_age_hours": 17.42,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -421,9 +421,9 @@
       "route": "/market-valuation",
       "label": "시장 밸류에이션",
       "owner": "Market valuation",
-      "status": "stale",
-      "status_label": "오래됨",
-      "coverage_score": 72.73,
+      "status": "pending",
+      "status_label": "대기",
+      "coverage_score": 81.82,
       "summary": "시장 화면은 값 자체보다 기준일, 커버리지, 소스 차이를 함께 보여야 한다.",
       "checks": [
         {
@@ -436,8 +436,8 @@
           "label": "거시·심리",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "24,738개 루트 JSON",
-          "count": 24738
+          "detail": "24,740개 루트 JSON",
+          "count": 24740
         },
         {
           "label": "시장 구조",
@@ -498,11 +498,11 @@
         },
         {
           "label": "Yardeni 기준일",
-          "status": "stale",
-          "status_label": "오래됨",
-          "detail": "기준 2026-08-21 · 12일 전",
-          "as_of": "2026-08-21",
-          "age_days": 12,
+          "status": "ready",
+          "status_label": "준비됨",
+          "detail": "기준 2026-08-28 · 5일 전",
+          "as_of": "2026-08-28",
+          "age_days": 5,
           "max_age_days": 10,
           "calendar": null
         },
@@ -537,7 +537,7 @@
           "calendar": "us_market"
         }
       ],
-      "as_of": "2026-09-02T18:44:57Z",
+      "as_of": "2026-09-02T21:56:32Z",
       "source_as_of": "2026-08-21",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -551,7 +551,7 @@
           {
             "id": "yardeni:published",
             "stamp_class": "date_bearing",
-            "source_as_of": "2026-08-21"
+            "source_as_of": "2026-08-28"
           },
           {
             "id": "market_facts:core_surface",
@@ -781,7 +781,7 @@
           "collection_fresh_count": 16,
           "stale_count": 0,
           "collected_at_floor": "2026-09-02T04:33:09Z",
-          "collection_age_hours": 14.215,
+          "collection_age_hours": 17.416,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -851,7 +851,7 @@
           "calendar": null
         }
       ],
-      "as_of": "2026-09-02T18:44:57Z",
+      "as_of": "2026-09-02T21:56:32Z",
       "source_as_of": "2026-09-01",
       "source_as_of_reason": null,
       "stamp_evidence": {
@@ -899,7 +899,7 @@
           "collection_fresh_count": 3,
           "stale_count": 0,
           "collected_at_floor": "2026-09-02T04:33:18Z",
-          "collection_age_hours": 14.212,
+          "collection_age_hours": 17.413,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -5491,7 +5491,7 @@
           "collection_fresh_count": 5,
           "stale_count": 0,
           "collected_at_floor": "2026-09-02T04:32:55Z",
-          "collection_age_hours": 14.219,
+          "collection_age_hours": 17.42,
           "max_age_hours": 50,
           "reason": "provider publishes no date; recency = collection time"
         },
@@ -5586,8 +5586,8 @@
           "label": "미러/사용 현황",
           "status": "ready",
           "status_label": "준비됨",
-          "detail": "24,738 / 11,049 JSON",
-          "root": 24738,
+          "detail": "24,740 / 11,049 JSON",
+          "root": 24740,
           "public": 11049
         },
         {
@@ -5622,7 +5622,7 @@
           "reason": "internal artifact uses generation time; no upstream source date"
         }
       ],
-      "as_of": "2026-09-02T18:46:01.647Z",
+      "as_of": "2026-09-02T21:58:06.077Z",
       "source_as_of": null,
       "source_as_of_reason": "internal artifact uses generation time; no upstream source date"
     }
