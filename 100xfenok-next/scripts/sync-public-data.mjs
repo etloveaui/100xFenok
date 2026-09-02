@@ -96,6 +96,24 @@ export const RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS = Object.freeze(
   })),
 );
 
+// Public-safe-aggregate file outputs must not be mirrored verbatim via the
+// generic data->public copy. Their public projection is a slim derived
+// artifact (e.g. OCC availability without rows/side_attempts) produced by the
+// dedicated writer. Generic mirroring would leak raw rows and blow the 25 MiB
+// Cloudflare asset limit.
+export const PUBLIC_SAFE_AGGREGATE_FILE_OUTPUTS = Object.freeze(
+  DERIVED_ASSET_REGISTRY.assets
+    .filter((asset) => asset.privacy_class === "public_safe_aggregate")
+    .flatMap((asset) => asset.outputs
+      .filter((spec) => spec.kind === "file" && spec.path.startsWith(CANONICAL_DATA_PREFIX))
+      .map((spec) => spec.path.slice(CANONICAL_DATA_PREFIX.length)))
+    .sort(),
+);
+
+function isPublicSafeAggregateFile(relativePath) {
+  return PUBLIC_SAFE_AGGREGATE_FILE_OUTPUTS.includes(normalizedRelative(relativePath));
+}
+
 const MARKET_FACTS_TICKER_ROOT = "computed/market_facts/tickers";
 const MARKET_FACTS_SHARD_ROOT = "computed/market_facts/shards";
 const MARKET_FACTS_ROOT = "computed/market_facts";
@@ -288,6 +306,11 @@ function collectSourceFiles(sourceRoot, sourceRootBinding) {
           throw new Error(`excluded source root must be a directory: ${absolutePath}`);
         }
         excludedSourceRoots += 1;
+        continue;
+      }
+      if (isPublicSafeAggregateFile(relativePath)) {
+        // Public-safe-aggregate files have a dedicated slim writer; the generic
+        // mirror would leak raw rows and exceed the 25 MiB asset limit.
         continue;
       }
       if (isTransformedRoot(relativePath)) {
