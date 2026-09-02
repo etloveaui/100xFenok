@@ -1,0 +1,107 @@
+/* 100x Light System — tokens (Slice 1b, SPEC System + Charts)
+ * Single source for type scale, radii, spacing, heatmap Radix tints, chart theme.
+ * --fnk-* keep their values; this file only adds/aliases Light System constants.
+ * Surfaces: page #f8fafc, panel #ffffff 1px #e2e8f0. Chart: lightweight-charts + chart.js share these.
+ */
+
+:root {
+  /* Surfaces */
+  --ls-page-bg: #f8fafc;
+  --ls-panel-bg: #ffffff;
+  --ls-panel-border: #e2e8f0;
+  --ls-text: #0f172a;
+  --ls-text-muted: #64748b;
+
+  /* Radii — 8 panel / 6 control / pill (SPEC: no 12/24) */
+  --ls-radius-panel: 8px;
+  --ls-radius-control: 6px;
+  --ls-radius-pill: 999px;
+
+  /* Spacing — panel padding 16, gap 8/12, panel gap 16, page margin 24 */
+  --ls-space-8: 8px;
+  --ls-space-12: 12px;
+  --ls-space-16: 16px;
+  --ls-space-24: 24px;
+  --ls-panel-pad: 16px;
+  --ls-panel-gap: 16px;
+  --ls-page-margin: 24px;
+
+  /* Type scale — body 13/1.45 (globals body already), page 20/600, panel 14/600, eyebrow 11/600 +0.06em, big 22-32/600 tabular */
+  --ls-type-body-size: 13px;
+  --ls-type-body-line: 1.45;
+  --ls-type-page-title-size: 20px;
+  --ls-type-panel-title-size: 14px;
+  --ls-type-eyebrow-size: 11px;
+  --ls-type-big-min: 22px;
+  --ls-type-big-max: 32px;
+
+  /* Heatmap Radix tints (SPEC Color) — text always #0f172a, bands ±0.25/0.75/1.5 */
+  --ls-heatmap-green4: #d6f1df;
+  --ls-heatmap-green3: #e6f6eb;
+  --ls-heatmap-green2: #f4fbf6;
+  --ls-heatmap-red2: #fff7f7;
+  --ls-heatmap-red3: #feebec;
+  --ls-heatmap-red4: #ffdbdc;
+  --ls-heatmap-red5: #ffcdce;
+  --ls-heatmap-text: #0f172a;
+  --ls-heatmap-neutral: #f8fafc;
+
+  /* Chart theme — lightweight-charts + chart.js share the same constants, no card frame */
+  --ls-chart-bg: #ffffff;
+  --ls-chart-text: #191919;
+  --ls-chart-grid: #D6DCDE;
+  --ls-chart-up: #1aa86f;
+  --ls-chart-down: #e84a5a;
+  --ls-chart-volume: #e2e8f0;
+  --ls-chart-accent: #1B73D3; /* chart line 1 + bars + primary action */
+}
+
+/* Type utilities — copy the exact values from System.dc.html inline CSS */
+.ls-page-title {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ls-text);
+}
+.ls-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ls-text);
+}
+.ls-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ls-text-muted);
+}
+.ls-big-number {
+  font-size: clamp(var(--ls-type-big-min), 3.5vw, var(--ls-type-big-max));
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ls-text);
+}
+.ls-num {
+  font-variant-numeric: tabular-nums;
+}
+.ls-mono {
+  font-family: var(--font-jetbrains-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+  font-weight: 500;
+}
+
+/* Panel primitive — page #f8fafc, panel #ffffff 1px #e2e8f0, radius 8, no shadow except ⌘K */
+.ls-panel {
+  background: var(--ls-panel-bg);
+  border: 1px solid var(--ls-panel-border);
+  border-radius: var(--ls-radius-panel);
+}
+.ls-page {
+  background: var(--ls-page-bg);
+}
+
+/* Spacing helpers */
+.ls-panel-pad { padding: var(--ls-panel-pad); }
+.ls-gap-8 { gap: var(--ls-space-8); }
+.ls-gap-12 { gap: var(--ls-space-12); }
