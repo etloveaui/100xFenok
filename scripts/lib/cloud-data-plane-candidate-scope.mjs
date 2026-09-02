@@ -6,6 +6,10 @@ import { canonicalJson } from "./json-canonical.mjs";
 import { LANE_REGISTRY, registryLaneById } from "./lane-registry.mjs";
 
 export const CANDIDATE_SCOPE_SCHEMA = "cloud-data-plane-candidate-scope/v1";
+export const MIGRATION_DEMAND_FIXTURE_PATHS = Object.freeze({
+  stockanalysis_etf_detail: "scripts/fixtures/cloud-data-plane/etf-migration-demand.json",
+  global_scouter: "scripts/fixtures/cloud-data-plane/global-scouter-migration-demand.json",
+});
 
 function fail(message) {
   throw new Error(`cloud-data-plane-candidate-scope: ${message}`);
@@ -291,4 +295,34 @@ export function buildCandidateScope({
       digest: manifest.path_digest,
     },
   };
+}
+
+export function buildMigrationDemandFixture({ repoRoot, candidateId, fixture } = {}) {
+  if (!fixture || typeof fixture !== "object" || Array.isArray(fixture)) fail("migration-demand fixture is required");
+  if (!fixture._manifest_measurement || typeof fixture._manifest_measurement !== "object") {
+    fail("migration-demand fixture has no manifest measurement");
+  }
+  const { manifest } = buildCandidateScope({ repoRoot, candidateId });
+  const projected = JSON.parse(JSON.stringify(fixture));
+  Object.assign(projected._manifest_measurement, {
+    path_digest: manifest.path_digest,
+    asset_count: manifest.totals.file_count,
+    unique_object_count: manifest.totals.file_count,
+    payload_bytes: manifest.totals.bytes,
+  });
+  return projected;
+}
+
+export function emitMigrationDemandFixture({
+  repoRoot,
+  candidateId,
+  sourcePath = path.join(repoRoot, MIGRATION_DEMAND_FIXTURE_PATHS[candidateId] ?? ""),
+  outputPath = sourcePath,
+} = {}) {
+  if (!MIGRATION_DEMAND_FIXTURE_PATHS[candidateId]) fail(`unknown migration-demand fixture: ${candidateId}`);
+  const fixture = JSON.parse(fs.readFileSync(sourcePath, "utf8"));
+  const projected = buildMigrationDemandFixture({ repoRoot, candidateId, fixture });
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, `${JSON.stringify(projected, null, 2)}\n`);
+  return projected;
 }

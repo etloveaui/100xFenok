@@ -23,6 +23,13 @@ export const COMMIT_MANIFEST_SCHEMA = "lane-commit-manifest/v1";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(__dirname, "..");
 export const DEFAULT_OUTPUT_PATH = path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json");
+export const DEFAULT_MATERIALIZATION_ORACLE_PATH = path.join(
+  REPO_ROOT,
+  "scripts",
+  "fixtures",
+  "update-manifest",
+  "materializations.expected.json",
+);
 
 function computedSignalsSourceTriggerExclusions(registry = LANE_REGISTRY) {
   const lanes = COMPUTED_SIGNALS_SOURCE_LANE_IDS.map((laneId) => {
@@ -788,6 +795,34 @@ export function emitLaneCommitManifest({ registry = LANE_REGISTRY, outputPath = 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, text);
   return manifest;
+}
+
+function materializationOracleFields(route) {
+  return {
+    source: route.source,
+    destination: route.destination,
+    mode: route.mode,
+    delete: route.delete,
+    excludes: route.excludes,
+    ...(route.remove_excluded ? { remove_excluded: route.remove_excluded } : {}),
+  };
+}
+
+export function buildMaterializationOracle(routes = UPDATE_MANIFEST_MATERIALIZATIONS) {
+  return {
+    schema_version: "update-manifest-materializations-expected/v1",
+    routes: routes.map(materializationOracleFields),
+  };
+}
+
+export function emitMaterializationOracle({
+  routes = UPDATE_MANIFEST_MATERIALIZATIONS,
+  outputPath = DEFAULT_MATERIALIZATION_ORACLE_PATH,
+} = {}) {
+  const oracle = buildMaterializationOracle(routes);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, `${JSON.stringify(oracle, null, 2)}\n`);
+  return oracle;
 }
 
 function main() {

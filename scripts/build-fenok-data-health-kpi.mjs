@@ -57,6 +57,8 @@ import { classifyProductSurfaceV2, nextProductSurfaceLineageV2 } from "./lib/pro
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const SCHEMA_VERSION = "fenok-data-health-kpi/v2";
 const KPI_REL_PATH = "admin/fenok-data-health-kpi.json";
+export const COMMITTED_KPI_PATH = path.join(ROOT, "data", KPI_REL_PATH);
+export const PUBLIC_KPI_PATH = path.join(ROOT, "100xfenok-next", "public", "data", KPI_REL_PATH);
 const SCRIPT_START_MS = Date.now();
 const FETCH_CRON_CALENDARS = JSON.parse(fs.readFileSync(
   path.join(ROOT, "scripts", "lib", "data-supply-detection-calendars.json"),
@@ -3742,6 +3744,30 @@ function writeJsonAtomic(absPath, payload) {
   fs.writeFileSync(tmp, body, "utf8");
   JSON.parse(fs.readFileSync(tmp, "utf8")); // validate serialized JSON before publish
   fs.renameSync(tmp, absPath);
+}
+
+export function buildPinnedKpiCronCoverage({ rootDoc, report, calendars = FETCH_CRON_CALENDARS } = {}) {
+  const projected = JSON.parse(JSON.stringify(rootDoc));
+  projected.runtime.fetch_cron_skip_detection = buildFetchCronAttemptCoverage({ report, calendars });
+  return {
+    rootDoc: projected,
+    publicDoc: projectPublicKpi(projected, projected.generated_at),
+  };
+}
+
+export function emitPinnedKpiCronCoverage({
+  rootSourcePath = COMMITTED_KPI_PATH,
+  reportPath = path.join(ROOT, "data", "admin", "data-supply-detection-floor.json"),
+  rootOutputPath = rootSourcePath,
+  publicOutputPath = PUBLIC_KPI_PATH,
+} = {}) {
+  const documents = buildPinnedKpiCronCoverage({
+    rootDoc: JSON.parse(fs.readFileSync(rootSourcePath, "utf8")),
+    report: JSON.parse(fs.readFileSync(reportPath, "utf8")),
+  });
+  writeJsonAtomic(rootOutputPath, documents.rootDoc);
+  writeJsonAtomic(publicOutputPath, documents.publicDoc);
+  return documents;
 }
 
 export function buildKpiDocuments(nowIso = resolveNow(), {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFile, rename, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,7 +13,7 @@ import {
 } from "./lib/plane-enrollment-derivation.mjs";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
-const OUTPUT_PATH = path.join(
+export const DEFAULT_ENROLLMENT_OUTPUT_PATH = path.join(
   REPO_ROOT,
   "100xfenok-next",
   "scripts",
@@ -28,9 +28,9 @@ function modeFromArgs(args) {
   throw new Error("usage: node scripts/build-cloud-data-plane-enrollment.mjs [--check|--write]");
 }
 
-async function readCurrent() {
+async function readCurrent(outputPath = DEFAULT_ENROLLMENT_OUTPUT_PATH) {
   try {
-    return await readFile(OUTPUT_PATH, "utf8");
+    return await readFile(outputPath, "utf8");
   } catch (error) {
     if (error.code === "ENOENT") return null;
     throw error;
@@ -40,6 +40,7 @@ async function readCurrent() {
 async function atomicWrite(filePath, contents) {
   const temporaryPath = `${filePath}.tmp-${process.pid}-${Date.now()}`;
   try {
+    await mkdir(path.dirname(filePath), { recursive: true });
     await writeFile(temporaryPath, contents, "utf8");
     await rename(temporaryPath, filePath);
   } finally {
@@ -49,21 +50,35 @@ async function atomicWrite(filePath, contents) {
   }
 }
 
-const mode = modeFromArgs(process.argv.slice(2));
-const schema = derivePublicPlaneEnrollment(FAMILIES);
-const privateDeny = derivePrivatePlaneDeny(derivedPrivateFileOutputs());
-const expected = renderPlaneEnrollmentModule(schema, privateDeny);
-const current = await readCurrent();
-
-if (mode === "check") {
-  if (current === expected) {
-    console.log(`cloud-data-plane enrollment is current (${schema.exact.length} exact, ${schema.prefixes.length} prefix)`);
-  } else {
-    console.error("cloud-data-plane enrollment is stale or missing.");
-    console.error(`Regenerate with: ${REGENERATION_COMMAND}`);
-    process.exitCode = 1;
-  }
-} else {
-  await atomicWrite(OUTPUT_PATH, expected);
-  console.log(`wrote cloud-data-plane enrollment (${schema.exact.length} exact, ${schema.prefixes.length} prefix)`);
+export function buildCloudDataPlaneEnrollment() {
+  const schema = derivePublicPlaneEnrollment(FAMILIES);
+  const privateDeny = derivePrivatePlaneDeny(derivedPrivateFileOutputs());
+  return { schema, contents: renderPlaneEnrollmentModule(schema, privateDeny) };
 }
+
+export async function emitCloudDataPlaneEnrollment({ outputPath = DEFAULT_ENROLLMENT_OUTPUT_PATH } = {}) {
+  const built = buildCloudDataPlaneEnrollment();
+  await atomicWrite(outputPath, built.contents);
+  return built;
+}
+
+async function main() {
+  const mode = modeFromArgs(process.argv.slice(2));
+  const built = buildCloudDataPlaneEnrollment();
+  const current = await readCurrent();
+  if (mode === "check") {
+    if (current === built.contents) {
+      console.log(`cloud-data-plane enrollment is current (${built.schema.exact.length} exact, ${built.schema.prefixes.length} prefix)`);
+    } else {
+      console.error("cloud-data-plane enrollment is stale or missing.");
+      console.error(`Regenerate with: ${REGENERATION_COMMAND}`);
+      process.exitCode = 1;
+    }
+  } else {
+    await emitCloudDataPlaneEnrollment();
+    console.log(`wrote cloud-data-plane enrollment (${built.schema.exact.length} exact, ${built.schema.prefixes.length} prefix)`);
+  }
+}
+
+const isDirect = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isDirect) await main();

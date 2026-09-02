@@ -1,0 +1,320 @@
+{
+  "schema_version": "update-manifest-materializations-expected/v1",
+  "routes": [
+    {
+      "source": "data/slickcharts",
+      "destination": "100xfenok-next/public/data/slickcharts",
+      "mode": "rsync_tree",
+      "delete": true,
+      "excludes": []
+    },
+    {
+      "source": "data/yf/finance",
+      "destination": "100xfenok-next/public/data/yf/finance",
+      "mode": "rsync_tree",
+      "delete": true,
+      "excludes": []
+    },
+    {
+      "source": "data/stockanalysis",
+      "destination": "100xfenok-next/public/data/stockanalysis",
+      "mode": "rsync_tree",
+      "delete": true,
+      "excludes": [
+        "etfs"
+      ]
+    },
+    {
+      "source": "data/yf/quarter_closes.json",
+      "destination": "100xfenok-next/public/data/yf/quarter_closes.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/indices/README.md",
+      "destination": "100xfenok-next/public/data/indices/README.md",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/indices/schema.json",
+      "destination": "100xfenok-next/public/data/indices/schema.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/indices/nasdaq-giw-sox-constituents.json",
+      "destination": "100xfenok-next/public/data/indices/nasdaq-giw-sox-constituents.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/indices/sp500.json",
+      "destination": "100xfenok-next/public/data/indices/sp500.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/indices/nasdaq.json",
+      "destination": "100xfenok-next/public/data/indices/nasdaq.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/indices/nasdaq100.json",
+      "destination": "100xfenok-next/public/data/indices/nasdaq100.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/indices/sox.json",
+      "destination": "100xfenok-next/public/data/indices/sox.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/admin/fenok-edge-korea-krx-daily-index.json",
+      "destination": "100xfenok-next/public/data/admin/fenok-edge-korea-krx-daily-index.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/computed/fenok-edge-korea-krx-bridge-history.json",
+      "destination": "100xfenok-next/public/data/computed/fenok-edge-korea-krx-bridge-history.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/computed/fenok-edge-korea-krx-index-daily.json",
+      "destination": "100xfenok-next/public/data/computed/fenok-edge-korea-krx-index-daily.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
+      "destination": "100xfenok-next/public/data/computed/fenok-edge-korea-krx-kosdaq-market-cap-aggregate.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/computed/market_facts/index.json",
+      "destination": "100xfenok-next/public/data/computed/market_facts/index.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/computed/fenok_etf_core_daily_basket_summary.json",
+      "destination": "100xfenok-next/public/data/computed/fenok_etf_core_daily_basket_summary.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/global-scouter/core/stocks_analyzer.json",
+      "destination": "100xfenok-next/public/data/global-scouter/core/stocks_analyzer.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/global-scouter/core/per_bands_index.json",
+      "destination": "100xfenok-next/public/data/global-scouter/core/per_bands_index.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/global-scouter/core/slick_index.json",
+      "destination": "100xfenok-next/public/data/global-scouter/core/slick_index.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/global-scouter/core/revision_movers.json",
+      "destination": "100xfenok-next/public/data/global-scouter/core/revision_movers.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/README.md",
+      "destination": "100xfenok-next/public/data/sec-13f/README.md",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/schema.json",
+      "destination": "100xfenok-next/public/data/sec-13f/schema.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/summary.json",
+      "destination": "100xfenok-next/public/data/sec-13f/summary.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/by_sector.json",
+      "destination": "100xfenok-next/public/data/sec-13f/by_sector.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/by_ticker.json",
+      "destination": "100xfenok-next/public/data/sec-13f/by_ticker.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/buying_pressure.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/buying_pressure.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/consensus.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/consensus.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/conviction.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/conviction.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/conviction_entries.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/conviction_entries.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/enhanced_consensus.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/enhanced_consensus.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/hhi.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/hhi.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/multi_quarter_trends.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/multi_quarter_trends.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/new_positions.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/new_positions.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/options_hedge.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/options_hedge.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/ticker_aliases.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/ticker_aliases.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/trades_ranking.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/trades_ranking.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/portfolio_views.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/portfolio_views.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/factor_exposures_summary.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/factor_exposures_summary.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/guru_holders_index.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/guru_holders_index.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/analytics/turnover.json",
+      "destination": "100xfenok-next/public/data/sec-13f/analytics/turnover.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/damodaran",
+      "destination": "100xfenok-next/public/data/damodaran",
+      "mode": "rsync_tree",
+      "delete": true,
+      "excludes": []
+    },
+    {
+      "source": "data/calendar/prev-values.json",
+      "destination": "100xfenok-next/public/data/calendar/prev-values.json",
+      "mode": "cp_file",
+      "delete": false,
+      "excludes": []
+    },
+    {
+      "source": "data/sec-13f/investors",
+      "destination": "100xfenok-next/public/data/sec-13f/investors",
+      "mode": "rsync_tree",
+      "delete": true,
+      "excludes": [
+        "griffin.json"
+      ],
+      "remove_excluded": [
+        "griffin.json"
+      ]
+    }
+  ]
+}

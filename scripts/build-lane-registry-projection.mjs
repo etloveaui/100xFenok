@@ -26,6 +26,7 @@ const PUBLIC_OUT_PATH = path.join(
   "admin",
   "lane-registry-projection.json",
 );
+export const DEFAULT_PROJECTION_OUTPUT_PATHS = Object.freeze([OUT_PATH, PUBLIC_OUT_PATH]);
 const CALENDAR_PATH = path.join(REPO_ROOT, "scripts", "lib", "data-supply-detection-calendars.json");
 const KPI_PATH = path.join(REPO_ROOT, "data", "admin", "fenok-data-health-kpi.json");
 const ALARM_PATH = path.join(REPO_ROOT, "data", "admin", "alarm-state.json");
@@ -592,13 +593,22 @@ export function buildLaneRegistryProjection(registry = LANE_REGISTRY, options = 
   };
 }
 
-function main() {
-  const projection = buildLaneRegistryProjection();
+export function emitLaneRegistryProjection({
+  registry = LANE_REGISTRY,
+  outputPaths = DEFAULT_PROJECTION_OUTPUT_PATHS,
+  options = {},
+} = {}) {
+  const projection = buildLaneRegistryProjection(registry, options);
   const json = `${JSON.stringify(projection, null, 2)}\n`;
-  for (const target of [OUT_PATH, PUBLIC_OUT_PATH]) {
+  for (const target of outputPaths) {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, json);
   }
+  return projection;
+}
+
+function main() {
+  const projection = emitLaneRegistryProjection();
   console.log(
     `lane-registry projection: ${projection.lanes.length} lanes -> ${path.relative(REPO_ROOT, OUT_PATH)} (+ public mirror)`,
   );

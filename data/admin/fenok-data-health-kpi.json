@@ -461,8 +461,8 @@
       "deployment_blocking": false,
       "counts": {
         "scheduled_members": 32,
-        "schedule_bindings": 36,
-        "observed": 30,
+        "schedule_bindings": 37,
+        "observed": 31,
         "suspected_skips": 3,
         "attempt_gaps": 3
       },
@@ -723,6 +723,19 @@
           "cron": "0 8 1 * *",
           "calendar_id": "utc",
           "expected_at": "2026-08-01T08:00:00.000Z",
+          "observed_at": "2026-09-01T12:48:56.407Z",
+          "state": "observed",
+          "producer_status": "ready",
+          "producer_reason": "ok"
+        },
+        {
+          "lane_id": "oecd_cli",
+          "member_id": "oecd_cli",
+          "workflow": ".github/workflows/fetch-oecd-cli.yml",
+          "schedule_id": "monthly_0800_8_utc",
+          "cron": "0 8 8 * *",
+          "calendar_id": "utc",
+          "expected_at": "2026-08-08T08:00:00.000Z",
           "observed_at": "2026-09-01T12:48:56.407Z",
           "state": "observed",
           "producer_status": "ready",

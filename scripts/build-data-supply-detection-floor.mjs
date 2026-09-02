@@ -2,6 +2,7 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -10,7 +11,7 @@ import {
   canonicalJson,
   validateDetectionConfig,
 } from "./lib/data-supply-detection-config.mjs";
-import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
+import { LANE_REGISTRY, registryDigest } from "./lib/lane-registry.mjs";
 import { matchesDayWeekday } from "./lib/schedule-day-weekday.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,6 +19,11 @@ const __dirname = path.dirname(__filename);
 export const REPO_ROOT = path.resolve(__dirname, "..");
 export const FIXTURE_ROOT = path.join(REPO_ROOT, "scripts", "fixtures", "data_supply", "detection_floor");
 export const CALENDAR_PATH = path.join(REPO_ROOT, "scripts", "lib", "data-supply-detection-calendars.json");
+export const EXPECTED_FIXTURE_PATH = path.join(FIXTURE_ROOT, "cases.expected.json");
+export const ATTEMPTS_FIXTURE_PATH = path.join(FIXTURE_ROOT, "attempts.fixture.json");
+export const ARTIFACTS_FIXTURE_PATH = path.join(FIXTURE_ROOT, "artifacts.fixture.json");
+export const CALENDARS_FIXTURE_PATH = path.join(FIXTURE_ROOT, "calendars.fixture.json");
+export const COMMITTED_REPORT_PATH = path.join(REPO_ROOT, "data", "admin", "data-supply-detection-floor.json");
 export const REPORT_BASENAME = "data-supply-detection-floor.json";
 export const REPORT_SCHEMA = "data-supply-detection-floor/v1";
 export const ATTEMPT_SCHEMA = "data-supply-detection-attempts/v2";
@@ -1788,6 +1794,102 @@ export function detectAndProject({
   const report = buildDetectionReport({ config, artifactRoot, attempts, now, calendars, fsModule: fsAdapter });
   const projection = projectReportAtomic({ report, outputRoot, artifactRoot, config, fsModule: fsAdapter, failpoint, tempToken });
   return { report, ...projection };
+}
+
+function materializeExpectedFixtureArtifacts(artifactsFixture) {
+  const artifactRoot = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-detection-pin-"));
+  fs.chmodSync(artifactRoot, 0o700);
+  const documents = new Map(artifactsFixture.documents.map((document) => [document.id, document]));
+  const layout = artifactsFixture.layouts.find((candidate) => candidate.id === "all_valid");
+  if (!layout) fail("schema_error", "artifact fixture requires all_valid layout");
+  for (const node of layout.nodes) {
+    const absolute = path.join(artifactRoot, ...node.path.split("/"));
+    if (node.node_type === "directory") {
+      fs.mkdirSync(absolute, { recursive: true, mode: 0o700 });
+      continue;
+    }
+    if (node.node_type !== "regular") fail("schema_error", `all_valid contains ${node.node_type}`);
+    const document = documents.get(node.document_id);
+    if (!document) fail("schema_error", `artifact document is missing: ${node.document_id}`);
+    fs.mkdirSync(path.dirname(absolute), { recursive: true, mode: 0o700 });
+    const body = document.encoding === "json" ? JSON.stringify(document.content) : document.content;
+    fs.writeFileSync(absolute, body, { encoding: "utf8", mode: 0o600 });
+  }
+  return artifactRoot;
+}
+
+export function buildDetectionExpectedFixture({
+  expectedFixture,
+  attempts,
+  artifactsFixture,
+  calendars,
+  config = DATA_SUPPLY_DETECTION_CONFIG,
+} = {}) {
+  const artifactRoot = materializeExpectedFixtureArtifacts(artifactsFixture);
+  try {
+    const projected = JSON.parse(JSON.stringify(expectedFixture));
+    const report = buildDetectionReport({
+      config,
+      artifactRoot,
+      attempts,
+      calendars,
+      now: projected.baseline.now,
+    });
+    const memberIds = config.lanes.flatMap((lane) => lane.producer_members.map((member) => member.id));
+    projected.config_digest = digestConfig(config);
+    projected.registry_digest = registryDigest();
+    projected.logical_lane_count = config.logical_lane_count;
+    projected.producer_member_count = config.producer_member_count;
+    projected.config_digest_input.ordered_lane_ids = config.lanes.map((lane) => lane.id);
+    projected.config_digest_input.ordered_member_ids = memberIds;
+    projected.slickcharts_member_ids = config.lanes
+      .find((lane) => lane.id === "slickcharts")
+      .producer_members.map((member) => member.id);
+    projected.baseline.attempt_fixture_schema = attempts.schema_version;
+    projected.baseline.calendar_fixture_schema = calendars.schema_version;
+    projected.baseline.expected_report = report;
+    projected.baseline.report_file_sha256 = sha256(Buffer.from(`${canonicalJson(report)}\n`, "utf8"));
+    return projected;
+  } finally {
+    fs.rmSync(artifactRoot, { recursive: true, force: true });
+  }
+}
+
+export function emitDetectionExpectedFixture({
+  sourcePath = EXPECTED_FIXTURE_PATH,
+  outputPath = sourcePath,
+  attemptsPath = ATTEMPTS_FIXTURE_PATH,
+  artifactsPath = ARTIFACTS_FIXTURE_PATH,
+  calendarsPath = CALENDARS_FIXTURE_PATH,
+} = {}) {
+  const projected = buildDetectionExpectedFixture({
+    expectedFixture: JSON.parse(fs.readFileSync(sourcePath, "utf8")),
+    attempts: JSON.parse(fs.readFileSync(attemptsPath, "utf8")),
+    artifactsFixture: JSON.parse(fs.readFileSync(artifactsPath, "utf8")),
+    calendars: JSON.parse(fs.readFileSync(calendarsPath, "utf8")),
+  });
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, `${JSON.stringify(projected, null, 2)}\n`);
+  return projected;
+}
+
+export function buildPinnedDetectionReport(report, config = DATA_SUPPLY_DETECTION_CONFIG) {
+  const projected = JSON.parse(JSON.stringify(report));
+  projected.config_digest = digestConfig(config);
+  projected.logical_lane_count = config.logical_lane_count;
+  projected.producer_member_count = config.producer_member_count;
+  validateDetectionReport(projected, config);
+  return projected;
+}
+
+export function emitPinnedDetectionReport({
+  sourcePath = COMMITTED_REPORT_PATH,
+  outputPath = sourcePath,
+} = {}) {
+  const projected = buildPinnedDetectionReport(JSON.parse(fs.readFileSync(sourcePath, "utf8")));
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, `${canonicalJson(projected)}\n`);
+  return projected;
 }
 
 function parseArgs(argv) {
