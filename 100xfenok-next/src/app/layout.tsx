@@ -4,10 +4,9 @@ import DesignVersionToggle from "@/components/design/DesignVersionToggle";
 import { siteOrigin } from "@/lib/site-url";
 import { Suspense } from "react";
 
-// Font faces are self-hosted in ./fonts/fonts.css, which also defines
-// --font-noto-sans-kr, --font-orbitron-face and --font-jetbrains-mono.
-// next/font/google was removed: its build-time fetch is a hard build failure
-// surface we do not control.
+// Font faces are self-hosted in ./fonts/fonts.css, which defines
+// --font-pretendard and --font-jetbrains-mono (Light System: Pretendard Variable + JetBrains Mono 500 only).
+// next/font/google was removed: its build-time fetch is a hard build failure surface we do not control.
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
