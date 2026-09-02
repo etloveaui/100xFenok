@@ -189,7 +189,7 @@ assert.equal(dryRunLines[0].enrolled.length, MEASURED_ASSETS);
 assert.equal(dryRunLines[0].enrolled[0].path, built.manifest.assets[0].path);
 assert.equal(dryRunLines[0].enrolled.at(-1).path, built.manifest.assets.at(-1).path);
 
-assert.equal(assertPublicationAuthorization().authorized, 24, "default registry authorization includes Global Scouter");
+assert.equal(assertPublicationAuthorization().authorized, 25, "default registry authorization includes Global Scouter");
 assert.throws(
   () => assertPublicationAuthorization({ families: { [FAMILY_NAME]: FAMILY }, bindings: {} }),
   /FAMILY_NOT_AUTHORIZED.*global-scouter/,
