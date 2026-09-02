@@ -119,6 +119,8 @@ assert.deepEqual(
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "fenok-krx-derived-test-"));
   fs.mkdirSync(path.join(tmpDir, "raw/core_stock_index/stk_bydd_trd"), { recursive: true });
   fs.mkdirSync(path.join(tmpDir, "raw/core_stock_index/ksq_bydd_trd"), { recursive: true });
+  fs.mkdirSync(path.join(tmpDir, "raw/core_stock_index/stk_isu_base_info"), { recursive: true });
+  fs.mkdirSync(path.join(tmpDir, "raw/core_stock_index/ksq_isu_base_info"), { recursive: true });
   fs.mkdirSync(path.join(tmpDir, "raw/bond_commodity_esg/kts_bydd_trd"), { recursive: true });
   fs.writeFileSync(
     path.join(tmpDir, "raw/core_stock_index/stk_bydd_trd/20260629.json"),
@@ -137,6 +139,20 @@ assert.deepEqual(
         { MKT_NM: "KOSDAQ", ISU_CD: "123456", ISU_NM: "샘플", MKTCAP: "9999" },
       ],
     }, null, 2)}\n`,
+  );
+  fs.writeFileSync(
+    path.join(tmpDir, "raw/core_stock_index/stk_isu_base_info/20260629.json"),
+    `${JSON.stringify({
+      OutBlock_1: [
+        { ISU_CD: "005930", ISU_NM: "삼성전자" },
+        { ISU_CD: "000660", ISU_NM: "SK하이닉스" },
+        { ISU_CD: "035420", ISU_NM: "NAVER" },
+      ],
+    }, null, 2)}\n`,
+  );
+  fs.writeFileSync(
+    path.join(tmpDir, "raw/core_stock_index/ksq_isu_base_info/20260629.json"),
+    `${JSON.stringify({ OutBlock_1: [{ ISU_CD: "123456", ISU_NM: "샘플" }] }, null, 2)}\n`,
   );
   fs.writeFileSync(
     path.join(tmpDir, "raw/bond_commodity_esg/kts_bydd_trd/20260629.json"),
@@ -181,6 +197,18 @@ assert.deepEqual(
         status: "success",
         row_count: 1,
       },
+      {
+        api_id: "stk_isu_base_info",
+        path: path.join(tmpDir, "raw/core_stock_index/stk_isu_base_info/20260629.json"),
+        status: "success",
+        row_count: 3,
+      },
+      {
+        api_id: "ksq_isu_base_info",
+        path: path.join(tmpDir, "raw/core_stock_index/ksq_isu_base_info/20260629.json"),
+        status: "success",
+        row_count: 1,
+      },
     ],
     normalized_score_candidates: [],
     request_budget: config.requestBudget,
@@ -196,6 +224,7 @@ assert.deepEqual(
       { ticker: "005930", market: "KRX" },
       { ticker: "000660", market: "KRX" },
       { ticker: "035420.KS", ticker_normalized: "035420", company: "NAVER", market: "KRX" },
+      { ticker: "012510.KS", ticker_normalized: "012510", company: "Douzone Bizon", market: "KRX" },
       { ticker: "123456", market: "KOSDAQ" },
     ],
   });

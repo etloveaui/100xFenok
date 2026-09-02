@@ -26,6 +26,10 @@ const rows = [
   { ticker: "123456", market: "KOSDAQ" },
   { ticker: "AAPL", market: "US" },
 ];
+const sourceRows = [
+  ...rows,
+  { ticker: "012510.KS", ticker_normalized: "012510", market: "KRX" },
+];
 const activeCodes = activeKrxUniverseCodes(rows);
 assert.deepEqual([...activeCodes].sort(), ["000660", "005930", "123456"]);
 
@@ -34,13 +38,14 @@ const receipt = buildKrxIssuerDailyCoverageReceipt({
   activeUniverseCodes: activeCodes,
   coveredCodes: ["005930", "000660", "123456", "NOT-A-KRX-ROW"],
   activeUniverseRows: rows,
+  sourceActiveUniverseRows: sourceRows,
   coveredCodesByMarket: {
     KRX: ["005930", "000660", "NOT-A-KRX-ROW"],
     KOSDAQ: ["123456"],
   },
   proofManifestSha256: "a".repeat(64),
 });
-assert.equal(receipt.schema_version, "fenok_krx_issuer_daily_coverage_receipt/v2");
+assert.equal(receipt.schema_version, "fenok_krx_issuer_daily_coverage_receipt/v3");
 assert.equal(receipt.schema_version, KRX_ISSUER_DAILY_RECEIPT_SCHEMA);
 assert.equal(receipt.covered_count, 3);
 assert.equal(receipt.denominator, 3);
@@ -53,14 +58,25 @@ assert.equal(receipt.status, "ready");
 assert.equal(receipt.raw_public, false);
 assert.equal(receipt.per_issuer_rows, false);
 assert.equal(receipt.active_universe_sha256, krxActiveUniverseSha256(activeCodes));
+assert.deepEqual(receipt.listing_status_filter, {
+  basis: "current_krx_issuer_master",
+  source_denominator: 4,
+  eligible_denominator: 3,
+  excluded_count: 1,
+  source_universe_sha256: krxActiveUniverseSha256(activeKrxUniverseCodes(sourceRows)),
+  markets: {
+    KRX: { source_denominator: 3, eligible_denominator: 2, excluded_count: 1 },
+    KOSDAQ: { source_denominator: 1, eligible_denominator: 1, excluded_count: 0 },
+  },
+});
 assert.equal(receipt.bridge_identity_sha256, krxBridgeIdentitySha256(bridge));
 assert.equal(Object.hasOwn(receipt, "covered_codes"), false);
 
 const boundBridge = { ...bridge, issuer_daily_coverage_receipt: receipt };
 const valid = validateKrxIssuerDailyCoverageReceipt({
   bridgeDocument: boundBridge,
-  activeUniverseCodes: activeCodes,
-  activeUniverseRows: rows,
+  activeUniverseCodes: activeKrxUniverseCodes(sourceRows),
+  activeUniverseRows: sourceRows,
 });
 assert.equal(valid.ok, true);
 assert.equal(valid.receipt.source_date, "2026-08-14");
