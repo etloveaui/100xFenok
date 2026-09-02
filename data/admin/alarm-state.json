@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-02T21:53:51.044Z",
+  "generated_at": "2026-09-02T22:31:15.294Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 5,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -15,19 +15,6 @@
         "failure_streak",
         "plane_freshness_unavailable",
         "plane_publish_failed",
-        "unrecovered_overdue"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
-    },
-    {
-      "workflow": "fetch-fred-yardeni.yml",
-      "label": "Fetch FRED Yardeni Data",
-      "streak": 1,
-      "failure_streak_threshold": 1,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
         "unrecovered_overdue"
       ],
       "lost_schedule_slot_count": 0,
@@ -275,10 +262,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 1,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "fetch-nasdaq-giw-sox.yml",
@@ -327,7 +312,7 @@
         "suspected_skip"
       ],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 19
+      "data_freshness_age_hours_at_generation": 20
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -475,8 +460,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 23,
-    "overdue": 3,
+    "not_due": 24,
+    "overdue": 2,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -492,13 +477,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33687417629",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33687417629",
-    "observed_at": "2026-09-02T21:53:51.044Z",
-    "event": "schedule",
+    "run_id": "33690580063",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33690580063",
+    "observed_at": "2026-09-02T22:31:15.294Z",
+    "event": "workflow_run",
     "workflows": [
       "fetch-edgar-filings.yml",
-      "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml",
       "slickcharts-history.yml",
