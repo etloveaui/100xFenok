@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 508,
-      "natural": true,
-      "observed_at": "2026-08-12T00:28:31Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "recovery_not_advanced_by_provider",
       "event_name": "schedule",
       "failures": [],
@@ -194,6 +181,20 @@
       "run_id": "33460327385",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for EA despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 690,
+      "natural": true,
+      "observed_at": "2026-09-02T01:05:40Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33577879211",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -212,12 +213,12 @@
     "error": "ValueError: quote_as_of is unavailable for EA despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 542,
+    "latency_ms": 690,
     "natural": true,
-    "observed_at": "2026-09-01T01:52:51Z",
+    "observed_at": "2026-09-02T01:05:40Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33460327385",
+    "run_id": "33577879211",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -229,9 +230,9 @@
     "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-01T01:52:51Z",
+    "observed_at": "2026-09-02T01:05:40Z",
     "run_attempt": 1,
-    "run_id": "33460327385"
+    "run_id": "33577879211"
   },
   "lkg": {
     "fetched_at": "2026-08-12T00:31:05Z",
@@ -267,5 +268,5 @@
     "source_as_of": "2026-08-04T20:00:00Z"
   },
   "ticker": "EA",
-  "updated_at": "2026-09-01T01:52:51Z"
+  "updated_at": "2026-09-02T01:05:40Z"
 }

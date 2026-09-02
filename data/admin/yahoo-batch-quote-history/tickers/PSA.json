@@ -2,26 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for PSA despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 694,
-      "natural": true,
-      "observed_at": "2026-08-12T22:55:30Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31648785047",
-      "schedule": "7 22 * * 0-5",
-      "shard": "47/72"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 539,
@@ -188,15 +168,28 @@
       "run_id": "33460327385",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 765,
+      "natural": true,
+      "observed_at": "2026-09-02T01:17:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33577879211",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-01T02:05:14Z",
-    "history_as_of": "2026-08-31",
+    "fetched_at": "2026-09-02T01:21:29Z",
+    "history_as_of": "2026-09-01",
     "path": "data/yf/finance/PSA.json",
-    "payload_sha256": "420245cab84435502fa1a417a836739d7df27a34813f124decbdfa098c8bd256",
-    "quote_as_of": "2026-08-31T20:00:02Z",
-    "source_as_of": "2026-08-31"
+    "payload_sha256": "bc0385eff7e485b7ee4948f559f71b0b5017cf51f51b2aa2b4202931a4a50268",
+    "quote_as_of": "2026-09-01T20:00:02Z",
+    "source_as_of": "2026-09-01"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,12 +199,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 635,
+    "latency_ms": 765,
     "natural": true,
-    "observed_at": "2026-09-01T02:01:44Z",
+    "observed_at": "2026-09-02T01:17:07Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33460327385",
+    "run_id": "33577879211",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
@@ -244,14 +237,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-31",
-    "observed_at": "2026-09-01T02:01:44Z",
-    "payload_sha256": "deb6dd67b6be2bb161a40e7d305dd47fc45d4f23ff96e28022210ad71c699905",
-    "quote_as_of": "2026-08-31T20:00:02Z",
+    "history_as_of": "2026-09-01",
+    "observed_at": "2026-09-02T01:17:07Z",
+    "payload_sha256": "1cf9600effbf0bd8b7e382965de27d6837de2e08078941ba9631dac5dc91af27",
+    "quote_as_of": "2026-09-01T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "33460327385",
+    "run_id": "33577879211",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-31"
+    "source_as_of": "2026-09-01"
   },
   "recovered_at": "2026-08-13T00:06:17Z",
   "recovered_from_run_id": "31648785047",
@@ -272,5 +265,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "PSA",
-  "updated_at": "2026-09-01T02:01:44Z"
+  "updated_at": "2026-09-02T01:17:07Z"
 }

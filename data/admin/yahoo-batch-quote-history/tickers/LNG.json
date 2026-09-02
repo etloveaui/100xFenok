@@ -2,26 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for LNG despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 582,
-      "natural": true,
-      "observed_at": "2026-08-12T22:55:30Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31648785047",
-      "schedule": "7 22 * * 0-5",
-      "shard": "47/72"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 466,
@@ -188,15 +168,28 @@
       "run_id": "33460327385",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 795,
+      "natural": true,
+      "observed_at": "2026-09-02T01:27:36Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33577879211",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-01T02:12:43Z",
-    "history_as_of": "2026-08-31",
+    "fetched_at": "2026-09-02T01:31:19Z",
+    "history_as_of": "2026-09-01",
     "path": "data/yf/finance/LNG.json",
-    "payload_sha256": "4e27d16ce8f2885fea085e8c3961bc0a036f652a49878afcde06a3b86b602cb3",
-    "quote_as_of": "2026-08-31T20:00:02Z",
-    "source_as_of": "2026-08-31"
+    "payload_sha256": "7ddf71963f917289f34b0343f2a5d97c5b8b28da8cbe819bfd6d9f4185f0bd02",
+    "quote_as_of": "2026-09-01T20:00:02Z",
+    "source_as_of": "2026-09-01"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -206,12 +199,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 555,
+    "latency_ms": 795,
     "natural": true,
-    "observed_at": "2026-09-01T02:10:13Z",
+    "observed_at": "2026-09-02T01:27:36Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33460327385",
+    "run_id": "33577879211",
     "schedule": "20 23 * * 1-5",
     "shard": "4/5"
   },
@@ -244,14 +237,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-31",
-    "observed_at": "2026-09-01T02:10:13Z",
-    "payload_sha256": "58a1e1ff2fbe2a9efaa70949c0c1e1dc71bdae29ed551cf3261e88a1f7ca4179",
-    "quote_as_of": "2026-08-31T20:00:02Z",
+    "history_as_of": "2026-09-01",
+    "observed_at": "2026-09-02T01:27:36Z",
+    "payload_sha256": "2d9ba8b569efcb6134e44d88e9a8bd6e40073a0d26c85e46e7ce6020fda9680d",
+    "quote_as_of": "2026-09-01T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "33460327385",
+    "run_id": "33577879211",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-31"
+    "source_as_of": "2026-09-01"
   },
   "recovered_at": "2026-08-13T00:06:17Z",
   "recovered_from_run_id": "31648785047",
@@ -262,5 +255,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "LNG",
-  "updated_at": "2026-09-01T02:10:13Z"
+  "updated_at": "2026-09-02T01:27:36Z"
 }
