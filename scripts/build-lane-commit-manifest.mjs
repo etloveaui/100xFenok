@@ -242,15 +242,13 @@ export const UPDATE_MANIFEST_MATERIALIZATIONS = [
     required: true,
     trailing_slash: false,
   },
-  {
-    source: "data/computed/fenok_occ_options_availability.json",
-    destination: "100xfenok-next/public/data/computed/fenok_occ_options_availability.json",
-    mode: "cp_file",
-    delete: false,
-    excludes: [],
-    required: true,
-    trailing_slash: false,
-  },
+  // fenok_occ_options_availability is public_safe_aggregate: its public
+  // projection is a slim marker (rows/side_attempts stripped) produced by
+  // fetch-fenok-occ-options-volume.mjs:writePublicSlimAvailability, not a
+  // verbatim cp_file. The previous verbatim route fattened the public file
+  // to 25.5 MiB on 0deda857ee via materialize-update-manifest-routes. Exclude
+  // it from generic materialization; the edge-daily lane stages the slim
+  // marker directly.
   {
     source: "data/computed/market_facts/index.json",
     destination: "100xfenok-next/public/data/computed/market_facts/index.json",

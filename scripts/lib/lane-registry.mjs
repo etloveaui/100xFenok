@@ -636,6 +636,10 @@ const lanes = [
     provider_refs: [{ provider_id: "oecd", role: "source", members: null }],
     store_kind: "payload",
     lane_class: "detection_floor",
+    // OECD CLI publishes around the 7th monthly, skips August; July+August
+    // release is 2026-09-07. Lane probes on 1st and 8th; freshness allows
+    // 100d so June period is not flagged stale before Sep 8 (see
+    // data-supply-detection-config lane oecd_cli).
     cadence: { kind: "monthly" },
     // First workflow commit: 2026-07-20 23:20:11 +0900.
     activated_at: "2026-07-20T14:20:11Z",

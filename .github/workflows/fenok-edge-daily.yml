@@ -263,6 +263,14 @@ jobs:
               data/computed/fenok_occ_options_availability.json \
               data/computed/fenok_occ_options_volume*.json \
               data/computed/fenok_signal_lens_proxies*.json
+            # Public-safe slim marker for OCC availability: rows/side_attempts
+            # stripped by fetch-fenok-occ-options-volume:writePublicSlimAvailability.
+            # Staged directly from the edge lane (not via Update Manifest's
+            # verbatim cp_file) so the generic manifest materialization cannot
+            # fatten it to 25 MiB.
+            if [ -f "100xfenok-next/public/data/computed/fenok_occ_options_availability.json" ]; then
+              git add -- 100xfenok-next/public/data/computed/fenok_occ_options_availability.json
+            fi
           fi
           git diff --staged --quiet || git commit -m "chore: update fenok edge daily data"
           for attempt in $(seq 1 5); do

@@ -3,6 +3,11 @@ name: Fetch OECD CLI Shadow
 on:
   schedule:
     - cron: '0 8 1 * *'
+    # OECD skips the August release; July+August data publish 2026-09-07
+    # 12:00 CET. The 1st-of-month probe misses that release, so add an
+    # 8th-of-month probe (day after OECD's ~7th). Both crons expect the same
+    # payload; the detection floor's freshness is aware of the August gap.
+    - cron: '0 8 8 * *'
   workflow_dispatch:
     inputs:
       controlled_failure:

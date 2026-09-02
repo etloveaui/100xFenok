@@ -823,7 +823,10 @@ const config = {
     lane({
       id: "oecd_cli",
       label: "OECD composite leading indicators",
-      members: [registryMember("oecd_cli", ["0 8 1 * *"], [
+      // OECD publishes CLI around the 7th monthly, skips August; July+August
+      // publish 2026-09-07. Probe on both the 1st and 8th so the post-skip
+      // release is caught without flagging June data as stale before Sep 8.
+      members: [registryMember("oecd_cli", ["0 8 1 * *", "0 8 8 * *"], [
         artifact("oecd_cli_shadow", "data/admin/oecd_cli/shadow/oecd-cli.json", {
           schemaVersion: schemaVersion("/schema_version", "oecd-cli-shadow/v1"),
           sourceSelector: pointerSource("/latest_date", "date"),
@@ -831,7 +834,10 @@ const config = {
         }),
       ])],
       endpointContract: endpoint("oecd_sdmx", "sdmx_cli_rows", "/data", "array", "http"),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 70 }),
+      // June period (2026-06-01) remains current through the August gap until
+      // 2026-09-07; 70d would flag it ~Aug 10. Use 100d to cover June->Sep 7
+      // (~98d) with margin, calendar utc, so June is not stale before Sep 8.
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 100 }),
       affectedSurfaceIds: ["activity_surveys"],
       visibility: "admin_only",
     }),
