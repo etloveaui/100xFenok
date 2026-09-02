@@ -83,7 +83,7 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn("yahoo_etf_fallback:TQQQ", control_input.group("body"))
 
         proof_profile = re.search(
-            r'if \[ "\$ETF_DETAIL_FAILURE_PROOF" = "true" \] \|\| \[ "\$YAHOO_ETF_FAILURE_PROOF" = "true" \]; then(?P<body>.*?)\n\s*elif ',
+            r'(?:if|elif) \[ "\$ETF_DETAIL_FAILURE_PROOF" = "true" \] \|\| \[ "\$YAHOO_ETF_FAILURE_PROOF" = "true" \]; then(?P<body>\n\s*ARGS=.*?)\n\s*elif ',
             self.text,
             flags=re.DOTALL,
         )
