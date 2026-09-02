@@ -190,7 +190,6 @@ const EXPECTED_PRIVATE_DERIVED_FILES = Object.freeze([
   "computed/fenok_signals.json",
   "computed/fenok_social_attention_proxy.json",
   "computed/fenok_social_attention_proxy_history.json",
-  "computed/sec13f_bridge_index.json",
 ]);
 const EXPECTED_PRIVATE_EXACT_FILES = Object.freeze([
   ...EXPECTED_PRIVATE_DERIVED_FILES,
