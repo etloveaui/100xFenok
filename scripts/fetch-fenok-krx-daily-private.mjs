@@ -76,6 +76,10 @@ const LICENSE_OR_TERMS_NOTE =
   "KRX usage permission granted by owner 2026-07-19; public serving of derived/aggregate surfaces authorized; raw per-issuer row redistribution still governed per-slice.";
 const SNAPSHOT_ENDPOINTS = new Set(["sri_bond_info", "esg_index_info", "esg_etp_info"]);
 const REQUIRED_DAILY_ISSUER_ENDPOINTS = new Set(["stk_bydd_trd", "ksq_bydd_trd"]);
+const CURRENT_ISSUER_MASTER_MARKETS = Object.freeze({
+  stk_isu_base_info: "KRX",
+  ksq_isu_base_info: "KOSDAQ",
+});
 // A healthy public bridge must be tied to dates KRX actually returned, not
 // merely to the basDd which this runner requested. These daily responses
 // establish the public index/KOSDAQ surfaces and the two derived RIM inputs.
@@ -1176,8 +1180,44 @@ function buildDerivedRimInputs(manifest, config) {
   };
 }
 
+function normalizeIssuerMasterCode(row) {
+  for (const value of [row?.ISU_SRT_CD, row?.ISU_CD, row?.ISU_CODE, row?.SHORT_CODE]) {
+    const raw = String(value ?? "").trim().toUpperCase();
+    if (/^[0-9A-Z]{6}$/u.test(raw)) return raw;
+    if (/^KR[0-9A-Z]{10}$/u.test(raw)) return raw.slice(3, 9);
+  }
+  return "";
+}
+
+function currentListedActiveUniverseRows({ manifest, activeUniverseRows }) {
+  const listedCodesByMarket = {
+    KRX: new Set(),
+    KOSDAQ: new Set(),
+  };
+  const observedMarkets = new Set();
+  for (const file of manifest.files ?? []) {
+    const market = CURRENT_ISSUER_MASTER_MARKETS[file.api_id];
+    if (!market || !file.path || file.status !== "success" || Number(file.row_count) <= 0) continue;
+    const payload = readOptionalJson(resolveRepoPath(file.path));
+    const rows = Array.isArray(payload?.OutBlock_1) ? payload.OutBlock_1 : [];
+    for (const row of rows) {
+      const code = normalizeIssuerMasterCode(row);
+      if (code) listedCodesByMarket[market].add(code);
+    }
+    if (listedCodesByMarket[market].size > 0) observedMarkets.add(market);
+  }
+  if (!Object.values(CURRENT_ISSUER_MASTER_MARKETS).every((market) => observedMarkets.has(market))) return null;
+  return (Array.isArray(activeUniverseRows) ? activeUniverseRows : []).filter((row) => {
+    if (row?.market !== "KRX" && row?.market !== "KOSDAQ") return false;
+    const code = normalizeKrxCoverageCode(row?.ticker_normalized ?? row?.ticker);
+    return code && listedCodesByMarket[row.market].has(code);
+  });
+}
+
 function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, activeUniverseRows }) {
-  const activeUniverseCodes = activeKrxUniverseCodes(activeUniverseRows);
+  const listedActiveUniverseRows = currentListedActiveUniverseRows({ manifest, activeUniverseRows });
+  if (!listedActiveUniverseRows) return null;
+  const activeUniverseCodes = activeKrxUniverseCodes(listedActiveUniverseRows);
   const coveredCodes = new Set();
   const coveredCodesByMarket = {
     KRX: new Set(),
@@ -1204,7 +1244,8 @@ function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, act
     bridgeDocument,
     activeUniverseCodes,
     coveredCodes,
-    activeUniverseRows,
+    activeUniverseRows: listedActiveUniverseRows,
+    sourceActiveUniverseRows: activeUniverseRows,
     coveredCodesByMarket,
     proofManifestSha256,
   });
@@ -1213,7 +1254,7 @@ function buildIssuerDailyCoverageReceipt({ manifest, config, bridgeDocument, act
       Object.entries(coveredCodesByMarket).map(([market, codes]) => [market, new Set(codes)]),
     );
     const missingByIdentity = new Map();
-    for (const row of Array.isArray(activeUniverseRows) ? activeUniverseRows : []) {
+    for (const row of listedActiveUniverseRows) {
       if (row?.market !== "KRX" && row?.market !== "KOSDAQ") continue;
       const code = normalizeKrxCoverageCode(row?.ticker_normalized ?? row?.ticker);
       if (!code || normalizedCoveredCodesByMarket[row.market]?.has(code)) continue;

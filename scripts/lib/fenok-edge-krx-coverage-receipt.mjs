@@ -3,7 +3,8 @@ import { createHash } from "node:crypto";
 import { canonicalJson } from "./json-canonical.mjs";
 
 const KRX_ISSUER_DAILY_RECEIPT_SCHEMA_V1 = "fenok_krx_issuer_daily_coverage_receipt/v1";
-export const KRX_ISSUER_DAILY_RECEIPT_SCHEMA = "fenok_krx_issuer_daily_coverage_receipt/v2";
+const KRX_ISSUER_DAILY_RECEIPT_SCHEMA_V2 = "fenok_krx_issuer_daily_coverage_receipt/v2";
+export const KRX_ISSUER_DAILY_RECEIPT_SCHEMA = "fenok_krx_issuer_daily_coverage_receipt/v3";
 const KRX_COVERAGE_MARKETS = Object.freeze(["KRX", "KOSDAQ"]);
 
 function sha256(value) {
@@ -41,6 +42,25 @@ function activeKrxUniverseCodesByMarket(rows) {
     if (code) byMarket[row.market].add(code);
   }
   return byMarket;
+}
+
+function buildListingStatusFilter({ activeUniverseRows, sourceActiveUniverseRows }) {
+  const eligibleCodes = activeKrxUniverseCodes(activeUniverseRows);
+  const sourceCodes = activeKrxUniverseCodes(sourceActiveUniverseRows);
+  const eligibleByMarket = activeKrxUniverseCodesByMarket(activeUniverseRows);
+  const sourceByMarket = activeKrxUniverseCodesByMarket(sourceActiveUniverseRows);
+  return {
+    basis: "current_krx_issuer_master",
+    source_denominator: sourceCodes.size,
+    eligible_denominator: eligibleCodes.size,
+    excluded_count: Math.max(0, sourceCodes.size - eligibleCodes.size),
+    source_universe_sha256: krxActiveUniverseSha256(sourceCodes),
+    markets: Object.fromEntries(KRX_COVERAGE_MARKETS.map((market) => [market, {
+      source_denominator: sourceByMarket[market].size,
+      eligible_denominator: eligibleByMarket[market].size,
+      excluded_count: Math.max(0, sourceByMarket[market].size - eligibleByMarket[market].size),
+    }])),
+  };
 }
 
 function normalizedCoverageCodesByMarket(codesByMarket) {
@@ -133,6 +153,7 @@ export function buildKrxIssuerDailyCoverageReceipt({
   activeUniverseCodes,
   coveredCodes,
   activeUniverseRows,
+  sourceActiveUniverseRows = activeUniverseRows,
   coveredCodesByMarket,
   proofManifestSha256,
 }) {
@@ -163,6 +184,7 @@ export function buildKrxIssuerDailyCoverageReceipt({
     denominator: denominator.size,
     missing_count: missingCount,
     market_coverage: marketCoverage,
+    listing_status_filter: buildListingStatusFilter({ activeUniverseRows, sourceActiveUniverseRows }),
     status: missingCount === 0 ? "ready" : "partial",
     active_universe_sha256: krxActiveUniverseSha256(denominator),
     bridge_identity_sha256: krxBridgeIdentitySha256(bridgeDocument),
@@ -180,8 +202,9 @@ export function validateKrxIssuerDailyCoverageReceipt({
 }) {
   const receipt = bridgeDocument?.issuer_daily_coverage_receipt;
   const isLegacyV1 = receipt?.schema_version === KRX_ISSUER_DAILY_RECEIPT_SCHEMA_V1;
-  const isCurrentV2 = receipt?.schema_version === KRX_ISSUER_DAILY_RECEIPT_SCHEMA;
-  if (!isLegacyV1 && !isCurrentV2) return { ok: false, reason: "missing_or_wrong_schema" };
+  const isLegacyV2 = receipt?.schema_version === KRX_ISSUER_DAILY_RECEIPT_SCHEMA_V2;
+  const isCurrentV3 = receipt?.schema_version === KRX_ISSUER_DAILY_RECEIPT_SCHEMA;
+  if (!isLegacyV1 && !isLegacyV2 && !isCurrentV3) return { ok: false, reason: "missing_or_wrong_schema" };
   if (!validIsoDate(receipt.source_date) || receipt.source_date !== bridgeDocument?.as_of) {
     return { ok: false, reason: "source_date_mismatch" };
   }
@@ -189,7 +212,7 @@ export function validateKrxIssuerDailyCoverageReceipt({
     || receipt.run_id !== bridgeDocument?.latest_run?.run_id) {
     return { ok: false, reason: "run_identity_mismatch" };
   }
-  const denominator = new Set(sortedKrxCoverageCodes(
+  const sourceDenominator = new Set(sortedKrxCoverageCodes(
     Array.isArray(activeUniverseRows) ? activeKrxUniverseCodes(activeUniverseRows) : activeUniverseCodes,
   ));
   const coveredCount = Number(receipt.covered_count);
@@ -202,13 +225,13 @@ export function validateKrxIssuerDailyCoverageReceipt({
     || missingCount < 0
     || coveredCount > receiptDenominator
     || coveredCount + missingCount !== receiptDenominator
-    || receiptDenominator !== denominator.size) {
+    || (!isCurrentV3 && receiptDenominator !== sourceDenominator.size)) {
     return { ok: false, reason: "count_mismatch" };
   }
   if (receipt.raw_public !== false || receipt.per_issuer_rows !== false) {
     return { ok: false, reason: "privacy_contract_mismatch" };
   }
-  if (isCurrentV2 && !validMarketCoverage({
+  if (isLegacyV2 && !validMarketCoverage({
     receipt,
     activeUniverseRows,
     coveredCount,
@@ -217,9 +240,66 @@ export function validateKrxIssuerDailyCoverageReceipt({
   })) {
     return { ok: false, reason: "market_coverage_mismatch" };
   }
+  if (isCurrentV3) {
+    const filter = receipt.listing_status_filter;
+    const sourceByMarket = activeKrxUniverseCodesByMarket(activeUniverseRows);
+    if (!hasExactKeys(filter, [
+      "basis",
+      "source_denominator",
+      "eligible_denominator",
+      "excluded_count",
+      "source_universe_sha256",
+      "markets",
+    ])
+      || filter.basis !== "current_krx_issuer_master"
+      || filter.source_denominator !== sourceDenominator.size
+      || filter.eligible_denominator !== receiptDenominator
+      || filter.excluded_count !== filter.source_denominator - filter.eligible_denominator
+      || filter.excluded_count < 0
+      || filter.source_universe_sha256 !== krxActiveUniverseSha256(sourceDenominator)
+      || !hasExactKeys(filter.markets, KRX_COVERAGE_MARKETS)) {
+      return { ok: false, reason: "listing_status_filter_mismatch" };
+    }
+    for (const market of KRX_COVERAGE_MARKETS) {
+      const statusRow = filter.markets[market];
+      const coverageRow = receipt.market_coverage?.[market];
+      if (!hasExactKeys(statusRow, ["source_denominator", "eligible_denominator", "excluded_count"])
+        || !hasExactKeys(coverageRow, ["covered_count", "denominator", "missing_count"])
+        || statusRow.source_denominator !== sourceByMarket[market].size
+        || statusRow.eligible_denominator !== coverageRow?.denominator
+        || statusRow.excluded_count !== statusRow.source_denominator - statusRow.eligible_denominator
+        || statusRow.excluded_count < 0
+        || !Number.isSafeInteger(coverageRow.covered_count)
+        || !Number.isSafeInteger(coverageRow.denominator)
+        || !Number.isSafeInteger(coverageRow.missing_count)
+        || coverageRow.covered_count < 0
+        || coverageRow.missing_count < 0
+        || coverageRow.covered_count + coverageRow.missing_count !== coverageRow.denominator) {
+        return { ok: false, reason: "listing_status_market_mismatch" };
+      }
+    }
+    const eligibleSplit = KRX_COVERAGE_MARKETS.reduce(
+      (sum, market) => sum + receipt.market_coverage[market].denominator,
+      0,
+    );
+    const coveredSplit = KRX_COVERAGE_MARKETS.reduce(
+      (sum, market) => sum + receipt.market_coverage[market].covered_count,
+      0,
+    );
+    const missingSplit = KRX_COVERAGE_MARKETS.reduce(
+      (sum, market) => sum + receipt.market_coverage[market].missing_count,
+      0,
+    );
+    if (eligibleSplit !== receiptDenominator
+      || coveredSplit !== coveredCount
+      || missingSplit !== missingCount
+      || !validSha256(receipt.active_universe_sha256)) {
+      return { ok: false, reason: "listed_universe_mismatch" };
+    }
+  }
   const expectedStatus = missingCount === 0 ? "ready" : "partial";
   if (receipt.status !== expectedStatus) return { ok: false, reason: "status_mismatch" };
-  if (receipt.active_universe_sha256 !== krxActiveUniverseSha256(denominator)) {
+  if (!isCurrentV3 && receipt.active_universe_sha256 !== krxActiveUniverseSha256(sourceDenominator)) {
     return { ok: false, reason: "active_universe_digest_mismatch" };
   }
   if (receipt.bridge_identity_sha256 !== krxBridgeIdentitySha256(bridgeDocument)) {
