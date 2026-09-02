@@ -162,6 +162,7 @@
     "qa:fenok-data-health-kpi:artifact": "node scripts/check-fenok-data-health-kpi.mjs --strict && npm run qa:kpi-last-attempt && npm run qa:lane-runid",
     "qa:data-state": "tsx scripts/check-data-state-render-contract.tsx",
     "qa:computed-signals-contracts": "node ../scripts/test-export-computed-signals.mjs && node ../scripts/test-coordinate-computed-signals-workflow.mjs",
+    "test-fetch-damodaran-shadow": "node ../scripts/test-fetch-damodaran-shadow.mjs",
     "regen:pins": "node ../scripts/regen-pins.mjs",
     "qa:pins": "node ../scripts/regen-pins.mjs --check && node ../scripts/test-lane-commit-manifest-parity.mjs && node ../scripts/test-cloud-data-plane-routing-authority.mjs && node ../scripts/test-persist-cloud-publish-outcome.mjs && node ../scripts/test-build-data-supply-detection-floor.mjs && node scripts/test-sync-public-data.mjs && node ../scripts/test-update-manifest-materializations.mjs && node ../scripts/test-sec13f-bridge-index.mjs",
     "qa:registry-contracts": "npm run qa:pins && bash scripts/load-guard.sh --assert-nested && node ../scripts/test-lane-registry.mjs && node ../scripts/test-lane-registry-projection.mjs && node ../scripts/test-lane-commit-manifest.mjs && node ../scripts/test-derived-asset-registry.mjs && node ../scripts/test-derived-asset-workflow-parity.mjs && npm run qa:cloud-data-plane-budget:fixtures && npm run qa:cloud-data-plane-generation && npm run qa:cloud-data-plane-publisher && node scripts/test-data-supply-public-redaction.mjs && node scripts/check-fenok-public-mirror-guard.mjs",
