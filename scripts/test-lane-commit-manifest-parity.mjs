@@ -19,6 +19,9 @@ const validateWorkflowsText = fs.readFileSync(
   path.join(REPO_ROOT, ".github/workflows/validate-workflows.yml"),
   "utf8",
 );
+const packageJson = JSON.parse(
+  fs.readFileSync(path.join(REPO_ROOT, "100xfenok-next/package.json"), "utf8"),
+);
 assert.equal(
   canonicalJson(persistedManifest),
   canonicalJson(manifest),
@@ -41,10 +44,10 @@ const expectedCentralDirectories = centralPaths.filter(isDirectoryPath);
 
 const ATTEMPT_SHARD_ROOT = "data/admin/data-supply-state/detection-attempts";
 
-// All three tests and the detection-floor fixture are direct CI dependencies:
-// each path must appear in both push and pull_request filters, and the three
-// test commands must run inside the existing Update Manifest validation step
-// (no separate job/step).
+// All three tests and the detection-floor fixture are CI dependencies: each
+// path must appear in both push and pull_request filters. The parity contract
+// runs through qa:pins so the Update Manifest validation step must invoke that
+// gate without duplicating this command directly.
 const validateFilterText = validateWorkflowsText.slice(0, validateWorkflowsText.indexOf("jobs:"));
 for (const dependencyPath of [
   "scripts/test-update-manifest-central-staging.mjs",
@@ -62,7 +65,9 @@ const updateValidationBlock = validateWorkflowsText
   .slice(validateWorkflowsText.indexOf("- name: Validate Update Manifest policy"))
   .split("      - name:", 2)[0];
 assert.match(updateValidationBlock, /node scripts\/test-update-manifest-central-staging\.mjs/);
-assert.match(updateValidationBlock, /node scripts\/test-lane-commit-manifest-parity\.mjs/);
+assert.match(updateValidationBlock, /npm --prefix 100xfenok-next run qa:pins/);
+assert.doesNotMatch(updateValidationBlock, /node scripts\/test-lane-commit-manifest-parity\.mjs/);
+assert.match(packageJson.scripts["qa:pins"], /node \.\.\/scripts\/test-lane-commit-manifest-parity\.mjs/);
 
 function sourceRepresentsDynamicAttemptShard(sourceText, spec) {
   if (spec.kind !== "file" || !spec.path.startsWith(`${ATTEMPT_SHARD_ROOT}/`) || !spec.path.endsWith(".json")) return false;
