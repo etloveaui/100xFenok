@@ -1133,7 +1133,7 @@ try {
   );
   assert.equal(
     EXCLUDED_PUBLIC_DATA_FILES.length,
-    21,
+    20,
     `the exact-file exclusion set must cover the six declared exceptions plus all private derived files, got ${EXCLUDED_PUBLIC_DATA_FILES.length}: ${JSON.stringify(EXCLUDED_PUBLIC_DATA_FILES)}`,
   );
   const expectedDerivedExactFiles = [
