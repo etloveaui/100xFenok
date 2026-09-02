@@ -155,7 +155,6 @@ const hook = fs.readFileSync(CLIENT_HOOK, "utf8");
 const worker = fs.readFileSync(WORKER_PATH, "utf8");
 for (const privatePath of [
   "/data/sec-13f/investors/griffin.json",
-  "/data/computed/sec13f_bridge_index.json",
 ]) {
   assert.equal(
     PRIVATE_PUBLIC_PATHS.has(privatePath),
@@ -164,6 +163,13 @@ for (const privatePath of [
   );
   assert.equal(worker.includes(privatePath), false, `Worker must consume, not restate, ${privatePath}`);
 }
+const publicBridgePath = "/data/computed/sec13f_bridge_index.json";
+assert.equal(
+  PRIVATE_PUBLIC_PATHS.has(publicBridgePath),
+  false,
+  `routing authority must allow the live SEC 13F bridge: ${publicBridgePath}`,
+);
+assert.equal(worker.includes(publicBridgePath), false, `Worker must consume, not restate, ${publicBridgePath}`);
 for (const relativePath of derivedPrivateFileOutputs()) {
   const publicPath = `/${relativePath}`;
   assert.equal(PRIVATE_PUBLIC_PATHS.has(publicPath), true, `routing authority missing: ${publicPath}`);
