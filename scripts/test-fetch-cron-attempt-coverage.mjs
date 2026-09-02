@@ -68,7 +68,7 @@ const scheduledMembers = DATA_SUPPLY_DETECTION_CONFIG.lanes
   .filter((member) => member.cadence_declaration?.kind === "github_workflow" && member.schedule.length > 0);
 const scheduleBindings = scheduledMembers.reduce((sum, member) => sum + member.schedule.length, 0);
 assert.equal(scheduledMembers.length, 32);
-assert.equal(scheduleBindings, 36);
+assert.equal(scheduleBindings, 37);
 
 // Schedule parity. The detection config declares when a lane is expected to
 // run, and the observer attributes a missed slot against that declaration. If
@@ -171,6 +171,14 @@ assert.deepEqual(coverage.pre_activation_members, [
     cron: "0 8 1 * *",
     activated_at: "2026-07-20T14:20:11Z",
     first_eligible_at: "2026-08-01T08:00:00.000Z",
+  },
+  {
+    lane_id: "oecd_cli",
+    member_id: "oecd_cli",
+    workflow: ".github/workflows/fetch-oecd-cli.yml",
+    cron: "0 8 8 * *",
+    activated_at: "2026-07-20T14:20:11Z",
+    first_eligible_at: "2026-08-08T08:00:00.000Z",
   },
   {
     lane_id: "damodaran",
@@ -282,8 +290,8 @@ assert.equal(rowOf(postActivationCoverage, "damodaran").expected_at, "2026-07-25
 assert.equal(rowOf(postActivationCoverage, "damodaran").state, "suspected_skip");
 assert.deepEqual(
   postActivationCoverage.pre_activation_members.map((row) => row.lane_id),
-  // one stock slot plus one ETF slot
-  ["oecd_cli", ...Array(2).fill("yahoo_batch_quote_history")],
+  // oecd 2 slots (1st + 8th) + one stock slot plus one ETF slot
+  ["oecd_cli", "oecd_cli", ...Array(2).fill("yahoo_batch_quote_history")],
 );
 
 const missingReportCoverage = buildFetchCronAttemptCoverage({

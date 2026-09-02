@@ -210,11 +210,6 @@ export const PLANE_OUTCOME_UNRECORDED_REASONS = Object.freeze({
     reason:
       "new shadow family declared 2026-08-24 after the latest landed Yahoo cycle; its first eligible publish occurs after the next natural fetch-yf-finance run on cron '20 23 * * 1-5' lands changed finance payloads and confirms origin readback. The anti-rot test requires removing this entry as soon as that first outcome shard exists",
   }),
-  "oecd-cli": Object.freeze({
-    classification: "incident",
-    reason:
-      "GENUINE INCIDENT, reclassified 2026-08-21 by measurement: this was first recorded as awaiting a monthly turn, which was misleading. Its scheduled path has never once completed - the only schedule run in retained history, 2026-08-01T09:45:49Z, was cancelled - and every success it has is a workflow_dispatch, including the 2026-08-03 run originally cited. A lane that only ever runs by hand is not waiting for its cadence",
-  }),
   "slickcharts-monthly": Object.freeze({
     classification: "incident",
     reason:
