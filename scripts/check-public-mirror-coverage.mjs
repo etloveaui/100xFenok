@@ -38,6 +38,18 @@ const BOUNDARY_WORKFLOWS = new Set([
   ".github/workflows/fetch-stockanalysis.yml", // full sync + its commit
 ]);
 
+// Public-safe slim markers are produced by the lane writer directly (e.g.
+// fenok_occ_options_availability.json via writePublicSlimAvailability) and
+// staged by the owning edge lane, not via the generic Update Manifest copy.
+// The previous verbatim cp_file fattened it to 25.5 MiB. Allow the owning
+// lane to stage its own slim marker.
+const LANE_OWNED_PUBLIC_MIRROR_ALLOWLIST = new Map([
+  [
+    ".github/workflows/fenok-edge-daily.yml",
+    new Set(["100xfenok-next/public/data/computed/fenok_occ_options_availability.json"]),
+  ],
+]);
+
 function listDir(dir) {
   try {
     return fs.readdirSync(dir, { withFileTypes: true });
@@ -82,7 +94,16 @@ function laneStagedMirrorPaths() {
     const normalized = src.replace(/\\[ \t]*\r?\n[ \t]*/g, " ");
     for (const line of normalized.split("\n")) {
       const m = line.match(/git\s+add.*?100xfenok-next\/public\/data(?:\/|$)/);
-      if (m) staged.push(`${rel}: ${line.trim()}`);
+      if (!m) continue;
+      const allowSet = LANE_OWNED_PUBLIC_MIRROR_ALLOWLIST.get(rel);
+      if (allowSet) {
+        let isAllowed = false;
+        for (const allowed of allowSet) {
+          if (line.includes(allowed)) { isAllowed = true; break; }
+        }
+        if (isAllowed) continue;
+      }
+      staged.push(`${rel}: ${line.trim()}`);
     }
   }
   return staged;
