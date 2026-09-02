@@ -1,62 +1,35 @@
 {
-  "schema_version": "producer-lkg-key-state/v2",
+  "schema_version": "producer-lkg-key-state/v1",
   "lane_id": "us_indices_daily",
   "key": "nasdaq.json",
-  "updated_at": "2026-09-01T00:56:38.113Z",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "updated_at": "2026-09-02T23:43:53.652Z",
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "current": {
-    "path": "data/indices/nasdaq.json",
+    "path": "data/admin/us-indices-daily/lkg/nasdaq.json",
     "payload_sha256": "bb283e5a50c8106d995d3a73131873f71b4b28e63d22f96021ec00aefcb99fd3",
     "source_as_of": "2026-08-31"
   },
-  "canonical_ref": "data/indices/nasdaq.json",
   "lkg": {
     "path": "data/admin/us-indices-daily/lkg/nasdaq.json",
     "payload_sha256": "bb283e5a50c8106d995d3a73131873f71b4b28e63d22f96021ec00aefcb99fd3",
     "source_as_of": "2026-08-31"
   },
-  "latest_failure": null,
+  "canonical_ref": "data/indices/nasdaq.json",
+  "latest_failure": {
+    "run_id": "33696334752",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-09-02T23:43:53.652Z",
+    "failure_kind": "schema_drift",
+    "error": "Error: Yahoo chart row must have a valid date and finite positive value for ^IXIC"
+  },
   "recovered_from_run_id": "30246526864",
   "recovery_run_id": "30312327287",
   "recovery_run_attempt": 1,
   "recovery_event_name": "schedule",
   "recovered_at": "2026-07-27T22:55:09.730Z",
-  "last_run_id": "33456677231",
+  "last_run_id": "33696334752",
   "last_run_attempt": 1,
-  "last_event_name": "schedule",
-  "promotion_contract": "provider_observation/v2",
-  "promotion_proof_required": true,
-  "provider_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "f2c58249446dded68d56644736505f58553f220e5087b95503cfff1119757e86",
-    "candidate_payload_sha256": "bb283e5a50c8106d995d3a73131873f71b4b28e63d22f96021ec00aefcb99fd3",
-    "payload_ref": "data/admin/us-indices-daily/provider-observations/f2c58249446dded68d56644736505f58553f220e5087b95503cfff1119757e86.json",
-    "source_as_of": "2026-08-31",
-    "run_id": "33456677231",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-09-01T00:56:38.113Z",
-    "recovered_from_run_id": "30246526864"
-  },
-  "recovery_observation": {
-    "schema_version": "provider_observation/v2",
-    "payload_sha256": "9afabf572beaf90fbd03ab7b9abe18cde603971d00e3fbc91984c1278ea34524",
-    "candidate_payload_sha256": "bb2c964a361e8bfb3d1927834eb67e0d96a559a704d000702a2c37c8db1aa928",
-    "payload_ref": "data/admin/us-indices-daily/provider-observations/9afabf572beaf90fbd03ab7b9abe18cde603971d00e3fbc91984c1278ea34524.json",
-    "source_as_of": "2026-07-27",
-    "run_id": "30312327287",
-    "run_attempt": 1,
-    "event_name": "schedule",
-    "observed_at": "2026-07-27T22:55:09.730Z",
-    "recovered_from_run_id": "30246526864"
-  },
-  "last_recovered_failure": {
-    "run_id": "30246526864",
-    "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-07-27T07:33:36.216Z",
-    "failure_kind": "controlled_failure",
-    "error": "controlled_failure"
-  }
+  "last_event_name": "schedule"
 }
