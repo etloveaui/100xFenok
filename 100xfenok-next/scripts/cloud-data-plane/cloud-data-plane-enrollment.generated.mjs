@@ -630,5 +630,4 @@ export const PLANE_ENROLLMENT_PRIVATE_DENY = Object.freeze([
   "/data/computed/fenok_signals.json",
   "/data/computed/fenok_social_attention_proxy.json",
   "/data/computed/fenok_social_attention_proxy_history.json",
-  "/data/computed/sec13f_bridge_index.json",
 ]);
