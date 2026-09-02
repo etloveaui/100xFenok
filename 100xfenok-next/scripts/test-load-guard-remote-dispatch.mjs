@@ -93,6 +93,20 @@ set -eu
 printf local > "$LOCAL_MARKER"
 `);
 for (const name of ["git"]) fs.copyFileSync(path.join(bin, name), path.join(baseBin, name));
+// Ensure awk remains available even when gh/npm are hidden (PATH=baseBin). The
+// guard uses awk to parse ls-remote output before it checks for gh, so a
+// stripped PATH that only hides gh would otherwise make the gh_unavailable
+// case fail as origin_ref_revision_invalid. Copy the system awk into both
+// bins so baseBin can still parse the remote.
+for (const awkPath of ["/usr/bin/awk", "/bin/awk"]) {
+  if (fs.existsSync(awkPath)) {
+    fs.copyFileSync(awkPath, path.join(bin, "awk"));
+    fs.copyFileSync(awkPath, path.join(baseBin, "awk"));
+    try { fs.chmodSync(path.join(bin, "awk"), 0o755); } catch {}
+    try { fs.chmodSync(path.join(baseBin, "awk"), 0o755); } catch {}
+    break;
+  }
+}
 
 function runGuard({ extraEnv = {}, withoutGh = false, withoutNpm = false, command = ["npm", "run", "build:runtime:steps"] } = {}) {
   const inheritedEnv = { ...process.env };
