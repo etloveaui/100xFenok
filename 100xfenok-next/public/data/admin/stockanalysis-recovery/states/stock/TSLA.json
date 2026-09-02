@@ -4,17 +4,6 @@
   "entity": "TSLA",
   "attempts": [
     {
-      "run_id": "31910027994",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 21 * * *",
-      "natural": true,
-      "observed_at": "2026-08-15T21:40:57Z",
-      "outcome": "failed",
-      "controlled": false,
-      "error": "ValueError: financial candidate is required for stock pair: TSLA; ValueError: financial statement missing required fields: ratios dividendyield"
-    },
-    {
       "run_id": "31974093247",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -144,24 +133,34 @@
       "observed_at": "2026-08-29T23:24:21Z",
       "outcome": "fresh",
       "controlled": false
+    },
+    {
+      "run_id": "33591076140",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "schedule": "",
+      "natural": false,
+      "observed_at": "2026-09-02T04:32:53Z",
+      "outcome": "fresh",
+      "controlled": false
     }
   ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/stocks/TSLA.json",
-    "payload_sha256": "b68ad26abbdec6bd5f326d79c7a13092a090bc83827838f138d0e3c92b43e7ca",
-    "source_as_of": "2026-08-28T20:00:00Z",
-    "fetched_at": "2026-08-29T23:24:40Z"
+    "payload_sha256": "a2d1d8d450cb7ac78139c8a59fe9cb009b8f988c02220be93df2fa67a44f4054",
+    "source_as_of": "2026-09-01T20:00:00Z",
+    "fetched_at": "2026-09-02T04:42:09Z"
   },
-  "updated_at": "2026-08-29T23:24:21Z",
+  "updated_at": "2026-09-02T04:32:53Z",
   "last_attempt": {
-    "run_id": "33280832319",
+    "run_id": "33591076140",
     "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "20 21 * * *",
-    "natural": true,
-    "observed_at": "2026-08-29T23:24:21Z",
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "observed_at": "2026-09-02T04:32:53Z",
     "outcome": "fresh",
     "controlled": false
   },
