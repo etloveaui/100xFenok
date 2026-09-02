@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import {
   EXCLUDED_PUBLIC_DATA_FILES,
   EXCLUDED_PUBLIC_DATA_ROOTS,
+  PUBLIC_SAFE_AGGREGATE_FILE_OUTPUTS,
   RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS,
   RESTRICTED_DERIVED_PUBLIC_DATA_FILES,
   deriveRestrictedDerivedPublicDataRoots,
@@ -1120,6 +1121,11 @@ try {
   );
   assert.equal(new Set(EXCLUDED_PUBLIC_DATA_FILES).size, EXCLUDED_PUBLIC_DATA_FILES.length,
     "the exact-file exclusion set must not contain duplicates");
+  assert.deepEqual(
+    PUBLIC_SAFE_AGGREGATE_FILE_OUTPUTS,
+    ["computed/fenok_occ_options_availability.json"],
+    "only the lane-owned slim OCC projection may bypass the generic public mirror",
+  );
   const expectedDerivedExactFiles = [
     DETECTION_FLOOR_REPORT,
     "admin/damodaran-shadow-parity.json",

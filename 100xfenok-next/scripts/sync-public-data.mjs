@@ -25,6 +25,7 @@ import {
 } from "../src/lib/stockanalysis-etf-shard.mjs";
 import {
   DERIVED_ASSET_REGISTRY,
+  derivedLaneOwnedPublicProjectionFiles,
   derivedPrivateFileOutputs,
 } from "../../scripts/lib/derived-asset-registry.mjs";
 import {
@@ -96,18 +97,13 @@ export const RESTRICTED_DERIVED_PUBLIC_DATA_ROOTS = Object.freeze(
   })),
 );
 
-// Public-safe-aggregate file outputs must not be mirrored verbatim via the
-// generic data->public copy. Their public projection is a slim derived
-// artifact (e.g. OCC availability without rows/side_attempts) produced by the
-// dedicated writer. Generic mirroring would leak raw rows and blow the 25 MiB
-// Cloudflare asset limit.
+// Lane-owned public-safe-aggregate projections must not be overwritten by the
+// generic data->public copy. OCC availability is a slim writer artifact with
+// rows/side_attempts removed; KRX and Yahoo aggregates remain sync-owned and
+// must continue through the generic mirror.
 export const PUBLIC_SAFE_AGGREGATE_FILE_OUTPUTS = Object.freeze(
-  DERIVED_ASSET_REGISTRY.assets
-    .filter((asset) => asset.privacy_class === "public_safe_aggregate")
-    .flatMap((asset) => asset.outputs
-      .filter((spec) => spec.kind === "file" && spec.path.startsWith(CANONICAL_DATA_PREFIX))
-      .map((spec) => spec.path.slice(CANONICAL_DATA_PREFIX.length)))
-    .sort(),
+  derivedLaneOwnedPublicProjectionFiles()
+    .map((relativePath) => relativePath.slice(CANONICAL_DATA_PREFIX.length)),
 );
 
 function isPublicSafeAggregateFile(relativePath) {

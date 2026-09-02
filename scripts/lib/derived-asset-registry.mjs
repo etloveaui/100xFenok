@@ -52,6 +52,13 @@ export const DERIVED_PUBLIC_SERVING_STATUSES = Object.freeze([
   "missing_projection",
 ]);
 
+// Public-safe aggregate assets normally reach the mirror through the generic
+// data -> public sync. Only these assets own a distinct public projection that
+// their lane stages directly, so the sync must preserve that writer output.
+export const LANE_OWNED_PUBLIC_PROJECTION_ASSET_IDS = Object.freeze([
+  "fenok_occ_options_availability",
+]);
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_REPO_ROOT = path.resolve(__dirname, "..", "..");
 const ID_RE = /^[a-z][a-z0-9_]{0,95}$/;
@@ -1085,6 +1092,22 @@ export function derivedPrivateFileOutputs(registryValue = DERIVED_ASSET_REGISTRY
       .flatMap((assetValue) => assetValue.outputs
         .filter((spec) => spec.kind === "file" && spec.path.startsWith("data/"))
         .map((spec) => spec.path)),
+  )].sort();
+}
+
+export function derivedLaneOwnedPublicProjectionFiles(registryValue = DERIVED_ASSET_REGISTRY) {
+  validateDerivedAssetRegistry(registryValue);
+  const assetsById = new Map(registryValue.assets.map((assetValue) => [assetValue.id, assetValue]));
+  return [...new Set(
+    LANE_OWNED_PUBLIC_PROJECTION_ASSET_IDS.flatMap((assetId) => {
+      const assetValue = assetsById.get(assetId);
+      if (!assetValue || assetValue.privacy_class !== "public_safe_aggregate") {
+        fail(`lane-owned public projection asset is missing or not public-safe: ${assetId}`);
+      }
+      return assetValue.outputs
+        .filter((spec) => spec.kind === "file" && spec.path.startsWith("data/"))
+        .map((spec) => spec.path);
+    }),
   )].sort();
 }
 
