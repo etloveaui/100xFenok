@@ -288,7 +288,28 @@ function makeRunPaths(root) {
 
 {
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github", "workflows", "fetch-fred-yardeni.yml"), "utf8");
-  assert.match(workflow, /detection-attempts\/fred_yardeni\.json/);
+  // The 2026-08-27 "deduplicate Yardeni staging" refactor (199f672298) moved
+  // this workflow's shard paths out of the YAML hand list and into the
+  // generated lane-commit-manifest.json (scripts/lib/lane-registry.mjs +
+  // stage-lane-manifest.sh), matching the same migration already applied to
+  // the other producer workflows (e.g. fetch-treasury-tga.yml, DEC-305/306).
+  // The workflow body no longer contains the literal shard path, so the
+  // contract check reads the generated manifest instead of grepping the YAML.
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"),
+    "utf8",
+  ));
+  const workflowLanes = manifest.workflows[".github/workflows/fetch-fred-yardeni.yml"];
+  const attemptSpec = workflowLanes?.stages?.always_if_exists
+    ?.find((spec) => spec.path === "data/admin/data-supply-state/detection-attempts/fred_yardeni.json");
+  assert.ok(attemptSpec, "fred_yardeni lane must declare its detection-attempt shard in always_if_exists");
+  const canonicalSpec = workflowLanes?.stages?.success_if_exists
+    ?.find((spec) => spec.path === "data/yardney/yardney_model.json");
+  assert.equal(
+    canonicalSpec?.required,
+    true,
+    "successful Feno Yardeni fetch must require the canonical payload",
+  );
   assert.match(workflow, /- name: Commit and push Feno Yardeni data\n\s+if: \$\{\{ always\(\) \}\}/);
 
   // Durable checkout contract for the R2.4 public mirror guard: the Yardeni
