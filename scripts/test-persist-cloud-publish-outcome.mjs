@@ -38,6 +38,10 @@ function run(command, args, cwd) {
   return result.stdout.trim();
 }
 
+function persistFixtureOutcome(options) {
+  return persistPublishOutcome({ ...options, branch: "main" });
+}
+
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -422,7 +426,7 @@ function jobBlockAt(text, index) {
       }),
     });
 
-    const first = persistPublishOutcome({
+    const first = persistFixtureOutcome({
       family: "oecd-cli",
       workflow: ".github/workflows/fetch-oecd-cli.yml",
       publisherOutcome: "success",
@@ -438,7 +442,7 @@ function jobBlockAt(text, index) {
       "same-run persistence commit must contain only the owned family shard",
     );
 
-    const second = persistPublishOutcome({
+    const second = persistFixtureOutcome({
       family: "oecd-cli",
       workflow: ".github/workflows/fetch-oecd-cli.yml",
       publisherOutcome: "success",
@@ -463,7 +467,7 @@ function jobBlockAt(text, index) {
     const finalSentiment = await readFile(path.join(verify, OUTCOME_ROOT, "sentiment.json"), "utf8");
     assert.equal(finalSentiment, await readFile(path.join(seed, OUTCOME_ROOT, "sentiment.json"), "utf8"));
 
-    const skippedAbsent = persistPublishOutcome({
+    const skippedAbsent = persistFixtureOutcome({
       family: "fred-macro",
       workflow: ".github/workflows/fetch-fred-macro.yml",
       publisherOutcome: "skipped",
@@ -474,7 +478,7 @@ function jobBlockAt(text, index) {
     assert.equal(skippedAbsent.reason, "skipped_absent");
     for (const publisherOutcome of ["success", "failure"]) {
       assert.throws(
-        () => persistPublishOutcome({
+        () => persistFixtureOutcome({
           family: "fred-macro",
           workflow: ".github/workflows/fetch-fred-macro.yml",
           publisherOutcome,
@@ -485,7 +489,7 @@ function jobBlockAt(text, index) {
         /outcome shard is absent/,
       );
     }
-    const skippedUnchanged = persistPublishOutcome({
+    const skippedUnchanged = persistFixtureOutcome({
       family: "oecd-cli",
       workflow: ".github/workflows/fetch-oecd-cli.yml",
       publisherOutcome: "skipped",
@@ -496,7 +500,7 @@ function jobBlockAt(text, index) {
     assert.equal(skippedUnchanged.reason, "skipped_unchanged");
     for (const publisherOutcome of ["success", "failure"]) {
       assert.throws(
-        () => persistPublishOutcome({
+        () => persistFixtureOutcome({
           family: "oecd-cli",
           workflow: ".github/workflows/fetch-oecd-cli.yml",
           publisherOutcome,
@@ -508,7 +512,7 @@ function jobBlockAt(text, index) {
       );
     }
     assert.throws(
-      () => persistPublishOutcome({
+      () => persistFixtureOutcome({
         family: "oecd-cli",
         workflow: ".github/workflows/fetch-oecd-cli.yml",
         repoRoot: verify,
@@ -518,7 +522,7 @@ function jobBlockAt(text, index) {
       /publisherOutcome must be/,
     );
     assert.throws(
-      () => persistPublishOutcome({
+      () => persistFixtureOutcome({
         family: "oecd-cli",
         workflow: ".github/workflows/fetch-oecd-cli.yml",
         publisherOutcome: "cancelled",
@@ -529,7 +533,7 @@ function jobBlockAt(text, index) {
       /publisherOutcome must be/,
     );
     assert.throws(
-      () => persistPublishOutcome({
+      () => persistFixtureOutcome({
         family: "oecd-cli",
         workflow: ".github/workflows/fetch-sentiment.yml",
         publisherOutcome: "success",
@@ -551,7 +555,7 @@ function jobBlockAt(text, index) {
         observedAt: "2026-08-10T03:00:00.000Z",
       }),
     });
-    const persistedAfterPublisherFailure = persistPublishOutcome({
+    const persistedAfterPublisherFailure = persistFixtureOutcome({
       family: "oecd-cli",
       workflow: ".github/workflows/fetch-oecd-cli.yml",
       publisherOutcome: "failure",
@@ -576,7 +580,7 @@ function jobBlockAt(text, index) {
     await writeFile(rejectHook, "#!/usr/bin/env bash\nexit 1\n");
     await chmod(rejectHook, 0o755);
     assert.throws(
-      () => persistPublishOutcome({
+      () => persistFixtureOutcome({
         family: "oecd-cli",
         workflow: ".github/workflows/fetch-oecd-cli.yml",
         publisherOutcome: "success",
@@ -597,7 +601,7 @@ function jobBlockAt(text, index) {
       record: buildPublishOutcomeRecord({ family: "oecd-cli", result: "published", generationId: "generation-unpublished-head" }),
     });
     assert.throws(
-      () => persistPublishOutcome({
+      () => persistFixtureOutcome({
         family: "oecd-cli",
         workflow: ".github/workflows/fetch-oecd-cli.yml",
         publisherOutcome: "success",
@@ -638,7 +642,7 @@ function jobBlockAt(text, index) {
     assert.match(dirtySignalStatus, /^D\s+100xfenok-next\/public\/data\/computed\/signals\.json$/m,
       "coordinator fixture must contain a real tracked deletion");
     assert.throws(
-      () => persistPublishOutcome({
+      () => persistFixtureOutcome({
         family: "computed-signals",
         workflow: COORDINATOR_WORKFLOW,
         publisherOutcome: "success",
@@ -656,7 +660,7 @@ function jobBlockAt(text, index) {
     }
     assert.equal(run("git", ["status", "--short", "--", ...TRACKED_SIGNAL_PATHS], workerCoordinator), "",
       "tracked signal files must be clean before outcome persistence");
-    const coordinatorPersisted = persistPublishOutcome({
+    const coordinatorPersisted = persistFixtureOutcome({
       family: "computed-signals",
       workflow: COORDINATOR_WORKFLOW,
       publisherOutcome: "success",
