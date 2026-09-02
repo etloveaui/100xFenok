@@ -44,8 +44,11 @@ function computedSignalsSourceTriggerExclusions(registry = LANE_REGISTRY) {
     const basename = path.posix.basename(output);
     return `!${basename.includes(".") ? output : `${output}/**`}`;
   }));
+  const canonicalDirectories = lanes.flatMap((lane) => lane.commit_shards
+    .filter((shard) => lane.roots.canonical_outputs.some((output) => output.startsWith(`${shard}/`)))
+    .map((shard) => `!${shard}/**`));
   const admin = lanes.map((lane) => `!${lane.roots.admin_store}/**`);
-  const exclusions = [...canonical, ...admin];
+  const exclusions = [...canonical, ...canonicalDirectories, ...admin];
   if (new Set(exclusions).size !== exclusions.length) fail("computed-signals source trigger exclusions contain duplicates");
   return exclusions;
 }
