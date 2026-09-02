@@ -344,7 +344,6 @@ node scripts/build-phase2-closeout-indexes.mjs
 # workflow do not trigger another workflow, so its own push trigger never fires
 # for these commits and only its daily cron heals the seal.
 node scripts/build-sec13f-bridge-index.mjs
-node scripts/test-sec13f-bridge-index.mjs
 
 # --- S6: Build Fenok stock signals ------------------------------------------
 node scripts/build-fenok-signals.mjs

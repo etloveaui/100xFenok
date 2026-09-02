@@ -103,13 +103,30 @@ on:
       - 'data/metadata/**'
       - '100xfenok-next/public/data/metadata/**'
       - 'scripts/lib/lane-registry.mjs'
+      - 'scripts/regen-pins.mjs'
       - 'scripts/build-lane-commit-manifest.mjs'
+      - 'scripts/build-lane-registry-projection.mjs'
+      - 'scripts/build-cloud-data-plane-enrollment.mjs'
+      - 'scripts/build-fenok-data-health-kpi.mjs'
+      - 'scripts/lib/cloud-data-plane-candidate-scope.mjs'
+      - 'scripts/fixtures/lane-registry/**'
+      - 'scripts/fixtures/derived-asset-registry/**'
+      - 'scripts/fixtures/data_supply/policy_registry/**'
+      - 'scripts/fixtures/cloud-data-plane/**'
+      - 'scripts/fixtures/update-manifest/**'
       - 'data/admin/lane-commit-manifest.json'
+      - 'data/admin/lane-registry-projection.json'
+      - 'data/admin/data-supply-detection-floor.json'
+      - 'data/admin/fenok-data-health-kpi.json'
+      - '100xfenok-next/public/data/admin/lane-registry-projection.json'
+      - '100xfenok-next/public/data/admin/fenok-data-health-kpi.json'
+      - '100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs'
       - 'scripts/persist-cloud-publish-outcome.mjs'
       - 'scripts/lib/publish-outcome-shard.mjs'
       - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - 'scripts/check-public-mirror-coverage.mjs'
       - '100xfenok-next/scripts/sync-public-data.mjs'
+      - '100xfenok-next/scripts/test-sync-public-data.mjs'
       - '100xfenok-next/package.json'
       - '100xfenok-next/scripts/load-guard.sh'
       - '100xfenok-next/scripts/test-load-guard-remote-dispatch.mjs'
@@ -209,13 +226,30 @@ on:
       - 'data/metadata/**'
       - '100xfenok-next/public/data/metadata/**'
       - 'scripts/lib/lane-registry.mjs'
+      - 'scripts/regen-pins.mjs'
       - 'scripts/build-lane-commit-manifest.mjs'
+      - 'scripts/build-lane-registry-projection.mjs'
+      - 'scripts/build-cloud-data-plane-enrollment.mjs'
+      - 'scripts/build-fenok-data-health-kpi.mjs'
+      - 'scripts/lib/cloud-data-plane-candidate-scope.mjs'
+      - 'scripts/fixtures/lane-registry/**'
+      - 'scripts/fixtures/derived-asset-registry/**'
+      - 'scripts/fixtures/data_supply/policy_registry/**'
+      - 'scripts/fixtures/cloud-data-plane/**'
+      - 'scripts/fixtures/update-manifest/**'
       - 'data/admin/lane-commit-manifest.json'
+      - 'data/admin/lane-registry-projection.json'
+      - 'data/admin/data-supply-detection-floor.json'
+      - 'data/admin/fenok-data-health-kpi.json'
+      - '100xfenok-next/public/data/admin/lane-registry-projection.json'
+      - '100xfenok-next/public/data/admin/fenok-data-health-kpi.json'
+      - '100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs'
       - 'scripts/persist-cloud-publish-outcome.mjs'
       - 'scripts/lib/publish-outcome-shard.mjs'
       - 'scripts/test-sync-update-manifest-trigger-paths.mjs'
       - 'scripts/check-public-mirror-coverage.mjs'
       - '100xfenok-next/scripts/sync-public-data.mjs'
+      - '100xfenok-next/scripts/test-sync-public-data.mjs'
       - '100xfenok-next/package.json'
       - '100xfenok-next/scripts/load-guard.sh'
       - '100xfenok-next/scripts/test-load-guard-remote-dispatch.mjs'
@@ -304,17 +338,12 @@ jobs:
 
       - name: Validate Update Manifest policy
         run: |
+          npm --prefix 100xfenok-next run qa:pins
           node scripts/test-update-manifest-runner.mjs
           node scripts/test-update-manifest-workflow.mjs
-          node scripts/test-update-manifest-materializations.mjs
           node scripts/test-update-manifest-central-staging.mjs
           node scripts/test-lane-commit-manifest-parity.mjs
-          node scripts/test-persist-cloud-publish-outcome.mjs
-          node scripts/test-update-manifest-materializations.mjs
           node scripts/test-sec13f-retention-web-contract.mjs
-          # Committed-tree review contract: do not regenerate the bridge here.
-          node scripts/test-sec13f-bridge-index.mjs
-          node scripts/test-build-data-supply-detection-floor.mjs
           node scripts/test-update-manifest-rebuild-policy.mjs
           node scripts/test-update-manifest-dispatch-decoupling.mjs
           node scripts/test-sync-update-manifest-trigger-paths.mjs
