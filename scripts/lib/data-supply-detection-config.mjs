@@ -1087,7 +1087,10 @@ const config = {
         "damodaran_converter",
         exactAssertion("owner_guard_match", "/status", "match"),
         "library",),
-      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 10 }),
+      // FH-20260902-394: per-source freshness not supported — lane window ~400d
+      // covers annual January editions without flagging stale before next January;
+      // ctryprem is semiannual (Jan + ~July) so 400d also tolerates a missed July.
+      freshnessPolicy: freshness({ fold: "latest", unit: "calendar_days", calendar: "utc", maxStaleness: 400 }),
       affectedSurfaceIds: ["market_valuation", "stock_detail", "regime"],
     }),
     lane({

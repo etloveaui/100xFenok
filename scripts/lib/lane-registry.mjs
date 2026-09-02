@@ -1001,7 +1001,12 @@ const lanes = [
     store_kind: "payload",
     lane_class: "detection_floor",
     cadence: {
-      kind: "weekly",
+      kind: "annual",
+      // FH-20260902-394: five Damodaran datasets republish annually in early January;
+      // ctryprem (country ERP workbook) is semiannual — expect January + mid-year
+      // (~July, e.g. ctrypremJuly26.xlsx Last-Mod 10 Jul 2026). Weekly Saturday
+      // probes (17 11,23 * * 6) are retained as cheap drift detection; US
+      // implied ERP is monthly and out-of-scope (not fetched).
       provenance: { kind: "github_workflow", evidence: ".github/workflows/fetch-damodaran-shadow.yml" },
     },
     // First workflow commit: 2026-07-20 00:05:41 +0900.
