@@ -210,11 +210,6 @@ export const PLANE_OUTCOME_UNRECORDED_REASONS = Object.freeze({
     reason:
       "new shadow family declared 2026-08-24 after the latest landed Yahoo cycle; its first eligible publish occurs after the next natural fetch-yf-finance run on cron '20 23 * * 1-5' lands changed finance payloads and confirms origin readback. The anti-rot test requires removing this entry as soon as that first outcome shard exists",
   }),
-  "slickcharts-monthly": Object.freeze({
-    classification: "incident",
-    reason:
-      "GENUINE INCIDENT, reclassified 2026-08-21 by measurement: same shape as oecd-cli and same original error. Its 2026-08-01T09:57:19Z scheduled run was cancelled and its 2026-07-01T11:16:10Z scheduled run failed, so the scheduled path has never completed; the 2026-08-10 run originally cited was a workflow_dispatch",
-  }),
 });
 
 // The alarm used to fail open. Any GitHub API failure marked that workflow
