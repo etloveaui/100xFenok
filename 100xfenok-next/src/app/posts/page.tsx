@@ -126,7 +126,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
     >
       <div className="container mx-auto p-3 sm:p-4 md:p-8">
         <header className="text-center my-8 sm:my-10 md:my-16">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 orbitron mb-3 leading-tight">분석 아카이브</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-3 leading-tight">분석 아카이브</h1>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto">
             시장의 거시적 흐름과 복잡한 현상의 본질을 파헤치는 심층 분석 콘텐츠.
           </p>

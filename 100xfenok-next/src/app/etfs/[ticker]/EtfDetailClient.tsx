@@ -740,7 +740,7 @@ function MetricCard({ label, value, note }: { label: string; value: string; note
   return (
     <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3" data-etf-detail-metric-card="true">
       <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
-      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
+      <p className="mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
       {note && note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-[var(--c-ink-3)]">{note}</p> : null}
     </div>
   );
@@ -761,12 +761,12 @@ function PeerEtfCard({ row, currentSymbol }: { row: DetailEtfUniverseRecord; cur
     <div className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <TransitionLink href={`/etfs/${encodeURIComponent(ticker)}`} className="orbitron text-sm font-black text-[var(--c-ink)] hover:text-brand-interactive">
+          <TransitionLink href={`/etfs/${encodeURIComponent(ticker)}`} className="text-sm font-black text-[var(--c-ink)] hover:text-brand-interactive">
             {ticker}
           </TransitionLink>
           <p className="mt-1 min-w-0 truncate text-xs font-bold leading-snug text-[var(--c-ink-3)]" title={row.name ?? ticker}>{row.name ?? ticker}</p>
         </div>
-        <span className="orbitron tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
+        <span className="tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
           {formatAum(row)}
         </span>
       </div>
@@ -897,7 +897,7 @@ function PerformanceView({ performance }: { performance: EtfPerformance | null }
         return (
           <div key={item.label} className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/70 px-3 py-3">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{item.label}</p>
-            <p className={`orbitron mt-1 text-lg font-black tabular-nums ${tone}`}>{fmtCompactSignedPercent(value)}</p>
+            <p className={` mt-1 text-lg font-black tabular-nums ${tone}`}>{fmtCompactSignedPercent(value)}</p>
             <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">{item.note}</p>
           </div>
         );
@@ -968,17 +968,17 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
             const weightClass = weight !== null && weight < 0 ? "text-[var(--c-down)]" : "text-[var(--c-ink)]";
             return (
               <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-[var(--c-line)] last:border-b-0" data-etf-detail-holding-row="true">
-                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-[var(--c-ink-3)]">{item.rank ?? index + 1}</td>
+                <td className="px-2 py-2 text-right tabular-nums text-[11px] font-bold text-[var(--c-ink-3)]">{item.rank ?? index + 1}</td>
                 <th scope="row" className="px-2 py-2 text-left min-w-0">
                   {item.symbol ? (
-                    <span className="orbitron text-xs font-black text-[var(--c-ink)]">{item.symbol}</span>
+                    <span className="text-xs font-black text-[var(--c-ink)]">{item.symbol}</span>
                   ) : null}
                   <span className="block truncate max-w-[14rem] text-[11px] font-semibold text-[var(--c-ink-3)]" title={item.name ?? undefined}>
                     {item.name ?? "—"}
                   </span>
                 </th>
-                <td className={`px-2 py-2 text-right orbitron tabular-nums text-xs font-black ${weightClass}`}>{fmtPercentPoints(weight)}</td>
-                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-semibold text-[var(--c-ink-3)]">{fmtShares(item.shares)}</td>
+                <td className={`px-2 py-2 text-right  tabular-nums text-xs font-black ${weightClass}`}>{fmtPercentPoints(weight)}</td>
+                <td className="px-2 py-2 text-right tabular-nums text-[11px] font-semibold text-[var(--c-ink-3)]">{fmtShares(item.shares)}</td>
               </tr>
             );
           })}
@@ -1001,7 +1001,7 @@ function WeightedList({ rows, empty }: { rows: WeightedRow[] | null | undefined;
           <div key={`${weightedRowName(row)}-${index}`}>
             <div className="mb-1 flex items-center justify-between gap-3 text-xs">
               <span className="min-w-0 truncate font-bold text-[var(--c-ink)]">{weightedRowName(row)}</span>
-              <span className={`orbitron tabular-nums font-black ${value < 0 ? "text-[var(--c-down)]" : "text-[var(--c-ink)]"}`}>{fmtPercentPoints(value)}</span>
+              <span className={` tabular-nums font-black ${value < 0 ? "text-[var(--c-down)]" : "text-[var(--c-ink)]"}`}>{fmtPercentPoints(value)}</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-[var(--c-surface-2)]">
               <div className={`h-2 rounded-full ${value < 0 ? "bg-[color:var(--c-down)]" : "bg-brand-interactive"}`} style={{ width: `${width}%` }} />
@@ -1247,9 +1247,9 @@ function HistoryView({
               {rows.map((point, index) => (
                 <tr key={`${historyPointDate(point) ?? "row"}-${index}`} className="border-b border-[var(--c-line)] last:border-b-0">
                   <th scope="row" className="px-2 py-2 text-left font-bold text-[var(--c-ink)]">{historyPointDate(point) ?? "—"}</th>
-                  <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-[var(--c-ink)]">{formatCurrency(historyPointClose(point), currency as Currency)}</td>
-                  <td className={`px-2 py-2 text-right orbitron tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]"}`}>{fmtSignedPercentPoints(point.ch)}</td>
-                  <td className="px-2 py-2 text-right orbitron tabular-nums font-semibold text-[var(--c-ink-3)]">{fmtShares(point.v)}</td>
+                  <td className="px-2 py-2 text-right tabular-nums font-black text-[var(--c-ink)]">{formatCurrency(historyPointClose(point), currency as Currency)}</td>
+                  <td className={`px-2 py-2 text-right  tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-[var(--c-down)]" : "text-[var(--c-up)]"}`}>{fmtSignedPercentPoints(point.ch)}</td>
+                  <td className="px-2 py-2 text-right tabular-nums font-semibold text-[var(--c-ink-3)]">{fmtShares(point.v)}</td>
                 </tr>
               ))}
             </tbody>

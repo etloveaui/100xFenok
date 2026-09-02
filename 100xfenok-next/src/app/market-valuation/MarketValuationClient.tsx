@@ -431,7 +431,7 @@ function MacroPulsePanel({ items, fallbackAsOf }: { items: MarketMacroPulse[]; f
                 <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{item.label}</p>
               </div>
               <div className="mt-2 flex min-w-0 items-end gap-1">
-                <span className="orbitron min-w-0 text-2xl font-black tabular-nums text-[var(--c-ink)]">{formatDecimal(item.value, { digits: 1 })}</span>
+                <span className="min-w-0 text-2xl font-black tabular-nums text-[var(--c-ink)]">{formatDecimal(item.value, { digits: 1 })}</span>
                 <span className="pb-1 text-[10px] font-bold uppercase text-[var(--c-ink-3)]">{item.unit}</span>
               </div>
               <p className="mt-1 text-[11px] font-semibold text-[var(--c-ink-3)]">{formatAsOf(item.releaseDate ?? item.period) ?? "—"}</p>
@@ -483,7 +483,7 @@ function BondPulsePanel({ items, fallbackAsOf }: { items: MarketBondPulse[]; fal
                 <span className={cx("h-2 w-2 shrink-0 rounded-full", toneDotClass(item.tone))} />
                 <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
               </div>
-              <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{item.valueLabel}</p>
+              <p className="mt-2 text-2xl font-black tabular-nums text-slate-950">{item.valueLabel}</p>
               <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
               <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
                 <span className="rounded-full border border-[var(--c-line)] bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-2)]">{item.changeLabel}</span>
@@ -511,7 +511,7 @@ function SentimentPulsePanel({ items, fallbackAsOf }: { items: MarketSentimentPu
                 <span className={cx("h-2 w-2 shrink-0 rounded-full", toneDotClass(item.tone))} />
                 <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
               </div>
-              <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{item.valueLabel}</p>
+              <p className="mt-2 text-2xl font-black tabular-nums text-slate-950">{item.valueLabel}</p>
               <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-slate-500">{item.detail}</p>
               <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{formatAsOf(item.date) ?? "—"}</p>
             </div>
@@ -553,7 +553,7 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
                   <div className="flex min-w-0 items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{trend.label}</p>
-                      <p className="orbitron mt-1 text-2xl font-black tabular-nums text-slate-950">{formatInteger(trend.latestValue)}</p>
+                      <p className="mt-1 text-2xl font-black tabular-nums text-slate-950">{formatInteger(trend.latestValue)}</p>
                     </div>
                     <span className="shrink-0 text-right text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{trend.latestDate ?? "—"}</span>
                   </div>
@@ -587,14 +587,14 @@ function MarketStructurePanel({ trends, structures }: { trends: MarketIndexTrend
               {concentration.map((item) => (
                 <div key={item.id} className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
                   <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label} 집중도</p>
-                  <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{formatDecimal(item.top10Weight ?? null, { digits: 1 })}%</p>
+                  <p className="mt-2 text-2xl font-black tabular-nums text-slate-950">{formatDecimal(item.top10Weight ?? null, { digits: 1 })}%</p>
                   <p className="mt-1 text-[11px] font-semibold text-slate-500">상위 3개 {formatDecimal(item.top3Weight ?? null, { digits: 1 })}%</p>
                 </div>
               ))}
               {credit ? (
                 <div className="min-w-0 border-t border-slate-100 px-4 py-3 first:border-t-0 lg:border-t-0">
                   <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">신용 스프레드</p>
-                  <p className="orbitron mt-2 text-2xl font-black tabular-nums text-slate-950">{formatSignedPercent(credit.medianSpread ?? null, { digits: 2 })}</p>
+                  <p className="mt-2 text-2xl font-black tabular-nums text-slate-950">{formatSignedPercent(credit.medianSpread ?? null, { digits: 2 })}</p>
                   <p className="mt-1 text-[11px] font-semibold text-slate-500">{doc.creditRatings?.sourceDate ?? "—"} · 표 {doc.creditRatings?.tableCount ?? 0}개</p>
                 </div>
               ) : null}
@@ -683,7 +683,7 @@ function MomentumCell({ label, value }: { label: string; value: number | null })
   return (
     <div className="rounded-xl border border-[var(--c-line)] bg-white/70 px-3 py-2">
       <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
-      <p className={cx("orbitron mt-1 text-sm font-black tabular-nums", value === null ? "text-[var(--c-line-2)]" : positive ? "text-[var(--c-up)]" : "text-[var(--c-down)]")}>
+      <p className={cx(" mt-1 text-sm font-black tabular-nums", value === null ? "text-[var(--c-line-2)]" : positive ? "text-[var(--c-up)]" : "text-[var(--c-down)]")}>
         {formatSignedPercent(value)}
       </p>
     </div>
@@ -698,7 +698,7 @@ function ValuationRow({ label, metric, band, digits }: { label: string; metric: 
     <div className="rounded-[1rem] border border-[var(--c-line)] bg-white/70 px-3 py-3" data-market-valuation-row={metric}>
       <div className="flex items-baseline justify-between">
         <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">{label}</span>
-        <span className="orbitron text-xl font-black text-[var(--c-ink)]">{formatDecimal(band.current, { digits })}</span>
+        <span className="text-xl font-black text-[var(--c-ink)]">{formatDecimal(band.current, { digits })}</span>
       </div>
       <div className="mt-1 flex items-center justify-between text-[11px] font-bold">
         <span className={cx("inline-flex items-center gap-1", meta.tone)} data-market-valuation-verdict>

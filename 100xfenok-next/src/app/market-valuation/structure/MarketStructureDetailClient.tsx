@@ -75,7 +75,7 @@ function MetricCard({
       data-market-structure-summary-card="true"
     >
       <p className="truncate text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">{label}</p>
-      <p className="orbitron mt-1 text-2xl font-black tabular-nums text-[var(--c-ink)]">
+      <p className="mt-1 text-2xl font-black tabular-nums text-[var(--c-ink)]">
         {value}
       </p>
       <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-4 text-[var(--c-ink-3)]">

@@ -292,7 +292,7 @@ export function YardeniOverlayChartPanel() {
             <p className="truncate text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
               {label}
             </p>
-            <p className="orbitron mt-1 truncate text-xs font-black tabular-nums text-[var(--c-ink)]">
+            <p className="mt-1 truncate text-xs font-black tabular-nums text-[var(--c-ink)]">
               {value}
             </p>
           </div>
@@ -397,7 +397,7 @@ export function PmiActivityChartPanel() {
                     <span className={cx("h-1.5 w-1.5 shrink-0 rounded-full", toneDot(component.tone))} />
                   </div>
                   <div className="mt-1 flex min-w-0 items-baseline justify-between gap-2">
-                    <span className="orbitron text-sm font-black tabular-nums text-[var(--c-ink)]">
+                    <span className="text-sm font-black tabular-nums text-[var(--c-ink)]">
                       {fmtMetric(component.value, 1)}
                     </span>
                     <span

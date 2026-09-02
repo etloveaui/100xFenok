@@ -288,7 +288,7 @@ function renderEstimateCell(
       className="inline-flex min-w-[58px] flex-col items-end gap-0.5 leading-none"
       title={`${FISCAL_PERIOD_LABELS[0]}~${FISCAL_PERIOD_LABELS[2]} 추정치 ${completeness.label}`}
     >
-      <span className={cx("orbitron tabular-nums", valueClass)}>{formatValue(value)}</span>
+      <span className={cx(" tabular-nums", valueClass)}>{formatValue(value)}</span>
       {showGap ? (
         <span className={cx("rounded-full px-1.5 py-[1px] text-[9px] font-black", estimateCompletenessTone(completeness))}>
           {completeness.label}
@@ -540,7 +540,7 @@ function ConnectionPills({ stock, compact = false }: { stock: ScreenerStock; com
   const active = CONNECTION_BADGES.filter((badge) => connection.flags[badge.key]);
   return (
     <span className="flex min-w-0 flex-wrap items-center gap-1" title={connectionTitle(stock)}>
-      <span className="orbitron rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black tabular-nums text-slate-800">
+      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black tabular-nums text-slate-800">
         {connection.count}
       </span>
       {active.slice(0, compact ? 2 : 4).map((badge) => (
@@ -579,7 +579,7 @@ function renderCell(
     case "name":
       return (
         <span className="block min-w-0 max-w-[180px]">
-          <span className="orbitron text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
+          <span className="text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
           <span className="block truncate text-[11px] font-semibold text-[var(--c-ink-3)]" title={stock.name ?? undefined}>
             {stock.name ?? "—"}
           </span>
@@ -754,35 +754,35 @@ function renderCell(
     case "country":
       return <span className="text-xs font-bold text-slate-500">{COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}</span>;
     case "price":
-      return <span className="orbitron tabular-nums text-slate-900">{stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}</span>;
+      return <span className="tabular-nums text-slate-900">{stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}</span>;
     case "marketCap":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtMarketCap(stock.marketCap)}</span>;
+      return <span className="tabular-nums text-slate-700">{fmtMarketCap(stock.marketCap)}</span>;
     case "per":
-      return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock.per, 1)}</span>;
+      return <span className="tabular-nums text-slate-900">{fmtNum(stock.per, 1)}</span>;
     case "pbr":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtNum(stock.pbr, 2)}</span>;
+      return <span className="tabular-nums text-slate-700">{fmtNum(stock.pbr, 2)}</span>;
     case "peg":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtNum(stock.peg, 2)}</span>;
+      return <span className="tabular-nums text-slate-700">{fmtNum(stock.peg, 2)}</span>;
     case "dividendYield":
-      return <span className="orbitron tabular-nums text-slate-600">{fmtYield(stock.dividendYield)}</span>;
+      return <span className="tabular-nums text-slate-600">{fmtYield(stock.dividendYield)}</span>;
     case "return12m":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.return12m))}>{fmtSignedPct(stock.return12m)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.return12m))}>{fmtSignedPct(stock.return12m)}</span>;
     case "roe":
-      return <span className="orbitron tabular-nums text-slate-900">{fmtRoe(stock.roe)}</span>;
+      return <span className="tabular-nums text-slate-900">{fmtRoe(stock.roe)}</span>;
     case "opm":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtOpm(stock.opm)}</span>;
+      return <span className="tabular-nums text-slate-700">{fmtOpm(stock.opm)}</span>;
     case "eps":
-      return <span className="orbitron tabular-nums text-slate-900">{fmtEps(stock.eps)}</span>;
+      return <span className="tabular-nums text-slate-900">{fmtEps(stock.eps)}</span>;
     case "growthRate":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.growthRate))}>{fmtSignedPct(stock.growthRate)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.growthRate))}>{fmtSignedPct(stock.growthRate)}</span>;
     case "momentum1m":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum1m))}>{fmtSignedPct(stock.momentum1m)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.momentum1m))}>{fmtSignedPct(stock.momentum1m)}</span>;
     case "momentum3m":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum3m))}>{fmtSignedPct(stock.momentum3m)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.momentum3m))}>{fmtSignedPct(stock.momentum3m)}</span>;
     case "momentum6m":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum6m))}>{fmtSignedPct(stock.momentum6m)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.momentum6m))}>{fmtSignedPct(stock.momentum6m)}</span>;
     case "momentum12m":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.momentum12m))}>{fmtSignedPct(stock.momentum12m)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.momentum12m))}>{fmtSignedPct(stock.momentum12m)}</span>;
     case "roeFy1":
     case "roeFy2":
     case "roeFy3":
@@ -797,20 +797,20 @@ function renderCell(
       return renderEstimateCell(stock, key, (value) => (value === null ? "—" : `${value.toFixed(1)}%`), "text-slate-700");
     case "guruHolders":
       return guruHoldersCount(stock) !== null ? (
-        <span className="orbitron tabular-nums font-bold text-violet-700">{guruHoldersCount(stock)}</span>
+        <span className="tabular-nums font-bold text-violet-700">{guruHoldersCount(stock)}</span>
       ) : (
         <span className="text-slate-300">—</span>
       );
     case "connectionCount":
       return <ConnectionPills stock={stock} />;
     case "rank":
-      return <span className="orbitron tabular-nums text-slate-600">{fmtRank(stock.rank)}</span>;
+      return <span className="tabular-nums text-slate-600">{fmtRank(stock.rank)}</span>;
     case "perBandCurrent":
       return <PerBandBar current={stock.perBandCurrent} min={stock.perBandMin} avg={stock.perBandAvg} max={stock.perBandMax} />;
     case "peForward":
-      return <span className="orbitron tabular-nums text-slate-900">{fmtNum(stock.peForward, 1)}</span>;
+      return <span className="tabular-nums text-slate-900">{fmtNum(stock.peForward, 1)}</span>;
     case "epsForward":
-      return <span className="orbitron tabular-nums text-slate-700">{fmtEps(stock.epsForward)}</span>;
+      return <span className="tabular-nums text-slate-700">{fmtEps(stock.epsForward)}</span>;
     case "forwardPeFy1":
     case "forwardPeFy2":
     case "forwardPeFy3":
@@ -827,13 +827,13 @@ function renderCell(
     case "epsGrowthFy3":
       return renderEstimateCell(stock, key, fmtSignedPctPoint, cx("font-black", getMomentumClass(stock[key] ?? null)));
     case "dividendTtm":
-      return <span className="orbitron tabular-nums text-slate-600">{stock.dividendTtm === null ? "—" : `$${stock.dividendTtm.toFixed(2)}`}</span>;
+      return <span className="tabular-nums text-slate-600">{stock.dividendTtm === null ? "—" : `$${stock.dividendTtm.toFixed(2)}`}</span>;
     case "ret1y":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.ret1y))}>{fmtSignedPct(stock.ret1y)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.ret1y))}>{fmtSignedPct(stock.ret1y)}</span>;
     case "ret3y":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.ret3y))}>{fmtSignedPct(stock.ret3y)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.ret3y))}>{fmtSignedPct(stock.ret3y)}</span>;
     case "ret5y":
-      return <span className={cx("orbitron font-black tabular-nums", getMomentumClass(stock.ret5y))}>{fmtSignedPct(stock.ret5y)}</span>;
+      return <span className={cx(" font-black tabular-nums", getMomentumClass(stock.ret5y))}>{fmtSignedPct(stock.ret5y)}</span>;
     default:
       return "—";
   }
@@ -852,7 +852,7 @@ function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: C
       const pct = bandPct(safeCurrent, safeMin, safeMax);
       const label = bandLabel(pct);
       return (
-        <span className="orbitron font-black tabular-nums text-slate-800 text-[10px] truncate">
+        <span className="font-black tabular-nums text-slate-800 text-[10px] truncate">
           {safeCurrent.toFixed(1)}x ({label} {Math.round(pct * 100)}%)
         </span>
       );
@@ -975,7 +975,7 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
                       return (
                         <span
                           key={`${section.title}-${row.label}-${ESTIMATE_PERIOD_LABELS[index]}`}
-                          className={cx("orbitron min-w-0 truncate text-right text-[11px] font-black tabular-nums", trendValueClass(value, row.tone))}
+                          className={cx(" min-w-0 truncate text-right text-[11px] font-black tabular-nums", trendValueClass(value, row.tone))}
                           title={`${row.label} ${ESTIMATE_PERIOD_LABELS[index]} ${row.formatValue(value)}`}
                         >
                           {row.formatValue(value)}
@@ -1138,13 +1138,13 @@ function MobileStockCard({
           ) : null}
         </div>
         <div onClick={onToggle} className="shrink-0 cursor-pointer text-right">
-          <span className="orbitron block text-sm font-black tabular-nums text-slate-950">
+          <span className="block text-sm font-black tabular-nums text-slate-950">
             {stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}
           </span>
-          <span className="orbitron mt-1 block text-[11px] font-black tabular-nums text-slate-500">
+          <span className="mt-1 block text-[11px] font-black tabular-nums text-slate-500">
             {fmtMarketCap(stock.marketCap)}
           </span>
-          <span className={cx("orbitron mt-1 block text-[11px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
+          <span className={cx(" mt-1 block text-[11px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
             {fmtSignedPct(stock.return12m)}
           </span>
         </div>
@@ -1253,7 +1253,7 @@ function DesktopStockCard({
         </button>
         <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <span className="orbitron text-lg font-black text-slate-950">{stock.ticker}</span>
+            <span className="text-lg font-black text-slate-950">{stock.ticker}</span>
             <GuruHolderBadge stock={stock} compact />
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
               {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
@@ -1272,13 +1272,13 @@ function DesktopStockCard({
           </span>
         </button>
         <button type="button" onClick={onToggle} className="shrink-0 text-right">
-          <span className="orbitron block text-base font-black tabular-nums text-slate-950">
+          <span className="block text-base font-black tabular-nums text-slate-950">
             {stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}
           </span>
-          <span className="orbitron mt-1 block text-[11px] font-black tabular-nums text-slate-500">
+          <span className="mt-1 block text-[11px] font-black tabular-nums text-slate-500">
             {fmtMarketCap(stock.marketCap)}
           </span>
-          <span className={cx("orbitron mt-1 block text-[11px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
+          <span className={cx(" mt-1 block text-[11px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
             {fmtSignedPct(stock.return12m)}
           </span>
         </button>
@@ -2913,7 +2913,7 @@ export default function ScreenerClient({
             ) : null}
             <div className="cp-screener-filter-summary">
               <span>
-                <strong className="orbitron">{sorted.length.toLocaleString()}</strong>개 종목
+                <strong className="">{sorted.length.toLocaleString()}</strong>개 종목
               </span>
               {hasFilters ? (
                 <button type="button" onClick={resetFilters} className="cp-button cp-screener-reset-button" data-variant="ghost" data-density="compact">
@@ -3402,7 +3402,7 @@ export default function ScreenerClient({
           <div />
           <div className="flex items-center gap-3">
             <span className="text-sm font-bold text-[var(--c-ink-3)]">
-              <strong className="orbitron text-[var(--c-ink)]">{sorted.length.toLocaleString()}</strong>개 종목
+              <strong className="text-[var(--c-ink)]">{sorted.length.toLocaleString()}</strong>개 종목
             </span>
             {hasFilters ? (
               <button
@@ -3719,7 +3719,7 @@ export default function ScreenerClient({
             >
               이전
             </button>
-            <span className={canvasPlusPreview ? "cp-screener-page-status" : "orbitron text-xs font-bold tabular-nums text-[var(--c-ink-3)]"}>
+            <span className={canvasPlusPreview ? "cp-screener-page-status" : " text-xs font-bold tabular-nums text-[var(--c-ink-3)]"}>
               {safePage + 1} / {pageCount}
             </span>
             <button

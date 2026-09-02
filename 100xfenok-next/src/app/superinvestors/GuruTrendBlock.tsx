@@ -153,7 +153,7 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
             ) : null}
           </p>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="orbitron text-sm font-black text-slate-900">{formatCurrencyCompact(latestSnap.aum, "USD")}</span>
+            <span className="text-sm font-black text-slate-900">{formatCurrencyCompact(latestSnap.aum, "USD")}</span>
             <span className="text-[10px] font-bold text-slate-500">{latestSnap.quarter}</span>
           </div>
           <div className="mt-0.5 flex gap-3 text-[10px] font-bold text-slate-500">

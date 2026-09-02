@@ -8,11 +8,11 @@ export default function NotFound() {
       <div className="text-center max-w-lg w-full">
         {/* Animated 404 Number */}
         <div className="relative mb-8">
-          <div className="text-[120px] sm:text-[180px] font-black text-slate-100 leading-none select-none orbitron">
+          <div className="text-[120px] sm:text-[180px] font-black text-slate-100 leading-none select-none">
             404
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-6xl sm:text-8xl font-black orbitron bg-gradient-to-br from-brand-navy to-brand-interactive bg-clip-text text-transparent">
+            <span className="text-6xl sm:text-8xl font-black bg-gradient-to-br from-brand-navy to-brand-interactive bg-clip-text text-transparent">
               404
             </span>
           </div>
@@ -26,7 +26,7 @@ export default function NotFound() {
         </div>
 
         {/* Message */}
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-3 orbitron">
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-3">
           Page Not Found
         </h1>
         <p className="text-slate-500 mb-8 text-base sm:text-lg leading-relaxed">
@@ -67,7 +67,7 @@ export default function NotFound() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-navy to-brand-interactive flex items-center justify-center text-white text-xs font-bold">
               100x
             </div>
-            <span className="font-bold orbitron text-slate-700 group-hover:text-brand-navy transition-colors">
+            <span className="font-bold text-slate-700 group-hover:text-brand-navy transition-colors">
               FENOK
             </span>
           </Link>

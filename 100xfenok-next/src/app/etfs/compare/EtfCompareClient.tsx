@@ -74,7 +74,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareClientRow }) {
         className="rounded-xl border border-red-200 bg-red-50 px-3 py-3"
         data-etf-compare-shard-infrastructure-state="unavailable"
       >
-        <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="orbitron text-sm text-red-900" />
+        <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="text-sm text-red-900" />
         <p className="mt-2 text-xs font-black text-red-900">ETF 상세 저장소를 확인할 수 없습니다.</p>
         <p className="mt-1 text-[10px] font-semibold text-red-800">이 종목을 누락이나 빈 데이터로 바꾸지 않고 일시 장애로 표시합니다.</p>
       </div>
@@ -96,11 +96,11 @@ function CompareSummaryCard({ row }: { row: EtfCompareClientRow }) {
     <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3" data-etf-compare-summary-card="true">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
-          <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="orbitron text-sm text-[var(--c-ink)]" />
+          <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="text-sm text-[var(--c-ink)]" />
           <p className="mt-1 min-w-0 truncate text-xs font-bold leading-snug text-[var(--c-ink-3)]" title={name}>{name}</p>
           <p className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">{holdingsDate === "—" ? "기준일 미확인" : `기준 ${holdingsDate}`}</p>
         </div>
-        <span className="orbitron tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
+        <span className="tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
           {fmtSigned(performance.tr1y)}
         </span>
       </div>
@@ -126,7 +126,7 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
     <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3" data-etf-compare-overlap-card="true">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="orbitron text-sm font-black text-[var(--c-ink)]">
+          <p className="text-sm font-black text-[var(--c-ink)]">
             <TickerChip ticker={pair.left.ticker} href={`/etfs/${encodeURIComponent(pair.left.ticker)}`} variant="inline" className="text-[var(--c-ink)]" />
             {" / "}
             <TickerChip ticker={pair.right.ticker} href={`/etfs/${encodeURIComponent(pair.right.ticker)}`} variant="inline" className="text-[var(--c-ink)]" />
@@ -134,7 +134,7 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
           <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">상위 25개 보유 항목 기준</p>
         </div>
         <div className="text-right">
-          <p className="orbitron tabular-nums text-lg font-black text-[var(--c-ink)]">{fmtPercent(pair.overlapWeight)}</p>
+          <p className="tabular-nums text-lg font-black text-[var(--c-ink)]">{fmtPercent(pair.overlapWeight)}</p>
           <p className="text-[10px] font-bold text-[var(--c-ink-3)]">최소 비중 합계</p>
         </div>
       </div>
@@ -154,8 +154,8 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
                   <th scope="row" className="px-2 py-2 text-left font-bold text-[var(--c-ink)]">
                     {item.symbol !== "—" ? `${item.symbol} · ` : ""}{item.name}
                   </th>
-                  <td className="px-2 py-2 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">{fmtPercent(item.leftWeight)}</td>
-                  <td className="px-2 py-2 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">{fmtPercent(item.rightWeight)}</td>
+                  <td className="px-2 py-2 text-right font-black tabular-nums text-[var(--c-ink)]">{fmtPercent(item.leftWeight)}</td>
+                  <td className="px-2 py-2 text-right font-black tabular-nums text-[var(--c-ink)]">{fmtPercent(item.rightWeight)}</td>
                 </tr>
               ))}
             </tbody>

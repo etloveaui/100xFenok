@@ -15,7 +15,7 @@ export default function SentimentGauge({ fearGreedScore, fearGreedLabel }: Senti
 
   return (
     <div className="bento-card p-4">
-      <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">Sentiment</h3>
+      <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2">Sentiment</h3>
       <div className="flex items-center gap-3">
         <div className="relative w-16 h-8">
           <svg viewBox="0 0 100 50" className="w-full h-full" aria-hidden="true">
@@ -38,7 +38,7 @@ export default function SentimentGauge({ fearGreedScore, fearGreedLabel }: Senti
             />
           </svg>
         </div>
-        <span className="text-2xl font-bold text-brand-navy orbitron">{Math.round(fearGreedScore)}</span>
+        <span className="text-2xl font-bold text-brand-navy">{Math.round(fearGreedScore)}</span>
         <span className={`px-2 py-0.5 rounded-full font-bold text-xs ${fearGreedBadgeClass}`}>{fearGreedLabel}</span>
       </div>
       <p className="mt-3 text-sm text-slate-600">

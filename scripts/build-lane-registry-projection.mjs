@@ -582,7 +582,7 @@ export function projectLane(lane, providerRecords = LANE_REGISTRY.providers, con
 
 export function buildLaneRegistryProjection(registry = LANE_REGISTRY, options = {}) {
   const context = createProjectionContext(options);
-  return {
+  const projection = {
     schema_version: PROJECTION_SCHEMA,
     generated_at: context.now,
     source_schema_version: registry.schema_version,
@@ -591,6 +591,17 @@ export function buildLaneRegistryProjection(registry = LANE_REGISTRY, options = 
     lane_count: registry.lanes.length,
     lanes: registry.lanes.map((lane) => projectLane(lane, registry.providers, context)),
   };
+  // Semantic guard: generated_at must not precede any embedded observation timestamp
+  const genEpoch = Date.parse(projection.generated_at);
+  for (const lane of projection.lanes) {
+    const observed = lane.control_room_state?.latest_attempt?.observed_at;
+    if (observed && Date.parse(observed) > genEpoch) {
+      throw new Error(
+        `generated_at ${projection.generated_at} precedes ${lane.id} observed_at ${observed}`,
+      );
+    }
+  }
+  return projection;
 }
 
 export function emitLaneRegistryProjection({

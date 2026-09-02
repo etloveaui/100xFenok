@@ -13,6 +13,7 @@ import {
 } from "./build-lane-commit-manifest.mjs";
 import {
   DEFAULT_PROJECTION_OUTPUT_PATHS,
+  buildLaneRegistryProjection,
   emitLaneRegistryProjection,
 } from "./build-lane-registry-projection.mjs";
 import {
@@ -64,11 +65,22 @@ function writeDigestFixture(sourcePath, outputPath, field, value) {
 }
 
 function projectionNow() {
+  const fresh = new Date().toISOString();
+  let old = null;
   try {
     const current = JSON.parse(fs.readFileSync(DEFAULT_PROJECTION_OUTPUT_PATHS[0], "utf8"));
-    if (typeof current.generated_at === "string") return current.generated_at;
+    if (typeof current.generated_at === "string" && !Number.isNaN(Date.parse(current.generated_at))) {
+      old = current.generated_at;
+    }
   } catch {}
-  return new Date().toISOString();
+  if (!old) return fresh;
+  try {
+    buildLaneRegistryProjection(undefined, { now: old });
+    return old;
+  } catch (error) {
+    if (error?.message?.includes("precedes")) return fresh;
+    throw error;
+  }
 }
 
 function tempPath(tempRoot, canonicalPath) {

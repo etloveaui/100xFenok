@@ -74,11 +74,11 @@ export default function PerBandBar({ current, min, avg, max }: PerBandBarProps) 
           )}
         </div>
 
-        <span className="orbitron shrink-0 tabular-nums text-[9px] font-black text-[var(--c-ink-2)]">
+        <span className="shrink-0 tabular-nums text-[9px] font-black text-[var(--c-ink-2)]">
           현재 {safeCurrent.toFixed(1)}x
         </span>
 
-        <span className={cx("orbitron shrink-0 tabular-nums rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide", badgeClass)}>
+        <span className={cx(" shrink-0 tabular-nums rounded px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide", badgeClass)}>
           {label} {Math.round(pct * 100)}%
         </span>
       </div>

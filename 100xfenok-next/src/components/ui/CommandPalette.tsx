@@ -78,7 +78,21 @@ export function CommandPalette({ items = DEFAULT_ITEMS, onSelect }: { items?: It
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "?" && !open) { e.preventDefault(); setShowHelp((v) => !v); return; }
+      const target = e.target as HTMLElement | null;
+      const isEditable =
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (target?.isContentEditable ?? false);
+      if (e.key === "?" && !isEditable) {
+        e.preventDefault();
+        if (!open) {
+          setOpen(true);
+          setShowHelp(true);
+        } else {
+          setShowHelp((v) => !v);
+        }
+        return;
+      }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setOpen((v) => !v); return; }
       if (e.key.length === 1 && e.key.charCodeAt(0) === 47 && !open && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
         e.preventDefault(); setOpen(true); return;
@@ -92,6 +106,15 @@ export function CommandPalette({ items = DEFAULT_ITEMS, onSelect }: { items?: It
   React.useEffect(() => {
     if (!open) return;
     const onJK = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isEditable =
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (target?.isContentEditable ?? false);
+      if (isEditable) {
+        if (e.key === "j" || e.key === "k" || e.key === "ArrowDown" || e.key === "ArrowUp") return;
+        if (e.key.length === 1) return;
+      }
       if (e.key === "j" || e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, flat.length - 1)); }
       if (e.key === "k" || e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
       if (e.key === "Enter" && flat[active]) {

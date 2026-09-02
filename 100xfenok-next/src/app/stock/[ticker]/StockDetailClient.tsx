@@ -1243,14 +1243,14 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
                     ) : null}
                   </td>
                   {row.actuals!.map((v, i) => (
-                    <td key={i} className="px-2 py-1.5 text-right orbitron tabular-nums font-semibold text-slate-900">{isFiniteNumber(v) ? row.fmt(v) : "—"}</td>
+                    <td key={i} className="px-2 py-1.5 text-right tabular-nums font-semibold text-slate-900">{isFiniteNumber(v) ? row.fmt(v) : "—"}</td>
                   ))}
                   {estKeys.map((k) => (
                     <td
                       key={k}
                       data-stock-financial-estimate-column="cell"
                       data-stock-financial-estimate-key={k}
-                      className="border-l border-dashed border-slate-100 bg-sky-50/60 px-2 py-1.5 text-right orbitron tabular-nums font-semibold text-slate-600"
+                      className="border-l border-dashed border-slate-100 bg-sky-50/60 px-2 py-1.5 text-right tabular-nums font-semibold text-slate-600"
                     >
                       {isFiniteNumber(row.estimates?.[k]) ? row.fmt(row.estimates![k] as number) : "—"}
                     </td>
@@ -1344,17 +1344,17 @@ function DividendPanel({
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
         <div data-stock-dividend-metric="yield" className="rounded-md border border-slate-200 bg-white px-3 py-2">
           <p className="text-[10px] font-bold text-slate-500">배당수익률</p>
-          <p className="orbitron tabular-nums text-sm font-black text-slate-900">{dividendYield !== null ? `${dividendYield.toFixed(2)}%` : "—"}</p>
+          <p className="tabular-nums text-sm font-black text-slate-900">{dividendYield !== null ? `${dividendYield.toFixed(2)}%` : "—"}</p>
           <p className="mt-1 text-[10px] font-semibold text-slate-500">Yahoo Finance 기준</p>
         </div>
         <div data-stock-dividend-metric="payout" className="rounded-md border border-slate-200 bg-white px-3 py-2">
           <p className="text-[10px] font-bold text-slate-500">배당성향</p>
-          <p className="orbitron tabular-nums text-sm font-black text-slate-900">{payoutRatio !== null ? `${(payoutRatio * 100).toFixed(1)}%` : "—"}</p>
+          <p className="tabular-nums text-sm font-black text-slate-900">{payoutRatio !== null ? `${(payoutRatio * 100).toFixed(1)}%` : "—"}</p>
           <p className="mt-1 text-[10px] font-semibold text-slate-500">순이익 대비 지급 비율</p>
         </div>
         <div data-stock-dividend-metric="history" className="rounded-md border border-slate-200 bg-white px-3 py-2">
           <p className="text-[10px] font-bold text-slate-500">배당 이력</p>
-          <p className="orbitron tabular-nums text-sm font-black text-slate-900">{historyValue}</p>
+          <p className="tabular-nums text-sm font-black text-slate-900">{historyValue}</p>
           <p className="mt-1 text-[10px] font-semibold text-slate-500">{historyNote}</p>
         </div>
       </div>
@@ -1411,7 +1411,7 @@ function StockEstimatesPanel({
         {consensusCards.map((card) => (
           <div key={card.label} data-stock-estimates-consensus-card className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{card.label}</p>
-            <p className="orbitron mt-1 text-base font-black tabular-nums text-slate-950">{card.value}</p>
+            <p className="mt-1 text-base font-black tabular-nums text-slate-950">{card.value}</p>
             <p className="mt-1 text-[10px] font-semibold text-slate-500">{card.note}</p>
           </div>
         ))}
@@ -1556,7 +1556,7 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
                       {isFiniteNumber(trade.rank) ? `#${trade.rank}` : "rank —"}
                     </span>
                   </div>
-                  <p className="mt-1 orbitron text-base font-black tabular-nums text-slate-950">{tradeAmount(trade.amount)}</p>
+                  <p className="mt-1 text-base font-black tabular-nums text-slate-950">{tradeAmount(trade.amount)}</p>
                   <p className="mt-1 text-[10px] font-bold text-slate-600">
                     {countLabel} {isFiniteNumber(trade.investors_count) ? `${trade.investors_count}명` : "—"}
                     {isFiniteNumber(eventCount) && eventCount > 0 ? ` · ${eventLabel} ${eventCount}명` : ""}
@@ -1598,10 +1598,10 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
                       <span className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">포트폴리오</span>
                     </TransitionLink>
                   </td>
-                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-900">
+                  <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-900">
                     {h.shares > 0 ? h.shares.toLocaleString() : "—"}
                   </td>
-                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-700">
+                  <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-700">
                     {h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—"}
                   </td>
                   <td data-smart-money-report-date-cell className="px-2 py-1.5 text-right text-[10px] font-black text-slate-500">
@@ -1640,7 +1640,7 @@ function MetricWithSpark({ label, value, data, estimates, color, years, benchmar
     <div className="rounded-xl border border-slate-200 p-3">
       <div className="flex items-center justify-between">
         <MetricHelp label={label} className="text-[10px] font-bold text-slate-500" />
-        <span className="orbitron tabular-nums text-sm font-black text-slate-900">{value}</span>
+        <span className="tabular-nums text-sm font-black text-slate-900">{value}</span>
       </div>
       {finiteValues(data).length >= 2 ? <div className="mt-1"><Sparkline data={data} color={color} years={years} estimates={estimates ?? undefined} formatValue={formatValue} /></div> : null}
       {(showEstimateCompleteness || isFiniteNumber(nextEstimate) || benchValue !== null) ? (
@@ -3726,7 +3726,7 @@ export default function StockDetailClient({
                                 <div className="relative h-3 flex-1 rounded-full bg-slate-100">
                                   <div className={`absolute top-0 h-3 rounded-full ${barColor}`} style={{ left: `${pct}%`, width: "3px", transform: "translateX(-1.5px)" }} />
                                 </div>
-                                <span className={`w-14 text-xs orbitron tabular-nums font-bold ${textColor}`}>{v.toFixed(1)}</span>
+                                <span className={`w-14 text-xs  tabular-nums font-bold ${textColor}`}>{v.toFixed(1)}</span>
                               </div>
                             );
                           })}
@@ -4204,7 +4204,7 @@ function FinancialCandidatePanel({
         {metrics.map((metric) => (
           <div key={metric.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{metric.label}</p>
-            <p className="orbitron mt-1 min-w-0 break-words text-sm font-black tabular-nums text-slate-950">{metric.value}</p>
+            <p className="mt-1 min-w-0 break-words text-sm font-black tabular-nums text-slate-950">{metric.value}</p>
           </div>
         ))}
       </div>
@@ -4216,7 +4216,7 @@ function FinancialCandidatePanel({
               {Object.entries(group.data).map(([key, info]) => (
                 <div key={`${group.label}-${key}`} className="rounded-md bg-slate-50 px-2 py-2">
                   <p className="text-[10px] font-bold text-slate-500">{financialStatementLabel(key)}</p>
-                  <p className="orbitron mt-0.5 text-xs font-black tabular-nums text-slate-900">
+                  <p className="mt-0.5 text-xs font-black tabular-nums text-slate-900">
                     {fmtCandidateCount(info?.field_count)}개 항목
                   </p>
                   <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
@@ -4352,7 +4352,7 @@ function EtfDataPanel({
           {cards.map((card) => (
             <div key={`${card.label}-${card.value}`} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
               <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{card.label}</p>
-              <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{card.value}</p>
+              <p className="mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{card.value}</p>
               {card.note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-500">{card.note}</p> : null}
             </div>
           ))}
@@ -4426,11 +4426,11 @@ function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHo
             const weightClass = weight !== null && weight < 0 ? "text-rose-600" : "text-slate-900";
             return (
               <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-slate-100 last:border-b-0">
-                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-bold text-slate-500">{item.rank ?? index + 1}</td>
+                <td className="px-2 py-2 text-right tabular-nums text-[11px] font-bold text-slate-500">{item.rank ?? index + 1}</td>
                 <td className="px-2 py-2 font-bold text-slate-800">{item.name ?? "—"}</td>
-                <td className="px-2 py-2 orbitron tabular-nums text-[11px] font-black text-slate-500">{item.symbol ?? "—"}</td>
-                <td className={`px-2 py-2 text-right orbitron tabular-nums text-xs font-black ${weightClass}`}>{fmtEtfPct(weight)}</td>
-                <td className="px-2 py-2 text-right orbitron tabular-nums text-[11px] font-semibold text-slate-600">{fmtShares(item.shares)}</td>
+                <td className="px-2 py-2 tabular-nums text-[11px] font-black text-slate-500">{item.symbol ?? "—"}</td>
+                <td className={`px-2 py-2 text-right  tabular-nums text-xs font-black ${weightClass}`}>{fmtEtfPct(weight)}</td>
+                <td className="px-2 py-2 text-right tabular-nums text-[11px] font-semibold text-slate-600">{fmtShares(item.shares)}</td>
               </tr>
             );
           })}
@@ -4474,7 +4474,7 @@ function EtfWeightedList({ rows, empty }: { rows: StockanalysisWeightedRow[] | n
           <div key={`${weightedRowName(row)}-${index}`}>
             <div className="mb-1 flex items-center justify-between gap-3 text-xs">
               <span className="min-w-0 truncate font-bold text-slate-700">{weightedRowName(row)}</span>
-              <span className={`orbitron tabular-nums font-black ${value < 0 ? "text-rose-600" : "text-slate-900"}`}>{fmtEtfPct(value)}</span>
+              <span className={` tabular-nums font-black ${value < 0 ? "text-rose-600" : "text-slate-900"}`}>{fmtEtfPct(value)}</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-slate-100">
               <div className={`h-2 rounded-full ${value < 0 ? "bg-rose-400" : "bg-brand-interactive"}`} style={{ width: `${width}%` }} />
@@ -4533,9 +4533,9 @@ function EtfHistoryView({ history, currency }: { history: StockanalysisHistoryPo
             {rows.map((point, index) => (
               <tr key={`${point.t ?? "row"}-${index}`} className="border-b border-slate-100 last:border-b-0">
                 <td className="px-2 py-2 font-bold text-slate-700">{point.t ?? "—"}</td>
-                <td className="px-2 py-2 text-right orbitron tabular-nums font-black text-slate-900">{formatMoney(point.c, currency)}</td>
-                <td className={`px-2 py-2 text-right orbitron tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-rose-600" : "text-emerald-600"}`}>{fmtEtfSignedPct(point.ch)}</td>
-                <td className="px-2 py-2 text-right orbitron tabular-nums font-semibold text-slate-500">{fmtShares(point.v)}</td>
+                <td className="px-2 py-2 text-right tabular-nums font-black text-slate-900">{formatMoney(point.c, currency)}</td>
+                <td className={`px-2 py-2 text-right  tabular-nums font-black ${isFiniteNumber(point.ch) && point.ch < 0 ? "text-rose-600" : "text-emerald-600"}`}>{fmtEtfSignedPct(point.ch)}</td>
+                <td className="px-2 py-2 text-right tabular-nums font-semibold text-slate-500">{fmtShares(point.v)}</td>
               </tr>
             ))}
           </tbody>

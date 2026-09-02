@@ -166,14 +166,14 @@ export default function YardeniCard() {
       <div className="mt-2 flex flex-wrap items-baseline gap-3 text-[11px] font-bold text-[var(--c-ink-3)]">
         <span>
           S&P 500{" "}
-          <span className="orbitron font-black text-[var(--c-ink)]">
+          <span className="font-black text-[var(--c-ink)]">
             {fmtIndex(active.spx)}
           </span>
         </span>
         <span className="text-[var(--c-line-2)]">vs</span>
         <span>
           적정가{" "}
-          <span className="orbitron font-black text-[var(--c-ink)]">
+          <span className="font-black text-[var(--c-ink)]">
             {fmtIndex(active.fair_value)}
           </span>
         </span>
@@ -249,7 +249,7 @@ export default function YardeniCard() {
             ].map(([label, value]) => (
               <div key={label} className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
                 <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
-                <p className="orbitron mt-1 text-xs font-black tabular-nums text-[var(--c-ink-2)]">{value}</p>
+                <p className="mt-1 text-xs font-black tabular-nums text-[var(--c-ink-2)]">{value}</p>
               </div>
             ))}
           </div>

@@ -14,7 +14,7 @@ export default function RiskAppetiteCard({ vixValue, vixLabel, putCallValue, put
     <article className="overview-widget-card overview-widget-card--sentiment">
       <header className="overview-widget-head">
         <div>
-          <p className="overview-widget-kicker orbitron">투자 심리</p>
+          <p className="overview-widget-kicker">투자 심리</p>
           <h3 className="overview-widget-subtitle">Risk Appetite</h3>
           <p className="overview-source-meta">변동성과 옵션, 암호화폐 심리를 함께 봅니다.</p>
         </div>

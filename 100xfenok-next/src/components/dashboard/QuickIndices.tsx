@@ -15,7 +15,7 @@ export default function QuickIndices({ quickIndices, tenYearYield, hySpread }: Q
 
   return (
     <div className="bento-card p-4 quick-indices-card">
-      <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2 orbitron">Quick Indices</h3>
+      <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2">Quick Indices</h3>
       <div className="quick-indices-scroll">
         <div className="index-item">
           <span className="text-xs text-slate-600">SPY</span>

@@ -175,7 +175,7 @@ function FinancialsTab({ data }: { data: YfData }) {
                 <tr key={eng} className="border-b border-slate-100 last:border-b-0">
                   <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{ko}</td>
                   {vals.map((v, i) => (
-                    <td key={i} className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-900">
+                    <td key={i} className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-900">
                       {formatFn(v, eng)}
                     </td>
                   ))}
@@ -257,7 +257,7 @@ function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; i
           return (
             <div key={r.label} className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
               <MetricHelp label={r.label} className="text-[10px] font-medium text-slate-500" />
-              <span className="orbitron tabular-nums text-[11px] font-black">
+              <span className="tabular-nums text-[11px] font-black">
                 <span className={better ? "text-emerald-700" : "text-slate-900"}>{fmt(r.stock as number, r.isFraction)}</span>
                 <span className="mx-1 font-semibold text-slate-300">/</span>
                 <span className="font-bold text-slate-500">산업 {fmt(r.ind as number, r.isFraction)}</span>
@@ -383,7 +383,7 @@ function OwnershipTab({ data }: { data: YfData }) {
           ].map(([label, value]) => (
             <div key={label as string} className="rounded-xl border border-slate-200 bg-white p-3 text-center">
               <p className="text-[10px] font-bold text-slate-500">{label as string}</p>
-              <p className="orbitron mt-1 text-lg font-black text-slate-900">{value}</p>
+              <p className="mt-1 text-lg font-black text-slate-900">{value}</p>
             </div>
           ))}
         </div>
@@ -416,13 +416,13 @@ function OwnershipTab({ data }: { data: YfData }) {
                   return (
                     <tr key={i} className="border-b border-slate-100 last:border-b-0">
                       <td className="px-2 py-1.5 max-w-[180px] truncate text-[10px] font-bold text-slate-700">{h.Holder}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{pctHeld !== null ? `${(pctHeld * 100).toFixed(2)}%` : "—"}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-600">{shares !== null ? shares.toLocaleString() : "—"}</td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold text-slate-600">{value !== null ? formatCompactMoney(value, currency) : "—"}</td>
-                      <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${pctChange != null ? (pctChange >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-500"}`}>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{pctHeld !== null ? `${(pctHeld * 100).toFixed(2)}%` : "—"}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-600">{shares !== null ? shares.toLocaleString() : "—"}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-600">{value !== null ? formatCompactMoney(value, currency) : "—"}</td>
+                      <td className={`px-2 py-1.5 text-right  tabular-nums text-xs font-bold ${pctChange != null ? (pctChange >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-500"}`}>
                         {pctChange != null ? `${pctChange > 0 ? "+" : ""}${pctChange.toFixed(1)}%` : "—"}
                       </td>
-                      <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[10px] font-semibold text-slate-500">{h["Date Reported"] ?? "—"}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-[10px] font-semibold text-slate-500">{h["Date Reported"] ?? "—"}</td>
                     </tr>
                   );
                 })}
@@ -511,12 +511,12 @@ function EstimatesTab({ data }: { data: YfData }) {
                     return (
                       <tr key={e._index} className="border-b border-slate-100 last:border-b-0">
                         <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[e._index] ?? e._index}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{formatMoney(e.avg, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatMoney(e.low, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatMoney(e.high, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatMoney(e.yearAgoEps, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{finiteNumber(e.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
-                        <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{formatMoney(e.avg, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatMoney(e.low, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatMoney(e.high, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatMoney(e.yearAgoEps, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{finiteNumber(e.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
+                        <td className={`px-2 py-1.5 text-right  tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
                           {fmtSignedPct(growth, true)}
                         </td>
                       </tr>
@@ -551,12 +551,12 @@ function EstimatesTab({ data }: { data: YfData }) {
                     return (
                       <tr key={r._index} className="border-b border-slate-100 last:border-b-0">
                         <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[r._index] ?? r._index}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs font-semibold">{formatCompactMoney(r.avg, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatCompactMoney(r.low, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatCompactMoney(r.high, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{formatCompactMoney(r.yearAgoRevenue, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right orbitron tabular-nums text-xs text-slate-500">{finiteNumber(r.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
-                        <td className={`px-2 py-1.5 text-right orbitron tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{formatCompactMoney(r.avg, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatCompactMoney(r.low, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatCompactMoney(r.high, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatCompactMoney(r.yearAgoRevenue, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{finiteNumber(r.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
+                        <td className={`px-2 py-1.5 text-right  tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
                           {fmtSignedPct(growth, true)}
                         </td>
                       </tr>
@@ -626,14 +626,14 @@ export function FiftyTwoWeekBar({ info }: { info: Record<string, any> }) {
     <div className="rounded-lg border border-slate-200 bg-white p-3">
       <p className="text-[10px] font-bold text-slate-500 mb-1">52주 범위</p>
       <div className="flex items-center gap-2">
-        <span className="max-w-[5.5rem] truncate text-[10px] orbitron font-semibold text-slate-500">{fmtBound(low)}</span>
+        <span className="max-w-[5.5rem] truncate text-[10px] font-semibold text-slate-500">{fmtBound(low)}</span>
         <div className="relative h-2 flex-1 rounded-full bg-slate-100">
           <div
             className="absolute top-0 h-2 w-2 rounded-full bg-brand-interactive"
             style={{ left: `${pct}%`, transform: "translateX(-50%)" }}
           />
         </div>
-        <span className="max-w-[5.5rem] truncate text-[10px] orbitron font-semibold text-slate-500">{fmtBound(high)}</span>
+        <span className="max-w-[5.5rem] truncate text-[10px] font-semibold text-slate-500">{fmtBound(high)}</span>
       </div>
       <p className="mt-1 text-center text-[10px] font-bold text-slate-600">
         52주 범위 {pct >= 50 ? "상단" : "하단"} {Math.round(pct >= 50 ? pct : 100 - pct)}% 구간
@@ -806,7 +806,7 @@ export function SummaryScoreCard({ data, perBand, industry, onAreaSelect }: {
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-[10px] font-bold text-slate-600">{a.area}</span>
-                <span className="orbitron tabular-nums text-[10px] font-black text-slate-700">{a.score}/{a.total}</span>
+                <span className="tabular-nums text-[10px] font-black text-slate-700">{a.score}/{a.total}</span>
               </div>
               <div className="mt-0.5 h-1.5 rounded-full bg-slate-100">
                 <div className="h-1.5 rounded-full" style={{ width: `${r * 100}%`, backgroundColor: scoreColor(r) }} />
@@ -937,7 +937,7 @@ function KV({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
       <MetricHelp label={label} className="text-[10px] font-medium text-slate-500" />
-      <span className="orbitron tabular-nums text-xs font-black text-slate-900">{value}</span>
+      <span className="tabular-nums text-xs font-black text-slate-900">{value}</span>
     </div>
   );
 }

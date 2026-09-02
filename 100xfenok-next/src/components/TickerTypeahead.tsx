@@ -298,7 +298,7 @@ export default function TickerTypeahead({
                 >
                   {s.type === "stock" && s.stock ? (
                     <>
-                      <span className="orbitron text-sm">
+                      <span className="text-sm">
                         <TickerChip ticker={s.stock.symbol} variant="inline" />
                       </span>
                       <span className="truncate text-xs font-semibold text-slate-600">{s.stock.companyName}</span>

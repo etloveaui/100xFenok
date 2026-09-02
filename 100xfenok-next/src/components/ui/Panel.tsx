@@ -41,7 +41,7 @@ export function Panel({
   stale,
   asOf,
   onRetry,
-  keepContentOnStale,
+  keepContentOnStale = true,
 }: PanelProps) {
   const showSkeleton = useDelayedLoading(loading);
   if (showSkeleton) {

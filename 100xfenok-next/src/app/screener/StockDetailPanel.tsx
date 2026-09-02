@@ -609,7 +609,7 @@ function DetailAxisLegend({ axis }: { axis: DetailLongTermAxis }) {
           {compactTierText}
         </span>
       ) : null}
-      <span className="orbitron shrink-0 text-sm font-black tabular-nums text-[var(--c-ink)]">
+      <span className="shrink-0 text-sm font-black tabular-nums text-[var(--c-ink)]">
         {scoreText}
       </span>
       <div className="hidden h-1.5 w-12 overflow-hidden rounded-full bg-[var(--c-surface-2)] sm:block">
@@ -1214,7 +1214,7 @@ function EtfBreakdownStrip({
           return (
             <span key={`${title}-${index}-${etfBreakdownLabel(row)}`} className="max-w-full rounded-full bg-[var(--c-panel)] px-2 py-0.5 text-[10px] font-bold text-[var(--c-ink-3)] ring-1 ring-[var(--c-line)]">
               <span className="inline-block max-w-[9rem] truncate align-bottom">{etfBreakdownLabel(row)}</span>
-              {weight !== null ? <span className="orbitron ml-1 font-black tabular-nums text-[var(--c-ink)]">{formatPlainPercent(weight, { digits: 1, fraction: false })}</span> : null}
+              {weight !== null ? <span className="ml-1 font-black tabular-nums text-[var(--c-ink)]">{formatPlainPercent(weight, { digits: 1, fraction: false })}</span> : null}
             </span>
           );
         })}
@@ -1234,7 +1234,7 @@ function MarketFactCard({ label, field, fact, currency }: { label: string; field
           기준 {candidateCount}곳 확인
         </span>
       </div>
-      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">
+      <p className="mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">
         {formatMarketFact(field, fact, currency)}
       </p>
       <p className="mt-1 min-w-0 truncate text-[10px] font-bold text-[var(--c-ink-3)]" title={sourceLabel(fact.source)}>
@@ -1310,7 +1310,7 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
         <div className="min-w-0">
           <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">통합 데이터</h4>
           <p className="mt-0.5 min-w-0 text-[11px] font-bold text-[var(--c-ink-3)]">
-            <span className="orbitron font-black">{data.ticker ?? ticker}</span>
+            <span className="font-black">{data.ticker ?? ticker}</span>
             {data.identity?.name ? (
               <span className="block max-w-[14rem] truncate" title={data.identity.name}>
                 {data.identity.name}
@@ -1374,7 +1374,7 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
                   <tr key={`${row.rank ?? index}-${row.name ?? "holding"}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
                     <td className="px-2 py-1.5 min-w-0">
                       {row.symbol ? (
-                        <span className="orbitron text-xs font-black text-[var(--c-ink)]">{row.symbol}</span>
+                        <span className="text-xs font-black text-[var(--c-ink)]">{row.symbol}</span>
                       ) : null}
                       {row.name ? (
                         <span className="block max-w-[14rem] truncate text-[11px] font-semibold text-[var(--c-ink-3)]" title={row.name}>
@@ -1384,7 +1384,7 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
                         <span className="text-[11px] text-[var(--c-ink-3)]">—</span>
                       )}
                     </td>
-                    <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">
+                    <td className="px-2 py-1.5 text-right font-black tabular-nums text-[var(--c-ink)]">
                       {formatPlainPercent(row.weight_pct, { digits: 2, fraction: false })}
                     </td>
                     <td className="px-2 py-1.5 text-right font-bold tabular-nums text-[var(--c-ink-3)]">
@@ -1770,7 +1770,7 @@ export function PerBandChart({
               x={padL - 4}
               y={toY(bands.max_8y) + 3}
               textAnchor="end"
-              className="text-[8px] font-black fill-[var(--c-ink-3)] orbitron tabular-nums"
+              className="text-[8px] font-black fill-[var(--c-ink-3)] tabular-nums"
             >
               {bands.max_8y.toFixed(0)}
             </text>
@@ -1778,7 +1778,7 @@ export function PerBandChart({
               x={padL - 4}
               y={toY(bands.avg_8y) + 3}
               textAnchor="end"
-              className="text-[8px] font-black fill-[var(--c-ink-3)] orbitron tabular-nums"
+              className="text-[8px] font-black fill-[var(--c-ink-3)] tabular-nums"
             >
               {bands.avg_8y.toFixed(1)}
             </text>
@@ -1786,7 +1786,7 @@ export function PerBandChart({
               x={padL - 4}
               y={toY(bands.min_8y) + 3}
               textAnchor="end"
-              className="text-[8px] font-black fill-[var(--c-ink-3)] orbitron tabular-nums"
+              className="text-[8px] font-black fill-[var(--c-ink-3)] tabular-nums"
             >
               {bands.min_8y.toFixed(0)}
             </text>
@@ -1843,7 +1843,7 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
                     {fmtSignedFractionPercent(row.change)}
                   </span>
                 </div>
-                <p className="orbitron mt-1 text-sm font-black tabular-nums text-[var(--c-ink)]">{fmtEps(latest?.value)}</p>
+                <p className="mt-1 text-sm font-black tabular-nums text-[var(--c-ink)]">{fmtEps(latest?.value)}</p>
                 <p className="mt-1 truncate text-[9px] font-bold tabular-nums text-[var(--c-ink-3)]">
                   {latest?.date ?? "—"} · 전주 {fmtEps(previous?.value)}
                 </p>
@@ -1868,10 +1868,10 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
               {historyRows.map((row, index) => (
                 <tr key={`${row.date}-${index}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
                   <td className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 font-bold tabular-nums text-[var(--c-ink-2)]">{row.date}</td>
-                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtPlainNumber(row.price, 2)}</td>
-                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtLarge(row.revenue_consensus)}</td>
-                  <td className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink-2)]">{fmtEps(row.eps_consensus)}</td>
-                  <td className={`px-2 py-1.5 text-right orbitron font-black tabular-nums ${toneText(row.eps_change)}`}>
+                  <td className="px-2 py-1.5 text-right tabular-nums text-[var(--c-ink-2)]">{fmtPlainNumber(row.price, 2)}</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums text-[var(--c-ink-2)]">{fmtLarge(row.revenue_consensus)}</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums text-[var(--c-ink-2)]">{fmtEps(row.eps_consensus)}</td>
+                  <td className={`px-2 py-1.5 text-right  font-black tabular-nums ${toneText(row.eps_change)}`}>
                     {fmtSignedNumber(row.eps_change, 2)}
                   </td>
                 </tr>
@@ -1929,7 +1929,7 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
                 {periods.map((period, index) => {
                   const value = row.data?.[index];
                   return (
-                    <td key={`${row.label}-${period}`} className="px-2 py-1.5 text-right orbitron tabular-nums text-[var(--c-ink)]">
+                    <td key={`${row.label}-${period}`} className="px-2 py-1.5 text-right tabular-nums text-[var(--c-ink)]">
                       {row.fmt(value)}
                     </td>
                   );
@@ -1997,7 +1997,7 @@ function SlickMetricCard({ label, value, delta }: { label: string; value: string
   return (
     <div className="min-w-0 rounded-lg border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
       <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
-      <p className="orbitron mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
+      <p className="mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
       <p className="mt-1 min-h-[16px] text-[11px] font-bold tabular-nums text-[var(--c-ink-3)]">{delta ? `직전 ${delta}` : ""}</p>
     </div>
   );
@@ -2117,7 +2117,7 @@ export function PriceDividendHistoryDepth({
                   {returnRows.map((row) => (
                     <tr key={row.year} className="border-b border-[var(--c-line-2)] last:border-b-0">
                       <td className="px-2 py-1.5 font-bold tabular-nums text-[var(--c-ink-2)]">{row.year}</td>
-                      <td className={`px-2 py-1.5 text-right orbitron font-black tabular-nums ${toneText(row.return)}`}>
+                      <td className={`px-2 py-1.5 text-right  font-black tabular-nums ${toneText(row.return)}`}>
                         {fmtSlickReturn(row.return)}
                       </td>
                     </tr>
@@ -2144,7 +2144,7 @@ export function PriceDividendHistoryDepth({
                   {dividendRows.map((row, index) => (
                     <tr key={`${row.exDate ?? "ex"}-${index}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
                       <td className="px-2 py-1.5 font-bold tabular-nums text-[var(--c-ink-2)]">{row.exDate ?? "—"}</td>
-                      <td className="px-2 py-1.5 text-right orbitron font-black tabular-nums text-[var(--c-ink)]">
+                      <td className="px-2 py-1.5 text-right font-black tabular-nums text-[var(--c-ink)]">
                         {fmtSlickMoney(row.amount, 3)}
                       </td>
                       <td className="px-2 py-1.5 text-right font-bold tabular-nums text-[var(--c-ink-3)]">{row.payDate ?? "—"}</td>
@@ -2277,7 +2277,7 @@ export function StockDetailBody({
                 estimates={detail.income_statement_estimates?.revenue}
                 formatValue={fmtLarge}
               />
-              <div className="orbitron tabular-nums mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
+              <div className="tabular-nums mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
                 {fmtLarge(latestRevenue)}
                 {" (최신)"}
               </div>
@@ -2301,7 +2301,7 @@ export function StockDetailBody({
                 estimates={detail.per_share_estimates?.eps}
                 formatValue={(value) => formatCurrency(value, "USD", { digits: 2 })}
               />
-              <div className="orbitron tabular-nums mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
+              <div className="tabular-nums mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">
                 {latestEps != null ? `${fmtEps(latestEps)} (최신)` : "—"}
               </div>
             </>
@@ -2529,7 +2529,7 @@ export default function StockDetailPanel({
                 Short Edge
               </div>
               <div className="mt-1 flex items-end justify-between gap-2">
-                <span className={`orbitron text-2xl font-black tabular-nums ${signalScoreTone(shortTermConvictionScore)}`}>
+                <span className={` text-2xl font-black tabular-nums ${signalScoreTone(shortTermConvictionScore)}`}>
                   {shortTermConvictionScore ?? "—"}
                 </span>
                 <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
@@ -2545,7 +2545,7 @@ export default function StockDetailPanel({
                 Long Edge
               </div>
               <div className="mt-1 flex items-end justify-between gap-2">
-                <span className={`orbitron text-2xl font-black tabular-nums ${signalScoreTone(longTermConvictionScore)}`}>
+                <span className={` text-2xl font-black tabular-nums ${signalScoreTone(longTermConvictionScore)}`}>
                   {longTermConvictionScore ?? "—"}
                 </span>
                 <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
@@ -2612,7 +2612,7 @@ export default function StockDetailPanel({
             href={ROUTES.stock(ticker)}
             className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--brand-interactive)] bg-[color:color-mix(in_srgb,var(--brand-interactive)_8%,transparent)] px-3 text-[10px] font-black text-[var(--brand-interactive)] transition hover:bg-[color:color-mix(in_srgb,var(--brand-interactive)_14%,transparent)]"
           >
-            <span className="orbitron rounded-full bg-[var(--brand-interactive)] px-2 py-0.5 text-[9px] font-black text-white">
+            <span className="rounded-full bg-[var(--brand-interactive)] px-2 py-0.5 text-[9px] font-black text-white">
               {ticker}
             </span>
             종목 상세 →

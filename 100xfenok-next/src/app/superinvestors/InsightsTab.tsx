@@ -379,9 +379,9 @@ function AccumulationHeatmap({ trades }: { trades: TradesRankingData | null }) {
             <div className="mt-2 flex items-end justify-between gap-2">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.08em] text-emerald-800">매수 참여</p>
-                <p className="orbitron text-lg font-black tabular-nums text-slate-950">{row.investors_count}명</p>
+                <p className="text-lg font-black tabular-nums text-slate-950">{row.investors_count}명</p>
               </div>
-              <p className="orbitron text-[11px] font-black tabular-nums text-emerald-800">{formatCurrencyCompact(row.amount, "USD")}</p>
+              <p className="text-[11px] font-black tabular-nums text-emerald-800">{formatCurrencyCompact(row.amount, "USD")}</p>
             </div>
             <div className="mt-2 h-1.5 rounded-full bg-white/70">
               <div className="h-1.5 rounded-full bg-emerald-700" style={{ width: `${Math.max(8, amountIntensity * 100)}%` }} />
@@ -430,11 +430,11 @@ function PressurePanel({ title, rows, color, signLabel }: {
                     <div className="h-2 flex-1 rounded-full bg-slate-100">
                       <div className="h-2 rounded-full" style={{ width: `${Math.abs(r.pressure) * 100}%`, backgroundColor: barColor }} />
                     </div>
-                    <span className="orbitron tabular-nums text-[10px] font-bold text-slate-600">{formatPlainPercent(Math.abs(r.pressure), { fraction: true, digits: 0 })}</span>
+                    <span className="tabular-nums text-[10px] font-bold text-slate-600">{formatPlainPercent(Math.abs(r.pressure), { fraction: true, digits: 0 })}</span>
                   </div>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className={`orbitron tabular-nums text-[10px] font-bold ${r.total_value_change >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
+                  <span className={` tabular-nums text-[10px] font-bold ${r.total_value_change >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
                     {formatCurrencyCompact(r.total_value_change, "USD")}
                   </span>
                 </td>
@@ -486,10 +486,10 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
                   <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums text-[10px] font-bold text-slate-900">{formatCurrencyCompact(r.position_value, "USD")}</span>
+                  <span className="tabular-nums text-[10px] font-bold text-slate-900">{formatCurrencyCompact(r.position_value, "USD")}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{formatPlainPercent(r.position_weight, { fraction: true, digits: 2 })}</span>
+                  <span className="tabular-nums text-[10px] font-semibold text-slate-600">{formatPlainPercent(r.position_weight, { fraction: true, digits: 2 })}</span>
                 </td>
               </tr>
             ))}
@@ -541,10 +541,10 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
                   <TickerChip ticker={r.ticker} variant="inline" />
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums font-bold text-slate-900">{formatPlainPercent(r.weight, { fraction: true, digits: 1 })}</span>
+                  <span className="tabular-nums font-bold text-slate-900">{formatPlainPercent(r.weight, { fraction: true, digits: 1 })}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{formatCurrencyCompact(r.market_value, "USD")}</span>
+                  <span className="tabular-nums text-[10px] font-semibold text-slate-600">{formatCurrencyCompact(r.market_value, "USD")}</span>
                 </td>
               </tr>
             ))}
@@ -591,10 +591,10 @@ function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
                   )}
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums font-bold text-slate-900">{formatPlainPercent(r.weight, { fraction: true, digits: 1 })}</span>
+                  <span className="tabular-nums font-bold text-slate-900">{formatPlainPercent(r.weight, { fraction: true, digits: 1 })}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{formatCurrencyCompact(r.value, "USD")}</span>
+                  <span className="tabular-nums text-[10px] font-semibold text-slate-600">{formatCurrencyCompact(r.value, "USD")}</span>
                 </td>
               </tr>
             ))}
@@ -639,13 +639,13 @@ function HhiCard({ data }: { data: HhiData }) {
                   <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums font-bold text-slate-900">{r.hhi.toFixed(2)}</span>
+                  <span className="tabular-nums font-bold text-slate-900">{r.hhi.toFixed(2)}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{(r.top_weight * 100).toFixed(1)}%</span>
+                  <span className="tabular-nums text-[10px] font-semibold text-slate-600">{(r.top_weight * 100).toFixed(1)}%</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="orbitron tabular-nums text-[10px] font-semibold text-slate-600">{r.holdings_count}</span>
+                  <span className="tabular-nums text-[10px] font-semibold text-slate-600">{r.holdings_count}</span>
                 </td>
                 <td className="px-2 py-1.5 text-center">
                   <span className={`inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${classificationColor(r.classification)}`}>

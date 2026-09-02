@@ -6,8 +6,8 @@ type PillProps = React.HTMLAttributes<HTMLSpanElement> & {
 
 const toneClass: Record<string, string> = {
   neutral: "border-[#e2e8f0] text-[#475569] bg-[#ffffff]",
-  up: "border-[#bbf7d0] text-[#166534] bg-[#f0fdf4]",
-  down: "border-[#fecdd3] text-[#991b1b] bg-[#fef2f2]",
+  up: "border-[#e2e8f0] text-[#1aa86f] bg-[#ffffff]",
+  down: "border-[#e2e8f0] text-[#e84a5a] bg-[#ffffff]",
   warn: "border-[#f2a93b] text-[#b9791a] bg-[#fffbeb]",
 };
 

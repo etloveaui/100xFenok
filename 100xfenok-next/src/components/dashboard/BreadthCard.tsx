@@ -24,7 +24,7 @@ export default function BreadthCard({ sectorRows, sectorUp, sectorDown }: Breadt
     <article className="overview-widget-card overview-widget-card--sector">
       <header className="overview-widget-head">
         <div>
-          <p className="overview-widget-kicker orbitron">섹터 흐름</p>
+          <p className="overview-widget-kicker">섹터 흐름</p>
           <h3 className="overview-widget-subtitle">Breadth Expansion</h3>
           <p className="overview-source-meta">최근 강세와 약세 섹터를 한눈에 요약합니다.</p>
         </div>

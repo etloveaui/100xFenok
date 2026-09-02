@@ -380,15 +380,15 @@ function LatestHoldingsMobileCards({ rows }: { rows: InvestorHolding[] }) {
           <dl className="cpw5-super-mobile-card__metrics mt-3">
             <div className="cpw5-super-mobile-card__field">
               <dt>비중</dt>
-              <dd className="orbitron tabular-nums">{formatPercent(h.weight, { digits: 2 })}</dd>
+              <dd className="tabular-nums">{formatPercent(h.weight, { digits: 2 })}</dd>
             </div>
             <div className="cpw5-super-mobile-card__field">
               <dt>주식수</dt>
-              <dd className="orbitron tabular-nums">{formatCompactNumber(h.shares)}</dd>
+              <dd className="tabular-nums">{formatCompactNumber(h.shares)}</dd>
             </div>
             <div className="cpw5-super-mobile-card__field cpw5-super-mobile-card__field--wide">
               <dt>시가총액</dt>
-              <dd className="orbitron tabular-nums">{formatCurrencyCompact(h.market_value, "USD")}</dd>
+              <dd className="tabular-nums">{formatCurrencyCompact(h.market_value, "USD")}</dd>
             </div>
           </dl>
         </article>
@@ -460,13 +460,13 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
                   {h.sector ? <span className="text-[10px] text-[var(--c-ink-3)]">{h.sector}</span> : null}
                 </td>
                 <td className="px-2 py-2 text-right">
-                  <span className="orbitron tabular-nums font-bold text-slate-900">{formatPercent(h.weight, { digits: 2 })}</span>
+                  <span className="tabular-nums font-bold text-slate-900">{formatPercent(h.weight, { digits: 2 })}</span>
                 </td>
                 <td className="px-2 py-2 text-right">
-                  <span className="orbitron tabular-nums text-slate-700">{formatCompactNumber(h.shares)}</span>
+                  <span className="tabular-nums text-slate-700">{formatCompactNumber(h.shares)}</span>
                 </td>
                 <td className="px-2 py-2 text-right">
-                  <span className="orbitron tabular-nums text-slate-700">{formatCurrencyCompact(h.market_value, "USD")}</span>
+                  <span className="tabular-nums text-slate-700">{formatCurrencyCompact(h.market_value, "USD")}</span>
                 </td>
               </tr>
             ))}
@@ -606,25 +606,25 @@ function GuruDetailPanel({
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-center">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">신규매수 ↑</p>
-            <p className="orbitron mt-1 text-sm font-black text-emerald-800">
+            <p className="mt-1 text-sm font-black text-emerald-800">
               {latest.changes_summary.new?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-center">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-rose-700">청산매도 ↓</p>
-            <p className="orbitron mt-1 text-sm font-black text-rose-800">
+            <p className="mt-1 text-sm font-black text-rose-800">
               {latest.changes_summary.sold?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-center">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-sky-700">비중확대 ↑</p>
-            <p className="orbitron mt-1 text-sm font-black text-sky-800">
+            <p className="mt-1 text-sm font-black text-sky-800">
               {latest.changes_summary.increased?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">비중축소 ↓</p>
-            <p className="orbitron mt-1 text-sm font-black text-amber-800">
+            <p className="mt-1 text-sm font-black text-amber-800">
               {latest.changes_summary.decreased?.length ?? 0}
             </p>
           </div>
@@ -742,7 +742,7 @@ function KpiCard({
       {isLoading ? (
         <div className="mt-1 h-6 w-3/4 rounded bg-slate-200" />
       ) : (
-        <p className="mt-1 truncate text-lg font-black tracking-tight text-slate-950 orbitron tabular-nums sm:text-xl">
+        <p className="mt-1 truncate text-lg font-black tracking-tight text-slate-950 tabular-nums sm:text-xl">
           {value}
         </p>
       )}
@@ -780,7 +780,7 @@ function TradeRankingMobileCard({
       className="cpw5-super-mobile-card"
     >
       <div className="flex min-w-0 items-start gap-2">
-        <span className="orbitron shrink-0 pt-2 text-xs font-bold text-[var(--c-ink-3)]">#{row.rank}</span>
+        <span className="shrink-0 pt-2 text-xs font-bold text-[var(--c-ink-3)]">#{row.rank}</span>
         <TransitionLink
           href={ROUTES.stock(row.ticker)}
           data-superinvestor-trades-card-action
@@ -806,13 +806,13 @@ function TradeRankingMobileCard({
         </div>
         <div className="cpw5-super-mobile-card__field">
           <dt>{shareScopeLabel}</dt>
-          <dd className={`orbitron tabular-nums ${amountTextClass}`}>
+          <dd className={` tabular-nums ${amountTextClass}`}>
             {formatTradeShare(row.amount, totalAmount)}
           </dd>
         </div>
         <div className="cpw5-super-mobile-card__field">
           <dt>투자자</dt>
-          <dd className="orbitron tabular-nums text-slate-900">
+          <dd className="tabular-nums text-slate-900">
             {row.investors_count}
             {actionLabel(row) ? <span className="ml-1 font-sans text-[10px] font-semibold text-[var(--c-ink-3)]">{actionLabel(row)}</span> : null}
           </dd>
@@ -937,7 +937,7 @@ function TradeRankingPanel({
                   className="border-b border-slate-100 last:border-b-0"
                 >
                   <td className="min-w-0 px-1 py-2 sm:px-2">
-                    <span className="orbitron tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{r.rank}</span>
+                    <span className="tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{r.rank}</span>
                   </td>
                   <td className="min-w-0 px-1 py-2 sm:px-2">
                     <TransitionLink
@@ -960,12 +960,12 @@ function TradeRankingPanel({
                     </span>
                   </td>
                   <td className="min-w-0 px-1 py-2 text-right sm:px-2" title={shareScopeLabel}>
-                    <span className={`orbitron tabular-nums font-bold ${amountTextClass}`}>
+                    <span className={` tabular-nums font-bold ${amountTextClass}`}>
                       {formatTradeShare(r.amount, totalAmount)}
                     </span>
                   </td>
                   <td className="min-w-0 px-1 py-2 text-right sm:px-2">
-                    <span className="orbitron tabular-nums font-bold text-slate-900">{r.investors_count}</span>
+                    <span className="tabular-nums font-bold text-slate-900">{r.investors_count}</span>
                     {actionLabel(r) ? (
                       <span className="block truncate text-[10px] font-semibold text-[var(--c-ink-3)]">{actionLabel(r)}</span>
                     ) : null}
@@ -1328,7 +1328,7 @@ export default function SuperinvestorsClient({
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <div data-superinvestor-data-boundary-cohort className="rounded-xl border border-amber-100 bg-white/80 px-3 py-2.5">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">현재 반영</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">
+            <p className="mt-1 text-sm font-black text-slate-950">
               {investorCount != null && trackedInvestorCount != null
                 ? `${formatInteger(investorCount)} / ${formatInteger(trackedInvestorCount)}명`
                 : "확인 중"}
@@ -1337,19 +1337,19 @@ export default function SuperinvestorsClient({
           </div>
           <div data-superinvestor-data-boundary-stale className="rounded-xl border border-amber-100 bg-white/80 px-3 py-2.5">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">stale 제외</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">{dataReady ? `${formatInteger(excludedStale.length)}명` : "확인 중"}</p>
+            <p className="mt-1 text-sm font-black text-slate-950">{dataReady ? `${formatInteger(excludedStale.length)}명` : "확인 중"}</p>
             <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">최신 분기 계산에서 제외</p>
           </div>
           <div data-superinvestor-data-boundary-history className="rounded-xl border border-amber-100 bg-white/80 px-3 py-2.5">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">보존 이력</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">
+            <p className="mt-1 text-sm font-black text-slate-950">
               {retainedQuarterCount != null ? `${formatInteger(retainedQuarterCount)}개 분기` : "확인 중"}
             </p>
             <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">{retainedQuarterRange ?? "분기 범위 확인 중"}</p>
           </div>
           <div data-superinvestor-data-boundary-tickers className="rounded-xl border border-amber-100 bg-white/80 px-3 py-2.5">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">분석 종목</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">
+            <p className="mt-1 text-sm font-black text-slate-950">
               {tickerCount != null ? `${formatInteger(tickerCount)}개` : "확인 중"}
             </p>
             <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">현재 분기 보유 티커</p>
@@ -1590,17 +1590,17 @@ export default function SuperinvestorsClient({
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             <div data-superinvestor-ticker-kpi="holders" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
               <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">보유 투자자</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{byTickerEntry.holder_details.length}명</p>
+              <p className="mt-1 text-sm font-black text-slate-950">{byTickerEntry.holder_details.length}명</p>
             </div>
             <div data-superinvestor-ticker-kpi="equity" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
               <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">주식 기준</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">
+              <p className="mt-1 text-sm font-black text-slate-950">
                 {byTickerEnhanced ? `${byTickerEnhanced.equity_holders}/${byTickerEnhanced.total_holders}명` : "—"}
               </p>
             </div>
             <div data-superinvestor-ticker-kpi="score" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
               <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">확신 점수</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">
+              <p className="mt-1 text-sm font-black text-slate-950">
                 {byTickerEnhanced ? formatPercent(byTickerEnhanced.equity_score, { digits: 0 }) : "—"}
               </p>
             </div>
@@ -1674,15 +1674,15 @@ export default function SuperinvestorsClient({
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             <div data-superinvestor-trades-kpi="bought" className="rounded-xl border border-emerald-100 bg-white px-3 py-2">
               <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">상위 매수 비중</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{formatPercent(boughtSegmentPct, { digits: 1, fraction: false })}</p>
+              <p className="mt-1 text-sm font-black text-slate-950">{formatPercent(boughtSegmentPct, { digits: 1, fraction: false })}</p>
             </div>
             <div data-superinvestor-trades-kpi="sold" className="rounded-xl border border-rose-100 bg-white px-3 py-2">
               <p className="text-[10px] font-black uppercase tracking-[0.08em] text-rose-700">상위 매도 비중</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{formatPercent(soldSegmentPct, { digits: 1, fraction: false })}</p>
+              <p className="mt-1 text-sm font-black text-slate-950">{formatPercent(soldSegmentPct, { digits: 1, fraction: false })}</p>
             </div>
             <div data-superinvestor-trades-kpi="cohort" className="rounded-xl border border-slate-100 bg-white px-3 py-2">
               <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">분석 투자자</p>
-              <p className="mt-1 orbitron text-sm font-black text-slate-950">{tradesData.metadata.investors_included.length}명</p>
+              <p className="mt-1 text-sm font-black text-slate-950">{tradesData.metadata.investors_included.length}명</p>
             </div>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -1864,13 +1864,13 @@ export default function SuperinvestorsClient({
                       return (
                         <tr key={row.ticker} className="border-b border-slate-100 last:border-b-0">
                           <td className="px-3 py-3">
-                            <span className="orbitron tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{rank}</span>
+                            <span className="tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{rank}</span>
                           </td>
                           <td className="px-3 py-3">
                             <TickerChip ticker={row.ticker} variant="inline" />
                           </td>
                           <td className="px-3 py-3 text-right">
-                            <span className="orbitron tabular-nums text-base font-black text-brand-interactive">
+                            <span className="tabular-nums text-base font-black text-brand-interactive">
                               {holders.length}
                             </span>
                           </td>
@@ -1878,7 +1878,7 @@ export default function SuperinvestorsClient({
                             {enhanced ? (
                               <div className="ml-auto max-w-[120px]">
                                 <div className="flex items-center justify-end gap-2">
-                                  <span className="orbitron tabular-nums text-xs font-black text-slate-900">
+                                  <span className="tabular-nums text-xs font-black text-slate-900">
                                     {classSummary(enhanced)}
                                   </span>
                                   <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
@@ -1965,19 +1965,19 @@ export default function SuperinvestorsClient({
                       className="cpw5-super-mobile-card"
                     >
                       <div className="flex min-w-0 items-center justify-between gap-2">
-                        <span className="orbitron shrink-0 text-xs font-bold text-[var(--c-ink-3)]">#{rank}</span>
+                        <span className="shrink-0 text-xs font-bold text-[var(--c-ink-3)]">#{rank}</span>
                         <TickerChip ticker={row.ticker} variant="pill" className="min-h-11" />
                       </div>
                       <dl className="cpw5-super-mobile-card__metrics mt-3">
                         <div className="cpw5-super-mobile-card__field">
                           <dt>보유자</dt>
-                          <dd className="orbitron tabular-nums text-brand-interactive">{holders.length}명</dd>
+                          <dd className="tabular-nums text-brand-interactive">{holders.length}명</dd>
                         </div>
                         <div className="cpw5-super-mobile-card__field">
                           <dt>주식 기준</dt>
                           <dd>
                             {enhanced ? (
-                              <span className="orbitron tabular-nums text-slate-900">
+                              <span className="tabular-nums text-slate-900">
                                 {classSummary(enhanced)} · {formatPercent(enhanced.equity_score, { digits: 0 })}
                               </span>
                             ) : (
@@ -2045,7 +2045,7 @@ export default function SuperinvestorsClient({
                   이전
                 </button>
                 <span className="text-xs font-bold text-slate-500">
-                  <span className="orbitron tabular-nums text-slate-900">{safePage + 1}</span> / {pageCount}
+                  <span className="tabular-nums text-slate-900">{safePage + 1}</span> / {pageCount}
                 </span>
                 <button
                   type="button"
@@ -2082,7 +2082,7 @@ export default function SuperinvestorsClient({
               </select>
             </label>
             <span className="text-sm font-bold text-slate-700">
-              <strong className="orbitron text-slate-900">{guruEntries.length}</strong>명
+              <strong className="text-slate-900">{guruEntries.length}</strong>명
             </span>
           </div>
 
@@ -2131,11 +2131,11 @@ export default function SuperinvestorsClient({
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
                         <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">AUM</p>
-                        <p className="orbitron tabular-nums mt-0.5 text-sm font-black text-slate-900">{formatCurrencyCompact(inv.aum, "USD")}</p>
+                        <p className="tabular-nums mt-0.5 text-sm font-black text-slate-900">{formatCurrencyCompact(inv.aum, "USD")}</p>
                       </div>
                       <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
                         <p className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">보유</p>
-                        <p className="orbitron mt-0.5 text-sm font-black text-slate-900">{inv.holdings_count}종목</p>
+                        <p className="mt-0.5 text-sm font-black text-slate-900">{inv.holdings_count}종목</p>
                       </div>
                     </div>
 
@@ -2268,7 +2268,7 @@ export default function SuperinvestorsClient({
                   </span>
                   <span className="text-sm font-bold text-slate-500">
                     보유자{" "}
-                    <strong className="orbitron text-slate-900">{byTickerEntry.holder_details.length}</strong>명
+                    <strong className="text-slate-900">{byTickerEntry.holder_details.length}</strong>명
                   </span>
                   <TransitionLink
                     href={ROUTES.screenerTicker(selectedTicker)}
@@ -2315,19 +2315,19 @@ export default function SuperinvestorsClient({
                       <dl className="cpw5-super-mobile-card__metrics mt-3">
                         <div className="cpw5-super-mobile-card__field">
                           <dt>비중</dt>
-                          <dd className="orbitron tabular-nums">{formatPercent(h.weight, { digits: 2 })}</dd>
+                          <dd className="tabular-nums">{formatPercent(h.weight, { digits: 2 })}</dd>
                         </div>
                         <div className="cpw5-super-mobile-card__field">
                           <dt>평가액</dt>
-                          <dd className="orbitron tabular-nums">{formatCurrencyCompact(h.market_value, "USD")}</dd>
+                          <dd className="tabular-nums">{formatCurrencyCompact(h.market_value, "USD")}</dd>
                         </div>
                         <div className="cpw5-super-mobile-card__field">
                           <dt>주식수</dt>
-                          <dd className="orbitron tabular-nums">{formatCompactNumber(h.shares)}</dd>
+                          <dd className="tabular-nums">{formatCompactNumber(h.shares)}</dd>
                         </div>
                         <div className="cpw5-super-mobile-card__field">
                           <dt>전체 비중</dt>
-                          <dd className="orbitron tabular-nums text-slate-500">
+                          <dd className="tabular-nums text-slate-500">
                             {formatPercent(h.shares / (byTickerEntry.total_shares || 1), { digits: 1 })}
                           </dd>
                         </div>
@@ -2397,16 +2397,16 @@ export default function SuperinvestorsClient({
                           </TransitionLink>
                         </td>
                         <td className="whitespace-nowrap px-3 py-3 text-right">
-                          <span className="orbitron tabular-nums font-bold text-slate-900">{formatPercent(h.weight, { digits: 2 })}</span>
+                          <span className="tabular-nums font-bold text-slate-900">{formatPercent(h.weight, { digits: 2 })}</span>
                         </td>
                         <td className="whitespace-nowrap px-3 py-3 text-right">
-                          <span className="orbitron tabular-nums text-slate-700">{formatCurrencyCompact(h.market_value, "USD")}</span>
+                          <span className="tabular-nums text-slate-700">{formatCurrencyCompact(h.market_value, "USD")}</span>
                         </td>
                         <td className="whitespace-nowrap px-3 py-3 text-right">
-                          <span className="orbitron tabular-nums text-slate-700">{formatCompactNumber(h.shares)}</span>
+                          <span className="tabular-nums text-slate-700">{formatCompactNumber(h.shares)}</span>
                         </td>
                         <td className="whitespace-nowrap px-3 py-3 text-right">
-                          <span className="orbitron tabular-nums text-slate-500">
+                          <span className="tabular-nums text-slate-500">
                             {formatPercent(h.shares / (byTickerEntry.total_shares || 1), { digits: 1 })}
                           </span>
                         </td>
@@ -2540,14 +2540,14 @@ export default function SuperinvestorsClient({
         <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">기준 분기</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">{quarter ?? "—"}</p>
+            <p className="mt-1 text-sm font-black text-slate-950">{quarter ?? "—"}</p>
             <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
               {generatedAtLabel ? `생성 ${generatedAtLabel}` : "생성 시각 정보 없음"}
             </p>
           </div>
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">분석 범위</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">
+            <p className="mt-1 text-sm font-black text-slate-950">
               {formatInteger(investorCount)}명 · {formatInteger(tickerCount)}종목
             </p>
             <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
@@ -2563,14 +2563,14 @@ export default function SuperinvestorsClient({
           </div>
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">종목별 보유</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">{formatInteger(tickerCount)}</p>
+            <p className="mt-1 text-sm font-black text-slate-950">{formatInteger(tickerCount)}</p>
             <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
               보유 투자자·비중은 종목별 보유 탭에서 확인
             </p>
           </div>
           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
             <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">확신 신호</p>
-            <p className="mt-1 orbitron text-sm font-black text-slate-950">
+            <p className="mt-1 text-sm font-black text-slate-950">
               {formatInteger(convictionNewCount)} / {formatInteger(convictionHoldCount)}
             </p>
             <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">

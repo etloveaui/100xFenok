@@ -271,7 +271,7 @@ export default function LaneBoard({
                     )}
                   </td>
                   <td className="border-b border-slate-100 px-3 py-3">
-                    <span className="orbitron font-black tabular-nums text-slate-900">재시도 {retry} · 복구 {recovered}</span>
+                    <span className="font-black tabular-nums text-slate-900">재시도 {retry} · 복구 {recovered}</span>
                   </td>
                   <td className="border-b border-slate-100 px-3 py-3">
                     {runHref ? (

@@ -249,7 +249,7 @@ export default async function AdminDataLabPage() {
             ].map(([label, value]) => (
               <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                 <p className="text-slate-500">{label}</p>
-                <p className="orbitron mt-1 text-sm text-slate-950">{value}</p>
+                <p className="mt-1 text-sm text-slate-950">{value}</p>
               </div>
             ))}
           </div>
@@ -282,7 +282,7 @@ export default async function AdminDataLabPage() {
                       {compactLaneCounts(lane).map(([key, value]) => (
                         <div key={`${lane.id}-${key}`} className="rounded-lg bg-slate-50 px-2 py-1">
                           <p className="font-bold text-slate-500">{key}</p>
-                          <p className="orbitron font-black text-slate-900">{Number(value).toLocaleString("ko-KR")}</p>
+                          <p className="font-black text-slate-900">{Number(value).toLocaleString("ko-KR")}</p>
                         </div>
                       ))}
                     </div>
@@ -331,7 +331,7 @@ export default async function AdminDataLabPage() {
             ].map(([label, value]) => (
               <div key={label} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                 <p className="text-slate-500">{label}</p>
-                <p className="orbitron mt-1 text-sm text-slate-950">{Number(value || 0).toLocaleString("ko-KR")}</p>
+                <p className="mt-1 text-sm text-slate-950">{Number(value || 0).toLocaleString("ko-KR")}</p>
               </div>
             ))}
           </div>
@@ -360,7 +360,7 @@ export default async function AdminDataLabPage() {
                     </span>
                   </td>
                   <td className="border-b border-slate-100 px-3 py-3">
-                    <span className="orbitron font-black tabular-nums text-slate-900">
+                    <span className="font-black tabular-nums text-slate-900">
                       {typeof surface.coverage_score === "number" ? `${surface.coverage_score.toFixed(0)}%` : "-"}
                     </span>
                   </td>

@@ -17,14 +17,14 @@ export default function LiquidityCard({ liquidityFlow, liquidityFlowLabel, liqui
     <article className="overview-widget-card overview-widget-card--liquidity">
       <header className="overview-widget-head">
         <div>
-          <p className="overview-widget-kicker orbitron">유동성</p>
+          <p className="overview-widget-kicker">유동성</p>
           <h3 className="overview-widget-subtitle">Funding Pulse</h3>
           <p className="overview-source-meta">대출과 예금 흐름으로 유동성 방향을 봅니다.</p>
         </div>
         <span className={`overview-status-pill ${liquidityPillClass}`}>{liquidityPillLabel}</span>
       </header>
       <div className="overview-metric-stack">
-        <p className="overview-metric-main orbitron">{formatSignedBillions(liquidityFlow)}</p>
+        <p className="overview-metric-main">{formatSignedBillions(liquidityFlow)}</p>
         <p className="overview-metric-sub">{liquidityFlowLabel}</p>
       </div>
       <div className="overview-mini-bars" aria-hidden="true">

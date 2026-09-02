@@ -745,7 +745,7 @@ function Kpi({
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-3">
       <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{label}</p>
-      <p className={`mt-1 orbitron text-sm font-black tabular-nums text-slate-900 ${valueClass ?? ""}`}>
+      <p className={`mt-1  text-sm font-black tabular-nums text-slate-900 ${valueClass ?? ""}`}>
         {value}
       </p>
     </div>
@@ -971,7 +971,7 @@ function HoldingConnectionMini({ row }: { row: HoldingRow }) {
   ].filter((item): item is string => Boolean(item));
   return (
     <span className="flex flex-wrap gap-1">
-      <span className="orbitron rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black tabular-nums text-slate-800">
+      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-black tabular-nums text-slate-800">
         {stockConnectionCount(entry) ?? items.length}
       </span>
       {items.slice(0, 3).map((item) => (
@@ -1151,29 +1151,29 @@ function MobileHoldingCard({
       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-slate-50 p-2">
           <p className="text-[10px] font-black uppercase text-slate-500">수량</p>
-          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{row.shares}</p>
+          <p className="mt-1 font-black tabular-nums text-slate-900">{row.shares}</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-2">
           <p className="text-[10px] font-black uppercase text-slate-500">평단</p>
-          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{formatCurrency(row.avg_cost, "USD")}</p>
+          <p className="mt-1 font-black tabular-nums text-slate-900">{formatCurrency(row.avg_cost, "USD")}</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-2">
           <p className="text-[10px] font-black uppercase text-slate-500">현재가</p>
-          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{row.price != null ? formatCurrency(row.price, "USD") : "—"}</p>
+          <p className="mt-1 font-black tabular-nums text-slate-900">{row.price != null ? formatCurrency(row.price, "USD") : "—"}</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-2">
           <p className="text-[10px] font-black uppercase text-slate-500">평가액</p>
-          <p className="orbitron mt-1 font-black tabular-nums text-slate-900">{row.marketValue != null ? formatCurrency(row.marketValue, "USD") : "—"}</p>
+          <p className="mt-1 font-black tabular-nums text-slate-900">{row.marketValue != null ? formatCurrency(row.marketValue, "USD") : "—"}</p>
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between gap-2 text-sm">
-        <span className={`orbitron font-black tabular-nums ${row.gain != null ? gainColor(row.gain) : "text-slate-500"}`}>
+        <span className={` font-black tabular-nums ${row.gain != null ? gainColor(row.gain) : "text-slate-500"}`}>
           {row.gain != null ? formatCurrency(row.gain, "USD") : "—"}
         </span>
-        <span className={`orbitron font-black tabular-nums ${row.gainPct != null ? gainColor(row.gainPct) : "text-slate-500"}`}>
+        <span className={` font-black tabular-nums ${row.gainPct != null ? gainColor(row.gainPct) : "text-slate-500"}`}>
           {row.gainPct != null ? formatSignedPercent(row.gainPct, { digits: 2 }) : "—"}
         </span>
-        <span className="orbitron tabular-nums text-xs font-bold text-slate-500">
+        <span className="tabular-nums text-xs font-bold text-slate-500">
           {row.weight != null ? formatPercent(row.weight, { digits: 1 }) : "—"}
         </span>
       </div>
@@ -1217,25 +1217,25 @@ function HoldingsTable({
             <td className="px-2 py-2">
               <HoldingConnectionMini row={r} />
             </td>
-            <td className="px-2 py-2 text-right orbitron tabular-nums font-bold text-slate-700">
+            <td className="px-2 py-2 text-right tabular-nums font-bold text-slate-700">
               {r.shares}
             </td>
-            <td className="px-2 py-2 text-right orbitron tabular-nums text-slate-700">
+            <td className="px-2 py-2 text-right tabular-nums text-slate-700">
               {formatCurrency(r.avg_cost, "USD")}
             </td>
-            <td className="px-2 py-2 text-right orbitron tabular-nums font-bold text-slate-900">
+            <td className="px-2 py-2 text-right tabular-nums font-bold text-slate-900">
               {r.price != null ? formatCurrency(r.price, "USD") : "—"}
             </td>
-            <td className="px-2 py-2 text-right orbitron tabular-nums font-bold text-slate-900">
+            <td className="px-2 py-2 text-right tabular-nums font-bold text-slate-900">
               {r.marketValue != null ? formatCurrency(r.marketValue, "USD") : "—"}
             </td>
-            <td className={`px-2 py-2 text-right orbitron tabular-nums font-bold ${r.gain != null ? gainColor(r.gain) : "text-slate-500"}`}>
+            <td className={`px-2 py-2 text-right  tabular-nums font-bold ${r.gain != null ? gainColor(r.gain) : "text-slate-500"}`}>
               {r.gain != null ? formatCurrency(r.gain, "USD") : "—"}
             </td>
-            <td className={`px-2 py-2 text-right orbitron tabular-nums font-bold ${r.gainPct != null ? gainColor(r.gainPct) : "text-slate-500"}`}>
+            <td className={`px-2 py-2 text-right  tabular-nums font-bold ${r.gainPct != null ? gainColor(r.gainPct) : "text-slate-500"}`}>
               {r.gainPct != null ? formatSignedPercent(r.gainPct, { digits: 2 }) : "—"}
             </td>
-            <td className="px-2 py-2 text-right orbitron tabular-nums text-slate-500">
+            <td className="px-2 py-2 text-right tabular-nums text-slate-500">
               {r.weight != null ? formatPercent(r.weight, { digits: 1 }) : "—"}
             </td>
             {onDelete ? (
