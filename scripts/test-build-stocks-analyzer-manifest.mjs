@@ -48,7 +48,7 @@ for (const stepName of [
   const step = workflow.slice(stepStart, stepEnd < 0 ? workflow.length : stepEnd);
   assert.match(step, /if: github\.event_name != 'push'/, `${stepName} must be skipped on lightweight pushes`);
 }
-const bridgeBuildStepStart = workflow.indexOf("- name: Build the review-only 13F bridge index from the regenerated tree");
+const bridgeBuildStepStart = workflow.indexOf("- name: Build the SEC 13F bridge index from the regenerated tree");
 const bridgeBuildStepEnd = workflow.indexOf("\n      - name:", bridgeBuildStepStart + 1);
 const bridgeBuildStep = workflow.slice(
   bridgeBuildStepStart,
@@ -59,7 +59,7 @@ assert.match(bridgeBuildStep, /build-sec13f-bridge-index\.mjs/);
 assert.doesNotMatch(
   bridgeBuildStep,
   /test-sec13f-bridge-index\.mjs/,
-  "the review-only count pin must not gate production builders or publication",
+  "the bridge verification must not gate production builders or publication",
 );
 
 const retryStart = workflow.indexOf("for attempt in $(seq 1 5); do");
@@ -73,14 +73,14 @@ assert.match(
 assert.doesNotMatch(
   retryBlock,
   /test-sec13f-bridge-index\.mjs/,
-  "the review-only count pin must not block a rebased production publication",
+  "the bridge verification must not block a rebased production publication",
 );
 
 const publishStepStart = workflow.indexOf("- name: Commit and push");
 const publishStepEnd = workflow.indexOf("\n      - name:", publishStepStart + 1);
 const publishStep = workflow.slice(publishStepStart, publishStepEnd < 0 ? workflow.length : publishStepEnd);
 const bridgeReviewStepStart = workflow.indexOf(
-  "- name: Verify the review-only 13F bridge index against the regenerated tree",
+  "- name: Verify the SEC 13F bridge index against the regenerated tree",
 );
 const bridgeReviewStepEnd = workflow.indexOf("\n      - name:", bridgeReviewStepStart + 1);
 const bridgeReviewStep = workflow.slice(

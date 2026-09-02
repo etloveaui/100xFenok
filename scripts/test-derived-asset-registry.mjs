@@ -51,12 +51,14 @@ function clone(value) {
   assert.deepEqual(
     sec13fBridge.outputs,
     [{ path: "data/computed/sec13f_bridge_index.json", kind: "file" }],
-    "the review-only SEC 13F bridge must have one private canonical owner",
+    "the SEC 13F bridge must have one canonical owner",
   );
   assert.equal(sec13fBridge.owner_workflow, ".github/workflows/build-stocks-analyzer.yml");
   assert.equal(sec13fBridge.writer, "scripts/build-sec13f-bridge-index.mjs");
-  assert.deepEqual(sec13fBridge.public_outputs, []);
-  assert.equal(sec13fBridge.public_serving_status, "private");
+  assert.deepEqual(sec13fBridge.public_outputs, [{ path: "100xfenok-next/public/data/computed/sec13f_bridge_index.json", kind: "file" }]);
+  assert.equal(sec13fBridge.public_serving_status, "active");
+  assert.equal(sec13fBridge.privacy_class, "public_mirror");
+  assert.equal(sec13fBridge.label, "SEC 13F bridge index (live, honest 424/1,026 coverage)");
   assert.equal(sec13fBridge.cadence.kind, "daily");
   assert.equal(sec13fBridge.recovery, "rebuild_from_inputs");
   const fenokRim = derivedAssetById("fenok_rim");
