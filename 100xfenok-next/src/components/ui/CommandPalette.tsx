@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { ROUTES } from "@/lib/routes";
 
 /* ---- chosung utilities (no hangul-js) ---- */
 const CHO = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
@@ -34,11 +35,11 @@ function matchesChosung(query: string, target: string) {
 type Item = { id: string; label: string; sub?: string; section: "종목" | "화면" | "동작"; href?: string; action?: () => void };
 
 const DEFAULT_ITEMS: Item[] = [
-  { id: "ticker-nvda", label: "NVDA", sub: "엔비디아", section: "종목", href: "/stock/NVDA" },
-  { id: "ticker-000880", label: "000880.KS", sub: "한화", section: "종목", href: "/stock/000880.KS" },
-  { id: "route-home", label: "홈", sub: "/", section: "화면", href: "/" },
-  { id: "route-screener", label: "스크리너", sub: "/screener", section: "화면", href: "/screener" },
-  { id: "route-stock", label: "종목", sub: "/stock/:ticker", section: "화면", href: "/stock/NVDA" },
+  { id: "ticker-nvda", label: "NVDA", sub: "엔비디아", section: "종목", href: ROUTES.stock("NVDA") },
+  { id: "ticker-000880", label: "000880.KS", sub: "한화", section: "종목", href: ROUTES.stock("000880.KS") },
+  { id: "route-home", label: "홈", sub: ROUTES.home, section: "화면", href: ROUTES.home },
+  { id: "route-screener", label: "스크리너", sub: ROUTES.screener, section: "화면", href: ROUTES.screener },
+  { id: "route-stock", label: "종목", sub: "/stock/:ticker", section: "화면", href: ROUTES.stock("NVDA") },
   { id: "action-retry", label: "재시도", sub: "데이터 재시도", section: "동작" },
 ];
 
