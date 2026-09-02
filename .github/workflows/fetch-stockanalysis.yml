@@ -641,28 +641,25 @@ jobs:
               # it does not remove it. The remote comparison answers from the
               # complete graph, so a negative result means the commit really is
               # not on main.
+              # FH-20260902-496 fallback: queue already serializes via fenok-data-writer
+              # (concurrency group fenok-data-writer-refs/heads/main at fetch-stockanalysis.yml:443/828,
+              # same as fetch-fdic.yml:31, fenok-edge-daily.yml:63), but schedule burst still
+              # races shallow checkout. Keep fence but replace gh api compare with git.
               COMPARE_STATUS=""
-              for compare_attempt in 1 2 3; do
-                COMPARE_STATUS="$(gh api "repos/$GITHUB_REPOSITORY/compare/$PUBLISHED_COMMIT...main" --jq '.status' 2>/dev/null)" \
-                  || COMPARE_STATUS=""
-                # Only the four documented compare statuses are complete
-                # answers. An unrecognised value is an INCOMPLETE answer, not a
-                # negative one, so it is discarded and the attempt is allowed to
-                # retry rather than being classified. Letting it fall through to
-                # a default arm is how an unknown silently becomes "not
-                # reachable", which is the one misreading this fence must never
-                # make.
-                case "$COMPARE_STATUS" in
-                  identical|ahead|behind|diverged) break ;;
-                  *) COMPARE_STATUS="" ;;
-                esac
-                sleep $((compare_attempt * 2))
-              done
               COMMIT_REACHABLE=""
-              case "$COMPARE_STATUS" in
-                identical|ahead) COMMIT_REACHABLE="yes" ;;
-                behind|diverged) COMMIT_REACHABLE="no" ;;
-              esac
+              for backoff in 15 30 60; do
+                git fetch origin main --deepen=50 2>/dev/null || git fetch origin main 2>/dev/null || true
+                if [ "$(git rev-parse "$PUBLISHED_COMMIT" 2>/dev/null)" = "$(git rev-parse origin/main 2>/dev/null)" ]; then
+                  COMPARE_STATUS="identical"; COMMIT_REACHABLE="yes"; break
+                elif git merge-base --is-ancestor "$PUBLISHED_COMMIT" origin/main 2>/dev/null; then
+                  COMPARE_STATUS="ahead"; COMMIT_REACHABLE="yes"; break
+                elif git merge-base --is-ancestor origin/main "$PUBLISHED_COMMIT" 2>/dev/null; then
+                  COMPARE_STATUS="behind"; COMMIT_REACHABLE="no"; break
+                elif git cat-file -e "$PUBLISHED_COMMIT" 2>/dev/null && git cat-file -e origin/main 2>/dev/null; then
+                  COMPARE_STATUS="diverged"; COMMIT_REACHABLE="no"; break
+                fi
+                sleep $backoff
+              done
               # Availability and identity are different failures. An absent or
               # unrecognised comparison leaves the answer UNKNOWN after the
               # bounded attempts, and an unknown must never be reported as a
