@@ -4,17 +4,6 @@
   "entity": "AMZN",
   "attempts": [
     {
-      "run_id": "31910027994",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 21 * * *",
-      "natural": true,
-      "observed_at": "2026-08-15T21:40:57Z",
-      "outcome": "failed",
-      "controlled": false,
-      "error": "ValueError: financial candidate is required for stock pair: AMZN; ValueError: financial statement missing required fields: ratios dividendyield"
-    },
-    {
       "run_id": "31974093247",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -144,24 +133,34 @@
       "observed_at": "2026-08-29T23:24:21Z",
       "outcome": "fresh",
       "controlled": false
+    },
+    {
+      "run_id": "33591076140",
+      "run_attempt": 1,
+      "event_name": "workflow_dispatch",
+      "schedule": "",
+      "natural": false,
+      "observed_at": "2026-09-02T04:32:53Z",
+      "outcome": "fresh",
+      "controlled": false
     }
   ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/stocks/AMZN.json",
-    "payload_sha256": "9db8c19f8c98c99f9891ed18a3dd8128bde12b65859edd38467258a89ca38dbf",
-    "source_as_of": "2026-08-28T20:00:00Z",
-    "fetched_at": "2026-08-29T23:24:32Z"
+    "payload_sha256": "0b3d315c4dd97f1c5aff51646e176efd4d60292b2fb17602b0a84d84e3094b99",
+    "source_as_of": "2026-09-01T20:00:00Z",
+    "fetched_at": "2026-09-02T04:42:03Z"
   },
-  "updated_at": "2026-08-29T23:24:21Z",
+  "updated_at": "2026-09-02T04:32:53Z",
   "last_attempt": {
-    "run_id": "33280832319",
+    "run_id": "33591076140",
     "run_attempt": 1,
-    "event_name": "schedule",
-    "schedule": "20 21 * * *",
-    "natural": true,
-    "observed_at": "2026-08-29T23:24:21Z",
+    "event_name": "workflow_dispatch",
+    "schedule": "",
+    "natural": false,
+    "observed_at": "2026-09-02T04:32:53Z",
     "outcome": "fresh",
     "controlled": false
   },
