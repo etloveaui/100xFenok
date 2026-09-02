@@ -80,7 +80,7 @@ export function CommandPalette({ items = DEFAULT_ITEMS, onSelect }: { items?: It
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "?" && !open) { e.preventDefault(); setShowHelp((v) => !v); return; }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setOpen((v) => !v); return; }
-      if (e.key === "/" && !open && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
+      if (e.key.length === 1 && e.key.charCodeAt(0) === 47 && !open && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
         e.preventDefault(); setOpen(true); return;
       }
       if (e.key === "Escape" && open) { setOpen(false); return; }
