@@ -20,7 +20,13 @@ export async function setupDeterministicNetwork(
     await route.fulfill({ json: { now: fixedNowISO } });
   });
 
-  await context.route("**/analytics/**", (route) => route.abort());
+  for (const trackerHost of [
+    "https://*.google-analytics.com/**",
+    "https://*.googletagmanager.com/**",
+    "https://static.cloudflareinsights.com/**",
+  ]) {
+    await context.route(trackerHost, (route) => route.abort());
+  }
   await context.route("**/*vitals*", (route) => route.abort());
   await context.route("**/ws/**", (route) => route.abort());
 }
