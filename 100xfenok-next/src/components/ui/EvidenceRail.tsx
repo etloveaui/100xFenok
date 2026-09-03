@@ -117,7 +117,7 @@ export function EvidenceRail({
   return (
     <div className={className}>
       <div
-        className="flex items-center gap-[14px] h-[30px] px-4 border-t border-[var(--fnk-neutral-100)] bg-[#fafbfc] text-[11px] text-[var(--fnk-neutral-500)] overflow-hidden whitespace-nowrap"
+        className="flex items-center gap-[14px] h-[30px] px-4 border-t border-[var(--fnk-neutral-100)] bg-[#fafbfc] text-[11px] text-[var(--fnk-neutral-500)] overflow-hidden whitespace-nowrap max-md:h-auto max-md:min-h-[30px] max-md:flex-wrap max-md:gap-x-[14px] max-md:gap-y-1 max-md:whitespace-normal max-md:py-1"
       >
         <span className="inline-flex items-center gap-1 shrink-0">
           <span className="inline-block w-[6px] h-[6px] rounded-full" style={{ background: dotColor[freshness] }} />
@@ -143,13 +143,13 @@ export function EvidenceRail({
         {showRetry && (
           <button
             onClick={onRetry}
-            className={`${hasDrawer || onEvidence ? "" : "ml-auto "}shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive`}
+            className={`${hasDrawer || onEvidence ? "" : "ml-auto "}shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-[44px] max-md:inline-flex max-md:items-center`}
           >
             지금 재시도
           </button>
         )}
         {(hasDrawer || onEvidence) && (
-          <button onClick={handleEvidence} aria-expanded={hasDrawer ? drawerOpen : undefined} aria-controls={hasDrawer ? drawerId : undefined} className="ml-auto shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive">
+          <button onClick={handleEvidence} aria-expanded={hasDrawer ? drawerOpen : undefined} aria-controls={hasDrawer ? drawerId : undefined} className="ml-auto shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-[44px] max-md:inline-flex max-md:items-center">
             증거 보기
           </button>
         )}
