@@ -197,5 +197,8 @@ export function useDashboardData() {
     dataReady,
     failedSources,
     freshness: dashboard.freshness,
+    retry: () => {
+      void loadOverviewData();
+    },
   } satisfies DashboardDataResult;
 }

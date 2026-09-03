@@ -127,7 +127,7 @@ function stockHrefOf(ticker: string | null): string | undefined {
   return ROUTES.stock(ticker);
 }
 
-function revisionRows(doc: unknown): DiffRow[] {
+function revisionRows(doc: unknown, watch: Set<string> | null): DiffRow[] {
   if (!isRecord(doc)) return [];
   const rows: DiffRow[] = [];
   for (const key of ["up", "down"] as const) {
@@ -137,6 +137,9 @@ function revisionRows(doc: unknown): DiffRow[] {
       if (!isRecord(raw)) continue;
       const ticker = normalizeForEntityKey(raw.ticker);
       if (!isValidEntityTicker(ticker)) continue;
+      // Watchlist scope applies BEFORE the per-direction caps so every
+      // watched ticker present in the source survives to the rows.
+      if (watch && !watch.has(ticker)) continue;
       const change = asNumber(raw.change_1w);
       const eps = asNumber(raw.eps_fy1);
       const asOf = isoDay(raw.as_of);
@@ -165,7 +168,7 @@ function revisionRows(doc: unknown): DiffRow[] {
   return [...up, ...down];
 }
 
-function holderRows(trades: unknown, byTicker: unknown): DiffRow[] {
+function holderRows(trades: unknown, byTicker: unknown, watch: Set<string> | null): DiffRow[] {
   if (!isRecord(trades)) return [];
   const holders = new Map<string, number>();
   if (isRecord(byTicker)) {
@@ -181,6 +184,7 @@ function holderRows(trades: unknown, byTicker: unknown): DiffRow[] {
   for (const raw of bought) {
     if (!isRecord(raw)) continue;
     const ticker = normalizeForEntityKey(raw.ticker);
+    if (watch && !watch.has(ticker)) continue;
     const fresh = asNumber(raw.new_count) ?? 0;
     const current = holders.get(ticker);
     if (!isValidEntityTicker(ticker) || fresh <= 0 || current === undefined) continue;
@@ -214,6 +218,7 @@ function holderRows(trades: unknown, byTicker: unknown): DiffRow[] {
   for (const raw of sold) {
     if (!isRecord(raw)) continue;
     const ticker = normalizeForEntityKey(raw.ticker);
+    if (watch && !watch.has(ticker)) continue;
     const exits = asNumber(raw.exit_count) ?? 0;
     const current = holders.get(ticker);
     if (!isValidEntityTicker(ticker) || exits <= 0 || current === undefined) continue;
@@ -294,13 +299,13 @@ function toneClass(tone: DiffTone): string {
 function accentClass(accent: DiffRow["accent"]): string {
   if (accent === "add") return "bg-[var(--fnk-color-gain-soft)] shadow-[inset_2px_0_0_var(--fnk-color-gain)]";
   if (accent === "del") return "bg-[var(--fnk-color-loss-soft)] shadow-[inset_2px_0_0_var(--fnk-color-loss)]";
-  return "";
+  return "focus-visible:shadow-[inset_2px_0_0_var(--fnk-neutral-300)]";
 }
 
 const FOCUS_RING = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-interactive";
 
 export default function ChangesClient() {
-  const { dashboard, dataReady, failedSources } = useDashboardData();
+  const { dashboard, dataReady, failedSources, retry: retryDashboard } = useDashboardData();
   const [revisionDoc, setRevisionDoc] = useState<unknown>(null);
   const [tradesDoc, setTradesDoc] = useState<unknown>(null);
   const [byTickerDoc, setByTickerDoc] = useState<unknown>(null);
@@ -323,9 +328,11 @@ export default function ChangesClient() {
       fetchJson<unknown>("/data/sec-13f/by_ticker.json"),
     ]).then(([revision, trades, byTicker]) => {
       if (cancelled) return;
-      setRevisionDoc(revision);
-      setTradesDoc(trades);
-      setByTickerDoc(byTicker);
+      // Keep good docs on failure: a failed refetch never replaces a loaded
+      // doc with null (last-known-good stays on screen).
+      if (revision !== null) setRevisionDoc(revision);
+      if (trades !== null) setTradesDoc(trades);
+      if (byTicker !== null) setByTickerDoc(byTicker);
       setFeedsLoaded(true);
     });
     return () => {
@@ -333,7 +340,10 @@ export default function ChangesClient() {
     };
   }, [retryKey]);
 
-  const retryFeeds = () => setRetryKey((key) => key + 1);
+  const retryFeeds = () => {
+    retryDashboard();
+    setRetryKey((key) => key + 1);
+  };
 
   const dashboardSettled = dataReady || failedSources.length > 0;
   const dashboardFailed = failedSources.length > 0;
@@ -357,25 +367,33 @@ export default function ChangesClient() {
   const quarter = useMemo(() => tradesQuarter(tradesDoc), [tradesDoc]);
   const nextDiffLabel = useMemo(() => nextRevisionRefreshLabel(Date.now()), []);
 
-  // Persist this visit as next visit's baseline once everything settles.
-  // Failed dashboard fallbacks are never snapshotted as truth: without a real
-  // load the Edge/regime fields stay null instead of freezing a fallback.
+  // Persist this visit as next visit's baseline once everything settles with
+  // a real dashboard load. A fallback-contaminated baseline is never saved:
+  // the whole write waits for dataReady && !dashboardFailed.
   useEffect(() => {
-    if (!settled || snapshotSaved) return;
+    if (!settled || snapshotSaved || dashboardFailed || !dataReady) return;
     setSnapshotSaved(true);
     writeSnapshot({
       at: new Date().toISOString(),
-      edgeScore: dataReady ? regime.confidence : null,
-      regime: dataReady ? regime.label : null,
+      edgeScore: regime.confidence,
+      regime: regime.label,
       revisionAsOf: revAsOf,
       quarter,
     });
-  }, [settled, snapshotSaved, dataReady, regime.confidence, regime.label, revAsOf, quarter]);
+  }, [settled, snapshotSaved, dashboardFailed, dataReady, regime.confidence, regime.label, revAsOf, quarter]);
+
+  // Watchlist scope set: null = global. Consumed inside revisionRows /
+  // holderRows BEFORE the per-direction caps so every watched ticker present
+  // in the source survives (visit-baseline rows carry no ticker and stay).
+  const watchSet = useMemo(
+    () => (mineOnly && watchlist.length > 0 ? new Set(watchlist.map((entry) => entry.toUpperCase())) : null),
+    [mineOnly, watchlist],
+  );
 
   const rows = useMemo(() => {
     if (!settled) return [];
-    const revRows = revisionRows(revisionDoc);
-    const holdRows = holderRows(tradesDoc, byTickerDoc);
+    const revRows = revisionRows(revisionDoc, watchSet);
+    const holdRows = holderRows(tradesDoc, byTickerDoc, watchSet);
     const out: DiffRow[] = [];
     // Snapshot comparisons need a real dashboard load: fallback values are
     // never rendered as the current side of a visit diff.
@@ -426,13 +444,8 @@ export default function ChangesClient() {
     } else {
       out.push(...revRows, ...holdRows);
     }
-    // 내 종목 기준: with a non-empty watchlist and 내 종목 on, rows scope to
-    // watched tickers; visit-baseline rows (no ticker) always stay.
-    const scoped = mineOnly && watchlist.length > 0
-      ? out.filter((row) => row.ticker === null || watchlist.includes(row.ticker.toUpperCase()))
-      : out;
-    return scoped.sort((a, b) => a.rank - b.rank || a.title.localeCompare(b.title));
-  }, [settled, segment, revisionDoc, tradesDoc, byTickerDoc, snapshot, dataReady, dashboardFailed, mineOnly, watchlist, regime.confidence, regime.label, quarter]);
+    return out.sort((a, b) => a.rank - b.rank || a.title.localeCompare(b.title));
+  }, [settled, segment, revisionDoc, tradesDoc, byTickerDoc, snapshot, dataReady, dashboardFailed, watchSet, regime.confidence, regime.label, quarter]);
 
   const upCount = rows.filter((row) => row.tone === "up").length;
   const downCount = rows.filter((row) => row.tone === "down").length;
@@ -562,7 +575,7 @@ export default function ChangesClient() {
 
       <Panel
         loading={!settled}
-        empty={settled && rows.length === 0}
+        empty={settled && rows.length === 0 && !allMissing}
         emptyReason={
           snapshotNotice ?? (revMissing && holdersMissing
             ? "비교할 피드를 읽지 못했습니다"
@@ -611,9 +624,11 @@ export default function ChangesClient() {
               </span>
             </>
           );
-          const className = `grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 border-t border-slate-100 px-4 py-2 text-[13px] transition-colors duration-150 first:border-t-0 md:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)_100px] md:gap-2 ${FOCUS_RING} ${accentClass(row.accent)}`;
+          // SPEC row hover/focus: bg #f8fafc + 2px left accent. add/del carry
+          // the accent always; neutral rows get it on focus via accentClass.
+          const className = `grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 border-t border-slate-100 px-4 py-2 text-[13px] transition-colors duration-150 first:border-t-0 md:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)_100px] md:gap-2 hover:bg-[#f8fafc] focus-visible:bg-[#f8fafc] focus-visible:outline-none ${accentClass(row.accent)}`;
           return row.href ? (
-            <TransitionLink key={row.id} href={row.href} className={`${className} hover:bg-slate-50`}>
+            <TransitionLink key={row.id} href={row.href} className={className}>
               {body}
             </TransitionLink>
           ) : (
@@ -636,7 +651,7 @@ export default function ChangesClient() {
       <div className="grid gap-4 md:grid-cols-3">
         <Panel
           loading={!settled}
-          empty={settled && rows.length === 0}
+          empty={settled && rows.length === 0 && !allMissing}
           emptyReason="집계할 변화가 없습니다"
           emptyNextRefresh="다음 수집 시"
           emptyActionLabel={settled && rows.length === 0 ? emptyActionLabel : undefined}
@@ -668,7 +683,7 @@ export default function ChangesClient() {
         </Panel>
         <Panel
           loading={!settled}
-          empty={settled && !first}
+          empty={settled && !first && !allMissing}
           emptyReason="먼저 볼 항목이 없습니다"
           emptyNextRefresh="다음 수집 시"
           emptyActionLabel={settled && !first ? emptyActionLabel : undefined}

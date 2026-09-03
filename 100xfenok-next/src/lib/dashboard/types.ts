@@ -146,4 +146,6 @@ export type DashboardDataResult = {
   dataReady: boolean;
   failedSources: DashboardSourceId[];
   freshness: DashboardFreshnessMap;
+  /** manual refetch of every dashboard source (retry path) */
+  retry: () => void;
 };
