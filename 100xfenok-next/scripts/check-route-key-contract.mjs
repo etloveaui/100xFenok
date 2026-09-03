@@ -486,8 +486,8 @@ for (const sourcePath of collectDeclaredSourcePaths()) {
     errors.push(`${sourcePath}: declared macro source path must be /data/* or stooq:*`);
     continue;
   }
-  const filePath = path.join(APP_ROOT, "public", sourcePath);
-  assert(fs.existsSync(filePath), `${sourcePath} points to missing public file`, errors);
+  const filePath = path.join(APP_ROOT, "..", "data", sourcePath.replace(/^\/data\//, ""));
+  assert(fs.existsSync(filePath), `${sourcePath} points to missing data file`, errors);
 }
 
 const productPaths = new Set(routeExports.staticProductRoutePaths ?? []);
