@@ -207,13 +207,6 @@ function collectDeclaredSourcePaths() {
   const sourcePaths = new Set();
   const jsonPath = path.join(APP_ROOT, "..", "data", "catalog", "macro-series.json");
   collectSourcePathsFromJson(JSON.parse(fs.readFileSync(jsonPath, "utf8")), sourcePaths);
-
-  const catalogTs = fs.readFileSync(path.join(APP_ROOT, "src", "lib", "macro-chart", "catalog.ts"), "utf8");
-  const sourcePathPattern = /\bsourcePath:\s*["']([^"']+)["']/g;
-  let match;
-  while ((match = sourcePathPattern.exec(catalogTs))) {
-    sourcePaths.add(match[1]);
-  }
   return [...sourcePaths];
 }
 
