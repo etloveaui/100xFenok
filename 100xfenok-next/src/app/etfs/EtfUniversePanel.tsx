@@ -23,7 +23,7 @@ export default function EtfUniversePanel({ surface }: { surface: EtfSurfaceData 
   const feedFailed = loaded && !universeOk;
   const clock = etfUniverseAsOf(surface.universe);
   const published = etfUniversePublishedAt(surface.universe);
-  const stale = loaded && !!insights && isEtfClockStale(clock);
+  const stale = loaded && !!insights && isEtfClockStale(clock ?? published);
 
   const compositionSummary = (insights?.compositionBuckets ?? [])
     .filter((bucket) => bucket.count > 0)

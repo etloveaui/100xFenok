@@ -150,7 +150,7 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
   // The list is universe-feed truth; a failed snapshot feed only degrades the
   // digital-asset segment, so the rail drops to partial instead of fresh.
   const feedFailed = loaded && !universeOk;
-  const stale = loaded && !feedFailed && isEtfClockStale(clock);
+  const stale = loaded && !feedFailed && isEtfClockStale(clock ?? published);
   const partial = loaded && !feedFailed && !snapshotOk;
 
   const [query, setQuery] = useState("");
