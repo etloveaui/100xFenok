@@ -51,6 +51,8 @@ import {
   RIM_FIVE_CANONICAL_BLOCKER_KEYS,
   RIM_FIVE_CANONICAL_SOURCE_CLOCK_KEYS,
   RIM_FIVE_CANONICAL_PUBLIC_MIRROR_RELS,
+  OUTCOME_WATCHDOG_CADENCE_HOURS,
+  OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER,
 } from "./lib/kpi-contract-constants.mjs";
 import { classifyProductSurfaceV2, nextProductSurfaceLineageV2 } from "./lib/product-surface-stamp-v2.mjs";
 
@@ -468,6 +470,57 @@ export function evaluateSlaAge({ sourceDate, unit, calendar, nowIso }) {
 export function slaStatusForAge(age, maxStaleness) {
   if (age == null) return "unavailable";
   return age <= Number(maxStaleness) ? "ready" : "stale";
+}
+
+export function buildOutcomeWatchdog(nowIso, laneRows, registry = LANE_REGISTRY) {
+  const nowMs = new Date(nowIso).getTime();
+  if (!Number.isFinite(nowMs)) throw new Error(`outcome watchdog now is invalid: ${nowIso}`);
+  const lanesById = new Map((Array.isArray(laneRows) ? laneRows : []).map((row) => [row?.id, row]));
+  const rows = registry.lanes
+    .filter((entry) => entry.enforcement === "live"
+      && entry.lane_class === "detection_floor"
+      && Object.hasOwn(OUTCOME_WATCHDOG_CADENCE_HOURS, entry.cadence?.kind))
+    .flatMap((entry) => {
+      const laneEntry = lanesById.get(entry.id);
+      if (!laneEntry) return [];
+      const lastAdvance = laneEntry?.artifact?.source_as_of ?? null;
+      const advanceMs = typeof lastAdvance === "string" ? new Date(lastAdvance).getTime() : NaN;
+      const cadenceHours = OUTCOME_WATCHDOG_CADENCE_HOURS[entry.cadence.kind];
+      const thresholdHours = cadenceHours * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER;
+      const ageHours = Number.isFinite(advanceMs)
+        ? Math.round(((nowMs - advanceMs) / 3600000) * 100) / 100
+        : null;
+      const state = ageHours === null
+        ? "unobservable"
+        : ageHours > thresholdHours ? "overdue" : "current";
+      return [{
+        lane_id: entry.id,
+        cadence_kind: entry.cadence.kind,
+        cadence_hours: cadenceHours,
+        threshold_hours: thresholdHours,
+        last_advance: lastAdvance,
+        age_hours: ageHours,
+        state,
+      }];
+    });
+  const counts = rows.reduce((acc, row) => {
+    acc[row.state] += 1;
+    return acc;
+  }, { current: 0, overdue: 0, unobservable: 0 });
+  return {
+    schema_version: "lane-outcome-watchdog/v1",
+    evaluated_at: nowIso,
+    basis: "canonical_file_source_as_of",
+    threshold_multiplier: OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER,
+    status: counts.overdue > 0 ? "overdue" : "ready",
+    counts: {
+      monitored: rows.length,
+      current: counts.current,
+      overdue: counts.overdue,
+      unobservable: counts.unobservable,
+    },
+    rows,
+  };
 }
 
 // Fail-closed OLDEST: if ANY listed input is null/unparseable, the aggregate is
@@ -3638,6 +3691,7 @@ export function buildPayload(
       Object.assign(laneEntry.details, LAST_ATTEMPT_STORELESS_DETAIL);
     }
   }
+  const outcomeWatchdog = buildOutcomeWatchdog(nowIso, lanes);
   const { overallStatus, totals, deploymentIntegrity } = summarize(lanes);
   const nonReadyChecks = lanes.flatMap((item) => (item.checks || [])
     .filter((entry) => entry.status !== "ready")
@@ -3694,6 +3748,7 @@ export function buildPayload(
       source_artifacts_are_referenced_by_id_only: true,
     },
     deployment_integrity: deploymentIntegrity,
+    outcome_watchdog: outcomeWatchdog,
     runtime,
     publication: buildPublicationOutcomes({ dataRoot }),
     source_sla: sourceSla,

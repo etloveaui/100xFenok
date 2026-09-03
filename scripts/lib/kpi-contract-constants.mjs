@@ -72,6 +72,17 @@ export const PRODUCT_SURFACE_DATELESS_REASON = "provider publishes no date; rece
 export const PRODUCT_SURFACE_LEGACY_CLASSIFICATION = "legacy-fabricated";
 export const PRODUCT_SURFACE_LEGACY_DISPOSITION = "superseded";
 
+// Outcome freshness is deliberately narrower than the registry's full cadence
+// vocabulary. DEC-407 makes these four producer cadences actionable; hourly,
+// annual, mixed, and unknown lanes retain their existing specialized contracts.
+export const OUTCOME_WATCHDOG_CADENCE_HOURS = Object.freeze({
+  daily: 24,
+  weekly: 7 * 24,
+  monthly: 30 * 24,
+  quarterly: 90 * 24,
+});
+export const OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER = 1.5;
+
 // Cadence thresholds (definitional). v2_activated_at + calendar_version are
 // per-build state stamped onto the artifact cadence, NOT part of this canonical set.
 export const CADENCE = Object.freeze({

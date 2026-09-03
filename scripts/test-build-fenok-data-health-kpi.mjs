@@ -58,6 +58,7 @@ const {
   assessRimFiveCanonicalArtifact,
   readRimFiveCanonicalHealth,
   buildRuntime,
+  buildOutcomeWatchdog,
   buildPayload,
   enumerateDueSlots,
   deriveMissedSlots,
@@ -73,6 +74,8 @@ const {
   TRACKED_CRONS,
   CADENCE,
   RIM_FIVE_CANONICAL_DATA_REL,
+  OUTCOME_WATCHDOG_CADENCE_HOURS,
+  OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER,
 } = await import("./lib/kpi-contract-constants.mjs");
 const { ETF_CORE_DAILY_BASKET_CONFIG } = await import("./build-fenok-etf-core-daily-basket.mjs");
 const {
@@ -81,6 +84,7 @@ const {
   checkPublicProjection,
   checkDetectionFloorLane,
   checkRecoveryStateSources,
+  checkOutcomeWatchdog,
   checkSourceStatusProjections,
   executeCheckerRun,
 } = await import("../100xfenok-next/scripts/check-fenok-data-health-kpi.mjs");
@@ -1917,6 +1921,7 @@ function readyCoreV2(now) {
       status_message: "Platform integrity gates are ready; degraded lanes may publish independently.",
       blocker_count: 0, blockers: [],
     },
+    outcome_watchdog: buildOutcomeWatchdog(now, lanes),
     lanes,
     totals: { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length, degraded: 0, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 0, platform_blocking_not_ready: 0 },
     non_ready_checks: [],
@@ -2912,8 +2917,12 @@ console.log("# KPI v2 runtime self-proof fixtures");
   const runtime = makeProducerRuntime({ builtAt: now, slotKey: "update-manifest.yml:30 2 * * *@2026-07-10T02:30Z", runId: "e2e" });
   runtime.cadence.v2_activated_at = now; // due set empty -> missed empty
   seedReadyV2(tmp, { now, runtime, sla: readySla(now) });
-  assert.equal(runChecker(tmp, now).exit, 0, "checker green on ready v2 doc (fresh sources)");
-  assert.equal(runChecker(tmp, now, { strict: true }).exit, 0, "strict mode also green when everything fresh");
+  const readyResult = runChecker(tmp, now);
+  assert.equal(readyResult.exit, 0,
+    `checker green on ready v2 doc (fresh sources):\n${readyResult.stderr}`);
+  const strictReadyResult = runChecker(tmp, now, { strict: true });
+  assert.equal(strictReadyResult.exit, 0,
+    `strict mode also green when everything fresh:\n${strictReadyResult.stderr}`);
   ok("checker passes end-to-end on a ready v2 doc in both warn-only and strict modes");
 }
 
@@ -5148,6 +5157,74 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     "StockAnalysis row6 recovery must remain on its separate shared state",
   );
   ok("lane-registry recovery-source completeness (both directions)");
+}
+
+// Source-artifact projection migration pin (#366 item 5): the built
+// source_artifacts array must deep-equal the legacy hand list it replaces —
+// ids, order, and both public flags per entry.
+{
+  const laneRow = (id, sourceAsOf) => ({
+    id,
+    as_of: sourceAsOf,
+    artifact: { source_as_of: sourceAsOf },
+  });
+  const watchdog = buildOutcomeWatchdog("2026-09-03T00:00:00.000Z", [
+    laneRow("slickcharts", "2026-09-01"),
+    laneRow("fred_yardeni", "2026-08-29"),
+    laneRow("oecd_cli", "2026-07-01"),
+    laneRow("fdic_tier1", "2026-07-01"),
+    laneRow("stockanalysis_etf_detail", null),
+    laneRow("yahoo_ticker_macro", "2026-09-02T23:00:00Z"),
+  ]);
+  const rows = new Map(watchdog.rows.map((row) => [row.lane_id, row]));
+  assert.equal(watchdog.schema_version, "lane-outcome-watchdog/v1");
+  assert.equal(watchdog.threshold_multiplier, OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER);
+  assert.equal(rows.get("slickcharts").threshold_hours,
+    OUTCOME_WATCHDOG_CADENCE_HOURS.daily * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER);
+  assert.equal(rows.get("slickcharts").state, "overdue");
+  assert.equal(rows.get("fred_yardeni").state, "current");
+  assert.equal(rows.get("oecd_cli").state, "overdue");
+  assert.equal(rows.get("fdic_tier1").state, "current");
+  assert.equal(rows.get("stockanalysis_etf_detail").state, "unobservable");
+  assert.equal(rows.has("yahoo_ticker_macro"), false,
+    "hourly lanes stay outside the owner-approved daily/weekly/monthly/quarterly watchdog contract");
+  assert.deepEqual(watchdog.counts, {
+    monitored: 5,
+    current: 2,
+    overdue: 2,
+    unobservable: 1,
+  });
+  assert.equal(watchdog.status, "overdue");
+  const watchdogErrors = [];
+  checkOutcomeWatchdog({
+    generated_at: watchdog.evaluated_at,
+    lanes: [
+      laneRow("slickcharts", "2026-09-01"),
+      laneRow("fred_yardeni", "2026-08-29"),
+      laneRow("oecd_cli", "2026-07-01"),
+      laneRow("fdic_tier1", "2026-07-01"),
+      laneRow("stockanalysis_etf_detail", null),
+    ],
+    outcome_watchdog: watchdog,
+  }, watchdogErrors);
+  assert.deepEqual(watchdogErrors, []);
+  const tampered = structuredClone(watchdog);
+  tampered.rows[0].threshold_hours += 1;
+  const tamperErrors = [];
+  checkOutcomeWatchdog({
+    generated_at: watchdog.evaluated_at,
+    lanes: [
+      laneRow("slickcharts", "2026-09-01"),
+      laneRow("fred_yardeni", "2026-08-29"),
+      laneRow("oecd_cli", "2026-07-01"),
+      laneRow("fdic_tier1", "2026-07-01"),
+      laneRow("stockanalysis_etf_detail", null),
+    ],
+    outcome_watchdog: tampered,
+  }, tamperErrors);
+  assert.ok(tamperErrors.some((message) => /threshold_hours/.test(message)),
+    "checker must reject an artifact-defined outcome threshold");
+  ok("outcome watchdog derives per-lane advance state from registry cadence and canonical as-of");
 }
 
 // Source-artifact projection migration pin (#366 item 5): the built

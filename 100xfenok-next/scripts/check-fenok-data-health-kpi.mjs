@@ -28,6 +28,8 @@ import {
   PRODUCT_SURFACE_STAMP_VERSION,
   PRODUCT_SURFACE_LEGACY_CLASSIFICATION,
   PRODUCT_SURFACE_LEGACY_DISPOSITION,
+  OUTCOME_WATCHDOG_CADENCE_HOURS,
+  OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER,
 } from "../../scripts/lib/kpi-contract-constants.mjs";
 import { classifyProductSurfaceV2 } from "../../scripts/lib/product-surface-stamp-v2.mjs";
 import {
@@ -48,6 +50,7 @@ import { DATA_SUPPLY_DETECTION_CONFIG } from "../../scripts/lib/data-supply-dete
 import { hasStructuredGithubRunBinding } from "../../scripts/lib/data-supply-lkg-store.mjs";
 import { buildFetchCronAttemptCoverage } from "../../scripts/build-data-supply-detection-floor.mjs";
 import { inspectSlickchartsCompositeLiveIntegrity } from "../../scripts/lib/slickcharts-composite-recovery.mjs";
+import { LANE_REGISTRY } from "../../scripts/lib/lane-registry.mjs";
 
 const APP_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const REPO_ROOT = path.resolve(APP_ROOT, "..");
@@ -457,6 +460,70 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
     push(errors, retryCheck?.platform_blocking === false,
       `${laneId}: lkg_retry_set_empty must not be platform blocking`);
   }
+}
+
+export function checkOutcomeWatchdog(rootDoc, errors) {
+  const watchdog = rootDoc?.outcome_watchdog;
+  push(errors, watchdog && typeof watchdog === "object" && !Array.isArray(watchdog),
+    "outcome_watchdog object is required in v2");
+  if (!watchdog || typeof watchdog !== "object" || Array.isArray(watchdog)) return;
+  push(errors, watchdog.schema_version === "lane-outcome-watchdog/v1",
+    `outcome_watchdog schema is invalid: ${watchdog.schema_version}`);
+  push(errors, watchdog.evaluated_at === rootDoc.generated_at,
+    "outcome_watchdog.evaluated_at must equal the KPI generated_at clock");
+  push(errors, watchdog.basis === "canonical_file_source_as_of",
+    "outcome_watchdog basis must be canonical_file_source_as_of");
+  push(errors, watchdog.threshold_multiplier === OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER,
+    "outcome_watchdog threshold_multiplier differs from the canonical contract");
+
+  const lanesById = new Map((Array.isArray(rootDoc?.lanes) ? rootDoc.lanes : [])
+    .map((row) => [row?.id, row]));
+  const expectedRegistryRows = LANE_REGISTRY.lanes.filter((entry) =>
+    entry.enforcement === "live"
+    && entry.lane_class === "detection_floor"
+    && Object.hasOwn(OUTCOME_WATCHDOG_CADENCE_HOURS, entry.cadence?.kind)
+    && lanesById.has(entry.id));
+  const rows = Array.isArray(watchdog.rows) ? watchdog.rows : [];
+  push(errors, Array.isArray(watchdog.rows), "outcome_watchdog.rows must be an array");
+  push(errors, rows.length === expectedRegistryRows.length,
+    `outcome_watchdog monitored lane count mismatch: ${rows.length} vs ${expectedRegistryRows.length}`);
+  const nowMs = new Date(rootDoc.generated_at).getTime();
+  const expectedCounts = { monitored: expectedRegistryRows.length, current: 0, overdue: 0, unobservable: 0 };
+  for (let index = 0; index < expectedRegistryRows.length; index += 1) {
+    const registryLane = expectedRegistryRows[index];
+    const lane = lanesById.get(registryLane.id);
+    const row = rows[index];
+    const lastAdvance = lane?.artifact?.source_as_of ?? null;
+    const lastAdvanceMs = typeof lastAdvance === "string" ? new Date(lastAdvance).getTime() : NaN;
+    const cadenceHours = OUTCOME_WATCHDOG_CADENCE_HOURS[registryLane.cadence.kind];
+    const thresholdHours = cadenceHours * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER;
+    const ageHours = Number.isFinite(lastAdvanceMs) && Number.isFinite(nowMs)
+      ? Math.round(((nowMs - lastAdvanceMs) / 3600000) * 100) / 100
+      : null;
+    const state = ageHours === null
+      ? "unobservable"
+      : ageHours > thresholdHours ? "overdue" : "current";
+    expectedCounts[state] += 1;
+    push(errors, row?.lane_id === registryLane.id,
+      `outcome_watchdog.rows[${index}].lane_id is not registry ordered`);
+    push(errors, row?.cadence_kind === registryLane.cadence.kind,
+      `${registryLane.id}: outcome cadence_kind differs from the registry`);
+    push(errors, row?.cadence_hours === cadenceHours,
+      `${registryLane.id}: outcome cadence_hours differs from the canonical contract`);
+    push(errors, row?.threshold_hours === thresholdHours,
+      `${registryLane.id}: outcome threshold_hours differs from the canonical contract`);
+    push(errors, row?.last_advance === lastAdvance,
+      `${registryLane.id}: outcome last_advance differs from canonical file source_as_of`);
+    push(errors, row?.age_hours === ageHours,
+      `${registryLane.id}: outcome age_hours differs from the KPI clock`);
+    push(errors, row?.state === state,
+      `${registryLane.id}: outcome state ${row?.state} differs from ${state}`);
+  }
+  push(errors, JSON.stringify(watchdog.counts) === JSON.stringify(expectedCounts),
+    "outcome_watchdog counts do not reconcile with per-lane states");
+  const expectedStatus = expectedCounts.overdue > 0 ? "overdue" : "ready";
+  push(errors, watchdog.status === expectedStatus,
+    `outcome_watchdog status ${watchdog.status} differs from ${expectedStatus}`);
 }
 
 export function checkRecoveryStateSources(
@@ -1498,6 +1565,7 @@ export function validateV2({
   validateCoreShape(publicDoc, errors, SCHEMA_VERSION_V2, warnings);
   scanForbiddenTokens(publicKpiPath, errors);
   checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context, strict });
+  checkOutcomeWatchdog(rootDoc, errors);
   checkFetchCronSourceParity(rootDoc, rootKpiPath, { errors, warnings });
   checkSourceSla(rootDoc, { errors, warnings }, nowIso);
   checkRecoveryStateSources(rootDoc, rootKpiPath, errors, { slickchartsRepoRoot });
