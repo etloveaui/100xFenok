@@ -2,11 +2,14 @@
 
 import TransitionLink from "@/components/TransitionLink";
 import { EvidenceRail, Panel, PanelHeader } from "@/components/ui";
-import { formatAsOf } from "@/lib/data-state";
 import { formatInteger } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import {
   computeEtfInsights,
+  etfClockKind,
+  etfInlineClockLabel,
+  etfRailClockDate,
+  etfSnapshotPublishedClocks,
   etfSnapshotSubfeedClocks,
   fmtSignedPct,
   fmtVolumeCompact,
@@ -40,9 +43,17 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
   const clocks = etfSnapshotSubfeedClocks(snapshot);
   const newClock = clocks.newEtfs;
   const screenerClock = clocks.screener;
+  // Publication fallback per displayed block (fh-349): never an observation date.
+  const publishedClocks = etfSnapshotPublishedClocks(snapshot);
+  const newPublished = publishedClocks.newEtfs;
+  const screenerPublished = publishedClocks.screener;
   const stale = loaded && !!insights && (isEtfClockStale(newClock) || isEtfClockStale(screenerClock));
   // Panel floor is the oldest displayed subfeed clock (completeness floor).
   const floor = [newClock, screenerClock]
+    .filter((value): value is string => value !== null)
+    .sort()
+    .at(0) ?? null;
+  const publishedFloor = [newPublished, screenerPublished]
     .filter((value): value is string => value !== null)
     .sort()
     .at(0) ?? null;
@@ -50,7 +61,8 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
   const newPreview = snapshot?.newEtfs?.records?.slice(0, 3) ?? [];
   const volumeLeaders = insights?.volumeLeadersTop3 ?? [];
   const changeLeaders = insights?.changeLeadersTop3 ?? [];
-  const asOfLabel = formatAsOf(floor) ?? "제공자 미공개";
+  const asOfLabel = etfRailClockDate(floor, publishedFloor);
+  const asOfKind = etfClockKind(floor, publishedFloor);
 
   return (
     <Panel
@@ -86,7 +98,7 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
               {formatInteger(insights.newCount)}
               <span className="etf-today-unit">개</span>
             </span>
-            <span className="etf-today-asof">기준 {formatAsOf(newClock) ?? "미공개"}</span>
+            <span className="etf-today-asof">{etfInlineClockLabel(newClock, newPublished)}</span>
             <div className="etf-today-list">
               {newPreview.length > 0 ? (
                 newPreview.map((row) => (
@@ -103,7 +115,7 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
               {formatInteger(volumeLeaders.length)}
               <span className="etf-today-unit">종목</span>
             </span>
-            <span className="etf-today-asof">기준 {formatAsOf(screenerClock) ?? "미공개"}</span>
+            <span className="etf-today-asof">{etfInlineClockLabel(screenerClock, screenerPublished)}</span>
             <div className="etf-today-list">
               {volumeLeaders.map((row) => (
                 <TodayMoverLink key={`vol-${row.s}`} ticker={row.s} valueLabel={fmtVolumeCompact(row.volume)} />
@@ -116,7 +128,7 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
               {formatInteger(changeLeaders.length)}
               <span className="etf-today-unit">종목</span>
             </span>
-            <span className="etf-today-asof">기준 {formatAsOf(screenerClock) ?? "미공개"}</span>
+            <span className="etf-today-asof">{etfInlineClockLabel(screenerClock, screenerPublished)}</span>
             <div className="etf-today-list">
               {changeLeaders.map((row) => (
                 <TodayMoverLink
@@ -131,9 +143,10 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
         </div>
       ) : null}
       <EvidenceRail
-        freshness={loading ? "pending" : feedFailed ? "error" : stale ? "stale" : floor ? "fresh" : "fixed"}
+        freshness={loading ? "pending" : feedFailed ? "error" : stale ? "stale" : (floor ?? publishedFloor) ? "fresh" : "fixed"}
         source="거래소 · 발행사 공시"
         asOf={asOfLabel}
+        asOfKind={asOfKind === "published" ? "published" : undefined}
         coverage={insights ? `${formatInteger(insights.totalCount)}개 전량` : "—"}
         lkgAsOf={stale && floor ? floor : undefined}
         onRetry={feedFailed || stale ? reload : undefined}
