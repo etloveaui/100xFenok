@@ -255,6 +255,15 @@ const EMPTY: MarketValuationResult = {
   damodaranUsErp: null,
   dataReady: false,
   failed: false,
+  feedReady: {
+    valuation: false,
+    computed: false,
+    macro: false,
+    sentiment: false,
+    erp: false,
+    structure: false,
+    bond: false,
+  },
   sourceDate: null,
 };
 
@@ -987,23 +996,39 @@ export function useMarketValuation(): MarketValuationResult {
         sourceFromManifest("slickcharts", "SlickCharts", "지수 집중도·drawdown·연간 수익률", manifest),
       ].filter((source): source is ValuationDataSource => source !== null);
 
+      const macroPulses = buildMacroPulses(activity);
+      const signalPulses = buildSignalPulses(signals);
+      const sentimentPulses = buildSentimentPulses({ vix, fearGreed, aaii, move, putCall });
+      const structurePulses = marketStructurePulsesFromModel(marketStructureModel, { sp500Holdings, nasdaqHoldings, sp500Drawdown, sp500Returns, nasdaqReturns });
+      const erpInsight = buildErpInsight(damodaran, historicalErp);
+      const bondPulses = buildBondPulses(economic);
+
       setResult({
         indices,
         dataSources,
-        macroPulses: buildMacroPulses(activity),
+        macroPulses,
         macroDepths: buildMacroDepths(activity),
-        signalPulses: buildSignalPulses(signals),
-        sentimentPulses: buildSentimentPulses({ vix, fearGreed, aaii, move, putCall }),
+        signalPulses,
+        sentimentPulses,
         eventRisks: buildEventRisks(calendar, prevValues),
         indexTrends: buildIndexTrends(sp500Index, nasdaqIndex),
-        structurePulses: marketStructurePulsesFromModel(marketStructureModel, { sp500Holdings, nasdaqHoldings, sp500Drawdown, sp500Returns, nasdaqReturns }),
-        erpInsight: buildErpInsight(damodaran, historicalErp),
-        bondPulses: buildBondPulses(economic),
+        structurePulses,
+        erpInsight,
+        bondPulses,
         sp500AnnualReturns: buildAnnualReturns(sp500Returns),
         benchmarkSections: summaries?.metadata?.source_summary_sections ?? null,
         damodaranUsErp: finite(damodaran?.us_erp) ? damodaran!.us_erp! : null,
         dataReady: indices.length > 0,
         failed: indices.length === 0,
+        feedReady: {
+          valuation: indices.length > 0,
+          computed: signalPulses.length > 0,
+          macro: macroPulses.length > 0,
+          sentiment: sentimentPulses.length > 0,
+          erp: erpInsight !== null,
+          structure: structurePulses.length > 0,
+          bond: bondPulses.length > 0,
+        },
         sourceDate: raw.metadata?.version ?? null,
       });
     })();
