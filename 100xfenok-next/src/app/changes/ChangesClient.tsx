@@ -135,6 +135,7 @@ function revisionRows(doc: unknown, watch: Set<string> | null): DiffRow[] {
     if (!Array.isArray(list)) continue;
     for (const raw of list) {
       if (!isRecord(raw)) continue;
+      if (typeof raw.ticker !== "string") continue;
       const ticker = normalizeForEntityKey(raw.ticker);
       if (!isValidEntityTicker(ticker)) continue;
       // Watchlist scope applies BEFORE the per-direction caps so every
@@ -183,6 +184,7 @@ function holderRows(trades: unknown, byTicker: unknown, watch: Set<string> | nul
   const sold = Array.isArray(trades.sold) ? trades.sold : [];
   for (const raw of bought) {
     if (!isRecord(raw)) continue;
+    if (typeof raw.ticker !== "string") continue;
     const ticker = normalizeForEntityKey(raw.ticker);
     if (watch && !watch.has(ticker)) continue;
     const fresh = asNumber(raw.new_count) ?? 0;
@@ -217,6 +219,7 @@ function holderRows(trades: unknown, byTicker: unknown, watch: Set<string> | nul
   const sells: Array<{ row: DiffRow; amount: number }> = [];
   for (const raw of sold) {
     if (!isRecord(raw)) continue;
+    if (typeof raw.ticker !== "string") continue;
     const ticker = normalizeForEntityKey(raw.ticker);
     if (watch && !watch.has(ticker)) continue;
     const exits = asNumber(raw.exit_count) ?? 0;
