@@ -77,7 +77,7 @@
 
 .rgm-score-counts {
   font-size: 11px;
-  color: var(--c-chart-ord-mid);
+  color: var(--fnk-neutral-500);
   margin-top: 8px;
 }
 
@@ -130,6 +130,27 @@
 .rgm-mute {
   color: var(--fnk-neutral-500);
   font-weight: 600;
+}
+
+/* Composite meter fills follow the axis tone (dc semantic green/amber/red);
+ * the shared Bar default blue is kept for the neutral state. The child
+ * selector outranks the Bar fill utility without touching shared ui. */
+
+.rgm-bar-up > i {
+  background: var(--fnk-color-gain);
+}
+
+.rgm-bar-warn > i {
+  background: var(--fnk-color-warn-ink);
+}
+
+.rgm-bar-down > i {
+  background: var(--fnk-color-loss);
+}
+
+.rgm-meter-nodata {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
 }
 
 /* Axis breakdown table */
@@ -185,8 +206,17 @@
   white-space: nowrap;
 }
 
+/* Undated-feed disclosure under the axis table (structure carries no date). */
+
+.rgm-floor-note {
+  padding: 8px 16px 12px;
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
 /* Action panel rows: link rows with a secondary-button-styled opener.
- * The opener is a span (not a nested <button>) because the row is a link. */
+ * The opener is a span (not a nested <button>) because the row is a link.
+ * Left accent uses a 2px border; hover and keyboard focus share it. */
 
 .rgm-arow {
   display: grid;
@@ -194,12 +224,13 @@
   align-items: center;
   gap: 12px;
   min-height: 44px;
-  padding: 6px 16px;
+  padding: 6px 16px 6px 14px;
   border-top: 1px solid var(--fnk-neutral-100);
+  border-left: 2px solid transparent;
   font-size: 13px;
   color: var(--fnk-neutral-700);
   text-decoration: none;
-  transition: background-color 150ms ease, box-shadow 150ms ease;
+  transition: background-color 150ms ease, border-color 150ms ease;
 }
 
 .rgm-arow:first-of-type {
@@ -208,7 +239,13 @@
 
 .rgm-arow:hover {
   background: var(--fnk-neutral-50);
-  box-shadow: inset 2px 0 0 var(--fnk-brand-interactive);
+  border-left-color: var(--fnk-brand-interactive);
+}
+
+.rgm-arow:focus-visible {
+  background: var(--fnk-neutral-50);
+  border-left-color: var(--fnk-brand-interactive);
+  outline: none;
 }
 
 .rgm-atext {
@@ -224,7 +261,7 @@
 }
 
 .rgm-adetail {
-  color: var(--c-chart-ord-mid);
+  color: var(--fnk-neutral-500);
   font-weight: 400;
   min-width: 0;
   overflow: hidden;
