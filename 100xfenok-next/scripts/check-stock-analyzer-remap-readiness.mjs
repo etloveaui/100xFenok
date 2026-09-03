@@ -192,7 +192,10 @@ function buildReport() {
   );
 
   const { rows, failures } = checkRequiredStrings(fileContents);
-  const dataAssetPath = path.join(APP_ROOT, FILES.dataAsset);
+  const mirrorDataAssetPath = path.join(APP_ROOT, FILES.dataAsset);
+  const dataAssetPath = fs.existsSync(mirrorDataAssetPath)
+    ? mirrorDataAssetPath
+    : path.join(APP_ROOT, "..", "data", "global-scouter", "core", "stocks_analyzer.json");
   const dataAssetExists = fs.existsSync(dataAssetPath);
   if (!dataAssetExists) {
     failures.push(`data asset missing: ${FILES.dataAsset}`);
