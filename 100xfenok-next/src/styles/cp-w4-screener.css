@@ -1,4 +1,10 @@
-/* W4 screener nav + row-detail redesign styles - owned by the screener track. Additive, namespaced .cpw4-* */
+/* W4 screener shared styles - owned by the screener track. Slice-3 collapsed the
+   screener-page chrome (hero/nav/search/filter-shell/results-header/column/density
+   controls, verdict) out of this sheet: the screener now renders those regions with
+   plain components. What remains is layout + shared component styling consumed by
+   the stock route (.cpw4-hero/__top/p), StockDetailPanel (detail-*, edge-*, meters,
+   axis-*, ctas), the preset menu, and macro-shared .cpw5-tile-*. Keep it that way:
+   do not re-add page-chrome selectors here. */
 
 .cpw4-hero,
 .cpw4-filter-shell,
@@ -23,8 +29,6 @@
 }
 
 .cpw4-hero__top,
-.cpw4-nav-row,
-.cpw4-results-header,
 .cpw4-detail-context,
 .cpw4-edge-card__meta,
 .cpw4-edge-identity,
@@ -36,27 +40,6 @@
   gap: 16px;
 }
 
-.cpw4-hero__copy {
-  min-width: 0;
-}
-
-.cpw4-kicker {
-  margin: 0 0 8px;
-  color: var(--cpw4-accent);
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-.cpw4-hero h1 {
-  margin: 0;
-  color: var(--cpw4-ink);
-  font-size: 52px;
-  line-height: 1.03;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
 .cpw4-hero p {
   margin: 10px 0 0;
   color: var(--cpw4-muted);
@@ -66,79 +49,7 @@
   letter-spacing: 0;
 }
 
-.cpw4-freshness {
-  display: inline-flex;
-  min-height: 34px;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid #ccebd8;
-  border-radius: 999px;
-  background: #f0fbf5;
-  padding: 0 12px;
-  color: #166534;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-.cpw4-freshness__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #16a34a;
-  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.13);
-}
-
-.cpw4-nav-row {
-  margin-top: 28px;
-  align-items: stretch;
-}
-
-.cpw4-universe-tabs {
-  display: inline-flex;
-  min-height: 54px;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--cpw4-line);
-  border-radius: var(--cp-radius-sm);
-  background: #f8fafc;
-  padding: 5px;
-}
-
-.cpw4-universe-tab {
-  position: relative;
-  display: inline-flex;
-  min-height: 42px;
-  min-width: 104px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 0 16px;
-  color: var(--cpw4-muted);
-  font-size: 14px;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 0;
-  text-decoration: none;
-  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
-}
-
-.cpw4-universe-tab[aria-selected="true"] {
-  border-color: #bcd0f8;
-  background: var(--cpw4-panel);
-  color: var(--cpw4-accent);
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.14);
-}
-
-.cpw4-universe-tab strong {
-  font-variant-numeric: tabular-nums;
-}
-
-.cpw4-preset-wrap,
-.cpw4-column-lens {
+.cpw4-preset-wrap {
   position: relative;
 }
 
@@ -161,168 +72,8 @@
   font-weight: 800;
 }
 
-.cpw4-search {
-  display: flex;
-  min-height: 54px;
-  min-width: min(420px, 100%);
-  flex: 0 1 440px;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid var(--cpw4-line);
-  border-radius: var(--cp-radius-sm);
-  background: var(--cpw4-panel);
-  padding: 0 14px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-.cpw4-search__icon {
-  position: relative;
-  width: 17px;
-  height: 17px;
-  flex: 0 0 auto;
-  border: 2px solid #94a3b8;
-  border-radius: 999px;
-}
-
-.cpw4-search__icon::after {
-  position: absolute;
-  right: -6px;
-  bottom: -5px;
-  width: 8px;
-  height: 2px;
-  border-radius: 999px;
-  background: #94a3b8;
-  content: "";
-  transform: rotate(45deg);
-}
-
-.cpw4-search__input {
-  min-width: 0;
-  flex: 1 1 auto;
-  border: 0;
-  background: transparent;
-  color: var(--cpw4-ink);
-  font-size: 18px;
-  font-weight: 900;
-  outline: 0;
-}
-
-.cpw4-search__input::placeholder {
-  color: #64748b;
-}
-
-.cpw4-search__hint,
-.cpw4-search__clear {
-  display: inline-flex;
-  min-width: 28px;
-  min-height: 28px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--cpw4-line);
-  border-radius: 6px;
-  background: #f8fafc;
-  color: var(--cpw4-muted);
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.cpw4-search__clear {
-  padding: 0 8px;
-}
-
 .cpw4-selection-card--empty {
   display: none;
-}
-
-.cpw4-filter-shell {
-  border: 1px solid var(--cpw4-line);
-  border-radius: var(--cp-radius-sm);
-  background: var(--cpw4-panel);
-  overflow: visible;
-}
-
-.cpw4-filter-summary {
-  display: grid;
-  width: 100%;
-  min-height: 62px;
-  grid-template-columns: minmax(260px, 1fr) minmax(260px, 0.9fr) auto;
-  align-items: center;
-  gap: 16px;
-  border: 0;
-  background: transparent;
-  padding: 0 18px;
-  text-align: left;
-}
-
-.cpw4-filter-summary__lead,
-.cpw4-filter-summary__coverage,
-.cpw4-filter-summary__count {
-  display: inline-flex;
-  min-width: 0;
-  align-items: center;
-  gap: 10px;
-  color: var(--cpw4-muted);
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-.cpw4-filter-summary__label {
-  color: var(--cpw4-ink);
-  font-weight: 900;
-}
-
-.cpw4-filter-summary__preview {
-  overflow: hidden;
-  color: #334155;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cpw4-filter-summary__chevron {
-  color: #64748b;
-  font-size: 11px;
-}
-
-.cpw4-filter-summary__coverage {
-  justify-content: center;
-}
-
-.cpw4-coverage-bar {
-  width: 92px;
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #e2e8f0;
-}
-
-.cpw4-coverage-bar span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #22c55e, #2563eb);
-}
-
-.cpw4-filter-summary__count {
-  justify-content: flex-end;
-  color: var(--cpw4-ink);
-  white-space: nowrap;
-}
-
-.cpw4-filter-summary__count strong {
-  display: inline-flex;
-  min-width: 24px;
-  height: 24px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: var(--cpw4-accent);
-  font-size: 11px;
-}
-
-.cpw4-filter-summary__count strong,
-.cpw5-preset-chip[data-active="true"] {
-  color: #fff;
 }
 
 .cpw4-filter-drawer {
@@ -330,148 +81,6 @@
   border-width: 1px 0 0;
   border-radius: 0 0 8px 8px;
   box-shadow: none;
-}
-
-.cpw4-results-header {
-  min-height: 60px;
-  border-bottom: 1px solid var(--cpw4-line);
-  padding: 4px 4px 14px;
-}
-
-.cpw4-results-title {
-  display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
-  color: var(--cpw4-muted);
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.cpw4-results-title strong {
-  color: var(--cpw4-ink);
-  font-size: 20px;
-  font-weight: 900;
-}
-
-.cpw4-results-tools,
-.cpw4-icon-toggle-group,
-.cpw4-density-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* The table/card toggle only does anything in the desktop results branch, which
-   starts at 921px (ScreenerClient.tsx `hidden min-[921px]:block`). Below that the
-   mobile card list renders and ignores viewMode, so the control was visible,
-   focusable and inert. This bound MUST stay paired with that 921 boundary. */
-@media (max-width: 920px) {
-  [data-screener-view-mode-control] {
-    display: none;
-  }
-}
-
-.cpw4-column-chip,
-.cpw4-icon-button,
-.cpw4-density-button {
-  display: inline-flex;
-  min-height: 36px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--cpw4-line);
-  border-radius: 6px;
-  background: var(--cpw4-panel);
-  color: #334155;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0;
-  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
-}
-
-.cpw4-column-chip {
-  min-width: 116px;
-  gap: 6px;
-  padding: 0 12px;
-}
-
-.cpw4-icon-button,
-.cpw4-density-button {
-  width: 36px;
-  padding: 0;
-}
-
-@media (max-width: 900px) {
-  .cpw4-icon-button,
-  .cpw4-density-button {
-    min-height: 44px;
-    width: 44px;
-  }
-}
-
-.cpw4-column-chip:hover,
-.cpw4-icon-button:hover,
-.cpw4-density-button:hover,
-.cpw4-icon-button[data-canvas-plus-active="true"],
-.cpw4-density-button[data-canvas-plus-active="true"],
-.cpw5-preset-chip:hover {
-  border-color: #bcd0f8;
-  background: var(--cpw4-accent-soft);
-  color: var(--cpw4-accent);
-}
-
-.cpw4-column-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 15;
-  display: grid;
-  min-width: 178px;
-  gap: 4px;
-  border: 1px solid var(--cpw4-line);
-  border-radius: var(--cp-radius-sm);
-  background: var(--cpw4-panel);
-  padding: 6px;
-  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.14);
-}
-
-.cpw4-column-menu__item {
-  min-height: 34px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  padding: 0 10px;
-  color: #334155;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.cpw4-column-menu__item[data-canvas-plus-active="true"] {
-  background: var(--cpw4-accent-soft);
-  color: var(--cpw4-accent);
-}
-
-.cpw4-icon-table,
-.cpw4-icon-card {
-  width: 16px;
-  height: 16px;
-  border: 2px solid currentColor;
-  border-radius: 3px;
-}
-
-.cpw4-icon-table {
-  background:
-    linear-gradient(currentColor, currentColor) 0 33% / 100% 2px no-repeat,
-    linear-gradient(currentColor, currentColor) 0 66% / 100% 2px no-repeat,
-    linear-gradient(currentColor, currentColor) 50% 0 / 2px 100% no-repeat;
-}
-
-.cpw4-icon-card {
-  background:
-    linear-gradient(currentColor, currentColor) 50% 50% / 70% 2px no-repeat,
-    linear-gradient(currentColor, currentColor) 50% 72% / 70% 2px no-repeat;
 }
 
 .cpw4-detail-panel {
@@ -768,35 +377,8 @@
   margin-top: 14px;
 }
 
-/* W5 verdict hero — go-forward .cpw5-* namespace (W5-C screener polish) */
-
-.cpw5-verdict {
-  display: grid;
-  gap: 14px;
-  margin: 0;
-  border: 1px solid var(--cpw4-line);
-  border-radius: var(--cp-radius-sm);
-  background: linear-gradient(180deg, var(--cpw4-panel) 0%, var(--cpw4-soft) 140%);
-  padding: 18px 20px;
-}
-
-.cpw5-verdict__sentence {
-  margin: 0;
-  color: var(--cpw4-ink);
-  font-size: clamp(15px, 1.6vw, 18px);
-  font-weight: 800;
-  line-height: 1.5;
-}
-
-.cpw5-verdict__sentence strong {
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-}
-
-.cpw5-verdict__muted {
-  color: var(--cpw4-muted);
-  font-weight: 800;
-}
+/* .cpw5-tile-* is shared with the macro route (cp-w5-kit owns a parallel copy);
+   keep these rules even though the screener verdict no longer renders them. */
 
 .cpw5-tile-row {
   display: grid;
@@ -836,32 +418,6 @@
   font-size: 11px;
   font-weight: 700;
   overflow-wrap: anywhere;
-}
-
-.cpw5-preset-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.cpw5-preset-chip {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
-  border: 1px solid var(--cpw4-line);
-  border-radius: 999px;
-  background: var(--cpw4-panel);
-  padding: 0 14px;
-  color: var(--cpw4-ink);
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0;
-  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
-}
-
-.cpw5-preset-chip[data-active="true"] {
-  border-color: var(--cpw4-accent);
-  background: var(--cpw4-accent);
 }
 
 .cpw5-more-metrics-toggle {
@@ -1064,43 +620,24 @@
   gap: 8px;
 }
 
+/* The table/card toggle only does anything in the desktop results branch, which
+   starts at 921px (ScreenerClient.tsx `hidden min-[921px]:block`). Below that the
+   mobile card list renders and ignores viewMode, so the control was visible,
+   focusable and inert. This bound MUST stay paired with that 921 boundary. */
+@media (max-width: 920px) {
+  [data-screener-view-mode-control] {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
   .cpw4-hero__top,
-  .cpw4-nav-row,
-  .cpw4-results-header,
   .cpw4-detail-context,
   .cpw4-edge-identity,
   .cpw4-hero-verdict,
   .cpw4-weak-axis-callout {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .cpw4-search,
-  .cpw4-universe-tabs,
-  .cpw4-results-tools {
-    width: 100%;
-  }
-
-  .cpw4-search {
-    min-width: 0;
-    flex: 0 0 auto;
-  }
-
-  .cpw4-universe-tabs,
-  .cpw4-results-tools {
-    justify-content: space-between;
-  }
-
-  .cpw4-filter-summary {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 12px;
-  }
-
-  .cpw4-filter-summary__coverage,
-  .cpw4-filter-summary__count {
-    justify-content: flex-start;
   }
 
   .cpw4-detail-context__metrics {
@@ -1116,14 +653,6 @@
     margin-left: 0;
     width: 100%;
   }
-
-  .cpw5-verdict {
-    padding: 16px;
-  }
-
-  .cpw5-verdict__sentence {
-    font-size: 14.5px;
-  }
 }
 
 @media (max-width: 520px) {
@@ -1132,9 +661,7 @@
     padding: 18px;
   }
 
-  .cpw5-verdict,
-  .cpw5-tile-row,
-  .cpw5-preset-row {
+  .cpw5-tile-row {
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
@@ -1145,41 +672,8 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .cpw5-preset-chip {
-    min-width: 0;
-    flex: 1 1 calc(50% - 4px);
-    justify-content: center;
-  }
-
-  .cpw4-hero h1 {
-    font-size: 34px;
-  }
-
-  .cpw4-nav-row,
-  .cpw4-universe-tabs {
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-    max-width: 100%;
-  }
-
-  .cpw4-universe-tabs {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 4px;
-  }
-
   .cpw4-preset-wrap {
     min-width: 0;
-  }
-
-  .cpw4-preset-wrap > .cpw4-universe-tab,
-  .cpw4-universe-tab {
-    width: 100%;
-    min-width: 0;
-    flex: 1 1 0;
-    gap: 4px;
-    padding: 0 6px;
   }
 
   [data-canvas-plus-screener-service="true"] .cp-screener-results-shell,

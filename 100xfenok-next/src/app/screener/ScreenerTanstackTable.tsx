@@ -1,20 +1,34 @@
 "use client";
 
-import { Component, Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type ErrorInfo, type ReactNode } from "react";
+import { Component, Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ErrorInfo, type ReactNode } from "react";
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import MetricHelp from "@/components/MetricHelp";
 import type { ScreenerSortKey, ScreenerStock } from "@/lib/screener/types";
 import StockDetailPanel from "./StockDetailPanel";
 import type { ScreenerColumn, ScreenerDesktopTableProps } from "./ScreenerDesktopTable";
 
+export type ScreenerResultsScrollTarget = {
+  index: number;
+  nonce: number;
+};
+
 type ScreenerTanstackTableProps = ScreenerDesktopTableProps & {
   canvasPlusPreview?: boolean;
   enabled: boolean;
   fallback: ReactNode;
+  rows: ScreenerStock[];
+  scrollTarget?: ScreenerResultsScrollTarget | null;
+  onVisibleStartIndex?: (index: number) => void;
+  cursorTicker?: string | null;
 };
 
 type ScreenerTanstackTableInnerProps = ScreenerDesktopTableProps & {
   canvasPlusPreview: boolean;
+  rows: ScreenerStock[];
+  scrollTarget?: ScreenerResultsScrollTarget | null;
+  onVisibleStartIndex?: (index: number) => void;
+  cursorTicker?: string | null;
 };
 
 type ScreenerTanstackBoundaryProps = {
@@ -36,11 +50,8 @@ function canvasPlusDensityMode(density: string): "compact" | "default" | "comfy"
   return "default";
 }
 
-function canvasPlusRowHeight(density: string): number {
-  if (density === "compact") return 32;
-  if (density === "comfortable") return 48;
-  return 40;
-}
+const VIRTUAL_ROW_HEIGHT = 36;
+const EXPANDED_DETAIL_ESTIMATE = 360;
 
 function canvasPlusColumnWidth(column?: ScreenerColumn): number {
   if (!column) return 42;
@@ -189,6 +200,10 @@ function ScreenerTanstackTableInner({
   hasFilters = false,
   pageRows,
   preset,
+  rows,
+  scrollTarget = null,
+  onVisibleStartIndex,
+  cursorTicker = null,
   selectedTickers,
   sortDir,
   sortKey,
@@ -201,14 +216,79 @@ function ScreenerTanstackTableInner({
   toggleSelectedTicker,
   toggleSort,
 }: ScreenerTanstackTableInnerProps) {
-  const rowHeight = canvasPlusRowHeight(density);
+  const rowHeight = VIRTUAL_ROW_HEIGHT;
   const densityMode = canvasPlusDensityMode(density);
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+  const expandedTickerRef = useRef(expandedTicker);
+  expandedTickerRef.current = expandedTicker;
+  const detailHeights = useRef(new Map<string, number>());
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => tableScrollRef.current,
+    estimateSize: (index) => {
+      const stock = rowsRef.current[index];
+      if (!stock) return VIRTUAL_ROW_HEIGHT;
+      const cached = detailHeights.current.get(stock.ticker);
+      if (cached !== undefined) return VIRTUAL_ROW_HEIGHT + cached;
+      return VIRTUAL_ROW_HEIGHT + (expandedTickerRef.current === stock.ticker ? EXPANDED_DETAIL_ESTIMATE : 0);
+    },
+    overscan: 10,
+  });
+  const virtualizerRef = useRef(virtualizer);
+  virtualizerRef.current = virtualizer;
+  const measureDetailRef = useCallback((node: HTMLDivElement | null) => {
+    const current = virtualizerRef.current;
+    if (!current) return;
+    const ticker = node?.dataset.detailTicker;
+    if (!node || !ticker) return;
+    const height = node.offsetHeight;
+    if (detailHeights.current.get(ticker) !== height) {
+      detailHeights.current.set(ticker, height);
+      current.measure();
+    }
+  }, []);
+  useEffect(() => {
+    const live = new Set(rows.map((stock) => stock.ticker));
+    let pruned = false;
+    for (const key of detailHeights.current.keys()) {
+      if (!live.has(key)) {
+        detailHeights.current.delete(key);
+        pruned = true;
+      }
+    }
+    virtualizer.measure();
+    void pruned;
+  }, [virtualizer, rows, expandedTicker]);
+  useEffect(() => {
+    if (!scrollTarget || rows.length === 0) return;
+    virtualizer.scrollToIndex(Math.min(scrollTarget.index, rows.length - 1), { align: "start" });
+  }, [virtualizer, scrollTarget, rows.length]);
+  useEffect(() => {
+    if (!onVisibleStartIndex) return undefined;
+    const node = tableScrollRef.current;
+    if (!node) return undefined;
+    const report = () => {
+      if (node.clientHeight === 0) return;
+      const first = virtualizer.getVirtualItems()[0];
+      onVisibleStartIndex(first ? first.index : 0);
+    };
+    report();
+    node.addEventListener("scroll", report, { passive: true });
+    return () => node.removeEventListener("scroll", report);
+  }, [virtualizer, onVisibleStartIndex, rows.length]);
   const [canvasPlusScrollState, setCanvasPlusScrollState] = useState({
     atEnd: true,
     atStart: true,
     overflow: false,
   });
+  const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false);
+  useEffect(() => {
+    if (dataReady) { setShowLoadingSkeleton(false); return undefined; }
+    const timer = window.setTimeout(() => setShowLoadingSkeleton(true), 120);
+    return () => window.clearTimeout(timer);
+  }, [dataReady]);
   const visibleColumns = useMemo(
     () => (canvasPlusPreview ? activeColumns.filter((column) => column.key !== "name") : activeColumns),
     [activeColumns, canvasPlusPreview],
@@ -305,7 +385,7 @@ function ScreenerTanstackTableInner({
   // TanStack owns this table instance; keep the React Compiler warning scoped to the gated adapter.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: pageRows,
+    data: rows,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (stock) => stock.ticker,
@@ -356,6 +436,19 @@ function ScreenerTanstackTableInner({
       observer?.disconnect();
     };
   }, [canvasPlusPreview, canvasPlusTableWidth, density, pageRows.length, visibleColumns.length]);
+
+  const tableRows = table.getRowModel().rows;
+  const virtualItems = virtualizer.getVirtualItems();
+  const virtualTopPad = canvasPlusPreview && virtualItems.length > 0 ? virtualItems[0].start : 0;
+  const virtualBottomPad = canvasPlusPreview && virtualItems.length > 0
+    ? Math.max(0, virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end)
+    : 0;
+  const bodyRows = canvasPlusPreview
+    ? virtualItems.flatMap((virtualItem) => {
+      const row = tableRows[virtualItem.index];
+      return row ? [row] : [];
+    })
+    : tableRows;
 
   const tableScroller = (
     <div
@@ -421,7 +514,12 @@ function ScreenerTanstackTableInner({
           ))}
         </thead>
         <tbody>
-          {table.getRowModel().rows.map((row) => {
+          {virtualTopPad > 0 ? (
+            <tr aria-hidden="true">
+              <td colSpan={visibleColumns.length + 1} style={{ height: `${virtualTopPad}px`, padding: 0, border: 0 }} />
+            </tr>
+          ) : null}
+          {bodyRows.map((row) => {
             const stock = row.original;
             const expanded = expandedTicker === stock.ticker;
             const detailId = `screener-detail-${stock.ticker}`;
@@ -432,7 +530,10 @@ function ScreenerTanstackTableInner({
                   data-ticker={stock.ticker}
                   data-row-parity={canvasPlusPreview ? (row.index % 2 === 0 ? "even" : "odd") : undefined}
                   onClick={() => onToggleExpandedTicker(stock.ticker)}
-                  className={canvasPlusPreview ? "cursor-pointer" : "cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"}
+                  style={canvasPlusPreview ? { height: `${VIRTUAL_ROW_HEIGHT}px` } : undefined}
+                  className={canvasPlusPreview
+                    ? cx("cursor-pointer transition-colors duration-150 hover:bg-[var(--c-bg)] hover:shadow-[inset_2px_0_0_var(--c-brand)]", cursorTicker === stock.ticker && "outline outline-2 outline-offset-[-2px] outline-[var(--cp-focus-ring)]")
+                    : "cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"}
                 >
                   {row.getVisibleCells().map((cell) => {
                     const column = columnById.get(cell.column.id as ScreenerSortKey);
@@ -466,7 +567,11 @@ function ScreenerTanstackTableInner({
                     data-canvas-plus-detail-row={canvasPlusPreview ? "true" : undefined}
                   >
 	                    <td colSpan={visibleColumns.length + 1} className="p-0">
-	                      <div className={canvasPlusPreview ? "cp-screener-detail-shell" : undefined}>
+	                      <div
+	                        ref={canvasPlusPreview ? measureDetailRef : undefined}
+	                        data-detail-ticker={canvasPlusPreview ? stock.ticker : undefined}
+	                        className={canvasPlusPreview ? "cp-screener-detail-shell" : undefined}
+	                      >
 	                        <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} />
 	                      </div>
 	                    </td>
@@ -475,7 +580,26 @@ function ScreenerTanstackTableInner({
               </Fragment>
             );
           })}
-          {dataReady && pageRows.length === 0 ? (
+          {virtualBottomPad > 0 ? (
+            <tr aria-hidden="true">
+              <td colSpan={visibleColumns.length + 1} style={{ height: `${virtualBottomPad}px`, padding: 0, border: 0 }} />
+            </tr>
+          ) : null}
+          {!dataReady && showLoadingSkeleton && canvasPlusPreview ? (
+            Array.from({ length: 12 }, (_, skeletonIndex) => (
+              <tr key={`screener-loading-skeleton-${skeletonIndex}`} aria-hidden="true" style={{ height: `${VIRTUAL_ROW_HEIGHT}px` }}>
+                <td colSpan={visibleColumns.length + 1} style={{ padding: 0, border: 0 }}>
+                  <div className="flex h-full items-center gap-3 px-4 animate-pulse">
+                    <span className="h-3 w-16 rounded bg-[var(--c-surface-2)]" />
+                    <span className="h-3 w-28 rounded bg-[var(--c-surface-2)]" />
+                    <span className="h-3 w-20 rounded bg-[var(--c-surface-2)]" />
+                    <span className="ml-auto h-3 w-12 rounded bg-[var(--c-surface-2)]" />
+                  </div>
+                </td>
+              </tr>
+            ))
+          ) : null}
+          {dataReady && rows.length === 0 ? (
             <tr>
               <td colSpan={visibleColumns.length + 1} className={canvasPlusPreview ? "p-0" : "px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]"}>
                 {canvasPlusPreview ? (
@@ -489,7 +613,7 @@ function ScreenerTanstackTableInner({
                         data-variant="ghost"
                         data-density="compact"
                       >
-                        필터 초기화
+                        필터 완화
                       </button>
                     ) : null}
                   </div>
