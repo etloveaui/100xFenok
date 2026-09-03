@@ -1884,6 +1884,28 @@ async function collectRouteChecks(page, route) {
               failures.push({ check: "market-valuation-horizons-target", detail: `button ${index} height=${Math.round(node.getBoundingClientRect().height)}` });
             }
           });
+        Array.from(document.querySelectorAll(".mv-brow"))
+          .filter((node) => node.getBoundingClientRect().width > 0)
+          .forEach((node, index) => {
+            const rect = node.getBoundingClientRect();
+            if (rect.height < 44) {
+              failures.push({ check: "market-valuation-brow-target", detail: `brow ${index} height=${Math.round(rect.height)}` });
+            }
+            const band = node.querySelector(".mv-band");
+            const bandStart = band ? window.getComputedStyle(band).gridColumnStart : "";
+            if (!band || bandStart === "auto") {
+              failures.push({ check: "market-valuation-band-geometry", detail: `brow ${index} gridColumnStart=${bandStart || "missing"}` });
+            } else {
+              const bandRect = band.getBoundingClientRect();
+              const nameRect = node.querySelector(".mv-bname")?.getBoundingClientRect();
+              if (rect.width - bandRect.width > 40) {
+                failures.push({ check: "market-valuation-band-geometry", detail: `brow ${index} band=${Math.round(bandRect.width)} brow=${Math.round(rect.width)}` });
+              }
+              if (nameRect && bandRect.top < nameRect.bottom - 2) {
+                failures.push({ check: "market-valuation-band-geometry", detail: `brow ${index} band overlaps name row` });
+              }
+            }
+          });
       }
     }
 
@@ -2677,6 +2699,28 @@ async function collectRouteChecks(page, route) {
             detail: `alignItems=${mobileMetricAlign}`,
           });
         }
+
+        const searchInput = document.querySelector("[data-canvas-plus-screener-search]");
+        if (!searchInput || searchInput.getBoundingClientRect().height < 44) {
+          failures.push({ check: "screener-search-target", detail: `height=${Math.round(searchInput?.getBoundingClientRect().height ?? 0)}` });
+        }
+        Array.from(document.querySelectorAll("[data-canvas-plus-screener-title] form button"))
+          .filter((node) => node.getBoundingClientRect().width > 0)
+          .forEach((node, index) => {
+            if (node.getBoundingClientRect().height < 44) {
+              failures.push({ check: "screener-search-reset-target", detail: `reset ${index} height=${Math.round(node.getBoundingClientRect().height)}` });
+            }
+          });
+        const toolbarButtons = Array.from(document.querySelectorAll("[data-canvas-plus-screener-toolbar] button"))
+          .filter((node) => node.getBoundingClientRect().width > 0);
+        if (toolbarButtons.length === 0) {
+          failures.push({ check: "screener-toolbar-controls", detail: "no visible toolbar controls" });
+        }
+        toolbarButtons.forEach((node, index) => {
+          if (node.getBoundingClientRect().height < 44) {
+            failures.push({ check: "screener-toolbar-target", detail: `control ${index} height=${Math.round(node.getBoundingClientRect().height)}` });
+          }
+        });
       }
 
       const densityControl = document.querySelector("[data-screener-density-control]");
