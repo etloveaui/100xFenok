@@ -74,6 +74,29 @@ function renderContractHash(sites) {
 
 const readSource = (relativePath) => fs.readFileSync(path.join(APP_ROOT, relativePath), "utf8");
 
+// Curated background-evidence re-pins, keyed by site id. The roster is
+// baseline-driven and cannot express a surface/evidence reassignment, so a
+// re-curation lives here (source), never as a fixture hand-edit: regen
+// replaces the entry, pins the measured occurrence, and refuses an evidence
+// line that does not resolve to the claimed surface (patterns identical to
+// test-ink4-contrast-contract.mjs).
+const CURATED_BACKGROUND_EVIDENCE = {
+  "src/app/stock/[ticker]/StockDetailClient.tsx#9929fa694dcb#1": {
+    // GuruSection holdings text renders inside SectionCard > Panel (white);
+    // the previous panel witness line was removed by the slice-4b uncard, so
+    // re-pin to the GuruSection trade-card panel line in the same file.
+    background: "panel",
+    path: "src/app/stock/[ticker]/StockDetailClient.tsx",
+    target_hash: "8cca1aa4954114cac7a7af086cf35a017827eb4d3f5298733b3413a87a90d925",
+  },
+};
+
+const BACKGROUND_PATTERNS = {
+  panel: /bg-white|bg-\[var\(--c-panel\)\]|background:\s*var\(--c-panel\)|var\(--paper-1\)|--fnk-color-card:\s*#ffffff/,
+  muted: /bg-slate-50|bg-\[var\(--c-surface-2\)\]|background:\s*var\(--c-surface-2\)|var\(--paper-0\)|--fnk-color-background:\s*#f8fafc/,
+  slate100: /bg-slate-100|--fnk-neutral-100:\s*#f1f5f9/,
+};
+
 export function emitInk4ContrastFixture({ outputPath = INK4_CONTRAST_FIXTURE_PATH } = {}) {
   const baseline = JSON.parse(fs.readFileSync(INK4_CONTRAST_FIXTURE_PATH, "utf8"));
 
@@ -109,16 +132,26 @@ export function emitInk4ContrastFixture({ outputPath = INK4_CONTRAST_FIXTURE_PAT
         `ink4 fixture drift: ${site.id} render-target line vanished from ${site.path}`,
       );
     }
-    const evidence = getEvidence(site.background_evidence.path).get(site.background_evidence.target_hash);
+    const curated = CURATED_BACKGROUND_EVIDENCE[site.id];
+    const background = curated?.background ?? site.background;
+    const evidencePath = curated?.path ?? site.background_evidence.path;
+    const evidenceHash = curated?.target_hash ?? site.background_evidence.target_hash;
+    const evidence = getEvidence(evidencePath).get(evidenceHash);
     if ((evidence?.count ?? 0) === 0) {
       throw new Error(
-        `ink4 fixture drift: ${site.id} background-evidence line vanished from ${site.background_evidence.path}`,
+        `ink4 fixture drift: ${site.id} background-evidence line vanished from ${evidencePath}`,
+      );
+    }
+    if (!BACKGROUND_PATTERNS[background]?.test(evidence.line)) {
+      throw new Error(
+        `ink4 fixture curation: ${site.id} background evidence does not resolve to ${background}`,
       );
     }
     sites.push({
       ...site,
       occurrence: actual,
-      background_evidence: { ...site.background_evidence, occurrence: evidence.count },
+      background,
+      background_evidence: { path: evidencePath, target_hash: evidenceHash, occurrence: evidence.count, surface: background },
     });
   }
 
