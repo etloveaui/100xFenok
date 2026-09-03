@@ -3162,10 +3162,11 @@ async function collectRouteChecks(page, route) {
       }
       const graph = document.querySelector("[data-superinvestors-graph]");
       const graphTeaser = document.querySelector("[data-superinvestors-graph-teaser]");
-      const graphVisible = !!graph && graph.getBoundingClientRect().height > 0 && /Graph Network/.test(graph.textContent || "");
-      const teaserVisible = !!graphTeaser && graphTeaser.getBoundingClientRect().height > 0 && /그래프 보기/.test(graphTeaser.textContent || "");
-      if (!graphVisible && !teaserVisible) {
-        failures.push({ check: "superinvestors-graph", detail: "missing visible graph section or teaser" });
+      if (!graph || graph.getBoundingClientRect().height <= 0 || !/Graph Network/.test(graph.textContent || "")) {
+        failures.push({ check: "superinvestors-graph", detail: "missing visible graph section" });
+      }
+      if (!graphTeaser || graphTeaser.getBoundingClientRect().height <= 0 || !/그래프 보기/.test(graphTeaser.textContent || "")) {
+        failures.push({ check: "superinvestors-graph-teaser", detail: "missing visible graph teaser" });
       }
       if (currentRoute.includes("guru=")) {
         const params = new URLSearchParams(currentRoute.split("?")[1] || "");

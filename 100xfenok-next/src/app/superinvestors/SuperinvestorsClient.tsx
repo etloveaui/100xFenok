@@ -267,13 +267,22 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
     () => buildGraphNetwork({ summary, byTicker, excludedStale, failedRequests }),
     [summary, byTicker, excludedStale, failedRequests],
   );
-  const graphFailed = !loading && byTicker === null && failedRequests.includes("by_ticker");
-  const graphReady = !loading && !graphFailed && byTicker !== null;
+  const graphFailed = !loading && byTicker === null && graphNetwork.edges.length === 0 && failedRequests.includes("by_ticker");
+  const graphReady = !loading && !graphFailed && (byTicker !== null || graphNetwork.edges.length > 0);
   const graphFreshness: "pending" | "error" | "partial" | "stale" =
     loading ? "pending" : graphFailed ? "error" : partialFeeds || excludedStale.length > 0 ? "partial" : "stale";
   const graphCoverage = graphReady
-    ? `투자자 ${formatInteger(graphNetwork.investorCount)}명 · ${formatInteger(graphNetwork.tickerCount)}개 종목 연결`
+    ? `투자자 ${formatInteger(graphNetwork.investorCount)}${graphNetwork.totalInvestors !== null ? `/${formatInteger(graphNetwork.totalInvestors)}` : ""}명 · 종목 ${formatInteger(graphNetwork.tickerCount)}/${formatInteger(graphNetwork.totalTickers)} 연결`
     : coverage;
+  const plottedTickers = useMemo(
+    () => new Set(graphNetwork.nodes.flatMap((node) => (node.kind === "ticker" ? [node.ticker] : []))),
+    [graphNetwork],
+  );
+  useEffect(() => {
+    if (selectedGraphTicker !== null && !plottedTickers.has(selectedGraphTicker)) {
+      setSelectedGraphTicker(null);
+    }
+  }, [selectedGraphTicker, plottedTickers]);
   function openGraphEvidence() {
     openEvidence("/data/sec-13f/summary.json");
     openEvidence("/data/sec-13f/by_ticker.json");
@@ -493,10 +502,12 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
             network={graphNetwork}
             href="#superinvestors-graph-full"
             status={loading ? "pending" : graphFailed ? "error" : "ready"}
+            freshness={graphFreshness}
             source="SEC EDGAR 13F"
             asOf={asOfLabel}
             coverage={graphCoverage}
-            onRetry={graphFailed ? retry : undefined}
+            onRetry={graphFailed || (graphReady && partialFeeds) ? retry : undefined}
+            onEvidence={dataReady && !failed ? openGraphEvidence : undefined}
           />
         </div>
       </div>

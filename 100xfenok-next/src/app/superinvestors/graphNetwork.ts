@@ -33,6 +33,8 @@ export interface GraphNetwork {
   edges: GraphEdge[];
   investorCount: number;
   tickerCount: number;
+  totalInvestors: number | null;
+  totalTickers: number;
   feeds: { summary: boolean; byTicker: boolean };
   excludedCount: number;
 }
@@ -42,9 +44,15 @@ const EMPTY: GraphNetwork = {
   edges: [],
   investorCount: 0,
   tickerCount: 0,
+  totalInvestors: null,
+  totalTickers: 0,
   feeds: { summary: false, byTicker: false },
   excludedCount: 0,
 };
+
+// Last-known-good by_ticker docs: a failed retry must keep rendering the
+// retained graph (partial/error rail) instead of collapsing to EMPTY.
+let retainedByTicker: ByTickerData | null = null;
 
 export function buildGraphNetwork(input: GraphNetworkInput): GraphNetwork {
   const { summary, byTicker, excludedStale, failedRequests } = input;
@@ -52,7 +60,14 @@ export function buildGraphNetwork(input: GraphNetworkInput): GraphNetwork {
     summary: summary !== null && !failedRequests.includes("summary"),
     byTicker: byTicker !== null && !failedRequests.includes("by_ticker"),
   };
-  if (!feeds.byTicker || byTicker === null) return { ...EMPTY, feeds, excludedCount: excludedStale.length };
+  if (byTicker !== null) retainedByTicker = byTicker;
+  const docs = byTicker ?? retainedByTicker;
+  const totalTickers = docs !== null ? Object.keys(docs).length : 0;
+  const totalInvestors =
+    feeds.summary && summary !== null
+      ? (summary.metadata.total_investors ?? summary.metadata.investor_count ?? Object.keys(summary.investors).length)
+      : null;
+  if (docs === null) return { ...EMPTY, feeds, excludedCount: excludedStale.length };
   const excluded = new Set(excludedStale);
   if (feeds.summary && summary !== null) {
     for (const [investorId, profile] of Object.entries(summary.investors)) {
@@ -61,7 +76,7 @@ export function buildGraphNetwork(input: GraphNetworkInput): GraphNetwork {
   }
 
   const tickerHolders = new Map<string, Map<string, { weight: number; marketValue: number | null }>>();
-  for (const [ticker, entry] of Object.entries(byTicker)) {
+  for (const [ticker, entry] of Object.entries(docs)) {
     const holders = tickerHolders.get(ticker) ?? new Map();
     for (const detail of entry.holder_details ?? []) {
       if (excluded.has(detail.investor)) continue;
@@ -129,6 +144,8 @@ export function buildGraphNetwork(input: GraphNetworkInput): GraphNetwork {
     edges,
     investorCount: activeInvestors.size,
     tickerCount: tickerHolders.size,
+    totalInvestors,
+    totalTickers,
     feeds,
     excludedCount: excluded.size,
   };

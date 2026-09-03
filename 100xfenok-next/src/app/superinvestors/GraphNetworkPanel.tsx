@@ -149,7 +149,7 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
             title="누가 무엇을 함께 들고 있나"
             right={
               <span className="grn-head-meta">
-                {`투자자 ${formatInteger(network.investorCount)}명 · ${formatInteger(network.tickerCount)}개 종목 연결${capped ? " · 상위 표시" : ""}`}
+                {`투자자 ${formatInteger(network.investorCount)}명 · ${formatInteger(network.tickerCount)}개 종목 연결${capped ? " · 상위 14개만 표시" : ""}`}
               </span>
             }
           />
@@ -343,15 +343,31 @@ export interface GraphNetworkTeaserProps {
   network: GraphNetwork;
   href: string;
   status: GraphNetworkTeaserStatus;
+  freshness: EvidenceRailFreshness;
   source: string;
   asOf: string;
   coverage: string;
   onRetry?: () => void;
+  onEvidence?: () => void;
 }
 
-export function GraphNetworkTeaser({ network, href, status, source, asOf, coverage, onRetry }: GraphNetworkTeaserProps) {
+const TEASER_INVESTORS = 3;
+const TEASER_TICKERS = 5;
+
+export function GraphNetworkTeaser({ network, href, status, freshness, source, asOf, coverage, onRetry, onEvidence }: GraphNetworkTeaserProps) {
   const found = network.nodes.find((node) => node.kind === "ticker");
   const top = found !== undefined && found.kind === "ticker" ? found : null;
+  const previewInvestors = network.nodes.filter((node) => node.kind === "investor").slice(0, TEASER_INVESTORS);
+  const previewTickers = network.nodes.filter((node) => node.kind === "ticker").slice(0, TEASER_TICKERS);
+  const previewEdges: Array<{ investorId: string; ticker: string }> = [];
+  for (const edge of network.edges) {
+    if (previewEdges.length >= 12) break;
+    if (previewInvestors.some((node) => node.kind === "investor" && node.investorId === edge.investorId)
+      && previewTickers.some((node) => node.kind === "ticker" && node.ticker === edge.ticker)) {
+      previewEdges.push(edge);
+    }
+  }
+  const retained = network.feeds.byTicker === false;
   return (
     <Panel>
       <div data-superinvestors-graph-teaser>
@@ -370,15 +386,50 @@ export function GraphNetworkTeaser({ network, href, status, source, asOf, covera
             {status === "pending" ? "그래프 데이터를 불러오는 중입니다." : "연결된 공유 보유가 없습니다."}
           </p>
         ) : (
-          <p className="grn-teaser-top">
-            <span className="grn-ticker">{top.ticker}</span>
-            <span className="grn-kv-sub">
-              {`보유 ${top.holdersCount}명 · 투자자 ${formatInteger(network.investorCount)}명 · ${formatInteger(network.tickerCount)}개 종목 연결`}
-            </span>
-          </p>
+          <>
+            <div className="grn-teaser-svg">
+              <svg viewBox="0 0 220 72" aria-hidden="true" focusable="false">
+                {previewEdges.map((edge) => {
+                  const investorIndex = previewInvestors.findIndex((node) => node.kind === "investor" && node.investorId === edge.investorId);
+                  const tickerIndex = previewTickers.findIndex((node) => node.kind === "ticker" && node.ticker === edge.ticker);
+                  if (investorIndex < 0 || tickerIndex < 0) return null;
+                  return (
+                    <line
+                      key={`${edge.investorId}|${edge.ticker}`}
+                      x1={18}
+                      y1={12 + investorIndex * 24}
+                      x2={196}
+                      y2={10 + tickerIndex * 13}
+                      stroke="var(--fnk-neutral-200)"
+                      strokeWidth={1.5}
+                    />
+                  );
+                })}
+                {previewInvestors.map((node, index) => (
+                  node.kind === "investor" ? <circle key={node.id} cx={18} cy={12 + index * 24} r={5} className="grn-tick-circle" /> : null
+                ))}
+                {previewTickers.map((node, index) => (
+                  node.kind === "ticker" ? <circle key={node.id} cx={196} cy={10 + index * 13} r={6} className="grn-inv-card" /> : null
+                ))}
+              </svg>
+            </div>
+            <p className="grn-teaser-top">
+              <span className="grn-ticker">{top.ticker}</span>
+              <span className="grn-kv-sub">
+                {`보유 ${top.holdersCount}명 · 투자자 ${formatInteger(network.investorCount)}명 · ${formatInteger(network.tickerCount)}개 종목 연결${retained ? " · 이전 값 유지 중" : ""}`}
+              </span>
+            </p>
+          </>
         )}
         <p className="grn-teaser-cap">선 굵기 = 포트폴리오 비중 · 클릭 시 종목·투자자 상세로 이동</p>
-        <p className="grn-teaser-src">{`출처 ${source} · 기준 ${asOf} · 커버리지 ${coverage}`}</p>
+        <EvidenceRail
+          freshness={freshness}
+          source={source}
+          asOf={asOf}
+          coverage={coverage}
+          onRetry={onRetry}
+          onEvidence={onEvidence}
+        />
       </div>
     </Panel>
   );
