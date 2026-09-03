@@ -75,7 +75,7 @@ async function prepareDynamicRoute(page, route) {
 
   const readySelectors = {
     "/etfs": ".cpw5-etfs-mobile-card",
-    "/market-valuation": ".cpw5-mv-index-row:not(.cpw5-mv-index-head)",
+    "/market-valuation": ".mv-trow",
     "/regime": "[data-regime-axis-card]",
     "/sectors": "[data-sector-relative-bars]",
   };
@@ -1789,7 +1789,7 @@ async function collectRouteChecks(page, route) {
           return rect.width > 0 && rect.height > 0;
         });
       const chartGrid = document.querySelector("[data-market-valuation-chart-grid]");
-      const indexCards = Array.from(document.querySelectorAll(".cpw5-mv-index-row:not(.cpw5-mv-index-head)"))
+      const indexCards = Array.from(document.querySelectorAll(".mv-trow"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
