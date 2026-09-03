@@ -1215,7 +1215,7 @@ function StockEstimatesPanel({
 // GuruSection
 // ---------------------------------------------------------------------------
 
-function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ticker: string }) {
+function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[] | null; ticker: string; f13Quality?: { error: LoaderError | null; onRetry?: () => void } }) {
   const [tradesChip, setTradesChip] = useState<{ bought?: any; sold?: any; metadata?: any } | null>(null);
   const tradeInvestorName = (value: any) => {
     if (typeof value === "string") return value;
@@ -1265,7 +1265,21 @@ function GuruSection({ f13Entries, ticker }: { f13Entries: F13Entry[] | null; ti
       .sort((a, b) => b.weight - a.weight).slice(0, 10);
   }, [f13Entries]);
 
-  if ((!f13Entries || f13Entries.length === 0) && !tradesChip?.bought && !tradesChip?.sold) return null;
+  if ((!f13Entries || f13Entries.length === 0) && !tradesChip?.bought && !tradesChip?.sold) {
+    if (f13Quality?.error) {
+      return (
+        <DataStateNotice
+          state={makeDataState({
+            status: "unavailable",
+            detail: "13F 보유자 데이터를 불러오지 못했습니다. 다시 시도해 주세요.",
+          })}
+          actionLabel="지금 재시도"
+          onAction={f13Quality.onRetry}
+        />
+      );
+    }
+    return null;
+  }
   const { quarter, generatedAt } = tradeQuarter(tradesChip?.metadata);
   const reportBasisLabel = [quarter ?? "최근 분기", generatedAt ? `생성 ${generatedAt}` : null].filter(Boolean).join(" · ");
   const holderCount = f13Entries
@@ -2009,12 +2023,13 @@ function EstimatesRecoCp({ yfData, quality }: { yfData: any; quality?: { loading
 // ---------------------------------------------------------------------------
 
 function OwnershipHeroCp({
-  f13Entries, ticker, yfData, displayPrice,
+  f13Entries, ticker, yfData, displayPrice, f13Quality,
 }: {
   f13Entries: F13Entry[] | null;
   ticker: string;
   yfData: any;
   displayPrice: number | null;
+  f13Quality?: { error: LoaderError | null; onRetry?: () => void };
 }) {
   const [tradesChip, setTradesChip] = useState<{ bought?: any; sold?: any; metadata?: any } | null>(null);
 
@@ -2066,7 +2081,7 @@ function OwnershipHeroCp({
   const insidersPct = isFiniteNumber(mh.insidersPercentHeld) ? mh.insidersPercentHeld * 100 : null;
   const institutionsCount = isFiniteNumber(mh.institutionsCount) ? mh.institutionsCount : null;
 
-  if (holderCount === 0 && !hasFlow && institutionsPct === null) return null;
+  if (holderCount === 0 && !hasFlow && institutionsPct === null && !f13Quality?.error) return null;
 
   const maxFlow = Math.max(boughtAmount ?? 0, soldAmount ?? 0, 1);
   const sellWidthPct = soldAmount !== null ? Math.max(6, (soldAmount / maxFlow) * 100) : 0;
@@ -2144,6 +2159,15 @@ function OwnershipHeroCp({
                   );
                 })}
               </>
+            ) : f13Quality?.error ? (
+              <DataStateNotice
+                state={makeDataState({
+                  status: "unavailable",
+                  detail: "13F 보유자 데이터를 불러오지 못했습니다. 다시 시도해 주세요.",
+                })}
+                actionLabel="지금 재시도"
+                onAction={f13Quality.onRetry}
+              />
             ) : (
               <p className="px-4 py-3 text-[12px] text-slate-500">13F 보유자 데이터를 찾지 못했습니다.</p>
             )}
@@ -3293,7 +3317,7 @@ export default function StockDetailClient({
             {activeStockTab === "ownership" ? (
               <div id="guru-section">
                 <SectionCard>
-                  <GuruSection f13Entries={f13Entries} ticker={symbol} />
+                  <GuruSection f13Entries={f13Entries} ticker={symbol} f13Quality={{ error: f13Error, onRetry: retryF13 }} />
                 </SectionCard>
               </div>
             ) : null}
@@ -3527,7 +3551,7 @@ export default function StockDetailClient({
           </div>
         ) : detail ? (
           <>
-            <OwnershipHeroCp f13Entries={f13Entries} ticker={symbol} yfData={yfData} displayPrice={displayPrice} />
+            <OwnershipHeroCp f13Entries={f13Entries} ticker={symbol} yfData={yfData} displayPrice={displayPrice} f13Quality={{ error: f13Error, onRetry: retryF13 }} />
 
             {yfAvailable ? (
               <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" data-stock-tab-card="ownership-yf">

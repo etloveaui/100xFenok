@@ -2403,11 +2403,15 @@ export function StockDetailBody({
   f13Entries,
   ticker,
   stock,
+  f13Error,
+  f13Retry,
 }: {
   detail: DetailData;
   f13Entries: F13Entry[] | null;
   ticker?: string;
   stock?: ScreenerStock;
+  f13Error?: LoaderError | null;
+  f13Retry?: () => void;
 }) {
   const revenue = detail.income_statement?.revenue ?? [];
   const eps = detail.per_share?.eps ?? [];
@@ -2544,6 +2548,20 @@ export function StockDetailBody({
               </span>
             ))}
           </div>
+        </div>
+      ) : f13Error ? (
+        <div className="mt-4">
+          <h4 className="mb-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+            기관 공시 보유
+          </h4>
+          <DataStateNotice
+            state={makeDataState({
+              status: "unavailable",
+              detail: "기관 공시 보유 데이터를 불러오지 못했습니다. 다시 시도해 주세요.",
+            })}
+            actionLabel="지금 재시도"
+            onAction={f13Retry}
+          />
         </div>
       ) : null}
     </>
@@ -2696,7 +2714,7 @@ export default function StockDetailPanel({
         </div>
       </div>
       <StockDetailBoundary ticker={ticker}>
-        <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} />
+        <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} f13Error={f13Error} f13Retry={retryF13} />
       </StockDetailBoundary>
     </div>
   );
@@ -2771,7 +2789,7 @@ export default function StockDetailPanel({
         </summary>
         <div className="cpw4-financial-detail__body">
           <StockDetailBoundary ticker={ticker}>
-            <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} />
+            <StockDetailBody detail={detail} f13Entries={f13Entries} ticker={ticker} stock={stock} f13Error={f13Error} f13Retry={retryF13} />
           </StockDetailBoundary>
         </div>
       </details>
