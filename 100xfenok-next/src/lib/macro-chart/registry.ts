@@ -1,4 +1,4 @@
-import catalogJson from "../../../../data/catalog/macro-series.json";
+import catalogJson from "../../../public/data/catalog/macro-series.json";
 
 import type { MacroChartPreset, MacroSeriesAccessor, MacroSeriesDefinition, MacroValueTransform } from "./types";
 import { stooqSeriesDefinitionFromId } from "./stooq";
