@@ -1,14 +1,15 @@
 /* Market Valuation — light-system route namespace (slice 7a).
  * Layout only: grids, rows, and the valuation band. Panel chrome, type scale,
- * colors, and states come from src/components/ui. The .mv-band gradient is the
- * single SPEC-allowed gradient exception. */
+ * and states come from src/components/ui; ink and fills reference --fnk-*
+ * system tokens. The .mv-band gradient is the single SPEC-allowed gradient
+ * exception (valuation-band raw stops, allowlisted by category). */
 
 .mv {
   display: flex;
   flex-direction: column;
   gap: 16px;
   padding: 20px 24px 32px;
-  background: #f8fafc;
+  background: var(--fnk-neutral-50);
   font-size: 13px;
   line-height: 1.45;
 }
@@ -25,12 +26,12 @@
   margin: 0;
   font-size: 20px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--fnk-neutral-900);
 }
 
 .mv-verdict {
   font-size: 13px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
 }
 
 .mv-tabs {
@@ -46,20 +47,20 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: #475569;
+  color: var(--fnk-neutral-600);
   text-decoration: none;
 }
 
 .mv-tabs a[aria-current="page"] {
-  background: #f1f5f9;
-  color: #1b73d3;
+  background: var(--fnk-neutral-100);
+  color: var(--fnk-brand-interactive);
   font-weight: 600;
 }
 
 .mv-lede {
   padding: 14px 16px 0;
   font-size: 13px;
-  color: #334155;
+  color: var(--fnk-neutral-700);
 }
 
 .mv-stats {
@@ -86,14 +87,14 @@
   height: 30px;
   font-size: 11px;
   font-weight: 600;
-  color: #64748b;
-  border-bottom: 1px solid #f1f5f9;
+  color: var(--fnk-neutral-500);
+  border-bottom: 1px solid var(--fnk-neutral-100);
 }
 
 .mv-trow {
   height: 38px;
   font-size: 13px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--fnk-neutral-100);
   transition: background-color 150ms ease;
 }
 
@@ -102,11 +103,18 @@
 }
 
 .mv-trow:hover {
-  background: #f8fafc;
+  background: var(--fnk-neutral-50);
+}
+
+.mv-trow:focus-visible,
+.mv-brow:focus-visible {
+  background: var(--fnk-neutral-50);
+  box-shadow: inset 2px 0 0 var(--fnk-brand-interactive);
+  outline: none;
 }
 
 .mv-idx {
-  color: #0f172a;
+  color: var(--fnk-neutral-900);
   font-weight: 500;
   min-width: 0;
   overflow: hidden;
@@ -121,7 +129,7 @@
   gap: 12px;
   height: 34px;
   padding: 0 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--fnk-neutral-100);
   font-size: 12px;
 }
 
@@ -130,11 +138,11 @@
 }
 
 .mv-brow:hover {
-  background: #f8fafc;
+  background: var(--fnk-neutral-50);
 }
 
 .mv-bname {
-  color: #334155;
+  color: var(--fnk-neutral-700);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -144,10 +152,10 @@
 .mv-bpct {
   text-align: right;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--fnk-neutral-900);
 }
 
-/* SPEC exception: the only gradient on the route. */
+/* SPEC exception: the only gradient on the route (valuation-band stops). */
 .mv-band {
   position: relative;
   height: 8px;
@@ -177,15 +185,15 @@
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: #475569;
+  color: var(--fnk-neutral-600);
   background: transparent;
   border: 0;
   cursor: pointer;
 }
 
 .mv-horizons button[aria-pressed="true"] {
-  background: #f1f5f9;
-  color: #1b73d3;
+  background: var(--fnk-neutral-100);
+  color: var(--fnk-brand-interactive);
   font-weight: 600;
 }
 
@@ -193,7 +201,7 @@
   padding: 8px 16px 0;
   font-size: 11px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
 }
 
 .mv-histref {
@@ -211,28 +219,12 @@
 
 .mv-chart-cap {
   font-size: 12px;
-  color: #475569;
+  color: var(--fnk-neutral-600);
   font-weight: 600;
-}
-
-.mv-legend {
-  display: flex;
-  gap: 12px;
-  font-size: 11px;
-  color: #64748b;
-  margin-top: 4px;
-}
-
-.mv-legend i {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  margin-right: 5px;
 }
 
 .mv-foot {
   padding: 0 4px;
   font-size: 11px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
 }

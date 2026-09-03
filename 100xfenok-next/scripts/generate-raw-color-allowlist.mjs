@@ -19,6 +19,7 @@ const CATEGORY_DEFINITIONS = {
   "chart-exception": "Canvas/chart palette code where literals are intentionally bridged separately.",
   "product-theme": "Current immersive product surface with an intentional self-contained palette.",
   "p4-delete": "Retire or preview surface scheduled for deletion, not migration.",
+  "valuation-band": "SPEC-allowed valuation-band gradient stops and marker on the market-valuation route; all other route colors use system tokens.",
 };
 const rawColorGovernancePattern =
   /(?<![&\w-])#(?:[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?|(?=[0-9A-Fa-f]{3,4}\b)(?=[0-9A-Fa-f]*[A-Fa-f])[0-9A-Fa-f]{3,4})\b|rgba?\([^)]*\)|(?<!-)\b(?:white|black)\b(?!-)/g;
@@ -184,6 +185,13 @@ function categoryForPath(relPath) {
     return {
       category: "product-theme",
       note: "100x Light System Home canvas surface — intentional self-contained palette for slice 2 (Main/HomeMobile dc).",
+    };
+  }
+
+  if (relPath === "src/app/market-valuation/market-valuation.css") {
+    return {
+      category: "valuation-band",
+      note: "SPEC-allowed valuation-band gradient stops and marker; every other route color is a system token.",
     };
   }
 

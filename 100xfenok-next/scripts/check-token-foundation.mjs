@@ -15,6 +15,7 @@ const ALLOWED_RAW_COLOR_CATEGORIES = new Set([
   "chart-exception",
   "product-theme",
   "p4-delete",
+  "valuation-band",
 ]);
 const CSS_TARGETS = [
   "src/app/globals.css",

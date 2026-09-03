@@ -8,7 +8,7 @@
   flex-direction: column;
   gap: 16px;
   padding: 20px 24px 32px;
-  background: #f8fafc;
+  background: var(--fnk-neutral-50);
   font-size: 13px;
   line-height: 1.45;
 }
@@ -18,20 +18,20 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
 }
 
 .etf-strong {
-  color: #0f172a;
+  color: var(--fnk-neutral-900);
 }
 
 .etf-up {
-  color: #1aa86f;
+  color: var(--fnk-color-gain);
   font-weight: 600;
 }
 
 .etf-down {
-  color: #e84a5a;
+  color: var(--fnk-color-loss);
   font-weight: 600;
 }
 
@@ -61,19 +61,19 @@
   margin: 0;
   font-size: 20px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--fnk-neutral-900);
   max-width: 900px;
 }
 
 .etf-sub {
   font-size: 12px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
   max-width: 820px;
 }
 
 .etf-hero-loading {
   font-size: 13px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
 }
 
 .etf-retry {
@@ -82,21 +82,21 @@
   padding: 0;
   cursor: pointer;
   font-weight: 600;
-  color: #1b73d3;
+  color: var(--fnk-brand-interactive);
 }
 
 /* Panel header slots */
 
 .etf-head-note {
   font-size: 12px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
   white-space: nowrap;
 }
 
 .etf-tabs {
   display: flex;
   gap: 2px;
-  background: #f1f5f9;
+  background: var(--fnk-neutral-100);
   padding: 2px;
   border-radius: 6px;
 }
@@ -109,14 +109,14 @@
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: #475569;
+  color: var(--fnk-neutral-600);
   text-decoration: none;
   transition: background-color 150ms ease, color 150ms ease;
 }
 
 .etf-tab[data-active="true"] {
-  background: #ffffff;
-  color: #1b73d3;
+  background: var(--fnk-color-card);
+  color: var(--fnk-brand-interactive);
   font-weight: 600;
 }
 
@@ -136,17 +136,17 @@
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
-  border: 1px solid #e2e8f0;
-  color: #475569;
-  background: #ffffff;
+  border: 1px solid var(--fnk-neutral-200);
+  color: var(--fnk-neutral-600);
+  background: var(--fnk-color-card);
   white-space: nowrap;
   cursor: pointer;
   transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
 }
 
 .etf-seg-pill[data-active="true"] {
-  border-color: #1b73d3;
-  color: #1b73d3;
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-brand-interactive);
 }
 
 /* Universe panel */
@@ -165,7 +165,7 @@
 }
 
 .etf-uni-cell + .etf-uni-cell {
-  border-left: 1px solid #f1f5f9;
+  border-left: 1px solid var(--fnk-neutral-100);
 }
 
 .etf-uni-label-row {
@@ -177,22 +177,22 @@
 
 .etf-uni-label {
   font-size: 12px;
-  color: #334155;
+  color: var(--fnk-neutral-700);
 }
 
 .etf-uni-pct {
   font-size: 11px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--fnk-neutral-900);
 }
 
 .etf-uni-summary {
   font-size: 12px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
 }
 
 .etf-bar-warn i {
-  background: #f2a93b;
+  background: var(--fnk-color-warn);
 }
 
 @media (max-width: 760px) {
@@ -202,7 +202,7 @@
 
   .etf-uni-cell + .etf-uni-cell {
     border-left: 0;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--fnk-neutral-100);
   }
 }
 
@@ -218,7 +218,7 @@
   flex-direction: column;
   gap: 6px;
   padding: 14px 16px;
-  border-right: 1px solid #f1f5f9;
+  border-right: 1px solid var(--fnk-neutral-100);
   min-width: 0;
 }
 
@@ -228,19 +228,19 @@
 
 .etf-today-label {
   font-size: 12px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
 }
 
 .etf-today-big {
   font-size: 22px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--fnk-neutral-900);
 }
 
 .etf-today-unit {
   font-size: 12px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
   margin-left: 2px;
 }
 
@@ -261,22 +261,22 @@
 }
 
 .etf-today-row:hover {
-  background: #f8fafc;
+  background: var(--fnk-neutral-50);
 }
 
 .etf-ticker {
   font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--fnk-neutral-900);
 }
 
 .etf-today-value {
-  color: #64748b;
+  color: var(--fnk-neutral-500);
 }
 
 .etf-today-empty {
   font-size: 11px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
 }
 
 @media (max-width: 760px) {
@@ -286,7 +286,7 @@
 
   .etf-today-stat {
     border-right: 0;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--fnk-neutral-100);
   }
 
   .etf-today-stat:first-child {
@@ -304,11 +304,11 @@
   width: 100%;
   height: 32px;
   padding: 0 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--fnk-neutral-200);
   border-radius: 6px;
   font-size: 13px;
-  color: #0f172a;
-  background: #ffffff;
+  color: var(--fnk-neutral-900);
+  background: var(--fnk-color-card);
 }
 
 .etf-filter-grid {
@@ -323,16 +323,16 @@
   flex-direction: column;
   gap: 4px;
   font-size: 12px;
-  color: #475569;
+  color: var(--fnk-neutral-600);
 }
 
 .etf-filter-field select {
   height: 32px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--fnk-neutral-200);
   border-radius: 6px;
   font-size: 12px;
-  color: #0f172a;
-  background: #ffffff;
+  color: var(--fnk-neutral-900);
+  background: var(--fnk-color-card);
 }
 
 @media (max-width: 760px) {
@@ -355,9 +355,9 @@
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
-  border: 1px solid #e2e8f0;
-  color: #475569;
-  background: #ffffff;
+  border: 1px solid var(--fnk-neutral-200);
+  color: var(--fnk-neutral-600);
+  background: var(--fnk-color-card);
   white-space: nowrap;
 }
 
@@ -374,12 +374,12 @@
 .etf-table-ticker strong {
   font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--fnk-neutral-900);
 }
 
 .etf-table-ticker span {
   font-size: 11px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
 }
 
 .etf-mobile-list {
@@ -399,7 +399,7 @@
 
 .etf-mobile-card {
   padding: 12px 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--fnk-neutral-100);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -423,12 +423,12 @@
 .etf-mobile-title strong {
   font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--fnk-neutral-900);
 }
 
 .etf-mobile-title span {
   font-size: 11px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -436,7 +436,7 @@
 
 .etf-mobile-category {
   font-size: 11px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
   white-space: nowrap;
 }
 
@@ -459,14 +459,14 @@
 
 .etf-mobile-stats dt {
   font-size: 11px;
-  color: #64748b;
+  color: var(--fnk-neutral-500);
 }
 
 .etf-mobile-stats dd {
   margin: 0;
   font-size: 12px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--fnk-neutral-900);
   font-variant-numeric: tabular-nums;
 }
 
@@ -478,16 +478,16 @@
   height: 34px;
   background: none;
   border: 0;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--fnk-neutral-100);
   font-size: 12px;
   font-weight: 600;
-  color: #1b73d3;
+  color: var(--fnk-brand-interactive);
   cursor: pointer;
   transition: background-color 150ms ease;
 }
 
 .etf-load-more:hover {
-  background: #f8fafc;
+  background: var(--fnk-neutral-50);
 }
 
 /* Tools panel */
@@ -504,10 +504,10 @@
   gap: 10px;
   min-height: 34px;
   padding: 8px 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--fnk-neutral-100);
   font-size: 13px;
   font-weight: 500;
-  color: #334155;
+  color: var(--fnk-neutral-700);
   text-decoration: none;
   transition: background-color 150ms ease;
 }
@@ -517,12 +517,12 @@
 }
 
 .etf-tool-row:hover {
-  background: #f8fafc;
+  background: var(--fnk-neutral-50);
 }
 
 .etf-tool-tag {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--c-chart-ord-mid);
   white-space: nowrap;
 }
 
@@ -532,7 +532,7 @@
   }
 
   .etf-tool-row:nth-child(-n + 3) {
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--fnk-neutral-100);
   }
 
   .etf-tool-row:first-child {
@@ -544,7 +544,7 @@
   display: flex;
   justify-content: flex-end;
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--c-chart-ord-mid);
   margin: 0;
   padding: 4px 4px 0;
 }
