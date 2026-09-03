@@ -14,11 +14,15 @@ import { EvidenceRail, Panel, PanelHeader, Pill, Stat } from "@/components/ui";
 import {
   ErpHistoryPanel,
   YardeniOverlayChartPanel,
+  type LedgerChartLoadStatus,
 } from "@/lib/market-valuation/charts/ledgerChartPanels";
 import { formatDecimal, formatSignedDecimal } from "@/lib/format";
 import { formatPercent } from "@/lib/dashboard/formatters";
 import {
   freshnessDataState,
+  isStaleAsOf,
+  latestAsOf,
+  makeDataState,
   DATA_STATE_LABELS,
   type DataState,
 } from "@/lib/data-state";
@@ -47,12 +51,12 @@ const HORIZONS: ReadonlyArray<{ id: BenchmarkOrdinalHorizon; label: string }> = 
 type PillTone = "neutral" | "up" | "down" | "warn";
 
 function valuationMeta(pct: number | null): { label: string; pill: PillTone; num: string } {
-  if (pct === null) return { label: "확인 중", pill: "neutral", num: "text-[#0f172a]" };
-  if (pct >= 80) return { label: "고평가", pill: "down", num: "text-[#e84a5a]" };
-  if (pct >= 60) return { label: "다소 높음", pill: "warn", num: "text-[#b9791a]" };
-  if (pct >= 40) return { label: "역사적 중립", pill: "neutral", num: "text-[#0f172a]" };
-  if (pct >= 20) return { label: "다소 낮음", pill: "neutral", num: "text-[#0f172a]" };
-  return { label: "저평가", pill: "up", num: "text-[#1aa86f]" };
+  if (pct === null) return { label: "확인 중", pill: "neutral", num: "text-[var(--fnk-neutral-500)]" };
+  if (pct >= 80) return { label: "고평가", pill: "down", num: "text-[var(--fnk-color-loss)]" };
+  if (pct >= 60) return { label: "다소 높음", pill: "warn", num: "text-[var(--fnk-color-warn-ink)]" };
+  if (pct >= 40) return { label: "역사적 중립", pill: "neutral", num: "text-[var(--fnk-neutral-900)]" };
+  if (pct >= 20) return { label: "다소 낮음", pill: "neutral", num: "text-[var(--fnk-neutral-900)]" };
+  return { label: "저평가", pill: "up", num: "text-[var(--fnk-color-gain)]" };
 }
 
 function averagePremiumPct(band: ValuationBand): number | null {
@@ -60,9 +64,11 @@ function averagePremiumPct(band: ValuationBand): number | null {
   return (band.current / band.avg - 1) * 100;
 }
 
+// Signed history-premium numerics follow the artboard: positive reads gain,
+// negative reads loss (the pre-fix mapping had them reversed).
 function signedClass(value: number | null): string {
-  if (value === null) return "text-[#0f172a]";
-  return value >= 0 ? "text-[#e84a5a]" : "text-[#1aa86f]";
+  if (value === null) return "text-[var(--fnk-neutral-900)]";
+  return value >= 0 ? "text-[var(--fnk-color-gain)]" : "text-[var(--fnk-color-loss)]";
 }
 
 function verdictSentence(sp500: MarketIndexValuation | undefined): string {
@@ -98,16 +104,20 @@ function ValuationReadPanel({
   const pct = sp500?.pe.percentile ?? null;
   const meta = valuationMeta(pct);
   const premium = sp500 ? averagePremiumPct(sp500.pe) : null;
-  const empty = !loading && !failed && !sp500;
+  const empty = !loading && !sp500;
+  const stale = !loading && !failed && isStaleAsOf(sourceDate);
 
   return (
     <Panel
       loading={loading}
-      empty={empty || failed}
+      empty={empty}
       emptyReason={failed ? "지수 밸류에이션을 불러오지 못했습니다" : "표시할 밸류에이션 데이터가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
       emptyActionLabel={failed ? "다시 시도" : undefined}
       onEmptyAction={failed ? reload : undefined}
+      stale={stale}
+      asOf={sourceDate ?? undefined}
+      onRetry={stale ? reload : undefined}
     >
       <PanelHeader
         eyebrow="Valuation Read"
@@ -125,7 +135,7 @@ function ValuationReadPanel({
         <Stat
           label="ROE"
           value={
-            <span className={sp500?.roe == null ? "text-[#0f172a]" : sp500.roe >= 0.15 ? "text-[#1aa86f]" : "text-[#0f172a]"}>
+            <span className={sp500?.roe == null ? "text-[var(--fnk-neutral-900)]" : sp500.roe >= 0.15 ? "text-[var(--fnk-color-gain)]" : "text-[var(--fnk-neutral-900)]"}>
               {sp500?.roe == null ? "—" : formatPercent(sp500.roe * 100, 1)}
             </span>
           }
@@ -140,11 +150,12 @@ function ValuationReadPanel({
         />
       </div>
       <EvidenceRail
-        freshness={loading ? "pending" : failed ? "error" : "fresh"}
-        source="Bloomberg · Yardeni"
+        freshness={loading ? "pending" : failed ? "error" : stale ? "stale" : "fresh"}
+        source="Bloomberg"
         asOf={sourceDate ?? "—"}
         coverage={`${count}/4`}
-        onRetry={failed ? reload : undefined}
+        lkgAsOf={!loading && (failed || stale) && sourceDate ? sourceDate : undefined}
+        onRetry={failed || stale ? reload : undefined}
         onEvidence={failed ? undefined : () => openEvidence("/data/benchmarks/us.json")}
       />
     </Panel>
@@ -165,16 +176,20 @@ function PeerComparePanel({
   const rows = PEER_ORDER.map((id) => indices.find((index) => index.id === id)).filter(
     (row): row is MarketIndexValuation => row !== undefined,
   );
-  const empty = !loading && !failed && rows.length === 0;
+  const empty = !loading && rows.length === 0;
+  const stale = !loading && !failed && rows.length > 0 && isStaleAsOf(sourceDate);
 
   return (
     <Panel
       loading={loading}
-      empty={empty || failed}
+      empty={empty}
       emptyReason={failed ? "지수 비교 데이터를 불러오지 못했습니다" : "비교할 지수 데이터가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
       emptyActionLabel={failed ? "다시 시도" : undefined}
       onEmptyAction={failed ? reload : undefined}
+      stale={stale}
+      asOf={sourceDate ?? undefined}
+      onRetry={stale ? reload : undefined}
     >
       <PanelHeader
         eyebrow="Peer Compare"
@@ -192,7 +207,7 @@ function PeerComparePanel({
         {rows.map((index) => {
           const meta = valuationMeta(index.pe.percentile);
           return (
-            <div className="mv-trow" role="row" key={index.id}>
+            <div className="mv-trow" role="row" tabIndex={0} key={index.id}>
               <span className="mv-idx" role="cell">{INDEX_KO[index.id] ?? index.name}</span>
               <span className="tabular-nums" role="cell">
                 {formatDecimal(index.pe.current, { digits: 1 })}x
@@ -211,22 +226,29 @@ function PeerComparePanel({
         })}
       </div>
       <EvidenceRail
-        freshness={loading ? "pending" : failed ? "error" : "fresh"}
+        freshness={loading ? "pending" : failed ? "error" : stale ? "stale" : "fresh"}
         source="Bloomberg"
         asOf={sourceDate ?? "—"}
         coverage={`${rows.length}/4`}
-        onRetry={failed ? reload : undefined}
+        lkgAsOf={!loading && (failed || stale) && sourceDate ? sourceDate : undefined}
+        onRetry={failed || stale ? reload : undefined}
         onEvidence={failed ? undefined : () => openEvidence("/data/benchmarks/us.json")}
       />
     </Panel>
   );
 }
 
+// Historical Position reads the six Bloomberg benchmark ordinals
+// (us/us_sectors/developed/emerging/msci/micro_sectors — every file carries
+// metadata.source "Bloomberg Terminal"), so the rail names Bloomberg, not the
+// Reference-panel feeds. Wiring the RIM sustainable ranges + Yardeni model in
+// here instead would replace the 38-asset trailing-window reading with a
+// different model; the truthful rail keeps this panel honest (fh-669 P1b).
 function HistoricalPositionPanel() {
   const { state, view } = useBenchmarkOrdinals();
   const [horizon, setHorizon] = useState<BenchmarkOrdinalHorizon>("w10");
   const loading = state === "pending";
-  const refused = state === "refused" || state === "failed";
+  const transportFailed = state === "refused" || state === "failed";
   const ready = state === "ready" && view?.status === "ready";
 
   const allRows: BenchmarkOrdinalRow[] = view && view.status === "ready"
@@ -247,15 +269,23 @@ function HistoricalPositionPanel() {
     : [];
   const horizonLabel = HORIZONS.find((item) => item.id === horizon)?.label ?? "10년";
   const asOf = view && view.status === "ready" ? view.asOf : null;
+  // Loaded groups stay visible when siblings refuse (LKG): only a fully
+  // empty board becomes the empty state.
+  const empty = !loading && shown.length === 0;
+  const partial = !loading && !empty && (!ready || groupRefusals.length > 0);
+  const stale = !loading && !empty && !transportFailed && isStaleAsOf(asOf);
 
   return (
     <Panel
       loading={loading}
-      empty={!loading && (refused || !ready || shown.length === 0)}
-      emptyReason={refused ? "역사 위치 데이터를 읽지 못했습니다" : "표시할 역사 위치 데이터가 없습니다"}
+      empty={empty}
+      emptyReason={transportFailed ? "역사 위치 데이터를 읽지 못했습니다" : "표시할 역사 위치 데이터가 없습니다"}
       emptyNextRefresh="주간 갱신"
-      emptyActionLabel={refused ? "다시 시도" : undefined}
-      onEmptyAction={refused ? reload : undefined}
+      emptyActionLabel={transportFailed ? "다시 시도" : undefined}
+      onEmptyAction={transportFailed ? reload : undefined}
+      stale={stale}
+      asOf={asOf ?? undefined}
+      onRetry={stale ? reload : undefined}
     >
       <PanelHeader
         eyebrow="Historical Position"
@@ -279,7 +309,7 @@ function HistoricalPositionPanel() {
           const pct = reading.percentile ?? 0;
           const meta = valuationMeta(reading.percentile);
           return (
-            <div className="mv-brow" key={row.id}>
+            <div className="mv-brow" tabIndex={0} key={row.id}>
               <span className="mv-bname">{row.name}</span>
               <div className="mv-band" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${row.name} 역사 백분위`}>
                 <i style={{ left: `${pct}%` }} />
@@ -296,37 +326,60 @@ function HistoricalPositionPanel() {
         </p>
       ) : null}
       <EvidenceRail
-        freshness={loading ? "pending" : refused ? "error" : "fresh"}
-        source="Yardeni · Damodaran"
+        freshness={loading ? "pending" : transportFailed && empty ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
+        source="Bloomberg"
         asOf={asOf ?? "—"}
         coverage={allRows.length > 0 ? `${allRows.length}/38` : "—"}
-        onRetry={refused ? reload : undefined}
-        onEvidence={refused ? undefined : () => openEvidence(BENCHMARK_ORDINAL_GROUPS[0].file)}
+        lkgAsOf={!loading && !empty && (partial || stale) && asOf ? asOf : undefined}
+        onRetry={transportFailed && empty ? reload : stale || partial ? reload : undefined}
+        onEvidence={transportFailed && empty ? undefined : () => openEvidence(BENCHMARK_ORDINAL_GROUPS[0].file)}
       />
     </Panel>
   );
 }
 
+// The Reference rail waits for both embedded chart loaders: coverage and
+// freshness derive from the ERP + Yardeni outcomes, never from a fixed 2/2.
 function HistoricalReferencePanel({ erpSourceDate }: { erpSourceDate: string | null }) {
+  const [erp, setErp] = useState<LedgerChartLoadStatus>({ state: "pending", asOf: null });
+  const [yardeni, setYardeni] = useState<LedgerChartLoadStatus>({ state: "pending", asOf: null });
+  const pending = erp.state === "pending" || yardeni.state === "pending";
+  const readyCount = (erp.state === "ready" ? 1 : 0) + (yardeni.state === "ready" ? 1 : 0);
+  const bothFailed = erp.state === "failed" && yardeni.state === "failed";
+  const empty = !pending && bothFailed;
+  const asOf = latestAsOf([erp.asOf, yardeni.asOf, erpSourceDate]);
+  const stale = !pending && !bothFailed && (isStaleAsOf(erp.asOf) || isStaleAsOf(yardeni.asOf));
+
   return (
-    <Panel>
+    <Panel
+      loading={pending}
+      empty={empty}
+      emptyReason="ERP · 채권 대비 PER 차트를 불러오지 못했습니다"
+      emptyActionLabel="다시 시도"
+      onEmptyAction={reload}
+      stale={stale}
+      asOf={asOf ?? undefined}
+      onRetry={stale ? reload : undefined}
+    >
       <PanelHeader eyebrow="Historical Reference" title="ERP · 채권 대비 PER 추이" right={<Pill>20Y</Pill>} />
-      <div className="mv-histref">
+      <div className="mv-histref" data-market-valuation-chart-grid>
         <div>
           <p className="mv-chart-cap">Damodaran ERP vs 10년물</p>
-          <ErpHistoryPanel bare />
+          <ErpHistoryPanel bare onStatus={setErp} />
         </div>
         <div>
           <p className="mv-chart-cap">Yardeni 채권 대비 PER</p>
-          <YardeniOverlayChartPanel bare />
+          <YardeniOverlayChartPanel bare onStatus={setYardeni} />
         </div>
       </div>
       <EvidenceRail
-        freshness="fixed"
+        freshness={pending ? "pending" : bothFailed ? "error" : readyCount < 2 ? "partial" : stale ? "stale" : "fresh"}
         source="Damodaran · Yardeni"
-        asOf={erpSourceDate ?? "—"}
-        coverage="2/2"
-        onEvidence={() => openEvidence("/data/damodaran/historical_erp.json")}
+        asOf={pending ? "—" : asOf ?? "—"}
+        coverage={pending ? "—" : `${readyCount}/2`}
+        lkgAsOf={!pending && !bothFailed && (stale || readyCount < 2) && asOf ? asOf : undefined}
+        onRetry={bothFailed || stale ? reload : undefined}
+        onEvidence={bothFailed ? undefined : () => openEvidence("/data/damodaran/historical_erp.json")}
       />
     </Panel>
   );
@@ -347,7 +400,16 @@ export default function MarketValuationClient({
 
   useEffect(() => {
     if (!onFreshnessChange) return;
-    if (!dataReady && !failed) {
+    if (failed) {
+      onFreshnessChange(makeDataState({
+        status: "error",
+        label: DATA_STATE_LABELS.error,
+        detail: "지수 밸류에이션을 불러오지 못했습니다.",
+        asOf: sourceDate,
+      }));
+      return;
+    }
+    if (!dataReady) {
       onFreshnessChange(null);
       return;
     }

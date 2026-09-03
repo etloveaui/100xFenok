@@ -8,7 +8,7 @@
 // - AnnualReturnsChartPanel: 101-year S&P returns as a responsive bar chart, which
 //   fixes the 760px fixed-width clipping — feedback #8.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatInteger } from "@/lib/format";
 
 import {
@@ -124,13 +124,47 @@ function toneDot(tone: string): string {
   return "bg-[var(--c-neutral)]";
 }
 
-export function ErpHistoryPanel({ bare = false }: { bare?: boolean }) {
+export type LedgerChartLoadState = "pending" | "ready" | "failed";
+
+export interface LedgerChartLoadStatus {
+  state: LedgerChartLoadState;
+  asOf: string | null;
+}
+
+function latestDate(dates: Array<string | undefined>): string | null {
+  const dated = dates.filter((date): date is string => typeof date === "string" && date.length > 0);
+  return dated.length > 0 ? dated.sort().at(-1) ?? null : null;
+}
+
+export function ErpHistoryPanel({
+  bare = false,
+  onStatus,
+}: {
+  bare?: boolean;
+  onStatus?: (status: LedgerChartLoadStatus) => void;
+}) {
   const [model, setModel] = useState<ErpHistoryModel | null>(null);
+  const onStatusRef = useRef(onStatus);
+  onStatusRef.current = onStatus;
 
   useEffect(() => {
     let cancelled = false;
     loadErpHistoryModel().then((next) => {
-      if (!cancelled) setModel(next);
+      if (cancelled) return;
+      setModel(next);
+      if (next) {
+        onStatusRef.current?.({
+          state: "ready",
+          asOf: latestDate([
+            next.erpFcfe.at(-1)?.date,
+            next.erpDdm.at(-1)?.date,
+            next.tbond.at(-1)?.date,
+            next.sp500Annual.at(-1)?.date,
+          ]),
+        });
+      } else {
+        onStatusRef.current?.({ state: "failed", asOf: null });
+      }
     });
     return () => {
       cancelled = true;
@@ -167,7 +201,7 @@ export function ErpHistoryPanel({ bare = false }: { bare?: boolean }) {
         { id: "40Y", label: "40Y", count: 40 },
         { id: "MAX", label: "전체" },
       ]}
-      defaultRangeId="MAX"
+      defaultRangeId="20Y"
       footnote="Damodaran 내재 ERP · 좌축 %, S&P는 우축 · 토글로 비교"
     />
   );
@@ -216,13 +250,27 @@ export function AnnualReturnsChartPanel() {
   );
 }
 
-export function YardeniOverlayChartPanel({ bare = false }: { bare?: boolean }) {
+export function YardeniOverlayChartPanel({
+  bare = false,
+  onStatus,
+}: {
+  bare?: boolean;
+  onStatus?: (status: LedgerChartLoadStatus) => void;
+}) {
   const [model, setModel] = useState<YardeniOverlayModel | null>(null);
+  const onStatusRef = useRef(onStatus);
+  onStatusRef.current = onStatus;
 
   useEffect(() => {
     let cancelled = false;
     yardeniOverlayModel().then((next) => {
-      if (!cancelled) setModel(next);
+      if (cancelled) return;
+      setModel(next);
+      if (next) {
+        onStatusRef.current?.({ state: "ready", asOf: next.latest.date || null });
+      } else {
+        onStatusRef.current?.({ state: "failed", asOf: null });
+      }
     });
     return () => {
       cancelled = true;
@@ -269,21 +317,22 @@ export function YardeniOverlayChartPanel({ bare = false }: { bare?: boolean }) {
           ranges={[
             { id: "1Y", label: "1Y", count: 52 },
             { id: "5Y", label: "5Y", count: 260 },
+            { id: "20Y", label: "20Y", count: 1040 },
             { id: "MAX", label: "전체" },
           ]}
-          defaultRangeId="5Y"
+          defaultRangeId="20Y"
           footnote={`야데니 공개 파생 데이터 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}주 · 전체 기간은 1990년 이후`}
         />
         <dl className="mt-2 grid min-w-0 grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-5">
           {stats.map(([label, value]) => (
-            <div key={label} className="flex min-w-0 items-baseline justify-between gap-2 border-t border-[#f1f5f9] py-1">
-              <dt className="truncate text-[11px] font-semibold text-[#64748b]">{label}</dt>
-              <dd className="shrink-0 text-[12px] font-semibold tabular-nums text-[#0f172a]">{value}</dd>
+            <div key={label} className="flex min-w-0 items-baseline justify-between gap-2 border-t border-[var(--fnk-neutral-100)] py-1">
+              <dt className="truncate text-[11px] font-semibold text-[var(--fnk-neutral-500)]">{label}</dt>
+              <dd className="shrink-0 text-[12px] font-semibold tabular-nums text-[var(--fnk-neutral-900)]">{value}</dd>
             </div>
           ))}
         </dl>
         {typeof model?.latest.premiumPercentile === "number" ? (
-          <p className="mt-1 text-[11px] font-semibold text-[#64748b]">
+          <p className="mt-1 text-[11px] font-semibold text-[var(--fnk-neutral-500)]">
             1990년 이후 프리미엄 상위 {model.latest.premiumPercentile}% 수준
           </p>
         ) : null}
@@ -317,9 +366,10 @@ export function YardeniOverlayChartPanel({ bare = false }: { bare?: boolean }) {
         ranges={[
           { id: "1Y", label: "1Y", count: 52 },
           { id: "5Y", label: "5Y", count: 260 },
+          { id: "20Y", label: "20Y", count: 1040 },
           { id: "MAX", label: "전체" },
         ]}
-        defaultRangeId="5Y"
+        defaultRangeId="20Y"
         footnote={`야데니 공개 파생 데이터 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}주 · 전체 기간은 1990년 이후`}
       />
 
