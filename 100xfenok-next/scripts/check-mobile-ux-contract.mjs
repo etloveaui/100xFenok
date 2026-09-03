@@ -74,7 +74,7 @@ async function prepareDynamicRoute(page, route) {
   const pathname = new URL(route, baseUrl).pathname.replace(/\/+$/, "") || "/";
 
   const readySelectors = {
-    "/etfs": ".cpw5-etfs-mobile-card",
+    "/etfs": ".etf-mobile-card",
     "/market-valuation": ".mv-trow",
     "/regime": "[data-regime-axis-summary-card]",
     "/sectors": "[data-sectors-flow-rows]",
@@ -85,11 +85,11 @@ async function prepareDynamicRoute(page, route) {
   }
 
   if (pathname === "/etfs") {
-    const filterDetails = page.locator("details").filter({ has: page.locator(".cpw5-etfs-filter-grid") }).first();
+    const filterDetails = page.locator("details").filter({ has: page.locator(".etf-filter-grid") }).first();
     if ((await filterDetails.count()) > 0 && (await filterDetails.getAttribute("open")) === null) {
       await filterDetails.locator("summary").click();
     }
-    await page.locator(".cpw5-etfs-filter-field select:visible").first().waitFor({ state: "visible", timeout: 10_000 });
+    await page.locator(".etf-filter-field select:visible").first().waitFor({ state: "visible", timeout: 10_000 });
   }
 
   if (pathname.startsWith("/stock/") && route.includes("tab=ownership")) {
@@ -2196,40 +2196,40 @@ async function collectRouteChecks(page, route) {
 
     if (new URL(currentRoute, window.location.origin).pathname === "/etfs") {
       const surface = document.querySelector("[data-etfs-surface]");
-      const hero = document.querySelector(".cpw5-etfs-hero-block .cpw5-hero");
-      const header = document.querySelector(".cpw5-etfs-hero-block .cpw5-hero__eyebrow");
-      const toolLinks = Array.from(document.querySelectorAll('.cpw5-etfs-hero-block a[href="/etfs/compare"], .cpw5-etfs-hero-block a[href="/etfs/new"]'))
+      const hero = document.querySelector(".etf-hero");
+      const header = document.querySelector(".etf-eyebrow");
+      const toolLinks = Array.from(document.querySelectorAll('.etf-tabs a[href="/etfs/compare"], .etf-tabs a[href="/etfs/new"]'))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const snapshot = document.querySelector(".cpw5-etfs-hero-block .cpw5-hero__trust-row");
-      const snapshotRows = Array.from(document.querySelectorAll(".cpw5-etfs-hero-block .cpw5-tile"))
+      const snapshot = document.querySelector(".etf-today-grid");
+      const snapshotRows = Array.from(document.querySelectorAll(".etf-today-stat"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const snapshotLabels = snapshotRows.map((node) => (node.querySelector(".cpw5-tile__label")?.textContent || "").trim());
-      const universe = document.querySelector(".cpw5-etfs-table-toolbar");
-      const filterSelects = Array.from(document.querySelectorAll(".cpw5-etfs-filter-field select"));
+      const snapshotLabels = snapshotRows.map((node) => (node.querySelector(".etf-today-label")?.textContent || "").trim());
+      const universe = document.querySelector(".etf-list-toolbar");
+      const filterSelects = Array.from(document.querySelectorAll(".etf-filter-field select"));
       const controls = [
-        { key: "search", node: document.querySelector(".cpw5-etfs-search") },
+        { key: "search", node: document.querySelector(".etf-search") },
         { key: "category", node: filterSelects[0] },
         { key: "issuer", node: filterSelects[1] },
         { key: "aum", node: filterSelects[2] },
         { key: "expense", node: filterSelects[3] },
       ];
-      const segmentButtons = Array.from(document.querySelectorAll(".cpw5-etfs-segment-pill"))
+      const segmentButtons = Array.from(document.querySelectorAll(".etf-seg-pill"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const universeRows = Array.from(document.querySelectorAll(".cpw5-etfs-mobile-card"))
+      const universeRows = Array.from(document.querySelectorAll(".etf-mobile-card"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const loadMore = document.querySelector(".cpw5-etfs-load-more");
+      const loadMore = document.querySelector(".etf-load-more");
 
       if (!surface || surface.getBoundingClientRect().height <= 0) {
         failures.push({ check: "etfs-surface-visible", detail: "missing ETF center surface" });
