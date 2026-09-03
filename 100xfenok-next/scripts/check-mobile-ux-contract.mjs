@@ -77,7 +77,7 @@ async function prepareDynamicRoute(page, route) {
     "/etfs": ".cpw5-etfs-mobile-card",
     "/market-valuation": ".mv-trow",
     "/regime": "[data-regime-axis-summary-card]",
-    "/sectors": "[data-sector-relative-bars]",
+    "/sectors": "[data-sectors-flow-rows]",
   };
   const readySelector = readySelectors[pathname];
   if (readySelector) {
@@ -2713,8 +2713,8 @@ async function collectRouteChecks(page, route) {
 
     if (currentRoute.startsWith("/sectors")) {
       if (viewportWidth < 768) {
-        const periodToggle = document.querySelector(".cpw5-sectors-period-toggle");
-        const periodButtons = Array.from(document.querySelectorAll(".cpw5-sectors-period-toggle button"))
+        const periodToggle = document.querySelector("[data-sectors-period-toggle]");
+        const periodButtons = Array.from(document.querySelectorAll("[data-sectors-period-toggle] button"))
           .filter((node) => {
             const rect = node.getBoundingClientRect();
             return rect.width > 0 && rect.height > 0;
@@ -2742,13 +2742,13 @@ async function collectRouteChecks(page, route) {
         });
       }
 
-      const relativeBars = document.querySelector("[data-sector-relative-bars]");
-      const relativeBarRows = Array.from(document.querySelectorAll("[data-sector-relative-bar]"))
+      const relativeBars = document.querySelector("[data-sectors-flow-rows]");
+      const relativeBarRows = Array.from(document.querySelectorAll("[data-sectors-flow-row]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const relativeSides = new Set(relativeBarRows.map((node) => node.getAttribute("data-sector-relative-side")));
+      const relativeSides = new Set(relativeBarRows.map((node) => node.getAttribute("data-sectors-flow-side")));
       if (!relativeBars || relativeBars.getBoundingClientRect().height <= 0) {
         failures.push({ check: "sector-relative-bars-visible", detail: "missing S&P relative bar strip" });
       }
@@ -3922,7 +3922,7 @@ async function collectSectorViewSwitchChecks(page, route) {
   let clickScrollWidth = null;
 
   for (const tab of expectedTabs) {
-    const button = page.locator(".cpw5-sectors-period-toggle button").filter({ hasText: tab.label }).first();
+    const button = page.locator("[data-sectors-period-toggle] button").filter({ hasText: tab.label }).first();
     if ((await button.count()) === 0) {
       failures.push({ check: "sector-period-toggle-target", detail: `missing=${tab.key}` });
       continue;
@@ -3936,9 +3936,9 @@ async function collectSectorViewSwitchChecks(page, route) {
         document.documentElement.scrollWidth,
         document.body?.scrollWidth ?? 0,
       );
-      const buttons = Array.from(document.querySelectorAll(".cpw5-sectors-period-toggle button"));
+      const buttons = Array.from(document.querySelectorAll("[data-sectors-period-toggle] button"));
       const button = buttons.find((node) => node.getAttribute("aria-pressed") === "true");
-      const panel = document.querySelector(`[data-sector-relative-bars][data-sector-relative-window="${key}"]`);
+      const panel = document.querySelector(`[data-sectors-flow-rows][data-sectors-flow-window="${key}"]`);
       const buttonPressed = Boolean(button);
       const panelRect = panel?.getBoundingClientRect();
 
