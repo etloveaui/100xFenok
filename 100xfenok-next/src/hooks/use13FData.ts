@@ -14,17 +14,51 @@ import type {
 
 export const SEC_13F_FETCH_TIMEOUT_MS = 6000;
 
-export async function fetch13FJson<T>(url: string, timeoutMs = SEC_13F_FETCH_TIMEOUT_MS): Promise<T | null> {
+export type Fetch13FErrorKind = "status" | "timeout" | "parse";
+
+export class Fetch13FError extends Error {
+  readonly url: string;
+  readonly kind: Fetch13FErrorKind;
+  readonly status: number | null;
+
+  constructor(url: string, kind: Fetch13FErrorKind, status: number | null, message: string) {
+    super(message);
+    this.name = "Fetch13FError";
+    this.url = url;
+    this.kind = kind;
+    this.status = status;
+  }
+}
+
+async function request13FOnce<T>(url: string, timeoutMs: number): Promise<T> {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch {
-    return null;
+    if (!response.ok) {
+      throw new Fetch13FError(url, "status", response.status, `13F fetch failed with status ${response.status}: ${url}`);
+    }
+    try {
+      return (await response.json()) as T;
+    } catch {
+      throw new Fetch13FError(url, "parse", response.status, `13F fetch returned invalid JSON: ${url}`);
+    }
+  } catch (error) {
+    if (error instanceof Fetch13FError) throw error;
+    if (controller.signal.aborted) {
+      throw new Fetch13FError(url, "timeout", null, `13F fetch timed out after ${timeoutMs}ms: ${url}`);
+    }
+    throw new Fetch13FError(url, "timeout", null, `13F fetch failed before response: ${url}`);
   } finally {
     window.clearTimeout(timeoutId);
+  }
+}
+
+export async function fetch13FJson<T>(url: string, timeoutMs = SEC_13F_FETCH_TIMEOUT_MS): Promise<T> {
+  try {
+    return await request13FOnce<T>(url, timeoutMs);
+  } catch {
+    return request13FOnce<T>(url, timeoutMs);
   }
 }
 
@@ -41,30 +75,67 @@ const EMPTY: SuperInvestorsDataResult = {
   excludedStale: [],
 };
 
-export function use13FData(): SuperInvestorsDataResult {
+async function settle13F<T>(promise: Promise<T>): Promise<{ data: T | null; failed: boolean }> {
+  try {
+    return { data: await promise, failed: false };
+  } catch {
+    return { data: null, failed: true };
+  }
+}
+
+export interface SuperInvestorsDataState extends SuperInvestorsDataResult {
+  failedRequests: string[];
+  retry: () => void;
+}
+
+export function use13FData(): SuperInvestorsDataState {
   const [result, setResult] = useState<SuperInvestorsDataResult>(EMPTY);
+  const [failedRequests, setFailedRequests] = useState<string[]>([]);
+  const [attempt, setAttempt] = useState(0);
   const isMountedRef = useRef(true);
+
+  const retry = () => setAttempt((n) => n + 1);
 
   useEffect(() => {
     isMountedRef.current = true;
+    if (attempt > 0) {
+      setResult(EMPTY);
+      setFailedRequests([]);
+    }
 
     void (async () => {
-      const [consensus, summary, byTicker, enhancedConsensus, bySector, convictionEntries] = await Promise.all([
-        fetch13FJson<ConsensusData>("/data/sec-13f/analytics/consensus.json"),
-        fetch13FJson<SummaryData>("/data/sec-13f/summary.json"),
-        fetch13FJson<ByTickerData>("/data/sec-13f/by_ticker.json"),
-        fetch13FJson<EnhancedConsensusData>("/data/sec-13f/analytics/enhanced_consensus.json"),
-        fetch13FJson<SectorHoldingsData>("/data/sec-13f/by_sector.json"),
-        fetch13FJson<ConvictionEntriesData>("/data/sec-13f/analytics/conviction_entries.json"),
+      const [consensusRes, summaryRes, byTickerRes, enhancedRes, bySectorRes, convictionRes] = await Promise.all([
+        settle13F(fetch13FJson<ConsensusData>("/data/sec-13f/analytics/consensus.json")),
+        settle13F(fetch13FJson<SummaryData>("/data/sec-13f/summary.json")),
+        settle13F(fetch13FJson<ByTickerData>("/data/sec-13f/by_ticker.json")),
+        settle13F(fetch13FJson<EnhancedConsensusData>("/data/sec-13f/analytics/enhanced_consensus.json")),
+        settle13F(fetch13FJson<SectorHoldingsData>("/data/sec-13f/by_sector.json")),
+        settle13F(fetch13FJson<ConvictionEntriesData>("/data/sec-13f/analytics/conviction_entries.json")),
       ]);
 
       if (!isMountedRef.current) return;
+
+      const failed: string[] = [];
+      if (consensusRes.failed || !consensusRes.data?.consensus) failed.push("consensus");
+      if (summaryRes.failed || !summaryRes.data) failed.push("summary");
+      if (byTickerRes.failed || !byTickerRes.data) failed.push("by_ticker");
+      if (enhancedRes.failed || !enhancedRes.data) failed.push("enhanced_consensus");
+      if (bySectorRes.failed || !bySectorRes.data) failed.push("by_sector");
+      if (convictionRes.failed || !convictionRes.data) failed.push("conviction_entries");
+
+      const consensus = consensusRes.data;
+      const summary = summaryRes.data;
+      const byTicker = byTickerRes.data;
+      const enhancedConsensus = enhancedRes.data;
+      const bySector = bySectorRes.data;
+      const convictionEntries = convictionRes.data;
 
       const anyFailed = !consensus && !summary && !byTicker;
       const consensusFailed = !consensus?.consensus;
 
       if (anyFailed || consensusFailed) {
         setResult({ ...EMPTY, failed: true });
+        setFailedRequests(failed.length > 0 ? failed : ["consensus"]);
         return;
       }
 
@@ -80,14 +151,15 @@ export function use13FData(): SuperInvestorsDataResult {
         quarter: consensus?.metadata?.quarter ?? null,
         excludedStale: consensus?.metadata?.excluded_stale_investors ?? [],
       });
+      setFailedRequests(failed);
     })();
 
     return () => {
       isMountedRef.current = false;
     };
-  }, []);
+  }, [attempt]);
 
-  return result;
+  return { ...result, failedRequests, retry };
 }
 
 const INVESTOR_CACHE = new Map<string, InvestorData>();

@@ -154,12 +154,12 @@ function loadTurnover(): Promise<TurnoverData["by_investor"] | null> {
   if (turnoverPromise) return turnoverPromise;
   turnoverPromise = fetch13FJson<TurnoverData>("/data/sec-13f/analytics/turnover.json")
     .then((data) => {
-      if (!data) {
-        turnoverPromise = null;
-        return null;
-      }
       turnoverCache = data.by_investor ?? {};
       return turnoverCache;
+    })
+    .catch(() => {
+      turnoverPromise = null;
+      return null;
     });
   return turnoverPromise;
 }
@@ -1023,6 +1023,8 @@ export default function SuperinvestorsClient({
     convictionEntries,
     dataReady,
     failed,
+    failedRequests,
+    retry: retry13F,
     quarter,
     excludedStale,
   } = use13FData();
@@ -1300,9 +1302,18 @@ export default function SuperinvestorsClient({
         </div>
       </section>
 
-      {failed ? (
+      {failedRequests.length > 0 ? (
         <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-          기관 공시 데이터를 불러오지 못했습니다.
+          <p>
+            기관 공시 데이터를 불러오지 못했습니다{failed ? "" : " (일부)"}: {failedRequests.join(", ")}
+          </p>
+          <button
+            type="button"
+            onClick={retry13F}
+            className="mt-2 inline-flex min-h-11 items-center justify-center rounded-full border border-rose-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-rose-700 transition hover:border-rose-400"
+          >
+            다시 시도
+          </button>
         </div>
       ) : null}
 
