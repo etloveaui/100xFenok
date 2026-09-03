@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import IndustryMapPanel from "./IndustryMapPanel";
 import SmartMoneyPanel from "./SmartMoneyPanel";
-import { Button } from "@/components/ui";
+import { Button, useDelayedLoading } from "@/components/ui";
 import {
   CpAccordion,
   CpDataTable,
@@ -271,6 +271,8 @@ function HeatCell({ value }: { value: number | null | undefined }) {
 }
 
 function LoadingSkeleton() {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
   return (
     <div className="cpw5-sectors-skeleton">
       <div className="cpw5-sectors-skeleton__bar" style={{ width: 160 }} />

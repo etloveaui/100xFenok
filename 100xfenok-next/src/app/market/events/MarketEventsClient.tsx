@@ -5,6 +5,7 @@ import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { ROUTES } from "@/lib/routes";
+import { EmptyState, Skeleton, useDelayedLoading } from "@/components/ui";
 import { EVENTS_STALE_LABEL, eventStaleSuffix, isEventBoardStale } from "@/lib/market-events/freshness";
 
 type EventTab = "earnings" | "actions" | "ipo" | "movers";
@@ -270,14 +271,7 @@ function makeRow(row: EventRow, title: string, detail: string, value: string, sy
 }
 
 function EmptyRows({ label }: { label: string }) {
-  return (
-    <div className="mv-row">
-      <span className="co">
-        <div className="n">{label}</div>
-      </span>
-      <span className="pc num neutral">-</span>
-    </div>
-  );
+  return <EmptyState reason={label} nextRefresh="다음 갱신 시" />;
 }
 
 export default function MarketEventsClient({
@@ -490,15 +484,11 @@ export default function MarketEventsClient({
 }
 
 function LoadingPanel() {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
   return (
     <section className="panel">
-      <div className="mv-row">
-        <span className="co">
-          <div className="n">시장 이벤트 확인 중</div>
-          <div className="tk">어닝·기업 이벤트·IPO·급등락 데이터를 읽고 있습니다</div>
-        </span>
-        <span className="pc num neutral">...</span>
-      </div>
+      <Skeleton />
     </section>
   );
 }

@@ -405,6 +405,35 @@ export function CpPriceChartImpl(props: CpPriceChartProps) {
   return <CpPriceChartCore {...props} />;
 }
 
+function CpChartZeroData({
+  pending,
+  loadError,
+  onRetry,
+  emptyLabel,
+}: {
+  pending?: boolean;
+  loadError?: string | null;
+  onRetry?: () => void;
+  emptyLabel: string;
+}) {
+  const showPending = useDelayedLoading(pending, 120);
+  if (showPending) {
+    return <div className="cp-chart-skeleton" aria-hidden="true" />;
+  }
+  if (pending) return null;
+  if (loadError) {
+    return (
+      <EmptyState
+        reason={loadError}
+        nextRefresh="가격 데이터 연결 시"
+        actionLabel={onRetry ? "다시 시도" : undefined}
+        onAction={onRetry}
+      />
+    );
+  }
+  return <EmptyState reason={emptyLabel} nextRefresh="차트 데이터 확보 시" />;
+}
+
 function CpPriceChartCore(props: CpPriceChartProps) {
   const {
     kind,
@@ -420,6 +449,9 @@ function CpPriceChartCore(props: CpPriceChartProps) {
     volumeTone = "directional",
     className,
     emptyLabel = "차트 데이터 없음",
+    pending,
+    loadError,
+    onRetry,
   } = props;
   const shellRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLDivElement | null>(null);
@@ -577,7 +609,7 @@ function CpPriceChartCore(props: CpPriceChartProps) {
       data-density={density}
       aria-label={ariaLabel ?? title}
     >
-      {!hasData ? <EmptyState reason={emptyLabel} /> : null}
+      {!hasData ? <CpChartZeroData pending={pending} loadError={loadError} onRetry={onRetry} emptyLabel={emptyLabel} /> : null}
       {showChartSkeleton ? <div className="cp-chart-skeleton" aria-hidden="true" /> : null}
       {hasData ? (
         <div

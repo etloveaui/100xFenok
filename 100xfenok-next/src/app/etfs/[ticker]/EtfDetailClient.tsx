@@ -8,6 +8,7 @@ import TickerSurfaceEventsCard from "@/app/stock/[ticker]/TickerSurfaceEventsCar
 import EtfRetryCallout from "@/app/etfs/EtfRetryCallout";
 import ExternalSourceLinks from "@/components/ExternalSourceLinks";
 import DataProvenanceNote from "@/components/DataProvenanceNote";
+import { EmptyState, Panel, Skeleton, useDelayedLoading } from "@/components/ui";
 import {
   cleanCategory,
   formatAum,
@@ -726,13 +727,12 @@ function SectionCard({
 }
 
 function SkeletonSection() {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
   return (
-    <div className="panel stock-section">
-      <div className="panel-b">
-        <div className="h-5 w-1/3 rounded bg-[var(--c-surface-2)]" />
-        <div className="mt-3 h-32 rounded bg-[var(--c-surface-2)]" />
-      </div>
-    </div>
+    <Panel>
+      <Skeleton />
+    </Panel>
   );
 }
 
@@ -886,7 +886,7 @@ function PerformanceView({ performance }: { performance: EtfPerformance | null }
   ].filter((item) => isFiniteNumber(item.value));
 
   if (!items.length) {
-    return <p className="text-sm font-semibold text-[var(--c-ink-3)]">기간 수익률 데이터 없음</p>;
+    return <EmptyState reason="기간 수익률 데이터 없음" nextRefresh="수익률 데이터 연결 시" />;
   }
 
   return (
@@ -949,7 +949,7 @@ function DetailAvailabilityCallout({
 
 function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currency: string }) {
   if (!holdings.length) {
-    return <p className="text-sm font-semibold text-[var(--c-ink-3)]">보유 구성 데이터 없음</p>;
+    return <EmptyState reason="보유 구성 데이터 없음" nextRefresh="보유 데이터 연결 시" />;
   }
   return (
     <div className="-mx-1 max-h-[560px] overflow-auto px-1" role="region" aria-label="보유 구성 표" tabIndex={0} data-etf-detail-holdings-table="true">
@@ -991,7 +991,7 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
 
 function WeightedList({ rows, empty }: { rows: WeightedRow[] | null | undefined; empty: string }) {
   const items = Array.isArray(rows) ? rows.filter((row) => weightedRowValue(row) !== null) : [];
-  if (!items.length) return <p className="text-sm font-semibold text-[var(--c-ink-3)]">{empty}</p>;
+  if (!items.length) return <EmptyState reason={empty} nextRefresh="데이터 연결 시" />;
   return (
     <div className="space-y-2">
       {items.map((row, index) => {

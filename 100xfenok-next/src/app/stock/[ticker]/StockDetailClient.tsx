@@ -51,7 +51,7 @@ import {
   SharedValuationBandPanel,
   type SharedValuationBand,
 } from "@/app/screener/StockDetailPanel";
-import { Panel, PanelHeader, Row, Stat, StatStrip, Bar, EvidenceRail, Pill, useDelayedLoading } from "@/components/ui";
+import { Panel, PanelHeader, Row, Stat, StatStrip, Bar, EvidenceRail, Pill, EmptyState, Skeleton, useDelayedLoading } from "@/components/ui";
 import {
   edgeAxisSpokeLabel,
 } from "@/lib/fenok-signals/edge-axis-labels.mjs";
@@ -2267,6 +2267,7 @@ function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
   const heroFiling = readyFilings[0] ?? null;
   const feedFilings = useMemo(() => readyFilings.slice(1, 3), [readyFilings]);
   const feedKey = feedFilings.map((f) => f.summaryPath).join(",");
+  const showFilingsSkeleton = useDelayedLoading(filings === null, 120);
 
   useEffect(() => {
     let cancelled = false;
@@ -2296,7 +2297,10 @@ function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedKey]);
 
-  if (filings === null) return <div className="cp-stock-tab-loading"><SkeletonSection /></div>;
+  if (filings === null) {
+    if (!showFilingsSkeleton) return null;
+    return <div className="cp-stock-tab-loading"><SkeletonSection /></div>;
+  }
   if (filings.length === 0) {
     return (
       <Panel>
@@ -2752,6 +2756,7 @@ export default function StockDetailClient({
   const yfLoaded = yfData !== undefined;
   const yfAvailable = yfData != null;
   const showTabSkeleton = useDelayedLoading(detailLoading, 120);
+  const showEstimatesSkeleton = useDelayedLoading(detailLoading || yfData === undefined, 120);
   const etfData: StockanalysisEtfPayload | null | undefined = etfResult === undefined
     ? undefined
     : etfResult?.kind === "ok"
@@ -2766,6 +2771,7 @@ export default function StockDetailClient({
         : null;
   const hasEtfSurfaceData = surfaceRowsReturned(etfSurfaceData) > 0;
   const etfSurface = etfSurfaceFallback(etfSurfaceData, symbol);
+  const showUnknownLoading = useDelayedLoading(!rowLoading && !row && (marketFactsLoading || etfData === undefined || etfSurfaceData === undefined), 120);
   const isEtfAsset = assetHint === "etf" || marketFacts?.asset_type === "etf" || etfData?.asset_type === "etf" || hasEtfSurfaceData;
   const isEtfOnlyAsset = isEtfAsset && !row;
   const showFilingsTab = !isEtfAsset;
@@ -2817,12 +2823,12 @@ export default function StockDetailClient({
   if (etfResult?.kind === "shard_infrastructure_unavailable") {
     return (
       <div className="stock-shell" data-stock-etf-shard-infrastructure-state="unavailable">
-        <div className="panel stock-empty">
-          <p className="text-lg font-black text-red-900">ETF 상세 저장소를 확인할 수 없습니다.</p>
-          <p className="mt-2 text-sm font-semibold text-red-800">
-            {symbol}의 상세 정보를 누락이나 요약 데이터로 바꾸지 않고 일시 장애로 표시합니다.
-          </p>
-        </div>
+        <Panel>
+          <EmptyState
+            reason={`${symbol} ETF 상세 저장소를 확인할 수 없습니다`}
+            nextRefresh="일시 장애 · 복구 후 자동 표시"
+          />
+        </Panel>
       </div>
     );
   }
@@ -2830,12 +2836,12 @@ export default function StockDetailClient({
   // Unknown ticker
   if (!rowLoading && !row) {
     if (marketFactsLoading || etfData === undefined || etfSurfaceData === undefined) {
+      if (!showUnknownLoading) return null;
       return (
         <div className="stock-shell">
-          <div className="panel stock-empty">
-            <p className="text-lg font-black text-slate-700">통합 데이터 확인 중</p>
-            <p className="mt-2 text-sm font-semibold text-slate-500">{symbol} 통합 데이터를 확인하고 있습니다.</p>
-          </div>
+          <Panel loading>
+            <PanelHeader eyebrow="Stock" title={`${symbol} 통합 데이터 확인 중`} />
+          </Panel>
         </div>
       );
     }
@@ -3089,7 +3095,8 @@ export default function StockDetailClient({
                   composition="w4"
                   volumeTone="muted"
                   className="cp-stock-price-chart"
-                  emptyLabel={stockAuxData === undefined ? `가격 이력 ${DATA_STATE_LABELS.pending}...` : "표시할 가격 이력이 없습니다."}
+                  emptyLabel="표시할 가격 이력이 없습니다."
+                  pending={stockAuxData === undefined}
                 />
               </section>
 
@@ -3103,7 +3110,7 @@ export default function StockDetailClient({
                 ))}
               </section>
 
-              {detailLoading ? (
+              {showTabSkeleton ? (
                 <div className="cp-stock-preview-loading">
                   <SkeletonSection />
                 </div>
@@ -3169,7 +3176,7 @@ export default function StockDetailClient({
                 : activeStockTab === "statistics"
                 ? renderStatisticsCpTab(showTabSkeleton)
                 : activeStockTab === "estimates"
-                ? renderEstimatesCpTab(showTabSkeleton)
+                ? renderEstimatesCpTab(showEstimatesSkeleton)
                 : activeStockTab === "ownership"
                 ? renderOwnershipCpTab(showTabSkeleton)
                 : activeStockTab === "filings"
@@ -3207,7 +3214,7 @@ export default function StockDetailClient({
             <div className="panel-b">{renderYfTab(activeStockTab, yfData, industryBench)}</div>
           </section>
         ) : null}
-        {detailLoading ? (
+        {showTabSkeleton ? (
           <div className="space-y-4">
             <SkeletonSection />
             <SkeletonSection />
@@ -3489,7 +3496,7 @@ export default function StockDetailClient({
   function renderEstimatesCpTab(showSkeleton: boolean) {
     return (
       <div className="cp-stock-tab-financials">
-        {showSkeleton || yfData === undefined ? (
+        {showSkeleton ? (
           <div className="cp-stock-tab-loading">
             <SkeletonSection />
             <SkeletonSection />
@@ -3608,12 +3615,9 @@ function SectionCard({ title, children }: { title?: string; children: React.Reac
 
 function SkeletonSection() {
   return (
-    <div className="panel stock-section">
-      <div className="panel-b">
-      <div className="h-5 w-1/3 rounded bg-slate-200" />
-      <div className="mt-3 h-32 rounded bg-slate-200" />
-      </div>
-    </div>
+    <Panel>
+      <Skeleton />
+    </Panel>
   );
 }
 

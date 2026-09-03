@@ -22,16 +22,21 @@ import type {
 import { loadPortfolioViews, loadFactorExposuresSummary } from "./portfolioViewsLoader";
 import { formatQuarterDate, getCommonSamePeriodWindow } from "./samePeriodWindow";
 import { DATA_STATE_LABELS } from "@/lib/data-state";
+import { EmptyState, useDelayedLoading } from "@/components/ui";
 import { formatCurrencyCompact, formatPlainPercent } from "@/lib/format";
 
 // Chart.js is client-only; load the chart bodies behind ssr:false so they stay
 // out of the Worker/SSR bundle. Fallback height matches the chart containers
 // (h-[300px]) to avoid layout jump.
-const InsightsChartLoading = () => (
+const InsightsChartLoading = () => {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
+  return (
   <div className="grid h-[300px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-3)]">
     {`차트 ${DATA_STATE_LABELS.pending}`}
   </div>
-);
+  );
+};
 
 const RiskReturnScatter = dynamic(() => import("./PortfolioCharts").then((mod) => mod.RiskReturnScatter), {
   ssr: false,
@@ -146,6 +151,8 @@ function InsightTableScroll({ label, children }: { label: string; children: Reac
 }
 
 function SkeletonCard() {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
   return (
     <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
       <div className="h-5 w-1/3 rounded bg-slate-200" />
@@ -158,8 +165,8 @@ function SkeletonCard() {
 
 function UnavailablePanel({ label }: { label: string }) {
   return (
-    <div data-superinvestor-insights-empty-state className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-xs font-bold text-slate-500">
-      {label} 데이터를 불러오지 못했습니다. 다른 인사이트는 계속 확인할 수 있습니다.
+    <div data-superinvestor-insights-empty-state>
+      <EmptyState reason={`${label} 데이터를 불러오지 못했습니다`} nextRefresh="다른 인사이트는 계속 확인할 수 있습니다." />
     </div>
   );
 }
@@ -348,8 +355,8 @@ function AccumulationHeatmap({ trades }: { trades: TradesRankingData | null }) {
 
   if (rows.length === 0) {
     return (
-      <div data-superinvestor-accumulation-heatmap className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3 text-xs font-bold text-slate-500">
-        누적 매수 heat-map 데이터가 없습니다.
+      <div data-superinvestor-accumulation-heatmap>
+        <EmptyState reason="누적 매수 heat-map 데이터가 없습니다" nextRefresh="다음 분기 공시에서 다시 확인해 주세요." />
       </div>
     );
   }
@@ -408,7 +415,7 @@ function PressurePanel({ title, rows, color, signLabel }: {
 }) {
   const textColor = color === "emerald" ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
   const barColor = color === "emerald" ? "var(--c-up)" : "var(--c-down)";
-  if (rows.length === 0) return <p className="text-xs text-[var(--c-ink-3)]">데이터 없음</p>;
+  if (rows.length === 0) return <EmptyState reason={`${title} 데이터가 없습니다`} nextRefresh="다음 분기 공시에서 다시 확인해 주세요." />;
   return (
     <div>
       <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{title}</h4>
@@ -502,7 +509,7 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
           </tbody>
         </table>
       </InsightTableScroll>
-      {rows.length === 0 ? <p className="text-xs text-[var(--c-ink-3)]">현재 분기 신규 편입 데이터 없음</p> : null}
+      {rows.length === 0 ? <EmptyState reason="현재 분기 신규 편입 데이터가 없습니다" nextRefresh="다음 분기 공시에서 다시 확인해 주세요." /> : null}
       <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} 신규 편입 · 총 {data.metadata.new_positions_count}건 ({data.metadata.unique_tickers}종목)
       </p>
@@ -703,8 +710,13 @@ export default function InsightsTab() {
 
   if (failed) {
     return (
-        <div data-superinvestor-insights-error className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-          기관 공시 인사이트 데이터를 불러오지 못했습니다.
+        <div data-superinvestor-insights-error>
+          <EmptyState
+            reason="기관 공시 인사이트 데이터를 불러오지 못했습니다"
+            nextRefresh="다음 갱신 시 자동 복구됩니다"
+            actionLabel="다시 시도"
+            onAction={() => window.location.reload()}
+          />
         </div>
     );
   }

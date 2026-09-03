@@ -45,4 +45,9 @@ export type CpPriceChartProps = {
   footnote?: string;
   className?: string;
   emptyLabel?: string;
+  /** zero-data path: still fetching (delayed skeleton, not immediate EmptyState) */
+  pending?: boolean;
+  /** zero-data path: fetch failed (reason + retry, LKG kept by caller) */
+  loadError?: string | null;
+  onRetry?: () => void;
 };

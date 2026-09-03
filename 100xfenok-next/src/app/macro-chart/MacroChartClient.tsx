@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
 import TransitionLink from "@/components/TransitionLink";
-import { EvidenceRail, Panel } from "@/components/ui";
+import { EmptyState, EvidenceRail, Panel, useDelayedLoading } from "@/components/ui";
 import { formatAsOf, freshnessDataState } from "@/lib/data-state";
 import { MarketChartFrame, type MarketChartRange } from "@/lib/market-valuation/charts/MarketChartFrame";
 import type { MarketChartSeries } from "@/lib/market-valuation/charts/types";
@@ -974,6 +974,20 @@ function PickerButton({
   );
 }
 
+function DelayedMacroChartSkeleton() {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
+  return (
+    <div className="cpw5-macro-chart-skeleton" aria-label="차트 데이터를 불러오는 중입니다">
+      <span className="sr-only">차트 데이터를 불러오는 중입니다.</span>
+      <i />
+      <i />
+      <i />
+      <i />
+    </div>
+  );
+}
+
 export default function MacroChartClient({ initialMode = "macro" }: { initialMode?: MacroChartInitialMode }) {
   const stockCompareMode = initialMode === "stock-compare";
   const headerEyebrow = stockCompareMode ? "Multi Chart" : "Macro Chart";
@@ -1518,13 +1532,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               </button>
             </div>
           ) : activeLoadState.status === "loading" ? (
-            <div className="cpw5-macro-chart-skeleton" aria-label="차트 데이터를 불러오는 중입니다">
-              <span className="sr-only">차트 데이터를 불러오는 중입니다.</span>
-              <i />
-              <i />
-              <i />
-              <i />
-            </div>
+            <DelayedMacroChartSkeleton />
           ) : activeLoadState.status === "ready" && chartSeries.length ? (
             <div className="cpw5-macro-chart-rows" data-macro-chart-row-count={chartRows.length}>
               {chartRows.map((row, rowIndex) => (
@@ -1580,7 +1588,10 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               </div>
             </div>
           ) : (
-            <div className="cpw5-macro-empty">비교할 시리즈를 선택하세요.</div>
+            <EmptyState
+              reason="비교할 시리즈가 없습니다"
+              nextRefresh="카탈로그에서 시리즈를 선택하면 차트가 표시됩니다"
+            />
           )}
           <EvidenceRail
             freshness={evidenceFreshness}
@@ -1768,7 +1779,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   />
                 ))}
                 {filteredCatalog.length === 0 ? (
-                  <p className="cpw5-macro-empty-small">검색 결과가 없습니다.</p>
+                  <EmptyState reason="검색 결과가 없습니다" nextRefresh="검색어를 바꾸면 다른 시리즈가 표시됩니다" />
                 ) : null}
               </div>
             </div>

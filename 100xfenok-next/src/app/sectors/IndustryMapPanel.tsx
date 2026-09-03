@@ -5,6 +5,7 @@ import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import { DATA_STATE_LABELS } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
+import { EmptyState } from "@/components/ui";
 import { formatCurrencyCompact, formatInteger } from "@/lib/format";
 
 interface SurfaceDoc<T = EventRow> {
@@ -287,15 +288,7 @@ function downloadIndustryCsv(rows: IndustryMapRow[]) {
 }
 
 function EmptyRows({ label }: { label: string }) {
-  return (
-    <div className="mv-row">
-      <span className="co">
-        <div className="n">표시할 데이터 없음</div>
-        <div className="tk">{label}</div>
-      </span>
-      <span className="pc num neutral">-</span>
-    </div>
-  );
+  return <EmptyState reason="표시할 데이터 없음" nextRefresh={label} />;
 }
 
 function IndustryConstituentList({

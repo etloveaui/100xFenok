@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { DataStateBadge } from "@/components/DataStateNotice";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
+import { EmptyState } from "@/components/ui";
 import MarketThermometer from "@/components/market/MarketThermometer";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import { readSustainableRanges, type SustainableRangesDoc } from "./sustainableRanges";
@@ -88,7 +89,7 @@ function toneDotClass(tone: MarketTone): string {
 }
 
 function EmptyPanel({ label }: { label: string }) {
-  return <div className="px-[var(--panel-pad)] py-5 text-sm font-semibold text-[var(--c-ink-3)]">{label}</div>;
+  return <EmptyState reason={label} nextRefresh="데이터 연결 시" />;
 }
 
 function AsOfBadge({ value, prefix = "기준" }: { value: string | null | undefined; prefix?: string }) {

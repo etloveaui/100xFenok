@@ -11,6 +11,7 @@ import {
 } from "@/components/canvas-plus/kit";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
+import { EmptyState, useDelayedLoading } from "@/components/ui";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import { DATA_STATE_LABELS, formatAsOf } from "@/lib/data-state";
 import type {
@@ -476,6 +477,7 @@ export default function RegimeClient() {
   ]);
 
   const isLoading = !dataReady && !failed;
+  const showRegimeSkeleton = useDelayedLoading(isLoading, 120);
 
   return (
     <div className="data-shell-page canvas-plus" data-regime-surface data-canvas-plus data-canvas-plus-regime>
@@ -499,12 +501,17 @@ export default function RegimeClient() {
       </section>
 
       {failed ? (
-        <div className="cpw5-empty" data-variant="skip-note" data-regime-failed>
-          시장 국면 데이터를 불러오지 못했습니다.
+        <div data-regime-failed>
+          <EmptyState
+            reason="시장 국면 데이터를 불러오지 못했습니다"
+            nextRefresh="다음 갱신 시 자동 복구됩니다"
+            actionLabel="다시 시도"
+            onAction={() => window.location.reload()}
+          />
         </div>
       ) : null}
 
-      {isLoading ? (
+      {showRegimeSkeleton ? (
         <div className="cpw5-regime-skeleton" aria-busy="true" data-regime-loading>
           <div className="cpw5-regime-skeleton__hero" />
           <div className="cpw5-regime-skeleton__gauge" />

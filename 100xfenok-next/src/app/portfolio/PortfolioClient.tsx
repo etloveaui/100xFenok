@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
+import { EmptyState } from "@/components/ui";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import { makeDataState } from "@/lib/data-state";
@@ -855,9 +856,10 @@ function buildPortfolioConnectionSummary(
 
 function HoldingsEmptyState() {
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center">
-      <p className="text-xs font-bold text-slate-500">보유 종목이 없습니다</p>
-    </div>
+    <EmptyState
+      reason="보유 종목이 없습니다"
+      nextRefresh="아래 종목 추가 폼에서 첫 종목을 등록하세요"
+    />
   );
 }
 

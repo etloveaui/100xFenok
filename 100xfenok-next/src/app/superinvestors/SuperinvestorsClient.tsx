@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import Tabs, { TabPanel, type TabItem, useTabsBaseId } from "@/components/ui/Tabs";
+import { EmptyState as SharedEmptyState, useDelayedLoading } from "@/components/ui";
 import { fetch13FJson, PRIVATE_INVESTOR_IDS, use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
@@ -112,11 +113,15 @@ function syncSuperinvestorUrl({ tab, ticker, guru }: SuperinvestorUrlState) {
   if (nextUrl !== currentUrl) window.history.replaceState(window.history.state, "", nextUrl);
 }
 
-const ChartLoading = () => (
-  <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-3)]">
-    차트 로딩 중
-  </div>
-);
+const ChartLoading = () => {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
+  return (
+    <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-3)]">
+      차트 로딩 중
+    </div>
+  );
+};
 
 const PortfolioTreemap = dynamic(() => import("./PortfolioCharts").then((mod) => mod.PortfolioTreemap), {
   ssr: false,
@@ -314,15 +319,18 @@ function buildSectorRotationRows(
 }
 
 function EmptyState({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className="rounded-[1.2rem] border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-6 py-10 text-center">
-      <p className="text-sm font-black text-slate-700">{title}</p>
-      <p className="mt-1 text-xs font-semibold text-slate-500">{desc}</p>
-    </div>
-  );
+  return <SharedEmptyState reason={title} nextRefresh={desc} />;
+}
+
+function Delayed({ children }: { children: ReactNode }) {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
+  return <>{children}</>;
 }
 
 function SkeletonRows({ count = 6 }: { count?: number }) {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
@@ -340,6 +348,8 @@ function SkeletonRows({ count = 6 }: { count?: number }) {
 }
 
 function SkeletonCards({ count = 6 }: { count?: number }) {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
@@ -688,25 +698,27 @@ function GuruDetailPanel({
           aria-live="polite"
           className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500"
         >
-          보유 포트폴리오 데이터를 불러오는 중입니다…
+          <Delayed>보유 포트폴리오 데이터를 불러오는 중입니다…</Delayed>
         </div>
       ) : pvFailed ? (
         <div
           data-superinvestor-guru-portfolio-state="error"
           role="status"
           aria-live="polite"
-          className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"
+          className="mt-4"
         >
-          보유 포트폴리오 데이터를 불러오지 못했습니다.
+          <EmptyState title="보유 포트폴리오 데이터를 불러오지 못했습니다" desc="잠시 후 다시 시도하거나 다른 투자자를 선택해 주세요." />
         </div>
       ) : null}
 
       {loading ? (
+        <Delayed>
         <div className="mt-4 space-y-2">
           <div className="h-4 w-1/3 rounded bg-slate-200" />
           <div className="h-4 w-1/2 rounded bg-slate-200" />
           <div className="h-4 w-2/3 rounded bg-slate-200" />
         </div>
+        </Delayed>
       ) : latest ? (
         <div className="mt-4">
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">Top 보유</p>
@@ -1303,18 +1315,12 @@ export default function SuperinvestorsClient({
       </section>
 
       {failedRequests.length > 0 ? (
-        <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-          <p>
-            기관 공시 데이터를 불러오지 못했습니다{failed ? "" : " (일부)"}: {failedRequests.join(", ")}
-          </p>
-          <button
-            type="button"
-            onClick={retry13F}
-            className="mt-2 inline-flex min-h-11 items-center justify-center rounded-full border border-rose-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-rose-700 transition hover:border-rose-400"
-          >
-            다시 시도
-          </button>
-        </div>
+        <SharedEmptyState
+          reason={`기관 공시 데이터를 불러오지 못했습니다${failed ? "" : " (일부)"}: ${failedRequests.join(", ")}`}
+          nextRefresh="잠시 후 다시 시도해 주세요. 불러온 데이터는 계속 확인할 수 있습니다."
+          actionLabel="다시 시도"
+          onAction={retry13F}
+        />
       ) : null}
 
       <section
@@ -1774,16 +1780,15 @@ export default function SuperinvestorsClient({
               aria-live="polite"
               className="rounded-[1.2rem] border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500"
             >
-              거장 토탈 포트폴리오 데이터를 불러오는 중입니다… 코호트 확인 중
+              <Delayed>거장 토탈 포트폴리오 데이터를 불러오는 중입니다… 코호트 확인 중</Delayed>
             </div>
           ) : pvFailed ? (
             <div
               data-superinvestor-portfolio-state="error"
               role="status"
               aria-live="polite"
-              className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700"
             >
-              거장 토탈 포트폴리오 데이터를 불러오지 못했습니다. 다른 13F 패널은 계속 확인할 수 있습니다.
+              <EmptyState title="거장 토탈 포트폴리오 데이터를 불러오지 못했습니다" desc="잠시 후 다시 시도해 주세요. 다른 13F 패널은 계속 확인할 수 있습니다." />
             </div>
           ) : pvData ? (
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
@@ -1951,7 +1956,8 @@ export default function SuperinvestorsClient({
               aria-label="공통 보유 종목 모바일 요약"
             >
               {!dataReady ? (
-                Array.from({ length: 4 }).map((_, index) => (
+                <Delayed>
+                {Array.from({ length: 4 }).map((_, index) => (
                   <div key={index} className="cpw5-super-mobile-card" aria-hidden="true">
                     <div className="h-5 w-1/3 rounded bg-slate-200" />
                     <div className="mt-3 grid grid-cols-2 gap-2">
@@ -1959,7 +1965,8 @@ export default function SuperinvestorsClient({
                       <div className="h-10 rounded bg-slate-100" />
                     </div>
                   </div>
-                ))
+                ))}
+                </Delayed>
               ) : pageRows.length === 0 ? (
                 <EmptyState title="결과가 없습니다" desc="검색어를 바꾸거나 필터를 초기화해 주세요." />
               ) : (
@@ -2234,11 +2241,13 @@ export default function SuperinvestorsClient({
           className={cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4", !dataReady && "opacity-60")}
         >
           {!dataReady ? (
+            <Delayed>
             <div className="space-y-3">
               <div className="h-5 w-1/3 rounded bg-slate-200" />
               <div className="h-4 w-1/2 rounded bg-slate-200" />
               <div className="h-4 w-2/3 rounded bg-slate-200" />
             </div>
+            </Delayed>
           ) : !search.trim() ? (
             <EmptyState title="티커를 입력해 주세요" desc="보유 투자자를 확인할 종목 코드를 검색해 주세요." />
           ) : !byTickerEntry ? (
@@ -2479,6 +2488,7 @@ export default function SuperinvestorsClient({
 
           {/* Loading skeleton */}
           {tradesLoading ? (
+            <Delayed>
             <div className="grid gap-4 lg:grid-cols-2">
               {[0, 1].map((p) => (
                 <div key={p} className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
@@ -2491,10 +2501,9 @@ export default function SuperinvestorsClient({
                 </div>
               ))}
             </div>
+            </Delayed>
           ) : tradesFailed ? (
-            <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-              매매랭킹 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
-            </div>
+            <EmptyState title="매매랭킹 데이터를 불러오지 못했습니다" desc="잠시 후 다시 시도해 주세요." />
           ) : tradesData ? (
             <>
               {/* Panels */}
