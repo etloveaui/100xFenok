@@ -74,7 +74,24 @@ assert.deepEqual(parsed, [
   { date: "2026-07-16", value: 6200.1 },
   { date: "2026-07-17", value: 6210.2 },
 ]);
-assert.throws(() => parseYahooChart(yahooPayload("^GSPC", [["2026-07-17", Number.NaN]]), "^GSPC"), /finite positive/);
+assert.deepEqual(
+  parseYahooChart(yahooPayload("^GSPC", [
+    ["2026-07-16", 6200.1],
+    ["2026-07-17", null],
+    ["2026-07-18", Number.NaN],
+  ]), "^GSPC"),
+  [{ date: "2026-07-16", value: 6200.1 }],
+  "trailing Yahoo rows without a finite close are ignored",
+);
+assert.throws(
+  () => parseYahooChart(yahooPayload("^GSPC", [
+    ["2026-07-16", 6200.1],
+    ["2026-07-17", Number.NaN],
+    ["2026-07-18", 6220.3],
+  ]), "^GSPC"),
+  /finite positive/,
+  "an interior malformed close remains a schema failure",
+);
 
 assert.deepEqual(
   mergeSeries([{ date: "2026-07-15", value: 6190 }], parsed),
