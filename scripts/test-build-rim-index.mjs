@@ -159,6 +159,41 @@ function makeExactSpotFixture({ includeAdmin = true, spotRows = {}, mutateKospi 
   let kospiPayload = readJson(path.join(computedSource, "fenok-edge-korea-krx-index-daily.json"));
   if (typeof mutateKospi === "function") kospiPayload = mutateKospi(kospiPayload);
   writeJson(path.join(tempRoot, "computed", "fenok-edge-korea-krx-index-daily.json"), kospiPayload);
+  // Fixed-clock clamp: keep fixture input clocks at-or-before the fixed now
+  // (2026-08-10). Truncation only, never a date rewrite. Weekly benchmark rows
+  // clamp to the last Friday before the fixed now for us/micro (2026-07-31,
+  // exactly the 10-day SLA boundary, and distinct from the 2026-08-07 spots)
+  // and to 2026-08-07 for emerging. The single-date official KOSPI file cannot
+  // be clamped and stays live.
+  const benchmarkCutoffs = { "us.json": "2026-08-06", "micro_sectors.json": "2026-08-06", "emerging.json": "2026-08-10" };
+  const liveBenchmarkRoot = path.join(dataRoot, "benchmarks");
+  fs.rmSync(path.join(tempRoot, "benchmarks"), { recursive: true, force: true });
+  fs.mkdirSync(path.join(tempRoot, "benchmarks"), { recursive: true });
+  for (const entry of fs.readdirSync(liveBenchmarkRoot, { withFileTypes: true })) {
+    const liveFile = path.join(liveBenchmarkRoot, entry.name);
+    const tempFile = path.join(tempRoot, "benchmarks", entry.name);
+    const cutoff = entry.isFile() ? benchmarkCutoffs[entry.name] : null;
+    if (!cutoff) {
+      fs.symlinkSync(liveFile, tempFile, entry.isDirectory() ? "dir" : "file");
+      continue;
+    }
+    const benchmarkPayload = readJson(liveFile);
+    for (const section of Object.values(benchmarkPayload.sections ?? {})) {
+      if (Array.isArray(section?.data)) section.data = section.data.filter((row) => typeof row?.date === "string" && row.date <= cutoff);
+    }
+    writeJson(tempFile, benchmarkPayload);
+  }
+  const clampedMacroPayload = readJson(path.join(dataRoot, "macro/fred-banking-daily.json"));
+  for (const rows of Object.values(clampedMacroPayload.series ?? {})) {
+    if (Array.isArray(rows)) {
+      const kept = rows.filter((row) => typeof row?.date === "string" && row.date <= "2026-08-10");
+      rows.length = 0;
+      rows.push(...kept);
+    }
+  }
+  fs.rmSync(path.join(tempRoot, "macro"), { recursive: true, force: true });
+  fs.mkdirSync(path.join(tempRoot, "macro"), { recursive: true });
+  writeJson(path.join(tempRoot, "macro/fred-banking-daily.json"), clampedMacroPayload);
   return tempRoot;
 }
 
@@ -372,27 +407,15 @@ assert.equal(invalidSoxFreshness.status, "refresh_recommended");
 const currentSoxFixtureAsOf = readJson(path.join(dataRoot, "indices/nasdaq-giw-sox-constituents.json")).as_of;
 assert.match(currentSoxFixtureAsOf, /^\d{4}-\d{2}-\d{2}$/, "SOX fixture source date");
 const exactSpotRoot = makeExactSpotFixture({ includeAdmin: true });
-// This builder reads the LIVE data tree, so pinning the clock to one file's date
-// makes the test fail the moment any other source publishes past it - a weekly
-// benchmark refresh moved KOSPI to 2026-07-26 while this pin sat at the SOX file's
-// 2026-07-24 and every KOSPI field asserted "source as_of must not be after
-// generated_at". Discover the newest observed source date first, then pin to it,
-// which is the same defence the availability fixtures below already use.
-const newestObservedSourceAsOf = (built) => Object.values(built.indices)
-  .flatMap((item) => Object.values(item.observed ?? {}))
-  .map((field) => field?.as_of)
-  .filter((asOf) => typeof asOf === "string" && /^\d{4}-\d{2}-\d{2}$/.test(asOf))
-  .sort()
-  .at(-1);
-// Building is separate from validating, so this probe cannot trip the assertion
-// it exists to prevent.
-const soxProbeAsOf = newestObservedSourceAsOf(buildRimIndexInputs({
-  dataRootOverride: exactSpotRoot,
-  generatedAt: `${currentSoxFixtureAsOf}T23:59:59.000Z`,
-}));
-const payloadPinAsOf = soxProbeAsOf && soxProbeAsOf > currentSoxFixtureAsOf
-  ? soxProbeAsOf
-  : currentSoxFixtureAsOf;
+// Fixed clock for the exact-spot lane: the builder's only clock is generatedAt,
+// so pinning it pins every freshness computation. It stays inside the
+// 10-calendar-day spot SLA after the 2026-08-07 exact spots and at-or-after the
+// 2026-08-10 slickcharts collection, hence 2026-08-10. Fixture input clocks are
+// clamped to at-or-before it inside makeExactSpotFixture. Live single-date
+// Korea inputs (official KOSPI file, KRX bridge) newer than the fixed now keep
+// their own dates and are named by validation until the data side carries
+// history for them.
+const payloadPinAsOf = "2026-08-10";
 const payload = buildRimIndexInputs({
   dataRootOverride: exactSpotRoot,
   generatedAt: `${payloadPinAsOf}T23:59:59.000Z`,
