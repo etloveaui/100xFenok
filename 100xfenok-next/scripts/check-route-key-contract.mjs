@@ -502,6 +502,19 @@ for (const file of DRIFT_SCAN_FILES) {
 
 if (errors.length) fail(`${errors.length} violation(s)`, errors);
 
+const superinvestorsLiveContract = spawnSync(
+  TSX_BIN,
+  ["scripts/test-superinvestors-live-contract.ts"],
+  { cwd: APP_ROOT, encoding: "utf8", maxBuffer: 1024 * 1024 },
+);
+if (superinvestorsLiveContract.status !== 0) {
+  fail("superinvestors live contract failed", [
+    superinvestorsLiveContract.stdout?.trim(),
+    superinvestorsLiveContract.stderr?.trim(),
+  ].filter(Boolean));
+}
+process.stdout.write(superinvestorsLiveContract.stdout);
+
 console.log(
   `[qa:routes] route/key contract OK (${routeExports.appRoutePatterns.length} app routes, ${collectDeclaredSourcePaths().length} source paths, ${DRIFT_SCAN_FILES.length} drift scopes)`,
 );
