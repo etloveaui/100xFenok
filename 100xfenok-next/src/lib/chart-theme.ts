@@ -37,7 +37,7 @@ export function lwCandlestickSeriesOptions(theme: LightChartTheme = lightChartTh
 }
 
 export function lwLineSeriesOptions(theme: LightChartTheme = lightChartTheme) {
-  return { color: theme.accent, lineWidth: 1.5 as const } as const;
+  return { color: theme.accent, lineWidth: 2 as const } as const;
 }
 
 export function lwVolumeSeriesOptions(theme: LightChartTheme = lightChartTheme) {
