@@ -130,7 +130,7 @@ const DEFAULT_EXACT_SPOT_ROWS = Object.freeze({
   sox: [{ date: "2026-08-07", value: 12000.1 }],
 });
 
-function makeExactSpotFixture({ includeAdmin = true, spotRows = {}, mutateKospi = null } = {}) {
+function makeExactSpotFixture({ includeAdmin = true, spotRows = {}, mutateKospi = null, mutateSox = null } = {}) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "rim-index-exact-spot-"));
   for (const dir of ["benchmarks", "damodaran", "macro", "slickcharts", "stockanalysis", "yf"]) {
     fs.symlinkSync(path.join(dataRoot, dir), path.join(tempRoot, dir), "dir");
@@ -138,9 +138,9 @@ function makeExactSpotFixture({ includeAdmin = true, spotRows = {}, mutateKospi 
   if (includeAdmin) fs.symlinkSync(path.join(dataRoot, "admin"), path.join(tempRoot, "admin"), "dir");
 
   fs.mkdirSync(path.join(tempRoot, "indices"), { recursive: true });
-  for (const file of ["nasdaq-giw-sox-constituents.json"]) {
-    fs.symlinkSync(path.join(dataRoot, "indices", file), path.join(tempRoot, "indices", file), "file");
-  }
+  let soxConstituents = readJson(path.join(dataRoot, "indices/nasdaq-giw-sox-constituents.json"));
+  if (typeof mutateSox === "function") soxConstituents = mutateSox(soxConstituents);
+  writeJson(path.join(tempRoot, "indices/nasdaq-giw-sox-constituents.json"), soxConstituents);
   const mergedSpotRows = { ...DEFAULT_EXACT_SPOT_ROWS, ...spotRows };
   for (const [key, rows] of Object.entries(mergedSpotRows)) {
     writeJson(path.join(tempRoot, "indices", `${key}.json`), rows);
@@ -378,26 +378,40 @@ const exactSpotRoot = makeExactSpotFixture({ includeAdmin: true });
 // 2026-07-24 and every KOSPI field asserted "source as_of must not be after
 // generated_at". Discover the newest observed source date first, then pin to it,
 // which is the same defence the availability fixtures below already use.
-const newestObservedSourceAsOf = (built) => Object.values(built.indices)
-  .flatMap((item) => Object.values(item.observed ?? {}))
-  .map((field) => field?.as_of)
+const newestFixtureSourceAsOf = (built) => [
+  ...Object.values(built.indices)
+    .flatMap((item) => Object.values(item.observed ?? {}))
+    .map((field) => field?.as_of),
+  built.coverage_diagnostics?.stock_action?.KOSPI?.krx_kospi_weights?.as_of,
+  built.coverage_diagnostics?.stock_action?.SOX?.as_of,
+]
   .filter((asOf) => typeof asOf === "string" && /^\d{4}-\d{2}-\d{2}$/.test(asOf))
   .sort()
   .at(-1);
+const assertFreshnessWarning = (item, { code, source, asOf }) => {
+  const warning = item.warnings.find((row) => row.code === code);
+  assert.ok(warning, `${item.id}: ${code} must be disclosed`);
+  assert.equal(warning.severity, "freshness_warning", `${item.id}: ${code} severity`);
+  assert.equal(warning.source, source, `${item.id}: ${code} source`);
+  assert.equal(warning.as_of, asOf, `${item.id}: ${code} as_of`);
+};
 // Building is separate from validating, so this probe cannot trip the assertion
 // it exists to prevent.
-const soxProbeAsOf = newestObservedSourceAsOf(buildRimIndexInputs({
+const fixtureProbeAsOf = newestFixtureSourceAsOf(buildRimIndexInputs({
   dataRootOverride: exactSpotRoot,
   generatedAt: `${currentSoxFixtureAsOf}T23:59:59.000Z`,
 }));
-const payloadPinAsOf = soxProbeAsOf && soxProbeAsOf > currentSoxFixtureAsOf
-  ? soxProbeAsOf
+const payloadPinAsOf = fixtureProbeAsOf && fixtureProbeAsOf > currentSoxFixtureAsOf
+  ? fixtureProbeAsOf
   : currentSoxFixtureAsOf;
 const payload = buildRimIndexInputs({
   dataRootOverride: exactSpotRoot,
   generatedAt: `${payloadPinAsOf}T23:59:59.000Z`,
 });
 const validation = validateRimIndexInputs(payload);
+const currentLiveFixtureAsOf = newestFixtureSourceAsOf(payload);
+assert.match(currentLiveFixtureAsOf, /^\d{4}-\d{2}-\d{2}$/, "current live fixture source date");
+const currentLiveFixtureGeneratedAt = `${currentLiveFixtureAsOf}T23:59:59.000Z`;
 
 assert.equal(validation.ok, true, validation.errors.join("\n"));
 assert.equal(payload.schema_version, "rim_index_inputs.v2");
@@ -563,15 +577,20 @@ const staleSpotRoot = makeExactSpotFixture({
 try {
   const staleSpotPayload = buildRimIndexInputs({
     dataRootOverride: staleSpotRoot,
-    generatedAt: "2026-08-10T23:59:59.000Z",
+    generatedAt: currentLiveFixtureGeneratedAt,
   });
   const staleSpot = staleSpotPayload.indices.SPX;
   assert.equal(staleSpot.observed.price.value, 7000);
   assert.equal(staleSpot.observed.price.freshness.status, "refresh_recommended");
   assert.equal(staleSpot.blockers.length, 0, "stale spot is a warning, not a blocker (decision D)");
-  assert.ok(staleSpot.warnings.some((row) => row.code === "spot_source_refresh_recommended"));
+  assertFreshnessWarning(staleSpot, {
+    code: "spot_source_refresh_recommended",
+    source: "indices/sp500.json",
+    asOf: "2026-07-01",
+  });
   assert.equal(staleSpot.public_status, "ready_inputs_and_forecast_grid");
-  assert.equal(validateRimIndexInputs(staleSpotPayload).ok, true);
+  const staleSpotValidation = validateRimIndexInputs(staleSpotPayload);
+  assert.equal(staleSpotValidation.ok, true, staleSpotValidation.errors.join("\n"));
 } finally {
   fs.rmSync(staleSpotRoot, { recursive: true, force: true });
 }
@@ -581,7 +600,7 @@ try {
   fs.rmSync(path.join(missingSpotRoot, "indices", "nasdaq100.json"), { force: true });
   const missingSpotPayload = buildRimIndexInputs({
     dataRootOverride: missingSpotRoot,
-    generatedAt: "2026-08-10T23:59:59.000Z",
+    generatedAt: currentLiveFixtureGeneratedAt,
   });
   const missingSpot = missingSpotPayload.indices.NDX;
   assert.ok(missingSpot.blockers.some((row) => row.code === "source_unavailable"));
@@ -603,7 +622,7 @@ const identityMismatchRoot = makeExactSpotFixture({
 try {
   const identityMismatchPayload = buildRimIndexInputs({
     dataRootOverride: identityMismatchRoot,
-    generatedAt: "2026-08-10T23:59:59.000Z",
+    generatedAt: currentLiveFixtureGeneratedAt,
   });
   const mismatchedKospi = identityMismatchPayload.indices.KOSPI;
   assert.ok(mismatchedKospi.blockers.some((row) => row.code === "source_unavailable"));
@@ -620,7 +639,7 @@ try {
   fs.rmSync(path.join(missingOfficialKospiRoot, "computed", "fenok-edge-korea-krx-index-daily.json"), { force: true });
   const missingOfficialKospiPayload = buildRimIndexInputs({
     dataRootOverride: missingOfficialKospiRoot,
-    generatedAt: "2026-08-10T23:59:59.000Z",
+    generatedAt: currentLiveFixtureGeneratedAt,
   });
   const missingOfficialKospi = missingOfficialKospiPayload.indices.KOSPI;
   assert.ok(missingOfficialKospi.blockers.some((row) => row.code === "source_unavailable"));
@@ -635,14 +654,6 @@ try {
 // fixture floor forces the real builder down that path without fabricating inputs.
 // Availability fixtures symlink shared sources from the live data tree. Pin their
 // clock to the newest observed source date so those sources cannot outrun the test.
-const currentLiveFixtureAsOf = Object.values(payload.indices)
-  .flatMap((item) => Object.values(item.observed ?? {}))
-  .map((field) => field?.as_of)
-  .filter((asOf) => typeof asOf === "string" && /^\d{4}-\d{2}-\d{2}$/.test(asOf))
-  .sort()
-  .at(-1);
-assert.match(currentLiveFixtureAsOf, /^\d{4}-\d{2}-\d{2}$/, "current live fixture source date");
-const currentLiveFixtureGeneratedAt = `${currentLiveFixtureAsOf}T23:59:59.000Z`;
 const degradedCoveragePayload = buildRimIndexInputs({
   generatedAt: currentLiveFixtureGeneratedAt,
   minCoveredWeight: 0.99,
@@ -708,7 +719,11 @@ try {
   assert.equal(staleBenchmarkValidation.ok, true, staleBenchmarkValidation.errors.join("\n"));
   for (const id of ["SPX", "NDX"]) {
     assert.equal(staleBenchmarkPayload.indices[id].public_status, "ready_inputs_and_forecast_grid");
-    assert.ok(staleBenchmarkPayload.indices[id].warnings.some((row) => row.code === "benchmark_source_refresh_recommended"));
+    assertFreshnessWarning(staleBenchmarkPayload.indices[id], {
+      code: "benchmark_source_refresh_recommended",
+      source: "benchmarks/us.json",
+      asOf: "2026-05-01",
+    });
   }
   assert.equal(staleBenchmarkPayload.indices.SOX.public_status, "ready_inputs_and_forecast_grid");
   const tamperedDegradedSecondary = JSON.parse(JSON.stringify(staleBenchmarkPayload));
@@ -890,11 +905,19 @@ try {
 const kospi = payload.indices.KOSPI;
 assert.doesNotMatch(String(kospi.observed.risk_free_rate.source_field ?? ""), /DGS10/);
 if (kospi.role === "secondary_input_only") {
-  const liveKrxFreshness = payload.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights.freshness;
+  const liveKrxWeights = payload.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights;
+  const liveKrxFreshness = liveKrxWeights.freshness;
   assert.ok(
     ["fresh_enough_for_input_slice", "refresh_recommended"].includes(liveKrxFreshness.status),
     `unexpected live KRX freshness status: ${liveKrxFreshness.status}`,
   );
+  if (liveKrxFreshness.status === "refresh_recommended") {
+    assertFreshnessWarning(kospi, {
+      code: "krx_kospi_daily_refresh_recommended",
+      source: liveKrxWeights.source,
+      asOf: liveKrxWeights.as_of,
+    });
+  }
   assert.equal(kospi.public_status, "input_only_krx_exact_weights_with_caveats");
   assert.ok(
     kospi.blockers.some((blocker) => blocker.code === "kospi_dart_payout_pointer_unavailable"),
@@ -1000,9 +1023,36 @@ try {
   });
   const staleKospiBridge = staleBridgePayload.indices.KOSPI;
   assert.equal(staleKospiBridge.public_status, "input_only_krx_exact_weights_with_caveats");
-  assert.ok(staleKospiBridge.warnings.some((row) => row.code === "krx_kospi_daily_refresh_recommended"));
+  const staleKrxWeights = staleBridgePayload.coverage_diagnostics.stock_action.KOSPI.krx_kospi_weights;
+  assertFreshnessWarning(staleKospiBridge, {
+    code: "krx_kospi_daily_refresh_recommended",
+    source: staleKrxWeights.source,
+    asOf: staleKrxWeights.as_of,
+  });
 } finally {
   fs.rmSync(bridgeFixtureRoot, { recursive: true, force: true });
+}
+
+const staleSoxRoot = makeExactSpotFixture({
+  includeAdmin: true,
+  mutateSox: (source) => ({ ...source, as_of: "2026-07-01" }),
+});
+try {
+  const staleSoxPayload = buildRimIndexInputs({
+    dataRootOverride: staleSoxRoot,
+    generatedAt: currentLiveFixtureGeneratedAt,
+  });
+  const staleSox = staleSoxPayload.indices.SOX;
+  const staleSoxWeights = staleSoxPayload.coverage_diagnostics.stock_action.SOX;
+  assertFreshnessWarning(staleSox, {
+    code: "sox_giw_daily_refresh_recommended",
+    source: staleSoxWeights.source,
+    asOf: staleSoxWeights.as_of,
+  });
+  const staleSoxValidation = validateRimIndexInputs(staleSoxPayload);
+  assert.equal(staleSoxValidation.ok, true, staleSoxValidation.errors.join("\n"));
+} finally {
+  fs.rmSync(staleSoxRoot, { recursive: true, force: true });
 }
 
 function runKospiDartFixture({ artifact = makeKospiDartArtifact(), pointer = null, includePointer = true, rawArtifact = null, rawPointer = null } = {}) {

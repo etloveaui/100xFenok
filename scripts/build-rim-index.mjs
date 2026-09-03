@@ -2936,8 +2936,7 @@ function unavailableIndex(indexConfig, error, { spot = null, generatedAt = null 
     ...(source ? { source } : {}),
     reason,
   }];
-  // Decision D (fh-777): pure freshness is a warning, never a blocker. The
-  // last-known spot stays in observed.price with its as-of disclosed.
+  // An age-only SLA overrun keeps a valid last-known spot usable and disclosed.
   const warnings = [];
   if (spot) {
     const spotFreshness = observed.price.freshness;
@@ -3649,7 +3648,7 @@ function buildPrimaryIndex(indexConfig, context) {
   const spotFreshness = spotFreshnessForIndex(indexConfig, spot.asOf, context.generatedAt);
   const benchmarkFreshness = rimObservedPriceFreshness(benchmarkRow.date, context.generatedAt);
   const blockers = [];
-  // Decision D (fh-777): pure freshness is a warning, never a blocker.
+  // Age-only SLA overruns keep otherwise valid inputs usable and disclosed.
   const warnings = [];
   if (spotFreshness.status === "refresh_recommended") {
     warnings.push({
@@ -3778,7 +3777,7 @@ function buildSecondaryIndex(indexConfig, context) {
     ...buildBenchmarkObservedInputs(indexConfig, benchmarkRow, benchmarkFreshness),
   };
   const baseBlockers = [];
-  // Decision D (fh-777): pure freshness is a warning, never a blocker.
+  // Age-only SLA overruns keep otherwise valid inputs usable and disclosed.
   const baseWarnings = [];
   if (spotFreshness.status === "refresh_recommended") {
     baseWarnings.push({
@@ -3868,6 +3867,8 @@ function buildSecondaryIndex(indexConfig, context) {
         warnings.push({
           code: "krx_kospi_daily_refresh_recommended",
           severity: "freshness_warning",
+          source: context.krxKospiWeights.source,
+          as_of: context.krxKospiWeights.as_of,
         });
       }
       if (!context.kospiDartPayout) {
@@ -4006,6 +4007,8 @@ function buildSecondaryIndex(indexConfig, context) {
         warnings.push({
           code: "sox_giw_daily_refresh_recommended",
           severity: "freshness_warning",
+          source: context.soxWeights.source,
+          as_of: context.soxWeights.as_of,
         });
       }
       if ((payoutRatio.coverage?.covered_weight_ratio ?? 0) < context.minCoveredWeight) {
