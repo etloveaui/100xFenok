@@ -172,6 +172,25 @@ async function collectRouteChecks(page, route) {
       });
     }
 
+    if (viewportWidth < 768) {
+      const railButtons = Array.from(document.querySelectorAll("button"))
+        .filter((node) => {
+          const label = (node.textContent || "").trim();
+          return label === "증거 보기" || label === "지금 재시도";
+        })
+        .filter((node) => node.getBoundingClientRect().width > 0);
+      railButtons.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        if (rect.height < 44) {
+          failures.push({ check: "evidence-rail-button-target", detail: `button ${index} height=${Math.round(rect.height)}` });
+        }
+        const row = node.parentElement;
+        if (row && row.scrollWidth > row.clientWidth + 1) {
+          failures.push({ check: "evidence-rail-no-clip", detail: `button ${index} scroll=${row.scrollWidth} client=${row.clientWidth}` });
+        }
+      });
+    }
+
     if (currentRoute === "/" || currentRoute.startsWith("/?")) {
       const homeSearch = document.querySelector("[data-home-search-first]");
       const homeSearchInput = homeSearch?.querySelector('[role="combobox"]');
@@ -1842,6 +1861,30 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "market-index-card-content", detail: `card=${cardIndex} empty-or-not-row` });
         }
       });
+      if (viewportWidth < 768) {
+        const thead = document.querySelector(".mv-thead");
+        if (thead && thead.getBoundingClientRect().height > 0) {
+          failures.push({ check: "market-valuation-stacked-thead-hidden", detail: `height=${Math.round(thead.getBoundingClientRect().height)}` });
+        }
+        indexCards.forEach((row, rowIndex) => {
+          const rect = row.getBoundingClientRect();
+          if (rect.height < 44) {
+            failures.push({ check: "market-valuation-stacked-row-target", detail: `row ${rowIndex} height=${Math.round(rect.height)}` });
+          }
+          const name = row.querySelector(".mv-idx");
+          const nameStart = name ? window.getComputedStyle(name).gridColumnStart : "";
+          if (!name || nameStart === "auto") {
+            failures.push({ check: "market-valuation-stacked-name-span", detail: `row ${rowIndex} gridColumnStart=${nameStart || "missing"}` });
+          }
+        });
+        Array.from(document.querySelectorAll(".mv-horizons button"))
+          .filter((node) => node.getBoundingClientRect().width > 0)
+          .forEach((node, index) => {
+            if (node.getBoundingClientRect().height < 44) {
+              failures.push({ check: "market-valuation-horizons-target", detail: `button ${index} height=${Math.round(node.getBoundingClientRect().height)}` });
+            }
+          });
+      }
     }
 
     if (new URL(currentRoute, window.location.origin).pathname === "/market-valuation/structure") {
@@ -3139,6 +3182,16 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "superinvestors-sort-touch-target", detail: `tab ${index} ${Math.round(rect.width)}x${Math.round(rect.height)}` });
         }
       });
+      if (viewportWidth < 768) {
+        Array.from(document.querySelectorAll(".sup-holder-name"))
+          .filter((node) => node.getBoundingClientRect().width > 0)
+          .forEach((node, index) => {
+            const rect = node.getBoundingClientRect();
+            if (rect.height < 44) {
+              failures.push({ check: "superinvestors-holder-button-target", detail: `holder ${index} height=${Math.round(rect.height)}` });
+            }
+          });
+      }
       // overlap + graph + guru checks live above; route-wide link checks retired
       // with the tab-specific panels (fh-590 light-system single view).
     }
