@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import IndustryMapPanel from "./IndustryMapPanel";
 import SmartMoneyPanel from "./SmartMoneyPanel";
+import { Button } from "@/components/ui";
 import {
   CpAccordion,
-  CpCTARow,
   CpDataTable,
   CpSectionCard,
   CpStatChipRow,
@@ -283,6 +284,7 @@ function LoadingSkeleton() {
 }
 
 export default function SectorsClient() {
+  const router = useRouter();
   const {
     rows,
     benchmarkMomentum,
@@ -604,11 +606,15 @@ export default function SectorsClient() {
         />
       </CpAccordion>
 
-      <CpCTARow
-        primary={{ label: "업종 이벤트 보기", href: ROUTES.marketEvents }}
-        secondary={{ label: "투자 대가 보유 보기", href: ROUTES.superinvestors }}
-        note="투자 조언 아님 · 데이터 지연 가능"
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="primary" onClick={() => router.push(ROUTES.marketEvents)}>
+          업종 이벤트 보기
+        </Button>
+        <Button variant="secondary" onClick={() => router.push(ROUTES.superinvestors)}>
+          투자 대가 보유 보기
+        </Button>
+        <p className="ml-auto text-[11px] font-semibold text-[var(--c-ink-3)]">투자 조언 아님 · 데이터 지연 가능</p>
+      </div>
     </div>
   );
 }
