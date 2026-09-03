@@ -250,6 +250,7 @@ const EMPTY: MarketValuationResult = {
   structurePulses: [],
   erpInsight: null,
   bondPulses: [],
+  sharedDailyObservationDate: null,
   sp500AnnualReturns: [],
   benchmarkSections: null,
   damodaranUsErp: null,
@@ -594,6 +595,25 @@ function sortedEconomicRecords(economic: RawEconomicIndicators | null): RawEcono
   return (Array.isArray(economic?.records) ? economic!.records! : [])
     .filter((record) => typeof record.date === "string")
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+}
+
+function latestSharedDailyObservationDate(
+  sp500: RawIndexPoint[] | null,
+  economic: RawEconomicIndicators | null,
+): string | null {
+  const rateDates = new Set(
+    sortedEconomicRecords(economic)
+      .filter((record) =>
+        [record.hys_us, record.t10y, record.t2y, record.t10y_2y_spread, record.bei_10y, record.tips_10y]
+          .some(finite),
+      )
+      .map((record) => record.date as string),
+  );
+  return (Array.isArray(sp500) ? sp500 : [])
+    .filter((point) => typeof point.date === "string" && finite(point.value) && rateDates.has(point.date))
+    .map((point) => point.date as string)
+    .sort()
+    .at(-1) ?? null;
 }
 
 function economicValue(record: RawEconomicRecord | undefined, key: keyof RawEconomicRecord): number | null {
@@ -1015,6 +1035,7 @@ export function useMarketValuation(): MarketValuationResult {
         structurePulses,
         erpInsight,
         bondPulses,
+        sharedDailyObservationDate: latestSharedDailyObservationDate(sp500Index, economic),
         sp500AnnualReturns: buildAnnualReturns(sp500Returns),
         benchmarkSections: summaries?.metadata?.source_summary_sections ?? null,
         damodaranUsErp: finite(damodaran?.us_erp) ? damodaran!.us_erp! : null,

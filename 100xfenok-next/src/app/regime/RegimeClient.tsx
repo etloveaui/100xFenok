@@ -4,7 +4,7 @@ import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
 import { Bar, EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
-import { DATA_STATE_LABELS, formatAsOf, isStaleAsOf } from "@/lib/data-state";
+import { DATA_STATE_LABELS, dateOnly, formatAsOf, isStaleAsOf } from "@/lib/data-state";
 import type {
   MarketBondPulse,
   MarketIndexValuation,
@@ -22,6 +22,7 @@ type Pulse = {
   valueLabel: string;
   detail: string;
   asOf: string | null;
+  period?: string | null;
   tone: MarketTone;
 };
 
@@ -32,7 +33,7 @@ type Axis = {
   tone: MarketTone;
   pulses: Pulse[];
   ready: boolean;
-  floor: string | null;
+  asOf: string | null;
 };
 
 type PillTone = "neutral" | "up" | "down" | "warn";
@@ -129,15 +130,66 @@ function axisBarClass(tone: MarketTone): string {
   return "";
 }
 
-/**
- * Oldest present observation date. Unlike a completeness floor, undated feeds
- * (market structure carries no observation date) are excluded instead of
- * collapsing the whole floor to null; the exclusion is disclosed separately.
- */
+const ENGLISH_MONTHS: Record<string, number> = {
+  January: 1,
+  February: 2,
+  March: 3,
+  April: 4,
+  May: 5,
+  June: 6,
+  July: 7,
+  August: 8,
+  September: 9,
+  October: 10,
+  November: 11,
+  December: 12,
+};
+
+function canonicalObservationDate(value: string | null): string | null {
+  const isoDate = dateOnly(value);
+  if (isoDate) return isoDate;
+  const match = typeof value === "string" ? /^([A-Z][a-z]+) (\d{1,2}), (\d{4})$/.exec(value.trim()) : null;
+  if (!match) return null;
+  const month = ENGLISH_MONTHS[match[1]];
+  const day = Number(match[2]);
+  const year = Number(match[3]);
+  if (!month || day < 1 || day > 31) return null;
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+  if (candidate.getUTCFullYear() !== year || candidate.getUTCMonth() !== month - 1 || candidate.getUTCDate() !== day) return null;
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** Oldest real observation/release date, used only for rail disclosure. */
 function oldestDatedSourceDate(values: Array<string | null>): string | null {
-  const dated = values.filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+  const dated = values.map(canonicalObservationDate).filter((value): value is string => value !== null);
   if (dated.length === 0) return null;
   return dated.sort().at(0) ?? null;
+}
+
+function latestDatedSourceDate(values: Array<string | null>): string | null {
+  const dated = values.map(canonicalObservationDate).filter((value): value is string => value !== null);
+  if (dated.length === 0) return null;
+  return dated.sort().at(-1) ?? null;
+}
+
+function formatPeriod(value: string | null | undefined): string | null {
+  if (typeof value !== "string" || value.trim().length === 0) return null;
+  const trimmed = value.trim();
+  const quarter = /^(\d{4})-?Q([1-4])$/i.exec(trimmed);
+  if (quarter) return `${quarter[1]}Q${quarter[2]}`;
+  return trimmed;
+}
+
+function axisAsOfLabel(axis: Axis): string {
+  const labels: string[] = [];
+  if (axis.asOf) labels.push(`기준 ${formatAsOf(axis.asOf) ?? axis.asOf}`);
+  const latestPeriod = axis.pulses
+    .map((pulse) => formatPeriod(pulse.period))
+    .filter((period): period is string => period !== null)
+    .sort()
+    .at(-1);
+  if (latestPeriod) labels.push(`기간 ${latestPeriod}`);
+  return labels.join(" · ") || "관측일 미제공";
 }
 
 function signalStatusLabel(item: MarketSignalPulse): string {
@@ -225,7 +277,10 @@ function toMacroPulse(item: MarketMacroPulse): Pulse {
     label: item.label,
     valueLabel: `${formatNumber(item.value)} ${item.unit}`.trim(),
     detail: readableDetail(item.detail),
-    asOf: item.releaseDate ?? item.period,
+    // A period is not an observation day. Keep it as a labelled period and
+    // reserve `asOf` for a real release/observation date.
+    asOf: item.releaseDate,
+    period: item.period,
     tone: item.tone,
   };
 }
@@ -325,7 +380,8 @@ function CompositePanel({
   ready,
   partial,
   stale,
-  floor,
+  asOf,
+  oldestInputAsOf,
 }: {
   axes: Axis[];
   gauge: ReturnType<typeof gaugeReading>;
@@ -334,7 +390,8 @@ function CompositePanel({
   ready: boolean;
   partial: boolean;
   stale: boolean;
-  floor: string | null;
+  asOf: string | null;
+  oldestInputAsOf: string | null;
 }) {
   const score = gauge === null ? null : Math.round(gauge.percent);
   const emptyActive = failed || (!loading && !ready);
@@ -352,7 +409,11 @@ function CompositePanel({
           <PanelHeader
             eyebrow="Market Regime"
             title="종합 판독"
-            right={<Pill tone={floor ? "neutral" : "warn"}>{floor ? `기준 ${formatAsOf(floor)}` : "기준일 확인 필요"}</Pill>}
+            right={
+              <Pill tone={asOf ? "neutral" : "warn"} data-regime-composite-asof>
+                {asOf ? `기준 ${formatAsOf(asOf)}` : "기준일 확인 필요"}
+              </Pill>
+            }
           />
           <div className="rgm-score">
             <div className="rgm-score-num">
@@ -392,14 +453,20 @@ function CompositePanel({
           </div>
         </div>
       )}
-      <EvidenceRail
-        freshness={loading ? "pending" : failed || !ready ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
-        source="국면 판독 엔진"
-        asOf={floor ? (formatAsOf(floor) ?? floor) : "—"}
-        coverage={gauge === null ? "0개 신호" : `${gauge.total}개 신호`}
-        onRetry={failed || stale || partial ? reload : undefined}
-        onEvidence={ready && !failed ? () => openEvidence("/data/computed/signals.json") : undefined}
-      />
+      <div data-regime-composite-rail>
+        <EvidenceRail
+          freshness={loading ? "pending" : failed || !ready ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
+          source="국면 판독 엔진"
+          asOf={asOf ? (formatAsOf(asOf) ?? asOf) : "—"}
+          coverage={
+            gauge === null
+              ? "0개 신호"
+              : `${gauge.total}개 신호${oldestInputAsOf ? ` · 가장 오래된 입력 ${formatAsOf(oldestInputAsOf) ?? oldestInputAsOf}` : ""}`
+          }
+          onRetry={failed || stale || partial ? reload : undefined}
+          onEvidence={ready && !failed ? () => openEvidence("/data/computed/signals.json") : undefined}
+        />
+      </div>
     </Panel>
   );
 }
@@ -449,7 +516,10 @@ function AxisTablePanel({
               // all-clear reading instead of a missing feed.
               !axis.ready ? (
                 <div className="rgm-trow" role="row" key={axis.id} data-regime-axis-unavailable={axis.id}>
-                  <span className="rgm-axis" role="cell">{axis.title}</span>
+                  <span className="rgm-axis" role="cell">
+                    <span>{axis.title}</span>
+                    <span className="rgm-axis-asof" data-regime-axis-asof>관측일 확인 필요</span>
+                  </span>
                   <span className="rgm-sum" role="cell">피드를 받지 못했습니다 · 다음 마감 후 갱신</span>
                   <span className="tabular-nums" role="cell">—</span>
                   <span role="cell">
@@ -458,7 +528,12 @@ function AxisTablePanel({
                 </div>
               ) : (
               <div className="rgm-trow" role="row" key={axis.id} data-regime-axis-summary-card={axis.id}>
-                <span className="rgm-axis" role="cell">{axis.title}</span>
+                <span className="rgm-axis" role="cell">
+                  <span>{axis.title}</span>
+                  <span className="rgm-axis-asof" data-regime-axis-asof title={axisAsOfLabel(axis)}>
+                    {axisAsOfLabel(axis)}
+                  </span>
+                </span>
                 <span className="rgm-sum" role="cell">{axis.summary}</span>
                 <span className="tabular-nums" role="cell">{axis.pulses.length}개</span>
                 <span role="cell">
@@ -559,11 +634,10 @@ export default function RegimeClient() {
     structurePulses,
     erpInsight,
     bondPulses,
-    dataSources,
+    sharedDailyObservationDate,
     dataReady,
     failed,
     feedReady,
-    sourceDate,
   } = useMarketValuation();
 
   const sp500 = indices.find((index) => index.id === "sp500");
@@ -592,7 +666,7 @@ export default function RegimeClient() {
       pulses: structurePulseList,
       tone: strongestTone(structurePulseList),
       ready: feedReady.structure,
-      floor: oldestDatedSourceDate(structurePulseList.map((pulse) => pulse.asOf)),
+      asOf: latestDatedSourceDate(structurePulseList.map((pulse) => pulse.asOf)),
     },
     {
       id: "signals",
@@ -601,7 +675,7 @@ export default function RegimeClient() {
       pulses: signalPulseList,
       tone: strongestTone(signalPulseList),
       ready: feedReady.computed,
-      floor: oldestDatedSourceDate(signalPulseList.map((pulse) => pulse.asOf)),
+      asOf: latestDatedSourceDate(signalPulseList.map((pulse) => pulse.asOf)),
     },
     {
       id: "macro",
@@ -612,7 +686,7 @@ export default function RegimeClient() {
       // Per-axis completeness: ready is AND over child feeds, so a missing
       // bond feed can never hide behind present macro pulses.
       ready: feedReady.macro && feedReady.bond,
-      floor: oldestDatedSourceDate(macroPulseList.map((pulse) => pulse.asOf)),
+      asOf: latestDatedSourceDate(macroPulseList.map((pulse) => pulse.asOf)),
     },
     {
       id: "valuation",
@@ -623,28 +697,22 @@ export default function RegimeClient() {
       // Per-axis completeness: ready is AND over child feeds (index band,
       // ERP insight, sentiment), never OR.
       ready: feedReady.valuation && feedReady.erp && feedReady.sentiment,
-      floor: oldestDatedSourceDate(valuationPulseList.map((pulse) => pulse.asOf)),
+      asOf: latestDatedSourceDate(valuationPulseList.map((pulse) => pulse.asOf)),
     },
   ];
 
   const allPulses = axes.flatMap((axis) => axis.pulses);
   const gauge = gaugeReading(allPulses);
-  const requiredSourceIds = ["benchmarks", "yardney", "damodaran", "macro", "computed", "sentiment", "indices", "slickcharts"];
-  const visibleSources = dataSources.filter((source) => requiredSourceIds.includes(source.id));
-  const sourceById = new Map(visibleSources.map((source) => [source.id, source]));
-  // Panel floor from dated clocks only: structure pulses carry no observation
-  // date, so they are excluded here and disclosed via the floor note instead of
-  // collapsing the whole floor to null.
-  const floor = oldestDatedSourceDate([
-    sourceDate,
-    ...allPulses.map((pulse) => pulse.asOf),
-    ...requiredSourceIds.map((id) => sourceById.get(id)?.updated ?? null),
-  ]);
+  const compositeAsOf = sharedDailyObservationDate;
+  // This disclosure is deliberately separate from the composite basis date.
+  // It includes only real observation/release dates: periods and manifest
+  // collection clocks never enter either calculation.
+  const oldestInputAsOf = oldestDatedSourceDate(allPulses.map((pulse) => pulse.asOf));
 
   const isLoading = !dataReady && !failed;
   const ready = !isLoading && !failed && gauge !== null;
-  const partial = ready && (axes.some((axis) => !axis.ready) || floor === null);
-  const stale = ready && !partial && isStaleAsOf(floor);
+  const partial = ready && (axes.some((axis) => !axis.ready) || compositeAsOf === null);
+  const stale = ready && !partial && isStaleAsOf(compositeAsOf);
   const undatedStructure = axes[0].pulses.length > 0;
 
   return (
@@ -659,10 +727,10 @@ export default function RegimeClient() {
         </div>
       </div>
 
-      <CompositePanel axes={axes} gauge={gauge} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} floor={floor} />
-      <AxisTablePanel axes={axes} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} floor={floor} undatedStructure={undatedStructure} />
+      <CompositePanel axes={axes} gauge={gauge} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} asOf={compositeAsOf} oldestInputAsOf={oldestInputAsOf} />
+      <AxisTablePanel axes={axes} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} floor={compositeAsOf} undatedStructure={undatedStructure} />
       <HistoryPanel />
-      <ActionsPanel loading={isLoading} failed={failed} partial={partial} floor={floor} />
+      <ActionsPanel loading={isLoading} failed={failed} partial={partial} floor={compositeAsOf} />
     </div>
   );
 }

@@ -230,6 +230,8 @@ export interface MarketValuationResult {
   structurePulses: MarketStructurePulse[];
   erpInsight: MarketErpInsight | null;
   bondPulses: MarketBondPulse[];
+  /** Latest observation date present in both daily S&P 500 and rates inputs. */
+  sharedDailyObservationDate: string | null;
   sp500AnnualReturns: MarketAnnualReturn[];
   benchmarkSections: number | null;
   damodaranUsErp: number | null;

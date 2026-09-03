@@ -2016,6 +2016,13 @@ async function collectRouteChecks(page, route) {
         });
       const axisHead = document.querySelector(".rgm-thead");
       const axisHeadText = (axisHead?.textContent || "").replace(/\s+/g, " ").trim();
+      const compositeAsOf = document.querySelector("[data-regime-composite-asof]");
+      const compositeAsOfText = (compositeAsOf?.textContent || "").replace(/\s+/g, " ").trim();
+      const compositeRail = document.querySelector("[data-regime-composite-rail]");
+      const compositeRailText = (compositeRail?.textContent || "").replace(/\s+/g, " ").trim();
+      const axisAsOfRows = Array.from(document.querySelectorAll("[data-regime-axis-asof]"));
+      const macroAxisAsOf = document.querySelector('[data-regime-axis-summary-card="macro"] [data-regime-axis-asof]');
+      const macroAxisAsOfText = (macroAxisAsOf?.textContent || "").replace(/\s+/g, " ").trim();
       const historyPanel = document.querySelector("[data-regime-history]");
       const historyText = (historyPanel?.textContent || "").replace(/\s+/g, " ").trim();
 
@@ -2069,6 +2076,21 @@ async function collectRouteChecks(page, route) {
         !expectedHeadColumns.every((column) => axisHeadText.includes(column))
       ) {
         failures.push({ check: "regime-axis-table-head", detail: `head=${axisHeadText.slice(0, 80)}` });
+      }
+      if (
+        !/^기준 \d{4}-\d{2}-\d{2}$/.test(compositeAsOfText) &&
+        compositeAsOfText !== "기준일 확인 필요"
+      ) {
+        failures.push({ check: "regime-composite-observation-date", detail: `asOf=${compositeAsOfText || "missing"}` });
+      }
+      if (axisAsOfRows.length !== expectedAxes.length) {
+        failures.push({ check: "regime-axis-asof-count", detail: `rows=${axisAsOfRows.length}` });
+      }
+      if (macroAxisAsOf && !macroAxisAsOfText.includes("기간 ")) {
+        failures.push({ check: "regime-macro-period-label", detail: `asOf=${macroAxisAsOfText || "missing"}` });
+      }
+      if (/^기준 \d{4}-\d{2}-\d{2}$/.test(compositeAsOfText) && !compositeRailText.includes("가장 오래된 입력")) {
+        failures.push({ check: "regime-oldest-input-disclosure", detail: "missing oldest input disclosure" });
       }
       if (!historyPanel || historyPanel.getBoundingClientRect().height <= 0 || historyText.length === 0) {
         failures.push({ check: "regime-history-visible", detail: "missing regime history panel" });
