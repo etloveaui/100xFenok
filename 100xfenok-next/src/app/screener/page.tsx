@@ -1,19 +1,10 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import AppShell from "@/components/shell/AppShell";
 import { macroContextFromParam } from "@/lib/macro-chart/context";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { parseScreenerFilterState } from "@/lib/screener/filter-url";
-
-const ScreenerClient = dynamic(() => import("./ScreenerClient"), {
-  ssr: false,
-  loading: () => (
-    <div role="status" aria-live="polite" data-screener-loading="true">
-      스크리너를 불러오는 중입니다.
-    </div>
-  ),
-});
+import ScreenerClientLoader from "./ScreenerClientLoader";
 
 interface Props {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -37,7 +28,7 @@ export default async function ScreenerPage({ searchParams }: Props) {
   return (
     <div className="fnk-shell">
       <AppShell active="screener" title="스크리너" backHref={ROUTES.home}>
-        <ScreenerClient
+        <ScreenerClientLoader
           initialSearch={initialSearch}
           initialSector={initialSector}
           initialMacroContextId={initialMacroContextId}
