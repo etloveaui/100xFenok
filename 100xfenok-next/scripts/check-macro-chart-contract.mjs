@@ -136,6 +136,9 @@ async function inspectStaticContracts() {
     if (!loaderSource.includes(token)) addFailure(failures, "transform-pipeline-contract", `${token} missing`);
   }
   if (!engineSource.includes("spanGaps: false")) addFailure(failures, "missing-date-gap-contract", "spanGaps must be false");
+  if (!engineSource.includes("animation: false")) {
+    addFailure(failures, "deterministic-chart-animation", "shared chart animation must be disabled for deterministic capture");
+  }
   if (!engineSource.includes('item.lineRole === "primary" ? 2.5') || !engineSource.includes("[6, 4]")) {
     addFailure(failures, "line-role-contract", "primary/secondary line weight and dash encoding missing");
   }
