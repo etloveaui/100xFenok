@@ -51,10 +51,14 @@ export default function DataStateNotice({
   state,
   className,
   showAsOf = true,
+  actionLabel,
+  onAction,
 }: {
   state: DataState;
   className?: string;
   showAsOf?: boolean;
+  actionLabel?: string;
+  onAction?: () => void;
 }) {
   const asOf = showAsOf ? formatAsOf(state.asOf) : null;
   return (
@@ -66,6 +70,17 @@ export default function DataStateNotice({
       <span className="font-black">{state.label}</span>
       <span className="ml-2">{state.detail}</span>
       {asOf ? <span className="ml-2 whitespace-nowrap font-black tabular-nums">기준 {asOf}</span> : null}
+      {actionLabel && onAction ? (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={onAction}
+            className="inline-flex min-h-9 items-center rounded-full border border-current px-3 text-[11px] font-black text-[#1B73D3] transition hover:text-[#155fae]"
+          >
+            {actionLabel}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -12,6 +12,9 @@ export interface DataState {
   reason?: string | null;
 }
 
+export type LoaderErrorKind = "status" | "timeout" | "parse";
+export type LoaderError = { kind: LoaderErrorKind; status?: number | null };
+
 export const DATA_STATE_LABELS: Record<DataReadinessStatus, string> = {
   ready: "준비됨",
   partial: "부분 준비",

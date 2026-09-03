@@ -18,7 +18,7 @@ import {
   hasEstimateGap,
   type EstimateCompleteness,
 } from "@/lib/estimate-completeness";
-import { makeDataState } from "@/lib/data-state";
+import { makeDataState, type LoaderError } from "@/lib/data-state";
 import {
   formatCurrency,
   formatCurrencyCompact,
@@ -1053,9 +1053,17 @@ function toneText(value: MaybeNumber): string {
   return value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
 }
 
+function loaderErrorDetail(error: LoaderError, subject: string): string {
+  if (error.kind === "status") return `${subject}를 불러오지 못했습니다(HTTP ${error.status ?? "오류"}). 다시 시도해 주세요.`;
+  if (error.kind === "parse") return `${subject}의 데이터 형식을 확인하지 못했습니다. 다시 시도해 주세요.`;
+  return `${subject} 요청이 시간 초과되었습니다. 네트워크 확인 후 다시 시도해 주세요.`;
+}
+
 export function useStockDetail(ticker: string, enabled = true) {
   const [detail, setDetail] = useState<DetailData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<LoaderError | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -1063,16 +1071,24 @@ export function useStockDetail(ticker: string, enabled = true) {
     if (!enabled || !symbol) {
       setDetail(null);
       setLoading(false);
+      setError(null);
       return;
     }
     const run = async () => {
       setLoading(true);
       try {
         const r = await fetch(`/data/global-scouter/stocks/detail/${encodeURIComponent(symbol)}.json`);
-        const d = r.ok ? await r.json() : null;
-        if (!cancelled) setDetail(isRecord(d) ? (d as unknown as DetailData) : null);
-      } catch {
-        if (!cancelled) setDetail(null);
+        if (!r.ok) {
+          if (!cancelled) setError({ kind: "status", status: r.status });
+          return;
+        }
+        const d = await r.json();
+        if (!cancelled) {
+          setDetail(isRecord(d) ? (d as unknown as DetailData) : null);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof SyntaxError ? { kind: "parse" } : { kind: "timeout" });
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -1081,22 +1097,27 @@ export function useStockDetail(ticker: string, enabled = true) {
     return () => {
       cancelled = true;
     };
-  }, [ticker, enabled]);
+  }, [ticker, enabled, retryNonce]);
 
-  return { detail, loading };
+  return { detail, loading, error, retry: () => setRetryNonce((n) => n + 1) };
 }
 
 const F13_CACHE = new Map<string, F13Entry[]>();
 
 export function use13FData(ticker: string) {
   const [entries, setEntries] = useState<F13Entry[] | null>(null);
+  const [error, setError] = useState<LoaderError | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     const symbol = normalizeForEntityKey(ticker);
     if (!symbol) {
       Promise.resolve().then(() => {
-        if (!cancelled) setEntries([]);
+        if (!cancelled) {
+          setEntries([]);
+          setError(null);
+        }
       });
       return () => {
         cancelled = true;
@@ -1106,11 +1127,16 @@ export function use13FData(ticker: string) {
       const cached = F13_CACHE.get(symbol);
       if (cached !== undefined) {
         setEntries(cached);
+        setError(null);
         return;
       }
       try {
         const r = await fetch("/data/sec-13f/by_ticker.json");
-        const d = r.ok ? await r.json() : null;
+        if (!r.ok) {
+          if (!cancelled) setError({ kind: "status", status: r.status });
+          return;
+        }
+        const d = await r.json();
         const holders = Array.isArray(d?.[symbol]?.holder_details) ? d[symbol].holder_details : [];
         const seen = new Set<string>();
         const unique = holders.filter((h: { investor?: unknown }) => {
@@ -1120,19 +1146,29 @@ export function use13FData(ticker: string) {
           return true;
         }) as F13Entry[];
         F13_CACHE.set(symbol, unique);
-        if (!cancelled) setEntries(unique);
-      } catch {
-        F13_CACHE.set(symbol, []);
-        if (!cancelled) setEntries([]);
+        if (!cancelled) {
+          setEntries(unique);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof SyntaxError ? { kind: "parse" } : { kind: "timeout" });
       }
     };
     run();
     return () => {
       cancelled = true;
     };
-  }, [ticker]);
+  }, [ticker, retryNonce]);
 
-  return entries;
+  return {
+    entries,
+    error,
+    retry: () => {
+      const symbol = normalizeForEntityKey(ticker);
+      if (symbol) F13_CACHE.delete(symbol);
+      setRetryNonce((n) => n + 1);
+    },
+  };
 }
 
 const SLICK_STOCK_CACHE = new Map<string, SlickStockData | null>();
@@ -1252,6 +1288,8 @@ function normalizeMarketFacts(value: unknown): MarketFactsData | null {
 export function useMarketFacts(ticker: string, enabled = true) {
   const [data, setData] = useState<MarketFactsData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<LoaderError | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -1259,12 +1297,14 @@ export function useMarketFacts(ticker: string, enabled = true) {
     if (!enabled || !symbol) {
       setData(null);
       setLoading(false);
+      setError(null);
       return;
     }
     const cached = MARKET_FACTS_CACHE.get(symbol);
     if (cached !== undefined) {
       setData(cached);
       setLoading(false);
+      setError(null);
       return;
     }
 
@@ -1273,10 +1313,17 @@ export function useMarketFacts(ticker: string, enabled = true) {
       try {
         const parsed = normalizeMarketFacts(await fetchMarketFactsFromShard(symbol));
         MARKET_FACTS_CACHE.set(symbol, parsed);
-        if (!cancelled) setData(parsed);
-      } catch {
-        MARKET_FACTS_CACHE.set(symbol, null);
-        if (!cancelled) setData(null);
+        if (!cancelled) {
+          setData(parsed);
+          setError(null);
+        }
+      } catch (err) {
+        // fetchMarketFactsFromShard throws Error("... status NNN") on HTTP !ok.
+        const statusText = err instanceof Error ? /status (\d{3})/.exec(err.message)?.[1] : undefined;
+        const status = statusText !== undefined ? Number(statusText) : null;
+        if (!cancelled) {
+          setError(err instanceof SyntaxError ? { kind: "parse" } : status !== null ? { kind: "status", status } : { kind: "timeout" });
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -1285,9 +1332,18 @@ export function useMarketFacts(ticker: string, enabled = true) {
     return () => {
       cancelled = true;
     };
-  }, [ticker, enabled]);
+  }, [ticker, enabled, retryNonce]);
 
-  return { data, loading };
+  return {
+    data,
+    loading,
+    error,
+    retry: () => {
+      const symbol = normalizeForEntityKey(ticker);
+      if (symbol) MARKET_FACTS_CACHE.delete(symbol);
+      setRetryNonce((n) => n + 1);
+    },
+  };
 }
 
 function sourceLabel(source?: string): string {
@@ -1389,7 +1445,7 @@ function MarketFactCard({ label, field, fact, currency }: { label: string; field
 }
 
 export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; compact?: boolean }) {
-  const { data, loading } = useMarketFacts(ticker);
+  const { data, loading, error, retry } = useMarketFacts(ticker);
   if (loading) {
     return (
       <DataStateNotice
@@ -1402,6 +1458,19 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
     );
   }
   if (!data) {
+    if (error) {
+      return (
+        <DataStateNotice
+          state={makeDataState({
+            status: "unavailable",
+            detail: loaderErrorDetail(error, "이 종목의 가격·분류·보조 지표"),
+          })}
+          actionLabel="지금 재시도"
+          onAction={retry}
+          className="mt-4"
+        />
+      );
+    }
     return (
       <DataStateNotice
         state={makeDataState({
@@ -2515,8 +2584,8 @@ export default function StockDetailPanel({
   stock?: ScreenerStock;
   canvasPlusPreview?: boolean;
 }) {
-  const { detail, loading } = useStockDetail(ticker);
-  const f13Entries = use13FData(ticker);
+  const { detail, loading, error: detailError, retry: retryDetail } = useStockDetail(ticker);
+  const { entries: f13Entries, error: f13Error, retry: retryF13 } = use13FData(ticker);
 
   if (loading) {
     return (
@@ -2531,6 +2600,19 @@ export default function StockDetailPanel({
   }
 
   if (!detail) {
+    if (detailError) {
+      return (
+        <DataStateNotice
+          state={makeDataState({
+            status: "unavailable",
+            detail: loaderErrorDetail(detailError, "이 종목의 상세 재무·추정치 데이터"),
+          })}
+          actionLabel="지금 재시도"
+          onAction={retryDetail}
+          className="col-span-full border-t border-[var(--c-line-2)]"
+        />
+      );
+    }
     return (
       <DataStateNotice
         state={makeDataState({

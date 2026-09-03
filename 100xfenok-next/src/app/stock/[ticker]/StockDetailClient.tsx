@@ -34,7 +34,7 @@ import type { IndustryBench } from "./StockTabs";
 import WatchStar from "@/components/WatchStar";
 import MetricHelp from "@/components/MetricHelp";
 import { formatDateish, formatSignedPercent } from "@/lib/format";
-import { DATA_STATE_LABELS, makeDataState } from "@/lib/data-state";
+import { DATA_STATE_LABELS, makeDataState, type LoaderError } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import TickerSurfaceEventsCard, { loadTickerSurfaces, type TickerSurfacePayload } from "./TickerSurfaceEventsCard";
@@ -135,22 +135,36 @@ function loadAnalyzer(): Promise<Record<string, AnalyzerRow> | null> {
 // yf finance data module-level cache
 // ---------------------------------------------------------------------------
 
-const yfCache: Record<string, any> = {};
-const yfPending: Record<string, Promise<any | null>> = {};
+type YfFinanceResult = { data: any | null; error: LoaderError | null };
 
-function loadYfFinance(ticker: string): Promise<any | null> {
+const yfCache: Record<string, YfFinanceResult> = {};
+const yfPending: Record<string, Promise<YfFinanceResult>> = {};
+
+function loadYfFinance(ticker: string): Promise<YfFinanceResult> {
   const symbol = normalizeForEntityKey(ticker);
-  if (!symbol) return Promise.resolve(null);
-  if (symbol in yfCache) return Promise.resolve(yfCache[symbol] || null);
+  if (!symbol) return Promise.resolve({ data: null, error: null });
+  if (symbol in yfCache) return Promise.resolve(yfCache[symbol]);
   if (symbol in yfPending) return yfPending[symbol];
-  const p = fetch(`/data/yf/finance/${encodeURIComponent(symbol)}.json`)
-    .then((res) => (res.ok ? res.json() : null))
-    .then((d) => {
-      yfCache[symbol] = d && typeof d === "object" && !Array.isArray(d) ? d.data ?? null : null;
-      delete yfPending[symbol];
-      return yfCache[symbol];
-    })
-    .catch(() => { delete yfPending[symbol]; return null; });
+  const p = fetch(`/data/yf/finance/${encodeURIComponent(symbol)}.json`).then(
+    (res): Promise<YfFinanceResult> => {
+      if (!res.ok) return Promise.resolve({ data: null, error: { kind: "status", status: res.status } });
+      return res.json().then(
+        (d): YfFinanceResult => ({
+          data: d && typeof d === "object" && !Array.isArray(d) ? d.data ?? null : null,
+          error: null,
+        }),
+        (err: unknown): YfFinanceResult => ({
+          data: null,
+          error: err instanceof SyntaxError ? { kind: "parse" } : { kind: "timeout" },
+        }),
+      );
+    },
+    (): YfFinanceResult => ({ data: null, error: { kind: "timeout" } }),
+  ).then((r) => {
+    if (!r.error) yfCache[symbol] = r;
+    delete yfPending[symbol];
+    return r;
+  });
   yfPending[symbol] = p;
   return p;
 }
@@ -1117,13 +1131,16 @@ function StockEstimatesPanel({
   years,
   currency,
   variant = "default",
+  quality,
 }: {
   detail: any;
   years: string[];
   currency: string;
   variant?: "default" | "canvasPlus";
+  quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void };
 }) {
   const [granularity, setGranularity] = useState<"annual" | "quarterly">("annual");
+  const hasData = detail != null;
   const fy1Per = detail.valuation_estimates?.per?.fy1;
   const fy1Revenue = detail.income_statement_estimates?.revenue?.fy1;
   const fy1Eps = detail.per_share_estimates?.eps?.fy1;
@@ -1189,7 +1206,7 @@ function StockEstimatesPanel({
     <Panel>
       <PanelHeader eyebrow="Estimates" title="추정치 변화" />
       {body}
-      <EvidenceRail freshness="fresh" source="StockAnalysis/Yahoo" asOf="—" coverage="FY+1~3 컨센서스" skeletonDelayMs={120} />
+      <EvidenceRail freshness={quality?.error && !hasData ? "error" : quality?.loading && !hasData ? "pending" : hasData ? "fresh" : "stale"} source="StockAnalysis/Yahoo" asOf="—" coverage="FY+1~3 컨센서스" onRetry={quality?.onRetry} skeletonDelayMs={120} />
     </Panel>
   );
 }
@@ -1936,7 +1953,7 @@ function EstimatesGrowthTilesCp({ detail, currency }: { detail: any; currency: s
   );
 }
 
-function EstimatesRecoCp({ yfData }: { yfData: any }) {
+function EstimatesRecoCp({ yfData, quality }: { yfData: any; quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void } }) {
   const recs = Array.isArray(yfData?.recommendations) ? yfData.recommendations : [];
   const lastRec = recs.length > 0 ? recs[recs.length - 1] : null;
   if (!lastRec) return null;
@@ -1952,6 +1969,7 @@ function EstimatesRecoCp({ yfData }: { yfData: any }) {
   const bullish = (Number(lastRec.strongBuy) || 0) + (Number(lastRec.buy) || 0);
   const bullishRatio = bullish / total;
   const overall = bullishRatio >= 0.7 ? "Strong Buy" : bullishRatio >= 0.5 ? "Buy" : bullishRatio >= 0.3 ? "Hold" : "Sell 우세";
+  const hasData = lastRec !== null && total > 0;
 
   return (
     <section data-stock-tab-card="estimates-recommendation">
@@ -1980,7 +1998,7 @@ function EstimatesRecoCp({ yfData }: { yfData: any }) {
           ))}
         </div>
       </div>
-      <EvidenceRail freshness="fresh" source="Yahoo Finance" asOf={typeof lastRec.period === "string" ? lastRec.period : "—"} coverage="추천 분포" skeletonDelayMs={120} />
+      <EvidenceRail freshness={quality?.error && !hasData ? "error" : quality?.loading && !hasData ? "pending" : hasData ? "fresh" : "stale"} source="Yahoo Finance" asOf={typeof lastRec.period === "string" ? lastRec.period : "—"} coverage="추천 분포" onRetry={quality?.onRetry} skeletonDelayMs={120} />
     </Panel>
     </section>
   );
@@ -2558,10 +2576,10 @@ export default function StockDetailClient({
 }) {
   const symbol = normalizeForEntityKey(ticker);
   const [row, setRow] = useState<AnalyzerRow | null | undefined>(undefined);
-  const { data: marketFacts, loading: marketFactsLoading } = useMarketFacts(symbol, assetHint !== "etf");
+  const { data: marketFacts, loading: marketFactsLoading, error: marketFactsError, retry: retryMarketFacts } = useMarketFacts(symbol, assetHint !== "etf");
   const canLoadStockData = row !== undefined && row !== null;
-  const { detail, loading: detailLoading } = useStockDetail(symbol, canLoadStockData);
-  const f13Entries = use13FData(symbol);
+  const { detail, loading: detailLoading, error: detailError, retry: retryDetail } = useStockDetail(symbol, canLoadStockData);
+  const { entries: f13Entries, error: f13Error, retry: retryF13 } = use13FData(symbol);
   const canonical = row ? resolveSector(null, row.sector) : null;
   const years: string[] = Array.isArray(detail?.years) ? detail.years : [];
   const rowPerBand = validAnalyzerPerBand(row);
@@ -2583,6 +2601,12 @@ export default function StockDetailClient({
 
   const rowLoading = row === undefined;
   const [yfData, setYfData] = useState<any | undefined>(undefined);
+  const [yfError, setYfError] = useState<LoaderError | null>(null);
+  const [yfRetryNonce, setYfRetryNonce] = useState(0);
+  const retryYfFinance = useCallback(() => {
+    delete yfCache[symbol];
+    setYfRetryNonce((n) => n + 1);
+  }, [symbol]);
   const [stockTab, setStockTab] = useState<StockTab>(initialTab ?? "overview");
   const [etfResult, setEtfResult] = useState<StockanalysisEtfLoadResult | null | undefined>(undefined);
   const [etfSurfaceData, setEtfSurfaceData] = useState<TickerSurfacePayload | null | undefined>(undefined);
@@ -2616,13 +2640,16 @@ export default function StockDetailClient({
     let cancelled = false;
     if (!canLoadStockData) {
       Promise.resolve().then(() => {
-        if (!cancelled) setYfData(row === null ? null : undefined);
+        if (!cancelled) {
+          setYfData(row === null ? null : undefined);
+          setYfError(null);
+        }
       });
       return () => { cancelled = true; };
     }
-    loadYfFinance(symbol).then((d) => { if (!cancelled) setYfData(d ?? null); });
+    loadYfFinance(symbol).then((r) => { if (!cancelled) { setYfData(r.data ?? null); setYfError(r.error); } });
     return () => { cancelled = true; };
-  }, [symbol, canLoadStockData, row]);
+  }, [symbol, canLoadStockData, row, yfRetryNonce]);
 
   useEffect(() => {
     let cancelled = false;
@@ -2939,6 +2966,12 @@ export default function StockDetailClient({
       : "표시할 가격 데이터를 찾지 못했습니다.",
     asOf: typeof marketFactsSourceAsOf === "string" ? marketFactsSourceAsOf : null,
   });
+  const headerRetry = marketFactsError ? retryMarketFacts : yfError && displayPrice === null ? retryYfFinance : undefined;
+  const headerHasData = displayPrice !== null || marketFacts != null;
+  const headerFreshness = (marketFactsError ?? (displayPrice === null ? yfError : null)) && !headerHasData
+    ? "error"
+    : marketFactsLoading ? "pending" : displayPrice !== null && marketFacts ? "fresh" : displayPrice !== null ? "partial" : "stale";
+  const headerLkgAsOf = typeof marketFactsSourceAsOf === "string" && marketFactsSourceAsOf.trim() ? marketFactsSourceAsOf : undefined;
   const stockChartData = stockHistoryToChartData(stockAuxData?.normalized?.history);
   const rangedStockChartData = filterStockChartRange(stockChartData, stockChartRange);
   const stockChartCopy = stockChartSummary(rangedStockChartData, displayCurrency, stockChartRange);
@@ -2985,7 +3018,7 @@ export default function StockDetailClient({
             onSelect={selectStockTab}
             note={isEtfAsset && etfData === undefined ? `ETF 상세 ${DATA_STATE_LABELS.pending}...` : !yfLoaded ? `추가 지표 ${DATA_STATE_LABELS.pending}...` : !yfAvailable ? `추가 지표 ${DATA_STATE_LABELS.pending}` : null}
           />
-          <EvidenceRail freshness={marketFactsLoading ? "pending" : displayPrice !== null && marketFacts ? "fresh" : displayPrice !== null ? "partial" : "stale"} source="통합 시세" asOf={typeof marketFactsSourceAsOf === "string" ? marketFactsSourceAsOf : "—"} coverage="가격·시가총액" next={marketFactsLoading || (displayPrice !== null && marketFacts) ? undefined : displayPrice !== null ? "통합 지표 연결 시" : "가격 연결 시"} skeletonDelayMs={120} />
+          <EvidenceRail freshness={headerFreshness} source="통합 시세" asOf={typeof marketFactsSourceAsOf === "string" ? marketFactsSourceAsOf : "—"} coverage="가격·시가총액" next={marketFactsLoading || (displayPrice !== null && marketFacts) ? undefined : displayPrice !== null ? "통합 지표 연결 시" : "가격 연결 시"} onRetry={headerRetry} lkgAsOf={headerLkgAsOf} skeletonDelayMs={120} />
         </Panel>
 
         {activeStockTab === "overview" ? (
@@ -3254,7 +3287,7 @@ export default function StockDetailClient({
             ) : null}
 
             {activeStockTab === "estimates" ? (
-              <StockEstimatesPanel detail={detail} years={years} currency={displayCurrency} />
+              <StockEstimatesPanel detail={detail} years={years} currency={displayCurrency} quality={{ loading: detailLoading, error: detailError, onRetry: retryDetail }} />
             ) : null}
 
             {activeStockTab === "ownership" ? (
@@ -3347,7 +3380,7 @@ export default function StockDetailClient({
               />
               <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
             </div>
-            <EvidenceRail freshness="stale" source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" skeletonDelayMs={120} />
+            <EvidenceRail freshness={(detailError || yfError) && !detail && !yfAvailable ? "error" : "stale"} source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" onRetry={(detailError || yfError) && !detail && !yfAvailable ? (detailError ? retryDetail : retryYfFinance) : undefined} skeletonDelayMs={120} />
           </Panel>
         )}
       </div>
@@ -3419,7 +3452,7 @@ export default function StockDetailClient({
               />
               <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
             </div>
-            <EvidenceRail freshness="stale" source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" skeletonDelayMs={120} />
+            <EvidenceRail freshness={(detailError || yfError) && !detail && !yfAvailable ? "error" : "stale"} source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" onRetry={(detailError || yfError) && !detail && !yfAvailable ? (detailError ? retryDetail : retryYfFinance) : undefined} skeletonDelayMs={120} />
           </Panel>
         )}
       </div>
@@ -3441,7 +3474,7 @@ export default function StockDetailClient({
             {detail ? <EstimatesHeroCp yfData={yfData} detail={detail} currency={displayCurrency} /> : null}
             {yfAvailable ? <EstimatesBandCp yfData={yfData} currency={displayCurrency} /> : null}
             {detail ? <EstimatesGrowthTilesCp detail={detail} currency={displayCurrency} /> : null}
-            {yfAvailable ? <EstimatesRecoCp yfData={yfData} /> : null}
+            {yfAvailable ? <EstimatesRecoCp yfData={yfData} quality={{ loading: !yfLoaded, error: yfError, onRetry: retryYfFinance }} /> : null}
 
             <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" data-stock-tab-card="estimates-yf">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
@@ -3452,7 +3485,7 @@ export default function StockDetailClient({
                 {detail ? (
                   <div data-stock-tab-card="estimates-consensus">
                     <h3 className="cp-stock-tab-card__subheading">추정치 변화</h3>
-                    <StockEstimatesPanel detail={detail} years={years} currency={displayCurrency} variant="canvasPlus" />
+                    <StockEstimatesPanel detail={detail} years={years} currency={displayCurrency} variant="canvasPlus" quality={{ loading: detailLoading, error: detailError, onRetry: retryDetail }} />
                   </div>
                 ) : null}
                 {yfAvailable ? (
@@ -3475,7 +3508,7 @@ export default function StockDetailClient({
               />
               <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
             </div>
-            <EvidenceRail freshness="stale" source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" skeletonDelayMs={120} />
+            <EvidenceRail freshness={(detailError || yfError) && !detail && !yfAvailable ? "error" : "stale"} source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" onRetry={(detailError || yfError) && !detail && !yfAvailable ? (detailError ? retryDetail : retryYfFinance) : undefined} skeletonDelayMs={120} />
           </Panel>
         )}
       </div>
@@ -3519,7 +3552,7 @@ export default function StockDetailClient({
               />
               <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
             </div>
-            <EvidenceRail freshness="stale" source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" skeletonDelayMs={120} />
+            <EvidenceRail freshness={(detailError || yfError) && !detail && !yfAvailable ? "error" : "stale"} source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" onRetry={(detailError || yfError) && !detail && !yfAvailable ? (detailError ? retryDetail : retryYfFinance) : undefined} skeletonDelayMs={120} />
           </Panel>
         )}
       </div>
