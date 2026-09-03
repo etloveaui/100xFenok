@@ -1,9 +1,22 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-03T02:52:22.684Z",
+  "generated_at": "2026-09-03T03:57:51.632Z",
   "status": "open",
-  "open_incident_count": 7,
+  "open_incident_count": 8,
   "open_incidents": [
+    {
+      "workflow": "data-plane-serving-probe.yml",
+      "label": "Data Plane Serving Probe",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -339,7 +352,7 @@
         "suspected_skip"
       ],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 0
+      "data_freshness_age_hours_at_generation": 1
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -504,11 +517,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33709117949",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33709117949",
-    "observed_at": "2026-09-03T02:52:22.684Z",
+    "run_id": "33713147814",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33713147814",
+    "observed_at": "2026-09-03T03:57:51.632Z",
     "event": "workflow_run",
     "workflows": [
+      "data-plane-serving-probe.yml",
       "fetch-edgar-filings.yml",
       "fetch-stockanalysis.yml",
       "fetch-us-indices-daily.yml",
