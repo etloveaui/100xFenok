@@ -748,7 +748,7 @@ export default function HomeCanvasPlusClient() {
               source="Fenok Edge"
               asOf={formatDatePart(dashboard.tickerFetchedAt)}
               coverage={`섹터 ${dashboard.sectorRows.length}개 · 실시간 ${dashboard.sectorLiveCount}개`}
-              next={edgeNextSlot ? formatSlotShort(edgeNextSlot.slot) : undefined}
+              next={edgeNextSlot ? formatSlotShort(edgeNextSlot.slot) ?? undefined : undefined}
               stages={edgeStages.length > 0 ? edgeStages : undefined}
               onEvidence={edgeStages.length > 0 ? undefined : () => router.push(ROUTES.regime)}
             />
@@ -777,7 +777,7 @@ export default function HomeCanvasPlusClient() {
               source="Sector Flow"
               asOf={dashboard.sectorMode === "LIVE_1D" ? formatDatePart(dashboard.tickerFetchedAt) : "1개월 기준"}
               coverage={`${heatSectors.length}/${dashboard.sectorRows.length} 섹터`}
-              next={slickNextSlot ? formatSlotShort(slickNextSlot) : undefined}
+              next={slickNextSlot ? formatSlotShort(slickNextSlot) ?? undefined : undefined}
               onEvidence={() => router.push(ROUTES.sectors)}
             />
           </Panel>
