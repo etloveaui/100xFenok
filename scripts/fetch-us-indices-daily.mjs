@@ -82,8 +82,13 @@ export function parseYahooChart(payload, expectedSymbol) {
   if (!Array.isArray(timestamps) || !Array.isArray(closes) || timestamps.length !== closes.length || typeof timeZone !== "string") {
     throw new Error(`Yahoo chart arrays are invalid for ${expectedSymbol}`);
   }
+  let retainedLength = closes.length;
+  while (retainedLength > 0 && !Number.isFinite(closes[retainedLength - 1])) retainedLength -= 1;
+  if (retainedLength === 0) {
+    throw new Error(`Yahoo chart row must have a valid date and finite positive value for ${expectedSymbol}`);
+  }
   const byDate = new Map();
-  for (let index = 0; index < timestamps.length; index += 1) {
+  for (let index = 0; index < retainedLength; index += 1) {
     const row = { date: localDate(timestamps[index], timeZone), value: closes[index] };
     if (!validRow(row)) throw new Error(`Yahoo chart row must have a valid date and finite positive value for ${expectedSymbol}`);
     byDate.set(row.date, row);
