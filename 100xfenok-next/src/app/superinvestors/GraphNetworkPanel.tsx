@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { EvidenceRail, Panel, PanelHeader, Pill, EmptyState, type EvidenceRailFreshness } from "@/components/ui";
+import { EvidenceRail, Panel, PanelHeader, Pill, EmptyState } from "@/components/ui";
+import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import { formatCurrencyCompact, formatInteger, formatPercent } from "@/lib/format";
 import type { GraphNetwork } from "./graphNetwork";
 
