@@ -70,6 +70,8 @@ export interface MarketChartFrameProps {
    * first-seen label union would otherwise interleave out of order.
    */
   sortLabels?: boolean;
+  /** Connect sparse observations across dates contributed by denser peer series. */
+  spanGaps?: boolean;
   /** The caller already cut the data window before transforming/downsampling. */
   seriesAreRangeFiltered?: boolean;
 }
@@ -172,6 +174,7 @@ export function MarketChartFrame({
   onRangeChange,
   onHiddenSeriesChange,
   sortLabels = false,
+  spanGaps = false,
   seriesAreRangeFiltered = false,
 }: MarketChartFrameProps) {
   const [internalRangeId, setInternalRangeId] = useState<string>(
@@ -322,6 +325,7 @@ export function MarketChartFrame({
         heightClassName={heightClassName}
         showLegend={showLegend && !showToggles}
         sortLabels={sortLabels}
+        spanGaps={spanGaps}
         suggestedMin={suggestedMin}
         suggestedMax={suggestedMax}
         yAxisTitle={yAxisTitle}

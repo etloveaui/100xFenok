@@ -68,6 +68,8 @@ export interface MarketChartEngineProps {
   emptyLabel?: string;
   showLegend?: boolean;
   sortLabels?: boolean;
+  /** Connect finite observations across union-axis labels absent from this series. */
+  spanGaps?: boolean;
   suggestedMin?: number;
   suggestedMax?: number;
   formatValue?: MarketChartValueFormatter;

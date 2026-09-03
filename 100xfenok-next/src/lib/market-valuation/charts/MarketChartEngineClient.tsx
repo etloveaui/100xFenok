@@ -96,6 +96,7 @@ function buildData(
   series: readonly MarketChartSeries[],
   labels: readonly string[],
   theme: MarketChartTheme,
+  spanGaps: boolean,
 ): ChartData<MarketChartType, Array<number | null>, string> {
   return {
     labels: [...labels],
@@ -117,7 +118,7 @@ function buildData(
         pointHitRadius: isLine ? 10 : undefined,
         tension: isLine ? 0.24 : undefined,
         fill: false,
-        spanGaps: false,
+        spanGaps,
         hidden: item.hidden,
         yAxisID: item.yAxisId ?? "y",
       };
@@ -262,6 +263,7 @@ export function MarketChartEngineClient({
   emptyLabel = "차트 데이터 없음",
   showLegend = true,
   sortLabels = false,
+  spanGaps = false,
   suggestedMin,
   suggestedMax,
   formatValue,
@@ -280,8 +282,8 @@ export function MarketChartEngineClient({
     [visibleSeries, sortLabels],
   );
   const data = useMemo(
-    () => buildData(type, visibleSeries, labels, theme),
-    [type, visibleSeries, labels, theme],
+    () => buildData(type, visibleSeries, labels, theme, spanGaps),
+    [type, visibleSeries, labels, theme, spanGaps],
   );
   const resetKeyboardHover = useMemo(
     () =>

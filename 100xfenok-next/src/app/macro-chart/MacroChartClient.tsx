@@ -1545,6 +1545,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                       ].filter((id, index, all) => all.indexOf(id) === index && chartSeriesIds.has(id)));
                     }}
                     sortLabels
+                    spanGaps
                     seriesAreRangeFiltered
                     heightClassName="h-[22rem] sm:h-[26rem] lg:h-[30rem]"
                     yAxisTitle={row.yAxisTitle}

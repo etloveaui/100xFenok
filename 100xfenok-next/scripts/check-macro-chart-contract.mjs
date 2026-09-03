@@ -133,7 +133,13 @@ async function inspectStaticContracts() {
   for (const token of ["cutoffPoints(rawPoints", "applyMacroTransform(windowPoints", "downsampleMacroPoints(applyMacroTransform", "payloadErrors", "transformedUnitGroup"]) {
     if (!loaderSource.includes(token)) addFailure(failures, "transform-pipeline-contract", `${token} missing`);
   }
-  if (!engineSource.includes("spanGaps: false")) addFailure(failures, "missing-date-gap-contract", "spanGaps must be false");
+  if (
+    !engineSource.includes("spanGaps = false") ||
+    !engineSource.includes("spanGaps,") ||
+    !macroSource.includes("spanGaps")
+  ) {
+    addFailure(failures, "sparse-series-gap-contract", "macro charts must connect finite observations across union-axis dates");
+  }
   if (!engineSource.includes("animation: false")) {
     addFailure(failures, "deterministic-chart-animation", "shared chart animation must be disabled for deterministic capture");
   }
