@@ -352,20 +352,20 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[18vh]" role="dialog" aria-modal="true" aria-label="명령 팔레트">
       <button aria-label="close" onClick={() => setOpen(false)} className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
-      <div className="relative w-[min(640px,92vw)] bg-white rounded-[8px] border border-[#e2e8f0] shadow-[0_16px_40px_rgba(15,23,42,0.18)] overflow-hidden">
-        <div className="flex items-center gap-3 h-12 px-4 border-b border-[#e2e8f0]">
+      <div className="relative w-[min(640px,92vw)] bg-white rounded-[8px] border border-[var(--fnk-neutral-200)] shadow-[0_16px_40px_rgba(15,23,42,0.18)] overflow-hidden">
+        <div className="flex items-center gap-3 h-12 px-4 border-b border-[var(--fnk-neutral-200)]">
           <input
             autoFocus
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActive(0); }}
             placeholder="종목, 화면, 동작 검색 — 초성 검색 지원 (예: ㅅㅇ)"
-            className="flex-1 outline-none text-[13px] placeholder:text-[#94a3b8]"
+            className="flex-1 outline-none text-[13px] placeholder:text-[var(--fnk-neutral-400)]"
           />
-          <span className="text-[11px] text-[#94a3b8] border border-[#e2e8f0] rounded px-1.5 py-0.5">⌘K</span>
-          <button onClick={() => setShowHelp((v) => !v)} className="text-[11px] text-[#64748b] border border-[#e2e8f0] rounded px-1.5 py-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive">?</button>
+          <span className="text-[11px] text-[var(--fnk-neutral-400)] border border-[var(--fnk-neutral-200)] rounded px-1.5 py-0.5">⌘K</span>
+          <button onClick={() => setShowHelp((v) => !v)} className="text-[11px] text-[var(--fnk-neutral-500)] border border-[var(--fnk-neutral-200)] rounded px-1.5 py-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive">?</button>
         </div>
         {showHelp && (
-          <div className="px-4 py-3 bg-[#f8fafc] border-b border-[#e2e8f0] text-[11px] text-[#475569] grid grid-cols-2 gap-2">
+          <div className="px-4 py-3 bg-[var(--fnk-neutral-50)] border-b border-[var(--fnk-neutral-200)] text-[11px] text-[var(--fnk-neutral-600)] grid grid-cols-2 gap-2">
             <span><b>⌘K</b> / <b>/</b> 열기</span><span><b>?</b> 도움말</span>
             <span><b>j/k</b> 이동</span><span><b>↵</b> 선택</span>
             <span><b>g s</b> 스크리너</span><span><b>g h</b> 섹터 히트맵</span>
@@ -375,14 +375,14 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
         <div className="max-h-[42vh] overflow-auto py-2">
           {recentItems.length > 0 && !query && (
             <div className="px-2 pb-2">
-              <div className="text-[11px] font-semibold tracking-[0.06em] uppercase text-[#64748b] px-2 py-1">최근</div>
+              <div className="text-[11px] font-semibold tracking-[0.06em] uppercase text-[var(--fnk-neutral-500)] px-2 py-1">최근</div>
               {recentItems.map((it) => (
                 <button
                   key={`recent-${it.id}`}
                   onClick={() => select(it, it.kbd === "w" ? { keepOpen: true } : undefined)}
-                  className="w-full text-left px-2 py-1.5 rounded-[6px] text-[13px] text-[#334155] flex justify-between hover:bg-[#f8fafc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+                  className="w-full text-left px-2 py-1.5 rounded-[6px] text-[13px] text-[var(--fnk-neutral-700)] flex justify-between hover:bg-[var(--fnk-neutral-50)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
                 >
-                  <span>{it.label}</span><span className="text-[#94a3b8] text-[11px]">{it.sub}</span>
+                  <span>{it.label}</span><span className="text-[var(--fnk-neutral-400)] text-[11px]">{it.sub}</span>
                 </button>
               ))}
             </div>
@@ -390,7 +390,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
           {(["종목", "화면", "동작"] as const).map((sec) => (
             grouped[sec].length > 0 && (
               <div key={sec} className="px-2">
-                <div className="text-[11px] font-semibold tracking-[0.06em] uppercase text-[#64748b] px-2 py-1">{sec}</div>
+                <div className="text-[11px] font-semibold tracking-[0.06em] uppercase text-[var(--fnk-neutral-500)] px-2 py-1">{sec}</div>
                 {grouped[sec].map((it) => {
                   const idx = flat.indexOf(it);
                   const isActive = idx === active;
@@ -400,13 +400,13 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
                       key={it.id}
                       onMouseEnter={() => setActive(idx)}
                       onClick={() => select(it, it.kbd === "w" ? { keepOpen: true } : undefined)}
-                      className={`w-full text-left px-2 py-1.5 rounded-[6px] flex items-center justify-between text-[13px] transition-colors duration-120 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive ${isActive ? "bg-[#f8fafc] shadow-[inset_2px_0_0_#1B73D3] text-[#0f172a]" : "text-[#334155] hover:bg-[#f8fafc]"}`}
+                      className={`w-full text-left px-2 py-1.5 rounded-[6px] flex items-center justify-between text-[13px] transition-colors duration-120 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive ${isActive ? "bg-[var(--fnk-neutral-50)] shadow-[inset_2px_0_0_#1B73D3] text-[var(--fnk-neutral-900)]" : "text-[var(--fnk-neutral-700)] hover:bg-[var(--fnk-neutral-50)]"}`}
                     >
                       <span className="font-medium">{starred ? "★ " : ""}{it.label}</span>
-                      <span className="text-[11px] text-[#94a3b8] flex items-center gap-2">
+                      <span className="text-[11px] text-[var(--fnk-neutral-400)] flex items-center gap-2">
                         <span>{it.sub}</span>
                         {it.kbd && (
-                          <span className="border border-[#e2e8f0] rounded px-1.5 py-0.5">{it.kbd}</span>
+                          <span className="border border-[var(--fnk-neutral-200)] rounded px-1.5 py-0.5">{it.kbd}</span>
                         )}
                       </span>
                     </button>
@@ -415,13 +415,13 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
               </div>
             )
           ))}
-          {filtered.length === 0 && <div className="px-4 py-8 text-center text-[13px] text-[#64748b]">검색 결과 없음</div>}
+          {filtered.length === 0 && <div className="px-4 py-8 text-center text-[13px] text-[var(--fnk-neutral-500)]">검색 결과 없음</div>}
         </div>
-        <div className="flex items-center gap-3 h-9 px-4 border-t border-[#e2e8f0] text-[11px] text-[#94a3b8]">
+        <div className="flex items-center gap-3 h-9 px-4 border-t border-[var(--fnk-neutral-200)] text-[11px] text-[var(--fnk-neutral-400)]">
           {recentTickers.length > 0 && (
-            <span>최근: <span className="mono text-[#64748b]">{recentTickers.join(" · ")}</span></span>
+            <span>최근: <span className="mono text-[var(--fnk-neutral-500)]">{recentTickers.join(" · ")}</span></span>
           )}
-          <span className="ml-auto"><span className="border border-[#e2e8f0] rounded px-1 py-px">⌘K</span> 어디서든 열기 · <span className="border border-[#e2e8f0] rounded px-1 py-px">?</span> 단축키</span>
+          <span className="ml-auto"><span className="border border-[var(--fnk-neutral-200)] rounded px-1 py-px">⌘K</span> 어디서든 열기 · <span className="border border-[var(--fnk-neutral-200)] rounded px-1 py-px">?</span> 단축키</span>
         </div>
       </div>
     </div>

@@ -28,13 +28,13 @@ type EvidenceRailProps = {
 };
 
 const dotColor: Record<EvidenceRailFreshness, string> = {
-  fresh: "#1aa86f",
-  stale: "#f2a93b",
-  delayed: "#e84a5a",
-  fixed: "#94a3b8",
-  pending: "#f2a93b",
-  error: "#e84a5a",
-  partial: "#f2a93b",
+  fresh: "var(--fnk-color-gain)",
+  stale: "var(--fnk-color-warn)",
+  delayed: "var(--fnk-color-loss)",
+  fixed: "var(--fnk-neutral-400)",
+  pending: "var(--fnk-color-warn)",
+  error: "var(--fnk-color-loss)",
+  partial: "var(--fnk-color-warn)",
 };
 
 const label: Record<EvidenceRailFreshness, string> = {
@@ -48,10 +48,10 @@ const label: Record<EvidenceRailFreshness, string> = {
 };
 
 const stageDot: Record<EvidenceStageTone, string> = {
-  ok: "#1aa86f",
-  warn: "#f2a93b",
-  bad: "#e84a5a",
-  muted: "#94a3b8",
+  ok: "var(--fnk-color-gain)",
+  warn: "var(--fnk-color-warn)",
+  bad: "var(--fnk-color-loss)",
+  muted: "var(--fnk-neutral-400)",
 };
 
 function useDelayedRailSkeleton(active: boolean, delayMs: number) {
@@ -90,12 +90,12 @@ export function EvidenceRail({
     const chipInner = (
       <>
         <span className="inline-block w-[6px] h-[6px] rounded-full" style={{ background: dotColor[freshness] }} />
-        <b className="text-[#334155] font-semibold">{label[freshness]}</b>
+        <b className="text-[var(--fnk-neutral-700)] font-semibold">{label[freshness]}</b>
         <span className="tabular-nums">{asOf}</span>
       </>
     );
     const chipClass =
-      "inline-flex items-center gap-1.5 rounded-full border border-[#e2e8f0] bg-white px-2.5 py-1 text-[11px] text-[#64748b] whitespace-nowrap";
+      "inline-flex items-center gap-1.5 rounded-full border border-[var(--fnk-neutral-200)] bg-white px-2.5 py-1 text-[11px] text-[var(--fnk-neutral-500)] whitespace-nowrap";
     if (!onEvidence) {
       return <span className={chipClass}>{chipInner}</span>;
     }
@@ -117,27 +117,27 @@ export function EvidenceRail({
   return (
     <div className={className}>
       <div
-        className="flex items-center gap-[14px] h-[30px] px-4 border-t border-[#f1f5f9] bg-[#fafbfc] text-[11px] text-[#64748b] overflow-hidden whitespace-nowrap"
+        className="flex items-center gap-[14px] h-[30px] px-4 border-t border-[var(--fnk-neutral-100)] bg-[#fafbfc] text-[11px] text-[var(--fnk-neutral-500)] overflow-hidden whitespace-nowrap"
       >
         <span className="inline-flex items-center gap-1 shrink-0">
           <span className="inline-block w-[6px] h-[6px] rounded-full" style={{ background: dotColor[freshness] }} />
-          <b className="text-[#334155] font-semibold">{label[freshness]}</b>
+          <b className="text-[var(--fnk-neutral-700)] font-semibold">{label[freshness]}</b>
         </span>
         {showMobileSkeleton ? (
-          <span aria-hidden="true" className="h-[10px] flex-1 rounded bg-[#f1f5f9] animate-pulse md:hidden" />
+          <span aria-hidden="true" className="h-[10px] flex-1 rounded bg-[var(--fnk-neutral-100)] animate-pulse md:hidden" />
         ) : (
           <>
             <span className="shrink-0 max-md:hidden">
-              출처 <b className="text-[#334155] font-semibold">{source}</b>
+              출처 <b className="text-[var(--fnk-neutral-700)] font-semibold">{source}</b>
             </span>
-            <span className="shrink-0"><span className="max-md:hidden">기준 </span><b className="tabular-nums text-[#334155] font-semibold">{asOf}</b></span>
+            <span className="shrink-0"><span className="max-md:hidden">기준 </span><b className="tabular-nums text-[var(--fnk-neutral-700)] font-semibold">{asOf}</b></span>
             {showLkg && (
-              <span className="shrink-0">{lkgLabel} <b className="tabular-nums text-[#334155] font-semibold">{lkgAsOf}</b></span>
+              <span className="shrink-0">{lkgLabel} <b className="tabular-nums text-[var(--fnk-neutral-700)] font-semibold">{lkgAsOf}</b></span>
             )}
             <span className="max-md:hidden">
-              커버리지 <b className="tabular-nums text-[#334155] font-semibold">{coverage}</b>
+              커버리지 <b className="tabular-nums text-[var(--fnk-neutral-700)] font-semibold">{coverage}</b>
             </span>
-            {next && (<span className="shrink-0">다음 <b className="tabular-nums text-[#334155] font-semibold">{next}</b></span>)}
+            {next && (<span className="shrink-0">다음 <b className="tabular-nums text-[var(--fnk-neutral-700)] font-semibold">{next}</b></span>)}
           </>
         )}
         {showRetry && (
@@ -155,18 +155,18 @@ export function EvidenceRail({
         )}
       </div>
       {hasDrawer && drawerOpen && (
-        <div id={drawerId} role="region" aria-label={`증거: ${source} ${asOf}`} className="border-t border-[#f1f5f9] bg-white px-4 py-2">
+        <div id={drawerId} role="region" aria-label={`증거: ${source} ${asOf}`} className="border-t border-[var(--fnk-neutral-100)] bg-white px-4 py-2">
           {stages!.map((stage) => (
-            <div key={stage.stage} className="flex items-baseline gap-3 border-b border-[#f1f5f9] py-1.5 text-[11px] last:border-b-0">
-              <span className="inline-flex w-[52px] shrink-0 items-center gap-1.5 font-semibold text-[#64748b]">
+            <div key={stage.stage} className="flex items-baseline gap-3 border-b border-[var(--fnk-neutral-100)] py-1.5 text-[11px] last:border-b-0">
+              <span className="inline-flex w-[52px] shrink-0 items-center gap-1.5 font-semibold text-[var(--fnk-neutral-500)]">
                 <span
                   className="inline-block w-[6px] h-[6px] rounded-full"
                   style={{ background: stageDot[stage.tone ?? "muted"] }}
                 />
                 {stage.stage}
               </span>
-              <span className="min-w-0 flex-1 truncate text-[#334155]">{stage.detail}</span>
-              {stage.at && <span className="shrink-0 tabular-nums text-[#64748b]">{stage.at}</span>}
+              <span className="min-w-0 flex-1 truncate text-[var(--fnk-neutral-700)]">{stage.detail}</span>
+              {stage.at && <span className="shrink-0 tabular-nums text-[var(--fnk-neutral-500)]">{stage.at}</span>}
             </div>
           ))}
         </div>
