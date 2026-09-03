@@ -43,6 +43,10 @@ const STRUCTURE_LINK = {
 
 const TEXT_LINK_CLASS = "text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive";
 
+export const MARKET_QUICK_BASE_LINKS = BASE_LINKS;
+export const MARKET_QUICK_MACRO_LENS_LINKS = MACRO_LENS_LINKS;
+export const MARKET_QUICK_STRUCTURE_LINK = STRUCTURE_LINK;
+
 export default function MarketQuickLinks({
   className,
   includeStructure = false,

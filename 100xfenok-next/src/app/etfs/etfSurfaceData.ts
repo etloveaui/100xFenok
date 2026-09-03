@@ -13,6 +13,7 @@ import {
   type EtfUniverseRecord,
 } from "@/app/explore/etfUniverseUtils";
 import { formatCompactNumber, formatCurrency, formatInteger } from "@/lib/format";
+import { useEffect, useState } from "react";
 
 export type { EtfUniverseRecord } from "@/app/explore/etfUniverseUtils";
 
@@ -53,7 +54,7 @@ interface EtfBitcoinRow {
   symbol?: string;
 }
 
-interface EtfSnapshotDoc {
+export interface EtfSnapshotDoc {
   source_as_of?: string | null;
   source_as_of_reason?: string | null;
   newEtfs?: {
@@ -330,4 +331,60 @@ export function fmtSignedPct(value: number | null | undefined): string {
 
 export function fmtVolumeCompact(value: number | null | undefined): string {
   return formatCompactNumber(value);
+}
+
+export function digitalTickersFromSnapshot(snapshot: EtfSnapshotDoc | null): Set<string> {
+  return new Set(
+    (snapshot?.bitcoin?.records ?? [])
+      .map((row) => (typeof row.symbol === "string" ? row.symbol.trim().toUpperCase() : ""))
+      .filter(Boolean),
+  );
+}
+
+export interface EtfSurfaceData {
+  loaded: boolean;
+  failed: boolean;
+  rows: EtfUniverseRecord[];
+  snapshot: EtfSnapshotDoc | null;
+  reload: () => void;
+}
+
+export function useEtfSurfaceData(): EtfSurfaceData {
+  const [reloadKey, setReloadKey] = useState(0);
+  const [state, setState] = useState<{ loaded: boolean; failed: boolean; rows: EtfUniverseRecord[]; snapshot: EtfSnapshotDoc | null }>({
+    loaded: false,
+    failed: false,
+    rows: [],
+    snapshot: null,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([loadEtfUniverse(), loadEtfSnapshot()]).then(([universe, snapshot]) => {
+      if (cancelled) return;
+      if (!universe && !snapshot) {
+        setState({ loaded: true, failed: true, rows: [], snapshot: null });
+        return;
+      }
+      setState({ loaded: true, failed: false, rows: normalizeUniverseRows(universe, snapshot), snapshot });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
+
+  return {
+    loaded: state.loaded,
+    failed: state.failed,
+    rows: state.rows,
+    snapshot: state.snapshot,
+    reload: () => {
+      clearEtfSurfaceCaches();
+      setReloadKey((value) => value + 1);
+    },
+  };
+}
+
+export function openEtfEvidence(path: string) {
+  window.open(path, "_blank", "noopener");
 }

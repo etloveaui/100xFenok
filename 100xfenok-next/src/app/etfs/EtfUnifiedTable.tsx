@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
-import { CpAccordion, CpDataTable, CpEmptyState, CpSectionCard, type CpDataTableColumn } from "@/components/canvas-plus/kit";
+import { CpAccordion, CpDataTable, type CpDataTableColumn } from "@/components/canvas-plus/kit";
+import { EvidenceRail, Panel, PanelHeader } from "@/components/ui";
 import {
   etfClassificationLabels,
   formatAum,
@@ -11,9 +12,9 @@ import {
 import { formatAsOf } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 import { formatInteger, formatPlainPercent } from "@/lib/format";
-import EtfRetryCallout from "./EtfRetryCallout";
 import {
   clearEtfSurfaceCaches,
+  digitalTickersFromSnapshot,
   fmtSignedPct,
   isInverseEtf,
   isLeveragedEtf,
@@ -22,6 +23,7 @@ import {
   loadEtfSnapshot,
   loadEtfUniverse,
   normalizeUniverseRows,
+  openEtfEvidence,
   type EtfUniverseRecord,
 } from "./etfSurfaceData";
 
@@ -95,27 +97,27 @@ function EtfMobileList({
   digitalTickers: ReadonlySet<string>;
 }) {
   return (
-    <div className="cpw5-etfs-mobile-list" aria-label="ETF 모바일 목록">
+    <div className="etf-mobile-list" aria-label="ETF 모바일 목록">
       {rows.map((row) => {
         const oneYearValue = row.performance?.tr1y ?? null;
         const oneYearLabel = fmtSignedPct(oneYearValue);
         const oneYearClassName =
-          typeof oneYearValue === "number" ? (oneYearValue < 0 ? "cpw5-etfs-down" : "cpw5-etfs-up") : undefined;
+          typeof oneYearValue === "number" ? (oneYearValue < 0 ? "etf-down" : "etf-up") : undefined;
         return (
-          <article key={row.ticker ?? row.name ?? "unknown"} className="cpw5-etfs-mobile-card">
-            <div className="cpw5-etfs-mobile-card__head">
-              <TransitionLink href={ROUTES.etf(row.ticker ?? "")} className="cpw5-etfs-mobile-title">
+          <article key={row.ticker ?? row.name ?? "unknown"} className="etf-mobile-card">
+            <div className="etf-mobile-card__head">
+              <TransitionLink href={ROUTES.etf(row.ticker ?? "")} className="etf-mobile-title">
                 <strong>{row.ticker}</strong>
                 <span>{row.name && row.name !== row.ticker ? row.name : "—"}</span>
               </TransitionLink>
-              <span className="cpw5-etfs-mobile-category">{row.category ?? "미분류"}</span>
+              <span className="etf-mobile-category">{row.category ?? "미분류"}</span>
             </div>
-            <span className="cpw5-etfs-badges cpw5-etfs-mobile-badges">
+            <span className="etf-badges etf-mobile-badges">
               {etfTypeLabels(row, digitalTickers).map((label) => (
-                <span key={label} className="cpw5-etfs-badge">{label}</span>
+                <span key={label} className="etf-badge">{label}</span>
               ))}
             </span>
-            <dl className="cpw5-etfs-mobile-stats">
+            <dl className="etf-mobile-stats">
               <div>
                 <dt>운용자산</dt>
                 <dd>{formatAum(row)}</dd>
@@ -164,13 +166,7 @@ export default function EtfUnifiedTable() {
         return;
       }
       setRows(normalizeUniverseRows(universe, snapshot));
-      setDigitalTickers(
-        new Set(
-          (snapshot?.bitcoin?.records ?? [])
-            .map((row) => (typeof row.symbol === "string" ? row.symbol.trim().toUpperCase() : ""))
-            .filter(Boolean),
-        ),
-      );
+      setDigitalTickers(digitalTickersFromSnapshot(snapshot));
       const sourceMetadata = universe as ({ source_as_of?: unknown; source_as_of_reason?: unknown } | null);
       setAsOf(typeof sourceMetadata?.source_as_of === "string" ? sourceMetadata.source_as_of : null);
       setAsOfReason(
@@ -272,7 +268,7 @@ export default function EtfUnifiedTable() {
       header: "티커 · 이름",
       align: "left",
       render: (row) => (
-        <TransitionLink href={ROUTES.etf(row.ticker ?? "")} className="cpw5-etfs-table-ticker">
+        <TransitionLink href={ROUTES.etf(row.ticker ?? "")} className="etf-table-ticker">
           <strong>{row.ticker}</strong>
           <span>{row.name && row.name !== row.ticker ? row.name : "—"}</span>
         </TransitionLink>
@@ -289,9 +285,9 @@ export default function EtfUnifiedTable() {
       render: (row) => {
         const labels = etfTypeLabels(row, digitalTickers);
         return (
-          <span className="cpw5-etfs-badges">
+          <span className="etf-badges">
             {labels.map((label) => (
-              <span key={label} className="cpw5-etfs-badge">{label}</span>
+              <span key={label} className="etf-badge">{label}</span>
             ))}
           </span>
         );
@@ -314,138 +310,153 @@ export default function EtfUnifiedTable() {
         const value = row.performance?.tr1y ?? null;
         const label = fmtSignedPct(value);
         if (typeof value !== "number") return label;
-        return <span className={value >= 0 ? "cpw5-etfs-up" : "cpw5-etfs-down"}>{label}</span>;
+        return <span className={value >= 0 ? "etf-up" : "etf-down"}>{label}</span>;
       },
     },
   ];
 
+  const loading = !loaded;
+  const empty = loaded && (failed || filteredRows.length === 0);
+  const asOfLabel = formatAsOf(asOf) ?? (asOfReason ? "제공자 미공개" : "—");
+
   return (
-    <CpSectionCard
-      title="ETF 목록"
-      meta={`기준일 ${formatAsOf(asOf) ?? (asOfReason ? "제공자 미공개" : "—")} · ${formatInteger(filteredRows.length)}개`}
-      footnote="행을 선택하면 ETF 상세 페이지로 이동합니다. 투자 조언 아님."
+    <Panel
+      loading={loading}
+      empty={empty}
+      emptyReason={failed ? "ETF 목록을 불러오지 못했습니다" : "조건에 맞는 ETF가 없습니다. 필터를 조정해 주세요."}
+      emptyNextRefresh="다음 마감 후 갱신"
+      emptyActionLabel={failed ? "다시 시도" : undefined}
+      onEmptyAction={failed ? retryLoad : undefined}
     >
-      <div className="cpw5-etfs-table-toolbar">
-        <label className="sr-only" htmlFor="cpw5-etfs-search">ETF 검색</label>
-        <input
-          id="cpw5-etfs-search"
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            resetVisibleCount();
-          }}
-          placeholder="티커 또는 이름 검색"
-          className="cpw5-etfs-search"
-        />
-        <div className="cpw5-etfs-segment-row" role="group" aria-label="ETF 세그먼트">
-          {segments.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                setSegment(option.value);
-                resetVisibleCount();
-              }}
-              aria-pressed={segment === option.value}
-              className="cpw5-etfs-segment-pill"
-              data-active={segment === option.value ? "true" : undefined}
-            >
-              {option.label} <span>{option.count.toLocaleString("ko-KR")}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <CpAccordion title="필터 더보기" meta="자산군 · 운용사 · 운용자산 · 보수">
-        <div className="cpw5-etfs-filter-grid">
-          <label className="cpw5-etfs-filter-field">
-            <span>자산군</span>
-            <select
-              value={category}
-              onChange={(event) => {
-                setCategory(event.target.value);
-                resetVisibleCount();
-              }}
-            >
-              <option value="전체">전체</option>
-              {categories.map((item) => (
-                <option key={item.name} value={item.name}>{item.name} ({item.count.toLocaleString("ko-KR")})</option>
-              ))}
-            </select>
-          </label>
-          <label className="cpw5-etfs-filter-field">
-            <span>운용사</span>
-            <select
-              value={issuer}
-              onChange={(event) => {
-                setIssuer(event.target.value);
-                resetVisibleCount();
-              }}
-            >
-              <option value="전체">전체</option>
-              {issuers.map((item) => (
-                <option key={item.name} value={item.name}>{item.name} ({item.count.toLocaleString("ko-KR")})</option>
-              ))}
-            </select>
-          </label>
-          <label className="cpw5-etfs-filter-field">
-            <span>운용자산</span>
-            <select
-              value={aum}
-              onChange={(event) => {
-                setAum(event.target.value as AumFilter);
-                resetVisibleCount();
-              }}
-            >
-              {AUM_FILTERS.map((item) => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label className="cpw5-etfs-filter-field">
-            <span>보수</span>
-            <select
-              value={expense}
-              onChange={(event) => {
-                setExpense(event.target.value as ExpenseFilter);
-                resetVisibleCount();
-              }}
-            >
-              {EXPENSE_FILTERS.map((item) => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </CpAccordion>
-
-      {!loaded ? (
-        <CpEmptyState message="ETF 목록을 불러오는 중입니다." />
-      ) : failed ? (
-        <EtfRetryCallout
-          title="ETF 목록을 불러오지 못했습니다"
-          desc="전체 ETF 목록 연결에 실패했습니다. 다시 시도하면 최신 목록을 새로 요청합니다."
-          onRetry={retryLoad}
-        />
-      ) : filteredRows.length === 0 ? (
-        <CpEmptyState message="조건에 맞는 ETF가 없습니다. 필터를 조정해 주세요." />
-      ) : (
-        <>
-          <div className="cpw5-etfs-table-desktop">
-            <CpDataTable columns={columns} rows={visibleRows} getRowKey={(row) => row.ticker ?? ""} />
+      <PanelHeader
+        eyebrow="Universe"
+        title="ETF 목록"
+        right={
+          <div className="etf-seg-pills" role="group" aria-label="ETF 세그먼트">
+            {segments.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  setSegment(option.value);
+                  resetVisibleCount();
+                }}
+                aria-pressed={segment === option.value}
+                className="etf-seg-pill"
+                data-active={segment === option.value ? "true" : undefined}
+              >
+                {option.label} <span className="tabular-nums">{option.count.toLocaleString("ko-KR")}</span>
+              </button>
+            ))}
           </div>
-          <EtfMobileList rows={visibleRows} digitalTickers={digitalTickers} />
-          {hasMore ? (
-            <button
-              type="button"
-              className="cpw5-etfs-load-more"
-              onClick={() => setVisibleCount((value) => Math.min(filteredRows.length, value + PAGE_SIZE))}
-            >
-              더 보기 · {visibleRows.length.toLocaleString("ko-KR")} / {filteredRows.length.toLocaleString("ko-KR")}
-            </button>
+        }
+      />
+      {!failed ? (
+        <>
+          <div className="etf-list-toolbar">
+            <label className="sr-only" htmlFor="etf-search">ETF 검색</label>
+            <input
+              id="etf-search"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                resetVisibleCount();
+              }}
+              placeholder="티커 또는 이름 검색"
+              className="etf-search"
+            />
+          </div>
+
+          <CpAccordion title="필터 더보기" meta="자산군 · 운용사 · 운용자산 · 보수">
+            <div className="etf-filter-grid">
+              <label className="etf-filter-field">
+                <span>자산군</span>
+                <select
+                  value={category}
+                  onChange={(event) => {
+                    setCategory(event.target.value);
+                    resetVisibleCount();
+                  }}
+                >
+                  <option value="전체">전체</option>
+                  {categories.map((item) => (
+                    <option key={item.name} value={item.name}>{item.name} ({item.count.toLocaleString("ko-KR")})</option>
+                  ))}
+                </select>
+              </label>
+              <label className="etf-filter-field">
+                <span>운용사</span>
+                <select
+                  value={issuer}
+                  onChange={(event) => {
+                    setIssuer(event.target.value);
+                    resetVisibleCount();
+                  }}
+                >
+                  <option value="전체">전체</option>
+                  {issuers.map((item) => (
+                    <option key={item.name} value={item.name}>{item.name} ({item.count.toLocaleString("ko-KR")})</option>
+                  ))}
+                </select>
+              </label>
+              <label className="etf-filter-field">
+                <span>운용자산</span>
+                <select
+                  value={aum}
+                  onChange={(event) => {
+                    setAum(event.target.value as AumFilter);
+                    resetVisibleCount();
+                  }}
+                >
+                  {AUM_FILTERS.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="etf-filter-field">
+                <span>보수</span>
+                <select
+                  value={expense}
+                  onChange={(event) => {
+                    setExpense(event.target.value as ExpenseFilter);
+                    resetVisibleCount();
+                  }}
+                >
+                  {EXPENSE_FILTERS.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </CpAccordion>
+
+          {filteredRows.length > 0 ? (
+            <>
+              <div className="etf-table-desktop">
+                <CpDataTable columns={columns} rows={visibleRows} getRowKey={(row) => row.ticker ?? ""} />
+              </div>
+              <EtfMobileList rows={visibleRows} digitalTickers={digitalTickers} />
+              {hasMore ? (
+                <button
+                  type="button"
+                  className="etf-load-more"
+                  onClick={() => setVisibleCount((value) => Math.min(filteredRows.length, value + PAGE_SIZE))}
+                >
+                  더보기 · {visibleRows.length.toLocaleString("ko-KR")} / {filteredRows.length.toLocaleString("ko-KR")}
+                </button>
+              ) : null}
+            </>
           ) : null}
         </>
-      )}
-    </CpSectionCard>
+      ) : null}
+      <EvidenceRail
+        freshness={loading ? "pending" : failed ? "error" : "fresh"}
+        source="발행사 공시 · 거래소"
+        asOf={asOfLabel}
+        coverage={rows.length > 0 ? `${formatInteger(filteredRows.length)}/${formatInteger(rows.length)}` : "—"}
+        onRetry={failed ? retryLoad : undefined}
+        onEvidence={failed ? undefined : () => openEtfEvidence("/api/data/stockanalysis/etf-universe")}
+      />
+    </Panel>
   );
 }
