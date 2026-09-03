@@ -23,7 +23,7 @@ import {
   lwLineSeriesOptions,
   lwVolumeSeriesOptions,
 } from "@/lib/chart-theme";
-import { EvidenceRail, Panel, PanelHeader, Row, Stat, StatStrip } from "@/components/ui";
+import { EmptyState, EvidenceRail, Panel, PanelHeader, Row, Stat, StatStrip, useDelayedLoading } from "@/components/ui";
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -338,7 +338,9 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3} className="px-2 py-2 text-slate-500">월봉 계산에 필요한 가격 데이터가 없습니다.</td>
+                    <td colSpan={3} className="px-2 py-2">
+                      <EmptyState reason="월봉 계산에 필요한 가격 데이터가 없습니다." nextRefresh="월봉 데이터 확보 시" />
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -438,6 +440,7 @@ function CpPriceChartCore(props: CpPriceChartProps) {
     }
     return data.some((datum) => Number.isFinite(datum.value));
   }, [data, kind]);
+  const showChartSkeleton = useDelayedLoading(hasData && !isVisible, 120);
 
   useEffect(() => {
     const shell = shellRef.current;
@@ -574,8 +577,8 @@ function CpPriceChartCore(props: CpPriceChartProps) {
       data-density={density}
       aria-label={ariaLabel ?? title}
     >
-      {!hasData ? <p className="px-4 py-3 text-[12px] text-slate-500">{emptyLabel}</p> : null}
-      {hasData && !isVisible ? <div className="cp-chart-skeleton" aria-hidden="true" /> : null}
+      {!hasData ? <EmptyState reason={emptyLabel} /> : null}
+      {showChartSkeleton ? <div className="cp-chart-skeleton" aria-hidden="true" /> : null}
       {hasData ? (
         <div
           ref={canvasRef}

@@ -51,7 +51,7 @@ import {
   SharedValuationBandPanel,
   type SharedValuationBand,
 } from "@/app/screener/StockDetailPanel";
-import { Panel, PanelHeader, Row, Stat, StatStrip, Bar, EvidenceRail, Pill } from "@/components/ui";
+import { Panel, PanelHeader, Row, Stat, StatStrip, Bar, EvidenceRail, Pill, useDelayedLoading } from "@/components/ui";
 import {
   edgeAxisSpokeLabel,
 } from "@/lib/fenok-signals/edge-axis-labels.mjs";
@@ -2751,6 +2751,7 @@ export default function StockDetailClient({
 
   const yfLoaded = yfData !== undefined;
   const yfAvailable = yfData != null;
+  const showTabSkeleton = useDelayedLoading(detailLoading, 120);
   const etfData: StockanalysisEtfPayload | null | undefined = etfResult === undefined
     ? undefined
     : etfResult?.kind === "ok"
@@ -3164,13 +3165,13 @@ export default function StockDetailClient({
           >
             <main className="cp-stock-detail-main cp-stock-tab-body">
               {activeStockTab === "financials"
-                ? renderFinancialsCpTab()
+                ? renderFinancialsCpTab(showTabSkeleton)
                 : activeStockTab === "statistics"
-                ? renderStatisticsCpTab()
+                ? renderStatisticsCpTab(showTabSkeleton)
                 : activeStockTab === "estimates"
-                ? renderEstimatesCpTab()
+                ? renderEstimatesCpTab(showTabSkeleton)
                 : activeStockTab === "ownership"
-                ? renderOwnershipCpTab()
+                ? renderOwnershipCpTab(showTabSkeleton)
                 : activeStockTab === "filings"
                 ? renderFilingsCpTab()
                 : renderStockDataTab()}
@@ -3344,10 +3345,10 @@ export default function StockDetailClient({
   // and the yf FinancialsTab block verbatim — wrapper-level restyle only.
   // W4 재무 tab: hero (TTM 매출 + verdict + 매출/영업이익률 콤보 차트) → 스냅샷 타일
   // → 배당 카드 → 전체 재무제표 아코디언 (CompactFinancialTable/yf/FinancialCandidate/RawDepth).
-  function renderFinancialsCpTab() {
+  function renderFinancialsCpTab(showSkeleton: boolean) {
     return (
       <div className="cp-stock-tab-financials">
-        {detailLoading ? (
+        {showSkeleton ? (
           <div className="cp-stock-tab-loading">
             <SkeletonSection />
             <SkeletonSection />
@@ -3363,7 +3364,7 @@ export default function StockDetailClient({
               </div>
             </section>
 
-            <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" open>
+            <details className="group" open>
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
                 <span>
                   전체 재무제표 보기
@@ -3413,10 +3414,10 @@ export default function StockDetailClient({
 
   // W4 밸류 tab: hero (PER 8Y 밴드 그라디언트 + 판정 문장) → 리레이팅 타일 → 산업 대비
   // 델타 칩 → 수익성/성장 FY+1 그리드 + WACC 인사이트 → 가격·배당/전체지표 아코디언.
-  function renderStatisticsCpTab() {
+  function renderStatisticsCpTab(showSkeleton: boolean) {
     return (
       <div className="cp-stock-tab-financials">
-        {detailLoading ? (
+        {showSkeleton ? (
           <div className="cp-stock-tab-loading">
             <SkeletonSection />
             <SkeletonSection />
@@ -3439,7 +3440,7 @@ export default function StockDetailClient({
 
             <ValuationBodyCp yfData={yfData} industryBench={industryBench} detail={detail} profitabilityEstimates={profitabilityEstimates} currency={displayCurrency} years={years} />
 
-            <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" data-stock-tab-card="price-dividend">
+            <details className="group" data-stock-tab-card="price-dividend">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
                 <span>가격·수익률·배당 히스토리<div className="mt-0.5 text-[12px] font-bold text-slate-500">SlickCharts 가격/배당 이력</div></span>
                 <span className="shrink-0 text-[12px] text-slate-500 transition-transform group-open:rotate-90">▸</span>
@@ -3455,7 +3456,7 @@ export default function StockDetailClient({
               </div>
             </details>
 
-            <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" data-stock-tab-card="statistics-yf" open>
+            <details className="group" data-stock-tab-card="statistics-yf" open>
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
                 <span>밸류 지표 상세 보기 (Yahoo 전체 지표)<div className="mt-0.5 text-[12px] font-bold text-slate-500">밸류에이션 · 수익성 · 재무건전성 · 배당 · 거래·규모</div></span>
                 <span className="shrink-0 text-[12px] text-slate-500 transition-transform group-open:rotate-90">▸</span>
@@ -3485,10 +3486,10 @@ export default function StockDetailClient({
 
   // W4 추정치 tab: hero (목표가 여력 + EPS FY0→FY+3 컨센서스 바) → 목표가 범위 밴드
   // → FY+1 성장 타일 → 추천 분포 → 연간/분기 상세 아코디언.
-  function renderEstimatesCpTab() {
+  function renderEstimatesCpTab(showSkeleton: boolean) {
     return (
       <div className="cp-stock-tab-financials">
-        {detailLoading || yfData === undefined ? (
+        {showSkeleton || yfData === undefined ? (
           <div className="cp-stock-tab-loading">
             <SkeletonSection />
             <SkeletonSection />
@@ -3541,10 +3542,10 @@ export default function StockDetailClient({
 
   // W4 보유기관 tab: hero (13F 매수/매도 흐름 대칭 바 + 청산 콜아웃 + Top Guru 표)
   // → 기관 보유 요약 도넛 → Yahoo 상세 아코디언.
-  function renderOwnershipCpTab() {
+  function renderOwnershipCpTab(showSkeleton: boolean) {
     return (
       <div className="cp-stock-tab-financials">
-        {detailLoading ? (
+        {showSkeleton ? (
           <div className="cp-stock-tab-loading">
             <SkeletonSection />
             <SkeletonSection />

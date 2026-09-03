@@ -19,7 +19,7 @@ type PanelProps = {
   keepContentOnStale?: boolean;
 };
 
-function useDelayedLoading(active?: boolean, delay = 120) {
+export function useDelayedLoading(active?: boolean, delay = 120) {
   const [show, setShow] = React.useState(false);
   React.useEffect(() => {
     if (!active) { setShow(false); return; }

@@ -1,4 +1,4 @@
-export { Panel } from "./Panel";
+export { Panel, useDelayedLoading } from "./Panel";
 export { PanelHeader } from "./PanelHeader";
 export { Pill } from "./Pill";
 export { Button } from "./Button";
