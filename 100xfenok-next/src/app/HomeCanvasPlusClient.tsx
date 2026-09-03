@@ -118,6 +118,39 @@ function formatDatePart(value: string | null | undefined): string {
   return value.slice(0, 10);
 }
 
+const REVISION_REFRESH_WEEKDAY_KST = 5; // Friday: weekly US-Thursday batch lands Friday 08:00 KST
+const REVISION_REFRESH_HOUR_KST = 8;
+function parseFileTimeMs(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    const [y, m, d] = trimmed.split("-").map(Number);
+    return Date.UTC(y, m - 1, d, 12);
+  }
+  const ms = Date.parse(trimmed);
+  return Number.isFinite(ms) ? ms : null;
+}
+function lastRevisionRefreshMs(nowMs: number): number {
+  // most recent Friday 08:00 KST at or before nowMs (KST = UTC+9)
+  const kst = new Date(nowMs + 9 * 3600 * 1000);
+  const day = kst.getUTCDay();
+  let back = (day - REVISION_REFRESH_WEEKDAY_KST + 7) % 7;
+  const dayStartKstAsUtc = Date.UTC(kst.getUTCFullYear(), kst.getUTCMonth(), kst.getUTCDate()) - 9 * 3600 * 1000;
+  let refresh = dayStartKstAsUtc - back * 86400 * 1000 + REVISION_REFRESH_HOUR_KST * 3600 * 1000;
+  if (refresh > nowMs) refresh -= 7 * 86400 * 1000;
+  return refresh;
+}
+function nextRevisionRefreshMs(nowMs: number): number {
+  const last = lastRevisionRefreshMs(nowMs);
+  return last > nowMs ? last : last + 7 * 86400 * 1000;
+}
+function formatNextRefreshLabel(nowMs: number): string {
+  const kst = new Date(nextRevisionRefreshMs(nowMs) + 9 * 3600 * 1000);
+  const mm = String(kst.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(kst.getUTCDate()).padStart(2, "0");
+  return `${mm}-${dd} 08:00`;
+}
+
 function maxTimestamp(values: Array<string | null | undefined>): string | null {
   return values
     .filter((value): value is string => typeof value === "string" && value.length > 0)
@@ -542,6 +575,14 @@ export default function HomeCanvasPlusClient() {
   const anySourceLoading = stockMovers.loading || investor.loading;
   const sourceUnavailable = projection.sources.revision.status !== "available"
     || projection.sources.superinvestor.status !== "available";
+  const revisionLegOk = projection.sources.revision.status === "available";
+  const superLegOk = projection.sources.superinvestor.status === "available";
+  const laneFresh = revisionLegOk && superLegOk;
+  const revisionFileMs = parseFileTimeMs(revisionEvidence.generatedAt ?? revisionEvidence.asOf);
+  const revisionOverdue = !revisionLegOk && (revisionFileMs === null || revisionFileMs < lastRevisionRefreshMs(Date.now()));
+  const laneDelayed = revisionOverdue;
+  const laneAwaiting = !laneFresh && !laneDelayed;
+  const laneNext = laneAwaiting ? formatNextRefreshLabel(Date.now()) : undefined;
   const changedEmptyMessage = bothSourcesLoading
     ? DATA_STATE_LABELS.pending
     : oneSourceLoading
@@ -675,7 +716,7 @@ export default function HomeCanvasPlusClient() {
             />
           </Panel>
 
-          <Panel loading={!dashboardSettled} stale={dashboard.sectorMode === "LIVE_1D" && heatDelayed} asOf={formatDatePart(dashboard.tickerFetchedAt)}>
+          <Panel loading={!dashboardSettled} stale={heatDelayed} asOf={formatDatePart(dashboard.tickerFetchedAt)}>
             <PanelHeader
               eyebrow="Sector Flow"
               title="섹터 히트맵"
@@ -694,7 +735,7 @@ export default function HomeCanvasPlusClient() {
               ))}
             </div>
             <EvidenceRail
-              freshness={dashboard.sectorMode === "LIVE_1D" ? (heatDelayed ? "delayed" : "fresh") : "fixed"}
+              freshness={heatDelayed ? "delayed" : dashboard.sectorMode === "LIVE_1D" ? "fresh" : "fixed"}
               source="Sector Flow"
               asOf={dashboard.sectorMode === "LIVE_1D" ? formatDatePart(dashboard.tickerFetchedAt) : "1개월 기준"}
               coverage={`${heatSectors.length}/${dashboard.sectorRows.length} 섹터`}
@@ -709,7 +750,7 @@ export default function HomeCanvasPlusClient() {
             empty={!anySourceLoading && projection.changed.length === 0}
             emptyReason={changedEmptyMessage}
             emptyNextRefresh={sourceUnavailable ? undefined : "다음 데이터 수집 주기에 자동 갱신"}
-            stale={!anySourceLoading && sourceUnavailable && projection.changed.length > 0}
+            stale={!anySourceLoading && laneDelayed && projection.changed.length > 0}
             asOf={revisionClock}
             onRetry={retrySources}
           >
@@ -766,10 +807,11 @@ export default function HomeCanvasPlusClient() {
               })}
             </div>
             <EvidenceRail
-              freshness={sourceUnavailable ? "delayed" : "fresh"}
+              freshness={laneFresh ? "fresh" : laneDelayed ? "delayed" : "stale"}
               source="리비전 무버 · 13F"
               asOf={revisionClock}
               coverage={`후보 ${revisionEvidence.validCandidateCount + superinvestorEvidence.validCandidateCount}개`}
+              next={laneNext}
               onEvidence={() => router.push(ROUTES.screener)}
             />
           </Panel>
@@ -779,7 +821,7 @@ export default function HomeCanvasPlusClient() {
             loading={bothSourcesLoading}
             empty={!anySourceLoading && projection.attention.length === 0}
             emptyReason={attentionEmptyMessage}
-            stale={!anySourceLoading && sourceUnavailable && projection.attention.length > 0}
+            stale={!anySourceLoading && laneDelayed && projection.attention.length > 0}
             asOf={revisionClock}
             onRetry={retrySources}
           >
@@ -805,10 +847,11 @@ export default function HomeCanvasPlusClient() {
               ))}
             </div>
             <EvidenceRail
-              freshness={sourceUnavailable ? "delayed" : "fresh"}
+              freshness={laneFresh ? "fresh" : laneDelayed ? "delayed" : "stale"}
               source="개인 플래그 · 리비전 · 13F"
               asOf={revisionClock}
               coverage={`확인 대상 ${projection.attention.length}건`}
+              next={laneNext}
               onEvidence={() => router.push(ROUTES.portfolio)}
             />
           </Panel>

@@ -7,6 +7,7 @@ type EvidenceRailProps = {
   source: string;
   asOf: string;
   coverage: string;
+  next?: string;
   onEvidence?: () => void;
   className?: string;
 };
@@ -25,7 +26,7 @@ const label: Record<Freshness, string> = {
   fixed: "고정",
 };
 
-export function EvidenceRail({ freshness, source, asOf, coverage, onEvidence, className = "" }: EvidenceRailProps) {
+export function EvidenceRail({ freshness, source, asOf, coverage, next, onEvidence, className = "" }: EvidenceRailProps) {
   return (
     <div
       className={`flex items-center gap-[14px] h-[30px] px-4 border-t border-[#f1f5f9] bg-[#fafbfc] text-[11px] text-[#64748b] overflow-hidden whitespace-nowrap ${className}`}
@@ -41,6 +42,7 @@ export function EvidenceRail({ freshness, source, asOf, coverage, onEvidence, cl
       <span className="max-md:hidden">
         커버리지 <b className="tabular-nums text-[#334155] font-semibold">{coverage}</b>
       </span>
+      {next && (<span className="shrink-0">다음 <b className="tabular-nums text-[#334155] font-semibold">{next}</b></span>)}
       {onEvidence && (
         <button onClick={onEvidence} className="ml-auto shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150">
           증거 보기
