@@ -79,6 +79,8 @@ function finalize(member, {
   passed = true,
   fullRun = true,
   mutateAfterSnapshot = false,
+  invalidReceipt = false,
+  removeRequiredAfterSnapshot = false,
   responseSha256 = "a".repeat(64),
 } = {}) {
   runCounter += 1;
@@ -91,8 +93,14 @@ function finalize(member, {
     const firstFile = inspectSlickchartsMemberBundle(root, member).files[0].path;
     write(firstFile, { member, candidate_after_snapshot: runCounter });
   }
+  if (removeRequiredAfterSnapshot) {
+    const requiredFile = SLICKCHARTS_MEMBER_PATHS[member].find((spec) => spec.kind === "file" && spec.required)?.path;
+    if (!requiredFile) throw new Error(`missing required file fixture for ${member}`);
+    fs.rmSync(path.join(root, requiredFile));
+  }
   write(path.relative(root, rowPath), readyRow(member, passed));
-  receipt(path.relative(root, receiptPath), providerDate, responseSha256);
+  if (invalidReceipt) write(path.relative(root, receiptPath), {});
+  else receipt(path.relative(root, receiptPath), providerDate, responseSha256);
   return finalizeSlickchartsCompositeRecovery({
     repoRoot: root,
     member,
@@ -309,9 +317,9 @@ for (const [offset, member] of ["daily", "monthly", "history", "symbols"].entrie
   assert.equal(recovered.index.members[member].resolution_state, "fresh_primary");
 }
 
-// A degraded composite permits exactly one retry. All other member candidates
-// and failures are restored until that retry recovers, so the five-member
-// canonical generation cannot become mixed.
+// A degraded composite permits exactly one retry, but that durable state is
+// not a writer lock: a healthy member may still advance while the failed
+// member retains its LKG. A second member failure remains deferred.
 let failedDaily = failMember("daily", "2026-10-01T00:00:00.000Z");
 const generationWhileDailyRetries = failedDaily.index.active_composite.generation_id;
 const historyBeforeSuppressedFailure = inspectSlickchartsMemberBundle(root, "history");
@@ -321,18 +329,46 @@ assert.deepEqual(failedHistory.index.retry_members, ["daily"]);
 assert.equal(failedHistory.index.active_composite.generation_id, generationWhileDailyRetries);
 assert.deepEqual(inspectSlickchartsMemberBundle(root, "history"), historyBeforeSuppressedFailure);
 const retainedGeneration = failedHistory.index.retained_composite.generation_id;
-let deferredHistory = finalize("history", {
+const invalidReceiptHistory = finalize("history", {
   providerDate: "2026-10-03T00:00:00.000Z",
   mutateAfterSnapshot: true,
+  invalidReceipt: true,
 });
-assert.equal(deferredHistory.status.decision, "composite_retry_in_progress_deferred");
-assert.equal(deferredHistory.status.publish_data, false);
+assert.equal(invalidReceiptHistory.status.decision, "secondary_failure_deferred");
+assert.equal(invalidReceiptHistory.status.exit_code, 2);
+assert.deepEqual(invalidReceiptHistory.index.retry_members, ["daily"]);
+assert.deepEqual(inspectSlickchartsMemberBundle(root, "history"), historyBeforeSuppressedFailure);
+const invalidBundleHistory = finalize("history", {
+  providerDate: "2026-10-04T00:00:00.000Z",
+  removeRequiredAfterSnapshot: true,
+});
+assert.equal(invalidBundleHistory.status.decision, "secondary_failure_deferred");
+assert.equal(invalidBundleHistory.status.exit_code, 2);
+assert.deepEqual(invalidBundleHistory.index.retry_members, ["daily"]);
+assert.deepEqual(inspectSlickchartsMemberBundle(root, "history"), historyBeforeSuppressedFailure);
+let deferredHistory = finalize("history", {
+  providerDate: "2026-10-05T00:00:00.000Z",
+  mutateAfterSnapshot: true,
+});
+assert.equal(deferredHistory.status.decision, "candidate_promoted");
+assert.equal(deferredHistory.status.publish_data, true);
 assert.deepEqual(deferredHistory.index.retry_members, ["daily"]);
 assert.equal(deferredHistory.index.retained_composite.generation_id, retainedGeneration);
-assert.equal(deferredHistory.index.active_composite.generation_id, generationWhileDailyRetries);
-assert.deepEqual(inspectSlickchartsMemberBundle(root, "history"), historyBeforeSuppressedFailure);
+assert.notEqual(deferredHistory.index.active_composite.generation_id, generationWhileDailyRetries);
+assert.notDeepEqual(inspectSlickchartsMemberBundle(root, "history"), historyBeforeSuppressedFailure);
+assert.equal(validateSlickchartsCompositeIndex(deferredHistory.index), true);
+const rebasedHealthyHistory = mergeSlickchartsCompositeMember({
+  baseIndex: failedHistory.index,
+  savedIndex: deferredHistory.index,
+  member: "history",
+  generatedAt: "2026-10-05T00:01:00.000Z",
+});
+assert.deepEqual(rebasedHealthyHistory.members.history, deferredHistory.index.members.history);
+assert.deepEqual(rebasedHealthyHistory.retry_members, ["daily"]);
+assert.equal(rebasedHealthyHistory.retained_composite.generation_id, retainedGeneration);
+assert.equal(validateSlickchartsCompositeIndex(rebasedHealthyHistory), true);
 let recoveredDaily = finalize("daily", {
-  providerDate: "2026-10-04T00:00:00.000Z",
+  providerDate: "2026-10-06T00:00:00.000Z",
   responseSha256: "c".repeat(64),
 });
 assert.deepEqual(recoveredDaily.index.retry_members, []);

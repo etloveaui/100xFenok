@@ -455,6 +455,9 @@ export function validateSlickchartsCompositeIndex(index) {
     fail("retained composite exists without a retry");
   }
   if (expectedRetryMembers.length === 1) {
+    // The retained generation records the last all-fresh checkpoint. Healthy
+    // members may advance while one member remains on LKG, so it need not
+    // equal the current active generation.
     const retainedMembers = index.retained_composite?.members ?? {};
     const retainedVector = SLICKCHARTS_COMPOSITE_MEMBERS.map((member) => ({
       member,
@@ -464,8 +467,6 @@ export function validateSlickchartsCompositeIndex(index) {
       || Object.keys(retainedMembers).sort().join(",") !== [...SLICKCHARTS_COMPOSITE_MEMBERS].sort().join(",")
       || retainedVector.some((row) => !/^[a-f0-9]{64}$/u.test(row.tree_sha256 ?? ""))
       || index.retained_composite.generation_id !== sha256(canonicalJson(retainedVector))
-      || index.retained_composite.generation_id !== index.active_composite.generation_id
-      || canonicalJson(index.retained_composite.members) !== canonicalJson(index.active_composite.members)
       || (index.retained_composite.commit_sha !== null
         && !/^[a-f0-9]{40}$/u.test(index.retained_composite.commit_sha ?? ""))) {
       fail("retained composite generation is invalid");
@@ -541,18 +542,14 @@ export function finalizeSlickchartsCompositeRecovery({
   let decision;
   const existingRetryMember = retryMembers(index.members)[0] ?? null;
 
-  if (existingRetryMember !== null && existingRetryMember !== member) {
-    restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
-    index.members[member] = prior;
-    decision = !fullRun
-      ? "partial_run_deferred"
-      : attemptReady(row)
-        ? "composite_retry_in_progress_deferred"
-        : "secondary_failure_deferred";
-  } else if (!fullRun) {
+  if (!fullRun) {
     restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
     index.members[member] = prior;
     decision = "partial_run_deferred";
+  } else if (existingRetryMember !== null && existingRetryMember !== member && !attemptReady(row)) {
+    restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
+    index.members[member] = prior;
+    decision = "secondary_failure_deferred";
   } else if (!attemptReady(row)) {
     const restored = restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
     const hasTrustedLkg = prior.resolution_state === "fresh_primary" || prior.resolution_state === "lkg_primary";
@@ -577,17 +574,22 @@ export function finalizeSlickchartsCompositeRecovery({
       providerObservation = readProviderReceiptSet(receiptTargets);
     } catch (error) {
       restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
-      const hasTrustedLkg = prior.resolution_state === "fresh_primary" || prior.resolution_state === "lkg_primary";
-      index.members[member] = {
-        ...prior,
-        resolution_state: hasTrustedLkg ? "lkg_primary" : prior.resolution_state,
-        retry: hasTrustedLkg,
-        last_failure: { run, attempt_id: row.attempt_id, detail: error.message, retained_generation_id: index.active_composite.generation_id },
-      };
-      if (index.retained_composite === null && index.members[member].resolution_state === "lkg_primary") {
-        index.retained_composite = structuredClone(index.active_composite);
+      if (existingRetryMember !== null && existingRetryMember !== member) {
+        index.members[member] = prior;
+        decision = "secondary_failure_deferred";
+      } else {
+        const hasTrustedLkg = prior.resolution_state === "fresh_primary" || prior.resolution_state === "lkg_primary";
+        index.members[member] = {
+          ...prior,
+          resolution_state: hasTrustedLkg ? "lkg_primary" : prior.resolution_state,
+          retry: hasTrustedLkg,
+          last_failure: { run, attempt_id: row.attempt_id, detail: error.message, retained_generation_id: index.active_composite.generation_id },
+        };
+        if (index.retained_composite === null && index.members[member].resolution_state === "lkg_primary") {
+          index.retained_composite = structuredClone(index.active_composite);
+        }
+        decision = "provider_receipt_invalid";
       }
-      decision = "provider_receipt_invalid";
       exitCode = 2;
       providerObservation = null;
     }
@@ -612,25 +614,37 @@ export function finalizeSlickchartsCompositeRecovery({
             ? "recovery_requires_advancing_provider_time"
             : "recovery_requires_advancing_provider_content";
       } else {
-        const bundle = inspectSlickchartsMemberBundle(repoRoot, member);
-        index.members[member] = {
-          resolution_state: "fresh_primary",
-          retry: false,
-          bundle,
-          provider_observation: providerObservation,
-          promoted_run: run,
-          last_failure: prior.last_failure,
-          last_recovery: recovering ? {
-            recovered_from_run_id: prior.last_failure?.run?.run_id ?? null,
-            recovery_run_id: run.run_id,
-            recovery_run_attempt: run.run_attempt,
-            recovery_event_name: run.event_name,
-            recovered_at: run.observed_at,
-            retained_generation_id: prior.last_failure?.retained_generation_id ?? index.retained_composite?.generation_id ?? null,
-          } : prior.last_recovery,
-        };
-        publishData = true;
-        decision = recovering ? "recovered_and_promoted" : "candidate_promoted";
+        let bundle;
+        try {
+          bundle = inspectSlickchartsMemberBundle(repoRoot, member);
+        } catch (error) {
+          if (existingRetryMember === null || existingRetryMember === member) throw error;
+          restoreSlickchartsCompositeSnapshot({ repoRoot, member, snapshotRoot });
+          index.members[member] = prior;
+          decision = "secondary_failure_deferred";
+          exitCode = 2;
+          bundle = null;
+        }
+        if (bundle !== null) {
+          index.members[member] = {
+            resolution_state: "fresh_primary",
+            retry: false,
+            bundle,
+            provider_observation: providerObservation,
+            promoted_run: run,
+            last_failure: prior.last_failure,
+            last_recovery: recovering ? {
+              recovered_from_run_id: prior.last_failure?.run?.run_id ?? null,
+              recovery_run_id: run.run_id,
+              recovery_run_attempt: run.run_attempt,
+              recovery_event_name: run.event_name,
+              recovered_at: run.observed_at,
+              retained_generation_id: prior.last_failure?.retained_generation_id ?? index.retained_composite?.generation_id ?? null,
+            } : prior.last_recovery,
+          };
+          publishData = true;
+          decision = recovering ? "recovered_and_promoted" : "candidate_promoted";
+        }
       }
     }
   }
@@ -677,17 +691,15 @@ export function mergeSlickchartsCompositeMember({ baseIndex, savedIndex, member,
     || (baseMemberSha256 !== expectedBaseMemberSha256 && baseMemberSha256 !== savedMemberSha256)) {
     fail(`foreign_writer_conflict for ${member}`);
   }
-  const baseRetryMember = retryMembers(baseIndex.members)[0] ?? null;
-  if (baseRetryMember !== null && baseRetryMember !== member) {
-    fail(`foreign_writer_conflict: ${baseRetryMember} composite retry is active`);
-  }
   const merged = structuredClone(baseIndex);
   merged.members[member] = structuredClone(savedIndex.members[member]);
   merged.current_attempt = structuredClone(savedIndex.current_attempt);
   const mergedRetryMember = retryMembers(merged.members)[0] ?? null;
   if (mergedRetryMember === null) {
     merged.retained_composite = null;
-  } else if (baseRetryMember === member && baseIndex.retained_composite !== null) {
+  } else if (baseIndex.retained_composite !== null) {
+    // Preserve the original all-fresh checkpoint across healthy updates from
+    // other members while the retrying member stays on LKG.
     merged.retained_composite = structuredClone(baseIndex.retained_composite);
   } else {
     merged.retained_composite = structuredClone(baseIndex.active_composite);
