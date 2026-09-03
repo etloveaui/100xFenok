@@ -2,14 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import TickerChip from "@/components/TickerChip";
-import TransitionLink from "@/components/TransitionLink";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { ROUTES } from "@/lib/routes";
-import { EmptyState, Skeleton, useDelayedLoading } from "@/components/ui";
-import { EVENTS_STALE_LABEL, eventStaleSuffix, isEventBoardStale } from "@/lib/market-events/freshness";
+import { EmptyState } from "@/components/ui";
+import { EVENTS_STALE_LABEL, isEventBoardStale } from "@/lib/market-events/freshness";
 import MarketEventsTimeline from "./MarketEventsTimeline";
-
-type EventTab = "earnings" | "actions" | "ipo" | "movers";
 
 interface SurfaceDoc<T = EventRow> {
   surface?: string;
@@ -91,20 +88,6 @@ const SURFACES: Record<keyof EventData, string> = {
   losersYtd: "market_losers_ytd",
 };
 
-const TABS: Array<{ key: EventTab; label: string }> = [
-  { key: "earnings", label: "어닝" },
-  { key: "actions", label: "기업 이벤트" },
-  { key: "ipo", label: "IPO" },
-  { key: "movers", label: "급등락" },
-];
-
-const EVENT_ACTIONS = [
-  { key: "market", label: "시장", detail: "밸류·구조", href: ROUTES.market },
-  { key: "regime", label: "국면", detail: "종합 판독", href: ROUTES.regime },
-  { key: "sectors", label: "섹터", detail: "업종 지도", href: ROUTES.sectors },
-  { key: "screener", label: "스크리너", detail: "종목 선별", href: ROUTES.screener },
-] as const;
-
 let cache: EventData | null = null;
 let pending: Promise<EventData | null> | null = null;
 
@@ -161,13 +144,6 @@ function numberText(value: unknown): string {
   return text(value);
 }
 
-function countRows(doc: SurfaceDoc | null | undefined): number {
-  const counts = doc?.counts ?? {};
-  const value = counts.records ?? counts.rows;
-  if (typeof value === "number") return value;
-  return rowsOf(doc).length;
-}
-
 function normalizedDate(value: string | null | undefined): string | null {
   const textValue = typeof value === "string" ? value.trim() : "";
   return /^(\d{4}-\d{2}-\d{2})/.exec(textValue)?.[1] ?? null;
@@ -178,17 +154,6 @@ function completeDateFloor(values: Array<string | null | undefined>): string | n
   const dates = values.map(normalizedDate);
   if (dates.some((value) => value === null)) return null;
   return (dates as string[]).sort().at(0) ?? null;
-}
-
-function surfaceTimeLabel(doc: SurfaceDoc | null | undefined): string {
-  const sourceDate = normalizedDate(doc?.source_as_of);
-  const collectedDate = normalizedDate(doc?.fetched_at);
-  const base = sourceDate
-    ? `기준 ${sourceDate}`
-    : collectedDate
-      ? `수집 ${collectedDate}`
-      : "원천 기준일 미제공";
-  return `${base}${eventStaleSuffix(doc)}`;
 }
 
 function eventTimeLabel(data: EventData | null): string {
@@ -218,11 +183,6 @@ function eventSortFromParam(value: string | null | undefined): EventSort {
 function eventRangeFromParam(value: string | null | undefined): EventDateRange {
   if (value === "7" || value === "14" || value === "30") return value;
   return "all";
-}
-
-function eventTabFromParam(value: string | null | undefined): EventTab {
-  if (value === "actions" || value === "ipo" || value === "movers") return value;
-  return "earnings";
 }
 
 function rowSymbol(row: EventRow): string {
@@ -259,24 +219,11 @@ function rowTitle(title: string, symbol?: string) {
   );
 }
 
-function makeRow(row: EventRow, title: string, detail: string, value: string, symbol?: string, valueClass = "neutral") {
-  return (
-    <div key={`${symbol ?? "row"}-${title}-${detail}`} className="mv-row">
-      <span className="co">
-        <div className="n">{rowTitle(title, symbol)}</div>
-        <div className="tk">{detail}</div>
-      </span>
-      <span className={`pc num ${valueClass}`}>{value}</span>
-    </div>
-  );
-}
-
 function EmptyRows({ label }: { label: string }) {
   return <EmptyState reason={label} nextRefresh="다음 갱신 시" />;
 }
 
 export default function MarketEventsClient({
-  initialTab,
   initialQuery,
   initialSection,
   initialRange,
@@ -286,7 +233,6 @@ export default function MarketEventsClient({
 }: MarketEventsClientProps) {
   const [data, setData] = useState<EventData | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [tab, setTab] = useState<EventTab>(eventTabFromParam(initialTab));
   const [query, setQuery] = useState((initialQuery ?? "").trim());
   const [sort, setSort] = useState<EventSort>(eventSortFromParam(initialSort));
   const [sectionFilter, setSectionFilter] = useState(initialSection && initialSection.trim() ? initialSection.trim() : "전체");
@@ -294,6 +240,13 @@ export default function MarketEventsClient({
   const [fromDate, setFromDate] = useState(validDateInput(initialFrom));
   const [toDate, setToDate] = useState(validDateInput(initialTo));
   const [resultLimit, setResultLimit] = useState(40);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const reload = useCallback(() => {
+    cache = null;
+    pending = null;
+    setReloadKey((key) => key + 1);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -306,15 +259,8 @@ export default function MarketEventsClient({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
-  const tabCounts = useMemo(() => ({
-    earnings: countRows(data?.earnings),
-    actions: countRows(data?.actions) + countRows(data?.splits),
-    ipo: countRows(data?.ipoCalendar) + countRows(data?.ipoRecent) + countRows(data?.ipoFilings) + countRows(data?.ipoStats) + countRows(data?.ipoWithdrawn),
-    movers: countRows(data?.gainers) + countRows(data?.losers) + countRows(data?.active) + countRows(data?.premarket) + countRows(data?.afterhours) + countRows(data?.gainersWeek) + countRows(data?.gainersMonth) + countRows(data?.losersYtd),
-  }), [data]);
-  const totalEventCount = tabCounts.earnings + tabCounts.actions + tabCounts.ipo + tabCounts.movers;
   const boardStale = useMemo(
     () => loaded && isEventBoardStale(data ? Object.values(data) : []),
     [data, loaded],
@@ -363,15 +309,6 @@ export default function MarketEventsClient({
     window.history.replaceState(null, "", `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`);
   }, [dateRange, fromDate, query, sectionFilter, sort, toDate]);
 
-  const syncTab = useCallback((nextTab: EventTab) => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    if (nextTab === "earnings") params.delete("tab");
-    else params.set("tab", nextTab);
-    const queryString = params.toString();
-    window.history.replaceState(null, "", `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`);
-  }, []);
-
   return (
     <div className="data-shell-page" data-market-events-surface="true" data-market-events-route-owner="event-catalyst-center">
       <section className="panel data-shell-header">
@@ -379,71 +316,12 @@ export default function MarketEventsClient({
           <p className="data-shell-kicker">시장 이벤트</p>
           <h1 className="data-shell-title">시장 이벤트</h1>
           <p className="data-shell-desc">
-            어닝, 기업 이벤트, IPO, 급등락을 전용 화면에서 나눠 봅니다.
+            어닝, 배당, IPO 일정을 타임라인에서 보고, 전체 이벤트를 검색합니다.
           </p>
         </div>
         <div className="data-shell-head-actions">
           <span className={`data-shell-pill${loaded ? (boardStale ? " warn" : " ok") : ""}`}><span />{eventTimeLabel(data)}{boardStale ? ` · ${EVENTS_STALE_LABEL}` : ""}</span>
           <MarketSectionNav active="events" />
-        </div>
-      </section>
-
-      <section className="panel" data-market-events-overview="true">
-        <div className="panel-h">
-          <h2>시장 이벤트</h2>
-          <span className="desc">{loaded ? `${totalEventCount.toLocaleString("ko-KR")}개 이벤트` : "확인 중"}</span>
-        </div>
-        <div className="panel-b">
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="시장 이벤트 분류" data-market-events-tabs="true">
-            {TABS.map((item) => {
-              const selected = tab === item.key;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={selected}
-                  data-market-event-tab={item.key}
-                  onClick={() => {
-                    setTab(item.key);
-                    syncTab(item.key);
-                  }}
-                  className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-[11px] font-black transition ${
-                    selected
-                      ? "border-brand-interactive bg-brand-interactive text-white shadow-sm"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-brand-interactive hover:text-brand-interactive"
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  <span className={selected ? "text-white/80" : "text-slate-500"}>{tabCounts[item.key].toLocaleString("ko-KR")}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[12px] font-bold text-[var(--c-ink-3)]">
-            <span>산업 지도와 섹터별 구성종목은 섹터 화면에서 봅니다.</span>
-            <TransitionLink href={ROUTES.sectors} className="font-black text-brand-interactive hover:underline">
-              섹터로 이동
-            </TransitionLink>
-          </div>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4" data-market-events-action-rail="true">
-            {EVENT_ACTIONS.map((action, index) => (
-              <TransitionLink
-                key={action.key}
-                href={action.href}
-                className="group flex min-h-14 min-w-0 items-center gap-3 rounded-[1rem] border border-[var(--c-line)] bg-white px-3 py-3 text-left transition hover:border-[var(--c-brand)] hover:bg-[var(--c-surface-2)]"
-                data-market-events-action={action.key}
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--c-line)] bg-[var(--c-surface)] text-xs font-black text-[var(--c-ink)] group-hover:border-[var(--c-brand)] group-hover:text-[var(--c-brand)]">
-                  {index + 1}
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-black text-[var(--c-ink)]">{action.label}</span>
-                  <span className="block text-xs font-semibold leading-5 text-[var(--c-ink-3)]">{action.detail}</span>
-                </span>
-              </TransitionLink>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -454,18 +332,8 @@ export default function MarketEventsClient({
           actions={data?.actions ?? null}
           splits={data?.splits ?? null}
           ipoCalendar={data?.ipoCalendar ?? null}
+          onRetry={reload}
         />
-      </div>
-
-      <div style={{ marginTop: "var(--s4)" }}>
-        {!loaded ? (
-          <LoadingPanel />
-        ) : (
-          <TabPanel
-            tab={tab}
-            data={data}
-          />
-        )}
       </div>
 
       <div style={{ marginTop: "var(--s4)" }}>
@@ -492,29 +360,6 @@ export default function MarketEventsClient({
       </div>
     </div>
   );
-}
-
-function LoadingPanel() {
-  const show = useDelayedLoading(true, 120);
-  if (!show) return null;
-  return (
-    <section className="panel">
-      <Skeleton />
-    </section>
-  );
-}
-
-function TabPanel({
-  tab,
-  data,
-}: {
-  tab: EventTab;
-  data: EventData | null;
-}) {
-  if (tab === "earnings") return <EarningsPanel data={data} />;
-  if (tab === "actions") return <ActionsPanel data={data} />;
-  if (tab === "ipo") return <IpoPanel data={data} />;
-  return <MoversPanel data={data} />;
 }
 
 function rowDate(row: EventRow): string {
@@ -924,165 +769,5 @@ function EventDrilldown({
         </div>
       ) : null}
     </section>
-  );
-}
-
-function EarningsPanel({ data }: { data: EventData | null }) {
-  const today = todayIso();
-  const rows = rowsOf(data?.earnings)
-    .filter((row) => text(row.date) >= today)
-    .slice(0, 30);
-  return (
-    <section className="panel">
-      <div className="panel-h">
-        <h2>다가오는 어닝</h2>
-        <span className="desc">{surfaceTimeLabel(data?.earnings)} · {countRows(data?.earnings).toLocaleString("ko-KR")}개</span>
-      </div>
-      <div className="mv-col">
-        {rows.length ? rows.map((row) => {
-          const symbol = rowSymbol(row);
-          const timing = text(row.timing).toUpperCase();
-          const detail = `${dateText(row.date)} · ${timing} · EPS ${numberText(row.eps_estimate)} · 매출 ${numberText(row.revenue_estimate)}`;
-          return makeRow(row, `${symbol} · ${text(row.name)}`, detail, numberText(row.market_cap), symbol || undefined);
-        }) : <EmptyRows label="오늘 이후 어닝 일정이 없습니다." />}
-      </div>
-    </section>
-  );
-}
-
-function ActionsPanel({ data }: { data: EventData | null }) {
-  const recent = rowsOf(data?.actions).slice(0, 20);
-  const splits = rowsOf(data?.splits).slice(0, 10);
-  return (
-    <div className="grid gap-4 xl:grid-cols-[1fr_0.85fr]">
-      <section className="panel">
-        <div className="panel-h">
-          <h2>최근 기업 이벤트</h2>
-          <span className="desc">{surfaceTimeLabel(data?.actions)} · {countRows(data?.actions).toLocaleString("ko-KR")}개</span>
-        </div>
-        <div className="mv-col">
-          {recent.length ? recent.map((row) => {
-            const symbol = rowSymbol(row);
-            return makeRow(row, `${symbol} · ${text(row.name)}`, `${dateText(row.date)} · ${text(row.type)} · ${text(row.text)}`, text(row.other), symbol || undefined);
-          }) : <EmptyRows label="최근 기업 이벤트가 없습니다." />}
-        </div>
-      </section>
-      <section className="panel">
-        <div className="panel-h">
-          <h2>분할·병합</h2>
-          <span className="desc">{countRows(data?.splits).toLocaleString("ko-KR")}개</span>
-        </div>
-        <div className="mv-col">
-          {splits.length ? splits.map((row) => {
-            const symbol = rowSymbol(row);
-            return makeRow(row, `${symbol} · ${text(row.company_name)}`, `${dateText(row.date)} · ${text(row.type)}`, text(row.split_ratio), symbol || undefined);
-          }) : <EmptyRows label="표시할 분할·병합 항목이 없습니다." />}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function IpoPanel({ data }: { data: EventData | null }) {
-  const calendar = rowsOf(data?.ipoCalendar).slice(0, 12);
-  const recent = rowsOf(data?.ipoRecent).slice(0, 10);
-  const filings = rowsOf(data?.ipoFilings).slice(0, 10);
-  const stats = rowsOf(data?.ipoStats).slice(0, 8);
-  const withdrawn = rowsOf(data?.ipoWithdrawn).slice(0, 6);
-  return (
-    <div className="grid gap-4 xl:grid-cols-2">
-      <section className="panel">
-        <div className="panel-h">
-          <h2>예정 IPO</h2>
-          <span className="desc">{surfaceTimeLabel(data?.ipoCalendar)} · {countRows(data?.ipoCalendar).toLocaleString("ko-KR")}개</span>
-        </div>
-        <div className="mv-col">
-          {calendar.length ? calendar.map((row) => (
-            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.ipo_date)} · ${text(row.exchange)} · ${text(row.price_range)}`, text(row.deal_size), rowSymbol(row) || undefined)
-          )) : <EmptyRows label="예정 IPO가 없습니다." />}
-        </div>
-      </section>
-      <section className="panel">
-        <div className="panel-h">
-          <h2>최근 상장 성과</h2>
-          <span className="desc">{countRows(data?.ipoRecent).toLocaleString("ko-KR")}개</span>
-        </div>
-        <div className="mv-col">
-          {recent.length ? recent.map((row) => (
-            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.ipo_date)} · 공모가 ${text(row.ipo_price)} · 현재 ${text(row.current)}`, text(row.return), rowSymbol(row) || undefined, pctClass(row.return))
-          )) : <EmptyRows label="최근 상장 성과가 없습니다." />}
-        </div>
-      </section>
-      <section className="panel">
-        <div className="panel-h">
-          <h2>신규 신청</h2>
-          <span className="desc">{countRows(data?.ipoFilings).toLocaleString("ko-KR")}개</span>
-        </div>
-        <div className="mv-col">
-          {filings.length ? filings.map((row) => (
-            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.filing_date)} · ${text(row.price_range)}`, text(row.shares_offered), rowSymbol(row) || undefined)
-          )) : <EmptyRows label="신규 신청 목록이 없습니다." />}
-        </div>
-      </section>
-      <section className="panel">
-        <div className="panel-h">
-          <h2>IPO 활동</h2>
-          <span className="desc">{surfaceTimeLabel(data?.ipoStats)} · {countRows(data?.ipoStats).toLocaleString("ko-KR")}개</span>
-        </div>
-        <div className="mv-col">
-          {stats.length ? stats.map((row) => {
-            const symbol = rowSymbol(row);
-            return makeRow(row, `${symbol} · ${text(row.name)}`, "최근 IPO 통계에 포함된 상장", dateText(row.date), symbol || undefined);
-          }) : <EmptyRows label="IPO 활동 데이터가 없습니다." />}
-        </div>
-      </section>
-      <section className="panel">
-        <div className="panel-h">
-          <h2>철회</h2>
-          <span className="desc">{countRows(data?.ipoWithdrawn).toLocaleString("ko-KR")}개</span>
-        </div>
-        <div className="mv-col">
-          {withdrawn.length ? withdrawn.map((row) => (
-            makeRow(row, `${rowSymbol(row)} · ${text(row.company_name)}`, `${dateText(row.withdrawn_date)} · ${text(row.price_range)}`, text(row.shares_offered), rowSymbol(row) || undefined)
-          )) : <EmptyRows label="철회 목록이 없습니다." />}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function MoversPanel({ data }: { data: EventData | null }) {
-  const groups = [
-    { title: "당일 상승", doc: data?.gainers, rows: rowsOf(data?.gainers).slice(0, 10), valueKey: "pct_change" },
-    { title: "당일 하락", doc: data?.losers, rows: rowsOf(data?.losers).slice(0, 10), valueKey: "pct_change" },
-    { title: "거래량", doc: data?.active, rows: rowsOf(data?.active).slice(0, 10), valueKey: "pct_change" },
-    { title: "장전 거래", doc: data?.premarket, rows: rowsOf(data?.premarket).slice(0, 8), valueKey: "pct_change", priceKeys: ["premkt_price", "stock_price"], volumeKeys: ["pre_volume", "volume"] },
-    { title: "장 마감 후", doc: data?.afterhours, rows: rowsOf(data?.afterhours).slice(0, 8), valueKey: "pct_change", priceKeys: ["afterhr_price", "stock_price"], volumeKeys: ["volume"], extraKeys: ["afterhr_close"] },
-    { title: "이번 주 상승", doc: data?.gainersWeek, rows: rowsOf(data?.gainersWeek).slice(0, 8), valueKey: "change_1w" },
-    { title: "한 달 상승", doc: data?.gainersMonth, rows: rowsOf(data?.gainersMonth).slice(0, 8), valueKey: "change_1m" },
-    { title: "연초 이후 하락", doc: data?.losersYtd, rows: rowsOf(data?.losersYtd).slice(0, 8), valueKey: "change_ytd" },
-  ];
-  return (
-    <div className="grid gap-4 xl:grid-cols-2">
-      {groups.map((group) => (
-        <section key={group.title} className="panel">
-          <div className="panel-h">
-            <h2>{group.title}</h2>
-            <span className="desc">{surfaceTimeLabel(group.doc)} · {countRows(group.doc).toLocaleString("ko-KR")}개</span>
-          </div>
-          <div className="mv-col">
-            {group.rows.length ? group.rows.map((row) => {
-              const symbol = rowSymbol(row);
-              const value = text(row[group.valueKey]);
-              const price = firstText(row, group.priceKeys ?? ["stock_price"]);
-              const volume = firstText(row, group.volumeKeys ?? ["volume"]);
-              const extra = firstText(row, group.extraKeys ?? []);
-              const activity = extra !== "-" ? `기준가 ${extra}` : `거래량 ${volume}`;
-              return makeRow(row, `${symbol} · ${text(row.company_name)}`, `가격 ${price} · ${activity} · 시총 ${text(row.market_cap)}`, value, symbol || undefined, pctClass(value));
-            }) : <EmptyRows label={`${group.title} 데이터가 없습니다.`} />}
-          </div>
-        </section>
-      ))}
-    </div>
   );
 }

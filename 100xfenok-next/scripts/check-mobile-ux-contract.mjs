@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors,/superinvestors?guru=blackrock")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-console,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors?tab=insights,/superinvestors?tab=gurus&guru=blackrock,/superinvestors?tab=by-ticker&ticker=NVDA,/superinvestors?tab=trades")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -2048,20 +2048,14 @@ async function collectRouteChecks(page, route) {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const overview = document.querySelector("[data-market-events-overview]");
-      const tabs = Array.from(document.querySelectorAll("[data-market-event-tab]"))
+      const timeline = document.querySelector("[data-market-events-timeline]");
+      const lanes = Array.from(document.querySelectorAll("[data-timeline-lane]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
       const drilldown = document.querySelector("[data-market-events-drilldown]");
       const drilldownRows = Array.from(document.querySelectorAll("[data-market-events-drilldown-row]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
-      const actionRail = document.querySelector("[data-market-events-action-rail]");
-      const actionLinks = Array.from(document.querySelectorAll("[data-market-events-action]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
@@ -2108,66 +2102,21 @@ async function collectRouteChecks(page, route) {
         }
       });
 
-      if (!overview || overview.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "market-events-overview-visible", detail: "missing events overview panel" });
-      }
-      if (!actionRail || actionRail.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "market-events-action-rail-visible", detail: "missing events action rail" });
+      if (!timeline || timeline.getBoundingClientRect().height <= 0) {
+        failures.push({ check: "market-events-timeline-visible", detail: "missing events timeline" });
       }
 
-      const expectedActions = [
-        { key: "market", path: "/market-valuation" },
-        { key: "regime", path: "/regime" },
-        { key: "sectors", path: "/sectors" },
-        { key: "screener", path: "/screener" },
-      ];
-      const actualActions = actionLinks.map((node) => node.getAttribute("data-market-events-action"));
+      const expectedLanes = ["earnings", "dividend", "macro-us", "macro-kr", "data-refresh", "options-expiry", "ipoCalendar"];
+      const actualLanes = lanes.map((node) => node.getAttribute("data-timeline-lane"));
       if (
-        actionLinks.length !== expectedActions.length ||
-        !expectedActions.every((action, index) => actualActions[index] === action.key)
+        lanes.length !== expectedLanes.length ||
+        !expectedLanes.every((key, index) => actualLanes[index] === key)
       ) {
         failures.push({
-          check: "market-events-action-order",
-          detail: `actual=${JSON.stringify(actualActions)} expected=${JSON.stringify(expectedActions.map((action) => action.key))}`,
+          check: "market-events-lane-order",
+          detail: `actual=${JSON.stringify(actualLanes)} expected=${JSON.stringify(expectedLanes)}`,
         });
       }
-      actionLinks.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        const href = node.getAttribute("href") || "";
-        const expectedPath = expectedActions[index]?.path;
-        const actualPath = href ? new URL(href, window.location.origin).pathname.replace(/\/$/, "") || "/" : "";
-        if (rect.height < 44) {
-          failures.push({ check: "market-events-action-touch-target", detail: `action ${index} height=${Math.round(rect.height)}` });
-        }
-        if (expectedPath && actualPath !== expectedPath) {
-          failures.push({ check: "market-events-action-href", detail: `action ${index} href=${href} expected=${expectedPath}` });
-        }
-      });
-
-      const expectedTabs = ["earnings", "actions", "ipo", "movers"];
-      const actualTabs = tabs.map((node) => node.getAttribute("data-market-event-tab"));
-      if (
-        tabs.length !== expectedTabs.length ||
-        !expectedTabs.every((key, index) => actualTabs[index] === key)
-      ) {
-        failures.push({
-          check: "market-events-tab-order",
-          detail: `actual=${JSON.stringify(actualTabs)} expected=${JSON.stringify(expectedTabs)}`,
-        });
-      }
-      const selectedTab = tabs.find((node) => node.getAttribute("aria-selected") === "true");
-      if (selectedTab?.getAttribute("data-market-event-tab") !== "earnings") {
-        failures.push({
-          check: "market-events-default-tab",
-          detail: `selected=${selectedTab?.getAttribute("data-market-event-tab") || ""}`,
-        });
-      }
-      tabs.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({ check: "market-events-tab-target", detail: `tab ${index} height=${Math.round(rect.height)}` });
-        }
-      });
 
       if (!drilldown || drilldown.getBoundingClientRect().height <= 0) {
         failures.push({ check: "market-events-drilldown-visible", detail: "missing drilldown panel" });
