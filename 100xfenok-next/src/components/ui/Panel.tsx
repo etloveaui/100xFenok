@@ -57,6 +57,7 @@ export function Panel({
   if (empty) {
     return (
       <div className={`bg-[#ffffff] border border-[#e2e8f0] rounded-[8px] overflow-hidden transition-colors duration-150 ${className}`}>
+        {children}
         <EmptyState reason={emptyReason} nextRefresh={emptyNextRefresh} actionLabel={emptyActionLabel} onAction={onEmptyAction} />
       </div>
     );

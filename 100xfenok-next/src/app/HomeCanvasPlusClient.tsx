@@ -578,10 +578,11 @@ export default function HomeCanvasPlusClient() {
   const revisionLegOk = projection.sources.revision.status === "available";
   const superLegOk = projection.sources.superinvestor.status === "available";
   const laneFresh = revisionLegOk && superLegOk;
+  const lanePartial = !laneFresh && (revisionLegOk || superLegOk);
   const revisionFileMs = parseFileTimeMs(revisionEvidence.generatedAt ?? revisionEvidence.asOf);
   const revisionOverdue = !revisionLegOk && (revisionFileMs === null || revisionFileMs < lastRevisionRefreshMs(Date.now()));
   const laneDelayed = revisionOverdue;
-  const laneAwaiting = !laneFresh && !laneDelayed;
+  const laneAwaiting = !laneFresh && !lanePartial && !laneDelayed;
   const laneNext = laneAwaiting ? formatNextRefreshLabel(Date.now()) : undefined;
   const changedEmptyMessage = bothSourcesLoading
     ? DATA_STATE_LABELS.pending
@@ -749,7 +750,7 @@ export default function HomeCanvasPlusClient() {
             loading={bothSourcesLoading}
             empty={!anySourceLoading && projection.changed.length === 0}
             emptyReason={changedEmptyMessage}
-            emptyNextRefresh={sourceUnavailable ? undefined : "다음 데이터 수집 주기에 자동 갱신"}
+            emptyNextRefresh="다음 데이터 수집 주기에 자동 갱신"
             stale={!anySourceLoading && laneDelayed && projection.changed.length > 0}
             asOf={revisionClock}
             onRetry={retrySources}
@@ -807,7 +808,7 @@ export default function HomeCanvasPlusClient() {
               })}
             </div>
             <EvidenceRail
-              freshness={laneFresh ? "fresh" : laneDelayed ? "delayed" : "stale"}
+              freshness={laneFresh ? "fresh" : laneDelayed ? "delayed" : lanePartial ? "partial" : "stale"}
               source="리비전 무버 · 13F"
               asOf={revisionClock}
               coverage={`후보 ${revisionEvidence.validCandidateCount + superinvestorEvidence.validCandidateCount}개`}
@@ -847,7 +848,7 @@ export default function HomeCanvasPlusClient() {
               ))}
             </div>
             <EvidenceRail
-              freshness={laneFresh ? "fresh" : laneDelayed ? "delayed" : "stale"}
+              freshness={laneFresh ? "fresh" : laneDelayed ? "delayed" : lanePartial ? "partial" : "stale"}
               source="개인 플래그 · 리비전 · 13F"
               asOf={revisionClock}
               coverage={`확인 대상 ${projection.attention.length}건`}
