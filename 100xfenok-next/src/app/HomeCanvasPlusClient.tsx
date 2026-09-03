@@ -556,18 +556,25 @@ export default function HomeCanvasPlusClient() {
       : sourceUnavailable
         ? "확인 필요"
         : "0";
+  const headerAttentionLabel = projection.attention.length > 0
+    ? `${projection.attention.length}건`
+    : anySourceLoading
+      ? DATA_STATE_LABELS.pending
+      : "0건";
   const retrySources = () => setReloadKey((k) => k + 1);
 
   return (
-    <div className="bg-[#f8fafc]">
-      <div className="flex flex-col gap-3 px-4 pb-20 pt-[14px] md:gap-4 md:px-6 md:pb-8 md:pt-5">
+    <div className="flex flex-col gap-3 md:gap-4">
         <div className="flex items-baseline justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
             <h1 className="m-0 text-[18px] font-semibold text-[#0f172a] md:text-[20px]">오늘 시장의 기준점</h1>
             <span className="text-[13px] text-[#64748b]">
               시장 판독 <b className="font-semibold text-[#334155]">{regime.label}</b>
               {" · "}데이터 <b className="font-semibold text-[#334155]">{dataReady ? "준비됨" : "대기 중"}</b>
-              {" · "}확인 필요 <b className="font-semibold text-[#b9791a]">{failedSources.length}개</b>
+              {" · "}확인 필요 <b className="font-semibold text-[#b9791a]">{headerAttentionLabel}</b>
+              {failedSources.length > 0 && !anySourceLoading
+                ? " · 일부 소스 미수신"
+                : null}
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-2 max-md:hidden">
@@ -674,7 +681,7 @@ export default function HomeCanvasPlusClient() {
                   name={sector.name}
                   value={formatSignedPercentUnit(sector.displayChange * 100, 1)}
                   change={sector.displayChange * 100}
-                  className={i === 0 ? "col-span-1 md:col-span-2" : ""}
+                  className={`${i === 0 ? "col-span-1 md:col-span-2" : ""}${i >= 9 ? " max-md:hidden" : ""}`}
                 />
               ))}
             </div>
@@ -758,6 +765,7 @@ export default function HomeCanvasPlusClient() {
           </Panel>
 
           <Panel
+            className="max-md:hidden"
             loading={bothSourcesLoading}
             empty={!anySourceLoading && projection.attention.length === 0}
             emptyReason={attentionEmptyMessage}
@@ -794,7 +802,6 @@ export default function HomeCanvasPlusClient() {
             />
           </Panel>
         </div>
-      </div>
     </div>
   );
 }
