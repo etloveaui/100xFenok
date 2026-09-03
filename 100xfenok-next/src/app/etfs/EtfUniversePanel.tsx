@@ -3,28 +3,42 @@
 import { Bar, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import { formatAsOf } from "@/lib/data-state";
 import { formatInteger } from "@/lib/format";
-import { computeEtfInsights, openEtfEvidence, useEtfSurfaceData } from "./etfSurfaceData";
+import {
+  computeEtfInsights,
+  etfUniverseAsOf,
+  isEtfClockStale,
+  openEtfEvidence,
+  type EtfSurfaceData,
+} from "./etfSurfaceData";
 
-export default function EtfUniversePanel() {
-  const { loaded, failed, rows, snapshot, reload } = useEtfSurfaceData();
-  const insights = loaded && !failed ? computeEtfInsights(rows, snapshot, null) : null;
+export default function EtfUniversePanel({ surface }: { surface: EtfSurfaceData }) {
+  const { loaded, universeOk, rows, snapshot, reload } = surface;
+  // Universe composition is universe-feed truth: a failed universe feed empties
+  // the panel even when the snapshot feed is fine (fh-681 P1).
+  const insights = loaded && universeOk ? computeEtfInsights(rows, snapshot, null) : null;
   const loading = !loaded;
-  const empty = loaded && (failed || !insights);
+  const empty = loaded && !insights;
+  const feedFailed = loaded && !universeOk;
+  const clock = etfUniverseAsOf(surface.universe);
+  const stale = loaded && !!insights && isEtfClockStale(clock);
 
   const compositionSummary = (insights?.compositionBuckets ?? [])
     .filter((bucket) => bucket.count > 0)
     .map((bucket) => `${bucket.label} ${bucket.pct}%`)
     .join(" · ");
-  const asOfLabel = formatAsOf(insights?.asOf ?? null) ?? "제공자 미공개";
+  const asOfLabel = formatAsOf(clock) ?? "제공자 미공개";
 
   return (
     <Panel
       loading={loading}
       empty={empty}
-      emptyReason={failed ? "ETF 시장 개요를 불러오지 못했습니다" : "표시할 ETF 시장 데이터가 없습니다"}
+      emptyReason={feedFailed ? "ETF 시장 개요를 불러오지 못했습니다" : "표시할 ETF 시장 데이터가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
-      emptyActionLabel={failed ? "다시 시도" : undefined}
-      onEmptyAction={failed ? reload : undefined}
+      emptyActionLabel={feedFailed ? "다시 시도" : undefined}
+      onEmptyAction={feedFailed ? reload : undefined}
+      stale={stale}
+      asOf={clock ?? undefined}
+      onRetry={stale ? reload : undefined}
     >
       <PanelHeader
         eyebrow="Universe"
@@ -61,12 +75,13 @@ export default function EtfUniversePanel() {
         </div>
       ) : null}
       <EvidenceRail
-        freshness={loading ? "pending" : failed ? "error" : insights?.asOf ? "fresh" : "fixed"}
+        freshness={loading ? "pending" : feedFailed ? "error" : stale ? "stale" : clock ? "fresh" : "fixed"}
         source="ETF 발행사 목록"
         asOf={asOfLabel}
         coverage={insights ? `${formatInteger(insights.totalCount)}개 전량` : "—"}
-        onRetry={failed ? reload : undefined}
-        onEvidence={failed ? undefined : () => openEtfEvidence("/api/data/stockanalysis/etf-universe")}
+        lkgAsOf={stale && clock ? clock : undefined}
+        onRetry={feedFailed || stale ? reload : undefined}
+        onEvidence={feedFailed ? undefined : () => openEtfEvidence("/api/data/stockanalysis/etf-universe")}
       />
     </Panel>
   );

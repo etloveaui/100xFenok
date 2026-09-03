@@ -35,6 +35,9 @@ export default function EtfToolsPanel() {
           </TransitionLink>
         ))}
       </div>
+      {/* Intentional deviation (fh-681 P2): no onEvidence — this rail describes
+          static route links, not a backing data document, so there is no
+          evidence destination to open. freshness="fixed" marks it as such. */}
       <EvidenceRail freshness="fixed" source="ETF 센터 라우팅" asOf="—" coverage={`${TOOL_LINKS.length}개 도구`} />
     </Panel>
   );

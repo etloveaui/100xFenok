@@ -1,24 +1,36 @@
 "use client";
 
-import { Pill } from "@/components/ui";
+import { EvidenceRail, Pill, Skeleton, StaleState } from "@/components/ui";
 import { formatAsOf } from "@/lib/data-state";
 import { formatInteger } from "@/lib/format";
-import { computeEtfInsights, useEtfSurfaceData } from "./etfSurfaceData";
+import {
+  computeEtfInsights,
+  isEtfClockStale,
+  openEtfEvidence,
+  type EtfSurfaceData,
+} from "./etfSurfaceData";
 
-export default function EtfHeroPanel() {
-  const { loaded, failed, rows, snapshot, reload } = useEtfSurfaceData();
-  const insights = loaded && !failed ? computeEtfInsights(rows, snapshot, null) : null;
+export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
+  const { loaded, universeOk, snapshotOk, rows, snapshot, reload } = surface;
+  // The verdict blends both feeds (universe counts + snapshot leaders), so a
+  // partial pair never renders: one failed feed empties the hero (fh-681 P1).
+  const ready = loaded && universeOk && snapshotOk;
+  const insights = ready ? computeEtfInsights(rows, snapshot, null) : null;
+  const loading = !loaded;
+  const empty = loaded && !insights;
+  const stale = loaded && !!insights && isEtfClockStale(insights.asOf);
+  const asOfLabel = formatAsOf(insights?.asOf ?? null) ?? "제공자 미공개";
 
-  if (!loaded) {
+  if (loading) {
     return (
       <div className="etf-hero" aria-busy="true">
         <span className="etf-eyebrow">ETF · 시장 스냅샷</span>
-        <p className="etf-hero-loading">ETF 시장 현황을 계산하는 중입니다.</p>
+        <Skeleton />
       </div>
     );
   }
 
-  if (failed || !insights) {
+  if (empty || !insights) {
     return (
       <div className="etf-hero">
         <span className="etf-eyebrow">ETF · 시장 스냅샷</span>
@@ -28,14 +40,22 @@ export default function EtfHeroPanel() {
             다시 시도
           </button>
         </p>
+        <EvidenceRail
+          freshness="error"
+          source="ETF 발행사 목록 · 거래소"
+          asOf="—"
+          coverage="—"
+          onRetry={reload}
+        />
       </div>
     );
   }
 
-  const { dominantBucket, leverageInversePct, newCount, topMoversCount, topMoversLeverageInverseCount, totalCount, asOf, asOfReason } = insights;
+  const { dominantBucket, leverageInversePct, newCount, topMoversCount, topMoversLeverageInverseCount, totalCount, asOf } = insights;
 
   return (
     <div className="etf-hero">
+      {stale ? <StaleState asOf={asOfLabel} onRetry={reload} /> : null}
       <div className="etf-hero-top">
         <div className="etf-hero-title-block">
           <div className="etf-hero-eyebrow-row">
@@ -53,8 +73,17 @@ export default function EtfHeroPanel() {
             기준이며 자금 유입·유출액은 포함하지 않습니다.
           </span>
         </div>
-        <Pill>기준일 {formatAsOf(asOf) ?? (asOfReason ? "제공자 미공개" : "미확인")}</Pill>
+        <Pill>기준일 {formatAsOf(asOf) ?? (insights.asOfReason ? "제공자 미공개" : "미확인")}</Pill>
       </div>
+      <EvidenceRail
+        freshness={stale ? "stale" : insights.asOf ? "fresh" : "fixed"}
+        source="ETF 발행사 목록 · 거래소"
+        asOf={asOfLabel}
+        coverage={`${formatInteger(totalCount)}개 전량`}
+        lkgAsOf={stale && asOf ? asOf : undefined}
+        onRetry={stale ? reload : undefined}
+        onEvidence={() => openEtfEvidence("/api/data/stockanalysis/etf-universe")}
+      />
     </div>
   );
 }

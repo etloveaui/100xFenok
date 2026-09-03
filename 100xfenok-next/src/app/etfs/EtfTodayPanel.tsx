@@ -5,7 +5,15 @@ import { EvidenceRail, Panel, PanelHeader } from "@/components/ui";
 import { formatAsOf } from "@/lib/data-state";
 import { formatInteger } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
-import { computeEtfInsights, fmtSignedPct, fmtVolumeCompact, openEtfEvidence, useEtfSurfaceData } from "./etfSurfaceData";
+import {
+  computeEtfInsights,
+  etfSnapshotAsOf,
+  fmtSignedPct,
+  fmtVolumeCompact,
+  isEtfClockStale,
+  openEtfEvidence,
+  type EtfSurfaceData,
+} from "./etfSurfaceData";
 
 function TodayMoverLink({ ticker, valueLabel, valueClassName }: { ticker?: string; valueLabel: string; valueClassName?: string }) {
   if (!ticker) return null;
@@ -17,25 +25,34 @@ function TodayMoverLink({ ticker, valueLabel, valueClassName }: { ticker?: strin
   );
 }
 
-export default function EtfTodayPanel() {
-  const { loaded, failed, rows, snapshot, reload } = useEtfSurfaceData();
-  const insights = loaded && !failed ? computeEtfInsights(rows, snapshot, null) : null;
+export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) {
+  const { loaded, snapshotOk, rows, snapshot, reload } = surface;
+  // Today leaders + new listings are snapshot-feed truth: a failed snapshot
+  // feed empties the panel even when the universe feed is fine, so a blank
+  // leader board is never promoted to full fresh (fh-681 P1).
+  const insights = loaded && snapshotOk ? computeEtfInsights(rows, snapshot, null) : null;
   const loading = !loaded;
-  const empty = loaded && (failed || !insights);
+  const empty = loaded && !insights;
+  const feedFailed = loaded && !snapshotOk;
+  const clock = etfSnapshotAsOf(snapshot);
+  const stale = loaded && !!insights && isEtfClockStale(clock);
 
   const newPreview = snapshot?.newEtfs?.records?.slice(0, 3) ?? [];
   const volumeLeaders = insights?.volumeLeadersTop3 ?? [];
   const changeLeaders = insights?.changeLeadersTop3 ?? [];
-  const asOfLabel = formatAsOf(insights?.asOf ?? null) ?? "제공자 미공개";
+  const asOfLabel = formatAsOf(clock) ?? "제공자 미공개";
 
   return (
     <Panel
       loading={loading}
       empty={empty}
-      emptyReason={failed ? "오늘의 ETF 신호를 불러오지 못했습니다" : "표시할 오늘의 ETF 신호가 없습니다"}
+      emptyReason={feedFailed ? "오늘의 ETF 신호를 불러오지 못했습니다" : "표시할 오늘의 ETF 신호가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
-      emptyActionLabel={failed ? "다시 시도" : undefined}
-      onEmptyAction={failed ? reload : undefined}
+      emptyActionLabel={feedFailed ? "다시 시도" : undefined}
+      onEmptyAction={feedFailed ? reload : undefined}
+      stale={stale}
+      asOf={clock ?? undefined}
+      onRetry={stale ? reload : undefined}
     >
       <PanelHeader
         eyebrow="Today"
@@ -101,12 +118,13 @@ export default function EtfTodayPanel() {
         </div>
       ) : null}
       <EvidenceRail
-        freshness={loading ? "pending" : failed ? "error" : "fresh"}
+        freshness={loading ? "pending" : feedFailed ? "error" : stale ? "stale" : clock ? "fresh" : "fixed"}
         source="거래소 · 발행사 공시"
         asOf={asOfLabel}
         coverage={insights ? `${formatInteger(insights.totalCount)}개 전량` : "—"}
-        onRetry={failed ? reload : undefined}
-        onEvidence={failed ? undefined : () => openEtfEvidence("/api/data/stockanalysis/etf-snapshot")}
+        lkgAsOf={stale && clock ? clock : undefined}
+        onRetry={feedFailed || stale ? reload : undefined}
+        onEvidence={feedFailed ? undefined : () => openEtfEvidence("/api/data/stockanalysis/etf-snapshot")}
       />
     </Panel>
   );

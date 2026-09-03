@@ -13,11 +13,12 @@ import {
   type EtfUniverseRecord,
 } from "@/app/explore/etfUniverseUtils";
 import { formatCompactNumber, formatCurrency, formatInteger } from "@/lib/format";
+import { isStaleAsOf, latestAsOf } from "@/lib/data-state";
 import { useEffect, useState } from "react";
 
 export type { EtfUniverseRecord } from "@/app/explore/etfUniverseUtils";
 
-interface EtfUniverseDoc {
+export interface EtfUniverseDoc {
   generated_at?: string | null;
   screener_fetched_at?: string | null;
   source_as_of?: string | null;
@@ -341,9 +342,33 @@ export function digitalTickersFromSnapshot(snapshot: EtfSnapshotDoc | null): Set
   );
 }
 
+export function etfUniverseAsOf(universe: EtfUniverseDoc | null): string | null {
+  const asOf = universe?.source_as_of;
+  return typeof asOf === "string" && asOf.length >= 10 ? asOf.slice(0, 10) : null;
+}
+
+export function etfSnapshotAsOf(snapshot: EtfSnapshotDoc | null): string | null {
+  if (!snapshot) return null;
+  return latestAsOf([
+    snapshot.screener?.source_as_of ?? snapshot.source_as_of,
+    snapshot.newEtfs?.source_as_of ?? snapshot.source_as_of,
+    snapshot.bitcoin?.source_as_of ?? snapshot.source_as_of,
+  ]);
+}
+
+export function isEtfClockStale(asOf: string | null): boolean {
+  return isStaleAsOf(asOf);
+}
+
 export interface EtfSurfaceData {
   loaded: boolean;
+  /** both feeds failed — page-level fatal */
   failed: boolean;
+  /** etf-universe feed settled with a document */
+  universeOk: boolean;
+  /** etf-snapshot feed settled with a document */
+  snapshotOk: boolean;
+  universe: EtfUniverseDoc | null;
   rows: EtfUniverseRecord[];
   snapshot: EtfSnapshotDoc | null;
   reload: () => void;
@@ -351,10 +376,9 @@ export interface EtfSurfaceData {
 
 export function useEtfSurfaceData(): EtfSurfaceData {
   const [reloadKey, setReloadKey] = useState(0);
-  const [state, setState] = useState<{ loaded: boolean; failed: boolean; rows: EtfUniverseRecord[]; snapshot: EtfSnapshotDoc | null }>({
+  const [state, setState] = useState<{ loaded: boolean; universe: EtfUniverseDoc | null; snapshot: EtfSnapshotDoc | null }>({
     loaded: false,
-    failed: false,
-    rows: [],
+    universe: null,
     snapshot: null,
   });
 
@@ -362,21 +386,25 @@ export function useEtfSurfaceData(): EtfSurfaceData {
     let cancelled = false;
     Promise.all([loadEtfUniverse(), loadEtfSnapshot()]).then(([universe, snapshot]) => {
       if (cancelled) return;
-      if (!universe && !snapshot) {
-        setState({ loaded: true, failed: true, rows: [], snapshot: null });
-        return;
-      }
-      setState({ loaded: true, failed: false, rows: normalizeUniverseRows(universe, snapshot), snapshot });
+      // Overwrite only on settle: a retry in flight keeps the previous pair
+      // visible (LKG) instead of flashing every dependent panel to pending.
+      setState({ loaded: true, universe, snapshot });
     });
     return () => {
       cancelled = true;
     };
   }, [reloadKey]);
 
+  const universeOk = state.universe !== null;
+  const snapshotOk = state.snapshot !== null;
+
   return {
     loaded: state.loaded,
-    failed: state.failed,
-    rows: state.rows,
+    failed: state.loaded && !universeOk && !snapshotOk,
+    universeOk,
+    snapshotOk,
+    universe: state.universe,
+    rows: state.loaded ? normalizeUniverseRows(state.universe, state.snapshot) : [],
     snapshot: state.snapshot,
     reload: () => {
       clearEtfSurfaceCaches();

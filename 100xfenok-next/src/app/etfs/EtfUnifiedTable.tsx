@@ -13,17 +13,16 @@ import { formatAsOf } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 import { formatInteger, formatPlainPercent } from "@/lib/format";
 import {
-  clearEtfSurfaceCaches,
   digitalTickersFromSnapshot,
+  etfUniverseAsOf,
   fmtSignedPct,
+  isEtfClockStale,
   isInverseEtf,
   isLeveragedEtf,
   isSingleStockLeveragedEtf,
   issuerNameFromEtfName,
-  loadEtfSnapshot,
-  loadEtfUniverse,
-  normalizeUniverseRows,
   openEtfEvidence,
+  type EtfSurfaceData,
   type EtfUniverseRecord,
 } from "./etfSurfaceData";
 
@@ -138,14 +137,18 @@ function EtfMobileList({
   );
 }
 
-export default function EtfUnifiedTable() {
-  const [reloadKey, setReloadKey] = useState(0);
-  const [loaded, setLoaded] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const [rows, setRows] = useState<EtfUniverseRecord[]>([]);
-  const [digitalTickers, setDigitalTickers] = useState<Set<string>>(new Set());
-  const [asOf, setAsOf] = useState<string | null>(null);
-  const [asOfReason, setAsOfReason] = useState<string | null>(null);
+export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }) {
+  // Page-level store (fh-681 P1): no own loader — rows/snapshot/reload come
+  // from EtfPageClient, so one retry recovers every dependent panel atomically.
+  const { loaded, universeOk, snapshotOk, universe, rows, snapshot, reload } = surface;
+  const digitalTickers = useMemo(() => digitalTickersFromSnapshot(snapshot), [snapshot]);
+  const clock = etfUniverseAsOf(universe);
+  const loading = !loaded;
+  // The list is universe-feed truth; a failed snapshot feed only degrades the
+  // digital-asset segment, so the rail drops to partial instead of fresh.
+  const feedFailed = loaded && !universeOk;
+  const stale = loaded && !feedFailed && isEtfClockStale(clock);
+  const partial = loaded && !feedFailed && !snapshotOk;
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -157,40 +160,11 @@ export default function EtfUnifiedTable() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
-    let cancelled = false;
-    Promise.all([loadEtfUniverse(), loadEtfSnapshot()]).then(([universe, snapshot]) => {
-      if (cancelled) return;
-      if (!universe && !snapshot) {
-        setLoaded(true);
-        setFailed(true);
-        return;
-      }
-      setRows(normalizeUniverseRows(universe, snapshot));
-      setDigitalTickers(digitalTickersFromSnapshot(snapshot));
-      const sourceMetadata = universe as ({ source_as_of?: unknown; source_as_of_reason?: unknown } | null);
-      setAsOf(typeof sourceMetadata?.source_as_of === "string" ? sourceMetadata.source_as_of : null);
-      setAsOfReason(
-        typeof sourceMetadata?.source_as_of_reason === "string"
-          ? sourceMetadata.source_as_of_reason
-          : null,
-      );
-      setLoaded(true);
-      setFailed(false);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadKey]);
-
-  useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedQuery(query), 180);
     return () => window.clearTimeout(timer);
   }, [query]);
 
-  const retryLoad = () => {
-    clearEtfSurfaceCaches();
-    setReloadKey((value) => value + 1);
-  };
+  const retryLoad = reload;
 
   const resetVisibleCount = () => setVisibleCount(PAGE_SIZE);
 
@@ -315,18 +289,20 @@ export default function EtfUnifiedTable() {
     },
   ];
 
-  const loading = !loaded;
-  const empty = loaded && (failed || filteredRows.length === 0);
-  const asOfLabel = formatAsOf(asOf) ?? (asOfReason ? "제공자 미공개" : "—");
+  const empty = loaded && (feedFailed || filteredRows.length === 0);
+  const asOfLabel = formatAsOf(clock) ?? (universe?.source_as_of_reason ? "제공자 미공개" : "—");
 
   return (
     <Panel
       loading={loading}
       empty={empty}
-      emptyReason={failed ? "ETF 목록을 불러오지 못했습니다" : "조건에 맞는 ETF가 없습니다. 필터를 조정해 주세요."}
+      emptyReason={feedFailed ? "ETF 목록을 불러오지 못했습니다" : "조건에 맞는 ETF가 없습니다. 필터를 조정해 주세요."}
       emptyNextRefresh="다음 마감 후 갱신"
-      emptyActionLabel={failed ? "다시 시도" : undefined}
-      onEmptyAction={failed ? retryLoad : undefined}
+      emptyActionLabel={feedFailed ? "다시 시도" : undefined}
+      onEmptyAction={feedFailed ? retryLoad : undefined}
+      stale={stale}
+      asOf={clock ?? undefined}
+      onRetry={stale ? retryLoad : undefined}
     >
       <PanelHeader
         eyebrow="Universe"
@@ -351,7 +327,7 @@ export default function EtfUnifiedTable() {
           </div>
         }
       />
-      {!failed ? (
+      {!feedFailed ? (
         <>
           <div className="etf-list-toolbar">
             <label className="sr-only" htmlFor="etf-search">ETF 검색</label>
@@ -450,12 +426,13 @@ export default function EtfUnifiedTable() {
         </>
       ) : null}
       <EvidenceRail
-        freshness={loading ? "pending" : failed ? "error" : "fresh"}
+        freshness={loading ? "pending" : feedFailed ? "error" : partial ? "partial" : stale ? "stale" : clock ? "fresh" : "fixed"}
         source="발행사 공시 · 거래소"
         asOf={asOfLabel}
         coverage={rows.length > 0 ? `${formatInteger(filteredRows.length)}/${formatInteger(rows.length)}` : "—"}
-        onRetry={failed ? retryLoad : undefined}
-        onEvidence={failed ? undefined : () => openEtfEvidence("/api/data/stockanalysis/etf-universe")}
+        lkgAsOf={stale && clock ? clock : undefined}
+        onRetry={feedFailed || stale ? retryLoad : undefined}
+        onEvidence={feedFailed ? undefined : () => openEtfEvidence("/api/data/stockanalysis/etf-universe")}
       />
     </Panel>
   );
