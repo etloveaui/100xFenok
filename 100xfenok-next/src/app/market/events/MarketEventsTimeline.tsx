@@ -80,7 +80,16 @@ function stockHref(symbol: string): string {
 
 function isoDay(value: string | null | undefined): string | null {
   const raw = typeof value === "string" ? value.trim() : "";
-  return /^(\d{4}-\d{2}-\d{2})/.exec(raw)?.[1] ?? null;
+  const iso = /^(\d{4}-\d{2}-\d{2})/.exec(raw)?.[1] ?? null;
+  if (iso) return iso;
+  // Committed surfaces also use the "Sep 8, 2026" form (actions/IPO tables):
+  // parse with the repo-standard Date.parse, then back to a UTC ISO day.
+  const epoch = Date.parse(raw);
+  if (!Number.isFinite(epoch)) return null;
+  const date = new Date(epoch);
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${date.getUTCFullYear()}-${month}-${day}`;
 }
 
 function localToday(): Date {
@@ -117,31 +126,6 @@ function isDividendRow(row: TimelineRow): boolean {
 
 const LANES: TimelineLaneDef[] = [
   {
-    id: "earnings",
-    label: "실적",
-    sourceLabel: "stockanalysis · earnings_calendar",
-    dark: true,
-    dateKeys: ["date"],
-    emptyReason: "앞으로 4주 실적 일정이 없습니다.",
-    buildSymbol: (row) => rowSymbol(row),
-    buildTitle: (row) => `${rowSymbol(row)} · ${text(row.name)}`,
-    buildChip: (row) => text(row.timing).toUpperCase(),
-    buildHref: (_row, symbol) => (symbol && symbol !== "-" ? stockHref(symbol) : undefined),
-  },
-  {
-    id: "dividend",
-    label: "배당",
-    sourceLabel: "stockanalysis · actions_recent",
-    dark: false,
-    dateKeys: ["date"],
-    emptyReason: "앞으로 4주 배당 일정이 없습니다.",
-    matches: isDividendRow,
-    buildSymbol: (row) => rowSymbol(row),
-    buildTitle: (row) => `${rowSymbol(row)} · ${text(row.name)}`,
-    buildChip: (row) => text(row.type),
-    buildHref: (_row, symbol) => (symbol && symbol !== "-" ? stockHref(symbol) : undefined),
-  },
-  {
     id: "macro-us",
     label: "거시·미국",
     sourceLabel: NO_FEED_SOURCE,
@@ -158,6 +142,32 @@ const LANES: TimelineLaneDef[] = [
     dateKeys: [],
     emptyReason: NO_FEED_REASON,
     noFeed: true,
+  },
+  {
+    id: "earnings",
+    label: "실적",
+    sourceLabel: "stockanalysis · earnings_calendar",
+    dark: true,
+    dateKeys: ["date"],
+    emptyReason: "앞으로 4주 실적 일정이 없습니다.",
+    buildSymbol: (row) => rowSymbol(row),
+    buildTitle: (row) => `${rowSymbol(row)} · ${text(row.name)}`,
+    buildChip: (row) => text(row.timing).toUpperCase(),
+    buildHref: (_row, symbol) => (symbol && symbol !== "-" ? stockHref(symbol) : undefined),
+  },
+  {
+    id: "dividend",
+    label: "배당",
+    sourceLabel: NO_FEED_SOURCE,
+    dark: false,
+    dateKeys: [],
+    emptyReason: NO_FEED_REASON,
+    noFeed: true,
+    matches: isDividendRow,
+    buildSymbol: (row) => rowSymbol(row),
+    buildTitle: (row) => `${rowSymbol(row)} · ${text(row.name)}`,
+    buildChip: (row) => text(row.type),
+    buildHref: (_row, symbol) => (symbol && symbol !== "-" ? stockHref(symbol) : undefined),
   },
   {
     id: "data-refresh",
@@ -244,13 +254,15 @@ function laneAsOf(doc: TimelineDoc | null | undefined): string {
  */
 function laneStages(lane: TimelineLaneDef, doc: TimelineDoc | null | undefined, events: TimelineEvent[]): EvidenceStage[] {
   if (lane.noFeed || !doc || doc.load_failed) return [];
-  const collected = isoDay(doc.source_as_of) ?? isoDay(doc.fetched_at);
+  const sourceDay = isoDay(doc.source_as_of);
+  const collectedDay = isoDay(doc.fetched_at);
+  const at = sourceDay ?? collectedDay;
   const stages: EvidenceStage[] = [
     {
-      stage: "수집",
+      stage: sourceDay ? "원천" : "수집",
       detail: lane.sourceLabel,
-      at: collected,
-      tone: collected ? "ok" : "muted",
+      at,
+      tone: at ? "ok" : "muted",
     },
   ];
   const next = events[0];
@@ -306,7 +318,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
 
   if (!loaded) {
     return (
-      <div data-market-events-timeline="true">
+      <div data-market-events-timeline="true" aria-label="이벤트 타임라인">
         <Panel loading>
           <span aria-hidden="true" />
         </Panel>
@@ -316,7 +328,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
 
   if (!earnings && !actions && !splits && !ipoCalendar) {
     return (
-      <div data-market-events-timeline="true">
+      <div data-market-events-timeline="true" aria-label="이벤트 타임라인">
         <Panel error errorDetail="이벤트 표면을 읽지 못했습니다." onRetry={onRetry} retryLabel="다시 읽기">
           <PanelHeader eyebrow="Timeline Gantt" title="앞으로 4주" />
           <EmptyState reason="이벤트 타임라인을 표시할 수 없습니다" nextRefresh="다음 수집 시 자동 복구됩니다" />
@@ -405,6 +417,8 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
                           <EmptyState
                             reason={lane.emptyReason}
                             nextRefresh="피드 연결 시"
+                            actionLabel="전체 검색으로 이동"
+                            onAction={scrollToDrilldown}
                           />
                         ) : (
                           <EmptyState

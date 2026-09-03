@@ -146,6 +146,10 @@ const RUN_BAR_SLOTS = 14;
 function attemptTone(attempt: LaneAttempt): { color: string; label: string } | null {
   if (!attempt || typeof attempt.outcome !== "string" || attempt.outcome.length === 0) return null;
   if (attempt.outcome === "success") return { color: "var(--fnk-color-gain)", label: "성공" };
+  if (attempt.outcome === "provider_wait") return { color: "var(--fnk-warn-500)", label: "대기" };
+  if (attempt.outcome === "provider_unsupported" || attempt.failure_class === "provider_unsupported") {
+    return { color: "var(--fnk-neutral-500)", label: "미지원" };
+  }
   if (attempt.failure_class) return { color: "var(--fnk-warn-500)", label: `실패(${attempt.failure_class})` };
   return { color: "var(--fnk-color-loss)", label: "실패" };
 }
@@ -380,7 +384,7 @@ export default function DataConsoleClient() {
             </span>
           </div>
         </Panel>
-        <Panel loading={loading} empty={!loading && !nextSlot} emptyReason="다음 슬롯 정보 없음" emptyNextRefresh="레지스트리 다음 발행 시">
+        <Panel loading={loading} empty={!loading && !nextSlot} emptyReason="다음 슬롯 정보 없음" emptyNextRefresh="레지스트리 다음 발행 시" emptyActionLabel="다시 읽기" onEmptyAction={reload}>
           <div className="flex flex-col gap-1 px-4 py-3.5">
             <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--fnk-neutral-500)]">다음 예정</span>
             <span className="truncate text-[22px] font-semibold tabular-nums text-[var(--fnk-neutral-900)]">
@@ -396,6 +400,8 @@ export default function DataConsoleClient() {
         empty={!loading && lanes.length === 0}
         emptyReason="표시할 레인이 없습니다"
         emptyNextRefresh="다음 KPI 발행 시"
+        emptyActionLabel="다시 읽기"
+        onEmptyAction={reload}
       >
         <PanelHeader
           eyebrow="Ops Console"
@@ -430,6 +436,11 @@ export default function DataConsoleClient() {
               const nextLabel = slot ? (utcSlotShort(slot) ?? "—") : "—";
               const checks = Array.isArray(lane.checks) ? lane.checks : [];
               const attempt = lane.details?.last_attempt;
+              const retryable =
+                registryLane?.cadence?.kind !== "annual" &&
+                attempt?.outcome !== "provider_wait" &&
+                attempt?.outcome !== "provider_unsupported" &&
+                attempt?.failure_class !== "provider_unsupported";
               const lastSuccess = lastSuccessOf(attempt) ?? "—";
               const stages = laneStages(lane, registry, laneId);
               const rowLabel = `${str(lane.label) ?? laneId} · ${statusLabelOf(lane)}`;
@@ -488,7 +499,7 @@ export default function DataConsoleClient() {
                     asOf={shortDateTime(lane.as_of ?? null) ?? "—"}
                     coverage={coverageText(lane)}
                     next={slot ? (nextLabel === "—" ? undefined : nextLabel) : undefined}
-                    onRetry={freshness === "error" || freshness === "stale" ? reload : undefined}
+                    onRetry={(freshness === "error" || freshness === "stale") && retryable ? reload : undefined}
                     stages={stages}
                     skeletonDelayMs={120}
                   />

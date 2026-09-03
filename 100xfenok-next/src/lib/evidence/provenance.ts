@@ -12,7 +12,7 @@
 export type EvidenceStageTone = "ok" | "warn" | "bad" | "muted";
 
 export type EvidenceStage = {
-  stage: "수집" | "검증" | "발행" | "제공" | "다음";
+  stage: "수집" | "원천" | "검증" | "발행" | "제공" | "다음";
   detail: string;
   at?: string | null;
   tone?: EvidenceStageTone;
