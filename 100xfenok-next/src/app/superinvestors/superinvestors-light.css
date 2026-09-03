@@ -1,0 +1,353 @@
+/* /superinvestors route — light-system layout namespace (slice 7b screen 2/2).
+ * Layout only: head, holders table, overlap rows, rail grid, CTA. Panel
+ * chrome, type scale, colors, and states come from src/components/ui.
+ * Token-pure: only var(--fnk-*) / var(--font-*) references, no raw colors,
+ * no shadows, no gradients. Accent var(--fnk-brand-interactive) appears only
+ * on the active sort tab text, the expanded holder name, and holder-row
+ * focus/hover accent. Tickers use var(--font-jetbrains-mono). */
+
+.sup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 32px;
+  background: var(--fnk-neutral-50);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.sup-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sup-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  max-width: 900px;
+}
+
+.sup-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sup-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fnk-neutral-500);
+}
+
+.sup-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+  max-width: 900px;
+}
+
+.sup-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sup-head-note {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+/* Main grid: Holders (wide) + right rail (Overlap, Graph). */
+
+.sup-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.sup-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Holders sort tabs ride in the panel header right slot. */
+
+.sup-sort-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--fnk-neutral-100);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+/* Holders table: one table for desktop and mobile; the scroll container keeps
+ * all five columns reachable on narrow screens without growing the page. */
+
+.sup-hold-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.sup-hold-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.sup-hold-table thead th {
+  height: 28px;
+  padding: 0 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sup-hold-table thead th.sup-th-name {
+  text-align: left;
+}
+
+.sup-hold-row {
+  border-top: 1px solid var(--fnk-neutral-100);
+  transition: background-color 150ms ease;
+}
+
+.sup-hold-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sup-hold-table td {
+  padding: 0 16px;
+  height: 36px;
+  text-align: right;
+  color: var(--fnk-neutral-700);
+  white-space: nowrap;
+}
+
+.sup-holder-name-cell {
+  text-align: left;
+  padding: 0 16px;
+  height: 36px;
+}
+
+.sup-holder-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  max-width: 220px;
+  padding: 4px 0 4px 6px;
+  margin-left: -6px;
+  border-left: 2px solid transparent;
+  background: none;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 150ms ease;
+}
+
+.sup-holder-name:hover {
+  border-left-color: var(--fnk-brand-interactive);
+}
+
+.sup-holder-name:focus-visible {
+  border-left-color: var(--fnk-brand-interactive);
+  outline: none;
+}
+
+.sup-holder-name[aria-expanded="true"] {
+  border-left-color: var(--fnk-brand-interactive);
+}
+
+.sup-holder-name-text {
+  color: var(--fnk-neutral-900);
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.sup-holder-name:hover .sup-holder-name-text,
+.sup-holder-name:focus-visible .sup-holder-name-text {
+  color: var(--fnk-brand-interactive);
+}
+
+.sup-holder-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+.sup-stale-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--fnk-neutral-200);
+  color: var(--fnk-neutral-500);
+}
+
+.sup-top {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sup-mono {
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+  font-weight: 500;
+  color: var(--fnk-neutral-900);
+}
+
+.sup-ticker-strong {
+  font-size: 12px;
+}
+
+.sup-mute {
+  color: var(--fnk-neutral-500);
+  font-weight: 400;
+}
+
+.sup-detail-row td {
+  text-align: left;
+  white-space: normal;
+  padding: 0 16px 12px;
+  background: var(--fnk-neutral-50);
+}
+
+.sup-detail-note {
+  margin: 0;
+  padding: 10px 0 2px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.sup-detail-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.sup-detail-facts > div {
+  min-width: 0;
+}
+
+.sup-detail-facts dt {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fnk-neutral-500);
+}
+
+.sup-detail-facts dd {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-900);
+}
+
+.sup-detail-tops {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sup-detail-tops li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 5px 0;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 12px;
+  color: var(--fnk-neutral-700);
+}
+
+/* Overlap rows reuse the shared Row primitive; only the cell type treatment
+ * lives here. The shared Row already owns hover/focus states. */
+
+.sup-olap-holders {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  color: var(--fnk-neutral-700);
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.sup-olap-holders b {
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+.sup-olap-score {
+  text-align: right;
+  color: var(--fnk-neutral-700);
+  font-size: 12px;
+}
+
+/* CTA row */
+
+.sup-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 4px 0;
+}
+
+.sup-cta-note {
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+@media (max-width: 1024px) {
+  .sup-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .sup {
+    padding: 12px 12px 28px;
+  }
+
+  .sup-sort-btn {
+    min-height: 44px;
+  }
+
+  .sup-detail-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
