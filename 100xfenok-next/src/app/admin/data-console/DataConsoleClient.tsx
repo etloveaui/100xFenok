@@ -324,7 +324,7 @@ export default function DataConsoleClient() {
               <button
                 type="button"
                 onClick={reload}
-                className="font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+                className="font-semibold text-[var(--fnk-brand-interactive)] hover:text-[var(--fnk-brand-navy)] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
               >
                 다시 시도
               </button>
@@ -439,7 +439,7 @@ export default function DataConsoleClient() {
                   tabIndex={0}
                   role="group"
                   aria-label={rowLabel}
-                  className="transition-colors duration-150 hover:bg-[var(--fnk-neutral-50)] focus-visible:outline-none focus-visible:shadow-[inset_2px_0_0_#1B73D3]"
+                  className="transition-colors duration-150 hover:bg-[var(--fnk-neutral-50)] focus-visible:outline-none focus-visible:shadow-[inset_2px_0_0_var(--fnk-brand-interactive)]"
                 >
                   <div className="grid grid-cols-[24px_minmax(0,1.1fr)_130px_100px_100px_120px_130px] items-center gap-2.5 px-4 py-2 text-[12px]">
                     <span
