@@ -1,11 +1,13 @@
 "use client";
 
 import { Bar, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
-import { formatAsOf } from "@/lib/data-state";
 import { formatInteger } from "@/lib/format";
 import {
   computeEtfInsights,
+  etfClockKind,
+  etfRailClockDate,
   etfUniverseAsOf,
+  etfUniversePublishedAt,
   isEtfClockStale,
   openEtfEvidence,
   type EtfSurfaceData,
@@ -20,13 +22,15 @@ export default function EtfUniversePanel({ surface }: { surface: EtfSurfaceData 
   const empty = loaded && !insights;
   const feedFailed = loaded && !universeOk;
   const clock = etfUniverseAsOf(surface.universe);
+  const published = etfUniversePublishedAt(surface.universe);
   const stale = loaded && !!insights && isEtfClockStale(clock);
 
   const compositionSummary = (insights?.compositionBuckets ?? [])
     .filter((bucket) => bucket.count > 0)
     .map((bucket) => `${bucket.label} ${bucket.pct}%`)
     .join(" · ");
-  const asOfLabel = formatAsOf(clock) ?? "제공자 미공개";
+  const asOfLabel = etfRailClockDate(clock, published);
+  const asOfKind = etfClockKind(clock, published);
 
   return (
     <Panel
@@ -75,9 +79,10 @@ export default function EtfUniversePanel({ surface }: { surface: EtfSurfaceData 
         </div>
       ) : null}
       <EvidenceRail
-        freshness={loading ? "pending" : feedFailed ? "error" : stale ? "stale" : clock ? "fresh" : "fixed"}
+        freshness={loading ? "pending" : feedFailed ? "error" : stale ? "stale" : (clock ?? published) ? "fresh" : "fixed"}
         source="ETF 발행사 목록"
         asOf={asOfLabel}
+        asOfKind={asOfKind === "published" ? "published" : undefined}
         coverage={insights ? `${formatInteger(insights.totalCount)}개 전량` : "—"}
         lkgAsOf={stale && clock ? clock : undefined}
         onRetry={feedFailed || stale ? reload : undefined}
