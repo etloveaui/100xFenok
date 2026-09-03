@@ -19,7 +19,7 @@ const CATEGORY_DEFINITIONS = {
   "chart-exception": "Canvas/chart palette code where literals are intentionally bridged separately.",
   "product-theme": "Current immersive product surface with an intentional self-contained palette.",
   "p4-delete": "Retire or preview surface scheduled for deletion, not migration.",
-  "valuation-band": "SPEC-allowed valuation-band gradient stops and marker on the market-valuation route; all other route colors use system tokens.",
+  "valuation-band": "SPEC-allowed raw literals inside .mv-band selectors only on the market-valuation route; any literal outside a band selector fails regen.",
 };
 const rawColorGovernancePattern =
   /(?<![&\w-])#(?:[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?|(?=[0-9A-Fa-f]{3,4}\b)(?=[0-9A-Fa-f]*[A-Fa-f])[0-9A-Fa-f]{3,4})\b|rgba?\([^)]*\)|(?<!-)\b(?:white|black)\b(?!-)/g;
@@ -57,6 +57,40 @@ function collectRawColorLiterals(text) {
   });
 
   return literals;
+}
+
+// The valuation-band category covers .mv-band selectors only: any raw literal
+// elsewhere in market-valuation.css fails regen instead of being pinned.
+const BAND_SELECTOR_PATTERN = /\.mv-band\b/;
+
+function assertValuationBandLiteralsScoped(text) {
+  const lines = text.split("\n");
+  let selector = "";
+  let pendingSelector = "";
+  lines.forEach((line, index) => {
+    const open = line.indexOf("{");
+    const close = line.indexOf("}");
+    if (open >= 0) {
+      selector = `${pendingSelector} ${line.slice(0, open)}`.trim();
+      pendingSelector = "";
+    } else if (close < 0) {
+      pendingSelector += ` ${line}`;
+    }
+    if (close >= 0) {
+      pendingSelector = line.slice(close + 1);
+      if (!pendingSelector.includes("{")) selector = "";
+    }
+    if (isCommentOnlyLine(line)) return;
+    for (const match of line.matchAll(rawColorGovernancePattern)) {
+      const literal = match[0];
+      if (shouldIgnoreRawColorLiteral(literal)) continue;
+      if (!BAND_SELECTOR_PATTERN.test(selector)) {
+        throw new Error(
+          `valuation-band scope violation: ${literal} on line ${index + 1} sits outside a .mv-band selector (in "${selector || "(global)"}").`,
+        );
+      }
+    }
+  });
 }
 
 function categoryForPath(relPath) {
@@ -191,7 +225,7 @@ function categoryForPath(relPath) {
   if (relPath === "src/app/market-valuation/market-valuation.css") {
     return {
       category: "valuation-band",
-      note: "SPEC-allowed valuation-band gradient stops and marker; every other route color is a system token.",
+      note: "SPEC-allowed raw literals inside .mv-band selectors only (gradient stops + marker); any literal outside a band selector fails regen.",
     };
   }
 
@@ -217,10 +251,14 @@ const fileCategories = {};
 let totalAllowedOccurrences = 0;
 
 for (const file of walk(SRC_ROOT).sort()) {
-  const literals = collectRawColorLiterals(readFileSync(file, "utf8"));
+  const text = readFileSync(file, "utf8");
+  const literals = collectRawColorLiterals(text);
   if (literals.size === 0) continue;
 
   const relPath = relative(ROOT, file);
+  if (relPath === "src/app/market-valuation/market-valuation.css") {
+    assertValuationBandLiteralsScoped(text);
+  }
   files[relPath] = Object.fromEntries([...literals.entries()].sort(([left], [right]) => left.localeCompare(right)));
   fileCategories[relPath] = categoryForPath(relPath);
   totalAllowedOccurrences += [...literals.values()].reduce((sum, count) => sum + count, 0);
