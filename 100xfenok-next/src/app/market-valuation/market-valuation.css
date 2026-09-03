@@ -1,0 +1,238 @@
+/* Market Valuation — light-system route namespace (slice 7a).
+ * Layout only: grids, rows, and the valuation band. Panel chrome, type scale,
+ * colors, and states come from src/components/ui. The .mv-band gradient is the
+ * single SPEC-allowed gradient exception. */
+
+.mv {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 32px;
+  background: #f8fafc;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.mv-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mv-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.mv-verdict {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.mv-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.mv-tabs a {
+  height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+}
+
+.mv-tabs a[aria-current="page"] {
+  background: #f1f5f9;
+  color: #1b73d3;
+  font-weight: 600;
+}
+
+.mv-lede {
+  padding: 14px 16px 0;
+  font-size: 13px;
+  color: #334155;
+}
+
+.mv-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 10px;
+}
+
+@media (max-width: 720px) {
+  .mv-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.mv-thead,
+.mv-trow {
+  display: grid;
+  grid-template-columns: 160px 1fr 1fr 1fr 140px;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.mv-thead {
+  height: 30px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.mv-trow {
+  height: 38px;
+  font-size: 13px;
+  border-top: 1px solid #f1f5f9;
+  transition: background-color 150ms ease;
+}
+
+.mv-trow:first-of-type {
+  border-top: 0;
+}
+
+.mv-trow:hover {
+  background: #f8fafc;
+}
+
+.mv-idx {
+  color: #0f172a;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-brow {
+  display: grid;
+  grid-template-columns: 150px 1fr 52px 72px;
+  align-items: center;
+  gap: 12px;
+  height: 34px;
+  padding: 0 16px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 12px;
+}
+
+.mv-brow:first-of-type {
+  border-top: 0;
+}
+
+.mv-brow:hover {
+  background: #f8fafc;
+}
+
+.mv-bname {
+  color: #334155;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-bpct {
+  text-align: right;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* SPEC exception: the only gradient on the route. */
+.mv-band {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #dcfce7 0%, #f1f5f9 50%, #fdebed 100%);
+}
+
+.mv-band i {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 14px;
+  background: #0f172a;
+  border-radius: 1px;
+  transform: translateX(-1px);
+}
+
+.mv-horizons {
+  display: flex;
+  gap: 4px;
+  padding: 10px 16px 0;
+}
+
+.mv-horizons button {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.mv-horizons button[aria-pressed="true"] {
+  background: #f1f5f9;
+  color: #1b73d3;
+  font-weight: 600;
+}
+
+.mv-note {
+  padding: 8px 16px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.mv-histref {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 14px 16px;
+}
+
+@media (max-width: 900px) {
+  .mv-histref {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.mv-chart-cap {
+  font-size: 12px;
+  color: #475569;
+  font-weight: 600;
+}
+
+.mv-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.mv-legend i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 5px;
+}
+
+.mv-foot {
+  padding: 0 4px;
+  font-size: 11px;
+  color: #64748b;
+}

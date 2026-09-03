@@ -124,7 +124,7 @@ function toneDot(tone: string): string {
   return "bg-[var(--c-neutral)]";
 }
 
-export function ErpHistoryPanel() {
+export function ErpHistoryPanel({ bare = false }: { bare?: boolean }) {
   const [model, setModel] = useState<ErpHistoryModel | null>(null);
 
   useEffect(() => {
@@ -155,7 +155,8 @@ export function ErpHistoryPanel() {
 
   return (
     <MarketChartFrame
-      title="Damodaran ERP 역사 (vs 금리 · S&P)"
+      bare={bare}
+      title={bare ? undefined : "Damodaran ERP 역사 (vs 금리 · S&P)"}
       ariaLabel="Damodaran 내재 ERP, 10Y 금리, S&P 500 연말값 추이"
       series={series}
       type="line"
@@ -215,7 +216,7 @@ export function AnnualReturnsChartPanel() {
   );
 }
 
-export function YardeniOverlayChartPanel() {
+export function YardeniOverlayChartPanel({ bare = false }: { bare?: boolean }) {
   const [model, setModel] = useState<YardeniOverlayModel | null>(null);
 
   useEffect(() => {
@@ -247,6 +248,48 @@ export function YardeniOverlayChartPanel() {
   }, [model]);
 
   const verdict = yardeniVerdict(model?.latest.premiumPct ?? null);
+
+  const stats: Array<[string, string]> = [
+    ["S&P 500", fmtIndex(model?.latest.spx ?? null)],
+    ["적정가", fmtIndex(model?.latest.fairValue ?? null)],
+    ["프리미엄", fmtMetric(model?.latest.premiumPct ?? null, 1, "%")],
+    ["EPS", fmtMetric(model?.latest.eps ?? null, 2, "")],
+    ["Bond PER", fmtMetric(model?.latest.bondPer ?? null, 1, "x")],
+  ];
+
+  if (bare) {
+    return (
+      <div className="min-w-0">
+        <MarketChartFrame
+          bare
+          ariaLabel="Yardeni Bond PER 기반 S&P 500 적정가 비교"
+          series={series}
+          type="line"
+          formatValue={indexFormat}
+          ranges={[
+            { id: "1Y", label: "1Y", count: 52 },
+            { id: "5Y", label: "5Y", count: 260 },
+            { id: "MAX", label: "전체" },
+          ]}
+          defaultRangeId="5Y"
+          footnote={`야데니 공개 파생 데이터 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}주 · 전체 기간은 1990년 이후`}
+        />
+        <dl className="mt-2 grid min-w-0 grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-5">
+          {stats.map(([label, value]) => (
+            <div key={label} className="flex min-w-0 items-baseline justify-between gap-2 border-t border-[#f1f5f9] py-1">
+              <dt className="truncate text-[11px] font-semibold text-[#64748b]">{label}</dt>
+              <dd className="shrink-0 text-[12px] font-semibold tabular-nums text-[#0f172a]">{value}</dd>
+            </div>
+          ))}
+        </dl>
+        {typeof model?.latest.premiumPercentile === "number" ? (
+          <p className="mt-1 text-[11px] font-semibold text-[#64748b]">
+            1990년 이후 프리미엄 상위 {model.latest.premiumPercentile}% 수준
+          </p>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <section className="min-w-0 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
@@ -281,13 +324,7 @@ export function YardeniOverlayChartPanel() {
       />
 
       <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-5">
-        {[
-          ["S&P 500", fmtIndex(model?.latest.spx ?? null)],
-          ["적정가", fmtIndex(model?.latest.fairValue ?? null)],
-          ["프리미엄", fmtMetric(model?.latest.premiumPct ?? null, 1, "%")],
-          ["EPS", fmtMetric(model?.latest.eps ?? null, 2, "")],
-          ["Bond PER", fmtMetric(model?.latest.bondPer ?? null, 1, "x")],
-        ].map(([label, value]) => (
+        {stats.map(([label, value]) => (
           <div key={label} className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
             <p className="truncate text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
               {label}
