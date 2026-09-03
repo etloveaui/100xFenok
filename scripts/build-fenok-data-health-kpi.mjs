@@ -3488,6 +3488,63 @@ export function loadCommittedDetectionAttemptDetails(lanes, { dataRoot = DATA_RO
   return details;
 }
 
+// Public 발행 (publication) projection for the Evidence drawer: per-family
+// latest publish outcome only. Shards live at private
+// admin/data-supply-state/publish-outcomes/<family>.json with
+// { schema_version, family, records: [...] }; records carry {family, result,
+// generation_id, ..., gate_after, observed_at, ...}. Only the four
+// public-safe fields are projected — no ids, digests, counts, or paths —
+// so the block passes the public-mirror redaction policy unchanged.
+// A missing outcomes dir (hermetic fixtures, fresh clones) yields
+// families: [], never a build failure; a malformed shard is skipped, never
+// fatal, because evidence projection must not break the KPI build.
+const PUBLISH_OUTCOME_STATE_DIR = "admin/data-supply-state/publish-outcomes";
+const PUBLICATION_OUTCOMES_SCHEMA = "fenok-kpi-publication-outcomes/v1";
+
+function readPublishOutcomeShards({ dataRoot = DATA_ROOT } = {}) {
+  let names;
+  try {
+    names = fs.readdirSync(path.join(dataRoot, PUBLISH_OUTCOME_STATE_DIR));
+  } catch {
+    return [];
+  }
+  const shards = [];
+  for (const name of [...names].sort()) {
+    if (!name.endsWith(".json")) continue;
+    try {
+      shards.push(JSON.parse(fs.readFileSync(path.join(dataRoot, PUBLISH_OUTCOME_STATE_DIR, name), "utf8")));
+    } catch {
+      continue;
+    }
+  }
+  return shards;
+}
+
+export function buildPublicationOutcomes({ dataRoot = DATA_ROOT } = {}) {
+  const families = [];
+  for (const shard of readPublishOutcomeShards({ dataRoot })) {
+    if (!shard || typeof shard !== "object" || Array.isArray(shard)) continue;
+    const family = typeof shard.family === "string" ? shard.family : null;
+    const records = Array.isArray(shard.records) ? shard.records : [];
+    if (!family || records.length === 0) continue;
+    let latest = null;
+    for (const record of records) {
+      if (!record || typeof record !== "object" || Array.isArray(record)) continue;
+      if (record.family !== family || typeof record.observed_at !== "string") continue;
+      if (!latest || record.observed_at >= latest.observed_at) latest = record;
+    }
+    if (!latest) continue;
+    families.push({
+      family,
+      result: typeof latest.result === "string" ? latest.result : null,
+      observed_at: latest.observed_at,
+      gate_after: latest.gate_after ?? null,
+    });
+  }
+  families.sort((left, right) => (left.family < right.family ? -1 : left.family > right.family ? 1 : 0));
+  return { schema_version: PUBLICATION_OUTCOMES_SCHEMA, families };
+}
+
 export function buildPayload(
   nowIso,
   priorRuntime,
@@ -3638,6 +3695,7 @@ export function buildPayload(
     },
     deployment_integrity: deploymentIntegrity,
     runtime,
+    publication: buildPublicationOutcomes({ dataRoot }),
     source_sla: sourceSla,
     source_artifacts: buildSourceArtifacts({
       coverageIndex,
