@@ -52,6 +52,7 @@ const SCREEN_LABELS: Record<string, { label: string; kbd?: string }> = {
   [ROUTES.marketStructure]: { label: "시장 구조" },
   [ROUTES.regime]: { label: "시장 국면" },
   [ROUTES.marketEvents]: { label: "시장 이벤트" },
+  [ROUTES.changes]: { label: "무엇이 바뀌었나" },
   [ROUTES.sectors]: { label: "섹터 히트맵", kbd: "g h" },
   [ROUTES.etfs]: { label: "ETF" },
   [ROUTES.etfCompare]: { label: "ETF 비교" },
