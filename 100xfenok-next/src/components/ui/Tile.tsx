@@ -16,7 +16,7 @@ function heatmapClass(pct: number) {
     if (v <= 0.25) return "bg-[#f4fbf6] border-[#f4fbf6]";
     if (v <= 0.75) return "bg-[#e6f6eb] border-[#e6f6eb]";
     if (v <= 1.5) return "bg-[#d6f1df] border-[#d6f1df]";
-    return "bg-[#d6f1df] border-[#d6f1df]";
+    return "bg-[#c4e8d1] border-[#c4e8d1]";
   }
   if (v >= -0.25) return "bg-[#fff7f7] border-[#feebec]";
   if (v >= -0.75) return "bg-[#feebec] border-[#ffdbdc]";
