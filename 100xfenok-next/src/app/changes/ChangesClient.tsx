@@ -621,7 +621,7 @@ export default function ChangesClient() {
                   {row.ticker ? `${row.title.slice(row.ticker.length + 3) || row.kind} · ${row.kind}` : row.kind}
                 </span>
               </span>
-              <span className="truncate text-right tabular-nums text-[12px] text-slate-400 line-through md:text-left">
+              <span className="truncate text-right tabular-nums text-[12px] text-slate-500 line-through md:text-left">
                 {row.before}
               </span>
               <span className="min-w-0 truncate text-[13px] font-semibold tabular-nums text-slate-900">
