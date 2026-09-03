@@ -14,7 +14,7 @@ import type {
   TurnoverData,
 } from "@/lib/superinvestors/types";
 import { buildGraphNetwork } from "./graphNetwork";
-import GraphNetworkPanel from "./GraphNetworkPanel";
+import GraphNetworkPanel, { GraphNetworkTeaser } from "./GraphNetworkPanel";
 
 type HolderSort = "aum" | "holdings" | "change";
 
@@ -271,6 +271,13 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
   const graphReady = !loading && !graphFailed && byTicker !== null;
   const graphFreshness: "pending" | "error" | "partial" | "stale" =
     loading ? "pending" : graphFailed ? "error" : partialFeeds || excludedStale.length > 0 ? "partial" : "stale";
+  const graphCoverage = graphReady
+    ? `투자자 ${formatInteger(graphNetwork.investorCount)}명 · ${formatInteger(graphNetwork.tickerCount)}개 종목 연결`
+    : coverage;
+  function openGraphEvidence() {
+    openEvidence("/data/sec-13f/summary.json");
+    openEvidence("/data/sec-13f/by_ticker.json");
+  }
 
   function toggleGuru(id: string) {
     setExpandedGuru((cur) => {
@@ -482,39 +489,71 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
             />
           </Panel>
 
-          {graphReady ? (
-            <GraphNetworkPanel
-              network={graphNetwork}
-              selectedTicker={selectedGraphTicker}
-              onSelectTicker={setSelectedGraphTicker}
-              rail={{
-                freshness: graphFreshness,
-                source: "SEC EDGAR 13F",
-                asOf: asOfLabel,
-                coverage,
-                onRetry: failed ? reload : partialFeeds ? retry : undefined,
-                onEvidence: dataReady && !failed ? () => openEvidence("/data/sec-13f/analytics/consensus.json") : undefined,
-              }}
-            />
-          ) : (
-            <Panel>
-              <div data-superinvestors-graph>
-                <PanelHeader eyebrow="Graph Network" title="누가 무엇을 함께 들고 있나" />
-                <EmptyState
-                  reason="네트워크 그래프 로더가 아직 없습니다"
-                  nextRefresh="다음 단계: 종목–투자자 그래프 로더 추가 후 제공"
-                />
-                <EvidenceRail
-                  freshness="pending"
-                  source="SEC EDGAR 13F"
-                  asOf={asOfLabel}
-                  coverage="—"
-                />
-              </div>
-            </Panel>
-          )}
+          <GraphNetworkTeaser
+            network={graphNetwork}
+            href="#superinvestors-graph-full"
+            status={loading ? "pending" : graphFailed ? "error" : "ready"}
+            source="SEC EDGAR 13F"
+            asOf={asOfLabel}
+            coverage={graphCoverage}
+            onRetry={graphFailed ? retry : undefined}
+          />
         </div>
       </div>
+
+      <section className="sup-graph-full" id="superinvestors-graph-full" aria-label="투자자 종목 연결 그래프">
+        {graphFailed ? (
+          <Panel
+            error
+            errorDetail="종목별 보유 피드를 불러오지 못했습니다."
+            asOf={asOfLabel}
+            onRetry={retry}
+            retryLabel="다시 시도"
+          >
+            <div data-superinvestors-graph>
+              <PanelHeader eyebrow="Graph Network" title="누가 무엇을 함께 들고 있나" />
+              <EvidenceRail
+                freshness="error"
+                source="SEC EDGAR 13F"
+                asOf={asOfLabel}
+                coverage="—"
+                onRetry={retry}
+                onEvidence={dataReady && !failed ? openGraphEvidence : undefined}
+              />
+            </div>
+          </Panel>
+        ) : graphReady ? (
+          <GraphNetworkPanel
+            network={graphNetwork}
+            selectedTicker={selectedGraphTicker}
+            onSelectTicker={setSelectedGraphTicker}
+            rail={{
+              freshness: graphFreshness,
+              source: "SEC EDGAR 13F",
+              asOf: asOfLabel,
+              coverage: graphCoverage,
+              onRetry: failed ? reload : partialFeeds ? retry : undefined,
+              onEvidence: dataReady && !failed ? openGraphEvidence : undefined,
+            }}
+          />
+        ) : (
+          <Panel>
+            <div data-superinvestors-graph>
+              <PanelHeader eyebrow="Graph Network" title="누가 무엇을 함께 들고 있나" />
+              <EmptyState
+                reason="그래프 데이터를 불러오는 중입니다"
+                nextRefresh="잠시 후 다시 확인해 주세요"
+              />
+              <EvidenceRail
+                freshness="pending"
+                source="SEC EDGAR 13F"
+                asOf={asOfLabel}
+                coverage="—"
+              />
+            </div>
+          </Panel>
+        )}
+      </section>
 
       <div className="sup-cta">
         <span className="sup-cta-note">13F 공시 기반 장기 보유 포지션만 집계합니다. 공시는 최대 45일 늦게 반영됩니다.</span>
