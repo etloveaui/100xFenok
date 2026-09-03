@@ -56,16 +56,17 @@ export function buildGraphNetwork(input: GraphNetworkInput): GraphNetwork {
     summary: summary !== null && !failedRequests.includes("summary"),
     byTicker: byTicker !== null && !failedRequests.includes("by_ticker"),
   };
-  // Pure builder: feed flags drive freshness only. Whatever non-null docs the
-  // hook hands over (including hook-retained LKG rows with profiles) get built.
+  // Pure builder, docs-first: non-null docs drive metadata, profiles, and
+  // stale-exclusions even when a feed flag marks them failed (fully failed
+  // retry keeps hook-retained LKG rows). Feed flags drive freshness only.
   const totalTickers = byTicker !== null ? Object.keys(byTicker).length : 0;
   const totalInvestors =
-    feeds.summary && summary !== null
+    summary !== null
       ? (summary.metadata.total_investors ?? summary.metadata.investor_count ?? Object.keys(summary.investors).length)
       : null;
   if (byTicker === null) return { ...EMPTY, feeds, excludedCount: excludedStale.length };
   const excluded = new Set(excludedStale);
-  if (feeds.summary && summary !== null) {
+  if (summary !== null) {
     for (const [investorId, profile] of Object.entries(summary.investors)) {
       if (profile.is_stale) excluded.add(investorId);
     }
@@ -95,7 +96,7 @@ export function buildGraphNetwork(input: GraphNetworkInput): GraphNetwork {
   }
   edges.sort((a, b) => b.weight - a.weight || (a.ticker < b.ticker ? -1 : 1));
 
-  const profiles = feeds.summary && summary !== null ? summary.investors : {};
+  const profiles = summary !== null ? summary.investors : {};
   const nodes: GraphNode[] = [];
   for (const investorId of activeInvestors) {
     const profile = profiles[investorId];

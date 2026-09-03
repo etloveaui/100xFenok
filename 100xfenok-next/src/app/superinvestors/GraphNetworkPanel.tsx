@@ -421,8 +421,8 @@ export function GraphNetworkTeaser({ network, href, status, freshness, source, a
                     </g>
                   );
                 })}
-                <circle cx={110} cy={50} r={16} className="grn-tick-circle" />
-                <text x={110} y={54} textAnchor="middle" className="grn-tick-label">
+                <circle cx={110} cy={50} r={16} className="grn-tick-circle grn-tick-selected" />
+                <text x={110} y={54} textAnchor="middle" className="grn-tick-label grn-tick-label-selected">
                   {top.ticker.length > 5 ? `${top.ticker.slice(0, 5)}…` : top.ticker}
                 </text>
               </svg>
