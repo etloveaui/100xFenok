@@ -31,7 +31,7 @@ const dotColor: Record<EvidenceRailFreshness, string> = {
   fresh: "var(--fnk-color-gain)",
   stale: "var(--fnk-color-warn)",
   delayed: "var(--fnk-color-loss)",
-  fixed: "var(--fnk-neutral-400)",
+  fixed: "var(--fnk-neutral-500)",
   pending: "var(--fnk-color-warn)",
   error: "var(--fnk-color-loss)",
   partial: "var(--fnk-color-warn)",
@@ -51,7 +51,7 @@ const stageDot: Record<EvidenceStageTone, string> = {
   ok: "var(--fnk-color-gain)",
   warn: "var(--fnk-color-warn)",
   bad: "var(--fnk-color-loss)",
-  muted: "var(--fnk-neutral-400)",
+  muted: "var(--fnk-neutral-500)",
 };
 
 function useDelayedRailSkeleton(active: boolean, delayMs: number) {

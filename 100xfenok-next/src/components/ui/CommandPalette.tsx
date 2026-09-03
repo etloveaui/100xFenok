@@ -359,9 +359,9 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
             value={query}
             onChange={(e) => { setQuery(e.target.value); setActive(0); }}
             placeholder="종목, 화면, 동작 검색 — 초성 검색 지원 (예: ㅅㅇ)"
-            className="flex-1 outline-none text-[13px] placeholder:text-[var(--fnk-neutral-400)]"
+            className="flex-1 outline-none text-[13px] placeholder:text-[var(--fnk-neutral-500)]"
           />
-          <span className="text-[11px] text-[var(--fnk-neutral-400)] border border-[var(--fnk-neutral-200)] rounded px-1.5 py-0.5">⌘K</span>
+          <span className="text-[11px] text-[var(--fnk-neutral-500)] border border-[var(--fnk-neutral-200)] rounded px-1.5 py-0.5">⌘K</span>
           <button onClick={() => setShowHelp((v) => !v)} className="text-[11px] text-[var(--fnk-neutral-500)] border border-[var(--fnk-neutral-200)] rounded px-1.5 py-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive">?</button>
         </div>
         {showHelp && (
@@ -382,7 +382,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
                   onClick={() => select(it, it.kbd === "w" ? { keepOpen: true } : undefined)}
                   className="w-full text-left px-2 py-1.5 rounded-[6px] text-[13px] text-[var(--fnk-neutral-700)] flex justify-between hover:bg-[var(--fnk-neutral-50)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
                 >
-                  <span>{it.label}</span><span className="text-[var(--fnk-neutral-400)] text-[11px]">{it.sub}</span>
+                  <span>{it.label}</span><span className="text-[var(--fnk-neutral-500)] text-[11px]">{it.sub}</span>
                 </button>
               ))}
             </div>
@@ -403,7 +403,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
                       className={`w-full text-left px-2 py-1.5 rounded-[6px] flex items-center justify-between text-[13px] transition-colors duration-120 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive ${isActive ? "bg-[var(--fnk-neutral-50)] shadow-[inset_2px_0_0_#1B73D3] text-[var(--fnk-neutral-900)]" : "text-[var(--fnk-neutral-700)] hover:bg-[var(--fnk-neutral-50)]"}`}
                     >
                       <span className="font-medium">{starred ? "★ " : ""}{it.label}</span>
-                      <span className="text-[11px] text-[var(--fnk-neutral-400)] flex items-center gap-2">
+                      <span className="text-[11px] text-[var(--fnk-neutral-500)] flex items-center gap-2">
                         <span>{it.sub}</span>
                         {it.kbd && (
                           <span className="border border-[var(--fnk-neutral-200)] rounded px-1.5 py-0.5">{it.kbd}</span>
@@ -417,7 +417,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
           ))}
           {filtered.length === 0 && <div className="px-4 py-8 text-center text-[13px] text-[var(--fnk-neutral-500)]">검색 결과 없음</div>}
         </div>
-        <div className="flex items-center gap-3 h-9 px-4 border-t border-[var(--fnk-neutral-200)] text-[11px] text-[var(--fnk-neutral-400)]">
+        <div className="flex items-center gap-3 h-9 px-4 border-t border-[var(--fnk-neutral-200)] text-[11px] text-[var(--fnk-neutral-500)]">
           {recentTickers.length > 0 && (
             <span>최근: <span className="mono text-[var(--fnk-neutral-500)]">{recentTickers.join(" · ")}</span></span>
           )}
