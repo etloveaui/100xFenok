@@ -69,7 +69,7 @@ const ROUTE_SCOPE_CLASSIFICATION_ACK = {
     "/screener",
     "/sectors",
     "/stock/NVDA",
-    "/superinvestors?tab=insights",
+    "/superinvestors?guru=blackrock",
   ],
 };
 
