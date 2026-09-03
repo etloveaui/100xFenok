@@ -10,10 +10,11 @@
     "admin-internal": "Admin-only route surface, outside the public product migration target.",
     "chart-exception": "Canvas/chart palette code where literals are intentionally bridged separately.",
     "product-theme": "Current immersive product surface with an intentional self-contained palette.",
-    "p4-delete": "Retire or preview surface scheduled for deletion, not migration."
+    "p4-delete": "Retire or preview surface scheduled for deletion, not migration.",
+    "valuation-band": "SPEC-allowed raw literals inside .mv-band selectors only on the market-valuation route; any literal outside a band selector fails regen."
   },
-  "total_allowed_occurrences": 867,
-  "file_count": 43,
+  "total_allowed_occurrences": 871,
+  "file_count": 44,
   "file_categories": {
     "src/app/HomeCanvasPlusClient.tsx": {
       "category": "product-theme",
@@ -42,6 +43,10 @@
     "src/app/manifest.ts": {
       "category": "metadata-color",
       "note": "Browser or route metadata literal; active component styling must use tokens."
+    },
+    "src/app/market-valuation/market-valuation.css": {
+      "category": "valuation-band",
+      "note": "SPEC-allowed raw literals inside .mv-band selectors only (gradient stops + marker); any literal outside a band selector fails regen."
     },
     "src/app/posts/page.tsx": {
       "category": "metadata-color",
@@ -355,6 +360,12 @@
     },
     "src/app/manifest.ts": {
       "#ffffff": 2
+    },
+    "src/app/market-valuation/market-valuation.css": {
+      "#0f172a": 1,
+      "#dcfce7": 1,
+      "#f1f5f9": 1,
+      "#fdebed": 1
     },
     "src/app/posts/page.tsx": {
       "#3b82f6": 1
