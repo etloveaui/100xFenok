@@ -264,8 +264,18 @@
   background: var(--fnk-neutral-50);
 }
 
+.etf-today-row:focus-visible,
+.etf-tool-row:focus-visible,
+.etf-table-ticker:focus-visible,
+.etf-mobile-title:focus-visible,
+.etf-load-more:focus-visible {
+  background: var(--fnk-neutral-50);
+  box-shadow: inset 2px 0 0 var(--fnk-brand-interactive);
+  outline: none;
+}
+
 .etf-ticker {
-  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
   font-weight: 500;
   color: var(--fnk-neutral-900);
 }
@@ -372,7 +382,7 @@
 }
 
 .etf-table-ticker strong {
-  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
   font-weight: 500;
   color: var(--fnk-neutral-900);
 }
@@ -421,7 +431,7 @@
 }
 
 .etf-mobile-title strong {
-  font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
   font-weight: 500;
   color: var(--fnk-neutral-900);
 }
@@ -522,7 +532,7 @@
 
 .etf-tool-tag {
   font-size: 11px;
-  color: var(--c-chart-ord-mid);
+  color: var(--fnk-neutral-500);
   white-space: nowrap;
 }
 
@@ -544,7 +554,7 @@
   display: flex;
   justify-content: flex-end;
   font-size: 11px;
-  color: var(--c-chart-ord-mid);
+  color: var(--fnk-neutral-500);
   margin: 0;
   padding: 4px 4px 0;
 }
