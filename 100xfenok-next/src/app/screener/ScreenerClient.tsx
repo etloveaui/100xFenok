@@ -405,7 +405,7 @@ function GuruHolderBadge({ stock, compact = false }: { stock: ScreenerStock; com
       data-testid="screener-guru-badge"
       data-ticker={stock.ticker}
       data-superinvestors-href={ROUTES.superinvestorsByTicker(stock.ticker)}
-      className="inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-violet-50 px-1.5 py-0.5 text-[9px] font-black text-violet-700 transition hover:border-violet-400 hover:bg-violet-100"
+      className="inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-white px-1.5 py-0.5 text-[9px] font-black text-violet-700 transition hover:border-violet-400"
       title={`${stock.ticker} 기관·고수 보유 ${holders.toLocaleString("ko-KR")}명 — 클릭하면 /superinvestors 종목별 보유로 이동`}
       onClick={(event) => event.stopPropagation()}
     >
@@ -415,11 +415,11 @@ function GuruHolderBadge({ stock, compact = false }: { stock: ScreenerStock; com
 }
 
 const CONNECTION_BADGES = [
-  { key: "marketFacts", label: "시세", className: "border-sky-200 bg-sky-50 text-sky-700" },
-  { key: "filings", label: "공시", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  { key: "smartMoney", label: "13F", className: "border-violet-200 bg-violet-50 text-violet-700" },
-  { key: "indexMembership", label: "지수", className: "border-amber-200 bg-amber-50 text-amber-700" },
-  { key: "singleStockEtfs", label: "ETF", className: "border-cyan-200 bg-cyan-50 text-cyan-700" },
+  { key: "marketFacts", label: "시세", className: "border-sky-200 bg-white text-sky-700" },
+  { key: "filings", label: "공시", className: "border-emerald-200 bg-white text-emerald-700" },
+  { key: "smartMoney", label: "13F", className: "border-violet-200 bg-white text-violet-700" },
+  { key: "indexMembership", label: "지수", className: "border-amber-200 bg-white text-amber-700" },
+  { key: "singleStockEtfs", label: "ETF", className: "border-cyan-200 bg-white text-cyan-700" },
 ] as const;
 
 function connectionTitle(stock: ScreenerStock): string {
@@ -1069,7 +1069,7 @@ function MobileStockCard({
     <article
       data-screener-stock-card
       data-canvas-plus-screener-card={canvasPlusPreview ? "mobile" : undefined}
-      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--mobile" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]"}
+      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--mobile" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)]"}
     >
       <div className="flex items-center justify-between gap-2 border-b border-[var(--c-line-2)] px-3 py-2">
         <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
@@ -1211,7 +1211,7 @@ function DesktopStockCard({
       data-screener-stock-card
       data-screener-desktop-stock-card
       data-canvas-plus-screener-card={canvasPlusPreview ? "desktop" : undefined}
-      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--desktop" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] shadow-[var(--sh-sm)]"}
+      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--desktop" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)]"}
     >
       <div className="flex items-center justify-between gap-3 border-b border-[var(--c-line-2)] px-4 py-3">
         <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
@@ -1802,18 +1802,22 @@ export default function ScreenerClient({
     count: sorted.length,
     getScrollElement: () => mobileListRef.current,
     estimateSize: () => 260,
-    overscan: 10,
+    overscan: MOBILE_LIST_OVERSCAN,
   });
+  const [showMobileSkeleton, setShowMobileSkeleton] = useState(false);
+  useEffect(() => {
+    if (dataReady) { setShowMobileSkeleton(false); return undefined; }
+    const timer = window.setTimeout(() => setShowMobileSkeleton(true), 120);
+    return () => window.clearTimeout(timer);
+  }, [dataReady]);
 
   const handleVisibleStartIndex = useCallback((index: number) => {
     const nextPage = Math.max(0, Math.floor(index / PAGE_SIZE));
     setPage((prev) => (prev === nextPage ? prev : nextPage));
     setCursor((prev) => {
       if (sorted.length === 0) return 0;
-      const pageStart = nextPage * PAGE_SIZE;
-      const pageEnd = Math.min(sorted.length - 1, pageStart + PAGE_SIZE - 1);
-      if (prev >= pageStart && prev <= pageEnd) return prev;
-      return Math.min(Math.max(0, pageStart), sorted.length - 1);
+      const next = Math.max(0, Math.min(index, sorted.length - 1));
+      return prev === next ? prev : next;
     });
   }, [sorted.length]);
 
@@ -1830,9 +1834,9 @@ export default function ScreenerClient({
     const report = () => {
       if (node.clientHeight === 0) return;
       const items = mobileVirtualizer.getVirtualItems();
-      const firstVisible = items.find((item) => item.end > node.scrollTop)?.index
-        ?? (items[0] ? Math.min(items[0].index + MOBILE_LIST_OVERSCAN, sorted.length - 1) : 0);
-      handleVisibleStartIndex(Math.max(0, Math.min(firstVisible, sorted.length - 1)));
+      const firstFullyVisible = items.find((item) => item.start >= node.scrollTop)?.index
+        ?? (items.length > 0 ? items[items.length - 1].index : 0);
+      handleVisibleStartIndex(Math.max(0, Math.min(firstFullyVisible, sorted.length - 1)));
     };
     report();
     node.addEventListener("scroll", report, { passive: true });
@@ -1849,7 +1853,7 @@ export default function ScreenerClient({
     const target = event.target as HTMLElement | null;
     if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable)) return;
     if (sorted.length === 0) return;
-    if (target && typeof target.closest === "function" && target.closest('button, a[href], select, input, textarea, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [data-screener-pagination], [data-screener-view-mode-control], [data-screener-view-mode-option], [data-screener-density-control], [data-screener-density-option], [data-screener-preset], [data-screener-page], [data-screener-expand]')) return;
+    if (target && typeof target.closest === "function" && target.closest('summary, details, button, a, select, input, textarea, [contenteditable], [role="button"], [role="link"], [role="tab"], [role="menuitem"], [data-screener-pagination], [data-screener-view-mode-control], [data-screener-view-mode-option], [data-screener-density-control], [data-screener-density-option], [data-screener-preset], [data-screener-page], [data-screener-expand]')) return;
     if (event.key === "j" || event.key === "k") {
       event.preventDefault();
       const next = event.key === "j" ? Math.min(sorted.length - 1, safeCursor + 1) : Math.max(0, safeCursor - 1);
@@ -3453,7 +3457,7 @@ export default function ScreenerClient({
       <section
         className={canvasPlusPreview
           ? cx("cp-card cp-screener-results-shell", !dataReady && "cp-screener-results-shell--muted")
-          : cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 shadow-[var(--sh-sm)] sm:p-3", !dataReady && "opacity-60")}
+          : cx("rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-2 sm:p-3", !dataReady && "opacity-60")}
         data-canvas-plus-screener-results-shell={canvasPlusPreview ? "true" : undefined}
         tabIndex={0}
         role="region"
@@ -3545,10 +3549,21 @@ export default function ScreenerClient({
           coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}
           onRetry={railFreshness === "fresh" ? undefined : retryScreenerData}
           lkgAsOf={screenerSourceDate ?? undefined}
-          skeletonDelayMs={400}
+          skeletonDelayMs={120}
         />
 
         <div className={canvasPlusPreview ? "cp-screener-results-mobile min-[921px]:hidden" : "min-[921px]:hidden"}>
+          {!dataReady && showMobileSkeleton ? (
+            <div aria-hidden="true" className="space-y-2 p-3">
+              {Array.from({ length: 6 }, (_, skeletonIndex) => (
+                <div key={`screener-mobile-skeleton-${skeletonIndex}`} className="animate-pulse space-y-2 rounded-lg bg-[var(--c-surface-2)] p-3">
+                  <div className="h-3 w-24 rounded bg-[var(--c-line-2)]" />
+                  <div className="h-3 w-full rounded bg-[var(--c-line-2)]" />
+                  <div className="h-3 w-2/3 rounded bg-[var(--c-line-2)]" />
+                </div>
+              ))}
+            </div>
+          ) : (
           <Panel>
             <div
               ref={mobileListRef}
@@ -3568,14 +3583,13 @@ export default function ScreenerClient({
                       key={stock.ticker}
                       data-index={virtualItem.index}
                       ref={mobileVirtualizer.measureElement}
+                      className={virtualItem.index === safeCursor ? "bg-[var(--c-surface-2)] shadow-[inset_2px_0_0_var(--c-brand)]" : undefined}
                       style={{
                         position: "absolute",
                         top: 0,
                         left: 0,
                         width: "100%",
                         transform: `translateY(${virtualItem.start}px)`,
-                        outline: virtualItem.index === safeCursor ? "2px solid var(--cp-focus-ring)" : undefined,
-                        outlineOffset: "-2px",
                       }}
                     >
                       <MobileStockCard
@@ -3594,6 +3608,7 @@ export default function ScreenerClient({
               </div>
             </div>
           </Panel>
+          )}
           {dataReady && sorted.length === 0 ? (
             <ScreenerEmptyState canvasPlusPreview={canvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} />
           ) : null}

@@ -221,7 +221,7 @@
   margin-top: 20px;
   border: 1px solid #d8e2f3;
   border-radius: var(--cp-radius-sm);
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  background: var(--cpw4-panel);
   padding: 16px;
 }
 
@@ -710,4 +710,26 @@
     width: 112px;
     height: 112px;
   }
+}
+
+/* Results-path numeric cells (12M / momentum / ret): plain tabular numbers.
+   Gain/loss color lives in the number text (renderCell); this neutralizes the
+   shared pill-chip treatment from canvas-plus.css. This sheet loads after it,
+   so equal specificity wins. Score/action pills are untouched. */
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="return12m"],
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="growthRate"],
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="momentum1m"],
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="momentum3m"],
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="momentum6m"],
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="momentum12m"],
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="ret1y"],
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="ret3y"],
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="ret5y"] {
+  display: table-cell;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
 }

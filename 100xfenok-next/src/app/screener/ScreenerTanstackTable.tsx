@@ -289,9 +289,9 @@ function ScreenerTanstackTableInner({
     const report = () => {
       if (node.clientHeight === 0) return;
       const items = virtualizer.getVirtualItems();
-      const firstVisible = items.find((item) => item.end > node.scrollTop)?.index
-        ?? (items[0] ? Math.min(items[0].index + DESKTOP_TABLE_OVERSCAN, rows.length - 1) : 0);
-      onVisibleStartIndex(Math.max(0, Math.min(firstVisible, rows.length - 1)));
+      const firstFullyVisible = items.find((item) => item.start >= node.scrollTop)?.index
+        ?? (items.length > 0 ? items[items.length - 1].index : 0);
+      onVisibleStartIndex(Math.max(0, Math.min(firstFullyVisible, rows.length - 1)));
     };
     report();
     node.addEventListener("scroll", report, { passive: true });
@@ -551,8 +551,8 @@ function ScreenerTanstackTableInner({
                   onClick={() => onToggleExpandedTicker(stock.ticker)}
                   style={canvasPlusPreview ? { height: `${VIRTUAL_ROW_HEIGHT}px` } : undefined}
                   className={canvasPlusPreview
-                    ? cx("cursor-pointer transition-colors duration-150 hover:bg-[var(--c-bg)] hover:shadow-[inset_2px_0_0_var(--c-brand)]", cursorTicker === stock.ticker && "outline outline-2 outline-offset-[-2px] outline-[var(--cp-focus-ring)]")
-                    : "cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]"}
+                    ? cx("cursor-pointer transition-colors duration-150 hover:bg-[var(--c-bg)] hover:shadow-[inset_2px_0_0_var(--c-brand)]", cursorTicker === stock.ticker && "bg-[var(--c-bg)] shadow-[inset_2px_0_0_var(--c-brand)]")
+                    : cx("cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]", cursorTicker === stock.ticker && "bg-[var(--c-surface-2)] shadow-[inset_2px_0_0_var(--c-brand)]")}
                 >
                   {row.getVisibleCells().map((cell) => {
                     const column = columnById.get(cell.column.id as ScreenerSortKey);

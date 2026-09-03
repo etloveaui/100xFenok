@@ -175,7 +175,9 @@ export function useScreenerData(): ScreenerDataResult {
       if (!isMountedRef.current) return;
 
       if (!records) {
-        setResult({ ...EMPTY, failed: true });
+        // Fetch error keeps last-known-good rows (five-state rule): the rail
+        // flips to error with retry while results stay on screen.
+        setResult((prev) => ({ ...prev, failed: true }));
         return;
       }
 

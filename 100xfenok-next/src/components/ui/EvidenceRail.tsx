@@ -61,7 +61,7 @@ export function EvidenceRail({
   onRetry,
   lkgAsOf,
   lkgLabel = "이전 값",
-  skeletonDelayMs = 400,
+  skeletonDelayMs = 120,
 }: EvidenceRailProps) {
   const showLkg = (freshness === "error" || freshness === "stale") && !!lkgAsOf;
   const showRetry = !!onRetry && freshness !== "fresh";
