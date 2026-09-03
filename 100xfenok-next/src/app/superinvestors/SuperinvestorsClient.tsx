@@ -33,6 +33,11 @@ function loadTurnoverLocal(): Promise<TurnoverData["by_investor"] | null> {
   turnoverPromise = fetch13FJson<TurnoverData>("/data/sec-13f/analytics/turnover.json").then((data) => {
     turnoverCache = data?.by_investor ?? null;
     return turnoverCache;
+  }, (error) => {
+    // A rejected fetch must not pin the module slot: clear it so a manual
+    // retry can issue a fresh request instead of replaying the rejection.
+    turnoverPromise = null;
+    throw error;
   });
   return turnoverPromise;
 }
@@ -127,10 +132,13 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
     failed,
     quarter,
     excludedStale,
+    failedRequests,
+    retry,
   } = use13FData();
   const [sort, setSort] = useState<HolderSort>("aum");
   const [expandedGuru, setExpandedGuru] = useState<string | null>(initialGuru);
   const [turnover, setTurnover] = useState<TurnoverData["by_investor"] | null | undefined>(undefined);
+  const [turnoverError, setTurnoverError] = useState(false);
 
   useEffect(() => {
     setExpandedGuru(initialGuru);
@@ -138,11 +146,38 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
 
   useEffect(() => {
     let cancelled = false;
-    loadTurnoverLocal().then((map) => {
-      if (!cancelled) setTurnover(map);
-    });
+    loadTurnoverLocal().then(
+      (map) => {
+        if (!cancelled) {
+          setTurnover(map);
+          setTurnoverError(false);
+        }
+      },
+      () => {
+        // Turnover shapes only the "분기 변화" column: a fetch rejection is
+        // an error state on the Holders rail, never a silent pending cell.
+        if (!cancelled) {
+          setTurnover(null);
+          setTurnoverError(true);
+        }
+      },
+    );
     return () => { cancelled = true; };
   }, []);
+
+  function retryTurnover() {
+    setTurnoverError(false);
+    setTurnover(undefined);
+    loadTurnoverLocal().then(
+      (map) => {
+        setTurnover(map);
+      },
+      () => {
+        setTurnover(null);
+        setTurnoverError(true);
+      },
+    );
+  }
 
   const investors = useMemo<[string, SummaryInvestor][]>(
     () => (summary ? Object.entries(summary.investors) : []),
@@ -203,15 +238,25 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
   const coverage = dataReady ? `${formatInteger(investorCount)}/${formatInteger(totalTracked)} 투자자` : "—";
   const turnoverCovered = turnover ? Object.keys(turnover).length : 0;
   const holdersCoverage =
-    turnover !== undefined && turnoverCovered > 0
-      ? `${coverage} · 회전율 ${formatInteger(turnoverCovered)}명`
-      : coverage;
-  const asOfLabel = quarter ?? "—";
+    turnoverError
+      ? `${coverage} · 회전율 확인 불가`
+      : turnover !== undefined && turnoverCovered > 0
+        ? `${coverage} · 회전율 ${formatInteger(turnoverCovered)}명`
+        : coverage;
+  // 13F filings land up to 45 days after quarter end: the quarter label names
+  // the cohort, never a fresh as-of. Rails carry the real build clock when the
+  // summary stamps one, else the true quarter as-of — always stale, never
+  // fresh from the quarter label alone.
+  const generatedClock = summary?.metadata?.generated_at?.slice(0, 10) ?? null;
+  const asOfLabel = generatedClock ?? quarter ?? "—";
+  const partialFeeds = failedRequests.length > 0;
 
   const holdersEmpty = !loading && (failed || (dataReady && sortedInvestors.length === 0));
   const overlapEmpty = !loading && (failed || (dataReady && overlapRows.length === 0));
-  const holdersFreshness = loading ? "pending" : failed ? "error" : excludedStale.length > 0 ? "partial" : "fresh" as const;
-  const overlapFreshness = holdersFreshness;
+  const holdersFreshness: "pending" | "error" | "partial" | "stale" =
+    loading ? "pending" : failed ? "error" : partialFeeds || excludedStale.length > 0 || turnoverError ? "partial" : "stale";
+  const overlapFreshness: "pending" | "error" | "partial" | "stale" =
+    loading ? "pending" : failed ? "error" : partialFeeds || excludedStale.length > 0 ? "partial" : "stale";
 
   function toggleGuru(id: string) {
     setExpandedGuru((cur) => {
@@ -237,8 +282,10 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
             )}
           </h1>
           <div className="sup-meta-row">
-            <Pill data-superinvestors-quarter>기준 {asOfLabel} 제출분</Pill>
+            <Pill data-superinvestors-quarter>기준 {quarter ?? "—"} 제출분</Pill>
             {excludedStale.length > 0 ? <Pill tone="warn">최신 분기 제외 {excludedStale.length}명</Pill> : null}
+            {!failed && partialFeeds ? <Pill tone="warn">일부 피드 {failedRequests.length}개 미반영</Pill> : null}
+            {!failed && !partialFeeds && turnoverError ? <Pill tone="warn">회전율 확인 불가</Pill> : null}
             {failed ? <Button variant="secondary" onClick={reload}>다시 시도</Button> : null}
           </div>
         </div>
@@ -360,7 +407,8 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
             source="SEC EDGAR 13F"
             asOf={asOfLabel}
             coverage={holdersCoverage}
-            onRetry={failed ? reload : undefined}
+            next="분기 종료 후 최대 45일"
+            onRetry={failed ? reload : partialFeeds ? retry : turnoverError ? retryTurnover : undefined}
             onEvidence={dataReady && !failed ? () => openEvidence("/data/sec-13f/summary.json") : undefined}
           />
         </Panel>
@@ -386,7 +434,6 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
                   return (
                     <Row
                       key={row.ticker}
-                      tabIndex={-1}
                       data-superinvestors-overlap-row
                       data-superinvestors-overlap-ticker={row.ticker}
                       data-superinvestors-overlap-holders={row.holders_count}
@@ -411,7 +458,8 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
               source="SEC EDGAR 13F"
               asOf={asOfLabel}
               coverage={coverage}
-              onRetry={failed ? reload : undefined}
+              next="분기 종료 후 최대 45일"
+              onRetry={failed ? reload : partialFeeds ? retry : undefined}
               onEvidence={dataReady && !failed ? () => openEvidence("/data/sec-13f/analytics/consensus.json") : undefined}
             />
           </Panel>
