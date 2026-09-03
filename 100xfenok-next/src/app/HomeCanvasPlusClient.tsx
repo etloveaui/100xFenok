@@ -12,6 +12,14 @@ import { PanelHeader } from "@/components/ui/PanelHeader";
 import { Pill } from "@/components/ui/Pill";
 import { Tile } from "@/components/ui/Tile";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import {
+  buildProvenanceStages,
+  earliestNextSlot,
+  formatSlotShort,
+  nextSlotForLane,
+  summarizeAllServing,
+} from "@/lib/evidence/provenance";
+import { useEvidenceProvenance } from "@/lib/evidence/useEvidenceProvenance";
 import { clamp, getRegimeLabel } from "@/lib/dashboard/formatters";
 import { DATA_STATE_LABELS } from "@/lib/data-state";
 import type { DashboardSnapshot, DashboardSourceId, SectorSnapshot } from "@/lib/dashboard/types";
@@ -475,6 +483,7 @@ function edgeStrengthLabel(score: number): string {
 
 export default function HomeCanvasPlusClient() {
   const { dashboard, dataReady, failedSources } = useDashboardData();
+  const { kpi: provenanceKpi, laneProjection } = useEvidenceProvenance();
   const indexCards = useIndexCards(dashboard);
   const { tile: kospi, loading: kospiLoading } = useKospiTile();
   const [reloadKey, setReloadKey] = useState(0);
@@ -585,6 +594,16 @@ export default function HomeCanvasPlusClient() {
   const laneDelayed = revisionOverdue;
   const laneAwaiting = !laneFresh && !lanePartial && !laneDelayed;
   const laneNext = laneAwaiting ? formatNextRefreshLabel(Date.now()) : undefined;
+  // Hosted provenance (slice-5 E3): lane-registry slots replace client-side guesses
+  // on the Edge/Sector rails; the Edge drawer stages are built from the public
+  // KPI + lane projection + this session's fetch-boundary stamps.
+  const slickNextSlot = nextSlotForLane(laneProjection, "slickcharts");
+  const edgeNextSlot = earliestNextSlot(laneProjection);
+  const edgeStages = useMemo(
+    () => buildProvenanceStages({ kpi: provenanceKpi, laneProjection, serving: summarizeAllServing() }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [provenanceKpi, laneProjection, dataReady],
+  );
   const changedEmptyMessage = bothSourcesLoading
     ? DATA_STATE_LABELS.pending
     : oneSourceLoading
@@ -683,7 +702,7 @@ export default function HomeCanvasPlusClient() {
             <PanelHeader
               eyebrow="Fenok Edge"
               title="시장 체력 점수"
-              right={<Pill tone={regime.confidence >= 62 ? "up" : regime.confidence >= 45 ? "neutral" : "down"}>{edgeStrengthLabel(regime.confidence)}</Pill>}
+              right={<><Pill tone={regime.confidence >= 62 ? "up" : regime.confidence >= 45 ? "neutral" : "down"}>{edgeStrengthLabel(regime.confidence)}</Pill><EvidenceRail variant="chip" freshness={edgeDelayed ? "delayed" : "fresh"} source="Fenok Edge" asOf={formatDatePart(dashboard.tickerFetchedAt)} coverage="" onEvidence={() => router.push(ROUTES.regime)} /></>}
             />
             <div className="flex gap-4 p-[14px] md:gap-6 md:p-4">
               <div className="flex min-w-[72px] flex-col justify-center md:min-w-24">
@@ -715,7 +734,9 @@ export default function HomeCanvasPlusClient() {
               source="Fenok Edge"
               asOf={formatDatePart(dashboard.tickerFetchedAt)}
               coverage={`섹터 ${dashboard.sectorRows.length}개 · 실시간 ${dashboard.sectorLiveCount}개`}
-              onEvidence={() => router.push(ROUTES.regime)}
+              next={edgeNextSlot ? formatSlotShort(edgeNextSlot.slot) : undefined}
+              stages={edgeStages.length > 0 ? edgeStages : undefined}
+              onEvidence={edgeStages.length > 0 ? undefined : () => router.push(ROUTES.regime)}
             />
           </Panel>
 
@@ -742,6 +763,7 @@ export default function HomeCanvasPlusClient() {
               source="Sector Flow"
               asOf={dashboard.sectorMode === "LIVE_1D" ? formatDatePart(dashboard.tickerFetchedAt) : "1개월 기준"}
               coverage={`${heatSectors.length}/${dashboard.sectorRows.length} 섹터`}
+              next={slickNextSlot ? formatSlotShort(slickNextSlot) : undefined}
               onEvidence={() => router.push(ROUTES.sectors)}
             />
           </Panel>

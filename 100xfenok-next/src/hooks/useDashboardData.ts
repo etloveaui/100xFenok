@@ -21,6 +21,7 @@ import {
   DEFAULT_DASHBOARD,
 } from '@/lib/dashboard/constants';
 import { buildDashboardSnapshot } from '@/lib/dashboard/snapshot-builder';
+import { recordServing } from '@/lib/evidence/provenance';
 
 // HTTP cache intentional: static /data/*.json has Cache-Control max-age=300
 // (see next.config.ts headers). Ticker /api/* has its own s-maxage=15.
@@ -30,6 +31,7 @@ async function fetchJson<T>(url: string, timeoutMs = CLIENT_FETCH_TIMEOUT_MS): P
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(url, { signal: controller.signal });
+    recordServing(url, response.headers);
     if (!response.ok) return null;
     return (await response.json()) as T;
   } catch {
