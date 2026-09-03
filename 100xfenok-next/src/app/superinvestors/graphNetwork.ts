@@ -54,6 +54,11 @@ export function buildGraphNetwork(input: GraphNetworkInput): GraphNetwork {
   };
   if (!feeds.byTicker || byTicker === null) return { ...EMPTY, feeds, excludedCount: excludedStale.length };
   const excluded = new Set(excludedStale);
+  if (feeds.summary && summary !== null) {
+    for (const [investorId, profile] of Object.entries(summary.investors)) {
+      if (profile.is_stale) excluded.add(investorId);
+    }
+  }
 
   const tickerHolders = new Map<string, Map<string, { weight: number; marketValue: number | null }>>();
   for (const [ticker, entry] of Object.entries(byTicker)) {
@@ -125,6 +130,6 @@ export function buildGraphNetwork(input: GraphNetworkInput): GraphNetwork {
     investorCount: activeInvestors.size,
     tickerCount: tickerHolders.size,
     feeds,
-    excludedCount: excludedStale.length,
+    excludedCount: excluded.size,
   };
 }
