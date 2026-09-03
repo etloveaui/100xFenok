@@ -1050,12 +1050,14 @@ function DividendPanel({
   years,
   currency,
   highlight,
+  quality,
 }: {
   detail: any;
   yfData: any;
   years: string[];
   currency: string;
   highlight: boolean;
+  quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void };
 }) {
   const info = yfData?.info && typeof yfData.info === "object" ? yfData.info : {};
   const dividendYield = isFiniteNumber(info.dividendYield) ? info.dividendYield : null; // yf finance uses percent points here.
@@ -1082,6 +1084,7 @@ function DividendPanel({
       ? "StockAnalysis DPS series"
       : "배당 데이터 없음";
   const hasDividendData = dividendYield !== null || payoutRatio !== null || dpsValues.length > 0 || dividendDates.length > 0;
+  const dividendRailAsOf = dividendDates.length > 0 ? dividendDates[dividendDates.length - 1] : years.length > 0 ? years[years.length - 1] : "—";
 
   return (
     <section
@@ -1120,7 +1123,7 @@ function DividendPanel({
           이 티커에서는 DPS 시계열을 찾지 못했습니다. 수익률/성향 값이 없으면 배당 분석은 빈 상태로 유지됩니다.
         </p>
       )}
-      <EvidenceRail freshness={hasDividendData ? "fresh" : "stale"} source="Yahoo Finance" asOf="—" coverage="배당 지표" next={hasDividendData ? undefined : "배당 데이터 확보 시"} skeletonDelayMs={120} />
+      <EvidenceRail freshness={quality?.error && !hasDividendData ? "error" : quality?.loading && !hasDividendData ? "pending" : hasDividendData && dividendRailAsOf !== "—" ? "fresh" : "stale"} source="Yahoo Finance" asOf={dividendRailAsOf} coverage="배당 지표" next={hasDividendData ? undefined : "배당 데이터 확보 시"} onRetry={quality?.onRetry} skeletonDelayMs={120} />
     </Panel>
     </section>
   );
@@ -1200,13 +1203,22 @@ function StockEstimatesPanel({
     </>
   );
 
-  if (variant === "canvasPlus") return body;
+  const estimatesRailFreshness = quality?.error && !hasData ? "error" : quality?.loading && !hasData ? "pending" : hasData ? "fresh" : "stale";
+
+  if (variant === "canvasPlus") {
+    return (
+      <>
+        {body}
+        <EvidenceRail freshness={estimatesRailFreshness} source="StockAnalysis/Yahoo" asOf="—" coverage="FY+1~3 컨센서스" onRetry={quality?.onRetry} skeletonDelayMs={120} />
+      </>
+    );
+  }
 
   return (
     <Panel>
       <PanelHeader eyebrow="Estimates" title="추정치 변화" />
       {body}
-      <EvidenceRail freshness={quality?.error && !hasData ? "error" : quality?.loading && !hasData ? "pending" : hasData ? "fresh" : "stale"} source="StockAnalysis/Yahoo" asOf="—" coverage="FY+1~3 컨센서스" onRetry={quality?.onRetry} skeletonDelayMs={120} />
+      <EvidenceRail freshness={estimatesRailFreshness} source="StockAnalysis/Yahoo" asOf="—" coverage="FY+1~3 컨센서스" onRetry={quality?.onRetry} skeletonDelayMs={120} />
     </Panel>
   );
 }
@@ -1380,6 +1392,7 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
           </table>
         </div>
       ) : null}
+      <EvidenceRail freshness={f13Quality?.error && holders.length === 0 && tradeRows.length === 0 ? "error" : (holders.length > 0 || tradeRows.length > 0) && (generatedAt !== null || quarter !== null) ? "fresh" : "stale"} source="13F" asOf={generatedAt ?? quarter ?? "—"} coverage="대가 보유·매매 변화" onRetry={f13Quality?.onRetry} skeletonDelayMs={120} />
     </section>
   );
 }
@@ -1443,13 +1456,14 @@ function tradeInvestorNameOf(value: unknown): string | null {
 // ---------------------------------------------------------------------------
 
 function FinancialsHeroCp({
-  detail, years, currency, financialCandidate, profitabilityEstimates,
+  detail, years, currency, financialCandidate, profitabilityEstimates, quality,
 }: {
   detail: any;
   years: string[];
   currency: string;
   financialCandidate: StockanalysisFinancialPayload | null | undefined;
   profitabilityEstimates: ReturnType<typeof deriveProfitabilityEstimates> | null;
+  quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void };
 }) {
   const revenueActual = numberSeries(detail.income_statement?.revenue);
   const revenueEstimates = detail.income_statement_estimates?.revenue ?? null;
@@ -1595,7 +1609,7 @@ function FinancialsHeroCp({
           <span>영업이익률(선)</span>
         </div>
       </div>
-      <EvidenceRail freshness={revBars.length > 0 ? "fresh" : "stale"} source="스톡분석 재무" asOf={years.length > 0 ? years[years.length - 1] : "—"} coverage="매출·영업이익률 추이" next={revBars.length > 0 ? undefined : "재무 데이터 확보 시"} skeletonDelayMs={120} />
+      <EvidenceRail freshness={quality?.error && revBars.length === 0 ? "error" : quality?.loading && revBars.length === 0 ? "pending" : revBars.length > 0 && years.length > 0 ? "fresh" : "stale"} source="스톡분석 재무" asOf={years.length > 0 ? years[years.length - 1] : "—"} coverage="매출·영업이익률 추이" next={revBars.length > 0 ? undefined : "재무 데이터 확보 시"} onRetry={quality?.onRetry} skeletonDelayMs={120} />
     </Panel>
     </section>
   );
@@ -1642,7 +1656,7 @@ function FinancialsTilesCp({
 // W4 밸류(Valuation/statistics) tab surface
 // ---------------------------------------------------------------------------
 
-function ValuationHeroCp({ detailPerBands }: { detailPerBands: { current: number; min_8y: number; avg_8y: number; max_8y: number } }) {
+function ValuationHeroCp({ detailPerBands, years, quality }: { detailPerBands: { current: number; min_8y: number; avg_8y: number; max_8y: number }; years: string[]; quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void } }) {
   const { current, min_8y, max_8y, avg_8y } = detailPerBands;
   if (max_8y <= min_8y) return null;
   const pct = bandPct(current, min_8y, max_8y);
@@ -1676,14 +1690,14 @@ function ValuationHeroCp({ detailPerBands }: { detailPerBands: { current: number
           <span className="text-right">{max_8y.toFixed(1)}x · 8년 최고</span>
         </div>
       </div>
-      <EvidenceRail freshness="fresh" source="PER 밴드" asOf="—" coverage="8Y PER" skeletonDelayMs={120} />
+      <EvidenceRail freshness={quality?.error ? "error" : quality?.loading ? "pending" : years.length > 0 ? "fresh" : "stale"} source="PER 밴드" asOf={years.length > 0 ? years[years.length - 1] : "—"} coverage="8Y PER" onRetry={quality?.onRetry} skeletonDelayMs={120} />
     </Panel>
     </section>
   );
 }
 
 function ValuationBodyCp({
-  yfData, industryBench, detail, profitabilityEstimates, currency,
+  yfData, industryBench, detail, profitabilityEstimates, currency, quality,
 }: {
   yfData: any;
   industryBench: IndustryBench | null;
@@ -1691,6 +1705,7 @@ function ValuationBodyCp({
   profitabilityEstimates: ReturnType<typeof deriveProfitabilityEstimates> | null;
   currency: string;
   years: string[];
+  quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void };
 }) {
   const info = yfData?.info ?? {};
   const trailingPE = isFiniteNumber(info.trailingPE) ? info.trailingPE : null;
@@ -1753,7 +1768,7 @@ function ValuationBodyCp({
               <Stat key={t.label} label={t.label} value={t.body} sub={t.cap} />
             ))}
           </div>
-          <EvidenceRail freshness="fresh" source="Yahoo Finance" asOf="—" coverage="밸류 지표" skeletonDelayMs={120} />
+          <EvidenceRail freshness={quality?.error && rrTiles.length === 0 ? "error" : quality?.loading && rrTiles.length === 0 ? "pending" : "stale"} source="Yahoo Finance" asOf="—" coverage="밸류 지표" onRetry={quality?.onRetry} skeletonDelayMs={120} />
         </Panel>
         </section>
       ) : null}
@@ -1779,7 +1794,7 @@ function ValuationBodyCp({
               );
             })}
           </div>
-          <EvidenceRail freshness="fresh" source="다모다란" asOf="—" coverage="산업 대비 지표" skeletonDelayMs={120} />
+          <EvidenceRail freshness={quality?.error && industryChips.length === 0 ? "error" : quality?.loading && industryChips.length === 0 ? "pending" : "stale"} source="다모다란" asOf="—" coverage="산업 대비 지표" onRetry={quality?.onRetry} skeletonDelayMs={120} />
         </Panel>
         </section>
       ) : null}
@@ -1818,7 +1833,7 @@ function ValuationBodyCp({
               ROE <b>{roeNow.toFixed(1)}%</b>가 자본비용(WACC) <b>{wacc.toFixed(1)}%</b>를 {roeNow >= wacc ? "웃돕니다" : "밑돕니다"} — 자본을 굴릴수록 가치를 {roeNow >= wacc ? "만들어내는" : "갉아먹는"} 스프레드입니다.
             </p>
           ) : null}
-          <EvidenceRail freshness="fresh" source="스톡분석 재무" asOf="—" coverage="수익성·성장 FY+1" skeletonDelayMs={120} />
+          <EvidenceRail freshness={quality?.error && profRows.length === 0 ? "error" : quality?.loading && profRows.length === 0 ? "pending" : profRows.length > 0 && years.length > 0 ? "fresh" : "stale"} source="스톡분석 재무" asOf={years.length > 0 ? years[years.length - 1] : "—"} coverage="수익성·성장 FY+1" onRetry={quality?.onRetry} skeletonDelayMs={120} />
         </Panel>
         </section>
       ) : null}
@@ -1830,7 +1845,7 @@ function ValuationBodyCp({
 // W4 추정치(Estimates) tab surface
 // ---------------------------------------------------------------------------
 
-function EstimatesHeroCp({ yfData, detail, currency }: { yfData: any; detail: any; currency: string }) {
+function EstimatesHeroCp({ yfData, detail, currency, quality }: { yfData: any; detail: any; currency: string; quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void } }) {
   const targets = yfData?.analyst_price_targets ?? {};
   const current = isFiniteNumber(targets.current) ? targets.current : null;
   const mean = isFiniteNumber(targets.mean) ? targets.mean : null;
@@ -1851,6 +1866,10 @@ function EstimatesHeroCp({ yfData, detail, currency }: { yfData: any; detail: an
 
   if (current === null && epsPoints.length === 0) return null;
   const maxEps = Math.max(...epsPoints.map((p) => p.value), 1);
+
+  const heroHasData = upsidePct !== null || epsPoints.length > 0;
+  const heroYears: string[] = Array.isArray(detail?.years) ? detail.years : [];
+  const heroRailAsOf = heroYears.length > 0 ? heroYears[heroYears.length - 1] : "—";
 
   return (
     <section data-stock-tab-card="estimates-consensus">
@@ -1889,12 +1908,13 @@ function EstimatesHeroCp({ yfData, detail, currency }: { yfData: any; detail: an
           ))}
         </div>
       ) : null}
+      <EvidenceRail freshness={quality?.error && !heroHasData ? "error" : quality?.loading && !heroHasData ? "pending" : heroHasData && heroRailAsOf !== "—" ? "fresh" : "stale"} source="Yahoo Finance/추정치" asOf={heroRailAsOf} coverage="목표가 여력·EPS 추이" onRetry={quality?.onRetry} skeletonDelayMs={120} />
     </Panel>
     </section>
   );
 }
 
-function EstimatesBandCp({ yfData, currency }: { yfData: any; currency: string }) {
+function EstimatesBandCp({ yfData, currency, quality }: { yfData: any; currency: string; quality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void } }) {
   const targets = yfData?.analyst_price_targets ?? {};
   const low = isFiniteNumber(targets.low) ? targets.low : null;
   const high = isFiniteNumber(targets.high) ? targets.high : null;
@@ -1930,6 +1950,7 @@ function EstimatesBandCp({ yfData, currency }: { yfData: any; currency: string }
         <span>최저 {formatMoney(low, currency)}</span>
         <span className="text-right">최고 {formatMoney(high, currency)}</span>
       </div>
+      <EvidenceRail freshness={quality?.error ? "error" : quality?.loading ? "pending" : "stale"} source="Yahoo Finance" asOf="—" coverage="목표가 범위" onRetry={quality?.onRetry} skeletonDelayMs={120} />
     </Panel>
     </section>
   );
@@ -2023,13 +2044,14 @@ function EstimatesRecoCp({ yfData, quality }: { yfData: any; quality?: { loading
 // ---------------------------------------------------------------------------
 
 function OwnershipHeroCp({
-  f13Entries, ticker, yfData, displayPrice, f13Quality,
+  f13Entries, ticker, yfData, displayPrice, f13Quality, yQuality,
 }: {
   f13Entries: F13Entry[] | null;
   ticker: string;
   yfData: any;
   displayPrice: number | null;
   f13Quality?: { error: LoaderError | null; onRetry?: () => void };
+  yQuality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void };
 }) {
   const [tradesChip, setTradesChip] = useState<{ bought?: any; sold?: any; metadata?: any } | null>(null);
 
@@ -2131,6 +2153,7 @@ function OwnershipHeroCp({
           {isFiniteNumber(tradesChip?.sold?.exit_count) && tradesChip.sold.exit_count > 0 ? <span>완전 청산(포지션 제로) <b className="tabular-nums text-slate-900">{tradesChip.sold.exit_count}</b></span> : null}
           {guruValueApprox !== null ? <span>Guru 합산 보유 평가액(근사) <b className="tabular-nums text-slate-900">{formatCompactMoney(guruValueApprox, "USD")}</b></span> : null}
         </div>
+        <EvidenceRail freshness={f13Quality?.error && !hasFlow && holderCount === 0 ? "error" : (hasFlow || holderCount > 0) && (generatedAt !== null || quarter !== null) ? "fresh" : "stale"} source="13F" asOf={generatedAt ?? quarter ?? "—"} coverage="기관 자금 흐름" onRetry={f13Quality?.onRetry} skeletonDelayMs={120} />
       </Panel>
       </section>
 
@@ -2172,6 +2195,7 @@ function OwnershipHeroCp({
               <p className="px-4 py-3 text-[12px] text-slate-500">13F 보유자 데이터를 찾지 못했습니다.</p>
             )}
           </div>
+          <EvidenceRail freshness={f13Quality?.error && top10.length === 0 ? "error" : top10.length > 0 && (quarter !== null || generatedAt !== null) ? "fresh" : "stale"} source="13F" asOf={quarter ?? generatedAt ?? "—"} coverage="Guru 보유 Top 10" onRetry={f13Quality?.onRetry} skeletonDelayMs={120} />
         </Panel>
         </section>
 
@@ -2187,6 +2211,7 @@ function OwnershipHeroCp({
                   <span className="text-right text-[12px] font-semibold text-slate-900">매도 랭크 #{isFiniteNumber(tradesChip.sold.rank) ? tradesChip.sold.rank : "—"}</span>
                 </Row>
               ) : null}
+              <EvidenceRail freshness={generatedAt !== null || quarter !== null ? "fresh" : "stale"} source="13F" asOf={generatedAt ?? quarter ?? "—"} coverage="완전 청산" skeletonDelayMs={120} />
             </Panel>
           ) : null}
 
@@ -2210,7 +2235,7 @@ function OwnershipHeroCp({
                 {insidersPct !== null ? <Stat label="내부자 보유율" value={`${insidersPct.toFixed(1)}%`} /> : null}
                 {institutionsCount !== null ? <Stat label="보유 기관 총 수" value={institutionsCount.toLocaleString()} /> : null}
               </StatStrip>
-              <EvidenceRail freshness="fresh" source="Yahoo Finance" asOf={reportBasisLabel ?? "—"} coverage="기관 보유" skeletonDelayMs={120} />
+              <EvidenceRail freshness={yQuality?.error && institutionsPct === null && institutionsCount === null ? "error" : yQuality?.loading && institutionsPct === null && institutionsCount === null ? "pending" : quarter !== null || generatedAt !== null ? "fresh" : "stale"} source="Yahoo Finance" asOf={reportBasisLabel ?? "—"} coverage="기관 보유" onRetry={yQuality?.onRetry} skeletonDelayMs={120} />
             </Panel>
             </section>
           ) : null}
@@ -2478,7 +2503,7 @@ function FilingsTimelineCp({ filings, heroFiling }: { filings: EdgarKoreanSummar
         <span>8-K 등 요약 완료</span>
         <span>요약 대기</span>
       </div>
-      <EvidenceRail freshness="fresh" source="EDGAR" asOf={sorted.length > 0 ? sorted[sorted.length - 1].filingDate : "—"} coverage={`캘린더 ${filings.length}건`} skeletonDelayMs={120} />
+      <EvidenceRail freshness={sorted.length > 0 ? "fresh" : "stale"} source="EDGAR" asOf={sorted.length > 0 ? sorted[sorted.length - 1].filingDate : "—"} coverage={`캘린더 ${filings.length}건`} skeletonDelayMs={120} />
     </Panel>
     </section>
   );
@@ -2639,6 +2664,11 @@ export default function StockDetailClient({
   const [etfResult, setEtfResult] = useState<StockanalysisEtfLoadResult | null | undefined>(undefined);
   const [etfSurfaceData, setEtfSurfaceData] = useState<TickerSurfacePayload | null | undefined>(undefined);
   const [stockAuxData, setStockAuxData] = useState<StockanalysisStockPayload | null | undefined>(undefined);
+  const [stockAuxRetryNonce, setStockAuxRetryNonce] = useState(0);
+  const retryStockAux = useCallback(() => {
+    setStockAuxData(undefined);
+    setStockAuxRetryNonce((n) => n + 1);
+  }, []);
   const [financialCandidate, setFinancialCandidate] = useState<StockanalysisFinancialPayload | null | undefined>(undefined);
   const [fenokSignalLens, setFenokSignalLens] = useState<FenokSignalsSummaryRecord | null | undefined>(undefined);
   const [stockChartRange, setStockChartRange] = useState<StockChartRange>("1Y");
@@ -2724,7 +2754,7 @@ export default function StockDetailClient({
     });
     loadStockanalysisStock(symbol).then((d) => { if (!cancelled) setStockAuxData(d); });
     return () => { cancelled = true; };
-  }, [assetHint, canLoadStockData, symbol]);
+  }, [assetHint, canLoadStockData, stockAuxRetryNonce, symbol]);
 
   useEffect(() => {
     let cancelled = false;
@@ -3097,6 +3127,8 @@ export default function StockDetailClient({
                   className="cp-stock-price-chart"
                   emptyLabel="표시할 가격 이력이 없습니다."
                   pending={stockAuxData === undefined}
+                  loadError={stockAuxData === null ? "가격 이력 데이터를 찾지 못했습니다." : null}
+                  onRetry={stockAuxData === null ? retryStockAux : undefined}
                 />
               </section>
 
@@ -3240,7 +3272,7 @@ export default function StockDetailClient({
 	                  <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">실적 추이 · 추정</h4>
 	                  <CompactFinancialTable detail={detail} years={years} />
 	                </div>
-	                <DividendPanel detail={detail} yfData={yfData} years={years} currency={displayCurrency} highlight={highlightDividend} />
+	                <DividendPanel detail={detail} yfData={yfData} years={years} currency={displayCurrency} highlight={highlightDividend} quality={{ loading: detailLoading || !yfLoaded, error: detailError ?? yfError, onRetry: detailError ? retryDetail : yfError ? retryYfFinance : undefined }} />
 	                <FinancialCandidatePanel data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
 	                <RawFinancialDepth detail={detail} />
 	              </SectionCard>
@@ -3324,9 +3356,7 @@ export default function StockDetailClient({
 
             {activeStockTab === "ownership" ? (
               <div id="guru-section">
-                <SectionCard>
-                  <GuruSection f13Entries={f13Entries} ticker={symbol} f13Quality={{ error: f13Error, onRetry: retryF13 }} />
-                </SectionCard>
+                <GuruSection f13Entries={f13Entries} ticker={symbol} f13Quality={{ error: f13Error, onRetry: retryF13 }} />
               </div>
             ) : null}
           </>
@@ -3362,12 +3392,12 @@ export default function StockDetailClient({
           </div>
         ) : detail ? (
           <>
-            <FinancialsHeroCp detail={detail} years={years} currency={displayCurrency} financialCandidate={financialCandidate} profitabilityEstimates={profitabilityEstimates} />
+            <FinancialsHeroCp detail={detail} years={years} currency={displayCurrency} financialCandidate={financialCandidate} profitabilityEstimates={profitabilityEstimates} quality={{ loading: detailLoading, error: detailError, onRetry: retryDetail }} />
             <FinancialsTilesCp detail={detail} financialCandidate={financialCandidate} currency={displayCurrency} />
 
             <section data-stock-tab-card="dividend">
               <div>
-                <DividendPanel detail={detail} yfData={yfData} years={years} currency={displayCurrency} highlight={highlightDividend} />
+                <DividendPanel detail={detail} yfData={yfData} years={years} currency={displayCurrency} highlight={highlightDividend} quality={{ loading: detailLoading || !yfLoaded, error: detailError ?? yfError, onRetry: detailError ? retryDetail : yfError ? retryYfFinance : undefined }} />
               </div>
             </section>
 
@@ -3432,7 +3462,7 @@ export default function StockDetailClient({
         ) : detail ? (
           <>
             {detailPerBands ? (
-              <ValuationHeroCp detailPerBands={detailPerBands} />
+              <ValuationHeroCp detailPerBands={detailPerBands} years={years} quality={{ loading: detailLoading, error: detailError, onRetry: retryDetail }} />
             ) : finiteValues(detail.valuation?.per).length >= 2 ? (
               <section data-stock-tab-card="valuation-band">
               <Panel>
@@ -3440,12 +3470,12 @@ export default function StockDetailClient({
                 <div className="px-4 py-2">
                   <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
                 </div>
-                <EvidenceRail freshness="fresh" source="PER 밴드" asOf="—" coverage="8Y PER" skeletonDelayMs={120} />
+                <EvidenceRail freshness={(detailError || yfError) ? "error" : detailLoading ? "pending" : years.length > 0 ? "fresh" : "stale"} source="PER 밴드" asOf={years.length > 0 ? years[years.length - 1] : "—"} coverage="8Y PER" onRetry={detailError ? retryDetail : yfError ? retryYfFinance : undefined} skeletonDelayMs={120} />
               </Panel>
               </section>
             ) : null}
 
-            <ValuationBodyCp yfData={yfData} industryBench={industryBench} detail={detail} profitabilityEstimates={profitabilityEstimates} currency={displayCurrency} years={years} />
+            <ValuationBodyCp yfData={yfData} industryBench={industryBench} detail={detail} profitabilityEstimates={profitabilityEstimates} currency={displayCurrency} years={years} quality={{ loading: !yfLoaded || detailLoading, error: yfError ?? detailError, onRetry: yfError ? retryYfFinance : detailError ? retryDetail : undefined }} />
 
             <details className="group" data-stock-tab-card="price-dividend">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
@@ -3503,12 +3533,12 @@ export default function StockDetailClient({
           </div>
         ) : detail || yfAvailable ? (
           <>
-            {detail ? <EstimatesHeroCp yfData={yfData} detail={detail} currency={displayCurrency} /> : null}
-            {yfAvailable ? <EstimatesBandCp yfData={yfData} currency={displayCurrency} /> : null}
+            {detail ? <EstimatesHeroCp yfData={yfData} detail={detail} currency={displayCurrency} quality={{ loading: detailLoading || !yfLoaded, error: detailError ?? yfError, onRetry: detailError ? retryDetail : yfError ? retryYfFinance : undefined }} /> : null}
+            {yfAvailable ? <EstimatesBandCp yfData={yfData} currency={displayCurrency} quality={{ loading: !yfLoaded, error: yfError, onRetry: retryYfFinance }} /> : null}
             {detail ? <EstimatesGrowthTilesCp detail={detail} currency={displayCurrency} /> : null}
             {yfAvailable ? <EstimatesRecoCp yfData={yfData} quality={{ loading: !yfLoaded, error: yfError, onRetry: retryYfFinance }} /> : null}
 
-            <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" data-stock-tab-card="estimates-yf">
+            <details className="group" data-stock-tab-card="estimates-yf">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
                 <span>연간·분기 추정 상세 보기<div className="mt-0.5 text-[12px] font-bold text-slate-500">FY-4~FY+3 실적/추정 그리드 · 애널리스트 EPS·매출 추정 상세</div></span>
                 <span className="shrink-0 text-[12px] text-slate-500 transition-transform group-open:rotate-90">▸</span>
@@ -3559,10 +3589,10 @@ export default function StockDetailClient({
           </div>
         ) : detail ? (
           <>
-            <OwnershipHeroCp f13Entries={f13Entries} ticker={symbol} yfData={yfData} displayPrice={displayPrice} f13Quality={{ error: f13Error, onRetry: retryF13 }} />
+            <OwnershipHeroCp f13Entries={f13Entries} ticker={symbol} yfData={yfData} displayPrice={displayPrice} f13Quality={{ error: f13Error, onRetry: retryF13 }} yQuality={{ loading: !yfLoaded, error: yfError, onRetry: retryYfFinance }} />
 
             {yfAvailable ? (
-              <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" data-stock-tab-card="ownership-yf">
+              <details className="group" data-stock-tab-card="ownership-yf">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
                   <span>기관 보유 상세 보기 (Yahoo Finance)<div className="mt-0.5 text-[12px] font-bold text-slate-500">기관 보유 TOP 10 · 지분율·주식수·증감</div></span>
                   <span className="shrink-0 text-[12px] text-slate-500 transition-transform group-open:rotate-90">▸</span>
@@ -3750,7 +3780,7 @@ function FinancialCandidatePanel({
           </div>
         ))}
       </div>
-      <EvidenceRail freshness="fresh" source="재무제표" asOf={data.fetched_at ? (fmtKstMinute(data.fetched_at) ?? "—") : "—"} coverage="교차검증" skeletonDelayMs={120} />
+      <EvidenceRail freshness={data.fetched_at && fmtKstMinute(data.fetched_at) ? "fresh" : "stale"} source="재무제표" asOf={data.fetched_at ? (fmtKstMinute(data.fetched_at) ?? "—") : "—"} coverage="교차검증" skeletonDelayMs={120} />
     </Panel>
   );
 }
@@ -3798,6 +3828,7 @@ function EtfDataPanel({
       : holdings.length;
   const holdingsUpdated = normalized.holdings_updated ?? marketFacts?.etf?.holdings_updated ?? null;
   const history = Array.isArray(normalized.history) ? normalized.history : [];
+  const historyAsOf = history.find((point) => typeof point.t === "string" && point.t.trim() !== "")?.t ?? null;
   const assetAllocation = normalized.asset_allocation ?? marketFacts?.etf?.asset_allocation ?? null;
   const sectors = normalized.sectors ?? marketFacts?.etf?.sectors ?? null;
   const countries = normalized.countries ?? marketFacts?.etf?.countries ?? null;
@@ -3887,7 +3918,7 @@ function EtfDataPanel({
             운용사 웹사이트
           </a>
         ) : null}
-        <EvidenceRail freshness="fresh" source="ETF" asOf={externalSourceAsOf ?? "—"} coverage="핵심 지표" skeletonDelayMs={120} />
+        <EvidenceRail freshness={externalSourceAsOf ? "fresh" : "stale"} source="ETF" asOf={externalSourceAsOf ?? "—"} coverage="핵심 지표" skeletonDelayMs={120} />
       </Panel>
 
       <Panel>
@@ -3916,7 +3947,7 @@ function EtfDataPanel({
       <Panel>
         <PanelHeader eyebrow="History" title="가격 히스토리" />
         <div className="px-4 py-2"><EtfHistoryView history={history} currency={currency} /></div>
-        <EvidenceRail freshness={history.length > 0 ? "fresh" : "stale"} source="ETF" asOf="—" coverage="가격 히스토리" skeletonDelayMs={120} />
+        <EvidenceRail freshness={historyAsOf !== null ? "fresh" : "stale"} source="ETF" asOf={historyAsOf ?? "—"} coverage="가격 히스토리" skeletonDelayMs={120} />
       </Panel>
     </div>
   );

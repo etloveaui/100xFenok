@@ -75,7 +75,7 @@ export default function DataStateNotice({
           <button
             type="button"
             onClick={onAction}
-            className="inline-flex min-h-9 items-center rounded-full border border-current px-3 text-[11px] font-black text-[#1B73D3] transition hover:text-[#155fae]"
+            className="inline-flex min-h-9 items-center rounded-full border border-current px-3 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-interactive"
           >
             {actionLabel}
           </button>

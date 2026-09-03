@@ -54,10 +54,18 @@ async function request13FOnce<T>(url: string, timeoutMs: number): Promise<T> {
   }
 }
 
+function isRetryable13FError(error: unknown): boolean {
+  if (!(error instanceof Fetch13FError)) return false;
+  if (error.kind === "timeout") return true;
+  if (error.kind === "parse") return false;
+  return error.status === 429 || (error.status !== null && error.status >= 500);
+}
+
 export async function fetch13FJson<T>(url: string, timeoutMs = SEC_13F_FETCH_TIMEOUT_MS): Promise<T> {
   try {
     return await request13FOnce<T>(url, timeoutMs);
-  } catch {
+  } catch (error) {
+    if (!isRetryable13FError(error)) throw error;
     return request13FOnce<T>(url, timeoutMs);
   }
 }
@@ -85,6 +93,7 @@ async function settle13F<T>(promise: Promise<T>): Promise<{ data: T | null; fail
 
 export interface SuperInvestorsDataState extends SuperInvestorsDataResult {
   failedRequests: string[];
+  retrying: boolean;
   retry: () => void;
 }
 
@@ -92,6 +101,7 @@ export function use13FData(): SuperInvestorsDataState {
   const [result, setResult] = useState<SuperInvestorsDataResult>(EMPTY);
   const [failedRequests, setFailedRequests] = useState<string[]>([]);
   const [attempt, setAttempt] = useState(0);
+  const [retrying, setRetrying] = useState(false);
   const isMountedRef = useRef(true);
 
   const retry = () => setAttempt((n) => n + 1);
@@ -99,8 +109,9 @@ export function use13FData(): SuperInvestorsDataState {
   useEffect(() => {
     isMountedRef.current = true;
     if (attempt > 0) {
-      setResult(EMPTY);
-      setFailedRequests([]);
+      // Retry keeps last-known-good rows (five-state rule): settled data stays
+      // on screen while the refetch is in flight.
+      setRetrying(true);
     }
 
     void (async () => {
@@ -134,8 +145,9 @@ export function use13FData(): SuperInvestorsDataState {
       const consensusFailed = !consensus?.consensus;
 
       if (anyFailed || consensusFailed) {
-        setResult({ ...EMPTY, failed: true });
+        setResult((prev) => ({ ...prev, failed: true }));
         setFailedRequests(failed.length > 0 ? failed : ["consensus"]);
+        setRetrying(false);
         return;
       }
 
@@ -152,6 +164,7 @@ export function use13FData(): SuperInvestorsDataState {
         excludedStale: consensus?.metadata?.excluded_stale_investors ?? [],
       });
       setFailedRequests(failed);
+      setRetrying(false);
     })();
 
     return () => {
@@ -159,7 +172,7 @@ export function use13FData(): SuperInvestorsDataState {
     };
   }, [attempt]);
 
-  return { ...result, failedRequests, retry };
+  return { ...result, failedRequests, retrying, retry };
 }
 
 const INVESTOR_CACHE = new Map<string, InvestorData>();

@@ -207,8 +207,8 @@ function renderContractHash(sites) {
 
 export function validateRenderManifest(manifest, reader = read) {
   assert.equal(manifest.schema_version, "ink4-render-sites/v2");
-  assert.equal(manifest.site_count, 101, "111 minus the 10 staggered duplicate pins removed for exact-equality witnesses");
-  assert.equal(manifest.consumer_count, 102, "112 minus the 10 consumers on the removed duplicate pins");
+  assert.equal(manifest.site_count, 100, "111 minus the 10 staggered duplicate pins removed for exact-equality witnesses, minus the 1 MarketValuation body_text witness retired by slice-5-E4c (EmptyPanel-to-EmptyState: line no longer carries an ink token)");
+  assert.equal(manifest.consumer_count, 101, "112 minus the 10 consumers on the removed duplicate pins, minus the 1 consumer on the retired MarketValuation witness");
   assert.equal(manifest.sites.length, manifest.site_count, "render manifest denominator drifted");
   assert.deepEqual(
     manifest.surfaces,
@@ -223,8 +223,8 @@ export function validateRenderManifest(manifest, reader = read) {
   }, {});
   assert.deepEqual(
     roles,
-    { body_text: 94, non_text: 4, mixed_text_non_text: 1, inactive_control: 2 },
-    "text, non-text, or inactive-control classification drifted",
+    { body_text: 93, non_text: 4, mixed_text_non_text: 1, inactive_control: 2 },
+    "text, non-text, or inactive-control classification drifted (body_text 94 minus the 1 retired MarketValuation witness)",
   );
 
   const byPath = new Map();

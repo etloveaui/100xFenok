@@ -97,6 +97,18 @@ const BACKGROUND_PATTERNS = {
   slate100: /bg-slate-100|--fnk-neutral-100:\s*#f1f5f9/,
 };
 
+// Retired render-target witnesses, keyed by site id. A witness retires only
+// when its render line legitimately stops carrying an ink-4 token (never to
+// silence drift): regen drops the entry, and the contract counts move with it.
+// fh-20260903-747 pins failure: slice-5-E4c replaced MarketValuation EmptyPanel
+// (a `text-[var(--c-ink-3)]` div) with the shared EmptyState primitive, whose
+// reason text renders near-black without an ink token — the line lost witness
+// eligibility, so the site retires instead of being re-pinned.
+const RETIRED_INK4_SITES = {
+  "src/app/market-valuation/MarketValuationClient.tsx#56e2c87acd5f#1":
+    "slice-5-E4c EmptyPanel-to-EmptyState: render line no longer carries an ink token",
+};
+
 export function emitInk4ContrastFixture({ outputPath = INK4_CONTRAST_FIXTURE_PATH } = {}) {
   const baseline = JSON.parse(fs.readFileSync(INK4_CONTRAST_FIXTURE_PATH, "utf8"));
 
@@ -126,6 +138,7 @@ export function emitInk4ContrastFixture({ outputPath = INK4_CONTRAST_FIXTURE_PAT
   // measured count becomes the pinned expectation.
   const sites = [];
   for (const site of roster.values()) {
+    if (Object.hasOwn(RETIRED_INK4_SITES, site.id)) continue;
     const actual = getTargets(site.path).get(site.target_hash) ?? 0;
     if (actual === 0) {
       throw new Error(
