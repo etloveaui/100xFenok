@@ -2244,7 +2244,7 @@ export default function ScreenerClient({
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="NVDA"
-                className="min-h-9 min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-semibold text-[var(--c-ink)] outline-none transition focus:border-[var(--brand-interactive)]"
+                className="min-h-9 min-w-0 flex-1 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-sm font-semibold text-[var(--c-ink)] outline-none transition placeholder:text-[var(--c-ink-3)] focus:border-[var(--brand-interactive)]"
                 data-canvas-plus-screener-search="true"
               />
               {search.trim() ? (

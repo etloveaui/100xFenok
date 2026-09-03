@@ -73,8 +73,8 @@ assert.match(
 );
 
 const legacyScreener = read("src/styles/cp-w4-screener.css");
-assert.equal(occurrences(legacyScreener, "#94a3b8"), 2, "only the search icon may retain raw ink-4");
-assert.equal(occurrences(legacyScreener, "#64748b"), 4, "three legacy text sites must move to ink-3");
+assert.equal(occurrences(legacyScreener, "#94a3b8"), 0, "slice-3 removed the search icon, the sole raw ink-4 site");
+assert.equal(occurrences(legacyScreener, "#64748b"), 2, "only the muted token source and the disabled CTA may retain raw ink-3");
 assert.equal(occurrences(read("src/styles/route-embed.css"), "#94a3b8"), 1, "embed border must retain raw ink-4");
 
 console.log("ink-4 contrast contract: PASS (77 text migrations; non-text survivors preserved)");

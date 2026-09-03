@@ -140,9 +140,9 @@ assert.match(
   "the retained order chevron must remain hidden from assistive technology",
 );
 assert.match(
-  read("src/styles/cp-w4-screener.css"),
-  /\.cpw4-search__input\s*\{[^}]*font-size:\s*18px;[^}]*font-weight:\s*900;[^}]*\}[\s\S]*?\.cpw4-search__input::placeholder\s*\{\s*color:\s*#64748b;/,
-  "the approved 18px placeholder stays on body ink-3",
+  read("src/app/screener/ScreenerClient.tsx"),
+  /id="cp-screener-search-input"[\s\S]{0,800}placeholder:text-\[var\(--c-ink-3\)\]/,
+  "the screener search placeholder stays on body ink-3",
 );
 
 assert.throws(
@@ -207,8 +207,8 @@ function renderContractHash(sites) {
 
 export function validateRenderManifest(manifest, reader = read) {
   assert.equal(manifest.schema_version, "ink4-render-sites/v2");
-  assert.equal(manifest.site_count, 113, "121 minus the 8 sites on the superseded chrome removed 2026-08-22");
-  assert.equal(manifest.consumer_count, 114, "122 minus the 8 consumers on the superseded chrome removed 2026-08-22");
+  assert.equal(manifest.site_count, 111, "113 minus the 2 sites on the slice-3 superseded search/filter chrome");
+  assert.equal(manifest.consumer_count, 112, "114 minus the 2 consumers on the slice-3 superseded search/filter chrome");
   assert.equal(manifest.sites.length, manifest.site_count, "render manifest denominator drifted");
   assert.deepEqual(
     manifest.surfaces,
@@ -223,7 +223,7 @@ export function validateRenderManifest(manifest, reader = read) {
   }, {});
   assert.deepEqual(
     roles,
-    { body_text: 106, non_text: 4, mixed_text_non_text: 1, inactive_control: 2 },
+    { body_text: 104, non_text: 4, mixed_text_non_text: 1, inactive_control: 2 },
     "text, non-text, or inactive-control classification drifted",
   );
 
