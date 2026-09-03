@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { EvidenceRail, Panel, PanelHeader, Pill, EmptyState, type EvidenceRailFreshness } from "@/components/ui";
 import { formatCurrencyCompact, formatInteger, formatPercent } from "@/lib/format";
 import type { GraphNetwork } from "./graphNetwork";
@@ -34,6 +34,14 @@ const CENTER_Y = 264;
 const RING_RX = 178;
 const RING_RY = 148;
 
+const HUB_SPOKES = [
+  { x: 30, y: 18 },
+  { x: 30, y: 78 },
+  { x: 190, y: 18 },
+  { x: 190, y: 78 },
+  { x: 110, y: 10 },
+];
+
 function edgeWidth(weight: number): number {
   return Math.round((1 + Math.min(Math.max(weight, 0), 0.25) * 20) * 2) / 2;
 }
@@ -59,6 +67,11 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
     () => new Set(tickers.flatMap((node) => (node.kind === "ticker" ? [node.ticker] : []))),
     [tickers],
   );
+  useEffect(() => {
+    if (selectedTicker !== null && !displayedTickers.has(selectedTicker)) {
+      onSelectTicker(null);
+    }
+  }, [selectedTicker, displayedTickers, onSelectTicker]);
   const labels = useMemo(() => {
     const map = new Map<string, string>();
     for (const node of network.nodes) if (node.kind === "investor") map.set(node.investorId, node.label);
@@ -351,22 +364,19 @@ export interface GraphNetworkTeaserProps {
   onEvidence?: () => void;
 }
 
-const TEASER_INVESTORS = 3;
-const TEASER_TICKERS = 5;
-
 export function GraphNetworkTeaser({ network, href, status, freshness, source, asOf, coverage, onRetry, onEvidence }: GraphNetworkTeaserProps) {
   const found = network.nodes.find((node) => node.kind === "ticker");
   const top = found !== undefined && found.kind === "ticker" ? found : null;
-  const previewInvestors = network.nodes.filter((node) => node.kind === "investor").slice(0, TEASER_INVESTORS);
-  const previewTickers = network.nodes.filter((node) => node.kind === "ticker").slice(0, TEASER_TICKERS);
-  const previewEdges: Array<{ investorId: string; ticker: string }> = [];
-  for (const edge of network.edges) {
-    if (previewEdges.length >= 12) break;
-    if (previewInvestors.some((node) => node.kind === "investor" && node.investorId === edge.investorId)
-      && previewTickers.some((node) => node.kind === "ticker" && node.ticker === edge.ticker)) {
-      previewEdges.push(edge);
-    }
-  }
+  const hubHolders = useMemo(
+    () =>
+      top === null
+        ? []
+        : network.edges
+            .filter((edge) => edge.ticker === top.ticker)
+            .sort((a, b) => b.weight - a.weight)
+            .slice(0, 5),
+    [network, top],
+  );
   const retained = network.feeds.byTicker === false;
   return (
     <Panel>
@@ -388,29 +398,33 @@ export function GraphNetworkTeaser({ network, href, status, freshness, source, a
         ) : (
           <>
             <div className="grn-teaser-svg">
-              <svg viewBox="0 0 220 72" aria-hidden="true" focusable="false">
-                {previewEdges.map((edge) => {
-                  const investorIndex = previewInvestors.findIndex((node) => node.kind === "investor" && node.investorId === edge.investorId);
-                  const tickerIndex = previewTickers.findIndex((node) => node.kind === "ticker" && node.ticker === edge.ticker);
-                  if (investorIndex < 0 || tickerIndex < 0) return null;
+              <svg viewBox="0 0 220 96" aria-hidden="true" focusable="false">
+                {hubHolders.map((edge, index) => {
+                  const pos = HUB_SPOKES[index % HUB_SPOKES.length];
+                  const midX = (110 + pos.x) / 2;
+                  const midY = (50 + pos.y) / 2;
                   return (
-                    <line
-                      key={`${edge.investorId}|${edge.ticker}`}
-                      x1={18}
-                      y1={12 + investorIndex * 24}
-                      x2={196}
-                      y2={10 + tickerIndex * 13}
-                      stroke="var(--fnk-neutral-200)"
-                      strokeWidth={1.5}
-                    />
+                    <g key={edge.investorId}>
+                      <line
+                        x1={110}
+                        y1={50}
+                        x2={pos.x}
+                        y2={pos.y}
+                        stroke="var(--fnk-neutral-300)"
+                        strokeWidth={edgeWidth(edge.weight)}
+                        strokeLinecap="round"
+                      />
+                      <circle cx={pos.x} cy={pos.y} r={5} className="grn-tick-circle" />
+                      <text x={midX} y={midY - 3} textAnchor="middle" className="grn-teaser-edge-label">
+                        {formatPercent(edge.weight, { digits: 1 })}
+                      </text>
+                    </g>
                   );
                 })}
-                {previewInvestors.map((node, index) => (
-                  node.kind === "investor" ? <circle key={node.id} cx={18} cy={12 + index * 24} r={5} className="grn-tick-circle" /> : null
-                ))}
-                {previewTickers.map((node, index) => (
-                  node.kind === "ticker" ? <circle key={node.id} cx={196} cy={10 + index * 13} r={6} className="grn-inv-card" /> : null
-                ))}
+                <circle cx={110} cy={50} r={16} className="grn-tick-circle" />
+                <text x={110} y={54} textAnchor="middle" className="grn-tick-label">
+                  {top.ticker.length > 5 ? `${top.ticker.slice(0, 5)}…` : top.ticker}
+                </text>
               </svg>
             </div>
             <p className="grn-teaser-top">

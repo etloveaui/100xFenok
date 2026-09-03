@@ -274,15 +274,6 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
   const graphCoverage = graphReady
     ? `투자자 ${formatInteger(graphNetwork.investorCount)}${graphNetwork.totalInvestors !== null ? `/${formatInteger(graphNetwork.totalInvestors)}` : ""}명 · 종목 ${formatInteger(graphNetwork.tickerCount)}/${formatInteger(graphNetwork.totalTickers)} 연결`
     : coverage;
-  const plottedTickers = useMemo(
-    () => new Set(graphNetwork.nodes.flatMap((node) => (node.kind === "ticker" ? [node.ticker] : []))),
-    [graphNetwork],
-  );
-  useEffect(() => {
-    if (selectedGraphTicker !== null && !plottedTickers.has(selectedGraphTicker)) {
-      setSelectedGraphTicker(null);
-    }
-  }, [selectedGraphTicker, plottedTickers]);
   function openGraphEvidence() {
     openEvidence("/data/sec-13f/summary.json");
     openEvidence("/data/sec-13f/by_ticker.json");
