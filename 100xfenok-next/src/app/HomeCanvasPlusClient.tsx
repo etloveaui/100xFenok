@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import AppShell from "@/components/shell/AppShell";
 import TransitionLink from "@/components/TransitionLink";
 import { Bar } from "@/components/ui/Bar";
@@ -12,7 +13,7 @@ import { Tile } from "@/components/ui/Tile";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { clamp, getRegimeLabel } from "@/lib/dashboard/formatters";
 import { DATA_STATE_LABELS } from "@/lib/data-state";
-import type { DashboardSnapshot, SectorSnapshot } from "@/lib/dashboard/types";
+import type { DashboardSnapshot, DashboardSourceId, SectorSnapshot } from "@/lib/dashboard/types";
 import { projectMaterialChanges } from "@/lib/home/material-change";
 import { readPersonalFlags, type Flag } from "@/lib/personal/personal-state";
 import { EXPLORE_PRODUCT_TITLE } from "@/lib/product-nav";
@@ -458,7 +459,13 @@ export default function HomeCanvasPlusClient() {
 
   const indexUpdatedAt = useMemo(() => formatDatePart(maxTimestamp(indexCards.map((card) => card.fetchedAt))), [indexCards]);
   const dashboardSettled = dataReady || failedSources.length > 0;
-  const dashboardStale = failedSources.length > 0;
+  const router = useRouter();
+  const sectorTickerFailed = (etf: string): boolean =>
+    failedSources.includes(`ticker:${etf}` as DashboardSourceId);
+  const heatDelayed = dashboard.sectorRows.some((sector) => sectorTickerFailed(sector.etf));
+  const edgeDelayed = failedSources.includes("sentiment")
+    || failedSources.includes("dailyBanking")
+    || heatDelayed;
 
   const regime = useMemo(() => {
     const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
@@ -629,7 +636,7 @@ export default function HomeCanvasPlusClient() {
         </section>
 
         <div className="grid gap-3 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-4">
-          <Panel loading={!dashboardSettled} stale={dashboardStale} asOf={formatDatePart(dashboard.tickerFetchedAt)}>
+          <Panel loading={!dashboardSettled} stale={edgeDelayed} asOf={formatDatePart(dashboard.tickerFetchedAt)}>
             <PanelHeader
               eyebrow="Fenok Edge"
               title="시장 체력 점수"
@@ -660,14 +667,15 @@ export default function HomeCanvasPlusClient() {
               </div>
             </div>
             <EvidenceRail
-              freshness={dashboardStale ? "stale" : "fresh"}
+              freshness={edgeDelayed ? "delayed" : "fresh"}
               source="Fenok Edge"
               asOf={formatDatePart(dashboard.tickerFetchedAt)}
               coverage={`섹터 ${dashboard.sectorRows.length}개 · 실시간 ${dashboard.sectorLiveCount}개`}
+              onEvidence={() => router.push(ROUTES.regime)}
             />
           </Panel>
 
-          <Panel loading={!dashboardSettled} stale={dashboardStale} asOf={formatDatePart(dashboard.tickerFetchedAt)}>
+          <Panel loading={!dashboardSettled} stale={dashboard.sectorMode === "LIVE_1D" && heatDelayed} asOf={formatDatePart(dashboard.tickerFetchedAt)}>
             <PanelHeader
               eyebrow="Sector Flow"
               title="섹터 히트맵"
@@ -686,10 +694,11 @@ export default function HomeCanvasPlusClient() {
               ))}
             </div>
             <EvidenceRail
-              freshness={dashboard.sectorMode === "LIVE_1D" ? (dashboardStale ? "stale" : "fresh") : "fixed"}
+              freshness={dashboard.sectorMode === "LIVE_1D" ? (heatDelayed ? "delayed" : "fresh") : "fixed"}
               source="Sector Flow"
               asOf={dashboard.sectorMode === "LIVE_1D" ? formatDatePart(dashboard.tickerFetchedAt) : "1개월 기준"}
               coverage={`${heatSectors.length}/${dashboard.sectorRows.length} 섹터`}
+              onEvidence={() => router.push(ROUTES.sectors)}
             />
           </Panel>
         </div>
@@ -757,10 +766,11 @@ export default function HomeCanvasPlusClient() {
               })}
             </div>
             <EvidenceRail
-              freshness={sourceUnavailable ? "stale" : "fresh"}
+              freshness={sourceUnavailable ? "delayed" : "fresh"}
               source="리비전 무버 · 13F"
               asOf={revisionClock}
               coverage={`후보 ${revisionEvidence.validCandidateCount + superinvestorEvidence.validCandidateCount}개`}
+              onEvidence={() => router.push(ROUTES.screener)}
             />
           </Panel>
 
@@ -795,10 +805,11 @@ export default function HomeCanvasPlusClient() {
               ))}
             </div>
             <EvidenceRail
-              freshness={sourceUnavailable ? "stale" : "fresh"}
+              freshness={sourceUnavailable ? "delayed" : "fresh"}
               source="개인 플래그 · 리비전 · 13F"
               asOf={revisionClock}
               coverage={`확인 대상 ${projection.attention.length}건`}
+              onEvidence={() => router.push(ROUTES.portfolio)}
             />
           </Panel>
         </div>

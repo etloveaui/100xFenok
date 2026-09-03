@@ -28,23 +28,21 @@ const label: Record<Freshness, string> = {
 export function EvidenceRail({ freshness, source, asOf, coverage, onEvidence, className = "" }: EvidenceRailProps) {
   return (
     <div
-      className={`flex items-center gap-[14px] h-[30px] px-4 border-t border-[#f1f5f9] bg-[#fafbfc] text-[11px] text-[#64748b] ${className}`}
+      className={`flex items-center gap-[14px] h-[30px] px-4 border-t border-[#f1f5f9] bg-[#fafbfc] text-[11px] text-[#64748b] overflow-hidden whitespace-nowrap ${className}`}
     >
-      <span className="inline-flex items-center gap-1">
+      <span className="inline-flex items-center gap-1 shrink-0">
         <span className="inline-block w-[6px] h-[6px] rounded-full" style={{ background: dotColor[freshness] }} />
         <b className="text-[#334155] font-semibold">{label[freshness]}</b>
       </span>
-      <span>
+      <span className="shrink-0 max-md:hidden">
         출처 <b className="text-[#334155] font-semibold">{source}</b>
       </span>
-      <span>
-        기준 <b className="tabular-nums text-[#334155] font-semibold">{asOf}</b>
-      </span>
-      <span>
+      <span className="shrink-0"><span className="max-md:hidden">기준 </span><b className="tabular-nums text-[#334155] font-semibold">{asOf}</b></span>
+      <span className="max-md:hidden">
         커버리지 <b className="tabular-nums text-[#334155] font-semibold">{coverage}</b>
       </span>
       {onEvidence && (
-        <button onClick={onEvidence} className="ml-auto font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150">
+        <button onClick={onEvidence} className="ml-auto shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150">
           증거 보기
         </button>
       )}
