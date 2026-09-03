@@ -7,7 +7,7 @@ import { formatInteger } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import {
   computeEtfInsights,
-  etfSnapshotAsOf,
+  etfSnapshotSubfeedClocks,
   fmtSignedPct,
   fmtVolumeCompact,
   isEtfClockStale,
@@ -34,13 +34,23 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
   const loading = !loaded;
   const empty = loaded && !insights;
   const feedFailed = loaded && !snapshotOk;
-  const clock = etfSnapshotAsOf(snapshot);
-  const stale = loaded && !!insights && isEtfClockStale(clock);
+  // Per-subfeed clocks: the new-listings block reads the new-ETFs feed while
+  // both leader boards read the screener feed, so each block shows its own
+  // date — the masked snapshot latest could hide a stale displayed sibling.
+  const clocks = etfSnapshotSubfeedClocks(snapshot);
+  const newClock = clocks.newEtfs;
+  const screenerClock = clocks.screener;
+  const stale = loaded && !!insights && (isEtfClockStale(newClock) || isEtfClockStale(screenerClock));
+  // Panel floor is the oldest displayed subfeed clock (completeness floor).
+  const floor = [newClock, screenerClock]
+    .filter((value): value is string => value !== null)
+    .sort()
+    .at(0) ?? null;
 
   const newPreview = snapshot?.newEtfs?.records?.slice(0, 3) ?? [];
   const volumeLeaders = insights?.volumeLeadersTop3 ?? [];
   const changeLeaders = insights?.changeLeadersTop3 ?? [];
-  const asOfLabel = formatAsOf(clock) ?? "제공자 미공개";
+  const asOfLabel = formatAsOf(floor) ?? "제공자 미공개";
 
   return (
     <Panel
@@ -51,7 +61,7 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
       emptyActionLabel={feedFailed ? "다시 시도" : undefined}
       onEmptyAction={feedFailed ? reload : undefined}
       stale={stale}
-      asOf={clock ?? undefined}
+      asOf={floor ?? undefined}
       onRetry={stale ? reload : undefined}
     >
       <PanelHeader
@@ -76,6 +86,7 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
               {formatInteger(insights.newCount)}
               <span className="etf-today-unit">개</span>
             </span>
+            <span className="etf-today-asof">기준 {formatAsOf(newClock) ?? "미공개"}</span>
             <div className="etf-today-list">
               {newPreview.length > 0 ? (
                 newPreview.map((row) => (
@@ -92,6 +103,7 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
               {formatInteger(volumeLeaders.length)}
               <span className="etf-today-unit">종목</span>
             </span>
+            <span className="etf-today-asof">기준 {formatAsOf(screenerClock) ?? "미공개"}</span>
             <div className="etf-today-list">
               {volumeLeaders.map((row) => (
                 <TodayMoverLink key={`vol-${row.s}`} ticker={row.s} valueLabel={fmtVolumeCompact(row.volume)} />
@@ -104,6 +116,7 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
               {formatInteger(changeLeaders.length)}
               <span className="etf-today-unit">종목</span>
             </span>
+            <span className="etf-today-asof">기준 {formatAsOf(screenerClock) ?? "미공개"}</span>
             <div className="etf-today-list">
               {changeLeaders.map((row) => (
                 <TodayMoverLink
@@ -118,11 +131,11 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
         </div>
       ) : null}
       <EvidenceRail
-        freshness={loading ? "pending" : feedFailed ? "error" : stale ? "stale" : clock ? "fresh" : "fixed"}
+        freshness={loading ? "pending" : feedFailed ? "error" : stale ? "stale" : floor ? "fresh" : "fixed"}
         source="거래소 · 발행사 공시"
         asOf={asOfLabel}
         coverage={insights ? `${formatInteger(insights.totalCount)}개 전량` : "—"}
-        lkgAsOf={stale && clock ? clock : undefined}
+        lkgAsOf={stale && floor ? floor : undefined}
         onRetry={feedFailed || stale ? reload : undefined}
         onEvidence={feedFailed ? undefined : () => openEtfEvidence("/api/data/stockanalysis/etf-snapshot")}
       />

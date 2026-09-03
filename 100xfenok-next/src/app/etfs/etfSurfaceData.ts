@@ -356,6 +356,28 @@ export function etfSnapshotAsOf(snapshot: EtfSnapshotDoc | null): string | null 
   ]);
 }
 
+export interface EtfSnapshotSubfeedClocks {
+  screener: string | null;
+  newEtfs: string | null;
+  bitcoin: string | null;
+}
+
+function snapshotSubfeedDate(value: string | null | undefined, snapshot: EtfSnapshotDoc | null): string | null {
+  const asOf = value ?? snapshot?.source_as_of;
+  return typeof asOf === "string" && asOf.length >= 10 ? asOf.slice(0, 10) : null;
+}
+
+// Per-subfeed clocks: panels that display specific subfeeds must read their
+// own dates here instead of the masked latest in etfSnapshotAsOf, so a fresh
+// subfeed can never hide a stale displayed sibling.
+export function etfSnapshotSubfeedClocks(snapshot: EtfSnapshotDoc | null): EtfSnapshotSubfeedClocks {
+  return {
+    screener: snapshotSubfeedDate(snapshot?.screener?.source_as_of, snapshot),
+    newEtfs: snapshotSubfeedDate(snapshot?.newEtfs?.source_as_of, snapshot),
+    bitcoin: snapshotSubfeedDate(snapshot?.bitcoin?.source_as_of, snapshot),
+  };
+}
+
 export function isEtfClockStale(asOf: string | null): boolean {
   return isStaleAsOf(asOf);
 }
@@ -386,9 +408,14 @@ export function useEtfSurfaceData(): EtfSurfaceData {
     let cancelled = false;
     Promise.all([loadEtfUniverse(), loadEtfSnapshot()]).then(([universe, snapshot]) => {
       if (cancelled) return;
-      // Overwrite only on settle: a retry in flight keeps the previous pair
-      // visible (LKG) instead of flashing every dependent panel to pending.
-      setState({ loaded: true, universe, snapshot });
+      // A failed retry never overwrites LKG with null: each feed keeps its
+      // previous document unless the fresh fetch settled with one, so every
+      // dependent panel keeps showing prior values instead of flashing empty.
+      setState((prev) => ({
+        loaded: true,
+        universe: universe ?? prev.universe,
+        snapshot: snapshot ?? prev.snapshot,
+      }));
     });
     return () => {
       cancelled = true;
