@@ -698,7 +698,7 @@ export default function HomeCanvasPlusClient() {
         </section>
 
         <div className="grid gap-3 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-4">
-          <Panel loading={!dashboardSettled} stale={edgeDelayed} asOf={formatDatePart(dashboard.tickerFetchedAt)}>
+          <Panel loading={!dashboardSettled} stale={edgeDelayed} asOf={formatDatePart(dashboard.tickerFetchedAt)} onRetry={retrySources}>
             <PanelHeader
               eyebrow="Fenok Edge"
               title="시장 체력 점수"
@@ -740,7 +740,7 @@ export default function HomeCanvasPlusClient() {
             />
           </Panel>
 
-          <Panel loading={!dashboardSettled} stale={heatDelayed} asOf={formatDatePart(dashboard.tickerFetchedAt)}>
+          <Panel loading={!dashboardSettled} stale={heatDelayed} asOf={formatDatePart(dashboard.tickerFetchedAt)} onRetry={retrySources}>
             <PanelHeader
               eyebrow="Sector Flow"
               title="섹터 히트맵"
@@ -774,7 +774,7 @@ export default function HomeCanvasPlusClient() {
             loading={bothSourcesLoading}
             empty={!anySourceLoading && projection.changed.length === 0}
             emptyReason={changedEmptyMessage}
-            emptyNextRefresh="다음 데이터 수집 주기에 자동 갱신"
+            emptyNextRefresh={laneNext ? `다음 갱신 ${laneNext}` : "다음 데이터 수집 주기에 자동 갱신"}
             emptyActionLabel="다시 불러오기"
             onEmptyAction={retrySources}
             stale={!anySourceLoading && laneDelayed && projection.changed.length > 0}
@@ -848,6 +848,9 @@ export default function HomeCanvasPlusClient() {
             loading={bothSourcesLoading}
             empty={!anySourceLoading && projection.attention.length === 0}
             emptyReason={attentionEmptyMessage}
+            emptyNextRefresh={laneNext ? `다음 갱신 ${laneNext}` : "다음 데이터 수집 주기에 자동 갱신"}
+            emptyActionLabel="다시 불러오기"
+            onEmptyAction={retrySources}
             stale={!anySourceLoading && laneDelayed && projection.attention.length > 0}
             asOf={revisionClock}
             onRetry={retrySources}

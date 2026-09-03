@@ -1005,22 +1005,37 @@ function ScreenerEmptyState({
   canvasPlusPreview,
   hasFilters,
   onResetFilters,
+  nextRefresh,
 }: {
   canvasPlusPreview: boolean;
   hasFilters: boolean;
   onResetFilters: () => void;
+  nextRefresh?: string;
 }) {
+  const reason = hasFilters ? "현재 필터 조건에 맞는 종목이 없습니다." : "조건에 맞는 종목이 없습니다.";
+  const next = nextRefresh ?? "필터 변경 시 즉시 재검색";
   if (!canvasPlusPreview) {
     return (
-      <div className="col-span-full px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]">
-        조건에 맞는 종목이 없습니다.
+      <div className="col-span-full flex flex-col items-center gap-2 px-2 py-10 text-center">
+        <p className="text-sm font-semibold text-[var(--c-ink-3)]">{reason}</p>
+        <p className="text-xs font-semibold text-[var(--c-ink-2)]">{next}</p>
+        {hasFilters ? (
+          <button
+            type="button"
+            onClick={onResetFilters}
+            className="mt-1 inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black text-[var(--c-brand)] transition hover:border-[var(--brand-interactive)]"
+          >
+            필터 완화
+          </button>
+        ) : null}
       </div>
     );
   }
 
   return (
     <div className="cp-screener-empty-state" data-canvas-plus-screener-empty-state="true">
-      <p>조건에 맞는 종목이 없습니다.</p>
+      <p>{reason}</p>
+      <span>{next}</span>
       {hasFilters ? (
         <button
           type="button"
@@ -1069,7 +1084,7 @@ function MobileStockCard({
     <article
       data-screener-stock-card
       data-canvas-plus-screener-card={canvasPlusPreview ? "mobile" : undefined}
-      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--mobile" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)]"}
+      className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--mobile focus-within:bg-[var(--c-surface-2)] focus-within:shadow-[inset_2px_0_0_var(--c-brand)]" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] focus-within:bg-[var(--c-surface-2)] focus-within:shadow-[inset_2px_0_0_var(--c-brand)]"}
     >
       <div className="flex items-center justify-between gap-2 border-b border-[var(--c-line-2)] px-3 py-2">
         <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
@@ -2149,6 +2164,7 @@ export default function ScreenerClient({
   const retryScreenerData = useCallback(() => {
     window.location.reload();
   }, []);
+  const screenerNoticeRetryable = screenerDataState.status === "pending" || screenerDataState.status === "error";
   const priceCoverageRatio = sorted.length > 0 ? Math.round((pricedCount / sorted.length) * 100) : 0;
   const sourceDateLabel = formatScreenerSourceDateLabel(sourceDate, marketFactsDate, {
     pending: !dataReady && !connectionIndexReady,
@@ -2380,10 +2396,18 @@ export default function ScreenerClient({
       {screenerDataState.status !== "ready" && !(canvasPlusPreview && screenerDataState.status === "partial") ? (
         canvasPlusPreview ? (
           <section className="cp-card cp-screener-data-state-card" data-canvas-plus-screener-data-state="true">
-            <DataStateNotice state={screenerDataState} />
+            <DataStateNotice
+              state={screenerDataState}
+              actionLabel={screenerNoticeRetryable ? "다시 불러오기" : undefined}
+              onAction={screenerNoticeRetryable ? retryScreenerData : undefined}
+            />
           </section>
         ) : (
-          <DataStateNotice state={screenerDataState} />
+          <DataStateNotice
+            state={screenerDataState}
+            actionLabel={screenerNoticeRetryable ? "다시 불러오기" : undefined}
+            onAction={screenerNoticeRetryable ? retryScreenerData : undefined}
+          />
         )
       ) : null}
 
@@ -3611,7 +3635,7 @@ export default function ScreenerClient({
           </Panel>
           )}
           {dataReady && sorted.length === 0 ? (
-            <ScreenerEmptyState canvasPlusPreview={canvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} />
+            <ScreenerEmptyState canvasPlusPreview={canvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} nextRefresh={`필터 변경 시 즉시 재검색 · ${sourceDateLabel}`} />
           ) : null}
         </div>
 
@@ -3640,7 +3664,7 @@ export default function ScreenerClient({
                 );
               })}
               {dataReady && pageRows.length === 0 ? (
-                <ScreenerEmptyState canvasPlusPreview={canvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} />
+                <ScreenerEmptyState canvasPlusPreview={canvasPlusPreview} hasFilters={hasFilters} onResetFilters={resetFilters} nextRefresh={`필터 변경 시 즉시 재검색 · ${sourceDateLabel}`} />
               ) : null}
             </div>
           ) : (
@@ -3653,6 +3677,7 @@ export default function ScreenerClient({
               hasFilters={hasFilters}
               canvasPlusPreview={canvasPlusPreview}
               enabled={true}
+              emptyNextRefresh={`필터 변경 시 즉시 재검색 · ${sourceDateLabel}`}
               expandedTicker={expandedTicker}
               fallback={
                 <ScreenerDesktopTable

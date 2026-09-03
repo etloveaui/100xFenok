@@ -21,6 +21,7 @@ type ScreenerTanstackTableProps = ScreenerDesktopTableProps & {
   scrollTarget?: ScreenerResultsScrollTarget | null;
   onVisibleStartIndex?: (index: number) => void;
   cursorTicker?: string | null;
+  emptyNextRefresh?: string;
 };
 
 type ScreenerTanstackTableInnerProps = ScreenerDesktopTableProps & {
@@ -29,6 +30,7 @@ type ScreenerTanstackTableInnerProps = ScreenerDesktopTableProps & {
   scrollTarget?: ScreenerResultsScrollTarget | null;
   onVisibleStartIndex?: (index: number) => void;
   cursorTicker?: string | null;
+  emptyNextRefresh?: string;
 };
 
 type ScreenerTanstackBoundaryProps = {
@@ -198,6 +200,7 @@ function ScreenerTanstackTableInner({
   density,
   densityClass,
   expandedTicker,
+  emptyNextRefresh,
   hasFilters = false,
   pageRows,
   preset,
@@ -620,10 +623,11 @@ function ScreenerTanstackTableInner({
           ) : null}
           {dataReady && rows.length === 0 ? (
             <tr>
-              <td colSpan={visibleColumns.length + 1} className={canvasPlusPreview ? "p-0" : "px-2 py-10 text-center text-sm font-semibold text-[var(--c-ink-3)]"}>
+              <td colSpan={visibleColumns.length + 1} className={canvasPlusPreview ? "p-0" : "px-2 py-10 text-center"}>
                 {canvasPlusPreview ? (
                   <div className="cp-screener-empty-state" data-canvas-plus-screener-empty-state="true">
-                    <p>조건에 맞는 종목이 없습니다.</p>
+                    <p>{hasFilters ? "현재 필터 조건에 맞는 종목이 없습니다." : "조건에 맞는 종목이 없습니다."}</p>
+                    <span>{emptyNextRefresh ?? "필터 변경 시 즉시 재검색"}</span>
                     {hasFilters && onResetFilters ? (
                       <button
                         type="button"
@@ -637,7 +641,19 @@ function ScreenerTanstackTableInner({
                     ) : null}
                   </div>
                 ) : (
-                  "조건에 맞는 종목이 없습니다."
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-sm font-semibold text-[var(--c-ink-3)]">{hasFilters ? "현재 필터 조건에 맞는 종목이 없습니다." : "조건에 맞는 종목이 없습니다."}</p>
+                    <p className="text-xs font-semibold text-[var(--c-ink-2)]">{emptyNextRefresh ?? "필터 변경 시 즉시 재검색"}</p>
+                    {hasFilters && onResetFilters ? (
+                      <button
+                        type="button"
+                        onClick={onResetFilters}
+                        className="mt-1 inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black text-[var(--c-brand)] transition hover:border-[var(--brand-interactive)]"
+                      >
+                        필터 완화
+                      </button>
+                    ) : null}
+                  </div>
                 )}
               </td>
             </tr>
