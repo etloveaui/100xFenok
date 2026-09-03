@@ -2,32 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 449,
-      "natural": true,
-      "observed_at": "2026-08-14T23:48:33Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31851174388",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 589,
-      "natural": true,
-      "observed_at": "2026-08-19T23:57:48Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 3344,
@@ -181,29 +155,55 @@
       "run_id": "33577879211",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 512,
+      "natural": true,
+      "observed_at": "2026-09-03T01:11:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33702512577",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-03T01:16:16Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "33702512577",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:15:28Z",
-    "history_as_of": "2026-09-01",
+    "fetched_at": "2026-09-03T01:14:57Z",
+    "history_as_of": "2026-09-02",
     "path": "data/yf/finance/IBKR.json",
-    "payload_sha256": "a8552ee96bb61ba453b75a3733e60bbe2b94210e50a5df7844402a39097b4bab",
-    "quote_as_of": "2026-09-01T20:00:01Z",
-    "source_as_of": "2026-09-01"
+    "payload_sha256": "d2d2c658df723ce2654db8d23df751733ab0e01ecd1d518ba40b4c487fc52570",
+    "quote_as_of": "2026-09-02T20:00:01Z",
+    "source_as_of": "2026-09-02"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 844,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-02T01:11:48Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-03T01:16:16Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "33702512577",
     "schedule": "20 23 * * 1-5",
     "shard": "1/5"
   },
@@ -218,14 +218,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:11:48Z",
-    "payload_sha256": "8e36ead201ac3971df6a27eabded29dc616dd191bb1e4186060fc7e380991f34",
-    "quote_as_of": "2026-09-01T20:00:01Z",
+    "history_as_of": "2026-09-02",
+    "observed_at": "2026-09-03T01:11:07Z",
+    "payload_sha256": "492b3ef50d58d018b8cc00125b67cf753560235e09da391c31cb2ddeb94b3a74",
+    "quote_as_of": "2026-09-02T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "33702512577",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-02"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -241,5 +241,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "IBKR",
-  "updated_at": "2026-09-02T01:11:48Z"
+  "updated_at": "2026-09-03T01:16:16Z"
 }

@@ -142,15 +142,28 @@
       "run_id": "33577879211",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 484,
+      "natural": true,
+      "observed_at": "2026-09-03T01:11:07Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33702512577",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:09:35Z",
-    "history_as_of": "2026-08-31",
+    "fetched_at": "2026-09-03T01:11:54Z",
+    "history_as_of": "2026-09-02",
     "path": "data/yf/finance/DACL.json",
-    "payload_sha256": "271436c32f0e559e377eb4f694de933b73699d19c0ba4e005b7e1682a2e3d70c",
-    "quote_as_of": "2026-08-25T15:38:41Z",
-    "source_as_of": "2026-08-25T15:38:41Z"
+    "payload_sha256": "783a3201cab09802916f3589642ba5ee5507e1144d16cf092f18cbe97d60b11f",
+    "quote_as_of": "2026-09-02T16:00:06Z",
+    "source_as_of": "2026-09-02"
   },
   "discovered_from": [
     "market_facts",
@@ -160,30 +173,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 690,
+    "latency_ms": 484,
     "natural": true,
-    "observed_at": "2026-09-02T01:05:40Z",
+    "observed_at": "2026-09-03T01:11:07Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "33702512577",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-02T01:09:35Z",
+    "history_as_of": "2026-08-31",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DACL.json",
+    "payload_sha256": "271436c32f0e559e377eb4f694de933b73699d19c0ba4e005b7e1682a2e3d70c",
+    "quote_as_of": "2026-08-25T15:38:41Z",
+    "source_as_of": "2026-08-25T15:38:41Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-31",
-    "observed_at": "2026-09-02T01:05:40Z",
-    "payload_sha256": "0cffbe829f78b4dac47c03f03555fb4a84242e19418c7a59a227a350c5254b39",
-    "quote_as_of": "2026-08-25T15:38:41Z",
+    "history_as_of": "2026-09-02",
+    "observed_at": "2026-09-03T01:11:07Z",
+    "payload_sha256": "04643b48a2832aca73f065b3cda07db321f945b22222db2acf426afc9a1f90ee",
+    "quote_as_of": "2026-09-02T16:00:06Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "33702512577",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-25T15:38:41Z"
+    "source_as_of": "2026-09-02"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-09-03T01:11:07Z",
+    "classified_run_id": "33702512577",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "DACL holds LKG because Yahoo source date 2026-08-25T15:38:41Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-25T15:38:41Z"
+  },
   "ticker": "DACL",
-  "updated_at": "2026-09-02T01:05:40Z"
+  "updated_at": "2026-09-03T01:11:07Z"
 }

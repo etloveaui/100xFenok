@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 498,
-      "natural": true,
-      "observed_at": "2026-08-14T00:18:08Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31755913658",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 653,
       "natural": true,
       "observed_at": "2026-08-14T23:56:58Z",
@@ -181,12 +168,26 @@
       "run_id": "33577879211",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 553,
+      "natural": true,
+      "observed_at": "2026-09-03T01:16:16Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33702512577",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-02T01:26:42Z",
     "history_as_of": "2026-09-01",
-    "path": "data/yf/finance/PG.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PG.json",
     "payload_sha256": "af20fda72fcf89af7dd6eff0f032555210b5aa23988e92cbe98e6c1457933414",
     "quote_as_of": "2026-09-01T20:03:12Z",
     "source_as_of": "2026-09-01"
@@ -197,24 +198,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 972,
+    "latency_ms": 553,
     "natural": true,
-    "observed_at": "2026-09-02T01:22:18Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-03T01:16:16Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "33702512577",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "1/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-03T01:16:16Z",
+    "run_attempt": 1,
+    "run_id": "33702512577"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T02:45:48Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-09-02T01:26:42Z",
+    "history_as_of": "2026-09-01",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PG.json",
-    "payload_sha256": "fde872109426d994bbc28304c01aae9a6af4b271fa80ea0c535aa6c1d652e33f",
-    "quote_as_of": "2026-07-08T20:01:25Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "af20fda72fcf89af7dd6eff0f032555210b5aa23988e92cbe98e6c1457933414",
+    "quote_as_of": "2026-09-01T20:03:12Z",
+    "source_as_of": "2026-09-01"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -228,8 +242,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-01"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -242,5 +256,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "PG",
-  "updated_at": "2026-09-02T01:22:18Z"
+  "updated_at": "2026-09-03T01:16:16Z"
 }
