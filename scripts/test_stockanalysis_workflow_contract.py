@@ -443,27 +443,24 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn('fence_reason=main_readback_identity', publish)
         self.assertIn("sed -n 's/^StockAnalysis-Artifact-Digest: //p'", publish)
         self.assertIn('[ "$COMMIT_ARTIFACT_DIGEST" != "$ARTIFACT_DIGEST" ]', publish)
-        # Reachability is proven against the remote, from the complete graph.
-        # A local ancestry test answers from whatever slice a shallow checkout
-        # holds and against an already-stale HEAD, so a burst of commits between
-        # the push and the readback would fence a valid publication. A fixed
-        # deepen only moves that cliff, so neither may reappear.
-        compare = 'gh api "repos/$GITHUB_REPOSITORY/compare/$PUBLISHED_COMMIT...main"'
-        self.assertIn(compare, publish)
-        self.assertNotIn("--deepen", publish)
-        self.assertNotIn("git merge-base --is-ancestor", publish)
-        self.assertIn("for compare_attempt in 1 2 3", publish)
-        # Only the four documented compare statuses are complete answers, and
-        # the retry loop is where that is decided: an unrecognised value is
-        # discarded so the bounded attempts can recover, rather than being
-        # carried into classification.
-        self.assertIn("identical|ahead|behind|diverged) break ;;", publish)
-        # Classification enumerates both outcomes explicitly and has NO default
-        # arm. A default is exactly how an unknown silently becomes "not
-        # reachable", which is the one misreading this fence must never make.
-        self.assertIn('identical|ahead) COMMIT_REACHABLE="yes" ;;', publish)
-        self.assertIn('behind|diverged) COMMIT_REACHABLE="no" ;;', publish)
-        self.assertNotIn('*) COMMIT_REACHABLE=', publish)
+        # Reachability is proven against a freshly deepened origin/main graph,
+        # with bounded backoff for a concurrent writer burst. The exact-head
+        # case and both ancestry directions are explicit; an incomplete graph
+        # remains UNKNOWN instead of being misclassified as unreachable.
+        reachability = "for backoff in 15 30 60; do"
+        self.assertIn(reachability, publish)
+        self.assertIn("git fetch origin main --deepen=50", publish)
+        self.assertIn('git rev-parse "$PUBLISHED_COMMIT"', publish)
+        self.assertIn('git rev-parse origin/main', publish)
+        self.assertIn('git merge-base --is-ancestor "$PUBLISHED_COMMIT" origin/main', publish)
+        self.assertIn('git merge-base --is-ancestor origin/main "$PUBLISHED_COMMIT"', publish)
+        self.assertIn('git cat-file -e "$PUBLISHED_COMMIT"', publish)
+        self.assertIn('COMPARE_STATUS="identical"; COMMIT_REACHABLE="yes"; break', publish)
+        self.assertIn('COMPARE_STATUS="ahead"; COMMIT_REACHABLE="yes"; break', publish)
+        self.assertIn('COMPARE_STATUS="behind"; COMMIT_REACHABLE="no"; break', publish)
+        self.assertIn('COMPARE_STATUS="diverged"; COMMIT_REACHABLE="no"; break', publish)
+        self.assertIn("sleep $backoff", publish)
+        self.assertNotIn('gh api "repos/$GITHUB_REPOSITORY/compare/$PUBLISHED_COMMIT...main"', publish)
         # Availability and identity are different failures. An absent or
         # unrecognised comparison is the pre-existing infrastructure fence,
         # never an identity mismatch, so "we could not get a documented answer"
@@ -483,10 +480,10 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         # reachability, then trailer equality.
         self.assertLess(
             publish.index("scripts/stockanalysis_artifact.py verify-attempt"),
-            publish.index(compare),
+            publish.index(reachability),
         )
         self.assertLess(
-            publish.index(compare),
+            publish.index(reachability),
             publish.index('echo "confirmation=confirmed" >> "$GITHUB_OUTPUT"'),
         )
         self.assertLess(
