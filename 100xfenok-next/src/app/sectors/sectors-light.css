@@ -1,0 +1,378 @@
+/* /sectors route — light-system layout namespace (slice 7b).
+ * Layout only: head, flow rows, ETF table, smart-money grid, CTA. Panel
+ * chrome, type scale, colors, and states come from src/components/ui.
+ * Token-pure: only var(--fnk-*) / var(--font-*) references, no raw colors,
+ * no shadows, no gradients. Accent var(--fnk-brand-interactive) appears only
+ * on the active period tab text, linked-row left accent, and the CTA primary
+ * action (shared Button). Flow bars use the dc semantic gain/loss fills. */
+
+.sec {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 32px;
+  background: var(--fnk-neutral-50);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.sec-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sec-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  max-width: 900px;
+}
+
+.sec-eyebrow-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sec-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+  max-width: 900px;
+}
+
+.sec-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sec-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.sec-head-note {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+.sec-up {
+  color: var(--fnk-color-gain);
+  font-weight: 600;
+}
+
+.sec-down {
+  color: var(--fnk-color-loss);
+  font-weight: 600;
+}
+
+.sec-mute {
+  color: var(--fnk-neutral-400);
+  font-weight: 600;
+}
+
+.sec-strong {
+  font-weight: 600;
+}
+
+.sec-abs {
+  font-size: 10px;
+  color: var(--fnk-neutral-400);
+}
+
+.sec-ticker {
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+  font-weight: 500;
+  color: var(--fnk-neutral-400);
+  font-size: 11px;
+}
+
+.sec-ticker-strong {
+  color: var(--fnk-neutral-900);
+  font-size: 12px;
+}
+
+/* Sector Flow: period tabs ride in the panel header right slot. */
+
+.sec-period-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--fnk-neutral-100);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.sec-flow-head {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 100px;
+  align-items: center;
+  gap: 12px;
+  height: 26px;
+  padding: 0 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-flow-head-num {
+  text-align: right;
+}
+
+/* Full-row link rows: hover and keyboard focus share the 2px left accent;
+ * outline is dropped in favor of the accent, no shadows. */
+
+.sec-flow-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 100px;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 5px 16px 5px 14px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.sec-flow-row:hover {
+  background: var(--fnk-neutral-50);
+  border-left-color: var(--fnk-brand-interactive);
+}
+
+.sec-flow-row:focus-visible {
+  background: var(--fnk-neutral-50);
+  border-left-color: var(--fnk-brand-interactive);
+  outline: none;
+}
+
+.sec-flow-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fnk-neutral-700);
+  font-size: 12px;
+}
+
+.sec-flow-row:hover .sec-flow-name {
+  color: var(--fnk-brand-interactive);
+}
+
+.sec-flow-bar {
+  height: 8px;
+  min-width: 0;
+}
+
+/* Semantic bar fills follow the row side (dc gain/loss); the shared Bar
+ * default blue is kept for neutral states elsewhere. The child selector
+ * outranks the Bar fill utility without touching shared ui. */
+
+.sec-bar-up > i {
+  background: var(--fnk-color-gain);
+}
+
+.sec-bar-down > i {
+  background: var(--fnk-color-loss);
+}
+
+.sec-flow-values {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  text-align: right;
+  font-size: 12px;
+}
+
+/* ETF Compare: one table for desktop and mobile; the scroll container keeps
+ * all eight columns reachable on narrow screens without growing the page. */
+
+.sec-etf-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.sec-etf-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.sec-etf-table thead th {
+  height: 26px;
+  padding: 0 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sec-etf-table thead th.sec-etf-th-name {
+  text-align: left;
+}
+
+.sec-etf-row {
+  border-top: 1px solid var(--fnk-neutral-100);
+  transition: background-color 150ms ease;
+}
+
+.sec-etf-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sec-etf-table td {
+  padding: 0 16px;
+  height: 34px;
+  text-align: right;
+  color: var(--fnk-neutral-700);
+  white-space: nowrap;
+}
+
+.sec-etf-name {
+  text-align: left;
+  padding: 0 16px;
+  height: 34px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.sec-etf-sector {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--fnk-neutral-500);
+  margin-left: 8px;
+}
+
+/* Smart money grid: two columns on desktop, one on narrow screens. */
+
+.sec-smart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sec-smart-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+}
+
+.sec-smart-cell:nth-child(odd) {
+  border-right: 1px solid var(--fnk-neutral-100);
+}
+
+.sec-smart-top,
+.sec-smart-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sec-smart-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fnk-neutral-700);
+  font-size: 12px;
+}
+
+.sec-smart-delta,
+.sec-smart-avg {
+  font-size: 11px;
+  color: var(--fnk-neutral-400);
+  white-space: nowrap;
+}
+
+.sec-smart-holdings {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sec-smart-more {
+  margin-top: 12px;
+  text-align: right;
+  padding: 0 16px 12px;
+}
+
+.sec-more-link {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fnk-brand-interactive);
+  text-decoration: none;
+}
+
+.sec-more-link:hover,
+.sec-more-link:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
+/* CTA row */
+
+.sec-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 4px 0;
+}
+
+.sec-cta-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sec-cta-note {
+  font-size: 11px;
+  color: var(--fnk-neutral-400);
+}
+
+@media (max-width: 760px) {
+  .sec {
+    padding: 12px 12px 28px;
+  }
+
+  .sec-flow-head,
+  .sec-flow-row {
+    grid-template-columns: 110px minmax(0, 1fr) 84px;
+    gap: 8px;
+  }
+
+  .sec-smart-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sec-smart-cell:nth-child(odd) {
+    border-right: 0;
+  }
+
+  .sec-period-btn {
+    min-height: 44px;
+  }
+}

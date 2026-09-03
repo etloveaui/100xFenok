@@ -1,19 +1,9 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import IndustryMapPanel from "./IndustryMapPanel";
 import SmartMoneyPanel from "./SmartMoneyPanel";
-import { Button, useDelayedLoading } from "@/components/ui";
-import {
-  CpAccordion,
-  CpDataTable,
-  CpSectionCard,
-  CpStatChipRow,
-  CpVerdictHero,
-  type CpDataTableColumn,
-  type CpVerdictHeroTrustChip,
-} from "@/components/canvas-plus/kit";
+import { Bar, Button, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
 import { ROUTES, withQuery } from "@/lib/routes";
@@ -22,11 +12,9 @@ import {
   MOMENTUM_WINDOWS,
   type MomentumWindow,
   type SectorRow,
-  type SectorValuationBand,
 } from "@/lib/sectors/types";
-import { formatPercent, formatSignedPercentDecimal, getMarketStateMeta } from "@/lib/dashboard/formatters";
-import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
-import { DATA_STATE_LABELS, formatAsOf } from "@/lib/data-state";
+import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
+import { formatAsOf, isStaleAsOf } from "@/lib/data-state";
 import { formatDecimal } from "@/lib/format";
 
 function pct(value: number | null | undefined, digits = 1): string {
@@ -36,10 +24,6 @@ function pct(value: number | null | undefined, digits = 1): string {
 function pp(value: number | null | undefined, digits = 1): string {
   const formatted = pct(value, digits);
   return formatted === "—" ? formatted : formatted.replace("%", "%p");
-}
-
-function dateOnly(value: string | null | undefined): string | null {
-  return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : null;
 }
 
 function toneOf(value: number | null | undefined): "positive" | "negative" | "neutral" {
@@ -84,204 +68,243 @@ function failedSourceLabel(source: string): string | null {
   return null;
 }
 
-function valuationTone(percentile: number | null | undefined): { label: string; tone: "positive" | "negative" | "neutral" } {
-  if (typeof percentile !== "number" || !Number.isFinite(percentile)) return { label: "범위 없음", tone: "neutral" };
-  if (percentile <= 0.25) return { label: "저평가권", tone: "positive" };
-  if (percentile >= 0.75) return { label: "고평가권", tone: "negative" };
-  return { label: "평균권", tone: "neutral" };
+function reload() {
+  window.location.reload();
 }
 
-function PeBandGauge({ value, band }: { value: number | null; band: SectorValuationBand | null }) {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return <span className="text-sm font-bold text-[var(--cp-text-soft)]">—</span>;
-  }
-  if (!band) {
-    return <span className="text-sm font-bold text-[var(--cp-text-strong)]">{formatDecimal(value, { digits: 1 })}</span>;
-  }
-  const span = band.max - band.min;
-  const position = span > 0 ? Math.min(100, Math.max(0, ((value - band.min) / span) * 100)) : 50;
-  const percentile = Math.round(band.percentile * 100);
-  const tone = valuationTone(band.percentile);
-  return (
-    <div
-      className="ml-auto w-full max-w-[190px]"
-      title={`역사적 Fwd P/E 백분위 ${percentile}% · ${tone.label} · 범위 ${formatDecimal(band.min, { digits: 1 })}~${formatDecimal(band.max, { digits: 1 })}`}
-    >
-      <div className="mb-1 flex items-center justify-end gap-2">
-        <span className="text-sm font-black tabular-nums text-[var(--cp-text-strong)]">{formatDecimal(value, { digits: 1 })}</span>
-        <span
-          className="rounded-full px-2 py-0.5 text-[10px] font-black"
-          style={{
-            background: tone.tone === "positive" ? "var(--cp-positive-soft)" : tone.tone === "negative" ? "var(--cp-negative-soft)" : "var(--cp-surface-strong)",
-            color: tone.tone === "positive" ? "var(--cp-positive)" : tone.tone === "negative" ? "var(--cp-negative)" : "var(--cp-text-muted)",
-          }}
-        >
-          {tone.label}
-        </span>
-      </div>
-      <div
-        className="relative h-2 rounded-full"
-        style={{ background: "linear-gradient(90deg, var(--cp-positive-soft), var(--cp-surface-strong), var(--cp-negative-soft))" }}
-      >
-        <span
-          className="absolute top-1/2 h-4 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{ left: `${position}%`, background: "var(--cp-accent-strong)" }}
-        />
-      </div>
-      <div className="mt-1 flex justify-between text-[9px] font-bold text-[var(--cp-text-soft)]">
-        <span>{formatDecimal(band.min, { digits: 1 })}</span>
-        <span>{percentile}%</span>
-        <span>{formatDecimal(band.max, { digits: 1 })}</span>
-      </div>
-    </div>
-  );
+function openEvidence(path: string) {
+  window.open(path, "_blank", "noopener");
 }
 
-function SectorHeroBars({
-  rows,
-  windowKey,
-  benchmarkValue,
-}: {
-  rows: SectorRow[];
-  windowKey: MomentumWindow;
-  benchmarkValue: number | null;
-}) {
-  const items = rows
+type FlowItem = {
+  row: SectorRow;
+  value: number;
+  relative: number;
+};
+
+function flowItems(rows: SectorRow[], windowKey: MomentumWindow, benchmarkValue: number | null): FlowItem[] {
+  return rows
     .map((row) => {
       const value = row.momentum[windowKey];
       const relative = typeof value === "number" && typeof benchmarkValue === "number" ? value - benchmarkValue : null;
       return { row, value, relative };
     })
-    .filter((item): item is { row: SectorRow; value: number; relative: number } =>
+    .filter((item): item is FlowItem =>
       typeof item.value === "number" && typeof item.relative === "number" && Number.isFinite(item.value) && Number.isFinite(item.relative),
-    );
+    )
+    .sort((a, b) => b.relative - a.relative);
+}
 
-  if (items.length === 0) {
-    return <p className="cpw5-sectors-hero-chart__empty">S&amp;P 500 기준선 또는 섹터 성과 데이터가 아직 없습니다.</p>;
-  }
-
-  const sorted = [...items].sort((a, b) => b.relative - a.relative);
-  const maxAbs = Math.max(0.01, ...sorted.map((item) => Math.abs(item.relative)));
-  const maxMarketCap = Math.max(1, ...sorted.map((item) => item.row.etfInfo?.marketCap ?? 0));
+function SectorFlowPanel({
+  rows,
+  benchmarkValue,
+  windowKey,
+  onWindowChange,
+  loading,
+  ready,
+  failed,
+  stale,
+  clock,
+  lkgClock,
+  coverage,
+  onRetry,
+}: {
+  rows: SectorRow[];
+  benchmarkValue: number | null;
+  windowKey: MomentumWindow;
+  onWindowChange: (window: MomentumWindow) => void;
+  loading: boolean;
+  ready: boolean;
+  failed: boolean;
+  stale: boolean;
+  clock: string | null;
+  lkgClock: string | null;
+  coverage: string;
+  onRetry: () => void;
+}) {
+  const items = ready ? flowItems(rows, windowKey, benchmarkValue) : [];
+  const empty = !loading && (!ready || items.length === 0);
+  const maxAbs = Math.max(0.01, ...items.map((item) => Math.abs(item.relative)));
+  const asOfLabel = formatAsOf(clock) ?? "—";
 
   return (
-    <div className="cpw5-sectors-bar-list" data-sector-relative-bars data-sector-relative-window={windowKey} data-sector-relative-count={sorted.length}>
-      {sorted.map(({ row, value, relative }) => {
-        const width = Math.max(3, Math.min(50, (Math.abs(relative) / maxAbs) * 50));
-        const positive = relative >= 0;
-        const marketCap = row.etfInfo?.marketCap ?? null;
-        const weightPct = marketCap !== null ? Math.max(8, Math.min(100, (marketCap / maxMarketCap) * 100)) : 0;
-        return (
-          <div key={row.key} className="cpw5-sectors-bar-row" data-sector-relative-bar data-sector-relative-side={positive ? "up" : "down"}>
-            <div className="min-w-0">
-              <TransitionLink href={screenerSectorHref(row.key)} className="cpw5-sectors-bar-name" title={`${row.name} 종목을 스크리너에서 보기`}>
-                {row.name}
-              </TransitionLink>
-              <span className="cpw5-sectors-bar-etf">{row.etf}</span>
-            </div>
-            <div className="cpw5-sectors-bar-track" title={marketCap !== null ? `ETF 시가총액 비중 참고선` : undefined}>
-              {marketCap !== null ? <span className="cpw5-sectors-bar-weight" style={{ width: `${weightPct}%` }} aria-hidden="true" /> : null}
-              <span className="cpw5-sectors-bar-mid" aria-hidden="true" />
-              <span
-                className="cpw5-sectors-bar-fill"
-                data-side={positive ? "up" : "down"}
-                style={{ width: `${width}%` }}
-                aria-hidden="true"
-              />
-            </div>
-            <div className="cpw5-sectors-bar-values">
-              <span className="cpw5-sectors-bar-relative" data-tone={toneOf(relative)}>{pp(relative, 1)}</span>
-              <span className="cpw5-sectors-bar-absolute">{pct(value, 1)}</span>
-            </div>
+    <Panel
+      loading={loading}
+      empty={empty}
+      emptyReason={failed || !ready ? "S&P 500 대비 섹터 초과 성과를 불러오지 못했습니다" : "표시할 섹터 성과 데이터가 없습니다"}
+      emptyNextRefresh="다음 마감 후 갱신"
+      emptyActionLabel={failed || !ready ? "다시 시도" : undefined}
+      onEmptyAction={failed || !ready ? onRetry : undefined}
+      stale={stale}
+      asOf={clock ?? undefined}
+      onRetry={stale ? onRetry : undefined}
+    >
+      {ready && items.length > 0 && (
+        <div data-sectors-flow-rows data-sectors-flow-window={windowKey} data-sectors-flow-count={items.length}>
+          <PanelHeader
+            eyebrow="Sector Flow"
+            title="S&P 500 대비 초과 성과"
+            right={(
+              <div className="sec-period-toggle" data-sectors-period-toggle role="group" aria-label="기간 선택">
+                {MOMENTUM_WINDOWS.map((window) => (
+                  <Button
+                    key={window.key}
+                    type="button"
+                    variant="tab"
+                    active={window.key === windowKey}
+                    aria-pressed={window.key === windowKey}
+                    data-sectors-period={window.key}
+                    className="sec-period-btn"
+                    onClick={() => onWindowChange(window.key)}
+                  >
+                    {window.label}
+                  </Button>
+                ))}
+              </div>
+            )}
+          />
+          <div className="sec-flow-head" aria-hidden="true">
+            <span>업종</span>
+            <span>{MOMENTUM_WINDOWS.find((window) => window.key === windowKey)?.label ?? windowKey} 상대 성과</span>
+            <span className="sec-flow-head-num">%p · 실제</span>
           </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function EtfCard({ row }: { row: SectorRow }) {
-  const etf = row.etfInfo;
-  const oneMonthTone = toneOf(etf?.returns["1m"]);
-  return (
-    <article className="cpw5-sectors-card">
-      <div className="cpw5-sectors-card__head">
-        <div className="min-w-0">
-          <p className="cpw5-sectors-card__name">{row.etf}</p>
-          <span className="cpw5-sectors-card__etf">{row.name}</span>
+          {items.map(({ row, value, relative }) => {
+            const positive = relative >= 0;
+            const width = Math.max(3, Math.min(100, (Math.abs(relative) / maxAbs) * 100));
+            return (
+              <TransitionLink
+                key={row.key}
+                href={screenerSectorHref(row.key)}
+                className="sec-flow-row"
+                data-sectors-flow-row
+                data-sectors-flow-side={positive ? "up" : "down"}
+                title={`${row.name} 종목을 스크리너에서 보기`}
+              >
+                <span className="sec-flow-name">
+                  {row.name} <span className="sec-ticker">{row.etf}</span>
+                </span>
+                <Bar
+                  value={width}
+                  className={positive ? "sec-bar-up" : "sec-bar-down"}
+                  aria-label={`${row.name} 상대 성과 ${pp(relative, 1)}`}
+                />
+                <span className="sec-flow-values">
+                  <span className={positive ? "sec-up tabular-nums" : "sec-down tabular-nums"}>{pp(relative, 1)}</span>
+                  <span className="sec-abs tabular-nums">{pct(value, 1)}</span>
+                </span>
+              </TransitionLink>
+            );
+          })}
         </div>
-        <span className="cpw5-sectors-card__value" data-tone={oneMonthTone}>{pct(etf?.returns["1m"], 1)}</span>
-      </div>
-      <div className="cpw5-sectors-card__grid">
-        <span className="cpw5-sectors-card__cell">YTD {pct(etf?.returns.ytd, 1)}</span>
-        <span className="cpw5-sectors-card__cell">1Y {pct(etf?.returns["1y"], 1)}</span>
-        <span className="cpw5-sectors-card__cell">3Y {pct(etf?.cagr["3y"], 1)}</span>
-        <span className="cpw5-sectors-card__cell">Beta {formatDecimal(etf?.beta, { digits: 2 })}</span>
-        <span className="cpw5-sectors-card__cell">보수 {typeof etf?.expenseRatio === "number" ? formatPercent(etf.expenseRatio * 100, 2) : "—"}</span>
-        <span className="cpw5-sectors-card__cell">{etf ? "추적 중" : "ETF 없음"}</span>
-      </div>
-    </article>
+      )}
+      <EvidenceRail
+        freshness={loading ? "pending" : failed || !ready ? "error" : stale ? "stale" : clock ? "fresh" : "fixed"}
+        source="SlickCharts · Yahoo"
+        asOf={asOfLabel}
+        coverage={coverage}
+        lkgAsOf={stale && lkgClock ? (formatAsOf(lkgClock) ?? lkgClock) : undefined}
+        onRetry={failed || !ready || stale ? onRetry : undefined}
+        onEvidence={ready && !failed ? () => openEvidence("/data/benchmarks/summaries.json") : undefined}
+      />
+    </Panel>
   );
 }
 
-function ValuationCard({ row }: { row: SectorRow }) {
-  const value = row.valuation;
-  const tone = valuationTone(value?.peBand?.percentile);
+function EtfComparePanel({
+  rows,
+  loading,
+  ready,
+  failed,
+  stale,
+  clock,
+  lkgClock,
+  coverage,
+  missingNote,
+  onRetry,
+}: {
+  rows: SectorRow[];
+  loading: boolean;
+  ready: boolean;
+  failed: boolean;
+  stale: boolean;
+  clock: string | null;
+  lkgClock: string | null;
+  coverage: string;
+  missingNote: string | null;
+  onRetry: () => void;
+}) {
+  const etfRows = rows.filter((row) => row.etfInfo);
+  const empty = !loading && (!ready || etfRows.length === 0);
+  const asOfLabel = formatAsOf(clock) ?? "—";
+
   return (
-    <article className="cpw5-sectors-card">
-      <div className="cpw5-sectors-card__head">
-        <div className="min-w-0">
-          <p className="cpw5-sectors-card__name">{row.name}</p>
-          <span className="cpw5-sectors-card__etf">{row.etf}</span>
+    <Panel
+      loading={loading}
+      empty={empty}
+      emptyReason={failed || !ready ? "섹터 ETF 비교 데이터를 불러오지 못했습니다" : "표시할 섹터 ETF 데이터가 없습니다"}
+      emptyNextRefresh="다음 마감 후 갱신"
+      emptyActionLabel={failed || !ready ? "다시 시도" : undefined}
+      onEmptyAction={failed || !ready ? onRetry : undefined}
+      stale={stale}
+      asOf={clock ?? undefined}
+      onRetry={stale ? onRetry : undefined}
+    >
+      {ready && etfRows.length > 0 && (
+        <div data-sectors-etf-compare>
+          <PanelHeader
+            eyebrow="ETF"
+            title="섹터 ETF 비교"
+            right={<span className="sec-head-note">{coverage} 섹터 ETF 상세{missingNote ? ` · ${missingNote} 없음` : ""}</span>}
+          />
+          <div className="sec-etf-scroll">
+            <table className="sec-etf-table">
+              <thead>
+                <tr>
+                  <th scope="col" className="sec-etf-th-name">ETF</th>
+                  <th scope="col">1M</th>
+                  <th scope="col">YTD</th>
+                  <th scope="col">1Y</th>
+                  <th scope="col">3Y CAGR</th>
+                  <th scope="col">5Y CAGR</th>
+                  <th scope="col">Beta</th>
+                  <th scope="col">보수율</th>
+                </tr>
+              </thead>
+              <tbody>
+                {etfRows.map((row) => {
+                  const oneMonth = row.etfInfo?.returns["1m"];
+                  const oneMonthTone = toneOf(oneMonth);
+                  return (
+                    <tr key={row.key} className="sec-etf-row" data-sectors-etf-row={row.etf}>
+                      <th scope="row" className="sec-etf-name">
+                        <span className="sec-ticker sec-ticker-strong">{row.etf}</span>
+                        <span className="sec-etf-sector">{row.name}</span>
+                      </th>
+                      <td className={oneMonthTone === "positive" ? "sec-up tabular-nums sec-strong" : oneMonthTone === "negative" ? "sec-down tabular-nums sec-strong" : "tabular-nums"}>{pct(oneMonth, 1)}</td>
+                      <td className="tabular-nums">{pct(row.etfInfo?.returns.ytd, 1)}</td>
+                      <td className="tabular-nums">{pct(row.etfInfo?.returns["1y"], 1)}</td>
+                      <td className="tabular-nums">{pct(row.etfInfo?.cagr["3y"], 1)}</td>
+                      <td className="tabular-nums">{pct(row.etfInfo?.cagr["5y"], 1)}</td>
+                      <td className="tabular-nums">{formatDecimal(row.etfInfo?.beta, { digits: 2 })}</td>
+                      <td className="tabular-nums">{typeof row.etfInfo?.expenseRatio === "number" ? formatPercent(row.etfInfo.expenseRatio * 100, 2) : "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <span className="cpw5-sectors-card__badge" data-tone={tone.tone}>{tone.label}</span>
-      </div>
-      <div className="cpw5-sectors-card__grid">
-        <span className="cpw5-sectors-card__cell">Fwd P/E {formatDecimal(value?.pe, { digits: 1 })}</span>
-        <span className="cpw5-sectors-card__cell">P/B {formatDecimal(value?.pb, { digits: 2 })}</span>
-        <span className="cpw5-sectors-card__cell">ROE {typeof value?.roe === "number" ? formatPercent(value.roe * 100, 1) : "—"}</span>
-      </div>
-    </article>
-  );
-}
-
-type MatrixRow = {
-  rowKey: string;
-  name: string;
-  etf: string;
-  benchmark: boolean;
-  dayChange: number | null;
-  marketState: string | null;
-  momentum: Partial<Record<MomentumWindow, number | null>>;
-  [key: string]: unknown;
-};
-
-/** CpDataTable requires `T extends Record<string, unknown>`; SectorRow has no
- * index signature, so widen it locally for the two tables that render it
- * directly (kit is read-only — see FILES YOU OWN in the task brief). */
-type SectorTableRow = SectorRow & Record<string, unknown>;
-
-function HeatCell({ value }: { value: number | null | undefined }) {
-  const theme = useMarketChartTheme();
-  return (
-    <div className="cpw5-sectors-heat-cell" style={theme.heatStyle(value)}>
-      {pct(value, 1)}
-    </div>
-  );
-}
-
-function LoadingSkeleton() {
-  const show = useDelayedLoading(true, 120);
-  if (!show) return null;
-  return (
-    <div className="cpw5-sectors-skeleton">
-      <div className="cpw5-sectors-skeleton__bar" style={{ width: 160 }} />
-      <div className="cpw5-sectors-skeleton__grid">
-        {Array.from({ length: 8 }, (_, index) => (
-          <div key={index} className="cpw5-sectors-skeleton__bar" style={{ height: 36, animationDelay: `${index * 70}ms` }} />
-        ))}
-      </div>
-    </div>
+      )}
+      <EvidenceRail
+        freshness={loading ? "pending" : failed || !ready ? "error" : stale ? "stale" : clock ? "fresh" : "fixed"}
+        source="ETF 운용사 공시"
+        asOf={asOfLabel}
+        coverage={coverage}
+        lkgAsOf={stale && lkgClock ? (formatAsOf(lkgClock) ?? lkgClock) : undefined}
+        onRetry={failed || !ready || stale ? onRetry : undefined}
+        onEvidence={ready && !failed ? () => openEvidence("/data/global-scouter/etfs/index.json") : undefined}
+      />
+    </Panel>
   );
 }
 
@@ -290,332 +313,144 @@ export default function SectorsClient() {
   const {
     rows,
     benchmarkMomentum,
+    loaded,
     dataReady,
     benchmarksReady,
     etfsReady,
-    valuationReady,
+    smartMoneyReady,
     failedSources,
-    updatedAt,
+    staleSources,
     sourceMeta,
   } = useSectorData();
   const [sortWindow, setSortWindow] = useState<MomentumWindow>("1m");
 
-  const sorted = useMemo(
-    () => [...rows].sort((a, b) => (b.momentum[sortWindow] ?? -Infinity) - (a.momentum[sortWindow] ?? -Infinity)),
-    [rows, sortWindow],
-  );
-  const leaders = sorted.slice(0, 3);
-  const laggards = sorted.filter((row) => row.momentum[sortWindow] !== null).slice(-3).reverse();
-  const etfRows = useMemo(() => rows.filter((row) => row.etfInfo), [rows]);
-  const valuationRows = useMemo(() => rows.filter((row) => row.valuation), [rows]);
+  const loading = !loaded;
+  const failed = loaded && !dataReady;
   const activeWindowLabel = MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label ?? sortWindow;
-
-  const isMuted = !(benchmarksReady || etfsReady || valuationReady);
-  const dateLabel = formatAsOf(updatedAt) ?? dateOnly(updatedAt);
   const activeBenchmark = benchmarkMomentum?.[sortWindow] ?? null;
+  const items = benchmarksReady ? flowItems(rows, sortWindow, activeBenchmark) : [];
+  const leaders = items[0] ?? null;
+  const laggards = items.length > 0 ? items[items.length - 1] : null;
   const beatCount =
     typeof activeBenchmark === "number"
-      ? rows.filter((row) => typeof row.momentum[sortWindow] === "number" && (row.momentum[sortWindow] ?? -Infinity) > activeBenchmark).length
+      ? items.filter((item) => item.relative > 0).length
       : null;
 
-  const valuationWithBands = valuationRows.filter((row) => typeof row.valuation?.peBand?.percentile === "number");
-  const cheapest = valuationWithBands.length > 0 ? [...valuationWithBands].sort((a, b) => a.valuation!.peBand!.percentile - b.valuation!.peBand!.percentile)[0] : null;
-  const richest = valuationWithBands.length > 0 ? [...valuationWithBands].sort((a, b) => b.valuation!.peBand!.percentile - a.valuation!.peBand!.percentile)[0] : null;
-  const smartRows = rows.filter((row) => row.smartMoney);
-  const smartLeader = smartRows.length > 0 ? [...smartRows].sort((a, b) => (b.smartMoney?.weight ?? -Infinity) - (a.smartMoney?.weight ?? -Infinity))[0] : null;
-  const smartDeltaLeader = smartRows.length > 0 ? [...smartRows].sort((a, b) => (b.smartMoney?.delta4q ?? -Infinity) - (a.smartMoney?.delta4q ?? -Infinity))[0] : null;
+  const flowStale = benchmarksReady && (staleSources.includes("benchmarks") || isStaleAsOf(sourceMeta.benchmarksSourceDate));
+  const flowFailed = loaded && !benchmarksReady;
+  const flowCoverage = benchmarksReady
+    ? `${rows.filter((row) => typeof row.momentum[sortWindow] === "number").length}/${rows.length} 섹터`
+    : "—";
+
+  const etfRows = etfsReady ? rows.filter((row) => row.etfInfo) : [];
+  const etfStale = etfsReady && (staleSources.includes("etfs") || isStaleAsOf(sourceMeta.etfSourceDate));
+  const etfFailed = loaded && !etfsReady;
+  const etfCoverage = etfsReady ? `${etfRows.length}/${rows.length}` : "—";
+  const etfMissingNote = sourceMeta.etfMissing.length > 0 ? sourceMeta.etfMissing.join("·") : null;
+
+  const smartStale = smartMoneyReady && (staleSources.includes("portfolio_views") || staleSources.includes("by_sector"));
+  const smartFailed = loaded && !smartMoneyReady;
+  const smartAsOf = sourceMeta.smartMoneyGeneratedAt?.slice(0, 10) ?? sourceMeta.smartMoneySourceDate;
+  const smartCoverage = smartMoneyReady
+    ? `${rows.filter((row) => row.smartMoney).length}/${rows.length} 섹터`
+    : "—";
 
   const missingLabels = Array.from(new Set(failedSources.map(failedSourceLabel).filter((label): label is string => Boolean(label))));
+  const quoteLabel = formatAsOf(sourceMeta.tickerSourceDate) ?? "확인 중";
 
-  const verdict: ReactNode = !dataReady
-    ? failedSources.length > 0
-      ? "섹터 데이터를 불러오지 못했습니다. 새로고침 후 다시 확인해 주세요."
-      : "섹터 데이터를 불러오는 중입니다."
-    : benchmarksReady && leaders[0] && laggards[0]
-      ? (
-          <>
-            {dateLabel ?? DATA_STATE_LABELS.unavailable} 기준 {activeWindowLabel}에는{" "}
-            <b className="up">{leaders[0].name} {pct(leaders[0].momentum[sortWindow], 1)}</b>가 시장을 주도하고,{" "}
-            <b className="down">{laggards[0].name} {pct(laggards[0].momentum[sortWindow], 1)}</b>가 가장 약합니다. S&amp;P 500 대비{" "}
-            <b>{beatCount ?? 0}/{rows.length}개</b> 섹터가 상회 중입니다.
-          </>
-        )
-      : "섹터 자료 일부를 불러왔지만 기간별 모멘텀 기준선은 아직 없습니다.";
-
-  const trustChips: CpVerdictHeroTrustChip[] = [
-    {
-      id: "asof",
-      label: "필수 입력 최저 기준일",
-      value: dateLabel ?? DATA_STATE_LABELS.unavailable,
-      freshness: true,
-      tone: dataReady && updatedAt !== null ? "neutral" : "warning",
-    },
-    { id: "count", label: "섹터", value: `${rows.length}개` },
-    // The floor date is almost always the 13F cohort, because 13F filings are due 45 days
-    // after quarter end. Without naming the cause the chip reads as if the whole page were
-    // months stale, when the other three inputs are current. Only shown when 13F actually
-    // is the binding input.
-    ...(updatedAt !== null && sourceMeta.smartMoneySourceDate === updatedAt && sourceMeta.smartMoneyQuarter
-      ? [{
-          id: "asof-cause",
-          label: "최저 기준일 원인",
-          value: `13F ${sourceMeta.smartMoneyQuarter} · 분기 종료 후 45일 공시`,
-          tone: "neutral" as const,
-        }]
-      : []),
-    ...(missingLabels.length > 0
-      ? [{ id: "missing", label: DATA_STATE_LABELS.unavailable, value: missingLabels.join(" · "), tone: "warning" as const }]
-      : []),
-  ];
-
-  const matrixRows: MatrixRow[] = [
-    {
-      rowKey: "sp500",
-      name: "S&P 500",
-      etf: benchmarksReady ? "시장 기준선" : failedSources.includes("benchmarks") ? DATA_STATE_LABELS.unavailable : DATA_STATE_LABELS.pending,
-      benchmark: true,
-      dayChange: null,
-      marketState: null,
-      momentum: benchmarkMomentum ?? {},
-    },
-    ...sorted.map((row) => ({
-      rowKey: row.key,
-      name: row.name,
-      etf: row.etf,
-      benchmark: false,
-      dayChange: row.dayChange,
-      marketState: row.marketState,
-      momentum: row.momentum,
-    })),
-  ];
-
-  const matrixColumns: CpDataTableColumn<MatrixRow>[] = [
-    {
-      key: "name",
-      header: "업종",
-      align: "left",
-      render: (row) => (
-        <>
-          <span className="block text-[13px] font-black text-[var(--cp-text-strong)]">{row.name}</span>
-          <span className="block text-[10.5px] font-bold uppercase tracking-[0.06em] text-[var(--cp-text-soft)]">{row.etf}</span>
-        </>
-      ),
-    },
-    {
-      key: "day",
-      header: "당일",
-      render: (row) => {
-        if (row.benchmark) return <span className="text-xs font-black text-[var(--cp-text-soft)]">기준</span>;
-        const state = getMarketStateMeta(row.marketState);
-        return (
-          <>
-            <span className="text-sm font-black tabular-nums" style={{ color: row.dayChange === null ? "var(--cp-text-soft)" : row.dayChange >= 0 ? "var(--cp-positive)" : "var(--cp-negative)" }}>
-              {pct(row.dayChange, 2)}
-            </span>
-            {state ? <span className="market-state-badge ml-1 align-middle">{state.label}</span> : null}
-          </>
-        );
-      },
-    },
-    ...MOMENTUM_WINDOWS.map((window) => ({
-      key: window.key,
-      header: window.label,
-      render: (row: MatrixRow) => <HeatCell value={row.momentum[window.key]} />,
-    })),
-  ];
-
-  const dayCoverageText = `${etfRows.length}/${rows.length}개 섹터 ETF 상세 확인`;
-  const valuationSourceLine = `가치 원천 기준 ${sourceMeta.valuationLatestDate ?? DATA_STATE_LABELS.unavailable}`;
+  let headline: ReactNode;
+  if (loading) {
+    headline = "섹터 데이터를 불러오는 중입니다.";
+  } else if (failed) {
+    headline = "섹터 데이터를 불러오지 못했습니다. 다시 시도해 주세요.";
+  } else if (benchmarksReady && leaders && laggards && beatCount !== null) {
+    headline = (
+      <>
+        {activeWindowLabel} 기준 <b className={leaders.relative >= 0 ? "sec-up" : "sec-down"}>{leaders.row.name} {pct(leaders.value, 1)}</b>가 시장을 주도하고,{" "}
+        <b className={laggards.relative >= 0 ? "sec-up" : "sec-down"}>{laggards.row.name} {pct(laggards.value, 1)}</b>가 가장 약합니다. S&amp;P 500 대비{" "}
+        <b className="tabular-nums">{beatCount}/{rows.length}</b>개 섹터가 상회 중입니다.
+      </>
+    );
+  } else {
+    headline = "섹터 자료 일부를 불러왔지만 기간별 모멘텀 기준선은 아직 없습니다.";
+  }
 
   return (
-    <div className="canvas-plus cpw5-sectors-page" data-canvas-plus data-canvas-plus-sectors>
-      <div className="cpw5-sectors-topbar">
-        <MarketSectionNav active="sectors" />
+    <div className="sec" data-sectors-surface>
+      <div className="sec-head">
+        <div className="sec-title-block">
+          <div className="sec-eyebrow-row">
+            <span className="sec-eyebrow">SECTORS · GICS 기준 11개 업종 흐름</span>
+            <Pill>섹터 11개</Pill>
+          </div>
+          <h1 className="sec-title">{headline}</h1>
+          <div className="sec-meta-row">
+            <Pill tone={sourceMeta.tickerSourceDate ? "neutral" : "warn"}>시세 수집 {quoteLabel}</Pill>
+            {failed && (
+              <Button variant="secondary" onClick={reload}>
+                다시 시도
+              </Button>
+            )}
+            {missingLabels.length > 0 && (
+              <Pill tone="warn">{missingLabels.join(" · ")} 확인 불가</Pill>
+            )}
+          </div>
+        </div>
+        <div className="sec-tabs">
+          <MarketSectionNav active="sectors" />
+        </div>
       </div>
 
-      <CpVerdictHero
-        eyebrow="SECTORS · GICS 기준 11개 업종 흐름"
-        verdict={verdict}
-        sub="S&amp;P 500 대비 초과 성과와 밸류에이션, 기관 보유 방향이 같은 편인지 한 화면에서 확인합니다."
-        trustChips={trustChips}
+      <SectorFlowPanel
+        rows={rows}
+        benchmarkValue={activeBenchmark}
+        windowKey={sortWindow}
+        onWindowChange={setSortWindow}
+        loading={loading}
+        ready={benchmarksReady}
+        failed={flowFailed}
+        stale={flowStale}
+        clock={sourceMeta.benchmarksSourceDate}
+        lkgClock={sourceMeta.benchmarksSourceDate}
+        coverage={flowCoverage}
+        onRetry={reload}
       />
 
-      {isMuted ? <LoadingSkeleton /> : null}
-
-      <section className="cpw5-sectors-hero-chart" aria-label="섹터 성과 랭킹 (S&P 500 대비)">
-        <div className="cpw5-sectors-hero-chart__head">
-          <h2 className="cpw5-sectors-hero-chart__title">S&amp;P 500 대비 {activeWindowLabel} 초과 성과 · 트랙 굵기는 ETF 시가총액 비중</h2>
-          <span className="cpw5-sectors-hero-chart__baseline">기준 {pct(activeBenchmark, 1)}</span>
-        </div>
-        <div className="cpw5-sectors-period-toggle" role="group" aria-label="기간 선택">
-          {MOMENTUM_WINDOWS.map((window) => (
-            <button
-              key={window.key}
-              type="button"
-              data-active={window.key === sortWindow ? "true" : "false"}
-              className="cpw5-sectors-period-btn min-h-11"
-              onClick={() => setSortWindow(window.key)}
-              aria-pressed={window.key === sortWindow}
-            >
-              {window.label}
-            </button>
-          ))}
-        </div>
-        <SectorHeroBars rows={sorted} windowKey={sortWindow} benchmarkValue={activeBenchmark} />
-      </section>
-
-      <CpStatChipRow
-        items={[
-          {
-            id: "valuation",
-            label: "가치 위치 (저평가 · 고평가)",
-            value: `${cheapest?.name ?? "—"} · ${richest?.name ?? "—"}`,
-          },
-          {
-            id: "smart-leader",
-            label: "기관 보유 리더",
-            value: smartLeader?.smartMoney ? `${smartLeader.name} ${pct(smartLeader.smartMoney.weight, 1)}` : "—",
-          },
-          {
-            id: "smart-delta",
-            label: "기관 보유 증가",
-            value: smartDeltaLeader?.smartMoney ? `${smartDeltaLeader.name} ${pp(smartDeltaLeader.smartMoney.delta4q, 1)}` : "—",
-            tone: smartDeltaLeader?.smartMoney && (smartDeltaLeader.smartMoney.delta4q ?? 0) >= 0 ? "positive" : "negative",
-          },
-        ]}
+      <EtfComparePanel
+        rows={rows}
+        loading={loading}
+        ready={etfsReady}
+        failed={etfFailed}
+        stale={etfStale}
+        clock={sourceMeta.etfSourceDate}
+        lkgClock={sourceMeta.etfSourceDate}
+        coverage={etfCoverage}
+        missingNote={etfMissingNote}
+        onRetry={reload}
       />
 
-      <CpAccordion title="전체 업종 × 기간 성과표 보기" meta={`${rows.length}개 업종 · 당일 포함 ${MOMENTUM_WINDOWS.length + 1}개 구간`}>
-        <CpDataTable
-          columns={matrixColumns}
-          rows={matrixRows}
-          getRowKey={(row) => row.rowKey}
-          emphRowKeys={new Set(["sp500"])}
-        />
-      </CpAccordion>
+      <SmartMoneyPanel
+        rows={rows}
+        sourceMeta={sourceMeta}
+        loading={loading}
+        ready={smartMoneyReady}
+        failed={smartFailed}
+        stale={smartStale}
+        asOf={smartAsOf}
+        coverage={smartCoverage}
+        onRetry={reload}
+      />
 
-      <CpSectionCard eyebrow="ETF" title="섹터 ETF 비교" footnote={dayCoverageText}>
-        {etfRows.length === 0 ? (
-          <p className="text-sm text-[var(--cp-text-muted)]">ETF 데이터를 불러오지 못했습니다.</p>
-        ) : (
-          <>
-            <div className="cpw5-sectors-card-grid md:hidden" data-cols="1">
-              {rows.map((row) => (
-                <EtfCard key={row.key} row={row} />
-              ))}
-            </div>
-            <div className="hidden md:block">
-              <CpDataTable<SectorTableRow>
-                columns={[
-                  {
-                    key: "etf",
-                    header: "ETF",
-                    align: "left",
-                    render: (row: SectorRow) => (
-                      <>
-                        <span className="text-sm font-black text-[var(--cp-text-strong)]">{row.etf}</span>
-                        <span className="ml-2 text-xs font-semibold text-[var(--cp-text-muted)]">{row.name}</span>
-                      </>
-                    ),
-                  },
-                  { key: "1m", header: "1M", render: (row: SectorRow) => pct(row.etfInfo?.returns["1m"], 1) },
-                  { key: "ytd", header: "YTD", render: (row: SectorRow) => pct(row.etfInfo?.returns.ytd, 1) },
-                  { key: "1y", header: "1Y", render: (row: SectorRow) => pct(row.etfInfo?.returns["1y"], 1) },
-                  { key: "3y", header: "3Y CAGR", render: (row: SectorRow) => pct(row.etfInfo?.cagr["3y"], 1) },
-                  { key: "5y", header: "5Y CAGR", render: (row: SectorRow) => pct(row.etfInfo?.cagr["5y"], 1) },
-                  {
-                    key: "beta",
-                    header: "Beta",
-                    render: (row: SectorRow) => formatDecimal(row.etfInfo?.beta, { digits: 2 }),
-                  },
-                  {
-                    key: "expense",
-                    header: "보수율",
-                    render: (row: SectorRow) => (typeof row.etfInfo?.expenseRatio === "number" ? formatPercent(row.etfInfo.expenseRatio * 100, 2) : "—"),
-                  },
-                ]}
-                rows={etfRows as SectorTableRow[]}
-                getRowKey={(row: SectorRow) => row.key}
-              />
-            </div>
-          </>
-        )}
-      </CpSectionCard>
-
-      <CpSectionCard eyebrow="VALUATION" title="섹터 밸류에이션" footnote={valuationSourceLine}>
-        <div className="cpw5-sectors-card-grid md:hidden" data-cols="1">
-          {valuationRows.map((row) => (
-            <ValuationCard key={row.key} row={row} />
-          ))}
+      <div className="sec-cta">
+        <div className="sec-cta-actions">
+          <Button variant="primary" onClick={() => router.push(ROUTES.marketEvents)}>
+            업종 이벤트 보기
+          </Button>
+          <Button variant="secondary" onClick={() => router.push(ROUTES.superinvestors)}>
+            투자 대가 보유 보기
+          </Button>
         </div>
-        <div className="hidden md:block">
-          <CpDataTable<SectorTableRow>
-            columns={[
-              {
-                key: "name",
-                header: "업종",
-                align: "left",
-                render: (row: SectorRow) => (
-                  <>
-                    <span className="text-sm font-bold text-[var(--cp-text-strong)]">{row.name}</span>
-                    <span className="ml-2 text-xs font-semibold text-[var(--cp-text-soft)]">{row.etf}</span>
-                  </>
-                ),
-              },
-              {
-                key: "pe",
-                header: (
-                  <abbr title="Fwd P/E: 향후 12개월 예상 이익 대비 주가 배수" className="cursor-help no-underline">
-                    Fwd P/E
-                  </abbr>
-                ),
-                render: (row: SectorRow) => <PeBandGauge value={row.valuation?.pe ?? null} band={row.valuation?.peBand ?? null} />,
-              },
-              {
-                key: "pb",
-                header: (
-                  <abbr title="P/B: 장부가 대비 주가 배수" className="cursor-help no-underline">
-                    P/B
-                  </abbr>
-                ),
-                render: (row: SectorRow) => formatDecimal(row.valuation?.pb, { digits: 2 }),
-              },
-              {
-                key: "roe",
-                header: (
-                  <abbr title="ROE: 자기자본이익률" className="cursor-help no-underline">
-                    ROE
-                  </abbr>
-                ),
-                render: (row: SectorRow) => (typeof row.valuation?.roe === "number" ? formatPercent(row.valuation.roe * 100, 1) : "—"),
-              },
-            ]}
-            rows={valuationRows as SectorTableRow[]}
-            getRowKey={(row: SectorRow) => row.key}
-          />
-        </div>
-      </CpSectionCard>
-
-      <SmartMoneyPanel rows={rows} sourceMeta={sourceMeta} />
-
-      <CpAccordion title="업종 세부 지도 보기" meta="산업 단위 드릴다운">
-        <IndustryMapPanel
-          bridgeText={
-            leaders[0]
-              ? `${leaders[0].name} 섹터 내 세부 산업(기술 섹터/반도체 등)은 아래에서 이어서 확인합니다.`
-              : null
-          }
-        />
-      </CpAccordion>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant="primary" onClick={() => router.push(ROUTES.marketEvents)}>
-          업종 이벤트 보기
-        </Button>
-        <Button variant="secondary" onClick={() => router.push(ROUTES.superinvestors)}>
-          투자 대가 보유 보기
-        </Button>
-        <p className="ml-auto text-[11px] font-semibold text-[var(--c-ink-3)]">투자 조언 아님 · 데이터 지연 가능</p>
+        <span className="sec-cta-note">투자 조언 아님 · 데이터 지연 가능</span>
       </div>
     </div>
   );

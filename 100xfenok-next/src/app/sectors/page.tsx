@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
 import { ROUTES } from "@/lib/routes";
 import SectorsClient from "./SectorsClient";
-import "@/styles/cp-w5-sectors.css";
+import "./sectors-light.css";
 
 export const dynamic = "force-dynamic";
 
