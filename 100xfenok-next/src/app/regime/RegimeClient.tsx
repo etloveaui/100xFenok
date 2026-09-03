@@ -444,6 +444,19 @@ function AxisTablePanel({
               <span role="columnheader">상태</span>
             </div>
             {axes.map((axis) => (
+              // Unavailable axes render the shared empty row, never a
+              // zero-signal row: "0개 · 신호 없음" would read as a genuine
+              // all-clear reading instead of a missing feed.
+              !axis.ready ? (
+                <div className="rgm-trow" role="row" key={axis.id} data-regime-axis-unavailable={axis.id}>
+                  <span className="rgm-axis" role="cell">{axis.title}</span>
+                  <span className="rgm-sum" role="cell">피드를 받지 못했습니다 · 다음 마감 후 갱신</span>
+                  <span className="tabular-nums" role="cell">—</span>
+                  <span role="cell">
+                    <Pill tone="neutral">미수신</Pill>
+                  </span>
+                </div>
+              ) : (
               <div className="rgm-trow" role="row" key={axis.id} data-regime-axis-summary-card={axis.id}>
                 <span className="rgm-axis" role="cell">{axis.title}</span>
                 <span className="rgm-sum" role="cell">{axis.summary}</span>
@@ -456,6 +469,7 @@ function AxisTablePanel({
                   )}
                 </span>
               </div>
+              )
             ))}
           </div>
           {undatedStructure && (
@@ -595,7 +609,9 @@ export default function RegimeClient() {
       summary: AXIS_SUMMARIES.macro,
       pulses: macroPulseList,
       tone: strongestTone(macroPulseList),
-      ready: feedReady.macro || feedReady.bond,
+      // Per-axis completeness: ready is AND over child feeds, so a missing
+      // bond feed can never hide behind present macro pulses.
+      ready: feedReady.macro && feedReady.bond,
       floor: oldestDatedSourceDate(macroPulseList.map((pulse) => pulse.asOf)),
     },
     {
@@ -604,7 +620,9 @@ export default function RegimeClient() {
       summary: AXIS_SUMMARIES.valuation,
       pulses: valuationPulseList,
       tone: strongestTone(valuationPulseList),
-      ready: feedReady.valuation || feedReady.erp || feedReady.sentiment,
+      // Per-axis completeness: ready is AND over child feeds (index band,
+      // ERP insight, sentiment), never OR.
+      ready: feedReady.valuation && feedReady.erp && feedReady.sentiment,
       floor: oldestDatedSourceDate(valuationPulseList.map((pulse) => pulse.asOf)),
     },
   ];
