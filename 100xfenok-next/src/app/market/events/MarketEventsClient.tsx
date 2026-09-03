@@ -7,6 +7,7 @@ import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { ROUTES } from "@/lib/routes";
 import { EmptyState, Skeleton, useDelayedLoading } from "@/components/ui";
 import { EVENTS_STALE_LABEL, eventStaleSuffix, isEventBoardStale } from "@/lib/market-events/freshness";
+import MarketEventsTimeline from "./MarketEventsTimeline";
 
 type EventTab = "earnings" | "actions" | "ipo" | "movers";
 
@@ -445,6 +446,16 @@ export default function MarketEventsClient({
           </div>
         </div>
       </section>
+
+      <div style={{ marginTop: "var(--s4)" }}>
+        <MarketEventsTimeline
+          loaded={loaded}
+          earnings={data?.earnings ?? null}
+          actions={data?.actions ?? null}
+          splits={data?.splits ?? null}
+          ipoCalendar={data?.ipoCalendar ?? null}
+        />
+      </div>
 
       <div style={{ marginTop: "var(--s4)" }}>
         {!loaded ? (
