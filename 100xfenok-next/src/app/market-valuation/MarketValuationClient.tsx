@@ -347,12 +347,18 @@ function HistoricalReferencePanel({ erpSourceDate }: { erpSourceDate: string | n
   const readyCount = (erp.state === "ready" ? 1 : 0) + (yardeni.state === "ready" ? 1 : 0);
   const bothFailed = erp.state === "failed" && yardeni.state === "failed";
   const empty = !pending && bothFailed;
+  const partial = !pending && !bothFailed && readyCount < 2;
   const asOf = latestAsOf([erp.asOf, yardeni.asOf, erpSourceDate]);
   const stale = !pending && !bothFailed && (isStaleAsOf(erp.asOf) || isStaleAsOf(yardeni.asOf));
 
   return (
+    // Route-level five-state: the ERP/Yardeni charts load their own feeds, so
+    // the panel never delegates loading to Panel — Panel's delayed skeleton
+    // replaces children after 120ms, which would drop the live chart frames
+    // for a slow fetch. Children stay mounted; pending/partial surface on the
+    // rail with coverage. (Panel itself is correct for data-less panels.)
     <Panel
-      loading={pending}
+      loading={false}
       empty={empty}
       emptyReason="ERP · 채권 대비 PER 차트를 불러오지 못했습니다"
       emptyActionLabel="다시 시도"
@@ -362,7 +368,7 @@ function HistoricalReferencePanel({ erpSourceDate }: { erpSourceDate: string | n
       onRetry={stale ? reload : undefined}
     >
       <PanelHeader eyebrow="Historical Reference" title="ERP · 채권 대비 PER 추이" right={<Pill>20Y</Pill>} />
-      <div className="mv-histref" data-market-valuation-chart-grid>
+      <div className="mv-histref" data-market-valuation-chart-grid aria-busy={pending}>
         <div>
           <p className="mv-chart-cap">Damodaran ERP vs 10년물</p>
           <ErpHistoryPanel bare onStatus={setErp} />
@@ -373,12 +379,12 @@ function HistoricalReferencePanel({ erpSourceDate }: { erpSourceDate: string | n
         </div>
       </div>
       <EvidenceRail
-        freshness={pending ? "pending" : bothFailed ? "error" : readyCount < 2 ? "partial" : stale ? "stale" : "fresh"}
+        freshness={pending ? "pending" : bothFailed ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
         source="Damodaran · Yardeni"
         asOf={pending ? "—" : asOf ?? "—"}
         coverage={pending ? "—" : `${readyCount}/2`}
-        lkgAsOf={!pending && !bothFailed && (stale || readyCount < 2) && asOf ? asOf : undefined}
-        onRetry={bothFailed || stale ? reload : undefined}
+        lkgAsOf={!pending && !bothFailed && (stale || partial) && asOf ? asOf : undefined}
+        onRetry={bothFailed || stale || partial ? reload : undefined}
         onEvidence={bothFailed ? undefined : () => openEvidence("/data/damodaran/historical_erp.json")}
       />
     </Panel>
