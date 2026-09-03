@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-03T08:26:00.737Z",
+  "generated_at": "2026-09-03T09:48:16.701Z",
   "status": "open",
-  "open_incident_count": 7,
+  "open_incident_count": 6,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -59,19 +59,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     },
     {
       "workflow": "slickcharts-daily.yml",
@@ -339,7 +326,7 @@
         "suspected_skip"
       ],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 6
+      "data_freshness_age_hours_at_generation": 7
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -506,16 +493,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33733115590",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33733115590",
-    "observed_at": "2026-09-03T08:26:00.737Z",
+    "run_id": "33740675128",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33740675128",
+    "observed_at": "2026-09-03T09:48:16.701Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-edgar-filings.yml",
       "fetch-stockanalysis.yml",
       "fetch-us-indices-daily.yml",
       "fetch-yf-finance.yml",
-      "global-writer-queue-observer.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml"
     ],
