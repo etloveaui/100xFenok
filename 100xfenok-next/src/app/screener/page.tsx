@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import AppShell from "@/components/shell/AppShell";
 import { macroContextFromParam } from "@/lib/macro-chart/context";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { parseScreenerFilterState } from "@/lib/screener/filter-url";
-import ScreenerClient from "./ScreenerClient";
+
+const ScreenerClient = dynamic(() => import("./ScreenerClient"), {
+  ssr: false,
+  loading: () => (
+    <div role="status" aria-live="polite" data-screener-loading="true">
+      스크리너를 불러오는 중입니다.
+    </div>
+  ),
+});
 
 interface Props {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
