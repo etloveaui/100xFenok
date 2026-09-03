@@ -38,6 +38,12 @@ export interface MarketChartSeries {
   hidden?: boolean;
   yAxisId?: "y" | "y1";
   chartType?: MarketChartType;
+  /** Stable palette slot for cross-row/chart color consistency. */
+  paletteIndex?: number;
+  /** Visual priority: primary is solid/heavier, secondary is dashed/lighter. */
+  lineRole?: "primary" | "secondary";
+  /** Comparable-domain key used by multi-row macro charts. */
+  unitGroup?: string;
 }
 
 export interface MarketChartHoverSeriesPoint {

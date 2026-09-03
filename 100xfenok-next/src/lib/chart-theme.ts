@@ -13,6 +13,18 @@ export const lightChartTheme = {
   accent: "#1B73D3",
 } as const;
 
+/** Color-blind-safe categorical sequence shared by every chart engine. */
+export const okabeItoPalette = [
+  "#0072B2",
+  "#E69F00",
+  "#009E73",
+  "#D55E00",
+  "#CC79A7",
+  "#56B4E9",
+  "#F0E442",
+  "#000000",
+] as const;
+
 export type LightChartTheme = typeof lightChartTheme;
 
 /* lightweight-charts options factory */

@@ -71,6 +71,31 @@
   background: var(--cp-surface);
 }
 
+.cpw5-macro-chart-rows {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.cpw5-macro-chart-rows > [data-macro-chart-unit-group] {
+  min-width: 0;
+}
+
+.cpw5-macro-series-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--cp-border);
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.cpw5-macro-series-evidence [data-series-load-state="failed"] {
+  color: var(--cp-negative);
+}
+
 .cpw5-macro-chart-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -714,6 +739,10 @@
     display: grid;
     width: 100%;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .cpw5-macro-chart-rows {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .cpw5-macro-tool-button {

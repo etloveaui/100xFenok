@@ -70,6 +70,8 @@ export interface MarketChartFrameProps {
    * first-seen label union would otherwise interleave out of order.
    */
   sortLabels?: boolean;
+  /** The caller already cut the data window before transforming/downsampling. */
+  seriesAreRangeFiltered?: boolean;
 }
 
 const DEFAULT_RANGES: readonly MarketChartRange[] = [
@@ -89,6 +91,13 @@ function orderedLabels(series: readonly MarketChartSeries[]): string[] {
     }
   }
   return labels;
+}
+
+function compareLabels(a: string, b: string): number {
+  const aDate = Date.parse(a);
+  const bDate = Date.parse(b);
+  if (Number.isFinite(aDate) && Number.isFinite(bDate)) return aDate - bDate;
+  return a.localeCompare(b);
 }
 
 /**
@@ -127,7 +136,7 @@ function applyRange(
   // Count mode (year/month-cadence ledger charts): keep trailing-N labels.
   if (!range.count) return series;
   const labels = orderedLabels(series);
-  const ordered = sortLabels ? [...labels].sort((a, b) => a.localeCompare(b)) : labels;
+  const ordered = sortLabels ? [...labels].sort(compareLabels) : labels;
   if (ordered.length <= range.count) return series;
   const kept = new Set(ordered.slice(ordered.length - range.count));
   return series.map((item) => ({
@@ -163,6 +172,7 @@ export function MarketChartFrame({
   onRangeChange,
   onHiddenSeriesChange,
   sortLabels = false,
+  seriesAreRangeFiltered = false,
 }: MarketChartFrameProps) {
   const [internalRangeId, setInternalRangeId] = useState<string>(
     defaultRangeId ?? ranges[ranges.length - 1]?.id ?? "MAX",
@@ -201,11 +211,11 @@ export function MarketChartFrame({
 
   const renderedSeries = useMemo(
     () =>
-      applyRange(series, activeRange, sortLabels).map((item) => ({
+      (seriesAreRangeFiltered ? series : applyRange(series, activeRange, sortLabels)).map((item) => ({
         ...item,
         hidden: hiddenIds.has(item.id),
       })),
-    [series, activeRange, hiddenIds, sortLabels],
+    [series, activeRange, hiddenIds, sortLabels, seriesAreRangeFiltered],
   );
 
   const toggleSeries = useCallback((id: string) => {

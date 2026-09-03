@@ -43,6 +43,13 @@ function pointMap(series: MarketChartSeries): Map<string, MarketChartPoint> {
   return new Map(series.points.map((point) => [point.label, point]));
 }
 
+function compareLabels(a: string, b: string): number {
+  const aDate = Date.parse(a);
+  const bDate = Date.parse(b);
+  if (Number.isFinite(aDate) && Number.isFinite(bDate)) return aDate - bDate;
+  return a.localeCompare(b);
+}
+
 function buildLabels(series: readonly MarketChartSeries[], sortLabels: boolean): string[] {
   const labels: string[] = [];
   const seen = new Set<string>();
@@ -53,7 +60,7 @@ function buildLabels(series: readonly MarketChartSeries[], sortLabels: boolean):
       labels.push(point.label);
     }
   }
-  return sortLabels ? labels.sort((a, b) => a.localeCompare(b)) : labels;
+  return sortLabels ? labels.sort(compareLabels) : labels;
 }
 
 function backgroundColors(
@@ -104,12 +111,13 @@ function buildData(
         data: values,
         borderColor: isLine ? color : backgroundColors(values, color, negativeColor),
         backgroundColor: backgroundColors(values, color, negativeColor),
-        borderWidth: isLine ? 2 : 0,
+        borderWidth: isLine ? (item.lineRole === "primary" ? 2.5 : item.lineRole === "secondary" ? 1.5 : 2) : 0,
+        borderDash: isLine && item.lineRole === "secondary" ? [6, 4] : undefined,
         pointRadius: isLine ? 0 : undefined,
         pointHitRadius: isLine ? 10 : undefined,
         tension: isLine ? 0.24 : undefined,
         fill: false,
-        spanGaps: true,
+        spanGaps: false,
         hidden: item.hidden,
         yAxisID: item.yAxisId ?? "y",
       };

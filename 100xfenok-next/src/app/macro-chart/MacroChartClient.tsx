@@ -5,16 +5,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
 import TransitionLink from "@/components/TransitionLink";
+import { EvidenceRail, Panel } from "@/components/ui";
 import { formatAsOf, freshnessDataState } from "@/lib/data-state";
 import { MarketChartFrame, type MarketChartRange } from "@/lib/market-valuation/charts/MarketChartFrame";
 import type { MarketChartSeries } from "@/lib/market-valuation/charts/types";
 import {
+  MACRO_CATALOG_CURATED_AT,
+  MACRO_CATALOG_SERIES_COUNT,
   MACRO_CHART_PRESETS,
   MACRO_GROUP_LABELS,
   MACRO_SERIES_CATALOG,
   MACRO_TRANSFORM_LABELS,
   seriesById,
-} from "@/lib/macro-chart/catalog";
+} from "@/lib/macro-chart/registry";
 import {
   DEFAULT_MACRO_CONTEXT_ID,
   MACRO_CONTEXTS,
@@ -23,7 +26,7 @@ import {
   type MacroContextId,
   type MacroWorkbenchContext,
 } from "@/lib/macro-chart/context";
-import { buildMarketSeries, loadMacroSeries, unitLabel } from "@/lib/macro-chart/loader";
+import { buildMarketSeries, loadMacroSeries, transformedUnitGroupLabel, unitLabel } from "@/lib/macro-chart/loader";
 import { stooqSeriesIdFromInput } from "@/lib/macro-chart/stooq";
 import type { LoadedMacroSeries } from "@/lib/macro-chart/loader";
 import type { MacroSeriesDefinition, MacroValueTransform } from "@/lib/macro-chart/types";
@@ -33,8 +36,6 @@ const DEFAULT_RANGE_ID = "5Y";
 const MAX_SELECTED_SERIES = 8;
 const MAX_FORMULA_SERIES = 3;
 const USER_PRESET_STORAGE_KEY = "100xfenok.macroChart.userPresets.v1";
-const MACRO_CATALOG_CURATED_AT = "2026-06-24";
-const MACRO_CATALOG_SERIES_COUNT = 30;
 const MACRO_RANGES: readonly MarketChartRange[] = [
   { id: "3M", label: "3M", months: 3 },
   { id: "6M", label: "6M", months: 6 },
@@ -625,7 +626,7 @@ function sourceSummary(definitions: readonly MacroSeriesDefinition[]) {
   return `${definitions.length}개 시리즈 · ${files.size}개 데이터 파일`;
 }
 
-function downloadCsv(series: readonly MarketChartSeries[], selected: readonly SelectedMacroSeries[]) {
+function downloadCsv(series: readonly MarketChartSeries[], selected: readonly SelectedMacroSeries[], rangeId: string) {
   const labels = new Set<string>();
   for (const item of series) {
     for (const point of item.points) labels.add(point.label);
@@ -637,7 +638,7 @@ function downloadCsv(series: readonly MarketChartSeries[], selected: readonly Se
     "date",
     ...series.map((item) => {
       const transform = transformById.get(item.id);
-      return transform ? `${item.id}_${transform}` : item.id;
+      return transform ? `${item.id}_${transform}_${rangeId}` : `${item.id}_computed_${rangeId}`;
     }),
   ];
   const sourceRow = ["__meta_source", ...series.map((item) => sourceKindLabel(seriesById(item.id)))];
@@ -671,16 +672,21 @@ function waitForPaint() {
 
 async function downloadChartPng() {
   await waitForPaint();
-  const canvas = document.querySelector<HTMLCanvasElement>('[role="group"][aria-label*="매크로 시계열 비교 차트"] canvas');
-  if (!canvas) return false;
+  const canvases = [...document.querySelectorAll<HTMLCanvasElement>('.cpw5-macro-chart-rows [role="group"][aria-label*="매크로 시계열 비교 차트"] canvas')];
+  if (!canvases.length) return false;
+  const gap = 16;
   const exportCanvas = document.createElement("canvas");
-  exportCanvas.width = canvas.width;
-  exportCanvas.height = canvas.height;
+  exportCanvas.width = Math.max(...canvases.map((canvas) => canvas.width));
+  exportCanvas.height = canvases.reduce((height, canvas) => height + canvas.height, 0) + gap * (canvases.length - 1);
   const ctx = exportCanvas.getContext("2d");
   if (!ctx) return false;
   ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--c-panel").trim() || "Canvas";
   ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-  ctx.drawImage(canvas, 0, 0);
+  let y = 0;
+  for (const canvas of canvases) {
+    ctx.drawImage(canvas, 0, y);
+    y += canvas.height + gap;
+  }
   const link = document.createElement("a");
   link.href = exportCanvas.toDataURL("image/png");
   link.download = `100xfenok-macro-chart-${new Date().toISOString().slice(0, 10)}.png`;
@@ -757,10 +763,45 @@ function buildFormulaSeries(baseSeries: readonly MarketChartSeries[], formulas: 
         label: formulaLabel(formula),
         colorToken: "fairValue",
         yAxisId: "y",
+        unitGroup: formula.operator === "ratio" ? "level" : "percent",
+        paletteIndex: baseSeries.length + formulas.indexOf(formula),
+        lineRole: "secondary",
         points,
       };
     })
     .filter((item): item is MarketChartSeries => item !== null);
+}
+
+type MacroChartRow = {
+  id: string;
+  series: MarketChartSeries[];
+  yAxisTitle: string;
+  y1AxisTitle?: string;
+};
+
+function buildChartRows(series: readonly MarketChartSeries[]): MacroChartRow[] {
+  const groups = [...new Set(series.map((item) => item.unitGroup ?? "level"))];
+  if (groups.length <= 2) {
+    return [{
+      id: groups.join("-") || "empty",
+      series: series.map((item) => ({
+        ...item,
+        yAxisId: groups.indexOf(item.unitGroup ?? "level") === 1 ? "y1" : "y",
+      })),
+      yAxisTitle: transformedUnitGroupLabel(groups[0] ?? "level"),
+      y1AxisTitle: groups[1] ? transformedUnitGroupLabel(groups[1]) : undefined,
+    }];
+  }
+  return groups.map((group) => ({
+    id: group,
+    series: series.filter((item) => (item.unitGroup ?? "level") === group).map((item) => ({ ...item, yAxisId: "y" })),
+    yAxisTitle: transformedUnitGroupLabel(group),
+  }));
+}
+
+function finiteRange(series: MarketChartSeries) {
+  const values = series.points.flatMap((point) => typeof point.value === "number" && Number.isFinite(point.value) ? [point.value] : []);
+  return values.length ? { min: Math.min(...values), max: Math.max(...values) } : null;
 }
 
 function nextRangeId(current: string, delta: -1 | 1) {
@@ -1031,10 +1072,16 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     Promise.resolve().then(() => {
       if (!cancelled) setLoadState({ status: "loading" });
     });
-    loadMacroSeries(selectedDefinitions, transformMap)
+    const selectedRange = MACRO_RANGES.find((range) => range.id === rangeId);
+    loadMacroSeries(selectedDefinitions, transformMap, { months: selectedRange?.months })
       .then((loaded) => {
         if (cancelled) return;
-        setLoadState({ status: "ready", series: buildMarketSeries(loaded), loaded });
+        const series = buildMarketSeries(loaded);
+        if (!series.length && loaded.some((item) => item.error)) {
+          setLoadState({ status: "error", message: "선택한 시리즈를 모두 불러오지 못했습니다." });
+          return;
+        }
+        setLoadState({ status: "ready", series, loaded });
       })
       .catch((error: unknown) => {
         if (cancelled) return;
@@ -1045,7 +1092,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     return () => {
       cancelled = true;
     };
-  }, [clientStateReady, loadRetryKey, selectedDefinitions, transformMap]);
+  }, [clientStateReady, loadRetryKey, rangeId, selectedDefinitions, transformMap]);
 
   useEffect(() => {
     if (!clientStateReady || typeof window === "undefined") return;
@@ -1260,10 +1307,6 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     }
   }, [userPresets]);
 
-  const handleHiddenSeriesChange = useCallback((nextHiddenIds: string[]) => {
-    setHiddenIds([...new Set(nextHiddenIds)].filter((id) => chartSeriesIds.has(id)));
-  }, [chartSeriesIds]);
-
   const activeLoadState = useMemo<LoadState>(
     () => (selectedDefinitions.length ? loadState : { status: "ready", series: [], loaded: [] }),
     [loadState, selectedDefinitions.length],
@@ -1274,6 +1317,15 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     const baseSeries = applyAxisOverrides(activeLoadState.series, axisById);
     return [...baseSeries, ...buildFormulaSeries(baseSeries, formulas)];
   }, [activeLoadState, axisById, formulas]);
+  const chartRows = useMemo(() => buildChartRows(chartSeries), [chartSeries]);
+  const failedLoadedSeries = useMemo(
+    () => activeLoadState.status === "ready" ? activeLoadState.loaded.filter((item) => item.error || !item.transformedPoints.length) : [],
+    [activeLoadState],
+  );
+  const healthyLoadedSeries = useMemo(
+    () => activeLoadState.status === "ready" ? activeLoadState.loaded.filter((item) => !item.error && item.transformedPoints.length) : [],
+    [activeLoadState],
+  );
   const canZoomIn = MACRO_RANGE_ORDER.indexOf(rangeId) > 0;
   const canZoomOut = MACRO_RANGE_ORDER.indexOf(rangeId) >= 0 && MACRO_RANGE_ORDER.indexOf(rangeId) < MACRO_RANGE_ORDER.length - 1;
   const selectedSourceCount = useMemo(
@@ -1393,7 +1445,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           <p className="cpw5-macro-description">{headerDescription}</p>
         </div>
 
-        <section className="cpw5-macro-chart-card" aria-label="매크로 차트 히어로">
+        <Panel className="cpw5-macro-chart-card">
           <div className="cpw5-macro-chart-toolbar">
             <div className="cpw5-macro-chart-toolbar__copy">
               <h2>시장 방향 차트</h2>
@@ -1433,8 +1485,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 type="button"
                 onClick={() => {
                   if (!ready) return;
-                  downloadCsv(chartSeries, selected);
-                  setExportNotice("전체 CSV 저장됨");
+                  downloadCsv(chartSeries, selected, rangeId);
+                  setExportNotice(`${rangeLabel(rangeId)} 변환 CSV 저장됨`);
                 }}
                 disabled={!ready || chartSeries.length === 0}
                 className="cpw5-macro-tool-button"
@@ -1467,27 +1519,70 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               <i />
             </div>
           ) : activeLoadState.status === "ready" && chartSeries.length ? (
-            <MarketChartFrame
-              ariaLabel="매크로 시계열 비교 차트"
-              series={chartSeries}
-              ranges={MACRO_RANGES}
-              defaultRangeId={DEFAULT_RANGE_ID}
-              rangeId={rangeId}
-              hiddenSeriesIds={visibleHiddenIds}
-              onRangeChange={setRangeId}
-              onHiddenSeriesChange={handleHiddenSeriesChange}
-              sortLabels
-              heightClassName="h-[22rem] sm:h-[26rem] lg:h-[30rem]"
-              yAxisTitle="기준값 / 지수"
-              y1AxisTitle={rightAxisTitle}
-              formatValue={formatValue}
-              footnote={sourceSummary(selectedDefinitions)}
-              bare
-            />
+            <div className="cpw5-macro-chart-rows" data-macro-chart-row-count={chartRows.length}>
+              {chartRows.map((row, rowIndex) => (
+                <div key={row.id} data-macro-chart-unit-group={row.id}>
+                  <MarketChartFrame
+                    ariaLabel={`매크로 시계열 비교 차트 ${rowIndex + 1}`}
+                    series={row.series}
+                    ranges={MACRO_RANGES}
+                    defaultRangeId={DEFAULT_RANGE_ID}
+                    rangeId={rangeId}
+                    hiddenSeriesIds={visibleHiddenIds}
+                    onRangeChange={setRangeId}
+                    onHiddenSeriesChange={(nextHiddenIds) => {
+                      const rowIds = new Set(row.series.map((item) => item.id));
+                      setHiddenIds((previous) => [
+                        ...previous.filter((id) => !rowIds.has(id)),
+                        ...nextHiddenIds,
+                      ].filter((id, index, all) => all.indexOf(id) === index && chartSeriesIds.has(id)));
+                    }}
+                    sortLabels
+                    seriesAreRangeFiltered
+                    heightClassName="h-[22rem] sm:h-[26rem] lg:h-[30rem]"
+                    yAxisTitle={row.yAxisTitle}
+                    y1AxisTitle={row.y1AxisTitle ?? rightAxisTitle}
+                    formatValue={formatValue}
+                    footnote={sourceSummary(selectedDefinitions)}
+                    bare
+                  />
+                  {row.series.map((item) => {
+                    const range = finiteRange(item);
+                    return range ? (
+                      <output
+                        key={item.id}
+                        className="sr-only"
+                        data-macro-chart-series-range={item.id}
+                        data-unit-group={item.unitGroup}
+                        data-axis={item.yAxisId ?? "y"}
+                        data-min={range.min}
+                        data-max={range.max}
+                        data-first={item.points.find((point) => typeof point.value === "number")?.value}
+                      >{`${item.id}: ${range.min}..${range.max}`}</output>
+                    ) : null;
+                  })}
+                </div>
+              ))}
+              <div className="cpw5-macro-series-evidence" aria-label="시리즈별 데이터 근거">
+                {activeLoadState.loaded.map((item) => (
+                  <span key={item.definition.id} data-series-load-state={item.error ? "failed" : "ready"}>
+                    {item.definition.shortLabel} · {sourceDisplayLabel(item.definition)} · {item.error ? "불러오기 실패" : item.transformedPoints.at(-1)?.date ?? "관측 없음"}
+                  </span>
+                ))}
+              </div>
+              <EvidenceRail
+                freshness={failedLoadedSeries.length ? "partial" : "fresh"}
+                source={[...new Set(healthyLoadedSeries.map((item) => sourceDisplayLabel(item.definition)))].join(" · ") || "데이터 확인 중"}
+                asOf={latestVisibleDate ?? "—"}
+                coverage={`${healthyLoadedSeries.length}/${MACRO_CATALOG_SERIES_COUNT}`}
+                next={failedLoadedSeries.length ? `${failedLoadedSeries.map((item) => item.definition.shortLabel).join(", ")} 재시도` : undefined}
+                onRetry={failedLoadedSeries.length ? () => setLoadRetryKey((value) => value + 1) : undefined}
+              />
+            </div>
           ) : (
             <div className="cpw5-macro-empty">비교할 시리즈를 선택하세요.</div>
           )}
-        </section>
+        </Panel>
 
         <div className="cpw5-tile-row cpw5-macro-metrics" aria-label="매크로 분석 요약">
           {analysisCards.map((card) => (
@@ -1934,7 +2029,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           formulas.length ? `${formulas.length}개 합성 시리즈` : null,
           hasStooqSelection ? "시장 심볼은 외부 데이터 경로를 경유합니다" : null,
           `카탈로그 ${MACRO_CATALOG_CURATED_AT} · ${MACRO_CATALOG_SERIES_COUNT}개 시리즈`,
-          "전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준",
+          "CSV는 선택 기간·변환 후 실제 표시값 기준",
           "URL로 선택값·기간·숨김·축 상태 공유 가능",
         ]}
       >

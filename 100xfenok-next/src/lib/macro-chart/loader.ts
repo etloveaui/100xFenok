@@ -27,6 +27,11 @@ export interface LoadedMacroSeries {
   transform: MacroValueTransform;
   rawPoints: MacroRawPoint[];
   transformedPoints: MacroRawPoint[];
+  error?: string;
+}
+
+export interface MacroChartWindow {
+  months?: number;
 }
 
 function asRecord(value: unknown): JsonRecord {
@@ -44,6 +49,27 @@ function asNumber(value: unknown): number | null {
 
 function sourceKind(definition: MacroSeriesDefinition) {
   return definition.sourceKind ?? "local-json";
+}
+
+function dateValue(date: string): number {
+  const value = Date.parse(date);
+  return Number.isFinite(value) ? value : Number.NEGATIVE_INFINITY;
+}
+
+function monthsBefore(date: string, months: number): number {
+  const parsed = new Date(date);
+  if (!Number.isFinite(parsed.valueOf())) return Number.NEGATIVE_INFINITY;
+  const targetMonth = parsed.getUTCMonth() - months;
+  const targetYear = parsed.getUTCFullYear() + Math.floor(targetMonth / 12);
+  const normalizedMonth = ((targetMonth % 12) + 12) % 12;
+  const lastDay = new Date(Date.UTC(targetYear, normalizedMonth + 1, 0)).getUTCDate();
+  return Date.UTC(targetYear, normalizedMonth, Math.min(parsed.getUTCDate(), lastDay));
+}
+
+function cutoffPoints(points: readonly MacroRawPoint[], anchor: string | null, window: MacroChartWindow): MacroRawPoint[] {
+  if (!anchor || window.months == null) return [...points];
+  const cutoff = monthsBefore(anchor, window.months);
+  return points.filter((point) => dateValue(point.date) >= cutoff);
 }
 
 function browserStorage(): Storage | null {
@@ -159,25 +185,49 @@ function extractPoints(payload: unknown, accessor: MacroSeriesAccessor): MacroRa
 export async function loadMacroSeries(
   definitions: readonly MacroSeriesDefinition[],
   transforms: ReadonlyMap<string, MacroValueTransform>,
+  window: MacroChartWindow = {},
 ): Promise<LoadedMacroSeries[]> {
   const payloads = new Map<string, unknown>();
+  const payloadErrors = new Map<string, string>();
   await Promise.all(
     [...new Set(definitions.filter((definition) => sourceKind(definition) === "local-json").map((definition) => definition.sourcePath))].map(async (sourcePath) => {
-      const response = await fetch(sourcePath, { cache: "force-cache" });
-      if (!response.ok) throw new Error(`${sourcePath} ${response.status}`);
-      payloads.set(sourcePath, await response.json());
+      try {
+        const response = await fetch(sourcePath, { cache: "force-cache" });
+        if (!response.ok) throw new Error(`${sourcePath} ${response.status}`);
+        payloads.set(sourcePath, await response.json());
+      } catch (error) {
+        payloadErrors.set(sourcePath, error instanceof Error ? error.message : String(error));
+      }
     }),
   );
 
-  return Promise.all(definitions.map(async (definition) => {
-    const rawPoints =
-      sourceKind(definition) === "stooq"
+  const extracted: Array<{ definition: MacroSeriesDefinition; rawPoints: MacroRawPoint[]; error?: string }> = await Promise.all(definitions.map(async (definition) => {
+    try {
+      const sourceError = payloadErrors.get(definition.sourcePath);
+      if (sourceError) throw new Error(sourceError);
+      const rawPoints = sourceKind(definition) === "stooq"
         ? await loadStooqRawPoints(definition)
         : extractPoints(payloads.get(definition.sourcePath), definition.accessor);
-    const transform = transforms.get(definition.id) ?? definition.defaultTransform ?? "raw";
-    const transformedPoints = downsampleMacroPoints(applyMacroTransform(rawPoints, transform, definition));
-    return { definition, transform, rawPoints, transformedPoints };
+      if (!rawPoints.length) throw new Error("no finite observations");
+      return { definition, rawPoints };
+    } catch (error) {
+      return {
+        definition,
+        rawPoints: [] as MacroRawPoint[],
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
   }));
+  const anchor = extracted
+    .flatMap((item) => item.rawPoints)
+    .reduce<string | null>((latest, point) => latest === null || dateValue(point.date) > dateValue(latest) ? point.date : latest, null);
+
+  return extracted.map(({ definition, rawPoints, error }) => {
+    const transform = transforms.get(definition.id) ?? definition.defaultTransform ?? "raw";
+    const windowPoints = cutoffPoints(rawPoints, anchor, window);
+    const transformedPoints = downsampleMacroPoints(applyMacroTransform(windowPoints, transform, definition));
+    return { definition, transform, rawPoints: windowPoints, transformedPoints, error };
+  });
 }
 
 export function unitLabel(unit: MacroSeriesUnitKind): string {
@@ -192,25 +242,35 @@ export function unitLabel(unit: MacroSeriesUnitKind): string {
 }
 
 export function buildMarketSeries(items: readonly LoadedMacroSeries[]): MarketChartSeries[] {
-  const labels = buildAlignedLabels(items.map((item) => item.transformedPoints));
-  const hasMixedRawUnits = new Set(
-    items
-      .filter((item) => item.transform === "raw")
-      .map((item) => unitLabel(item.definition.unit)),
-  ).size > 1;
+  const healthy = items.filter((item) => !item.error && item.transformedPoints.length > 0);
+  const labels = buildAlignedLabels(healthy.map((item) => item.transformedPoints));
+  const unitGroups = [...new Set(healthy.map((item) => transformedUnitGroup(item)))];
 
-  return items.map((item) => {
+  return healthy.map((item, index) => {
     const transformedUnit = transformUnitLabel(item.transform, unitLabel(item.definition.unit));
-    const yAxisId =
-      item.transform === "raw" && hasMixedRawUnits && (item.definition.unit === "percent" || item.definition.unit === "spread")
-        ? "y1"
-        : "y";
+    const unitGroup = transformedUnitGroup(item);
     return {
       id: item.definition.id,
       label: `${item.definition.shortLabel} · ${transformedUnit}`,
-      colorToken: item.definition.colorToken,
-      yAxisId,
+      paletteIndex: index,
+      lineRole: index === 0 ? "primary" : "secondary",
+      unitGroup,
+      yAxisId: unitGroups.indexOf(unitGroup) === 1 ? "y1" : "y",
       points: alignMacroPoints(item.transformedPoints, labels),
     };
   });
+}
+
+export function transformedUnitGroup(item: Pick<LoadedMacroSeries, "definition" | "transform">): string {
+  if (item.transform === "rebase100") return "level";
+  if (item.transform === "yoy" || item.transform === "change") return "percent";
+  if (item.definition.unit === "index" || item.definition.unit === "score") return "level";
+  if (item.definition.unit === "percent" || item.definition.unit === "spread") return "percent";
+  return unitLabel(item.definition.unit);
+}
+
+export function transformedUnitGroupLabel(group: string): string {
+  if (group === "level") return "지수 / 기준값";
+  if (group === "percent") return "% / 스프레드 / YoY";
+  return group;
 }

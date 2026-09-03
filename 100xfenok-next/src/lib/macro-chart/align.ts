@@ -4,17 +4,17 @@ import type { MacroRawPoint } from "./types";
 export function alignMacroPoints(points: readonly MacroRawPoint[], labels: readonly string[]): MarketChartPoint[] {
   if (points.length === 0 || labels.length === 0) return [];
   const byDate = new Map(points.map((point) => [point.date, point.value]));
-  const firstDate = points[0]?.date ?? "";
-  let carried: number | null = null;
+  return labels.map((label) => ({
+    label,
+    value: typeof byDate.get(label) === "number" && Number.isFinite(byDate.get(label))
+      ? byDate.get(label)!
+      : null,
+  }));
+}
 
-  return labels.map((label) => {
-    const exact = byDate.get(label);
-    if (typeof exact === "number" && Number.isFinite(exact)) carried = exact;
-    return {
-      label,
-      value: label < firstDate ? null : carried,
-    };
-  });
+function dateValue(label: string): number {
+  const value = Date.parse(label);
+  return Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
 }
 
 export function buildAlignedLabels(series: ReadonlyArray<readonly MacroRawPoint[]>): string[] {
@@ -22,7 +22,7 @@ export function buildAlignedLabels(series: ReadonlyArray<readonly MacroRawPoint[
   for (const points of series) {
     for (const point of points) labels.add(point.date);
   }
-  return [...labels].sort((a, b) => a.localeCompare(b));
+  return [...labels].sort((a, b) => dateValue(a) - dateValue(b) || a.localeCompare(b));
 }
 
 export function downsampleMacroPoints(points: readonly MacroRawPoint[], maxPoints = 1200): MacroRawPoint[] {

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import type { MarketChartColorToken, MarketChartSeries } from "./types";
+import { okabeItoPalette } from "@/lib/chart-theme";
 
 const FALLBACK_THEME: Record<MarketChartColorToken, string> = {
   brand: "royalblue",
@@ -91,7 +92,7 @@ function alphaFromTriplet(triplet: string, alpha: number): string {
 export interface MarketChartTheme {
   token: (token: MarketChartColorToken) => string;
   alpha: (token: RgbToken, alpha: number) => string;
-  seriesColor: (series: Pick<MarketChartSeries, "color" | "colorToken">, index: number) => string;
+  seriesColor: (series: Pick<MarketChartSeries, "color" | "colorToken" | "paletteIndex">, index: number) => string;
   negativeColor: (series: Pick<MarketChartSeries, "negativeColor" | "negativeColorToken">) => string;
   heatStyle: (value: number | null | undefined, maxAbs?: number) => { backgroundColor: string; color: string };
   returnColor: (value: number | null | undefined) => string;
@@ -103,9 +104,11 @@ export interface MarketChartTheme {
 function buildTheme(values: Record<MarketChartColorToken, string>, rgbValues: Record<RgbToken, string>): MarketChartTheme {
   const token = (name: MarketChartColorToken) => values[name];
   const alpha = (name: RgbToken, amount: number) => alphaFromTriplet(rgbValues[name], amount);
-  const palette = SERIES_TOKENS.map((name) => token(name));
+  const palette = okabeItoPalette;
   const seriesColor: MarketChartTheme["seriesColor"] = (series, index) =>
-    series.color ?? token(series.colorToken ?? SERIES_TOKENS[index % SERIES_TOKENS.length]);
+    series.color ?? (series.paletteIndex == null
+      ? token(series.colorToken ?? SERIES_TOKENS[index % SERIES_TOKENS.length])
+      : palette[series.paletteIndex % palette.length]);
   const negativeColor: MarketChartTheme["negativeColor"] = (series) =>
     series.negativeColor ?? token(series.negativeColorToken ?? "down");
   const heatStyle: MarketChartTheme["heatStyle"] = (value, maxAbs = 0.15) => {

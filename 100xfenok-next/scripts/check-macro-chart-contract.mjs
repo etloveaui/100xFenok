@@ -13,6 +13,7 @@ const expectedSharedParams = new URL(sharedRoute, "https://qa.local").searchPara
 const expectedSharedSeries = expectedSharedParams.get("series")?.split(",").filter(Boolean) ?? [];
 const expectedSharedTransforms = expectedSharedParams.get("transform")?.split(",").filter(Boolean) ?? [];
 const presetRoute = "/macro-chart?macro=activity&preset=activity&range=MAX&hidden=ism_mfg_headline";
+const ownerProofRoute = "/macro-chart?macro=risk-liquidity&series=sp500,DGS10,HY_spread,M2SL&transform=rebase100,raw,raw,yoy&range=5Y";
 const expectedPresetSeries = ["oecd_cli_us", "pmi_mfg_us_sp", "ism_mfg_headline", "ism_services_headline"];
 
 function routeUrl(route) {
@@ -89,6 +90,10 @@ async function inspectStaticContracts() {
     navbarSource,
     shellSource,
     productNavSource,
+    registrySource,
+    loaderSource,
+    engineSource,
+    chartThemeSource,
   ] = await Promise.all([
     readFile(new URL("../src/app/macro-chart/MacroChartClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/macro-chart/page.tsx", import.meta.url), "utf8"),
@@ -105,6 +110,10 @@ async function inspectStaticContracts() {
     readFile(new URL("../src/components/Navbar.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/product-nav.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/macro-chart/registry.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/macro-chart/loader.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/market-valuation/charts/MarketChartEngineClient.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/chart-theme.ts", import.meta.url), "utf8"),
   ]);
   const catalog = JSON.parse(catalogSource);
 
@@ -117,8 +126,21 @@ async function inspectStaticContracts() {
   if (!macroPageSource.includes('className="fnk-shell"')) {
     addFailure(failures, "macro-shell-wrapper", "MacroChartPage must use fnk-shell wrapper");
   }
-  if (!macroSource.includes("전체 CSV 저장") || !macroSource.includes("전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준")) {
-    addFailure(failures, "csv-full-export-copy", "full CSV export copy missing");
+  if (!macroSource.includes("변환 CSV 저장됨") || !macroSource.includes("CSV는 선택 기간·변환 후 실제 표시값 기준")) {
+    addFailure(failures, "csv-plotted-export-copy", "plotted CSV export copy missing");
+  }
+  if (!registrySource.includes('macro-series.json') || !macroSource.includes('macro-chart/registry')) {
+    addFailure(failures, "runtime-catalog-ssot", "runtime must import the tracked JSON catalog through the registry");
+  }
+  for (const token of ["cutoffPoints(rawPoints", "applyMacroTransform(windowPoints", "downsampleMacroPoints(applyMacroTransform", "payloadErrors", "transformedUnitGroup"]) {
+    if (!loaderSource.includes(token)) addFailure(failures, "transform-pipeline-contract", `${token} missing`);
+  }
+  if (!engineSource.includes("spanGaps: false")) addFailure(failures, "missing-date-gap-contract", "spanGaps must be false");
+  if (!engineSource.includes('item.lineRole === "primary" ? 2.5') || !engineSource.includes("[6, 4]")) {
+    addFailure(failures, "line-role-contract", "primary/secondary line weight and dash encoding missing");
+  }
+  for (const color of ["#0072B2", "#E69F00", "#009E73", "#D55E00", "#CC79A7", "#56B4E9", "#F0E442", "#000000"]) {
+    if (!chartThemeSource.includes(color)) addFailure(failures, "okabe-ito-palette", `${color} missing`);
   }
   if (!macroSource.includes("macroContextId") || !macroSource.includes('aria-label="매크로 인사이트"')) {
     addFailure(failures, "macro-context-state", "MacroChartClient must carry macro context state and render the insight section");
@@ -286,6 +308,17 @@ async function collectPageOverflow(page) {
   });
 }
 
+async function collectSemanticRanges(page) {
+  return page.locator("[data-macro-chart-series-range]").evaluateAll((nodes) => nodes.map((node) => ({
+    id: node.getAttribute("data-macro-chart-series-range"),
+    unitGroup: node.getAttribute("data-unit-group"),
+    axis: node.getAttribute("data-axis"),
+    min: Number(node.getAttribute("data-min")),
+    max: Number(node.getAttribute("data-max")),
+    first: Number(node.getAttribute("data-first")),
+  })));
+}
+
 async function inspectSharedDesktop(page) {
   const failures = [];
   watchHydrationErrors(page, failures);
@@ -300,6 +333,16 @@ async function inspectSharedDesktop(page) {
   if (layout.scrollWidth > layout.viewportWidth + 1) {
     addFailure(failures, "desktop-overflow", `scrollWidth=${layout.scrollWidth} viewport=${layout.viewportWidth}`);
   }
+  const semanticRanges = await collectSemanticRanges(page);
+  const flatSeries = semanticRanges.filter((item) => !Number.isFinite(item.min) || !Number.isFinite(item.max) || item.min === item.max);
+  if (flatSeries.length) addFailure(failures, "plotted-series-range", JSON.stringify(flatSeries));
+  const axisGroups = new Map();
+  for (const item of semanticRanges) {
+    const prior = axisGroups.get(item.axis);
+    if (prior && prior !== item.unitGroup) addFailure(failures, "axis-unit-domain", `${item.axis}:${prior},${item.unitGroup}`);
+    axisGroups.set(item.axis, item.unitGroup);
+  }
+  console.log(JSON.stringify({ owner_url: routeUrl(sharedRoute), plotted_ranges: semanticRanges }));
   if (layout.chartGroups === 0 || layout.canvasWidth < 240 || layout.canvasHeight < 180) {
     addFailure(failures, "desktop-chart-visible", `canvas=${Math.round(layout.canvasWidth)}x${Math.round(layout.canvasHeight)}`);
   }
@@ -330,7 +373,10 @@ async function inspectSharedDesktop(page) {
   }
 
   await page.getByRole("button", { name: "1Y", exact: true }).click();
-  await page.waitForTimeout(200);
+  await page.waitForFunction(() => {
+    const output = document.querySelector('[data-macro-chart-series-range="sp500"]');
+    return output?.getAttribute("data-first") === "100";
+  }, null, { timeout: 20_000 });
   const rangeAfterClick = await page.evaluate(() => new URL(window.location.href).searchParams.get("range"));
   if (rangeAfterClick !== "1Y") addFailure(failures, "range-url-update", `range=${rangeAfterClick}`);
 
@@ -366,8 +412,8 @@ async function inspectSharedDesktop(page) {
   if (!(await page.getByText("카탈로그 2026-06-24 · 30개 시리즈").isVisible())) {
     addFailure(failures, "catalog-provenance-copy", "catalog provenance copy missing");
   }
-  if (!(await page.getByText("전체 CSV는 선택한 시리즈의 전체 로딩 범위 기준").isVisible())) {
-    addFailure(failures, "csv-provenance-copy", "full CSV provenance copy missing");
+  if (!(await page.getByText("CSV는 선택 기간·변환 후 실제 표시값 기준").isVisible())) {
+    addFailure(failures, "csv-provenance-copy", "plotted CSV provenance copy missing");
   }
   if (!(await page.locator('[aria-label="매크로 분석 요약"]').getByText("연결 데이터").isVisible())) {
     addFailure(failures, "analysis-summary-visible", "analysis summary missing");
@@ -539,8 +585,8 @@ async function inspectSharedDesktop(page) {
       addFailure(failures, "csv-download-path", "download path unavailable");
     } else {
       const csvHeader = (await readFile(downloadPath, "utf8")).split("\n")[0] ?? "";
-      const expectedHeaders = expectedSharedSeries.map((id, index) => `${id}_${expectedSharedTransforms[index] ?? "raw"}`);
-      const missingHeaders = ["date", ...expectedHeaders, "formula-ratio-sp500-DGS10"].filter((header) => !csvHeader.includes(`"${header}"`));
+      const expectedHeaders = expectedSharedSeries.map((id, index) => `${id}_${expectedSharedTransforms[index] ?? "raw"}_10Y`);
+      const missingHeaders = ["date", ...expectedHeaders, "formula-ratio-sp500-DGS10_computed_10Y"].filter((header) => !csvHeader.includes(`"${header}"`));
       if (missingHeaders.length) addFailure(failures, "csv-header-content", `missing=${missingHeaders.join(",")}`);
     }
   }
@@ -559,6 +605,40 @@ async function inspectSharedDesktop(page) {
   }
 
   return { route: sharedRoute, viewport: "desktop", status: response?.status() ?? null, layout, failures };
+}
+
+async function inspectOwnerProof(page) {
+  const failures = [];
+  watchHydrationErrors(page, failures);
+  const response = await page.goto(routeUrl(ownerProofRoute), { waitUntil: "networkidle", timeout: 60_000 });
+  await waitForMacroChart(page);
+  const ranges = await collectSemanticRanges(page);
+  const expected = ["sp500", "DGS10", "HY_spread", "M2SL"];
+  for (const id of expected) {
+    const item = ranges.find((candidate) => candidate.id === id);
+    if (!item) addFailure(failures, "owner-series-present", `${id} missing`);
+    else if (!Number.isFinite(item.min) || !Number.isFinite(item.max) || item.min === item.max) {
+      addFailure(failures, "owner-series-non-flat", `${id} min=${item.min} max=${item.max}`);
+    }
+  }
+  const axisGroups = new Map();
+  for (const item of ranges) {
+    const prior = axisGroups.get(item.axis);
+    if (prior && prior !== item.unitGroup) addFailure(failures, "owner-axis-unit-domain", `${item.axis}:${prior},${item.unitGroup}`);
+    axisGroups.set(item.axis, item.unitGroup);
+  }
+  console.log(JSON.stringify({ owner_url: routeUrl(ownerProofRoute), plotted_ranges: ranges }));
+  return { route: ownerProofRoute, viewport: "desktop", status: response?.status() ?? null, ranges, failures };
+}
+
+async function inspectMultiUnitRows(page) {
+  const route = "/macro-chart?macro=risk-liquidity&series=sp500,DGS10,tga&transform=raw,raw,raw&range=1Y";
+  const failures = [];
+  const response = await page.goto(routeUrl(route), { waitUntil: "networkidle", timeout: 60_000 });
+  await page.waitForSelector('[data-macro-chart-row-count="3"]', { timeout: 45_000 });
+  const rows = await page.locator("[data-macro-chart-unit-group]").count();
+  if (rows !== 3) addFailure(failures, "multi-unit-row-split", `rows=${rows}`);
+  return { route, viewport: "desktop", status: response?.status() ?? null, failures };
 }
 
 async function inspectStooqFusionRoute(page) {
@@ -805,9 +885,12 @@ async function inspectRetry(context) {
     if (response?.status() !== 200) {
       addFailure(failures, "http-status", `status=${response?.status() ?? "unknown"}`);
     }
-    await page.getByText("차트 데이터를 불러오지 못했습니다.").waitFor({ timeout: 20_000 });
-    await page.getByRole("button", { name: "다시 시도" }).click();
     await waitForMacroChart(page);
+    await page.locator('[data-series-load-state="failed"]', { hasText: "S&P 500" }).waitFor({ timeout: 20_000 });
+    const healthyBeforeRetry = await page.locator('[data-series-load-state="ready"]').count();
+    if (healthyBeforeRetry < 1) addFailure(failures, "partial-load-survivors", `ready=${healthyBeforeRetry}`);
+    await page.getByRole("button", { name: "지금 재시도" }).click();
+    await page.locator('[data-series-load-state="ready"]', { hasText: "S&P 500" }).waitFor({ timeout: 20_000 });
     if (!blockedOnce) addFailure(failures, "retry-forced-error", "intercept did not block first request");
   } catch (error) {
     addFailure(failures, "retry-path", String(error));
@@ -918,6 +1001,8 @@ try {
   });
   const desktopPage = await desktopContext.newPage();
   results.push(await inspectSharedDesktop(desktopPage));
+  results.push(await inspectOwnerProof(desktopPage));
+  results.push(await inspectMultiUnitRows(desktopPage));
   results.push(await inspectStooqFusionRoute(desktopPage));
   results.push(await inspectPresetRoute(desktopPage));
   results.push(await inspectMultichartRoute(desktopPage));
