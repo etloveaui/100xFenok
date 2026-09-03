@@ -1697,7 +1697,7 @@ function ValuationHeroCp({ detailPerBands, years, quality }: { detailPerBands: {
 }
 
 function ValuationBodyCp({
-  yfData, industryBench, detail, profitabilityEstimates, currency, quality,
+  yfData, industryBench, detail, profitabilityEstimates, currency, years, quality,
 }: {
   yfData: any;
   industryBench: IndustryBench | null;
