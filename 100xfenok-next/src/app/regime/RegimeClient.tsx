@@ -4,7 +4,7 @@ import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
 import { Bar, EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
-import { DATA_STATE_LABELS, formatAsOf } from "@/lib/data-state";
+import { DATA_STATE_LABELS, formatAsOf, isStaleAsOf } from "@/lib/data-state";
 import type {
   MarketBondPulse,
   MarketIndexValuation,
@@ -31,6 +31,8 @@ type Axis = {
   summary: string;
   tone: MarketTone;
   pulses: Pulse[];
+  ready: boolean;
+  floor: string | null;
 };
 
 type PillTone = "neutral" | "up" | "down" | "warn";
@@ -120,11 +122,22 @@ function formatRatePercent(value: number | null, digits = 2): string {
   return value === null ? "-" : `${(value * 100).toFixed(digits)}%`;
 }
 
-function completeOldestSourceDate(values: Array<string | null>): string | null {
-  if (values.length === 0 || values.some((value) => typeof value !== "string" || value.trim().length === 0)) {
-    return null;
-  }
-  return (values as string[]).sort().at(0) ?? null;
+function axisBarClass(tone: MarketTone): string {
+  if (tone === "rose") return "rgm-bar-down";
+  if (tone === "amber") return "rgm-bar-warn";
+  if (tone === "emerald") return "rgm-bar-up";
+  return "";
+}
+
+/**
+ * Oldest present observation date. Unlike a completeness floor, undated feeds
+ * (market structure carries no observation date) are excluded instead of
+ * collapsing the whole floor to null; the exclusion is disclosed separately.
+ */
+function oldestDatedSourceDate(values: Array<string | null>): string | null {
+  const dated = values.filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+  if (dated.length === 0) return null;
+  return dated.sort().at(0) ?? null;
 }
 
 function signalStatusLabel(item: MarketSignalPulse): string {
@@ -263,13 +276,14 @@ function toneCounts(pulses: Pulse[]) {
 /**
  * Composite position — a pure client-side transform of already-loaded tone counts
  * (friendlyCount − cautionCount − alertCount×2, normalized to 0-100). No new data source;
- * a true numeric regime score is not emitted by the hook.
+ * a true numeric regime score is not emitted by the hook. Returns null when there is
+ * nothing to read: callers gate bodies on null instead of rendering a neutral 50.
  */
 function gaugeReading(pulses: Pulse[]) {
   const { alert, caution, friendly } = toneCounts(pulses);
   const total = pulses.length;
   if (total === 0) {
-    return { percent: 50, position: "중립", alert, caution, friendly, total };
+    return null;
   }
   const raw = friendly - caution - alert * 2;
   const min = -2 * total;
@@ -288,13 +302,19 @@ function openEvidence(path: string) {
 }
 
 function headerSentence(
+  axes: Axis[],
   gauge: ReturnType<typeof gaugeReading>,
   loading: boolean,
   failed: boolean,
 ): string {
   if (loading) return "시장 신호를 불러오는 중입니다.";
   if (failed) return "시장 국면 데이터를 불러오지 못했습니다. 다시 시도해 주세요.";
-  return `긍정 신호 ${gauge.friendly}개가 확인되어 국면은 ${gauge.position}입니다 — 밸류에이션과 심리 과열은 함께 봐야 합니다.`;
+  if (gauge === null) return "표시할 신호가 아직 없습니다. 다음 마감 후 다시 확인해 주세요.";
+  const hot = axes.filter((axis) => axis.pulses.length > 0 && (axis.tone === "rose" || axis.tone === "amber"));
+  if (hot.length === 0) {
+    return `긍정 신호 ${gauge.friendly}개 · ${gauge.position} 국면 — 전 축에서 과열 징후가 없습니다.`;
+  }
+  return `긍정 ${gauge.friendly} · 주의 ${gauge.caution} · 경계 ${gauge.alert} — ${gauge.position} 국면, ${hot.map((axis) => axis.title).join("·")} 축을 함께 확인하세요.`;
 }
 
 function CompositePanel({
@@ -302,63 +322,83 @@ function CompositePanel({
   gauge,
   loading,
   failed,
+  ready,
+  partial,
+  stale,
   floor,
 }: {
   axes: Axis[];
   gauge: ReturnType<typeof gaugeReading>;
   loading: boolean;
   failed: boolean;
+  ready: boolean;
+  partial: boolean;
+  stale: boolean;
   floor: string | null;
 }) {
-  const score = Math.round(gauge.percent);
+  const score = gauge === null ? null : Math.round(gauge.percent);
+  const emptyActive = failed || (!loading && !ready);
   return (
     <Panel
       loading={loading}
-      empty={failed}
-      emptyReason="시장 국면 데이터를 불러오지 못했습니다"
+      empty={emptyActive}
+      emptyReason={failed ? "시장 국면 데이터를 불러오지 못했습니다" : "표시할 신호가 아직 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
       emptyActionLabel="다시 시도"
       onEmptyAction={reload}
     >
-      <div data-regime-headline>
-        <PanelHeader
-          eyebrow="Market Regime"
-          title="종합 판독"
-          right={<Pill tone={floor ? "neutral" : "warn"}>{floor ? `기준 ${formatAsOf(floor)}` : "기준일 확인 필요"}</Pill>}
-        />
-        <div className="rgm-score">
-          <div className="rgm-score-num">
-            <span className="tabular-nums rgm-score-value">{score}</span>
-            <span className="rgm-score-unit">/ 100 · {gauge.position}</span>
-            <span className="rgm-score-counts tabular-nums">
-              긍정 {gauge.friendly} · 주의 {gauge.caution} · 경계 {gauge.alert}
-            </span>
-          </div>
-          <div className="rgm-meters">
-            {axes.map((axis) => {
-              const axisScore = Math.round(gaugeReading(axis.pulses).percent);
-              return (
-                <div className="rgm-meter" key={axis.id}>
-                  <div className="rgm-meter-top">
-                    <span className="rgm-meter-label">{axis.title}</span>
-                    <span className="tabular-nums rgm-meter-value">
-                      {axisScore} <span className={axisLabelClass(axis.tone)}>{toneLabel(axis.tone)}</span>
-                    </span>
+      {ready && gauge !== null && score !== null && (
+        <div data-regime-headline>
+          <PanelHeader
+            eyebrow="Market Regime"
+            title="종합 판독"
+            right={<Pill tone={floor ? "neutral" : "warn"}>{floor ? `기준 ${formatAsOf(floor)}` : "기준일 확인 필요"}</Pill>}
+          />
+          <div className="rgm-score">
+            <div className="rgm-score-num">
+              <span className="tabular-nums rgm-score-value">{score}</span>
+              <span className="rgm-score-unit">/ 100 · {gauge.position}</span>
+              <span className="rgm-score-counts tabular-nums">
+                긍정 {gauge.friendly} · 주의 {gauge.caution} · 경계 {gauge.alert}
+              </span>
+            </div>
+            <div className="rgm-meters">
+              {axes.map((axis) => {
+                const axisScore = gaugeReading(axis.pulses);
+                const axisPercent = axisScore === null ? null : Math.round(axisScore.percent);
+                return (
+                  <div className="rgm-meter" key={axis.id}>
+                    <div className="rgm-meter-top">
+                      <span className="rgm-meter-label">{axis.title}</span>
+                      {axisPercent !== null ? (
+                        <span className="tabular-nums rgm-meter-value">
+                          {axisPercent} <span className={axisLabelClass(axis.tone)}>{toneLabel(axis.tone)}</span>
+                        </span>
+                      ) : (
+                        <span className="rgm-meter-nodata">신호 없음</span>
+                      )}
+                    </div>
+                    {axisPercent !== null && (
+                      <Bar
+                        value={axisPercent}
+                        className={axisBarClass(axis.tone)}
+                        aria-label={`${axis.title} 점수`}
+                      />
+                    )}
                   </div>
-                  <Bar value={axisScore} aria-label={`${axis.title} 점수`} />
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
       <EvidenceRail
-        freshness={loading ? "pending" : failed ? "error" : "fresh"}
+        freshness={loading ? "pending" : failed || !ready ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
         source="국면 판독 엔진"
         asOf={floor ? (formatAsOf(floor) ?? floor) : "—"}
-        coverage={`${gauge.total}개 신호`}
-        onRetry={failed ? reload : undefined}
-        onEvidence={failed ? undefined : () => openEvidence("/data/computed/signals.json")}
+        coverage={gauge === null ? "0개 신호" : `${gauge.total}개 신호`}
+        onRetry={failed || stale || partial ? reload : undefined}
+        onEvidence={ready && !failed ? () => openEvidence("/data/computed/signals.json") : undefined}
       />
     </Panel>
   );
@@ -368,48 +408,70 @@ function AxisTablePanel({
   axes,
   loading,
   failed,
+  ready,
+  partial,
+  stale,
   floor,
+  undatedStructure,
 }: {
   axes: Axis[];
   loading: boolean;
   failed: boolean;
+  ready: boolean;
+  partial: boolean;
+  stale: boolean;
   floor: string | null;
+  undatedStructure: boolean;
 }) {
+  const readyAxes = axes.filter((axis) => axis.ready).length;
   return (
     <Panel
       loading={loading}
-      empty={failed}
-      emptyReason="축별 신호 요약을 불러오지 못했습니다"
+      empty={failed || (!loading && !ready)}
+      emptyReason={failed ? "축별 신호 요약을 불러오지 못했습니다" : "표시할 신호가 아직 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
       emptyActionLabel="다시 시도"
       onEmptyAction={reload}
     >
-      <PanelHeader eyebrow="Axis Breakdown" title="축별 신호 요약" right={<Pill>4개 축</Pill>} />
-      <div role="table" aria-label="축별 신호 요약">
-        <div className="rgm-thead" role="row">
-          <span role="columnheader">축</span>
-          <span role="columnheader">요약</span>
-          <span role="columnheader">신호수</span>
-          <span role="columnheader">상태</span>
-        </div>
-        {axes.map((axis) => (
-          <div className="rgm-trow" role="row" key={axis.id} data-regime-axis-summary-card={axis.id}>
-            <span className="rgm-axis" role="cell">{axis.title}</span>
-            <span className="rgm-sum" role="cell">{axis.summary}</span>
-            <span className="tabular-nums" role="cell">{axis.pulses.length}개</span>
-            <span role="cell">
-              <Pill tone={axisPillTone(axis.tone)}>{toneLabel(axis.tone)}</Pill>
-            </span>
+      {ready && (
+        <>
+          <PanelHeader eyebrow="Axis Breakdown" title="축별 신호 요약" right={<Pill>4개 축</Pill>} />
+          <div role="table" aria-label="축별 신호 요약">
+            <div className="rgm-thead" role="row">
+              <span role="columnheader">축</span>
+              <span role="columnheader">요약</span>
+              <span role="columnheader">신호수</span>
+              <span role="columnheader">상태</span>
+            </div>
+            {axes.map((axis) => (
+              <div className="rgm-trow" role="row" key={axis.id} data-regime-axis-summary-card={axis.id}>
+                <span className="rgm-axis" role="cell">{axis.title}</span>
+                <span className="rgm-sum" role="cell">{axis.summary}</span>
+                <span className="tabular-nums" role="cell">{axis.pulses.length}개</span>
+                <span role="cell">
+                  {axis.pulses.length > 0 ? (
+                    <Pill tone={axisPillTone(axis.tone)}>{toneLabel(axis.tone)}</Pill>
+                  ) : (
+                    <Pill tone="neutral">신호 없음</Pill>
+                  )}
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+          {undatedStructure && (
+            <div className="rgm-floor-note" data-regime-floor-note>
+              시장 구조 신호는 관측일이 제공되지 않아 기준일 계산에서 제외됩니다.
+            </div>
+          )}
+        </>
+      )}
       <EvidenceRail
-        freshness={loading ? "pending" : failed ? "error" : "fresh"}
+        freshness={loading ? "pending" : failed || !ready ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
         source="국면 판독 엔진"
         asOf={floor ? (formatAsOf(floor) ?? floor) : "—"}
-        coverage="4/4 축"
-        onRetry={failed ? reload : undefined}
-        onEvidence={failed ? undefined : () => openEvidence("/data/computed/signals.json")}
+        coverage={`${readyAxes}/4 축`}
+        onRetry={failed || stale || partial ? reload : undefined}
+        onEvidence={ready && !failed ? () => openEvidence("/data/computed/signals.json") : undefined}
       />
     </Panel>
   );
@@ -420,17 +482,29 @@ function HistoryPanel() {
   // can never render. Shared EmptyState with reason + next refresh, never null.
   return (
     <Panel>
-      <PanelHeader eyebrow="Regime History" title="국면 히스토리 — 최근 12주" right={<Pill>주간</Pill>} />
-      <EmptyState
-        reason="날짜별 국면 피드가 아직 없어 히스토리를 표시할 수 없습니다"
-        nextRefresh="피드 연결 후 주간 갱신"
-      />
-      <EvidenceRail freshness="pending" source="국면 판독 엔진 아카이브" asOf="—" coverage="0/12주" />
+      <div data-regime-history>
+        <PanelHeader eyebrow="Regime History" title="국면 히스토리 — 최근 12주" right={<Pill>주간</Pill>} />
+        <EmptyState
+          reason="날짜별 국면 피드가 아직 없어 히스토리를 표시할 수 없습니다"
+          nextRefresh="피드 연결 후 주간 갱신"
+        />
+        <EvidenceRail freshness="pending" source="국면 판독 엔진 아카이브" asOf="—" coverage="0/12주" />
+      </div>
     </Panel>
   );
 }
 
-function ActionsPanel({ floor }: { floor: string | null }) {
+function ActionsPanel({
+  loading,
+  failed,
+  partial,
+  floor,
+}: {
+  loading: boolean;
+  failed: boolean;
+  partial: boolean;
+  floor: string | null;
+}) {
   return (
     <Panel>
       <PanelHeader eyebrow="Next Actions" title="다음 확인" right={<Pill>4개</Pill>} />
@@ -451,10 +525,12 @@ function ActionsPanel({ floor }: { floor: string | null }) {
         ))}
       </div>
       <EvidenceRail
-        freshness="fresh"
+        freshness={loading ? "pending" : failed ? "error" : !floor || partial ? "partial" : "fresh"}
         source="국면 엔진"
         asOf={floor ? (formatAsOf(floor) ?? floor) : "—"}
         coverage="4/4"
+        onRetry={failed || partial ? reload : undefined}
+        onEvidence={failed ? undefined : () => openEvidence("/data/computed/signals.json")}
       />
     </Panel>
   );
@@ -472,6 +548,7 @@ export default function RegimeClient() {
     dataSources,
     dataReady,
     failed,
+    feedReady,
     sourceDate,
   } = useMarketValuation();
 
@@ -488,34 +565,47 @@ export default function RegimeClient() {
       }
     : null;
 
+  const structurePulseList = structurePulses.slice(0, 4).map(toStructurePulse);
+  const signalPulseList = signalPulses.map(toSignalPulse);
+  const macroPulseList = [...macroPulses.slice(0, 3).map(toMacroPulse), ...bondPulses.slice(0, 2).map(toBondPulse)];
+  const valuationPulseList = [valuationPulse, erpPulse, ...sentimentPulses.slice(0, 2).map(toSentimentPulse)].filter((item): item is Pulse => item !== null);
+
   const axes: Axis[] = [
     {
       id: "structure",
       title: "시장 구조",
       summary: AXIS_SUMMARIES.structure,
-      pulses: structurePulses.slice(0, 4).map(toStructurePulse),
-      tone: strongestTone(structurePulses.slice(0, 4).map(toStructurePulse)),
+      pulses: structurePulseList,
+      tone: strongestTone(structurePulseList),
+      ready: feedReady.structure,
+      floor: oldestDatedSourceDate(structurePulseList.map((pulse) => pulse.asOf)),
     },
     {
       id: "signals",
       title: "유동성·리스크",
       summary: AXIS_SUMMARIES.signals,
-      pulses: signalPulses.map(toSignalPulse),
-      tone: strongestTone(signalPulses.map(toSignalPulse)),
+      pulses: signalPulseList,
+      tone: strongestTone(signalPulseList),
+      ready: feedReady.computed,
+      floor: oldestDatedSourceDate(signalPulseList.map((pulse) => pulse.asOf)),
     },
     {
       id: "macro",
       title: "경기·금리",
       summary: AXIS_SUMMARIES.macro,
-      pulses: [...macroPulses.slice(0, 3).map(toMacroPulse), ...bondPulses.slice(0, 2).map(toBondPulse)],
-      tone: strongestTone([...macroPulses.slice(0, 3).map(toMacroPulse), ...bondPulses.slice(0, 2).map(toBondPulse)]),
+      pulses: macroPulseList,
+      tone: strongestTone(macroPulseList),
+      ready: feedReady.macro || feedReady.bond,
+      floor: oldestDatedSourceDate(macroPulseList.map((pulse) => pulse.asOf)),
     },
     {
       id: "valuation",
       title: "밸류에이션·보상",
       summary: AXIS_SUMMARIES.valuation,
-      pulses: [valuationPulse, erpPulse, ...sentimentPulses.slice(0, 2).map(toSentimentPulse)].filter((item): item is Pulse => item !== null),
-      tone: strongestTone([valuationPulse, erpPulse, ...sentimentPulses.slice(0, 2).map(toSentimentPulse)].filter((item): item is Pulse => item !== null)),
+      pulses: valuationPulseList,
+      tone: strongestTone(valuationPulseList),
+      ready: feedReady.valuation || feedReady.erp || feedReady.sentiment,
+      floor: oldestDatedSourceDate(valuationPulseList.map((pulse) => pulse.asOf)),
     },
   ];
 
@@ -524,30 +614,37 @@ export default function RegimeClient() {
   const requiredSourceIds = ["benchmarks", "yardney", "damodaran", "macro", "computed", "sentiment", "indices", "slickcharts"];
   const visibleSources = dataSources.filter((source) => requiredSourceIds.includes(source.id));
   const sourceById = new Map(visibleSources.map((source) => [source.id, source]));
-  const completeSourceFloor = completeOldestSourceDate([
+  // Panel floor from dated clocks only: structure pulses carry no observation
+  // date, so they are excluded here and disclosed via the floor note instead of
+  // collapsing the whole floor to null.
+  const floor = oldestDatedSourceDate([
     sourceDate,
     ...allPulses.map((pulse) => pulse.asOf),
     ...requiredSourceIds.map((id) => sourceById.get(id)?.updated ?? null),
   ]);
 
   const isLoading = !dataReady && !failed;
+  const ready = !isLoading && !failed && gauge !== null;
+  const partial = ready && (axes.some((axis) => !axis.ready) || floor === null);
+  const stale = ready && !partial && isStaleAsOf(floor);
+  const undatedStructure = axes[0].pulses.length > 0;
 
   return (
     <div className="rgm" data-regime-surface>
       <div className="rgm-head">
         <div className="rgm-title-block">
           <h1 className="rgm-title">시장 국면</h1>
-          <span className="rgm-verdict">{headerSentence(gauge, isLoading, failed)}</span>
+          <span className="rgm-verdict">{headerSentence(axes, gauge, isLoading, failed)}</span>
         </div>
         <div className="rgm-tabs">
           <MarketSectionNav active="regime" />
         </div>
       </div>
 
-      <CompositePanel axes={axes} gauge={gauge} loading={isLoading} failed={failed} floor={completeSourceFloor} />
-      <AxisTablePanel axes={axes} loading={isLoading} failed={failed} floor={completeSourceFloor} />
+      <CompositePanel axes={axes} gauge={gauge} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} floor={floor} />
+      <AxisTablePanel axes={axes} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} floor={floor} undatedStructure={undatedStructure} />
       <HistoryPanel />
-      <ActionsPanel floor={completeSourceFloor} />
+      <ActionsPanel loading={isLoading} failed={failed} partial={partial} floor={floor} />
     </div>
   );
 }
