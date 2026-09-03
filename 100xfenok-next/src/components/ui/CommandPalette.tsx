@@ -112,8 +112,10 @@ export function CommandPalette({ items = DEFAULT_ITEMS, onSelect }: { items?: It
         e.target instanceof HTMLTextAreaElement ||
         (target?.isContentEditable ?? false);
       if (isEditable) {
-        if (e.key === "j" || e.key === "k" || e.key === "ArrowDown" || e.key === "ArrowUp") return;
-        if (e.key.length === 1) return;
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          // allow arrow navigation while typing — fall through
+        } else if (e.key === "j" || e.key === "k") return;
+        else if (e.key.length === 1) return;
       }
       if (e.key === "j" || e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, flat.length - 1)); }
       if (e.key === "k" || e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }

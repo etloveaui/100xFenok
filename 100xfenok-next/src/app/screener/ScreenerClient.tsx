@@ -572,14 +572,14 @@ function renderCell(
     case "ticker":
       return (
         <span className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <span className="text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
+          <span className="font-mono text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
           <GuruHolderBadge stock={stock} compact />
         </span>
       );
     case "name":
       return (
         <span className="block min-w-0 max-w-[180px]">
-          <span className="text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
+          <span className="font-mono text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
           <span className="block truncate text-[11px] font-semibold text-[var(--c-ink-3)]" title={stock.name ?? undefined}>
             {stock.name ?? "—"}
           </span>
@@ -1111,7 +1111,7 @@ function MobileStockCard({
         </button>
         <div onClick={onToggle} className="min-w-0 flex-1 cursor-pointer">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <span className="text-base font-black text-slate-950">{stock.ticker}</span>
+            <span className="font-mono text-base font-black text-slate-950">{stock.ticker}</span>
             <span
               className={cx("max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}
               title={actionTitle}
@@ -1253,7 +1253,7 @@ function DesktopStockCard({
         </button>
         <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <span className="text-lg font-black text-slate-950">{stock.ticker}</span>
+            <span className="font-mono text-lg font-black text-slate-950">{stock.ticker}</span>
             <GuruHolderBadge stock={stock} compact />
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
               {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
