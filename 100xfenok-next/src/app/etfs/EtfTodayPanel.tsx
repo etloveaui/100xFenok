@@ -47,7 +47,7 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
   const publishedClocks = etfSnapshotPublishedClocks(snapshot);
   const newPublished = publishedClocks.newEtfs;
   const screenerPublished = publishedClocks.screener;
-  const stale = loaded && !!insights && (isEtfClockStale(newClock) || isEtfClockStale(screenerClock));
+  const stale = loaded && !!insights && (isEtfClockStale(newClock ?? newPublished) || isEtfClockStale(screenerClock ?? screenerPublished));
   // Panel floor is the oldest displayed subfeed clock (completeness floor).
   const floor = [newClock, screenerClock]
     .filter((value): value is string => value !== null)
