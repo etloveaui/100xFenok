@@ -1564,6 +1564,7 @@ function FinancialsHeroCp({
           <span>영업이익률(선)</span>
         </div>
       </div>
+      <EvidenceRail freshness={revBars.length > 0 ? "fresh" : "stale"} source="스톡분석 재무" asOf={years.length > 0 ? years[years.length - 1] : "—"} coverage="매출·영업이익률 추이" next={revBars.length > 0 ? undefined : "재무 데이터 확보 시"} skeletonDelayMs={120} />
     </Panel>
     </section>
   );
@@ -1644,6 +1645,7 @@ function ValuationHeroCp({ detailPerBands }: { detailPerBands: { current: number
           <span className="text-right">{max_8y.toFixed(1)}x · 8년 최고</span>
         </div>
       </div>
+      <EvidenceRail freshness="fresh" source="PER 밴드" asOf="—" coverage="8Y PER" skeletonDelayMs={120} />
     </Panel>
     </section>
   );
@@ -1720,6 +1722,7 @@ function ValuationBodyCp({
               <Stat key={t.label} label={t.label} value={t.body} sub={t.cap} />
             ))}
           </div>
+          <EvidenceRail freshness="fresh" source="Yahoo Finance" asOf="—" coverage="밸류 지표" skeletonDelayMs={120} />
         </Panel>
         </section>
       ) : null}
@@ -1745,6 +1748,7 @@ function ValuationBodyCp({
               );
             })}
           </div>
+          <EvidenceRail freshness="fresh" source="다모다란" asOf="—" coverage="산업 대비 지표" skeletonDelayMs={120} />
         </Panel>
         </section>
       ) : null}
@@ -1783,6 +1787,7 @@ function ValuationBodyCp({
               ROE <b>{roeNow.toFixed(1)}%</b>가 자본비용(WACC) <b>{wacc.toFixed(1)}%</b>를 {roeNow >= wacc ? "웃돕니다" : "밑돕니다"} — 자본을 굴릴수록 가치를 {roeNow >= wacc ? "만들어내는" : "갉아먹는"} 스프레드입니다.
             </p>
           ) : null}
+          <EvidenceRail freshness="fresh" source="스톡분석 재무" asOf="—" coverage="수익성·성장 FY+1" skeletonDelayMs={120} />
         </Panel>
         </section>
       ) : null}
@@ -2980,6 +2985,7 @@ export default function StockDetailClient({
             onSelect={selectStockTab}
             note={isEtfAsset && etfData === undefined ? `ETF 상세 ${DATA_STATE_LABELS.pending}...` : !yfLoaded ? `추가 지표 ${DATA_STATE_LABELS.pending}...` : !yfAvailable ? `추가 지표 ${DATA_STATE_LABELS.pending}` : null}
           />
+          <EvidenceRail freshness={marketFactsLoading ? "pending" : displayPrice !== null && marketFacts ? "fresh" : displayPrice !== null ? "partial" : "stale"} source="통합 시세" asOf={typeof marketFactsSourceAsOf === "string" ? marketFactsSourceAsOf : "—"} coverage="가격·시가총액" next={marketFactsLoading || (displayPrice !== null && marketFacts) ? undefined : displayPrice !== null ? "통합 지표 연결 시" : "가격 연결 시"} skeletonDelayMs={120} />
         </Panel>
 
         {activeStockTab === "overview" ? (

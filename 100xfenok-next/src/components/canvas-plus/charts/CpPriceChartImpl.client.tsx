@@ -260,6 +260,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
           <div className="min-w-[30%] flex-1"><Stat label="최근 거래일 저가" value={formatCurrency(isFiniteNumber(latest?.low) ? latest.low : null, currency)} /></div>
           <div className="min-w-[30%] flex-1"><Stat label="최근 거래일 거래량" value={formatVolume(isFiniteNumber(latest?.volume) ? latest.volume : null)} sub={`10일 평균 ${formatVolume(stats.averageVolume)}`} /></div>
         </StatStrip>
+        <EvidenceRail freshness={stats.sortedCount >= 2 ? "fresh" : "stale"} source="가격 데이터" asOf={formatDateLabel(latest?.time)} coverage={`${range} 위치 요약`} next={stats.sortedCount >= 2 ? undefined : "차트 데이터 확보 시"} skeletonDelayMs={120} />
       </Panel>
 
       <Panel>
@@ -312,6 +313,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
               </tbody>
             </table>
           </div>
+          <EvidenceRail freshness={stats.sortedCount >= 2 ? "fresh" : "stale"} source="가격 데이터" asOf={formatDateLabel(latest?.time)} coverage="최근 거래일" next={stats.sortedCount >= 2 ? undefined : "차트 데이터 확보 시"} skeletonDelayMs={120} />
         </Panel>
 
         <Panel>
@@ -342,6 +344,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
               </tbody>
             </table>
           </div>
+          <EvidenceRail freshness={stats.monthlyRows.length > 0 ? "fresh" : "stale"} source="가격 데이터" asOf={formatDateLabel(latest?.time)} coverage={`월봉 ${stats.monthlyRows.length}개월`} next={stats.monthlyRows.length > 0 ? undefined : "월봉 데이터 확보 시"} skeletonDelayMs={120} />
         </Panel>
       </div>
 
@@ -357,6 +360,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
                   <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{row.returnPct < 0 ? "▼ " : "▲ "}{formatSignedPercent(row.returnPct, 1, "percent")}</span>
                 </Row>
               ))}
+              <EvidenceRail freshness="fresh" source="가격 데이터" asOf={formatDateLabel(latest?.time)} coverage={`연도별 ${annualRows.length}년`} skeletonDelayMs={120} />
             </Panel>
           ) : null}
 
@@ -370,6 +374,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
                   <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{row.returnPct < 0 ? "▼ " : "▲ "}{formatSignedPercent(row.returnPct, 1, "percent")}</span>
                 </Row>
               ))}
+              <EvidenceRail freshness="fresh" source="가격 데이터" asOf={formatDateLabel(latest?.time)} coverage={`지수 대비 ${indexRows.length}건`} skeletonDelayMs={120} />
             </Panel>
           ) : null}
 
