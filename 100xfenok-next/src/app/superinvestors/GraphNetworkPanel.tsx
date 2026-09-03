@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { EvidenceRail, Panel, PanelHeader, Pill, type EvidenceRailFreshness } from "@/components/ui";
+import { EvidenceRail, Panel, PanelHeader, Pill, EmptyState, type EvidenceRailFreshness } from "@/components/ui";
 import { formatCurrencyCompact, formatInteger, formatPercent } from "@/lib/format";
 import type { GraphNetwork } from "./graphNetwork";
 
@@ -55,6 +55,10 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
     () => network.nodes.filter((node) => node.kind === "ticker").slice(0, MAX_TICKERS),
     [network],
   );
+  const displayedTickers = useMemo(
+    () => new Set(tickers.flatMap((node) => (node.kind === "ticker" ? [node.ticker] : []))),
+    [tickers],
+  );
   const labels = useMemo(() => {
     const map = new Map<string, string>();
     for (const node of network.nodes) if (node.kind === "investor") map.set(node.investorId, node.label);
@@ -63,11 +67,12 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
   const topTickerOf = useMemo(() => {
     const best = new Map<string, { ticker: string; weight: number }>();
     for (const edge of network.edges) {
+      if (!displayedTickers.has(edge.ticker)) continue;
       const prev = best.get(edge.investorId);
       if (!prev || edge.weight > prev.weight) best.set(edge.investorId, { ticker: edge.ticker, weight: edge.weight });
     }
     return best;
-  }, [network]);
+  }, [network, displayedTickers]);
   const shown = useMemo(() => {
     const investorIds = new Set(investors.map((node) => node.investorId));
     const tickerIds = new Set(tickers.map((node) => node.ticker));
@@ -99,6 +104,10 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
             .slice(0, 8),
     [network, selectedTicker],
   );
+  const selectedTotal = useMemo(
+    () => (selectedTicker === null ? 0 : network.edges.filter((edge) => edge.ticker === selectedTicker).length),
+    [network, selectedTicker],
+  );
   const commonHoldings = useMemo(
     () => network.nodes.filter((node) => node.kind === "ticker").slice(0, 6),
     [network],
@@ -106,9 +115,18 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
 
   if (network.edges.length === 0) {
     return (
-      <Panel empty emptyReason="연결된 공유 보유가 없습니다" emptyNextRefresh="다음 분기 공시 후 다시 확인해 주세요">
+      <Panel>
         <div data-superinvestors-graph>
           <PanelHeader eyebrow="Graph Network" title="누가 무엇을 함께 들고 있나" />
+          <EmptyState reason="연결된 공유 보유가 없습니다" nextRefresh="다음 분기 공시 후 다시 확인해 주세요" />
+          <EvidenceRail
+            freshness={rail.freshness}
+            source={rail.source}
+            asOf={rail.asOf}
+            coverage={rail.coverage}
+            onRetry={rail.onRetry}
+            onEvidence={rail.onEvidence}
+          />
         </div>
       </Panel>
     );
@@ -135,7 +153,7 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
               </span>
             }
           />
-          <svg className="grn-canvas" viewBox="0 0 900 560" role="img" aria-label={`투자자 종목 연결 그래프. ${caption}`}>
+          <svg className="grn-canvas" viewBox="0 0 900 560" role="group" aria-label={`투자자 종목 연결 그래프. ${caption}`}>
             <g stroke="var(--fnk-neutral-200)" strokeLinecap="round">
               {shown.map((edge) => {
                 const from = positions.get(`investor:${edge.investorId}`);
@@ -169,6 +187,7 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
                     className="grn-node"
                     tabIndex={0}
                     role="button"
+                    aria-pressed={top !== null && top === selectedTicker}
                     aria-label={`투자자 ${node.label}. ${sub}${node.stale ? ". 지연 공시" : ""}. 선택 시 최대 보유 종목 표시`}
                     onClick={activate}
                     onKeyDown={(event) => {
@@ -210,6 +229,7 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
                     className="grn-node"
                     tabIndex={0}
                     role="button"
+                    aria-pressed={selected}
                     aria-label={`종목 ${node.ticker}. 보유 투자자 ${node.holdersCount}명${selected ? ". 선택됨" : ""}`}
                     onClick={() => onSelectTicker(selected ? null : node.ticker)}
                     onKeyDown={(event) => {
@@ -253,21 +273,26 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
             title={selectedTicker ?? "종목을 선택하세요"}
             right={
               selectedTicker === null ? undefined : (
-                <span className="grn-head-meta">투자자 {formatInteger(selectedHolders.length)}명</span>
+                <span className="grn-head-meta">
+                  {`투자자 ${formatInteger(selectedTotal)}명${selectedTotal > selectedHolders.length ? " · 상위 8" : ""}`}
+                </span>
               )
             }
           />
           {selectedTicker === null ? (
             <p className="grn-side-empty">그래프에서 종목 노드를 선택하면 보유 투자자와 비중이 표시됩니다.</p>
           ) : (
-            <ul className="grn-kv-list">
-              {selectedHolders.map((edge) => (
-                <li key={edge.investorId} className="grn-kv">
-                  <span className="grn-kv-name">{labels.get(edge.investorId) ?? edge.investorId}</span>
-                  <span className="tabular-nums grn-kv-num">{formatPercent(edge.weight, { digits: 1 })}</span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="grn-kv-list">
+                {selectedHolders.map((edge) => (
+                  <li key={edge.investorId} className="grn-kv">
+                    <span className="grn-kv-name">{labels.get(edge.investorId) ?? edge.investorId}</span>
+                    <span className="tabular-nums grn-kv-num">{formatPercent(edge.weight, { digits: 1 })}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="grn-side-note">보유 비중만 제공 · 분기 변화율 미제공</p>
+            </>
           )}
         </Panel>
 
@@ -292,14 +317,14 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
                       <span className="grn-ticker">{node.ticker}</span>
                       <span className="grn-kv-sub">{node.holdersCount}명 보유</span>
                     </span>
-                    <span className="tabular-nums grn-kv-num">{formatPercent(topWeight, { digits: 1 })}</span>
+                    <span className="tabular-nums grn-kv-num" title="최대 보유 비중">{formatPercent(topWeight, { digits: 1 })}</span>
                   </button>
                 </li>
               );
             })}
           </ul>
         </Panel>
-        <p className="grn-hint">종목 클릭 → 보유 목록 · 투자자 카드는 최대 보유 종목 선택 · 관심 종목은 기존 테이블에서 추가</p>
+        <p className="grn-hint">종목 클릭 → 보유 목록 · 투자자 카드는 최대 보유 종목 선택 · 관심 종목은 기존 테이블에서 추가 · 가격·수익률 미제공</p>
         {network.excludedCount > 0 || network.feeds.summary === false || network.feeds.byTicker === false ? (
           <Pill tone="warn">
             {network.feeds.byTicker === false
@@ -309,5 +334,52 @@ export default function GraphNetworkPanel({ network, selectedTicker, onSelectTic
         ) : null}
       </div>
     </div>
+  );
+}
+
+export type GraphNetworkTeaserStatus = "pending" | "error" | "ready";
+
+export interface GraphNetworkTeaserProps {
+  network: GraphNetwork;
+  href: string;
+  status: GraphNetworkTeaserStatus;
+  source: string;
+  asOf: string;
+  coverage: string;
+  onRetry?: () => void;
+}
+
+export function GraphNetworkTeaser({ network, href, status, source, asOf, coverage, onRetry }: GraphNetworkTeaserProps) {
+  const found = network.nodes.find((node) => node.kind === "ticker");
+  const top = found !== undefined && found.kind === "ticker" ? found : null;
+  return (
+    <Panel>
+      <div data-superinvestors-graph-teaser>
+        <PanelHeader
+          eyebrow="Graph Network"
+          title="누가 무엇을 함께 들고 있나"
+          right={<a className="grn-teaser-cta" href={href}>그래프 보기</a>}
+        />
+        {status === "error" ? (
+          <p className="grn-side-empty">
+            그래프를 불러오지 못했습니다.
+            {onRetry ? <button type="button" className="grn-teaser-retry" onClick={onRetry}>다시 시도</button> : null}
+          </p>
+        ) : status === "pending" || top === null ? (
+          <p className="grn-side-empty">
+            {status === "pending" ? "그래프 데이터를 불러오는 중입니다." : "연결된 공유 보유가 없습니다."}
+          </p>
+        ) : (
+          <p className="grn-teaser-top">
+            <span className="grn-ticker">{top.ticker}</span>
+            <span className="grn-kv-sub">
+              {`보유 ${top.holdersCount}명 · 투자자 ${formatInteger(network.investorCount)}명 · ${formatInteger(network.tickerCount)}개 종목 연결`}
+            </span>
+          </p>
+        )}
+        <p className="grn-teaser-cap">선 굵기 = 포트폴리오 비중 · 클릭 시 종목·투자자 상세로 이동</p>
+        <p className="grn-teaser-src">{`출처 ${source} · 기준 ${asOf} · 커버리지 ${coverage}`}</p>
+      </div>
+    </Panel>
   );
 }
