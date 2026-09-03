@@ -2,6 +2,7 @@ import * as React from "react";
 import { Skeleton } from "./Skeleton";
 import { EmptyState } from "./EmptyState";
 import { StaleState } from "./StaleState";
+import { EvidenceRail } from "./EvidenceRail";
 
 type PanelProps = {
   children: React.ReactNode;
@@ -33,6 +34,19 @@ export function useDelayedLoading(active?: boolean, delay = 120) {
   return show;
 }
 
+function splitTrailingRails(children: React.ReactNode) {
+  const items = React.Children.toArray(children).filter(
+    (child) => child !== null && child !== undefined && typeof child !== "boolean",
+  );
+  const rails: React.ReactNode[] = [];
+  let tail: unknown = items[items.length - 1];
+  while (React.isValidElement(tail) && tail.type === EvidenceRail) {
+    rails.unshift(items.pop());
+    tail = items[items.length - 1];
+  }
+  return { body: items, rails };
+}
+
 export function Panel({
   children,
   className = "",
@@ -62,10 +76,12 @@ export function Panel({
     );
   }
   if (empty) {
+    const { body, rails } = splitTrailingRails(children);
     return (
       <div className={`bg-[#ffffff] border border-[#e2e8f0] rounded-[8px] overflow-hidden transition-colors duration-150 ${className}`}>
-        {children}
+        {body}
         <EmptyState reason={emptyReason} nextRefresh={emptyNextRefresh} actionLabel={emptyActionLabel} onAction={onEmptyAction} />
+        {rails}
       </div>
     );
   }

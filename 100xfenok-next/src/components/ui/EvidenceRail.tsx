@@ -99,7 +99,7 @@ export function EvidenceRail({
       return <span className={chipClass}>{chipInner}</span>;
     }
     return (
-      <button onClick={onEvidence} className={chipClass} aria-label={`증거: ${source} ${asOf}`}>
+      <button onClick={onEvidence} className={`${chipClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1B73D3]`} aria-label={`증거: ${source} ${asOf}`}>
         {chipInner}
       </button>
     );
@@ -142,13 +142,13 @@ export function EvidenceRail({
         {showRetry && (
           <button
             onClick={onRetry}
-            className={`${hasDrawer || onEvidence ? "" : "ml-auto "}shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150`}
+            className={`${hasDrawer || onEvidence ? "" : "ml-auto "}shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1B73D3]`}
           >
             지금 재시도
           </button>
         )}
         {(hasDrawer || onEvidence) && (
-          <button onClick={handleEvidence} className="ml-auto shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150">
+          <button onClick={handleEvidence} className="ml-auto shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1B73D3]">
             증거 보기
           </button>
         )}
