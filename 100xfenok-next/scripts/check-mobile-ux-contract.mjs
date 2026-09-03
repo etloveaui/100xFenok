@@ -3161,8 +3161,11 @@ async function collectRouteChecks(page, route) {
         failures.push({ check: "superinvestors-overlap-sort", detail: `holders=${JSON.stringify(overlapHolders)}` });
       }
       const graph = document.querySelector("[data-superinvestors-graph]");
-      if (!graph || graph.getBoundingClientRect().height <= 0 || !/로더/.test(graph.textContent || "")) {
-        failures.push({ check: "superinvestors-graph-blocked", detail: "missing visible graph blocked state" });
+      const graphTeaser = document.querySelector("[data-superinvestors-graph-teaser]");
+      const graphVisible = !!graph && graph.getBoundingClientRect().height > 0 && /Graph Network/.test(graph.textContent || "");
+      const teaserVisible = !!graphTeaser && graphTeaser.getBoundingClientRect().height > 0 && /그래프 보기/.test(graphTeaser.textContent || "");
+      if (!graphVisible && !teaserVisible) {
+        failures.push({ check: "superinvestors-graph", detail: "missing visible graph section or teaser" });
       }
       if (currentRoute.includes("guru=")) {
         const params = new URLSearchParams(currentRoute.split("?")[1] || "");
