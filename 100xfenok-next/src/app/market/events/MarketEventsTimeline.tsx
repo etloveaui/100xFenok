@@ -187,18 +187,6 @@ const LANES: TimelineLaneDef[] = [
     emptyReason: NO_FEED_REASON,
     noFeed: true,
   },
-  {
-    id: "ipoCalendar",
-    label: "예정 IPO",
-    sourceLabel: "stockanalysis · ipos_calendar",
-    dark: false,
-    dateKeys: ["ipo_date"],
-    emptyReason: "앞으로 4주 예정 IPO가 없습니다.",
-    buildSymbol: (row) => rowSymbol(row),
-    buildTitle: (row) => `${rowSymbol(row)} · ${text(row.company_name)}`,
-    buildChip: (row) => text(row.exchange),
-    buildHref: () => undefined,
-  },
 ];
 
 function laneEvents(lane: TimelineLaneDef, doc: TimelineDoc | null | undefined, startIso: string, endIso: string): TimelineEvent[] {

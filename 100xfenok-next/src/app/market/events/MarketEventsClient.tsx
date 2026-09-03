@@ -316,7 +316,7 @@ export default function MarketEventsClient({
           <p className="data-shell-kicker">시장 이벤트</p>
           <h1 className="data-shell-title">시장 이벤트</h1>
           <p className="data-shell-desc">
-            어닝, 배당, IPO 일정을 타임라인에서 보고, 전체 이벤트를 검색합니다.
+            어닝·배당 일정을 타임라인에서 보고, IPO를 포함한 전체 이벤트를 검색합니다.
           </p>
         </div>
         <div className="data-shell-head-actions">

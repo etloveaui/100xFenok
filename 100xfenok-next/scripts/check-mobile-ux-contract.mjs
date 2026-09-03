@@ -2106,7 +2106,7 @@ async function collectRouteChecks(page, route) {
         failures.push({ check: "market-events-timeline-visible", detail: "missing events timeline" });
       }
 
-      const expectedLanes = ["macro-us", "macro-kr", "earnings", "dividend", "data-refresh", "options-expiry", "ipoCalendar"];
+      const expectedLanes = ["macro-us", "macro-kr", "earnings", "dividend", "data-refresh", "options-expiry"];
       const actualLanes = lanes.map((node) => node.getAttribute("data-timeline-lane"));
       if (
         lanes.length !== expectedLanes.length ||
