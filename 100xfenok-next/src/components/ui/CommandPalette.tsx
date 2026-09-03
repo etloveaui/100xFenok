@@ -326,8 +326,24 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
 
   if (!open) return null;
 
+  // Recent ids resolve against the full stock universe + screen registry, not the
+  // current empty-query list, so previously opened tickers survive reopen.
   const recentItems = recent
-    .map((id) => allItems.find((x) => x.id === id))
+    .map((id) => {
+      const found = allItems.find((x) => x.id === id);
+      if (found) return found;
+      if (id.startsWith("stock:")) {
+        const sym = id.slice("stock:".length);
+        if (!sym) return undefined;
+        const row = bySymbol.get(sym.toUpperCase());
+        if (row) return stockRow(row);
+        return { id, label: sym, section: "종목", href: ROUTES.stock(sym) } as Item;
+      }
+      if (id.startsWith("screen:")) {
+        return SCREEN_ITEMS.find((x) => x.id === id);
+      }
+      return undefined;
+    })
     .filter((it): it is Item => Boolean(it));
   const recentTickers = recentItems
     .filter((it) => it.section === "종목")
@@ -346,7 +362,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
             className="flex-1 outline-none text-[13px] placeholder:text-[#94a3b8]"
           />
           <span className="text-[11px] text-[#94a3b8] border border-[#e2e8f0] rounded px-1.5 py-0.5">⌘K</span>
-          <button onClick={() => setShowHelp((v) => !v)} className="text-[11px] text-[#64748b] border border-[#e2e8f0] rounded px-1.5 py-0.5">?</button>
+          <button onClick={() => setShowHelp((v) => !v)} className="text-[11px] text-[#64748b] border border-[#e2e8f0] rounded px-1.5 py-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive">?</button>
         </div>
         {showHelp && (
           <div className="px-4 py-3 bg-[#f8fafc] border-b border-[#e2e8f0] text-[11px] text-[#475569] grid grid-cols-2 gap-2">
@@ -364,7 +380,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
                 <button
                   key={`recent-${it.id}`}
                   onClick={() => select(it, it.kbd === "w" ? { keepOpen: true } : undefined)}
-                  className="w-full text-left px-2 py-1.5 rounded-[6px] text-[13px] text-[#334155] flex justify-between hover:bg-[#f8fafc]"
+                  className="w-full text-left px-2 py-1.5 rounded-[6px] text-[13px] text-[#334155] flex justify-between hover:bg-[#f8fafc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
                 >
                   <span>{it.label}</span><span className="text-[#94a3b8] text-[11px]">{it.sub}</span>
                 </button>
@@ -384,7 +400,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
                       key={it.id}
                       onMouseEnter={() => setActive(idx)}
                       onClick={() => select(it, it.kbd === "w" ? { keepOpen: true } : undefined)}
-                      className={`w-full text-left px-2 py-1.5 rounded-[6px] flex items-center justify-between text-[13px] transition-colors duration-120 ${isActive ? "bg-[#f8fafc] shadow-[inset_2px_0_0_#1B73D3] text-[#0f172a]" : "text-[#334155] hover:bg-[#f8fafc]"}`}
+                      className={`w-full text-left px-2 py-1.5 rounded-[6px] flex items-center justify-between text-[13px] transition-colors duration-120 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive ${isActive ? "bg-[#f8fafc] shadow-[inset_2px_0_0_#1B73D3] text-[#0f172a]" : "text-[#334155] hover:bg-[#f8fafc]"}`}
                     >
                       <span className="font-medium">{starred ? "★ " : ""}{it.label}</span>
                       <span className="text-[11px] text-[#94a3b8] flex items-center gap-2">

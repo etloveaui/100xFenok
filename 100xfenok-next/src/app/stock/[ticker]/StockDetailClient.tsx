@@ -1209,7 +1209,7 @@ function StockEstimatesPanel({
     return (
       <>
         {body}
-        <EvidenceRail freshness={estimatesRailFreshness} source="StockAnalysis/Yahoo" asOf="—" coverage="FY+1~3 컨센서스" onRetry={quality?.onRetry} skeletonDelayMs={120} />
+        <EvidenceRail freshness={estimatesRailFreshness} source="StockAnalysis/Yahoo" asOf={hasData && years.length > 0 ? years[years.length - 1] : "—"} coverage="FY+1~3 컨센서스" onRetry={quality?.onRetry} skeletonDelayMs={120} />
       </>
     );
   }
@@ -1218,7 +1218,7 @@ function StockEstimatesPanel({
     <Panel>
       <PanelHeader eyebrow="Estimates" title="추정치 변화" />
       {body}
-      <EvidenceRail freshness={estimatesRailFreshness} source="StockAnalysis/Yahoo" asOf="—" coverage="FY+1~3 컨센서스" onRetry={quality?.onRetry} skeletonDelayMs={120} />
+      <EvidenceRail freshness={estimatesRailFreshness} source="StockAnalysis/Yahoo" asOf={hasData && years.length > 0 ? years[years.length - 1] : "—"} coverage="FY+1~3 컨센서스" onRetry={quality?.onRetry} skeletonDelayMs={120} />
     </Panel>
   );
 }
@@ -2601,6 +2601,10 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
         title="단기·장기 독립 진단"
         shortScore={shortScore}
         longScore={longScore}
+        hero={[
+          { label: "단기", score: shortScore },
+          { label: "장기", score: longScore },
+        ]}
         shortRows={shortAxes.map((a) => ({ key: a.key, label: a.label, score: a.score, referenceOnly: a.referenceOnly }))}
         longRows={longAxes.map((a) => ({ key: a.key, label: a.label, score: a.score, referenceOnly: a.referenceOnly }))}
         shortTitle="단기 축 · 6축 · 장외거래 참고축"

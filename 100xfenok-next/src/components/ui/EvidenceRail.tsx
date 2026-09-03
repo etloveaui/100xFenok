@@ -83,6 +83,7 @@ export function EvidenceRail({
   const showRetry = !!onRetry && freshness !== "fresh";
   const showMobileSkeleton = useDelayedRailSkeleton(freshness === "pending", skeletonDelayMs);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const drawerId = React.useId();
   const hasDrawer = Array.isArray(stages) && stages.length > 0;
 
   if (variant === "chip") {
@@ -99,7 +100,7 @@ export function EvidenceRail({
       return <span className={chipClass}>{chipInner}</span>;
     }
     return (
-      <button onClick={onEvidence} className={`${chipClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1B73D3]`} aria-label={`증거: ${source} ${asOf}`}>
+      <button onClick={onEvidence} className={`${chipClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive`} aria-label={`증거: ${source} ${asOf}`}>
         {chipInner}
       </button>
     );
@@ -142,19 +143,19 @@ export function EvidenceRail({
         {showRetry && (
           <button
             onClick={onRetry}
-            className={`${hasDrawer || onEvidence ? "" : "ml-auto "}shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1B73D3]`}
+            className={`${hasDrawer || onEvidence ? "" : "ml-auto "}shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive`}
           >
             지금 재시도
           </button>
         )}
         {(hasDrawer || onEvidence) && (
-          <button onClick={handleEvidence} className="ml-auto shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1B73D3]">
+          <button onClick={handleEvidence} aria-expanded={hasDrawer ? drawerOpen : undefined} aria-controls={hasDrawer ? drawerId : undefined} className="ml-auto shrink-0 font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive">
             증거 보기
           </button>
         )}
       </div>
       {hasDrawer && drawerOpen && (
-        <div className="border-t border-[#f1f5f9] bg-white px-4 py-2">
+        <div id={drawerId} role="region" aria-label={`증거: ${source} ${asOf}`} className="border-t border-[#f1f5f9] bg-white px-4 py-2">
           {stages!.map((stage) => (
             <div key={stage.stage} className="flex items-baseline gap-3 border-b border-[#f1f5f9] py-1.5 text-[11px] last:border-b-0">
               <span className="inline-flex w-[52px] shrink-0 items-center gap-1.5 font-semibold text-[#64748b]">

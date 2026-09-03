@@ -147,25 +147,30 @@ export default function ScreenerDesktopTable({
                       key={column.key}
                       className={cx(densityClass.bodyCell, column.align === "right" ? "text-right" : "text-left")}
                     >
-                      {column.key === "ticker" ? (
-                        <div className={cx("flex max-w-full items-center gap-1.5", densityClass.tickerCell)}>
-                          <button
-                            type="button"
-                            aria-expanded={expanded}
-                            aria-controls={detailId}
-                            aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              onToggleExpandedTicker(stock.ticker);
-                            }}
-                            className="inline-flex items-center gap-1 rounded-md text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
-                          >
-                            <span className="w-5 text-center text-[12px] text-[var(--c-ink-3)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
-                            <span className="truncate">{stock.ticker}</span>
-                          </button>
-                          {renderGuruHolderBadge(stock)}
-                        </div>
-                      ) : renderCell(stock, column.key, preset)}
+                      <span className="group/screener-cell inline-flex w-full min-w-0 items-center gap-1">
+                        <span className="min-w-0 flex-1">
+                          {column.key === "ticker" ? (
+                            <div className={cx("flex max-w-full items-center gap-1.5", densityClass.tickerCell)}>
+                              <button
+                                type="button"
+                                aria-expanded={expanded}
+                                aria-controls={detailId}
+                                aria-label={`${stock.ticker} 상세 ${expanded ? "접기" : "펼치기"}`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  onToggleExpandedTicker(stock.ticker);
+                                }}
+                                className="inline-flex items-center gap-1 rounded-md text-left text-sm font-black text-[var(--c-ink)] transition hover:bg-[var(--c-surface-2)] focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+                              >
+                                <span className="w-5 text-center text-[12px] text-[var(--c-ink-3)]" aria-hidden="true">{expanded ? "-" : "+"}</span>
+                                <span className="truncate">{stock.ticker}</span>
+                              </button>
+                              {renderGuruHolderBadge(stock)}
+                            </div>
+                          ) : renderCell(stock, column.key, preset)}
+                        </span>
+                        <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} className="shrink-0 opacity-0 transition group-hover/screener-cell:opacity-100 focus-within:opacity-100" />
+                      </span>
                     </td>
                   ))}
                 </tr>

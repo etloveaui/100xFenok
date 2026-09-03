@@ -14,7 +14,7 @@ import { Tile } from "@/components/ui/Tile";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import {
   buildProvenanceStages,
-  earliestNextSlot,
+  earliestNextSlotForLanes,
   formatSlotShort,
   nextSlotForLane,
   summarizeAllServing,
@@ -598,9 +598,23 @@ export default function HomeCanvasPlusClient() {
   // on the Edge/Sector rails; the Edge drawer stages are built from the public
   // KPI + lane projection + this session's fetch-boundary stamps.
   const slickNextSlot = nextSlotForLane(laneProjection, "slickcharts");
-  const edgeNextSlot = earliestNextSlot(laneProjection);
+  // P1: the Fenok Edge drawer/next slot attribute only the lanes and files the
+  // Edge panel actually reads — never global pipeline stamps.
+  const EDGE_PROVENANCE_LANES = ["sentiment", "benchmarks", "fred_banking"] as const;
+  const EDGE_SERVING_PREFIXES = [
+    "/data/sentiment/",
+    "/data/benchmarks/",
+    "/data/macro/fred-banking",
+    "/api/ticker/",
+  ] as const;
+  const edgeNextSlot = earliestNextSlotForLanes(laneProjection, EDGE_PROVENANCE_LANES);
   const edgeStages = useMemo(
-    () => buildProvenanceStages({ kpi: provenanceKpi, laneProjection, serving: summarizeAllServing() }),
+    () => buildProvenanceStages({
+      kpi: provenanceKpi,
+      laneProjection,
+      serving: summarizeAllServing(),
+      scope: { laneIds: EDGE_PROVENANCE_LANES, servingUrlPrefixes: EDGE_SERVING_PREFIXES },
+    }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [provenanceKpi, laneProjection, dataReady],
   );

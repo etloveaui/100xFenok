@@ -150,12 +150,74 @@ export function earliestNextSlot(laneProjection: unknown): { label: string; slot
   return best ? { label: best.label, slot: best.slot } : null;
 }
 
+export type ProvenanceScope = {
+  /** lane-registry ids whose publication families / next slots may be attributed */
+  laneIds?: readonly string[];
+  /** serving-stamp URL prefixes whose files the panel actually read */
+  servingUrlPrefixes?: readonly string[];
+};
+
+function normalizeScopeToken(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const token = value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return token.length > 0 ? token : null;
+}
+
+export function summarizeServingByPrefix(prefixes: readonly string[]): {
+  latestServedAt: number | null;
+  hitCount: number;
+  stampedCount: number;
+} {
+  let latestServedAt: number | null = null;
+  let hitCount = 0;
+  let stampedCount = 0;
+  for (const [url, info] of servingStamps.entries()) {
+    if (!prefixes.some((prefix) => url.startsWith(prefix))) continue;
+    stampedCount += 1;
+    if (info.cacheHit) hitCount += 1;
+    if (latestServedAt === null || info.servedAt > latestServedAt) latestServedAt = info.servedAt;
+  }
+  return { latestServedAt, hitCount, stampedCount };
+}
+
+export function earliestNextSlotForLanes(
+  laneProjection: unknown,
+  laneIds: readonly string[],
+): { label: string; slot: string } | null {
+  const scoped = new Set(
+    laneIds.map(normalizeScopeToken).filter((token): token is string => token !== null),
+  );
+  const root = asRecord(laneProjection);
+  const lanes = root && Array.isArray(root.lanes) ? root.lanes : [];
+  let best: { label: string; slot: string; epoch: number } | null = null;
+  for (const lane of lanes) {
+    const row = asRecord(lane);
+    const token = normalizeScopeToken(row?.id);
+    if (!token || !scoped.has(token)) continue;
+    const schedule = asRecord(asRecord(row?.control_room_state)?.schedule);
+    const slot = asString(schedule?.next_expected_slot);
+    if (!slot) continue;
+    const epoch = Date.parse(slot);
+    if (!Number.isFinite(epoch)) continue;
+    if (!best || epoch < best.epoch) {
+      best = {
+        label: asString(row?.label) ?? String(row?.id ?? "레인"),
+        slot,
+        epoch,
+      };
+    }
+  }
+  return best ? { label: best.label, slot: best.slot } : null;
+}
+
 export function buildProvenanceStages(args: {
   kpi: unknown;
   laneProjection: unknown;
   serving: { latestServedAt: number | null; hitCount: number; stampedCount: number };
+  /** when provided, 발행/제공/다음 attribute only in-scope lanes/files (P1: never global) */
+  scope?: ProvenanceScope;
 }): EvidenceStage[] {
-  const { kpi, laneProjection, serving } = args;
+  const { kpi, laneProjection, serving, scope } = args;
   const stages: EvidenceStage[] = [];
   const kpiRoot = asRecord(kpi);
   const runtime = asRecord(kpiRoot?.runtime);
@@ -182,7 +244,18 @@ export function buildProvenanceStages(args: {
     });
   }
   const publication = asRecord(kpiRoot?.publication);
-  const families = publication && Array.isArray(publication.families) ? publication.families : [];
+  const allFamilies = publication && Array.isArray(publication.families) ? publication.families : [];
+  // P1: a publication family is attributable only when its normalized name is
+  // one of the scoped lane ids. Unmatched families are omitted, never forged.
+  const scopedLanes = scope?.laneIds
+    ? new Set(scope.laneIds.map(normalizeScopeToken).filter((token): token is string => token !== null))
+    : null;
+  const families = scopedLanes
+    ? allFamilies.filter((row) => {
+      const token = normalizeScopeToken(asRecord(row)?.family);
+      return token !== null && scopedLanes.has(token);
+    })
+    : allFamilies;
   if (families.length > 0) {
     const latest = families
       .map(asRecord)
@@ -198,18 +271,24 @@ export function buildProvenanceStages(args: {
       });
     }
   }
-  if (serving.latestServedAt !== null) {
+  // P1: 제공 counts only the files this panel actually read (prefix match);
+  // the unscoped fallback keeps prior callers working but must not feed Edge.
+  const scopedServing = scope?.servingUrlPrefixes
+    ? summarizeServingByPrefix(scope.servingUrlPrefixes)
+    : serving;
+  if (scopedServing.latestServedAt !== null) {
     stages.push({
       stage: "제공",
       detail:
-        serving.stampedCount > 0
-          ? `이 화면이 읽은 파일 ${serving.stampedCount}건${serving.hitCount > 0 ? ` · 캐시 적중 ${serving.hitCount}건` : ""}`
+        scopedServing.stampedCount > 0
+          ? `이 화면이 읽은 파일 ${scopedServing.stampedCount}건${scopedServing.hitCount > 0 ? ` · 캐시 적중 ${scopedServing.hitCount}건` : ""}`
           : "이 화면이 읽은 파일",
-      at: new Date(serving.latestServedAt).toISOString(),
+      at: new Date(scopedServing.latestServedAt).toISOString(),
       tone: "muted",
     });
   }
-  const next = earliestNextSlot(laneProjection);
+  // P1: 다음 names the earliest slot among scoped lanes only.
+  const next = scope?.laneIds ? earliestNextSlotForLanes(laneProjection, scope.laneIds) : earliestNextSlot(laneProjection);
   if (next) {
     stages.push({
       stage: "다음",

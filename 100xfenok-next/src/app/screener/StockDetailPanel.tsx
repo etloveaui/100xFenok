@@ -83,6 +83,7 @@ export function SharedEdgePanel({
   source = "FENOK 신호",
   asOf = "—",
   coverage = "—",
+  hero,
 }: {
   title: string;
   eyebrow?: string;
@@ -99,6 +100,8 @@ export function SharedEdgePanel({
   source?: string;
   asOf?: string;
   coverage?: string;
+  /** 88px panel EdgeMark hero per Signature (Stock); omitted surfaces keep 22/16 only */
+  hero?: Array<{ label: string; score: number | null }>;
 }) {
   const hasRows = [...shortRows, ...longRows].some((row) => row.score !== null);
   const renderRows = (rows: SharedEdgeAxisRow[]) =>
@@ -118,6 +121,19 @@ export function SharedEdgePanel({
   return (
     <Panel loading={pending}>
       <PanelHeader eyebrow={eyebrow} title={title} right={<span className="text-[11px] text-[var(--c-ink-3)]">{coverage}</span>} />
+      {hero && hero.some((head) => head.score !== null) ? (
+        <div className="flex items-center gap-6 px-4 pt-3">
+          {hero.map((head) => head.score !== null ? (
+            <span key={head.label} className="flex flex-col items-center gap-1">
+              <EdgeMark score={head.score} size={88} />
+              <strong className="tabular-nums text-[22px] font-semibold leading-none text-[var(--c-ink)]">
+                {Math.round(head.score)}
+              </strong>
+              <span className="text-[11px] text-[var(--c-ink-3)]">{head.label}</span>
+            </span>
+          ) : null)}
+        </div>
+      ) : null}
       <div className="flex items-center gap-4 px-4 py-3">
         {[
           { label: shortLabel, score: shortScore },

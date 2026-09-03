@@ -2715,7 +2715,7 @@ function buildCcmpExplicitEpsGrowth(benchmarkRow, directForecast) {
   });
 }
 
-function buildCcmpIndex(indexConfig, context, benchmarkRow, spot, observed, baseBlockers) {
+function buildCcmpIndex(indexConfig, context, benchmarkRow, spot, observed, baseBlockers, baseWarnings = []) {
   const dgs10 = context.dgs10;
   const usErp = context.usErp;
   const ccmpPayout = buildCcmpPayoutRatio(indexConfig, benchmarkRow, spot, context);
@@ -2836,6 +2836,7 @@ function buildCcmpIndex(indexConfig, context, benchmarkRow, spot, observed, base
     },
     assumptions: {},
     blockers,
+    warnings: [...baseWarnings],
   };
 }
 
@@ -2935,12 +2936,15 @@ function unavailableIndex(indexConfig, error, { spot = null, generatedAt = null 
     ...(source ? { source } : {}),
     reason,
   }];
+  // Decision D (fh-777): pure freshness is a warning, never a blocker. The
+  // last-known spot stays in observed.price with its as-of disclosed.
+  const warnings = [];
   if (spot) {
     const spotFreshness = observed.price.freshness;
     if (spotFreshness?.status === "refresh_recommended") {
-      blockers.push({
+      warnings.push({
         code: "spot_source_refresh_recommended",
-        severity: "freshness_blocker",
+        severity: "freshness_warning",
         source: indexConfig.spotFile,
         as_of: spot.asOf,
       });
@@ -2975,6 +2979,7 @@ function unavailableIndex(indexConfig, error, { spot = null, generatedAt = null 
     },
     assumptions: {},
     blockers,
+    warnings,
   };
 }
 
@@ -3644,18 +3649,20 @@ function buildPrimaryIndex(indexConfig, context) {
   const spotFreshness = spotFreshnessForIndex(indexConfig, spot.asOf, context.generatedAt);
   const benchmarkFreshness = rimObservedPriceFreshness(benchmarkRow.date, context.generatedAt);
   const blockers = [];
+  // Decision D (fh-777): pure freshness is a warning, never a blocker.
+  const warnings = [];
   if (spotFreshness.status === "refresh_recommended") {
-    blockers.push({
+    warnings.push({
       code: "spot_source_refresh_recommended",
-      severity: "freshness_blocker",
+      severity: "freshness_warning",
       source: indexConfig.spotFile,
       as_of: spot.asOf,
     });
   }
   if (benchmarkFreshness.status === "refresh_recommended") {
-    blockers.push({
+    warnings.push({
       code: "benchmark_source_refresh_recommended",
-      severity: "freshness_blocker",
+      severity: "freshness_warning",
       source: indexConfig.benchmarkFile,
       as_of: benchmarkRow.date,
     });
@@ -3749,6 +3756,7 @@ function buildPrimaryIndex(indexConfig, context) {
       },
     },
     blockers,
+    warnings,
   };
 }
 
@@ -3770,18 +3778,20 @@ function buildSecondaryIndex(indexConfig, context) {
     ...buildBenchmarkObservedInputs(indexConfig, benchmarkRow, benchmarkFreshness),
   };
   const baseBlockers = [];
+  // Decision D (fh-777): pure freshness is a warning, never a blocker.
+  const baseWarnings = [];
   if (spotFreshness.status === "refresh_recommended") {
-    baseBlockers.push({
+    baseWarnings.push({
       code: "spot_source_refresh_recommended",
-      severity: "freshness_blocker",
+      severity: "freshness_warning",
       source: indexConfig.spotFile,
       as_of: spot.asOf,
     });
   }
   if (benchmarkFreshness.status === "refresh_recommended") {
-    baseBlockers.push({
+    baseWarnings.push({
       code: "benchmark_source_refresh_recommended",
-      severity: "freshness_blocker",
+      severity: "freshness_warning",
       source: indexConfig.benchmarkFile,
       as_of: benchmarkRow.date,
     });
@@ -3847,6 +3857,7 @@ function buildSecondaryIndex(indexConfig, context) {
       ].filter((date) => isRealCalendarDate(date));
       const forecastAvailabilityAsOf = forecastAvailabilityCandidates.sort().at(-1) ?? null;
       const blockers = [...baseBlockers];
+      const warnings = [...baseWarnings];
       if (!krRiskFree) {
         blockers.push({
           code: "country_risk_free_source_missing",
@@ -3854,9 +3865,9 @@ function buildSecondaryIndex(indexConfig, context) {
         });
       }
       if (context.krxKospiWeights.freshness?.status === "refresh_recommended") {
-        blockers.push({
+        warnings.push({
           code: "krx_kospi_daily_refresh_recommended",
-          severity: "freshness_blocker",
+          severity: "freshness_warning",
         });
       }
       if (!context.kospiDartPayout) {
@@ -3955,11 +3966,12 @@ function buildSecondaryIndex(indexConfig, context) {
         },
         assumptions: {},
         blockers,
+        warnings,
       };
     }
   }
   if (indexConfig.id === "CCMP") {
-    return buildCcmpIndex(indexConfig, context, benchmarkRow, spot, observed, baseBlockers);
+    return buildCcmpIndex(indexConfig, context, benchmarkRow, spot, observed, baseBlockers, baseWarnings);
   }
   if (indexConfig.id === "SOX") {
     const dgs10 = requireAvailableSource(context.dgs10, "macro/fred-banking-daily.json:series.DGS10");
@@ -3989,10 +4001,11 @@ function buildSecondaryIndex(indexConfig, context) {
       );
       const costOfEquityValue = dgs10.value + usErp.value;
       const blockers = [...baseBlockers];
+      const warnings = [...baseWarnings];
       if (context.soxWeights.freshness?.status === "refresh_recommended") {
-        blockers.push({
+        warnings.push({
           code: "sox_giw_daily_refresh_recommended",
-          severity: "freshness_blocker",
+          severity: "freshness_warning",
         });
       }
       if ((payoutRatio.coverage?.covered_weight_ratio ?? 0) < context.minCoveredWeight) {
@@ -4050,6 +4063,7 @@ function buildSecondaryIndex(indexConfig, context) {
         },
         assumptions: {},
         blockers,
+        warnings,
       };
     }
   }
@@ -4095,6 +4109,7 @@ function buildSecondaryIndex(indexConfig, context) {
         }]
         : []),
     ],
+    warnings: [...baseWarnings],
   };
 }
 
@@ -4309,9 +4324,12 @@ function validateUnavailableIndexShape(item, id, errors, warnings, payload) {
       }
     }
     if (expectedFreshness.future_date_anomaly) errors.push(`${id}: spot source date anomaly`);
-    if (expectedFreshness.status === "refresh_recommended"
-      && !item.blockers?.some((row) => row?.code === "spot_source_refresh_recommended")) {
-      errors.push(`${id}: stale spot source must be named in blockers`);
+    if (expectedFreshness.status === "refresh_recommended") {
+      if (!item.warnings?.some((row) => row?.code === "spot_source_refresh_recommended")) {
+        errors.push(`${id}: stale spot source must be named in warnings`);
+      } else {
+        warnings.push(`${id}: stale spot source; last-known spot retained with as-of disclosed`);
+      }
     }
   }
   for (const key of ["benchmark_price", "forward_eps", "forward_pe", "price_to_book", "roe", "risk_free_rate", "equity_risk_premium"]) {
@@ -5335,16 +5353,16 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
     const spotFreshness = spotFreshnessForId(id, item.observed?.price?.as_of, payload.generated_at);
     if (spotFreshness.future_date_anomaly) errors.push(`${id}: spot source date anomaly`);
     if (spotFreshness.status === "refresh_recommended") {
-      const named = item.blockers?.some((row) => row?.code === "spot_source_refresh_recommended");
-      if (!named) errors.push(`${id}: stale spot source must be named in blockers`);
-      if (declaredReady) errors.push(`${id}: false-ready: spot source exceeds the canonical SLA`);
+      const named = item.warnings?.some((row) => row?.code === "spot_source_refresh_recommended");
+      if (!named) errors.push(`${id}: stale spot source must be named in warnings`);
+      else warnings.push(`${id}: stale spot source; last-known spot retained with as-of disclosed`);
     }
     const benchmarkFreshness = rimObservedPriceFreshness(item.observed?.benchmark_price?.as_of, payload.generated_at);
     if (benchmarkFreshness.future_date_anomaly) errors.push(`${id}: benchmark source date anomaly`);
     if (benchmarkFreshness.status === "refresh_recommended") {
-      const named = item.blockers?.some((row) => row?.code === "benchmark_source_refresh_recommended");
-      if (!named) errors.push(`${id}: stale benchmark must be named in blockers`);
-      if (declaredReady) errors.push(`${id}: false-ready: benchmark source exceeds the canonical SLA`);
+      const named = item.warnings?.some((row) => row?.code === "benchmark_source_refresh_recommended");
+      if (!named) errors.push(`${id}: stale benchmark must be named in warnings`);
+      else warnings.push(`${id}: stale benchmark source; last-known values retained with as-of disclosed`);
     }
     if (item.derived?.payout_ratio?.source_tier !== "derived_formula") errors.push(`${id}.payout_ratio: derived_formula tier required`);
     if (item.derived?.explicit_eps_growth_3y?.source_tier !== "derived_formula") errors.push(`${id}.explicit_eps_growth_3y: derived_formula tier required`);
@@ -5526,16 +5544,16 @@ export function validateRimIndexInputs(payload, { minCoveredWeight = DEFAULT_MIN
     const spotFreshness = spotFreshnessForId(id, item.observed?.price?.as_of, payload.generated_at);
     if (spotFreshness.future_date_anomaly) errors.push(`${id}: spot source date anomaly`);
     if (spotFreshness.status === "refresh_recommended") {
-      const named = item.blockers?.some((row) => row?.code === "spot_source_refresh_recommended");
-      if (!named) errors.push(`${id}: stale spot source must be named in blockers`);
-      if (ready) errors.push(`${id}: false-ready: spot source exceeds the canonical SLA`);
+      const named = item.warnings?.some((row) => row?.code === "spot_source_refresh_recommended");
+      if (!named) errors.push(`${id}: stale spot source must be named in warnings`);
+      else warnings.push(`${id}: stale spot source; last-known spot retained with as-of disclosed`);
     }
     const benchmarkFreshness = rimObservedPriceFreshness(item.observed?.benchmark_price?.as_of, payload.generated_at);
     if (benchmarkFreshness.future_date_anomaly) errors.push(`${id}: benchmark source date anomaly`);
     if (benchmarkFreshness.status === "refresh_recommended") {
-      const named = item.blockers?.some((row) => row?.code === "benchmark_source_refresh_recommended");
-      if (!named) errors.push(`${id}: stale benchmark must be named in blockers`);
-      if (ready) errors.push(`${id}: false-ready: benchmark source exceeds the canonical SLA`);
+      const named = item.warnings?.some((row) => row?.code === "benchmark_source_refresh_recommended");
+      if (!named) errors.push(`${id}: stale benchmark must be named in warnings`);
+      else warnings.push(`${id}: stale benchmark source; last-known values retained with as-of disclosed`);
     }
     if (id === "KOSPI") {
       validateKospiDartPayout(item, payload, errors, warnings, minCoveredWeight, ready);

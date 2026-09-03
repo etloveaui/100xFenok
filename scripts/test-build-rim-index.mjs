@@ -568,8 +568,9 @@ try {
   const staleSpot = staleSpotPayload.indices.SPX;
   assert.equal(staleSpot.observed.price.value, 7000);
   assert.equal(staleSpot.observed.price.freshness.status, "refresh_recommended");
-  assert.ok(staleSpot.blockers.some((row) => row.code === "spot_source_refresh_recommended"));
-  assert.equal(staleSpot.public_status, "input_only_primary_with_caveats");
+  assert.equal(staleSpot.blockers.length, 0, "stale spot is a warning, not a blocker (decision D)");
+  assert.ok(staleSpot.warnings.some((row) => row.code === "spot_source_refresh_recommended"));
+  assert.equal(staleSpot.public_status, "ready_inputs_and_forecast_grid");
   assert.equal(validateRimIndexInputs(staleSpotPayload).ok, true);
 } finally {
   fs.rmSync(staleSpotRoot, { recursive: true, force: true });
@@ -706,10 +707,10 @@ try {
   const staleBenchmarkValidation = validateRimIndexInputs(staleBenchmarkPayload);
   assert.equal(staleBenchmarkValidation.ok, true, staleBenchmarkValidation.errors.join("\n"));
   for (const id of ["SPX", "NDX"]) {
-    assert.equal(staleBenchmarkPayload.indices[id].public_status, "input_only_primary_with_caveats");
-    assert.ok(staleBenchmarkPayload.indices[id].blockers.some((row) => row.code === "benchmark_source_refresh_recommended"));
+    assert.equal(staleBenchmarkPayload.indices[id].public_status, "ready_inputs_and_forecast_grid");
+    assert.ok(staleBenchmarkPayload.indices[id].warnings.some((row) => row.code === "benchmark_source_refresh_recommended"));
   }
-  assert.equal(staleBenchmarkPayload.indices.SOX.public_status, "input_only_sox_methodology_weights_with_caveats");
+  assert.equal(staleBenchmarkPayload.indices.SOX.public_status, "ready_inputs_and_forecast_grid");
   const tamperedDegradedSecondary = JSON.parse(JSON.stringify(staleBenchmarkPayload));
   tamperedDegradedSecondary.indices.SOX.derived.cost_of_equity.formula = "risk_free_rate";
   assert.equal(validateRimIndexInputs(tamperedDegradedSecondary).ok, false);
@@ -999,7 +1000,7 @@ try {
   });
   const staleKospiBridge = staleBridgePayload.indices.KOSPI;
   assert.equal(staleKospiBridge.public_status, "input_only_krx_exact_weights_with_caveats");
-  assert.ok(staleKospiBridge.blockers.some((row) => row.code === "krx_kospi_daily_refresh_recommended"));
+  assert.ok(staleKospiBridge.warnings.some((row) => row.code === "krx_kospi_daily_refresh_recommended"));
 } finally {
   fs.rmSync(bridgeFixtureRoot, { recursive: true, force: true });
 }

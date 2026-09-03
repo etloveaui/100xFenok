@@ -18,7 +18,7 @@ export function StaleState({ asOf, detail, onRetry, retryLabel = "지금 재시�
         {detail && <span className="ml-2">{detail}</span>}
       </span>
       {onRetry && (
-        <button onClick={onRetry} className="font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150">
+        <button onClick={onRetry} className="font-semibold text-[#1B73D3] hover:text-[#155fae] transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive">
           {retryLabel}
         </button>
       )}

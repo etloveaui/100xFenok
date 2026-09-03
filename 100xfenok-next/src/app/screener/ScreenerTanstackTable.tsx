@@ -559,6 +559,16 @@ function ScreenerTanstackTableInner({
                 >
                   {row.getVisibleCells().map((cell) => {
                     const column = columnById.get(cell.column.id as ScreenerSortKey);
+                    const content = canvasPlusPreview ? (
+                      <span
+                        className={cx("block", cell.column.id === "__select" ? "overflow-visible" : "overflow-hidden")}
+                        data-canvas-plus-cell-frame
+                        data-canvas-plus-cell-kind={canvasPlusCellKind(cell.column.id)}
+                        style={canvasPlusCellFrameStyle}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </span>
+                    ) : flexRender(cell.column.columnDef.cell, cell.getContext());
                     return (
                       <td
                         key={cell.id}
@@ -567,16 +577,12 @@ function ScreenerTanstackTableInner({
                         data-canvas-plus-sticky-cell={canvasPlusPreview ? canvasPlusStickyCell(cell.column.id) : undefined}
                         className={canvasPlusPreview ? undefined : column ? cx(densityClass.bodyCell, column.align === "right" ? "text-right" : "text-left") : densityClass.bodyCell}
                       >
-                        {canvasPlusPreview ? (
-                          <span
-                            className={cx("block", cell.column.id === "__select" ? "overflow-visible" : "overflow-hidden")}
-                            data-canvas-plus-cell-frame
-                            data-canvas-plus-cell-kind={canvasPlusCellKind(cell.column.id)}
-                            style={canvasPlusCellFrameStyle}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {column ? (
+                          <span className="group/screener-cell inline-flex w-full min-w-0 items-center gap-1">
+                            <span className="min-w-0 flex-1">{content}</span>
+                            <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} className="shrink-0 opacity-0 transition group-hover/screener-cell:opacity-100 focus-within:opacity-100" />
                           </span>
-                        ) : flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        ) : content}
                       </td>
                     );
                   })}

@@ -76,10 +76,9 @@ export function Panel({
     );
   }
   if (empty) {
-    const { body, rails } = splitTrailingRails(children);
+    const { rails } = splitTrailingRails(children);
     return (
       <div className={`bg-[#ffffff] border border-[#e2e8f0] rounded-[8px] overflow-hidden transition-colors duration-150 ${className}`}>
-        {body}
         <EmptyState reason={emptyReason} nextRefresh={emptyNextRefresh} actionLabel={emptyActionLabel} onAction={onEmptyAction} />
         {rails}
       </div>
