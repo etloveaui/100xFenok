@@ -2,7 +2,16 @@
 // so it matches the v5 light theme for every surface (the old V1 bento
 // skeleton had a dark `bg-slate-950` hero tile that flashed jarringly when
 // navigating away from the v5 home).
+//
+// The skeleton appears only after a 120ms delay (five-state contract: pending
+// skeleton with delay) so fast navigations never flash placeholder chrome.
+"use client";
+
+import { useDelayedLoading } from "@/components/ui";
+
 export default function Loading() {
+  const show = useDelayedLoading(true);
+  if (!show) return null;
   return (
     <div className="mx-auto w-full max-w-[1200px] overflow-x-hidden px-3 py-4 sm:px-4">
       {/* top status bar */}

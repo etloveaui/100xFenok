@@ -13,8 +13,12 @@ type PanelProps = {
   emptyActionLabel?: string;
   onEmptyAction?: () => void;
   stale?: boolean;
+  /** fetch/source failure: same honest LKG treatment as stale (기준 시각 + 재시도, no banner) */
+  error?: boolean;
+  errorDetail?: string;
   asOf?: string;
   onRetry?: () => void;
+  retryLabel?: string;
   /** keep LKG children visible when stale/error */
   keepContentOnStale?: boolean;
 };
@@ -39,8 +43,11 @@ export function Panel({
   emptyActionLabel,
   onEmptyAction,
   stale,
+  error,
+  errorDetail,
   asOf,
   onRetry,
+  retryLabel,
   keepContentOnStale = true,
 }: PanelProps) {
   const showSkeleton = useDelayedLoading(loading);
@@ -64,9 +71,9 @@ export function Panel({
   }
   return (
     <div className={`bg-[#ffffff] border border-[#e2e8f0] rounded-[8px] overflow-hidden transition-colors duration-150 ${className}`}>
-      {stale && <StaleState asOf={asOf} onRetry={onRetry} />}
-      {(stale && keepContentOnStale) || !stale ? children : null}
-      {stale && !keepContentOnStale && <div className="px-4 py-3 text-[12px] text-[#64748b]">이전 값 유지 중</div>}
+      {(stale || error) && <StaleState asOf={asOf} detail={error ? errorDetail : undefined} onRetry={onRetry} retryLabel={retryLabel} />}
+      {((stale || error) && keepContentOnStale) || (!stale && !error) ? children : null}
+      {(stale || error) && !keepContentOnStale && <div className="px-4 py-3 text-[12px] text-[#64748b]">이전 값 유지 중</div>}
     </div>
   );
 }
