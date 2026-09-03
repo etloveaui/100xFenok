@@ -10,7 +10,7 @@ export function Bar({ value, className = "", ...props }: BarProps) {
   const pct = Math.max(0, Math.min(100, value));
   return (
     <div
-      className={`h-[6px] rounded-[3px] bg-[#f1f5f9] overflow-hidden w-[160px] ${className}`}
+      className={`h-[6px] rounded-[3px] bg-[#f1f5f9] overflow-hidden w-full ${className}`}
       role="progressbar"
       aria-valuenow={pct}
       aria-valuemin={0}
