@@ -76,7 +76,7 @@ async function prepareDynamicRoute(page, route) {
   const readySelectors = {
     "/etfs": ".cpw5-etfs-mobile-card",
     "/market-valuation": ".mv-trow",
-    "/regime": "[data-regime-axis-card]",
+    "/regime": "[data-regime-axis-summary-card]",
     "/sectors": "[data-sector-relative-bars]",
   };
   const readySelector = readySelectors[pathname];
@@ -1951,16 +1951,10 @@ async function collectRouteChecks(page, route) {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const axisCards = Array.from(document.querySelectorAll("[data-regime-axis-card]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
-      const sourceCards = Array.from(document.querySelectorAll("[data-regime-source-card]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
+      const axisHead = document.querySelector(".rgm-thead");
+      const axisHeadText = (axisHead?.textContent || "").replace(/\s+/g, " ").trim();
+      const historyPanel = document.querySelector("[data-regime-history]");
+      const historyText = (historyPanel?.textContent || "").replace(/\s+/g, " ").trim();
 
       if (!surface || surface.getBoundingClientRect().height <= 0) {
         failures.push({ check: "regime-surface-visible", detail: "missing regime surface" });
@@ -1996,7 +1990,6 @@ async function collectRouteChecks(page, route) {
 
       const expectedAxes = ["structure", "signals", "macro", "valuation"];
       const actualSummaryAxes = summaryCards.map((node) => node.getAttribute("data-regime-axis-summary-card"));
-      const actualDetailAxes = axisCards.map((node) => node.getAttribute("data-regime-axis-card"));
       if (
         summaryCards.length !== expectedAxes.length ||
         !expectedAxes.every((key, index) => actualSummaryAxes[index] === key)
@@ -2006,14 +1999,16 @@ async function collectRouteChecks(page, route) {
           detail: `actual=${JSON.stringify(actualSummaryAxes)} expected=${JSON.stringify(expectedAxes)}`,
         });
       }
+      const expectedHeadColumns = ["축", "요약", "신호수", "상태"];
       if (
-        axisCards.length !== expectedAxes.length ||
-        !expectedAxes.every((key, index) => actualDetailAxes[index] === key)
+        !axisHead ||
+        axisHead.getBoundingClientRect().height <= 0 ||
+        !expectedHeadColumns.every((column) => axisHeadText.includes(column))
       ) {
-        failures.push({
-          check: "regime-axis-detail-order",
-          detail: `actual=${JSON.stringify(actualDetailAxes)} expected=${JSON.stringify(expectedAxes)}`,
-        });
+        failures.push({ check: "regime-axis-table-head", detail: `head=${axisHeadText.slice(0, 80)}` });
+      }
+      if (!historyPanel || historyPanel.getBoundingClientRect().height <= 0 || historyText.length === 0) {
+        failures.push({ check: "regime-history-visible", detail: "missing regime history panel" });
       }
 
       const expectedActions = [
@@ -2044,26 +2039,6 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "regime-action-href", detail: `action ${index} href=${href} expected=${expectedPath}` });
         }
       });
-
-      axisCards.forEach((card, cardIndex) => {
-        const axis = card.getAttribute("data-regime-axis-card") || "";
-        const rows = Array.from(card.querySelectorAll("[data-regime-evidence-row]"))
-          .filter((node) => {
-            const rect = node.getBoundingClientRect();
-            return rect.width > 0 && rect.height > 0;
-          });
-        const tone = card.querySelector("[data-regime-axis-tone]");
-        if (rows.length === 0) {
-          failures.push({ check: "regime-axis-evidence-present", detail: `axis=${axis || cardIndex}` });
-        }
-        if (!tone || !(tone.textContent || "").trim()) {
-          failures.push({ check: "regime-axis-tone-present", detail: `axis=${axis || cardIndex}` });
-        }
-      });
-
-      if (sourceCards.length < 4) {
-        failures.push({ check: "regime-source-card-count", detail: `visible source cards=${sourceCards.length}` });
-      }
     }
 
     if (new URL(currentRoute, window.location.origin).pathname === "/market/events") {
