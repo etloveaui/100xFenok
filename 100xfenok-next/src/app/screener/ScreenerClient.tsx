@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import TransitionLink from "@/components/TransitionLink";
 import { EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
+import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MacroContextCard from "@/components/macro/MacroContextCard";
 import MarketQuickLinks from "@/components/market/MarketQuickLinks";
@@ -48,6 +49,7 @@ import {
 import { readScreenerView, writeScreenerView, readScreenerUniverses, writeScreenerUniverses } from "@/lib/personal/personal-state";
 
 const PAGE_SIZE = 50;
+const MOBILE_LIST_OVERSCAN = 10;
 type ScreenerDensity = "compact" | "standard" | "comfortable";
 type ScreenerViewMode = "table" | "card";
 
@@ -939,7 +941,7 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
         <div key={section.title} className={compact ? "rounded-xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2" : "border-t border-[var(--c-line-2)] pt-3"}>
           <div className="mb-2 flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
             <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{section.title}</span>
-            <span className="grid w-full grid-cols-2 gap-1 text-center text-[9px] font-black text-[var(--c-ink-2)] sm:w-auto sm:min-w-[132px] sm:grid-cols-3">
+            <span className="grid w-full grid-cols-3 gap-1 text-center text-[9px] font-black text-[var(--c-ink-2)] sm:w-auto sm:min-w-[132px] sm:grid-cols-3">
               {ESTIMATE_PERIOD_LABELS.map((label) => <span key={`${section.title}-${label}`}>{label}</span>)}
             </span>
           </div>
@@ -957,7 +959,7 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
                       </span>
                     ) : null}
                   </span>
-                  <span className="grid min-w-0 grid-cols-2 gap-1 sm:grid-cols-3">
+                  <span className="grid min-w-0 grid-cols-3 gap-1 sm:grid-cols-3">
                     {row.values.map((raw, index) => {
                       const value = normalizeTrendValue(raw);
                       return (
@@ -1669,11 +1671,15 @@ export default function ScreenerClient({
     });
   }, [filtered, sortKey, sortDir]);
 
+  const [cursor, setCursor] = useState(0);
+  const [scrollSignal, setScrollSignal] = useState<{ index: number; nonce: number } | null>(null);
   const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${shortEdgeMin}|${longEdgeMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
     if (page !== 0) setPage(0);
+    if (cursor !== 0) setCursor(0);
+    setScrollSignal((prev) => ({ index: 0, nonce: (prev?.nonce ?? 0) + 1 }));
   }
 
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
@@ -1790,8 +1796,6 @@ export default function ScreenerClient({
   );
 
   const router = useRouter();
-  const [cursor, setCursor] = useState(0);
-  const [scrollSignal, setScrollSignal] = useState<{ index: number; nonce: number } | null>(null);
   const safeCursor = sorted.length > 0 ? Math.min(cursor, sorted.length - 1) : 0;
   const mobileListRef = useRef<HTMLDivElement | null>(null);
   const mobileVirtualizer = useVirtualizer({
@@ -1802,11 +1806,16 @@ export default function ScreenerClient({
   });
 
   const handleVisibleStartIndex = useCallback((index: number) => {
-    setPage((prev) => {
-      const next = Math.max(0, Math.floor(index / PAGE_SIZE));
-      return prev === next ? prev : next;
+    const nextPage = Math.max(0, Math.floor(index / PAGE_SIZE));
+    setPage((prev) => (prev === nextPage ? prev : nextPage));
+    setCursor((prev) => {
+      if (sorted.length === 0) return 0;
+      const pageStart = nextPage * PAGE_SIZE;
+      const pageEnd = Math.min(sorted.length - 1, pageStart + PAGE_SIZE - 1);
+      if (prev >= pageStart && prev <= pageEnd) return prev;
+      return Math.min(Math.max(0, pageStart), sorted.length - 1);
     });
-  }, []);
+  }, [sorted.length]);
 
   useEffect(() => {
     if (!scrollSignal || sorted.length === 0) return;
@@ -1820,8 +1829,10 @@ export default function ScreenerClient({
     if (!node) return undefined;
     const report = () => {
       if (node.clientHeight === 0) return;
-      const first = mobileVirtualizer.getVirtualItems()[0];
-      handleVisibleStartIndex(first ? first.index : 0);
+      const items = mobileVirtualizer.getVirtualItems();
+      const firstVisible = items.find((item) => item.end > node.scrollTop)?.index
+        ?? (items[0] ? Math.min(items[0].index + MOBILE_LIST_OVERSCAN, sorted.length - 1) : 0);
+      handleVisibleStartIndex(Math.max(0, Math.min(firstVisible, sorted.length - 1)));
     };
     report();
     node.addEventListener("scroll", report, { passive: true });
@@ -1838,6 +1849,7 @@ export default function ScreenerClient({
     const target = event.target as HTMLElement | null;
     if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable)) return;
     if (sorted.length === 0) return;
+    if (target && typeof target.closest === "function" && target.closest('button, a[href], select, input, textarea, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [data-screener-pagination], [data-screener-view-mode-control], [data-screener-view-mode-option], [data-screener-density-control], [data-screener-density-option], [data-screener-preset], [data-screener-page], [data-screener-expand]')) return;
     if (event.key === "j" || event.key === "k") {
       event.preventDefault();
       const next = event.key === "j" ? Math.min(sorted.length - 1, safeCursor + 1) : Math.max(0, safeCursor - 1);
@@ -2124,6 +2136,14 @@ export default function ScreenerClient({
   const activeFilterCount = scaleCount + valueCount + growthCount + qualityCount;
   const pricedCount = sorted.filter((stock) => stock.price !== null).length;
   const missingPriceCount = Math.max(0, sorted.length - pricedCount);
+  const railFreshness: EvidenceRailFreshness = screenerDataState.status === "ready" ? "fresh"
+    : screenerDataState.status === "pending" ? "pending"
+    : screenerDataState.status === "error" ? "error"
+    : screenerDataState.status === "partial" ? "partial"
+    : "fixed";
+  const retryScreenerData = useCallback(() => {
+    window.location.reload();
+  }, []);
   const priceCoverageRatio = sorted.length > 0 ? Math.round((pricedCount / sorted.length) * 100) : 0;
   const sourceDateLabel = formatScreenerSourceDateLabel(sourceDate, marketFactsDate, {
     pending: !dataReady && !connectionIndexReady,
@@ -3519,10 +3539,13 @@ export default function ScreenerClient({
         ) : null}
 
         <EvidenceRail
-          freshness={dataReady ? "fresh" : "fixed"}
+          freshness={railFreshness}
           source="스크리너"
           asOf={screenerSourceDate ?? "미제공"}
           coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}
+          onRetry={railFreshness === "fresh" ? undefined : retryScreenerData}
+          lkgAsOf={screenerSourceDate ?? undefined}
+          skeletonDelayMs={400}
         />
 
         <div className={canvasPlusPreview ? "cp-screener-results-mobile min-[921px]:hidden" : "min-[921px]:hidden"}>
@@ -3671,6 +3694,8 @@ export default function ScreenerClient({
               className={canvasPlusPreview ? "cp-button cp-screener-page-button" : "inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"}
               data-variant={canvasPlusPreview ? "ghost" : undefined}
               data-density={canvasPlusPreview ? "compact" : undefined}
+              data-screener-pagination
+              data-screener-page={safePage - 1}
             >
               이전
             </button>
@@ -3684,6 +3709,8 @@ export default function ScreenerClient({
               className={canvasPlusPreview ? "cp-button cp-screener-page-button" : "inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition enabled:hover:border-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)]"}
               data-variant={canvasPlusPreview ? "ghost" : undefined}
               data-density={canvasPlusPreview ? "compact" : undefined}
+              data-screener-pagination
+              data-screener-page={safePage + 1}
             >
               다음
             </button>
