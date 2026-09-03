@@ -582,12 +582,14 @@ function renderCell(
       const estimateSummary = preset === "estimate" ? interpretStockMetrics(stock).estimateSummary : null;
       const title = [...(stock.actionReasons ?? []), detail].filter(Boolean).join(" · ");
       return (
-        <span className="flex min-w-0 max-w-[180px] flex-col items-start gap-1" title={[title, estimateSummary].filter(Boolean).join(" · ")}>
-          <span className={cx("max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}>
-            {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
-          </span>
-          <span className={cx("max-w-full truncate text-[10px] font-black", confidenceClass(stock.confidenceLabel, lowEvidence))}>
-            {detail}
+        <span className="flex min-w-0 max-w-[180px] flex-col items-start gap-0.5" title={[title, estimateSummary].filter(Boolean).join(" · ")}>
+          <span className="flex min-w-0 max-w-full items-center gap-1">
+            <span className={cx("min-w-0 max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}>
+              {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
+            </span>
+            <span className={cx("shrink-0 rounded-full border border-[var(--c-line)] px-1.5 py-px text-[9px] font-black whitespace-nowrap", confidenceClass(stock.confidenceLabel, lowEvidence))}>
+              {confidence}
+            </span>
           </span>
           {estimateSummary ? (
             <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-brand)]">{estimateSummary}</span>

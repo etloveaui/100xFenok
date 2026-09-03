@@ -429,7 +429,7 @@ export default function AppShell({
   const previewModal = useModal("typeahead-preview");
   const moreOpen = moreModal.isOpen;
   const moreCloseRef = useRef<HTMLButtonElement>(null);
-  const navActive = active && NAV.some((item) => item.id === active) ? active : "explore";
+  const navActive: ShellPage | null = active && NAV.some((item) => item.id === active) ? active : null;
 
   const handleTypeaheadStockPreview = (ticker: string) => {
     moreModal.close();

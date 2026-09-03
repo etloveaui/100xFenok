@@ -38,7 +38,7 @@ export default function MetricHelp({
           aria-label={`${label} 설명: ${description}`}
           aria-describedby={tooltipId}
           onClick={(event) => event.stopPropagation()}
-          className="inline-flex size-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-black leading-none text-slate-500 shadow-sm transition hover:border-brand-interactive hover:text-brand-interactive focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+          className="inline-flex size-4 items-center justify-center rounded-full border border-[var(--c-line)] bg-white text-[10px] font-black leading-none text-[var(--c-ink-2)] shadow-sm transition hover:border-brand-interactive hover:text-brand-interactive focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
         >
           ?
         </button>

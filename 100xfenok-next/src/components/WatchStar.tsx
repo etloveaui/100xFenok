@@ -20,7 +20,9 @@ export default function WatchStar({ ticker, className = "" }: { ticker: string; 
           : "border-slate-200 bg-white text-slate-300 hover:border-amber-300 hover:text-amber-400"
       } ${className}`}
     >
-      <i className={`${on ? "fas" : "far"} fa-star`} aria-hidden="true" />
+      <svg viewBox="0 0 24 24" width="14" height="14" fill={on ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.4l6.5-.9L12 2.6z" />
+      </svg>
     </button>
   );
 }

@@ -109,7 +109,7 @@ export default function ScreenerDesktopTable({
                       )}
                     >
                       {column.label}
-                      <span className="text-[9px]">{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
+                      <span className={active ? "text-[9px] text-[var(--c-ink)]" : "text-[9px] text-[var(--c-ink-2)]"}>{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
                     </button>
                     <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} />
                   </div>

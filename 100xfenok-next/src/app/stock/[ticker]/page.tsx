@@ -44,7 +44,7 @@ export default async function StockDetailPage({ params, searchParams }: Props) {
   const initialMacroContextId = macroContextFromParam(firstParam(query.macro))?.id;
   return (
     <div className="fnk-shell">
-      <AppShell active="screener" title={symbol} backHref={ROUTES.screenerTicker(symbol)}>
+      <AppShell title={symbol} backHref={ROUTES.screenerTicker(symbol)}>
         {initialMacroContextId ? (
           <MacroContextCard contextId={initialMacroContextId} surface="stock" className="mb-[var(--s4)]" />
         ) : null}
