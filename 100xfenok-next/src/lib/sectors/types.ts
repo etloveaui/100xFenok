@@ -96,6 +96,9 @@ export interface SectorDataResult {
   /** benchmarks generated timestamp, or null. */
   updatedAt: string | null;
   sourceMeta: SectorSourceMeta;
+  /** Manual re-fetch that keeps serving last-known-good as stale until fresh
+   * settles — unlike a full page reload, which discards the in-memory LKG. */
+  refresh: () => void;
 }
 
 export interface SectorSourceMeta {

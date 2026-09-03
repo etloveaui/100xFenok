@@ -28,6 +28,7 @@ export default function SmartMoneyPanel({
   failed,
   stale,
   asOf,
+  lkgClock,
   coverage,
   onRetry,
   className,
@@ -39,6 +40,7 @@ export default function SmartMoneyPanel({
   failed: boolean;
   stale: boolean;
   asOf: string | null;
+  lkgClock: string | null;
   coverage: string;
   onRetry: () => void;
   className?: string;
@@ -124,6 +126,7 @@ export default function SmartMoneyPanel({
         source="SEC EDGAR 13F"
         asOf={asOfLabel}
         coverage={coverage}
+        lkgAsOf={stale && lkgClock ? (formatAsOf(lkgClock) ?? lkgClock) : undefined}
         next="분기 종료 후 최대 45일"
         onRetry={failed || !ready || stale ? onRetry : undefined}
         onEvidence={ready && !failed ? () => openEvidence("/data/sec-13f/analytics/portfolio_views.json") : undefined}

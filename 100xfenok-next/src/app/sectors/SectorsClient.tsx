@@ -68,10 +68,6 @@ function failedSourceLabel(source: string): string | null {
   return null;
 }
 
-function reload() {
-  window.location.reload();
-}
-
 function openEvidence(path: string) {
   window.open(path, "_blank", "noopener");
 }
@@ -126,6 +122,10 @@ function SectorFlowPanel({
   const empty = !loading && (!ready || items.length === 0);
   const maxAbs = Math.max(0.01, ...items.map((item) => Math.abs(item.relative)));
   const asOfLabel = formatAsOf(clock) ?? "—";
+  // Reduced counts (fewer sectors with a value for this window than rows on
+  // screen) are partial coverage — never fresh, even when the clock is new.
+  const valuedCount = rows.filter((row) => typeof row.momentum[windowKey] === "number").length;
+  const incomplete = ready && valuedCount < rows.length;
 
   return (
     <Panel
@@ -198,12 +198,12 @@ function SectorFlowPanel({
         </div>
       )}
       <EvidenceRail
-        freshness={loading ? "pending" : failed || !ready ? "error" : stale ? "stale" : clock ? "fresh" : "fixed"}
+        freshness={loading ? "pending" : failed || !ready ? "error" : incomplete ? "partial" : stale ? "stale" : clock ? "fresh" : "fixed"}
         source="SlickCharts · Yahoo"
         asOf={asOfLabel}
         coverage={coverage}
         lkgAsOf={stale && lkgClock ? (formatAsOf(lkgClock) ?? lkgClock) : undefined}
-        onRetry={failed || !ready || stale ? onRetry : undefined}
+        onRetry={failed || !ready || stale || incomplete ? onRetry : undefined}
         onEvidence={ready && !failed ? () => openEvidence("/data/benchmarks/summaries.json") : undefined}
       />
     </Panel>
@@ -236,6 +236,9 @@ function EtfComparePanel({
   const etfRows = rows.filter((row) => row.etfInfo);
   const empty = !loading && (!ready || etfRows.length === 0);
   const asOfLabel = formatAsOf(clock) ?? "—";
+  // Missing ETFs (fewer comparable rows than sectors on screen) are partial
+  // coverage — never fresh, even when the index clock is new.
+  const incomplete = ready && etfRows.length < rows.length;
 
   return (
     <Panel
@@ -275,7 +278,7 @@ function EtfComparePanel({
                   const oneMonth = row.etfInfo?.returns["1m"];
                   const oneMonthTone = toneOf(oneMonth);
                   return (
-                    <tr key={row.key} className="sec-etf-row" data-sectors-etf-row={row.etf}>
+                    <tr key={row.key} className="sec-etf-row" tabIndex={0} data-sectors-etf-row={row.etf}>
                       <th scope="row" className="sec-etf-name">
                         <span className="sec-ticker sec-ticker-strong">{row.etf}</span>
                         <span className="sec-etf-sector">{row.name}</span>
@@ -296,12 +299,12 @@ function EtfComparePanel({
         </div>
       )}
       <EvidenceRail
-        freshness={loading ? "pending" : failed || !ready ? "error" : stale ? "stale" : clock ? "fresh" : "fixed"}
+        freshness={loading ? "pending" : failed || !ready ? "error" : incomplete ? "partial" : stale ? "stale" : clock ? "fresh" : "fixed"}
         source="ETF 운용사 공시"
         asOf={asOfLabel}
         coverage={coverage}
         lkgAsOf={stale && lkgClock ? (formatAsOf(lkgClock) ?? lkgClock) : undefined}
-        onRetry={failed || !ready || stale ? onRetry : undefined}
+        onRetry={failed || !ready || stale || incomplete ? onRetry : undefined}
         onEvidence={ready && !failed ? () => openEvidence("/data/global-scouter/etfs/index.json") : undefined}
       />
     </Panel>
@@ -321,6 +324,7 @@ export default function SectorsClient() {
     failedSources,
     staleSources,
     sourceMeta,
+    refresh,
   } = useSectorData();
   const [sortWindow, setSortWindow] = useState<MomentumWindow>("1m");
 
@@ -387,7 +391,7 @@ export default function SectorsClient() {
           <div className="sec-meta-row">
             <Pill tone={sourceMeta.tickerSourceDate ? "neutral" : "warn"}>시세 수집 {quoteLabel}</Pill>
             {failed && (
-              <Button variant="secondary" onClick={reload}>
+              <Button variant="secondary" onClick={refresh}>
                 다시 시도
               </Button>
             )}
@@ -413,7 +417,7 @@ export default function SectorsClient() {
         clock={sourceMeta.benchmarksSourceDate}
         lkgClock={sourceMeta.benchmarksSourceDate}
         coverage={flowCoverage}
-        onRetry={reload}
+        onRetry={refresh}
       />
 
       <EtfComparePanel
@@ -426,7 +430,7 @@ export default function SectorsClient() {
         lkgClock={sourceMeta.etfSourceDate}
         coverage={etfCoverage}
         missingNote={etfMissingNote}
-        onRetry={reload}
+        onRetry={refresh}
       />
 
       <SmartMoneyPanel
@@ -437,8 +441,9 @@ export default function SectorsClient() {
         failed={smartFailed}
         stale={smartStale}
         asOf={smartAsOf}
+        lkgClock={sourceMeta.smartMoneySourceDate}
         coverage={smartCoverage}
-        onRetry={reload}
+        onRetry={refresh}
       />
 
       <div className="sec-cta">

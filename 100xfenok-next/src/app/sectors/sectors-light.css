@@ -237,6 +237,20 @@
   background: var(--fnk-neutral-50);
 }
 
+.sec-etf-row:focus-visible {
+  background: var(--fnk-neutral-50);
+  outline: none;
+}
+
+/* Collapsing table borders ignore tr border-left, so the 2px keyboard/hover
+ * accent lives on the row's first cell (same transparent-reserve idiom as
+ * .sec-flow-row, no box-shadow). */
+.sec-etf-row:hover > .sec-etf-name,
+.sec-etf-row:focus-visible > .sec-etf-name,
+.sec-etf-row:focus-within > .sec-etf-name {
+  border-left-color: var(--fnk-brand-interactive);
+}
+
 .sec-etf-table td {
   padding: 0 16px;
   height: 34px;
@@ -251,6 +265,7 @@
   height: 34px;
   font-weight: 400;
   white-space: nowrap;
+  border-left: 2px solid transparent;
 }
 
 .sec-etf-sector {

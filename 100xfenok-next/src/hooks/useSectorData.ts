@@ -285,6 +285,9 @@ export function useSectorData(): SectorDataResult {
       smartMoneyDisclaimer: null,
       etfMissing: [],
     },
+    // Overridden on every render by the return below; present so the initial
+    // literal satisfies SectorDataResult before load() exists.
+    refresh: () => {},
   });
   const inFlightRef = useRef(false);
   const isMountedRef = useRef(true);
@@ -494,5 +497,8 @@ export function useSectorData(): SectorDataResult {
     };
   }, [load]);
 
-  return result;
+  // Manual retry path: re-runs load() so the in-memory LKG keeps serving the
+  // previous payload as stale until fresh settles (fh-751). A full page
+  // reload would discard the LKG and blank readable panels on a failed fetch.
+  return { ...result, refresh: () => { void load(); } };
 }
