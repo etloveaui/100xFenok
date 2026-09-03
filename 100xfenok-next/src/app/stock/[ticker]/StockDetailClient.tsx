@@ -1313,17 +1313,17 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
               return (
                 <div
                   key={trade.action}
-                  className={`rounded-lg border px-3 py-2 ${isBuy ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className={`text-[10px] font-black uppercase tracking-[0.08em] ${isBuy ? "text-emerald-700" : "text-rose-700"}`}>
+                    <span className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
                       {isBuy ? "순매수 변화" : "순매도 변화"}
                     </span>
-                    <span className={`rounded-full bg-white/75 px-2 py-0.5 text-[9px] font-black tabular-nums ${isBuy ? "text-emerald-700" : "text-rose-700"}`}>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black tabular-nums text-slate-500">
                       {isFiniteNumber(trade.rank) ? `#${trade.rank}` : "rank —"}
                     </span>
                   </div>
-                  <p className="mt-1 text-base font-black tabular-nums text-slate-950">{tradeAmount(trade.amount)}</p>
+                  <p className={`mt-1 text-base font-black tabular-nums ${isBuy ? "text-emerald-700" : "text-rose-700"}`}>{tradeAmount(trade.amount)}</p>
                   <p className="mt-1 text-[10px] font-bold text-slate-600">
                     {countLabel} {isFiniteNumber(trade.investors_count) ? `${trade.investors_count}명` : "—"}
                     {isFiniteNumber(eventCount) && eventCount > 0 ? ` · ${eventLabel} ${eventCount}명` : ""}
@@ -3021,14 +3021,14 @@ export default function StockDetailClient({
       <div className="stock-shell canvas-plus cp-stock-detail-preview" data-canvas-plus data-canvas-plus-stock-detail-preview>
         <Panel>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 pt-3" aria-label={`${symbol} 종목 요약`}>
-            <span className="font-mono text-[18px] font-semibold tabular-nums text-slate-900">{symbol}</span>
-            <h1 className="text-[14px] font-semibold text-slate-900">{displayName}</h1>
+            <span className="font-mono text-[22px] font-semibold tabular-nums text-slate-900">{symbol}</span>
+            <h1 className="text-[20px] font-semibold text-slate-900">{displayName}</h1>
             {canonical ? <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-600">{sectorLabelKo(canonical)}</span> : null}
             {row?.sector && row.sector !== (canonical ? sectorLabelKo(canonical) : null) ? <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-600">{row.sector}</span> : null}
             <WatchStar ticker={symbol} className="stock-star" />
             <span className="ml-auto flex items-baseline gap-2">
-              <span className="tabular-nums text-[22px] font-semibold text-slate-900">{priceText}</span>
-              <span className="tabular-nums text-[12px] font-semibold text-slate-600" data-tone={heroChangeUp ? "positive" : "negative"}>{heroChangeText}</span>
+              <span className="tabular-nums text-[32px] font-semibold text-slate-900">{priceText}</span>
+              <span className="cp-number tabular-nums text-[12px] font-semibold" data-tone={heroChangeUp ? "positive" : "negative"}>{heroChangeText}</span>
             </span>
           </div>
           <p className="px-4 pb-1 text-[12px] text-slate-500">{contextLine || `종목 컨텍스트 ${DATA_STATE_LABELS.pending}`}</p>
