@@ -1,13 +1,13 @@
 {
   "schema_version": "stockanalysis-recovery-index/v1",
-  "generated_at": "2026-09-02T04:32:53Z",
+  "generated_at": "2026-09-03T23:20:13Z",
   "counts": {
     "tracked": 211,
     "fresh": 94,
     "lkg": 116,
     "unavailable": 1,
     "retry": 117,
-    "failed": 32,
+    "failed": 0,
     "recovered": 0,
     "promotion_deferred": 0
   },
@@ -1821,242 +1821,17 @@
   "recovered_etfs": [],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "33591076140",
+    "run_id": "33817024605",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
-    "attempted": 105,
-    "successes": 73,
-    "failed": 32,
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "attempted": 16,
+    "successes": 16,
+    "failed": 0,
     "recovered": 0,
     "promotion_deferred": 0,
-    "errors": [
-      {
-        "artifact_kind": "stock",
-        "entity": "ABBV",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:ABBV",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "AMAT",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:AMAT",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "AMD",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:AMD",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "ARM",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:ARM",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "ASML",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:ASML",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "AVGO",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:AVGO",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "BAC",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:BAC",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "BRK.A",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:BRK.A",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "BRK.B",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:BRK.B",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "CAT",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:CAT",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "COST",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:COST",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "CSCO",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:CSCO",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "CVX",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:CVX",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "GE",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:GE",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "GOOG",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:GOOG",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "INTC",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:INTC",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "JNJ",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:JNJ",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "KO",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:KO",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "LLY",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:LLY",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "LRCX",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:LRCX",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "MA",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:MA",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "MS",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:MS",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "MU",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:MU",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "NFLX",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:NFLX",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "ORCL",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:ORCL",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "PG",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:PG",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "PLTR",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:PLTR",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "TSM",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:TSM",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "UNH",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:UNH",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "V",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:V",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "WMT",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:WMT",
-        "controlled": false,
-        "data_loss": false
-      },
-      {
-        "artifact_kind": "stock",
-        "entity": "XOM",
-        "error": "ValueError: recovery promotion requires a natural schedule run for StockAnalysis stock:XOM",
-        "controlled": false,
-        "data_loss": false
-      }
-    ],
+    "errors": [],
     "success_rows": [
       {
         "artifact_kind": "stock",
@@ -2105,82 +1880,7 @@
       },
       {
         "artifact_kind": "financial",
-        "entity": "ABBV",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "AMAT",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "AMD",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
         "entity": "AMZN",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "ARM",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "ASML",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "AVGO",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "BAC",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "BRK.A",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "BRK.B",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "CAT",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "COST",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "CSCO",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "CVX",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "GE",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "GOOG",
         "outcome": "fresh"
       },
       {
@@ -2190,37 +1890,7 @@
       },
       {
         "artifact_kind": "financial",
-        "entity": "INTC",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "JNJ",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
         "entity": "JPM",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "KO",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "LLY",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "LRCX",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "MA",
         "outcome": "fresh"
       },
       {
@@ -2230,22 +1900,7 @@
       },
       {
         "artifact_kind": "financial",
-        "entity": "MS",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
         "entity": "MSFT",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "MU",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "NFLX",
         "outcome": "fresh"
       },
       {
@@ -2255,172 +1910,7 @@
       },
       {
         "artifact_kind": "financial",
-        "entity": "ORCL",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "PG",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "PLTR",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
         "entity": "TSLA",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "TSM",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "UNH",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "V",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "WMT",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "financial",
-        "entity": "XOM",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "actions_recent",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "actions_splits",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "earnings_calendar",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "etf_provider_blackrock",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "etf_provider_proshares",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "etf_screener",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "industries",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "industries_all",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "industry_semiconductors",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_calendar",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_filings",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_recent",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_statistics",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "ipos_withdrawn",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "list_bitcoin_etfs",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_active",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_afterhours",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers_month",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_gainers_week",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_losers",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_losers_ytd",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "market_premarket",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "new_etfs",
-        "outcome": "fresh"
-      },
-      {
-        "artifact_kind": "surface",
-        "entity": "sector_technology",
         "outcome": "fresh"
       }
     ],

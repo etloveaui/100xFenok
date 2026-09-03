@@ -4,17 +4,6 @@
   "entity": "TSLA",
   "attempts": [
     {
-      "run_id": "31974093247",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 21 * * *",
-      "natural": true,
-      "observed_at": "2026-08-16T21:40:14Z",
-      "outcome": "failed",
-      "controlled": false,
-      "error": "ValueError: source did not advance beyond the retained LKG for stock:TSLA"
-    },
-    {
       "run_id": "32072627394",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -143,24 +132,34 @@
       "observed_at": "2026-09-02T04:32:53Z",
       "outcome": "fresh",
       "controlled": false
+    },
+    {
+      "run_id": "33817024605",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-09-03T23:20:13Z",
+      "outcome": "fresh",
+      "controlled": false
     }
   ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/stocks/TSLA.json",
-    "payload_sha256": "a2d1d8d450cb7ac78139c8a59fe9cb009b8f988c02220be93df2fa67a44f4054",
-    "source_as_of": "2026-09-01T20:00:00Z",
-    "fetched_at": "2026-09-02T04:42:09Z"
+    "payload_sha256": "53b7664bb127946d69d51dae80397586811c1903632bab59379aacef0e13433b",
+    "source_as_of": "2026-09-03T20:00:00Z",
+    "fetched_at": "2026-09-03T23:20:33Z"
   },
-  "updated_at": "2026-09-02T04:32:53Z",
+  "updated_at": "2026-09-03T23:20:13Z",
   "last_attempt": {
-    "run_id": "33591076140",
+    "run_id": "33817024605",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
-    "observed_at": "2026-09-02T04:32:53Z",
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "observed_at": "2026-09-03T23:20:13Z",
     "outcome": "fresh",
     "controlled": false
   },

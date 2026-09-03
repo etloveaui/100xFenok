@@ -4,17 +4,6 @@
   "entity": "TSLA",
   "attempts": [
     {
-      "run_id": "31910027994",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "20 21 * * *",
-      "natural": true,
-      "observed_at": "2026-08-15T21:40:57Z",
-      "outcome": "failed",
-      "controlled": false,
-      "error": "ValueError: financial statement missing required fields: ratios dividendyield"
-    },
-    {
       "run_id": "32072627394",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -143,24 +132,34 @@
       "observed_at": "2026-09-02T04:32:53Z",
       "outcome": "fresh",
       "controlled": false
+    },
+    {
+      "run_id": "33817024605",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-09-03T23:20:13Z",
+      "outcome": "fresh",
+      "controlled": false
     }
   ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/financials/TSLA.json",
-    "payload_sha256": "1229896be672bbc345d70c6439cee39d8a2c8bdf0caa65cc05c2ad06544b24dd",
+    "payload_sha256": "89a733cf6a740bb5c22f88d84cf18da77b956da71f90f2129c74fcbc13697335",
     "source_as_of": "2026-06-30",
-    "fetched_at": "2026-09-02T04:42:09Z"
+    "fetched_at": "2026-09-03T23:20:33Z"
   },
-  "updated_at": "2026-09-02T04:32:53Z",
+  "updated_at": "2026-09-03T23:20:13Z",
   "last_attempt": {
-    "run_id": "33591076140",
+    "run_id": "33817024605",
     "run_attempt": 1,
-    "event_name": "workflow_dispatch",
-    "schedule": "",
-    "natural": false,
-    "observed_at": "2026-09-02T04:32:53Z",
+    "event_name": "schedule",
+    "schedule": "20 21 * * *",
+    "natural": true,
+    "observed_at": "2026-09-03T23:20:13Z",
     "outcome": "fresh",
     "controlled": false
   },
