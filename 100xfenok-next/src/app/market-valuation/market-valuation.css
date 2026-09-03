@@ -73,6 +73,37 @@
   .mv-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  /* slice 9 mobile-390: stack the compare table, keep rows tappable. */
+  .mv-thead {
+    display: none;
+  }
+  .mv-trow {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    height: auto;
+    min-height: 44px;
+    row-gap: 2px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .mv-idx {
+    grid-column: 1 / -1;
+  }
+  .mv-brow {
+    grid-template-columns: 1fr auto auto;
+    height: auto;
+    min-height: 44px;
+    row-gap: 4px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .mv-band {
+    grid-column: 1 / -1;
+    order: 4;
+  }
+  .mv-horizons button {
+    height: 44px;
+    padding: 0 14px;
+  }
 }
 
 .mv-thead,
