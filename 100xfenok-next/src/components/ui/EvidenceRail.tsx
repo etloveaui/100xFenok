@@ -9,6 +9,8 @@ type EvidenceRailProps = {
   freshness: EvidenceRailFreshness;
   source: string;
   asOf: string;
+  /** observed date ("기준") vs producer publication time ("게시"); default observed */
+  asOfKind?: "observed" | "published";
   coverage: string;
   next?: string;
   onEvidence?: () => void;
@@ -68,6 +70,7 @@ export function EvidenceRail({
   freshness,
   source,
   asOf,
+  asOfKind = "observed",
   coverage,
   next,
   onEvidence,
@@ -130,7 +133,7 @@ export function EvidenceRail({
             <span className="shrink-0 max-md:hidden">
               출처 <b className="text-[var(--fnk-neutral-700)] font-semibold">{source}</b>
             </span>
-            <span className="shrink-0"><span className="max-md:hidden">기준 </span><b className="tabular-nums text-[var(--fnk-neutral-700)] font-semibold">{asOf}</b></span>
+            <span className="shrink-0"><span className="max-md:hidden">{asOfKind === "published" ? "게시 " : "기준 "}</span><b className="tabular-nums text-[var(--fnk-neutral-700)] font-semibold">{asOf}</b></span>
             {showLkg && (
               <span className="shrink-0">{lkgLabel} <b className="tabular-nums text-[var(--fnk-neutral-700)] font-semibold">{lkgAsOf}</b></span>
             )}

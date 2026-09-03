@@ -9,12 +9,14 @@ import {
   formatAum,
   percentPointsValue,
 } from "@/app/explore/etfUniverseUtils";
-import { formatAsOf } from "@/lib/data-state";
 import { ROUTES } from "@/lib/routes";
 import { formatInteger, formatPlainPercent } from "@/lib/format";
 import {
   digitalTickersFromSnapshot,
+  etfClockKind,
+  etfRailClockDate,
   etfUniverseAsOf,
+  etfUniversePublishedAt,
   fmtSignedPct,
   isEtfClockStale,
   isInverseEtf,
@@ -143,6 +145,7 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
   const { loaded, universeOk, snapshotOk, universe, rows, snapshot, reload } = surface;
   const digitalTickers = useMemo(() => digitalTickersFromSnapshot(snapshot), [snapshot]);
   const clock = etfUniverseAsOf(universe);
+  const published = etfUniversePublishedAt(universe);
   const loading = !loaded;
   // The list is universe-feed truth; a failed snapshot feed only degrades the
   // digital-asset segment, so the rail drops to partial instead of fresh.
@@ -290,7 +293,8 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
   ];
 
   const empty = loaded && (feedFailed || filteredRows.length === 0);
-  const asOfLabel = formatAsOf(clock) ?? (universe?.source_as_of_reason ? "제공자 미공개" : "—");
+  const asOfLabel = etfRailClockDate(clock, published, universe?.source_as_of_reason ? "제공자 미공개" : "—");
+  const asOfKind = etfClockKind(clock, published);
 
   return (
     <Panel
@@ -426,9 +430,10 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
         </>
       ) : null}
       <EvidenceRail
-        freshness={loading ? "pending" : feedFailed ? "error" : partial ? "partial" : stale ? "stale" : clock ? "fresh" : "fixed"}
+        freshness={loading ? "pending" : feedFailed ? "error" : partial ? "partial" : stale ? "stale" : (clock ?? published) ? "fresh" : "fixed"}
         source="발행사 공시 · 거래소"
         asOf={asOfLabel}
+        asOfKind={asOfKind === "published" ? "published" : undefined}
         coverage={rows.length > 0 ? `${formatInteger(filteredRows.length)}/${formatInteger(rows.length)}` : "—"}
         lkgAsOf={stale && clock ? clock : undefined}
         onRetry={feedFailed || stale ? retryLoad : undefined}
