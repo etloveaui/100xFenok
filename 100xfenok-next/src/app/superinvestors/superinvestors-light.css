@@ -362,3 +362,191 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Graph Network panel: canvas + selected/common side rail. Token-pure
+ * (var(--fnk-*) / var(--font-*) only, no raw colors, no gradients).
+ * Investor cards carry the Okabe-Ito blue class, ticker nodes the
+ * brand accent only when selected. */
+
+.grn-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.grn-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.grn-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.grn-node {
+  cursor: pointer;
+}
+
+.grn-node:focus-visible {
+  outline: 2px solid var(--fnk-brand-interactive);
+  outline-offset: 3px;
+}
+
+.grn-inv-card {
+  fill: var(--fnk-color-card);
+  stroke: var(--fnk-neutral-200);
+}
+
+.grn-inv-unprofiled {
+  stroke-dasharray: 4 3;
+}
+
+.grn-inv-label {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--fnk-neutral-900);
+}
+
+.grn-inv-sub {
+  font-size: 10px;
+  fill: var(--fnk-neutral-500);
+}
+
+.grn-stale-dot {
+  fill: var(--fnk-color-warn);
+}
+
+.grn-tick-circle {
+  fill: var(--fnk-color-card);
+  stroke: var(--fnk-neutral-900);
+  stroke-width: 1.5;
+}
+
+.grn-tick-selected {
+  fill: var(--fnk-brand-interactive);
+  stroke: var(--fnk-brand-interactive);
+}
+
+.grn-tick-label {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--fnk-neutral-900);
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+}
+
+.grn-tick-sub {
+  font-size: 10px;
+  fill: var(--fnk-neutral-500);
+}
+
+.grn-tick-label-selected,
+.grn-tick-sub.grn-tick-label-selected {
+  fill: var(--fnk-color-card);
+}
+
+.grn-cap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+.grn-cap-note {
+  flex-shrink: 0;
+}
+
+.grn-head-meta {
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+.grn-kv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.grn-kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+}
+
+.grn-kv-list > li:first-child > .grn-kv,
+.grn-kv-list > .grn-kv:first-child {
+  border-top: 0;
+}
+
+.grn-kv-action {
+  width: 100%;
+  background: none;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.grn-kv-action[aria-pressed="true"] .grn-ticker {
+  color: var(--fnk-brand-interactive);
+}
+
+.grn-kv-name {
+  color: var(--fnk-neutral-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grn-kv-num {
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+  flex-shrink: 0;
+}
+
+.grn-kv-sub {
+  color: var(--fnk-neutral-500);
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.grn-ticker {
+  color: var(--fnk-neutral-900);
+  font-family: var(--font-jetbrains-mono), "SF Mono", Menlo, monospace;
+}
+
+.grn-side-empty {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+.grn-hint {
+  margin: 0;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--fnk-neutral-500);
+}
+
+@media (max-width: 900px) {
+  .grn-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -15,6 +15,7 @@ export type GraphNode =
       label: string;
       group: string | null;
       aum: number | null;
+      holdings: number | null;
       stale: boolean;
       unprofiled: boolean;
     }
@@ -91,6 +92,7 @@ export function buildGraphNetwork(input: GraphNetworkInput): GraphNetwork {
             label: profile.name,
             group: profile.group,
             aum: profile.aum,
+            holdings: profile.holdings_count,
             stale: profile.is_stale,
             unprofiled: false,
           }
@@ -101,6 +103,7 @@ export function buildGraphNetwork(input: GraphNetworkInput): GraphNetwork {
             label: investorId,
             group: null,
             aum: null,
+            holdings: null,
             stale: false,
             unprofiled: true,
           },
