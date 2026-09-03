@@ -251,12 +251,14 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
   const asOfLabel = generatedClock ?? quarter ?? "—";
   const partialFeeds = failedRequests.length > 0;
 
-  const holdersEmpty = !loading && (failed || (dataReady && sortedInvestors.length === 0));
-  const overlapEmpty = !loading && (failed || (dataReady && overlapRows.length === 0));
+  const holdersFailed = !loading && summary === null && failedRequests.includes("summary");
+  const overlapFailed = !loading && consensus === null && failedRequests.includes("consensus");
+  const holdersEmpty = !loading && !holdersFailed && dataReady && sortedInvestors.length === 0;
+  const overlapEmpty = !loading && !overlapFailed && dataReady && overlapRows.length === 0;
   const holdersFreshness: "pending" | "error" | "partial" | "stale" =
-    loading ? "pending" : failed ? "error" : partialFeeds || excludedStale.length > 0 || turnoverError ? "partial" : "stale";
+    loading ? "pending" : holdersFailed ? "error" : partialFeeds || excludedStale.length > 0 || turnoverError ? "partial" : "stale";
   const overlapFreshness: "pending" | "error" | "partial" | "stale" =
-    loading ? "pending" : failed ? "error" : partialFeeds || excludedStale.length > 0 ? "partial" : "stale";
+    loading ? "pending" : overlapFailed ? "error" : partialFeeds || excludedStale.length > 0 ? "partial" : "stale";
 
   function toggleGuru(id: string) {
     setExpandedGuru((cur) => {
@@ -295,10 +297,12 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
         <Panel
           loading={loading}
           empty={holdersEmpty}
-          emptyReason={failed ? "투자자 목록을 불러오지 못했습니다" : "표시할 투자자가 없습니다"}
+          emptyReason="표시할 투자자가 없습니다"
           emptyNextRefresh="다음 분기 공시 반영 후 갱신"
-          emptyActionLabel={failed ? "다시 시도" : undefined}
-          onEmptyAction={failed ? reload : undefined}
+          error={holdersFailed}
+          errorDetail="투자자 목록을 불러오지 못했습니다."
+          onRetry={holdersFailed ? retry : undefined}
+          retryLabel="다시 시도"
         >
           {dataReady && sortedInvestors.length > 0 && (
             <div data-superinvestors-holders data-superinvestors-holders-count={sortedInvestors.length}>
@@ -417,10 +421,12 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
           <Panel
             loading={loading}
             empty={overlapEmpty}
-            emptyReason={failed ? "공통 보유 종목을 불러오지 못했습니다" : "표시할 공통 보유 종목이 없습니다"}
+            emptyReason="표시할 공통 보유 종목이 없습니다"
             emptyNextRefresh="다음 분기 공시 반영 후 갱신"
-            emptyActionLabel={failed ? "다시 시도" : undefined}
-            onEmptyAction={failed ? reload : undefined}
+            error={overlapFailed}
+            errorDetail="공통 보유 종목을 불러오지 못했습니다."
+            onRetry={overlapFailed ? retry : undefined}
+            retryLabel="다시 시도"
           >
             {dataReady && overlapRows.length > 0 && (
               <div data-superinvestors-overlap data-superinvestors-overlap-count={overlapRows.length}>

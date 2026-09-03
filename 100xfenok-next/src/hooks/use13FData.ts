@@ -12,7 +12,9 @@ import type {
   SuperInvestorsDataResult,
 } from "@/lib/superinvestors/types";
 
-export const SEC_13F_FETCH_TIMEOUT_MS = 6000;
+// One retry remains bounded to 30 seconds, below the hosted QA route wait.
+// This includes connection queueing, download, and JSON parsing for by_ticker.
+export const SEC_13F_FETCH_TIMEOUT_MS = 15000;
 
 export type Fetch13FErrorKind = "status" | "timeout" | "parse";
 
@@ -83,12 +85,65 @@ const EMPTY: SuperInvestorsDataResult = {
   excludedStale: [],
 };
 
-async function settle13F<T>(promise: Promise<T>): Promise<{ data: T | null; failed: boolean }> {
+export type Settled13F<T> = { data: T | null; failed: boolean };
+
+async function settle13F<T>(promise: Promise<T>): Promise<Settled13F<T>> {
   try {
     return { data: await promise, failed: false };
   } catch {
     return { data: null, failed: true };
   }
+}
+
+type Settled13FSources = {
+  consensus: Settled13F<ConsensusData>;
+  summary: Settled13F<SummaryData>;
+  byTicker: Settled13F<ByTickerData>;
+  enhancedConsensus: Settled13F<EnhancedConsensusData>;
+  bySector: Settled13F<SectorHoldingsData>;
+  convictionEntries: Settled13F<ConvictionEntriesData>;
+};
+
+export function resolve13FLoad(sources: Settled13FSources): {
+  result: SuperInvestorsDataResult;
+  failedRequests: string[];
+} {
+  const consensus = !sources.consensus.failed && sources.consensus.data?.consensus
+    ? sources.consensus.data
+    : null;
+  const summary = !sources.summary.failed ? sources.summary.data : null;
+  const byTicker = !sources.byTicker.failed ? sources.byTicker.data : null;
+  const enhancedConsensus = !sources.enhancedConsensus.failed ? sources.enhancedConsensus.data : null;
+  const bySector = !sources.bySector.failed ? sources.bySector.data : null;
+  const convictionEntries = !sources.convictionEntries.failed ? sources.convictionEntries.data : null;
+
+  const failedRequests: string[] = [];
+  if (!consensus) failedRequests.push("consensus");
+  if (!summary) failedRequests.push("summary");
+  if (!byTicker) failedRequests.push("by_ticker");
+  if (!enhancedConsensus) failedRequests.push("enhanced_consensus");
+  if (!bySector) failedRequests.push("by_sector");
+  if (!convictionEntries) failedRequests.push("conviction_entries");
+
+  const dataReady = summary !== null || consensus !== null;
+  return {
+    result: {
+      consensus,
+      enhancedConsensus,
+      summary,
+      byTicker,
+      bySector,
+      convictionEntries,
+      dataReady,
+      failed: !dataReady,
+      quarter: consensus?.metadata?.quarter
+        ?? summary?.metadata?.source_quarter
+        ?? summary?.metadata?.latest_quarter
+        ?? null,
+      excludedStale: consensus?.metadata?.excluded_stale_investors ?? [],
+    },
+    failedRequests,
+  };
 }
 
 export interface SuperInvestorsDataState extends SuperInvestorsDataResult {
@@ -126,44 +181,19 @@ export function use13FData(): SuperInvestorsDataState {
 
       if (!isMountedRef.current) return;
 
-      const failed: string[] = [];
-      if (consensusRes.failed || !consensusRes.data?.consensus) failed.push("consensus");
-      if (summaryRes.failed || !summaryRes.data) failed.push("summary");
-      if (byTickerRes.failed || !byTickerRes.data) failed.push("by_ticker");
-      if (enhancedRes.failed || !enhancedRes.data) failed.push("enhanced_consensus");
-      if (bySectorRes.failed || !bySectorRes.data) failed.push("by_sector");
-      if (convictionRes.failed || !convictionRes.data) failed.push("conviction_entries");
-
-      const consensus = consensusRes.data;
-      const summary = summaryRes.data;
-      const byTicker = byTickerRes.data;
-      const enhancedConsensus = enhancedRes.data;
-      const bySector = bySectorRes.data;
-      const convictionEntries = convictionRes.data;
-
-      const anyFailed = !consensus && !summary && !byTicker;
-      const consensusFailed = !consensus?.consensus;
-
-      if (anyFailed || consensusFailed) {
-        setResult((prev) => ({ ...prev, failed: true }));
-        setFailedRequests(failed.length > 0 ? failed : ["consensus"]);
-        setRetrying(false);
-        return;
-      }
-
-      setResult({
-        consensus,
-        enhancedConsensus,
-        summary,
-        byTicker,
-        bySector,
-        convictionEntries,
-        dataReady: true,
-        failed: false,
-        quarter: consensus?.metadata?.quarter ?? null,
-        excludedStale: consensus?.metadata?.excluded_stale_investors ?? [],
+      const load = resolve13FLoad({
+        consensus: consensusRes,
+        summary: summaryRes,
+        byTicker: byTickerRes,
+        enhancedConsensus: enhancedRes,
+        bySector: bySectorRes,
+        convictionEntries: convictionRes,
       });
-      setFailedRequests(failed);
+
+      // A fully failed retry keeps prior usable rows on screen. Initial loads
+      // still expose a fatal state when neither panel-driving feed arrived.
+      setResult((prev) => load.result.failed && prev.dataReady ? prev : load.result);
+      setFailedRequests(load.failedRequests);
       setRetrying(false);
     })();
 

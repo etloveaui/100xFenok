@@ -282,6 +282,7 @@ export interface SummaryData {
   metadata: {
     version?: string;
     generated_at?: string;
+    source_quarter?: string;
     latest_quarter?: string;
     investor_count?: number;
     total_investors?: number;
