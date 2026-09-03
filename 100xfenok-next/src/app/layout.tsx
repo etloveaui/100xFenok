@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import DesignVersionToggle from "@/components/design/DesignVersionToggle";
+import { CommandPalette } from "@/components/ui/CommandPalette";
 import { siteOrigin } from "@/lib/site-url";
 import { Suspense } from "react";
 
@@ -86,6 +87,7 @@ export default function RootLayout({
         <main id="main-content" tabIndex={-1} className="pt-safe-nav">
           {children}
         </main>
+        <CommandPalette />
       </body>
     </html>
   );

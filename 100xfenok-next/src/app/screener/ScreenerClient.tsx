@@ -1851,6 +1851,7 @@ export default function ScreenerClient({
 
   function handleResultsKeyDown(event: React.KeyboardEvent<HTMLElement>) {
     const target = event.target as HTMLElement | null;
+    if (typeof document !== "undefined" && document.documentElement.dataset.cpOpen === "1") return;
     if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable)) return;
     if (sorted.length === 0) return;
     if (target && typeof target.closest === "function" && target.closest('summary, details, button, a, select, input, textarea, [contenteditable], [role="button"], [role="link"], [role="tab"], [role="menuitem"], [data-screener-pagination], [data-screener-view-mode-control], [data-screener-view-mode-option], [data-screener-density-control], [data-screener-density-option], [data-screener-preset], [data-screener-page], [data-screener-expand]')) return;
