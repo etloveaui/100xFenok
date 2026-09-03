@@ -1,22 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-03T05:41:23.714Z",
+  "generated_at": "2026-09-03T06:23:37.447Z",
   "status": "open",
-  "open_incident_count": 6,
+  "open_incident_count": 8,
   "open_incidents": [
-    {
-      "workflow": "deploy-worker.yml",
-      "label": "Deploy Worker (Cloudflare)",
-      "streak": 3,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 33717346754,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33717346754",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
@@ -74,6 +61,32 @@
       "cadence_status": "not_due"
     },
     {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "slickcharts-daily.yml",
+      "label": "SlickCharts Daily",
+      "streak": 1,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "unrecovered_overdue"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "overdue"
+    },
+    {
       "workflow": "slickcharts-history.yml",
       "label": "SlickCharts History",
       "streak": 1,
@@ -85,6 +98,19 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -326,7 +352,7 @@
         "suspected_skip"
       ],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 3
+      "data_freshness_age_hours_at_generation": 4
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -391,8 +417,10 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "not_due",
-      "cadence_evidence": []
+      "cadence_status": "overdue",
+      "cadence_evidence": [
+        "suspected_skip"
+      ]
     },
     {
       "file": "slickcharts-history.yml",
@@ -474,8 +502,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 24,
-    "overdue": 2,
+    "not_due": 23,
+    "overdue": 3,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -491,17 +519,19 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33719760157",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33719760157",
-    "observed_at": "2026-09-03T05:41:23.714Z",
+    "run_id": "33722827504",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33722827504",
+    "observed_at": "2026-09-03T06:23:37.447Z",
     "event": "workflow_run",
     "workflows": [
-      "deploy-worker.yml",
       "fetch-edgar-filings.yml",
       "fetch-stockanalysis.yml",
       "fetch-us-indices-daily.yml",
       "fetch-yf-finance.yml",
-      "slickcharts-history.yml"
+      "global-writer-queue-observer.yml",
+      "slickcharts-daily.yml",
+      "slickcharts-history.yml",
+      "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
