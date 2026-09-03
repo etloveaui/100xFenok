@@ -81,12 +81,18 @@ export interface SectorValuationBand {
 export interface SectorDataResult {
   rows: SectorRow[];
   benchmarkMomentum: SectorMomentum | null;
+  /** First fetch settled (success or failure). False = shared skeleton state. */
+  loaded: boolean;
   dataReady: boolean;
   benchmarksReady: boolean;
   etfsReady: boolean;
   valuationReady: boolean;
+  /** Both 13F inputs (portfolio_views + by_sector) present, fresh or LKG. */
+  smartMoneyReady: boolean;
   /** Source ids that fell back (e.g. "benchmarks", "etfs", "ticker:XLK"). */
   failedSources: string[];
+  /** Ready feeds currently serving last-known-good after a failed refresh. */
+  staleSources: string[];
   /** benchmarks generated timestamp, or null. */
   updatedAt: string | null;
   sourceMeta: SectorSourceMeta;
@@ -94,6 +100,12 @@ export interface SectorDataResult {
 
 export interface SectorSourceMeta {
   benchmarksGenerated: string | null;
+  /** Oldest observation date across the momentum inputs (summaries + us.json). */
+  benchmarksSourceDate: string | null;
+  /** ETF index source_date. */
+  etfSourceDate: string | null;
+  /** Oldest ticker quote clock across the 11 sector ETFs. */
+  tickerSourceDate: string | null;
   valuationGenerated: string | null;
   valuationSource: string | null;
   valuationVersion: string | null;

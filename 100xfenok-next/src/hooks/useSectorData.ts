@@ -73,6 +73,20 @@ interface BySectorPayload {
   [sector: string]: BySectorEntry | unknown;
 }
 
+/** Last-known-good snapshots so a failed 10-minute refresh keeps serving the
+ * previous payload (marked via staleSources) instead of blanking the screen. */
+interface SectorLkg {
+  benchmarks: BenchmarksMomentumPayload | null;
+  usBenchmarks: UsBenchmarksPayload | null;
+  etfs: EtfsPayload | null;
+  usSectors: UsSectorsPayload | null;
+  portfolioViews: PortfolioViewsPayload | null;
+  bySector: BySectorPayload | null;
+  tickers: Record<string, QuotePayload | null>;
+}
+
+const EMPTY_LKG_TICKERS: Record<string, QuotePayload | null> = {};
+
 // HTTP cache intentional: static /data/*.json has Cache-Control max-age=300;
 // ticker /api/* has its own s-maxage. Mirrors useDashboardData fetch policy.
 async function fetchJson<T>(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T | null> {
@@ -246,14 +260,20 @@ export function useSectorData(): SectorDataResult {
   const [result, setResult] = useState<SectorDataResult>({
     rows: [],
     benchmarkMomentum: null,
+    loaded: false,
     dataReady: false,
     benchmarksReady: false,
     etfsReady: false,
     valuationReady: false,
+    smartMoneyReady: false,
     failedSources: [],
+    staleSources: [],
     updatedAt: null,
     sourceMeta: {
       benchmarksGenerated: null,
+      benchmarksSourceDate: null,
+      etfSourceDate: null,
+      tickerSourceDate: null,
       valuationGenerated: null,
       valuationSource: null,
       valuationVersion: null,
@@ -268,13 +288,22 @@ export function useSectorData(): SectorDataResult {
   });
   const inFlightRef = useRef(false);
   const isMountedRef = useRef(true);
+  const lkgRef = useRef<SectorLkg>({
+    benchmarks: null,
+    usBenchmarks: null,
+    etfs: null,
+    usSectors: null,
+    portfolioViews: null,
+    bySector: null,
+    tickers: EMPTY_LKG_TICKERS,
+  });
 
   const load = useCallback(async () => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     try {
       const etfSymbols = SECTOR_DEFINITIONS.map((sector) => sector.etf);
-      const [benchmarks, usBenchmarks, etfs, usSectors, portfolioViews, bySector, tickerSettled] = await Promise.all([
+      const [freshBenchmarks, freshUsBenchmarks, freshEtfs, freshUsSectors, freshPortfolioViews, freshBySector, tickerSettled] = await Promise.all([
         fetchJson<BenchmarksMomentumPayload>("/data/benchmarks/summaries.json"),
         fetchJson<UsBenchmarksPayload>("/data/benchmarks/us.json"),
         fetchJson<EtfsPayload>("/data/global-scouter/etfs/index.json"),
@@ -289,12 +318,50 @@ export function useSectorData(): SectorDataResult {
         ),
       ]);
 
-      const tickerMap: Record<string, QuotePayload | null> = {};
+      // LKG: a failed fetch keeps the previous payload and marks the feed
+      // stale; only a feed with no payload at all counts as failed, so the
+      // 10-minute refresh never blanks a readable screen (fh-681 pattern).
+      const prev = lkgRef.current;
+      const stale: string[] = [];
+      const withLkg = <T>(id: string, fresh: T | null, prevValue: T | null, save: (value: T) => void): T | null => {
+        if (fresh !== null) {
+          save(fresh);
+          return fresh;
+        }
+        if (prevValue !== null) {
+          if (!stale.includes(id)) stale.push(id);
+          return prevValue;
+        }
+        return null;
+      };
+      const benchmarks = withLkg("benchmarks", freshBenchmarks, prev.benchmarks, (value) => { prev.benchmarks = value; });
+      const usBenchmarks = withLkg("benchmarks", freshUsBenchmarks, prev.usBenchmarks, (value) => { prev.usBenchmarks = value; });
+      const etfs = withLkg("etfs", freshEtfs, prev.etfs, (value) => { prev.etfs = value; });
+      const usSectors = withLkg("us_sectors", freshUsSectors, prev.usSectors, (value) => { prev.usSectors = value; });
+      const portfolioViews = withLkg("portfolio_views", freshPortfolioViews, prev.portfolioViews, (value) => { prev.portfolioViews = value; });
+      const bySector = withLkg("by_sector", freshBySector, prev.bySector, (value) => { prev.bySector = value; });
+
+      const freshTickerMap: Record<string, QuotePayload | null> = {};
       tickerSettled.forEach((settled) => {
         if (settled.status === "fulfilled") {
-          tickerMap[settled.value.symbol] = settled.value.quote;
+          freshTickerMap[settled.value.symbol] = settled.value.quote;
         }
       });
+      const tickerMap: Record<string, QuotePayload | null> = {};
+      let tickerStale = false;
+      for (const symbol of etfSymbols) {
+        const fresh = freshTickerMap[symbol] ?? null;
+        if (fresh !== null) {
+          tickerMap[symbol] = fresh;
+          prev.tickers = { ...prev.tickers, [symbol]: fresh };
+        } else if (prev.tickers[symbol] != null) {
+          tickerMap[symbol] = prev.tickers[symbol];
+          tickerStale = true;
+        } else {
+          tickerMap[symbol] = null;
+        }
+      }
+      if (tickerStale && !stale.includes("ticker")) stale.push("ticker");
 
       const failed: string[] = [];
       if (!benchmarks?.momentum) failed.push("benchmarks");
@@ -306,6 +373,7 @@ export function useSectorData(): SectorDataResult {
       const benchmarksReady = Boolean(benchmarks?.momentum);
       const etfsReady = Boolean(etfs?.etfs);
       const valuationReady = Boolean(usSectors?.sections);
+      const smartMoneyReady = Boolean(portfolioViews?.total?.sector_history && bySector);
       const benchmarkMomentum: SectorMomentum | null = benchmarks?.momentum?.sp500
         ? Object.fromEntries(MOMENTUM_KEYS.map((key) => [key, num(benchmarks.momentum?.sp500?.[key])]))
         : null;
@@ -374,6 +442,9 @@ export function useSectorData(): SectorDataResult {
       if (updatedAt === null) failed.push("source_clock");
       const sourceMeta = {
         benchmarksGenerated: benchmarks?.metadata?.generated ?? null,
+        benchmarksSourceDate: benchmarkSourceDate,
+        etfSourceDate: sourceDate(etfs?.source_date),
+        tickerSourceDate: tickerSourceFloor,
         valuationGenerated: usSectors?.metadata?.generated ?? null,
         valuationSource: usSectors?.metadata?.source ?? null,
         valuationVersion: usSectors?.metadata?.version ?? null,
@@ -394,11 +465,14 @@ export function useSectorData(): SectorDataResult {
       setResult({
         rows,
         benchmarkMomentum,
+        loaded: true,
         dataReady,
         benchmarksReady,
         etfsReady,
         valuationReady,
+        smartMoneyReady,
         failedSources: failed,
+        staleSources: stale,
         updatedAt,
         sourceMeta,
       });
