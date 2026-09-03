@@ -87,7 +87,6 @@ async function inspectStaticContracts() {
     stockPageSource,
     multichartPageSource,
     multichartHtmlSource,
-    navbarSource,
     shellSource,
     productNavSource,
     registrySource,
@@ -107,7 +106,6 @@ async function inspectStaticContracts() {
     readFile(new URL("../src/app/stock/[ticker]/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/multichart/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../public/tools/asset/multichart.html", import.meta.url), "utf8"),
-    readFile(new URL("../src/components/Navbar.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/product-nav.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/macro-chart/registry.ts", import.meta.url), "utf8"),
@@ -207,16 +205,6 @@ async function inspectStaticContracts() {
   }
   if (!macroSource.includes("__meta_source") || !macroSource.includes("__meta_frequency") || !macroSource.includes("definitionMetaLabel")) {
     addFailure(failures, "source-frequency-honesty", "source/frequency UI and CSV metadata contract missing");
-  }
-  for (const href of ['href={ROUTES.radar}', 'href={ROUTES.posts}', 'href={EXPLORE_ROUTE}', 'EXPLORE_NAV_LABEL']) {
-    if (!navbarSource.includes(href)) {
-      addFailure(failures, "analytics-header-contract", `${href} missing from header analytics menu`);
-    }
-  }
-  for (const href of ['href="/multichart"', 'href="/etfs"', 'href="/sectors"', 'href="/screener"', 'href="/superinvestors"']) {
-    if (navbarSource.includes(href)) {
-      addFailure(failures, "analytics-header-contract", `${href} must not appear in the header analytics menu`);
-    }
   }
   for (const item of [
     ['id: "explore"', 'href: EXPLORE_ROUTE', 'label: EXPLORE_NAV_LABEL'],
