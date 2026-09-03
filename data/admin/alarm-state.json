@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-03T16:23:41.144Z",
+  "generated_at": "2026-09-03T18:13:33.544Z",
   "status": "open",
-  "open_incident_count": 9,
+  "open_incident_count": 8,
   "open_incidents": [
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -23,7 +23,7 @@
     {
       "workflow": "fetch-fenok-news-tone.yml",
       "label": "Fetch Fenok GDELT News Tone Proxy",
-      "streak": 1,
+      "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
       "first_failing_run_url": null,
@@ -113,19 +113,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     }
   ],
   "watched_workflows": [
@@ -369,7 +356,7 @@
         "suspected_skip"
       ],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 14
+      "data_freshness_age_hours_at_generation": 15
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -536,9 +523,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33778104384",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33778104384",
-    "observed_at": "2026-09-03T16:23:41.144Z",
+    "run_id": "33789011680",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33789011680",
+    "observed_at": "2026-09-03T18:13:33.544Z",
     "event": "workflow_run",
     "workflows": [
       "fetch-edgar-filings.yml",
@@ -548,8 +535,7 @@
       "fetch-yf-finance.yml",
       "global-writer-queue-observer.yml",
       "slickcharts-daily.yml",
-      "slickcharts-history.yml",
-      "worker-request-budget-alarm.yml"
+      "slickcharts-history.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
