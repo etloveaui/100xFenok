@@ -52,6 +52,7 @@ function canvasPlusDensityMode(density: string): "compact" | "default" | "comfy"
 
 const VIRTUAL_ROW_HEIGHT = 36;
 const EXPANDED_DETAIL_ESTIMATE = 360;
+const DESKTOP_TABLE_OVERSCAN = 10;
 
 function canvasPlusColumnWidth(column?: ScreenerColumn): number {
   if (!column) return 42;
@@ -230,30 +231,46 @@ function ScreenerTanstackTableInner({
     estimateSize: (index) => {
       const stock = rowsRef.current[index];
       if (!stock) return VIRTUAL_ROW_HEIGHT;
+      if (expandedTickerRef.current !== stock.ticker) return VIRTUAL_ROW_HEIGHT;
       const cached = detailHeights.current.get(stock.ticker);
       if (cached !== undefined) return VIRTUAL_ROW_HEIGHT + cached;
-      return VIRTUAL_ROW_HEIGHT + (expandedTickerRef.current === stock.ticker ? EXPANDED_DETAIL_ESTIMATE : 0);
+      return VIRTUAL_ROW_HEIGHT + EXPANDED_DETAIL_ESTIMATE;
     },
-    overscan: 10,
+    overscan: DESKTOP_TABLE_OVERSCAN,
   });
   const virtualizerRef = useRef(virtualizer);
   virtualizerRef.current = virtualizer;
+  const detailObserverRef = useRef<ResizeObserver | null>(null);
   const measureDetailRef = useCallback((node: HTMLDivElement | null) => {
-    const current = virtualizerRef.current;
-    if (!current) return;
+    detailObserverRef.current?.disconnect();
+    detailObserverRef.current = null;
     const ticker = node?.dataset.detailTicker;
     if (!node || !ticker) return;
-    const height = node.offsetHeight;
-    if (detailHeights.current.get(ticker) !== height) {
-      detailHeights.current.set(ticker, height);
-      current.measure();
+    const record = () => {
+      const current = virtualizerRef.current;
+      if (!current) return;
+      const height = node.offsetHeight;
+      if (detailHeights.current.get(ticker) !== height) {
+        detailHeights.current.set(ticker, height);
+        current.measure();
+      }
+    };
+    record();
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(record);
+      observer.observe(node);
+      detailObserverRef.current = observer;
     }
+  }, []);
+  useEffect(() => () => {
+    detailObserverRef.current?.disconnect();
+    detailObserverRef.current = null;
   }, []);
   useEffect(() => {
     const live = new Set(rows.map((stock) => stock.ticker));
     let pruned = false;
     for (const key of detailHeights.current.keys()) {
-      if (!live.has(key)) {
+      if (!live.has(key) || key !== expandedTicker) {
         detailHeights.current.delete(key);
         pruned = true;
       }
@@ -271,8 +288,10 @@ function ScreenerTanstackTableInner({
     if (!node) return undefined;
     const report = () => {
       if (node.clientHeight === 0) return;
-      const first = virtualizer.getVirtualItems()[0];
-      onVisibleStartIndex(first ? first.index : 0);
+      const items = virtualizer.getVirtualItems();
+      const firstVisible = items.find((item) => item.end > node.scrollTop)?.index
+        ?? (items[0] ? Math.min(items[0].index + DESKTOP_TABLE_OVERSCAN, rows.length - 1) : 0);
+      onVisibleStartIndex(Math.max(0, Math.min(firstVisible, rows.length - 1)));
     };
     report();
     node.addEventListener("scroll", report, { passive: true });
