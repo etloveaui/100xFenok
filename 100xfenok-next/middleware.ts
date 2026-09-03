@@ -269,6 +269,7 @@ function rateLimitResponse(): NextResponse {
 export const ADMIN_CONCRETE_ROUTES = new Set<string>([
   "/admin",
   "/admin/archive",
+  "/admin/data-console",
   "/admin/data-lab",
   "/admin/design-gallery",
   "/admin/design-lab",

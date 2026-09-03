@@ -30,6 +30,7 @@ export const ROUTES = {
   dailyWrap: "/100x/daily-wrap",
   macroChart: "/macro-chart",
   multichart: "/multichart",
+  dataConsole: "/admin/data-console",
   stockAnalyzer: "/tools/stock-analyzer",
   stockAnalyzerNative: "/tools/stock-analyzer/native",
   stock: (ticker: string) => `/stock/${encodeURIComponent(normalizeForRouteTicker(ticker))}`,
@@ -123,6 +124,7 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
  * archive while the public root is no longer promoted or indexed.
  */
 export const SITEMAP_EXCLUSIONS: Partial<Record<RouteKey, string>> = {
+  dataConsole: "admin-only — behind AdminAccessGate; never indexed or linked from public surfaces.",
   briefing: "Legacy alias. Redirects to home (307 verified live 2026-08-23) and must not appear as a separate product.",
   marketLegacy: "Legacy bookmark target. Redirects to ROUTES.market — verified live 2026-08-23, though as a 200 with a meta refresh rather than the 308 the source requests; see BACKLOG B-404.",
   infiniteBuying: "undecided — serves 200 live and is reachable, but nobody has chosen whether it should be indexed. See BACKLOG B-403.",

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ROUTES } from "@/lib/routes";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,13 @@ export const metadata: Metadata = {
 };
 
 const adminLinks = [
+  {
+    href: ROUTES.dataConsole,
+    title: "데이터 건강 콘솔",
+    description: "레인별 신선도와 증거 서랍을 모은 Light System 운영 콘솔입니다.",
+    icon: "fa-heart-pulse",
+    badge: "OPS",
+  },
   {
     href: "/admin/data-lab",
     title: "Data Lab",
