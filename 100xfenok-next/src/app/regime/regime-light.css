@@ -1,0 +1,264 @@
+/* /regime route — light-system layout namespace (slice 7a).
+ * Layout only: head, score, meters, axis table, action rows. Panel chrome,
+ * type scale, colors, and states come from src/components/ui. No gradients.
+ * Accent #1B73D3 appears only on bar fills (shared Bar), tab active state,
+ * and the action open buttons. */
+
+.rgm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 32px;
+  background: #f8fafc;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.rgm-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rgm-title-block {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.rgm-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.rgm-verdict {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.rgm-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+/* Composite read */
+
+.rgm-score {
+  display: flex;
+  gap: 24px;
+  padding: 16px;
+}
+
+.rgm-score-num {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 110px;
+}
+
+.rgm-score-value {
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1;
+  color: #0f172a;
+}
+
+.rgm-score-unit {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+.rgm-score-counts {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 8px;
+}
+
+.rgm-meters {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 4px;
+  min-width: 0;
+}
+
+.rgm-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rgm-meter-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+}
+
+.rgm-meter-label {
+  color: #334155;
+}
+
+.rgm-meter-value {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.rgm-up {
+  color: #1aa86f;
+  font-weight: 600;
+}
+
+.rgm-warn {
+  color: #b9791a;
+  font-weight: 600;
+}
+
+.rgm-down {
+  color: #e84a5a;
+  font-weight: 600;
+}
+
+.rgm-mute {
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Axis breakdown table */
+
+.rgm-thead,
+.rgm-trow {
+  display: grid;
+  grid-template-columns: 150px 1fr 90px 110px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.rgm-thead {
+  height: 30px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.rgm-trow {
+  min-height: 44px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-size: 13px;
+  border-top: 1px solid #f1f5f9;
+  transition: background-color 150ms ease;
+}
+
+.rgm-trow:first-of-type {
+  border-top: 0;
+}
+
+.rgm-trow:hover {
+  background: #f8fafc;
+}
+
+.rgm-axis {
+  color: #0f172a;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rgm-sum {
+  color: #475569;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Action panel rows: link rows with a secondary-button-styled opener.
+ * The opener is a span (not a nested <button>) because the row is a link. */
+
+.rgm-arow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 16px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 13px;
+  color: #334155;
+  text-decoration: none;
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.rgm-arow:first-of-type {
+  border-top: 0;
+}
+
+.rgm-arow:hover {
+  background: #f8fafc;
+  box-shadow: inset 2px 0 0 #1b73d3;
+}
+
+.rgm-atext {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rgm-alabel {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.rgm-adetail {
+  color: #94a3b8;
+  font-weight: 400;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rgm-abtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.rgm-arow:hover .rgm-abtn {
+  background: #f8fafc;
+}
+
+@media (max-width: 720px) {
+  .rgm-thead,
+  .rgm-trow {
+    grid-template-columns: 110px 1fr 64px 84px;
+    gap: 8px;
+  }
+
+  .rgm-score {
+    flex-direction: column;
+    gap: 16px;
+  }
+}

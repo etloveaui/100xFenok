@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import AppShell from "@/components/shell/AppShell";
-import "@/styles/cp-w5-regime.css";
+import "./regime-light.css";
 import RegimeClient from "./RegimeClient";
 
 export const dynamic = "force-dynamic";
