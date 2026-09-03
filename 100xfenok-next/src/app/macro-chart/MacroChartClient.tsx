@@ -741,8 +741,7 @@ function buildFormulaSeries(baseSeries: readonly MarketChartSeries[], formulas: 
       const right = byId.get(formula.rightId);
       if (!left || !right) return null;
       const rightByLabel = new Map(right.points.map((point) => [point.label, point.value]));
-      const points = left.points
-        .map((point) => {
+      const points = left.points.map((point) => {
           const rightValue = rightByLabel.get(point.label);
           if (typeof point.value !== "number" || typeof rightValue !== "number") return { label: point.label, value: null };
           if (formula.operator === "ratio") {
@@ -755,9 +754,8 @@ function buildFormulaSeries(baseSeries: readonly MarketChartSeries[], formulas: 
             label: point.label,
             value: point.value - rightValue,
           };
-        })
-        .filter((point) => point.value !== null);
-      if (!points.length) return null;
+        });
+      if (!points.some((point) => typeof point.value === "number" && Number.isFinite(point.value))) return null;
       return {
         id: formula.id,
         label: formulaLabel(formula),
@@ -1326,6 +1324,15 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     () => activeLoadState.status === "ready" ? activeLoadState.loaded.filter((item) => !item.error && item.transformedPoints.length) : [],
     [activeLoadState],
   );
+  const evidenceFreshness = activeLoadState.status === "loading" || activeLoadState.status === "idle"
+    ? "pending"
+    : activeLoadState.status === "error"
+      ? "error"
+      : failedLoadedSeries.length
+        ? "partial"
+        : chartSeries.length
+          ? "fresh"
+          : "stale";
   const canZoomIn = MACRO_RANGE_ORDER.indexOf(rangeId) > 0;
   const canZoomOut = MACRO_RANGE_ORDER.indexOf(rangeId) >= 0 && MACRO_RANGE_ORDER.indexOf(rangeId) < MACRO_RANGE_ORDER.length - 1;
   const selectedSourceCount = useMemo(
@@ -1570,18 +1577,18 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   </span>
                 ))}
               </div>
-              <EvidenceRail
-                freshness={failedLoadedSeries.length ? "partial" : "fresh"}
-                source={[...new Set(healthyLoadedSeries.map((item) => sourceDisplayLabel(item.definition)))].join(" · ") || "데이터 확인 중"}
-                asOf={latestVisibleDate ?? "—"}
-                coverage={`${healthyLoadedSeries.length}/${MACRO_CATALOG_SERIES_COUNT}`}
-                next={failedLoadedSeries.length ? `${failedLoadedSeries.map((item) => item.definition.shortLabel).join(", ")} 재시도` : undefined}
-                onRetry={failedLoadedSeries.length ? () => setLoadRetryKey((value) => value + 1) : undefined}
-              />
             </div>
           ) : (
             <div className="cpw5-macro-empty">비교할 시리즈를 선택하세요.</div>
           )}
+          <EvidenceRail
+            freshness={evidenceFreshness}
+            source={[...new Set(healthyLoadedSeries.map((item) => sourceDisplayLabel(item.definition)))].join(" · ") || "데이터 확인 중"}
+            asOf={latestVisibleDate ?? "—"}
+            coverage={`카탈로그 ${healthyLoadedSeries.length}/${MACRO_CATALOG_SERIES_COUNT}`}
+            next={failedLoadedSeries.length ? `${failedLoadedSeries.map((item) => item.definition.shortLabel).join(", ")} 재시도` : undefined}
+            onRetry={activeLoadState.status === "error" || failedLoadedSeries.length ? () => setLoadRetryKey((value) => value + 1) : undefined}
+          />
         </Panel>
 
         <div className="cpw5-tile-row cpw5-macro-metrics" aria-label="매크로 분석 요약">
