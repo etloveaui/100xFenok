@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import AppShell from "@/components/shell/AppShell";
 import TransitionLink from "@/components/TransitionLink";
 import { Bar } from "@/components/ui/Bar";
+import { EdgeMark } from "@/components/ui/EdgeMark";
 import { EvidenceRail } from "@/components/ui/EvidenceRail";
 import { Panel } from "@/components/ui/Panel";
 import { PanelHeader } from "@/components/ui/PanelHeader";
@@ -686,6 +687,7 @@ export default function HomeCanvasPlusClient() {
             />
             <div className="flex gap-4 p-[14px] md:gap-6 md:p-4">
               <div className="flex min-w-[72px] flex-col justify-center md:min-w-24">
+                <EdgeMark score={regime.confidence} size={88} />
                 <span className="tabular-nums text-[36px] font-semibold leading-none text-[#0f172a] md:text-[44px]">{regime.confidence}</span>
                 <span className="mt-1.5 text-[12px] text-[#64748b]">/ 100 · 기여 {forces.total.toFixed(1)}</span>
               </div>

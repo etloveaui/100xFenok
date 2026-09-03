@@ -107,6 +107,7 @@ export function SharedEdgePanel({
         <span className="truncate text-[12px] text-[var(--c-ink-2)]">{row.label}{row.referenceOnly ? " · 참고" : ""}</span>
         <Bar value={row.score ?? 0} aria-label={`${row.label} ${row.score !== null ? Math.round(row.score) : "대기"}점`} />
         <span className="flex items-center justify-end gap-2">
+          {row.score !== null ? <EdgeMark score={row.score} size={16} showValue={false} /> : null}
           <strong className="tabular-nums text-[12px] font-semibold text-[var(--c-ink)]">
             {row.score !== null ? Math.round(row.score) : "—"}
           </strong>
