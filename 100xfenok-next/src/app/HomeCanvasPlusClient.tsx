@@ -751,6 +751,8 @@ export default function HomeCanvasPlusClient() {
             empty={!anySourceLoading && projection.changed.length === 0}
             emptyReason={changedEmptyMessage}
             emptyNextRefresh="다음 데이터 수집 주기에 자동 갱신"
+            emptyActionLabel="다시 불러오기"
+            onEmptyAction={retrySources}
             stale={!anySourceLoading && laneDelayed && projection.changed.length > 0}
             asOf={revisionClock}
             onRetry={retrySources}

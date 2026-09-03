@@ -207,8 +207,8 @@ function renderContractHash(sites) {
 
 export function validateRenderManifest(manifest, reader = read) {
   assert.equal(manifest.schema_version, "ink4-render-sites/v2");
-  assert.equal(manifest.site_count, 111, "113 minus the 2 sites on the slice-3 superseded search/filter chrome");
-  assert.equal(manifest.consumer_count, 112, "114 minus the 2 consumers on the slice-3 superseded search/filter chrome");
+  assert.equal(manifest.site_count, 101, "111 minus the 10 staggered duplicate pins removed for exact-equality witnesses");
+  assert.equal(manifest.consumer_count, 102, "112 minus the 10 consumers on the removed duplicate pins");
   assert.equal(manifest.sites.length, manifest.site_count, "render manifest denominator drifted");
   assert.deepEqual(
     manifest.surfaces,
@@ -223,7 +223,7 @@ export function validateRenderManifest(manifest, reader = read) {
   }, {});
   assert.deepEqual(
     roles,
-    { body_text: 104, non_text: 4, mixed_text_non_text: 1, inactive_control: 2 },
+    { body_text: 94, non_text: 4, mixed_text_non_text: 1, inactive_control: 2 },
     "text, non-text, or inactive-control classification drifted",
   );
 
@@ -232,7 +232,7 @@ export function validateRenderManifest(manifest, reader = read) {
   for (const site of manifest.sites) {
     if (!byPath.has(site.path)) byPath.set(site.path, targetOccurrences(reader(site.path)));
     const actualCount = byPath.get(site.path).get(site.target_hash) ?? 0;
-    assert.ok(actualCount >= site.occurrence, `${site.id} render target hash drifted`);
+    assert.equal(actualCount, site.occurrence, `${site.id} render target hash drifted (expected ${site.occurrence}, found ${actualCount})`);
     assert.equal(site.foreground, "ink3", `${site.id} foreground token drifted`);
 
     assert.equal(site.background_evidence.surface, site.background, `${site.id} background evidence surface mismatch`);
@@ -240,7 +240,7 @@ export function validateRenderManifest(manifest, reader = read) {
       evidenceByPath.set(site.background_evidence.path, lineEvidence(reader(site.background_evidence.path)));
     }
     const evidence = evidenceByPath.get(site.background_evidence.path).get(site.background_evidence.target_hash);
-    assert.ok(evidence?.count >= site.background_evidence.occurrence, `${site.id} background evidence hash drifted`);
+    assert.equal(evidence?.count ?? 0, site.background_evidence.occurrence, `${site.id} background evidence hash drifted (expected ${site.background_evidence.occurrence}, found ${evidence?.count ?? 0})`);
     assert.ok(supportsBackground(evidence.line, site.background), `${site.id} background evidence does not resolve to ${site.background}`);
 
     const backgroundHex = manifest.surfaces[site.background];

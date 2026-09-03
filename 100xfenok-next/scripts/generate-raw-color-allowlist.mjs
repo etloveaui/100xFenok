@@ -187,6 +187,13 @@ function categoryForPath(relPath) {
     };
   }
 
+  if (relPath === "src/app/stock/[ticker]/StockDetailClient.tsx") {
+    return {
+      category: "product-theme",
+      note: "Slice-4 stock detail light-system surface; slate literals tokenized to slate-* named classes, remaining brand-link (#1B73D3) and filing-status (#1aa86f/#b9791a) literals pending a brand/status token.",
+    };
+  }
+
   throw new Error(`Uncategorized raw color file: ${relPath}`);
 }
 

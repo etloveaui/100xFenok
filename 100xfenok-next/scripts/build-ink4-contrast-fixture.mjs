@@ -5,14 +5,14 @@
 // counts, site counts, and the contract hash are recomputed.
 //
 // Design note: fixture sites are existence witnesses, not exhaustive per-line
-// coverage (e.g. one pinned site may witness a line that occurs 3x in its
-// file), and role/background/evidence-surface assignments are curated audit
-// judgments. The generator therefore carries the curated roster forward,
-// verifies every pin against current sources, and recomputes only the
-// mechanical fields (site_count, contract_hash). Source drift fails loudly:
-// a vanished target or a vanished background-evidence line throws with the
-// exact site diff. (Unpinned candidate lines elsewhere in src are out of the
-// audited sample by design and do not fail regeneration.)
+// coverage, and role/background/evidence-surface assignments are curated audit
+// judgments. Occurrence expectations are NOT curated: they are derived from the
+// actual rendered tree at regen time (one witness site per distinct render line,
+// pinned to its measured count), so the roster carries no baseline occurrence
+// numbers and no staggered duplicate pins. Source drift fails loudly: a vanished
+// target or a vanished background-evidence line throws with the exact site.
+// (Unpinned candidate lines elsewhere in src are out of the audited sample by
+// design and do not fail regeneration.)
 
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -77,6 +77,16 @@ const readSource = (relativePath) => fs.readFileSync(path.join(APP_ROOT, relativ
 export function emitInk4ContrastFixture({ outputPath = INK4_CONTRAST_FIXTURE_PATH } = {}) {
   const baseline = JSON.parse(fs.readFileSync(INK4_CONTRAST_FIXTURE_PATH, "utf8"));
 
+  // One witness site per distinct (path, target_hash). The retired roster
+  // carried staggered duplicate pins (occurrences 1..N on the same line) only
+  // to satisfy the old >= witness check; exact-equality pins need exactly one
+  // site per line, so later duplicates are dropped here, never edited by hand.
+  const roster = new Map();
+  for (const site of baseline.sites) {
+    const key = `${site.path}||${site.target_hash}`;
+    if (!roster.has(key)) roster.set(key, site);
+  }
+
   const targetCache = new Map();
   const evidenceCache = new Map();
   const getTargets = (relativePath) => {
@@ -88,25 +98,38 @@ export function emitInk4ContrastFixture({ outputPath = INK4_CONTRAST_FIXTURE_PAT
     return evidenceCache.get(relativePath);
   };
 
-  for (const site of baseline.sites) {
+  // Occurrence expectations are measured from the actual rendered tree: a
+  // vanished target or background-evidence line fails loudly, otherwise the
+  // measured count becomes the pinned expectation.
+  const sites = [];
+  for (const site of roster.values()) {
     const actual = getTargets(site.path).get(site.target_hash) ?? 0;
-    if (actual < site.occurrence) {
+    if (actual === 0) {
       throw new Error(
-        `ink4 fixture drift: ${site.id} pins occurrence ${site.occurrence} but only ${actual} render-target line(s) remain in ${site.path}`,
+        `ink4 fixture drift: ${site.id} render-target line vanished from ${site.path}`,
       );
     }
     const evidence = getEvidence(site.background_evidence.path).get(site.background_evidence.target_hash);
-    if ((evidence?.count ?? 0) < site.background_evidence.occurrence) {
+    if ((evidence?.count ?? 0) === 0) {
       throw new Error(
-        `ink4 fixture drift: ${site.id} background evidence pins occurrence ${site.background_evidence.occurrence} but only ${evidence?.count ?? 0} line(s) remain in ${site.background_evidence.path}`,
+        `ink4 fixture drift: ${site.id} background-evidence line vanished from ${site.background_evidence.path}`,
       );
     }
+    sites.push({
+      ...site,
+      occurrence: actual,
+      background_evidence: { ...site.background_evidence, occurrence: evidence.count },
+    });
   }
 
   const manifest = {
     ...baseline,
-    site_count: baseline.sites.length,
-    contract_hash: renderContractHash(baseline.sites),
+    site_count: sites.length,
+    // One render target backs two consumers; the +1 invariant held across the
+    // 121/122, 113/114, and 111/112 re-pins, so it is recomputed, not curated.
+    consumer_count: sites.length + 1,
+    sites,
+    contract_hash: renderContractHash(sites),
   };
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, `${JSON.stringify(manifest, null, 2)}\n`);
