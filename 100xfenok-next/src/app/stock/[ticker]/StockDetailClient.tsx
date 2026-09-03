@@ -47,8 +47,12 @@ import {
   type FenokSignalsSummaryRecord,
 } from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
 import {
-  EDGE_RADAR_GEOMETRY,
-  edgeAxisRadarLines,
+  SharedEdgePanel,
+  SharedValuationBandPanel,
+  type SharedValuationBand,
+} from "@/app/screener/StockDetailPanel";
+import { Panel, PanelHeader, Row, Stat, StatStrip, Bar, EvidenceRail, Pill } from "@/components/ui";
+import {
   edgeAxisSpokeLabel,
 } from "@/lib/fenok-signals/edge-axis-labels.mjs";
 import { commonBasisSignalSummaryView } from "@/lib/fenok-signals/common-basis-signal-summary";
@@ -621,15 +625,6 @@ function resolveFenokLongTermScore(record: FenokSignalsSummaryRecord | null | un
   return isFiniteNumber(score) ? Math.max(0, Math.min(100, Math.round(score))) : null;
 }
 
-function fenokEdgeLabel(score: number | null): string {
-  if (!isFiniteNumber(score)) return "점수 대기";
-  if (score >= 80) return "강한 우위";
-  if (score >= 65) return "우위";
-  if (score >= 50) return "중립";
-  if (score >= 35) return "관망";
-  return "약세";
-}
-
 function formatCoverageRatio(value: MaybeNumber): string {
   if (!isFiniteNumber(value)) return "커버리지 대기";
   const pct = value <= 1 ? value * 100 : value;
@@ -728,14 +723,6 @@ type ValuationBandSummary = {
   source: string;
 };
 
-type ValuationBandTone = {
-  label: string;
-  detail: string;
-  chipClass: string;
-  fillClass: string;
-  zone: "deep-discount" | "discount" | "neutral" | "premium" | "overheated" | "trap";
-};
-
 function resolveValuationBandSummary(
   rowPerBand: ReturnType<typeof validAnalyzerPerBand>,
   detailPerBands: ReturnType<typeof validDetailPerBands>,
@@ -752,243 +739,6 @@ function resolveValuationBandSummary(
   return rowPerBand ? { ...rowPerBand, source: "Screener PER band" } : null;
 }
 
-function valuationBandTone(
-  band: ValuationBandSummary,
-  signalLens: FenokSignalsSummaryRecord | null | undefined,
-): ValuationBandTone {
-  const pct = bandPct(band.current, band.min, band.max);
-  const avgPct = isFiniteNumber(band.avg) ? bandPct(band.avg, band.min, band.max) : 0.5;
-  const neutralStart = Math.max(0.18, avgPct - 0.1);
-  const neutralEnd = Math.min(0.82, avgPct + 0.1);
-  const weakScores = [
-    signalLens?.profitabilityScore,
-    signalLens?.growthScore,
-    signalLens?.longTermScore,
-  ].filter((score): score is number => isFiniteNumber(score) && score < 45);
-  const valueTrapWatch = pct < neutralStart && weakScores.length > 0;
-
-  if (valueTrapWatch) {
-    return {
-      label: "밸류트랩 점검",
-      detail: "PER는 낮지만 성장·수익성 점수 약세가 함께 보입니다.",
-      chipClass: "border-amber-200 bg-amber-50 text-amber-700",
-      fillClass: "bg-amber-500",
-      zone: "trap",
-    };
-  }
-  if (pct < neutralStart * 0.55) {
-    return {
-      label: "강한 할인 구간",
-      detail: "PER 밴드 하단 깊숙한 구간입니다. 다음은 성장·마진 방어를 확인합니다.",
-      chipClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
-      fillClass: "bg-emerald-500",
-      zone: "deep-discount",
-    };
-  }
-  if (pct < neutralStart) {
-    return {
-      label: "할인 구간",
-      detail: "현재 PER가 공정가치권 아래에 있습니다.",
-      chipClass: "border-emerald-200 bg-emerald-50 text-emerald-700",
-      fillClass: "bg-emerald-500",
-      zone: "discount",
-    };
-  }
-  if (pct <= neutralEnd) {
-    return {
-      label: "공정가치권",
-      detail: "현재 PER는 평균 밴드의 ±10% 중립권입니다.",
-      chipClass: "border-slate-200 bg-white text-slate-700",
-      fillClass: "bg-slate-900",
-      zone: "neutral",
-    };
-  }
-  if (pct < neutralEnd + (1 - neutralEnd) * 0.55) {
-    return {
-      label: "프리미엄 구간",
-      detail: "현재 PER가 공정가치권 위에 있습니다. 성장 기대와 추정치 상향을 확인합니다.",
-      chipClass: "border-rose-200 bg-rose-50 text-rose-700",
-      fillClass: "bg-rose-500",
-      zone: "premium",
-    };
-  }
-  return {
-    label: "과열 프리미엄",
-    detail: "PER 밴드 상단권입니다. 기대 성장과 추정치 상향이 필요합니다.",
-    chipClass: "border-rose-200 bg-rose-50 text-rose-700",
-    fillClass: "bg-rose-600",
-    zone: "overheated",
-  };
-}
-
-function ValuationBandSummaryCard({
-  band,
-  signalLens,
-  variant = "default",
-}: {
-  band: ValuationBandSummary | null;
-  signalLens: FenokSignalsSummaryRecord | null | undefined;
-  variant?: "default" | "canvasPlusRail";
-}) {
-  if (!band) return null;
-  const pct = bandPct(band.current, band.min, band.max);
-  const clampedPct = Math.max(0, Math.min(100, pct * 100));
-  const tone = valuationBandTone(band, signalLens);
-  const avgPct = isFiniteNumber(band.avg) ? bandPct(band.avg, band.min, band.max) : 0.5;
-  const neutralStartPct = Math.max(18, Math.min(82, avgPct * 100 - 10));
-  const neutralEndPct = Math.max(18, Math.min(82, avgPct * 100 + 10));
-  const lowMidPct = neutralStartPct * 0.55;
-  const highMidPct = neutralEndPct + (100 - neutralEndPct) * 0.55;
-
-  if (variant === "canvasPlusRail") {
-    return (
-      <article data-stock-summary-module="valuation-band" className="cp-stock-rail-card cp-stock-valuation-card">
-        <header className="cp-stock-rail-card__header">
-          <div>
-            <p className="cp-stock-rail-eyebrow">Valuation Band</p>
-            <h2>밸류에이션 밴드</h2>
-          </div>
-          <span data-tone={tone.zone}>{Math.round(clampedPct)}%</span>
-        </header>
-        <div
-          data-stock-valuation-band-track
-          className="cp-stock-valuation-track"
-          aria-label={`PER 밴드 ${Math.round(clampedPct)}%, ${tone.label}`}
-        >
-          <span data-zone="deep-discount" data-stock-valuation-zone="deep-discount" style={{ width: `${lowMidPct}%` }} />
-          <span data-zone="discount" data-stock-valuation-zone="discount" style={{ left: `${lowMidPct}%`, width: `${Math.max(0, neutralStartPct - lowMidPct)}%` }} />
-          <span data-zone="neutral" data-stock-valuation-zone="neutral" style={{ left: `${neutralStartPct}%`, width: `${Math.max(0, neutralEndPct - neutralStartPct)}%` }} />
-          <span data-zone="premium" data-stock-valuation-zone="premium" style={{ left: `${neutralEndPct}%`, width: `${Math.max(0, highMidPct - neutralEndPct)}%` }} />
-          <span data-zone="overheated" data-stock-valuation-zone="overheated" style={{ left: `${highMidPct}%`, width: `${Math.max(0, 100 - highMidPct)}%` }} />
-          <i style={{ left: `${clampedPct}%` }} />
-        </div>
-        <div className="cp-stock-valuation-labels">
-          <span>{band.min.toFixed(1)}x</span>
-          <strong>{band.current.toFixed(1)}x</strong>
-          <span>{band.max.toFixed(1)}x</span>
-        </div>
-        <p data-stock-valuation-verdict={tone.zone} className="cp-stock-rail-card__summary">{tone.label} · {tone.detail}</p>
-      </article>
-    );
-  }
-
-  return (
-    <div data-stock-summary-module="valuation-band" className="rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-3">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">밸류에이션 판정</p>
-          <p data-stock-valuation-verdict={tone.zone} className="mt-1 text-sm font-black text-slate-900">{tone.label}</p>
-        </div>
-        <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black tabular-nums ${tone.chipClass}`}>
-          밴드 {Math.round(clampedPct)}%
-        </span>
-      </div>
-      <div className="mt-3">
-        <div
-          data-stock-valuation-band-track
-          className="relative h-3 overflow-hidden rounded-full border border-slate-200 bg-white"
-          aria-label={`PER 밴드 ${Math.round(clampedPct)}%, ${tone.label}`}
-        >
-          <span data-stock-valuation-zone="deep-discount" className="absolute inset-y-0 left-0 bg-emerald-600/45" style={{ width: `${lowMidPct}%` }} />
-          <span data-stock-valuation-zone="discount" className="absolute inset-y-0 bg-emerald-400/28" style={{ left: `${lowMidPct}%`, width: `${Math.max(0, neutralStartPct - lowMidPct)}%` }} />
-          <span data-stock-valuation-zone="neutral" className="absolute inset-y-0 bg-white" style={{ left: `${neutralStartPct}%`, width: `${Math.max(0, neutralEndPct - neutralStartPct)}%` }} />
-          <span data-stock-valuation-zone="premium" className="absolute inset-y-0 bg-rose-300/30" style={{ left: `${neutralEndPct}%`, width: `${Math.max(0, highMidPct - neutralEndPct)}%` }} />
-          <span data-stock-valuation-zone="overheated" className="absolute inset-y-0 bg-rose-500/45" style={{ left: `${highMidPct}%`, width: `${Math.max(0, 100 - highMidPct)}%` }} />
-          <span className="absolute inset-y-[-3px] w-[3px] rounded-full bg-slate-900 shadow-sm" style={{ left: `${clampedPct}%`, transform: "translateX(-1.5px)" }} />
-          <span className={`absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow ${tone.fillClass}`} style={{ left: `${clampedPct}%` }} />
-        </div>
-        <div className="mt-1 grid grid-cols-3 text-[9px] font-black tabular-nums text-slate-500">
-          <span>{band.min.toFixed(1)}x</span>
-          <span className="text-center">{isFiniteNumber(band.avg) ? `${band.avg.toFixed(1)}x ±10%` : band.source}</span>
-          <span className="text-right">{band.max.toFixed(1)}x</span>
-        </div>
-      </div>
-      <p className="mt-2 text-[11px] font-semibold leading-5 text-slate-600">
-        현재 PER {band.current.toFixed(1)}x · {tone.detail}
-      </p>
-    </div>
-  );
-}
-
-function FenokEdgeDonutCard({ record }: { record: FenokSignalsSummaryRecord | null | undefined }) {
-  const shortScore = resolveFenokShortTermScore(record);
-  const longScore = resolveFenokLongTermScore(record);
-  const coverage = record?.lensCoverageRatio ?? record?.coverageRatio;
-  const asOfLabel = fmtKstMinute(record?.asOf);
-  const radius = 46;
-  const circumference = 2 * Math.PI * radius;
-  const symbolKey = stockTabDomSafe(record?.symbol ?? "stock");
-  const gauges = [
-    { key: "short", label: "단기", score: shortScore },
-    { key: "long", label: "장기", score: longScore },
-  ];
-  const rows = [
-    { label: "수익성", value: record?.profitabilityScore },
-    { label: "성장성", value: record?.growthScore },
-    { label: "수급", value: record?.technicalFlowScore },
-    { label: "리스크", value: record?.downsidePressureScore },
-  ];
-
-  return (
-    <article className="cp-stock-rail-card cp-stock-edge-card">
-      <header className="cp-stock-rail-card__header">
-        <div>
-          <p className="cp-stock-rail-eyebrow">Fenok Edge</p>
-          <h2>단기 · 장기 스코어</h2>
-        </div>
-        <span>{formatCoverageRatio(coverage)}</span>
-      </header>
-      <div className="grid grid-cols-2 gap-2">
-        {gauges.map((gauge) => {
-          const score = gauge.score;
-          const offset = score === null ? circumference : circumference * (1 - score / 100);
-          const gradientId = `cp-stock-edge-gauge-${gauge.key}-${symbolKey}`;
-          return (
-            <div
-              key={gauge.key}
-              className="cp-edge-gauge cp-stock-edge-gauge"
-              data-tone={score !== null && score >= 65 ? "positive" : "neutral"}
-            >
-              <svg viewBox="0 0 120 120" role="img" aria-label={`${gauge.label} 스코어 ${score ?? "대기"}점`}>
-                <defs>
-                  <linearGradient id={gradientId} x1="0%" y1="20%" x2="100%" y2="80%">
-                    <stop offset="0%" stopColor="var(--cp-positive)" />
-                    <stop offset="100%" stopColor="var(--cp-accent)" />
-                  </linearGradient>
-                </defs>
-                <circle className="cp-edge-gauge__track" cx="60" cy="60" r={radius} />
-                <circle
-                  className="cp-edge-gauge__progress"
-                  cx="60"
-                  cy="60"
-                  r={radius}
-                  style={{ stroke: `url(#${gradientId})`, strokeDasharray: circumference, strokeDashoffset: offset }}
-                />
-              </svg>
-              <div className="cp-edge-gauge__score">
-                <strong>{score ?? "—"}</strong>
-                <span>{fenokEdgeLabel(score)}</span>
-              </div>
-              <div className="cp-edge-gauge__title">{gauge.label}</div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="cp-stock-edge-rows">
-        {rows.map((row) => (
-          <div key={row.label}>
-            <span>{row.label}</span>
-            <strong>{isFiniteNumber(row.value) ? Math.round(row.value) : "—"}</strong>
-          </div>
-        ))}
-      </div>
-      <p className="cp-stock-rail-card__summary">
-        {asOfLabel ? `신호 기준 ${asOfLabel}` : record === undefined ? `신호 ${DATA_STATE_LABELS.pending}` : "신호 데이터 대기"}
-      </p>
-    </article>
-  );
-}
-
 function FinancialSnapshotRail({
   data,
   loading,
@@ -998,19 +748,19 @@ function FinancialSnapshotRail({
   loading: boolean;
   currency: string;
 }) {
+  const fetchedAsOf = data?.fetched_at ? (fmtKstMinute(data.fetched_at) ?? "—") : "—";
   if (loading) {
     return (
-      <article className="cp-stock-rail-card cp-stock-financial-snapshot" aria-busy="true">
-        <header className="cp-stock-rail-card__header">
-          <div>
-            <p className="cp-stock-rail-eyebrow">Financials</p>
-            <h2>TTM 재무 스냅샷</h2>
-          </div>
-        </header>
-        <div className="cp-stock-skeleton-stack">
-          {[0, 1, 2].map((item) => <span key={item} />)}
-        </div>
-      </article>
+      <Panel loading>
+        <PanelHeader eyebrow="Financials" title="TTM 재무 스냅샷" />
+        <EvidenceRail
+          freshness="pending"
+          source="재무제표"
+          asOf={fetchedAsOf}
+          coverage="TTM"
+          skeletonDelayMs={120}
+        />
+      </Panel>
     );
   }
 
@@ -1034,24 +784,26 @@ function FinancialSnapshotRail({
   ];
 
   return (
-    <article className="cp-stock-rail-card cp-stock-financial-snapshot">
-      <header className="cp-stock-rail-card__header">
-        <div>
-          <p className="cp-stock-rail-eyebrow">Financials</p>
-          <h2>TTM 재무 스냅샷</h2>
-        </div>
-        <span>{data?.fetched_at ? `수집 ${fmtKstMinute(data.fetched_at) ?? "—"}` : "—"}</span>
-      </header>
-      <div className="cp-stock-financial-list">
+    <Panel>
+      <PanelHeader
+        eyebrow="Financials"
+        title="TTM 재무 스냅샷"
+        right={<span className="text-[11px] text-slate-500">{data?.fetched_at ? `수집 ${fetchedAsOf}` : "수집일 미확인"}</span>}
+      />
+      <div className="flex divide-x divide-slate-200">
         {metrics.map((metric) => (
-          <div key={metric.label}>
-            <span>{metric.label}</span>
-            <strong>{metric.value}</strong>
-            <em>{metric.note}</em>
-          </div>
+          <Stat key={metric.label} label={metric.label} value={metric.value} sub={metric.note} />
         ))}
       </div>
-    </article>
+      <EvidenceRail
+        freshness={data ? "fresh" : "stale"}
+        source="재무제표"
+        asOf={fetchedAsOf}
+        coverage="TTM"
+        next={data ? undefined : "다음 갱신 시"}
+        skeletonDelayMs={120}
+      />
+    </Panel>
   );
 }
 
@@ -1322,58 +1074,40 @@ function DividendPanel({
       id="dividend"
       data-stock-dividend-panel
       tabIndex={-1}
-      className={`mt-5 scroll-mt-24 rounded-lg border p-3 transition ${
-        highlight ? "border-emerald-400 bg-emerald-50/80 shadow-[var(--sh-sm)]" : "border-slate-200 bg-slate-50/60"
-      }`}
+      className="mt-5 scroll-mt-24"
       aria-label="배당 분석"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h4 className="text-[11px] font-black tracking-[0.08em] text-slate-700">배당 분석</h4>
-          <p className="mt-1 text-xs font-semibold text-slate-500">
-            배당수익률, 배당성향, DPS 이력을 재무 흐름과 함께 확인합니다.
-          </p>
-        </div>
-        {!hasDividendData ? (
-          <span data-stock-dividend-empty className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
-            배당 데이터 없음
-          </span>
-        ) : null}
-      </div>
+    <Panel className={highlight ? "border-emerald-400" : ""}>
+      <PanelHeader
+        eyebrow="Dividend"
+        title="배당 분석"
+        right={!hasDividendData ? <Pill tone="neutral"><span data-stock-dividend-empty>배당 데이터 없음</span></Pill> : null}
+      />
+      <p className="px-4 pt-2 text-[12px] text-slate-600">배당수익률, 배당성향, DPS 이력을 재무 흐름과 함께 확인합니다.</p>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
-        <div data-stock-dividend-metric="yield" className="rounded-md border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[10px] font-bold text-slate-500">배당수익률</p>
-          <p className="tabular-nums text-sm font-black text-slate-900">{dividendYield !== null ? `${dividendYield.toFixed(2)}%` : "—"}</p>
-          <p className="mt-1 text-[10px] font-semibold text-slate-500">Yahoo Finance 기준</p>
-        </div>
-        <div data-stock-dividend-metric="payout" className="rounded-md border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[10px] font-bold text-slate-500">배당성향</p>
-          <p className="tabular-nums text-sm font-black text-slate-900">{payoutRatio !== null ? `${(payoutRatio * 100).toFixed(1)}%` : "—"}</p>
-          <p className="mt-1 text-[10px] font-semibold text-slate-500">순이익 대비 지급 비율</p>
-        </div>
-        <div data-stock-dividend-metric="history" className="rounded-md border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[10px] font-bold text-slate-500">배당 이력</p>
-          <p className="tabular-nums text-sm font-black text-slate-900">{historyValue}</p>
-          <p className="mt-1 text-[10px] font-semibold text-slate-500">{historyNote}</p>
-        </div>
-      </div>
+      <StatStrip className="mx-4 my-2">
+        <div data-stock-dividend-metric="yield" className="flex-1"><Stat label="배당수익률" value={dividendYield !== null ? `${dividendYield.toFixed(2)}%` : "—"} sub="Yahoo Finance 기준" /></div>
+        <div data-stock-dividend-metric="payout" className="flex-1"><Stat label="배당성향" value={payoutRatio !== null ? `${(payoutRatio * 100).toFixed(1)}%` : "—"} sub="순이익 대비 지급 비율" /></div>
+        <div data-stock-dividend-metric="history" className="flex-1"><Stat label="배당 이력" value={historyValue} sub={historyNote} /></div>
+      </StatStrip>
 
       {dpsValues.length > 0 ? (
-        <div data-stock-dividend-history-chart className="mt-4 border-t border-slate-200 pt-3">
+        <div data-stock-dividend-history-chart className="border-t border-slate-100 px-4 py-3">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[10px] font-black tracking-[0.08em] text-slate-500">DPS 추이</p>
-            <p className="text-[10px] font-semibold text-slate-500">
+            <p className="text-[11px] font-semibold text-slate-500">DPS 추이</p>
+            <p className="text-[11px] text-slate-500">
               최근 {latestDps !== null ? formatMoney(latestDps, currency) : "—"} · 추정 {isFiniteNumber(nextDps) ? formatMoney(nextDps, currency) : "—"}
             </p>
           </div>
           <MiniBarChart actuals={dpsSeries} estimates={estimateDps} years={years} color="var(--c-info)" formatValue={(value) => formatMoney(value, currency)} />
         </div>
       ) : (
-        <p data-stock-dividend-empty className="mt-4 rounded-md border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500">
+        <p data-stock-dividend-empty className="mx-4 my-2 rounded-md border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500">
           이 티커에서는 DPS 시계열을 찾지 못했습니다. 수익률/성향 값이 없으면 배당 분석은 빈 상태로 유지됩니다.
         </p>
       )}
+      <EvidenceRail freshness={hasDividendData ? "fresh" : "stale"} source="Yahoo Finance" asOf="—" coverage="배당 지표" next={hasDividendData ? undefined : "배당 데이터 확보 시"} skeletonDelayMs={120} />
+    </Panel>
     </section>
   );
 }
@@ -1407,15 +1141,11 @@ function StockEstimatesPanel({
 
   const body = (
     <>
-      <div data-stock-estimates-consensus-summary className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <StatStrip data-stock-estimates-consensus-summary className="mx-4 my-2 flex-wrap">
         {consensusCards.map((card) => (
-          <div key={card.label} data-stock-estimates-consensus-card className="rounded-xl border border-slate-200 bg-white/80 px-3 py-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{card.label}</p>
-            <p className="mt-1 text-base font-black tabular-nums text-slate-950">{card.value}</p>
-            <p className="mt-1 text-[10px] font-semibold text-slate-500">{card.note}</p>
-          </div>
+          <div key={card.label} data-stock-estimates-consensus-card className="min-w-[30%] flex-1"><Stat label={card.label} value={card.value} sub={card.note} /></div>
         ))}
-      </div>
+      </StatStrip>
       <div data-stock-estimates-granularity-control className="mt-4 inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
         {[
           { key: "annual" as const, label: "연간" },
@@ -1435,19 +1165,19 @@ function StockEstimatesPanel({
         ))}
       </div>
       {granularity === "annual" ? (
-        <div data-stock-estimates-annual-panel data-stock-estimates-detail-table className="mt-3">
+        <div data-stock-estimates-annual-panel data-stock-estimates-detail-table className="px-4 py-2">
           <RevisionPulse detail={detail} />
           <CompactFinancialTable detail={detail} years={years} />
         </div>
       ) : (
-        <div data-stock-estimates-quarterly-panel className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-3">
-          <p className="text-[11px] font-black text-slate-800">분기 추정치 연결 대기</p>
-          <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">
+        <div data-stock-estimates-quarterly-panel className="mx-4 my-2 rounded-[8px] border border-dashed border-slate-200 bg-white p-3">
+          <p className="text-[11px] font-semibold text-slate-900">분기 추정치 연결 대기</p>
+          <p className="mt-1 text-[11px] leading-4 text-slate-500">
             현재 공개 추정치 정규화는 FY+1~3 연간 축을 우선 표시합니다. 분기 컨센서스가 들어오면 같은 순서로 요약 → 변화 → 상세 표를 채웁니다.
           </p>
         </div>
       )}
-      <p data-stock-estimate-disclosure="true" className="mt-3 text-[10px] font-semibold leading-4 text-slate-500">
+      <p data-stock-estimate-disclosure="true" className="px-4 py-2 text-[11px] leading-4 text-slate-500">
         출처: StockAnalysis/Yahoo 계열 추정치 정규화 데이터. EPS 기준(희석/조정 여부)은 제공자 원문 확인이 필요합니다.
       </p>
     </>
@@ -1455,7 +1185,13 @@ function StockEstimatesPanel({
 
   if (variant === "canvasPlus") return body;
 
-  return <SectionCard title="추정치 변화">{body}</SectionCard>;
+  return (
+    <Panel>
+      <PanelHeader eyebrow="Estimates" title="추정치 변화" />
+      {body}
+      <EvidenceRail freshness="fresh" source="StockAnalysis/Yahoo" asOf="—" coverage="FY+1~3 컨센서스" skeletonDelayMs={120} />
+    </Panel>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -1661,39 +1397,8 @@ function MetricWithSpark({ label, value, data, estimates, color, years, benchmar
 }
 
 // ---------------------------------------------------------------------------
-// W4 stock-tab surface redesign — shared SVG/format helpers
+// W4 stock-tab surface redesign — shared format helpers
 // ---------------------------------------------------------------------------
-
-function polarPoint(cx: number, cy: number, r: number, angleDeg: number): [number, number] {
-  const rad = ((angleDeg - 90) * Math.PI) / 180;
-  return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
-}
-
-function radarPolygonPoints(scores: Array<number | null>, cx: number, cy: number, maxR: number): string {
-  const n = scores.length;
-  if (n === 0) return "";
-  return scores
-    .map((score, i) => {
-      const r = (maxR * Math.max(0, Math.min(100, score ?? 0))) / 100;
-      const [x, y] = polarPoint(cx, cy, r, (360 / n) * i);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-}
-
-function axisToneClass(score: number | null): "positive" | "warning" | "negative" | "neutral" {
-  if (!isFiniteNumber(score)) return "neutral";
-  if (score >= 70) return "positive";
-  if (score >= 45) return "warning";
-  return "negative";
-}
-
-function axisToneLabel(tone: ReturnType<typeof axisToneClass>): string {
-  if (tone === "positive") return "양호";
-  if (tone === "warning") return "관리";
-  if (tone === "negative") return "약함";
-  return "—";
-}
 
 function tradeInvestorNameOf(value: unknown): string | null {
   if (typeof value === "string") return value;
@@ -1793,21 +1498,20 @@ function FinancialsHeroCp({
   }
 
   return (
-    <section className="cpw4-hero" data-stock-tab-card="financial-trend">
-      <div className="cpw4-hero__top">
-        <p className="cpw4-hero__eyebrow">재무 · FINANCIALS</p>
-        {yoyGrowth !== null ? (
-          <span className={`cpw4-badge ${yoyGrowth >= 0 ? "cpw4-badge--positive" : "cpw4-badge--negative"}`}>
+    <section data-stock-tab-card="financial-trend">
+    <Panel>
+      <PanelHeader
+        eyebrow="재무 · FINANCIALS"
+        title="매출 추이"
+        right={yoyGrowth !== null ? (
+          <span className="tabular-nums text-[11px] font-semibold text-slate-600">
             {yoyGrowth >= 0 ? "▲" : "▼"} {fmtPct(yoyGrowth)} YoY
           </span>
         ) : null}
-      </div>
-      <div className="cpw4-hero__top" style={{ marginTop: -6 }}>
-        <span className="cpw4-hero__number" style={{ fontSize: 34 }}>{ttmRevenueText}</span>
-        <span style={{ fontSize: 14, fontWeight: 750, color: "var(--cp-text-muted)" }}>매출(최근 회계연도)</span>
-      </div>
-      {verdictParts.length > 0 ? <h2 className="cpw4-hero__verdict">{verdictParts.join(", ")}</h2> : null}
-      <div className="cpw4-fin-chart-wrap">
+      />
+      <Stat label="매출(최근 회계연도)" value={ttmRevenueText} />
+      {verdictParts.length > 0 ? <p className="px-4 pb-1 text-[14px] font-semibold text-slate-900">{verdictParts.join(", ")}</p> : null}
+      <div className="px-4 pb-3">
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="매출 및 영업이익률 추이">
           {firstEstimateIndex >= 0 ? (
             <rect
@@ -1854,12 +1558,13 @@ function FinancialsHeroCp({
             <circle key={i} cx={p.x} cy={p.y} r={i < actualMarginPoints.length ? 3.5 : 3} fill="var(--cp-chart-line-2)" opacity={i < actualMarginPoints.length ? 1 : 0.75} />
           ))}
         </svg>
-        <div className="cpw4-fin-chart-legend">
-          <span><span className="swatch" style={{ background: "var(--cp-positive)" }} />매출 · 실적</span>
-          <span><span className="swatch" style={{ background: "var(--cp-positive)", opacity: 0.32, border: "1.5px dashed var(--cp-positive)" }} />매출 · 컨센서스 추정</span>
-          <span><span className="line" />영업이익률(선)</span>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-1 text-[11px] text-slate-500">
+          <span>매출 · 실적</span>
+          <span>매출 · 컨센서스 추정</span>
+          <span>영업이익률(선)</span>
         </div>
       </div>
+    </Panel>
     </section>
   );
 }
@@ -1893,15 +1598,11 @@ function FinancialsTilesCp({
   if (!tiles.some((t) => t.value !== "—")) return null;
 
   return (
-    <div className="cpw4-tile-row">
+    <StatStrip>
       {tiles.map((t) => (
-        <div className="cpw4-tile" key={t.label}>
-          <p className="cpw4-tile__label">{t.label}</p>
-          <p className="cpw4-tile__value">{t.value}</p>
-          {t.sub ? <p className="cpw4-tile__sub">{t.sub}</p> : null}
-        </div>
+        <Stat key={t.label} label={t.label} value={t.value} sub={t.sub} />
       ))}
-    </div>
+    </StatStrip>
   );
 }
 
@@ -1913,53 +1614,37 @@ function ValuationHeroCp({ detailPerBands }: { detailPerBands: { current: number
   const { current, min_8y, max_8y, avg_8y } = detailPerBands;
   if (max_8y <= min_8y) return null;
   const pct = bandPct(current, min_8y, max_8y);
-  const avgPct = bandPct(avg_8y, min_8y, max_8y);
   const clampedPct = Math.max(0, Math.min(100, pct * 100));
   const diffFromAvg = avg_8y !== 0 ? (current - avg_8y) / avg_8y : 0;
   const zoneLabel = clampedPct < 30 ? "저평가 구간" : clampedPct > 70 ? "고평가 구간" : "평균 밴드 · 중립권";
-  const zoneClass = clampedPct < 30 ? "up" : clampedPct > 70 ? "down" : "warn";
   const verdictDetail = Math.abs(diffFromAvg) < 0.03
     ? `현재 PER ${current.toFixed(1)}x는 8년 밸류에이션 밴드의 평균과 거의 일치합니다 — 싸지도, 비싸지도 않은 자리입니다.`
     : diffFromAvg < 0
       ? `현재 PER ${current.toFixed(1)}x는 8년 평균(${avg_8y.toFixed(1)}x) 대비 ${fmtPct(Math.abs(diffFromAvg))} 낮은 자리입니다.`
       : `현재 PER ${current.toFixed(1)}x는 8년 평균(${avg_8y.toFixed(1)}x) 대비 ${fmtPct(diffFromAvg)} 높은 자리입니다.`;
 
-  const W = 1160, trackX = 30, trackW = 1100, trackY = 76, trackH = 34;
-  const markerX = trackX + (clampedPct / 100) * trackW;
-  const avgX = trackX + Math.max(0, Math.min(100, avgPct * 100)) / 100 * trackW;
-  const gradMid = `${Math.max(5, Math.min(95, avgPct * 100)).toFixed(1)}%`;
-
   return (
-    <section className="cpw4-hero" data-stock-tab-card="valuation-band">
-      <div className="cpw4-hero__top">
-        <p className="cpw4-hero__eyebrow">VALUATION · PER 밴드 위치 (8년)</p>
-        <span className="cpw4-val-current-tag"><span className="l">현재 PER</span><span className="v">{current.toFixed(1)}x</span></span>
+    <section data-stock-tab-card="valuation-band">
+    <Panel>
+      <PanelHeader
+        eyebrow="VALUATION · PER 밴드 위치 (8년)"
+        title={`지금 가격은 ${zoneLabel}입니다`}
+        right={<span className="tabular-nums text-[11px] font-semibold text-slate-600">현재 PER {current.toFixed(1)}x</span>}
+      />
+      <div className="px-4 py-3">
+        <p className="pb-2 text-[12px] text-slate-600">{verdictDetail}</p>
+        <Row>
+          <span className="truncate text-[12px] text-slate-700">PER 밴드 위치</span>
+          <Bar value={clampedPct} aria-label={`PER 밸류에이션 밴드: 최저 ${min_8y.toFixed(1)}배, 평균 ${avg_8y.toFixed(1)}배, 현재 ${current.toFixed(1)}배, 최고 ${max_8y.toFixed(1)}배`} />
+          <span className="tabular-nums text-right text-[12px] font-semibold text-slate-900">{Math.round(clampedPct)}%</span>
+        </Row>
+        <div className="grid grid-cols-3 px-4 py-2 text-[11px] tabular-nums text-slate-500">
+          <span>{min_8y.toFixed(1)}x · 8년 최저</span>
+          <span className="text-center">{avg_8y.toFixed(1)}x · 평균</span>
+          <span className="text-right">{max_8y.toFixed(1)}x · 8년 최고</span>
+        </div>
       </div>
-      <h2 className="cpw4-hero__verdict">지금 가격은 <span className={zoneClass}>{zoneLabel}</span>입니다</h2>
-      <p className="cpw4-hero__sub">{verdictDetail}</p>
-      <div className="cpw4-val-gauge-wrap">
-        <svg viewBox={`0 0 ${W} 168`} role="img" aria-label={`PER 밸류에이션 밴드: 최저 ${min_8y.toFixed(1)}배, 평균 ${avg_8y.toFixed(1)}배, 현재 ${current.toFixed(1)}배, 최고 ${max_8y.toFixed(1)}배`}>
-          <defs>
-            <linearGradient id="cpw4-val-band-grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="var(--cp-positive)" />
-              <stop offset={gradMid} stopColor="var(--cp-warning)" />
-              <stop offset="100%" stopColor="var(--cp-negative)" />
-            </linearGradient>
-          </defs>
-          <rect x={trackX} y={trackY} width={trackW} height={trackH} rx={trackH / 2} fill="url(#cpw4-val-band-grad)" />
-          <line x1={avgX} y1={trackY} x2={avgX} y2={trackY + trackH} stroke="var(--cp-surface)" strokeWidth={2} opacity={0.85} />
-          <line x1={markerX} y1={40} x2={markerX} y2={trackY} stroke="var(--cp-text-strong)" strokeWidth={1.5} strokeDasharray="2 3" />
-          <rect x={Math.max(0, markerX - 65)} y={8} width={130} height={30} rx={8} fill="var(--cp-text-strong)" />
-          <text x={markerX} y={28} textAnchor="middle" fontSize="14" fontWeight="800" fill="var(--cp-surface)">현재 {current.toFixed(1)}x</text>
-          <circle cx={markerX} cy={trackY + trackH / 2} r={9} fill="var(--cp-surface)" stroke="var(--cp-text-strong)" strokeWidth={3} />
-          <line x1={trackX} y1={trackY + trackH} x2={trackX} y2={trackY + trackH + 10} stroke="var(--cp-border-strong)" strokeWidth={1.5} />
-          <line x1={trackX + trackW} y1={trackY + trackH} x2={trackX + trackW} y2={trackY + trackH + 10} stroke="var(--cp-border-strong)" strokeWidth={1.5} />
-          <text x={trackX} y={140} fontSize="16" fontWeight="800" fill="var(--cp-text-strong)">{min_8y.toFixed(1)}x</text>
-          <text x={trackX} y={156} fontSize="11" fill="var(--cp-text-soft)">8년 최저</text>
-          <text x={trackX + trackW} y={140} textAnchor="end" fontSize="16" fontWeight="800" fill="var(--cp-text-strong)">{max_8y.toFixed(1)}x</text>
-          <text x={trackX + trackW} y={156} textAnchor="end" fontSize="11" fill="var(--cp-text-soft)">8년 최고</text>
-        </svg>
-      </div>
+    </Panel>
     </section>
   );
 }
@@ -1983,23 +1668,17 @@ function ValuationBodyCp({
   const evEbitda = isFiniteNumber(info.enterpriseToEbitda) ? info.enterpriseToEbitda : null;
   const evRevenue = isFiniteNumber(info.enterpriseToRevenue) ? info.enterpriseToRevenue : null;
 
-  const rrTiles: Array<{ label: string; body: ReactNode; cap: string }> = [];
+  const rrTiles: Array<{ label: string; body: string; cap: string }> = [];
   if (trailingPE !== null || forwardPE !== null) {
     rrTiles.push({
       label: "PER TTM → FWD",
-      body: (
-        <div className="flow">
-          <span className="from">{trailingPE !== null ? `${trailingPE.toFixed(1)}x` : "—"}</span>
-          <span className="arrow">→</span>
-          <span className="to">{forwardPE !== null ? `${forwardPE.toFixed(1)}x` : "—"}</span>
-        </div>
-      ),
+      body: `${trailingPE !== null ? `${trailingPE.toFixed(1)}x` : "—"} → ${forwardPE !== null ? `${forwardPE.toFixed(1)}x` : "—"}`,
       cap: perDeltaPct !== null ? `선행 PER 컨센서스 반영 시 배수 ${fmtPct(perDeltaPct)}` : "선행 PER 컨센서스 기준",
     });
   }
-  if (pbr !== null) rrTiles.push({ label: "PBR", body: <div className="hero-num">{pbr.toFixed(1)}<span className="unit">x</span></div>, cap: isFiniteNumber(info.bookValue) ? `주당 장부가 ${formatMoney(info.bookValue, currency)}` : "Yahoo Finance 기준" });
-  if (peg !== null) rrTiles.push({ label: "PEG", body: <div className="hero-num">{peg.toFixed(2)}</div>, cap: peg < 1 ? "1.0 미만 = 이익 성장 대비 저평가 신호" : "1.0 이상 = 이익 성장 대비 프리미엄" });
-  if (evEbitda !== null) rrTiles.push({ label: "EV / EBITDA", body: <div className="hero-num">{evEbitda.toFixed(1)}<span className="unit">x</span></div>, cap: evRevenue !== null ? `EV/매출 ${evRevenue.toFixed(1)}x` : "Yahoo Finance 기준" });
+  if (pbr !== null) rrTiles.push({ label: "PBR", body: `${pbr.toFixed(1)}x`, cap: isFiniteNumber(info.bookValue) ? `주당 장부가 ${formatMoney(info.bookValue, currency)}` : "Yahoo Finance 기준" });
+  if (peg !== null) rrTiles.push({ label: "PEG", body: peg.toFixed(2), cap: peg < 1 ? "1.0 미만 = 이익 성장 대비 저평가 신호" : "1.0 이상 = 이익 성장 대비 프리미엄" });
+  if (evEbitda !== null) rrTiles.push({ label: "EV / EBITDA", body: `${evEbitda.toFixed(1)}x`, cap: evRevenue !== null ? `EV/매출 ${evRevenue.toFixed(1)}x` : "Yahoo Finance 기준" });
 
   const industryChips: Array<{ label: string; stock: number; ind: number; isFraction: boolean; lowerBetter: boolean }> = [];
   if (industryBench) {
@@ -2034,87 +1713,77 @@ function ValuationBodyCp({
     <>
       {rrTiles.length > 0 ? (
         <section data-stock-tab-card="valuation-rerating">
-          <div className="cpw4-section-head" style={{ marginBottom: 10 }}>
-            <h3>리레이팅 — 이익 성장이 배수를 어떻게 눌렀나</h3>
-            <span>Yahoo Finance 밸류 지표</span>
-          </div>
-          <div className="cpw4-rerating-row">
+        <Panel>
+          <PanelHeader eyebrow="Yahoo Finance 밸류 지표" title="리레이팅 — 이익 성장이 배수를 어떻게 눌렀나" />
+          <div className="flex divide-x divide-slate-200">
             {rrTiles.map((t) => (
-              <div className="cpw4-rr-tile" key={t.label}>
-                <span className="l">{t.label}</span>
-                {t.body}
-                <span className="cap">{t.cap}</span>
-              </div>
+              <Stat key={t.label} label={t.label} value={t.body} sub={t.cap} />
             ))}
           </div>
+        </Panel>
         </section>
       ) : null}
 
       {industryChips.length > 0 && industryBench ? (
         <section data-stock-tab-card="profitability-growth">
-          <div className="cpw4-section-head" style={{ marginBottom: 10 }}>
-            <h3>산업 대비 ({industryBench.name}, 다모다란{isFiniteNumber(industryBench.num_firms) ? ` ${industryBench.num_firms}개사` : ""})</h3>
-            <span>TTM 기준</span>
-          </div>
-          <div className="cpw4-dchip-row">
+        <Panel>
+          <PanelHeader
+            eyebrow="TTM 기준"
+            title={`산업 대비 (${industryBench.name}, 다모다란${isFiniteNumber(industryBench.num_firms) ? ` ${industryBench.num_firms}개사` : ""})`}
+          />
+          <div>
             {industryChips.map((c) => {
               const fmt = (v: number) => (c.isFraction ? `${(v * 100).toFixed(1)}%` : `${v.toFixed(1)}x`);
               const better = c.lowerBetter ? c.stock < c.ind : c.stock > c.ind;
               const deltaPct = c.ind !== 0 ? (c.stock - c.ind) / Math.abs(c.ind) : null;
               return (
-                <div className="cpw4-dchip" key={c.label}>
-                  <div className="cpw4-dchip-main">
-                    <span className="l">{c.label}</span>
-                    <span className="v">{fmt(c.stock)}<span className="vs">vs 산업</span>{fmt(c.ind)}</span>
-                  </div>
-                  {deltaPct !== null ? <span className={`cpw4-badge ${better ? "cpw4-badge--positive" : "cpw4-badge--negative"}`}>{fmtPct(deltaPct)}</span> : null}
-                </div>
+                <Row key={c.label}>
+                  <span className="truncate text-[12px] text-slate-700">{c.label}</span>
+                  <span className="truncate text-[12px] tabular-nums text-slate-600">{fmt(c.stock)} vs 산업 {fmt(c.ind)}{deltaPct !== null ? ` · ${fmtPct(deltaPct)}` : ""}</span>
+                  <span className="text-right text-[12px] font-semibold text-slate-900">{better ? "▲ 우위" : "▼ 열위"}</span>
+                </Row>
               );
             })}
           </div>
+        </Panel>
         </section>
       ) : null}
 
       {profRows.length > 0 ? (
         <section data-stock-tab-card="profitability-growth-detail">
-          <div className="cpw4-section-head" style={{ marginBottom: 10 }}>
-            <h3>수익성 · 성장 — 현재 → FY+1(E)</h3>
-            <span>스톡분석 재무 데이터 · 산업 비교 병기</span>
-          </div>
-          <div className="cpw4-metric-grid">
+        <Panel>
+          <PanelHeader eyebrow="스톡분석 재무 데이터 · 산업 비교 병기" title="수익성 · 성장 — 현재 → FY+1(E)" />
+          <div>
             {profRows.map((r) => {
               const now = r.now;
               const fy1 = r.fy1;
               const delta = now !== null && fy1 !== null ? fy1 - now : null;
               const maxV = Math.max(Math.abs(now ?? 0), Math.abs(fy1 ?? 0), 1);
+              const nowText = now !== null ? `${r.signed && now >= 0 ? "+" : ""}${now.toFixed(1)}%` : "—";
+              const fy1Text = fy1 !== null ? `${r.signed && fy1 >= 0 ? "+" : ""}${fy1.toFixed(1)}%` : "—";
+              const barValue = fy1 !== null ? Math.min(100, (Math.abs(fy1) / maxV) * 100) : now !== null ? Math.min(100, (Math.abs(now) / maxV) * 100) : 0;
               return (
-                <div className="cpw4-metric-cell" key={r.label}>
-                  <span className="label">{r.label}</span>
-                  <div className="cpw4-metric-row">
-                    <span className="now">{now !== null ? `${r.signed && now >= 0 ? "+" : ""}${now.toFixed(1)}` : "—"}<span className="unit">%</span></span>
-                    {fy1 !== null ? (
-                      <span className="cpw4-metric-fy">
-                        FY+1 <strong>{r.signed && fy1 >= 0 ? "+" : ""}{fy1.toFixed(1)}%</strong>
-                        {delta !== null ? <span className={`cpw4-metric-delta ${delta >= 0 ? "cpw4-metric-delta--positive" : "cpw4-metric-delta--warn"}`}>{delta >= 0 ? "▲" : "▼"}{Math.abs(delta).toFixed(1)}%p</span> : null}
-                      </span>
-                    ) : null}
-                    {isFiniteNumber(r.industry) ? <span className="cpw4-badge cpw4-badge--neutral">산업 {r.industry.toFixed(1)}%</span> : null}
-                  </div>
-                  {now !== null && fy1 !== null ? (
-                    <div className="cpw4-metric-bars">
-                      <div className="cpw4-metric-bar-row"><span className="cpw4-metric-bar-tag">현재</span><span className="cpw4-metric-bar-track"><span className="cpw4-metric-bar-fill cpw4-metric-bar-fill--now" style={{ width: `${Math.min(100, (Math.abs(now) / maxV) * 100)}%` }} /></span></div>
-                      <div className="cpw4-metric-bar-row"><span className="cpw4-metric-bar-tag">FY+1</span><span className="cpw4-metric-bar-track"><span className={`cpw4-metric-bar-fill ${delta !== null && delta >= 0 ? "cpw4-metric-bar-fill--positive" : "cpw4-metric-bar-fill--warn"}`} style={{ width: `${Math.min(100, (Math.abs(fy1) / maxV) * 100)}%` }} /></span></div>
-                    </div>
-                  ) : null}
-                </div>
+                <Row key={r.label}>
+                  <span className="truncate text-[12px] text-slate-700">{r.label}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[12px] tabular-nums text-slate-600">
+                      {nowText} → {fy1Text}
+                      {delta !== null ? ` (${delta >= 0 ? "▲" : "▼"}${Math.abs(delta).toFixed(1)}%p)` : ""}
+                      {isFiniteNumber(r.industry) ? ` · 산업 ${r.industry.toFixed(1)}%` : ""}
+                    </span>
+                    <Bar value={barValue} aria-label={`${r.label} 현재 ${nowText}, FY+1 ${fy1Text}`} />
+                  </span>
+                  <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{fy1Text}</span>
+                </Row>
               );
             })}
           </div>
           {roeNow !== null && wacc !== null ? (
-            <p className="cpw4-insight-line" style={{ marginTop: 12 }}>
+            <p className="px-4 py-2 text-[12px] text-slate-600">
               ROE <b>{roeNow.toFixed(1)}%</b>가 자본비용(WACC) <b>{wacc.toFixed(1)}%</b>를 {roeNow >= wacc ? "웃돕니다" : "밑돕니다"} — 자본을 굴릴수록 가치를 {roeNow >= wacc ? "만들어내는" : "갉아먹는"} 스프레드입니다.
             </p>
           ) : null}
+        </Panel>
         </section>
       ) : null}
     </>
@@ -2146,64 +1815,45 @@ function EstimatesHeroCp({ yfData, detail, currency }: { yfData: any; detail: an
 
   if (current === null && epsPoints.length === 0) return null;
   const maxEps = Math.max(...epsPoints.map((p) => p.value), 1);
-  const chartW = 860, chartH = 130, baseY = 100, barW = 70;
-  const slotW = epsPoints.length > 0 ? chartW / epsPoints.length : chartW;
 
   return (
-    <section className="cpw4-hero" data-stock-tab-card="estimates-consensus">
-      <p className="cpw4-hero__eyebrow">ESTIMATES · 시장 전망</p>
-      <div className="cpw4-est-hero-grid">
+    <section data-stock-tab-card="estimates-consensus">
+    <Panel>
+      <PanelHeader
+        eyebrow="ESTIMATES · 시장 전망"
+        title={upsidePct !== null ? `시장은 여전히 ${upsidePct >= 0 ? "위쪽" : "아래쪽"}을 본다` : "시장 전망"}
+        right={upsidePct !== null ? <span className="tabular-nums text-[11px] font-semibold text-slate-600">목표가 여력 {fmtPct(upsidePct)}</span> : null}
+      />
+      {upsidePct !== null ? (
         <div>
-          {upsidePct !== null ? (
-            <>
-              <h2 className="cpw4-hero__verdict" style={{ fontSize: 21 }}>시장은 여전히 <span className={upsidePct >= 0 ? "up" : "down"}>{upsidePct >= 0 ? "위쪽" : "아래쪽"}</span>을 본다</h2>
-              <div className="cpw4-est-headline">
-                <span className={`num ${upsidePct < 0 ? "down" : ""}`}>{fmtPct(upsidePct)}</span>
-                <span className="lbl">목표가 여력</span>
-              </div>
-              <p className="cpw4-hero__sub">
-                애널리스트 평균 목표가 <b>{formatMoney(mean, currency)}</b>는 현재가 <b>{formatMoney(current, currency)}</b>보다 {fmtPct(Math.abs(upsidePct))} {upsidePct >= 0 ? "높습니다" : "낮습니다"}.
-                {" "}{low !== null && current !== null ? (low >= current ? "최저 목표도 현재가를 밑돌지 않아, 하방 컨센서스는 아직 형성되지 않았습니다." : `최저 목표(${formatMoney(low, currency)})는 현재가 아래에 있습니다.`) : ""}
-              </p>
-            </>
-          ) : (
-            <p className="cpw4-hero__sub">애널리스트 목표가 컨센서스를 아직 확인하지 못했습니다.</p>
-          )}
+          <Stat
+            label="목표가 여력"
+            value={fmtPct(upsidePct)}
+            sub={`평균 목표 ${formatMoney(mean, currency)} · 현재가 ${formatMoney(current, currency)}`}
+          />
+          <p className="px-4 py-2 text-[12px] text-slate-600">
+            애널리스트 평균 목표가 <b>{formatMoney(mean, currency)}</b>는 현재가 <b>{formatMoney(current, currency)}</b>보다 {fmtPct(Math.abs(upsidePct))} {upsidePct >= 0 ? "높습니다" : "낮습니다"}.
+            {" "}{low !== null && current !== null ? (low >= current ? "최저 목표도 현재가를 밑돌지 않아, 하방 컨센서스는 아직 형성되지 않았습니다." : `최저 목표(${formatMoney(low, currency)})는 현재가 아래에 있습니다.`) : ""}
+          </p>
         </div>
-        {epsPoints.length > 0 ? (
-          <>
-            <div className="cpw4-divider-v" />
-            <div>
-              <div className="cpw4-eps-trio-head">
-                <span className="cpw4-eps-trio-title">EPS 실적 → 컨센서스 (FY0 → FY+3)</span>
-                {epsCumGrowth !== null ? <span className="cpw4-badge cpw4-badge--neutral">누적 {fmtPct(epsCumGrowth)}</span> : null}
-              </div>
-              <div className="cpw4-eps-chart">
-                <svg viewBox={`0 0 ${chartW} ${chartH}`} role="img" aria-label="EPS 실적 대비 컨센서스 추이">
-                  <line x1={0} y1={baseY} x2={chartW} y2={baseY} stroke="var(--cp-divider)" strokeWidth={1} />
-                  {epsPoints.map((p, i) => {
-                    const h = maxEps > 0 ? Math.max(6, (p.value / maxEps) * (baseY - 20)) : 6;
-                    const x = i * slotW + (slotW - barW) / 2;
-                    const y = baseY - h;
-                    const isLast = i === epsPoints.length - 1;
-                    return (
-                      <g key={p.label}>
-                        <rect x={x} y={y} width={barW} height={h} rx={6}
-                          fill={p.estimate ? `color-mix(in srgb, var(--cp-positive) ${28 + i * 22}%, var(--cp-surface-strong))` : "var(--cp-surface-strong)"}
-                          stroke={p.estimate ? "none" : "var(--cp-border-strong)"} strokeWidth={p.estimate ? 0 : 1} />
-                        <text x={x + barW / 2} y={Math.max(12, y - 8)} textAnchor="middle" fontSize={isLast ? 16 : 14} fontWeight={isLast ? 850 : 800} fill={isLast ? "var(--cp-positive)" : "var(--cp-text-strong)"}>
-                          {formatMoney(p.value, currency)}
-                        </text>
-                        <text x={x + barW / 2} y={chartH - 4} textAnchor="middle" fontSize="11" fill="var(--cp-text-soft)">{p.label}</text>
-                      </g>
-                    );
-                  })}
-                </svg>
-              </div>
-            </div>
-          </>
-        ) : null}
-      </div>
+      ) : (
+        <p className="px-4 py-3 text-[12px] text-slate-600">애널리스트 목표가 컨센서스를 아직 확인하지 못했습니다.</p>
+      )}
+      {epsPoints.length > 0 ? (
+        <div>
+          <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">
+            EPS 실적 → 컨센서스 (FY0 → FY+3){epsCumGrowth !== null ? ` · 누적 ${fmtPct(epsCumGrowth)}` : ""}
+          </p>
+          {epsPoints.map((p) => (
+            <Row key={p.label}>
+              <span className="truncate text-[12px] text-slate-700">{p.label}{p.estimate ? " (E)" : ""}</span>
+              <Bar value={maxEps > 0 ? (p.value / maxEps) * 100 : 0} aria-label={`${p.label} EPS ${formatMoney(p.value, currency)}`} />
+              <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{formatMoney(p.value, currency)}</span>
+            </Row>
+          ))}
+        </div>
+      ) : null}
+    </Panel>
     </section>
   );
 }
@@ -2219,32 +1869,32 @@ function EstimatesBandCp({ yfData, currency }: { yfData: any; currency: string }
   const currentPct = pctFor(current);
   const meanPct = pctFor(mean);
   const upsidePct = current !== 0 ? (mean - current) / current : null;
-  const W = 1000, trackY = 52, trackX = 40, trackW = 920, trackH = 10;
-  const currentX = trackX + (currentPct / 100) * trackW;
-  const meanX = trackX + (meanPct / 100) * trackW;
 
   return (
-    <section className="cp-stock-tab-card" data-stock-tab-card="estimates-target-band">
-      <header className="cp-stock-tab-card__header">
-        <div><p className="cp-stock-rail-eyebrow">Target Range</p><h2>애널리스트 목표가 범위</h2></div>
-      </header>
-      <div className="cp-stock-tab-card__body cpw4-band-svg">
-        <svg viewBox={`0 0 ${W} 118`} role="img" aria-label={`목표가 범위 최저 ${formatMoney(low, currency)}, 현재가 ${formatMoney(current, currency)}, 평균 목표 ${formatMoney(mean, currency)}, 최고 ${formatMoney(high, currency)}`}>
-          <rect x={trackX} y={trackY} width={trackW} height={trackH} rx={5} fill="var(--cp-surface-muted)" stroke="var(--cp-border)" />
-          <rect x={trackX} y={trackY} width={Math.max(0, currentX - trackX)} height={trackH} rx={5} fill="var(--cp-border-strong)" />
-          <rect x={currentX} y={trackY} width={Math.max(0, meanX - currentX)} height={trackH} fill="var(--cp-positive)" />
-          <rect x={meanX} y={trackY} width={Math.max(0, trackX + trackW - meanX)} height={trackH} rx={5} fill="var(--cp-warning-soft)" />
-          <circle cx={currentX} cy={trackY + trackH / 2} r={9} fill="var(--cp-text-strong)" stroke="var(--cp-surface)" strokeWidth={3} />
-          <text x={currentX} y={98} textAnchor="middle" fontSize="12" fill="var(--cp-text-soft)">현재가</text>
-          <text x={currentX} y={113} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--cp-text-strong)">{formatMoney(current, currency)}</text>
-          <line x1={meanX} y1={20} x2={meanX} y2={trackY} stroke="var(--cp-positive)" strokeWidth={2} />
-          <circle cx={meanX} cy={trackY + trackH / 2} r={10} fill="var(--cp-positive)" stroke="var(--cp-surface)" strokeWidth={3} />
-          <text x={meanX} y={16} textAnchor="middle" fontSize="14" fontWeight="850" fill="var(--cp-positive)">평균 목표 {formatMoney(mean, currency)}</text>
-          {upsidePct !== null ? <text x={meanX} y={113} textAnchor="middle" fontSize="13" fontWeight="800" fill="var(--cp-positive)">{fmtPct(upsidePct)}</text> : null}
-          <text x={trackX} y={34} fontSize="12" fontWeight="700" fill="var(--cp-text-muted)">최저 {formatMoney(low, currency)}</text>
-          <text x={trackX + trackW} y={34} textAnchor="end" fontSize="12" fontWeight="700" fill="var(--cp-text-muted)">최고 {formatMoney(high, currency)}</text>
-        </svg>
+    <section data-stock-tab-card="estimates-target-band">
+    <Panel>
+      <PanelHeader
+        eyebrow="Target Range"
+        title="애널리스트 목표가 범위"
+        right={upsidePct !== null ? <span className="tabular-nums text-[11px] font-semibold text-slate-600">{fmtPct(upsidePct)}</span> : null}
+      />
+      <div>
+        <Row>
+          <span className="truncate text-[12px] text-slate-700">현재가</span>
+          <Bar value={currentPct} aria-label={`목표가 범위 최저 ${formatMoney(low, currency)}, 현재가 ${formatMoney(current, currency)}, 평균 목표 ${formatMoney(mean, currency)}, 최고 ${formatMoney(high, currency)}`} />
+          <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{formatMoney(current, currency)}</span>
+        </Row>
+        <Row>
+          <span className="truncate text-[12px] text-slate-700">평균 목표</span>
+          <Bar value={meanPct} aria-label={`평균 목표 ${formatMoney(mean, currency)}`} />
+          <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{formatMoney(mean, currency)}</span>
+        </Row>
       </div>
+      <div className="grid grid-cols-2 px-4 py-2 text-[11px] tabular-nums text-slate-500">
+        <span>최저 {formatMoney(low, currency)}</span>
+        <span className="text-right">최고 {formatMoney(high, currency)}</span>
+      </div>
+    </Panel>
     </section>
   );
 }
@@ -2264,34 +1914,20 @@ function EstimatesGrowthTilesCp({ detail, currency }: { detail: any; currency: s
   if (tiles.length === 0) return null;
 
   return (
-    <div className="cpw4-tile-row">
+    <StatStrip>
       {tiles.map((t) => {
         const maxV = Math.max(t.now ?? 0, t.next ?? 0, 1);
-        const nowH = maxV > 0 ? Math.max(6, ((t.now ?? 0) / maxV) * 44) : 6;
-        const nextH = maxV > 0 ? Math.max(6, ((t.next ?? 0) / maxV) * 44) : 6;
+        const growthText = isFiniteNumber(t.growth) ? ` ${fmtWholeSignedPct(t.growth)}` : "";
         return (
-          <div className="cpw4-tile" key={t.label}>
-            <div className="cpw4-metric-row" style={{ marginBottom: 0 }}>
-              <p className="cpw4-tile__label" style={{ marginBottom: 0 }}>{t.label}</p>
-              {isFiniteNumber(t.growth) ? <span className={`cpw4-badge ${t.growth >= 0 ? "cpw4-badge--positive" : "cpw4-badge--negative"}`}>{fmtWholeSignedPct(t.growth)}</span> : null}
-            </div>
-            <p className="cpw4-tile__value" style={{ marginTop: 6 }}>{isFiniteNumber(t.next) ? t.fmt(t.next) : "—"}</p>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 14, marginTop: 8 }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                <span style={{ fontSize: 10.5, color: "var(--cp-text-soft)", fontWeight: 700 }}>{isFiniteNumber(t.now) ? t.fmt(t.now) : "—"}</span>
-                <div style={{ width: 20, height: nowH, borderRadius: "4px 4px 0 0", background: "var(--cp-surface-strong)" }} />
-                <span style={{ fontSize: 10, color: "var(--cp-text-soft)" }}>FY0</span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                <span style={{ fontSize: 10.5, color: "var(--cp-positive)", fontWeight: 800 }}>{isFiniteNumber(t.next) ? t.fmt(t.next) : "—"}</span>
-                <div style={{ width: 20, height: nextH, borderRadius: "4px 4px 0 0", background: "var(--cp-positive)" }} />
-                <span style={{ fontSize: 10, color: "var(--cp-text-soft)" }}>FY+1(E)</span>
-              </div>
-            </div>
-          </div>
+          <Stat
+            key={t.label}
+            label={t.label}
+            value={isFiniteNumber(t.next) ? t.fmt(t.next) : "—"}
+            sub={`FY0 ${isFiniteNumber(t.now) ? t.fmt(t.now) : "—"} → FY+1(E)${growthText}`}
+          />
         );
       })}
-    </div>
+    </StatStrip>
   );
 }
 
@@ -2313,30 +1949,34 @@ function EstimatesRecoCp({ yfData }: { yfData: any }) {
   const overall = bullishRatio >= 0.7 ? "Strong Buy" : bullishRatio >= 0.5 ? "Buy" : bullishRatio >= 0.3 ? "Hold" : "Sell 우세";
 
   return (
-    <section className="cp-stock-tab-card" data-stock-tab-card="estimates-recommendation">
-      <header className="cp-stock-tab-card__header">
-        <div><p className="cp-stock-rail-eyebrow">Analyst Recommendations</p><h2>애널리스트 추천 분포</h2></div>
-        <span className="cpw4-badge cpw4-badge--positive">종합: {overall}</span>
-      </header>
-      <div className="cp-stock-tab-card__body">
-        <div className="cpw4-reco-bar">
+    <section data-stock-tab-card="estimates-recommendation">
+    <Panel>
+      <PanelHeader
+        eyebrow="Analyst Recommendations"
+        title="애널리스트 추천 분포"
+        right={<span className="text-[11px] font-semibold text-slate-600">종합: {overall}</span>}
+      />
+      <div className="px-4 py-3">
+        <div className="flex h-9 overflow-hidden rounded-md border border-slate-200">
           {segs.map(([key, label, color]) => {
             const count = Number(lastRec[key]) || 0;
             const pct = (count / total) * 100;
             if (pct === 0) return null;
             return (
-              <div key={key} className="cpw4-reco-seg" style={{ width: `${pct}%`, background: color }}>
+              <div key={key} className="flex items-center justify-center whitespace-nowrap text-[12px] font-black text-white" style={{ width: `${pct}%`, background: color }}>
                 {pct > 8 ? `${label} ${count}` : ""}
               </div>
             );
           })}
         </div>
-        <div className="cpw4-reco-legend">
-          {segs.filter(([key]) => (Number(lastRec[key]) || 0) > 0).map(([key, label, color]) => (
-            <span key={key}><span className="dot" style={{ background: color }} />{label} {Number(lastRec[key])}명</span>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-[11px] text-slate-500">
+          {segs.filter(([key]) => (Number(lastRec[key]) || 0) > 0).map(([key, label]) => (
+            <span key={key}>{label} {Number(lastRec[key])}명</span>
           ))}
         </div>
       </div>
+      <EvidenceRail freshness="fresh" source="Yahoo Finance" asOf={typeof lastRec.period === "string" ? lastRec.period : "—"} coverage="추천 분포" skeletonDelayMs={120} />
+    </Panel>
     </section>
   );
 }
@@ -2409,158 +2049,128 @@ function OwnershipHeroCp({
   const sellWidthPct = soldAmount !== null ? Math.max(6, (soldAmount / maxFlow) * 100) : 0;
   const buyWidthPct = boughtAmount !== null ? Math.max(6, (boughtAmount / maxFlow) * 100) : 0;
 
-  const donutPct = institutionsPct !== null ? Math.max(0, Math.min(100, institutionsPct)) : null;
-  const donutR = 44;
-  const donutCirc = 2 * Math.PI * donutR;
-  const donutOffset = donutPct !== null ? donutCirc * (1 - donutPct / 100) : donutCirc;
+  const instHoldingPct = institutionsPct !== null ? Math.max(0, Math.min(100, institutionsPct)) : null;
 
   return (
     <>
-      <section className="cpw4-hero" id="guru-section" data-stock-tab-card="ownership-guru" data-smart-money-section="diff">
-        <div className="cpw4-hero__top">
-          <p className="cpw4-hero__eyebrow" data-smart-money-asof>
-            13F 기관 자금 흐름{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}
-          </p>
-          {hasFlow ? (
-            <div className="cpw4-own-net">
-              <div className="l">{isNetSell ? "순매도 규모" : "순매수 규모"}</div>
-              <div className={`v ${isNetSell ? "down" : "up"}`}>{isNetSell ? "-" : "+"}{formatCompactMoney(Math.abs(netFlow ?? 0), "USD")}</div>
-              <div className="r">매도 {formatCompactMoney(soldAmount ?? 0, "USD")} − 매수 {formatCompactMoney(boughtAmount ?? 0, "USD")}</div>
-            </div>
-          ) : null}
-        </div>
-        <h2 className="cpw4-hero__verdict">
-          {hasFlow ? (
-            <>이번 분기, 대형 기관은 <span className={isNetSell ? "down" : "up"}>{isNetSell ? "팔고 있습니다" : "사고 있습니다"}</span></>
-          ) : (
-            "이번 분기 랭킹 데이터에서 이 종목의 매매 흐름을 특정하지 못했습니다"
-          )}
-        </h2>
+      <section id="guru-section" data-stock-tab-card="ownership-guru" data-smart-money-section="diff">
+      <Panel>
+        <PanelHeader
+          eyebrow="13F 기관 자금 흐름"
+          title={hasFlow ? `이번 분기, 대형 기관은 ${isNetSell ? "팔고 있습니다" : "사고 있습니다"}` : "이번 분기 랭킹 데이터에서 이 종목의 매매 흐름을 특정하지 못했습니다"}
+          right={hasFlow ? <span className="tabular-nums text-[11px] font-semibold text-slate-600">{isNetSell ? "순매도" : "순매수"} {isNetSell ? "-" : "+"}{formatCompactMoney(Math.abs(netFlow ?? 0), "USD")}</span> : null}
+        />
+        <p className="px-4 pt-2 text-[11px] text-slate-500" data-smart-money-asof>
+          {reportBasisLabel ? `${reportBasisLabel}` : "기준 분기 미확인"} · 매도 {formatCompactMoney(soldAmount ?? 0, "USD")} − 매수 {formatCompactMoney(boughtAmount ?? 0, "USD")}
+        </p>
         {hasFlow && flowRatio !== null ? (
-          <p className="cpw4-hero__sub">
+          <p className="px-4 py-1 text-[12px] text-slate-600">
             추종 대가 중 {isNetSell ? "매도" : "매수"} 참여가 우세 — {isNetSell ? "매도" : "매수"} 금액이 {isNetSell ? "매수" : "매도"}의 <b>{flowRatio.toFixed(1)}배</b>에 달합니다.
           </p>
         ) : null}
         {hasFlow ? (
-          <div className="cpw4-own-flow-svg">
-            <svg viewBox="0 0 1000 100" preserveAspectRatio="xMidYMid meet" role="img" aria-label={`매도 ${formatCompactMoney(soldAmount ?? 0, "USD")} 대 매수 ${formatCompactMoney(boughtAmount ?? 0, "USD")}`}>
-              <line x1="500" y1="4" x2="500" y2="96" stroke="var(--cp-border-strong)" strokeWidth={2} />
-              <line x1="30" y1="66" x2="970" y2="66" stroke="var(--cp-divider)" strokeWidth={1} />
-              {soldAmount !== null ? (
-                <>
-                  <rect x={500 - (sellWidthPct / 100) * 460} y="48" width={(sellWidthPct / 100) * 460} height="24" rx="6" fill="var(--cp-negative)" />
-                  <text x={500 - (sellWidthPct / 100) * 460 + 10} y="65" fontSize="13" fontWeight="800" fill="var(--cp-surface)">매도 {formatCompactMoney(soldAmount, "USD")}</text>
-                  <text x={500 - (sellWidthPct / 100) * 460} y="42" fontSize="11" fontWeight="700" fill="var(--cp-text-soft)">
-                    참여 {isFiniteNumber(tradesChip?.sold?.investors_count) ? tradesChip.sold.investors_count : "—"}곳{isFiniteNumber(tradesChip?.sold?.exit_count) && tradesChip.sold.exit_count > 0 ? ` · 청산 ${tradesChip.sold.exit_count}곳` : ""}
-                  </text>
-                </>
-              ) : null}
-              {boughtAmount !== null ? (
-                <>
-                  <rect x="500" y="48" width={(buyWidthPct / 100) * 460} height="24" rx="6" fill="var(--cp-positive)" />
-                  <text x={500 + (buyWidthPct / 100) * 460 - 10} y="65" fontSize="13" fontWeight="800" fill="var(--cp-surface)" textAnchor="end">매수 {formatCompactMoney(boughtAmount, "USD")}</text>
-                  <text x="500" y="42" fontSize="11" fontWeight="700" fill="var(--cp-text-soft)">
-                    참여 {isFiniteNumber(tradesChip?.bought?.investors_count) ? tradesChip.bought.investors_count : "—"}곳{isFiniteNumber(tradesChip?.bought?.new_count) && tradesChip.bought.new_count > 0 ? ` · 신규 ${tradesChip.bought.new_count}곳` : ""}
-                  </text>
-                </>
-              ) : null}
-            </svg>
+          <div>
+            {soldAmount !== null ? (
+              <Row>
+                <span className="truncate text-[12px] text-slate-700">매도{isFiniteNumber(tradesChip?.sold?.investors_count) ? ` · 참여 ${tradesChip.sold.investors_count}곳` : ""}{isFiniteNumber(tradesChip?.sold?.exit_count) && tradesChip.sold.exit_count > 0 ? ` · 청산 ${tradesChip.sold.exit_count}곳` : ""}</span>
+                <Bar value={(sellWidthPct / 100) * 100} aria-label={`매도 ${formatCompactMoney(soldAmount ?? 0, "USD")} 대 매수 ${formatCompactMoney(boughtAmount ?? 0, "USD")}`} />
+                <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{formatCompactMoney(soldAmount, "USD")}</span>
+              </Row>
+            ) : null}
+            {boughtAmount !== null ? (
+              <Row>
+                <span className="truncate text-[12px] text-slate-700">매수{isFiniteNumber(tradesChip?.bought?.investors_count) ? ` · 참여 ${tradesChip.bought.investors_count}곳` : ""}{isFiniteNumber(tradesChip?.bought?.new_count) && tradesChip.bought.new_count > 0 ? ` · 신규 ${tradesChip.bought.new_count}곳` : ""}</span>
+                <Bar value={(buyWidthPct / 100) * 100} aria-label={`매수 ${formatCompactMoney(boughtAmount, "USD")}`} />
+                <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{formatCompactMoney(boughtAmount, "USD")}</span>
+              </Row>
+            ) : null}
           </div>
         ) : null}
-        <div className="cpw4-chip-row">
-          {holderCount > 0 ? <div className="cpw4-chip"><strong>{holderCount}</strong><span>보유 Guru 기관 수</span></div> : null}
-          {isFiniteNumber(tradesChip?.sold?.investors_count) ? <div className="cpw4-chip"><strong>{tradesChip.sold.investors_count}</strong><span>이번 분기 매도 참여</span></div> : null}
-          {isFiniteNumber(tradesChip?.bought?.investors_count) ? <div className="cpw4-chip"><strong>{tradesChip.bought.investors_count}</strong><span>이번 분기 매수 참여</span></div> : null}
-          {isFiniteNumber(tradesChip?.sold?.exit_count) && tradesChip.sold.exit_count > 0 ? <div className="cpw4-chip"><strong>{tradesChip.sold.exit_count}</strong><span>완전 청산(포지션 제로)</span></div> : null}
-          {guruValueApprox !== null ? <div className="cpw4-chip"><strong>{formatCompactMoney(guruValueApprox, "USD")}</strong><span>Guru 합산 보유 평가액(근사)</span></div> : null}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 py-2 text-[11px] text-slate-500">
+          {holderCount > 0 ? <span>보유 Guru 기관 수 <b className="tabular-nums text-slate-900">{holderCount}</b></span> : null}
+          {isFiniteNumber(tradesChip?.sold?.investors_count) ? <span>이번 분기 매도 참여 <b className="tabular-nums text-slate-900">{tradesChip.sold.investors_count}</b></span> : null}
+          {isFiniteNumber(tradesChip?.bought?.investors_count) ? <span>이번 분기 매수 참여 <b className="tabular-nums text-slate-900">{tradesChip.bought.investors_count}</b></span> : null}
+          {isFiniteNumber(tradesChip?.sold?.exit_count) && tradesChip.sold.exit_count > 0 ? <span>완전 청산(포지션 제로) <b className="tabular-nums text-slate-900">{tradesChip.sold.exit_count}</b></span> : null}
+          {guruValueApprox !== null ? <span>Guru 합산 보유 평가액(근사) <b className="tabular-nums text-slate-900">{formatCompactMoney(guruValueApprox, "USD")}</b></span> : null}
         </div>
+      </Panel>
       </section>
 
-      <div className="cpw4-own-body-grid">
-        <section className="cp-stock-tab-card" data-stock-tab-card="ownership-holders" data-smart-money-section="holdings">
-          <header className="cp-stock-tab-card__header">
-            <div><p className="cp-stock-rail-eyebrow">13F Guru</p><h2>Top Guru 보유 비중</h2></div>
-            <span style={{ fontSize: 11.5, color: "var(--cp-text-soft)", fontWeight: 650 }}>포트폴리오 내 {ticker} 비중 기준{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}</span>
-          </header>
-          <div className="cp-stock-tab-card__body">
+      <div style={{ display: "grid", gap: 16 }}>
+        <section data-stock-tab-card="ownership-holders" data-smart-money-section="holdings">
+        <Panel>
+          <PanelHeader
+            eyebrow="13F Guru"
+            title="Top Guru 보유 비중"
+            right={<span className="text-[11px] text-slate-500">포트폴리오 내 {ticker} 비중 기준{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}</span>}
+          />
+          <div>
             {top10.length > 0 ? (
               <>
-                <div className="cpw4-holder-cols" data-smart-money-report-date-column>
-                  <span>#</span><span>투자자</span><span>포트폴리오 비중</span><span className="right">비중</span><span className="right">주식수</span><span className="right">공시 기준</span>
-                </div>
                 {top10.map((h, i) => {
                   const maxWeight = top10[0]?.weight || 1;
                   const barPct = maxWeight > 0 ? Math.max(4, (h.weight / maxWeight) * 100) : 0;
                   return (
-                    <div className="cpw4-holder-row" key={h.investor} data-smart-money-report-date-cell>
-                      <div className={`cpw4-holder-rank ${i < 3 ? "cpw4-holder-rank--top" : ""}`}>{i + 1}</div>
-                      <TransitionLink href={ROUTES.superinvestorsGuru(h.investor)} className="cpw4-holder-name" title={h.investor}>{h.investor}</TransitionLink>
-                      <div className="cpw4-holder-track"><div className="cpw4-holder-fill" style={{ width: `${barPct}%` }} /></div>
-                      <div className="cpw4-holder-pct right">{h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—"}</div>
-                      <div className="cpw4-holder-shares right">{h.shares > 0 ? `${h.shares.toLocaleString()}주` : "—"}</div>
-                      <div className="cpw4-holder-quarter right">{quarter ?? "—"}</div>
-                    </div>
+                    <Row key={h.investor} data-smart-money-report-date-cell>
+                      <span className="truncate text-[12px] text-slate-700">{i + 1}. {h.investor}</span>
+                      <span className="min-w-0" data-smart-money-report-date-column>
+                        <Bar value={barPct} aria-label={`${h.investor} 포트폴리오 비중 ${h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—"}`} />
+                      </span>
+                      <span className="text-right text-[12px] tabular-nums text-slate-600">{h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—"} · {h.shares > 0 ? `${h.shares.toLocaleString()}주` : "—"} · {quarter ?? "—"}</span>
+                    </Row>
                   );
                 })}
               </>
             ) : (
-              <p style={{ fontSize: 12.5, color: "var(--cp-text-muted)" }}>13F 보유자 데이터를 찾지 못했습니다.</p>
+              <p className="px-4 py-3 text-[12px] text-slate-500">13F 보유자 데이터를 찾지 못했습니다.</p>
             )}
           </div>
+        </Panel>
         </section>
 
         <div style={{ display: "grid", gap: 16 }}>
           {isFiniteNumber(tradesChip?.sold?.exit_count) && tradesChip.sold.exit_count > 0 ? (
-            <section className="cpw4-own-changes">
-              <div className="cpw4-own-changes__eyebrow">최근 주요 변화{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}</div>
-              <div className="cpw4-own-changes__headline">완전 청산 <strong>{tradesChip.sold.exit_count}건</strong></div>
-              <div className="cpw4-own-changes__sub">매도 참여 {isFiniteNumber(tradesChip?.sold?.investors_count) ? tradesChip.sold.investors_count : "—"}곳 중 {tradesChip.sold.exit_count}곳은 포지션을 아예 제로로 정리했습니다</div>
+            <Panel>
+              <PanelHeader eyebrow={reportBasisLabel ? `최근 주요 변화 · ${reportBasisLabel}` : "최근 주요 변화"} title={`완전 청산 ${tradesChip.sold.exit_count}건`} />
+              <p className="px-4 py-2 text-[12px] text-slate-600">매도 참여 {isFiniteNumber(tradesChip?.sold?.investors_count) ? tradesChip.sold.investors_count : "—"}곳 중 {tradesChip.sold.exit_count}곳은 포지션을 아예 제로로 정리했습니다</p>
               {tradeInvestorNameOf(tradesChip?.sold?.top_investor) ? (
-                <div className="cpw4-own-change-row">
-                  <div>
-                    <div className="cpw4-own-change-name">{tradeInvestorNameOf(tradesChip.sold.top_investor)}</div>
-                    <div className="cpw4-own-change-desc">이번 분기 최대 매도 참여자 · 전량 청산 여부는 개별 확인 필요</div>
-                  </div>
-                  <span className="cpw4-badge cpw4-badge--negative">매도 랭크 #{isFiniteNumber(tradesChip.sold.rank) ? tradesChip.sold.rank : "—"}</span>
-                </div>
+                <Row>
+                  <span className="truncate text-[12px] text-slate-700">{tradeInvestorNameOf(tradesChip.sold.top_investor)} · 이번 분기 최대 매도 참여자 · 전량 청산 여부는 개별 확인 필요</span>
+                  <span className="truncate text-[12px] text-slate-600" />
+                  <span className="text-right text-[12px] font-semibold text-slate-900">매도 랭크 #{isFiniteNumber(tradesChip.sold.rank) ? tradesChip.sold.rank : "—"}</span>
+                </Row>
               ) : null}
-            </section>
+            </Panel>
           ) : null}
 
           {institutionsPct !== null || institutionsCount !== null ? (
-            <section className="cp-stock-tab-card" data-stock-tab-card="ownership-institutional-summary">
-              <header className="cp-stock-tab-card__header">
-                <div><p className="cp-stock-rail-eyebrow">Institutional</p><h2>기관 보유 요약</h2></div>
-                <span style={{ fontSize: 11, color: "var(--cp-text-soft)" }}>Yahoo Finance</span>
-              </header>
-              <div className="cp-stock-tab-card__body">
-                <div className="cpw4-own-gauge-wrap">
-                  {donutPct !== null ? (
-                    <svg width="104" height="104" viewBox="0 0 104 104">
-                      <circle cx="52" cy="52" r={donutR} fill="none" stroke="var(--cp-surface-strong)" strokeWidth="12" />
-                      <circle cx="52" cy="52" r={donutR} fill="none" stroke="var(--cp-accent-strong)" strokeWidth="12" strokeLinecap="round"
-                        strokeDasharray={donutCirc} strokeDashoffset={donutOffset} transform="rotate(-90 52 52)" />
-                      <text x="52" y="48" textAnchor="middle" fontSize="20" fontWeight="800" fill="var(--cp-text-strong)">{donutPct.toFixed(1)}%</text>
-                      <text x="52" y="65" textAnchor="middle" fontSize="10" fontWeight="700" fill="var(--cp-text-soft)">기관보유</text>
-                    </svg>
-                  ) : null}
-                  <p className="cpw4-own-gauge-sub">
-                    {institutionsCount !== null ? <>기관투자자 <strong>{institutionsCount.toLocaleString()}곳</strong>이 {ticker}를 보유 중이며, </> : null}
-                    {donutPct !== null ? <>발행주식의 <strong>{donutPct.toFixed(1)}%</strong>를 쥐고 있습니다.</> : null}
-                  </p>
-                </div>
-                <div className="cpw4-own-tiles">
-                  {institutionsFloatPct !== null ? <div className="cpw4-own-tile"><div className="v">{institutionsFloatPct.toFixed(1)}%</div><div className="l">유동주 기준 기관 보유율</div></div> : null}
-                  {insidersPct !== null ? <div className="cpw4-own-tile"><div className="v">{insidersPct.toFixed(1)}%</div><div className="l">내부자 보유율</div></div> : null}
-                  {institutionsCount !== null ? <div className="cpw4-own-tile"><div className="v">{institutionsCount.toLocaleString()}</div><div className="l">보유 기관 총 수</div></div> : null}
-                </div>
-              </div>
+            <section data-stock-tab-card="ownership-institutional-summary">
+            <Panel>
+              <PanelHeader eyebrow="Institutional · Yahoo Finance" title="기관 보유 요약" />
+              {instHoldingPct !== null ? (
+                <Row>
+                  <span className="truncate text-[12px] text-slate-700">발행주식 기준 기관 보유율</span>
+                  <Bar value={instHoldingPct} aria-label={`기관 보유율 ${instHoldingPct.toFixed(1)}%`} />
+                  <span className="text-right text-[12px] font-semibold text-slate-900">{instHoldingPct.toFixed(1)}%</span>
+                </Row>
+              ) : null}
+              <p className="px-4 py-2 text-[12px] text-slate-600">
+                {institutionsCount !== null ? <>기관투자자 <strong>{institutionsCount.toLocaleString()}곳</strong>이 {ticker}를 보유 중이며, </> : null}
+                {instHoldingPct !== null ? <>발행주식의 <strong>{instHoldingPct.toFixed(1)}%</strong>를 쥐고 있습니다.</> : null}
+              </p>
+              <StatStrip>
+                {institutionsFloatPct !== null ? <Stat label="유동주 기준 기관 보유율" value={`${institutionsFloatPct.toFixed(1)}%`} /> : null}
+                {insidersPct !== null ? <Stat label="내부자 보유율" value={`${insidersPct.toFixed(1)}%`} /> : null}
+                {institutionsCount !== null ? <Stat label="보유 기관 총 수" value={institutionsCount.toLocaleString()} /> : null}
+              </StatStrip>
+              <EvidenceRail freshness="fresh" source="Yahoo Finance" asOf={reportBasisLabel ?? "—"} coverage="기관 보유" skeletonDelayMs={120} />
+            </Panel>
             </section>
           ) : null}
         </div>
       </div>
 
-      <p className="cpw4-disclaimer" data-smart-money-lag-disclosure>13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다{reportBasisLabel ? ` · ${reportBasisLabel} 데이터` : ""}. Guru 합산 보유 평가액은 현재가 × 보유주식수 근사치입니다.</p>
+      <p className="px-1 py-2 text-[11px] leading-4 text-slate-500" data-smart-money-lag-disclosure>13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다{reportBasisLabel ? ` · ${reportBasisLabel} 데이터` : ""}. Guru 합산 보유 평가액은 현재가 × 보유주식수 근사치입니다.</p>
     </>
   );
 }
@@ -2583,15 +2193,10 @@ const FILING_STANCE_LABEL: Record<string, string> = {
   management_claim: "경영진 언급",
   feno_interpretation: "Feno 해석",
 };
-const FILING_STANCE_CLASS: Record<string, string> = {
-  fact: "cpw4-filing-tag-fact",
-  management_claim: "cpw4-filing-tag-claim",
-  feno_interpretation: "cpw4-filing-tag-note",
-};
 
-function filingFormBadgeClass(form: string): string {
-  if (form === "8-K" || form === "6-K") return "cpw4-badge--warning";
-  return "cpw4-badge--neutral";
+function filingFormPillTone(form: string): "warn" | "neutral" {
+  if (form === "8-K" || form === "6-K") return "warn";
+  return "neutral";
 }
 
 function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
@@ -2647,20 +2252,19 @@ function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
   if (filings === null) return <div className="cp-stock-tab-loading"><SkeletonSection /></div>;
   if (filings.length === 0) {
     return (
-      <section className="cp-stock-tab-card">
-        <div className="cp-stock-tab-card__body">
-          <p className="text-sm font-semibold text-slate-700">연결된 한글 공시 요약이 없습니다.</p>
-          <p className="mt-2 text-sm text-slate-500">{ticker}의 10-K, 10-Q, 8-K 한글 요약이 준비되면 이 탭에 자동으로 표시됩니다.</p>
+      <Panel>
+        <PanelHeader eyebrow="EDGAR · LLM 한글 요약" title="연결된 한글 공시 요약이 없습니다." />
+        <p className="px-4 py-2 text-[12px] text-slate-600">{ticker}의 10-K, 10-Q, 8-K 한글 요약이 준비되면 이 탭에 자동으로 표시됩니다.</p>
+        <div className="px-4 pb-3">
           <ExternalSourceLinks ticker={ticker} kind="filing" statusLine="연결된 한글 공시 요약 없음" className="mt-4" />
         </div>
-      </section>
+        <EvidenceRail freshness="stale" source="EDGAR" asOf="—" coverage="한글 요약 0건" next="요약 준비 시" skeletonDelayMs={120} />
+      </Panel>
     );
   }
 
   const readyCount = readyFilings.length;
   const readyRatio = filings.length > 0 ? readyCount / filings.length : 0;
-  const gaugeR = 32, gaugeCirc = 2 * Math.PI * gaugeR;
-  const gaugeOffset = gaugeCirc * (1 - readyRatio);
   const dateRange = filings.length > 0 ? `${filings[filings.length - 1].filingDate} ~ ${filings[0].filingDate}` : "";
   const otherFilings = filings.filter((f) => f !== heroFiling && !feedFilings.includes(f));
   const otherReady = otherFilings.filter((f) => f.summaryPath);
@@ -2668,86 +2272,68 @@ function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
 
   return (
     <>
-      <div className="cpw4-filing-section-head">
-        <div>
-          <p className="cpw4-hero__eyebrow">EDGAR · LLM 한글 요약</p>
-          <h2 className="cpw4-hero__verdict" style={{ fontSize: 22 }}>공시가 지금 이 종목에 의미하는 것</h2>
-          <p className="cpw4-hero__sub">최근 {filings.length}건 공시 · {dateRange}</p>
-          <p className="cpw4-filing-ai-caption"><span className="dot" />AI가 SEC 원문 공시를 분석해 한국어로 번역·요약합니다 · 투자 판단의 단독 근거로 쓰지 마세요</p>
-        </div>
-        <div className="cpw4-filing-coverage-gauge">
-          <svg width="76" height="76" viewBox="0 0 76 76">
-            <circle cx="38" cy="38" r={gaugeR} fill="none" stroke="var(--cp-divider)" strokeWidth="9" />
-            <circle cx="38" cy="38" r={gaugeR} fill="none" stroke="var(--cp-accent)" strokeWidth="9" strokeLinecap="round"
-              strokeDasharray={gaugeCirc} strokeDashoffset={gaugeOffset} transform="rotate(-90 38 38)" />
-            <text x="38" y="34" textAnchor="middle" fontSize="14" fontWeight="800" fill="var(--cp-text-strong)">{Math.round(readyRatio * 100)}%</text>
-            <text x="38" y="48" textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--cp-text-soft)">요약 완료</text>
-          </svg>
-          <div>
-            <div className="lbl">한글 요약 완료</div>
-            <div className="val">{readyCount}<small>&nbsp;/&nbsp;{filings.length}건</small></div>
-          </div>
-        </div>
-      </div>
+      <Panel>
+        <PanelHeader eyebrow="EDGAR · LLM 한글 요약" title="공시가 지금 이 종목에 의미하는 것" />
+        <p className="px-4 pt-2 text-[12px] text-slate-600">최근 {filings.length}건 공시 · {dateRange}</p>
+        <Row>
+          <span className="truncate text-[12px] text-slate-700">한글 요약 완료 {readyCount} / {filings.length}건</span>
+          <Bar value={filings.length > 0 ? (readyRatio * 100) : 0} aria-label={`한글 요약 완료율 ${Math.round(readyRatio * 100)}%`} />
+          <span className="text-right text-[12px] font-semibold text-slate-900">{Math.round(readyRatio * 100)}%</span>
+        </Row>
+        <p className="px-4 py-2 text-[11px] text-slate-500">AI가 SEC 원문 공시를 분석해 한국어로 번역·요약합니다 · 투자 판단의 단독 근거로 쓰지 마세요</p>
+        <EvidenceRail freshness={readyCount > 0 ? "fresh" : "pending"} source="EDGAR" asOf={filings.length > 0 ? filings[0].filingDate : "—"} coverage={`공시 ${filings.length}건`} skeletonDelayMs={120} />
+      </Panel>
 
       {heroFiling ? (
-        <section className="cpw4-hero" id="filing-hero" data-stock-tab-card="filings-hero">
-          <div className="cpw4-hero__top">
-            <span className={`cpw4-badge ${filingFormBadgeClass(heroFiling.form)}`}>{heroFiling.form}</span>
-            <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--cp-text-muted)" }}>{heroFiling.filingDate} 접수</span>
-            <span className="cpw4-badge cpw4-badge--warning">가장 중요한 최근 공시</span>
+        <section id="filing-hero" data-stock-tab-card="filings-hero">
+        <Panel>
+          <PanelHeader
+            eyebrow={`${heroFiling.form} · ${heroFiling.filingDate} 접수`}
+            title={heroArtifact === undefined ? "요약을 불러오는 중입니다…" : (heroArtifact?.summaryKo?.oneLine ?? heroFiling.summaryOneLine ?? heroFiling.title)}
+            right={<Pill tone="warn">가장 중요한 최근 공시</Pill>}
+          />
+          {heroArtifact?.summaryKo?.keyPoints && heroArtifact.summaryKo.keyPoints.length > 0 ? (
+            <div className="px-4 py-2" style={{ display: "grid", gap: 6 }}>
+              {heroArtifact.summaryKo.keyPoints.slice(0, 2).map((bullet, i) => (
+                <p className="text-[12px] text-slate-700" key={i}>
+                  <Pill tone="neutral">{FILING_STANCE_LABEL[bullet.stance] ?? "핵심"}</Pill> {bullet.text}
+                </p>
+              ))}
+            </div>
+          ) : null}
+          <div className="flex flex-wrap gap-2 px-4 py-2">
+            <a href={heroFiling.sourceUrl} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-[#1B73D3]">원문 보기</a>
+            {heroFiling.translationPath ? <a href={heroFiling.translationPath} className="text-[12px] font-semibold text-[#1B73D3]">번역 보기</a> : null}
           </div>
-          {heroArtifact === undefined ? (
-            <p className="cpw4-hero__sub">요약을 불러오는 중입니다…</p>
-          ) : (
-            <>
-              <h2 className="cpw4-hero__verdict">{heroArtifact?.summaryKo?.oneLine ?? heroFiling.summaryOneLine ?? heroFiling.title}</h2>
-              {heroArtifact?.summaryKo?.keyPoints && heroArtifact.summaryKo.keyPoints.length > 0 ? (
-                <div className="cpw4-filing-hero-bullets">
-                  {heroArtifact.summaryKo.keyPoints.slice(0, 2).map((bullet, i) => (
-                    <div className="cpw4-filing-bullet" key={i}>
-                      <span className={`tag ${FILING_STANCE_CLASS[bullet.stance] ?? "cpw4-filing-tag-fact"}`}>{FILING_STANCE_LABEL[bullet.stance] ?? "핵심"}</span>
-                      <span>{bullet.text}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </>
-          )}
-          <div className="cpw4-chip-row" style={{ marginTop: 4 }}>
-            <a href={heroFiling.sourceUrl} target="_blank" rel="noreferrer" className="cpw4-badge cpw4-badge--neutral">원문 보기</a>
-            {heroFiling.translationPath ? <a href={heroFiling.translationPath} className="cpw4-badge cpw4-badge--neutral">번역 보기</a> : null}
-          </div>
+          <EvidenceRail freshness={heroArtifact === undefined ? "pending" : heroArtifact ? "fresh" : "stale"} source="EDGAR" asOf={heroFiling.filingDate} coverage="최신 공시 요약" skeletonDelayMs={120} />
+        </Panel>
         </section>
       ) : null}
 
       {feedFilings.length > 0 ? (
         <section data-stock-tab-card="filings-feed">
-          <div className="cpw4-section-head" style={{ marginBottom: 10 }}><h3>공시 피드 · 최근 상세 요약</h3></div>
-          <div className="cpw4-filing-feed-grid">
-            {feedFilings.map((filing) => {
-              const artifact = filing.summaryPath ? feedArtifacts[filing.summaryPath] : null;
-              const bullets = [
-                ...(artifact?.summaryKo?.financialHighlights ?? []),
-                ...(artifact?.summaryKo?.riskChanges ?? []),
-              ].slice(0, 1);
-              return (
-                <article className="cpw4-filing-feed-card" key={filing.accession}>
-                  <div className="cpw4-filing-feed-head">
-                    <span className={`cpw4-badge ${filingFormBadgeClass(filing.form)}`}>{filing.form}</span>
-                    <span className="date">{filing.filingDate} 접수</span>
-                  </div>
-                  <p className="cpw4-filing-feed-headline">{artifact?.summaryKo?.oneLine ?? filing.summaryOneLine ?? filing.title}</p>
-                  {bullets.map((bullet, i) => (
-                    <div className="cpw4-filing-bullet" key={i}>
-                      <span className={`tag ${FILING_STANCE_CLASS[bullet.stance] ?? "cpw4-filing-tag-fact"}`}>{FILING_STANCE_LABEL[bullet.stance] ?? "핵심"}</span>
-                      <span>{bullet.text}</span>
-                    </div>
-                  ))}
-                </article>
-              );
-            })}
-          </div>
+        <Panel>
+          <PanelHeader eyebrow="Filings Feed" title="공시 피드 · 최근 상세 요약" />
+          {feedFilings.map((filing) => {
+            const artifact = filing.summaryPath ? feedArtifacts[filing.summaryPath] : null;
+            const bullets = [
+              ...(artifact?.summaryKo?.financialHighlights ?? []),
+              ...(artifact?.summaryKo?.riskChanges ?? []),
+            ].slice(0, 1);
+            return (
+              <div className="border-t border-slate-100 px-4 py-3" key={filing.accession} style={{ display: "grid", gap: 4 }}>
+                <p className="text-[12px] text-slate-600"><Pill tone={filingFormPillTone(filing.form)}>{filing.form}</Pill> {filing.filingDate} 접수</p>
+                <p className="text-[13px] font-semibold text-slate-900">{artifact?.summaryKo?.oneLine ?? filing.summaryOneLine ?? filing.title}</p>
+                {bullets.map((bullet, i) => (
+                  <p className="text-[12px] text-slate-700" key={i}>
+                    <Pill tone="neutral">{FILING_STANCE_LABEL[bullet.stance] ?? "핵심"}</Pill> {bullet.text}
+                  </p>
+                ))}
+              </div>
+            );
+          })}
+          <EvidenceRail freshness="fresh" source="EDGAR" asOf={feedFilings[0].filingDate} coverage={`피드 ${feedFilings.length}건`} skeletonDelayMs={120} />
+        </Panel>
         </section>
       ) : null}
 
@@ -2755,39 +2341,38 @@ function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
 
       {otherFilings.length > 0 ? (
         <section data-stock-tab-card="filings-other">
-          <div className="cpw4-section-head" style={{ marginBottom: 10 }}><h3>그 외 공시 ({otherFilings.length}건)</h3></div>
-          <div className="cpw4-filing-other-cols">
-            {otherReady.length > 0 ? (
-              <div>
-                <p className="cpw4-filing-other-group-title">요약 완료 · 원문 참고 ({otherReady.length}건)</p>
-                {otherReady.map((f) => (
-                  <div className="cpw4-filing-other-row" id={`other-${f.accession}`} key={f.accession}>
-                    <span className={`cpw4-badge ${filingFormBadgeClass(f.form)}`}>{f.form}</span>
-                    <span className="date">{f.filingDate}</span>
-                    <span className="stat stat--ready">요약 완료</span>
-                    <a href={f.sourceUrl} target="_blank" rel="noreferrer" className="cta">원문 보기</a>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            {otherPending.length > 0 ? (
-              <div>
-                <p className="cpw4-filing-other-group-title">요약 대기 ({otherPending.length}건)</p>
-                {otherPending.map((f) => (
-                  <div className="cpw4-filing-other-row" key={f.accession}>
-                    <span className="cpw4-badge cpw4-badge--neutral">{f.form}</span>
-                    <span className="date">{f.filingDate}</span>
-                    <span className="stat stat--pending">요약 대기</span>
-                    <a href={f.sourceUrl} target="_blank" rel="noreferrer" className="cta">원문 보기</a>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
+        <Panel>
+          <PanelHeader eyebrow="More Filings" title={`그 외 공시 (${otherFilings.length}건)`} />
+          {otherReady.length > 0 ? (
+            <div className="border-t border-slate-100 px-4 py-2">
+              <p className="py-1 text-[11px] font-semibold text-slate-500">요약 완료 · 원문 참고 ({otherReady.length}건)</p>
+              {otherReady.map((f) => (
+                <Row key={f.accession}>
+                  <span className="truncate text-[12px] text-slate-700" id={`other-${f.accession}`}><Pill tone={filingFormPillTone(f.form)}>{f.form}</Pill> {f.filingDate}</span>
+                  <span className="truncate text-center text-[12px] text-[#1aa86f]">요약 완료</span>
+                  <span className="text-right text-[12px] font-semibold text-[#1B73D3]"><a href={f.sourceUrl} target="_blank" rel="noreferrer">원문 보기</a></span>
+                </Row>
+              ))}
+            </div>
+          ) : null}
+          {otherPending.length > 0 ? (
+            <div className="border-t border-slate-100 px-4 py-2">
+              <p className="py-1 text-[11px] font-semibold text-slate-500">요약 대기 ({otherPending.length}건)</p>
+              {otherPending.map((f) => (
+                <Row key={f.accession}>
+                  <span className="truncate text-[12px] text-slate-700"><Pill tone="neutral">{f.form}</Pill> {f.filingDate}</span>
+                  <span className="truncate text-center text-[12px] text-[#b9791a]">요약 대기</span>
+                  <span className="text-right text-[12px] font-semibold text-[#1B73D3]"><a href={f.sourceUrl} target="_blank" rel="noreferrer">원문 보기</a></span>
+                </Row>
+              ))}
+            </div>
+          ) : null}
+          <EvidenceRail freshness={otherPending.length > 0 ? "partial" : "fresh"} source="EDGAR" asOf={otherFilings[0].filingDate} coverage={`기타 ${otherFilings.length}건`} skeletonDelayMs={120} />
+        </Panel>
         </section>
       ) : null}
 
-      <p className="cpw4-disclaimer">EDGAR 공시 원문 · Fenok LLM 한글 요약(자동 생성) · 투자 판단의 참고 자료이며 매수·매도 권유가 아닙니다.</p>
+      <p className="px-1 py-2 text-[11px] leading-4 text-slate-500">EDGAR 공시 원문 · Fenok LLM 한글 요약(자동 생성) · 투자 판단의 참고 자료이며 매수·매도 권유가 아닙니다.</p>
     </>
   );
 }
@@ -2810,8 +2395,10 @@ function FilingsTimelineCp({ filings, heroFiling }: { filings: EdgarKoreanSummar
 
   return (
     <section data-stock-tab-card="filings-timeline">
-      <div className="cpw4-section-head" style={{ marginBottom: 8 }}><h3>공시 캘린더 · {filings.length}건</h3></div>
-      <svg className="cpw4-filing-timeline-svg" viewBox={`0 0 ${W} 150`} preserveAspectRatio="xMidYMid meet">
+    <Panel>
+      <PanelHeader eyebrow="Filings Calendar" title={`공시 캘린더 · ${filings.length}건`} />
+      <div className="px-4 py-2">
+      <svg className="block h-auto w-full" viewBox={`0 0 ${W} 150`} preserveAspectRatio="xMidYMid meet">
         <line x1={padX} y1={periodicLaneY} x2={W - 40} y2={periodicLaneY} stroke="var(--cp-divider)" strokeWidth={1} />
         <line x1={padX} y1={eightKLaneY} x2={W - 40} y2={eightKLaneY} stroke="var(--cp-divider)" strokeWidth={1} />
         <text x={4} y={periodicLaneY + 4} fontSize="11.5" fontWeight="700" fill="var(--cp-text-soft)">정기공시</text>
@@ -2834,11 +2421,14 @@ function FilingsTimelineCp({ filings, heroFiling }: { filings: EdgarKoreanSummar
           return anchor ? <a href={anchor} key={f.accession}>{dot}</a> : <g key={f.accession}>{dot}</g>;
         })}
       </svg>
-      <div className="cpw4-filing-timeline-legend">
-        <span><span className="dot" style={{ background: "var(--cp-chart-line-2)" }} />10-K/10-Q/20-F/40-F 요약 완료</span>
-        <span><span className="dot" style={{ background: "var(--cp-warning)" }} />8-K 등 요약 완료</span>
-        <span><span className="dot" style={{ border: "1.6px dashed var(--cp-neutral)", background: "transparent" }} />요약 대기</span>
       </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-2 text-[11px] text-slate-500">
+        <span>정기공시 요약 완료</span>
+        <span>8-K 등 요약 완료</span>
+        <span>요약 대기</span>
+      </div>
+      <EvidenceRail freshness="fresh" source="EDGAR" asOf={sorted.length > 0 ? sorted[sorted.length - 1].filingDate : "—"} coverage={`캘린더 ${filings.length}건`} skeletonDelayMs={120} />
+    </Panel>
     </section>
   );
 }
@@ -2902,9 +2492,6 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
   const longScore = isFiniteNumber(record.longTermConvictionScore) ? record.longTermConvictionScore
     : isFiniteNumber(record.longTermScore) ? record.longTermScore : null;
 
-  const round = (v: number | null) => (v === null ? null : Math.round(Math.max(0, Math.min(100, v))));
-  const shortR = round(shortScore);
-  const longR = round(longScore);
   const shortTermBasis = shortTermCommonBasisCopy(record.marketScope, {
     sourceInputCount: shortTerm.sourceInputCount,
     basisCode: shortTerm.basisCode,
@@ -2920,144 +2507,33 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
   const asOfLabel = fmtKstMinute(record.asOf);
   const coverage = record.lensCoverageRatio ?? record.coverageRatio;
 
-  const gaugeR = 90, gaugeCirc = Math.PI * gaugeR;
-  const semiGauge = (score: number | null) => {
-    const clamped = score === null ? 0 : Math.max(0, Math.min(100, score));
-    return { filled: gaugeCirc * (clamped / 100), total: gaugeCirc };
-  };
-  const shortGauge = semiGauge(shortR);
-  const longGauge = semiGauge(longR);
-
-  function renderRadar(axes: EdgeAxisRow[], color: string, label: string) {
-    const { cx, cy, maxR, viewBoxWidth, viewBoxHeight, labelRingOffset, fontSizePx, valueLineDy } =
-      EDGE_RADAR_GEOMETRY;
-    const points = radarPolygonPoints(axes.map((a) => a.score), cx, cy, maxR);
-    return (
-      <svg viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`} role="img" aria-label={`${label} 6축 레이더 · 참고축 포함`}>
-        {[1, 0.75, 0.5, 0.25].map((level) => (
-          <polygon key={level} points={radarPolygonPoints(axes.map(() => 100 * level), cx, cy, maxR)} fill="none" stroke="var(--cp-divider)" strokeWidth={1} opacity={0.55} />
-        ))}
-        {axes.map((_, i) => {
-          const [x, y] = polarPoint(cx, cy, maxR, (360 / axes.length) * i);
-          return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="var(--cp-divider)" opacity={0.55} />;
-        })}
-        <polygon points={points} fill={`color-mix(in srgb, ${color} 16%, transparent)`} stroke={color} strokeWidth={2} strokeLinejoin="round" />
-        {axes.map((a, i) => {
-          const r = (maxR * Math.max(0, Math.min(100, a.score ?? 0))) / 100;
-          const [x, y] = polarPoint(cx, cy, r, (360 / axes.length) * i);
-          return <circle key={a.key} cx={x} cy={y} r={3} fill={color} />;
-        })}
-        {axes.map((a, i) => {
-          const [x, y] = polarPoint(cx, cy, maxR + labelRingOffset, (360 / axes.length) * i);
-          const [name, value] = edgeAxisRadarLines(a.spokeLabel, Boolean(a.referenceOnly), a.score);
-          return (
-            <text key={`${a.key}-label`} x={x} y={y} textAnchor="middle" fontSize={fontSizePx} fontWeight="700" fill="var(--cp-text-soft)">
-              <tspan x={x}>{name}</tspan>
-              <tspan x={x} dy={valueLineDy}>{value}</tspan>
-            </text>
-          );
-        })}
-      </svg>
-    );
-  }
-
-  function renderAxisGroup(axes: EdgeAxisRow[], groupClass: "short" | "long", title: string) {
-    return (
-      <div>
-        <div className={`cpw4-edge-axis-group-title cpw4-edge-axis-group-title--${groupClass}`}><span className="dot" />{title}</div>
-        {axes.map((a) => {
-          const tone = axisToneClass(a.score);
-          return (
-            <div className="cpw4-edge-axis-row" key={a.key}>
-              <span className="cpw4-edge-axis-name">{a.label}{a.referenceOnly ? " · 참고" : ""}</span>
-              <span className="cpw4-edge-axis-track"><span className={`cpw4-edge-axis-fill cpw4-edge-axis-fill--${tone}`} style={{ width: `${a.score ?? 0}%` }} /></span>
-              <span className="cpw4-edge-axis-value">{a.score !== null ? Math.round(a.score) : "—"}</span>
-              <span className={`cpw4-edge-axis-tone cpw4-edge-axis-tone--${tone}`}>{axisToneLabel(tone)}</span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
+  const edgeSummary = [
+    bestShort ? `단기 최강 ${bestShort.label} ${Math.round(bestShort.score ?? 0)}` : null,
+    worstShort ? `단기 최약 ${worstShort.label} ${Math.round(worstShort.score ?? 0)}` : null,
+    bestLong ? `장기 최강 ${bestLong.label} ${Math.round(bestLong.score ?? 0)}` : null,
+    worstLong ? `장기 최약 ${worstLong.label} ${Math.round(worstLong.score ?? 0)}` : null,
+    `${shortTermBasis.label} · ${shortTermBasis.windowLabel} · ${shortTermBasis.sourceInputCount ?? "—"}/3–5 입력`,
+    shortTermBasis.comparisonNote,
+    shortTermBasis.exclusionNote,
+    isFiniteNumber(shortTerm.score) ? `공통 3축 ${Math.round(shortTerm.score)}` : null,
+    "점수는 서로 합산하지 않음 · FENOK 파생 신호 · 투자 조언이 아닙니다",
+  ].filter(Boolean).join(" · ");
 
   return (
-    <section className="cpw4-edge-section" data-stock-tab-card="fenok-edge-overview">
-      <div className="cpw4-edge-head">
-        <div>
-          <p className="cpw4-hero__eyebrow">FENOK EDGE · 단기·장기 진단</p>
-          <h2 className="cpw4-hero__verdict" style={{ fontSize: 22 }}>단기·장기 독립 진단</h2>
-          <span className="cpw4-badge cpw4-badge--neutral">점수는 서로 합산하지 않음</span>
-          <p className="cpw4-hero__sub">
-            {bestShort ? <>단기 최강은 <b>{bestShort.label}</b>({Math.round(bestShort.score ?? 0)}), </> : null}
-            {worstShort ? <>단기 최약은 <b>{worstShort.label}</b>({Math.round(worstShort.score ?? 0)}), </> : null}
-            {bestLong ? <>장기 최강은 <b>{bestLong.label}</b>({Math.round(bestLong.score ?? 0)}), </> : null}
-            {worstLong ? <>장기 최약은 <b>{worstLong.label}</b>({Math.round(worstLong.score ?? 0)})입니다.</> : null}
-          </p>
-        </div>
-        <div className="cpw4-edge-head-right">
-          <div className="cpw4-edge-meta-row">
-            {record.confidence ? <span className="cpw4-badge cpw4-badge--positive">신뢰 {record.confidence === "high" ? "높음" : record.confidence === "medium" ? "중간" : "낮음"}</span> : null}
-            {isFiniteNumber(coverage) ? <span className="cpw4-badge cpw4-badge--neutral">커버리지 {formatCoverageRatio(coverage)}</span> : null}
-          </div>
-          <span style={{ fontSize: 11, color: "var(--cp-text-soft)" }}>FENOK 파생 신호 · 매수 권유 아님</span>
-        </div>
-      </div>
-
-      <div className="cpw4-edge-hero-row">
-        <div className="cpw4-edge-score-card cpw4-edge-score-card--short">
-          <span className="cpw4-edge-score-label">SHORT EDGE · 단기</span>
-          <div className="cpw4-edge-gauge-wrap" style={{ width: 220, aspectRatio: "220 / 132" }}>
-            <svg viewBox="0 0 220 132">
-              <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="var(--cp-surface-strong)" strokeWidth="16" strokeLinecap="round" />
-              <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="var(--cp-warning)" strokeWidth="16" strokeLinecap="round" strokeDasharray={`${shortGauge.filled} ${shortGauge.total}`} />
-            </svg>
-            <div className="cpw4-edge-gauge-value" style={{ bottom: 6 }}><strong>{shortR ?? "—"}</strong><span>/100</span></div>
-          </div>
-          <p className="cpw4-edge-score-read"><strong>{shortTermBasis.label}</strong> · {shortTermBasis.windowLabel} · {shortTermBasis.sourceInputCount ?? "—"}/3–5 입력. {shortTermBasis.comparisonNote} {shortTermBasis.exclusionNote} {isFiniteNumber(shortTerm.score) ? <>공통 3축만으로는 {Math.round(shortTerm.score)}입니다. </> : null}{worstShort ? <>가장 약한 축은 <b>{worstShort.label}</b>({Math.round(worstShort.score ?? 0)})입니다.</> : null}</p>
-        </div>
-
-        <div className="cpw4-edge-score-card cpw4-edge-score-card--long">
-          <span className="cpw4-edge-score-label">LONG EDGE · 장기</span>
-          <div className="cpw4-edge-gauge-wrap" style={{ width: 220, aspectRatio: "220 / 132" }}>
-            <svg viewBox="0 0 220 132">
-              <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="var(--cp-surface-strong)" strokeWidth="16" strokeLinecap="round" />
-              <path d="M 20 110 A 90 90 0 0 1 200 110" fill="none" stroke="var(--cp-positive)" strokeWidth="16" strokeLinecap="round" strokeDasharray={`${longGauge.filled} ${longGauge.total}`} />
-            </svg>
-            <div className="cpw4-edge-gauge-value" style={{ bottom: 6 }}><strong>{longR ?? "—"}</strong><span>/100</span></div>
-          </div>
-          <p className="cpw4-edge-score-read">장기 5개 방향성 축 평균 · {longDirectionalCount}/5 축입니다. 동종군 유사성은 참고축이며 평균에서 제외합니다. {bestLong ? <>가장 강한 축은 <b>{bestLong.label}</b>({Math.round(bestLong.score ?? 0)})입니다.</> : null}</p>
-        </div>
-      </div>
-
-      {bestShort || worstShort || bestLong || worstLong ? (
-        <div className="cpw4-edge-signal-strip">
-          {bestShort ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--best"><span className="tag">단기 최강</span><div className="body"><span className="name">{bestShort.label}</span></div><span className="val">{Math.round(bestShort.score ?? 0)}</span></div> : null}
-          {worstShort ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--worst"><span className="tag">단기 최약</span><div className="body"><span className="name">{worstShort.label}</span></div><span className="val">{Math.round(worstShort.score ?? 0)}</span></div> : null}
-          {bestLong ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--best"><span className="tag">장기 최강</span><div className="body"><span className="name">{bestLong.label}</span></div><span className="val">{Math.round(bestLong.score ?? 0)}</span></div> : null}
-          {worstLong ? <div className="cpw4-edge-signal-chip cpw4-edge-signal-chip--worst"><span className="tag">장기 최약</span><div className="body"><span className="name">{worstLong.label}</span></div><span className="val">{Math.round(worstLong.score ?? 0)}</span></div> : null}
-        </div>
-      ) : null}
-
-      <div className="cpw4-edge-radar-row">
-        <div className="cpw4-edge-radar-card">
-          <div className="cpw4-edge-radar-head"><div className="cpw4-edge-radar-title cpw4-edge-radar-title--short">SHORT-TERM 6축 · 진단 프록시</div><div className="cpw4-edge-radar-sub">기술·거래·강도·옵션·장외 참고·숏완화</div></div>
-          <div className="cpw4-edge-radar-svg">{renderRadar(shortAxes, "var(--cp-warning)", "단기")}</div>
-        </div>
-        <div className="cpw4-edge-radar-card">
-          <div className="cpw4-edge-radar-head"><div className="cpw4-edge-radar-title cpw4-edge-radar-title--long">LONG-TERM 5+참고축</div><div className="cpw4-edge-radar-sub">수익성·성장·상방·하방·동종군 참고·내구</div></div>
-          <div className="cpw4-edge-radar-svg">{renderRadar(longAxes, "var(--cp-positive)", "장기")}</div>
-        </div>
-      </div>
-
-      <div className="cpw4-edge-axis-groups">
-        {renderAxisGroup(shortAxes, "short", "단기 축 (SHORT · 6, 장외 참고)")}
-        {renderAxisGroup(longAxes, "long", "장기 축 (LONG · 5 방향성 + 동종군 참고)")}
-      </div>
-
-      <div className="cpw4-edge-footnote">
-        <span>FENOK 신호 한눈에 보기 · 매수 권유 아님</span>
-        <span>{asOfLabel ? `기준 ${asOfLabel}` : "기준일 미확인"}{isFiniteNumber(coverage) ? ` · 데이터 커버리지 ${formatCoverageRatio(coverage)}` : ""}</span>
-      </div>
+    <section data-stock-tab-card="fenok-edge-overview">
+      <SharedEdgePanel
+        title="단기·장기 독립 진단"
+        shortScore={shortScore}
+        longScore={longScore}
+        shortRows={shortAxes.map((a) => ({ key: a.key, label: a.label, score: a.score, referenceOnly: a.referenceOnly }))}
+        longRows={longAxes.map((a) => ({ key: a.key, label: a.label, score: a.score, referenceOnly: a.referenceOnly }))}
+        shortTitle="단기 축 · 6축 · 장외거래 참고축"
+        longTitle={`장기 축 · 5개 방향성 축 ${longDirectionalCount}/5 · 동종군 유사도 참고축`}
+        summary={edgeSummary}
+        source="FENOK 신호"
+        asOf={asOfLabel ?? "—"}
+        coverage={isFiniteNumber(coverage) ? formatCoverageRatio(coverage) : "커버리지 미확인"}
+      />
     </section>
   );
 }
@@ -3480,23 +2956,21 @@ export default function StockDetailClient({
 
     return (
       <div className="stock-shell canvas-plus cp-stock-detail-preview" data-canvas-plus data-canvas-plus-stock-detail-preview>
-        <section className="cp-stock-detail-hero" aria-label={`${symbol} CANVAS+ 종목 요약`}>
-          <div className="cp-stock-detail-hero__identity">
-            <span className="cp-stock-detail-logo">{symbol.slice(0, 1)}</span>
-            <div>
-              <div className="cp-stock-detail-title-row">
-                <h1>{symbol}</h1>
-                <WatchStar ticker={symbol} className="stock-star" />
-              </div>
-              <p>{contextLine || `종목 컨텍스트 ${DATA_STATE_LABELS.pending}`}</p>
-            </div>
+        <Panel>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 pt-3" aria-label={`${symbol} 종목 요약`}>
+            <span className="font-mono text-[18px] font-semibold tabular-nums text-slate-900">{symbol}</span>
+            <h1 className="text-[14px] font-semibold text-slate-900">{displayName}</h1>
+            {canonical ? <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-600">{sectorLabelKo(canonical)}</span> : null}
+            {row?.sector && row.sector !== (canonical ? sectorLabelKo(canonical) : null) ? <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-600">{row.sector}</span> : null}
+            <WatchStar ticker={symbol} className="stock-star" />
+            <span className="ml-auto flex items-baseline gap-2">
+              <span className="tabular-nums text-[22px] font-semibold text-slate-900">{priceText}</span>
+              <span className="tabular-nums text-[12px] font-semibold text-slate-600" data-tone={heroChangeUp ? "positive" : "negative"}>{heroChangeText}</span>
+            </span>
           </div>
-          <div className="cp-stock-detail-price">
-            <span className="cp-stock-detail-price__value">{priceText}</span>
-            <span className="cp-stock-detail-price__chip" data-tone={heroChangeUp ? "positive" : "negative"}>{heroChangeText}</span>
+          <p className="px-4 pb-1 text-[12px] text-slate-500">{contextLine || `종목 컨텍스트 ${DATA_STATE_LABELS.pending}`}</p>
+          <div className="flex flex-wrap items-center gap-2 px-4 pb-2">
             <DataStateBadge state={priceDataState} />
-          </div>
-          <div className="cp-stock-detail-hero__links">
             <MarketQuickLinks className="stock-market-links" />
           </div>
           <StockTabsNav
@@ -3506,7 +2980,7 @@ export default function StockDetailClient({
             onSelect={selectStockTab}
             note={isEtfAsset && etfData === undefined ? `ETF 상세 ${DATA_STATE_LABELS.pending}...` : !yfLoaded ? `추가 지표 ${DATA_STATE_LABELS.pending}...` : !yfAvailable ? `추가 지표 ${DATA_STATE_LABELS.pending}` : null}
           />
-        </section>
+        </Panel>
 
         {activeStockTab === "overview" ? (
           <>
@@ -3604,8 +3078,14 @@ export default function StockDetailClient({
             </main>
 
             <aside className="cp-stock-right-rail" aria-label={`${symbol} 우측 요약`}>
-              <ValuationBandSummaryCard band={valuationBandSummary} signalLens={fenokSignalLens} variant="canvasPlusRail" />
-              <FenokEdgeDonutCard record={fenokSignalLens} />
+              <SharedValuationBandPanel
+                band={valuationBandSummary}
+                weak={[fenokSignalLens?.profitabilityScore, fenokSignalLens?.growthScore, fenokSignalLens?.longTermScore].some((score) => isFiniteNumber(score) && score < 45)}
+                pending={detailLoading}
+                source={valuationBandSummary?.source ?? "PER 밴드"}
+                asOf={fmtKstMinute(fenokSignalLens?.asOf) ?? "—"}
+                coverage={formatCoverageRatio(fenokSignalLens?.lensCoverageRatio ?? fenokSignalLens?.coverageRatio)}
+              />
               <FinancialSnapshotRail data={financialCandidate} loading={financialCandidate === undefined} currency={displayCurrency} />
             </aside>
           </div>
@@ -3630,7 +3110,7 @@ export default function StockDetailClient({
                 ? renderOwnershipCpTab()
                 : activeStockTab === "filings"
                 ? renderFilingsCpTab()
-                : renderStockDataTab(false)}
+                : renderStockDataTab()}
             </main>
           </div>
         )}
@@ -3644,7 +3124,7 @@ export default function StockDetailClient({
     );
   }
 
-  function renderStockDataTab(showFooter: boolean = true) {
+  function renderStockDataTab() {
     if (activeStockTab === "overview") return null;
     if (activeStockTab === "filings") {
       return <EdgarSummaryClient ticker={symbol} embedded />;
@@ -3653,12 +3133,6 @@ export default function StockDetailClient({
       return (
         <div className="stock-main-stack">
           <EtfDataPanel ticker={symbol} data={etfData} loading={etfData === undefined} marketFacts={marketFacts} />
-          {showFooter ? (
-            <footer className="stock-footer">
-              <TransitionLink href={isEtfAsset ? ROUTES.etfs : ROUTES.screenerTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← {isEtfAsset ? "ETF 목록에서 보기" : "스크리너에서 보기"}</TransitionLink>
-              <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
-            </footer>
-          ) : null}
         </div>
       );
     }
@@ -3798,13 +3272,6 @@ export default function StockDetailClient({
             </div>
           </SectionCard>
         )}
-        {showFooter ? (
-          <footer className="stock-footer">
-            <TransitionLink href={ROUTES.screenerTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
-            <TransitionLink href={ROUTES.superinvestorsByTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">투자자 보유 보기</TransitionLink>
-            <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
-          </footer>
-        ) : null}
       </div>
     );
   }
@@ -3827,21 +3294,21 @@ export default function StockDetailClient({
             <FinancialsHeroCp detail={detail} years={years} currency={displayCurrency} financialCandidate={financialCandidate} profitabilityEstimates={profitabilityEstimates} />
             <FinancialsTilesCp detail={detail} financialCandidate={financialCandidate} currency={displayCurrency} />
 
-            <section className="cp-stock-tab-card" data-stock-tab-card="dividend">
-              <div className="cp-stock-tab-card__body cp-stock-tab-card__body--flush">
+            <section data-stock-tab-card="dividend">
+              <div>
                 <DividendPanel detail={detail} yfData={yfData} years={years} currency={displayCurrency} highlight={highlightDividend} />
               </div>
             </section>
 
-            <details className="cpw4-accordion" open>
-              <summary>
+            <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" open>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
                 <span>
                   전체 재무제표 보기
-                  <div className="cpw4-accordion__meta">추정 그리드 · 손익계산서 · 재무상태표 · 현금흐름표 — 실적 + 컨센서스</div>
+                  <div className="mt-0.5 text-[12px] font-bold text-slate-500">추정 그리드 · 손익계산서 · 재무상태표 · 현금흐름표 — 실적 + 컨센서스</div>
                 </span>
-                <span className="cpw4-accordion__chev">▸</span>
+                <span className="shrink-0 text-[12px] text-slate-500 transition-transform group-open:rotate-90">▸</span>
               </summary>
-              <div className="cpw4-accordion__body">
+              <div className="grid gap-[18px] border-t border-slate-200 px-[18px] pb-5 pt-1">
                 <div>
                   <h3 className="cp-stock-tab-card__subheading">실적 추이 · 추정</h3>
                   <CompactFinancialTable detail={detail} years={years} />
@@ -3864,19 +3331,18 @@ export default function StockDetailClient({
             </details>
           </>
         ) : (
-          <section className="cp-stock-tab-card">
-            <div className="cp-stock-tab-card__body">
-              <div className="py-8 text-center">
-                <DataStateNotice
-                  state={makeDataState({
-                    status: "unavailable",
-                    detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
-                  })}
-                />
-                <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
-              </div>
+          <Panel>
+            <div className="py-8 text-center">
+              <DataStateNotice
+                state={makeDataState({
+                  status: "unavailable",
+                  detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
+                })}
+              />
+              <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
             </div>
-          </section>
+            <EvidenceRail freshness="stale" source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" skeletonDelayMs={120} />
+          </Panel>
         )}
       </div>
     );
@@ -3897,27 +3363,25 @@ export default function StockDetailClient({
             {detailPerBands ? (
               <ValuationHeroCp detailPerBands={detailPerBands} />
             ) : finiteValues(detail.valuation?.per).length >= 2 ? (
-              <section className="cp-stock-tab-card" data-stock-tab-card="valuation-band">
-                <header className="cp-stock-tab-card__header">
-                  <div>
-                    <p className="cp-stock-rail-eyebrow">Valuation</p>
-                    <h2>PER 밸류에이션</h2>
-                  </div>
-                </header>
-                <div className="cp-stock-tab-card__body">
+              <section data-stock-tab-card="valuation-band">
+              <Panel>
+                <PanelHeader eyebrow="Valuation" title="PER 밸류에이션" />
+                <div className="px-4 py-2">
                   <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
                 </div>
+                <EvidenceRail freshness="fresh" source="PER 밴드" asOf="—" coverage="8Y PER" skeletonDelayMs={120} />
+              </Panel>
               </section>
             ) : null}
 
             <ValuationBodyCp yfData={yfData} industryBench={industryBench} detail={detail} profitabilityEstimates={profitabilityEstimates} currency={displayCurrency} years={years} />
 
-            <details className="cpw4-accordion" data-stock-tab-card="price-dividend">
-              <summary>
-                <span>가격·수익률·배당 히스토리<div className="cpw4-accordion__meta">SlickCharts 가격/배당 이력</div></span>
-                <span className="cpw4-accordion__chev">▸</span>
+            <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" data-stock-tab-card="price-dividend">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+                <span>가격·수익률·배당 히스토리<div className="mt-0.5 text-[12px] font-bold text-slate-500">SlickCharts 가격/배당 이력</div></span>
+                <span className="shrink-0 text-[12px] text-slate-500 transition-transform group-open:rotate-90">▸</span>
               </summary>
-              <div className="cpw4-accordion__body">
+              <div className="grid gap-[18px] border-t border-slate-200 px-[18px] pb-5 pt-1">
                 {hasSlickChartsTicker ? (
                   <PriceDividendHistoryDepth ticker={symbol} showUnavailable />
                 ) : (
@@ -3928,30 +3392,29 @@ export default function StockDetailClient({
               </div>
             </details>
 
-            <details className="cpw4-accordion" data-stock-tab-card="statistics-yf" open>
-              <summary>
-                <span>밸류 지표 상세 보기 (Yahoo 전체 지표)<div className="cpw4-accordion__meta">밸류에이션 · 수익성 · 재무건전성 · 배당 · 거래·규모</div></span>
-                <span className="cpw4-accordion__chev">▸</span>
+            <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" data-stock-tab-card="statistics-yf" open>
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+                <span>밸류 지표 상세 보기 (Yahoo 전체 지표)<div className="mt-0.5 text-[12px] font-bold text-slate-500">밸류에이션 · 수익성 · 재무건전성 · 배당 · 거래·규모</div></span>
+                <span className="shrink-0 text-[12px] text-slate-500 transition-transform group-open:rotate-90">▸</span>
               </summary>
-              <div className="cpw4-accordion__body">
+              <div className="grid gap-[18px] border-t border-slate-200 px-[18px] pb-5 pt-1">
                 {yfAvailable ? renderYfTab("statistics", yfData, industryBench) : <p className="text-sm text-slate-500">Yahoo Finance 데이터가 아직 준비되지 않았습니다.</p>}
               </div>
             </details>
           </>
         ) : (
-          <section className="cp-stock-tab-card">
-            <div className="cp-stock-tab-card__body">
-              <div className="py-8 text-center">
-                <DataStateNotice
-                  state={makeDataState({
-                    status: "unavailable",
-                    detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
-                  })}
-                />
-                <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
-              </div>
+          <Panel>
+            <div className="py-8 text-center">
+              <DataStateNotice
+                state={makeDataState({
+                  status: "unavailable",
+                  detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
+                })}
+              />
+              <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
             </div>
-          </section>
+            <EvidenceRail freshness="stale" source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" skeletonDelayMs={120} />
+          </Panel>
         )}
       </div>
     );
@@ -3974,12 +3437,12 @@ export default function StockDetailClient({
             {detail ? <EstimatesGrowthTilesCp detail={detail} currency={displayCurrency} /> : null}
             {yfAvailable ? <EstimatesRecoCp yfData={yfData} /> : null}
 
-            <details className="cpw4-accordion" data-stock-tab-card="estimates-yf">
-              <summary>
-                <span>연간·분기 추정 상세 보기<div className="cpw4-accordion__meta">FY-4~FY+3 실적/추정 그리드 · 애널리스트 EPS·매출 추정 상세</div></span>
-                <span className="cpw4-accordion__chev">▸</span>
+            <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" data-stock-tab-card="estimates-yf">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+                <span>연간·분기 추정 상세 보기<div className="mt-0.5 text-[12px] font-bold text-slate-500">FY-4~FY+3 실적/추정 그리드 · 애널리스트 EPS·매출 추정 상세</div></span>
+                <span className="shrink-0 text-[12px] text-slate-500 transition-transform group-open:rotate-90">▸</span>
               </summary>
-              <div className="cpw4-accordion__body">
+              <div className="grid gap-[18px] border-t border-slate-200 px-[18px] pb-5 pt-1">
                 {detail ? (
                   <div data-stock-tab-card="estimates-consensus">
                     <h3 className="cp-stock-tab-card__subheading">추정치 변화</h3>
@@ -3996,19 +3459,18 @@ export default function StockDetailClient({
             </details>
           </>
         ) : (
-          <section className="cp-stock-tab-card">
-            <div className="cp-stock-tab-card__body">
-              <div className="py-8 text-center">
-                <DataStateNotice
-                  state={makeDataState({
-                    status: "unavailable",
-                    detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
-                  })}
-                />
-                <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
-              </div>
+          <Panel>
+            <div className="py-8 text-center">
+              <DataStateNotice
+                state={makeDataState({
+                  status: "unavailable",
+                  detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
+                })}
+              />
+              <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
             </div>
-          </section>
+            <EvidenceRail freshness="stale" source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" skeletonDelayMs={120} />
+          </Panel>
         )}
       </div>
     );
@@ -4029,31 +3491,30 @@ export default function StockDetailClient({
             <OwnershipHeroCp f13Entries={f13Entries} ticker={symbol} yfData={yfData} displayPrice={displayPrice} />
 
             {yfAvailable ? (
-              <details className="cpw4-accordion" data-stock-tab-card="ownership-yf">
-                <summary>
-                  <span>기관 보유 상세 보기 (Yahoo Finance)<div className="cpw4-accordion__meta">기관 보유 TOP 10 · 지분율·주식수·증감</div></span>
-                  <span className="cpw4-accordion__chev">▸</span>
+              <details className="group overflow-hidden rounded-[8px] border border-slate-200 bg-white" data-stock-tab-card="ownership-yf">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3.5 px-[18px] py-[15px] text-[14px] font-black text-slate-900 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+                  <span>기관 보유 상세 보기 (Yahoo Finance)<div className="mt-0.5 text-[12px] font-bold text-slate-500">기관 보유 TOP 10 · 지분율·주식수·증감</div></span>
+                  <span className="shrink-0 text-[12px] text-slate-500 transition-transform group-open:rotate-90">▸</span>
                 </summary>
-                <div className="cpw4-accordion__body">
+                <div className="grid gap-[18px] border-t border-slate-200 px-[18px] pb-5 pt-1">
                   {renderYfTab("ownership", yfData, industryBench)}
                 </div>
               </details>
             ) : null}
           </>
         ) : (
-          <section className="cp-stock-tab-card">
-            <div className="cp-stock-tab-card__body">
-              <div className="py-8 text-center">
-                <DataStateNotice
-                  state={makeDataState({
-                    status: "unavailable",
-                    detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
-                  })}
-                />
-                <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
-              </div>
+          <Panel>
+            <div className="py-8 text-center">
+              <DataStateNotice
+                state={makeDataState({
+                  status: "unavailable",
+                  detail: "상세 재무·추정치 데이터를 아직 충분히 연결하지 못했습니다.",
+                })}
+              />
+              <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 상세 준비 중" className="mx-auto mt-4 max-w-xl" />
             </div>
-          </section>
+            <EvidenceRail freshness="stale" source="재무제표" asOf="—" coverage="상세 재무" next="데이터 연결 시" skeletonDelayMs={120} />
+          </Panel>
         )}
       </div>
     );
@@ -4074,10 +3535,10 @@ export default function StockDetailClient({
 
 function SectionCard({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
-    <section className="panel stock-section">
-      {title ? <div className="panel-h"><h2>{title}</h2></div> : null}
-      <div className="panel-b">{children}</div>
-    </section>
+    <Panel>
+      {title ? <PanelHeader title={title} /> : null}
+      <div className="px-4 py-3">{children}</div>
+    </Panel>
   );
 }
 
@@ -4138,21 +3599,20 @@ function FinancialCandidatePanel({
 }) {
   if (loading) {
     return (
-      <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <div className="h-4 w-32 rounded bg-slate-200" />
-        <div className="mt-3 grid gap-3 sm:grid-cols-4">
-          {[0, 1, 2, 3].map((item) => <div key={item} className="h-16 rounded bg-white" />)}
-        </div>
-      </div>
+      <Panel loading>
+        <PanelHeader eyebrow="Financials" title="재무 보강 데이터" />
+        <EvidenceRail freshness="pending" source="재무제표" asOf="—" coverage="교차검증" skeletonDelayMs={120} />
+      </Panel>
     );
   }
 
   if (!data) {
     return (
-      <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4">
-        <p className="text-[11px] font-black tracking-[0.08em] text-slate-500">재무 보강 데이터</p>
-        <p className="mt-1 text-sm font-semibold text-slate-500">재무 지표가 아직 준비되지 않았습니다.</p>
-      </div>
+      <Panel>
+        <PanelHeader eyebrow="Financials" title="재무 보강 데이터" />
+        <p className="px-4 py-3 text-[12px] text-slate-600">재무 지표가 아직 준비되지 않았습니다.</p>
+        <EvidenceRail freshness="stale" source="재무제표" asOf="—" coverage="교차검증" next="지표 준비 시" skeletonDelayMs={120} />
+      </Panel>
     );
   }
 
@@ -4190,33 +3650,27 @@ function FinancialCandidatePanel({
   ];
 
   return (
-    <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="text-[11px] font-black tracking-[0.08em] text-slate-500">재무 보강 데이터</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">교차검증용 · 가치평가 입력 아님</p>
-        </div>
-        <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-black text-slate-500">
-          {data.fetched_at ? `수집 ${fmtKstMinute(data.fetched_at) ?? "—"}` : "—"}
-        </span>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+    <Panel>
+      <PanelHeader
+        eyebrow="Financials · 교차검증용"
+        title="재무 보강 데이터"
+        right={<span className="text-[11px] text-slate-500">{data.fetched_at ? `수집 ${fmtKstMinute(data.fetched_at) ?? "—"}` : "—"}</span>}
+      />
+      <p className="px-4 pt-2 text-[12px] text-slate-600">교차검증용 · 가치평가 입력 아님</p>
+      <StatStrip className="mx-4 my-2 flex-wrap">
         {metrics.map((metric) => (
-          <div key={metric.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{metric.label}</p>
-            <p className="mt-1 min-w-0 break-words text-sm font-black tabular-nums text-slate-950">{metric.value}</p>
-          </div>
+          <div key={metric.label} className="min-w-[30%] flex-1"><Stat label={metric.label} value={metric.value} /></div>
         ))}
-      </div>
-      <div className="mt-3 grid gap-3 lg:grid-cols-2">
+      </StatStrip>
+      <div className="grid gap-3 px-4 py-2 lg:grid-cols-2">
         {summaryGroups.map((group) => (
-          <div key={group.label} className="rounded-lg border border-slate-200 bg-white p-3">
-            <p className="mb-2 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{group.label} 데이터 범위</p>
+          <div key={group.label} className="rounded-[8px] border border-slate-200 bg-white p-3">
+            <p className="mb-2 text-[11px] font-semibold text-slate-500">{group.label} 데이터 범위</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {Object.entries(group.data).map(([key, info]) => (
                 <div key={`${group.label}-${key}`} className="rounded-md bg-slate-50 px-2 py-2">
-                  <p className="text-[10px] font-bold text-slate-500">{financialStatementLabel(key)}</p>
-                  <p className="mt-0.5 text-xs font-black tabular-nums text-slate-900">
+                  <p className="text-[10px] font-semibold text-slate-500">{financialStatementLabel(key)}</p>
+                  <p className="mt-0.5 text-xs font-semibold tabular-nums text-slate-900">
                     {fmtCandidateCount(info?.field_count)}개 항목
                   </p>
                   <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
@@ -4228,7 +3682,8 @@ function FinancialCandidatePanel({
           </div>
         ))}
       </div>
-    </div>
+      <EvidenceRail freshness="fresh" source="재무제표" asOf={data.fetched_at ? (fmtKstMinute(data.fetched_at) ?? "—") : "—"} coverage="교차검증" skeletonDelayMs={120} />
+    </Panel>
   );
 }
 
@@ -4315,7 +3770,8 @@ function EtfDataPanel({
 
   if (!data && !marketFacts) {
     return (
-      <SectionCard title="ETF 상세">
+      <Panel>
+        <PanelHeader eyebrow="ETF" title="ETF 상세" />
         <div className="py-8 text-center">
           <DataStateNotice
             state={makeDataState({
@@ -4326,17 +3782,17 @@ function EtfDataPanel({
           />
           <ExternalSourceLinks ticker={ticker} kind="etf" statusLine="ETF 상세 데이터 미수집" className="mx-auto mt-4 max-w-xl" />
         </div>
-      </SectionCard>
+        <EvidenceRail freshness="stale" source="ETF" asOf="—" coverage="ETF 상세" next="상세 수집 시" skeletonDelayMs={120} />
+      </Panel>
     );
   }
 
   return (
     <div className="space-y-4">
-      <SectionCard title="ETF 핵심 지표">
+      <Panel>
+        <PanelHeader eyebrow="ETF" title="ETF 핵심 지표" />
         {detailStatusText ? (
-          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-black text-amber-800">
-            {detailStatusText}
-          </div>
+          <p className="px-4 py-2 text-[12px] text-slate-600"><Pill tone="warn">확인 필요</Pill> {detailStatusText}</p>
         ) : null}
         {detailStatusText ? (
           <ExternalSourceLinks
@@ -4348,50 +3804,52 @@ function EtfDataPanel({
             className="mb-3"
           />
         ) : null}
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <StatStrip className="mx-4 my-2 flex-wrap">
           {cards.map((card) => (
-            <div key={`${card.label}-${card.value}`} className="rounded-xl border border-slate-200 bg-white/70 px-3 py-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">{card.label}</p>
-              <p className="mt-1 min-w-0 break-words text-base font-black tabular-nums text-slate-950">{card.value}</p>
-              {card.note !== "—" ? <p className="mt-1 min-w-0 break-words text-[10px] font-semibold text-slate-500">{card.note}</p> : null}
-            </div>
+            <div key={`${card.label}-${card.value}`} className="min-w-[30%] flex-1"><Stat label={card.label} value={card.value} sub={card.note !== "—" ? card.note : undefined} /></div>
           ))}
-        </div>
+        </StatStrip>
         {website ? (
           <a
             href={website}
             target="_blank"
             rel="noreferrer"
-            className="mt-3 inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[10px] font-black uppercase tracking-[0.08em] text-slate-600 transition hover:border-brand-interactive hover:bg-white hover:text-brand-interactive"
+            className="mx-4 my-2 inline-flex min-h-[44px] items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-semibold text-slate-600 transition hover:text-[#1B73D3]"
           >
             운용사 웹사이트
           </a>
         ) : null}
-      </SectionCard>
+        <EvidenceRail freshness="fresh" source="ETF" asOf={externalSourceAsOf ?? "—"} coverage="핵심 지표" skeletonDelayMs={120} />
+      </Panel>
 
-      <SectionCard title="보유·스왑 구성">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">
-          <span>{ticker} · {holdings.length.toLocaleString()}개 표시</span>
-          <span>{formatDateish(holdingsUpdated) !== "—" ? `기준 ${formatDateish(holdingsUpdated)}` : "기준일 미표시"}</span>
+      <Panel>
+        <PanelHeader eyebrow={`${ticker} · ${holdings.length.toLocaleString()}개 표시`} title="보유·스왑 구성" right={<span className="text-[11px] text-slate-500">{formatDateish(holdingsUpdated) !== "—" ? `기준 ${formatDateish(holdingsUpdated)}` : "기준일 미표시"}</span>} />
+        <div className="px-4 py-2">
+          <EtfHoldingsTable holdings={holdings} currency={currency} />
         </div>
-        <EtfHoldingsTable holdings={holdings} currency={currency} />
-      </SectionCard>
+        <EvidenceRail freshness={holdings.length > 0 ? "fresh" : "stale"} source="ETF" asOf={formatDateish(holdingsUpdated) !== "—" ? formatDateish(holdingsUpdated) : "—"} coverage={`보유 ${holdings.length}건`} skeletonDelayMs={120} />
+      </Panel>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <SectionCard title="자산 분해">
-          <EtfWeightedList rows={assetAllocation} empty="자산 분해 데이터 없음" />
-        </SectionCard>
-        <SectionCard title="섹터 분해">
-          <EtfWeightedList rows={sectors} empty="섹터 데이터 없음" />
-        </SectionCard>
-        <SectionCard title="국가 분해">
-          <EtfWeightedList rows={countries} empty="국가 데이터 없음" />
-        </SectionCard>
+        <Panel>
+          <PanelHeader eyebrow="Breakdown" title="자산 분해" />
+          <div className="px-4 py-2"><EtfWeightedList rows={assetAllocation} empty="자산 분해 데이터 없음" /></div>
+        </Panel>
+        <Panel>
+          <PanelHeader eyebrow="Breakdown" title="섹터 분해" />
+          <div className="px-4 py-2"><EtfWeightedList rows={sectors} empty="섹터 데이터 없음" /></div>
+        </Panel>
+        <Panel>
+          <PanelHeader eyebrow="Breakdown" title="국가 분해" />
+          <div className="px-4 py-2"><EtfWeightedList rows={countries} empty="국가 데이터 없음" /></div>
+        </Panel>
       </div>
 
-      <SectionCard title="가격 히스토리">
-        <EtfHistoryView history={history} currency={currency} />
-      </SectionCard>
+      <Panel>
+        <PanelHeader eyebrow="History" title="가격 히스토리" />
+        <div className="px-4 py-2"><EtfHistoryView history={history} currency={currency} /></div>
+        <EvidenceRail freshness={history.length > 0 ? "fresh" : "stale"} source="ETF" asOf="—" coverage="가격 히스토리" skeletonDelayMs={120} />
+      </Panel>
     </div>
   );
 }

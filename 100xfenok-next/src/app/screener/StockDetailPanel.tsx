@@ -4,12 +4,9 @@ import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import { type FenokSignalRadarHexagonAxis } from "@/components/screener/FenokSignalRadarHexagon";
-import { FenokSignalRadarHexagonPair } from "@/components/screener/FenokSignalRadarHexagonPair";
-import FenokSignalHelpPopover from "@/components/screener/FenokSignalHelpPopover";
 import { edgeAxisSpokeLabel } from "@/lib/fenok-signals/edge-axis-labels.mjs";
 import type { FenokSignalHelpKey } from "@/lib/fenok-signals/signal-help-config";
-import { getDisplaySignalHelpBands, lookupBand, toneClass } from "@/lib/fenok-signals/signal-help-config";
-import { directionKo } from "@/lib/fenok-signals/direction-ko";
+import { getDisplaySignalHelpBands, lookupBand } from "@/lib/fenok-signals/signal-help-config";
 import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import { bandPct, bandClass } from "@/lib/screener/bands";
 import { commonBasisShortTermView } from "@/lib/screener/common-basis-short-term";
@@ -36,23 +33,9 @@ import {
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import { fetchMarketFactsFromShard } from "@/lib/market-facts-shard.mjs";
+import { Panel, PanelHeader, Row, Bar, EdgeMark, EvidenceRail } from "@/components/ui";
 
 export type MaybeNumber = number | null | undefined;
-
-function convictionTone(call: ScreenerStock["fenokConvictionCall"]): string {
-  if (call === "집중") return "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
-  if (call === "혼재") return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (call === "희석") return "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
-  return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
-}
-
-function signalScoreTone(score: number | null): string {
-  if (score === null || score === undefined) return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
-  if (score >= 70) return "border-[var(--up-border)] bg-[var(--c-up-soft)] text-[var(--c-up)]";
-  if (score >= 60) return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  if (score >= 50) return "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]";
-  return "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]";
-}
 
 function edgeLeadLabel(): string {
   return "단기·장기 독립 진단";
@@ -61,6 +44,226 @@ function edgeLeadLabel(): string {
 function formatSignalCoverage(value: number | null | undefined): string {
   if (!isFiniteNumber(value)) return "커버리지 미확인";
   return `커버리지 ${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
+}
+
+// ---------------------------------------------------------------------------
+// Shared light-system panels (slice-4 single implementation)
+// Used by the rewritten stock page AND the screener expanded rows so both
+// surfaces share one implementation. No gauges/radars/donuts — EdgeMark +
+// bar rows only. Every panel ends with an EvidenceRail.
+// ---------------------------------------------------------------------------
+
+export interface SharedEdgeAxisRow {
+  key: string;
+  label: string;
+  score: number | null;
+  referenceOnly?: boolean;
+}
+
+function sharedEdgeTone(score: number | null): string {
+  if (!isFiniteNumber(score)) return "—";
+  if (score >= 65) return "양호";
+  if (score >= 45) return "관리";
+  return "약함";
+}
+
+export function SharedEdgePanel({
+  title,
+  eyebrow = "Fenok Edge",
+  shortScore,
+  longScore,
+  shortLabel = "단기",
+  longLabel = "장기",
+  shortRows,
+  longRows,
+  shortTitle = "단기 축",
+  longTitle = "장기 축",
+  summary,
+  pending = false,
+  source = "FENOK 신호",
+  asOf = "—",
+  coverage = "—",
+}: {
+  title: string;
+  eyebrow?: string;
+  shortScore: number | null;
+  longScore: number | null;
+  shortLabel?: string;
+  longLabel?: string;
+  shortRows: SharedEdgeAxisRow[];
+  longRows: SharedEdgeAxisRow[];
+  shortTitle?: string;
+  longTitle?: string;
+  summary?: string | null;
+  pending?: boolean;
+  source?: string;
+  asOf?: string;
+  coverage?: string;
+}) {
+  const hasRows = [...shortRows, ...longRows].some((row) => row.score !== null);
+  const renderRows = (rows: SharedEdgeAxisRow[]) =>
+    rows.map((row) => (
+      <Row key={row.key}>
+        <span className="truncate text-[12px] text-[var(--c-ink-2)]">{row.label}{row.referenceOnly ? " · 참고" : ""}</span>
+        <Bar value={row.score ?? 0} aria-label={`${row.label} ${row.score !== null ? Math.round(row.score) : "대기"}점`} />
+        <span className="flex items-center justify-end gap-2">
+          <strong className="tabular-nums text-[12px] font-semibold text-[var(--c-ink)]">
+            {row.score !== null ? Math.round(row.score) : "—"}
+          </strong>
+          <span className="w-8 text-right text-[11px] text-[var(--c-ink-3)]">{sharedEdgeTone(row.score)}</span>
+        </span>
+      </Row>
+    ));
+  return (
+    <Panel loading={pending}>
+      <PanelHeader eyebrow={eyebrow} title={title} right={<span className="text-[11px] text-[var(--c-ink-3)]">{coverage}</span>} />
+      <div className="flex items-center gap-4 px-4 py-3">
+        {[
+          { label: shortLabel, score: shortScore },
+          { label: longLabel, score: longScore },
+        ].map((head) => (
+          <span key={head.label} className="flex items-center gap-2">
+            {head.score !== null ? <EdgeMark score={head.score} size={22} showValue={false} /> : null}
+            <span className="text-[11px] text-[var(--c-ink-3)]">{head.label}</span>
+            <strong className="tabular-nums text-[22px] font-semibold leading-none text-[var(--c-ink)]">
+              {head.score !== null ? Math.round(head.score) : "—"}
+            </strong>
+          </span>
+        ))}
+      </div>
+      {summary ? <p className="px-4 pb-2 text-[12px] text-[var(--c-ink-2)]">{summary}</p> : null}
+      {shortRows.length > 0 ? (
+        <div>
+          <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--c-ink-3)]">{shortTitle}</p>
+          {renderRows(shortRows)}
+        </div>
+      ) : null}
+      {longRows.length > 0 ? (
+        <div>
+          <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--c-ink-3)]">{longTitle}</p>
+          {renderRows(longRows)}
+        </div>
+      ) : null}
+      <EvidenceRail
+        freshness={pending ? "pending" : hasRows ? "fresh" : "stale"}
+        source={source}
+        asOf={asOf}
+        coverage={coverage}
+        next={hasRows || pending ? undefined : "다음 갱신 시"}
+        skeletonDelayMs={120}
+      />
+    </Panel>
+  );
+}
+
+export type SharedValuationZone = "deep-discount" | "discount" | "neutral" | "premium" | "overheated" | "trap";
+
+export interface SharedValuationBand {
+  current: number;
+  min: number;
+  max: number;
+  avg?: number | null;
+  source: string;
+}
+
+export function sharedValuationBandTone(
+  band: SharedValuationBand,
+  weak: boolean,
+): { label: string; detail: string; zone: SharedValuationZone } {
+  const pct = bandPct(band.current, band.min, band.max);
+  const avgPct = isFiniteNumber(band.avg) ? bandPct(band.avg, band.min, band.max) : 0.5;
+  const neutralStart = Math.max(0.18, avgPct - 0.1);
+  const neutralEnd = Math.min(0.82, avgPct + 0.1);
+  if (pct < neutralStart && weak) {
+    return { label: "밸류트랩 점검", detail: "PER는 낮지만 성장·수익성 점수 약세가 함께 보입니다.", zone: "trap" };
+  }
+  if (pct < neutralStart * 0.55) {
+    return { label: "강한 할인 구간", detail: "PER 밴드 하단 깊숙한 구간입니다. 다음은 성장·마진 방어를 확인합니다.", zone: "deep-discount" };
+  }
+  if (pct < neutralStart) {
+    return { label: "할인 구간", detail: "현재 PER가 공정가치권 아래에 있습니다.", zone: "discount" };
+  }
+  if (pct <= neutralEnd) {
+    return { label: "공정가치권", detail: "현재 PER는 평균 밴드의 ±10% 중립권입니다.", zone: "neutral" };
+  }
+  if (pct < neutralEnd + (1 - neutralEnd) * 0.55) {
+    return { label: "프리미엄 구간", detail: "현재 PER가 공정가치권 위에 있습니다. 성장 기대와 추정치 상향을 확인합니다.", zone: "premium" };
+  }
+  return { label: "과열 프리미엄", detail: "PER 밴드 상단권입니다. 기대 성장과 추정치 상향이 필요합니다.", zone: "overheated" };
+}
+
+export function SharedValuationBandPanel({
+  band,
+  weak = false,
+  pending = false,
+  source = "8Y PER band",
+  asOf = "—",
+  coverage = "—",
+}: {
+  band: SharedValuationBand | null;
+  weak?: boolean;
+  pending?: boolean;
+  source?: string;
+  asOf?: string;
+  coverage?: string;
+}) {
+  if (pending || !band) {
+    return (
+      <Panel loading={pending}>
+        <PanelHeader eyebrow="Valuation Band" title="밸류에이션 밴드" />
+        {!pending ? <p className="px-4 py-3 text-[12px] text-[var(--c-ink-3)]">밴드 데이터를 아직 확인하지 못했습니다.</p> : null}
+        <EvidenceRail
+          freshness={pending ? "pending" : "stale"}
+          source={source}
+          asOf={asOf}
+          coverage={coverage}
+          next={pending ? undefined : "다음 갱신 시"}
+          skeletonDelayMs={120}
+        />
+      </Panel>
+    );
+  }
+  const pct = bandPct(band.current, band.min, band.max);
+  const clampedPct = Math.max(0, Math.min(100, pct * 100));
+  const tone = sharedValuationBandTone(band, weak);
+  const avgPct = isFiniteNumber(band.avg) ? bandPct(band.avg, band.min, band.max) : 0.5;
+  const neutralStartPct = Math.max(18, Math.min(82, avgPct * 100 - 10));
+  const neutralEndPct = Math.max(18, Math.min(82, avgPct * 100 + 10));
+  const lowMidPct = neutralStartPct * 0.55;
+  const highMidPct = neutralEndPct + (100 - neutralEndPct) * 0.55;
+  return (
+    <Panel>
+      <PanelHeader
+        eyebrow="Valuation Band"
+        title="밸류에이션 밴드"
+        right={<span className="tabular-nums text-[11px] font-semibold text-[var(--c-ink-2)]">{Math.round(clampedPct)}%</span>}
+      />
+      <div className="px-4 py-3">
+        <div
+          data-stock-valuation-band-track
+          className="relative h-3 overflow-hidden rounded-full border border-[var(--c-line)] bg-white"
+          role="img"
+          aria-label={`PER 밴드 ${Math.round(clampedPct)}%, ${tone.label}`}
+        >
+          <span data-stock-valuation-zone="deep-discount" className="absolute inset-y-0 left-0 bg-[var(--c-up)] opacity-45" style={{ width: `${lowMidPct}%` }} />
+          <span data-stock-valuation-zone="discount" className="absolute inset-y-0 bg-[var(--c-up)] opacity-30" style={{ left: `${lowMidPct}%`, width: `${Math.max(0, neutralStartPct - lowMidPct)}%` }} />
+          <span data-stock-valuation-zone="neutral" className="absolute inset-y-0 bg-white" style={{ left: `${neutralStartPct}%`, width: `${Math.max(0, neutralEndPct - neutralStartPct)}%` }} />
+          <span data-stock-valuation-zone="premium" className="absolute inset-y-0 bg-[var(--c-down)] opacity-30" style={{ left: `${neutralEndPct}%`, width: `${Math.max(0, highMidPct - neutralEndPct)}%` }} />
+          <span data-stock-valuation-zone="overheated" className="absolute inset-y-0 bg-[var(--c-down)] opacity-45" style={{ left: `${highMidPct}%`, width: `${Math.max(0, 100 - highMidPct)}%` }} />
+          <span className="absolute inset-y-[-3px] w-[3px] rounded-full bg-[var(--c-ink)] shadow-sm" style={{ left: `${clampedPct}%`, transform: "translateX(-1.5px)" }} />
+        </div>
+        <div className="mt-1 grid grid-cols-3 text-[11px] tabular-nums text-[var(--c-ink-3)]">
+          <span>{band.min.toFixed(1)}x</span>
+          <span className="text-center">{isFiniteNumber(band.avg) ? `${band.avg.toFixed(1)}x ±10%` : band.source}</span>
+          <span className="text-right">{band.max.toFixed(1)}x</span>
+        </div>
+        <p data-stock-valuation-verdict={tone.zone} className="mt-2 text-[12px] text-[var(--c-ink-2)]">
+          {tone.label} · 현재 PER {band.current.toFixed(1)}x · {tone.detail}
+        </p>
+      </div>
+      <EvidenceRail freshness="fresh" source={source} asOf={asOf} coverage={coverage} skeletonDelayMs={120} />
+    </Panel>
+  );
 }
 
 export type NumberSeries = MaybeNumber[];
@@ -569,65 +772,6 @@ function buildDetailShortTermAxes(stock: ScreenerStock): DetailLongTermAxis[] {
       meta,
     };
   });
-}
-
-function DetailAxisLegend({ axis }: { axis: DetailLongTermAxis }) {
-  const width = axis.score === null ? 0 : Math.max(0, Math.min(100, axis.score));
-  const scoreText = axis.score === null ? "—" : Math.round(axis.score).toString();
-  const tierText = axis.meta.tier ?? "미확인";
-  const compactTierText =
-    tierText === "압력 큼"
-      ? "높음"
-      : tierText === "강하게 낮음"
-        ? "낮음"
-        : tierText;
-  const directionText = directionKo(axis.direction, "미확인");
-  const ariaLabel = `${axis.fullLabel}${axis.referenceOnly ? " · 참고축" : ""}: ${scoreText}점, ${directionText}, ${tierText}${axis.tooltipNote ? ` · ${axis.tooltipNote}` : ""}`;
-  return (
-    <div
-      aria-label={ariaLabel}
-      className="flex min-w-0 items-center gap-2 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-2.5 py-2"
-    >
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[11px] font-black text-[var(--c-ink)]">
-          {axis.fullLabel}{axis.referenceOnly ? " · 참고축" : ""}
-        </div>
-        {axis.coverage !== null ? (
-          <div className="truncate text-[10px] font-semibold text-[var(--c-ink-2)]">
-            데이터 {Math.round(axis.coverage * 100)}%
-          </div>
-        ) : null}
-      </div>
-      <FenokSignalHelpPopover
-        signal={axis.helpKey}
-        score={axis.score}
-        direction={axis.direction}
-        invertedDisplay={axis.invertedDisplay}
-      />
-      {axis.meta.tier && axis.score !== null ? (
-        <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-black ${toneClass(axis.meta.tone)}`}>
-          {compactTierText}
-        </span>
-      ) : null}
-      <span className="shrink-0 text-sm font-black tabular-nums text-[var(--c-ink)]">
-        {scoreText}
-      </span>
-      <div className="hidden h-1.5 w-12 overflow-hidden rounded-full bg-[var(--c-surface-2)] sm:block">
-        <div
-          className={`h-full rounded-full ${
-            axis.meta.tone === "up"
-              ? "bg-[var(--c-up)]"
-              : axis.meta.tone === "warn"
-                ? "bg-[var(--c-warn)]"
-                : axis.meta.tone === "down"
-                  ? "bg-[var(--c-down)]"
-                  : "bg-[var(--c-line)]"
-          }`}
-          style={{ width: `${width}%` }}
-        />
-      </div>
-    </div>
-  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -2337,22 +2481,6 @@ export function StockDetailBody({
 	  );
 	}
 
-function w4ClampScore(score: number | null): number {
-  if (!isFiniteNumber(score)) return 0;
-  return Math.max(0, Math.min(100, score));
-}
-
-function w4ScoreText(score: number | null): string {
-  return isFiniteNumber(score) ? Math.round(score).toString() : "—";
-}
-
-function w4ScoreTone(score: number | null): "strong" | "balanced" | "watch" | "muted" {
-  if (!isFiniteNumber(score)) return "muted";
-  if (score >= 70) return "strong";
-  if (score >= 55) return "balanced";
-  return "watch";
-}
-
 function w4FormatPrice(value: MaybeNumber): string {
   return formatCurrency(value, "USD", { digits: 2 });
 }
@@ -2376,60 +2504,6 @@ function w4FormatSignedFractionPercent(value: MaybeNumber, digits = 1): string {
 
 function w4Initials(ticker: string): string {
   return ticker.trim().slice(0, 2).toUpperCase() || "ST";
-}
-
-// The donut must say which score it is. Unlabelled and solitary beside a
-// cross-horizon heading it reads as a single integrated score, which is exactly
-// the thing the 2026-08-03 mandate retired — it carried the short-term number
-// while looking like an overall one.
-function W4ScoreDonut({ score, label }: { score: number | null; label: string }) {
-  const value = w4ClampScore(score);
-  return (
-    <div className="cpw4-detail-donut-wrap">
-      <span className="cpw4-detail-donut-label">{label}</span>
-      <div
-        className="cpw4-detail-donut"
-        style={{
-          background: `conic-gradient(var(--cpw4-accent) 0 ${value * 3.6}deg, var(--cp-divider) ${value * 3.6}deg 360deg)`,
-        }}
-        aria-label={`Fenok Edge ${label} ${w4ScoreText(score)}점`}
-      >
-        <span>{w4ScoreText(score)}</span>
-        <small>/100</small>
-      </div>
-    </div>
-  );
-}
-
-function W4Meter({ label, score, call }: { label: string; score: number | null; call: string | null }) {
-  const value = w4ClampScore(score);
-  return (
-    <div className="cpw4-meter" data-tone={w4ScoreTone(score)}>
-      <div className="cpw4-meter__head">
-        <span>{label}</span>
-        <strong>{w4ScoreText(score)} {call ?? "미정"}</strong>
-      </div>
-      <div className="cpw4-meter__track" aria-hidden="true">
-        <span style={{ width: `${value}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function W4AxisCard({ axis, rank }: { axis: DetailLongTermAxis; rank: number }) {
-  const value = w4ClampScore(axis.score);
-  return (
-    <div className="cpw4-axis-card" data-tone={w4ScoreTone(axis.score)}>
-      <div className="cpw4-axis-card__head">
-        <span>TOP {rank}</span>
-        <strong>{w4ScoreText(axis.score)}</strong>
-      </div>
-      <p>{axis.fullLabel}</p>
-      <div className="cpw4-axis-card__bar" aria-hidden="true">
-        <span style={{ width: `${value}%` }} />
-      </div>
-    </div>
-  );
 }
 
 export default function StockDetailPanel({
@@ -2475,11 +2549,9 @@ export default function StockDetailPanel({
   const shortTermConvictionScore = isFiniteNumber(stock?.fenokShortTermConvictionScore)
     ? Math.round(stock.fenokShortTermConvictionScore)
     : null;
-  const shortTermConvictionCall = stock?.fenokShortTermConvictionCall ?? shortTerm?.call ?? null;
   const longTermConvictionScore = isFiniteNumber(stock?.fenokLongTermConvictionScore)
     ? Math.round(stock.fenokLongTermConvictionScore)
     : null;
-  const longTermConvictionCall = stock?.fenokLongTermConvictionCall ?? null;
   const shortTermAxes = stock ? buildDetailShortTermAxes(stock) : [];
   const longTermAxes = stock ? buildDetailLongTermAxes(stock) : [];
   const hasShortTermSignal = shortTermAxes.some((axis) => axis.score !== null);
@@ -2498,105 +2570,27 @@ export default function StockDetailPanel({
   });
 
   if (!canvasPlusPreview) {
+  const toSharedRows = (axes: DetailLongTermAxis[]): SharedEdgeAxisRow[] =>
+    axes.map((axis) => ({ key: axis.key, label: axis.fullLabel, score: axis.score, referenceOnly: axis.referenceOnly }));
   return (
     <div className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 px-2 py-3 sm:p-4">
-      {stock && (
-        <div className="mb-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] p-2.5 shadow-[var(--sh-sm)] sm:p-3">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
-              Fenok 신호 한눈에 보기 · 투자 조언이 아닙니다
-            </span>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span
-                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums ${convictionTone(shortTermConvictionCall)}`}
-                title={`${shortTermBasis.detail} ${shortTermBasis.comparisonNote}`}
-              >
-                <span aria-hidden="true">{shortTermConvictionCall ?? "미정"}</span>
-                {shortTermConvictionScore ?? "—"}
-              </span>
-              <span
-                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums ${convictionTone(longTermConvictionCall)}`}
-                title="Fenok 장기 5개 방향성 축 평균 · 동종군 유사도 참고축"
-              >
-                <span aria-hidden="true">{longTermConvictionCall ?? "미정"}</span>
-                {longTermConvictionScore ?? "—"}
-              </span>
-            </div>
-          </div>
-          <div className="mb-3 grid gap-2 md:grid-cols-2">
-            <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-              <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                Short Edge
-              </div>
-              <div className="mt-1 flex items-end justify-between gap-2">
-                <span className={` text-2xl font-black tabular-nums ${signalScoreTone(shortTermConvictionScore)}`}>
-                  {shortTermConvictionScore ?? "—"}
-                </span>
-                <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
-                  {shortTermConvictionCall ?? "미정"}
-                </span>
-              </div>
-              <div className="mt-1 text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">
-                {shortTermBasis.label} · {shortTermBasis.windowLabel} · {shortTermBasis.sourceInputCount ?? "—"}/3–5 입력 · {shortTermBasis.exclusionNote}
-              </div>
-            </div>
-            <div className="min-w-0 rounded-lg border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-              <div className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                Long Edge
-              </div>
-              <div className="mt-1 flex items-end justify-between gap-2">
-                <span className={` text-2xl font-black tabular-nums ${signalScoreTone(longTermConvictionScore)}`}>
-                  {longTermConvictionScore ?? "—"}
-                </span>
-                <span className="pb-1 text-[10px] font-black text-[var(--c-ink-2)]">
-                  {longTermConvictionCall ?? "미정"}
-                </span>
-              </div>
-              <div className="mt-1 truncate text-[10px] font-semibold text-[var(--c-ink-3)]">
-                장기 5개 방향성 축 평균 · {longDirectionalCount}/5 축 · 동종군 유사도 참고축
-              </div>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <FenokSignalRadarHexagonPair
-              leftTitle="Short-term"
-              rightTitle="Long-term"
-              leftAxes={shortTermAxes}
-              rightAxes={longTermAxes}
-              size="md"
-            />
-            <p className="text-center text-[10px] font-bold text-[var(--c-ink-3)]">
-              Fenok 파생 신호 · 투자 조언이 아닙니다
-            </p>
-            <div className="grid gap-4 lg:grid-cols-2">
-              {hasShortTermSignal ? (
-                <div className="space-y-2">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                    단기 축
-                  </h3>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                    {shortTermAxes.map((axis) => (
-                      <DetailAxisLegend key={axis.key} axis={axis} />
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              {hasLongTermSignal ? (
-                <div className="space-y-2">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
-                    장기 축
-                  </h3>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                    {longTermAxes.map((axis) => (
-                      <DetailAxisLegend key={axis.key} axis={axis} />
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </div>
+      {stock && (hasShortTermSignal || hasLongTermSignal) ? (
+        <div className="mb-4">
+          <SharedEdgePanel
+            title={edgeLead}
+            shortScore={shortTermConvictionScore}
+            longScore={longTermConvictionScore}
+            shortRows={toSharedRows(shortTermAxes)}
+            longRows={toSharedRows(longTermAxes)}
+            shortTitle={`단기 축 · ${shortTermBasis.label} · ${shortTermBasis.windowLabel} · ${shortTermBasis.sourceInputCount ?? "—"}/3–5 입력`}
+            longTitle={`장기 축 · 5개 방향성 축 ${longDirectionalCount}/5 · 동종군 유사도 참고축`}
+            summary={`${shortTermBasis.exclusionNote} ${shortTermBasis.comparisonNote} Fenok 파생 신호 · 투자 조언이 아닙니다`.trim()}
+            source="FENOK 신호"
+            asOf={stock.fenokSignalAsOf ? stock.fenokSignalAsOf.slice(0, 10) : "—"}
+            coverage={signalCoverage}
+          />
         </div>
-      )}
+      ) : null}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
           종목 상세
@@ -2626,27 +2620,6 @@ export default function StockDetailPanel({
   );
   }
 
-  const topShortAxes = rankFenokEdgeAxes(shortTermAxes, "desc", 3);
-  const topLongAxes = longTermAxes
-    .filter((axis) => axis.score !== null && axis.key !== "marketSimilarity")
-    .sort((left, right) => (right.score ?? 0) - (left.score ?? 0))
-    .slice(0, 3);
-  const weakShortAxis = rankFenokEdgeAxes(shortTermAxes, "asc", 1)[0] ?? null;
-  const weakLongAxis = longTermAxes
-    .filter((axis) => axis.score !== null && axis.key !== "marketSimilarity")
-    .sort((left, right) => (left.score ?? 0) - (right.score ?? 0))[0] ?? null;
-  const detailScore = shortTermConvictionScore;
-  const verdictHeadline = edgeLead;
-  const verdictCopy = [
-    longTermConvictionScore !== null ? `장기 ${longTermConvictionScore}` : "장기 미확인",
-    shortTermConvictionScore !== null ? `단기 ${shortTermConvictionScore}` : "단기 미확인",
-    signalCoverage,
-    shortTermBasis.label,
-    shortTermBasis.windowLabel,
-    `단기 ${shortTermBasis.sourceInputCount ?? "—"}/3–5 입력`,
-    shortTermBasis.exclusionNote,
-    `장기 ${longDirectionalCount}/5 방향성 축`,
-  ].join(" · ");
   const etfCompareHref = stock?.connection?.singleStockEtfs?.length
     ? ROUTES.etfCompareTickers(stock.connection.singleStockEtfs.map((link) => link.ticker).slice(0, 4))
     : null;
@@ -2674,75 +2647,23 @@ export default function StockDetailPanel({
             </div>
           </div>
 
-          <section className="cpw4-edge-card" aria-label={`${stock.ticker} Fenok Edge`}>
-            <div className="cpw4-edge-card__meta">
-              <span className="cpw4-edge-kicker">
-                <span aria-hidden="true" /> Fenok Edge · 투자 조언이 아닙니다
-              </span>
-              <span>{stock.fenokSignalAsOf ? `기준일 ${stock.fenokSignalAsOf.slice(0, 10)}` : signalCoverage}</span>
-            </div>
+          <div className="mb-4">
+            <SharedEdgePanel
+              title={edgeLead}
+              shortScore={shortTermConvictionScore}
+              longScore={longTermConvictionScore}
+              shortRows={shortTermAxes.map((axis) => ({ key: axis.key, label: axis.fullLabel, score: axis.score, referenceOnly: axis.referenceOnly }))}
+              longRows={longTermAxes.map((axis) => ({ key: axis.key, label: axis.fullLabel, score: axis.score, referenceOnly: axis.referenceOnly }))}
+              shortTitle={`단기 축 · ${shortTermBasis.label} · ${shortTermBasis.windowLabel} · ${shortTermBasis.sourceInputCount ?? "—"}/3–5 입력`}
+              longTitle={`장기 축 · 5개 방향성 축 ${longDirectionalCount}/5 · 동종군 유사도 참고축`}
+              summary={`${shortTermBasis.exclusionNote} ${shortTermBasis.comparisonNote} Fenok 파생 신호 · 투자 조언이 아닙니다`.trim()}
+              source="FENOK 신호"
+              asOf={stock.fenokSignalAsOf ? stock.fenokSignalAsOf.slice(0, 10) : "—"}
+              coverage={signalCoverage}
+            />
+          </div>
 
-            <div className="cpw4-edge-identity">
-              <div className="cpw4-edge-identity__left">
-                <span className="cpw4-detail-avatar cpw4-detail-avatar--large">{w4Initials(stock.ticker)}</span>
-                <div>
-                  <h2>{stock.ticker}</h2>
-                  <p>{stock.name} · {stock.sector || "섹터 미정"} · {stock.country || "국가 미정"}</p>
-                </div>
-              </div>
-              <div className="cpw4-edge-price">
-                <strong>{w4FormatPrice(stock.price)}</strong>
-                <span>12M {w4FormatSignedFractionPercent(stock.return12m)}</span>
-              </div>
-            </div>
-
-            <div className="cpw4-hero-verdict">
-              <W4ScoreDonut score={detailScore} label="단기" />
-              <div className="cpw4-hero-verdict__copy">
-                <span className="cpw4-verdict-badge">
-                  {edgeLead}
-                </span>
-                <h3>{verdictHeadline}</h3>
-                <p>{verdictCopy}. {shortTermBasis.comparisonNote} Fenok 파생 신호는 축별 강도와 약점을 함께 보여주는 참고 지표입니다.</p>
-              </div>
-              <div className="cpw4-hero-verdict__meters">
-                <W4Meter label="단기" score={shortTermConvictionScore} call={shortTermConvictionCall ?? null} />
-                <W4Meter label="장기" score={longTermConvictionScore} call={longTermConvictionCall ?? null} />
-              </div>
-            </div>
-
-            <div className="cpw4-top3-grid">
-              {topShortAxes.length > 0 ? (
-                <div className="cpw4-axis-group-card">
-                  <h3>단기 강점 축</h3>
-                  {topShortAxes.map((axis, index) => <W4AxisCard key={axis.key} axis={axis} rank={index + 1} />)}
-                </div>
-              ) : null}
-              {topLongAxes.length > 0 ? (
-                <div className="cpw4-axis-group-card">
-                  <h3>장기 강점 축</h3>
-                  {topLongAxes.map((axis, index) => <W4AxisCard key={axis.key} axis={axis} rank={index + 1} />)}
-                </div>
-              ) : null}
-              {topShortAxes.length === 0 && topLongAxes.length === 0 ? (
-                <p className="cpw4-empty-axis">확인된 강점 축이 없습니다.</p>
-              ) : null}
-            </div>
-
-            {weakShortAxis ? (
-              <div className="cpw4-weak-axis-callout">
-                <strong>단기 약점 축 · {weakShortAxis.fullLabel} {w4ScoreText(weakShortAxis.score)}</strong>
-                <span>{weakShortAxis.tooltipNote ?? "점수가 낮은 축은 추가 확인이 필요한 구간입니다."}</span>
-              </div>
-            ) : null}
-            {weakLongAxis ? (
-              <div className="cpw4-weak-axis-callout">
-                <strong>장기 약점 축 · {weakLongAxis.fullLabel} {w4ScoreText(weakLongAxis.score)}</strong>
-                <span>{weakLongAxis.tooltipNote ?? "점수가 낮은 축은 추가 확인이 필요한 구간입니다."}</span>
-              </div>
-            ) : null}
-
-            <div className="cpw4-cta-row">
+          <div className="cpw4-cta-row">
               <TransitionLink href={ROUTES.stock(ticker)} className="cpw4-primary-cta">
                 종목 상세 보기 →
               </TransitionLink>
@@ -2758,45 +2679,6 @@ export default function StockDetailPanel({
               )}
               <span className="cpw4-cta-note">Fenok 파생 신호 · 투자 조언 아님</span>
             </div>
-          </section>
-
-          <details className="cpw4-axis-detail">
-            <summary>
-              <span>전체 축 보기</span>
-              <small>단기 {shortTermBasis.sourceInputCount ?? "—"}/3–5 입력 · {shortTermBasis.windowLabel} · 장외거래 참고축(평균 제외) · 장기 5개 방향성 축 {longDirectionalCount}/5 + 동종군 참고축</small>
-            </summary>
-            <div className="cpw4-axis-detail__body">
-              <FenokSignalRadarHexagonPair
-                leftTitle="Short-term"
-                rightTitle="Long-term"
-                leftAxes={shortTermAxes}
-                rightAxes={longTermAxes}
-                size="md"
-              />
-              <div className="cpw4-axis-detail__grid">
-                {hasShortTermSignal ? (
-                  <div>
-                    <h3>단기 축</h3>
-                    <div className="cpw4-axis-legend-grid">
-                      {shortTermAxes.map((axis) => (
-                        <DetailAxisLegend key={axis.key} axis={axis} />
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-                {hasLongTermSignal ? (
-                  <div>
-                    <h3>장기 축</h3>
-                    <div className="cpw4-axis-legend-grid">
-                      {longTermAxes.map((axis) => (
-                        <DetailAxisLegend key={axis.key} axis={axis} />
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </details>
         </>
       ) : null}
 

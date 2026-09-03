@@ -16,10 +16,14 @@ import {
 
 import type { CpChartDatum, CpPriceChartProps } from "@/components/canvas-plus/charts/types";
 import { formatCompactNumber, formatCurrency as formatSharedCurrency, formatDecimal, formatInteger, normalizeCurrency } from "@/lib/format";
-
-function cpClassNames(...parts: Array<string | false | null | undefined>): string {
-  return parts.filter(Boolean).join(" ");
-}
+import {
+  lightChartTheme,
+  lwCandlestickSeriesOptions,
+  lwChartOptions,
+  lwLineSeriesOptions,
+  lwVolumeSeriesOptions,
+} from "@/lib/chart-theme";
+import { EvidenceRail, Panel, PanelHeader, Row, Stat, StatStrip } from "@/components/ui";
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -155,19 +159,6 @@ function buildW4Stats(data: readonly CpChartDatum[], range: string) {
   };
 }
 
-function readCpToken(container: HTMLElement, tokenName: string, fallbackToken?: string): string {
-  const scope = container.closest(".canvas-plus") ?? document.documentElement;
-  const scopeStyles = getComputedStyle(scope);
-  const rootStyles = getComputedStyle(document.documentElement);
-  const value = scopeStyles.getPropertyValue(tokenName).trim();
-  if (value) return value;
-  if (fallbackToken) {
-    const fallback = scopeStyles.getPropertyValue(fallbackToken).trim() || rootStyles.getPropertyValue(fallbackToken).trim();
-    if (fallback) return fallback;
-  }
-  return rootStyles.getPropertyValue(tokenName).trim() || "currentColor";
-}
-
 function toLineData(data: readonly CpChartDatum[]): LineData<Time>[] {
   return data
     .filter((datum): datum is CpChartDatum & { value: number } => Number.isFinite(datum.value))
@@ -217,11 +208,6 @@ function toVolumeData(
     });
 }
 
-function CpW4ToneValue({ value, mode = "fraction" }: { value: number | null; mode?: "fraction" | "percent" }) {
-  const tone = isFiniteNumber(value) && value < 0 ? "negative" : isFiniteNumber(value) && value > 0 ? "positive" : "neutral";
-  return <span className={cpClassNames("cpw4-num", tone)}>{formatSignedPercent(value, 1, mode)}</span>;
-}
-
 function CpW4PriceSectionInner(props: CpPriceChartProps) {
   const {
     data,
@@ -257,195 +243,143 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
 
   return (
     <section
-      className={cpClassNames("cpw4-price-section", className)}
+      className={className}
       data-cpw4-price-section
       data-chart-range={range}
       aria-label={`${symbol ?? title} 가격 차트 구성`}
     >
-      <h2 className="cpw4-verdict">
-        {isFiniteNumber(stats.lowGain) && isFiniteNumber(highGapAbs) ? (
-          <>
-            {stats.rangeLabel} 저점 대비 <CpW4ToneValue value={stats.lowGain} /> 올랐지만, 고점까지는 아직{" "}
-            <span className="cpw4-num negative">{formatUnsignedPercent(highGapAbs)}</span> 남았다
-          </>
-        ) : (
-          verdict
-        )}
-      </h2>
+      <Panel>
+        <PanelHeader eyebrow={`Price · ${stats.rangeLabel}`} title={`${symbol ?? title} 가격 위치`} />
+        <p className="px-4 py-2 text-[13px] font-semibold text-slate-900">{verdict}</p>
+        <StatStrip className="mx-4 my-2 flex-wrap">
+          <div className="min-w-[30%] flex-1"><Stat label={`${stats.rangeLabel} 고가`} value={formatCurrency(stats.high, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.highGap)}`} /></div>
+          <div className="min-w-[30%] flex-1"><Stat label={`${stats.rangeLabel} 저가`} value={formatCurrency(stats.low, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.lowGain)}`} /></div>
+          <div className="min-w-[30%] flex-1"><Stat label={`${stats.rangeLabel} 수익률`} value={formatSignedPercent(stats.periodReturn)} sub={`${range} 보유 기준`} /></div>
+          <div className="min-w-[30%] flex-1"><Stat label="최근 거래일 시가" value={formatCurrency(isFiniteNumber(latest?.open) ? latest.open : null, currency)} /></div>
+          <div className="min-w-[30%] flex-1"><Stat label="최근 거래일 고가" value={formatCurrency(isFiniteNumber(latest?.high) ? latest.high : null, currency)} /></div>
+          <div className="min-w-[30%] flex-1"><Stat label="최근 거래일 저가" value={formatCurrency(isFiniteNumber(latest?.low) ? latest.low : null, currency)} /></div>
+          <div className="min-w-[30%] flex-1"><Stat label="최근 거래일 거래량" value={formatVolume(isFiniteNumber(latest?.volume) ? latest.volume : null)} sub={`10일 평균 ${formatVolume(stats.averageVolume)}`} /></div>
+        </StatStrip>
+      </Panel>
 
-      <div className="cpw4-range-strip" aria-label={`${stats.rangeLabel} 가격 범위`}>
-        <div className="cpw4-range-cell">
-          <span className="cpw4-range-label">{stats.rangeLabel} 고가</span>
-          <strong className="cpw4-range-value">{formatCurrency(stats.high, currency)}</strong>
-          <span className="cpw4-range-sub negative">현재가 대비 {formatSignedPercent(stats.highGap)}</span>
+      <Panel>
+        <PanelHeader eyebrow="Price Action · 가격 · 거래량" title="가격 · 거래량" />
+        <p className="px-4 pt-2 text-[11px] text-slate-500" aria-label="차트 범례">상승 마감 · 하락 마감 · 거래량 — 거래량은 강도만, 방향은 캔들이 말합니다</p>
+        <div className="px-4 py-2">
+          <CpPriceChartCore
+            {...props}
+            composition="default"
+            height={height}
+            hideHeader
+            showVolume
+            volumeTone="muted"
+          />
         </div>
-        <div className="cpw4-range-cell">
-          <span className="cpw4-range-label">{stats.rangeLabel} 저가</span>
-          <strong className="cpw4-range-value">{formatCurrency(stats.low, currency)}</strong>
-          <span className="cpw4-range-sub positive">현재가 대비 {formatSignedPercent(stats.lowGain)}</span>
-        </div>
-        <div className="cpw4-range-cell">
-          <span className="cpw4-range-label">{stats.rangeLabel} 수익률</span>
-          <strong className={cpClassNames("cpw4-range-value", isFiniteNumber(stats.periodReturn) && stats.periodReturn < 0 ? "negative" : "positive")}>
-            {formatSignedPercent(stats.periodReturn)}
-          </strong>
-          <span className="cpw4-range-sub">{range} 보유 기준</span>
-        </div>
-        <div className="cpw4-range-cell">
-          <span className="cpw4-range-label">최근 거래일 시가</span>
-          <strong className="cpw4-range-value muted">{formatCurrency(isFiniteNumber(latest?.open) ? latest.open : null, currency)}</strong>
-        </div>
-        <div className="cpw4-range-cell">
-          <span className="cpw4-range-label">최근 거래일 고가</span>
-          <strong className="cpw4-range-value muted">{formatCurrency(isFiniteNumber(latest?.high) ? latest.high : null, currency)}</strong>
-        </div>
-        <div className="cpw4-range-cell">
-          <span className="cpw4-range-label">최근 거래일 저가</span>
-          <strong className="cpw4-range-value muted">{formatCurrency(isFiniteNumber(latest?.low) ? latest.low : null, currency)}</strong>
-        </div>
-        <div className="cpw4-range-cell">
-          <span className="cpw4-range-label">최근 거래일 거래량</span>
-          <strong className="cpw4-range-value muted">{formatVolume(isFiniteNumber(latest?.volume) ? latest.volume : null)}</strong>
-          <span className="cpw4-range-sub">10일 평균 {formatVolume(stats.averageVolume)}</span>
-        </div>
-      </div>
-
-      <div className="cpw4-card cpw4-chart-card">
-        <div className="cpw4-chart-head">
-          <div>
-            <p className="cpw4-eyebrow">PRICE ACTION · 가격 · 거래량</p>
-            <p className="cpw4-chart-sub">거래량은 강도만, 방향은 캔들이 말합니다</p>
-          </div>
-          <div className="cpw4-chart-legend" aria-label="차트 범례">
-            <span><i className="positive" />상승 마감</span>
-            <span><i className="negative" />하락 마감</span>
-            <span><i className="volume" />거래량</span>
-          </div>
-        </div>
-        <CpPriceChartCore
-          {...props}
-          composition="default"
-          className="cpw4-chart-shell"
-          height={height}
-          hideHeader
-          showVolume
-          volumeTone="muted"
+        <EvidenceRail
+          freshness={stats.sortedCount >= 2 ? "fresh" : "stale"}
+          source="가격 데이터"
+          asOf={formatDateLabel(latest?.time)}
+          coverage={`${range} 가격·거래량`}
+          next={stats.sortedCount >= 2 ? undefined : "차트 데이터 확보 시"}
+          skeletonDelayMs={120}
         />
-      </div>
+      </Panel>
 
-      <div className="cpw4-tier2">
-        <div className="cpw4-card">
-          <div>
-            <h3 className="cpw4-section-title">최근 거래일 상세</h3>
-            <p className="cpw4-section-sub">{formatDateLabel(latest?.time)} · 정규장</p>
-          </div>
-          <div className="cpw4-table-wrap">
-            <table className="cpw4-table">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel>
+          <PanelHeader eyebrow={formatDateLabel(latest?.time)} title="최근 거래일 상세" right={<span className="text-[11px] text-slate-500">정규장</span>} />
+          <div className="overflow-x-auto px-4 py-2">
+            <table className="w-full text-xs">
               <thead>
-                <tr>
-                  <th>구분</th>
-                  <th>시가</th>
-                  <th>고가</th>
-                  <th>저가</th>
-                  <th>종가</th>
-                  <th>거래량</th>
+                <tr className="border-b border-slate-200 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-500">
+                  <th className="px-2 py-2 text-left">구분</th>
+                  <th className="px-2 py-2 text-right">시가</th>
+                  <th className="px-2 py-2 text-right">고가</th>
+                  <th className="px-2 py-2 text-right">저가</th>
+                  <th className="px-2 py-2 text-right">종가</th>
+                  <th className="px-2 py-2 text-right">거래량</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>{symbol ?? title}</td>
-                  <td>{formatPlainNumber(isFiniteNumber(latest?.open) ? latest.open : null)}</td>
-                  <td>{formatPlainNumber(isFiniteNumber(latest?.high) ? latest.high : null)}</td>
-                  <td>{formatPlainNumber(isFiniteNumber(latest?.low) ? latest.low : null)}</td>
-                  <td>{formatPlainNumber(latestClose)}</td>
-                  <td>{formatInteger(latest?.volume)}</td>
+                <tr className="text-slate-900">
+                  <td className="px-2 py-2 font-semibold">{symbol ?? title}</td>
+                  <td className="px-2 py-2 text-right tabular-nums">{formatPlainNumber(isFiniteNumber(latest?.open) ? latest.open : null)}</td>
+                  <td className="px-2 py-2 text-right tabular-nums">{formatPlainNumber(isFiniteNumber(latest?.high) ? latest.high : null)}</td>
+                  <td className="px-2 py-2 text-right tabular-nums">{formatPlainNumber(isFiniteNumber(latest?.low) ? latest.low : null)}</td>
+                  <td className="px-2 py-2 text-right tabular-nums">{formatPlainNumber(latestClose)}</td>
+                  <td className="px-2 py-2 text-right tabular-nums">{formatInteger(latest?.volume)}</td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </div>
+        </Panel>
 
-        <div className="cpw4-card">
-          <div>
-            <h3 className="cpw4-section-title">월봉 종가 추이</h3>
-            <p className="cpw4-section-sub">최근 3개월 마감 기준</p>
-          </div>
-          <div className="cpw4-table-wrap">
-            <table className="cpw4-table">
+        <Panel>
+          <PanelHeader eyebrow="최근 3개월 마감 기준" title="월봉 종가 추이" />
+          <div className="overflow-x-auto px-4 py-2">
+            <table className="w-full text-xs">
               <thead>
-                <tr>
-                  <th>월</th>
-                  <th>종가</th>
-                  <th>전월비</th>
+                <tr className="border-b border-slate-200 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-500">
+                  <th className="px-2 py-2 text-left">월</th>
+                  <th className="px-2 py-2 text-right">종가</th>
+                  <th className="px-2 py-2 text-right">전월비</th>
                 </tr>
               </thead>
               <tbody>
                 {stats.monthlyRows.length > 0 ? (
                   stats.monthlyRows.map((row) => (
-                    <tr key={row.month}>
-                      <td>{row.month}</td>
-                      <td>{formatPlainNumber(row.close)}</td>
-                      <td className={isFiniteNumber(row.change) && row.change < 0 ? "negative" : "positive"}>{formatSignedPercent(row.change)}</td>
+                    <tr key={row.month} className="border-b border-slate-100 text-slate-900 last:border-b-0">
+                      <td className="px-2 py-2 font-semibold">{row.month}</td>
+                      <td className="px-2 py-2 text-right tabular-nums">{formatPlainNumber(row.close)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums">{isFiniteNumber(row.change) ? (row.change < 0 ? "▼ " : "▲ ") : ""}{formatSignedPercent(row.change)}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3}>월봉 계산에 필요한 가격 데이터가 없습니다.</td>
+                    <td colSpan={3} className="px-2 py-2 text-slate-500">월봉 계산에 필요한 가격 데이터가 없습니다.</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </div>
+        </Panel>
       </div>
 
       {(annualRows.length > 0 || indexRows.length > 0 || skippedBlocks.length > 0) ? (
-        <div className="cpw4-tier3">
+        <div className="grid gap-4 lg:grid-cols-2">
           {annualRows.length > 0 ? (
-            <div className="cpw4-card">
-              <div>
-                <h3 className="cpw4-section-title">연도별 수익률</h3>
-                <p className="cpw4-section-sub">캘린더 이어 기준</p>
-              </div>
-              <div className="cpw4-year-grid">
-                {annualRows.map((row) => (
-                  <div className="cpw4-year-cell" key={row.year}>
-                    <span>{row.year}</span>
-                    <strong className={row.returnPct < 0 ? "negative" : "positive"}>
-                      {formatSignedPercent(row.returnPct, 1, "percent")}
-                    </strong>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Panel>
+              <PanelHeader eyebrow="캘린더 이어 기준" title="연도별 수익률" />
+              {annualRows.map((row) => (
+                <Row key={row.year}>
+                  <span className="truncate text-[12px] text-slate-700">{row.year}</span>
+                  <span className="truncate text-[12px] text-slate-500" />
+                  <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{row.returnPct < 0 ? "▼ " : "▲ "}{formatSignedPercent(row.returnPct, 1, "percent")}</span>
+                </Row>
+              ))}
+            </Panel>
           ) : null}
 
           {indexRows.length > 0 ? (
-            <div className="cpw4-card">
-              <div>
-                <h3 className="cpw4-section-title">동일기간 지수 대비</h3>
-                <p className="cpw4-section-sub">{range} 수익률</p>
-              </div>
-              <div className="cpw4-index-strip">
-                {indexRows.map((row) => (
-                  <div className="cpw4-index-row" key={row.label}>
-                    <span>{row.label}</span>
-                    <strong className={row.returnPct < 0 ? "negative" : "positive"}>
-                      {formatSignedPercent(row.returnPct, 1, "percent")}
-                    </strong>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Panel>
+              <PanelHeader eyebrow={`${range} 수익률`} title="동일기간 지수 대비" />
+              {indexRows.map((row) => (
+                <Row key={row.label}>
+                  <span className="truncate text-[12px] text-slate-700">{row.label}</span>
+                  <span className="truncate text-[12px] text-slate-500" />
+                  <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{row.returnPct < 0 ? "▼ " : "▲ "}{formatSignedPercent(row.returnPct, 1, "percent")}</span>
+                </Row>
+              ))}
+            </Panel>
           ) : null}
 
           {skippedBlocks.length > 0 ? (
-            <p className="cpw4-skip-note">소스 미전달로 생략: {skippedBlocks.join(", ")}</p>
+            <p className="px-1 py-1 text-[11px] text-slate-500">소스 미전달로 생략: {skippedBlocks.join(", ")}</p>
           ) : null}
         </div>
       ) : null}
 
-      <p className="cpw4-footnote">
+      <p className="px-1 py-2 text-[11px] leading-4 text-slate-500">
         {footnote ?? `표시가 ${formatDateLabel(latest?.time)} 기준 · ${symbol ?? title} ${range} 가격 데이터`}
       </p>
     </section>
@@ -469,8 +403,6 @@ function CpPriceChartCore(props: CpPriceChartProps) {
     kind,
     data,
     title,
-    summary,
-    headingLevel = "h2",
     ariaLabel,
     range = "1Y",
     height = 280,
@@ -479,7 +411,6 @@ function CpPriceChartCore(props: CpPriceChartProps) {
     showCrosshair = true,
     showVolume = false,
     volumeTone = "directional",
-    hideHeader = false,
     className,
     emptyLabel = "차트 데이터 없음",
   } = props;
@@ -534,15 +465,19 @@ function CpPriceChartCore(props: CpPriceChartProps) {
     const container = canvasRef.current;
     if (!container || !isVisible || !hasData) return;
 
-    const backgroundColor = readCpToken(container, "--cp-chart-bg", "--cp-surface");
-    const textColor = readCpToken(container, "--cp-chart-axis", "--cp-text-muted");
-    const gridColor = readCpToken(container, "--cp-chart-grid", "--cp-divider");
-    const crosshairColor = readCpToken(container, "--cp-chart-crosshair", "--cp-text-soft");
-    const lineColor = readCpToken(container, "--cp-chart-line-1", "--cp-accent");
-    const areaColor = readCpToken(container, "--cp-chart-line-2", "--cp-accent");
-    const positiveColor = readCpToken(container, "--cp-chart-positive-line", "--cp-positive");
-    const negativeColor = readCpToken(container, "--cp-chart-negative-line", "--cp-negative");
-    const mutedVolumeColor = readCpToken(container, "--cp-chart-volume", "--cp-border-strong");
+    const chartBase = lwChartOptions();
+    const candleBase = lwCandlestickSeriesOptions();
+    const lineBase = lwLineSeriesOptions();
+    const volumeBase = lwVolumeSeriesOptions();
+    const backgroundColor = chartBase.layout.background.color;
+    const textColor = chartBase.layout.textColor;
+    const gridColor = chartBase.grid.vertLines.color;
+    const crosshairColor = lightChartTheme.text;
+    const lineColor = lineBase.color;
+    const areaColor = lightChartTheme.accent;
+    const positiveColor = candleBase.upColor;
+    const negativeColor = candleBase.downColor;
+    const mutedVolumeColor = volumeBase.color;
 
     const chart = createChart(container, {
       width: container.clientWidth,
@@ -570,20 +505,13 @@ function CpPriceChartCore(props: CpPriceChartProps) {
     });
 
     if (kind === "candlestick") {
-      const series = chart.addSeries(CandlestickSeries, {
-        upColor: positiveColor,
-        downColor: negativeColor,
-        borderUpColor: positiveColor,
-        borderDownColor: negativeColor,
-        wickUpColor: positiveColor,
-        wickDownColor: negativeColor,
-      });
+      const series = chart.addSeries(CandlestickSeries, { ...candleBase });
       series.setData(toCandlestickData(data));
 
       if (showVolume) {
         const volumeSeries = chart.addSeries(HistogramSeries, {
-          priceFormat: { type: "volume" },
-          priceScaleId: "",
+          ...volumeBase,
+          priceFormat: { type: "volume" as const },
         });
         volumeSeries.setData(toVolumeData(data, positiveColor, negativeColor, mutedVolumeColor, volumeTone));
         chart.priceScale("").applyOptions({
@@ -604,7 +532,7 @@ function CpPriceChartCore(props: CpPriceChartProps) {
     } else {
       const series = chart.addSeries(LineSeries, {
         color: kind === "sparkline" ? positiveColor : lineColor,
-        lineWidth: kind === "sparkline" ? 1 : 2,
+        lineWidth: kind === "sparkline" ? 1 : lineBase.lineWidth,
         priceLineVisible: kind !== "sparkline",
         lastValueVisible: kind !== "sparkline",
       });
@@ -631,31 +559,17 @@ function CpPriceChartCore(props: CpPriceChartProps) {
     };
   }, [data, hasData, height, isVisible, kind, prefersReducedMotion, showCrosshair, showGrid, showVolume, volumeTone]);
 
-  const HeadingTag = headingLevel;
-
   return (
     <section
       ref={shellRef}
-      className={cpClassNames("cp-chart-shell", className)}
+      className={className}
       data-cp-price-chart
       data-chart-kind={kind}
       data-chart-range={range}
       data-density={density}
       aria-label={ariaLabel ?? title}
     >
-      {!hideHeader ? (
-        <header className="cp-chart-shell__header">
-          <div>
-            <HeadingTag className="cp-chart-shell__title">{title}</HeadingTag>
-            <p className="cp-chart-summary" data-cp-price-chart-summary>
-              {summary}
-            </p>
-          </div>
-          <span className="cp-chart-shell__range">{range}</span>
-        </header>
-      ) : null}
-
-      {!hasData ? <p className="cp-chart-fallback">{emptyLabel}</p> : null}
+      {!hasData ? <p className="px-4 py-3 text-[12px] text-slate-500">{emptyLabel}</p> : null}
       {hasData && !isVisible ? <div className="cp-chart-skeleton" aria-hidden="true" /> : null}
       {hasData ? (
         <div

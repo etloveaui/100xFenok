@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MetricHelp from "@/components/MetricHelp";
+import { Panel, PanelHeader, Stat, StatStrip } from "@/components/ui";
 import {
   formatCompactMoney,
   formatMoney,
@@ -247,15 +248,13 @@ function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; i
   if (rows.length === 0) return null;
   const fmt = (v: number, frac: boolean) => (frac ? `${(v * 100).toFixed(1)}%` : v.toFixed(1));
   return (
-    <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
-        산업 대비 — {industry.name}{industry.num_firms ? ` (${industry.num_firms}개사, 다모다란)` : " (다모다란)"}
-      </p>
-      <div className="mt-2 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+    <Panel>
+      <PanelHeader eyebrow="Industry Compare · 다모다란" title={`산업 대비 — ${industry.name}${industry.num_firms ? ` (${industry.num_firms}개사)` : ""}`} />
+      <div className="grid gap-1.5 px-4 py-2 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((r) => {
           const better = r.lowerBetter ? (r.stock as number) < (r.ind as number) : (r.stock as number) > (r.ind as number);
           return (
-            <div key={r.label} className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
+            <div key={r.label} className="flex items-center justify-between rounded-[8px] border border-slate-200 bg-white px-3 py-2">
               <MetricHelp label={r.label} className="text-[10px] font-medium text-slate-500" />
               <span className="tabular-nums text-[11px] font-black">
                 <span className={better ? "text-emerald-700" : "text-slate-900"}>{fmt(r.stock as number, r.isFraction)}</span>
@@ -266,7 +265,7 @@ function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; i
           );
         })}
       </div>
-    </div>
+    </Panel>
   );
 }
 
@@ -374,19 +373,16 @@ function OwnershipTab({ data }: { data: YfData }) {
       {/* Major holders summary */}
       <div>
         <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">주요 보유 현황</h3>
-        <div className="grid gap-3 sm:grid-cols-4">
+        <StatStrip className="flex-wrap">
           {[
             ["기관 보유율", fmtPct(mh.institutionsPercentHeld, true)],
             ["유통주 기관 보유", fmtPct(mh.institutionsFloatPercentHeld, true)],
             ["내부자 보유율", fmtPct(mh.insidersPercentHeld, true)],
             ["기관 수", finiteNumber(mh.institutionsCount)?.toLocaleString() ?? "—"],
           ].map(([label, value]) => (
-            <div key={label as string} className="rounded-xl border border-slate-200 bg-white p-3 text-center">
-              <p className="text-[10px] font-bold text-slate-500">{label as string}</p>
-              <p className="mt-1 text-lg font-black text-slate-900">{value}</p>
-            </div>
+            <div key={label as string} className="min-w-[22%] flex-1"><Stat label={label as string} value={value} /></div>
           ))}
-        </div>
+        </StatStrip>
       </div>
 
       {/* Institutional holders table */}
@@ -460,9 +456,9 @@ function EstimatesTab({ data }: { data: YfData }) {
     <div className="space-y-5">
       {/* Analyst price targets banner */}
       {targetCurrent !== null ? (
-        <div>
-          <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">애널리스트 목표가</h3>
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <Panel>
+          <PanelHeader eyebrow="Analyst Price Targets" title="애널리스트 목표가" />
+          <div className="px-4 py-3">
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500">
               <span>최저 {formatMoney(targetLow, infoCurrency)}</span>
               <span>평균 {formatMoney(targetMean, infoCurrency)}</span>
@@ -483,7 +479,7 @@ function EstimatesTab({ data }: { data: YfData }) {
               현재가 {formatMoney(targetCurrent, infoCurrency)} · 중간값 {formatMoney(targetMedian, infoCurrency)}
             </p>
           </div>
-        </div>
+        </Panel>
       ) : null}
 
       {/* Earnings & Revenue estimate table */}
@@ -571,9 +567,9 @@ function EstimatesTab({ data }: { data: YfData }) {
 
       {/* Recommendations bar */}
       {lastRec ? (
-        <div>
-          <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">애널리스트 추천</h3>
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
+        <Panel>
+          <PanelHeader eyebrow="Analyst Recommendations" title="애널리스트 추천" />
+          <div className="px-4 py-3">
             <div className="flex h-6 overflow-hidden rounded-full">
               {[
                 ["strongBuy", "bg-emerald-600"],
@@ -601,7 +597,7 @@ function EstimatesTab({ data }: { data: YfData }) {
               <span>적극매도</span>
             </div>
           </div>
-        </div>
+        </Panel>
       ) : null}
     </div>
   );
@@ -623,22 +619,24 @@ export function FiftyTwoWeekBar({ info }: { info: Record<string, any> }) {
   const fmtBound = (v: number) => (Math.abs(v) >= 100_000 ? formatCompactMoney(v, currency) : formatMoney(v, currency, 0));
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <p className="text-[10px] font-bold text-slate-500 mb-1">52주 범위</p>
-      <div className="flex items-center gap-2">
-        <span className="max-w-[5.5rem] truncate text-[10px] font-semibold text-slate-500">{fmtBound(low)}</span>
-        <div className="relative h-2 flex-1 rounded-full bg-slate-100">
-          <div
-            className="absolute top-0 h-2 w-2 rounded-full bg-brand-interactive"
-            style={{ left: `${pct}%`, transform: "translateX(-50%)" }}
-          />
+    <Panel>
+      <PanelHeader eyebrow="Range" title="52주 범위" />
+      <div className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="max-w-[5.5rem] truncate text-[10px] font-semibold text-slate-500">{fmtBound(low)}</span>
+          <div className="relative h-2 flex-1 rounded-full bg-slate-100">
+            <div
+              className="absolute top-0 h-2 w-2 rounded-full bg-brand-interactive"
+              style={{ left: `${pct}%`, transform: "translateX(-50%)" }}
+            />
+          </div>
+          <span className="max-w-[5.5rem] truncate text-[10px] font-semibold text-slate-500">{fmtBound(high)}</span>
         </div>
-        <span className="max-w-[5.5rem] truncate text-[10px] font-semibold text-slate-500">{fmtBound(high)}</span>
+        <p className="mt-1 text-center text-[10px] font-bold text-slate-600">
+          52주 범위 {pct >= 50 ? "상단" : "하단"} {Math.round(pct >= 50 ? pct : 100 - pct)}% 구간
+        </p>
       </div>
-      <p className="mt-1 text-center text-[10px] font-bold text-slate-600">
-        52주 범위 {pct >= 50 ? "상단" : "하단"} {Math.round(pct >= 50 ? pct : 100 - pct)}% 구간
-      </p>
-    </div>
+    </Panel>
   );
 }
 
@@ -772,70 +770,72 @@ export function SummaryScoreCard({ data, perBand, industry, onAreaSelect }: {
   const verdict = ratio >= 0.75 ? "우량 신호 우세" : ratio >= 0.5 ? "혼조 — 강점·약점 공존" : "주의 신호 우세";
 
   return (
-    <div className="rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-3">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 text-left"
-        aria-expanded={open}
-      >
-        <div>
-          <p className="text-[10px] font-bold text-slate-500">투자 체크 요약</p>
-          <p className="text-sm font-black text-slate-900">
-            {score}/{total} 통과 · <span style={{ color: scoreColor(ratio) }}>{verdict}</span>
-          </p>
-        </div>
-        <span className="text-[10px] font-bold text-slate-500">{open ? "접기 ▲" : "상세 ▼"}</span>
-      </button>
+    <Panel>
+      <div className="px-4 py-3">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex w-full items-center justify-between gap-3 text-left"
+          aria-expanded={open}
+        >
+          <div>
+            <p className="text-[10px] font-bold text-slate-500">투자 체크 요약</p>
+            <p className="text-sm font-black text-slate-900">
+              {score}/{total} 통과 · <span style={{ color: scoreColor(ratio) }}>{verdict}</span>
+            </p>
+          </div>
+          <span className="text-[10px] font-bold text-slate-500">{open ? "접기 ▲" : "상세 ▼"}</span>
+        </button>
 
-      <div className="mt-2 grid gap-1.5 sm:grid-cols-5">
-        {areas.map((a) => {
-          const r = a.total > 0 ? a.score / a.total : 0;
-          const target = SUMMARY_SCORE_AREA_TARGETS[a.area];
-          return (
-            <button
-              key={a.area}
-              type="button"
-              data-stock-summary-axis-link
-              data-stock-summary-axis={a.area}
-              data-stock-summary-axis-tab={target?.tab ?? ""}
-              data-stock-summary-axis-hash={target?.hash ?? ""}
-              onClick={() => target ? onAreaSelect?.(target.tab, target.hash) : undefined}
-              className="min-h-11 rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5 text-left transition hover:border-brand-interactive hover:bg-white"
-              aria-label={`${a.area} 체크 ${a.score}/${a.total}, ${target ? `${target.label} 섹션으로 이동` : "상세 확인"}`}
-            >
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[10px] font-bold text-slate-600">{a.area}</span>
-                <span className="tabular-nums text-[10px] font-black text-slate-700">{a.score}/{a.total}</span>
+        <div className="mt-2 grid gap-1.5 sm:grid-cols-5">
+          {areas.map((a) => {
+            const r = a.total > 0 ? a.score / a.total : 0;
+            const target = SUMMARY_SCORE_AREA_TARGETS[a.area];
+            return (
+              <button
+                key={a.area}
+                type="button"
+                data-stock-summary-axis-link
+                data-stock-summary-axis={a.area}
+                data-stock-summary-axis-tab={target?.tab ?? ""}
+                data-stock-summary-axis-hash={target?.hash ?? ""}
+                onClick={() => target ? onAreaSelect?.(target.tab, target.hash) : undefined}
+                className="min-h-11 rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5 text-left transition hover:border-brand-interactive hover:bg-white"
+                aria-label={`${a.area} 체크 ${a.score}/${a.total}, ${target ? `${target.label} 섹션으로 이동` : "상세 확인"}`}
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-[10px] font-bold text-slate-600">{a.area}</span>
+                  <span className="tabular-nums text-[10px] font-black text-slate-700">{a.score}/{a.total}</span>
+                </div>
+                <div className="mt-0.5 h-1.5 rounded-full bg-slate-100">
+                  <div className="h-1.5 rounded-full" style={{ width: `${r * 100}%`, backgroundColor: scoreColor(r) }} />
+                </div>
+                {target ? <span className="mt-1 block text-[9px] font-bold text-slate-500">{target.label} · {target.description}</span> : null}
+              </button>
+            );
+          })}
+        </div>
+
+        {open ? (
+          <div className="mt-3 grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-2 lg:grid-cols-5">
+            {areas.map((a) => (
+              <div key={a.area}>
+                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">{a.area}</p>
+                <ul className="space-y-1">
+                  {a.checks.map((c) => (
+                    <li key={c.label} className="flex items-start gap-1.5 text-[10px] font-semibold">
+                      <span className={c.pass ? "text-emerald-600" : "text-rose-500"}>{c.pass ? "✓" : "✗"}</span>
+                      <span className={c.pass ? "text-slate-700" : "text-slate-500"}>{c.label}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="mt-0.5 h-1.5 rounded-full bg-slate-100">
-                <div className="h-1.5 rounded-full" style={{ width: `${r * 100}%`, backgroundColor: scoreColor(r) }} />
-              </div>
-              {target ? <span className="mt-1 block text-[9px] font-bold text-slate-500">{target.label} · {target.description}</span> : null}
-            </button>
-          );
-        })}
+            ))}
+          </div>
+        ) : null}
+        <p className="mt-2 text-[9px] font-semibold text-slate-500">데이터 없는 항목은 채점에서 제외 · 투자 참고용 단순 체크리스트</p>
       </div>
-
-      {open ? (
-        <div className="mt-3 grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-2 lg:grid-cols-5">
-          {areas.map((a) => (
-            <div key={a.area}>
-              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">{a.area}</p>
-              <ul className="space-y-1">
-                {a.checks.map((c) => (
-                  <li key={c.label} className="flex items-start gap-1.5 text-[10px] font-semibold">
-                    <span className={c.pass ? "text-emerald-600" : "text-rose-500"}>{c.pass ? "✓" : "✗"}</span>
-                    <span className={c.pass ? "text-slate-700" : "text-slate-500"}>{c.label}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      ) : null}
-      <p className="mt-2 text-[9px] font-semibold text-slate-500">데이터 없는 항목은 채점에서 제외 · 투자 참고용 단순 체크리스트</p>
-    </div>
+    </Panel>
   );
 }
 
@@ -911,10 +911,10 @@ export function ThreeSecondSummary({ data, perBand, guruCount, industry }: {
   const sentences = buildThreeSecondSummary(data, perBand, guruCount, industry);
   if (sentences.length === 0) return null;
   return (
-    <div className="rounded-lg border border-brand-interactive/20 bg-brand-interactive/[0.03] p-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.1em] text-brand-interactive">3초 요약</p>
-      <p className="mt-1 text-[13px] font-bold leading-6 text-slate-800">{sentences.join(" ")}</p>
-    </div>
+    <Panel>
+      <PanelHeader eyebrow="Summary" title="3초 요약" />
+      <p className="px-4 py-3 text-[13px] font-bold leading-6 text-slate-800">{sentences.join(" ")}</p>
+    </Panel>
   );
 }
 
