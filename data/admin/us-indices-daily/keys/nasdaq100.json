@@ -1,35 +1,62 @@
 {
-  "schema_version": "producer-lkg-key-state/v1",
+  "schema_version": "producer-lkg-key-state/v2",
   "lane_id": "us_indices_daily",
   "key": "nasdaq100.json",
-  "updated_at": "2026-09-02T23:43:53.652Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "updated_at": "2026-09-03T23:53:32.990Z",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
-    "path": "data/admin/us-indices-daily/lkg/nasdaq100.json",
-    "payload_sha256": "b6d6e4f657b70fb89f1133b3d05fa77f7fe5e3222ef71a63e1a4bd4e9a6914d4",
-    "source_as_of": "2026-08-31"
+    "path": "data/indices/nasdaq100.json",
+    "payload_sha256": "3ed6810b79fdeb312bc478590477b87639a4aa0206c4b9dd1278a63ec97eb18e",
+    "source_as_of": "2026-09-03"
   },
+  "canonical_ref": "data/indices/nasdaq100.json",
   "lkg": {
     "path": "data/admin/us-indices-daily/lkg/nasdaq100.json",
     "payload_sha256": "b6d6e4f657b70fb89f1133b3d05fa77f7fe5e3222ef71a63e1a4bd4e9a6914d4",
     "source_as_of": "2026-08-31"
   },
-  "canonical_ref": "data/indices/nasdaq100.json",
-  "latest_failure": {
+  "latest_failure": null,
+  "recovered_from_run_id": "33696334752",
+  "recovery_run_id": "33818784791",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "recovered_at": "2026-09-03T23:53:32.990Z",
+  "last_run_id": "33818784791",
+  "last_run_attempt": 1,
+  "last_event_name": "schedule",
+  "promotion_contract": "provider_observation/v2",
+  "promotion_proof_required": true,
+  "provider_observation": {
+    "schema_version": "provider_observation/v2",
+    "payload_sha256": "10192b046e6d9d7ab586efb11f0b8cf4c688ba6f5a6292dc347141faa56795dc",
+    "candidate_payload_sha256": "3ed6810b79fdeb312bc478590477b87639a4aa0206c4b9dd1278a63ec97eb18e",
+    "payload_ref": "data/admin/us-indices-daily/provider-observations/10192b046e6d9d7ab586efb11f0b8cf4c688ba6f5a6292dc347141faa56795dc.json",
+    "source_as_of": "2026-09-03",
+    "run_id": "33818784791",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-09-03T23:53:32.990Z",
+    "recovered_from_run_id": "33696334752"
+  },
+  "recovery_observation": {
+    "schema_version": "provider_observation/v2",
+    "payload_sha256": "10192b046e6d9d7ab586efb11f0b8cf4c688ba6f5a6292dc347141faa56795dc",
+    "candidate_payload_sha256": "3ed6810b79fdeb312bc478590477b87639a4aa0206c4b9dd1278a63ec97eb18e",
+    "payload_ref": "data/admin/us-indices-daily/provider-observations/10192b046e6d9d7ab586efb11f0b8cf4c688ba6f5a6292dc347141faa56795dc.json",
+    "source_as_of": "2026-09-03",
+    "run_id": "33818784791",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-09-03T23:53:32.990Z",
+    "recovered_from_run_id": "33696334752"
+  },
+  "last_recovered_failure": {
     "run_id": "33696334752",
     "run_attempt": 1,
     "event_name": "schedule",
     "observed_at": "2026-09-02T23:43:53.652Z",
     "failure_kind": "schema_drift",
     "error": "Error: Yahoo chart row must have a valid date and finite positive value for ^NDX"
-  },
-  "recovered_from_run_id": null,
-  "recovery_run_id": null,
-  "recovery_run_attempt": null,
-  "recovery_event_name": null,
-  "recovered_at": null,
-  "last_run_id": "33696334752",
-  "last_run_attempt": 1,
-  "last_event_name": "schedule"
+  }
 }
