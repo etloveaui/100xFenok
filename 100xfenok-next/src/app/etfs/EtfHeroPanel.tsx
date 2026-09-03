@@ -5,6 +5,9 @@ import { formatAsOf } from "@/lib/data-state";
 import { formatInteger } from "@/lib/format";
 import {
   computeEtfInsights,
+  etfClockKind,
+  etfRailClockDate,
+  etfSurfacePublishedFloor,
   isEtfClockStale,
   openEtfEvidence,
   type EtfSurfaceData,
@@ -19,7 +22,9 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
   const loading = !loaded;
   const empty = loaded && !insights;
   const stale = loaded && !!insights && isEtfClockStale(insights.asOf);
-  const asOfLabel = formatAsOf(insights?.asOf ?? null) ?? "제공자 미공개";
+  const published = etfSurfacePublishedFloor(surface.universe, snapshot);
+  const asOfLabel = etfRailClockDate(insights?.asOf ?? null, published);
+  const asOfKind = etfClockKind(insights?.asOf ?? null, published);
 
   if (loading) {
     return (
@@ -52,6 +57,13 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
   }
 
   const { dominantBucket, leverageInversePct, newCount, topMoversCount, topMoversLeverageInverseCount, totalCount, asOf } = insights;
+  const observedLabel = formatAsOf(asOf);
+  const publishedLabel = formatAsOf(published);
+  const pillLabel = observedLabel
+    ? `기준일 ${observedLabel}`
+    : publishedLabel
+      ? `게시 ${publishedLabel}`
+      : (insights.asOfReason ? "제공자 미공개" : "미확인");
 
   return (
     <div className="etf-hero">
@@ -73,12 +85,13 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
             기준이며 자금 유입·유출액은 포함하지 않습니다.
           </span>
         </div>
-        <Pill>기준일 {formatAsOf(asOf) ?? (insights.asOfReason ? "제공자 미공개" : "미확인")}</Pill>
+        <Pill>{pillLabel}</Pill>
       </div>
       <EvidenceRail
-        freshness={stale ? "stale" : insights.asOf ? "fresh" : "fixed"}
+        freshness={stale ? "stale" : (insights.asOf ?? published) ? "fresh" : "fixed"}
         source="ETF 발행사 목록 · 거래소"
         asOf={asOfLabel}
+        asOfKind={asOfKind === "published" ? "published" : undefined}
         coverage={`${formatInteger(totalCount)}개 전량`}
         lkgAsOf={stale && asOf ? asOf : undefined}
         onRetry={stale ? reload : undefined}
