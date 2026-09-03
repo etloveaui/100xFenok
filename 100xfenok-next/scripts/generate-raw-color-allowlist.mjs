@@ -180,6 +180,13 @@ function categoryForPath(relPath) {
     };
   }
 
+  if (relPath === "src/app/HomeCanvasPlusClient.tsx") {
+    return {
+      category: "product-theme",
+      note: "100x Light System Home canvas surface — intentional self-contained palette for slice 2 (Main/HomeMobile dc).",
+    };
+  }
+
   throw new Error(`Uncategorized raw color file: ${relPath}`);
 }
 
