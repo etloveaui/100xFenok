@@ -194,6 +194,13 @@ function categoryForPath(relPath) {
     };
   }
 
+  if (relPath === "src/components/DataStateNotice.tsx") {
+    return {
+      category: "product-theme",
+      note: "Light System data-state notice primitive; retry action uses the brand-link (#1B73D3/#155fae) idiom shared with EvidenceRail/StaleState, pending a brand token.",
+    };
+  }
+
   throw new Error(`Uncategorized raw color file: ${relPath}`);
 }
 
