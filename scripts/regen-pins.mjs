@@ -32,6 +32,10 @@ import {
   emitPinnedKpiCronCoverage,
 } from "./build-fenok-data-health-kpi.mjs";
 import {
+  INK4_CONTRAST_FIXTURE_PATH,
+  emitInk4ContrastFixture,
+} from "../100xfenok-next/scripts/build-ink4-contrast-fixture.mjs";
+import {
   MIGRATION_DEMAND_FIXTURE_PATHS,
   emitMigrationDemandFixture,
 } from "./lib/cloud-data-plane-candidate-scope.mjs";
@@ -164,6 +168,7 @@ async function emitAll(outputFor) {
     rootOutputPath: outputFor(COMMITTED_KPI_PATH),
     publicOutputPath: outputFor(PUBLIC_KPI_PATH),
   });
+  emitInk4ContrastFixture({ outputPath: outputFor(INK4_CONTRAST_FIXTURE_PATH) });
 }
 
 function generatedPaths() {
@@ -180,6 +185,7 @@ function generatedPaths() {
     COMMITTED_REPORT_PATH,
     COMMITTED_KPI_PATH,
     PUBLIC_KPI_PATH,
+    INK4_CONTRAST_FIXTURE_PATH,
   ];
 }
 
