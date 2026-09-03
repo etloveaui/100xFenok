@@ -311,6 +311,10 @@ export default function ChangesClient() {
   const [byTickerDoc, setByTickerDoc] = useState<unknown>(null);
   const [feedsLoaded, setFeedsLoaded] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  // Refetch failure signal: kept separately from the docs so a failed refetch
+  // that preserves last-known-good still flags partial/stale, never fresh.
+  const [revFailed, setRevFailed] = useState(false);
+  const [holdersFailed, setHoldersFailed] = useState(false);
   const [segment, setSegment] = useState<DiffSegment>("visit");
   const watchlist = useWatchlist();
   const [mineOnly, setMineOnly] = useState(true);
@@ -329,10 +333,13 @@ export default function ChangesClient() {
     ]).then(([revision, trades, byTicker]) => {
       if (cancelled) return;
       // Keep good docs on failure: a failed refetch never replaces a loaded
-      // doc with null (last-known-good stays on screen).
+      // doc with null (last-known-good stays on screen), but the failure
+      // signal is kept so freshness flags partial/stale, never fresh.
       if (revision !== null) setRevisionDoc(revision);
       if (trades !== null) setTradesDoc(trades);
       if (byTicker !== null) setByTickerDoc(byTicker);
+      setRevFailed(revision === null);
+      setHoldersFailed(trades === null || byTicker === null);
       setFeedsLoaded(true);
     });
     return () => {
@@ -452,8 +459,10 @@ export default function ChangesClient() {
   const flatCount = rows.length - upCount - downCount;
   const first = rows[0] ?? null;
 
-  const revMissing = feedsLoaded && revisionDoc === null;
-  const holdersMissing = feedsLoaded && (tradesDoc === null || byTickerDoc === null);
+  // A failed refetch counts as missing even when last-known-good docs stay
+  // on screen, so the rail flags partial/stale and never fresh.
+  const revMissing = feedsLoaded && (revisionDoc === null || revFailed);
+  const holdersMissing = feedsLoaded && (tradesDoc === null || byTickerDoc === null || holdersFailed);
   const anyFeedMissing = revMissing || holdersMissing;
   const allMissing = revMissing && holdersMissing;
   const revOverdue = useMemo(() => {
@@ -626,7 +635,7 @@ export default function ChangesClient() {
           );
           // SPEC row hover/focus: bg #f8fafc + 2px left accent. add/del carry
           // the accent always; neutral rows get it on focus via accentClass.
-          const className = `grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 border-t border-slate-100 px-4 py-2 text-[13px] transition-colors duration-150 first:border-t-0 md:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)_100px] md:gap-2 hover:bg-[#f8fafc] focus-visible:bg-[#f8fafc] focus-visible:outline-none ${accentClass(row.accent)}`;
+          const className = `grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 border-t border-slate-100 px-4 py-2 text-[13px] transition-colors duration-150 first:border-t-0 md:grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)_100px] md:gap-2 hover:bg-[var(--c-surface-2)] focus-visible:bg-[var(--c-surface-2)] focus-visible:outline-none ${accentClass(row.accent)}`;
           return row.href ? (
             <TransitionLink key={row.id} href={row.href} className={className}>
               {body}
