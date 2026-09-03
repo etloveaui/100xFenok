@@ -478,6 +478,7 @@ export function useSectorData(): SectorDataResult {
         staleSources: stale,
         updatedAt,
         sourceMeta,
+        refresh: () => { void load(); },
       });
     } finally {
       inFlightRef.current = false;
