@@ -15,8 +15,8 @@
 import { BAND_CHEAP, bandPct, normalizeBandTuple } from "./bands";
 import { screenerSortValue } from "./common-basis-short-term";
 import { formatEdgeDrivers } from "./edge-drivers";
-import type { ScreenerFilterState, SortDir } from "./filter-url";
-import type { ScreenerSortKey, ScreenerStock } from "./types";
+import type { ScreenerFilterState } from "./filter-url";
+import type { ScreenerSortKey, ScreenerStock, SortDir } from "./types";
 
 export type QuestionCardId =
   | "smart-value"
