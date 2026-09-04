@@ -497,7 +497,7 @@ function parseFormulaSeries(raw: string | null, selected: readonly SelectedMacro
   return raw
     .split(",")
     .map((token) => token.split(":").map((part) => part.trim()))
-    .map((parts) => {
+    .map((parts): MacroFormulaSeries | false => {
       if (parts.length !== 3) return false;
       const [rawOperator, leftId, operand] = parts;
       const operator = normalizeFormulaOperator(rawOperator);
