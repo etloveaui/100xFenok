@@ -598,4 +598,60 @@ for (const state of [firing, resolved, unknown]) {
   assert.deepEqual(carried.lane_outcome_notified, { treasury_tga: "2026-07-20" });
 }
 
+{
+  // P2 (fh-429): condition churn on an already-reported lane must not
+  // re-comment the same day. The lane notified at noon as overdue; by evening
+  // it is overdue+streak, but nothing new needs saying until tomorrow.
+  const churnRow = (reasons) => ({
+    ...alarmingRow("fetch-treasury-tga.yml", "Treasury TGA"),
+    status: "alarm",
+    alarming: true,
+    alarm_reasons: reasons,
+    lane_outcome: [{
+      lane_id: "treasury_tga",
+      conditions: reasons,
+      decision: "failed",
+      generation_id: "gen-1",
+      observed_at: "2026-07-19T10:00:00Z",
+      source_as_of: "2026-07-18",
+      cadence_hours: 24,
+      threshold_hours: 36,
+      age_hours: 48,
+      last_advance: "2026-07-17",
+      families: ["treasury-tga"],
+      watchdog_evaluated_at: "2026-07-19T11:00:00Z",
+    }],
+  });
+  const churnHealthA = { status: "alarm", workflows: [churnRow(["lane_outcome_overdue"])] };
+  const churnHealthB = {
+    status: "alarm",
+    workflows: [churnRow(["lane_outcome_overdue", "lane_outcome_non_promotion_streak"])],
+  };
+  const churnA = buildAlarmState({ health: churnHealthA, prior: null, env: ENV, now: NOW });
+  const churnB = buildAlarmState({
+    health: churnHealthB,
+    prior: churnA,
+    env: { ...ENV, GITHUB_RUN_ID: "999999" },
+    now: new Date("2026-07-19T18:00:00Z"),
+  });
+  assert.equal(incidentIdentitiesChanged(churnA, churnB), false,
+    "lane condition churn on an already-notified lane must stay silent the same day");
+  // Control: a genuinely new lane the same day still notifies.
+  const newLaneHealth = {
+    status: "alarm",
+    workflows: [
+      churnRow(["lane_outcome_overdue"]),
+      { ...churnRow(["lane_outcome_overdue"]), lane_outcome: [{ ...churnRow(["lane_outcome_overdue"]).lane_outcome[0], lane_id: "krx" }] },
+    ],
+  };
+  const newLane = buildAlarmState({
+    health: newLaneHealth,
+    prior: churnA,
+    env: { ...ENV, GITHUB_RUN_ID: "999999" },
+    now: new Date("2026-07-19T18:00:00Z"),
+  });
+  assert.equal(incidentIdentitiesChanged(churnA, newLane), true,
+    "a new lane the same day must still notify");
+}
+
 console.log(JSON.stringify({ ok: true, suite: "emit-alarm-state contract" }, null, 2));

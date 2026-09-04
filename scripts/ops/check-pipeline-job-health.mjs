@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../lib/data-supply-detection-config.mjs";
 import { TRACKED_CRONS } from "../lib/kpi-contract-constants.mjs";
 import { classifyRuntimeSlots } from "../lib/kpi-runtime-slots.mjs";
-import { PLANE_PUBLISH_OUTCOME_BINDINGS } from "../lib/lane-registry.mjs";
+import { LANE_REGISTRY, PLANE_PUBLISH_OUTCOME_BINDINGS } from "../lib/lane-registry.mjs";
 // The single place a family is registered; import is side-effect free.
 import { FAMILIES } from "../publish-cloud-data-generation.mjs";
 import {
@@ -718,9 +718,17 @@ export function deriveLaneOutcomeAlarms({
   bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
   now = new Date(),
 } = {}) {
-  if (!watchdog || typeof watchdog !== "object"
-    || watchdog.schema_version !== LANE_OUTCOME_WATCHDOG_SCHEMA) return [];
-  const rows = Array.isArray(watchdog.rows) ? watchdog.rows : [];
+  const watchdogByLane = new Map();
+  if (watchdog && typeof watchdog === "object"
+    && watchdog.schema_version === LANE_OUTCOME_WATCHDOG_SCHEMA
+    && Array.isArray(watchdog.rows)) {
+    for (const row of watchdog.rows) {
+      if (row && typeof row.lane_id === "string") watchdogByLane.set(row.lane_id, row);
+    }
+  }
+  // A foreign watchdog schema skips only the overdue axis (fail-open): the
+  // alarm must never reason about a watchdog shape the KPI builder does not
+  // produce, but the streak axis reads outcome records, not the watchdog.
   const familiesByLane = new Map();
   for (const [family, binding] of Object.entries(bindings ?? {})) {
     if (typeof binding?.lane_id !== "string") continue;
@@ -728,9 +736,10 @@ export function deriveLaneOutcomeAlarms({
     familiesByLane.get(binding.lane_id).push(family);
   }
   const alarms = [];
-  for (const row of rows) {
-    if (row?.state !== "overdue" || typeof row?.lane_id !== "string") continue;
-    const families = [...(familiesByLane.get(row.lane_id) ?? [])].sort();
+  for (const laneId of new Set([...familiesByLane.keys(), ...watchdogByLane.keys()])) {
+    const row = watchdogByLane.get(laneId) ?? null;
+    const overdue = row?.state === "overdue";
+    const families = [...(familiesByLane.get(laneId) ?? [])].sort();
     let representative = null;
     let streak = false;
     for (const family of families) {
@@ -749,25 +758,55 @@ export function deriveLaneOutcomeAlarms({
         representative = latest;
       }
     }
+    // Overdue and streak are independent axes: a lane still "current" on the
+    // watchdog clock but failing to promote twice straight pages on the
+    // streak alone, and an overdue lane with a fresh success pages on the
+    // overdue alone.
+    if (!overdue && !streak) continue;
     alarms.push({
-      lane_id: row.lane_id,
+      lane_id: laneId,
       conditions: [
-        LANE_OUTCOME_ALARM_REASONS.overdue,
+        ...(overdue ? [LANE_OUTCOME_ALARM_REASONS.overdue] : []),
         ...(streak ? [LANE_OUTCOME_ALARM_REASONS.nonPromotionStreak] : []),
       ],
       decision: representative?.result ?? "overdue",
       generation_id: representative?.generation_id ?? null,
       observed_at: representative?.observed_at ?? null,
       source_as_of: representative?.source_as_of ?? null,
-      cadence_hours: row.cadence_hours ?? null,
-      threshold_hours: row.threshold_hours ?? null,
-      age_hours: row.age_hours ?? null,
-      last_advance: row.last_advance ?? null,
+      cadence_hours: row?.cadence_hours ?? null,
+      threshold_hours: row?.threshold_hours ?? null,
+      age_hours: row?.age_hours ?? null,
+      last_advance: row?.last_advance ?? null,
       families,
-      watchdog_evaluated_at: watchdog.evaluated_at ?? null,
+      watchdog_evaluated_at: watchdog?.evaluated_at ?? null,
     });
   }
   return alarms;
+}
+
+/**
+ * Workflow files that own a lane: every binding workflow for the lane's
+ * families, plus the registry lane-owner workflow. A lane with neither (a
+ * watchdog row the registry no longer names) falls back to the KPI publisher,
+ * which owns the watchdog verdict's freshness — an overdue lane must always
+ * reach a workflow row, never nowhere.
+ */
+export const LANE_OUTCOME_DEFAULT_OWNER_WORKFLOW = "update-manifest.yml";
+
+export function laneOwnerFiles(laneId, {
+  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+  lanes = LANE_REGISTRY?.lanes ?? [],
+} = {}) {
+  const files = new Set();
+  for (const binding of Object.values(bindings ?? {})) {
+    if (binding?.lane_id === laneId && typeof binding?.workflow === "string") {
+      files.add(path.basename(binding.workflow));
+    }
+  }
+  const owner = (lanes ?? []).find((lane) => lane?.id === laneId)?.owner_workflow;
+  if (typeof owner === "string" && owner.length > 0) files.add(path.basename(owner));
+  if (files.size === 0) files.add(LANE_OUTCOME_DEFAULT_OWNER_WORKFLOW);
+  return [...files].sort();
 }
 
 /**
@@ -777,19 +816,19 @@ export function deriveLaneOutcomeAlarms({
  */
 export function attachLaneOutcomeAlarms(workflows, laneAlarms, {
   bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+  lanes = LANE_REGISTRY?.lanes ?? [],
 } = {}) {
   if (!Array.isArray(workflows) || !Array.isArray(laneAlarms) || laneAlarms.length === 0) return workflows;
   const lanesByFile = new Map();
-  for (const binding of Object.values(bindings ?? {})) {
-    if (typeof binding?.workflow !== "string" || typeof binding?.lane_id !== "string") continue;
-    const file = path.basename(binding.workflow);
-    if (!lanesByFile.has(file)) lanesByFile.set(file, new Set());
-    lanesByFile.get(file).add(binding.lane_id);
+  for (const entry of laneAlarms) {
+    if (!entry || typeof entry.lane_id !== "string") continue;
+    for (const file of laneOwnerFiles(entry.lane_id, { bindings, lanes })) {
+      if (!lanesByFile.has(file)) lanesByFile.set(file, []);
+      lanesByFile.get(file).push(entry);
+    }
   }
-  const byLane = new Map(laneAlarms.map((entry) => [entry?.lane_id, entry]));
   return workflows.map((workflow) => {
-    const lanes = lanesByFile.get(workflow?.file) ?? new Set();
-    const relevant = [...lanes].map((lane) => byLane.get(lane)).filter(Boolean);
+    const relevant = lanesByFile.get(workflow?.file) ?? [];
     if (relevant.length === 0) return workflow;
     const alarmReasons = Array.isArray(workflow?.alarm_reasons) ? [...workflow.alarm_reasons] : [];
     for (const entry of relevant) {
@@ -797,9 +836,18 @@ export function attachLaneOutcomeAlarms(workflows, laneAlarms, {
         if (!alarmReasons.includes(condition)) alarmReasons.push(condition);
       }
     }
+    // Owner context rides on a per-workflow copy: the shared entry stays
+    // lane-shaped while the row names which owner run the operator opens.
+    // Records carry no GitHub run id, so the run is the owner's latest run
+    // URL from the workflow context — never presented as the record's own.
+    const detail = relevant.map((entry) => ({
+      ...entry,
+      owner_workflow: workflow.file,
+      owner_run_url: workflow.latestRunUrl ?? null,
+    }));
     return {
       ...workflow,
-      lane_outcome: relevant,
+      lane_outcome: detail,
       status: "alarm",
       alarming: true,
       alarm_reasons: alarmReasons,
@@ -1561,14 +1609,16 @@ export function buildIssueBody(alarms) {
       }
     }
     // A lane pages once no matter how many families it owns, so the body names
-    // the lane, the representative decision, and the evidence to act on: which
-    // run (generation_id — records carry no GitHub run id), how old the source
-    // is, and the cadence it is judged against.
+    // the lane, the representative decision, and the evidence to act on. The
+    // run is the publish-outcome generation id — records carry no GitHub run
+    // id, so it is labeled generation, with the owning workflow's latest run
+    // URL beside it from the workflow context.
     for (const lane of Array.isArray(alarm.lane_outcome) ? alarm.lane_outcome : []) {
       lines.push(`- Lane outcome: ${lane.lane_id} decision=${lane.decision}`
-        + ` run=${lane.generation_id ?? "unknown"}`
+        + ` generation=${lane.generation_id ?? "unknown"}`
         + ` source_as_of=${lane.source_as_of ?? "unknown"}`
-        + ` cadence=${lane.cadence_hours ?? "?"}h`);
+        + ` cadence=${lane.cadence_hours ?? "?"}h`
+        + ` owner_run=${lane.owner_run_url ?? "unknown"}`);
     }
     if (reasons.includes("failure_streak")) {
       lines.push(`- Consecutive failures: ${alarm.streak}`);

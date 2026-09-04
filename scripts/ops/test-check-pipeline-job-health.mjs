@@ -33,7 +33,9 @@ import {
   derivePublishOutcomeProjection,
   deriveWorkflowCadenceProjection,
   deriveWorkflowWatchPolicy,
+  laneOwnerFiles,
   LANE_OUTCOME_ALARM_REASONS,
+  LANE_OUTCOME_DEFAULT_OWNER_WORKFLOW,
   LANE_OUTCOME_WATCHDOG_SCHEMA,
   QUEUE_EVICTION_INSPECTION_LIMIT,
   annotateQueueEvictions,
@@ -1534,7 +1536,7 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   // a workflow owning no alarming lane passes through untouched.
   const attached = attachLaneOutcomeAlarms(
     [
-      { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [] },
+      { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [], latestRunUrl: "https://gh/run/777" },
       { file: "deploy-worker.yml", status: "ok", alarming: false, alarm_reasons: [] },
     ],
     [streak],
@@ -1548,14 +1550,76 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   ]);
   assert.equal(attached[0].lane_outcome.length, 1);
   assert.equal(attached[0].lane_outcome[0].lane_id, "fred_macro");
+  // Owner context rides on the per-workflow copy from the workflow context —
+  // the generation id stays labeled generation, never a GitHub run id.
+  assert.equal(attached[0].lane_outcome[0].owner_workflow, "fetch-fred-macro.yml");
+  assert.equal(attached[0].lane_outcome[0].owner_run_url, "https://gh/run/777");
   assert.equal(attached[1].status, "ok");
   assert.equal(attached[1].lane_outcome, undefined);
   const passthrough = [{ file: "fetch-fred-macro.yml", status: "ok" }];
   assert.equal(attachLaneOutcomeAlarms(passthrough, [], { bindings: laneBindings }), passthrough);
 
-  // Body: one lane line carrying lane, decision, run, as-of, and cadence.
+  // Body: one lane line carrying lane, decision, generation, as-of, cadence,
+  // and the owner run from the workflow context.
   const body = buildIssueBody(attached.filter((row) => row.status === "alarm"));
-  assert.match(body, /Lane outcome: fred_macro decision=gate_blocked run=gen-latest source_as_of=2026-08-09 cadence=24h/);
+  assert.match(body, /Lane outcome: fred_macro decision=gate_blocked generation=gen-latest source_as_of=2026-08-09 cadence=24h owner_run=https:\/\/gh\/run\/777/);
+
+  // P1 (fh-429): overdue and streak are independent. A lane still "current"
+  // on the watchdog clock but failing to promote twice straight pages on the
+  // streak alone.
+  const [currentStreak] = deriveLaneOutcomeAlarms({
+    watchdog: laneWatchdog([watchdogRow("sentiment", "current")]),
+    shards: {
+      sentiment: outcomeShard("sentiment", [
+        laneRecord("sentiment", "published", "2026-08-10T00:00:00Z", "gen-s0"),
+        laneRecord("sentiment", "failed", "2026-08-10T01:00:00Z", "gen-s1"),
+        laneRecord("sentiment", "failed", "2026-08-10T02:00:00Z", "gen-s2"),
+      ]),
+    },
+    bindings: laneBindings,
+    now: FIXTURE_NOW,
+  });
+  assert.deepEqual(currentStreak.conditions, [LANE_OUTCOME_ALARM_REASONS.nonPromotionStreak]);
+  assert.equal(currentStreak.decision, "failed");
+  assert.equal(currentStreak.generation_id, "gen-s2");
+
+  // P1 (fh-429): every watchdog lane routes somewhere. krx is overdue but has
+  // no publish-outcome binding, so it routes via its registry lane-owner
+  // workflow; a lane named nowhere falls back to the KPI publisher.
+  const ownerLanes = [{ id: "krx", owner_workflow: ".github/workflows/fenok-edge-krx-daily.yml" }];
+  assert.deepEqual(
+    laneOwnerFiles("krx", { bindings: laneBindings, lanes: ownerLanes }),
+    ["fenok-edge-krx-daily.yml"],
+  );
+  assert.deepEqual(
+    laneOwnerFiles("fred_macro", { bindings: laneBindings, lanes: ownerLanes }),
+    ["fetch-fred-macro.yml"],
+  );
+  assert.deepEqual(
+    laneOwnerFiles("ghost_lane", { bindings: {}, lanes: [] }),
+    [LANE_OUTCOME_DEFAULT_OWNER_WORKFLOW],
+  );
+  const [unbound] = deriveLaneOutcomeAlarms({
+    watchdog: laneWatchdog([watchdogRow("krx", "overdue")]),
+    shards: {},
+    bindings: laneBindings,
+    now: FIXTURE_NOW,
+  });
+  assert.equal(unbound.lane_id, "krx");
+  assert.deepEqual(unbound.families, []);
+  assert.equal(unbound.decision, "overdue");
+  const unboundAttached = attachLaneOutcomeAlarms(
+    [
+      { file: "fenok-edge-krx-daily.yml", status: "ok", alarming: false, alarm_reasons: [] },
+      { file: "deploy-worker.yml", status: "ok", alarming: false, alarm_reasons: [] },
+    ],
+    [unbound],
+    { bindings: laneBindings, lanes: ownerLanes },
+  );
+  assert.equal(unboundAttached[0].status, "alarm");
+  assert.deepEqual(unboundAttached[0].alarm_reasons, [LANE_OUTCOME_ALARM_REASONS.overdue]);
+  assert.equal(unboundAttached[0].lane_outcome[0].owner_run_url, null);
+  assert.equal(unboundAttached[1].status, "ok");
 }
 
 console.log("check-pipeline-job-health tests passed");

@@ -18,6 +18,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { LANE_OUTCOME_ALARM_REASONS } from "./check-pipeline-job-health.mjs";
+
 export const ALARM_STATE_SCHEMA = "alarm-state/v1";
 // The one family with a D3 aging policy. Scoped deliberately: this document
 // stays a workflow-health surface, not a per-family data catalogue.
@@ -302,6 +304,33 @@ function incidentIdentityProjection(state) {
   };
 }
 
+const LANE_REASON_SET = new Set(Object.values(LANE_OUTCOME_ALARM_REASONS));
+
+// Lane+day pre-dedupe for the identity comparison. A lane notified earlier
+// today is removed from the compared lanes, and when every lane on an
+// incident was already notified today the lane reasons are removed too — so
+// condition churn (overdue -> overdue+streak) on an already-reported lane
+// cannot re-comment the same day. Incidents with still-due lanes keep their
+// reasons: a new lane must still notify.
+function laneDedupedProjection(state, notifiedToday) {
+  const projection = incidentIdentityProjection(state);
+  if (!projection) return projection;
+  return {
+    ...projection,
+    open_incidents: projection.open_incidents.map((incident) => {
+      const lanes = incident.lane_outcome_lanes.filter((lane) => !notifiedToday.has(lane));
+      const fullyCovered = incident.lane_outcome_lanes.length > 0 && lanes.length === 0;
+      return {
+        ...incident,
+        lane_outcome_lanes: lanes,
+        alarm_reasons: fullyCovered
+          ? incident.alarm_reasons.filter((reason) => !LANE_REASON_SET.has(reason))
+          : incident.alarm_reasons,
+      };
+    }),
+  };
+}
+
 /**
  * Compare only the identities that should trigger a new OPS issue comment.
  * Full alarm-state equality remains owned by alarmStateUnchanged so counters,
@@ -311,16 +340,21 @@ function incidentIdentityProjection(state) {
 export function incidentIdentitiesChanged(prior, next) {
   if (next?.status === "clear") return false;
 
-  const nextProjection = incidentIdentityProjection(next);
-  const priorProjection = incidentIdentityProjection(prior);
+  const nextDay = typeof next?.generated_at === "string" && next.generated_at.length >= 10
+    ? next.generated_at.slice(0, 10)
+    : null;
+  const notifiedToday = new Set(
+    Object.entries(prior?.lane_outcome_notified ?? {})
+      .filter(([, day]) => day === nextDay)
+      .map(([lane]) => lane),
+  );
+  const nextProjection = laneDedupedProjection(next, notifiedToday);
+  const priorProjection = laneDedupedProjection(prior, notifiedToday);
   if (JSON.stringify(priorProjection) !== JSON.stringify(nextProjection)) return true;
   // Lane+day rollover: buildAlarmState stamps the new state's own ledger at
   // build time, so the next projection's own due set always reads empty. The
   // day boundary is visible only against the PRIOR ledger — a lane whose last
   // notification is an older day is due again even though nothing else moved.
-  const nextDay = typeof next?.generated_at === "string" && next.generated_at.length >= 10
-    ? next.generated_at.slice(0, 10)
-    : null;
   const nextLanes = Array.isArray(next?.open_incidents)
     ? next.open_incidents.flatMap((incident) => Array.isArray(incident?.lane_outcome_lanes)
       ? incident.lane_outcome_lanes
