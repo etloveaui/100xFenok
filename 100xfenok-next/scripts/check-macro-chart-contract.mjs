@@ -155,7 +155,6 @@ async function inspectStaticContracts() {
     '<CpDataTable',
     '기준 100 대비',
     'className="cpw5-macro-verdict__text"',
-    'if (value == null) return null',
   ]) {
     if (!macroSource.includes(token)) addFailure(failures, "macro-v2-reuse", `${token} missing`);
   }
@@ -172,6 +171,7 @@ async function inspectStaticContracts() {
     'data: xScaleMode === "time" ? timePoints : values',
     'type: "time"',
     'xScaleMode = "category"',
+    'if (value == null) return null',
   ]) {
     if (!engineSource.includes(token)) addFailure(failures, "macro-v2-time-scale", `${token} missing`);
   }

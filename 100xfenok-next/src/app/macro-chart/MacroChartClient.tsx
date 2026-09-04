@@ -1158,9 +1158,35 @@ function verdictRelationshipLabel(primaryDelta: number, secondaryDelta: number |
     : `${context.label} 흐름은 엇갈린 방향입니다.`;
 }
 
+function signedPercent(value: number) {
+  return `${value > 0 ? "+" : ""}${formatValue(value)}%`;
+}
+
+function verdictLeadValue(
+  series: MarketChartSeries,
+  delta: NonNullable<ReturnType<typeof seriesDelta>>,
+  transform: MacroValueTransform | undefined,
+  hasSecondary: boolean,
+) {
+  if (transform === "rebase100") {
+    return `기준 100 대비 ${signedPercent(delta.delta)}${hasSecondary ? "이고" : "입니다"}`;
+  }
+  return `${verdictValue(series, delta.latestValue)}로 ${movementLead(delta.delta, hasSecondary)}`;
+}
+
+function verdictSecondaryValue(
+  series: MarketChartSeries,
+  delta: NonNullable<ReturnType<typeof seriesDelta>>,
+  transform: MacroValueTransform | undefined,
+) {
+  if (transform === "rebase100") return `기준 100 대비 ${signedPercent(delta.delta)}입니다`;
+  return `${verdictValue(series, delta.latestValue)}로 ${movementConnector(delta.delta)}`;
+}
+
 function macroVerdictText(params: {
   context: MacroWorkbenchContext;
   visibleSeries: readonly MarketChartSeries[];
+  selected: readonly SelectedMacroSeries[];
   rangeId: string;
   latestVisibleDate: string | null;
 }) {
@@ -1183,13 +1209,15 @@ function macroVerdictText(params: {
   const primaryName = verdictSeriesName(primary);
   const primaryValue = verdictValue(primary, primaryDelta.latestValue);
   const relationship = verdictRelationshipLabel(primaryDelta.delta, secondaryDelta?.delta, params.context);
+  const primaryTransform = params.selected.find((item) => item.id === primary.id)?.transform;
+  const secondaryTransform = secondary ? params.selected.find((item) => item.id === secondary.id)?.transform : undefined;
   const secondaryClause = secondary && secondaryDelta
-    ? `, ${verdictSeriesName(secondary)}는 ${verdictValue(secondary, secondaryDelta.latestValue)}로 ${movementConnector(secondaryDelta.delta)}`
+    ? `, ${verdictSeriesName(secondary)}는 ${verdictSecondaryValue(secondary, secondaryDelta, secondaryTransform)}`
     : "";
 
   return {
     tone,
-    lead: `${primaryName}는 ${primaryValue}로 ${movementLead(primaryDelta.delta, Boolean(secondary && secondaryDelta))}${secondaryClause} — ${relationship}`,
+    lead: `${primaryName}는 ${verdictLeadValue(primary, primaryDelta, primaryTransform, Boolean(secondary && secondaryDelta))}${secondaryClause} — ${relationship}`,
     detail: `${latestLabel} · ${rangeLabel(params.rangeId)} 구간의 실제 로드 시리즈에서 계산했습니다.`,
     primaryValue: `${primaryName} ${primaryValue}`,
     secondaryValue: secondary && secondaryDelta ? `${verdictSeriesName(secondary)} ${verdictValue(secondary, secondaryDelta.latestValue)}` : "보조 시리즈 없음",
@@ -1763,8 +1791,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     [chartSeries, visibleHiddenIds],
   );
   const macroVerdict = useMemo(
-    () => macroVerdictText({ context: activeMacroContext, visibleSeries: visibleChartSeries, rangeId, latestVisibleDate }),
-    [activeMacroContext, latestVisibleDate, rangeId, visibleChartSeries],
+    () => macroVerdictText({ context: activeMacroContext, visibleSeries: visibleChartSeries, selected, rangeId, latestVisibleDate }),
+    [activeMacroContext, latestVisibleDate, rangeId, selected, visibleChartSeries],
   );
   const freshnessState = useMemo(
     () =>
@@ -1855,7 +1883,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         <div className="cpw5-macro-hero__copy">
           <h1 className="cpw5-macro-title">{headerTitle}</h1>
           <p className="cpw5-hero__verdict cpw5-macro-verdict" data-macro-chart-verdict="true">
-            <span className={macroVerdict.tone}>{macroVerdict.lead}</span>
+            <span className="cpw5-macro-verdict__text" data-movement-tone={macroVerdict.tone}>{macroVerdict.lead}</span>
           </p>
           <p className="cpw5-hero__sub">{macroVerdict.detail}</p>
           <p className="cpw5-macro-description">{headerDescription}</p>
@@ -2230,16 +2258,23 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             </div>
             <div className="cpw5-macro-chip-grid">
               {MARKET_COMPARE_LENSES.map((lens) => (
-                <button
-                  key={lens.id}
-                  type="button"
-                  onClick={() => applyMarketCompareLens(lens)}
-                  className="cpw5-macro-compare-card"
-                  data-macro-chart-market-lens={lens.id}
-                >
-                  <strong>{lens.label}</strong>
-                  <span>{lens.detail}</span>
-                </button>
+                <article key={lens.id} className="cpw5-macro-compare-card cpw5-macro-evidence-tile" data-macro-v2-tile-evidence="compare">
+                  <button
+                    type="button"
+                    onClick={() => applyMarketCompareLens(lens)}
+                    className="cpw5-macro-compare-card__action"
+                    data-macro-chart-market-lens={lens.id}
+                  >
+                    <strong>{lens.label}</strong>
+                    <span>{lens.detail}</span>
+                  </button>
+                  <EvidenceRail
+                    freshness="fixed"
+                    source="시장 비교 조합"
+                    asOf={MACRO_CATALOG_CURATED_AT}
+                    coverage={`${lens.state.selected.length}개 시리즈`}
+                  />
+                </article>
               ))}
             </div>
           </section>
