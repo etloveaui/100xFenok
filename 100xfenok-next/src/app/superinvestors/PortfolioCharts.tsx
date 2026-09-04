@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, LineController, PointElement, ScatterController, RadialLinearScale, RadarController, Filler } from "chart.js";
 import { TreemapController, TreemapElement } from "chartjs-chart-treemap";
 import type { ChartData, ChartOptions } from "chart.js";
@@ -912,6 +912,7 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
 
 interface FactorExposureRadarProps {
   data: FactorExposuresSummaryData;
+  investorId?: string | null;
 }
 
 const FACTOR_RADAR_AXES = [
@@ -940,14 +941,21 @@ function factorTitle(record: FactorExposureRecord): string {
   ].filter(Boolean).join(" · ");
 }
 
-export function FactorExposureRadar({ data }: FactorExposureRadarProps) {
+export function FactorExposureRadar({ data, investorId }: FactorExposureRadarProps) {
   const chartTheme = useMarketChartTheme();
   const records = useMemo(
     () => [...data.rows].sort((a, b) => (b.tiltStrengthScore ?? 0) - (a.tiltStrengthScore ?? 0) || a.name.localeCompare(b.name)),
     [data.rows],
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = records.find((record) => record.investorId === selectedId) ?? records[0] ?? null;
+  useEffect(() => {
+    if (investorId) setSelectedId(investorId);
+  }, [investorId]);
+  const selected =
+    (selectedId ? records.find((record) => record.investorId === selectedId) : undefined) ??
+    (investorId ? records.find((record) => record.investorId === investorId) : undefined) ??
+    (investorId ? null : records[0]) ??
+    null;
   const topRecords = records.slice(0, 12);
 
   const chartData = useMemo<ChartData<"radar">>(() => {

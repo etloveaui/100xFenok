@@ -253,7 +253,7 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
 
   if (rows.length === 0) {
     return (
-      <Panel empty emptyReason="보유 종목이 없습니다" emptyNextRefresh="다음 분기 공시 반영 후 갱신" />
+      <Panel empty emptyReason="보유 종목이 없습니다" emptyNextRefresh="다음 분기 공시 반영 후 갱신"><span>보유 종목이 없습니다</span></Panel>
     );
   }
 
@@ -349,7 +349,6 @@ function GuruDetailPanel({
   const sectorHistory = investorView?.sector_history ?? {};
   const sectorQuarters = Array.isArray(investorView?.quarters) ? investorView.quarters : [];
   const hasSectorHistory = sectorQuarters.length > 0 && Object.keys(sectorHistory).length > 0;
-  const hasPortfolioView = !!investorView && (treemapRows.length > 0 || hasSectorHistory || !!investorView.performance);
   const latestQuarter = latest?.quarter ?? summary.quarter ?? "—";
   const reportDate = latest?.report_date ?? "—";
   const filingDate = latest?.filing_date ?? "—";
@@ -398,7 +397,7 @@ function GuruDetailPanel({
   const factorRows = factorData?.rows ?? [];
   const hasFactorRecord = factorRows.some((row) => row?.investorId === id);
   const radarFailed = !factorLoading && (factorFailed || !factorData);
-  const radarEmpty = !factorLoading && !!factorData && factorRows.length === 0;
+  const radarEmpty = !factorLoading && !!factorData && !hasFactorRecord;
   const radarFreshness: "pending" | "error" | "partial" | "stale" =
     factorLoading ? "pending" : radarFailed ? "error" : radarEmpty || !hasFactorRecord ? "partial" : "stale";
   const radarCoverage = !factorData
@@ -406,6 +405,18 @@ function GuruDetailPanel({
     : factorRows.length === 0
       ? "표시할 팩터 행 없음"
       : `투자자 ${formatInteger(factorRows.length)}행${hasFactorRecord ? "" : " · 이 투자자 기록 없음"}`;
+
+  const kpiError = !loading && status === "error";
+  const kpiEmpty = !loading && status !== "error" && status !== "private" && !latest;
+  const kpiPartial = !loading && !kpiError && !kpiEmpty && (status === "private" || turnover == null);
+  const kpiFreshness: "pending" | "error" | "partial" | "stale" =
+    loading ? "pending" : kpiError ? "error" : kpiEmpty || kpiPartial ? "partial" : "stale";
+  const kpiCoverage =
+    status === "private"
+      ? `요약 기준 ${latestQuarter} · 상세 비공개`
+      : latest
+        ? `13F ${latestQuarter} 기준${turnover == null ? " · 회전율 없음" : ""}`
+        : "—";
 
   return (
     <div
@@ -466,6 +477,15 @@ function GuruDetailPanel({
       </div>
 
       {/* Row 1 — KPI strip (panel lives inside a narrow card column — keep 2x2) */}
+      <Panel
+        loading={loading}
+        empty={kpiEmpty}
+        emptyReason="이 투자자의 자료 없음"
+        emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+        error={kpiError}
+        errorDetail="KPI 데이터를 불러오지 못했습니다."
+        asOf={latestQuarter}
+      >
       <div className="grid grid-cols-2 gap-2">
         <KpiCard label="운용 자산" value={formatCurrencyCompact(latest?.aum_total ?? summary.aum, "USD")} isLoading={loading} dataKey="aum" />
         <KpiCard
@@ -487,6 +507,14 @@ function GuruDetailPanel({
           dataKey="turnover"
         />
       </div>
+        <EvidenceRail
+          freshness={kpiFreshness}
+          source="SEC EDGAR 13F"
+          asOf={latestQuarter}
+          coverage={kpiCoverage}
+          next="분기 종료 후 최대 45일"
+        />
+      </Panel>
 
       {/* Row 2 — 분기 매매 내역 */}
       {latest?.changes_summary ? (
@@ -531,41 +559,103 @@ function GuruDetailPanel({
       </div>
 
       {/* Portfolio charts (from portfolio_views.json) */}
-      {hasPortfolioView ? (
+      {investorView ? (
         <div
           data-superinvestor-guru-portfolio
-          data-superinvestor-guru-portfolio-quarter={investorView?.quarter ?? ""}
+          data-superinvestor-guru-portfolio-quarter={investorView.quarter ?? ""}
           className="mt-4 border-t border-slate-200 pt-4"
         >
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 포트폴리오</p>
           <div className="mt-2 space-y-4">
-            {treemapRows.length > 0 ? (
-              <div data-superinvestor-guru-treemap data-superinvestor-guru-treemap-count={treemapRows.length}>
-                <PortfolioTreemap
-                  rows={treemapRows}
-                  quarterLabel={investorView.quarter}
+            <Panel
+              loading={pvLoading}
+              empty={treemapRows.length === 0}
+              emptyReason="표시할 보유 비중 데이터가 없습니다"
+              emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+              error={pvFailed}
+              errorDetail="보유 포트폴리오 데이터를 불러오지 못했습니다."
+              asOf={investorView.quarter}
+              onRetry={pvFailed ? onRetryPv : undefined}
+              retryLabel="다시 시도"
+            >
+              {treemapRows.length > 0 ? (
+                <div data-superinvestor-guru-treemap data-superinvestor-guru-treemap-count={treemapRows.length}>
+                  <PortfolioTreemap
+                    rows={treemapRows}
+                    quarterLabel={investorView.quarter}
+                  />
+                </div>
+              ) : null}
+              <EvidenceRail
+                freshness={pvLoading ? "pending" : pvFailed ? "error" : treemapRows.length > 0 ? "stale" : "partial"}
+                source="SEC EDGAR 13F"
+                asOf={investorView.quarter}
+                coverage={treemapRows.length > 0 ? `상위 ${formatInteger(treemapRows.length)}종목 · ${investorView.quarter}` : "이 투자자 트리맵 행 없음"}
+                next="분기 종료 후 최대 45일"
+                onRetry={pvFailed ? onRetryPv : undefined}
+                onEvidence={() => openEvidence("/data/sec-13f/analytics/portfolio_views.json")}
+              />
+            </Panel>
+            <Panel
+              loading={pvLoading}
+              empty={!hasSectorHistory}
+              emptyReason="표시할 섹터 구성 데이터가 없습니다"
+              emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+              error={pvFailed}
+              errorDetail="보유 포트폴리오 데이터를 불러오지 못했습니다."
+              asOf={investorView.quarter}
+              onRetry={pvFailed ? onRetryPv : undefined}
+              retryLabel="다시 시도"
+            >
+              {hasSectorHistory ? (
+                <SectorMixPanel
+                  currentSectors={Object.fromEntries(
+                    Object.entries(sectorHistory).map(([s, h]) => [
+                      s,
+                      Array.isArray(h) ? h[h.length - 1] ?? 0 : 0,
+                    ]),
+                  )}
+                  history={sectorHistory}
+                  quarters={sectorQuarters}
                 />
-              </div>
-            ) : null}
-            {hasSectorHistory ? (
-              <SectorMixPanel
-                currentSectors={Object.fromEntries(
-                  Object.entries(sectorHistory).map(([s, h]) => [
-                    s,
-                    Array.isArray(h) ? h[h.length - 1] ?? 0 : 0,
-                  ]),
-                )}
-                history={sectorHistory}
-                quarters={sectorQuarters}
+              ) : null}
+              <EvidenceRail
+                freshness={pvLoading ? "pending" : pvFailed ? "error" : hasSectorHistory ? "stale" : "partial"}
+                source="SEC EDGAR 13F"
+                asOf={investorView.quarter}
+                coverage={hasSectorHistory ? `${formatInteger(sectorQuarters.length)}분기 추적 · ${investorView.quarter}` : "이 투자자 섹터 기록 없음"}
+                next="분기 종료 후 최대 45일"
+                onRetry={pvFailed ? onRetryPv : undefined}
+                onEvidence={() => openEvidence("/data/sec-13f/analytics/portfolio_views.json")}
               />
-            ) : null}
-            {investorView.performance ? (
-              <PerformanceChart
-                performance={investorView.performance}
-                investorName={investorView.name}
+            </Panel>
+            <Panel
+              loading={pvLoading}
+              empty={!investorView.performance}
+              emptyReason="표시할 성과 데이터가 없습니다"
+              emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+              error={pvFailed}
+              errorDetail="보유 포트폴리오 데이터를 불러오지 못했습니다."
+              asOf={investorView.quarter}
+              onRetry={pvFailed ? onRetryPv : undefined}
+              retryLabel="다시 시도"
+            >
+              {investorView.performance ? (
+                <PerformanceChart
+                  performance={investorView.performance}
+                  investorName={investorView.name}
+                />
+              ) : null}
+              <EvidenceRail
+                freshness={pvLoading ? "pending" : pvFailed ? "error" : investorView.performance ? "stale" : "partial"}
+                source="SEC EDGAR 13F"
+                asOf={investorView.quarter}
+                coverage={investorView.performance ? `${investorView.name} · ${investorView.quarter}` : "이 투자자 성과 시리즈 없음"}
+                next="분기 종료 후 최대 45일"
+                onRetry={pvFailed ? onRetryPv : undefined}
+                onEvidence={() => openEvidence("/data/sec-13f/analytics/portfolio_views.json")}
               />
-            ) : null}
-            <GuruTrendBlock investorId={id} />
+            </Panel>
           </div>
         </div>
       ) : pvLoading ? (
@@ -586,7 +676,17 @@ function GuruDetailPanel({
         >
           보유 포트폴리오 데이터를 불러오지 못했습니다.
         </div>
-      ) : null}
+      ) : (
+        <div
+          data-superinvestor-guru-portfolio-state="empty"
+          role="status"
+          aria-live="polite"
+          className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500"
+        >
+          이 투자자의 자료 없음 · 다음 분기 공시 반영 후 갱신
+        </div>
+      )}
+      <GuruTrendBlock investorId={id} />
 
       {/* Cohort cross-investor charts — full PortfolioViewsData required */}
       <div className="mt-4 space-y-3">
@@ -657,7 +757,7 @@ function GuruDetailPanel({
         <Panel
           loading={factorLoading}
           empty={radarEmpty}
-          emptyReason="표시할 팩터 노출 데이터가 없습니다"
+          emptyReason={hasFactorRecord ? "표시할 팩터 노출 데이터가 없습니다" : "이 투자자의 자료 없음"}
           emptyNextRefresh="다음 분기 공시 반영 후 갱신"
           error={radarFailed}
           errorDetail="팩터 노출 데이터를 불러오지 못했습니다."
@@ -665,14 +765,14 @@ function GuruDetailPanel({
           onRetry={radarFailed ? onRetryFactor : undefined}
           retryLabel="다시 시도"
         >
-          {factorData && factorRows.length > 0 ? (
+          {factorData && hasFactorRecord ? (
             <div data-superinvestor-guru-factor>
               <PanelHeader
                 eyebrow="Factor"
                 title="팩터 노출"
                 right={<span className="sup-head-note">FF 파생 틸트</span>}
               />
-              <FactorExposureRadar data={factorData} />
+              <FactorExposureRadar data={factorData} investorId={id} />
             </div>
           ) : null}
           <EvidenceRail
@@ -700,11 +800,11 @@ function GuruDetailPanel({
         </div>
       ) : status === "private" ? (
         <div className="mt-4">
-          <Panel empty emptyReason="상세 데이터는 비공개입니다" emptyNextRefresh="요약·포트폴리오 정보는 공개 범위에서 제공되며, 원문 보유내역은 공개하지 않습니다." />
+          <Panel empty emptyReason="상세 데이터는 비공개입니다" emptyNextRefresh="요약·포트폴리오 정보는 공개 범위에서 제공되며, 원문 보유내역은 공개하지 않습니다."><span>상세 데이터는 비공개입니다</span></Panel>
         </div>
       ) : (
         <div className="mt-4">
-          <Panel empty emptyReason="상세 데이터를 불러오지 못했습니다" emptyNextRefresh="잠시 후 다시 시도하거나 다른 투자자를 선택해 주세요." />
+          <Panel empty emptyReason="상세 데이터를 불러오지 못했습니다" emptyNextRefresh="잠시 후 다시 시도하거나 다른 투자자를 선택해 주세요."><span>상세 데이터를 불러오지 못했습니다</span></Panel>
         </div>
       )}
     </div>
@@ -856,7 +956,7 @@ function TradeRankingPanel({
     return (
       <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
         <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
-        <Panel empty emptyReason="데이터가 없습니다" emptyNextRefresh="해당 분기 매매 데이터가 존재하지 않습니다." />
+        <Panel empty emptyReason="데이터가 없습니다" emptyNextRefresh="해당 분기 매매 데이터가 존재하지 않습니다."><span>데이터가 없습니다</span></Panel>
       </div>
     );
   }

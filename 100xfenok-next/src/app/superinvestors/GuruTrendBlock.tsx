@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import TickerChip from "@/components/TickerChip";
+import { EvidenceRail } from "@/components/ui";
 import { useMarketChartTheme } from "@/lib/market-valuation/charts/chartTheme";
 import { formatCurrencyCompact } from "@/lib/format";
 
@@ -84,20 +85,24 @@ const SPARK_PAD = 2;
 export default function GuruTrendBlock({ investorId }: { investorId: string }) {
   const [trend, setTrend] = useState<TrendDoc | null>(null);
   const [hedge, setHedge] = useState<HedgeDoc | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const chartTheme = useMarketChartTheme();
 
   useEffect(() => {
     let cancelled = false;
+    setLoaded(false);
     Promise.all([loadTrends(), loadHedge()]).then(([t, h]) => {
       if (!cancelled) {
         setTrend(t);
         setHedge(h);
+        setLoaded(true);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [retryKey]);
 
   const investor = trend?.by_investor?.[investorId];
   const globalQ = trend?.metadata?.global_latest_quarter;
@@ -139,9 +144,75 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
     return { text: "중립", tone: "bg-slate-100 text-slate-600", sub: `풋 ${put_count}건 · 콜 ${call_count}건`, ratio: hedge_ratio };
   }, [hedgeData]);
 
-  if (!investor || !latestSnap) return null;
+  if (!loaded) {
+    return (
+      <div data-superinvestor-guru-trend data-superinvestor-guru-trend-state="loading" className="mt-4">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500"
+        >
+          운용 추이 데이터를 불러오는 중입니다…
+        </div>
+        <EvidenceRail
+          freshness="pending"
+          source="SEC EDGAR 13F"
+          asOf="—"
+          coverage="추이·헤지 확인 중"
+          next="분기 종료 후 최대 45일"
+        />
+      </div>
+    );
+  }
+
+  if (!trend && !hedge) {
+    return (
+      <div data-superinvestor-guru-trend data-superinvestor-guru-trend-state="error" className="mt-4">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"
+        >
+          운용 추이 데이터를 불러오지 못했습니다.
+        </div>
+        <EvidenceRail
+          freshness="error"
+          source="SEC EDGAR 13F"
+          asOf="—"
+          coverage="추이·헤지 불러오기 실패"
+          next="분기 종료 후 최대 45일"
+          onRetry={() => setRetryKey((k) => k + 1)}
+        />
+      </div>
+    );
+  }
+
+  if (!investor || !latestSnap) {
+    return (
+      <div data-superinvestor-guru-trend data-superinvestor-guru-trend-state="empty" className="mt-4">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500"
+        >
+          이 투자자의 자료 없음 · 다음 분기 공시 반영 후 갱신
+        </div>
+        <EvidenceRail
+          freshness="partial"
+          source="SEC EDGAR 13F"
+          asOf={globalQ ?? "—"}
+          coverage="이 투자자 추이 행 없음"
+          next="분기 종료 후 최대 45일"
+        />
+      </div>
+    );
+  }
+
+  const snapCount = investor.quarterly_snapshots?.length ?? 0;
+  const trendPartial = !hedgeData || snapCount < 2;
 
   return (
+    <div data-superinvestor-guru-trend data-superinvestor-guru-trend-state="ready" className="mt-4">
     <div className="rounded-xl border border-slate-200 bg-white p-3">
       {/* Section 1: AUM trajectory */}
       <div className="flex items-start justify-between gap-3">
@@ -218,6 +289,14 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
           <p className="mt-0.5 text-[9px] font-semibold text-[var(--c-ink-3)]">{hedgeLabel.sub}</p>
         </div>
       ) : null}
+    </div>
+      <EvidenceRail
+        freshness={trendPartial ? "partial" : "stale"}
+        source="SEC EDGAR 13F"
+        asOf={latestSnap.quarter}
+        coverage={`추이 ${snapCount}분기${hedgeData ? " · 옵션 헤지 있음" : " · 옵션 헤지 없음"}`}
+        next="분기 종료 후 최대 45일"
+      />
     </div>
   );
 }
