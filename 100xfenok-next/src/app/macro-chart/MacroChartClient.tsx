@@ -834,15 +834,11 @@ function downloadCsv(series: readonly MarketChartSeries[], selected: readonly Se
   }
   const dates = [...labels].sort((a, b) => a.localeCompare(b));
   const valuesBySeries = series.map((item) => new Map(item.points.map((point) => [point.label, point.value])));
-  const transformById = selectedTransformMap(selected);
   const frequencyById = new Map(selected.map((item) => [item.id, item.frequency ?? seriesById(item.id)?.frequency]));
   const aggregationById = new Map(selected.map((item) => [item.id, item.aggregation ?? "average"]));
   const header = [
     "date",
-    ...series.map((item) => {
-      const transform = transformById.get(item.id);
-      return transform ? `${item.id}_${transform}_${rangeId}` : `${item.formulaLabel ?? item.label}_${rangeId}`;
-    }),
+    ...series.map((item) => tableSeriesHeader(item, selected, rangeLabel(rangeId))),
   ];
   const sourceRow = ["__meta_source", ...series.map((item) => sourceKindLabel(seriesById(item.id)))];
   const frequencyRow = ["__meta_frequency", ...series.map((item) => frequencyById.get(item.id) ?? frequencyDisplayLabel(seriesById(item.id)))];

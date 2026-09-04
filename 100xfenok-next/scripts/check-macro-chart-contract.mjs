@@ -152,6 +152,7 @@ async function inspectStaticContracts() {
     'data-macro-v2-table-drawer="true"',
     'data-macro-v2-table-state={tableState}',
     '변환 후 값 · ${tableHeaderSummary}',
+    'tableSeriesHeader(item, selected, rangeLabel(rangeId))',
     '<CpDataTable',
     '기준 100 대비',
     'className="cpw5-macro-verdict__text"',
