@@ -99,6 +99,28 @@ async function fetchWithTimeout(url, init = {}) {
   }
 }
 
+// A response whose headers arrived but whose body never finishes used to hang
+// the gate (and through it, the publisher holding the writer lock) forever:
+// fetchWithTimeout's deadline covers headers only. Race every body read
+// against the same deadline so a mid-body stall throws and fails closed like
+// any other unreadable measurement.
+async function readJsonBody(response, label) {
+  let timer;
+  try {
+    return await Promise.race([
+      response.json(),
+      new Promise((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`${label} body read timed out after ${FETCH_TIMEOUT_MS}ms`)),
+          FETCH_TIMEOUT_MS,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Ask the billing API for the R2 subscription's period end and derive the
 // anchor day from it. Returns null when the token lacks billing read or the
 // shape is unfamiliar — the caller then falls back to configuration and says so.
@@ -109,7 +131,7 @@ async function fetchCycleAnchor() {
       { headers: { Authorization: `Bearer ${TOKEN}` } },
     );
     if (!response.ok) return null;
-    const body = await response.json();
+    const body = await readJsonBody(response, "billing subscriptions");
     if (!body.success) return null;
     const r2 = (body.result ?? []).find((s) => (s?.rate_plan?.id ?? "").startsWith("r2"));
     const end = r2?.current_period_end;
@@ -165,7 +187,7 @@ async function fetchUsage(bounds) {
     }),
   });
   if (!response.ok) throw new Error(`graphql http ${response.status}`);
-  const body = await response.json();
+  const body = await readJsonBody(response, "graphql usage");
   if (body.errors?.length) throw new Error(`graphql: ${JSON.stringify(body.errors)}`);
   const account = body?.data?.viewer?.accounts?.[0];
   if (!account) throw new Error("graphql returned no account row");
@@ -214,7 +236,7 @@ export async function cf(path, { transport = fetchWithTimeout, sleepImpl = sleep
       continue;
     }
     if (!response.ok) throw new Error(`cf ${path} http ${response.status}`);
-    const body = await response.json();
+    const body = await readJsonBody(response, `cf ${path}`);
     if (!body.success) throw new Error(`cf ${path}: ${JSON.stringify(body.errors)}`);
     return body;
   }

@@ -12,6 +12,7 @@ const MIME_TYPE = /^[a-z0-9][a-z0-9.+-]*\/[a-z0-9][a-z0-9.+-]*$/i;
 const PUBLIC_PREFIXES = Object.freeze(["public/data/", "public/generated/"]);
 const PRIVATE_PREFIXES = Object.freeze(["data/"]);
 export const DEFAULT_REMOTE_IO_CONCURRENCY = 8;
+const PROGRESS_EVERY = 500;
 
 function fail(code, detail) {
   const error = new Error(`${code}:${detail}`);
@@ -439,6 +440,11 @@ export async function publishGeneration({
   policy,
   now = () => new Date().toISOString(),
   receiptId = null,
+  // Optional progress hook for the object write pool: onProgress({done, total})
+  // fires every PROGRESS_EVERY objects and once at completion. The pool itself
+  // stays silent; callers that run under a job timeout wire this to stderr so
+  // a slow-but-healthy publish is distinguishable from a stall.
+  onProgress = null,
 }) {
   const summary = validateGenerationManifest(manifest);
   validatePublicationPolicy(policy, summary);
@@ -493,6 +499,7 @@ export async function publishGeneration({
       sha256: summary.manifest_sha256,
     },
   ].map((object) => [object.key, object]));
+  let publishedObjectCount = 0;
   // putIfAbsent result contract: { written, alreadyPresent }. When the
   // content-addressed object already exists byte-identically, the existence
   // path itself proved immutability, so the caller's immediate readback would
@@ -507,7 +514,16 @@ export async function publishGeneration({
         fail("OBJECT_READBACK_INVALID", object.key);
       }
     }
+    if (onProgress) {
+      publishedObjectCount += 1;
+      if (publishedObjectCount % PROGRESS_EVERY === 0) {
+        onProgress({ done: publishedObjectCount, total: immutableObjectsByKey.size });
+      }
+    }
   });
+  if (onProgress) {
+    onProgress({ done: publishedObjectCount, total: immutableObjectsByKey.size });
+  }
 
   const prepared = {
     schema_version: PUBLICATION_RECEIPT_SCHEMA,

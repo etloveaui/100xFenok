@@ -144,6 +144,12 @@ import {
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const GATE_SCRIPT = path.join(REPO_ROOT, "scripts", "check-r2-free-tier-usage.mjs");
+// Bound on one gate-child run. The job timeout stays untouched; this only stops
+// a stalled measurement from holding the publish (and its writer lock) forever.
+const GATE_TIMEOUT_MS = (() => {
+  const raw = Number(process.env.PUBLISH_GATE_TIMEOUT_MS);
+  return Number.isFinite(raw) && raw > 0 ? raw : 600_000;
+})();
 const R2_BUCKET = "fenok-data-plane";
 const DEFAULT_ACCOUNT_ID = "aeeb5ea3affe55a2219d08ea02dad9e1";
 
@@ -1857,7 +1863,7 @@ export function classifyResultLine(line) {
 
 // Exit evidence: resolve the active generation through the pointer and compare
 // every asset byte-for-byte against the files read from disk.
-export async function verifyGenerationParity({ pointerStore, objectStore, payloads }) {
+export async function verifyGenerationParity({ pointerStore, objectStore, payloads, onProgress = null }) {
   const pointer = await pointerStore.get();
   if (!pointer) fail("PARITY_POINTER_MISSING", "no active pointer after publish");
   const manifestBytes = await objectStore.get(pointer.active.manifest_key);
@@ -1877,6 +1883,8 @@ export async function verifyGenerationParity({ pointerStore, objectStore, payloa
     fail("PARITY_MANIFEST_CROSS_BIND", pointer.active.manifest_key);
   }
   let bytes = 0;
+  let checked = 0;
+  const total = manifest.assets.length;
   await runBoundedAsyncPool(manifest.assets, async (asset) => {
     const stored = await objectStore.get(asset.object_key);
     if (
@@ -1895,7 +1903,12 @@ export async function verifyGenerationParity({ pointerStore, objectStore, payloa
       fail("PARITY_ASSET_MISMATCH", asset.path);
     }
     bytes += stored.byteLength;
+    if (onProgress) {
+      checked += 1;
+      if (checked % 500 === 0) onProgress({ done: checked, total });
+    }
   });
+  if (onProgress) onProgress({ done: checked, total });
   return { assets: manifest.assets.length, bytes, pointer };
 }
 
@@ -1914,14 +1927,35 @@ function runCostGate({ planClassA, planClassB, planBytes, env }) {
     ], { cwd: REPO_ROOT, env, stdio: ["ignore", "pipe", "pipe"] });
     const stdoutChunks = [];
     const stderrChunks = [];
+    // A gate child that never returns used to park the publisher (and the
+    // global writer lock it holds) until the job timeout. Bound it: on expiry
+    // the child is killed and the gate resolves as measurement-unverified,
+    // which fails closed through the existing exit-3 path.
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGKILL");
+    }, GATE_TIMEOUT_MS);
     child.stdout.on("data", (chunk) => stdoutChunks.push(chunk));
     child.stderr.on("data", (chunk) => stderrChunks.push(chunk));
-    child.on("error", reject);
-    child.on("close", (code) => resolve({
-      code,
-      stdout: Buffer.concat(stdoutChunks).toString("utf8"),
-      stderr: Buffer.concat(stderrChunks).toString("utf8"),
-    }));
+    child.on("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      const stdout = Buffer.concat(stdoutChunks).toString("utf8");
+      const stderrText = Buffer.concat(stderrChunks).toString("utf8");
+      if (timedOut) {
+        resolve({
+          code: GATE_MEASUREMENT_UNVERIFIED_EXIT,
+          stdout,
+          stderr: `${stderrText}\ncost gate timed out after ${GATE_TIMEOUT_MS}ms and was killed`.trim(),
+        });
+        return;
+      }
+      resolve({ code, stdout, stderr: stderrText });
+    });
   });
 }
 
@@ -2575,6 +2609,11 @@ export async function runPublisherCli({
     // preserves their gate arithmetic exactly; a family that declares reads
     // declares them here.
     const gatePlan = family.plan;
+    // Heartbeat: this gate shell-out is the first place a publish can sit
+    // silent for tens of minutes, so its start/finish always reach stderr,
+    // even under --json.
+    const gateBeforeStartedAt = Date.now();
+    evidenceLog(`cost gate start: family=${args.family} plan class-a=${gatePlan.class_a} class-b=${gatePlan.class_b ?? 0}`);
     const gateBefore = await runCostGateImpl({
       planClassA: gatePlan.class_a,
       planClassB: gatePlan.class_b ?? 0,
@@ -2582,6 +2621,7 @@ export async function runPublisherCli({
       env,
     });
     outcomeState.gateBefore = gateVerdict(gateBefore);
+    evidenceLog(`cost gate done: family=${args.family} verdict=${outcomeState.gateBefore} elapsed_ms=${Date.now() - gateBeforeStartedAt}`);
     if (!args.json && gateBefore.stdout.trim()) {
       stderr(gateBefore.stdout.trim());
     }
@@ -2689,6 +2729,9 @@ export async function runPublisherCli({
     };
     let published;
     try {
+      const publishStartedAt = Date.now();
+      const publishTotal = resolved.manifest.assets.length + 1;
+      evidenceLog(`publish start: family=${args.family} generation=${manifest.generation_id} objects=${publishTotal}`);
       published = await publishGeneration({
         manifest: resolved.manifest,
         payloads,
@@ -2698,7 +2741,11 @@ export async function runPublisherCli({
         pointerStore: publishPointerStore,
         policy,
         now: resolved.resumeCreatedAt ? () => resolved.resumeCreatedAt : undefined,
+        onProgress: ({ done, total }) => evidenceLog(
+          `publish progress: family=${args.family} ${done}/${total} elapsed_ms=${Date.now() - publishStartedAt}`,
+        ),
       });
+      evidenceLog(`publish done: family=${args.family} generation=${manifest.generation_id} elapsed_ms=${Date.now() - publishStartedAt}`);
     } catch (error) {
       if (args.chaos === "stale-sequence" && error.code === "STALE_WRITER") {
         const pointerNow = await plane.pointerStore.get();
@@ -2756,11 +2803,17 @@ export async function runPublisherCli({
       + ` receipt ${published.receipt.receipt_id} (${published.receipt.state})`);
 
     // 4. Parity verification, resolved through the pointer ourselves.
+    const parityStartedAt = Date.now();
+    evidenceLog(`parity start: family=${args.family} generation=${manifest.generation_id}`);
     const parity = await verifyGenerationParity({
       pointerStore: plane.pointerStore,
       objectStore: plane.objectStore,
       payloads,
+      onProgress: ({ done, total }) => evidenceLog(
+        `parity progress: family=${args.family} ${done}/${total} elapsed_ms=${Date.now() - parityStartedAt}`,
+      ),
     });
+    evidenceLog(`parity done: family=${args.family} assets=${parity.assets} elapsed_ms=${Date.now() - parityStartedAt}`);
     log(`byte parity ok: ${parity.assets}/${parity.assets} assets, ${parity.bytes} bytes`);
 
     // 5. Gate again after the write batch, then the single JSON summary line.

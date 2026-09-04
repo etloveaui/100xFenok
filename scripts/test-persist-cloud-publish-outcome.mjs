@@ -476,6 +476,15 @@ function jobBlockAt(text, index) {
       log: () => {},
     });
     assert.equal(skippedAbsent.reason, "skipped_absent");
+    const cancelledAbsent = persistFixtureOutcome({
+      family: "fred-macro",
+      workflow: ".github/workflows/fetch-fred-macro.yml",
+      publisherOutcome: "cancelled",
+      repoRoot: verify,
+      manifestPath: MANIFEST_PATH,
+      log: () => {},
+    });
+    assert.equal(cancelledAbsent.reason, "cancelled_absent");
     for (const publisherOutcome of ["success", "failure"]) {
       assert.throws(
         () => persistFixtureOutcome({
@@ -521,17 +530,18 @@ function jobBlockAt(text, index) {
       }),
       /publisherOutcome must be/,
     );
-    assert.throws(
-      () => persistFixtureOutcome({
-        family: "oecd-cli",
-        workflow: ".github/workflows/fetch-oecd-cli.yml",
-        publisherOutcome: "cancelled",
-        repoRoot: verify,
-        manifestPath: MANIFEST_PATH,
-        log: () => {},
-      }),
-      /publisherOutcome must be/,
-    );
+    // A cancelled publisher left no evidence behind, so persistence is a
+    // no-op rather than a second failure (the run is already red).
+    const cancelledUnchanged = persistFixtureOutcome({
+      family: "oecd-cli",
+      workflow: ".github/workflows/fetch-oecd-cli.yml",
+      publisherOutcome: "cancelled",
+      repoRoot: verify,
+      manifestPath: MANIFEST_PATH,
+      log: () => {},
+    });
+    assert.equal(cancelledUnchanged.persisted, false);
+    assert.equal(cancelledUnchanged.reason, "cancelled_unchanged");
     assert.throws(
       () => persistFixtureOutcome({
         family: "oecd-cli",

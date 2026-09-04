@@ -25,6 +25,10 @@ import {
 // changes shape.
 
 const COORDINATOR_ID = "cloud-data-plane-coordinator";
+// Bound on one coordinator body read. fetchWithTimeout in the remote bridge
+// covers headers; a body that never finishes would otherwise park a pool
+// worker slot forever, so the read races the same 60s deadline and throws.
+const COORDINATOR_BODY_TIMEOUT_MS = 60_000;
 
 function fail(code, detail) {
   const error = new Error(`${code}:${detail}`);
@@ -46,7 +50,16 @@ async function coordinatorCall(coordinatorNamespace, action, payload, coordinato
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload ?? {}),
   });
-  const body = await response.json();
+  const body = await Promise.race([
+    response.json(),
+    new Promise((_, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error(`coordinator ${action} body read timed out after ${COORDINATOR_BODY_TIMEOUT_MS}ms`)),
+        COORDINATOR_BODY_TIMEOUT_MS,
+      );
+      timer.unref?.();
+    }),
+  ]);
   if (!response.ok) {
     fail(body?.error?.code ?? "COORDINATOR_UNAVAILABLE", body?.error?.detail ?? action);
   }

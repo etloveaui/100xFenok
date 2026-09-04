@@ -26,7 +26,7 @@ import {
 const DEFAULT_MANIFEST = "data/admin/lane-commit-manifest.json";
 const DEFAULT_BRANCH = "main";
 const DEFAULT_ATTEMPTS = 5;
-const PUBLISHER_STEP_OUTCOMES = new Set(["success", "failure", "skipped"]);
+const PUBLISHER_STEP_OUTCOMES = new Set(["success", "failure", "skipped", "cancelled"]);
 const COMMIT_PATTERN = /^[0-9a-f]{7,64}$/;
 // The Git publisher reports confirmed / not_confirmed. The tuple distinguishes
 // "readback ran and could not confirm" from "readback was never attempted", so
@@ -107,7 +107,7 @@ function parseArgs(argv) {
   }
   if (!args.family || !args.workflow) throw new Error("--family and --workflow are required");
   if (!PUBLISHER_STEP_OUTCOMES.has(args.publisherOutcome)) {
-    throw new Error("--publisher-outcome must be success, failure, or skipped");
+    throw new Error("--publisher-outcome must be success, failure, skipped, or cancelled");
   }
   if (args.bindingFromCurrentOrigin && bindingInputProvided) {
     throw new Error("--binding-from-current-origin cannot combine with explicit binding inputs");
@@ -296,14 +296,16 @@ export function persistPublishOutcome({
   log = (line) => console.error(line),
 } = {}) {
   if (!PUBLISHER_STEP_OUTCOMES.has(publisherOutcome)) {
-    throw new Error("publisherOutcome must be success, failure, or skipped");
+    throw new Error("publisherOutcome must be success, failure, skipped, or cancelled");
   }
   const shardPath = validateOwnership({ family, workflow, manifestPath });
   const absoluteShard = path.join(repoRoot, shardPath);
   if (!fs.existsSync(absoluteShard)) {
-    if (publisherOutcome === "skipped") {
-      log(`publisher skipped and outcome shard is absent for ${family}; nothing to persist`);
-      return { persisted: false, reason: "skipped_absent", shardPath };
+    // A cancelled publisher wrote no evidence, so like a skip there is
+    // nothing to persist; anything else without a shard is a caller bug.
+    if (publisherOutcome === "skipped" || publisherOutcome === "cancelled") {
+      log(`publisher ${publisherOutcome} and outcome shard is absent for ${family}; nothing to persist`);
+      return { persisted: false, reason: `${publisherOutcome}_absent`, shardPath };
     }
     throw new Error(`publisher ${publisherOutcome} but outcome shard is absent for ${family}`);
   }
@@ -316,9 +318,9 @@ export function persistPublishOutcome({
   }
   const shardChanged = changedPaths.includes(shardPath);
   if (!shardChanged) {
-    if (publisherOutcome === "skipped") {
-      log(`publisher skipped and outcome shard is unchanged for ${family}; nothing to persist`);
-      return { persisted: false, reason: "skipped_unchanged", shardPath };
+    if (publisherOutcome === "skipped" || publisherOutcome === "cancelled") {
+      log(`publisher ${publisherOutcome} and outcome shard is unchanged for ${family}; nothing to persist`);
+      return { persisted: false, reason: `${publisherOutcome}_unchanged`, shardPath };
     }
     throw new Error(`publisher ${publisherOutcome} but outcome shard is unchanged for ${family}`);
   }
