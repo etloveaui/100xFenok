@@ -88,6 +88,7 @@ def main() -> None:
 
     row = _html_attempt_tuple(200, NEW_SHAPE_HTML, content_assertion=assertion)
     assert row["assertions"] == [{"id": "yield_value", "passed": True}], row["assertions"]
+    assert row["page_shape"] == "yield", row.get("page_shape")
 
     unrelated_row = _html_attempt_tuple(
         200, UNRELATED_PERCENT_HTML, content_assertion=assertion
@@ -96,9 +97,11 @@ def main() -> None:
 
     default_row = _html_attempt_tuple(200, NEW_SHAPE_HTML)
     assert default_row["assertions"] == [{"id": "table_rows", "passed": False}]
+    assert default_row["page_shape"] == "table", default_row.get("page_shape")
 
     table_row = _html_attempt_tuple(200, OLD_TABLE_HTML)
     assert table_row["assertions"] == [{"id": "table_rows", "passed": True}]
+    assert table_row["page_shape"] == "table", table_row.get("page_shape")
 
     for bad_html in (
         SIGNED_HTML,

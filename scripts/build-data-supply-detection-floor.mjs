@@ -1122,7 +1122,7 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
       : (hasHttpRetryEvidence ? HTTP_RETRY_ATTEMPT_KEYS : ATTEMPT_KEYS)
     )
       .concat(failureDiagnosticKeys)
-      .concat(eventProvenanceKeys), `attempts[${index}]`);
+      .concat(eventProvenanceKeys), `attempts[${index}]`, ["page_shape"]);
     const composite = lane.monitoring_mode === "composite";
     const memberIds = new Set(lane.producer_members.map((member) => member.id));
     if (composite ? !memberIds.has(row.member_id) : row.member_id !== null) fail("schema_error", `invalid attempt member for ${lane.id}`);
@@ -1163,7 +1163,23 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     });
     const expectedAssertionIds = lane.endpoint_contract.assertions.map((assertion) => assertion.id).sort();
     const actualAssertionIds = [...assertionIds].sort();
-    const hasExactAssertions = canonicalJson(expectedAssertionIds) === canonicalJson(actualAssertionIds);
+    // Lanes whose contract declares per-shape assertion sets check each
+    // shaped row against the set for its own page_shape, never a global
+    // exact set. A row naming an unknown shape, or carrying another shape's
+    // set, fails here. Shapeless rows keep the legacy global check, and a
+    // shape key on a lane without shape sets is rejected.
+    const shapeSets = lane.endpoint_contract.assertion_sets;
+    let hasExactAssertions;
+    if (shapeSets !== undefined && Object.hasOwn(row, "page_shape")) {
+      const allowed = Object.hasOwn(shapeSets, row.page_shape) ? shapeSets[row.page_shape] : undefined;
+      hasExactAssertions = allowed !== undefined
+        && canonicalJson([...allowed].sort()) === canonicalJson(actualAssertionIds);
+    } else {
+      if (shapeSets === undefined && Object.hasOwn(row, "page_shape")) {
+        fail("schema_error", `${key} page_shape without a shape contract`);
+      }
+      hasExactAssertions = canonicalJson(expectedAssertionIds) === canonicalJson(actualAssertionIds);
+    }
     const hasEmptyOrExactFailedAssertions = row.assertions.length === 0
       || (hasExactAssertions && row.assertions.every((assertion) => assertion.passed === false));
     const providerThrottled = row.assertions.length === 1

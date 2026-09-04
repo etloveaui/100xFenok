@@ -234,6 +234,10 @@ export function buildAttemptRow({
       if (Object.hasOwn(tuple, key)) row[key] = tuple[key];
     }
   }
+  // Request page shape threads through to the row so evidence validation can
+  // check the event against the assertion set for its own shape. Tuples from
+  // producers that predate shapes carry no key and keep the legacy path.
+  if (Object.hasOwn(tuple, "page_shape")) row.page_shape = tuple.page_shape;
   if (Object.hasOwn(tuple, "failure_detail")) {
     row.failure_entity = tuple.failure_entity;
     row.failure_detail = tuple.failure_detail;
