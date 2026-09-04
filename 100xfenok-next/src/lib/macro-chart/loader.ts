@@ -12,8 +12,11 @@ import {
 import { applyMacroTransform, transformUnitLabel } from "./transforms";
 import type {
   MacroRawPoint,
+  MacroAggregation,
+  MacroOutputFrequency,
   MacroSeriesAccessor,
   MacroSeriesDefinition,
+  MacroSeriesViewOptions,
   MacroSeriesUnitKind,
   MacroValueTransform,
 } from "./types";
@@ -25,6 +28,8 @@ export { parseStooqDailyCsv, toStooqSymbol } from "./stooq";
 export interface LoadedMacroSeries {
   definition: MacroSeriesDefinition;
   transform: MacroValueTransform;
+  outputFrequency: MacroOutputFrequency;
+  aggregation: MacroAggregation;
   rawPoints: MacroRawPoint[];
   transformedPoints: MacroRawPoint[];
   error?: string;
@@ -70,6 +75,55 @@ function cutoffPoints(points: readonly MacroRawPoint[], anchor: string | null, w
   if (!anchor || window.months == null) return [...points];
   const cutoff = monthsBefore(anchor, window.months);
   return points.filter((point) => dateValue(point.date) >= cutoff);
+}
+
+const FREQUENCY_RANK: Record<MacroOutputFrequency, number> = {
+  daily: 0,
+  weekly: 1,
+  monthly: 2,
+  quarterly: 3,
+};
+
+function isoWeekStart(iso: string): string {
+  const date = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
+  if (!Number.isFinite(date.valueOf())) return iso;
+  const day = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() - day + 1);
+  return date.toISOString().slice(0, 10);
+}
+
+function bucketKey(date: string, frequency: MacroOutputFrequency): string {
+  if (frequency === "daily") return date;
+  if (frequency === "weekly") return isoWeekStart(date);
+  if (frequency === "monthly") return date.slice(0, 7);
+  const month = Number(date.slice(5, 7));
+  const quarter = Number.isFinite(month) && month > 0 ? Math.ceil(month / 3) : 1;
+  return `${date.slice(0, 4)}-Q${quarter}`;
+}
+
+export function aggregateMacroPoints(
+  points: readonly MacroRawPoint[],
+  sourceFrequency: MacroOutputFrequency,
+  outputFrequency: MacroOutputFrequency,
+  aggregation: MacroAggregation,
+): MacroRawPoint[] {
+  if (FREQUENCY_RANK[outputFrequency] <= FREQUENCY_RANK[sourceFrequency]) return [...points];
+  const buckets = new Map<string, MacroRawPoint[]>();
+  for (const point of points) {
+    const key = bucketKey(point.date, outputFrequency);
+    const bucket = buckets.get(key) ?? [];
+    bucket.push(point);
+    buckets.set(key, bucket);
+  }
+  return [...buckets.values()].map((bucket) => {
+    const last = bucket.at(-1)!;
+    if (aggregation === "end") return { ...last };
+    const total = bucket.reduce((sum, point) => sum + point.value, 0);
+    return {
+      date: last.date,
+      value: aggregation === "sum" ? total : total / bucket.length,
+    };
+  });
 }
 
 function browserStorage(): Storage | null {
@@ -186,6 +240,7 @@ export async function loadMacroSeries(
   definitions: readonly MacroSeriesDefinition[],
   transforms: ReadonlyMap<string, MacroValueTransform>,
   window: MacroChartWindow = {},
+  viewOptions: ReadonlyMap<string, MacroSeriesViewOptions> = new Map(),
 ): Promise<LoadedMacroSeries[]> {
   const payloads = new Map<string, unknown>();
   const payloadErrors = new Map<string, string>();
@@ -224,9 +279,16 @@ export async function loadMacroSeries(
 
   return extracted.map(({ definition, rawPoints, error }) => {
     const transform = transforms.get(definition.id) ?? definition.defaultTransform ?? "raw";
+    const options = viewOptions.get(definition.id);
+    const outputFrequency = options?.frequency ?? definition.frequency;
+    const aggregation = options?.aggregation ?? "average";
     const windowPoints = cutoffPoints(rawPoints, anchor, window);
-    const transformedPoints = downsampleMacroPoints(applyMacroTransform(windowPoints, transform, definition));
-    return { definition, transform, rawPoints: windowPoints, transformedPoints, error };
+    const aggregatedPoints = aggregateMacroPoints(windowPoints, definition.frequency, outputFrequency, aggregation);
+    const transformDefinition = outputFrequency === definition.frequency
+      ? definition
+      : { ...definition, frequency: outputFrequency };
+    const transformedPoints = downsampleMacroPoints(applyMacroTransform(aggregatedPoints, transform, transformDefinition));
+    return { definition, transform, outputFrequency, aggregation, rawPoints: windowPoints, transformedPoints, error };
   });
 }
 
@@ -263,7 +325,8 @@ export function buildMarketSeries(items: readonly LoadedMacroSeries[]): MarketCh
 
 export function transformedUnitGroup(item: Pick<LoadedMacroSeries, "definition" | "transform">): string {
   if (item.transform === "rebase100") return "level";
-  if (item.transform === "yoy" || item.transform === "change") return "percent";
+  if (item.transform === "yoy" || item.transform === "pctChange") return "percent";
+  if (item.transform === "change") return unitLabel(item.definition.unit);
   if (item.definition.unit === "index" || item.definition.unit === "score") return "level";
   if (item.definition.unit === "percent" || item.definition.unit === "spread") return "percent";
   return unitLabel(item.definition.unit);

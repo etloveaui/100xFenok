@@ -39,6 +39,7 @@ async function inspectStaticContracts() {
     loaderSource,
     engineSource,
     chartThemeSource,
+    macroStyleSource,
   ] = await Promise.all([
     readFile(new URL("../src/app/macro-chart/MacroChartClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/macro-chart/page.tsx", import.meta.url), "utf8"),
@@ -58,6 +59,7 @@ async function inspectStaticContracts() {
     readFile(new URL("../src/lib/macro-chart/loader.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/market-valuation/charts/MarketChartEngineClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/chart-theme.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/styles/cp-w5-macro-chart.css", import.meta.url), "utf8"),
   ]);
   const catalog = JSON.parse(catalogSource);
 
@@ -76,7 +78,7 @@ async function inspectStaticContracts() {
   if (!registrySource.includes('macro-series.json') || !macroSource.includes('macro-chart/registry')) {
     addFailure(failures, "runtime-catalog-ssot", "runtime must import the tracked JSON catalog through the registry");
   }
-  for (const token of ["cutoffPoints(rawPoints", "applyMacroTransform(windowPoints", "downsampleMacroPoints(applyMacroTransform", "payloadErrors", "transformedUnitGroup"]) {
+  for (const token of ["cutoffPoints(rawPoints", "aggregateMacroPoints(windowPoints", "applyMacroTransform(aggregatedPoints", "downsampleMacroPoints(applyMacroTransform", "payloadErrors", "transformedUnitGroup"]) {
     if (!loaderSource.includes(token)) addFailure(failures, "transform-pipeline-contract", `${token} missing`);
   }
   if (
@@ -88,6 +90,38 @@ async function inspectStaticContracts() {
   }
   if (!engineSource.includes("animation: false")) {
     addFailure(failures, "deterministic-chart-animation", "shared chart animation must be disabled for deterministic capture");
+  }
+  if (!engineSource.includes("Pretendard, Noto Sans KR, system-ui, sans-serif")) {
+    addFailure(failures, "macro-v2-chart-ui-font", "axis and tooltip labels must use the UI font stack");
+  }
+  for (const token of [
+    'data-macro-v2-topbar="true"',
+    'data-macro-v2-typeahead="true"',
+    'data-macro-v2-global-controls="true"',
+    'data-macro-v2-legend-overlay="true"',
+    'data-macro-v2-series-editor="true"',
+    'data-macro-v2-event-state="unavailable"',
+    '이벤트 피드 없음',
+    '침체 음영',
+    '축 그룹 자동',
+    '링크',
+  ]) {
+    if (!macroSource.includes(token)) addFailure(failures, "macro-v2-reading-first", `${token} missing`);
+  }
+  for (const label of ["리스크·유동성", "성장", "인플레이션", "금리·신용", "내 컬렉션"]) {
+    if (!macroSource.includes(label)) addFailure(failures, "macro-v2-lens-bar", `${label} missing`);
+  }
+  for (const label of ["수준", "변화", "% 변화", "YoY", "100 기준", "평균", "합", "기말", "왼쪽", "오른쪽", "자동 그룹", "제거"]) {
+    if (!macroSource.includes(label)) addFailure(failures, "macro-v2-series-editor-controls", `${label} missing`);
+  }
+  if (!macroSource.includes('spanGaps={false}')) {
+    addFailure(failures, "macro-v2-missing-date-gaps", "Macro V2 must keep missing dates as visible gaps");
+  }
+  for (const token of ["min-height: 720px", "height: 360px", "var(--c-brand)", "var(--c-panel)"]) {
+    if (!macroStyleSource.includes(token)) addFailure(failures, "macro-v2-light-system-layout", `${token} missing`);
+  }
+  if (!macroSource.includes('MACRO_TEN_YEAR_COLOR = okabeItoPalette[1]') || !chartThemeSource.includes('"#E69F00"')) {
+    addFailure(failures, "macro-v2-ten-year-color", "10Y series must use Okabe-Ito orange");
   }
   if (!engineSource.includes('item.lineRole === "primary" ? 2.5') || !engineSource.includes("[6, 4]")) {
     addFailure(failures, "line-role-contract", "primary/secondary line weight and dash encoding missing");
@@ -212,7 +246,7 @@ function inspectPlottedRanges() {
   const probe = `
     import fs from "node:fs";
     import path from "node:path";
-    import { loadMacroSeries, buildMarketSeries } from "./src/lib/macro-chart/loader.ts";
+    import { aggregateMacroPoints, loadMacroSeries, buildMarketSeries } from "./src/lib/macro-chart/loader.ts";
     import { seriesById } from "./src/lib/macro-chart/registry.ts";
 
     (async () => {
@@ -265,7 +299,18 @@ function inspectPlottedRanges() {
         axis: series.yAxisId,
       };
     });
-    console.log(JSON.stringify(ranges));
+    const aggregationFixture = [
+      { date: "2026-01-02", value: 10 },
+      { date: "2026-01-20", value: 20 },
+      { date: "2026-02-05", value: 30 },
+    ];
+    const aggregations = {
+      average: aggregateMacroPoints(aggregationFixture, "daily", "monthly", "average"),
+      sum: aggregateMacroPoints(aggregationFixture, "daily", "monthly", "sum"),
+      end: aggregateMacroPoints(aggregationFixture, "daily", "monthly", "end"),
+      noUpsample: aggregateMacroPoints(aggregationFixture.slice(0, 1), "monthly", "daily", "average"),
+    };
+    console.log(JSON.stringify({ ranges, aggregations }));
     })().catch((error) => {
       console.error(error);
       process.exit(1);
@@ -288,7 +333,15 @@ function inspectPlottedRanges() {
 
   let ranges;
   try {
-    ranges = JSON.parse(result.stdout);
+    const parsed = JSON.parse(result.stdout);
+    ranges = parsed.ranges;
+    const aggregations = parsed.aggregations;
+    if (aggregations?.average?.[0]?.value !== 15 || aggregations?.sum?.[0]?.value !== 30 || aggregations?.end?.[0]?.value !== 20) {
+      addFailure(failures, "frequency-aggregation", JSON.stringify(aggregations));
+    }
+    if (aggregations?.noUpsample?.length !== 1 || aggregations?.noUpsample?.[0]?.date !== "2026-01-02") {
+      addFailure(failures, "frequency-no-upsample", JSON.stringify(aggregations?.noUpsample));
+    }
   } catch (error) {
     addFailure(failures, "plotted-range-json", `${String(error)} output=${result.stdout.trim()}`);
     return { route: "static:macro-chart-ranges", viewport: "node", status: result.status, failures, ranges: [] };

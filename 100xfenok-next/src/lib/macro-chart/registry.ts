@@ -77,10 +77,11 @@ export const MACRO_GROUP_LABELS: Record<MacroSeriesDefinition["group"], string> 
 };
 
 export const MACRO_TRANSFORM_LABELS = {
-  raw: "원값",
-  rebase100: "100 기준",
+  raw: "수준",
+  change: "변화",
+  pctChange: "% 변화",
   yoy: "YoY",
-  change: "전기 대비",
+  rebase100: "100 기준",
 } as const;
 
 export const MACRO_CATALOG_CURATED_AT = catalog.curated_at;

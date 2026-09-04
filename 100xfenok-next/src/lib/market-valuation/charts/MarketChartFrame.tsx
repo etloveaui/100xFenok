@@ -52,6 +52,9 @@ export interface MarketChartFrameProps {
   yAxisTitle?: string;
   /** Right (y1) axis unit title for dual-axis charts, e.g. "Stablecoin ($B)". */
   y1AxisTitle?: string;
+  logScale?: boolean;
+  /** Keep range state active while a parent-owned toolbar renders the controls. */
+  showRangeControls?: boolean;
   /** Footnote shown when not hovering, e.g. source + default/reachable coverage. */
   footnote?: string;
   /** Drop the outer card chrome when embedded in a parent shell (e.g. SlotShell). */
@@ -167,6 +170,8 @@ export function MarketChartFrame({
   formatValue,
   yAxisTitle,
   y1AxisTitle,
+  logScale = false,
+  showRangeControls = true,
   footnote,
   bare = false,
   rangeId: controlledRangeId,
@@ -236,7 +241,7 @@ export function MarketChartFrame({
     [formatValue],
   );
 
-  const showRanges = ranges.length > 1;
+  const showRanges = showRangeControls && ranges.length > 1;
   const showToggles = togglableSeries && series.length > 1;
 
   return (
@@ -330,6 +335,7 @@ export function MarketChartFrame({
         suggestedMax={suggestedMax}
         yAxisTitle={yAxisTitle}
         y1AxisTitle={y1AxisTitle}
+        logScale={logScale}
         formatValue={fmt}
         onHoverPoint={setHover}
       />

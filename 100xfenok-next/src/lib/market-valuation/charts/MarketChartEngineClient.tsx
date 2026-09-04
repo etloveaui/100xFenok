@@ -138,6 +138,7 @@ function buildOptions({
   suggestedMax,
   yAxisTitle,
   y1AxisTitle,
+  logScale,
   theme,
 }: Required<Pick<MarketChartEngineProps, "ariaLabel" | "showLegend">> &
   Pick<
@@ -148,6 +149,7 @@ function buildOptions({
     | "suggestedMax"
     | "yAxisTitle"
     | "y1AxisTitle"
+    | "logScale"
   > & {
     labels: readonly string[];
     onMouseHover?: () => void;
@@ -155,7 +157,8 @@ function buildOptions({
     theme: MarketChartTheme;
   }): ChartOptions<MarketChartType> {
   const valueFormatter = formatValue ?? defaultFormatValue;
-  const axisTitleFont = { size: 10, weight: "bold" as const };
+  const uiFontFamily = "Pretendard, Noto Sans KR, system-ui, sans-serif";
+  const axisTitleFont = { family: uiFontFamily, size: 10, weight: "bold" as const };
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -183,7 +186,7 @@ function buildOptions({
           boxWidth: 10,
           boxHeight: 10,
           color: theme.token("ink2"),
-          font: { size: 11, weight: "bold" },
+          font: { family: uiFontFamily, size: 11, weight: "bold" },
           usePointStyle: true,
         },
       },
@@ -193,8 +196,8 @@ function buildOptions({
         borderWidth: 1,
         bodyColor: theme.token("ink"),
         titleColor: theme.token("ink"),
-        titleFont: { size: 11, weight: "bold" },
-        bodyFont: { size: 11, weight: "bold" },
+        titleFont: { family: uiFontFamily, size: 11, weight: "bold" },
+        bodyFont: { family: uiFontFamily, size: 11, weight: "bold" },
         mode: "index",
         intersect: false,
         callbacks: {
@@ -214,13 +217,14 @@ function buildOptions({
         grid: { display: false },
         ticks: {
           color: theme.token("ink3"),
-          font: { size: 10, weight: "bold" },
+          font: { family: uiFontFamily, size: 10, weight: "bold" },
           maxRotation: 0,
           autoSkip: true,
           autoSkipPadding: 16,
         },
       },
       y: {
+        type: logScale ? "logarithmic" : "linear",
         suggestedMin,
         suggestedMax,
         grid: { color: theme.token("line2") },
@@ -229,13 +233,14 @@ function buildOptions({
           : undefined,
         ticks: {
           color: theme.token("ink3"),
-          font: { size: 10, weight: "bold" },
+          font: { family: uiFontFamily, size: 10, weight: "bold" },
           callback(value) {
             return valueFormatter(toFiniteNumber(value));
           },
         },
       },
       y1: {
+        type: logScale ? "logarithmic" : "linear",
         display: series.some((item) => item.yAxisId === "y1"),
         position: "right",
         grid: { drawOnChartArea: false },
@@ -244,7 +249,7 @@ function buildOptions({
           : undefined,
         ticks: {
           color: theme.token("ink3"),
-          font: { size: 10, weight: "bold" },
+          font: { family: uiFontFamily, size: 10, weight: "bold" },
           callback(value) {
             return valueFormatter(toFiniteNumber(value));
           },
@@ -270,6 +275,7 @@ export function MarketChartEngineClient({
   onHoverPoint,
   yAxisTitle,
   y1AxisTitle,
+  logScale = false,
 }: MarketChartEngineProps) {
   const theme = useMarketChartTheme();
   const [keyboardIndex, setKeyboardIndex] = useState<number | null>(null);
@@ -308,6 +314,7 @@ export function MarketChartEngineClient({
         suggestedMax,
         yAxisTitle,
         y1AxisTitle,
+        logScale,
         theme,
       }),
     [
@@ -322,6 +329,7 @@ export function MarketChartEngineClient({
       suggestedMax,
       yAxisTitle,
       y1AxisTitle,
+      logScale,
       theme,
     ],
   );

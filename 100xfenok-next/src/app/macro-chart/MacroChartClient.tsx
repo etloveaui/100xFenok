@@ -6,6 +6,7 @@ import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
 import TransitionLink from "@/components/TransitionLink";
 import { EmptyState, EvidenceRail, Panel, useDelayedLoading } from "@/components/ui";
+import { okabeItoPalette } from "@/lib/chart-theme";
 import { formatAsOf, freshnessDataState } from "@/lib/data-state";
 import { MarketChartFrame, type MarketChartRange } from "@/lib/market-valuation/charts/MarketChartFrame";
 import type { MarketChartSeries } from "@/lib/market-valuation/charts/types";
@@ -28,8 +29,16 @@ import {
 } from "@/lib/macro-chart/context";
 import { buildMarketSeries, loadMacroSeries, transformedUnitGroupLabel, unitLabel } from "@/lib/macro-chart/loader";
 import { stooqSeriesIdFromInput } from "@/lib/macro-chart/stooq";
+import { transformUnitLabel } from "@/lib/macro-chart/transforms";
+import { ROUTES, withQuery } from "@/lib/routes";
 import type { LoadedMacroSeries } from "@/lib/macro-chart/loader";
-import type { MacroSeriesDefinition, MacroValueTransform } from "@/lib/macro-chart/types";
+import type {
+  MacroAggregation,
+  MacroOutputFrequency,
+  MacroSeriesDefinition,
+  MacroSeriesViewOptions,
+  MacroValueTransform,
+} from "@/lib/macro-chart/types";
 
 const DEFAULT_PRESET_ID = "risk-liquidity";
 const DEFAULT_RANGE_ID = "5Y";
@@ -46,9 +55,12 @@ const MACRO_RANGES: readonly MarketChartRange[] = [
   { id: "MAX", label: "전체" },
 ];
 const MACRO_RANGE_IDS = new Set(MACRO_RANGES.map((range) => range.id));
-const MACRO_RANGE_ORDER = MACRO_RANGES.map((range) => range.id);
-const MACRO_TRANSFORM_IDS = new Set<MacroValueTransform>(["raw", "rebase100", "yoy", "change"]);
+const MACRO_TRANSFORM_IDS = new Set<MacroValueTransform>(["raw", "change", "pctChange", "yoy", "rebase100"]);
+const MACRO_FREQUENCY_IDS = new Set<MacroOutputFrequency>(["daily", "weekly", "monthly", "quarterly"]);
+const MACRO_AGGREGATION_IDS = new Set<MacroAggregation>(["average", "sum", "end"]);
 const MACRO_AXIS_IDS = new Set(["auto", "left", "right"]);
+const MACRO_COLOR_OPTIONS = okabeItoPalette.slice(0, 6);
+const MACRO_TEN_YEAR_COLOR = okabeItoPalette[1];
 const MACRO_FORMULA_OPERATORS = new Set<string>(["spread", "ratio"]);
 const MACRO_FORMULA_LABELS: Record<MacroFormulaOperator, string> = {
   spread: "차이",
@@ -60,7 +72,13 @@ type LoadState =
   | { status: "ready"; series: MarketChartSeries[]; loaded: LoadedMacroSeries[] }
   | { status: "error"; message: string };
 
-type SelectedMacroSeries = { id: string; transform?: MacroValueTransform };
+type SelectedMacroSeries = {
+  id: string;
+  transform?: MacroValueTransform;
+  frequency?: MacroOutputFrequency;
+  aggregation?: MacroAggregation;
+  color?: string;
+};
 type MacroAxisId = "auto" | "left" | "right";
 type MacroFormulaOperator = "spread" | "ratio";
 type MacroFormulaSeries = {
@@ -122,7 +140,7 @@ function cx(...parts: Array<string | false | null | undefined>) {
 }
 
 function cloneSelection(selection: readonly SelectedMacroSeries[]) {
-  return selection.map((item) => ({ id: item.id, transform: item.transform }));
+  return selection.map((item) => withSeriesDefaults({ ...item }));
 }
 
 function stq(symbol: string) {
@@ -137,6 +155,28 @@ function coerceTransform(value: string | undefined, fallback: MacroValueTransfor
   return value && MACRO_TRANSFORM_IDS.has(value as MacroValueTransform)
     ? (value as MacroValueTransform)
     : fallback;
+}
+
+function coerceFrequency(value: string | undefined, fallback: MacroOutputFrequency): MacroOutputFrequency {
+  return value && MACRO_FREQUENCY_IDS.has(value as MacroOutputFrequency)
+    ? (value as MacroOutputFrequency)
+    : fallback;
+}
+
+function coerceAggregation(value: string | undefined): MacroAggregation {
+  return value && MACRO_AGGREGATION_IDS.has(value as MacroAggregation)
+    ? (value as MacroAggregation)
+    : "average";
+}
+
+function withSeriesDefaults(item: SelectedMacroSeries): SelectedMacroSeries {
+  const definition = seriesById(item.id);
+  return {
+    ...item,
+    frequency: item.frequency ?? definition?.frequency,
+    aggregation: item.aggregation ?? "average",
+    color: item.color ?? (item.id === "DGS10" ? MACRO_TEN_YEAR_COLOR : undefined),
+  };
 }
 
 function parseKnownHiddenIds(raw: string | null, knownIds: readonly string[]) {
@@ -253,6 +293,56 @@ const MACRO_ANALYSIS_LENSES: readonly MacroAnalysisLens[] = [
   },
 ];
 
+const MACRO_TOP_LENSES = [
+  {
+    id: "risk-liquidity",
+    label: "리스크·유동성",
+    state: {
+      selected: [
+        { id: "sp500", transform: "rebase100" as const },
+        { id: "DGS10", transform: "raw" as const },
+        { id: "HY_spread", transform: "raw" as const },
+        { id: "M2SL", transform: "yoy" as const },
+      ],
+      rangeId: "10Y",
+      axisById: { DGS10: "right" as const, HY_spread: "right" as const, M2SL: "right" as const },
+      macroContextId: "risk-liquidity" as const,
+    },
+  },
+  {
+    id: "growth",
+    label: "성장",
+    state: {
+      selected: [
+        { id: "GDP", transform: "yoy" as const },
+        { id: "oecd_cli_us", transform: "raw" as const },
+        { id: "ism_mfg_headline", transform: "raw" as const },
+        { id: "ism_services_headline", transform: "raw" as const },
+      ],
+      rangeId: "10Y",
+      axisById: { GDP: "right" as const },
+      macroContextId: "activity" as const,
+    },
+  },
+  { id: "inflation", label: "인플레이션", unavailable: "인플레이션 시리즈가 카탈로그에 없습니다" },
+  {
+    id: "rates-credit",
+    label: "금리·신용",
+    state: {
+      selected: [
+        { id: "DGS10", transform: "raw" as const },
+        { id: "HY_spread", transform: "raw" as const },
+        { id: "SOFR", transform: "raw" as const },
+        { id: "IORB", transform: "raw" as const },
+      ],
+      rangeId: "5Y",
+      axisById: {},
+      macroContextId: "bank-credit" as const,
+    },
+  },
+  { id: "collection", label: "내 컬렉션", collection: true },
+] as const;
+
 const MARKET_COMPARE_LENSES: readonly MarketCompareLens[] = [
   {
     id: "returns",
@@ -356,21 +446,21 @@ const MACRO_CONNECTION_LINKS: readonly MacroConnectionLink[] = [
     id: "market-structure",
     label: "시장 구조",
     detail: "밸류에이션·리스크 구조 차트와 비교한다.",
-    href: (context) => `/market-valuation/structure?macro=${context.id}`,
+    href: (context) => withQuery(ROUTES.marketStructure, { macro: context.id }),
     groups: ["equity", "rates", "credit", "liquidity"],
   },
   {
     id: "events",
     label: "이벤트",
     detail: "실적, 분할, 장전·시간외 움직임으로 이어 본다.",
-    href: (context) => `/market/events?macro=${context.id}`,
+    href: (context) => withQuery(ROUTES.marketEvents, { macro: context.id }),
     groups: ["equity", "sentiment", "activity"],
   },
   {
     id: "portfolio",
     label: "포트폴리오",
     detail: "내 보유 종목의 연결 데이터와 대조한다.",
-    href: (context) => `/portfolio?macro=${context.id}`,
+    href: (context) => withQuery(ROUTES.portfolio, { macro: context.id }),
     groups: ["equity", "rates", "credit", "liquidity", "banking", "activity", "sentiment"],
   },
 ] as const;
@@ -430,6 +520,32 @@ function parseAxisById(raw: string | null, selected: readonly SelectedMacroSerie
   );
 }
 
+function selectedWithUrlOptions(selected: readonly SelectedMacroSeries[], params: URLSearchParams) {
+  const transforms = params.get("transform")?.split(",") ?? [];
+  const frequencies = params.get("frequency")?.split(",") ?? [];
+  const aggregations = params.get("aggregation")?.split(",") ?? [];
+  const colors = params.get("color")?.split(",") ?? [];
+  return selected.map((item, index) => {
+    const definition = seriesById(item.id);
+    return withSeriesDefaults({
+      ...item,
+      transform: coerceTransform(transforms[index], item.transform ?? definition?.defaultTransform ?? "raw"),
+      frequency: coerceFrequency(frequencies[index], item.frequency ?? definition?.frequency ?? "daily"),
+      aggregation: coerceAggregation(aggregations[index] ?? item.aggregation),
+      color: MACRO_COLOR_OPTIONS.includes(colors[index] as (typeof MACRO_COLOR_OPTIONS)[number])
+        ? colors[index]
+        : item.color,
+    });
+  });
+}
+
+function selectedViewOptions(selected: readonly SelectedMacroSeries[]) {
+  return new Map<string, MacroSeriesViewOptions>(selected.map((item) => [
+    item.id,
+    { frequency: item.frequency, aggregation: item.aggregation },
+  ]));
+}
+
 function safeReadUserPresets(): UserMacroPreset[] {
   if (typeof window === "undefined") return [];
   try {
@@ -445,6 +561,18 @@ function safeReadUserPresets(): UserMacroPreset[] {
               .filter((entry): entry is SelectedMacroSeries =>
                 Boolean(entry && typeof entry.id === "string" && seriesById(entry.id)),
               )
+              .map((entry) => {
+                const definition = seriesById(entry.id)!;
+                return withSeriesDefaults({
+                  id: entry.id,
+                  transform: coerceTransform(entry.transform, definition.defaultTransform ?? "raw"),
+                  frequency: coerceFrequency(entry.frequency, definition.frequency),
+                  aggregation: coerceAggregation(entry.aggregation),
+                  color: entry.color && MACRO_COLOR_OPTIONS.includes(entry.color as (typeof MACRO_COLOR_OPTIONS)[number])
+                    ? entry.color
+                    : undefined,
+                });
+              })
               .slice(0, MAX_SELECTED_SERIES)
           : [];
         if (!selected.length || typeof record.name !== "string") return null;
@@ -531,7 +659,7 @@ function initialChartStateFromUrl(fallback: InitialChartState): InitialChartStat
   const rangeParam = params.get("range") ?? "";
   const rangeId = MACRO_RANGE_IDS.has(rangeParam) ? rangeParam : DEFAULT_RANGE_ID;
   if (preset) {
-    const selected = cloneSelection(preset.series);
+    const selected = selectedWithUrlOptions(cloneSelection(preset.series), params);
     const formulas = parseFormulaSeries(params.get("formula"), selected);
     return {
       selected,
@@ -544,17 +672,16 @@ function initialChartStateFromUrl(fallback: InitialChartState): InitialChartStat
   }
   const ids = params.get("series")?.split(",").map((id) => id.trim()).filter(Boolean) ?? [];
   if (!ids.length) return { ...fallback, rangeId, macroContextId };
-  const transforms = params.get("transform")?.split(",") ?? [];
-  const selected = ids
+  const selected = selectedWithUrlOptions(ids
     .filter((id) => seriesById(id))
     .slice(0, MAX_SELECTED_SERIES)
     .map((id, index) => ({
       id,
       transform: coerceTransform(
-        transforms[index],
+        params.get("transform")?.split(",")[index],
         seriesById(id)?.defaultTransform ?? "raw",
       ),
-    }));
+    })), params);
   const finalSelected = selected.length ? selected : fallback.selected;
   const formulas = parseFormulaSeries(params.get("formula"), finalSelected);
   return {
@@ -621,6 +748,37 @@ function formatValue(value: number | null) {
   }).format(value);
 }
 
+const MACRO_FREQUENCY_LABELS: Record<MacroOutputFrequency, string> = {
+  daily: "일",
+  weekly: "주",
+  monthly: "월",
+  quarterly: "분기",
+};
+
+const MACRO_AGGREGATION_LABELS: Record<MacroAggregation, string> = {
+  average: "평균",
+  sum: "합",
+  end: "기말",
+};
+
+const MACRO_FREQUENCY_RANK: Record<MacroOutputFrequency, number> = {
+  daily: 0,
+  weekly: 1,
+  monthly: 2,
+  quarterly: 3,
+};
+
+function frequencyAvailable(definition: MacroSeriesDefinition, frequency: MacroOutputFrequency) {
+  return MACRO_FREQUENCY_RANK[frequency] >= MACRO_FREQUENCY_RANK[definition.frequency];
+}
+
+function latestStepChange(series: MarketChartSeries) {
+  const finite = series.points.filter((point) => typeof point.value === "number" && Number.isFinite(point.value));
+  const latest = finite.at(-1)?.value;
+  const previous = finite.at(-2)?.value;
+  return typeof latest === "number" && typeof previous === "number" ? latest - previous : null;
+}
+
 function sourceSummary(definitions: readonly MacroSeriesDefinition[]) {
   const files = new Set(definitions.map((item) => item.sourcePath.replace("/data/", "")));
   return `${definitions.length}개 시리즈 · ${files.size}개 데이터 파일`;
@@ -634,6 +792,8 @@ function downloadCsv(series: readonly MarketChartSeries[], selected: readonly Se
   const dates = [...labels].sort((a, b) => a.localeCompare(b));
   const valuesBySeries = series.map((item) => new Map(item.points.map((point) => [point.label, point.value])));
   const transformById = selectedTransformMap(selected);
+  const frequencyById = new Map(selected.map((item) => [item.id, item.frequency ?? seriesById(item.id)?.frequency]));
+  const aggregationById = new Map(selected.map((item) => [item.id, item.aggregation ?? "average"]));
   const header = [
     "date",
     ...series.map((item) => {
@@ -642,7 +802,8 @@ function downloadCsv(series: readonly MarketChartSeries[], selected: readonly Se
     }),
   ];
   const sourceRow = ["__meta_source", ...series.map((item) => sourceKindLabel(seriesById(item.id)))];
-  const frequencyRow = ["__meta_frequency", ...series.map((item) => frequencyDisplayLabel(seriesById(item.id)))];
+  const frequencyRow = ["__meta_frequency", ...series.map((item) => frequencyById.get(item.id) ?? frequencyDisplayLabel(seriesById(item.id)))];
+  const aggregationRow = ["__meta_aggregation", ...series.map((item) => aggregationById.get(item.id) ?? "computed")];
   const rows = dates.map((date) => [
     date,
     ...valuesBySeries.map((values) => {
@@ -650,7 +811,7 @@ function downloadCsv(series: readonly MarketChartSeries[], selected: readonly Se
       return typeof value === "number" && Number.isFinite(value) ? String(value) : "";
     }),
   ]);
-  const csv = [header, sourceRow, frequencyRow, ...rows]
+  const csv = [header, sourceRow, frequencyRow, aggregationRow, ...rows]
     .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
     .join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -701,6 +862,11 @@ function applyAxisOverrides(series: readonly MarketChartSeries[], axisById: Reco
     if (axis === "right") return { ...item, yAxisId: "y1" as const };
     return item;
   });
+}
+
+function applySeriesColors(series: readonly MarketChartSeries[], selected: readonly SelectedMacroSeries[]) {
+  const colorById = new Map(selected.map((item) => [item.id, item.color]));
+  return series.map((item) => ({ ...item, color: colorById.get(item.id) ?? item.color }));
 }
 
 function axisParam(selected: readonly SelectedMacroSeries[], axisById: Record<string, MacroAxisId>) {
@@ -777,14 +943,30 @@ type MacroChartRow = {
   y1AxisTitle?: string;
 };
 
-function buildChartRows(series: readonly MarketChartSeries[]): MacroChartRow[] {
+function buildChartRows(
+  series: readonly MarketChartSeries[],
+  autoGroupAxes = true,
+  axisById: Record<string, MacroAxisId> = {},
+): MacroChartRow[] {
   const groups = [...new Set(series.map((item) => item.unitGroup ?? "level"))];
+  if (!autoGroupAxes) {
+    return [{
+      id: "manual-axis",
+      series: [...series],
+      yAxisTitle: "왼쪽 축",
+      y1AxisTitle: series.some((item) => item.yAxisId === "y1") ? "오른쪽 축" : undefined,
+    }];
+  }
   if (groups.length <= 2) {
     return [{
       id: groups.join("-") || "empty",
       series: series.map((item) => ({
         ...item,
-        yAxisId: groups.indexOf(item.unitGroup ?? "level") === 1 ? "y1" : "y",
+        yAxisId: axisById[item.id] === "right"
+          ? "y1"
+          : axisById[item.id] === "left"
+            ? "y"
+            : groups.indexOf(item.unitGroup ?? "level") === 1 ? "y1" : "y",
       })),
       yAxisTitle: transformedUnitGroupLabel(groups[0] ?? "level"),
       y1AxisTitle: groups[1] ? transformedUnitGroupLabel(groups[1]) : undefined,
@@ -792,20 +974,26 @@ function buildChartRows(series: readonly MarketChartSeries[]): MacroChartRow[] {
   }
   return groups.map((group) => ({
     id: group,
-    series: series.filter((item) => (item.unitGroup ?? "level") === group).map((item) => ({ ...item, yAxisId: "y" })),
+    series: series.filter((item) => (item.unitGroup ?? "level") === group).map((item) => ({
+      ...item,
+      yAxisId: axisById[item.id] === "right" ? "y1" : "y",
+    })),
     yAxisTitle: transformedUnitGroupLabel(group),
+    y1AxisTitle: series.some((item) => (item.unitGroup ?? "level") === group && axisById[item.id] === "right")
+      ? "오른쪽 축"
+      : undefined,
   }));
+}
+
+function supportsLogScale(series: readonly MarketChartSeries[]) {
+  const values = series.flatMap((item) => item.points.map((point) => point.value));
+  return values.some((value) => typeof value === "number" && Number.isFinite(value)) &&
+    values.every((value) => value === null || (typeof value === "number" && value > 0));
 }
 
 function finiteRange(series: MarketChartSeries) {
   const values = series.points.flatMap((point) => typeof point.value === "number" && Number.isFinite(point.value) ? [point.value] : []);
   return values.length ? { min: Math.min(...values), max: Math.max(...values) } : null;
-}
-
-function nextRangeId(current: string, delta: -1 | 1) {
-  const index = MACRO_RANGE_ORDER.indexOf(current);
-  const safeIndex = index >= 0 ? index : MACRO_RANGE_ORDER.indexOf(DEFAULT_RANGE_ID);
-  return MACRO_RANGE_ORDER[Math.min(Math.max(safeIndex + delta, 0), MACRO_RANGE_ORDER.length - 1)] ?? DEFAULT_RANGE_ID;
 }
 
 function rangeLabel(rangeId: string) {
@@ -957,17 +1145,17 @@ function PickerButton({
       className={cx(
         "flex min-h-14 w-full items-start justify-between gap-2 rounded-lg border px-3 py-2 text-left transition",
         active
-          ? "border-slate-900 bg-slate-900 text-white"
+          ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
           : "border-slate-200 bg-white text-slate-700 hover:border-brand-interactive",
       )}
     >
       <span className="min-w-0">
         <span className="block truncate text-xs font-black">{item.shortLabel}</span>
-        <span className={cx("block truncate text-[10px] font-semibold", active ? "text-slate-200" : "text-slate-600")}>
+        <span className={cx("block truncate text-[10px] font-semibold", active ? "text-white" : "text-slate-600")}>
           {definitionMetaLabel(item)}
         </span>
       </span>
-      <span className={cx("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black", active ? "bg-white text-slate-900" : "bg-slate-100 text-slate-700")}>
+      <span className={cx("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black", active ? "bg-white text-[var(--c-brand)]" : "bg-slate-100 text-slate-700")}>
         {active ? "선택" : "추가"}
       </span>
     </button>
@@ -1026,12 +1214,18 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const [loadRetryKey, setLoadRetryKey] = useState(0);
   const [seriesEditorOpen, setSeriesEditorOpen] = useState(stockCompareMode);
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeTopLensId, setActiveTopLensId] = useState("risk-liquidity");
+  const [editingSeriesId, setEditingSeriesId] = useState<string | null>(null);
+  const [logScale, setLogScale] = useState(false);
+  const [autoGroupAxes, setAutoGroupAxes] = useState(true);
 
   const selectedDefinitions = useMemo(
     () => selected.map((item) => seriesById(item.id)).filter((item): item is MacroSeriesDefinition => Boolean(item)),
     [selected],
   );
   const transformMap = useMemo(() => selectedTransformMap(selected), [selected]);
+  const viewOptions = useMemo(() => selectedViewOptions(selected), [selected]);
   const selectedIds = useMemo(() => new Set(selected.map((item) => item.id)), [selected]);
   const formulaIds = useMemo(() => new Set(formulas.map((formula) => formula.id)), [formulas]);
   const chartSeriesIds = useMemo(
@@ -1067,6 +1261,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       setMacroContextId(nextState.macroContextId);
       setFormulaLeftId(nextState.selected[0]?.id ?? "");
       setFormulaRightId(nextState.selected[1]?.id ?? "");
+      const params = new URLSearchParams(window.location.search);
+      setLogScale(params.get("log") === "1");
+      setAutoGroupAxes(params.get("axes") !== "manual");
       setUserPresets(safeReadUserPresets());
       setClientStateReady(true);
     }, 0);
@@ -1085,7 +1282,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       if (!cancelled) setLoadState({ status: "loading" });
     });
     const selectedRange = MACRO_RANGES.find((range) => range.id === rangeId);
-    loadMacroSeries(selectedDefinitions, transformMap, { months: selectedRange?.months })
+    loadMacroSeries(selectedDefinitions, transformMap, { months: selectedRange?.months }, viewOptions)
       .then((loaded) => {
         if (cancelled) return;
         const series = buildMarketSeries(loaded);
@@ -1104,7 +1301,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     return () => {
       cancelled = true;
     };
-  }, [clientStateReady, loadRetryKey, rangeId, selectedDefinitions, transformMap]);
+  }, [clientStateReady, loadRetryKey, rangeId, selectedDefinitions, transformMap, viewOptions]);
 
   useEffect(() => {
     if (!clientStateReady || typeof window === "undefined") return;
@@ -1112,15 +1309,20 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     params.set("macro", macroContextId);
     params.set("series", selected.map((item) => item.id).join(","));
     params.set("transform", selected.map((item) => item.transform ?? seriesById(item.id)?.defaultTransform ?? "raw").join(","));
+    params.set("frequency", selected.map((item) => item.frequency ?? seriesById(item.id)?.frequency ?? "daily").join(","));
+    params.set("aggregation", selected.map((item) => item.aggregation ?? "average").join(","));
+    if (selected.some((item) => item.color)) params.set("color", selected.map((item) => item.color ?? "").join(","));
     params.set("range", rangeId);
     if (visibleHiddenIds.length) params.set("hidden", visibleHiddenIds.join(","));
     const axis = axisParam(selected, axisById);
     if (axis) params.set("axis", axis);
     const formula = formulaParam(formulas);
     if (formula) params.set("formula", formula);
+    if (logScale) params.set("log", "1");
+    if (!autoGroupAxes) params.set("axes", "manual");
     const next = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, "", next);
-  }, [axisById, clientStateReady, formulas, macroContextId, rangeId, selected, visibleHiddenIds]);
+  }, [autoGroupAxes, axisById, clientStateReady, formulas, logScale, macroContextId, rangeId, selected, visibleHiddenIds]);
 
   const filteredCatalog = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -1132,6 +1334,16 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         .includes(needle),
     );
   }, [query]);
+  const typeaheadCatalog = useMemo(() => {
+    if (query.trim()) return filteredCatalog.slice(0, 8);
+    const popularIds = ["sp500", "DGS10", "HY_spread", "M2SL"];
+    const relatedGroups = new Set(selectedDefinitions.map((item) => item.group));
+    const popular = popularIds.map((id) => seriesById(id)).filter((item): item is MacroSeriesDefinition => Boolean(item));
+    const related = MACRO_SERIES_CATALOG.filter(
+      (item) => relatedGroups.has(item.group) && !popularIds.includes(item.id) && !selectedIds.has(item.id),
+    ).slice(0, 4);
+    return [...popular, ...related];
+  }, [filteredCatalog, query, selectedDefinitions, selectedIds]);
 
   const applyChartState = useCallback((state: InitialChartState) => {
     const nextSelected = cloneSelection(state.selected).slice(0, MAX_SELECTED_SERIES);
@@ -1156,6 +1368,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   }, []);
 
   const toggleSeries = useCallback((id: string) => {
+    setActiveTopLensId("custom");
     if (selected.some((item) => item.id === id)) {
       setSelected((prev) => prev.filter((item) => item.id !== id));
       setHiddenIds((prev) => prev.filter((hiddenId) => hiddenId !== id));
@@ -1174,11 +1387,12 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       setLimitNotice(`비교 시리즈는 최대 ${MAX_SELECTED_SERIES}개까지 선택할 수 있습니다.`);
       return;
     }
-    setSelected((prev) => [...prev, { id, transform: definition.defaultTransform ?? "raw" }]);
+    setSelected((prev) => [...prev, withSeriesDefaults({ id, transform: definition.defaultTransform ?? "raw" })]);
     setLimitNotice(null);
   }, [selected]);
 
   const addStooqSeries = useCallback(() => {
+    setActiveTopLensId("custom");
     const id = stooqSeriesIdFromInput(stooqTickerInput);
     if (!id) {
       setStooqTickerNotice("심볼 형식을 확인하세요. 예: NVDA, SPY.US, 005930.KS");
@@ -1198,7 +1412,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       setStooqTickerNotice(null);
       return;
     }
-    setSelected((prev) => [...prev, { id, transform: definition.defaultTransform ?? "raw" }]);
+    setSelected((prev) => [...prev, withSeriesDefaults({ id, transform: definition.defaultTransform ?? "raw" })]);
     setStooqTickerInput("");
     setStooqTickerNotice(`${definition.shortLabel} 추가됨`);
     setLimitNotice(null);
@@ -1206,6 +1420,18 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
 
   const setTransform = useCallback((id: string, transform: MacroValueTransform) => {
     setSelected((prev) => prev.map((item) => (item.id === id ? { ...item, transform } : item)));
+  }, []);
+
+  const setFrequency = useCallback((id: string, frequency: MacroOutputFrequency) => {
+    setSelected((prev) => prev.map((item) => (item.id === id ? { ...item, frequency } : item)));
+  }, []);
+
+  const setAggregation = useCallback((id: string, aggregation: MacroAggregation) => {
+    setSelected((prev) => prev.map((item) => (item.id === id ? { ...item, aggregation } : item)));
+  }, []);
+
+  const setSeriesColor = useCallback((id: string, color: string) => {
+    setSelected((prev) => prev.map((item) => (item.id === id ? { ...item, color } : item)));
   }, []);
 
   const setAxis = useCallback((id: string, axis: MacroAxisId) => {
@@ -1246,6 +1472,39 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     applyChartState({ ...lens.state, macroContextId: macroContextFromParam(lens.id)?.id ?? DEFAULT_MACRO_CONTEXT_ID });
     setPresetName(`${lens.label.replace(" 렌즈", "")} 뷰`);
   }, [applyChartState]);
+
+  const applyTopLens = useCallback((lens: (typeof MACRO_TOP_LENSES)[number]) => {
+    setActiveTopLensId(lens.id);
+    if ("unavailable" in lens) {
+      setLimitNotice(lens.unavailable);
+      return;
+    }
+    if ("collection" in lens) {
+      setSeriesEditorOpen(true);
+      window.setTimeout(() => document.querySelector('[data-macro-chart-collections="true"]')?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
+      return;
+    }
+    if ("state" in lens) {
+      applyChartState({
+        selected: cloneSelection(lens.state.selected),
+        rangeId: lens.state.rangeId,
+        hiddenIds: [],
+        axisById: lens.state.axisById,
+        formulas: [],
+        macroContextId: lens.state.macroContextId,
+      });
+      setPresetName(`${lens.label} 뷰`);
+    }
+  }, [applyChartState]);
+
+  const copyShareLink = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setExportNotice("공유 링크가 복사되었습니다.");
+    } catch {
+      setExportNotice("링크 복사를 지원하지 않는 브라우저입니다.");
+    }
+  }, []);
 
   const applyMarketCompareLens = useCallback((lens: MarketCompareLens) => {
     applyChartState(lens.state);
@@ -1326,10 +1585,14 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const ready = activeLoadState.status === "ready";
   const chartSeries = useMemo(() => {
     if (activeLoadState.status !== "ready") return [];
-    const baseSeries = applyAxisOverrides(activeLoadState.series, axisById);
+    const baseSeries = applyAxisOverrides(applySeriesColors(activeLoadState.series, selected), axisById);
     return [...baseSeries, ...buildFormulaSeries(baseSeries, formulas)];
-  }, [activeLoadState, axisById, formulas]);
-  const chartRows = useMemo(() => buildChartRows(chartSeries), [chartSeries]);
+  }, [activeLoadState, axisById, formulas, selected]);
+  const chartRows = useMemo(() => buildChartRows(chartSeries, autoGroupAxes, axisById), [autoGroupAxes, axisById, chartSeries]);
+  const canUseLogScale = useMemo(() => supportsLogScale(chartSeries), [chartSeries]);
+  useEffect(() => {
+    if (logScale && !canUseLogScale) setLogScale(false);
+  }, [canUseLogScale, logScale]);
   const failedLoadedSeries = useMemo(
     () => activeLoadState.status === "ready" ? activeLoadState.loaded.filter((item) => item.error || !item.transformedPoints.length) : [],
     [activeLoadState],
@@ -1347,8 +1610,6 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         : chartSeries.length
           ? "fresh"
           : "stale";
-  const canZoomIn = MACRO_RANGE_ORDER.indexOf(rangeId) > 0;
-  const canZoomOut = MACRO_RANGE_ORDER.indexOf(rangeId) >= 0 && MACRO_RANGE_ORDER.indexOf(rangeId) < MACRO_RANGE_ORDER.length - 1;
   const selectedSourceCount = useMemo(
     () => new Set(selectedDefinitions.map((definition) => definition.sourcePath)).size,
     [selectedDefinitions],
@@ -1437,6 +1698,20 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       visibleHiddenIds.length,
     ],
   );
+  const chartSeriesById = useMemo(() => new Map(chartSeries.map((item) => [item.id, item])), [chartSeries]);
+  const legendItems = useMemo(() => selected.map((item, index) => {
+    const definition = seriesById(item.id);
+    const series = chartSeriesById.get(item.id);
+    return {
+      selection: item,
+      definition,
+      series,
+      color: item.color ?? series?.color ?? okabeItoPalette[index % okabeItoPalette.length],
+      unit: definition ? transformUnitLabel(item.transform ?? definition.defaultTransform ?? "raw", unitLabel(definition.unit)) : "—",
+      latest: series ? latestFinitePoint(series)?.value ?? null : null,
+      change: series ? latestStepChange(series) : null,
+    };
+  }), [chartSeriesById, selected]);
 
   return (
     <div
@@ -1467,54 +1742,81 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         </div>
 
         <Panel className="cpw5-macro-chart-card">
-          <div className="cpw5-macro-chart-toolbar">
-            <div className="cpw5-macro-chart-toolbar__copy">
-              <h2>시장 방향 차트</h2>
-              <p>{sourceSummary(selectedDefinitions)}</p>
-            </div>
-            <div className="cpw5-macro-chart-toolbar__actions" aria-label="차트 도구">
-              <button
-                type="button"
-                onClick={() => setRangeId(nextRangeId(rangeId, -1))}
-                disabled={!canZoomIn}
-                className="cpw5-macro-tool-button"
-                aria-label="차트 확대"
-                data-macro-chart-action="zoom-in"
-              >
-                +
-              </button>
-              <button
-                type="button"
-                onClick={() => setRangeId(nextRangeId(rangeId, 1))}
-                disabled={!canZoomOut}
-                className="cpw5-macro-tool-button"
-                aria-label="차트 축소"
-                data-macro-chart-action="zoom-out"
-              >
-                -
-              </button>
-              <button
-                type="button"
-                onClick={async () => setExportNotice((await downloadChartPng()) ? "PNG 저장됨" : "차트가 준비되지 않았습니다.")}
-                disabled={!ready || chartSeries.length === 0}
-                className="cpw5-macro-tool-button"
-                data-macro-chart-action="png"
-              >
-                PNG
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!ready) return;
-                  downloadCsv(chartSeries, selected, rangeId);
-                  setExportNotice(`${rangeLabel(rangeId)} 변환 CSV 저장됨`);
+          <div className="cpw5-macro-v2-topbar" data-macro-v2-topbar="true">
+            <div className="cpw5-macro-v2-search" data-macro-v2-typeahead="true">
+              <label className="sr-only" htmlFor="macro-v2-series-search">시리즈 검색</label>
+              <input
+                id="macro-v2-series-search"
+                value={queryInput}
+                onFocus={() => setSearchOpen(true)}
+                onBlur={() => window.setTimeout(() => setSearchOpen(false), 120)}
+                onChange={(event) => {
+                  setQueryInput(event.target.value);
+                  setSearchOpen(true);
                 }}
-                disabled={!ready || chartSeries.length === 0}
-                className="cpw5-macro-tool-button"
-                data-macro-chart-action="csv"
-              >
-                CSV
-              </button>
+                placeholder="시리즈 추가 · M2, 10Y, HY..."
+                className="cpw5-macro-v2-search__input"
+                autoComplete="off"
+              />
+              {searchOpen ? (
+                <div className="cpw5-macro-v2-typeahead" role="listbox" aria-label="인기 · 연관 시리즈">
+                  <span>인기 · 연관</span>
+                  {typeaheadCatalog.map((item) => {
+                    const active = selectedIds.has(item.id);
+                    return (
+                      <button key={item.id} type="button" role="option" aria-selected={active} onMouseDown={(event) => event.preventDefault()} onClick={() => { toggleSeries(item.id); setSearchOpen(false); }}>
+                        <b>{item.shortLabel}</b>
+                        <small>{MACRO_GROUP_LABELS[item.group]} · {unitLabel(item.unit)}</small>
+                        <strong>{active ? "선택됨" : "+ 추가"}</strong>
+                      </button>
+                    );
+                  })}
+                  {typeaheadCatalog.length === 0 ? <p>검색 결과가 없습니다.</p> : null}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="cpw5-macro-v2-lenses" role="group" aria-label="분석 렌즈">
+              {MACRO_TOP_LENSES.map((lens) => (
+                <button
+                  key={lens.id}
+                  type="button"
+                  onClick={() => applyTopLens(lens)}
+                  aria-pressed={activeTopLensId === lens.id}
+                  data-unavailable={"unavailable" in lens ? "true" : undefined}
+                >
+                  {lens.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="cpw5-macro-v2-global" data-macro-v2-global-controls="true" aria-label="차트 전역 설정">
+              <button type="button" disabled aria-pressed="false" title="이벤트 피드 없음">침체 음영</button>
+              <button type="button" disabled aria-pressed="false" title="이벤트 피드 없음">이벤트</button>
+              <button type="button" disabled={!canUseLogScale} aria-pressed={logScale} onClick={() => setLogScale((value) => !value)} title={canUseLogScale ? undefined : "0 이하 값이 있어 로그 축을 사용할 수 없습니다"}>로그</button>
+              <button type="button" aria-pressed={autoGroupAxes} onClick={() => setAutoGroupAxes((value) => !value)}>축 그룹 자동</button>
+              <span data-macro-v2-event-state="unavailable">이벤트 피드 없음</span>
+            </div>
+
+            <div className="cpw5-macro-v2-actions">
+              <div className="cpw5-macro-v2-ranges" role="group" aria-label="기간 선택">
+                {MACRO_RANGES.map((range) => (
+                  <button key={range.id} type="button" aria-pressed={range.id === rangeId} onClick={() => setRangeId(range.id)}>{range.label}</button>
+                ))}
+              </div>
+              <div className="cpw5-macro-v2-export" role="group" aria-label="공유 및 내보내기">
+                <button type="button" onClick={copyShareLink}>링크</button>
+                <button type="button" onClick={async () => setExportNotice((await downloadChartPng()) ? "PNG 저장됨" : "차트가 준비되지 않았습니다.")} disabled={!ready || chartSeries.length === 0}>PNG</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!ready) return;
+                    downloadCsv(chartSeries, selected, rangeId);
+                    setExportNotice(`${rangeLabel(rangeId)} 변환 CSV 저장됨`);
+                  }}
+                  disabled={!ready || chartSeries.length === 0}
+                >CSV</button>
+              </div>
             </div>
           </div>
           {exportNotice ? (
@@ -1522,8 +1824,16 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               {exportNotice}
             </p>
           ) : null}
+          {limitNotice ? <p className="cpw5-macro-export-note" role="status">{limitNotice}</p> : null}
 
-          {activeLoadState.status === "error" ? (
+          {activeTopLensId === "inflation" ? (
+            <div data-macro-v2-lens-empty="inflation">
+              <EmptyState
+                reason="인플레이션 시리즈가 카탈로그에 없습니다"
+                nextRefresh="카탈로그에 CPI 계열이 연결되면 이 렌즈를 사용할 수 있습니다"
+              />
+            </div>
+          ) : activeLoadState.status === "error" ? (
             <div className="cpw5-macro-error" role="alert">
               <p>차트 데이터를 불러오지 못했습니다.</p>
               <span>{activeLoadState.message}</span>
@@ -1534,7 +1844,73 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           ) : activeLoadState.status === "loading" ? (
             <DelayedMacroChartSkeleton />
           ) : activeLoadState.status === "ready" && chartSeries.length ? (
-            <div className="cpw5-macro-chart-rows" data-macro-chart-row-count={chartRows.length}>
+            <div className="cpw5-macro-v2-stage">
+              <div className="cpw5-macro-v2-legend" data-macro-v2-legend-overlay="true" aria-label="차트 범례와 시리즈 편집">
+                {legendItems.map(({ selection, definition, series, color, unit, latest, change }) => definition ? (
+                  <div key={selection.id} className="cpw5-macro-v2-legend__item">
+                    <button
+                      type="button"
+                      className="cpw5-macro-v2-legend__chip"
+                      aria-expanded={editingSeriesId === selection.id}
+                      onClick={() => setEditingSeriesId((current) => current === selection.id ? null : selection.id)}
+                    >
+                      <i aria-hidden style={{ backgroundColor: color }} />
+                      <span><b>{definition.shortLabel}</b><small>{unit}</small></span>
+                      <span><strong>{formatValue(latest)}</strong><small className={change === null ? undefined : change >= 0 ? "positive" : "negative"}>{change === null ? "—" : `${change >= 0 ? "+" : ""}${formatValue(change)}`}</small></span>
+                    </button>
+                    {editingSeriesId === selection.id ? (
+                      <div className="cpw5-macro-v2-editor" data-macro-v2-series-editor="true" role="dialog" aria-label={`${definition.shortLabel} 편집`}>
+                        <div className="cpw5-macro-v2-editor__head">
+                          <span><i aria-hidden style={{ backgroundColor: color }} /><b>{definition.shortLabel}</b></span>
+                          <button type="button" onClick={() => setEditingSeriesId(null)} aria-label="편집 닫기">×</button>
+                        </div>
+                        <fieldset>
+                          <legend>변환</legend>
+                          <div className="cpw5-macro-v2-segments">
+                            {Object.entries(MACRO_TRANSFORM_LABELS).map(([value, label]) => (
+                              <button key={value} type="button" aria-pressed={(selection.transform ?? definition.defaultTransform ?? "raw") === value} onClick={() => setTransform(selection.id, value as MacroValueTransform)}>{label}</button>
+                            ))}
+                          </div>
+                        </fieldset>
+                        <fieldset>
+                          <legend>빈도</legend>
+                          <div className="cpw5-macro-v2-segments">
+                            {(["daily", "weekly", "monthly"] as const).map((frequency) => (
+                              <button key={frequency} type="button" disabled={!frequencyAvailable(definition, frequency)} aria-pressed={(selection.frequency ?? definition.frequency) === frequency} onClick={() => setFrequency(selection.id, frequency)}>{MACRO_FREQUENCY_LABELS[frequency]}</button>
+                            ))}
+                            {definition.frequency === "quarterly" ? <button type="button" aria-pressed={selection.frequency === "quarterly"} onClick={() => setFrequency(selection.id, "quarterly")}>분기</button> : null}
+                          </div>
+                          <div className="cpw5-macro-v2-aggregation" aria-label="집계">
+                            <span>집계</span>
+                            {(["average", "sum", "end"] as const).map((aggregation) => (
+                              <button key={aggregation} type="button" aria-pressed={(selection.aggregation ?? "average") === aggregation} onClick={() => setAggregation(selection.id, aggregation)}>{MACRO_AGGREGATION_LABELS[aggregation]}</button>
+                            ))}
+                          </div>
+                        </fieldset>
+                        <fieldset>
+                          <legend>축</legend>
+                          <div className="cpw5-macro-v2-segments">
+                            {([['auto', '자동 그룹'], ['left', '왼쪽'], ['right', '오른쪽']] as const).map(([axis, label]) => (
+                              <button key={axis} type="button" aria-pressed={(axisById[selection.id] ?? "auto") === axis} onClick={() => setAxis(selection.id, axis)}>{label}</button>
+                            ))}
+                          </div>
+                        </fieldset>
+                        <fieldset>
+                          <legend>색</legend>
+                          <div className="cpw5-macro-v2-colors">
+                            {MACRO_COLOR_OPTIONS.map((option) => (
+                              <button key={option} type="button" aria-label={`색 ${option}`} aria-pressed={color === option} onClick={() => setSeriesColor(selection.id, option)} style={{ backgroundColor: option }} />
+                            ))}
+                          </div>
+                        </fieldset>
+                        <button type="button" className="cpw5-macro-v2-remove" onClick={() => { toggleSeries(selection.id); setEditingSeriesId(null); }}>제거</button>
+                        {!series ? <p>이 시리즈는 현재 관측값을 불러오지 못했습니다.</p> : null}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null)}
+              </div>
+              <div className="cpw5-macro-chart-rows" data-macro-chart-row-count={chartRows.length}>
               {chartRows.map((row, rowIndex) => (
                 <div key={row.id} data-macro-chart-unit-group={row.id}>
                   <MarketChartFrame
@@ -1543,6 +1919,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                     ranges={MACRO_RANGES}
                     defaultRangeId={DEFAULT_RANGE_ID}
                     rangeId={rangeId}
+                    showRangeControls={false}
+                    showLegend={false}
+                    togglableSeries={false}
                     hiddenSeriesIds={visibleHiddenIds}
                     onRangeChange={setRangeId}
                     onHiddenSeriesChange={(nextHiddenIds) => {
@@ -1553,11 +1932,12 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                       ].filter((id, index, all) => all.indexOf(id) === index && chartSeriesIds.has(id)));
                     }}
                     sortLabels
-                    spanGaps
+                    spanGaps={false}
                     seriesAreRangeFiltered
-                    heightClassName="h-[22rem] sm:h-[26rem] lg:h-[30rem]"
+                    heightClassName="cpw5-macro-v2-plot"
                     yAxisTitle={row.yAxisTitle}
                     y1AxisTitle={row.y1AxisTitle ?? rightAxisTitle}
+                    logScale={logScale}
                     formatValue={formatValue}
                     footnote={sourceSummary(selectedDefinitions)}
                     bare
@@ -1585,6 +1965,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                     {item.definition.shortLabel} · {sourceDisplayLabel(item.definition)} · {item.error ? "불러오기 실패" : item.transformedPoints.at(-1)?.date ?? "관측 없음"}
                   </span>
                 ))}
+              </div>
               </div>
             </div>
           ) : (
@@ -1873,7 +2254,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             </div>
           </section>
 
-          <section className="cpw5-macro-editor-block">
+          <section className="cpw5-macro-editor-block" data-macro-chart-collections="true">
             <div className="cpw5-macro-section-head">
               <div>
                 <h2>내 프리셋</h2>

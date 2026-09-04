@@ -78,4 +78,6 @@ export interface MarketChartEngineProps {
   yAxisTitle?: string;
   /** Right (y1) axis unit title for dual-axis charts, e.g. "Stablecoin ($B)". */
   y1AxisTitle?: string;
+  /** Use logarithmic y scales when every visible value is positive. */
+  logScale?: boolean;
 }
