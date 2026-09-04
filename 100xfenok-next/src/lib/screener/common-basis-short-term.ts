@@ -31,5 +31,18 @@ export function screenerSortValue(stock: ScreenerStock, sortKey: ScreenerSortKey
   if (sortKey === "fenokConvictionScore") {
     return stock.fenokShortTermConvictionScore;
   }
-  return stock[sortKey];
+  // Discover Q2 (short-over-long) ranks by the short-minus-long gap, which is a
+  // derived value with no stock field. Either leg missing sorts nulls-last via
+  // the shared comparator.
+  if (sortKey === "edgeGap") {
+    const short = typeof stock.fenokShortTermScore === "number" && Number.isFinite(stock.fenokShortTermScore)
+      ? stock.fenokShortTermScore
+      : null;
+    const long = typeof stock.fenokLongTermScore === "number" && Number.isFinite(stock.fenokLongTermScore)
+      ? stock.fenokLongTermScore
+      : null;
+    if (short === null || long === null) return null;
+    return short - long;
+  }
+  return stock[sortKey as Exclude<ScreenerSortKey, "edgeGap">];
 }

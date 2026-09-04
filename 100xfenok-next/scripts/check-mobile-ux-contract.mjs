@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-console,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/changes,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener?mode=analyze,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors,/superinvestors?guru=blackrock")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-console,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/changes,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/screener?mode=analyze,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors,/superinvestors?guru=blackrock")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -2822,6 +2822,27 @@ async function collectRouteChecks(page, route) {
         }
         if (document.documentElement.scrollWidth > window.innerWidth + 1) {
           failures.push({ check: "screener-no-page-scroll", detail: `scrollWidth=${document.documentElement.scrollWidth} innerWidth=${window.innerWidth}` });
+        }
+        // Discover mode (default /screener): five question cards + mode toggle.
+        // Existing analyze assertions above stay untouched.
+        const discoverRoot = document.querySelector('[data-discover="true"]');
+        if (discoverRoot) {
+          const discoverCards = Array.from(document.querySelectorAll("[data-discover-card]"))
+            .filter((node) => node.getBoundingClientRect().width > 0);
+          if (discoverCards.length !== 5) {
+            failures.push({ check: "screener-discover-cards", detail: `cards=${discoverCards.length}` });
+          }
+          const modeToggle = document.querySelector('[data-screener-mode-toggle="true"]');
+          if (!modeToggle || modeToggle.getBoundingClientRect().width <= 0) {
+            failures.push({ check: "screener-discover-mode-toggle", detail: "missing visible mode toggle" });
+          }
+          if (viewportWidth < 768) {
+            discoverCards.forEach((node, index) => {
+              if (node.getBoundingClientRect().height < 44) {
+                failures.push({ check: "screener-discover-card-target", detail: `card ${index} height=${Math.round(node.getBoundingClientRect().height)}` });
+              }
+            });
+          }
         }
       }
     }

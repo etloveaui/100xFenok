@@ -201,7 +201,8 @@ export type ScreenerSortKey =
   | "upsidePotentialScore"
   | "downsidePressureScore"
   | "marketSimilarityScore"
-  | "sp500TrackingSimilarityScore";
+  | "sp500TrackingSimilarityScore"
+  | "edgeGap";
 
 export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "ticker",
@@ -267,6 +268,7 @@ export const SCREENER_SORT_KEYS: ScreenerSortKey[] = [
   "downsidePressureScore",
   "marketSimilarityScore",
   "sp500TrackingSimilarityScore",
+  "edgeGap",
 ];
 
 export type SortDir = "asc" | "desc";

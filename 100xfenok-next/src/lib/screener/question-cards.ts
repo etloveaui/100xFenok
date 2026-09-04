@@ -13,6 +13,7 @@
  */
 
 import { BAND_CHEAP, bandPct, normalizeBandTuple } from "./bands";
+import { formatEdgeDrivers } from "./edge-drivers";
 import type { ScreenerFilterState, SortDir } from "./filter-url";
 import type { ScreenerSortKey, ScreenerStock } from "./types";
 
@@ -41,10 +42,9 @@ export interface QuestionCardDef {
   /** Live predicate over the enriched screener stocks. */
   match: (stock: ScreenerStock) => boolean;
   /**
-   * Card ranking. Uses the shared workbench sort for every card except
-   * short-over-long, whose point (the short-minus-long gap) has no workbench
-   * sort key — "조건 보기" then applies 단기 Edge ≥ 60 + 단기 desc, and the card
-   * is the gap-ranked curation of that screen.
+   * Card ranking. Uses the shared workbench sort for every card — including
+   * short-over-long, whose short-minus-long gap has the edgeGap workbench sort
+   * key, so "조건 보기" applies filters and sort 1:1.
    */
   rank: (stocks: ScreenerStock[]) => ScreenerStock[];
   /** One-line "왜" for a result row. */
@@ -82,23 +82,18 @@ function holdersOf(stock: ScreenerStock): number | null {
   return finiteNumber(stock.guruHolders) && stock.guruHolders > 0 ? stock.guruHolders : null;
 }
 
-function bandLabelOf(stock: ScreenerStock): string | null {
-  const band = normalizeBandTuple(stock.perBandCurrent, stock.perBandMin, stock.perBandMax);
-  if (!band) return null;
-  const pct = Math.round(bandPct(band[0], band[1], band[2]) * 100);
-  const zone = pct <= 25 ? "저평가" : pct >= 75 ? "고평가" : "적정";
-  return `${zone} ${pct}%`;
-}
-
-function edgePairOf(stock: ScreenerStock): string {
-  const short = finiteNumber(stock.fenokShortTermScore) ? Math.round(stock.fenokShortTermScore) : null;
-  const long = finiteNumber(stock.fenokLongTermScore) ? Math.round(stock.fenokLongTermScore) : null;
-  return `단기 ${short ?? "—"} · 장기 ${long ?? "—"}`;
-}
-
 function holdersPhraseOf(stock: ScreenerStock): string {
   const holders = holdersOf(stock);
   return holders === null ? "기관 보유 미집계" : `기관 ${holders}곳 보유`;
+}
+
+/**
+ * Unified card "왜": top-2 Edge drivers (drawer-identical) · holder count ·
+ * 13F change. Per-stock 13F 신규/증가 exists nowhere in the pipeline, so the
+ * change leg is always an honest dash — never a fabricated breakdown.
+ */
+function driversWhy(stock: ScreenerStock): string {
+  return `${formatEdgeDrivers(stock) ?? "드라이버 미집계"} · ${holdersPhraseOf(stock)} · 13F 변화 -`;
 }
 
 function byDescNullsLast(get: (stock: ScreenerStock) => number | null) {
@@ -116,24 +111,16 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
   {
     id: "smart-value",
     index: 1,
-    title: "스마트머니가 새로 사는 저평가 종목",
-    question: "기관·고수가 주목하는 저평가 종목은?",
-    basis: "신호 기관·고수 주목 ∩ 밴드 저평가 ∩ 장기 Edge 60 이상",
+    title: "스마트머니 보유 저평가 종목",
+    question: "기관·고수가 보유한 저평가 종목은?",
+    basis: "신호 기관·고수 주목 ∩ 밴드 저평가 ∩ 장기 Edge 60 이상 · 13F 신규·증가 내역 부분 공개",
     filters: { actionFilter: "smart_money", bandFilter: "cheap", convictionMin: "60" },
     sortKey: "fenokConvictionScore",
     sortDir: "desc",
     chips: ["신호: 기관·고수 주목", "밴드: 저평가", "장기 Edge ≥ 60"],
     match: (stock) => stock.actionBucket === "smart_money" && isCheapBand(stock) && longEdgeAtLeast(stock, 60),
     rank: (stocks) => [...stocks].sort(byDescNullsLast(convictionOf)),
-    why: (stock) => {
-      const parts = [
-        convictionOf(stock) !== null ? `컨빅션 ${convictionOf(stock)}` : null,
-        bandLabelOf(stock) !== null ? `밸류 밴드 ${bandLabelOf(stock)}` : null,
-        edgePairOf(stock),
-        holdersPhraseOf(stock),
-      ].filter((part): part is string => part !== null);
-      return parts.join(" · ");
-    },
+    why: (stock) => driversWhy(stock),
   },
   {
     id: "short-over-long",
@@ -142,7 +129,7 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
     question: "단기 모멘텀이 장기를 앞서는 종목은?",
     basis: "단기 Edge 60 이상 중 단기−장기 괴리 순",
     filters: { fenokEdgeMin: "60" },
-    sortKey: "fenokShortTermScore",
+    sortKey: "edgeGap",
     sortDir: "desc",
     chips: ["단기 Edge ≥ 60", "단기−장기 괴리 순 정렬"],
     match: (stock) => {
@@ -156,16 +143,13 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
         const gapB = (b.fenokShortTermScore as number) - (b.fenokLongTermScore as number);
         return gapB - gapA;
       }),
-    why: (stock) => {
-      const gap = Math.round((stock.fenokShortTermScore as number) - (stock.fenokLongTermScore as number));
-      return `${edgePairOf(stock)}(괴리 +${gap}) · ${holdersPhraseOf(stock)}`;
-    },
+    why: (stock) => driversWhy(stock),
   },
   {
     id: "conviction-band",
     index: 3,
-    title: "컨빅션 상위 · 밸류 밴드 하단",
-    question: "확신은 높은데 아직 싼 종목은?",
+    title: "장기 Edge 상위 · 밸류 밴드 하단",
+    question: "장기 점수는 높은데 아직 싼 종목은?",
     basis: "장기 Edge 70 이상 ∩ 밴드 저평가",
     filters: { convictionMin: "70", bandFilter: "cheap" },
     sortKey: "fenokConvictionScore",
@@ -173,20 +157,13 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
     chips: ["장기 Edge ≥ 70", "밴드: 저평가"],
     match: (stock) => longEdgeAtLeast(stock, 70) && isCheapBand(stock),
     rank: (stocks) => [...stocks].sort(byDescNullsLast(convictionOf)),
-    why: (stock) => {
-      const parts = [
-        convictionOf(stock) !== null ? `컨빅션 ${convictionOf(stock)}` : null,
-        bandLabelOf(stock) !== null ? `밸류 밴드 ${bandLabelOf(stock)}` : null,
-        holdersPhraseOf(stock),
-      ].filter((part): part is string => part !== null);
-      return parts.join(" · ");
-    },
+    why: (stock) => driversWhy(stock),
   },
   {
     id: "upgrade-flow",
     index: 4,
-    title: "실적 상향 + 13F 증가",
-    question: "실적도 오르고 기관도 사는 종목은?",
+    title: "FY+1 성장 + 스마트머니 보유",
+    question: "FY+1 성장과 스마트머니 보유가 겹치는 종목은?",
     basis: "매출·EPS 상향(FY+1) ∩ 신호 기관·고수 주목",
     filters: { revenueGrowthMin: "0", epsGrowthMin: "0", actionFilter: "smart_money" },
     sortKey: "epsGrowthFy1",
@@ -207,12 +184,7 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
         if (bv === null) return -1;
         return bv - av;
       }),
-    why: (stock) => {
-      const eps = stock.epsGrowthFy1 !== null && stock.epsGrowthFy1 !== undefined ? `EPS+1 ${(stock.epsGrowthFy1 * 100).toFixed(1)}%` : null;
-      const rev = stock.revenueGrowthFy1 !== null && stock.revenueGrowthFy1 !== undefined ? `매출+1 ${(stock.revenueGrowthFy1 * 100).toFixed(1)}%` : null;
-      const parts = [eps, rev, holdersPhraseOf(stock)].filter((part): part is string => part !== null);
-      return parts.join(" · ");
-    },
+    why: (stock) => driversWhy(stock),
   },
   {
     id: "dividend-health",
@@ -223,8 +195,14 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
     filters: { dividendYieldMin: "2" },
     sortKey: "durabilityProfitabilityScore",
     sortDir: "desc",
-    chips: ["배당수익률 ≥ 2%", "내구 수익성 순 정렬"],
-    match: (stock) => stock.dividendYield !== null && stock.dividendYield * 100 >= 2,
+    chips: ["배당수익률 ≥ 2%", "내구 수익성 ≥ 50 · 카드 선별", "내구 수익성 순 정렬"],
+    match: (stock) => {
+      if (stock.dividendYield === null || stock.dividendYield === undefined || stock.dividendYield * 100 < 2) return false;
+      // Card-only curation floor: no workbench primitive reproduces it, so the
+      // chips above say so explicitly.
+      const durability = finiteNumber(stock.durabilityProfitabilityScore) ? stock.durabilityProfitabilityScore : null;
+      return durability !== null && durability >= 50;
+    },
     rank: (stocks) =>
       [...stocks].sort((a, b) => {
         const av = finiteNumber(a.durabilityProfitabilityScore) ? (a.durabilityProfitabilityScore as number) : null;
@@ -234,12 +212,7 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
         if (bv === null) return -1;
         return bv - av;
       }),
-    why: (stock) => {
-      const div = stock.dividendYield !== null ? `배당 ${(stock.dividendYield * 100).toFixed(2)}%` : null;
-      const dur = finiteNumber(stock.durabilityProfitabilityScore) ? `내구 수익성 ${Math.round(stock.durabilityProfitabilityScore as number)}` : null;
-      const parts = [div, dur, holdersPhraseOf(stock)].filter((part): part is string => part !== null);
-      return parts.join(" · ");
-    },
+    why: (stock) => driversWhy(stock),
   },
 ];
 

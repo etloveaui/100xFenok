@@ -3657,6 +3657,7 @@ export default function ScreenerClient({
           onRetry={railFreshness === "fresh" ? undefined : retryScreenerData}
           lkgAsOf={screenerSourceDate ?? undefined}
           skeletonDelayMs={120}
+          onEvidence={() => window.open("/data/global-scouter/core/stocks_analyzer.json", "_blank", "noopener")}
         />
 
         <div className={canvasPlusPreview ? "cp-screener-results-mobile min-[921px]:hidden" : "min-[921px]:hidden"}>
