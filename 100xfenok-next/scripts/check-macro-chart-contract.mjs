@@ -141,6 +141,33 @@ async function inspectStaticContracts() {
     if (!macroSource.includes(token)) addFailure(failures, "macro-v2-derived-series", `${token} missing`);
   }
   for (const token of [
+    'type MacroSurfaceState = "loading" | "empty" | "error" | "stale" | "ready"',
+    'data-macro-v2-lens-collection="true"',
+    'data-macro-v2-lens-sparkline=',
+    'data-macro-v2-lens-preview-state=',
+    'data-macro-v2-collection-state=',
+    'data-macro-v2-collection-action="rename"',
+    '이 브라우저 세션에만 저장됨',
+    'data-macro-v2-tile-evidence="compare"',
+    'data-macro-v2-table-drawer="true"',
+    'data-macro-v2-table-state={tableState}',
+    '변환 후 값 · ${tableHeaderSummary}',
+    '<CpDataTable',
+    '기준 100 대비',
+    'className="cpw5-macro-verdict__text"',
+    'if (value == null) return null',
+  ]) {
+    if (!macroSource.includes(token)) addFailure(failures, "macro-v2-reuse", `${token} missing`);
+  }
+  for (const token of [
+    ".cpw5-macro-lens-sparkline",
+    ".cpw5-macro-lens-card:focus-within",
+    ".cpw5-macro-table-panel",
+    ".cpw5-macro-collection-editor",
+  ]) {
+    if (!macroStyleSource.includes(token)) addFailure(failures, "macro-v2-reuse-states", `${token} missing`);
+  }
+  for (const token of [
     'const timePoints = item.points.map((point) => ({ x: Date.parse(point.label), y: point.value }))',
     'data: xScaleMode === "time" ? timePoints : values',
     'type: "time"',
