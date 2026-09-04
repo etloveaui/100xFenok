@@ -267,21 +267,23 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
   }, [consensus]);
 
   const loading = !dataReady && !failed;
-  const investorCount =
-    consensus?.metadata?.current_cohort_investors ??
-    summary?.metadata?.investor_count ??
-    summary?.metadata?.total_investors ??
-    investors.length;
-  const totalTracked =
-    consensus?.metadata?.total_investors ??
-    summary?.metadata?.investor_count ??
-    summary?.metadata?.total_investors ??
-    investors.length;
+  const investorCount = summary
+    ? (consensus?.metadata?.current_cohort_investors ??
+      summary?.metadata?.investor_count ??
+      summary?.metadata?.total_investors ??
+      investors.length)
+    : null;
+  const totalTracked = summary
+    ? (consensus?.metadata?.total_investors ??
+      summary?.metadata?.investor_count ??
+      summary?.metadata?.total_investors ??
+      investors.length)
+    : null;
   const coverage = dataReady ? `${formatInteger(investorCount)}/${formatInteger(totalTracked)} 투자자` : "—";
   const submittedTotal = summary?.metadata?.investor_count ?? null;
   // No average-filing-lag field exists in the loaded 13F payloads: the chip
   // binds submitted/total/stale to the payload and shows "—" for the lag.
-  const freshnessChip = `제출 지연 평균 — · ${formatInteger(dataReady ? investorCount : null)}/${formatInteger(dataReady ? submittedTotal : null)} 제출 · 정체 ${formatInteger(dataReady ? excludedStale.length : null)}명 제외`;
+  const freshnessChip = `제출 지연 평균 — · ${formatInteger(dataReady ? investorCount : null)}/${formatInteger(dataReady ? submittedTotal : null)} 제출 · 정체 ${formatInteger(dataReady && summary ? excludedStale.length : null)}명 제외`;
   const turnoverCovered = turnover ? Object.keys(turnover).length : 0;
   const holdersCoverage =
     turnoverError

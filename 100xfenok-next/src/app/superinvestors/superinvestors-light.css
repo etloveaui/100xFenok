@@ -718,12 +718,21 @@
 
 .sup-srow {
   border-top: 1px solid var(--fnk-neutral-100);
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-height: 44px;
   justify-content: center;
+  width: 100%;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
   transition: background-color 150ms ease;
 }
 
@@ -734,6 +743,12 @@
 .sup-srow:focus-visible {
   outline: 2px solid var(--fnk-brand-interactive);
   outline-offset: -2px;
+}
+
+.sup-unfiltered {
+  padding: 10px 12px;
+  font-size: 11px;
+  margin: 0;
 }
 
 .sup-srow-top {

@@ -54,6 +54,7 @@ export default function WhoHoldsPanel({
   const [newPositions, setNewPositions] = useState<NewPositionsData | null | undefined>(undefined);
   const [buyingPressure, setBuyingPressure] = useState<BuyingPressureData | null | undefined>(undefined);
   const [conviction, setConviction] = useState<ConvictionData | null | undefined>(undefined);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,7 +62,7 @@ export default function WhoHoldsPanel({
     loadSignalBuyingPressure().then((d) => { if (!cancelled) setBuyingPressure(d); });
     loadSignalConviction().then((d) => { if (!cancelled) setConviction(d); });
     return () => { cancelled = true; };
-  }, []);
+  }, [attempt]);
 
   const tickers = useMemo(() => {
     const set = new Set<string>();
@@ -111,6 +112,13 @@ export default function WhoHoldsPanel({
   const freshness: "pending" | "error" | "partial" | "stale" =
     loading ? "pending" : failed || (newPositions === null && buyingPressure === null && conviction === null) ? "error" : partialFeeds || feedsFailed ? "partial" : "stale";
   const emptyResult = committed !== null && dataReady && result === null && !loading;
+
+  function retryFeeds() {
+    setNewPositions(undefined);
+    setBuyingPressure(undefined);
+    setConviction(undefined);
+    setAttempt((n) => n + 1);
+  }
 
   function commit(value: string) {
     const q = normalizeTickerInput(value);
@@ -259,7 +267,7 @@ export default function WhoHoldsPanel({
         asOf={asOf}
         coverage={coverage}
         next="분기 종료 후 최대 45일"
-        onRetry={failed ? onRetry : undefined}
+        onRetry={failed ? onRetry : feedsFailed ? retryFeeds : undefined}
         onEvidence={dataReady && !failed ? () => window.open("/data/sec-13f/by_ticker.json", "_blank", "noopener") : undefined}
       />
     </Panel>
