@@ -558,23 +558,24 @@ function GuruDetailPanel({
         ) : null}
       </div>
 
-      {/* Portfolio charts (from portfolio_views.json) */}
-      {investorView ? (
+      {/* Portfolio charts (from portfolio_views.json) — the panels always mount;
+          each Panel owns its loading / error / empty / partial / ready state. */}
         <div
           data-superinvestor-guru-portfolio
-          data-superinvestor-guru-portfolio-quarter={investorView.quarter ?? ""}
+          data-superinvestor-guru-portfolio-quarter={investorView?.quarter ?? ""}
+          data-superinvestor-guru-portfolio-state={pvLoading ? "loading" : pvFailed ? "error" : investorView ? "ready" : "empty"}
           className="mt-4 border-t border-slate-200 pt-4"
         >
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 포트폴리오</p>
           <div className="mt-2 space-y-4">
             <Panel
               loading={pvLoading}
-              empty={treemapRows.length === 0}
-              emptyReason="표시할 보유 비중 데이터가 없습니다"
+              empty={!investorView || treemapRows.length === 0}
+              emptyReason={investorView ? "표시할 보유 비중 데이터가 없습니다" : "이 투자자의 자료 없음"}
               emptyNextRefresh="다음 분기 공시 반영 후 갱신"
               error={pvFailed}
               errorDetail="보유 포트폴리오 데이터를 불러오지 못했습니다."
-              asOf={investorView.quarter}
+              asOf={investorView?.quarter ?? asOf}
               onRetry={pvFailed ? onRetryPv : undefined}
               retryLabel="다시 시도"
             >
@@ -582,15 +583,15 @@ function GuruDetailPanel({
                 <div data-superinvestor-guru-treemap data-superinvestor-guru-treemap-count={treemapRows.length}>
                   <PortfolioTreemap
                     rows={treemapRows}
-                    quarterLabel={investorView.quarter}
+                    quarterLabel={investorView?.quarter ?? asOf}
                   />
                 </div>
               ) : null}
               <EvidenceRail
                 freshness={pvLoading ? "pending" : pvFailed ? "error" : treemapRows.length > 0 ? "stale" : "partial"}
                 source="SEC EDGAR 13F"
-                asOf={investorView.quarter}
-                coverage={treemapRows.length > 0 ? `상위 ${formatInteger(treemapRows.length)}종목 · ${investorView.quarter}` : "이 투자자 트리맵 행 없음"}
+                asOf={investorView?.quarter ?? asOf}
+                coverage={treemapRows.length > 0 ? `상위 ${formatInteger(treemapRows.length)}종목 · ${investorView?.quarter ?? asOf}` : "이 투자자 트리맵 행 없음"}
                 next="분기 종료 후 최대 45일"
                 onRetry={pvFailed ? onRetryPv : undefined}
                 onEvidence={() => openEvidence("/data/sec-13f/analytics/portfolio_views.json")}
@@ -598,12 +599,12 @@ function GuruDetailPanel({
             </Panel>
             <Panel
               loading={pvLoading}
-              empty={!hasSectorHistory}
-              emptyReason="표시할 섹터 구성 데이터가 없습니다"
+              empty={!investorView || !hasSectorHistory}
+              emptyReason={investorView ? "표시할 섹터 구성 데이터가 없습니다" : "이 투자자의 자료 없음"}
               emptyNextRefresh="다음 분기 공시 반영 후 갱신"
               error={pvFailed}
               errorDetail="보유 포트폴리오 데이터를 불러오지 못했습니다."
-              asOf={investorView.quarter}
+              asOf={investorView?.quarter ?? asOf}
               onRetry={pvFailed ? onRetryPv : undefined}
               retryLabel="다시 시도"
             >
@@ -622,8 +623,8 @@ function GuruDetailPanel({
               <EvidenceRail
                 freshness={pvLoading ? "pending" : pvFailed ? "error" : hasSectorHistory ? "stale" : "partial"}
                 source="SEC EDGAR 13F"
-                asOf={investorView.quarter}
-                coverage={hasSectorHistory ? `${formatInteger(sectorQuarters.length)}분기 추적 · ${investorView.quarter}` : "이 투자자 섹터 기록 없음"}
+                asOf={investorView?.quarter ?? asOf}
+                coverage={hasSectorHistory ? `${formatInteger(sectorQuarters.length)}분기 추적 · ${investorView?.quarter ?? asOf}` : "이 투자자 섹터 기록 없음"}
                 next="분기 종료 후 최대 45일"
                 onRetry={pvFailed ? onRetryPv : undefined}
                 onEvidence={() => openEvidence("/data/sec-13f/analytics/portfolio_views.json")}
@@ -631,26 +632,26 @@ function GuruDetailPanel({
             </Panel>
             <Panel
               loading={pvLoading}
-              empty={!investorView.performance}
-              emptyReason="표시할 성과 데이터가 없습니다"
+              empty={!investorView?.performance}
+              emptyReason={investorView ? "표시할 성과 데이터가 없습니다" : "이 투자자의 자료 없음"}
               emptyNextRefresh="다음 분기 공시 반영 후 갱신"
               error={pvFailed}
               errorDetail="보유 포트폴리오 데이터를 불러오지 못했습니다."
-              asOf={investorView.quarter}
+              asOf={investorView?.quarter ?? asOf}
               onRetry={pvFailed ? onRetryPv : undefined}
               retryLabel="다시 시도"
             >
-              {investorView.performance ? (
+              {investorView?.performance ? (
                 <PerformanceChart
                   performance={investorView.performance}
-                  investorName={investorView.name}
+                  investorName={investorView?.name ?? id}
                 />
               ) : null}
               <EvidenceRail
-                freshness={pvLoading ? "pending" : pvFailed ? "error" : investorView.performance ? "stale" : "partial"}
+                freshness={pvLoading ? "pending" : pvFailed ? "error" : investorView?.performance ? "stale" : "partial"}
                 source="SEC EDGAR 13F"
-                asOf={investorView.quarter}
-                coverage={investorView.performance ? `${investorView.name} · ${investorView.quarter}` : "이 투자자 성과 시리즈 없음"}
+                asOf={investorView?.quarter ?? asOf}
+                coverage={investorView?.performance ? `${investorView.name} · ${investorView.quarter}` : "이 투자자 성과 시리즈 없음"}
                 next="분기 종료 후 최대 45일"
                 onRetry={pvFailed ? onRetryPv : undefined}
                 onEvidence={() => openEvidence("/data/sec-13f/analytics/portfolio_views.json")}
@@ -658,34 +659,6 @@ function GuruDetailPanel({
             </Panel>
           </div>
         </div>
-      ) : pvLoading ? (
-        <div
-          data-superinvestor-guru-portfolio-state="loading"
-          role="status"
-          aria-live="polite"
-          className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500"
-        >
-          보유 포트폴리오 데이터를 불러오는 중입니다…
-        </div>
-      ) : pvFailed ? (
-        <div
-          data-superinvestor-guru-portfolio-state="error"
-          role="status"
-          aria-live="polite"
-          className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"
-        >
-          보유 포트폴리오 데이터를 불러오지 못했습니다.
-        </div>
-      ) : (
-        <div
-          data-superinvestor-guru-portfolio-state="empty"
-          role="status"
-          aria-live="polite"
-          className="mt-4 rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500"
-        >
-          이 투자자의 자료 없음 · 다음 분기 공시 반영 후 갱신
-        </div>
-      )}
       <GuruTrendBlock investorId={id} />
 
       {/* Cohort cross-investor charts — full PortfolioViewsData required */}

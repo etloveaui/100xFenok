@@ -47,10 +47,17 @@ let trendPending: Promise<TrendDoc | null> | null = null;
 function loadTrends(): Promise<TrendDoc | null> {
   if (trendCache) return Promise.resolve(trendCache);
   if (trendPending) return trendPending;
+  // A non-ok response is a failure, not a "no data" document: the pending
+  // promise is cleared so the next retry issues a fresh fetch instead of
+  // reusing a settled null.
   trendPending = fetch("/data/sec-13f/analytics/multi_quarter_trends.json")
-    .then((r) => (r.ok ? r.json() : null))
+    .then((r) => {
+      if (!r.ok) throw new Error(`multi_quarter_trends ${r.status}`);
+      return r.json() as Promise<TrendDoc>;
+    })
     .then((d) => {
       trendCache = d;
+      trendPending = null;
       return d;
     })
     .catch(() => {
@@ -66,9 +73,13 @@ function loadHedge(): Promise<HedgeDoc | null> {
   if (hedgeCache) return Promise.resolve(hedgeCache);
   if (hedgePending) return hedgePending;
   hedgePending = fetch("/data/sec-13f/analytics/options_hedge.json")
-    .then((r) => (r.ok ? r.json() : null))
+    .then((r) => {
+      if (!r.ok) throw new Error(`options_hedge ${r.status}`);
+      return r.json() as Promise<HedgeDoc>;
+    })
     .then((d) => {
       hedgeCache = d;
+      hedgePending = null;
       return d;
     })
     .catch(() => {
