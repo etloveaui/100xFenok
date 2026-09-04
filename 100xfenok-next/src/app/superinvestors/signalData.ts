@@ -82,6 +82,12 @@ export interface NewBuyRank {
 // An empty top set never bypasses the threshold: it yields the empty state.
 export const MIN_TOP_BUYERS = 3;
 
+// Display threshold for the visible 신규 list. The analytical floor stays
+// MIN_TOP_BUYERS, but ≥3 yields zero rows on the current payload, so the hero
+// shows ≥2 with the rail stating the threshold (fh-816); the empty state only
+// appears when nothing qualifies at ≥2.
+export const VISIBLE_MIN_TOP_BUYERS = 2;
+
 export function buildNewBuyRanks(
   newPositions: NewPositionsData | null,
   scope: Set<string> | null,

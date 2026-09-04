@@ -23,6 +23,7 @@ import {
   initialsOf,
   investorDisplayName,
   selectFollowRoster,
+  VISIBLE_MIN_TOP_BUYERS,
   type NewBuyRank,
   type PressureRank,
 } from "./signalData";
@@ -158,7 +159,9 @@ export default function SignalPanel({
   investorCount,
   onRetry,
 }: SignalPanelProps) {
-  const [followMode, setFollowMode] = useState<FollowMode>("roster");
+  // Default scope is the whole cohort so the hero answers on first paint;
+  // the conviction roster is the opt-in toggle.
+  const [followMode, setFollowMode] = useState<FollowMode>("all");
   const [attempt, setAttempt] = useState(0);
   const [newPositions, setNewPositions] = useState<NewPositionsData | null | undefined>(undefined);
   const [buyingPressure, setBuyingPressure] = useState<BuyingPressureData | null | undefined>(undefined);
@@ -179,7 +182,7 @@ export default function SignalPanel({
     [followMode, roster],
   );
   const topSet = useMemo(() => new Set(roster.ids), [roster]);
-  const newBuys = useMemo(() => buildNewBuyRanks(newPositions ?? null, scope, topSet), [newPositions, scope, topSet]);
+  const newBuys = useMemo(() => buildNewBuyRanks(newPositions ?? null, scope, topSet, 3, VISIBLE_MIN_TOP_BUYERS), [newPositions, scope, topSet]);
   const increases = useMemo(() => buildPressureRanks(buyingPressure ?? null, "net_buyers"), [buyingPressure]);
   const decreases = useMemo(() => buildPressureRanks(buyingPressure ?? null, "net_sellers"), [buyingPressure]);
 
@@ -196,8 +199,8 @@ export default function SignalPanel({
 
   const rosterNames = roster.ids.map((id) => investorDisplayName(summary, id));
   const newCoverage = followMode === "roster"
-    ? `상위 컨빅션 ${formatInteger(roster.ids.length)}명 로스터: ${rosterNames.join(" · ") || "—"}`
-    : `전체 ${formatInteger(dataReady ? investorCount : null)}명 기준`;
+    ? `상위 컨빅션 ${formatInteger(roster.ids.length)}명 로스터: ${rosterNames.join(" · ") || "—"} · 신규 ≥${VISIBLE_MIN_TOP_BUYERS}명`
+    : `전체 ${formatInteger(dataReady ? investorCount : null)}명 기준 · 신규 로스터 ≥${VISIBLE_MIN_TOP_BUYERS}명`;
   const pressureCoverage = "13F 집계값 · 개별 투자자 내역 미제공";
 
   return (
@@ -207,21 +210,21 @@ export default function SignalPanel({
         <div className="sup-follow-toggle" role="group" aria-label="따라가기 범위">
           <button
             type="button"
-            data-superinvestors-follow="roster"
-            aria-pressed={followMode === "roster"}
-            className={`sup-follow-btn${followMode === "roster" ? " on" : ""}`}
-            onClick={() => setFollowMode("roster")}
-          >
-            상위 컨빅션 {formatInteger(FOLLOW_ROSTER_SIZE)}명
-          </button>
-          <button
-            type="button"
             data-superinvestors-follow="all"
             aria-pressed={followMode === "all"}
             className={`sup-follow-btn${followMode === "all" ? " on" : ""}`}
             onClick={() => setFollowMode("all")}
           >
             전체 {formatInteger(dataReady ? investorCount : null)}명
+          </button>
+          <button
+            type="button"
+            data-superinvestors-follow="roster"
+            aria-pressed={followMode === "roster"}
+            className={`sup-follow-btn${followMode === "roster" ? " on" : ""}`}
+            onClick={() => setFollowMode("roster")}
+          >
+            상위 컨빅션 {formatInteger(FOLLOW_ROSTER_SIZE)}명
           </button>
         </div>
       </div>

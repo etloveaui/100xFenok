@@ -283,7 +283,7 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
   const submittedTotal = summary?.metadata?.investor_count ?? null;
   // No average-filing-lag field exists in the loaded 13F payloads: the chip
   // binds submitted/total/stale to the payload and shows "—" for the lag.
-  const freshnessChip = `제출 지연 평균 — · ${formatInteger(dataReady ? investorCount : null)}/${formatInteger(dataReady ? submittedTotal : null)} 제출 · 정체 ${formatInteger(dataReady && summary ? excludedStale.length : null)}명 제외`;
+  const freshnessChip = `${formatInteger(dataReady ? investorCount : null)}/${formatInteger(dataReady ? submittedTotal : null)} 제출 · 정체 ${formatInteger(dataReady && summary ? excludedStale.length : null)}명 제외 · 지연 평균 —`;
   const turnoverCovered = turnover ? Object.keys(turnover).length : 0;
   const holdersCoverage =
     turnoverError
