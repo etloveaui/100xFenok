@@ -1533,6 +1533,19 @@
   min-height: 0;
 }
 
+/* The ticker cell stacks the 13px ticker line over the company-name line
+   (flex-direction: column inherited from the base .cp-screener-name-cell), so
+   it alone takes 8px vertical padding while every other column stays 12/16 —
+   keeping the natural row inside the 44px contract. */
+[data-canvas-plus-screener-preview] .cp-screener-table tbody td[data-column-id="ticker"] {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-company-name {
+  line-height: 12px;
+}
+
 [data-canvas-plus-screener-preview] .cp-screener-table th[data-align="right"],
 [data-canvas-plus-screener-preview] .cp-screener-table td[data-align="right"],
 [data-canvas-plus-screener-preview] .cp-screener-table td[data-align="right"],
