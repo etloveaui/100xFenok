@@ -123,14 +123,24 @@ export default function RotationStripPanel({
                     <th scope="row" className="sec-rank-name">
                       {row.name} <span className="sec-ticker">{row.etf}</span>
                     </th>
-                    {MOMENTUM_WINDOWS.map((window) => {
+                    {MOMENTUM_WINDOWS.map((window, windowIndex) => {
                       const cell = ranks.get(window.key)?.get(row.key);
+                      // Rank movement vs the adjacent (previous) window: climbed
+                      // (smaller rank number) reads ▲, slipped reads ▼. The
+                      // marker is neutral — only the number carries gain/loss.
+                      const prev = windowIndex > 0
+                        ? ranks.get(MOMENTUM_WINDOWS[windowIndex - 1].key)?.get(row.key)
+                        : undefined;
+                      const delta = cell && prev ? prev.rank - cell.rank : null;
                       return (
                         <td
                           key={window.key}
                           className={cell ? (cell.relative >= 0 ? "sec-up tabular-nums" : "sec-down tabular-nums") : "tabular-nums sec-mute"}
                         >
                           {cell ? `#${cell.rank} · ${formatPp(cell.relative)}` : "—"}
+                          {delta !== null && delta !== 0 && (
+                            <span className="sec-rank-move">{delta > 0 ? `▲${delta}` : `▼${-delta}`}</span>
+                          )}
                         </td>
                       );
                     })}

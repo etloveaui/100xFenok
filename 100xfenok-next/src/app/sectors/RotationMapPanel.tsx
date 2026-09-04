@@ -10,6 +10,11 @@ function pp(value: number, digits = 1): string {
 
 const PLOT = { x0: 90, x1: 1150, y0: 20, y1: 340 };
 
+// Corner caption boxes. Dots are excluded from the caption columns by the x
+// domain padding below (inset + caption width + largest bubble radius), so the
+// y domain only needs bubble-radius containment plus centre clamping.
+const CAPTION = { w: 132, h: 24, inset: 10 };
+
 export default function RotationMapPanel({
   points,
   bandless,
@@ -28,10 +33,6 @@ export default function RotationMapPanel({
   const hi = Math.max(0, ...relatives);
   const span = Math.max(0.5, hi - lo);
   const pad = span * 0.08;
-  const dLo = lo - pad;
-  const dHi = hi + pad;
-  const x = (value: number) => PLOT.x0 + ((value - dLo) / (dHi - dLo)) * (PLOT.x1 - PLOT.x0);
-  const y = (band: number) => PLOT.y1 - (band / 100) * (PLOT.y1 - PLOT.y0);
 
   const caps = points.map((point) => point.row.etfInfo?.marketCap).filter((cap): cap is number => typeof cap === "number" && cap > 0);
   const maxCap = Math.max(...caps, 1);
@@ -40,6 +41,47 @@ export default function RotationMapPanel({
     if (typeof cap !== "number" || cap <= 0) return 12;
     return 8 + 20 * Math.sqrt(cap / maxCap);
   };
+  const plotted = points.filter((point) => point.band !== null);
+  const maxR = plotted.reduce((m, point) => Math.max(m, radius(point)), 12);
+
+  // X domain: each side reserves the corner caption column (inset + caption
+  // width) plus the largest bubble radius, so no bubble edge can reach a
+  // caption box and no bubble is clipped at the plot edge. Closed form: with
+  // xScale data-units-per-px over the base span, the margin converts exactly.
+  const plotW = PLOT.x1 - PLOT.x0;
+  const plotH = PLOT.y1 - PLOT.y0;
+  const xMarginPx = CAPTION.inset + CAPTION.w + maxR;
+  const xScale = (span + 2 * pad) / (plotW - 2 * xMarginPx);
+  const dLo = lo - pad - xMarginPx * xScale;
+  const dHi = hi + pad + xMarginPx * xScale;
+  const x = (value: number) => PLOT.x0 + ((value - dLo) / (dHi - dLo)) * plotW;
+
+  // Y domain: band 0–100 padded by bubble-radius containment only — the x
+  // exclusion already keeps dots out of the corner caption boxes.
+  const yMarginPx = maxR;
+  const yPadBand = (yMarginPx * 100) / (plotH - 2 * yMarginPx);
+  const yLo = 0 - yPadBand;
+  const yHi = 100 + yPadBand;
+  const y = (band: number) => PLOT.y1 - ((band - yLo) / (yHi - yLo)) * plotH;
+
+  // Clamp centres so a full bubble always stays inside the plot, then lift a
+  // ticker label above its bubble when two bubbles overlap (smaller first).
+  const placed = plotted.map((point) => {
+    const r = radius(point);
+    const cx = Math.min(PLOT.x1 - r, Math.max(PLOT.x0 + r, x(point.relative)));
+    const cy = Math.min(PLOT.y1 - r, Math.max(PLOT.y0 + r, y(point.band as number)));
+    return { point, cx, cy, r, raise: false };
+  });
+  for (let i = 0; i < placed.length; i += 1) {
+    for (let j = i + 1; j < placed.length; j += 1) {
+      const a = placed[i];
+      const b = placed[j];
+      if (Math.hypot(a.cx - b.cx, a.cy - b.cy) < a.r + b.r) {
+        if (a.r <= b.r) a.raise = true;
+        else b.raise = true;
+      }
+    }
+  }
 
   return (
     <div>
@@ -81,18 +123,18 @@ export default function RotationMapPanel({
         <text x={PLOT.x0 - 12} y={y(50) + 4} fontSize="11" fill="var(--fnk-neutral-500)" textAnchor="end">평균</text>
         <text x={PLOT.x0 - 12} y={PLOT.y1 + 4} fontSize="11" fill="var(--fnk-neutral-500)" textAnchor="end">저평가</text>
 
-        <text x={PLOT.x1 - 140} y={PLOT.y0 + 22} fontSize="12" fontWeight="600" fill="var(--fnk-neutral-500)" textAnchor="end">{QUADRANT_LABEL["run-expensive"]}</text>
-        <text x={PLOT.x1 - 140} y={PLOT.y1 - 18} fontSize="12" fontWeight="600" fill="var(--fnk-neutral-500)" textAnchor="end">{QUADRANT_LABEL["cheap-recover"]}</text>
-        <text x={PLOT.x0 + 140} y={PLOT.y0 + 22} fontSize="12" fontWeight="600" fill="var(--fnk-neutral-500)">{QUADRANT_LABEL["rich-fade"]}</text>
-        <text x={PLOT.x0 + 140} y={PLOT.y1 - 18} fontSize="12" fontWeight="600" fill="var(--fnk-neutral-500)">{QUADRANT_LABEL["cheap-weak"]}</text>
+        <text x={PLOT.x1 - CAPTION.inset} y={PLOT.y0 + CAPTION.inset + 12} fontSize="12" fontWeight="600" fill="var(--fnk-neutral-500)" textAnchor="end">{QUADRANT_LABEL["run-expensive"]}</text>
+        <text x={PLOT.x1 - CAPTION.inset} y={PLOT.y1 - CAPTION.inset - 6} fontSize="12" fontWeight="600" fill="var(--fnk-neutral-500)" textAnchor="end">{QUADRANT_LABEL["cheap-recover"]}</text>
+        <text x={PLOT.x0 + CAPTION.inset} y={PLOT.y0 + CAPTION.inset + 12} fontSize="12" fontWeight="600" fill="var(--fnk-neutral-500)">{QUADRANT_LABEL["rich-fade"]}</text>
+        <text x={PLOT.x0 + CAPTION.inset} y={PLOT.y1 - CAPTION.inset - 6} fontSize="12" fontWeight="600" fill="var(--fnk-neutral-500)">{QUADRANT_LABEL["cheap-weak"]}</text>
 
-        {points.filter((point) => point.band !== null).map((point) => {
+        {placed.map(({ point, cx, cy, r, raise }) => {
           const positive = point.relative >= 0;
           const color = positive ? "var(--fnk-color-gain)" : "var(--fnk-color-loss)";
           return (
             <g key={point.row.key}>
-              <circle cx={x(point.relative)} cy={y(point.band as number)} r={radius(point)} fill={color} opacity="0.14" stroke={color} strokeWidth="1.5" />
-              <text x={x(point.relative)} y={(y(point.band as number)) + 3.5} fontSize="11" fontWeight="600" fill="var(--fnk-neutral-900)" textAnchor="middle" className="sec-ticker">
+              <circle cx={cx} cy={cy} r={r} fill={color} opacity="0.14" stroke={color} strokeWidth="1.5" />
+              <text x={cx} y={raise ? cy - r - 7 : cy + 3.5} fontSize="11" fontWeight="600" fill="var(--fnk-neutral-900)" textAnchor="middle" className="sec-ticker">
                 {point.row.etf}
               </text>
               <title>{`${point.row.name} ${pp(point.relative)} · 밴드 ${Math.round(point.band as number)}`}</title>
