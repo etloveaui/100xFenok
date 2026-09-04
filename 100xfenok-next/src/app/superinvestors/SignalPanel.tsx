@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
-import { formatInteger } from "@/lib/format";
+import { formatInteger, formatPercent } from "@/lib/format";
 import type {
   ByTickerData,
   BuyingPressureData,
@@ -34,6 +34,7 @@ interface SignalPanelProps {
   enhancedConsensus: EnhancedConsensusData | null;
   byTicker: ByTickerData | null;
   convictionEntries: ConvictionEntriesData | null;
+  quarter: string | null;
   asOf: string;
   dataReady: boolean;
   failed: boolean;
@@ -97,7 +98,7 @@ function NewBuyRow({ rank, summary }: { rank: NewBuyRank; summary: SummaryData |
         <span className="sup-srow-names">{names.join(" · ")}{rank.count > names.length ? " 외" : ""}</span>
       </div>
       <div className="sup-srow-change">
-        <span className="sup-mute">신규 편입 · 비교 기준 없음</span>
+        <span className="sup-mute">평균 비중 변화 {rank.avgWeight === null ? "—" : `+${formatPercent(rank.avgWeight, { digits: 1 })}`}</span>
       </div>
       <ValueBandLine />
     </div>
@@ -108,11 +109,14 @@ function PressureRow({
   rank,
   kind,
   holdersTotal,
+  summary,
 }: {
   rank: PressureRank;
   kind: "buy" | "sell";
   holdersTotal: number | null;
+  summary: SummaryData | null;
 }) {
+  const names = rank.holders.slice(0, 2).map((h) => investorDisplayName(summary, h.investor));
   return (
     <div
       className="sup-srow"
@@ -126,10 +130,17 @@ function PressureRow({
         </span>
       </div>
       <div className="sup-srow-who">
-        <span className="sup-av sup-av-unknown" aria-hidden="true">?</span>
-        <span className="sup-mute">
-          명단 —{holdersTotal !== null ? ` · 총 보유 ${formatInteger(holdersTotal)}명` : ""}
-        </span>
+        {rank.holders.length > 0 ? (
+          <>
+            <HolderAvatars ids={rank.holders.map((h) => h.investor)} total={rank.holders.length} summary={summary} />
+            <span className="sup-srow-names">
+              {names.join(" · ")}{rank.holders.length > names.length ? " 외" : ""}
+              {holdersTotal !== null ? ` · 총 보유 ${formatInteger(holdersTotal)}명` : ""}
+            </span>
+          </>
+        ) : (
+          <span className="sup-mute">보유자 —{holdersTotal !== null ? ` · 총 보유 ${formatInteger(holdersTotal)}명` : ""}</span>
+        )}
       </div>
       <div className="sup-srow-change">
         <span className="sup-mute">평균 비중 변화 —</span>
@@ -148,6 +159,7 @@ export default function SignalPanel({
   enhancedConsensus,
   byTicker,
   convictionEntries,
+  quarter,
   asOf,
   dataReady,
   failed,
@@ -175,9 +187,10 @@ export default function SignalPanel({
     () => (followMode === "roster" ? new Set(roster.ids) : null),
     [followMode, roster],
   );
-  const newBuys = useMemo(() => buildNewBuyRanks(newPositions ?? null, scope), [newPositions, scope]);
-  const increases = useMemo(() => buildPressureRanks(buyingPressure ?? null, "net_buyers"), [buyingPressure]);
-  const exits = useMemo(() => buildPressureRanks(buyingPressure ?? null, "net_sellers"), [buyingPressure]);
+  const topSet = useMemo(() => new Set(roster.ids), [roster]);
+  const newBuys = useMemo(() => buildNewBuyRanks(newPositions ?? null, scope, topSet), [newPositions, scope, topSet]);
+  const increases = useMemo(() => buildPressureRanks(buyingPressure ?? null, "net_buyers", scope, byTicker), [buyingPressure, scope, byTicker]);
+  const decreases = useMemo(() => buildPressureRanks(buyingPressure ?? null, "net_sellers", scope, byTicker), [buyingPressure, scope, byTicker]);
 
   const loading = (!dataReady && !failed) || newPositions === undefined || buyingPressure === undefined;
   const feedsFailed = !loading && (newPositions === null || buyingPressure === null);
@@ -200,7 +213,9 @@ export default function SignalPanel({
   const newCoverage = followMode === "roster"
     ? `상위 컨빅션 ${formatInteger(roster.ids.length)}명 로스터: ${rosterNames.join(" · ") || "—"}`
     : `전체 ${formatInteger(dataReady ? investorCount : null)}명 기준`;
-  const pressureCoverage = "전체 코호트 순매수·순매도 집계 (보유자별 가중치 미제공)";
+  const pressureCoverage = followMode === "roster"
+    ? `상위 컨빅션 ${formatInteger(roster.ids.length)}명 보유자 기준 컨빅션 가중 순위`
+    : `전체 ${formatInteger(dataReady ? investorCount : null)}명 보유자 기준 컨빅션 가중 순위`;
 
   return (
     <div data-superinvestors-signal>
@@ -268,7 +283,7 @@ export default function SignalPanel({
             <PanelHeader eyebrow="Increases" title="증가 상위" right={<Pill>증가</Pill>} />
             {increases.length > 0 ? (
               increases.map((rank) => (
-                <PressureRow key={rank.ticker} rank={rank} kind="buy" holdersTotal={holdersTotalOf(rank.ticker)} />
+                <PressureRow key={rank.ticker} rank={rank} kind="buy" holdersTotal={holdersTotalOf(rank.ticker)} summary={summary} />
               ))
             ) : !loading && !failed && buyingPressure !== null ? (
               <EmptyState reason="표시할 증가 상위 종목이 없습니다" nextRefresh="다음 분기 공시 반영 후 갱신" />
@@ -288,18 +303,18 @@ export default function SignalPanel({
         <Panel
           loading={loading}
           error={!loading && (failed || buyingPressure === null)}
-          errorDetail="청산 집계를 불러오지 못했습니다."
+          errorDetail="감소 집계를 불러오지 못했습니다."
           onRetry={!loading && (failed || buyingPressure === null) ? (failed ? onRetry : retryFeeds) : undefined}
           retryLabel="다시 시도"
         >
-          <div data-superinvestors-signal-list="exited">
-            <PanelHeader eyebrow="Exits" title="청산 상위" right={<Pill>청산</Pill>} />
-            {exits.length > 0 ? (
-              exits.map((rank) => (
-                <PressureRow key={rank.ticker} rank={rank} kind="sell" holdersTotal={holdersTotalOf(rank.ticker)} />
+          <div data-superinvestors-signal-list="decreased">
+            <PanelHeader eyebrow="Decreases" title="감소 상위" right={<Pill>감소</Pill>} />
+            {decreases.length > 0 ? (
+              decreases.map((rank) => (
+                <PressureRow key={rank.ticker} rank={rank} kind="sell" holdersTotal={holdersTotalOf(rank.ticker)} summary={summary} />
               ))
             ) : !loading && !failed && buyingPressure !== null ? (
-              <EmptyState reason="13F 확정 대기" nextRefresh="다음 분기 공시 반영 후 갱신" />
+              <EmptyState reason="표시할 감소 상위 종목이 없습니다" nextRefresh="다음 분기 공시 반영 후 갱신" />
             ) : null}
           </div>
           <EvidenceRail

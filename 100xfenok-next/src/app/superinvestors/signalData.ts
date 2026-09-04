@@ -71,15 +71,22 @@ export interface NewBuyRank {
   buyers: Array<{ investor: string; weight: number }>;
   count: number;
   convictionWeight: number;
+  avgWeight: number | null;
 }
 
 // 신규 매수 상위: new-position buyers grouped by ticker, ranked by the
 // conviction-weighted buyer count (sum of position weights). Scope limits the
-// buyers to the follow roster; null scope means the whole cohort.
+// buyers to the follow roster; null scope means the whole cohort. RETHINK §3:
+// only tickers newly bought by at least MIN_TOP_BUYERS members of the
+// top-investor set (the follow roster) rank — a lone buyer is not a signal.
+export const MIN_TOP_BUYERS = 3;
+
 export function buildNewBuyRanks(
   newPositions: NewPositionsData | null,
   scope: Set<string> | null,
+  topSet: Set<string> | null,
   limit = 3,
+  minTopBuyers = MIN_TOP_BUYERS,
 ): NewBuyRank[] {
   const byTicker = new Map<string, Array<{ investor: string; weight: number }>>();
   for (const p of newPositions?.new_positions ?? []) {
@@ -91,10 +98,17 @@ export function buildNewBuyRanks(
     byTicker.set(p.ticker, arr);
   }
   return [...byTicker.entries()]
+    .filter(([, buyers]) => {
+      if (!topSet || topSet.size === 0) return true;
+      let top = 0;
+      for (const b of buyers) if (topSet.has(b.investor)) top += 1;
+      return top >= minTopBuyers;
+    })
     .map(([ticker, buyers]) => {
       buyers.sort((a, b) => b.weight - a.weight);
       const convictionWeight = buyers.reduce((sum, b) => sum + b.weight, 0);
-      return { ticker, buyers, count: buyers.length, convictionWeight };
+      const avgWeight = buyers.length > 0 ? convictionWeight / buyers.length : null;
+      return { ticker, buyers, count: buyers.length, convictionWeight, avgWeight };
     })
     .sort((a, b) => b.convictionWeight - a.convictionWeight || b.count - a.count || a.ticker.localeCompare(b.ticker))
     .slice(0, limit);
@@ -103,27 +117,45 @@ export function buildNewBuyRanks(
 export interface PressureRank {
   ticker: string;
   count: number;
+  convictionWeight: number;
+  holders: Array<{ investor: string; weight: number }>;
+  avgWeight: number | null;
 }
 
-// 증가/청산 상위: buying-pressure breadth counts. No holder-level weights
-// exist for increasers/sellers in the loaded feeds, so these rank by net
-// filer counts and say so on the rail — never synthesized weights.
+// 증가/감소 상위: buying-pressure breadth counts, ranked like new buys by the
+// conviction-weighted holder count (sum of each in-scope holder's position
+// weight). The generator's net_sellers counts every share decrease, not full
+// exits, so the third list reads 감소 — never 청산. Scope limits the holders
+// to the follow roster; null scope means the whole cohort. Per-holder deltas
+// have no feed, so rows show the measured net count with holder avatars and
+// "—" for the average weight change — never a synthesized number.
 export function buildPressureRanks(
   buyingPressure: BuyingPressureData | null,
   key: "net_buyers" | "net_sellers",
+  scope: Set<string> | null,
+  byTicker: ByTickerData | null,
   limit = 3,
 ): PressureRank[] {
-  const rows: Array<{ ticker: string; count: number; value: number }> = [];
+  const rows: Array<{ ticker: string; count: number; value: number; convictionWeight: number; holders: Array<{ investor: string; weight: number }>; avgWeight: number | null }> = [];
   for (const [ticker, row] of Object.entries(buyingPressure?.buying_pressure ?? {})) {
     const count = row?.[key];
     if (typeof count !== "number" || !Number.isFinite(count) || count <= 0) continue;
     const value = typeof row.total_value_change === "number" && Number.isFinite(row.total_value_change)
       ? row.total_value_change
       : 0;
-    rows.push({ ticker, count, value });
+    const holders: Array<{ investor: string; weight: number }> = [];
+    for (const h of byTicker?.[ticker]?.holder_details ?? []) {
+      if (!h || typeof h.investor !== "string") continue;
+      if (scope && !scope.has(h.investor)) continue;
+      const weight = typeof h.weight === "number" && Number.isFinite(h.weight) ? h.weight : 0;
+      holders.push({ investor: h.investor, weight });
+    }
+    holders.sort((a, b) => b.weight - a.weight || a.investor.localeCompare(b.investor));
+    const convictionWeight = holders.reduce((sum, h) => sum + h.weight, 0);
+    rows.push({ ticker, count, value, convictionWeight, holders, avgWeight: null });
   }
-  rows.sort((a, b) => b.count - a.count || b.value - a.value || a.ticker.localeCompare(b.ticker));
-  return rows.slice(0, limit);
+  rows.sort((a, b) => b.convictionWeight - a.convictionWeight || b.count - a.count || b.value - a.value || a.ticker.localeCompare(b.ticker));
+  return rows.slice(0, limit).map(({ ticker, count, convictionWeight, holders, avgWeight }) => ({ ticker, count, convictionWeight, holders, avgWeight }));
 }
 
 export interface GrandRow {
@@ -167,18 +199,18 @@ export function initialsOf(name: string): string {
 }
 
 const AVATAR_STYLES = [
-  { bg: "#cffafe", fg: "#0e7490" },
-  { bg: "#fef9c3", fg: "#854d0e" },
-  { bg: "#ccfbf1", fg: "#0f766e" },
-  { bg: "#e2e8f0", fg: "#334155" },
-  { bg: "#fae8ff", fg: "#a21caf" },
-  { bg: "#ffedd5", fg: "#c2410c" },
-  { bg: "#dbeafe", fg: "#1d4ed8" },
-  { bg: "#f1f5f9", fg: "#475569" },
+  { bg: "var(--fnk-surface-sky-50)", fg: "var(--fnk-sky-800)" },
+  { bg: "var(--fnk-warn-100)", fg: "var(--fnk-warn-900)" },
+  { bg: "var(--fnk-surface-teal-50)", fg: "var(--fnk-teal-700)" },
+  { bg: "var(--fnk-neutral-200)", fg: "var(--fnk-neutral-700)" },
+  { bg: "var(--fnk-surface-purple-50)", fg: "var(--fnk-purple-700)" },
+  { bg: "var(--fnk-warn-50)", fg: "var(--fnk-orange-600)" },
+  { bg: "var(--fnk-blue-100)", fg: "var(--fnk-blue-700)" },
+  { bg: "var(--fnk-neutral-100)", fg: "var(--fnk-neutral-600)" },
 ];
 
 export function avatarStyleFor(id: string): { bg: string; fg: string } {
   let hash = 0;
   for (let i = 0; i < id.length; i += 1) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  return AVATAR_STYLES[hash % AVATAR_STYLES.length] ?? { bg: "#f1f5f9", fg: "#475569" };
+  return AVATAR_STYLES[hash % AVATAR_STYLES.length] ?? { bg: "var(--fnk-neutral-100)", fg: "var(--fnk-neutral-600)" };
 }

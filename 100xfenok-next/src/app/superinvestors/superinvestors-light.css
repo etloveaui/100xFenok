@@ -134,7 +134,7 @@
 
 .sup-hold-table td {
   padding: 0 16px;
-  height: 36px;
+  height: 44px;
   text-align: right;
   color: var(--fnk-neutral-700);
   white-space: nowrap;
@@ -143,7 +143,7 @@
 .sup-holder-name-cell {
   text-align: left;
   padding: 0 16px;
-  height: 36px;
+  height: 44px;
 }
 
 .sup-holder-name {
@@ -649,7 +649,7 @@
 
 .sup-tab.on {
   background: var(--fnk-brand-interactive);
-  color: #ffffff;
+  color: var(--fnk-color-white);
 }
 
 .sup-tab:focus-visible {
@@ -700,7 +700,7 @@
 
 .sup-follow-btn.on {
   background: var(--fnk-brand-interactive);
-  color: #ffffff;
+  color: var(--fnk-color-white);
 }
 
 /* Hero: three ranked lists + who-holds cell. */
@@ -724,6 +724,16 @@
   gap: 6px;
   min-height: 44px;
   justify-content: center;
+  transition: background-color 150ms ease;
+}
+
+.sup-srow:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sup-srow:focus-visible {
+  outline: 2px solid var(--fnk-brand-interactive);
+  outline-offset: -2px;
 }
 
 .sup-srow-top {
@@ -785,7 +795,7 @@
   font-size: 10px;
   font-weight: 700;
   margin-left: -6px;
-  border: 1.5px solid #ffffff;
+  border: 1.5px solid var(--fnk-color-white);
 }
 
 .sup-av:first-child {
@@ -795,7 +805,7 @@
 .sup-av-more {
   background: var(--fnk-neutral-100);
   color: var(--fnk-neutral-500);
-  border: 1.5px solid #ffffff;
+  border: 1.5px solid var(--fnk-color-white);
   font-size: 9px;
 }
 
@@ -834,11 +844,11 @@
 }
 
 .sup-up {
-  color: #1aa86f;
+  color: var(--fnk-color-gain);
 }
 
 .sup-dn {
-  color: #e84a5a;
+  color: var(--fnk-color-loss);
 }
 
 /* Who-holds search cell + stocks tab. */
@@ -855,7 +865,7 @@
   border-radius: 6px;
   font-size: 12px;
   color: var(--fnk-neutral-900);
-  background: #ffffff;
+  background: var(--fnk-color-white);
 }
 
 .sup-whoholds-suggest {
@@ -870,7 +880,7 @@
   padding: 0 10px;
   border: 1px solid var(--fnk-neutral-200);
   border-radius: 999px;
-  background: #ffffff;
+  background: var(--fnk-color-white);
   font-size: 11px;
   color: var(--fnk-brand-interactive);
   cursor: pointer;
@@ -1034,7 +1044,7 @@
 
   .sup-graph-ranklist {
     display: block;
-    background: #ffffff;
+    background: var(--fnk-color-white);
     border: 1px solid var(--fnk-neutral-200);
     border-radius: 8px;
     overflow: hidden;

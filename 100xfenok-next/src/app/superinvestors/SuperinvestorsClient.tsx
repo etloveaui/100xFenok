@@ -9,6 +9,7 @@ import {
   formatInteger,
   formatPercent,
 } from "@/lib/format";
+import { ROUTES, withQuery } from "@/lib/routes";
 import type {
   ConsensusTicker,
   SummaryInvestor,
@@ -158,6 +159,7 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
     enhancedConsensus,
     summary,
     byTicker,
+    convictionEntries,
     dataReady,
     failed,
     quarter,
@@ -276,7 +278,7 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
     summary?.metadata?.total_investors ??
     investors.length;
   const coverage = dataReady ? `${formatInteger(investorCount)}/${formatInteger(totalTracked)} 투자자` : "—";
-  const submittedTotal = summary?.metadata?.investor_count ?? consensus?.metadata?.total_investors ?? null;
+  const submittedTotal = summary?.metadata?.investor_count ?? null;
   // No average-filing-lag field exists in the loaded 13F payloads: the chip
   // binds submitted/total/stale to the payload and shows "—" for the lag.
   const freshnessChip = `제출 지연 평균 — · ${formatInteger(dataReady ? investorCount : null)}/${formatInteger(dataReady ? submittedTotal : null)} 제출 · 정체 ${formatInteger(dataReady ? excludedStale.length : null)}명 제외`;
@@ -387,6 +389,7 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
           enhancedConsensus={enhancedConsensus}
           byTicker={byTicker}
           convictionEntries={convictionEntries}
+          quarter={quarter}
           asOf={asOfLabel}
           dataReady={dataReady}
           failed={failed}
@@ -397,7 +400,7 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
         <div className="sup-signal-teaser">
           <GraphNetworkTeaser
             network={graphNetwork}
-            href="/superinvestors?tab=graph"
+            href={withQuery(ROUTES.superinvestors, { tab: "graph" })}
             status={loading ? "pending" : graphFailed ? "error" : "ready"}
             freshness={graphFreshness}
             source="SEC EDGAR 13F"
@@ -589,7 +592,7 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
 
           <GraphNetworkTeaser
             network={graphNetwork}
-            href="/superinvestors?tab=graph"
+            href={withQuery(ROUTES.superinvestors, { tab: "graph" })}
             status={loading ? "pending" : graphFailed ? "error" : "ready"}
             freshness={graphFreshness}
             source="SEC EDGAR 13F"

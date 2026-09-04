@@ -106,10 +106,10 @@ export default function WhoHoldsPanel({
   }, [committed, dataReady, byTicker, consensus, buyingPressure, newPositions, conviction, enhancedConsensus]);
 
   const grand = useMemo(() => buildGrandPortfolio(byTicker, compact ? 3 : 10), [byTicker, compact]);
-  const loading = (!dataReady && !failed) || newPositions === undefined || buyingPressure === undefined;
-  const feedsFailed = !loading && (newPositions === null || buyingPressure === null);
+  const loading = (!dataReady && !failed) || newPositions === undefined || buyingPressure === undefined || conviction === undefined;
+  const feedsFailed = !loading && (newPositions === null || buyingPressure === null || conviction === null);
   const freshness: "pending" | "error" | "partial" | "stale" =
-    loading ? "pending" : failed || (newPositions === null && buyingPressure === null) ? "error" : partialFeeds || feedsFailed ? "partial" : "stale";
+    loading ? "pending" : failed || (newPositions === null && buyingPressure === null && conviction === null) ? "error" : partialFeeds || feedsFailed ? "partial" : "stale";
   const emptyResult = committed !== null && dataReady && result === null && !loading;
 
   function commit(value: string) {
