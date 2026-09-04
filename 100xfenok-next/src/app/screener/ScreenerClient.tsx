@@ -620,9 +620,6 @@ function renderCell(
         && Number.isFinite(stock.fenokShortTermConvictionScore)
         ? Math.round(stock.fenokShortTermConvictionScore)
         : null;
-      const longScore = typeof stock.fenokLongTermScore === "number" && Number.isFinite(stock.fenokLongTermScore)
-        ? Math.round(stock.fenokLongTermScore)
-        : null;
       const shortTermBasis = shortTermCommonBasisCopy(stock.fenokMarketScope, {
         sourceInputCount: shortTerm.sourceInputCount,
         basisCode: shortTerm.basisCode,
@@ -646,14 +643,6 @@ function renderCell(
               <span aria-hidden="true">단기</span>
               {shortScore ?? "—"}
             </span>
-            <span
-              className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums leading-[14px]", signalScoreTone(longScore))}
-              title="장기 Fenok 점수 · 투자 조언이 아닙니다"
-              aria-label={`장기 컨빅션 ${longScore ?? "정보 없음"}`}
-            >
-              <span aria-hidden="true">장기</span>
-              {longScore ?? "—"}
-            </span>
           </span>
           {isMobile ? (
             <span
@@ -674,11 +663,13 @@ function renderCell(
                 { label: "하방", score: stock.downsidePressureScore, direction: null, tone: "risk" as const },
               ].map((item) => {
                 const itemScore = typeof item.score === "number" && Number.isFinite(item.score) ? Math.round(item.score) : null;
+                const itemDir = item.direction ? signalDirectionLabel(item.direction) : null;
+                const itemDirPrefix = itemDir === "·" ? null : itemDir;
                 return (
                   <span
                     key={item.label}
                     className={cx("inline-flex items-center gap-0.5 rounded border px-1 py-[1px] text-[9px] font-black tabular-nums", item.tone === "risk" ? downsideRiskTone(itemScore) : signalScoreTone(itemScore))}
-                    title={`${item.label} ${signalDirectionLabel(item.direction)} · Fenok 파생 신호`}
+                    title={[item.label, itemDirPrefix, "Fenok 파생 신호"].filter(Boolean).join(" · ")}
                     aria-label={`${item.label} ${itemScore ?? "정보 없음"}`}
                   >
                     <span aria-hidden="true">{item.label}</span>
@@ -707,14 +698,18 @@ function renderCell(
       const titleSuffix = key === "durabilityProfitabilityScore"
         ? `${formatCoverageLabel(stock.durabilityProfitabilityCoverage)} · ${FENOK_SIGNAL_DISCLOSURE}`
         : FENOK_SIGNAL_DISCLOSURE;
+      // Null/unknown direction renders as "·" — omit the prefix so the cell
+      // shows the score only (matches the 하방 cell, which has no prefix).
+      const dirLabel = signalDirectionLabel(direction);
+      const dirPrefix = dirLabel === "·" ? null : dirLabel;
       return (
         <span className="inline-flex min-w-0 justify-end">
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums leading-[14px]", signalScoreTone(score))}
-            title={`${columnLabel(key)} ${signalDirectionLabel(direction)} · ${titleSuffix}`}
+            title={[columnLabel(key), dirPrefix, titleSuffix].filter(Boolean).join(" · ")}
             aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
           >
-            <span aria-hidden="true">{signalDirectionLabel(direction)}</span>
+            {dirPrefix === null ? null : <span aria-hidden="true">{dirPrefix}</span>}
             {score ?? "—"}
           </span>
         </span>
