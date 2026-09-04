@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, LineController, PointElement, ScatterController, RadialLinearScale, RadarController, Filler } from "chart.js";
 import { TreemapController, TreemapElement } from "chartjs-chart-treemap";
 import type { ActiveElement, ChartData, ChartEvent, ChartOptions } from "chart.js";
@@ -149,10 +149,28 @@ export function PortfolioTreemap({ rows, quarterLabel, onSelectTicker }: Treemap
     };
   }, [displayRows, chartTheme]);
 
+  // Tile clicks are handled by Chart.js itself (options.onClick receives the
+  // hit-tested elements); the canvas-level React onClick has a different
+  // signature and no element information.
+  const handleTileClick = useCallback(
+    (_event: ChartEvent, elements: ActiveElement[]) => {
+      if (!onSelectTicker) return;
+      const element = elements?.[0]?.element as unknown as { $context?: { raw?: unknown } } | undefined;
+      const fromRaw = leafRow({ raw: element?.$context?.raw as { _data?: PortfolioRow } | undefined });
+      const index = elements?.[0]?.index;
+      const row = fromRaw ?? (typeof index === "number" ? displayRows[index] : undefined);
+      const ticker = row?.ticker;
+      if (!ticker || ticker === "_OTHERS") return;
+      onSelectTicker(ticker);
+    },
+    [onSelectTicker, displayRows],
+  );
+
   const options = useMemo(
     () => ({
       responsive: true,
       maintainAspectRatio: false,
+      onClick: onSelectTicker ? handleTileClick : undefined,
       plugins: {
         tooltip: {
           callbacks: {
@@ -175,19 +193,8 @@ export function PortfolioTreemap({ rows, quarterLabel, onSelectTicker }: Treemap
         legend: { display: false },
       },
     }),
-    [],
+    [onSelectTicker, handleTileClick],
   );
-
-  const handleTileClick = (_event: ChartEvent, elements: ActiveElement[]) => {
-    if (!onSelectTicker) return;
-    const element = elements?.[0]?.element as unknown as { $context?: { raw?: unknown } } | undefined;
-    const fromRaw = leafRow({ raw: element?.$context?.raw as { _data?: PortfolioRow } | undefined });
-    const index = elements?.[0]?.index;
-    const row = fromRaw ?? (typeof index === "number" ? displayRows[index] : undefined);
-    const ticker = row?.ticker;
-    if (!ticker || ticker === "_OTHERS") return;
-    onSelectTicker(ticker);
-  };
 
   return (
     <div>
@@ -196,7 +203,6 @@ export function PortfolioTreemap({ rows, quarterLabel, onSelectTicker }: Treemap
           type="treemap"
           data={data as unknown as ChartData<"treemap">}
           options={options as unknown as ChartOptions<"treemap">}
-          onClick={onSelectTicker ? handleTileClick : undefined}
           role="img"
           aria-label={`${quarterLabel} 포트폴리오 보유 비중과 수익률 트리맵`}
         />
