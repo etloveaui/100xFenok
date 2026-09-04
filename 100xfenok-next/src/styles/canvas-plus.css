@@ -1495,19 +1495,27 @@
 
 [data-canvas-plus-screener-preview] .cp-screener-table thead th {
   z-index: 3;
+  height: 36px;
   border-bottom-color: var(--cp-border-strong);
   color: var(--cp-text-strong);
   background: var(--ls-panel-bg);
+  font-size: 11px;
   font-weight: 850;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table th button {
+  gap: 12px;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table th,
 [data-canvas-plus-screener-preview] .cp-screener-table td {
   overflow: hidden;
-  padding: 0 8px;
+  padding: 0 16px;
   border-bottom-color: var(--cp-divider);
   text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table th[data-align="right"],
@@ -1725,10 +1733,6 @@
 [data-canvas-plus-screener-preview] .cp-screener-table [data-canvas-plus-sticky-cell="ticker"] {
   left: 42px;
   box-shadow: 1px 0 0 var(--ls-panel-border);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tbody tr[data-row-parity="odd"] td {
-  background: color-mix(in srgb, var(--cp-surface) 86%, var(--cp-surface-muted));
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table tbody tr[data-testid="screener-desktop-row"]:hover td {

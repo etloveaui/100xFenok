@@ -33,7 +33,8 @@ export type ColumnPreset =
   | "fenokPicks";
 
 export const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
-  basic: ["ticker", "actionScore", "name", "sector", "country", "price", "marketCap", "per", "pbr", "dividendYield", "return12m"],
+  // Koyfin-density default: 8 visible columns; the rest via the column menu.
+  basic: ["ticker", "fenokShortTermScore", "fenokLongTermScore", "sector", "marketCap", "per", "fenokConvictionScore", "upsidePotentialScore"],
   action: ["ticker", "actionScore", "fenokShortTermScore", "fenokLongTermScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap", "durabilityProfitabilityScore"],
   connected: ["ticker", "connectionCount", "actionScore", "name", "sector", "guruHolders", "marketCap", "perBandCurrent", "forwardPeFy1", "return12m"],
   value: ["ticker", "name", "sector", "per", "peForward", "forwardPeFy1", "pbr", "peg", "roe", "opm", "perBandCurrent", "rank"],

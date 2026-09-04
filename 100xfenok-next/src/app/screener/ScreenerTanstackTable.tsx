@@ -52,32 +52,32 @@ function canvasPlusDensityMode(density: string): "compact" | "default" | "comfy"
   return "default";
 }
 
-const VIRTUAL_ROW_HEIGHT = 36;
+const VIRTUAL_ROW_HEIGHT = 44;
 const EXPANDED_DETAIL_ESTIMATE = 360;
 const DESKTOP_TABLE_OVERSCAN = 10;
 
 function canvasPlusColumnWidth(column?: ScreenerColumn): number {
   if (!column) return 42;
-  if (column.key === "ticker") return 142;
+  if (column.key === "ticker") return 160;
   if (column.key === "name") return 110;
-  if (column.key === "sector") return 72;
-  if (column.key === "fenokConvictionScore") return 140;
-  if (column.key === "fenokShortTermScore" || column.key === "fenokLongTermScore") return 64;
+  if (column.key === "sector") return 120;
+  if (column.key === "marketCap" || column.key === "per") return 96;
   if (
+    column.key === "fenokShortTermScore" ||
+    column.key === "fenokLongTermScore" ||
+    column.key === "fenokConvictionScore" ||
     column.key === "profitabilityScore" ||
     column.key === "growthScore" ||
     column.key === "technicalFlowScore" ||
     column.key === "durabilityProfitabilityScore" ||
-    column.key === "upsidePotentialScore"
-  ) return 86;
-  if (column.key === "downsidePressureScore") return 92;
-  if (column.key === "perBandCurrent") return 116;
+    column.key === "upsidePotentialScore" ||
+    column.key === "downsidePressureScore"
+  ) return 72;
   if (column.key === "actionScore") return 140;
   if (column.key === "connectionCount") return 112;
-  if (column.key === "marketCap") return 76;
-  if (column.key === "per") return 52;
-  if (column.align === "right") return 68;
-  return 92;
+  if (column.key === "perBandCurrent") return 116;
+  if (column.align === "right") return 88;
+  return 88;
 }
 
 function canvasPlusStickyCell(columnId: string): "select" | "ticker" | undefined {
@@ -355,9 +355,9 @@ function ScreenerTanstackTableInner({
               onClick={() => toggleSort(column.key)}
               aria-label={`${column.label} 정렬 ${active ? (sortDir === "asc" ? "오름차순" : "내림차순") : "정렬 안 됨"}`}
               className={canvasPlusPreview
-                ? cx("inline-flex items-center gap-1", column.align === "right" && "flex-row-reverse")
+                ? cx("inline-flex items-center gap-3", column.align === "right" && "flex-row-reverse")
                 : cx(
-                  "inline-flex items-center gap-1 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
+                  "inline-flex items-center gap-3 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
                   column.align === "right" && "flex-row-reverse",
                 )}
             >

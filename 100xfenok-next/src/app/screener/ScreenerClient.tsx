@@ -148,15 +148,16 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "rank", label: "순위", align: "right" },
   { key: "guruHolders", label: "대가 보유", align: "right" },
   { key: "connectionCount", label: "연결", align: "left" },
-  // Column id kept for saved sorts and shared URLs; the label says what the cell
-  // actually renders, which is the two surviving scores, not a single conviction.
-  { key: "fenokConvictionScore", label: "Short Edge (단기 정렬) · Long Edge 별도", align: "right" },
+  // Column id kept for saved sorts and shared URLs; the header shows the short
+  // label and the sort semantics (sorts by the Short value, Long shown
+  // separately) live in the column tooltip.
+  { key: "fenokConvictionScore", label: "컨빅션", align: "right" },
   { key: "profitabilityScore", label: "수익성", align: "right" },
   { key: "growthScore", label: "성장", align: "right" },
   { key: "technicalFlowScore", label: "기술/자금", align: "right" },
   { key: "durabilityProfitabilityScore", label: "내구 수익성", align: "right" },
-  { key: "upsidePotentialScore", label: "상방 잠재력", align: "right" },
-  { key: "downsidePressureScore", label: "하방 압력", align: "right" },
+  { key: "upsidePotentialScore", label: "상방", align: "right" },
+  { key: "downsidePressureScore", label: "하방", align: "right" },
   { key: "perBandCurrent", label: "PER 밴드", align: "left" },
   { key: "peForward", label: "예상 PER", align: "right" },
   { key: "epsForward", label: "예상 EPS", align: "right" },
@@ -581,21 +582,16 @@ function renderCell(
       const detail = [confidence, lowEvidence ? "증거 부족" : null].filter(Boolean).join(" · ");
       const estimateSummary = preset === "estimate" ? interpretStockMetrics(stock).estimateSummary : null;
       const title = [...(stock.actionReasons ?? []), detail].filter(Boolean).join(" · ");
+      // Table density: one line (pill + confidence), no wrapped second line.
+      // The reason/estimate detail stays in the title tooltip.
       return (
-        <span className="flex min-w-0 max-w-[180px] flex-col items-start gap-0.5" title={[title, estimateSummary].filter(Boolean).join(" · ")}>
-          <span className="flex min-w-0 max-w-full items-center gap-1">
-            <span className={cx("min-w-0 max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}>
-              {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
-            </span>
-            <span className={cx("shrink-0 rounded-full border border-[var(--c-line)] px-1.5 py-px text-[9px] font-black whitespace-nowrap", confidenceClass(stock.confidenceLabel, lowEvidence))}>
-              {confidence}
-            </span>
+        <span className="inline-flex min-w-0 max-w-full items-center gap-1" title={[title, estimateSummary].filter(Boolean).join(" · ")}>
+          <span className={cx("min-w-0 max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}>
+            {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
           </span>
-          {estimateSummary ? (
-            <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-brand)]">{estimateSummary}</span>
-          ) : stock.actionReasons?.[0] ? (
-            <span className="max-w-full truncate text-[10px] font-semibold text-[var(--c-ink-3)]">{stock.actionReasons[0]}</span>
-          ) : null}
+          <span className={cx("shrink-0 rounded-full border border-[var(--c-line)] px-1.5 py-px text-[9px] font-black whitespace-nowrap", confidenceClass(stock.confidenceLabel, lowEvidence))}>
+            {confidence}
+          </span>
         </span>
       );
     }
@@ -605,7 +601,7 @@ function renderCell(
       const raw = isShortTerm ? stock.fenokShortTermScore : stock.fenokLongTermScore;
       const score = typeof raw === "number" && Number.isFinite(raw) ? Math.round(raw) : null;
       return (
-        <span className="inline-flex min-w-[64px] justify-end">
+        <span className="inline-flex min-w-0 justify-end">
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", fenokEdgeTone(score))}
             title={fenokEdgeTitle(stock)}
@@ -638,7 +634,7 @@ function renderCell(
         <span
           className={cx(
             "inline-flex flex-col items-end gap-1",
-            isMobile ? "min-w-0 max-w-full" : isPicks ? "min-w-[140px]" : "min-w-[80px]",
+            isMobile ? "min-w-0 max-w-full" : "min-w-0",
           )}
         >
           <span className="inline-flex flex-wrap justify-end gap-1">
@@ -713,7 +709,7 @@ function renderCell(
         ? `${formatCoverageLabel(stock.durabilityProfitabilityCoverage)} · ${FENOK_SIGNAL_DISCLOSURE}`
         : FENOK_SIGNAL_DISCLOSURE;
       return (
-        <span className="inline-flex min-w-[64px] justify-end">
+        <span className="inline-flex min-w-0 justify-end">
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", signalScoreTone(score))}
             title={`${columnLabel(key)} ${signalDirectionLabel(direction)} · ${titleSuffix}`}
@@ -730,7 +726,7 @@ function renderCell(
         ? Math.round(stock.downsidePressureScore)
         : null;
       return (
-        <span className="inline-flex min-w-[64px] justify-end">
+        <span className="inline-flex min-w-0 justify-end">
           <span
             className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", downsideRiskTone(score))}
             title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · ${FENOK_SIGNAL_DISCLOSURE}`}

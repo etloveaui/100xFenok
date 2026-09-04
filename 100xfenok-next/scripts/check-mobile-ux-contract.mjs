@@ -2765,6 +2765,37 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "screener-view-mode-control", detail: `modes=${JSON.stringify(actualModes)}` });
         }
       }
+
+      // Koyfin-density (desktop table renders at >=921px, paired with
+      // ScreenerClient `hidden min-[921px]:block`): 44px rows, 36px header,
+      // ticker column min 160, table scrolls inside the panel only.
+      if (viewportWidth >= 921) {
+        const desktopRows = Array.from(document.querySelectorAll('tr[data-testid="screener-desktop-row"]'))
+          .filter((node) => node.getBoundingClientRect().width > 0);
+        if (desktopRows.length === 0) {
+          failures.push({ check: "screener-desktop-rows-present", detail: "no visible desktop rows" });
+        } else {
+          const rowHeight = desktopRows[0].getBoundingClientRect().height;
+          if (Math.abs(rowHeight - 44) > 1) {
+            failures.push({ check: "screener-row-height", detail: `height=${Math.round(rowHeight)}` });
+          }
+          const tickerCell = desktopRows[0].querySelector('td[data-column-id="ticker"]');
+          const tickerWidth = tickerCell ? tickerCell.getBoundingClientRect().width : 0;
+          if (tickerWidth < 159) {
+            failures.push({ check: "screener-ticker-min-width", detail: `width=${Math.round(tickerWidth)}` });
+          }
+        }
+        const headerCell = document.querySelector(".cp-screener-table thead th");
+        if (headerCell) {
+          const headerHeight = headerCell.getBoundingClientRect().height;
+          if (Math.abs(headerHeight - 36) > 1) {
+            failures.push({ check: "screener-header-height", detail: `height=${Math.round(headerHeight)}` });
+          }
+        }
+        if (document.documentElement.scrollWidth > window.innerWidth + 1) {
+          failures.push({ check: "screener-no-page-scroll", detail: `scrollWidth=${document.documentElement.scrollWidth} innerWidth=${window.innerWidth}` });
+        }
+      }
     }
 
     if (currentRoute.startsWith("/sectors")) {

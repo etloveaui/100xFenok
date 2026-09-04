@@ -104,7 +104,7 @@ export default function ScreenerDesktopTable({
                       onClick={() => toggleSort(column.key)}
                       aria-label={`${column.label} 정렬 ${active ? (sortDir === "asc" ? "오름차순" : "내림차순") : "정렬 안 됨"}`}
                       className={cx(
-                        "inline-flex items-center gap-1 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
+                        "inline-flex items-center gap-3 text-[var(--c-ink)] transition hover:text-[var(--c-ink)]",
                         column.align === "right" && "flex-row-reverse",
                       )}
                     >
