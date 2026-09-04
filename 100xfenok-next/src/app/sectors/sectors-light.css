@@ -1,6 +1,7 @@
-/* /sectors route — light-system layout namespace (slice 7b).
- * Layout only: head, flow rows, ETF table, smart-money grid, CTA. Panel
- * chrome, type scale, colors, and states come from src/components/ui.
+/* /sectors route — light-system layout namespace (slice 7b + S2).
+ * Layout only: head, rotation hero/strip, flow rows, ETF table, valuation
+ * bands, smart-money grid, accordions, action row. Panel chrome, type scale,
+ * colors, and states come from src/components/ui.
  * Token-pure: only var(--fnk-*) / var(--font-*) references, no raw colors,
  * no shadows, no gradients. Accent var(--fnk-brand-interactive) appears only
  * on the active period tab text, linked-row left accent, and the CTA primary
@@ -346,22 +347,7 @@
   outline: none;
 }
 
-/* CTA row */
-
-.sec-cta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding: 4px 4px 0;
-}
-
-.sec-cta-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+/* CTA note (shared by the action rail) */
 
 .sec-cta-note {
   font-size: 11px;
@@ -389,5 +375,322 @@
 
   .sec-period-btn {
     min-height: 44px;
+  }
+}
+
+/* Rotation map hero (slice S2): segmented window, SVG 2x2 map on desktop,
+ * ranked list on narrow screens, bandless row outside the map. */
+
+.sec-rotation-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--fnk-neutral-100);
+  padding: 2px;
+  border-radius: 6px;
+  width: fit-content;
+  margin: 12px 16px 4px;
+}
+
+.sec-rotation-map {
+  display: block;
+  padding: 8px 16px 0;
+}
+
+.sec-rotation-list {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sec-rotation-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 12px;
+}
+
+.sec-rotation-rank {
+  color: var(--fnk-neutral-500);
+  font-weight: 600;
+}
+
+.sec-rotation-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fnk-neutral-700);
+}
+
+.sec-rotation-quad {
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+  white-space: nowrap;
+}
+
+.sec-rotation-bandless {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 11px;
+}
+
+.sec-rotation-bandless-label {
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-rotation-bandless-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.sec-rotation-bandless-note {
+  color: var(--fnk-neutral-500);
+}
+
+.sec-rotation-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-rotation-legend b {
+  color: var(--fnk-neutral-700);
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .sec-rotation-map {
+    display: none;
+  }
+
+  .sec-rotation-list {
+    display: block;
+  }
+}
+
+/* Layer-2 accordions (slice S2): collapsed bars are full-width 44px buttons;
+ * the open section renders the existing panel unchanged. */
+
+.sec-acc-closed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 16px;
+  background: var(--fnk-color-white);
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 150ms ease;
+}
+
+.sec-acc-closed:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sec-acc-closed:focus-visible {
+  outline: 2px solid var(--fnk-brand-interactive);
+  outline-offset: 1px;
+}
+
+.sec-acc-chev {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-acc-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.sec-acc-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+.sec-acc-closed .sec-head-note {
+  margin-left: auto;
+  text-align: right;
+}
+
+/* Rank strip: one compact table, hidden on narrow screens per the artboard. */
+
+.sec-rank-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.sec-rank-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.sec-rank-table thead th {
+  height: 26px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sec-rank-table thead th.sec-rank-th-name {
+  text-align: left;
+  padding-left: 16px;
+}
+
+.sec-rank-row {
+  border-top: 1px solid var(--fnk-neutral-100);
+}
+
+.sec-rank-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sec-rank-table td {
+  padding: 0 12px;
+  height: 44px;
+  text-align: right;
+  color: var(--fnk-neutral-700);
+  white-space: nowrap;
+}
+
+.sec-rank-name {
+  text-align: left;
+  padding: 0 12px 0 16px;
+  height: 44px;
+  font-weight: 400;
+  white-space: nowrap;
+  color: var(--fnk-neutral-700);
+}
+
+/* Valuation bands: sector / Fwd P/E / band bar / percentile. */
+
+.sec-band-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 90px minmax(0, 2fr) 70px;
+  align-items: center;
+  gap: 12px;
+  height: 26px;
+  padding: 0 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-band-head-num {
+  text-align: right;
+}
+
+.sec-band-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 90px minmax(0, 2fr) 70px;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 5px 16px;
+  border-top: 1px solid var(--fnk-neutral-100);
+  font-size: 12px;
+}
+
+.sec-band-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sec-band-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fnk-neutral-700);
+}
+
+.sec-band-pe {
+  text-align: right;
+  color: var(--fnk-neutral-700);
+}
+
+.sec-band-missing {
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-band-pct {
+  text-align: right;
+  color: var(--fnk-neutral-500);
+}
+
+/* Action row: two buttons plus a plain connection rail (no freshness). */
+
+.sec-action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+}
+
+.sec-action-buttons button {
+  min-height: 44px;
+}
+
+.sec-action-rail {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 30px;
+  padding: 4px 16px 10px;
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+.sec-action-rail b {
+  color: var(--fnk-neutral-700);
+  font-weight: 600;
+}
+
+.sec-action-rail .sec-cta-note {
+  margin-left: auto;
+}
+
+@media (max-width: 760px) {
+  .sec-rank-strip {
+    display: none;
+  }
+
+  .sec-band-head,
+  .sec-band-row {
+    grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1.2fr) 52px;
+    gap: 8px;
   }
 }

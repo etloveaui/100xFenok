@@ -3,6 +3,9 @@
 import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import SmartMoneyPanel from "./SmartMoneyPanel";
+import RotationMapPanel from "./RotationMapPanel";
+import RotationStripPanel from "./RotationStripPanel";
+import ValuationBandPanel from "./ValuationBandPanel";
 import { Bar, Button, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
@@ -13,6 +16,13 @@ import {
   type MomentumWindow,
   type SectorRow,
 } from "@/lib/sectors/types";
+import {
+  ROTATION_WINDOWS,
+  bandPosition,
+  rotationPoints,
+  rotationRead,
+  type RotationWindow,
+} from "@/lib/sectors/rotation";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { formatAsOf, isStaleAsOf } from "@/lib/data-state";
 import { formatDecimal } from "@/lib/format";
@@ -89,6 +99,40 @@ function flowItems(rows: SectorRow[], windowKey: MomentumWindow, benchmarkValue:
       typeof item.value === "number" && typeof item.relative === "number" && Number.isFinite(item.value) && Number.isFinite(item.relative),
     )
     .sort((a, b) => b.relative - a.relative);
+}
+
+type AccordionSection = "bars" | "etf" | "valuation" | "smart";
+
+function CollapsedBar({
+  section,
+  eyebrow,
+  title,
+  meta,
+  onOpen,
+}: {
+  section: AccordionSection;
+  eyebrow: string;
+  title: string;
+  meta: ReactNode;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="sec-acc-closed"
+      aria-expanded={false}
+      onClick={onOpen}
+      data-sectors-accordion={section}
+      data-sectors-accordion-toggle={section}
+    >
+      <svg className="sec-acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+      <span className="sec-acc-titles">
+        <span className="sec-eyebrow">{eyebrow}</span>
+        <span className="sec-acc-title">{title}</span>
+      </span>
+      <span className="sec-head-note">{meta}</span>
+    </button>
+  );
 }
 
 function SectorFlowPanel({
@@ -320,6 +364,7 @@ export default function SectorsClient() {
     dataReady,
     benchmarksReady,
     etfsReady,
+    valuationReady,
     smartMoneyReady,
     failedSources,
     staleSources,
@@ -327,18 +372,20 @@ export default function SectorsClient() {
     refresh,
   } = useSectorData();
   const [sortWindow, setSortWindow] = useState<MomentumWindow>("1m");
+  const [rotationWindow, setRotationWindow] = useState<RotationWindow>("1m");
+  const [openSection, setOpenSection] = useState<"bars" | "etf" | "valuation" | "smart">("bars");
 
   const loading = !loaded;
   const failed = loaded && !dataReady;
-  const activeWindowLabel = MOMENTUM_WINDOWS.find((w) => w.key === sortWindow)?.label ?? sortWindow;
+  const rotationLabel = ROTATION_WINDOWS.find((w) => w.key === rotationWindow)?.label ?? rotationWindow;
+  const rotationBenchmark = benchmarkMomentum?.[rotationWindow] ?? null;
+  const rotationPts = benchmarksReady ? rotationPoints(rows, rotationWindow, rotationBenchmark) : [];
+  const rotationBandless = rotationPts.filter((point) => point.quadrant === null);
+  const rotationBandCount = rotationPts.filter((point) => point.band !== null).length;
+  const rotationTop = rotationPts[0] ?? null;
+  const rotationValued = rows.filter((row) => typeof row.momentum[rotationWindow] === "number").length;
+  const rotationIncomplete = benchmarksReady && rotationValued < rows.length;
   const activeBenchmark = benchmarkMomentum?.[sortWindow] ?? null;
-  const items = benchmarksReady ? flowItems(rows, sortWindow, activeBenchmark) : [];
-  const leaders = items[0] ?? null;
-  const laggards = items.length > 0 ? items[items.length - 1] : null;
-  const beatCount =
-    typeof activeBenchmark === "number"
-      ? items.filter((item) => item.relative > 0).length
-      : null;
 
   const flowStale = benchmarksReady && (staleSources.includes("benchmarks") || isStaleAsOf(sourceMeta.benchmarksSourceDate));
   const flowFailed = loaded && !benchmarksReady;
@@ -359,6 +406,21 @@ export default function SectorsClient() {
     ? `${rows.filter((row) => row.smartMoney).length}/${rows.length} 섹터`
     : "—";
 
+  const valuationFailed = loaded && !valuationReady;
+  const valuationStale = valuationReady && (staleSources.includes("us_sectors") || isStaleAsOf(sourceMeta.valuationLatestDate));
+  const bandCount = valuationReady ? rows.filter((row) => bandPosition(row) !== null).length : 0;
+  const bandHighCount = valuationReady
+    ? rows.filter((row) => {
+        const band = bandPosition(row);
+        return band !== null && band >= 50;
+      }).length
+    : 0;
+  const valuationCoverage = valuationReady ? `${bandCount}/${rows.length} 섹터` : "—";
+
+  const heroFailed = loaded && !benchmarksReady;
+  const heroEmpty = !loading && (!benchmarksReady || rotationPts.length === 0);
+  const heroAsOfLabel = formatAsOf(sourceMeta.benchmarksSourceDate) ?? "—";
+
   const missingLabels = Array.from(new Set(failedSources.map(failedSourceLabel).filter((label): label is string => Boolean(label))));
   const quoteLabel = formatAsOf(sourceMeta.tickerSourceDate) ?? "확인 중";
 
@@ -367,14 +429,8 @@ export default function SectorsClient() {
     headline = "섹터 데이터를 불러오는 중입니다.";
   } else if (failed) {
     headline = "섹터 데이터를 불러오지 못했습니다. 다시 시도해 주세요.";
-  } else if (benchmarksReady && leaders && laggards && beatCount !== null) {
-    headline = (
-      <>
-        {activeWindowLabel} 기준 <b className={leaders.relative >= 0 ? "sec-up" : "sec-down"}>{leaders.row.name} {pct(leaders.value, 1)}</b>가 시장을 주도하고,{" "}
-        <b className={laggards.relative >= 0 ? "sec-up" : "sec-down"}>{laggards.row.name} {pct(laggards.value, 1)}</b>가 가장 약합니다. S&amp;P 500 대비{" "}
-        <b className="tabular-nums">{beatCount}/{rows.length}</b>개 섹터가 상회 중입니다.
-      </>
-    );
+  } else if (benchmarksReady) {
+    headline = rotationRead(rows, rotationWindow, rotationLabel, rotationBenchmark, rows.length);
   } else {
     headline = "섹터 자료 일부를 불러왔지만 기간별 모멘텀 기준선은 아직 없습니다.";
   }
@@ -405,58 +461,185 @@ export default function SectorsClient() {
         </div>
       </div>
 
-      <SectorFlowPanel
+      <Panel
+        loading={loading}
+        empty={heroEmpty}
+        emptyReason={heroFailed ? "로테이션 지도 자료를 불러오지 못했습니다" : "표시할 로테이션 자료가 없습니다"}
+        emptyNextRefresh="다음 마감 후 갱신"
+        emptyActionLabel={heroFailed ? "다시 시도" : undefined}
+        onEmptyAction={heroFailed ? refresh : undefined}
+        stale={flowStale}
+        asOf={sourceMeta.benchmarksSourceDate ?? undefined}
+        onRetry={flowStale ? refresh : undefined}
+      >
+        {benchmarksReady && rotationPts.length > 0 && (
+          <div data-sectors-rotation-hero="true">
+            <PanelHeader
+              eyebrow="Rotation Map"
+              title="로테이션 지도 — 모멘텀 × 밸류 밴드"
+              right={<Pill>{rotationLabel} 기준</Pill>}
+            />
+            <RotationMapPanel
+              points={rotationPts}
+              bandless={rotationBandless}
+              windowKey={rotationWindow}
+              windowLabel={rotationLabel}
+              onWindowChange={setRotationWindow}
+            />
+          </div>
+        )}
+        <EvidenceRail
+          freshness={loading ? "pending" : heroFailed ? "error" : flowStale ? "stale" : rotationIncomplete || rotationBandless.length > 0 ? "partial" : sourceMeta.benchmarksSourceDate ? "fresh" : "fixed"}
+          source="SlickCharts · Yahoo · 밸류 밴드"
+          asOf={heroAsOfLabel}
+          coverage={benchmarksReady ? `${rotationPts.length}/${rows.length} · 밴드 ${rotationBandCount}/${rows.length}` : "—"}
+          lkgAsOf={flowStale && sourceMeta.benchmarksSourceDate ? (formatAsOf(sourceMeta.benchmarksSourceDate) ?? sourceMeta.benchmarksSourceDate) : undefined}
+          onRetry={heroFailed || flowStale || rotationIncomplete || rotationBandless.length > 0 ? refresh : undefined}
+          onEvidence={benchmarksReady && !heroFailed ? () => openEvidence("/data/benchmarks/summaries.json") : undefined}
+        />
+      </Panel>
+
+      <RotationStripPanel
         rows={rows}
-        benchmarkValue={activeBenchmark}
-        windowKey={sortWindow}
-        onWindowChange={setSortWindow}
+        benchmarkMomentum={benchmarkMomentum}
         loading={loading}
         ready={benchmarksReady}
         failed={flowFailed}
         stale={flowStale}
         clock={sourceMeta.benchmarksSourceDate}
         lkgClock={sourceMeta.benchmarksSourceDate}
-        coverage={flowCoverage}
         onRetry={refresh}
       />
 
-      <EtfComparePanel
-        rows={rows}
-        loading={loading}
-        ready={etfsReady}
-        failed={etfFailed}
-        stale={etfStale}
-        clock={sourceMeta.etfSourceDate}
-        lkgClock={sourceMeta.etfSourceDate}
-        coverage={etfCoverage}
-        missingNote={etfMissingNote}
-        onRetry={refresh}
-      />
-
-      <SmartMoneyPanel
-        rows={rows}
-        sourceMeta={sourceMeta}
-        loading={loading}
-        ready={smartMoneyReady}
-        failed={smartFailed}
-        stale={smartStale}
-        asOf={smartAsOf}
-        lkgClock={sourceMeta.smartMoneySourceDate}
-        coverage={smartCoverage}
-        onRetry={refresh}
-      />
-
-      <div className="sec-cta">
-        <div className="sec-cta-actions">
-          <Button variant="primary" onClick={() => router.push(ROUTES.marketEvents)}>
-            업종 이벤트 보기
-          </Button>
-          <Button variant="secondary" onClick={() => router.push(ROUTES.superinvestors)}>
-            투자 대가 보유 보기
-          </Button>
-        </div>
-        <span className="sec-cta-note">투자 조언 아님 · 데이터 지연 가능</span>
+      <div data-sectors-accordion="bars">
+        {openSection === "bars" ? (
+          <SectorFlowPanel
+            rows={rows}
+            benchmarkValue={activeBenchmark}
+            windowKey={sortWindow}
+            onWindowChange={setSortWindow}
+            loading={loading}
+            ready={benchmarksReady}
+            failed={flowFailed}
+            stale={flowStale}
+            clock={sourceMeta.benchmarksSourceDate}
+            lkgClock={sourceMeta.benchmarksSourceDate}
+            coverage={flowCoverage}
+            onRetry={refresh}
+          />
+        ) : (
+          <CollapsedBar
+            section="bars"
+            eyebrow="Sector Flow"
+            title="상대성과 바"
+            meta={`${rows.length}개 업종 전체`}
+            onOpen={() => setOpenSection("bars")}
+          />
+        )}
       </div>
+
+      <div data-sectors-accordion="etf">
+        {openSection === "etf" ? (
+          <EtfComparePanel
+            rows={rows}
+            loading={loading}
+            ready={etfsReady}
+            failed={etfFailed}
+            stale={etfStale}
+            clock={sourceMeta.etfSourceDate}
+            lkgClock={sourceMeta.etfSourceDate}
+            coverage={etfCoverage}
+            missingNote={etfMissingNote}
+            onRetry={refresh}
+          />
+        ) : (
+          <CollapsedBar
+            section="etf"
+            eyebrow="ETF"
+            title="섹터 ETF 비교"
+            meta={`${etfCoverage} 섹터 ETF 상세`}
+            onOpen={() => setOpenSection("etf")}
+          />
+        )}
+      </div>
+
+      <div data-sectors-accordion="valuation">
+        {openSection === "valuation" ? (
+          <ValuationBandPanel
+            rows={rows}
+            loading={loading}
+            ready={valuationReady}
+            failed={valuationFailed}
+            stale={valuationStale}
+            clock={sourceMeta.valuationLatestDate}
+            source={sourceMeta.valuationSource}
+            coverage={valuationCoverage}
+            lkgClock={sourceMeta.valuationLatestDate}
+            onRetry={refresh}
+          />
+        ) : (
+          <CollapsedBar
+            section="valuation"
+            eyebrow="Valuation"
+            title="밸류에이션 밴드"
+            meta={valuationReady ? `밴드 확보 ${bandCount}/${rows.length} · 고평가권 ${bandHighCount}개` : "확인 중"}
+            onOpen={() => setOpenSection("valuation")}
+          />
+        )}
+      </div>
+
+      <div data-sectors-accordion="smart">
+        {openSection === "smart" ? (
+          <SmartMoneyPanel
+            rows={rows}
+            sourceMeta={sourceMeta}
+            loading={loading}
+            ready={smartMoneyReady}
+            failed={smartFailed}
+            stale={smartStale}
+            asOf={smartAsOf}
+            lkgClock={sourceMeta.smartMoneySourceDate}
+            coverage={smartCoverage}
+            onRetry={refresh}
+          />
+        ) : (
+          <CollapsedBar
+            section="smart"
+            eyebrow="13F · 기관 보유"
+            title="13F 섹터 흐름"
+            meta={smartMoneyReady ? (
+              <Pill tone="warn">부분 반영 · {smartCoverage}</Pill>
+            ) : (
+              "확인 중"
+            )}
+            onOpen={() => setOpenSection("smart")}
+          />
+        )}
+      </div>
+
+      <Panel>
+        <div data-sectors-actions="true">
+          <PanelHeader
+            eyebrow="Action"
+            title="행동"
+          />
+          <div className="sec-action-buttons">
+            <Button
+              variant="primary"
+              onClick={() => router.push(rotationTop ? screenerSectorHref(rotationTop.row.key) : ROUTES.screener)}
+            >
+              {rotationTop ? `스크리너로 보내기 · ${rotationTop.row.name} 사전 필터` : "스크리너로 보내기"}
+            </Button>
+            <Button variant="secondary" onClick={() => router.push(ROUTES.marketEvents)}>
+              업종 이벤트 보기
+            </Button>
+          </div>
+        </div>
+        <div className="sec-action-rail">
+          <span>연결 <b>스크리너 · 이벤트 캘린더</b></span>
+          <span className="sec-cta-note">투자 조언 아님 · 데이터 지연 가능</span>
+        </div>
+      </Panel>
     </div>
   );
 }
