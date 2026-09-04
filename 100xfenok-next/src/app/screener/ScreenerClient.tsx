@@ -602,7 +602,7 @@ function renderCell(
       return (
         <span className="inline-flex min-w-0 justify-end">
           <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums", fenokEdgeTone(score))}
+            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums leading-[14px]", fenokEdgeTone(score))}
             title={fenokEdgeTitle(stock)}
             aria-label={`${isShortTerm ? "단기" : "장기"} 스코어 ${score ?? "정보 없음"}`}
           >
@@ -639,7 +639,7 @@ function renderCell(
         >
           <span className="inline-flex flex-wrap justify-end gap-1">
             <span
-              className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(shortScore))}
+              className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums leading-[14px]", signalScoreTone(shortScore))}
               title={`${shortTermBasis.detail} ${shortTermBasis.comparisonNote} 투자 조언이 아닙니다.`}
               aria-label={`단기 컨빅션 ${shortScore ?? "정보 없음"} · ${shortTermBasis.label}`}
             >
@@ -647,7 +647,7 @@ function renderCell(
               {shortScore ?? "—"}
             </span>
             <span
-              className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(longScore))}
+              className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums leading-[14px]", signalScoreTone(longScore))}
               title="장기 Fenok 점수 · 투자 조언이 아닙니다"
               aria-label={`장기 컨빅션 ${longScore ?? "정보 없음"}`}
             >
@@ -710,7 +710,7 @@ function renderCell(
       return (
         <span className="inline-flex min-w-0 justify-end">
           <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(score))}
+            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums leading-[14px]", signalScoreTone(score))}
             title={`${columnLabel(key)} ${signalDirectionLabel(direction)} · ${titleSuffix}`}
             aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
           >
@@ -727,7 +727,7 @@ function renderCell(
       return (
         <span className="inline-flex min-w-0 justify-end">
           <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums", downsideRiskTone(score))}
+            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums leading-[14px]", downsideRiskTone(score))}
             title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · ${FENOK_SIGNAL_DISCLOSURE}`}
             aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
           >
