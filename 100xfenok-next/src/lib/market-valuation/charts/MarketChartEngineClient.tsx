@@ -34,7 +34,8 @@ function defaultFormatValue(value: number | null): string {
   }).format(value);
 }
 
-function toFiniteNumber(value: string | number): number | null {
+function toFiniteNumber(value: string | number | null | undefined): number | null {
+  if (value == null) return null;
   const next = typeof value === "number" ? value : Number(value);
   return Number.isFinite(next) ? next : null;
 }
