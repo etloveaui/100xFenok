@@ -212,6 +212,7 @@ function normalizeFilterState(raw: unknown): ScreenerFilterState {
   state.epsGrowthMin = stringOrEmpty(raw.epsGrowthMin);
   state.dividendYieldMin = stringOrEmpty(raw.dividendYieldMin);
   state.dividendYieldMax = stringOrEmpty(raw.dividendYieldMax);
+  state.durabilityMin = stringOrEmpty(raw.durabilityMin);
   state.roeFy1Min = stringOrEmpty(raw.roeFy1Min);
   state.ret3yMin = stringOrEmpty(raw.ret3yMin);
   state.ret5yMin = stringOrEmpty(raw.ret5yMin);

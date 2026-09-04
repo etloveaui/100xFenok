@@ -222,6 +222,8 @@ export interface ScreenerFilterState {
   epsGrowthMin: string;
   dividendYieldMin: string;
   dividendYieldMax: string;
+  /** Workbench minimum for the durability profitability score (Q5 saved screen). */
+  durabilityMin: string;
   roeFy1Min: string;
   ret3yMin: string;
   ret5yMin: string;
@@ -258,6 +260,7 @@ export function defaultScreenerFilterState(): ScreenerFilterState {
     epsGrowthMin: "",
     dividendYieldMin: "",
     dividendYieldMax: "",
+    durabilityMin: "",
     roeFy1Min: "",
     ret3yMin: "",
     ret5yMin: "",
@@ -294,6 +297,7 @@ export function parseScreenerFilterState(params: Record<string, string | string[
     epsGrowthMin: parseNumberParam(params.epsMin) || defaults.epsGrowthMin,
     dividendYieldMin: parseNumberParam(params.divMin) || defaults.dividendYieldMin,
     dividendYieldMax: parseNumberParam(params.divMax) || defaults.dividendYieldMax,
+    durabilityMin: parseNumberParam(params.durMin) || defaults.durabilityMin,
     roeFy1Min: parseNumberParam(params.roeFy1Min) || defaults.roeFy1Min,
     ret3yMin: parseNumberParam(params.ret3yMin) || defaults.ret3yMin,
     ret5yMin: parseNumberParam(params.ret5yMin) || defaults.ret5yMin,
@@ -329,6 +333,7 @@ const URL_KEYS = [
   "epsMin",
   "divMin",
   "divMax",
+  "durMin",
   "roeFy1Min",
   "ret3yMin",
   "ret5yMin",
@@ -376,6 +381,7 @@ export function serializeScreenerFilterState(state: ScreenerFilterState, preferT
   setIfPresent(params, "epsMin", state.epsGrowthMin);
   setIfPresent(params, "divMin", state.dividendYieldMin);
   setIfPresent(params, "divMax", state.dividendYieldMax);
+  setIfPresent(params, "durMin", state.durabilityMin);
   setIfPresent(params, "roeFy1Min", state.roeFy1Min);
   setIfPresent(params, "ret3yMin", state.ret3yMin);
   setIfPresent(params, "ret5yMin", state.ret5yMin);

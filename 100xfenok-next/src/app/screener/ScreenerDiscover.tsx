@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import { Button, EmptyState, EvidenceRail, Panel, PanelHeader, Pill, Skeleton } from "@/components/ui";
-import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
+import type { EvidenceRailFreshness, EvidenceStage } from "@/components/ui/EvidenceRail";
 import PerBandBar from "@/components/screener/PerBandBar";
 import { formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { ROUTES } from "@/lib/routes";
@@ -146,7 +146,7 @@ function ActionButtons({
         aria-pressed={selected}
         title={selected ? "비교에서 제외" : full ? `비교는 최대 ${COMPARE_LIMIT}개` : "비교에 추가"}
         className={cx(
-          "inline-flex h-9 items-center rounded-md border px-2 text-[11px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive",
+          "inline-flex h-9 items-center rounded-md border px-2 text-[11px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-sm:min-h-11",
           selected
             ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
             : "border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-2)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]",
@@ -158,14 +158,14 @@ function ActionButtons({
       <TransitionLink
         href={ROUTES.portfolioTicker(stock.ticker)}
         title="관심 종목에 추가"
-        className="inline-flex h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-2 text-[11px] font-semibold text-[var(--c-ink-2)] transition hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]"
+        className="inline-flex h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-2 text-[11px] font-semibold text-[var(--c-ink-2)] transition hover:border-[var(--c-brand)] hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-sm:min-h-11"
       >
         관심
       </TransitionLink>
       <TransitionLink
         href={ROUTES.stock(stock.ticker)}
         title="종목 상세로 열기"
-        className="inline-flex h-9 items-center rounded-md bg-[var(--c-brand)] px-2 text-[11px] font-semibold text-white transition"
+        className="inline-flex h-9 items-center rounded-md bg-[var(--c-brand)] px-2 text-[11px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-sm:min-h-11"
       >
         열기
       </TransitionLink>
@@ -191,15 +191,17 @@ export default function ScreenerDiscover({
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   const asOfLabel = formatScreenerSourceDateLabel(sourceDate, marketFactsDate, { pending: !dataReady });
 
+  // Fetch error keeps last-known-good rows: card counts compute from the LKG
+  // rows and each card is marked stale, instead of null -> dashes.
   const cardStats = useMemo(() => {
-    if (!dataReady || failed) return null;
+    if (!dataReady) return null;
     return new Map<QuestionCardId, { count: number; samples: string[] }>(
       SCREENER_QUESTION_CARDS.map((item) => {
         const matched = matchQuestionCard(stocks, item);
         return [item.id, { count: matched.length, samples: matched.slice(0, 3).map((stock) => stock.ticker) }];
       }),
     );
-  }, [stocks, dataReady, failed]);
+  }, [stocks, dataReady]);
 
   const results = useMemo(() => {
     if (!dataReady) return [];
@@ -211,6 +213,18 @@ export default function ScreenerDiscover({
   const selected = (selectedTicker ? stockByTicker(stocks, selectedTicker) : null) ?? shown[0] ?? null;
   const compareStocks = compareTickers.map((ticker) => stockByTicker(stocks, ticker)).filter((stock): stock is ScreenerStock => stock !== null);
   const freshness = resultsFreshness(shown, dataReady, failed);
+  // Evidence drawer stages, mirroring other pages: only feeds that actually
+  // loaded (수집). Failed feeds are omitted rather than forged.
+  const discoverStages = useMemo<EvidenceStage[] | undefined>(() => {
+    if (!dataReady) return undefined;
+    const stages: EvidenceStage[] = [
+      { stage: "수집", detail: "Global Scouter 종목 집계", at: sourceDate, tone: sourceDate ? "ok" : "muted" },
+    ];
+    if (marketFactsDate) {
+      stages.push({ stage: "수집", detail: "시장 팩트 시세", at: marketFactsDate, tone: "ok" });
+    }
+    return stages;
+  }, [dataReady, sourceDate, marketFactsDate]);
 
   if (failed && stocks.length === 0) {
     return (
@@ -280,7 +294,7 @@ export default function ScreenerDiscover({
                       ))}
                     </span>
                   ) : null}
-                  <span className="text-[10.5px] text-[var(--c-ink-3)]">마지막 갱신 {asOfLabel}</span>
+                  <span className="text-[10.5px] text-[var(--c-ink-3)]">마지막 갱신 {asOfLabel}{failed ? " · 이전 값" : ""}</span>
                   <span className="text-[10.5px] leading-snug text-[var(--c-ink-3)]">{item.basis}</span>
                 </button>
               );
@@ -392,6 +406,7 @@ export default function ScreenerDiscover({
               source={DISCOVER_SOURCE}
               asOf={asOfLabel}
               coverage={dataReady ? `${coverageText(shown)} · 상위 ${shown.length}/${results.length} 표시` : "불러오는 중"}
+              stages={discoverStages}
               onEvidence={openStocksAnalyzerEvidence}
               onRetry={failed ? () => window.location.reload() : undefined}
               lkgAsOf={failed ? asOfLabel : undefined}
@@ -434,7 +449,7 @@ export default function ScreenerDiscover({
                   보유 {finiteNumber(selected.guruHolders) ? selected.guruHolders.toLocaleString("ko-KR") : "—"}곳
                 </p>
                 <p className="mt-1 text-[10.5px] leading-snug text-[var(--c-ink-3)]">
-                  신규·증가 내역은 분기 제출 단위로 부분 공개 — 보유 수는 guru 집계 기준
+                  신규·증가 내역은 미제공 — 보유 수는 guru 집계 기준
                 </p>
               </div>
               <EvidenceRail
@@ -442,6 +457,7 @@ export default function ScreenerDiscover({
                 source={DISCOVER_SOURCE}
                 asOf={asOfLabel}
                 coverage={`${selected.ticker} 단일 종목`}
+                stages={discoverStages}
                 onEvidence={openStocksAnalyzerEvidence}
               />
             </Panel>
@@ -478,7 +494,7 @@ export default function ScreenerDiscover({
                   type="button"
                   onClick={() => onToggleCompare(stock.ticker)}
                   aria-label={`${stock.ticker} 비교에서 제외`}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--c-surface-2)] text-[14px] text-[var(--c-ink-3)] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--c-surface-2)] text-[14px] text-[var(--c-ink-3)] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-sm:h-11 max-sm:w-11"
                 >
                   ×
                 </button>
@@ -524,6 +540,7 @@ export default function ScreenerDiscover({
             source={DISCOVER_SOURCE}
             asOf={asOfLabel}
             coverage={`비교 ${compareStocks.length}/${COMPARE_LIMIT}`}
+            stages={discoverStages}
             onEvidence={openStocksAnalyzerEvidence}
           />
         </Panel>
@@ -534,7 +551,7 @@ export default function ScreenerDiscover({
           eyebrow="두 번째 모드 미리보기"
           title="분석 — 워크벤치"
           right={
-            <Button variant="secondary" onClick={onOpenAnalyze}>
+            <Button variant="secondary" onClick={onOpenAnalyze} className="max-sm:min-h-11">
               분석 모드 열기 →
             </Button>
           }
@@ -549,6 +566,7 @@ export default function ScreenerDiscover({
           source={DISCOVER_SOURCE}
           asOf={asOfLabel}
           coverage={`발견 카드 ${SCREENER_QUESTION_CARDS.length}종`}
+          stages={discoverStages}
           onEvidence={openStocksAnalyzerEvidence}
         />
       </Panel>

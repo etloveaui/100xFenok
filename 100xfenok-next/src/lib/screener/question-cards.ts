@@ -8,11 +8,12 @@
  * Predicates mirror ScreenerClient's filter checks (cited inline); any deviation
  * from the artboard mock numbers is deliberate — the artboard shows illustrative
  * values, while these definitions compute live from the loaded payload and never
- * invent per-stock detail (e.g. 13F 신규/증가 breakdowns, which exist only as
- * honest partial state in the UI).
+ * invent per-stock detail (e.g. 13F 신규/증가 breakdowns, which the pipeline
+ * does not provide — basis copy states holder count only).
  */
 
 import { BAND_CHEAP, bandPct, normalizeBandTuple } from "./bands";
+import { screenerSortValue } from "./common-basis-short-term";
 import { formatEdgeDrivers } from "./edge-drivers";
 import type { ScreenerFilterState, SortDir } from "./filter-url";
 import type { ScreenerSortKey, ScreenerStock } from "./types";
@@ -42,9 +43,8 @@ export interface QuestionCardDef {
   /** Live predicate over the enriched screener stocks. */
   match: (stock: ScreenerStock) => boolean;
   /**
-   * Card ranking. Uses the shared workbench sort for every card — including
-   * short-over-long, whose short-minus-long gap has the edgeGap workbench sort
-   * key, so "조건 보기" applies filters and sort 1:1.
+   * Card ranking. Every card ranks via workbenchRank (the shared workbench
+   * sort primitive + key), so "조건 보기" applies filters and sort 1:1.
    */
   rank: (stocks: ScreenerStock[]) => ScreenerStock[];
   /** One-line "왜" for a result row. */
@@ -74,10 +74,6 @@ function shortEdgeAtLeast(stock: ScreenerStock, min: number): boolean {
   return short !== null && short >= min;
 }
 
-function convictionOf(stock: ScreenerStock): number | null {
-  return finiteNumber(stock.fenokConvictionScore) ? stock.fenokConvictionScore : null;
-}
-
 function holdersOf(stock: ScreenerStock): number | null {
   return finiteNumber(stock.guruHolders) && stock.guruHolders > 0 ? stock.guruHolders : null;
 }
@@ -96,15 +92,33 @@ function driversWhy(stock: ScreenerStock): string {
   return `${formatEdgeDrivers(stock) ?? "드라이버 미집계"} · ${holdersPhraseOf(stock)} · 13F 변화 -`;
 }
 
-function byDescNullsLast(get: (stock: ScreenerStock) => number | null) {
-  return (a: ScreenerStock, b: ScreenerStock) => {
-    const av = get(a);
-    const bv = get(b);
-    if (av === null && bv === null) return 0;
-    if (av === null) return 1;
-    if (bv === null) return -1;
-    return bv - av;
-  };
+/**
+ * Q1 (smart-value) "왜": holder count only. The Q1 basis states 13F as
+ * holder count with quarterly new/increased flows undisclosed, so no 13F
+ * change placeholder is shown on this card.
+ */
+function holdersWhy(stock: ScreenerStock): string {
+  return `${formatEdgeDrivers(stock) ?? "드라이버 미집계"} · ${holdersPhraseOf(stock)}`;
+}
+
+/**
+ * Card ranking via the exact workbench sort primitive. Mirrors the
+ * ScreenerClient `sorted` comparator (screenerSortValue + key, nulls-last
+ * on both directions, string keys via localeCompare) so each card ranks
+ * exactly as "조건 보기" does in analyze mode — including the
+ * fenokConvictionScore -> fenokShortTermConvictionScore mapping and the
+ * derived edgeGap key.
+ */
+function workbenchRank(stocks: ScreenerStock[], sortKey: ScreenerSortKey, sortDir: SortDir): ScreenerStock[] {
+  const dir = sortDir === "asc" ? 1 : -1;
+  return [...stocks].sort((a, b) => {
+    const av = screenerSortValue(a, sortKey);
+    const bv = screenerSortValue(b, sortKey);
+    if (av === null || av === undefined) return 1;
+    if (bv === null || bv === undefined) return -1;
+    if (typeof av === "string" && typeof bv === "string") return av.localeCompare(bv) * dir;
+    return ((av as number) - (bv as number)) * dir;
+  });
 }
 
 export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
@@ -113,14 +127,14 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
     index: 1,
     title: "스마트머니 보유 저평가 종목",
     question: "기관·고수가 보유한 저평가 종목은?",
-    basis: "신호 기관·고수 주목 ∩ 밴드 저평가 ∩ 장기 Edge 60 이상 · 13F 신규·증가 내역 부분 공개",
+    basis: "신호 기관·고수 주목 ∩ 밴드 저평가 ∩ 장기 Edge 60 이상 · 13F 보유 기관 수 기준 · 분기별 신규/증가 내역은 미제공",
     filters: { actionFilter: "smart_money", bandFilter: "cheap", convictionMin: "60" },
     sortKey: "fenokConvictionScore",
     sortDir: "desc",
     chips: ["신호: 기관·고수 주목", "밴드: 저평가", "장기 Edge ≥ 60"],
     match: (stock) => stock.actionBucket === "smart_money" && isCheapBand(stock) && longEdgeAtLeast(stock, 60),
-    rank: (stocks) => [...stocks].sort(byDescNullsLast(convictionOf)),
-    why: (stock) => driversWhy(stock),
+    rank: (stocks) => workbenchRank(stocks, "fenokConvictionScore", "desc"),
+    why: (stock) => holdersWhy(stock),
   },
   {
     id: "short-over-long",
@@ -137,12 +151,7 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
       if (!finiteNumber(stock.fenokLongTermScore)) return false;
       return (stock.fenokShortTermScore as number) > (stock.fenokLongTermScore as number);
     },
-    rank: (stocks) =>
-      [...stocks].sort((a, b) => {
-        const gapA = (a.fenokShortTermScore as number) - (a.fenokLongTermScore as number);
-        const gapB = (b.fenokShortTermScore as number) - (b.fenokLongTermScore as number);
-        return gapB - gapA;
-      }),
+    rank: (stocks) => workbenchRank(stocks, "edgeGap", "desc"),
     why: (stock) => driversWhy(stock),
   },
   {
@@ -156,7 +165,7 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
     sortDir: "desc",
     chips: ["장기 Edge ≥ 70", "밴드: 저평가"],
     match: (stock) => longEdgeAtLeast(stock, 70) && isCheapBand(stock),
-    rank: (stocks) => [...stocks].sort(byDescNullsLast(convictionOf)),
+    rank: (stocks) => workbenchRank(stocks, "fenokConvictionScore", "desc"),
     why: (stock) => driversWhy(stock),
   },
   {
@@ -164,7 +173,7 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
     index: 4,
     title: "FY+1 성장 + 스마트머니 보유",
     question: "FY+1 성장과 스마트머니 보유가 겹치는 종목은?",
-    basis: "매출·EPS 상향(FY+1) ∩ 신호 기관·고수 주목",
+    basis: "FY+1 매출·EPS 성장률 ≥ 0 (컨센서스 상향 신호 아님) ∩ 신호 기관·고수 주목",
     filters: { revenueGrowthMin: "0", epsGrowthMin: "0", actionFilter: "smart_money" },
     sortKey: "epsGrowthFy1",
     sortDir: "desc",
@@ -175,15 +184,7 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
       if (stock.epsGrowthFy1 === null || stock.epsGrowthFy1 === undefined || stock.epsGrowthFy1 < 0) return false;
       return true;
     },
-    rank: (stocks) =>
-      [...stocks].sort((a, b) => {
-        const av = a.epsGrowthFy1 ?? null;
-        const bv = b.epsGrowthFy1 ?? null;
-        if (av === null && bv === null) return 0;
-        if (av === null) return 1;
-        if (bv === null) return -1;
-        return bv - av;
-      }),
+    rank: (stocks) => workbenchRank(stocks, "epsGrowthFy1", "desc"),
     why: (stock) => driversWhy(stock),
   },
   {
@@ -192,26 +193,18 @@ export const SCREENER_QUESTION_CARDS: readonly QuestionCardDef[] = [
     title: "고배당 · 재무 체력",
     question: "배당주면서 체력도 좋은 종목은?",
     basis: "배당수익률 2% 이상 · 내구 수익성 순",
-    filters: { dividendYieldMin: "2" },
+    filters: { dividendYieldMin: "2", durabilityMin: "50" },
     sortKey: "durabilityProfitabilityScore",
     sortDir: "desc",
-    chips: ["배당수익률 ≥ 2%", "내구 수익성 ≥ 50 · 카드 선별", "내구 수익성 순 정렬"],
+    chips: ["배당수익률 ≥ 2%", "내구 수익성 ≥ 50", "내구 수익성 순 정렬"],
     match: (stock) => {
       if (stock.dividendYield === null || stock.dividendYield === undefined || stock.dividendYield * 100 < 2) return false;
-      // Card-only curation floor: no workbench primitive reproduces it, so the
-      // chips above say so explicitly.
+      // Mirrors the workbench durabilityMin check in ScreenerClient, so 조건 보기
+      // reproduces this card's match set exactly.
       const durability = finiteNumber(stock.durabilityProfitabilityScore) ? stock.durabilityProfitabilityScore : null;
       return durability !== null && durability >= 50;
     },
-    rank: (stocks) =>
-      [...stocks].sort((a, b) => {
-        const av = finiteNumber(a.durabilityProfitabilityScore) ? (a.durabilityProfitabilityScore as number) : null;
-        const bv = finiteNumber(b.durabilityProfitabilityScore) ? (b.durabilityProfitabilityScore as number) : null;
-        if (av === null && bv === null) return 0;
-        if (av === null) return 1;
-        if (bv === null) return -1;
-        return bv - av;
-      }),
+    rank: (stocks) => workbenchRank(stocks, "durabilityProfitabilityScore", "desc"),
     why: (stock) => driversWhy(stock),
   },
 ];

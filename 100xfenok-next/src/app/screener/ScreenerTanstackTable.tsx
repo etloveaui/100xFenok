@@ -4,6 +4,7 @@ import { Component, Fragment, useCallback, useEffect, useMemo, useRef, useState,
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import MetricHelp from "@/components/MetricHelp";
+import { screenerSortValue } from "@/lib/screener/common-basis-short-term";
 import type { ScreenerSortKey, ScreenerStock } from "@/lib/screener/types";
 import StockDetailPanel from "./StockDetailPanel";
 import type { ScreenerColumn, ScreenerDesktopTableProps } from "./ScreenerDesktopTable";
@@ -345,7 +346,9 @@ function ScreenerTanstackTableInner({
     },
     ...visibleColumns.map((column) => ({
       id: column.key,
-      accessorFn: (stock) => stock[column.key],
+      // Derived keys (e.g. edgeGap) are not ScreenerStock fields — read every
+      // key through the shared workbench sort primitive, never by indexing.
+      accessorFn: (stock: ScreenerStock) => screenerSortValue(stock, column.key),
       header: () => {
         const active = column.key === sortKey;
         return (

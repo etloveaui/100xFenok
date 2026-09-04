@@ -1416,6 +1416,7 @@ export default function ScreenerClient({
   const [epsGrowthMin, setEpsGrowthMin] = useState(() => initialFilterValues.epsGrowthMin ?? "");
   const [dividendYieldMin, setDividendYieldMin] = useState(() => initialFilterValues.dividendYieldMin ?? "");
   const [dividendYieldMax, setDividendYieldMax] = useState(() => initialFilterValues.dividendYieldMax ?? "");
+  const [durabilityMin, setDurabilityMin] = useState(() => initialFilterValues.durabilityMin ?? "");
   const [roeFy1Min, setRoeFy1Min] = useState(() => initialFilterValues.roeFy1Min ?? "");
   const [ret3yMin, setRet3yMin] = useState(() => initialFilterValues.ret3yMin ?? "");
   const [ret5yMin, setRet5yMin] = useState(() => initialFilterValues.ret5yMin ?? "");
@@ -1576,6 +1577,7 @@ export default function ScreenerClient({
       epsGrowthMin,
       dividendYieldMin,
       dividendYieldMax,
+      durabilityMin,
       roeFy1Min,
       ret3yMin,
       ret5yMin,
@@ -1611,6 +1613,7 @@ export default function ScreenerClient({
     epsGrowthMin,
     dividendYieldMin,
     dividendYieldMax,
+    durabilityMin,
     roeFy1Min,
     ret3yMin,
     ret5yMin,
@@ -1642,6 +1645,7 @@ export default function ScreenerClient({
     const epsGrowthMinValue = parseFilterNumber(epsGrowthMin);
     const dividendYieldMinValue = parseFilterNumber(dividendYieldMin);
     const dividendYieldMaxValue = parseFilterNumber(dividendYieldMax);
+    const durabilityMinValue = parseFilterNumber(durabilityMin);
     const roeFy1MinValue = parseFilterNumber(roeFy1Min);
     const ret3yMinValue = parseFilterNumber(ret3yMin);
     const ret5yMinValue = parseFilterNumber(ret5yMin);
@@ -1677,6 +1681,7 @@ export default function ScreenerClient({
       if (epsGrowthMinValue !== null && ((stock.epsGrowthFy1 ?? null) === null || (stock.epsGrowthFy1 as number) < epsGrowthMinValue)) return false;
       if (dividendYieldMinValue !== null && (stock.dividendYield === null || (stock.dividendYield * 100) < dividendYieldMinValue)) return false;
       if (dividendYieldMaxValue !== null && (stock.dividendYield === null || (stock.dividendYield * 100) > dividendYieldMaxValue)) return false;
+      if (durabilityMinValue !== null && (stock.durabilityProfitabilityScore === null || stock.durabilityProfitabilityScore === undefined || stock.durabilityProfitabilityScore < durabilityMinValue)) return false;
       if (roeFy1MinValue !== null && ((stock.roeFy1 ?? null) === null || (stock.roeFy1 as number) < roeFy1MinValue)) return false;
       if (ret3yMinValue !== null && (stock.ret3y === null || (stock.ret3y * 100) < ret3yMinValue)) return false;
       if (ret5yMinValue !== null && (stock.ret5y === null || (stock.ret5y * 100) < ret5yMinValue)) return false;
@@ -1699,7 +1704,7 @@ export default function ScreenerClient({
       }
       return true;
     });
-  }, [stocks, search, selectedSectors, selectedCountries, perMin, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, dividendYieldMax, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, pegMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, shortEdgeMin, longEdgeMin, connectionFilter]);
+  }, [stocks, search, selectedSectors, selectedCountries, perMin, perMax, forwardPerMax, revenueGrowthMin, epsGrowthMin, dividendYieldMin, dividendYieldMax, durabilityMin, roeFy1Min, ret3yMin, ret5yMin, marketCapMin, marketCapMax, pbrMin, pbrMax, pegMax, roeMin, opmMin, return12mMin, profitableOnly, bandFilter, actionFilter, shortEdgeMin, longEdgeMin, connectionFilter]);
 
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -1715,7 +1720,7 @@ export default function ScreenerClient({
 
   const [cursor, setCursor] = useState(0);
   const [scrollSignal, setScrollSignal] = useState<{ index: number; nonce: number } | null>(null);
-  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${shortEdgeMin}|${longEdgeMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
+  const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${durabilityMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${shortEdgeMin}|${longEdgeMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
     setPrevStateKey(stateKey);
@@ -1966,6 +1971,7 @@ export default function ScreenerClient({
       epsGrowthMin,
       dividendYieldMin,
       dividendYieldMax,
+      durabilityMin,
       roeFy1Min,
       ret3yMin,
       ret5yMin,
@@ -1998,8 +2004,9 @@ export default function ScreenerClient({
     setForwardPerMax(next.forwardPerMax);
     setRevenueGrowthMin(next.revenueGrowthMin);
     setEpsGrowthMin(next.epsGrowthMin);
-    setDividendYieldMin(next.dividendYieldMin);
-    setDividendYieldMax(next.dividendYieldMax);
+    setDividendYieldMin(next.dividendYieldMin ?? "");
+    setDividendYieldMax(next.dividendYieldMax ?? "");
+    setDurabilityMin(next.durabilityMin ?? "");
     setRoeFy1Min(next.roeFy1Min);
     setRet3yMin(next.ret3yMin);
     setRet5yMin(next.ret5yMin);
@@ -2224,8 +2231,8 @@ export default function ScreenerClient({
             aria-pressed={screenerMode === mode.id}
             onClick={() => handleScreenerModeChange(mode.id)}
             className={screenerMode === mode.id
-              ? "inline-flex min-h-11 items-center rounded-md bg-[var(--c-brand)] px-4 text-[13px] font-semibold text-white transition"
-              : "inline-flex min-h-11 items-center rounded-md px-4 text-[13px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-ink)]"}
+              ? "inline-flex min-h-11 items-center rounded-md bg-[var(--c-brand)] px-4 text-[13px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+              : "inline-flex min-h-11 items-center rounded-md px-4 text-[13px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"}
           >
             {mode.label}
           </button>

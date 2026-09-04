@@ -2823,26 +2823,28 @@ async function collectRouteChecks(page, route) {
         if (document.documentElement.scrollWidth > window.innerWidth + 1) {
           failures.push({ check: "screener-no-page-scroll", detail: `scrollWidth=${document.documentElement.scrollWidth} innerWidth=${window.innerWidth}` });
         }
-        // Discover mode (default /screener): five question cards + mode toggle.
-        // Existing analyze assertions above stay untouched.
-        const discoverRoot = document.querySelector('[data-discover="true"]');
-        if (discoverRoot) {
-          const discoverCards = Array.from(document.querySelectorAll("[data-discover-card]"))
-            .filter((node) => node.getBoundingClientRect().width > 0);
-          if (discoverCards.length !== 5) {
-            failures.push({ check: "screener-discover-cards", detail: `cards=${discoverCards.length}` });
-          }
-          const modeToggle = document.querySelector('[data-screener-mode-toggle="true"]');
-          if (!modeToggle || modeToggle.getBoundingClientRect().width <= 0) {
-            failures.push({ check: "screener-discover-mode-toggle", detail: "missing visible mode toggle" });
-          }
-          if (viewportWidth < 768) {
-            discoverCards.forEach((node, index) => {
-              if (node.getBoundingClientRect().height < 44) {
-                failures.push({ check: "screener-discover-card-target", detail: `card ${index} height=${Math.round(node.getBoundingClientRect().height)}` });
-              }
-            });
-          }
+      }
+      // Discover mode (default /screener): five question cards + mode toggle.
+      // Runs on every viewport (mobile/narrow included) so the <768 card
+      // touch check below is reachable. Existing analyze assertions above
+      // stay untouched.
+      const discoverRoot = document.querySelector('[data-discover="true"]');
+      if (discoverRoot) {
+        const discoverCards = Array.from(document.querySelectorAll("[data-discover-card]"))
+          .filter((node) => node.getBoundingClientRect().width > 0);
+        if (discoverCards.length !== 5) {
+          failures.push({ check: "screener-discover-cards", detail: `cards=${discoverCards.length}` });
+        }
+        const modeToggle = document.querySelector('[data-screener-mode-toggle="true"]');
+        if (!modeToggle || modeToggle.getBoundingClientRect().width <= 0) {
+          failures.push({ check: "screener-discover-mode-toggle", detail: "missing visible mode toggle" });
+        }
+        if (viewportWidth < 768) {
+          discoverCards.forEach((node, index) => {
+            if (node.getBoundingClientRect().height < 44) {
+              failures.push({ check: "screener-discover-card-target", detail: `card ${index} height=${Math.round(node.getBoundingClientRect().height)}` });
+            }
+          });
         }
       }
     }
