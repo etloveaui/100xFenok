@@ -14,6 +14,7 @@ const viewportCatalog = {
   narrow: { width: 375, height: 812 },
   tablet: { width: 1024, height: 1366 },
   desktop: { width: 1280, height: 900 },
+  wide: { width: 1440, height: 900 },
 };
 
 const requestedViewports = (process.env.QA_MOBILE_UX_VIEWPORTS || "mobile,narrow")
@@ -3084,6 +3085,35 @@ async function collectRouteChecks(page, route) {
             detail: JSON.stringify({ reportColumn: Boolean(reportColumn), reportCells: reportCells.length }),
           });
         }
+        // Top Guru holder rows are two-line (name line, then metrics line):
+        // every visible row must carry a non-empty rank label and its name
+        // and metrics lines must not overlap each other at this viewport.
+        const holderRows = Array.from(document.querySelectorAll('[data-smart-money-section="holdings"] [data-smart-money-report-date-cell]'))
+          .filter((node) => node.getBoundingClientRect().width > 0);
+        holderRows.forEach((row, index) => {
+          const nameEl = row.querySelector("[data-guru-holder-name]");
+          const metricsEl = row.querySelector("[data-guru-holder-metrics]");
+          if (!nameEl || !((nameEl.textContent || "").trim())) {
+            failures.push({ check: "stock-guru-holder-name-present", detail: `row=${index} empty rank label viewport=${window.innerWidth}` });
+            return;
+          }
+          if (!metricsEl) {
+            failures.push({ check: "stock-guru-holder-metrics-present", detail: `row=${index} missing metrics line viewport=${window.innerWidth}` });
+            return;
+          }
+          const nameRect = nameEl.getBoundingClientRect();
+          const metricsRect = metricsEl.getBoundingClientRect();
+          const separated = metricsRect.left >= nameRect.right - 1
+            || metricsRect.right <= nameRect.left + 1
+            || metricsRect.top >= nameRect.bottom - 1
+            || metricsRect.bottom <= nameRect.top + 1;
+          if (!separated) {
+            failures.push({
+              check: "stock-guru-holder-row-geometry",
+              detail: `row=${index} name/metrics overlap viewport=${window.innerWidth}`,
+            });
+          }
+        });
       }
       if (stockTab === "estimates") {
         const disclosure = document.querySelector("[data-stock-estimate-disclosure]");

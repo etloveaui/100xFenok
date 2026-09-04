@@ -336,6 +336,36 @@ function loadTradesRanking(): Promise<TradesCache | null> {
 }
 
 // ---------------------------------------------------------------------------
+// 13F summary profile names cache (id -> display name, the same source
+// SuperinvestorsClient uses: /data/sec-13f/summary.json investors[].name)
+// ---------------------------------------------------------------------------
+
+let summaryNamesCache: Record<string, string> | null = null;
+let summaryNamesPromise: Promise<Record<string, string> | null> | null = null;
+
+function load13FSummaryNames(): Promise<Record<string, string> | null> {
+  if (summaryNamesCache) return Promise.resolve(summaryNamesCache);
+  if (summaryNamesPromise) return summaryNamesPromise;
+  summaryNamesPromise = fetch("/data/sec-13f/summary.json")
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      const investors = data && typeof data === "object" && !Array.isArray(data)
+        ? (data as { investors?: Record<string, { name?: unknown }> }).investors
+        : null;
+      const names: Record<string, string> = {};
+      if (investors && typeof investors === "object") {
+        for (const [id, profile] of Object.entries(investors)) {
+          if (typeof profile?.name === "string" && profile.name.trim() !== "") names[id] = profile.name;
+        }
+      }
+      summaryNamesCache = names;
+      return names;
+    })
+    .catch(() => { summaryNamesPromise = null; return null; });
+  return summaryNamesPromise;
+}
+
+// ---------------------------------------------------------------------------
 // Formatters
 // ---------------------------------------------------------------------------
 
@@ -2054,6 +2084,7 @@ function OwnershipHeroCp({
   yQuality?: { loading: boolean; error: LoaderError | null; onRetry?: () => void };
 }) {
   const [tradesChip, setTradesChip] = useState<{ bought?: any; sold?: any; metadata?: any } | null>(null);
+  const [investorNames, setInvestorNames] = useState<Record<string, string> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -2063,6 +2094,10 @@ function OwnershipHeroCp({
       const b = data.bought.find((r: any) => r?.ticker === upper);
       const s = data.sold.find((r: any) => r?.ticker === upper);
       setTradesChip({ bought: b, sold: s, metadata: data.metadata });
+    });
+    load13FSummaryNames().then((names) => {
+      if (cancelled || !names) return;
+      setInvestorNames(names);
     });
     return () => { cancelled = true; };
   }, [ticker]);
@@ -2083,6 +2118,12 @@ function OwnershipHeroCp({
 
   const top10 = holders.slice(0, 10);
   const holderCount = holders.length;
+  // Profile display name first, raw id only when no profile exists. The id is
+  // always a non-empty string here (filtered above), so the rank line is never
+  // left empty.
+  const holderDisplayName = (id: string) => (
+    investorNames && typeof investorNames[id] === "string" && investorNames[id] !== "" ? investorNames[id] : id
+  );
   const totalShares = holders.reduce((s, h) => s + h.shares, 0);
   const guruValueApprox = isFiniteNumber(displayPrice) && totalShares > 0 ? displayPrice * totalShares : null;
 
@@ -2171,14 +2212,21 @@ function OwnershipHeroCp({
                 {top10.map((h, i) => {
                   const maxWeight = top10[0]?.weight || 1;
                   const barPct = maxWeight > 0 ? Math.max(4, (h.weight / maxWeight) * 100) : 0;
+                  const displayName = holderDisplayName(h.investor);
+                  const weightLabel = h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—";
                   return (
-                    <Row key={h.investor} data-smart-money-report-date-cell>
-                      <span className="truncate text-[12px] text-slate-700">{i + 1}. {h.investor}</span>
-                      <span className="min-w-0" data-smart-money-report-date-column>
-                        <Bar value={barPct} aria-label={`${h.investor} 포트폴리오 비중 ${h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—"}`} />
-                      </span>
-                      <span className="text-right text-[12px] tabular-nums text-slate-600">{h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—"} · {h.shares > 0 ? `${h.shares.toLocaleString()}주` : "—"} · {quarter ?? "—"}</span>
-                    </Row>
+                    <div key={h.investor} data-smart-money-report-date-cell className="border-t border-[#f1f5f9] px-4 py-2">
+                      <div className="flex items-baseline gap-2">
+                        <span data-guru-holder-name className="min-w-0 flex-1 truncate text-[12px] text-slate-700">{i + 1}. {displayName}</span>
+                        <span className="shrink-0 text-[12px] font-semibold tabular-nums text-slate-900">{weightLabel}</span>
+                      </div>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <span className="min-w-0 flex-1" data-smart-money-report-date-column>
+                          <Bar value={barPct} aria-label={`${displayName} 포트폴리오 비중 ${weightLabel}`} />
+                        </span>
+                        <span data-guru-holder-metrics className="shrink-0 text-[11px] tabular-nums text-slate-500">{h.shares > 0 ? `${h.shares.toLocaleString()}주` : "—"} · {quarter ?? "—"}</span>
+                      </div>
+                    </div>
                   );
                 })}
               </>
