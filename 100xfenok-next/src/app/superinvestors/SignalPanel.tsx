@@ -17,6 +17,7 @@ import { loadSignalBuyingPressure, loadSignalNewPositions } from "./signalFeeds"
 import WhoHoldsPanel from "./WhoHoldsPanel";
 import {
   FOLLOW_ROSTER_SIZE,
+  MIN_TOP_BUYERS,
   avatarStyleFor,
   buildNewBuyRanks,
   buildPressureRanks,
@@ -182,7 +183,14 @@ export default function SignalPanel({
     [followMode, roster],
   );
   const topSet = useMemo(() => new Set(roster.ids), [roster]);
-  const newBuys = useMemo(() => buildNewBuyRanks(newPositions ?? null, scope, topSet, 3, VISIBLE_MIN_TOP_BUYERS), [newPositions, scope, topSet]);
+  const { newBuys, newBuyThreshold } = useMemo(() => {
+    const primary = buildNewBuyRanks(newPositions ?? null, scope, topSet);
+    if (primary.length > 0) return { newBuys: primary, newBuyThreshold: MIN_TOP_BUYERS };
+    return {
+      newBuys: buildNewBuyRanks(newPositions ?? null, scope, topSet, 3, VISIBLE_MIN_TOP_BUYERS),
+      newBuyThreshold: VISIBLE_MIN_TOP_BUYERS,
+    };
+  }, [newPositions, scope, topSet]);
   const increases = useMemo(() => buildPressureRanks(buyingPressure ?? null, "net_buyers"), [buyingPressure]);
   const decreases = useMemo(() => buildPressureRanks(buyingPressure ?? null, "net_sellers"), [buyingPressure]);
 
@@ -199,8 +207,8 @@ export default function SignalPanel({
 
   const rosterNames = roster.ids.map((id) => investorDisplayName(summary, id));
   const newCoverage = followMode === "roster"
-    ? `상위 컨빅션 ${formatInteger(roster.ids.length)}명 로스터: ${rosterNames.join(" · ") || "—"} · 신규 ≥${VISIBLE_MIN_TOP_BUYERS}명`
-    : `전체 ${formatInteger(dataReady ? investorCount : null)}명 기준 · 신규 로스터 ≥${VISIBLE_MIN_TOP_BUYERS}명`;
+    ? `상위 컨빅션 ${formatInteger(roster.ids.length)}명 로스터: ${rosterNames.join(" · ") || "—"} · 신규 ≥${newBuyThreshold}명`
+    : `전체 ${formatInteger(dataReady ? investorCount : null)}명 기준 · 신규 로스터 ≥${newBuyThreshold}명`;
   const pressureCoverage = "13F 집계값 · 개별 투자자 내역 미제공";
 
   return (
