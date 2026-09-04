@@ -922,7 +922,14 @@ const config = {
           }),
         ]),
       ],
-      endpointContract: endpoint("slickcharts_html", "table_rows", "/rows", "array", "http"),
+      endpointContract: {
+        // Per-shape page-assertion acceptance: table pages carry exactly
+        // {table_rows}, the three SvelteKit-hydrated yield pages exactly
+        // {yield_value}. Evidence validation checks each event against the
+        // set for its own page_shape, never a global exact set.
+        ...endpoint("slickcharts_html", "table_rows", "/rows", "array", "http"),
+        assertion_sets: { table: ["table_rows"], yield: ["yield_value"] },
+      },
       freshnessPolicy: freshness({ fold: "member_worst", unit: "calendar_days", calendar: "utc", maxStaleness: 40 }),
       affectedSurfaceIds: ["slickcharts_discovery", "stock_signals"],
     }),
@@ -1404,6 +1411,14 @@ function validateAssertions(assertions, context, { allowEmpty = false } = {}) {
   });
 }
 
+function validateAssertionSets(sets, context) {
+  if (!isPlainObject(sets) || Object.keys(sets).length === 0) fail(`${context} must be a non-empty object`);
+  for (const [shape, ids] of Object.entries(sets)) {
+    requireIdentifier(shape, `${context}.${shape}`);
+    requireUniqueStrings(ids, `${context}.${shape}`, { identifiers: true });
+  }
+}
+
 function validateArtifactContract(contract, context) {
   exactKeys(contract, ["id", "path", "selection", "schema_version", "source_selector", "assertions"], context);
   requireIdentifier(contract.id, `${context}.id`);
@@ -1510,7 +1525,9 @@ function validateEndpointContract(endpointValue, context, artifactOnly) {
   // load failure, and every non-artifact-only lane states which one it is.
   exactKeys(endpointValue, artifactOnly
     ? ["endpoint_family", "probe_mode", "assertions"]
-    : ["endpoint_family", "probe_mode", "transport", "assertions"], context);
+    : ["endpoint_family", "probe_mode", "transport", "assertions"].concat(
+      Object.hasOwn(endpointValue, "assertion_sets") ? ["assertion_sets"] : [],
+    ), context);
   requireIdentifier(endpointValue.endpoint_family, `${context}.endpoint_family`);
   if (!new Set(["injected_post_fetch", "artifact_only"]).has(endpointValue.probe_mode)) fail(`${context}.probe_mode is invalid`);
   if (!artifactOnly && !ENDPOINT_TRANSPORTS.has(endpointValue.transport)) {
@@ -1519,6 +1536,7 @@ function validateEndpointContract(endpointValue, context, artifactOnly) {
   if (artifactOnly !== (endpointValue.probe_mode === "artifact_only")) fail(`${context}.probe_mode contradicts monitoring mode`);
   validateAssertions(endpointValue.assertions, `${context}.assertions`, { allowEmpty: artifactOnly });
   if (artifactOnly && endpointValue.assertions.length !== 0) fail(`${context}.assertions must be empty for artifact-only lanes`);
+  if (Object.hasOwn(endpointValue, "assertion_sets")) validateAssertionSets(endpointValue.assertion_sets, `${context}.assertion_sets`);
 }
 
 function validateFreshness(freshnessValue, context) {

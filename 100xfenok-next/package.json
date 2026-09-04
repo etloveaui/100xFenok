@@ -68,7 +68,7 @@
     "test:stockanalysis-workflow-contract": "python3 ../scripts/test_stockanalysis_workflow_contract.py",
     "test:stockanalysis-universe-proof": "python3 ../scripts/test_stockanalysis_recovery_state.py StockAnalysisRecoveryStateTest.test_reconcile_current_payload_sha_preserves_degraded_lkg_binding && python3 ../scripts/test_stockanalysis_workflow_contract.py StockAnalysisWorkflowContractTest.test_universe_controlled_failure_profile_is_isolated",
     "test:slickcharts-composite-recovery": "node ../scripts/test-slickcharts-composite-recovery.mjs",
-    "test:slickcharts-yield-content": "python3 ../scripts/test_slickcharts_yield_content_assertion.py",
+    "test:slickcharts-yield-content": "python3 ../scripts/test_slickcharts_yield_content_assertion.py && node ../scripts/test-slickcharts-monthly-telemetry.mjs",
     "test:admin-redirects": "node scripts/test-generate-admin-redirects.mjs",
     "check:admin-redirects": "node scripts/generate-admin-redirects.mjs --check",
     "gen:admin-redirects": "node scripts/generate-admin-redirects.mjs --write",

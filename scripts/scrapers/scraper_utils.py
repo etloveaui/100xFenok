@@ -174,14 +174,21 @@ def _html_attempt_tuple(
     content_assertion: Optional[tuple] = None,
 ) -> Dict[str, Any]:
     response_sha256 = hashlib.sha256(html.encode("utf-8")).hexdigest()
+    # Request shape for telemetry: the telemetry lane contract accepts one
+    # assertion-id set per page shape, never a global set. The shape is
+    # derived from the assertion path taken here, so it can never disagree
+    # with the emitted assertion id.
+    page_shape = "yield" if content_assertion is not None else "table"
     if not html.strip():
-        return _returned_attempt_tuple(
+        row = _returned_attempt_tuple(
             status,
             decode="ok",
             payload="empty",
             provider_date=provider_date,
             response_sha256=response_sha256,
         )
+        row["page_shape"] = page_shape
+        return row
     if content_assertion is not None:
         # Non-table pages (e.g. SvelteKit-hydrated yield pages) assert on the
         # content the scraper actually parses: (id, css selector, pattern or
@@ -201,7 +208,7 @@ def _html_attempt_tuple(
     else:
         has_table_rows = bool(BeautifulSoup(html, "html.parser").select("table tr"))
         assertions = [{"id": "table_rows", "passed": has_table_rows}]
-    return _returned_attempt_tuple(
+    row = _returned_attempt_tuple(
         status,
         decode="ok",
         payload="non_empty",
@@ -209,6 +216,8 @@ def _html_attempt_tuple(
         provider_date=provider_date,
         response_sha256=response_sha256,
     )
+    row["page_shape"] = page_shape
+    return row
 
 
 def decode_response_html(response: Response) -> str:
