@@ -1198,13 +1198,18 @@ function SectorRotationPanel({
   const participation = useMemo(() => {
     const bought = new Map<CanonicalSector, number>();
     const sold = new Map<CanonicalSector, number>();
+    // Participation = payload-provided investors_count summed over the sector's
+    // ranked tickers (investor×ticker pairs). Rows without the field add nothing;
+    // a sector with no valid aggregate stays absent so the UI renders "—".
     for (const row of tradesData?.bought ?? []) {
+      if (typeof row.investors_count !== "number" || !Number.isFinite(row.investors_count)) continue;
       const sector = normalizeSuperSector(row.sector_gics ?? row.sector, row.sector);
-      bought.set(sector, (bought.get(sector) ?? 0) + 1);
+      bought.set(sector, (bought.get(sector) ?? 0) + row.investors_count);
     }
     for (const row of tradesData?.sold ?? []) {
+      if (typeof row.investors_count !== "number" || !Number.isFinite(row.investors_count)) continue;
       const sector = normalizeSuperSector(row.sector_gics ?? row.sector, row.sector);
-      sold.set(sector, (sold.get(sector) ?? 0) + 1);
+      sold.set(sector, (sold.get(sector) ?? 0) + row.investors_count);
     }
     return { bought, sold };
   }, [tradesData]);
@@ -1222,7 +1227,7 @@ function SectorRotationPanel({
   const quarter = pvData?.metadata?.quarter ?? "—";
   const quarterCount = pvData?.total?.sector_history?.quarters.length ?? 0;
   const failed = !pvLoading && (pvFailed || !pvData);
-  const empty = !pvLoading && !pvFailed && !!pvData && rotation.length === 0;
+  const empty = !pvLoading && !tradesLoading && !pvFailed && !!pvData && rotation.length === 0;
   const tradesPartFailed = !tradesLoading && (tradesFailed || !tradesData);
   const chipsMissing = !bySector;
   const partial = !pvLoading && !failed && !empty && (tradesPartFailed || chipsMissing);
@@ -1295,12 +1300,16 @@ function SectorRotationPanel({
                   </div>
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-slate-700">
                     <span>보유 <b className="tabular-nums text-slate-900">{formatPercent(row.current, { digits: 1 })}</b></span>
-                    <span>매수 <b className="tabular-nums text-slate-900">{tradesPartFailed ? "—" : `${formatInteger(bought ?? 0)}종목`}</b></span>
-                    <span>매도 <b className="tabular-nums text-slate-900">{tradesPartFailed ? "—" : `${formatInteger(sold ?? 0)}종목`}</b></span>
+                    <span>매수 참여 <b className="tabular-nums text-slate-900">{tradesPartFailed || bought == null ? "—" : `${formatInteger(bought)}건`}</b></span>
+                    <span>매도 참여 <b className="tabular-nums text-slate-900">{tradesPartFailed || sold == null ? "—" : `${formatInteger(sold)}건`}</b></span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {chips.length > 0 ? (
-                      chips.map((ticker) => <TickerChip key={ticker} ticker={ticker} variant="inline" />)
+                      chips.map((ticker) => (
+                        <span key={ticker} className="inline-flex min-h-11 items-center">
+                          <TickerChip ticker={ticker} variant="inline" />
+                        </span>
+                      ))
                     ) : (
                       <span className="text-[10px] font-bold text-slate-700">—</span>
                     )}
