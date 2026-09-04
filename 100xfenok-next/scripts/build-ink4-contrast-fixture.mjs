@@ -109,6 +109,8 @@ const RETIRED_INK4_SITES = {
     "slice-5-E4c EmptyPanel-to-EmptyState: render line no longer carries an ink token",
   "src/app/market/events/MarketEventsClient.tsx#a474d8987daf#1":
     "8b timeline: legacy tab board (tab-count text-slate-500 span) removed in fd3df4565; the witness line no longer exists",
+  "src/app/screener/ScreenerClient.tsx#0f9cf5c84077#1":
+    "screener-density fh-463: signal-cell second line (actionReasons ink-3 span) removed for one-line density; line no longer carries an ink token",
 };
 
 export function emitInk4ContrastFixture({ outputPath = INK4_CONTRAST_FIXTURE_PATH } = {}) {

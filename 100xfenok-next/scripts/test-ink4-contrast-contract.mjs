@@ -207,8 +207,8 @@ function renderContractHash(sites) {
 
 export function validateRenderManifest(manifest, reader = read) {
   assert.equal(manifest.schema_version, "ink4-render-sites/v2");
-  assert.equal(manifest.site_count, 93, "94-site five-screens builder roster minus the 1 MarketEventsClient tab-count witness retired by 8b (legacy tab board removed in fd3df4565: line no longer carries an ink token)");
-  assert.equal(manifest.consumer_count, 94, "builder-derived consumer count remains exactly one above the render-site count");
+  assert.equal(manifest.site_count, 92, "94-site five-screens builder roster minus the 1 MarketEventsClient tab-count witness retired by 8b (legacy tab board removed in fd3df4565) and the 1 ScreenerClient signal-cell witness retired by screener-density fh-463 (second line removed for one-line density: line no longer carries an ink token)");
+  assert.equal(manifest.consumer_count, 93, "builder-derived consumer count remains exactly one above the render-site count");
   assert.equal(manifest.sites.length, manifest.site_count, "render manifest denominator drifted");
   assert.deepEqual(
     manifest.surfaces,
@@ -223,8 +223,8 @@ export function validateRenderManifest(manifest, reader = read) {
   }, {});
   assert.deepEqual(
     roles,
-    { body_text: 86, non_text: 4, mixed_text_non_text: 1, inactive_control: 2 },
-    "text, non-text, or inactive-control classification drifted from the five-screens builder roster (body_text 87 minus the 1 retired MarketEventsClient tab-count witness)",
+    { body_text: 85, non_text: 4, mixed_text_non_text: 1, inactive_control: 2 },
+    "text, non-text, or inactive-control classification drifted from the five-screens builder roster (body_text 87 minus the 1 retired MarketEventsClient tab-count witness and the 1 retired ScreenerClient signal-cell witness)",
   );
 
   const byPath = new Map();
