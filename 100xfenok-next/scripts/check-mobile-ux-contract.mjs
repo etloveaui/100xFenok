@@ -108,7 +108,12 @@ async function prepareDynamicRoute(page, route) {
   }
   if (pathname === "/superinvestors") {
     await page.locator("[data-superinvestors-surface]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
-    await page.locator("[data-superinvestors-holder-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    // V3 default tab is signal (?guru= forces the investors tab instead).
+    if (route.includes("guru=")) {
+      await page.locator("[data-superinvestors-holder-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    } else {
+      await page.locator("[data-superinvestors-signal-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    }
   }
   if (pathname === "/superinvestors" && route.includes("guru=")) {
     await page.locator("[data-superinvestors-holder-detail]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
@@ -3304,44 +3309,76 @@ async function collectRouteChecks(page, route) {
       if (!lagNote.includes("45")) {
         failures.push({ check: "superinvestors-13f-lag", detail: `footer=${lagNote.slice(0, 80)}` });
       }
-      const holders = document.querySelector("[data-superinvestors-holders]");
-      const holderRows = Array.from(document.querySelectorAll("[data-superinvestors-holder-row]"));
+      // V3 tabs: holders/overlap live under the investors tab (?guru= forces
+      // it), the signal tab is the default view. Inactive tabs unmount, so
+      // each route asserts only its visible tab; hooks are unchanged.
+      const isGuruRoute = currentRoute.includes("guru=");
       const sortBtns = Array.from(document.querySelectorAll("[data-superinvestors-sort]"));
-      const headCells = Array.from(holders?.querySelectorAll("thead th") || []);
-      if (!holders || holders.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "superinvestors-holders", detail: "missing visible holders panel" });
+      const tabBtns = Array.from(document.querySelectorAll("[data-superinvestors-tab]"));
+      if (tabBtns.length !== 4 || tabBtns.filter((btn) => btn.getAttribute("aria-selected") === "true").length !== 1) {
+        failures.push({ check: "superinvestors-tabs", detail: `tabs=${tabBtns.length}` });
       }
-      if (holderRows.length < 10) {
-        failures.push({ check: "superinvestors-holder-rows", detail: `rows=${holderRows.length}` });
+      if (isGuruRoute) {
+        const holders = document.querySelector("[data-superinvestors-holders]");
+        const holderRows = Array.from(document.querySelectorAll("[data-superinvestors-holder-row]"));
+        const headCells = Array.from(holders?.querySelectorAll("thead th") || []);
+        if (!holders || holders.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "superinvestors-holders", detail: "missing visible holders panel" });
+        }
+        if (holderRows.length < 10) {
+          failures.push({ check: "superinvestors-holder-rows", detail: `rows=${holderRows.length}` });
+        }
+        if (headCells.length !== 5) {
+          failures.push({ check: "superinvestors-holder-columns", detail: `columns=${headCells.length}` });
+        }
+        if (sortBtns.length !== 3 || sortBtns.filter((btn) => btn.getAttribute("aria-pressed") === "true").length !== 1) {
+          failures.push({ check: "superinvestors-sort-tabs", detail: `tabs=${sortBtns.length}` });
+        }
+        const holderCells = holderRows[0]?.querySelectorAll("th, td").length ?? 0;
+        if (holderRows.length > 0 && holderCells !== 5) {
+          failures.push({ check: "superinvestors-holder-row-cells", detail: `cells=${holderCells}` });
+        }
+        const overlap = document.querySelector("[data-superinvestors-overlap]");
+        const overlapRows = Array.from(document.querySelectorAll("[data-superinvestors-overlap-row]"));
+        if (!overlap || overlap.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "superinvestors-overlap", detail: "missing visible overlap panel" });
+        }
+        if (overlapRows.length !== 4) {
+          failures.push({ check: "superinvestors-overlap-rows", detail: `rows=${overlapRows.length}` });
+        }
+        const overlapHolders = overlapRows.map((node) => Number.parseInt(node.getAttribute("data-superinvestors-overlap-holders") || "", 10));
+        const overlapDesc = overlapHolders.every((value, index) => index === 0 || (Number.isFinite(value) && Number.isFinite(overlapHolders[index - 1]) && overlapHolders[index - 1] >= value));
+        if (overlapHolders.length !== overlapRows.length || !overlapDesc) {
+          failures.push({ check: "superinvestors-overlap-sort", detail: `holders=${JSON.stringify(overlapHolders)}` });
+        }
+      } else {
+        const signalLists = Array.from(document.querySelectorAll("[data-superinvestors-signal-list]"))
+          .filter((node) => node.getBoundingClientRect().height > 0);
+        const signalRows = Array.from(document.querySelectorAll("[data-superinvestors-signal-row]"))
+          .filter((node) => node.getBoundingClientRect().height > 0);
+        const followBtns = Array.from(document.querySelectorAll("[data-superinvestors-follow]"));
+        if (signalLists.length !== 3) {
+          failures.push({ check: "superinvestors-signal-lists", detail: `lists=${signalLists.length}` });
+        }
+        if (signalRows.length < 3) {
+          failures.push({ check: "superinvestors-signal-rows", detail: `rows=${signalRows.length}` });
+        }
+        if (followBtns.length !== 2 || followBtns.filter((btn) => btn.getAttribute("aria-pressed") === "true").length !== 1) {
+          failures.push({ check: "superinvestors-follow-toggle", detail: `tabs=${followBtns.length}` });
+        }
+        const whoholds = document.querySelector("[data-superinvestors-whoholds]");
+        const whoholdsInput = document.querySelector("[data-superinvestors-whoholds-input]");
+        if (!whoholds || whoholds.getBoundingClientRect().height <= 0 || !whoholdsInput || whoholdsInput.getBoundingClientRect().width <= 0) {
+          failures.push({ check: "superinvestors-whoholds", detail: "missing visible who-holds search" });
+        }
+        followBtns.forEach((btn, index) => {
+          const rect = btn.getBoundingClientRect();
+          if (rect.height < 32 || rect.width <= 0) {
+            failures.push({ check: "superinvestors-follow-touch-target", detail: `follow ${index} ${Math.round(rect.width)}x${Math.round(rect.height)}` });
+          }
+        });
       }
-      if (headCells.length !== 5) {
-        failures.push({ check: "superinvestors-holder-columns", detail: `columns=${headCells.length}` });
-      }
-      if (sortBtns.length !== 3 || sortBtns.filter((btn) => btn.getAttribute("aria-pressed") === "true").length !== 1) {
-        failures.push({ check: "superinvestors-sort-tabs", detail: `tabs=${sortBtns.length}` });
-      }
-      const holderCells = holderRows[0]?.querySelectorAll("th, td").length ?? 0;
-      if (holderRows.length > 0 && holderCells !== 5) {
-        failures.push({ check: "superinvestors-holder-row-cells", detail: `cells=${holderCells}` });
-      }
-      const overlap = document.querySelector("[data-superinvestors-overlap]");
-      const overlapRows = Array.from(document.querySelectorAll("[data-superinvestors-overlap-row]"));
-      if (!overlap || overlap.getBoundingClientRect().height <= 0) {
-        failures.push({ check: "superinvestors-overlap", detail: "missing visible overlap panel" });
-      }
-      if (overlapRows.length !== 4) {
-        failures.push({ check: "superinvestors-overlap-rows", detail: `rows=${overlapRows.length}` });
-      }
-      const overlapHolders = overlapRows.map((node) => Number.parseInt(node.getAttribute("data-superinvestors-overlap-holders") || "", 10));
-      const overlapDesc = overlapHolders.every((value, index) => index === 0 || (Number.isFinite(value) && Number.isFinite(overlapHolders[index - 1]) && overlapHolders[index - 1] >= value));
-      if (overlapHolders.length !== overlapRows.length || !overlapDesc) {
-        failures.push({ check: "superinvestors-overlap-sort", detail: `holders=${JSON.stringify(overlapHolders)}` });
-      }
-      const graph = document.querySelector("[data-superinvestors-graph]");
       const graphTeaser = document.querySelector("[data-superinvestors-graph-teaser]");
-      if (!graph || graph.getBoundingClientRect().height <= 0 || !/Graph Network/.test(graph.textContent || "")) {
-        failures.push({ check: "superinvestors-graph", detail: "missing visible graph section" });
-      }
       if (!graphTeaser || graphTeaser.getBoundingClientRect().height <= 0 || !/그래프 보기/.test(graphTeaser.textContent || "")) {
         failures.push({ check: "superinvestors-graph-teaser", detail: "missing visible graph teaser" });
       }

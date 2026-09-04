@@ -19,10 +19,11 @@ function firstParam(value: string | string[] | undefined): string {
 export default async function SuperinvestorsPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
   const initialGuru = firstParam(params.guru).trim();
+  const initialTab = firstParam(params.tab).trim();
   return (
     <div className="fnk-shell">
       <AppShell active="superinvestors" title="투자자">
-        <SuperinvestorsClient initialGuru={initialGuru || null} />
+        <SuperinvestorsClient initialGuru={initialGuru || null} initialTab={initialTab || null} />
       </AppShell>
     </div>
   );

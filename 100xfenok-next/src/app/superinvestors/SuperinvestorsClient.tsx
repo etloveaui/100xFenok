@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { fetch13FJson, use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { Button, EmptyState, EvidenceRail, Panel, PanelHeader, Pill, Row } from "@/components/ui";
+import { TabPanel, getPanelId, getTabId, useTabsBaseId } from "@/components/ui/Tabs";
 import {
   formatCurrencyCompact,
   formatInteger,
@@ -15,8 +16,25 @@ import type {
 } from "@/lib/superinvestors/types";
 import { buildGraphNetwork } from "./graphNetwork";
 import GraphNetworkPanel, { GraphNetworkTeaser } from "./GraphNetworkPanel";
+import SignalPanel from "./SignalPanel";
+import WhoHoldsPanel from "./WhoHoldsPanel";
 
 type HolderSort = "aum" | "holdings" | "change";
+
+type SupTab = "signal" | "investors" | "stocks" | "graph";
+
+const SUP_TABS: Array<{ id: SupTab; label: string }> = [
+  { id: "signal", label: "시그널" },
+  { id: "investors", label: "투자자" },
+  { id: "stocks", label: "종목" },
+  { id: "graph", label: "그래프" },
+];
+
+function resolveInitialTab(value: string | null, guru: string | null): SupTab {
+  if (guru) return "investors";
+  if (value === "investors" || value === "stocks" || value === "graph" || value === "signal") return value;
+  return "signal";
+}
 
 const HOLDER_SORTS: Array<{ key: HolderSort; label: string }> = [
   { key: "aum", label: "AUM 순" },
@@ -50,6 +68,16 @@ function reload() {
 
 function openEvidence(path: string) {
   window.open(path, "_blank", "noopener");
+}
+
+function syncTabParam(tab: SupTab) {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  params.set("tab", tab);
+  const queryString = params.toString();
+  const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`;
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextUrl !== currentUrl) window.history.replaceState(window.history.state, "", nextUrl);
 }
 
 function syncGuruParam(guru: string | null) {
@@ -124,7 +152,7 @@ function HolderDetail({ id }: { id: string }) {
   );
 }
 
-export default function SuperinvestorsClient({ initialGuru = null }: { initialGuru?: string | null }) {
+export default function SuperinvestorsClient({ initialGuru = null, initialTab = null }: { initialGuru?: string | null; initialTab?: string | null }) {
   const {
     consensus,
     enhancedConsensus,
@@ -139,12 +167,16 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
   } = use13FData();
   const [sort, setSort] = useState<HolderSort>("aum");
   const [expandedGuru, setExpandedGuru] = useState<string | null>(initialGuru);
+  const [tab, setTab] = useState<SupTab>(() => resolveInitialTab(initialTab, initialGuru));
+  const [prevInitial, setPrevInitial] = useState({ guru: initialGuru, tab: initialTab });
+  if (prevInitial.guru !== initialGuru || prevInitial.tab !== initialTab) {
+    setPrevInitial({ guru: initialGuru, tab: initialTab });
+    setExpandedGuru(initialGuru);
+    setTab(resolveInitialTab(initialTab, initialGuru));
+  }
+  const tabsBaseId = useTabsBaseId("sup");
   const [turnover, setTurnover] = useState<TurnoverData["by_investor"] | null | undefined>(undefined);
   const [turnoverError, setTurnoverError] = useState(false);
-
-  useEffect(() => {
-    setExpandedGuru(initialGuru);
-  }, [initialGuru]);
 
   useEffect(() => {
     let cancelled = false;
@@ -226,6 +258,12 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
     return sortConsensusByHolders(Object.values(consensus.consensus)).slice(0, 4);
   }, [consensus]);
 
+  // Mobile graph replacement: ranked list of the most-held tickers.
+  const graphRankRows = useMemo(() => {
+    if (!consensus) return [];
+    return sortConsensusByHolders(Object.values(consensus.consensus)).slice(0, 10);
+  }, [consensus]);
+
   const loading = !dataReady && !failed;
   const investorCount =
     consensus?.metadata?.current_cohort_investors ??
@@ -238,6 +276,10 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
     summary?.metadata?.total_investors ??
     investors.length;
   const coverage = dataReady ? `${formatInteger(investorCount)}/${formatInteger(totalTracked)} 투자자` : "—";
+  const submittedTotal = summary?.metadata?.investor_count ?? consensus?.metadata?.total_investors ?? null;
+  // No average-filing-lag field exists in the loaded 13F payloads: the chip
+  // binds submitted/total/stale to the payload and shows "—" for the lag.
+  const freshnessChip = `제출 지연 평균 — · ${formatInteger(dataReady ? investorCount : null)}/${formatInteger(dataReady ? submittedTotal : null)} 제출 · 정체 ${formatInteger(dataReady ? excludedStale.length : null)}명 제외`;
   const turnoverCovered = turnover ? Object.keys(turnover).length : 0;
   const holdersCoverage =
     turnoverError
@@ -287,6 +329,11 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
     });
   }
 
+  function selectTab(next: SupTab) {
+    setTab(next);
+    syncTabParam(next);
+  }
+
   return (
     <div className="sup" data-superinvestors-surface>
       <div className="sup-head">
@@ -299,11 +346,12 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
           </div>
           <h1 className="sup-title">
             {loading ? "투자자 데이터를 불러오는 중입니다." : failed ? "투자자 데이터를 불러오지 못했습니다. 다시 시도해 주세요." : (
-              <>거장 <b className="tabular-nums">{formatInteger(investorCount)}</b>명의 보유·매매를 한 화면에서 비교합니다</>
+              <>이번 분기 무엇을 새로 사고 팔았나 — 지금 봐야 할 시그널부터</>
             )}
           </h1>
           <div className="sup-meta-row">
             <Pill data-superinvestors-quarter>기준 {quarter ?? "—"} 제출분</Pill>
+            <Pill tone="warn" data-superinvestors-freshness>{freshnessChip}</Pill>
             {excludedStale.length > 0 ? <Pill tone="warn">최신 분기 제외 {excludedStale.length}명</Pill> : null}
             {!failed && partialFeeds ? <Pill tone="warn">일부 피드 {failedRequests.length}개 미반영</Pill> : null}
             {!failed && !partialFeeds && turnoverError ? <Pill tone="warn">회전율 확인 불가</Pill> : null}
@@ -312,6 +360,56 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
         </div>
       </div>
 
+      <div className="sup-tabs scroll-hint-x" role="region" tabIndex={0} aria-label="투자자 화면 탭 가로 스크롤">
+        <div role="tablist" aria-label="투자자 화면 전환" className="sup-tablist">
+          {SUP_TABS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              id={getTabId(tabsBaseId, item)}
+              aria-selected={tab === item.id}
+              aria-controls={getPanelId(tabsBaseId, item)}
+              data-superinvestors-tab={item.id}
+              className={`sup-tab${tab === item.id ? " on" : ""}`}
+              onClick={() => selectTab(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <TabPanel item={{ id: "signal" as SupTab, label: "시그널" }} active={tab === "signal"} idBase={tabsBaseId}>
+        <SignalPanel
+          summary={summary}
+          consensus={consensus}
+          enhancedConsensus={enhancedConsensus}
+          byTicker={byTicker}
+          convictionEntries={convictionEntries}
+          asOf={asOfLabel}
+          dataReady={dataReady}
+          failed={failed}
+          partialFeeds={partialFeeds}
+          investorCount={investorCount}
+          onRetry={retry}
+        />
+        <div className="sup-signal-teaser">
+          <GraphNetworkTeaser
+            network={graphNetwork}
+            href="/superinvestors?tab=graph"
+            status={loading ? "pending" : graphFailed ? "error" : "ready"}
+            freshness={graphFreshness}
+            source="SEC EDGAR 13F"
+            asOf={asOfLabel}
+            coverage={graphCoverage}
+            onRetry={graphFailed || (graphReady && partialFeeds) ? retry : undefined}
+            onEvidence={dataReady && !failed ? openGraphEvidence : undefined}
+          />
+        </div>
+      </TabPanel>
+
+      <TabPanel item={{ id: "investors" as SupTab, label: "투자자" }} active={tab === "investors"} idBase={tabsBaseId}>
       <div className="sup-grid">
         <Panel
           loading={loading}
@@ -491,7 +589,7 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
 
           <GraphNetworkTeaser
             network={graphNetwork}
-            href="#superinvestors-graph-full"
+            href="/superinvestors?tab=graph"
             status={loading ? "pending" : graphFailed ? "error" : "ready"}
             freshness={graphFreshness}
             source="SEC EDGAR 13F"
@@ -502,7 +600,24 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
           />
         </div>
       </div>
+      </TabPanel>
 
+      <TabPanel item={{ id: "stocks" as SupTab, label: "종목" }} active={tab === "stocks"} idBase={tabsBaseId}>
+        <WhoHoldsPanel
+          summary={summary}
+          consensus={consensus}
+          enhancedConsensus={enhancedConsensus}
+          byTicker={byTicker}
+          quarter={quarter}
+          asOf={asOfLabel}
+          dataReady={dataReady}
+          failed={failed}
+          partialFeeds={partialFeeds}
+          onRetry={retry}
+        />
+      </TabPanel>
+
+      <TabPanel item={{ id: "graph" as SupTab, label: "그래프" }} active={tab === "graph"} idBase={tabsBaseId}>
       <section className="sup-graph-full" id="superinvestors-graph-full" aria-label="투자자 종목 연결 그래프">
         {graphFailed ? (
           <Panel
@@ -556,6 +671,29 @@ export default function SuperinvestorsClient({ initialGuru = null }: { initialGu
           </Panel>
         )}
       </section>
+      {graphRankRows.length > 0 ? (
+        <div className="sup-graph-ranklist" data-superinvestors-graph-ranklist>
+          <PanelHeader eyebrow="Graph · Ranked" title="함께 가장 많이 들고 있는 종목" />
+          {graphRankRows.map((row) => (
+            <Row
+              key={row.ticker}
+              data-superinvestors-graph-rank-row
+              data-superinvestors-graph-rank-ticker={row.ticker}
+            >
+              <span className="sup-mono sup-ticker-strong">{row.ticker}</span>
+              <span className="tabular-nums"><b>{formatInteger(row.holders_count)}명</b></span>
+            </Row>
+          ))}
+          <EvidenceRail
+            freshness={graphFreshness}
+            source="SEC EDGAR 13F"
+            asOf={asOfLabel}
+            coverage={graphCoverage}
+            onEvidence={dataReady && !failed ? openGraphEvidence : undefined}
+          />
+        </div>
+      ) : null}
+      </TabPanel>
 
       <div className="sup-cta">
         <span className="sup-cta-note">13F 공시 기반 장기 보유 포지션만 집계합니다. 공시는 최대 45일 늦게 반영됩니다.</span>
