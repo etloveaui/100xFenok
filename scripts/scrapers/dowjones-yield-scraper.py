@@ -19,7 +19,7 @@ from bs4 import BeautifulSoup
 
 # Add parent directory to path for scraper_utils import
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from scraper_utils import extract_yield_percent, fetch_html
+from scraper_utils import YIELD_VALUE_SELECTOR, extract_yield_percent, fetch_html
 
 SOURCE_URL = "https://www.slickcharts.com/dowjones/yield"
 DEFAULT_OUTPUT = Path(__file__).with_name("dowjones_yield.json")
@@ -32,17 +32,18 @@ def _is_yield_heading(text: str) -> bool:
 # The yield page carries no static data table (SvelteKit-hydrated headings),
 # so the attempt event asserts on the parsed value heading instead of table
 # rows, using the exact rule the parser applies (unsigned, 0-30%).
-CONTENT_ASSERTION = ("yield_value", "h1 + h2", _is_yield_heading)
+CONTENT_ASSERTION = ("yield_value", YIELD_VALUE_SELECTOR, _is_yield_heading)
 
 
 def parse_yield(html: str) -> Dict[str, float | str]:
     """Extract dividend yield value from SlickCharts HTML."""
     soup = BeautifulSoup(html, "html.parser")
 
-    # Pattern 1: value heading next to the title (exact unsigned percent,
-    # so a signed figure like -1% can never publish as +1.0).
-    for elem in soup.find_all(["h1", "h2", "h3", "div", "span"]):
-        value = extract_yield_percent(elem.get_text(strip=True), exact=True)
+    # Pattern 1: the exact heading the attempt assertion validated
+    # (YIELD_VALUE_SELECTOR), so an unrelated percent elsewhere on the page
+    # can never win over the validated value.
+    for elem in soup.select(YIELD_VALUE_SELECTOR):
+        value = extract_yield_percent(elem.get_text(" ", strip=True), exact=True)
         if value is not None:
             return {"yield": value}
 

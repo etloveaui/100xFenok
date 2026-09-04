@@ -61,6 +61,14 @@ MISMATCHED_HTML = (
 
 OLD_TABLE_HTML = "<html><body><table><tr><td>1.03%</td></tr></table></body></html>"
 
+UNRELATED_PERCENT_HTML = (
+    "<html><body>"
+    "<div>29%</div>"
+    "<h1>Dividend Yield</h1> "
+    '<h2 class="text-center">1.03%</h2> '
+    "</body></html>"
+)
+
 
 def main() -> None:
     assertions = (
@@ -80,6 +88,11 @@ def main() -> None:
 
     row = _html_attempt_tuple(200, NEW_SHAPE_HTML, content_assertion=assertion)
     assert row["assertions"] == [{"id": "yield_value", "passed": True}], row["assertions"]
+
+    unrelated_row = _html_attempt_tuple(
+        200, UNRELATED_PERCENT_HTML, content_assertion=assertion
+    )
+    assert unrelated_row["assertions"] == [{"id": "yield_value", "passed": True}]
 
     default_row = _html_attempt_tuple(200, NEW_SHAPE_HTML)
     assert default_row["assertions"] == [{"id": "table_rows", "passed": False}]
@@ -106,6 +119,9 @@ def main() -> None:
     ):
         parsed = scraper.parse_yield(NEW_SHAPE_HTML)
         assert parsed == {"yield": 1.03}, parsed
+        # An unrelated percent outside the validated heading must never win.
+        unrelated = scraper.parse_yield(UNRELATED_PERCENT_HTML)
+        assert unrelated == {"yield": 1.03}, unrelated
         for bad_html in (SIGNED_HTML, ABSURD_HTML, MISMATCHED_HTML):
             try:
                 scraper.parse_yield(bad_html)

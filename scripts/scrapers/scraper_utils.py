@@ -138,6 +138,13 @@ def _provider_throttled_attempt_tuple(status: int) -> Dict[str, Any]:
     )
 
 
+# CSS selector for the SlickCharts yield value heading. The page carries no
+# static data table (SvelteKit-hydrated headings), so the yield scrapers and
+# their attempt-event assertion share this selector: the assertion validates
+# exactly the heading the parser reads, never a wider element set.
+YIELD_VALUE_SELECTOR = "h1 + h2"
+
+
 def extract_yield_percent(text: str, *, exact: bool) -> Optional[float]:
     """Extract an unsigned dividend-yield percent, fail-closed.
 
