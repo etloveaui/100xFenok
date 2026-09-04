@@ -2215,7 +2215,7 @@ function OwnershipHeroCp({
                   const displayName = holderDisplayName(h.investor);
                   const weightLabel = h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—";
                   return (
-                    <div key={h.investor} data-smart-money-report-date-cell className="border-t border-[#f1f5f9] px-4 py-2">
+                    <div key={h.investor} data-smart-money-report-date-cell className="border-t border-slate-100 px-4 py-2">
                       <div className="flex items-baseline gap-2">
                         <span data-guru-holder-name className="min-w-0 flex-1 truncate text-[12px] text-slate-700">{i + 1}. {displayName}</span>
                         <span className="shrink-0 text-[12px] font-semibold tabular-nums text-slate-900">{weightLabel}</span>
