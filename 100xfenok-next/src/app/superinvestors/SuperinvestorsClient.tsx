@@ -570,7 +570,7 @@ function GuruDetailPanel({
           <div className="mt-2 space-y-4">
             <Panel
               loading={pvLoading}
-              empty={!investorView || treemapRows.length === 0}
+              empty={!pvLoading && !pvFailed && (!investorView || treemapRows.length === 0)}
               emptyReason={investorView ? "표시할 보유 비중 데이터가 없습니다" : "이 투자자의 자료 없음"}
               emptyNextRefresh="다음 분기 공시 반영 후 갱신"
               error={pvFailed}
@@ -599,7 +599,7 @@ function GuruDetailPanel({
             </Panel>
             <Panel
               loading={pvLoading}
-              empty={!investorView || !hasSectorHistory}
+              empty={!pvLoading && !pvFailed && (!investorView || !hasSectorHistory)}
               emptyReason={investorView ? "표시할 섹터 구성 데이터가 없습니다" : "이 투자자의 자료 없음"}
               emptyNextRefresh="다음 분기 공시 반영 후 갱신"
               error={pvFailed}
@@ -632,7 +632,7 @@ function GuruDetailPanel({
             </Panel>
             <Panel
               loading={pvLoading}
-              empty={!investorView?.performance}
+              empty={!pvLoading && !pvFailed && !investorView?.performance}
               emptyReason={investorView ? "표시할 성과 데이터가 없습니다" : "이 투자자의 자료 없음"}
               emptyNextRefresh="다음 분기 공시 반영 후 갱신"
               error={pvFailed}
