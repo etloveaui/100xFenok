@@ -143,6 +143,7 @@ def _html_attempt_tuple(
     html: str,
     *,
     provider_date: Optional[str] = None,
+    content_assertion: Optional[tuple] = None,
 ) -> Dict[str, Any]:
     response_sha256 = hashlib.sha256(html.encode("utf-8")).hexdigest()
     if not html.strip():
@@ -153,12 +154,23 @@ def _html_attempt_tuple(
             provider_date=provider_date,
             response_sha256=response_sha256,
         )
-    has_table_rows = bool(BeautifulSoup(html, "html.parser").select("table tr"))
+    if content_assertion is not None:
+        # Non-table pages (e.g. SvelteKit-hydrated yield pages) assert on the
+        # content the scraper actually parses: (id, css selector, pattern).
+        assertion_id, selector, pattern = content_assertion
+        matched_text = " ".join(
+            element.get_text(" ", strip=True)
+            for element in BeautifulSoup(html, "html.parser").select(selector)
+        )
+        assertions = [{"id": assertion_id, "passed": bool(re.search(pattern, matched_text))}]
+    else:
+        has_table_rows = bool(BeautifulSoup(html, "html.parser").select("table tr"))
+        assertions = [{"id": "table_rows", "passed": has_table_rows}]
     return _returned_attempt_tuple(
         status,
         decode="ok",
         payload="non_empty",
-        assertions=[{"id": "table_rows", "passed": has_table_rows}],
+        assertions=assertions,
         provider_date=provider_date,
         response_sha256=response_sha256,
     )
@@ -329,6 +341,7 @@ def fetch_html(
     max_retries: int = MAX_RETRIES,
     rate_limit: float = RATE_LIMIT_SECONDS,
     timeout: int = REQUEST_TIMEOUT,
+    content_assertion: Optional[tuple] = None,
 ) -> str:
     """
     Fetch HTML content with retries and polite rate limiting.
@@ -340,6 +353,10 @@ def fetch_html(
         max_retries: Maximum retry attempts (default: 3)
         rate_limit: Delay between requests in seconds (default: 1.5)
         timeout: Request timeout in seconds (default: 30)
+        content_assertion: Optional (id, css selector, pattern) tuple asserting
+            on the parsed content instead of the default `table tr` presence.
+            For pages whose data is not a static table (e.g. hydrated yield
+            headings). A miss keeps the attempt fail-closed upstream.
 
     Returns:
         HTML content as string
@@ -380,6 +397,7 @@ def fetch_html(
                 response.status_code,
                 html,
                 provider_date=response.headers.get("Date"),
+                content_assertion=content_assertion,
             ))
             return html
         except requests.RequestException as exc:

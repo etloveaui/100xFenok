@@ -25,6 +25,10 @@ from scraper_utils import fetch_html
 SOURCE_URL = "https://www.slickcharts.com/dowjones/yield"
 DEFAULT_OUTPUT = Path(__file__).with_name("dowjones_yield.json")
 
+# The yield page carries no static data table (SvelteKit-hydrated headings),
+# so the attempt event asserts on the parsed value heading instead of table rows.
+CONTENT_ASSERTION = ("yield_value", "h1 + h2", r"\d+\.?\d*\s*%")
+
 
 def parse_yield(html: str) -> Dict[str, float | str]:
     """Extract dividend yield value from SlickCharts HTML."""
@@ -79,7 +83,7 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
 
     with requests.Session() as session:
-        html = fetch_html(session, SOURCE_URL)
+        html = fetch_html(session, SOURCE_URL, content_assertion=CONTENT_ASSERTION)
     data = parse_yield(html)
     payload = build_payload(data)
 
