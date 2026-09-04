@@ -14,6 +14,8 @@ export default function MetricHelp({
   align = "left",
   className,
   labelClassName,
+  glyph = "?",
+  buttonSize = "md",
 }: {
   label: string;
   metricKey?: string;
@@ -21,6 +23,8 @@ export default function MetricHelp({
   align?: "left" | "right";
   className?: string;
   labelClassName?: string;
+  glyph?: string;
+  buttonSize?: "md" | "sm";
 }) {
   const tooltipId = useId();
   const description = metricGlossaryText(label, metricKey);
@@ -28,6 +32,19 @@ export default function MetricHelp({
   if (!description) {
     return showLabel ? <span className={className}>{label}</span> : null;
   }
+
+  // The circled "?" keeps the legacy chrome (same utility set as before).
+  // Any other glyph (e.g. "ⓘ") renders as a borderless text mark.
+  const glyphOnly = glyph !== "?";
+  const buttonClassName = glyphOnly
+    ? cx(
+      "inline-flex items-center justify-center leading-none text-[var(--c-ink-2)] transition hover:text-brand-interactive focus:outline-none focus:ring-2 focus:ring-brand-interactive/40",
+      buttonSize === "sm" ? "text-[12px]" : "text-sm",
+    )
+    : cx(
+      "inline-flex items-center justify-center rounded-full border border-[var(--c-line)] bg-white font-black leading-none text-[var(--c-ink-2)] shadow-sm transition hover:border-brand-interactive hover:text-brand-interactive focus:outline-none focus:ring-2 focus:ring-brand-interactive/40",
+      buttonSize === "sm" ? "size-3 text-[9px]" : "size-4 text-[10px]",
+    );
 
   return (
     <span className={cx("inline-flex min-w-0 items-center gap-1 align-middle", className)}>
@@ -38,9 +55,9 @@ export default function MetricHelp({
           aria-label={`${label} 설명: ${description}`}
           aria-describedby={tooltipId}
           onClick={(event) => event.stopPropagation()}
-          className="inline-flex size-4 items-center justify-center rounded-full border border-[var(--c-line)] bg-white text-[10px] font-black leading-none text-[var(--c-ink-2)] shadow-sm transition hover:border-brand-interactive hover:text-brand-interactive focus:outline-none focus:ring-2 focus:ring-brand-interactive/40"
+          className={buttonClassName}
         >
-          ?
+          {glyph}
         </button>
         <span
           id={tooltipId}

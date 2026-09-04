@@ -111,7 +111,7 @@ export default function ScreenerDesktopTable({
                       {column.label}
                       <span className={active ? "text-[9px] text-[var(--c-ink)]" : "text-[9px] text-[var(--c-ink-2)]"}>{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
                     </button>
-                    <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} />
+                    <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} glyph="ⓘ" buttonSize="sm" />
                   </div>
                 </th>
               );
@@ -169,7 +169,6 @@ export default function ScreenerDesktopTable({
                             </div>
                           ) : renderCell(stock, column.key, preset)}
                         </span>
-                        <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} className="shrink-0 opacity-0 transition group-hover/screener-cell:opacity-100 focus-within:opacity-100" />
                       </span>
                     </td>
                   ))}

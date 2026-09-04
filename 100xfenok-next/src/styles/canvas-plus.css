@@ -1500,6 +1500,7 @@
   color: var(--cp-text-strong);
   background: var(--ls-panel-bg);
   font-size: 11px;
+  line-height: 12px;
   font-weight: 850;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1512,10 +1513,24 @@
 [data-canvas-plus-screener-preview] .cp-screener-table th,
 [data-canvas-plus-screener-preview] .cp-screener-table td {
   overflow: hidden;
-  padding: 0 16px;
+  padding: 12px 16px;
   border-bottom-color: var(--cp-divider);
   text-overflow: ellipsis;
   font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Koyfin-density: body rows size from cell padding + content line-height, not
+   from a fixed height. Neutralize the base fixed-height rails (td height and
+   the header sort-button min-height resolve to 44px/40px via
+   --cp-active-row-height) so the 44px body row / 36px header contract proves
+   content-driven sizing. */
+[data-canvas-plus-screener-preview] .cp-screener-table tbody td {
+  height: auto;
+  min-height: 0;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table thead th button {
+  min-height: 0;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table th[data-align="right"],

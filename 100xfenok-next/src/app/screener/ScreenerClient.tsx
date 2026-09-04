@@ -21,7 +21,6 @@ import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
 import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-copy.mjs";
 import { commonBasisShortTermView, screenerSortValue } from "@/lib/screener/common-basis-short-term";
 import { formatScreenerSourceDateLabel } from "@/lib/screener/source-dates";
-import MetricHelp from "@/components/MetricHelp";
 import ScreenerDesktopTable from "./ScreenerDesktopTable";
 import ScreenerTanstackTable from "./ScreenerTanstackTable";
 import StockDetailPanel from "./StockDetailPanel";
@@ -406,7 +405,7 @@ function GuruHolderBadge({ stock, compact = false }: { stock: ScreenerStock; com
       data-testid="screener-guru-badge"
       data-ticker={stock.ticker}
       data-superinvestors-href={ROUTES.superinvestorsByTicker(stock.ticker)}
-      className="inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-white px-1.5 py-0.5 text-[9px] font-black text-violet-700 transition hover:border-violet-400"
+      className="inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-white px-1.5 py-px text-[9px] font-black text-violet-700 transition hover:border-violet-400"
       title={`${stock.ticker} 기관·고수 보유 ${holders.toLocaleString("ko-KR")}명 — 클릭하면 /superinvestors 종목별 보유로 이동`}
       onClick={(event) => event.stopPropagation()}
     >
@@ -586,7 +585,7 @@ function renderCell(
       // The reason/estimate detail stays in the title tooltip.
       return (
         <span className="inline-flex min-w-0 max-w-full items-center gap-1" title={[title, estimateSummary].filter(Boolean).join(" · ")}>
-          <span className={cx("min-w-0 max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}>
+          <span className={cx("min-w-0 max-w-full truncate rounded-full border px-2 py-[2px] text-[10px] font-black", actionTone(stock.actionBucket, stock.confidenceLabel, lowEvidence))}>
             {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
           </span>
           <span className={cx("shrink-0 rounded-full border border-[var(--c-line)] px-1.5 py-px text-[9px] font-black whitespace-nowrap", confidenceClass(stock.confidenceLabel, lowEvidence))}>
@@ -603,7 +602,7 @@ function renderCell(
       return (
         <span className="inline-flex min-w-0 justify-end">
           <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", fenokEdgeTone(score))}
+            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums", fenokEdgeTone(score))}
             title={fenokEdgeTitle(stock)}
             aria-label={`${isShortTerm ? "단기" : "장기"} 스코어 ${score ?? "정보 없음"}`}
           >
@@ -636,6 +635,7 @@ function renderCell(
             "inline-flex flex-col items-end gap-1",
             isMobile ? "min-w-0 max-w-full" : "min-w-0",
           )}
+          title={`${shortTermBasis.label} · ${shortTermBasis.comparisonNote}`}
         >
           <span className="inline-flex flex-wrap justify-end gap-1">
             <span
@@ -655,15 +655,14 @@ function renderCell(
               {longScore ?? "—"}
             </span>
           </span>
-          <span
-            className={cx(
-              "max-w-full text-[9px] font-bold text-[var(--c-ink-3)]",
-              isMobile ? "whitespace-normal break-words" : "whitespace-nowrap",
-            )}
-            title={shortTermBasis.comparisonNote}
-          >
-            {shortTermBasis.label}
-          </span>
+          {isMobile ? (
+            <span
+              className="max-w-full whitespace-normal break-words text-[9px] font-bold text-[var(--c-ink-3)]"
+              title={shortTermBasis.comparisonNote}
+            >
+              {shortTermBasis.label}
+            </span>
+          ) : null}
           {isPicks ? (
             <span className="inline-flex flex-wrap justify-end gap-1">
               {[
@@ -711,7 +710,7 @@ function renderCell(
       return (
         <span className="inline-flex min-w-0 justify-end">
           <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", signalScoreTone(score))}
+            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums", signalScoreTone(score))}
             title={`${columnLabel(key)} ${signalDirectionLabel(direction)} · ${titleSuffix}`}
             aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
           >
@@ -728,7 +727,7 @@ function renderCell(
       return (
         <span className="inline-flex min-w-0 justify-end">
           <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums", downsideRiskTone(score))}
+            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums", downsideRiskTone(score))}
             title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · ${FENOK_SIGNAL_DISCLOSURE}`}
             aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
           >
@@ -738,7 +737,7 @@ function renderCell(
       );
     }
     case "sector":
-      return <span className="text-xs font-bold text-slate-500">{stock.sector || "—"}</span>;
+      return <span className="text-xs font-bold leading-5 text-slate-500">{stock.sector || "—"}</span>;
     case "country":
       return <span className="text-xs font-bold text-slate-500">{COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}</span>;
     case "price":
@@ -985,7 +984,7 @@ function MobileMetric({ stock, metricKey, preset }: { stock: ScreenerStock; metr
   return (
     <div className="min-w-0 rounded-xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
       <span className="block truncate text-[11px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
-        <MetricHelp label={columnLabel(metricKey)} metricKey={metricKey} align="right" />
+        {columnLabel(metricKey)}
       </span>
       <span className="mt-1 block min-w-0 truncate text-right text-sm font-black text-[var(--c-ink)]">
         {renderMobileCell(stock, metricKey, preset)}

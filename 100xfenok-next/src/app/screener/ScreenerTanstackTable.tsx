@@ -364,7 +364,7 @@ function ScreenerTanstackTableInner({
               {column.label}
               <span className={active ? "text-[9px] text-[var(--c-ink)]" : "text-[9px] text-[var(--c-ink-2)]"}>{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
             </button>
-            <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} />
+            <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} glyph="ⓘ" buttonSize="sm" />
           </div>
         );
       },
@@ -552,7 +552,6 @@ function ScreenerTanstackTableInner({
                   data-ticker={stock.ticker}
                   data-row-parity={canvasPlusPreview ? (row.index % 2 === 0 ? "even" : "odd") : undefined}
                   onClick={() => onToggleExpandedTicker(stock.ticker)}
-                  style={canvasPlusPreview ? { height: `${VIRTUAL_ROW_HEIGHT}px` } : undefined}
                   className={canvasPlusPreview
                     ? cx("cursor-pointer transition-colors duration-150 hover:bg-[var(--c-bg)] hover:shadow-[inset_2px_0_0_var(--c-brand)]", cursorTicker === stock.ticker && "bg-[var(--c-bg)] shadow-[inset_2px_0_0_var(--c-brand)]")
                     : cx("cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]", cursorTicker === stock.ticker && "bg-[var(--c-surface-2)] shadow-[inset_2px_0_0_var(--c-brand)]")}
@@ -580,7 +579,6 @@ function ScreenerTanstackTableInner({
                         {column ? (
                           <span className="group/screener-cell inline-flex w-full min-w-0 items-center gap-1">
                             <span className="min-w-0 flex-1">{content}</span>
-                            <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} className="shrink-0 opacity-0 transition group-hover/screener-cell:opacity-100 focus-within:opacity-100" />
                           </span>
                         ) : content}
                       </td>

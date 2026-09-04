@@ -2769,7 +2769,9 @@ async function collectRouteChecks(page, route) {
 
       // Koyfin-density (desktop table renders at >=921px, paired with
       // ScreenerClient `hidden min-[921px]:block`): 44px rows, 36px header,
-      // ticker column min 160, table scrolls inside the panel only.
+      // every rendered column honors its declared minimum
+      // (ScreenerTanstackTable canvasPlusColumnWidth), table scrolls inside
+      // the panel only.
       if (viewportWidth >= 921) {
         const desktopRows = Array.from(document.querySelectorAll('tr[data-testid="screener-desktop-row"]'))
           .filter((node) => node.getBoundingClientRect().width > 0);
@@ -2780,11 +2782,36 @@ async function collectRouteChecks(page, route) {
           if (Math.abs(rowHeight - 44) > 1) {
             failures.push({ check: "screener-row-height", detail: `height=${Math.round(rowHeight)}` });
           }
-          const tickerCell = desktopRows[0].querySelector('td[data-column-id="ticker"]');
-          const tickerWidth = tickerCell ? tickerCell.getBoundingClientRect().width : 0;
-          if (tickerWidth < 159) {
-            failures.push({ check: "screener-ticker-min-width", detail: `width=${Math.round(tickerWidth)}` });
-          }
+          const columnMinWidths = {
+            __select: 42,
+            ticker: 160,
+            name: 110,
+            sector: 120,
+            marketCap: 96,
+            per: 96,
+            fenokShortTermScore: 72,
+            fenokLongTermScore: 72,
+            fenokConvictionScore: 72,
+            profitabilityScore: 72,
+            growthScore: 72,
+            technicalFlowScore: 72,
+            durabilityProfitabilityScore: 72,
+            upsidePotentialScore: 72,
+            downsidePressureScore: 72,
+            actionScore: 140,
+            connectionCount: 112,
+            perBandCurrent: 116,
+          };
+          Array.from(desktopRows[0].querySelectorAll("td[data-column-id]"))
+            .filter((cell) => cell.getBoundingClientRect().width > 0)
+            .forEach((cell) => {
+              const columnId = cell.getAttribute("data-column-id") ?? "";
+              const expected = columnMinWidths[columnId] ?? 88;
+              const width = cell.getBoundingClientRect().width;
+              if (width < expected - 1) {
+                failures.push({ check: "screener-column-min-width", detail: `${columnId} width=${Math.round(width)} expected>=${expected}` });
+              }
+            });
         }
         const headerCell = document.querySelector(".cp-screener-table thead th");
         if (headerCell) {
