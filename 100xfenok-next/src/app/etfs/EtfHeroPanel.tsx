@@ -21,8 +21,8 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
   const insights = ready ? computeEtfInsights(rows, snapshot, null) : null;
   const loading = !loaded;
   const empty = loaded && !insights;
-  const stale = loaded && !!insights && isEtfClockStale(insights.asOf ?? published);
   const published = etfSurfacePublishedFloor(surface.universe, snapshot);
+  const stale = loaded && !!insights && isEtfClockStale(insights.asOf ?? published);
   const asOfLabel = etfRailClockDate(insights?.asOf ?? null, published);
   const asOfKind = etfClockKind(insights?.asOf ?? null, published);
 
