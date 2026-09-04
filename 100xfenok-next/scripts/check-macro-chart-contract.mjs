@@ -34,6 +34,7 @@ async function inspectStaticContracts() {
     multichartPageSource,
     multichartHtmlSource,
     shellSource,
+    shellStyleSource,
     productNavSource,
     registrySource,
     loaderSource,
@@ -55,6 +56,7 @@ async function inspectStaticContracts() {
     readFile(new URL("../src/app/multichart/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../public/tools/asset/multichart.html", import.meta.url), "utf8"),
     readFile(new URL("../src/components/shell/AppShell.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/styles/app-shell.css", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/product-nav.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/macro-chart/registry.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/macro-chart/loader.ts", import.meta.url), "utf8"),
@@ -133,6 +135,18 @@ async function inspectStaticContracts() {
     'xScale.getPixelForValue(start)',
   ]) {
     if (!engineSource.includes(token)) addFailure(failures, "market-chart-date-bands", `${token} missing`);
+  }
+  if (!shellStyleSource.includes('--c-band:var(--fnk-neutral-200)')) {
+    addFailure(failures, "macro-v2-recession-band-token", "dedicated neutral band token missing");
+  }
+  for (const token of ['band: "--c-band"', 'band: "lightgray"']) {
+    if (!chartThemeSource.includes(token)) addFailure(failures, "macro-v2-recession-band-token", `${token} missing`);
+  }
+  for (const token of ['theme.token("band")', 'ctx.globalAlpha = 0.55']) {
+    if (!engineSource.includes(token)) addFailure(failures, "macro-v2-recession-band-hero", `${token} missing`);
+  }
+  for (const token of ['fill: var(--c-band)', 'opacity: 0.55']) {
+    if (!macroStyleSource.includes(token)) addFailure(failures, "macro-v2-recession-band-lens", `${token} missing`);
   }
   for (const label of ["리스크·유동성", "성장", "인플레이션", "금리·신용", "내 컬렉션"]) {
     if (!macroSource.includes(label)) addFailure(failures, "macro-v2-lens-bar", `${label} missing`);

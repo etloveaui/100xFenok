@@ -12,6 +12,7 @@ export type MarketChartColorToken =
   | "neutral"
   | "line"
   | "line2"
+  | "band"
   | "ink"
   | "ink2"
   | "ink3"

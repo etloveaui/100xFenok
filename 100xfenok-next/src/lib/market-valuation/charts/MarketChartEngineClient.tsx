@@ -372,8 +372,8 @@ export function MarketChartEngineClient({
         ctx.beginPath();
         ctx.rect(left, top, right - left, bottom - top);
         ctx.clip();
-        ctx.fillStyle = theme.token("line2");
-        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = theme.token("band");
+        ctx.globalAlpha = 0.55;
         for (const band of dateBands) {
           const start = Date.parse(band.start);
           const end = Date.parse(band.end);
