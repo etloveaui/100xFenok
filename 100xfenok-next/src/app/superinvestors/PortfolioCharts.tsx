@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, LineController, PointElement, ScatterController, RadialLinearScale, RadarController, Filler } from "chart.js";
 import { TreemapController, TreemapElement } from "chartjs-chart-treemap";
-import type { ChartData, ChartOptions } from "chart.js";
+import type { ActiveElement, ChartData, ChartEvent, ChartOptions } from "chart.js";
 import { Doughnut, Bar, Line, Chart, Scatter, Radar } from "react-chartjs-2";
 import { CANONICAL_SECTORS, resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
@@ -94,6 +94,7 @@ function normalizeSectorHistory(
 interface TreemapProps {
   rows: PortfolioRow[];
   quarterLabel: string;
+  onSelectTicker?: (ticker: string) => void;
 }
 
 type TreemapLeaf = { raw?: { _data?: PortfolioRow } };
@@ -102,10 +103,13 @@ function leafRow(ctx: TreemapLeaf): PortfolioRow | null {
   return ctx.raw?._data ?? null;
 }
 
-export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
+export function PortfolioTreemap({ rows, quarterLabel, onSelectTicker }: TreemapProps) {
   const chartTheme = useMarketChartTheme();
+  const displayRows = useMemo(
+    () => rows.filter((r) => isFiniteNumber(r.weight) && r.weight > 0),
+    [rows],
+  );
   const data = useMemo(() => {
-    const displayRows = rows.filter((r) => isFiniteNumber(r.weight) && r.weight > 0);
     return {
       datasets: [
         {
@@ -143,7 +147,7 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
         },
       ],
     };
-  }, [rows, chartTheme]);
+  }, [displayRows, chartTheme]);
 
   const options = useMemo(
     () => ({
@@ -174,13 +178,25 @@ export function PortfolioTreemap({ rows, quarterLabel }: TreemapProps) {
     [],
   );
 
+  const handleTileClick = (_event: ChartEvent, elements: ActiveElement[]) => {
+    if (!onSelectTicker) return;
+    const element = elements?.[0]?.element as unknown as { $context?: { raw?: unknown } } | undefined;
+    const fromRaw = leafRow({ raw: element?.$context?.raw as { _data?: PortfolioRow } | undefined });
+    const index = elements?.[0]?.index;
+    const row = fromRaw ?? (typeof index === "number" ? displayRows[index] : undefined);
+    const ticker = row?.ticker;
+    if (!ticker || ticker === "_OTHERS") return;
+    onSelectTicker(ticker);
+  };
+
   return (
     <div>
-      <div className="relative h-[300px] sm:h-[420px]">
+      <div className="relative h-[300px] sm:h-[420px]" style={onSelectTicker ? { cursor: "pointer" } : undefined}>
         <Chart
           type="treemap"
           data={data as unknown as ChartData<"treemap">}
           options={options as unknown as ChartOptions<"treemap">}
+          onClick={onSelectTicker ? handleTileClick : undefined}
           role="img"
           aria-label={`${quarterLabel} 포트폴리오 보유 비중과 수익률 트리맵`}
         />

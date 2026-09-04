@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import TickerChip from "@/components/TickerChip";
 import TransitionLink from "@/components/TransitionLink";
 import { fetch13FJson, use13FData, useInvestorDetail } from "@/hooks/use13FData";
@@ -22,6 +23,8 @@ import type {
   InvestorFiling,
   InvestorHolding,
   PortfolioViewsData,
+  SectorHoldingsData,
+  SectorHoldingsEntry,
   SummaryInvestor,
   TradesRankingData,
   TradesRankingRow,
@@ -74,6 +77,39 @@ function normalizeSuperSector(gicsRaw?: string | null, scouterRaw?: string | nul
   const scouter = scouterRaw?.trim();
   if (scouter && CANONICAL_SECTOR_SET.has(scouter)) return scouter as CanonicalSector;
   return resolveSector(gicsRaw, scouterRaw);
+}
+
+function isSectorEntry(value: unknown): value is SectorHoldingsEntry {
+  return !!value && typeof value === "object" && Array.isArray((value as SectorHoldingsEntry).top_holdings);
+}
+
+function buildSectorRotationRows(
+  hist: PortfolioViewsData["total"]["sector_history"],
+): Array<{ sector: CanonicalSector; current: number; deltaPp: number }> {
+  if (!hist || hist.quarters.length < 2) return [];
+  const lastIdx = hist.quarters.length - 1;
+  const prevIdx = lastIdx - 1;
+  const bySector = new Map<CanonicalSector, { current: number; prev: number }>();
+
+  Object.entries(hist.series).forEach(([rawSector, values]) => {
+    const current = values[lastIdx] ?? 0;
+    const prev = values[prevIdx] ?? 0;
+    const canonicalSector = normalizeSuperSector(rawSector, rawSector);
+    const existing = bySector.get(canonicalSector) ?? { current: 0, prev: 0 };
+    bySector.set(canonicalSector, {
+      current: existing.current + current,
+      prev: existing.prev + prev,
+    });
+  });
+
+  return [...bySector.entries()]
+    .map(([sector, value]) => ({
+      sector,
+      current: value.current,
+      deltaPp: (value.current - value.prev) * 100,
+    }))
+    .sort((a, b) => Math.abs(b.deltaPp) - Math.abs(a.deltaPp))
+    .slice(0, 8);
 }
 
 function normalizeTradesRanking(data: unknown): TradesRankingData | null {
@@ -1063,12 +1099,240 @@ function TradeRankingPanel({
     </div>
   );
 }
+function CohortTreemapPanel({
+  pvData,
+  pvLoading,
+  pvFailed,
+  onRetryPv,
+  onSelectTicker,
+}: {
+  pvData: PortfolioViewsData | null;
+  pvLoading: boolean;
+  pvFailed: boolean;
+  onRetryPv?: () => void;
+  onSelectTicker?: (ticker: string) => void;
+}) {
+  const treemap = pvData?.total?.treemap ?? [];
+  const quarter = pvData?.metadata?.quarter ?? "—";
+  const cohort = pvData?.metadata?.cohort_count ?? null;
+  const failed = !pvLoading && (pvFailed || !pvData);
+  const empty = !pvLoading && !pvFailed && !!pvData && treemap.length === 0;
+  const partial = !pvLoading && !failed && !empty && cohort == null;
+  const headNote =
+    treemap.length > 0
+      ? `${formatInteger(treemap.length)}종목 · ${cohort != null ? `${formatInteger(cohort)}인 합산` : "코호트 확인 중"}`
+      : "—";
+  return (
+    <Panel
+      loading={pvLoading}
+      empty={empty}
+      emptyReason="표시할 코호트 트리맵 데이터가 없습니다"
+      emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+      error={failed}
+      errorDetail="거장 토탈 포트폴리오 데이터를 불러오지 못했습니다."
+      asOf={quarter}
+      onRetry={failed ? onRetryPv : undefined}
+      retryLabel="다시 시도"
+    >
+      {treemap.length > 0 ? (
+        <div data-superinvestor-cohort-treemap data-superinvestor-cohort-treemap-count={treemap.length}>
+          <PanelHeader
+            eyebrow="Cohort"
+            title="거장 토탈 포트폴리오"
+            right={<span className="sup-head-note">{headNote}</span>}
+          />
+          <PortfolioTreemap rows={treemap} quarterLabel={quarter} onSelectTicker={onSelectTicker} />
+          {pvData?.metadata?.disclaimer ? (
+            <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">{pvData.metadata.disclaimer}</p>
+          ) : null}
+        </div>
+      ) : null}
+      <EvidenceRail
+        freshness={pvLoading ? "pending" : failed ? "error" : empty || partial ? "partial" : "stale"}
+        source="SEC EDGAR 13F"
+        asOf={quarter}
+        coverage={treemap.length > 0 ? headNote : "표시할 코호트 행 없음"}
+        next="분기 종료 후 최대 45일"
+        onRetry={failed ? onRetryPv : undefined}
+        onEvidence={pvData ? () => openEvidence("/data/sec-13f/analytics/portfolio_views.json") : undefined}
+      />
+    </Panel>
+  );
+}
+
+type RotationSort = "abs" | "desc" | "asc";
+
+const ROTATION_SORTS: Array<{ key: RotationSort; label: string }> = [
+  { key: "abs", label: "변동폭 순" },
+  { key: "desc", label: "확대 순" },
+  { key: "asc", label: "축소 순" },
+];
+
+function SectorRotationPanel({
+  pvData,
+  pvLoading,
+  pvFailed,
+  onRetryPv,
+  tradesData,
+  tradesLoading,
+  tradesFailed,
+  bySector,
+}: {
+  pvData: PortfolioViewsData | null;
+  pvLoading: boolean;
+  pvFailed: boolean;
+  onRetryPv?: () => void;
+  tradesData: TradesRankingData | null;
+  tradesLoading: boolean;
+  tradesFailed: boolean;
+  bySector: SectorHoldingsData | null;
+}) {
+  const [sortMode, setSortMode] = useState<RotationSort>("abs");
+  const rotation = useMemo(() => {
+    const base = buildSectorRotationRows(pvData?.total?.sector_history);
+    const rows = [...base];
+    if (sortMode === "desc") rows.sort((a, b) => b.deltaPp - a.deltaPp);
+    else if (sortMode === "asc") rows.sort((a, b) => a.deltaPp - b.deltaPp);
+    return rows;
+  }, [pvData, sortMode]);
+  const participation = useMemo(() => {
+    const bought = new Map<CanonicalSector, number>();
+    const sold = new Map<CanonicalSector, number>();
+    for (const row of tradesData?.bought ?? []) {
+      const sector = normalizeSuperSector(row.sector_gics ?? row.sector, row.sector);
+      bought.set(sector, (bought.get(sector) ?? 0) + 1);
+    }
+    for (const row of tradesData?.sold ?? []) {
+      const sector = normalizeSuperSector(row.sector_gics ?? row.sector, row.sector);
+      sold.set(sector, (sold.get(sector) ?? 0) + 1);
+    }
+    return { bought, sold };
+  }, [tradesData]);
+  const holdingsBySector = useMemo(() => {
+    const map = new Map<CanonicalSector, SectorHoldingsEntry>();
+    if (!bySector) return map;
+    for (const [key, entry] of Object.entries(bySector)) {
+      if (key === "_meta" || !isSectorEntry(entry)) continue;
+      const canonical = normalizeSuperSector(key, key);
+      if (!map.has(canonical)) map.set(canonical, entry);
+    }
+    return map;
+  }, [bySector]);
+
+  const quarter = pvData?.metadata?.quarter ?? "—";
+  const quarterCount = pvData?.total?.sector_history?.quarters.length ?? 0;
+  const failed = !pvLoading && (pvFailed || !pvData);
+  const empty = !pvLoading && !pvFailed && !!pvData && rotation.length === 0;
+  const tradesPartFailed = !tradesLoading && (tradesFailed || !tradesData);
+  const chipsMissing = !bySector;
+  const partial = !pvLoading && !failed && !empty && (tradesPartFailed || chipsMissing);
+  const coverage =
+    rotation.length > 0
+      ? `${formatInteger(rotation.length)}섹터 · ${formatInteger(quarterCount)}분기${tradesPartFailed ? " · 매매 참여 미반영" : ""}${chipsMissing ? " · 보유 칩 미반영" : ""}`
+      : "표시할 섹터 행 없음";
+  return (
+    <Panel
+      loading={pvLoading || tradesLoading}
+      empty={empty}
+      emptyReason="표시할 섹터 로테이션 데이터가 없습니다"
+      emptyNextRefresh="다음 분기 공시 반영 후 갱신"
+      error={failed}
+      errorDetail="섹터 로테이션 데이터를 불러오지 못했습니다."
+      asOf={quarter}
+      onRetry={failed ? onRetryPv : undefined}
+      retryLabel="다시 시도"
+    >
+      {rotation.length > 0 ? (
+        <div data-superinvestor-sector-rotation data-superinvestor-sector-rotation-count={rotation.length}>
+          <PanelHeader
+            eyebrow="Sector"
+            title="섹터 로테이션"
+            right={<span className="sup-head-note">{quarter} · 전분기 대비</span>}
+          />
+          <div className="mt-2 flex flex-wrap gap-1" role="group" aria-label="섹터 정렬 기준">
+            {ROTATION_SORTS.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => setSortMode(option.key)}
+                aria-pressed={sortMode === option.key}
+                className={`inline-flex min-h-11 items-center rounded-full border px-3 text-[10px] font-black uppercase tracking-[0.1em] transition sm:min-h-8 ${
+                  sortMode === option.key
+                    ? "border-brand-interactive bg-brand-interactive/10 text-brand-interactive"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 space-y-2">
+            {rotation.map((row) => {
+              const up = row.deltaPp > 0.05;
+              const down = row.deltaPp < -0.05;
+              const deltaClass = up ? "text-emerald-700" : down ? "text-rose-700" : "text-slate-500";
+              const bought = participation.bought.get(row.sector);
+              const sold = participation.sold.get(row.sector);
+              const chips = holdingsBySector.get(row.sector)?.top_holdings?.slice(0, 3) ?? [];
+              return (
+                <div
+                  key={row.sector}
+                  data-superinvestor-sector-rotation-row
+                  data-superinvestor-sector-rotation-sector={row.sector}
+                  className="rounded-xl border border-slate-200 bg-white p-3"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex min-w-0 items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-semibold">
+                      <span
+                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: sectorColor(row.sector) }}
+                      />
+                      <span className="truncate">{sectorLabelKo(row.sector)}</span>
+                    </span>
+                    <span className={`shrink-0 text-xs font-black tabular-nums ${deltaClass}`}>
+                      {row.deltaPp >= 0 ? "▲" : "▼"}{Math.abs(row.deltaPp).toFixed(1)}%p
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-slate-700">
+                    <span>보유 <b className="tabular-nums text-slate-900">{formatPercent(row.current, { digits: 1 })}</b></span>
+                    <span>매수 <b className="tabular-nums text-slate-900">{tradesPartFailed ? "—" : `${formatInteger(bought ?? 0)}종목`}</b></span>
+                    <span>매도 <b className="tabular-nums text-slate-900">{tradesPartFailed ? "—" : `${formatInteger(sold ?? 0)}종목`}</b></span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {chips.length > 0 ? (
+                      chips.map((ticker) => <TickerChip key={ticker} ticker={ticker} variant="inline" />)
+                    ) : (
+                      <span className="text-[10px] font-bold text-slate-700">—</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
+            가중치는 거장 코호트 합산 보유 시가총액 기준, 델타는 직전 분기 대비 %p입니다. 매수·매도는 매매 상위권 기준 종목 수입니다.
+          </p>
+        </div>
+      ) : null}
+      <EvidenceRail
+        freshness={pvLoading || tradesLoading ? "pending" : failed ? "error" : empty || partial ? "partial" : "stale"}
+        source="SEC EDGAR 13F"
+        asOf={quarter}
+        coverage={coverage}
+        next="분기 종료 후 최대 45일"
+        onRetry={failed ? onRetryPv : undefined}
+        onEvidence={pvData ? () => openEvidence("/data/sec-13f/analytics/portfolio_views.json") : undefined}
+      />
+    </Panel>
+  );
+}
 export default function SuperinvestorsClient({ initialGuru = null, initialTab = null }: { initialGuru?: string | null; initialTab?: string | null }) {
   const {
     consensus,
     enhancedConsensus,
     summary,
     byTicker,
+    bySector,
     convictionEntries,
     dataReady,
     failed,
@@ -1087,6 +1351,7 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
     setTab(resolveInitialTab(initialTab, initialGuru));
   }
   const tabsBaseId = useTabsBaseId("sup");
+  const router = useRouter();
   const [turnover, setTurnover] = useState<TurnoverData["by_investor"] | null | undefined>(undefined);
   const [turnoverError, setTurnoverError] = useState(false);
   const [tradesData, setTradesData] = useState<TradesRankingData | null>(null);
@@ -1634,6 +1899,14 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
       </TabPanel>
 
       <TabPanel item={{ id: "stocks" as SupTab, label: "종목" }} active={tab === "stocks"} idBase={tabsBaseId}>
+        <div className="space-y-4">
+        <CohortTreemapPanel
+          pvData={pvData}
+          pvLoading={pvLoading}
+          pvFailed={pvFailed}
+          onRetryPv={retryPv}
+          onSelectTicker={(ticker) => router.push(ROUTES.stock(ticker))}
+        />
         <WhoHoldsPanel
           summary={summary}
           consensus={consensus}
@@ -1646,10 +1919,21 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
           partialFeeds={partialFeeds}
           onRetry={retry}
         />
+        </div>
       </TabPanel>
 
       <TabPanel item={{ id: "trades" as SupTab, label: "매매 동향" }} active={tab === "trades"} idBase={tabsBaseId}>
         <div className="space-y-4">
+          <SectorRotationPanel
+            pvData={pvData}
+            pvLoading={pvLoading}
+            pvFailed={pvFailed}
+            onRetryPv={retryPv}
+            tradesData={tradesData}
+            tradesLoading={tradesLoading}
+            tradesFailed={tradesFailed}
+            bySector={bySector}
+          />
           {tradesData ? (
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
