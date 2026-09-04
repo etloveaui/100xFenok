@@ -1,35 +1,62 @@
 {
-  "schema_version": "producer-lkg-key-state/v1",
+  "schema_version": "producer-lkg-key-state/v2",
   "lane_id": "us_indices_daily",
   "key": "sox.json",
-  "updated_at": "2026-09-02T23:43:53.652Z",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "updated_at": "2026-09-03T23:53:32.990Z",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "current": {
-    "path": "data/admin/us-indices-daily/lkg/sox.json",
-    "payload_sha256": "c0f9afe5b252d0228d9c461787f8dc1a991efa004d4a04d18142730db5374dfd",
-    "source_as_of": "2026-08-31"
+    "path": "data/indices/sox.json",
+    "payload_sha256": "4e7aeb7707b3ac4a5bfcfb740e472b5d1c0bfd81000d5547c49b3ad21eeb01e2",
+    "source_as_of": "2026-09-03"
   },
+  "canonical_ref": "data/indices/sox.json",
   "lkg": {
     "path": "data/admin/us-indices-daily/lkg/sox.json",
     "payload_sha256": "c0f9afe5b252d0228d9c461787f8dc1a991efa004d4a04d18142730db5374dfd",
     "source_as_of": "2026-08-31"
   },
-  "canonical_ref": "data/indices/sox.json",
-  "latest_failure": {
+  "latest_failure": null,
+  "recovered_from_run_id": "33696334752",
+  "recovery_run_id": "33818784791",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "recovered_at": "2026-09-03T23:53:32.990Z",
+  "last_run_id": "33818784791",
+  "last_run_attempt": 1,
+  "last_event_name": "schedule",
+  "promotion_contract": "provider_observation/v2",
+  "promotion_proof_required": true,
+  "provider_observation": {
+    "schema_version": "provider_observation/v2",
+    "payload_sha256": "a1bd67c3c828023375c8ce16c2a36590367910c3499fc547eac5f03864c3902d",
+    "candidate_payload_sha256": "4e7aeb7707b3ac4a5bfcfb740e472b5d1c0bfd81000d5547c49b3ad21eeb01e2",
+    "payload_ref": "data/admin/us-indices-daily/provider-observations/a1bd67c3c828023375c8ce16c2a36590367910c3499fc547eac5f03864c3902d.json",
+    "source_as_of": "2026-09-03",
+    "run_id": "33818784791",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-09-03T23:53:32.990Z",
+    "recovered_from_run_id": "33696334752"
+  },
+  "recovery_observation": {
+    "schema_version": "provider_observation/v2",
+    "payload_sha256": "a1bd67c3c828023375c8ce16c2a36590367910c3499fc547eac5f03864c3902d",
+    "candidate_payload_sha256": "4e7aeb7707b3ac4a5bfcfb740e472b5d1c0bfd81000d5547c49b3ad21eeb01e2",
+    "payload_ref": "data/admin/us-indices-daily/provider-observations/a1bd67c3c828023375c8ce16c2a36590367910c3499fc547eac5f03864c3902d.json",
+    "source_as_of": "2026-09-03",
+    "run_id": "33818784791",
+    "run_attempt": 1,
+    "event_name": "schedule",
+    "observed_at": "2026-09-03T23:53:32.990Z",
+    "recovered_from_run_id": "33696334752"
+  },
+  "last_recovered_failure": {
     "run_id": "33696334752",
     "run_attempt": 1,
     "event_name": "schedule",
     "observed_at": "2026-09-02T23:43:53.652Z",
     "failure_kind": "schema_drift",
     "error": "Error: Yahoo chart row must have a valid date and finite positive value for ^SOX"
-  },
-  "recovered_from_run_id": null,
-  "recovery_run_id": null,
-  "recovery_run_attempt": null,
-  "recovery_event_name": null,
-  "recovered_at": null,
-  "last_run_id": "33696334752",
-  "last_run_attempt": 1,
-  "last_event_name": "schedule"
+  }
 }

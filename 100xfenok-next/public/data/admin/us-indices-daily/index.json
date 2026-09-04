@@ -1,7 +1,7 @@
 {
   "schema_version": "producer-lkg-index/v2",
   "lane_id": "us_indices_daily",
-  "generated_at": "2026-09-02T23:43:53.652Z",
+  "generated_at": "2026-09-03T23:53:32.990Z",
   "keys": [
     "sp500.json",
     "nasdaq.json",
@@ -10,84 +10,63 @@
   ],
   "counts": {
     "keys": 4,
-    "fresh": 0,
-    "lkg": 4,
-    "retry": 4,
+    "fresh": 4,
+    "lkg": 0,
+    "retry": 0,
     "unavailable": 0,
-    "failed": 4,
-    "recovered": 0
+    "failed": 0,
+    "recovered": 4
   },
-  "retry_keys": [
-    "sp500.json",
-    "nasdaq.json",
-    "nasdaq100.json",
-    "sox.json"
-  ],
-  "lkg_details": [
-    {
-      "key": "sp500.json",
-      "payload_sha256": "6acd7c07b1923432d88634f16054ba207322bb15742479dae43bab5a9e579c1f",
-      "source_as_of": "2026-08-31",
-      "failure_run_id": "33696334752",
-      "failure_run_attempt": 1
-    },
-    {
-      "key": "nasdaq.json",
-      "payload_sha256": "bb283e5a50c8106d995d3a73131873f71b4b28e63d22f96021ec00aefcb99fd3",
-      "source_as_of": "2026-08-31",
-      "failure_run_id": "33696334752",
-      "failure_run_attempt": 1
-    },
-    {
-      "key": "nasdaq100.json",
-      "payload_sha256": "b6d6e4f657b70fb89f1133b3d05fa77f7fe5e3222ef71a63e1a4bd4e9a6914d4",
-      "source_as_of": "2026-08-31",
-      "failure_run_id": "33696334752",
-      "failure_run_attempt": 1
-    },
-    {
-      "key": "sox.json",
-      "payload_sha256": "c0f9afe5b252d0228d9c461787f8dc1a991efa004d4a04d18142730db5374dfd",
-      "source_as_of": "2026-08-31",
-      "failure_run_id": "33696334752",
-      "failure_run_attempt": 1
-    }
-  ],
+  "retry_keys": [],
+  "lkg_details": [],
   "recovery_details": [
     {
       "key": "sp500.json",
-      "recovered_from_run_id": "30246526864",
-      "recovery_run_id": "30312327287",
+      "recovered_from_run_id": "33696334752",
+      "recovery_run_id": "33818784791",
       "recovery_run_attempt": 1,
       "recovery_event_name": "schedule",
-      "recovered_at": "2026-07-27T22:55:09.730Z",
-      "source_as_of": "2026-08-31"
+      "recovered_at": "2026-09-03T23:53:32.990Z",
+      "source_as_of": "2026-09-03"
     },
     {
       "key": "nasdaq.json",
-      "recovered_from_run_id": "30246526864",
-      "recovery_run_id": "30312327287",
+      "recovered_from_run_id": "33696334752",
+      "recovery_run_id": "33818784791",
       "recovery_run_attempt": 1,
       "recovery_event_name": "schedule",
-      "recovered_at": "2026-07-27T22:55:09.730Z",
-      "source_as_of": "2026-08-31"
+      "recovered_at": "2026-09-03T23:53:32.990Z",
+      "source_as_of": "2026-09-03"
+    },
+    {
+      "key": "nasdaq100.json",
+      "recovered_from_run_id": "33696334752",
+      "recovery_run_id": "33818784791",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-09-03T23:53:32.990Z",
+      "source_as_of": "2026-09-03"
+    },
+    {
+      "key": "sox.json",
+      "recovered_from_run_id": "33696334752",
+      "recovery_run_id": "33818784791",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "recovered_at": "2026-09-03T23:53:32.990Z",
+      "source_as_of": "2026-09-03"
     }
   ],
   "promotion_deferral_details": [],
   "current_attempt": {
-    "run_id": "33696334752",
+    "run_id": "33818784791",
     "run_attempt": 1,
     "event_name": "schedule",
-    "observed_at": "2026-09-02T23:43:53.652Z",
+    "observed_at": "2026-09-03T23:53:32.990Z",
     "attempted": 4,
-    "successes": 0,
-    "failed": 4,
-    "failed_keys": [
-      "sp500.json",
-      "nasdaq.json",
-      "nasdaq100.json",
-      "sox.json"
-    ],
+    "successes": 4,
+    "failed": 0,
+    "failed_keys": [],
     "promotion_deferrals": 0,
     "promotion_deferral_keys": []
   }
