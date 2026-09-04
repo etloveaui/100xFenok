@@ -25,6 +25,7 @@ export function MarketChartEngine(props: MarketChartEngineProps) {
 
 export type {
   MarketChartEngineProps,
+  MarketChartDateBand,
   MarketChartHoverPoint,
   MarketChartHoverSeriesPoint,
   MarketChartPoint,

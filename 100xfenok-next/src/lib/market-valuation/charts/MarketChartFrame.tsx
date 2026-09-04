@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMarketChartTheme } from "./chartTheme";
 import { MarketChartEngine } from "./MarketChartEngine";
 import type {
+  MarketChartDateBand,
   MarketChartHoverPoint,
   MarketChartSeries,
   MarketChartType,
@@ -79,6 +80,8 @@ export interface MarketChartFrameProps {
   xScaleMode?: "category" | "time";
   /** The caller already cut the data window before transforming/downsampling. */
   seriesAreRangeFiltered?: boolean;
+  /** Optional ISO-date bands drawn behind time-series datasets. */
+  dateBands?: readonly MarketChartDateBand[];
 }
 
 const DEFAULT_RANGES: readonly MarketChartRange[] = [
@@ -184,6 +187,7 @@ export function MarketChartFrame({
   spanGaps = false,
   xScaleMode = "category",
   seriesAreRangeFiltered = false,
+  dateBands,
 }: MarketChartFrameProps) {
   const [internalRangeId, setInternalRangeId] = useState<string>(
     defaultRangeId ?? ranges[ranges.length - 1]?.id ?? "MAX",
@@ -335,6 +339,7 @@ export function MarketChartFrame({
         sortLabels={sortLabels}
         spanGaps={spanGaps}
         xScaleMode={xScaleMode}
+        dateBands={dateBands}
         suggestedMin={suggestedMin}
         suggestedMax={suggestedMax}
         yAxisTitle={yAxisTitle}

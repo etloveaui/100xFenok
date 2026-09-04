@@ -87,6 +87,16 @@ export const MACRO_TRANSFORM_LABELS = {
 export const MACRO_CATALOG_CURATED_AT = catalog.curated_at;
 export const MACRO_CATALOG_SERIES_COUNT = catalog.series.length;
 
+export const NBER_US_RECESSION_TABLE = {
+  source: "NBER Business Cycle Dating",
+  asOf: "2020-04",
+  periods: [
+    { peakMonth: "2001-03", troughMonth: "2001-11" },
+    { peakMonth: "2007-12", troughMonth: "2009-06" },
+    { peakMonth: "2020-02", troughMonth: "2020-04" },
+  ],
+} as const;
+
 export function seriesById(id: string): MacroSeriesDefinition | undefined {
   return MACRO_SERIES_CATALOG.find((item) => item.id === id) ?? stooqSeriesDefinitionFromId(id);
 }

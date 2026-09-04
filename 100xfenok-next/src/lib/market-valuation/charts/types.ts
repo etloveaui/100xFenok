@@ -27,6 +27,12 @@ export interface MarketChartPoint {
   detail?: string;
 }
 
+export interface MarketChartDateBand {
+  start: string;
+  end: string;
+  label: string;
+}
+
 export interface MarketChartSeries {
   id: string;
   label: string;
@@ -86,4 +92,6 @@ export interface MarketChartEngineProps {
   logScale?: boolean;
   /** Opt-in per-series ISO-date points on a Chart.js time scale. */
   xScaleMode?: "category" | "time";
+  /** Optional ISO-date bands drawn behind time-series datasets. */
+  dateBands?: readonly MarketChartDateBand[];
 }

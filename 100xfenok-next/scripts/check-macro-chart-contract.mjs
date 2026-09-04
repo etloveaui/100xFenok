@@ -107,8 +107,32 @@ async function inspectStaticContracts() {
     '침체 음영',
     '축 그룹 자동',
     '링크',
+    'data-macro-v2-formula-jump="true"',
+    '+ 수식',
   ]) {
     if (!macroSource.includes(token)) addFailure(failures, "macro-v2-reading-first", `${token} missing`);
+  }
+  for (const token of [
+    'NBER Business Cycle Dating',
+    'peakMonth: "2001-03", troughMonth: "2001-11"',
+    'peakMonth: "2007-12", troughMonth: "2009-06"',
+    'peakMonth: "2020-02", troughMonth: "2020-04"',
+  ]) {
+    if (!registrySource.includes(token)) addFailure(failures, "macro-v2-recession-registry", `${token} missing`);
+  }
+  for (const token of [
+    'data-macro-v2-recession-overlay="hero"',
+    'data-macro-v2-recession-overlay="lens"',
+    'dateBands={showRecessionShading ? NBER_RECESSION_DATE_BANDS : undefined}',
+  ]) {
+    if (!macroSource.includes(token)) addFailure(failures, "macro-v2-recession-shading", `${token} missing`);
+  }
+  for (const token of [
+    'id: "market-chart-date-bands"',
+    'beforeDatasetsDraw(chart)',
+    'xScale.getPixelForValue(start)',
+  ]) {
+    if (!engineSource.includes(token)) addFailure(failures, "market-chart-date-bands", `${token} missing`);
   }
   for (const label of ["리스크·유동성", "성장", "인플레이션", "금리·신용", "내 컬렉션"]) {
     if (!macroSource.includes(label)) addFailure(failures, "macro-v2-lens-bar", `${label} missing`);

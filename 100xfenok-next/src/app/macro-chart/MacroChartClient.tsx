@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
@@ -10,7 +10,7 @@ import { EmptyState, EvidenceRail, Panel, useDelayedLoading } from "@/components
 import { okabeItoPalette } from "@/lib/chart-theme";
 import { formatAsOf, freshnessDataState } from "@/lib/data-state";
 import { MarketChartFrame, type MarketChartRange } from "@/lib/market-valuation/charts/MarketChartFrame";
-import type { MarketChartSeries } from "@/lib/market-valuation/charts/types";
+import type { MarketChartDateBand, MarketChartSeries } from "@/lib/market-valuation/charts/types";
 import {
   MACRO_CATALOG_CURATED_AT,
   MACRO_CATALOG_SERIES_COUNT,
@@ -18,6 +18,7 @@ import {
   MACRO_GROUP_LABELS,
   MACRO_SERIES_CATALOG,
   MACRO_TRANSFORM_LABELS,
+  NBER_US_RECESSION_TABLE,
   seriesById,
 } from "@/lib/macro-chart/registry";
 import {
@@ -55,6 +56,22 @@ const MACRO_RANGES: readonly MarketChartRange[] = [
   { id: "10Y", label: "10Y", months: 120 },
   { id: "MAX", label: "전체" },
 ];
+
+function nextMonthStart(month: string) {
+  const [year, oneBasedMonth] = month.split("-").map((part) => Number.parseInt(part, 10));
+  const nextMonthIndex = oneBasedMonth;
+  const nextYear = year + Math.floor(nextMonthIndex / 12);
+  const nextMonth = (nextMonthIndex % 12) + 1;
+  return `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
+}
+
+const NBER_RECESSION_DATE_BANDS: readonly MarketChartDateBand[] = NBER_US_RECESSION_TABLE.periods.map(
+  ({ peakMonth, troughMonth }) => ({
+    start: `${peakMonth}-01`,
+    end: nextMonthStart(troughMonth),
+    label: `${peakMonth}–${troughMonth} 미국 경기침체`,
+  }),
+);
 const MACRO_RANGE_IDS = new Set(MACRO_RANGES.map((range) => range.id));
 const MACRO_TRANSFORM_IDS = new Set<MacroValueTransform>(["raw", "change", "pctChange", "yoy", "rebase100"]);
 const MACRO_FREQUENCY_IDS = new Set<MacroOutputFrequency>(["daily", "weekly", "monthly", "quarterly"]);
@@ -1040,8 +1057,40 @@ function sparklineSegments(series: MarketChartSeries) {
   return segments;
 }
 
-function LensSparkline({ series, state }: { series?: MarketChartSeries; state: MacroSurfaceState }) {
+function lensRecessionRects(series: MarketChartSeries, bands: readonly MarketChartDateBand[]) {
+  const timestamps = series.points
+    .map((point) => Date.parse(point.label))
+    .filter((value) => Number.isFinite(value));
+  if (timestamps.length < 2) return [];
+  const first = Math.min(...timestamps);
+  const last = Math.max(...timestamps);
+  const span = last - first;
+  if (span <= 0) return [];
+  return bands.flatMap((band) => {
+    const start = Math.max(first, Date.parse(band.start));
+    const end = Math.min(last, Date.parse(band.end));
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return [];
+    return [{
+      label: band.label,
+      x: ((start - first) / span) * 100,
+      width: ((end - start) / span) * 100,
+    }];
+  });
+}
+
+function LensSparkline({
+  series,
+  state,
+  showRecessionShading,
+}: {
+  series?: MarketChartSeries;
+  state: MacroSurfaceState;
+  showRecessionShading: boolean;
+}) {
   const segments = series ? sparklineSegments(series) : [];
+  const recessionRects = series && showRecessionShading
+    ? lensRecessionRects(series, NBER_RECESSION_DATE_BANDS)
+    : [];
   if (state === "loading") {
     return <div className="cpw5-macro-lens-sparkline cpw5-macro-lens-sparkline--loading" data-macro-v2-lens-sparkline="loading" aria-hidden />;
   }
@@ -1050,6 +1099,13 @@ function LensSparkline({ series, state }: { series?: MarketChartSeries; state: M
   }
   return (
     <svg className="cpw5-macro-lens-sparkline" data-macro-v2-lens-sparkline="ready" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden>
+      {showRecessionShading ? (
+        <g data-macro-v2-recession-overlay="lens">
+          {recessionRects.map((rect) => (
+            <rect key={rect.label} className="cpw5-macro-recession-band" x={rect.x} y="0" width={rect.width} height="32" />
+          ))}
+        </g>
+      ) : null}
       {segments.map((points, index) => (
         <polyline key={index} fill="none" stroke="var(--cp-accent)" strokeWidth="1.8" vectorEffect="non-scaling-stroke" points={points} />
       ))}
@@ -1411,9 +1467,11 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeTopLensId, setActiveTopLensId] = useState("risk-liquidity");
   const [editingSeriesId, setEditingSeriesId] = useState<string | null>(null);
+  const [showRecessionShading, setShowRecessionShading] = useState(false);
   const [logScale, setLogScale] = useState(false);
   const [autoGroupAxes, setAutoGroupAxes] = useState(true);
   const [tableOpen, setTableOpen] = useState(false);
+  const formulaBuilderRef = useRef<HTMLElement>(null);
 
   const selectedDefinitions = useMemo(
     () => selected.map((item) => seriesById(item.id)).filter((item): item is MacroSeriesDefinition => Boolean(item)),
@@ -1782,6 +1840,14 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     setFormulaNotice("합성 시리즈 삭제됨");
   }, []);
 
+  const openFormulaBuilder = useCallback(() => {
+    setSeriesEditorOpen(true);
+    window.setTimeout(() => {
+      formulaBuilderRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      formulaBuilderRef.current?.focus({ preventScroll: true });
+    }, 0);
+  }, []);
+
   const commitUserPresetList = useCallback((next: UserMacroPreset[], successMessage: string) => {
     const persistent = writeUserPresets(next);
     setUserPresets(next);
@@ -2110,7 +2176,12 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             </div>
 
             <div className="cpw5-macro-v2-global" data-macro-v2-global-controls="true" aria-label="차트 전역 설정">
-              <button type="button" disabled aria-pressed="false" title="이벤트 피드 없음">침체 음영</button>
+              <button
+                type="button"
+                aria-pressed={showRecessionShading}
+                onClick={() => setShowRecessionShading((value) => !value)}
+                title={`${NBER_US_RECESSION_TABLE.source} · ${NBER_US_RECESSION_TABLE.asOf} 기준`}
+              >침체 음영</button>
               <button type="button" disabled aria-pressed="false" title="이벤트 피드 없음">이벤트</button>
               <button type="button" disabled={!canUseLogScale} aria-pressed={logScale} onClick={() => setLogScale((value) => !value)} title={canUseLogScale ? undefined : "0 이하 값이 있어 로그 축을 사용할 수 없습니다"}>로그</button>
               <button type="button" aria-pressed={autoGroupAxes} onClick={() => setAutoGroupAxes((value) => !value)}>축 그룹 자동</button>
@@ -2243,10 +2314,21 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                     </div>
                   </div>
                 ))}
+                <button
+                  type="button"
+                  className="cpw5-macro-v2-legend__chip cpw5-macro-v2-legend__formula"
+                  onClick={openFormulaBuilder}
+                  data-macro-v2-formula-jump="true"
+                >+ 수식</button>
               </div>
               <div className="cpw5-macro-chart-rows" data-macro-chart-row-count={chartRows.length}>
               {chartRows.map((row, rowIndex) => (
                 <div key={row.id} data-macro-chart-unit-group={row.id}>
+                  {showRecessionShading ? (
+                    <span className="sr-only" data-macro-v2-recession-overlay="hero">
+                      {NBER_US_RECESSION_TABLE.source} 침체 음영
+                    </span>
+                  ) : null}
                   <MarketChartFrame
                     ariaLabel={`매크로 시계열 비교 차트 ${rowIndex + 1}`}
                     series={row.series}
@@ -2268,6 +2350,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                     sortLabels
                     spanGaps={false}
                     xScaleMode="time"
+                    dateBands={showRecessionShading ? NBER_RECESSION_DATE_BANDS : undefined}
                     seriesAreRangeFiltered
                     heightClassName="cpw5-macro-v2-plot"
                     yAxisTitle={row.yAxisTitle}
@@ -2311,9 +2394,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           )}
           <EvidenceRail
             freshness={evidenceFreshness}
-            source={[...new Set(healthyLoadedSeries.map((item) => sourceDisplayLabel(item.definition)))].join(" · ") || "데이터 확인 중"}
-            asOf={latestVisibleDate ?? "—"}
-            coverage={`카탈로그 ${healthyLoadedSeries.length}/${MACRO_CATALOG_SERIES_COUNT}`}
+            source={`${[...new Set(healthyLoadedSeries.map((item) => sourceDisplayLabel(item.definition)))].join(" · ") || "데이터 확인 중"}${showRecessionShading ? ` · ${NBER_US_RECESSION_TABLE.source}` : ""}`}
+            asOf={showRecessionShading ? NBER_US_RECESSION_TABLE.asOf : latestVisibleDate ?? "—"}
+            coverage={`카탈로그 ${healthyLoadedSeries.length}/${MACRO_CATALOG_SERIES_COUNT}${showRecessionShading ? ` · 침체 ${NBER_US_RECESSION_TABLE.periods.length}구간` : ""}`}
             next={failedLoadedSeries.length ? `${failedLoadedSeries.map((item) => item.definition.shortLabel).join(", ")} 재시도` : undefined}
             onRetry={activeLoadState.status === "error" || failedLoadedSeries.length ? () => setLoadRetryKey((value) => value + 1) : undefined}
           />
@@ -2365,14 +2448,18 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   data-macro-chart-lens={lens.id}
                 >
                   <strong>{lens.label}</strong>
-                  <LensSparkline series={preview?.series} state={preview?.state ?? "empty"} />
+                  <LensSparkline
+                    series={preview?.series}
+                    state={preview?.state ?? "empty"}
+                    showRecessionShading={showRecessionShading}
+                  />
                   <span>{lens.detail}</span>
                 </button>
                 <EvidenceRail
                   freshness={preview?.state === "loading" ? "pending" : preview?.state === "error" ? "error" : preview?.state === "stale" ? "partial" : "fixed"}
-                  source={preview?.series ? "현재 로드 시리즈" : "카탈로그 조합"}
-                  asOf={preview?.series ? latestVisibleDate ?? "—" : MACRO_CATALOG_CURATED_AT}
-                  coverage={preview?.series ? `${preview.series.label} 미리보기` : `${lens.state.selected.length}개 시리즈`}
+                  source={`${preview?.series ? "현재 로드 시리즈" : "카탈로그 조합"}${showRecessionShading ? ` · ${NBER_US_RECESSION_TABLE.source}` : ""}`}
+                  asOf={showRecessionShading ? NBER_US_RECESSION_TABLE.asOf : preview?.series ? latestVisibleDate ?? "—" : MACRO_CATALOG_CURATED_AT}
+                  coverage={`${preview?.series ? `${preview.series.label} 미리보기` : `${lens.state.selected.length}개 시리즈`}${showRecessionShading ? ` · 침체 ${NBER_US_RECESSION_TABLE.periods.length}구간` : ""}`}
                 />
               </article>
             );
@@ -2601,7 +2688,12 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             </div>
           </section>
 
-          <section className="cpw5-macro-editor-block">
+          <section
+            ref={formulaBuilderRef}
+            className="cpw5-macro-editor-block"
+            aria-label="합성 시리즈 빌더"
+            tabIndex={-1}
+          >
             <div className="cpw5-macro-section-head">
               <div>
                 <h2>합성 시리즈</h2>

@@ -300,6 +300,7 @@ export function MarketChartEngineClient({
   y1AxisTitle,
   logScale = false,
   xScaleMode = "category",
+  dateBands = [],
 }: MarketChartEngineProps) {
   const theme = useMarketChartTheme();
   const [keyboardIndex, setKeyboardIndex] = useState<number | null>(null);
@@ -358,6 +359,37 @@ export function MarketChartEngineClient({
       xScaleMode,
       theme,
     ],
+  );
+  const dateBandPlugin = useMemo<Plugin<MarketChartType>>(
+    () => ({
+      id: "market-chart-date-bands",
+      beforeDatasetsDraw(chart) {
+        if (xScaleMode !== "time" || dateBands.length === 0) return;
+        const xScale = chart.scales.x;
+        const { left, right, top, bottom } = chart.chartArea;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(left, top, right - left, bottom - top);
+        ctx.clip();
+        ctx.fillStyle = theme.token("line2");
+        ctx.globalAlpha = 0.6;
+        for (const band of dateBands) {
+          const start = Date.parse(band.start);
+          const end = Date.parse(band.end);
+          if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue;
+          const startPixel = xScale.getPixelForValue(start);
+          const endPixel = xScale.getPixelForValue(end);
+          if (!Number.isFinite(startPixel) || !Number.isFinite(endPixel)) continue;
+          const bandLeft = Math.max(left, Math.min(startPixel, endPixel));
+          const bandRight = Math.min(right, Math.max(startPixel, endPixel));
+          if (bandRight <= bandLeft) continue;
+          ctx.fillRect(bandLeft, top, bandRight - bandLeft, bottom - top);
+        }
+        ctx.restore();
+      },
+    }),
+    [dateBands, theme, xScaleMode],
   );
   const crosshairPlugin = useMemo<Plugin<MarketChartType>>(
     () => ({
@@ -443,6 +475,7 @@ export function MarketChartEngineClient({
           heightClassName,
           className,
         )}
+        data-market-chart-date-bands={dateBands.length || undefined}
       >
         {emptyLabel}
       </div>
@@ -456,13 +489,14 @@ export function MarketChartEngineClient({
         heightClassName,
         className,
       )}
+      data-market-chart-date-bands={dateBands.length || undefined}
       aria-label={`${ariaLabel}. 방향키, Home, End 키로 시점을 이동할 수 있습니다.`}
       onBlur={() => selectKeyboardIndex(null)}
       onKeyDown={handleKeyDown}
       role="group"
       tabIndex={onHoverPoint ? 0 : undefined}
     >
-      <Chart type={type} data={data} options={options} plugins={[crosshairPlugin]} aria-label={ariaLabel} role="img" />
+      <Chart type={type} data={data} options={options} plugins={[dateBandPlugin, crosshairPlugin]} aria-label={ariaLabel} role="img" />
     </div>
   );
 }
