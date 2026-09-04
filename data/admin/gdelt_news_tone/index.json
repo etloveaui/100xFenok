@@ -1,47 +1,44 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "gdelt_news_tone",
-  "updated_at": "2026-09-03T18:03:57.775Z",
-  "retry_set": [
-    "news_tone_proxy"
-  ],
+  "updated_at": "2026-09-04T17:48:09.363Z",
+  "retry_set": [],
   "items": {
     "news_tone_proxy": {
       "key": "news_tone_proxy",
-      "resolution_state": "lkg_primary",
-      "retry": true,
-      "updated_at": "2026-09-03T18:03:57.775Z",
+      "resolution_state": "fresh_primary",
+      "retry": false,
+      "updated_at": "2026-09-04T17:48:09.363Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "50b888f5033f6610741c58d3fc7b37614b85d6d6d7d42998ce47f5ea494d35ea",
-        "source_as_of": "2026-08-22T14:47:00.000Z",
-        "run_id": "32580198138",
+        "payload_sha256": "7dab45e77591db5519d006eccb904aa9c341edde614be1b53ac39dc2916b5e02",
+        "source_as_of": "2026-09-04T17:32:00.000Z",
+        "run_id": "33902451980",
         "run_attempt": 1,
-        "observed_at": "2026-08-22T14:57:04.361Z"
+        "observed_at": "2026-09-04T17:48:09.363Z"
       },
       "last_recovered_failure": {
-        "run_id": "32267985593",
+        "run_id": "33788237044",
         "run_attempt": 1,
-        "observed_at": "2026-08-19T15:08:43.595Z",
-        "reason": "rate_limited"
+        "observed_at": "2026-09-03T18:03:57.775Z",
+        "reason": "unexpected_error"
       },
       "current": {
-        "path": "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
-        "payload_sha256": "81dace8f4bf3ae9a8e0f13cb35f15236a59c4bed1917ebcdbe632c73350d4db2",
-        "source_as_of": "2026-08-22T14:47:00.000Z"
+        "path": "data/computed/fenok_news_tone_proxy.json",
+        "payload_sha256": "fde9b8c076b10e4f08badbb28db6e7db6be4c079d6be96fdef690e8251d4b2e4",
+        "source_as_of": "2026-09-04T17:32:00.000Z"
       },
       "lkg": {
         "path": "data/admin/gdelt_news_tone/lkg/news_tone_proxy.json",
         "payload_sha256": "81dace8f4bf3ae9a8e0f13cb35f15236a59c4bed1917ebcdbe632c73350d4db2",
         "source_as_of": "2026-08-22T14:47:00.000Z"
       },
-      "latest_failure": {
-        "run_id": "33788237044",
-        "run_attempt": 1,
-        "observed_at": "2026-09-03T18:03:57.775Z",
-        "reason": "unexpected_error"
-      }
+      "recovered_from_run_id": "33788237044",
+      "recovered_at": "2026-09-04T17:48:09.363Z",
+      "recovery_run_id": "33902451980",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule"
     }
   }
 }
