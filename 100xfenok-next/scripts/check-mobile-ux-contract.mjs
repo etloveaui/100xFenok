@@ -3315,8 +3315,13 @@ async function collectRouteChecks(page, route) {
       const isGuruRoute = currentRoute.includes("guru=");
       const sortBtns = Array.from(document.querySelectorAll("[data-superinvestors-sort]"));
       const tabBtns = Array.from(document.querySelectorAll("[data-superinvestors-tab]"));
-      if (tabBtns.length !== 4 || tabBtns.filter((btn) => btn.getAttribute("aria-selected") === "true").length !== 1) {
+      if (tabBtns.length !== 6 || tabBtns.filter((btn) => btn.getAttribute("aria-selected") === "true").length !== 1) {
         failures.push({ check: "superinvestors-tabs", detail: `tabs=${tabBtns.length}` });
+      }
+      const tabIds = tabBtns.map((btn) => btn.getAttribute("data-superinvestors-tab"));
+      const expectedTabIds = ["signal", "investors", "stocks", "trades", "insights", "graph"];
+      if (expectedTabIds.some((id) => !tabIds.includes(id))) {
+        failures.push({ check: "superinvestors-tab-ids", detail: `tabs=${tabIds.join(",")}` });
       }
       if (isGuruRoute) {
         const holders = document.querySelector("[data-superinvestors-holders]");
