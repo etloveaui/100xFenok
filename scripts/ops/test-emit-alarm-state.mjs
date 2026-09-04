@@ -14,6 +14,7 @@ import {
   alarmStateUnchanged,
   alarmStateResolved,
   incidentIdentitiesChanged,
+  laneNotificationsDue,
   writeAlarmStateMirrors,
   writeWorkflowOutputs,
   ALARM_STATE_SCHEMA,
@@ -502,6 +503,99 @@ for (const state of [firing, resolved, unknown]) {
   } finally {
     fs.rmSync(unwritableOutput, { recursive: true, force: true });
   }
+}
+
+// DEC-407 item 2: lane+day one-report-a-day. An unchanged overdue lane
+// notifies once per day: same-day re-reports compare equal (comment
+// suppressed), the next day the lane is due again (comment fires). No new
+// workflow: the ledger lives in the persisted lane_outcome_notified map.
+{
+  assert.deepEqual(
+    laneNotificationsDue({ notified: { fred_macro: "2026-07-19" }, lanes: ["fred_macro"], day: "2026-07-19" }),
+    [],
+    "a lane notified today must not notify again today",
+  );
+  assert.deepEqual(
+    laneNotificationsDue({ notified: { fred_macro: "2026-07-19" }, lanes: ["fred_macro"], day: "2026-07-20" }),
+    ["fred_macro"],
+    "a lane notified yesterday is due again today",
+  );
+  assert.deepEqual(
+    laneNotificationsDue({ notified: {}, lanes: ["fred_macro"], day: "2026-07-19" }),
+    ["fred_macro"],
+    "a never-notified lane is due",
+  );
+  assert.deepEqual(
+    laneNotificationsDue({ notified: {}, lanes: ["fred_macro"], day: null }),
+    [],
+    "an unreadable day fails silent instead of paging every run",
+  );
+
+  const laneRow = (file, label, lane) => ({
+    ...alarmingRow(file, label),
+    status: "alarm",
+    alarming: true,
+    alarm_reasons: ["lane_outcome_overdue"],
+    lane_outcome: [{
+      lane_id: lane,
+      conditions: ["lane_outcome_overdue"],
+      decision: "failed",
+      generation_id: "gen-1",
+      observed_at: "2026-07-19T10:00:00Z",
+      source_as_of: "2026-07-18",
+      cadence_hours: 24,
+      threshold_hours: 36,
+      age_hours: 48,
+      last_advance: "2026-07-17",
+      families: ["treasury-tga"],
+      watchdog_evaluated_at: "2026-07-19T11:00:00Z",
+    }],
+  });
+  const laneHealth = {
+    status: "alarm",
+    workflows: [laneRow("fetch-treasury-tga.yml", "Treasury TGA", "treasury_tga"), okRow("deploy-worker.yml", "Deploy Worker")],
+  };
+  const laneOpen = buildAlarmState({ health: laneHealth, prior: null, env: ENV, now: NOW });
+  assert.deepEqual(laneOpen.open_incidents[0].lane_outcome_lanes, ["treasury_tga"]);
+  assert.deepEqual(laneOpen.lane_outcome_notified, { treasury_tga: "2026-07-19" });
+  const laneJson = JSON.stringify(laneOpen);
+  for (const marker of [".github/", "data/admin", "gen-1"]) {
+    assert.ok(!laneJson.includes(marker), `lane state leaked forbidden marker: ${marker}`);
+  }
+
+  // Same-day re-report: nothing due, no new comment.
+  const laneRepeat = buildAlarmState({
+    health: laneHealth,
+    prior: laneOpen,
+    env: { ...ENV, GITHUB_RUN_ID: "999999" },
+    now: new Date("2026-07-19T18:00:00Z"),
+  });
+  assert.equal(incidentIdentitiesChanged(laneOpen, laneRepeat), false,
+    "an unchanged lane must not notify twice in one day");
+  assert.ok(alarmStateUnchanged(laneOpen, laneRepeat),
+    "a same-day lane re-report must not rewrite the persisted state");
+
+  // Next day: the same unchanged lane is due again.
+  const laneNextDay = buildAlarmState({
+    health: laneHealth,
+    prior: laneRepeat,
+    env: { ...ENV, GITHUB_RUN_ID: "999999" },
+    now: new Date("2026-07-20T12:00:00Z"),
+  });
+  assert.equal(incidentIdentitiesChanged(laneRepeat, laneNextDay), true,
+    "an unchanged lane must notify again the next day");
+  assert.deepEqual(laneNextDay.lane_outcome_notified, { treasury_tga: "2026-07-20" });
+  assert.ok(!alarmStateUnchanged(laneRepeat, laneNextDay),
+    "the day rollover must persist the new notification stamp");
+
+  // The ledger carries prior lanes forward instead of resetting them.
+  const carried = buildAlarmState({
+    health: quietHealth,
+    prior: laneNextDay,
+    env: ENV,
+    now: new Date("2026-07-20T13:00:00Z"),
+  });
+  assert.deepEqual(carried.lane_outcome_notified, { treasury_tga: "2026-07-20" });
 }
 
 console.log(JSON.stringify({ ok: true, suite: "emit-alarm-state contract" }, null, 2));

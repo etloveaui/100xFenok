@@ -21,15 +21,20 @@ import {
   PLANE_PUBLISH_ALARM_REASONS,
   PLANE_PUBLISH_OUTCOME_BINDINGS,
   assertDeclaredScheduleGraceContracts,
+  attachLaneOutcomeAlarms,
   attachPublishOutcomeAlarms,
   attachWorkflowCadence,
+  buildIssueBody,
   buildWorkflowRunsUrl,
   computeFailureStreak,
   deriveFailureStreakThreshold,
   deriveFamilyFreshness,
+  deriveLaneOutcomeAlarms,
   derivePublishOutcomeProjection,
   deriveWorkflowCadenceProjection,
   deriveWorkflowWatchPolicy,
+  LANE_OUTCOME_ALARM_REASONS,
+  LANE_OUTCOME_WATCHDOG_SCHEMA,
   QUEUE_EVICTION_INSPECTION_LIMIT,
   annotateQueueEvictions,
   evaluateWorkflow,
@@ -1390,6 +1395,167 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
     "healthy workflow_run completions remain quiet: issue preparation and issue update are alarm-only, and the run concludes green when reporting succeeded",
   );
   assert.doesNotMatch(workflow, /\$\{\{\s*runner\./, "must not reference the runner context in expressions (#357)");
+}
+
+// DEC-407 item 2: the KPI outcome_watchdog joins the existing alarm channel.
+// A lane pages once no matter how many families it owns; the representative is
+// the newest record and the run id is its generation_id (records carry no
+// GitHub run id). Small local bindings keep these contracts independent of the
+// registry's family count.
+{
+  const laneBindings = {
+    "fred-macro": { lane_id: "fred_macro", workflow: ".github/workflows/fetch-fred-macro.yml" },
+    "fred-macro-aux": { lane_id: "fred_macro", workflow: ".github/workflows/fetch-fred-macro.yml" },
+    sentiment: { lane_id: "sentiment", workflow: ".github/workflows/fetch-news-tone.yml" },
+  };
+  const watchdogRow = (lane_id, state, extra = {}) => ({
+    lane_id,
+    cadence_kind: "daily",
+    cadence_hours: 24,
+    threshold_hours: 36,
+    last_advance: "2026-08-09",
+    age_hours: state === "overdue" ? 48 : 12,
+    state,
+    ...extra,
+  });
+  const laneWatchdog = (rows) => ({
+    schema_version: LANE_OUTCOME_WATCHDOG_SCHEMA,
+    evaluated_at: "2026-08-10T02:30:00Z",
+    basis: "canonical_file_source_as_of",
+    threshold_multiplier: 1.5,
+    status: rows.some((row) => row.state === "overdue") ? "overdue" : "ready",
+    counts: { monitored: rows.length, current: 0, overdue: 0, unobservable: 0 },
+    rows,
+  });
+  const laneRecord = (family, result, observedAt, generationId = null) => buildPublishOutcomeRecord({
+    family,
+    result,
+    generationId,
+    observedAt,
+    sourceAsOf: "2026-08-09",
+  });
+
+  // Fail-open on a foreign watchdog shape: the alarm must never reason about a
+  // schema the KPI builder does not produce.
+  assert.deepEqual(
+    deriveLaneOutcomeAlarms({ watchdog: { schema_version: "v9", rows: [] }, shards: {}, bindings: laneBindings, now: FIXTURE_NOW }),
+    [],
+    "a foreign watchdog schema must yield no lane alarms",
+  );
+  assert.deepEqual(
+    deriveLaneOutcomeAlarms({ watchdog: null, shards: {}, bindings: laneBindings, now: FIXTURE_NOW }),
+    [],
+    "a missing watchdog must yield no lane alarms",
+  );
+
+  // Non-overdue rows never page, whatever the shards say.
+  assert.deepEqual(
+    deriveLaneOutcomeAlarms({
+      watchdog: laneWatchdog([watchdogRow("fred_macro", "current"), watchdogRow("sentiment", "unobservable")]),
+      shards: {},
+      bindings: laneBindings,
+      now: FIXTURE_NOW,
+    }),
+    [],
+    "current/unobservable watchdog rows must not alarm",
+  );
+
+  // Overdue + two consecutive non-successes: both conditions, representative is
+  // the newest record, run id is its generation_id.
+  const streakShards = {
+    "fred-macro": outcomeShard("fred-macro", [
+      laneRecord("fred-macro", "published", "2026-08-10T00:00:00Z", "gen-old"),
+      laneRecord("fred-macro", "failed", "2026-08-10T01:00:00Z", "gen-mid"),
+      laneRecord("fred-macro", "gate_blocked", "2026-08-10T02:00:00Z", "gen-latest"),
+    ]),
+  };
+  const [streak] = deriveLaneOutcomeAlarms({
+    watchdog: laneWatchdog([watchdogRow("fred_macro", "overdue")]),
+    shards: streakShards,
+    bindings: laneBindings,
+    now: FIXTURE_NOW,
+  });
+  assert.deepEqual(
+    streak.conditions,
+    [LANE_OUTCOME_ALARM_REASONS.overdue, LANE_OUTCOME_ALARM_REASONS.nonPromotionStreak],
+    "overdue with two consecutive non-successes must carry both conditions",
+  );
+  assert.equal(streak.decision, "gate_blocked");
+  assert.equal(streak.generation_id, "gen-latest");
+  assert.equal(streak.observed_at, "2026-08-10T02:00:00Z");
+  assert.equal(streak.source_as_of, "2026-08-09");
+  assert.equal(streak.cadence_hours, 24);
+  assert.deepEqual(streak.families, ["fred-macro", "fred-macro-aux"]);
+
+  // Overdue alone (fresh success on record): the overdue condition only.
+  const [fresh] = deriveLaneOutcomeAlarms({
+    watchdog: laneWatchdog([watchdogRow("fred_macro", "overdue")]),
+    shards: {
+      "fred-macro": outcomeShard("fred-macro", [
+        laneRecord("fred-macro", "published", "2026-08-10T02:00:00Z", "gen-ok"),
+      ]),
+    },
+    bindings: laneBindings,
+    now: FIXTURE_NOW,
+  });
+  assert.deepEqual(fresh.conditions, [LANE_OUTCOME_ALARM_REASONS.overdue]);
+  assert.equal(fresh.decision, "published");
+
+  // Overdue with no records at all (cancelled/dropped producer writes
+  // nothing): decision "overdue", null run — still pages.
+  const [absent] = deriveLaneOutcomeAlarms({
+    watchdog: laneWatchdog([watchdogRow("sentiment", "overdue", { last_advance: null, age_hours: null })]),
+    shards: {},
+    bindings: laneBindings,
+    now: FIXTURE_NOW,
+  });
+  assert.deepEqual(absent.conditions, [LANE_OUTCOME_ALARM_REASONS.overdue]);
+  assert.equal(absent.decision, "overdue");
+  assert.equal(absent.generation_id, null);
+
+  // One lane, two families: the newest record across families represents.
+  const [collapsed] = deriveLaneOutcomeAlarms({
+    watchdog: laneWatchdog([watchdogRow("fred_macro", "overdue")]),
+    shards: {
+      "fred-macro": outcomeShard("fred-macro", [
+        laneRecord("fred-macro", "failed", "2026-08-10T01:00:00Z", "gen-a"),
+      ]),
+      "fred-macro-aux": outcomeShard("fred-macro-aux", [
+        laneRecord("fred-macro-aux", "gate_blocked", "2026-08-10T02:00:00Z", "gen-b"),
+      ]),
+    },
+    bindings: laneBindings,
+    now: FIXTURE_NOW,
+  });
+  assert.equal(collapsed.decision, "gate_blocked");
+  assert.equal(collapsed.generation_id, "gen-b");
+
+  // Attach: the owning workflow alarms with both the reasons and the detail;
+  // a workflow owning no alarming lane passes through untouched.
+  const attached = attachLaneOutcomeAlarms(
+    [
+      { file: "fetch-fred-macro.yml", status: "ok", alarming: false, alarm_reasons: [] },
+      { file: "deploy-worker.yml", status: "ok", alarming: false, alarm_reasons: [] },
+    ],
+    [streak],
+    { bindings: laneBindings },
+  );
+  assert.equal(attached[0].status, "alarm");
+  assert.equal(attached[0].alarming, true);
+  assert.deepEqual(attached[0].alarm_reasons, [
+    LANE_OUTCOME_ALARM_REASONS.overdue,
+    LANE_OUTCOME_ALARM_REASONS.nonPromotionStreak,
+  ]);
+  assert.equal(attached[0].lane_outcome.length, 1);
+  assert.equal(attached[0].lane_outcome[0].lane_id, "fred_macro");
+  assert.equal(attached[1].status, "ok");
+  assert.equal(attached[1].lane_outcome, undefined);
+  const passthrough = [{ file: "fetch-fred-macro.yml", status: "ok" }];
+  assert.equal(attachLaneOutcomeAlarms(passthrough, [], { bindings: laneBindings }), passthrough);
+
+  // Body: one lane line carrying lane, decision, run, as-of, and cadence.
+  const body = buildIssueBody(attached.filter((row) => row.status === "alarm"));
+  assert.match(body, /Lane outcome: fred_macro decision=gate_blocked run=gen-latest source_as_of=2026-08-09 cadence=24h/);
 }
 
 console.log("check-pipeline-job-health tests passed");

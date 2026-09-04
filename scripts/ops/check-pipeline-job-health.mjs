@@ -558,7 +558,7 @@ export function derivePublishOutcomeProjection({
   return projection;
 }
 
-export function readPublishOutcomeProjection({
+export function readPublishOutcomeShards({
   root = PUBLISH_OUTCOME_ROOT,
   bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
 } = {}) {
@@ -569,6 +569,14 @@ export function readPublishOutcomeProjection({
     // I/O stays at the edge; the derivation stays pure over what it is handed.
     sourceClocks[family] = readCanonicalSourceAsOf(family);
   }
+  return { shards, sourceClocks };
+}
+
+export function readPublishOutcomeProjection({
+  root = PUBLISH_OUTCOME_ROOT,
+  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+} = {}) {
+  const { shards, sourceClocks } = readPublishOutcomeShards({ root, bindings });
   return derivePublishOutcomeProjection({ shards, bindings, sourceClocks });
 }
 
@@ -666,6 +674,137 @@ export function attachPublishOutcomeAlarms(workflows, projection, {
 
 function workflowFileFromDeclaration(workflow) {
   return typeof workflow === "string" ? path.basename(workflow) : null;
+}
+
+// DEC-407 item 2: the KPI outcome_watchdog already judges every live detection
+// lane against its own cadence (canonical file source_as_of advance vs
+// cadence_hours * 1.5), but nothing pages when a lane goes overdue — the alarm
+// only watches workflow runs and publish-outcome records. These functions join
+// the watchdog verdict to the workflow rows that own the lane, reusing the
+// existing alarm channel instead of adding a workflow.
+//
+// Vocabulary note: the watchdog rows carry states current/overdue/unobservable
+// and the publish-outcome records carry results
+// published/resumed/gate_blocked/failed (measured census 431/139/6/3 on
+// 2026-09-04 — deferred/contract-blocked/cancelled/timeout strings do not
+// exist in the records). A cancelled, timed-out, or silently dropped producer
+// writes no record at all, so it surfaces as a watchdog overdue with no fresh
+// record; a producer that runs but cannot promote for two cycles straight
+// surfaces as consecutive gate_blocked/failed records. The two conditions below
+// read exactly those two shapes.
+export const LANE_OUTCOME_WATCHDOG_SCHEMA = "lane-outcome-watchdog/v1";
+export const LANE_OUTCOME_ALARM_REASONS = Object.freeze({
+  overdue: "lane_outcome_overdue",
+  nonPromotionStreak: "lane_outcome_non_promotion_streak",
+});
+// A lane that stops promoting for this many consecutive outcome records is a
+// non-promotion streak, mirroring PLANE_FRESHNESS_MISSED_CYCLE_LIMIT.
+export const LANE_OUTCOME_NON_PROMOTION_STREAK_LIMIT = 2;
+
+/**
+ * Derive one alarm entry per overdue watchdog lane. Pure: the watchdog verdict,
+ * the outcome shards, and the bindings in; lane entries out. A watchdog with a
+ * foreign schema_version yields no entries (fail-open): the alarm must never
+ * reason about a watchdog shape the KPI builder does not produce.
+ *
+ * A lane owns several families, but a lane pages once: the representative is
+ * the family with the newest observed_at record, and run id is its
+ * generation_id (records carry no GitHub run id). A lane with no records at
+ * all reports decision "overdue" with a null run.
+ */
+export function deriveLaneOutcomeAlarms({
+  watchdog = null,
+  shards = {},
+  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+  now = new Date(),
+} = {}) {
+  if (!watchdog || typeof watchdog !== "object"
+    || watchdog.schema_version !== LANE_OUTCOME_WATCHDOG_SCHEMA) return [];
+  const rows = Array.isArray(watchdog.rows) ? watchdog.rows : [];
+  const familiesByLane = new Map();
+  for (const [family, binding] of Object.entries(bindings ?? {})) {
+    if (typeof binding?.lane_id !== "string") continue;
+    if (!familiesByLane.has(binding.lane_id)) familiesByLane.set(binding.lane_id, []);
+    familiesByLane.get(binding.lane_id).push(family);
+  }
+  const alarms = [];
+  for (const row of rows) {
+    if (row?.state !== "overdue" || typeof row?.lane_id !== "string") continue;
+    const families = [...(familiesByLane.get(row.lane_id) ?? [])].sort();
+    let representative = null;
+    let streak = false;
+    for (const family of families) {
+      const records = publishOutcomeRecords(shardForFamily(shards, family)) ?? [];
+      if (records.length === 0) continue;
+      const freshness = deriveFamilyFreshness({ records, now });
+      if ((freshness?.consecutive_non_success ?? 0) >= LANE_OUTCOME_NON_PROMOTION_STREAK_LIMIT) {
+        streak = true;
+      }
+      const latest = records.reduce((best, record) => {
+        if (!best) return record;
+        return Date.parse(record.observed_at) >= Date.parse(best.observed_at) ? record : best;
+      }, null);
+      if (latest && (!representative
+        || Date.parse(latest.observed_at) >= Date.parse(representative.observed_at))) {
+        representative = latest;
+      }
+    }
+    alarms.push({
+      lane_id: row.lane_id,
+      conditions: [
+        LANE_OUTCOME_ALARM_REASONS.overdue,
+        ...(streak ? [LANE_OUTCOME_ALARM_REASONS.nonPromotionStreak] : []),
+      ],
+      decision: representative?.result ?? "overdue",
+      generation_id: representative?.generation_id ?? null,
+      observed_at: representative?.observed_at ?? null,
+      source_as_of: representative?.source_as_of ?? null,
+      cadence_hours: row.cadence_hours ?? null,
+      threshold_hours: row.threshold_hours ?? null,
+      age_hours: row.age_hours ?? null,
+      last_advance: row.last_advance ?? null,
+      families,
+      watchdog_evaluated_at: watchdog.evaluated_at ?? null,
+    });
+  }
+  return alarms;
+}
+
+/**
+ * Attach lane-outcome alarm entries to the workflow rows that own the lane
+ * (via the outcome bindings), beside the existing plane/freshness reasons.
+ * Workflows owning no alarming lane are returned unchanged.
+ */
+export function attachLaneOutcomeAlarms(workflows, laneAlarms, {
+  bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
+} = {}) {
+  if (!Array.isArray(workflows) || !Array.isArray(laneAlarms) || laneAlarms.length === 0) return workflows;
+  const lanesByFile = new Map();
+  for (const binding of Object.values(bindings ?? {})) {
+    if (typeof binding?.workflow !== "string" || typeof binding?.lane_id !== "string") continue;
+    const file = path.basename(binding.workflow);
+    if (!lanesByFile.has(file)) lanesByFile.set(file, new Set());
+    lanesByFile.get(file).add(binding.lane_id);
+  }
+  const byLane = new Map(laneAlarms.map((entry) => [entry?.lane_id, entry]));
+  return workflows.map((workflow) => {
+    const lanes = lanesByFile.get(workflow?.file) ?? new Set();
+    const relevant = [...lanes].map((lane) => byLane.get(lane)).filter(Boolean);
+    if (relevant.length === 0) return workflow;
+    const alarmReasons = Array.isArray(workflow?.alarm_reasons) ? [...workflow.alarm_reasons] : [];
+    for (const entry of relevant) {
+      for (const condition of entry.conditions ?? []) {
+        if (!alarmReasons.includes(condition)) alarmReasons.push(condition);
+      }
+    }
+    return {
+      ...workflow,
+      lane_outcome: relevant,
+      status: "alarm",
+      alarming: true,
+      alarm_reasons: alarmReasons,
+    };
+  });
 }
 
 function declarationRows(config) {
@@ -1367,7 +1506,7 @@ export function evaluateWorkflow(workflow, runs, { now = Date.now() } = {}) {
   };
 }
 
-function buildIssueBody(alarms) {
+export function buildIssueBody(alarms) {
   const lines = [
     "[alert] Pipeline health incidents detected.",
     "",
@@ -1420,6 +1559,16 @@ function buildIssueBody(alarms) {
       if (freshness.triggered_by.length > 0) {
         lines.push(`- Triggered by: ${freshness.triggered_by.join(", ")}`);
       }
+    }
+    // A lane pages once no matter how many families it owns, so the body names
+    // the lane, the representative decision, and the evidence to act on: which
+    // run (generation_id — records carry no GitHub run id), how old the source
+    // is, and the cadence it is judged against.
+    for (const lane of Array.isArray(alarm.lane_outcome) ? alarm.lane_outcome : []) {
+      lines.push(`- Lane outcome: ${lane.lane_id} decision=${lane.decision}`
+        + ` run=${lane.generation_id ?? "unknown"}`
+        + ` source_as_of=${lane.source_as_of ?? "unknown"}`
+        + ` cadence=${lane.cadence_hours ?? "?"}h`);
     }
     if (reasons.includes("failure_streak")) {
       lines.push(`- Consecutive failures: ${alarm.streak}`);
@@ -1531,6 +1680,12 @@ export async function main() {
   const calendars = readJsonOrNull(DETECTION_CALENDARS_PATH);
   const kpi = readJsonOrNull(KPI_PATH);
   const publishOutcomeProjection = readPublishOutcomeProjection();
+  const { shards: publishOutcomeShards } = readPublishOutcomeShards();
+  const laneOutcomeAlarms = deriveLaneOutcomeAlarms({
+    watchdog: kpi?.outcome_watchdog ?? null,
+    shards: publishOutcomeShards,
+    now: new Date(checkedAtUtc),
+  });
   const cadenceProjection = deriveWorkflowCadenceProjection({
     watched: policy.watched,
     coverage: kpi?.runtime?.fetch_cron_skip_detection ?? null,
@@ -1557,7 +1712,8 @@ export async function main() {
       ...base,
       status: "unknown",
       message: "GITHUB_REPOSITORY is not set (expected owner/repo).",
-      workflows: attachPublishOutcomeAlarms(
+      lane_outcome_alarms: laneOutcomeAlarms,
+      workflows: attachLaneOutcomeAlarms(attachPublishOutcomeAlarms(
         attachWorkflowCadence(
           policy.watched.map((workflow) => ({
             file: workflow.file,
@@ -1569,6 +1725,8 @@ export async function main() {
           cadenceProjection,
         ),
         publishOutcomeProjection,
+        ),
+        laneOutcomeAlarms,
       ),
     };
     writeJson(resultPath, result);
@@ -1619,9 +1777,12 @@ export async function main() {
     }
   }
 
-  const classifiedWorkflows = attachPublishOutcomeAlarms(
-    attachWorkflowCadence(workflows, cadenceProjection),
-    publishOutcomeProjection,
+  const classifiedWorkflows = attachLaneOutcomeAlarms(
+    attachPublishOutcomeAlarms(
+      attachWorkflowCadence(workflows, cadenceProjection),
+      publishOutcomeProjection,
+    ),
+    laneOutcomeAlarms,
   );
   const alarms = classifiedWorkflows.filter((w) => w.status === "alarm");
   const unknowns = classifiedWorkflows.filter((w) => w.status === "unknown");
@@ -1636,6 +1797,7 @@ export async function main() {
     status: blindness.blind ? "blind" : status,
     blind: blindness.blind,
     blind_reason: blindness.reason,
+    lane_outcome_alarms: laneOutcomeAlarms,
     workflows: classifiedWorkflows,
   };
   if (alarms.length > 0) {
