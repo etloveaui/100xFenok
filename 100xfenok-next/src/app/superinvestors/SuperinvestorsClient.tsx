@@ -1305,11 +1305,7 @@ function SectorRotationPanel({
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {chips.length > 0 ? (
-                      chips.map((ticker) => (
-                        <span key={ticker} className="inline-flex min-h-11 items-center">
-                          <TickerChip ticker={ticker} variant="inline" />
-                        </span>
-                      ))
+                      chips.map((ticker) => <TickerChip key={ticker} ticker={ticker} variant="inline" className="inline-flex min-h-11 items-center" />)
                     ) : (
                       <span className="text-[10px] font-bold text-slate-700">—</span>
                     )}
@@ -1319,7 +1315,7 @@ function SectorRotationPanel({
             })}
           </div>
           <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
-            가중치는 거장 코호트 합산 보유 시가총액 기준, 델타는 직전 분기 대비 %p입니다. 매수·매도는 매매 상위권 기준 종목 수입니다.
+            가중치는 거장 코호트 합산 보유 시가총액 기준, 델타는 직전 분기 대비 %p입니다. 매수·매도 참여는 매매 상위권 종목의 공시 참여 투자자 수를 섹터별로 합산한 값(투자자×종목 건수)이며, 집계가 없는 섹터는 —로 표시합니다.
           </p>
         </div>
       ) : null}
