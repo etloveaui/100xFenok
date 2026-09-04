@@ -40,7 +40,7 @@ interface SignalPanelProps {
   dataReady: boolean;
   failed: boolean;
   partialFeeds: boolean;
-  investorCount: number;
+  investorCount: number | null;
   onRetry: () => void;
 }
 
