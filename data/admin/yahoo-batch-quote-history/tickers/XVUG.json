@@ -1,50 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-07-17T00:24:27Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "29544227703",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -215,6 +171,20 @@
       "run_id": "33702512577",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 846,
+      "natural": true,
+      "observed_at": "2026-09-04T01:04:03Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33824182428",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -233,12 +203,12 @@
     "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 496,
+    "latency_ms": 846,
     "natural": true,
-    "observed_at": "2026-09-03T01:11:07Z",
+    "observed_at": "2026-09-04T01:04:03Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33702512577",
+    "run_id": "33824182428",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -286,12 +256,12 @@
   },
   "latest_promotion_deferral": {
     "event_name": "schedule",
-    "observed_at": "2026-09-03T01:11:07Z",
+    "observed_at": "2026-09-04T01:04:03Z",
     "provider_history_as_of": "2026-08-27",
     "provider_quote_as_of": "2026-08-20T19:22:34Z",
     "reason": "recovery_not_advanced_by_provider",
     "run_attempt": 1,
-    "run_id": "33702512577"
+    "run_id": "33824182428"
   },
   "lkg": {
     "fetched_at": "2026-08-29T04:17:40Z",
@@ -332,5 +302,5 @@
     "source_as_of": "2026-08-20T19:22:34Z"
   },
   "ticker": "XVUG",
-  "updated_at": "2026-09-03T01:11:07Z"
+  "updated_at": "2026-09-04T01:04:03Z"
 }

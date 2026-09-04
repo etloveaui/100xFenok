@@ -168,15 +168,28 @@
       "run_id": "33577879211",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1779,
+      "natural": true,
+      "observed_at": "2026-09-04T01:04:03Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "33824182428",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:10:48Z",
-    "history_as_of": "2026-08-31",
+    "fetched_at": "2026-09-04T01:04:15Z",
+    "history_as_of": "2026-09-03",
     "path": "data/yf/finance/OPPG.json",
-    "payload_sha256": "f3671f00f99ddcd62fda5925039920ed053da95981cb38e64ee428189380356a",
-    "quote_as_of": "2026-08-26T19:58:47Z",
-    "source_as_of": "2026-08-26T19:58:47Z"
+    "payload_sha256": "86b64e2af3a1e6a8a85522b8b781aef1c323e67f3b498b5dd475f53a1c4bd5df",
+    "quote_as_of": "2026-09-03T16:49:41Z",
+    "source_as_of": "2026-09-03"
   },
   "discovered_from": [
     "market_facts",
@@ -186,30 +199,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 825,
+    "latency_ms": 1779,
     "natural": true,
-    "observed_at": "2026-09-02T01:05:40Z",
+    "observed_at": "2026-09-04T01:04:03Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "33824182428",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-02T01:10:48Z",
+    "history_as_of": "2026-08-31",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/OPPG.json",
+    "payload_sha256": "f3671f00f99ddcd62fda5925039920ed053da95981cb38e64ee428189380356a",
+    "quote_as_of": "2026-08-26T19:58:47Z",
+    "source_as_of": "2026-08-26T19:58:47Z"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-31",
-    "observed_at": "2026-09-02T01:05:40Z",
-    "payload_sha256": "41f09e4508d8711a8016de66e08f9941bbe21ac39cc4edd26c26a8a2aa146bf9",
-    "quote_as_of": "2026-08-26T19:58:47Z",
+    "history_as_of": "2026-09-03",
+    "observed_at": "2026-09-04T01:04:03Z",
+    "payload_sha256": "b5c2105b151c2f4e0c3b7e579c2754e13236f18c01a1ce55c4ea656b339310c3",
+    "quote_as_of": "2026-09-03T16:49:41Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "33824182428",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-26T19:58:47Z"
+    "source_as_of": "2026-09-03"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-09-04T01:04:03Z",
+    "classified_run_id": "33824182428",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "OPPG holds LKG because Yahoo source date 2026-08-26T19:58:47Z is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-08-26T19:58:47Z"
+  },
   "ticker": "OPPG",
-  "updated_at": "2026-09-02T01:05:40Z"
+  "updated_at": "2026-09-04T01:04:03Z"
 }

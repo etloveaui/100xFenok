@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 3016,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -183,6 +170,20 @@
       "run_id": "33702512577",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1053,
+      "natural": true,
+      "observed_at": "2026-09-04T01:04:03Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33824182428",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -203,12 +204,12 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 578,
+    "latency_ms": 1053,
     "natural": true,
-    "observed_at": "2026-09-03T01:11:07Z",
+    "observed_at": "2026-09-04T01:04:03Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33702512577",
+    "run_id": "33824182428",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -232,9 +233,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-03T01:11:07Z",
+    "observed_at": "2026-09-04T01:04:03Z",
     "run_attempt": 1,
-    "run_id": "33702512577"
+    "run_id": "33824182428"
   },
   "lkg": {
     "fetched_at": "2026-09-02T01:15:31Z",
@@ -265,5 +266,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "INTC",
-  "updated_at": "2026-09-03T01:11:07Z"
+  "updated_at": "2026-09-04T01:04:03Z"
 }

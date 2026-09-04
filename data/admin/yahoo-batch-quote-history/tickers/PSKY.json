@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 379,
-      "natural": true,
-      "observed_at": "2026-08-14T00:18:08Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31755913658",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 598,
       "natural": true,
       "observed_at": "2026-08-14T23:56:58Z",
@@ -182,6 +169,20 @@
       "run_id": "33702512577",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1016,
+      "natural": true,
+      "observed_at": "2026-09-04T01:04:03Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33824182428",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -200,14 +201,14 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 586,
+    "latency_ms": 1016,
     "natural": true,
-    "observed_at": "2026-09-03T01:16:16Z",
+    "observed_at": "2026-09-04T01:04:03Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33702512577",
+    "run_id": "33824182428",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "0/5"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -217,9 +218,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-03T01:16:16Z",
+    "observed_at": "2026-09-04T01:04:03Z",
     "run_attempt": 1,
-    "run_id": "33702512577"
+    "run_id": "33824182428"
   },
   "lkg": {
     "fetched_at": "2026-09-02T01:26:47Z",
@@ -245,5 +246,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "PSKY",
-  "updated_at": "2026-09-03T01:16:16Z"
+  "updated_at": "2026-09-04T01:04:03Z"
 }
