@@ -1165,19 +1165,24 @@ export function validateAttemptEvidence(document, config = DATA_SUPPLY_DETECTION
     const actualAssertionIds = [...assertionIds].sort();
     // Lanes whose contract declares per-shape assertion sets check each
     // shaped row against the set for its own page_shape, never a global
-    // exact set. A row naming an unknown shape, or carrying another shape's
-    // set, fails here. Shapeless rows keep the legacy global check, and a
-    // shape key on a lane without shape sets is rejected.
+    // exact set. A present page_shape must name a known shape of the lane
+    // contract, checked independently before outcome-specific assertion
+    // handling, so an unknown shape cannot validate through empty-assertion
+    // failure tuples or the provider-throttled bypass. Shapeless rows keep
+    // the legacy global check.
     const shapeSets = lane.endpoint_contract.assertion_sets;
+    const hasPageShape = Object.hasOwn(row, "page_shape");
+    if (hasPageShape
+      && (shapeSets === undefined
+        || typeof row.page_shape !== "string"
+        || !Object.hasOwn(shapeSets, row.page_shape))) {
+      fail("schema_error", `${key} page_shape is unknown`);
+    }
     let hasExactAssertions;
-    if (shapeSets !== undefined && Object.hasOwn(row, "page_shape")) {
-      const allowed = Object.hasOwn(shapeSets, row.page_shape) ? shapeSets[row.page_shape] : undefined;
-      hasExactAssertions = allowed !== undefined
-        && canonicalJson([...allowed].sort()) === canonicalJson(actualAssertionIds);
+    if (shapeSets !== undefined && hasPageShape) {
+      const allowed = shapeSets[row.page_shape];
+      hasExactAssertions = canonicalJson([...allowed].sort()) === canonicalJson(actualAssertionIds);
     } else {
-      if (shapeSets === undefined && Object.hasOwn(row, "page_shape")) {
-        fail("schema_error", `${key} page_shape without a shape contract`);
-      }
       hasExactAssertions = canonicalJson(expectedAssertionIds) === canonicalJson(actualAssertionIds);
     }
     const hasEmptyOrExactFailedAssertions = row.assertions.length === 0

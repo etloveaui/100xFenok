@@ -98,6 +98,62 @@ function pageEvent(pageShape, assertionId, passed = true) {
   assert.equal(result.row.exception_kind, "unexpected");
 }
 
+// An unknown shape with an empty-payload failure tuple still fails closed:
+// the empty-assertion path must not bypass shape membership.
+{
+  const result = runSlickchartsAttempt({
+    memberId: "monthly",
+    eventPaths: [eventPath("monthly-unknown-empty", [{
+      execution: "returned",
+      exception_kind: null,
+      http_status: 200,
+      auth: "not_applicable",
+      rate_limited: false,
+      decode: "ok",
+      payload: "empty",
+      assertions: [],
+      page_shape: "chart",
+      provider_date: "Thu, 04 Sep 2026 01:08:24 GMT",
+      response_sha256: "0".repeat(64),
+    }])],
+    producerOutcomes: ["success"],
+    shardPath: path.join(root, "unknown-empty-shard.json"),
+    rowPath: path.join(root, "unknown-empty-row.json"),
+    observedAt: "2026-09-04T05:08:46Z",
+    attemptId: "gh-304-1-monthly",
+  });
+  assert.equal(result.row.execution, "threw");
+  assert.equal(result.row.exception_kind, "unexpected");
+}
+
+// An unknown shape with a provider-throttled tuple still fails closed:
+// the throttled bypass must not skip shape membership.
+{
+  const result = runSlickchartsAttempt({
+    memberId: "monthly",
+    eventPaths: [eventPath("monthly-unknown-throttled", [{
+      execution: "returned",
+      exception_kind: null,
+      http_status: 200,
+      auth: "not_applicable",
+      rate_limited: false,
+      decode: "ok",
+      payload: "non_empty",
+      assertions: [{ id: "provider_throttled", passed: false }],
+      page_shape: "chart",
+      provider_date: "Thu, 04 Sep 2026 01:08:24 GMT",
+      response_sha256: "0".repeat(64),
+    }])],
+    producerOutcomes: ["success"],
+    shardPath: path.join(root, "unknown-throttled-shard.json"),
+    rowPath: path.join(root, "unknown-throttled-row.json"),
+    observedAt: "2026-09-04T06:08:46Z",
+    attemptId: "gh-305-1-monthly",
+  });
+  assert.equal(result.row.execution, "threw");
+  assert.equal(result.row.exception_kind, "unexpected");
+}
+
 // Shapeless legacy table events keep validating (backward compatibility).
 {
   const { page_shape: _dropped, ...legacy } = pageEvent("table", "table_rows");
