@@ -111,7 +111,10 @@ async function inspectStaticContracts() {
   for (const label of ["리스크·유동성", "성장", "인플레이션", "금리·신용", "내 컬렉션"]) {
     if (!macroSource.includes(label)) addFailure(failures, "macro-v2-lens-bar", `${label} missing`);
   }
-  for (const label of ["수준", "변화", "% 변화", "YoY", "100 기준", "평균", "합", "기말", "왼쪽", "오른쪽", "자동 그룹", "제거"]) {
+  for (const label of ["수준", "변화", "% 변화", "YoY", "100 기준"]) {
+    if (!registrySource.includes(label)) addFailure(failures, "macro-v2-series-editor-controls", `${label} missing`);
+  }
+  for (const label of ["평균", "합", "기말", "왼쪽", "오른쪽", "자동 그룹", "제거"]) {
     if (!macroSource.includes(label)) addFailure(failures, "macro-v2-series-editor-controls", `${label} missing`);
   }
   if (!macroSource.includes('spanGaps={false}')) {
