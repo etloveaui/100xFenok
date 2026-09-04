@@ -2,6 +2,7 @@
 
 import { EvidenceRail, Panel, PanelHeader } from "@/components/ui";
 import { formatAsOf, isStaleAsOf } from "@/lib/data-state";
+import { ROUTES } from "@/lib/routes";
 import {
   MOMENTUM_WINDOWS,
   type MomentumWindow,
@@ -64,19 +65,31 @@ export default function RotationStripPanel({
       rankForWindow(rows, window.key, benchmarkMomentum?.[window.key] ?? null),
     ]),
   );
-  const valuedWindows = MOMENTUM_WINDOWS.filter((window) => (ranks.get(window.key)?.size ?? 0) > 0);
+  // A window is complete only when all 11 sectors carry a value; coverage
+  // counts sector×window cells present (e.g. 52/55), never valued windows.
+  const valueCount = (windowKey: MomentumWindow) =>
+    rows.filter((row) => finiteNumber(row.momentum[windowKey])).length;
+  const completeWindows = MOMENTUM_WINDOWS.filter(
+    (window) => rows.length > 0 && valueCount(window.key) >= rows.length,
+  );
+  const presentCells = MOMENTUM_WINDOWS.reduce((sum, window) => sum + valueCount(window.key), 0);
+  const totalCells = rows.length * MOMENTUM_WINDOWS.length;
+  const coverageLabel = totalCells > 0
+    ? `${presentCells}/${totalCells} · ${MOMENTUM_WINDOWS.map((window) => `${window.key.toUpperCase()} ${valueCount(window.key)}/${rows.length}`).join(" · ")}`
+    : "—";
   // Row order follows the 1M rank so the strip reads top-to-bottom strongest-first.
   const orderRank = ranks.get("1m") ?? new Map<string, { rank: number; relative: number }>();
   const ordered = [...rows].sort(
     (a, b) => (orderRank.get(a.key)?.rank ?? 999) - (orderRank.get(b.key)?.rank ?? 999),
   );
-  const empty = !loading && (!ready || valuedWindows.length === 0);
+  const empty = !loading && (!ready || presentCells === 0);
   const asOfLabel = formatAsOf(clock) ?? "—";
-  const partial = ready && valuedWindows.length < MOMENTUM_WINDOWS.length;
+  const partial = ready && completeWindows.length < MOMENTUM_WINDOWS.length;
   const clockStale = isStaleAsOf(clock);
 
   return (
     <Panel
+      className="sec-rank-panel"
       loading={loading}
       empty={empty}
       emptyReason={failed || !ready ? "구간별 섹터 순위를 불러오지 못했습니다" : "표시할 순위 자료가 없습니다"}
@@ -87,7 +100,7 @@ export default function RotationStripPanel({
       asOf={clock ?? undefined}
       onRetry={stale || clockStale ? onRetry : undefined}
     >
-      {ready && valuedWindows.length > 0 && (
+      {ready && presentCells > 0 && (
         <div className="sec-rank-strip" data-sectors-rank-strip="true">
           <PanelHeader
             eyebrow="Rank Bump"
@@ -132,10 +145,10 @@ export default function RotationStripPanel({
         freshness={loading ? "pending" : failed || !ready ? "error" : stale || clockStale ? "stale" : partial ? "partial" : clock ? "fresh" : "fixed"}
         source="SlickCharts · Yahoo"
         asOf={asOfLabel}
-        coverage={`${valuedWindows.length}/${MOMENTUM_WINDOWS.length}구간`}
+        coverage={ready ? coverageLabel : "—"}
         lkgAsOf={(stale || clockStale) && lkgClock ? (formatAsOf(lkgClock) ?? lkgClock) : undefined}
         onRetry={failed || !ready || stale || clockStale || partial ? onRetry : undefined}
-        onEvidence={ready && !failed ? () => window.open("/data/benchmarks/summaries.json", "_blank", "noopener") : undefined}
+        onEvidence={ready && !failed ? () => window.open(ROUTES.sectorMomentumJson, "_blank", "noopener") : undefined}
       />
     </Panel>
   );

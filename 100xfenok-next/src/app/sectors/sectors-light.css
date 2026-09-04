@@ -254,7 +254,7 @@
 
 .sec-etf-table td {
   padding: 0 16px;
-  height: 34px;
+  height: 44px;
   text-align: right;
   color: var(--fnk-neutral-700);
   white-space: nowrap;
@@ -263,7 +263,7 @@
 .sec-etf-name {
   text-align: left;
   padding: 0 16px;
-  height: 34px;
+  height: 44px;
   font-weight: 400;
   white-space: nowrap;
   border-left: 2px solid transparent;
@@ -391,6 +391,14 @@
   margin: 12px 16px 4px;
 }
 
+/* Active rotation window reads as a filled accent tab (local override of the
+ * shared tab variant; Button.tsx stays untouched). */
+.sec-rotation-toggle .sec-period-btn[data-active="true"] {
+  background: var(--fnk-brand-interactive);
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-color-white);
+}
+
 .sec-rotation-map {
   display: block;
   padding: 8px 16px 0;
@@ -490,7 +498,21 @@
 }
 
 /* Layer-2 accordions (slice S2): collapsed bars are full-width 44px buttons;
- * the open section renders the existing panel unchanged. */
+ * the open section renders the existing panel unchanged. A collapsed section
+ * keeps a compact one-line EvidenceRail below the bar, so the closed state
+ * still carries source · 기준 · 커버리지. */
+
+.sec-acc-wrap {
+  background: var(--fnk-color-white);
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.sec-acc-wrap .sec-acc-closed {
+  border: none;
+  border-radius: 0;
+}
 
 .sec-acc-closed {
   display: flex;
@@ -684,7 +706,9 @@
 }
 
 @media (max-width: 760px) {
-  .sec-rank-strip {
+  /* Partial strip must not leave an empty Panel + rail on mobile: hide the
+   * whole rank panel, not only its table body. */
+  .sec-rank-panel {
     display: none;
   }
 

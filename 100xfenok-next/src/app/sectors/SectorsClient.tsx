@@ -10,7 +10,7 @@ import { Bar, Button, EvidenceRail, Panel, PanelHeader, Pill } from "@/component
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
 import { ROUTES, withQuery } from "@/lib/routes";
-import { useSectorData } from "@/hooks/useSectorData";
+import { PE_BAND_WINDOW_LABEL, useSectorData } from "@/hooks/useSectorData";
 import {
   MOMENTUM_WINDOWS,
   type MomentumWindow,
@@ -132,6 +132,54 @@ function CollapsedBar({
       </span>
       <span className="sec-head-note">{meta}</span>
     </button>
+  );
+}
+
+function CollapsedSection({
+  section,
+  eyebrow,
+  title,
+  meta,
+  onOpen,
+  freshness,
+  source,
+  asOf,
+  coverage,
+  next,
+  onEvidence,
+}: {
+  section: AccordionSection;
+  eyebrow: string;
+  title: string;
+  meta: ReactNode;
+  onOpen: () => void;
+  freshness: "fresh" | "stale" | "fixed" | "pending" | "error" | "partial";
+  source: string;
+  asOf: string;
+  coverage: string;
+  next?: string;
+  onEvidence?: () => void;
+}) {
+  // Collapsed accordions keep a compact one-line EvidenceRail (source ·
+  // 기준 · 커버리지) so the closed state still carries provenance.
+  return (
+    <div className="sec-acc-wrap">
+      <CollapsedBar
+        section={section}
+        eyebrow={eyebrow}
+        title={title}
+        meta={meta}
+        onOpen={onOpen}
+      />
+      <EvidenceRail
+        freshness={freshness}
+        source={source}
+        asOf={asOf}
+        coverage={coverage}
+        next={next}
+        onEvidence={onEvidence}
+      />
+    </div>
   );
 }
 
@@ -360,6 +408,7 @@ export default function SectorsClient() {
   const {
     rows,
     benchmarkMomentum,
+    prevSnapshot,
     loaded,
     dataReady,
     benchmarksReady,
@@ -387,6 +436,10 @@ export default function SectorsClient() {
   const rotationIncomplete = benchmarksReady && rotationValued < rows.length;
   const activeBenchmark = benchmarkMomentum?.[sortWindow] ?? null;
 
+  const flowValuedCount = benchmarksReady
+    ? rows.filter((row) => typeof row.momentum[sortWindow] === "number").length
+    : 0;
+  const flowIncomplete = benchmarksReady && flowValuedCount < rows.length;
   const flowStale = benchmarksReady && (staleSources.includes("benchmarks") || isStaleAsOf(sourceMeta.benchmarksSourceDate));
   const flowFailed = loaded && !benchmarksReady;
   const flowCoverage = benchmarksReady
@@ -415,7 +468,7 @@ export default function SectorsClient() {
         return band !== null && band >= 50;
       }).length
     : 0;
-  const valuationCoverage = valuationReady ? `${bandCount}/${rows.length} 섹터` : "—";
+  const valuationCoverage = valuationReady ? `${bandCount}/${rows.length} 섹터 · ${PE_BAND_WINDOW_LABEL}` : "—";
 
   const heroFailed = loaded && !benchmarksReady;
   const heroEmpty = !loading && (!benchmarksReady || rotationPts.length === 0);
@@ -430,7 +483,7 @@ export default function SectorsClient() {
   } else if (failed) {
     headline = "섹터 데이터를 불러오지 못했습니다. 다시 시도해 주세요.";
   } else if (benchmarksReady) {
-    headline = rotationRead(rows, rotationWindow, rotationLabel, rotationBenchmark, rows.length);
+    headline = rotationRead(rows, rotationWindow, rotationLabel, benchmarkMomentum, rows.length, prevSnapshot);
   } else {
     headline = "섹터 자료 일부를 불러왔지만 기간별 모멘텀 기준선은 아직 없습니다.";
   }
@@ -495,7 +548,7 @@ export default function SectorsClient() {
           coverage={benchmarksReady ? `${rotationPts.length}/${rows.length} · 밴드 ${rotationBandCount}/${rows.length}` : "—"}
           lkgAsOf={flowStale && sourceMeta.benchmarksSourceDate ? (formatAsOf(sourceMeta.benchmarksSourceDate) ?? sourceMeta.benchmarksSourceDate) : undefined}
           onRetry={heroFailed || flowStale || rotationIncomplete || rotationBandless.length > 0 ? refresh : undefined}
-          onEvidence={benchmarksReady && !heroFailed ? () => openEvidence("/data/benchmarks/summaries.json") : undefined}
+          onEvidence={benchmarksReady && !heroFailed ? () => openEvidence(ROUTES.sectorMomentumJson) : undefined}
         />
       </Panel>
 
@@ -528,12 +581,17 @@ export default function SectorsClient() {
             onRetry={refresh}
           />
         ) : (
-          <CollapsedBar
+          <CollapsedSection
             section="bars"
             eyebrow="Sector Flow"
             title="상대성과 바"
             meta={`${rows.length}개 업종 전체`}
             onOpen={() => setOpenSection("bars")}
+            freshness={loading ? "pending" : flowFailed ? "error" : flowIncomplete ? "partial" : flowStale ? "stale" : sourceMeta.benchmarksSourceDate ? "fresh" : "fixed"}
+            source="SlickCharts · Yahoo"
+            asOf={formatAsOf(sourceMeta.benchmarksSourceDate) ?? "—"}
+            coverage={flowCoverage}
+            onEvidence={benchmarksReady && !flowFailed ? () => openEvidence(ROUTES.sectorMomentumJson) : undefined}
           />
         )}
       </div>
@@ -553,12 +611,17 @@ export default function SectorsClient() {
             onRetry={refresh}
           />
         ) : (
-          <CollapsedBar
+          <CollapsedSection
             section="etf"
             eyebrow="ETF"
             title="섹터 ETF 비교"
             meta={`${etfCoverage} 섹터 ETF 상세`}
             onOpen={() => setOpenSection("etf")}
+            freshness={loading ? "pending" : etfFailed ? "error" : etfsReady && etfRows.length < rows.length ? "partial" : etfStale ? "stale" : sourceMeta.etfSourceDate ? "fresh" : "fixed"}
+            source="ETF 운용사 공시"
+            asOf={formatAsOf(sourceMeta.etfSourceDate) ?? "—"}
+            coverage={etfCoverage}
+            onEvidence={etfsReady && !etfFailed ? () => openEvidence("/data/global-scouter/etfs/index.json") : undefined}
           />
         )}
       </div>
@@ -578,12 +641,17 @@ export default function SectorsClient() {
             onRetry={refresh}
           />
         ) : (
-          <CollapsedBar
+          <CollapsedSection
             section="valuation"
             eyebrow="Valuation"
             title="밸류에이션 밴드"
             meta={valuationReady ? `밴드 확보 ${bandCount}/${rows.length} · 고평가권 ${bandHighCount}개` : "확인 중"}
             onOpen={() => setOpenSection("valuation")}
+            freshness={loading ? "pending" : valuationFailed ? "error" : valuationStale ? "stale" : valuationReady && bandCount < rows.length ? "partial" : "fixed"}
+            source={sourceMeta.valuationSource ?? "밸류에이션 자료"}
+            asOf={formatAsOf(sourceMeta.valuationLatestDate) ?? "—"}
+            coverage={valuationCoverage}
+            onEvidence={valuationReady && !valuationFailed ? () => openEvidence("/data/benchmarks/us_sectors.json") : undefined}
           />
         )}
       </div>
@@ -603,7 +671,7 @@ export default function SectorsClient() {
             onRetry={refresh}
           />
         ) : (
-          <CollapsedBar
+          <CollapsedSection
             section="smart"
             eyebrow="13F · 기관 보유"
             title="13F 섹터 흐름"
@@ -613,6 +681,12 @@ export default function SectorsClient() {
               "확인 중"
             )}
             onOpen={() => setOpenSection("smart")}
+            freshness={loading ? "pending" : smartFailed ? "error" : "stale"}
+            source="SEC EDGAR 13F"
+            asOf={formatAsOf(smartAsOf) ?? "—"}
+            coverage={smartCoverage}
+            next="분기 종료 후 최대 45일"
+            onEvidence={smartMoneyReady && !smartFailed ? () => openEvidence("/data/sec-13f/analytics/portfolio_views.json") : undefined}
           />
         )}
       </div>

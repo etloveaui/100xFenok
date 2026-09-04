@@ -167,12 +167,31 @@ function buildEtfInfo(raw: RawEtf | undefined): SectorEtfInfo | null {
   };
 }
 
+/** Trailing window (in calendar years) the on-screen Fwd P/E band covers. */
+export const PE_BAND_WINDOW_YEARS = 5;
+export const PE_BAND_WINDOW_LABEL = "최근 5년";
+
+function fiveYearCutoff(latestDate: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(latestDate.trim());
+  if (!match) return "0000-00-00";
+  const [, year, month, day] = match;
+  return `${String(Number(year) - PE_BAND_WINDOW_YEARS).padStart(4, "0")}-${month}-${day}`;
+}
+
 function buildPeBand(points: UsSectorPoint[] | undefined, latest: number | null): SectorValuationBand | null {
   if (latest === null || !Array.isArray(points)) return null;
-  const values = points
-    .map((point) => num(point.best_pe_ratio))
-    .filter((value): value is number => value !== null && value > 0);
-  if (values.length < 2) return null;
+  const dated = points
+    .map((point) => ({ date: sourceDate(point.date), value: num(point.best_pe_ratio) }))
+    .filter((entry): entry is { date: string; value: number } => entry.date !== null && entry.value !== null && entry.value > 0)
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  if (dated.length < 2) return null;
+  // The rail and header label this band "Fwd P/E 5년": percentile over the
+  // trailing 5 years ending at the latest observation, never the full
+  // 2010→now history.
+  const cutoff = fiveYearCutoff(dated[dated.length - 1].date);
+  const windowed = dated.filter((entry) => entry.date >= cutoff);
+  if (windowed.length < 2) return null;
+  const values = windowed.map((entry) => entry.value);
   const sorted = [...values].sort((a, b) => a - b);
   const min = sorted[0];
   const max = sorted[sorted.length - 1];
@@ -260,6 +279,7 @@ export function useSectorData(): SectorDataResult {
   const [result, setResult] = useState<SectorDataResult>({
     rows: [],
     benchmarkMomentum: null,
+    prevSnapshot: null,
     loaded: false,
     dataReady: false,
     benchmarksReady: false,
@@ -291,6 +311,10 @@ export function useSectorData(): SectorDataResult {
   });
   const inFlightRef = useRef(false);
   const isMountedRef = useRef(true);
+  // Last settled snapshot by as-of. When a load settles with a distinct
+  // newer as-of, the outgoing snapshot becomes prevSnapshot so headline
+  // movement reads compare the same timeframe across snapshots.
+  const snapshotRef = useRef<{ asOf: string | null; rows: SectorRow[]; benchmarkMomentum: SectorMomentum | null } | null>(null);
   const lkgRef = useRef<SectorLkg>({
     benchmarks: null,
     usBenchmarks: null,
@@ -465,9 +489,17 @@ export function useSectorData(): SectorDataResult {
       };
 
       if (!isMountedRef.current) return;
-      setResult({
+      const prev = snapshotRef.current;
+      if (benchmarkSourceDate !== null) {
+        snapshotRef.current = { asOf: benchmarkSourceDate, rows, benchmarkMomentum };
+      }
+      const shiftedPrev = benchmarkSourceDate !== null && prev !== null && prev.asOf !== null && prev.asOf !== benchmarkSourceDate
+        ? { rows: prev.rows, benchmarkMomentum: prev.benchmarkMomentum }
+        : null;
+      setResult((current) => ({
         rows,
         benchmarkMomentum,
+        prevSnapshot: shiftedPrev ?? current.prevSnapshot,
         loaded: true,
         dataReady,
         benchmarksReady,
@@ -479,7 +511,7 @@ export function useSectorData(): SectorDataResult {
         updatedAt,
         sourceMeta,
         refresh: () => { void load(); },
-      });
+      }));
     } finally {
       inFlightRef.current = false;
     }

@@ -81,6 +81,9 @@ export interface SectorValuationBand {
 export interface SectorDataResult {
   rows: SectorRow[];
   benchmarkMomentum: SectorMomentum | null;
+  /** Previous settled snapshot (earlier as-of) for same-timeframe movement
+   * reads; null until a second distinct as-of settles. */
+  prevSnapshot: { rows: SectorRow[]; benchmarkMomentum: SectorMomentum | null } | null;
   /** First fetch settled (success or failure). False = shared skeleton state. */
   loaded: boolean;
   dataReady: boolean;

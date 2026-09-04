@@ -16,6 +16,8 @@ export const ROUTES = {
   marketEvents: "/market/events",
   changes: "/changes",
   sectors: "/sectors",
+  /** Static JSON evidence backing the sectors rotation rails (not a product route). */
+  sectorMomentumJson: "/data/benchmarks/summaries.json",
   etfs: "/etfs",
   etfCompare: "/etfs/compare",
   etfNew: "/etfs/new",
@@ -127,6 +129,7 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
  * archive while the public root is no longer promoted or indexed.
  */
 export const SITEMAP_EXCLUSIONS: Partial<Record<RouteKey, string>> = {
+  sectorMomentumJson: "Static JSON evidence asset behind the sectors rotation rails; not a product route, never indexed or linked from public surfaces.",
   dataConsole: "admin-only — behind AdminAccessGate; never indexed or linked from public surfaces.",
   briefing: "Legacy alias. Redirects to home (307 verified live 2026-08-23) and must not appear as a separate product.",
   marketLegacy: "Legacy bookmark target. Redirects to ROUTES.market — verified live 2026-08-23, though as a 200 with a meta refresh rather than the 308 the source requests; see BACKLOG B-404.",

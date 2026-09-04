@@ -1,4 +1,4 @@
-import type { MomentumWindow, SectorRow } from "./types";
+import type { MomentumWindow, SectorMomentum, SectorRow } from "./types";
 
 export type RotationWindow = "1w" | "1m" | "3m";
 
@@ -7,12 +7,6 @@ export const ROTATION_WINDOWS: ReadonlyArray<{ key: RotationWindow; label: strin
   { key: "1m", label: "1개월" },
   { key: "3m", label: "3개월" },
 ];
-
-/** Window before the selected one in rotation order, or null for 1w. */
-export function previousRotationWindow(windowKey: RotationWindow): RotationWindow | null {
-  const index = ROTATION_WINDOWS.findIndex((window) => window.key === windowKey);
-  return index > 0 ? ROTATION_WINDOWS[index - 1].key : null;
-}
 
 export type QuadrantId = "run-expensive" | "cheap-recover" | "cheap-weak" | "rich-fade";
 
@@ -76,17 +70,21 @@ function formatPp(value: number, digits = 1): string {
 }
 
 /**
- * One-sentence rotation read. Derived from quadrant membership changes vs the
- * previous rotation window; when that comparison is unavailable (1w selected,
- * or the previous window has no data) it says so instead of inventing moves.
+ * One-sentence rotation read. Quadrant moves compare the selected timeframe
+ * against the previous SNAPSHOT (the earlier as-of in load history) — never
+ * the previous timeframe axis. Each timeframe's relative momentum uses that
+ * timeframe's own S&P benchmark. With no previous snapshot the read stays
+ * partial instead of inventing moves.
  */
 export function rotationRead(
   rows: SectorRow[],
   windowKey: RotationWindow,
   windowLabel: string,
-  benchmarkValue: number | null,
+  benchmarkMomentum: SectorMomentum | null,
   totalSectors: number,
+  prevSnapshot: { rows: SectorRow[]; benchmarkMomentum: SectorMomentum | null } | null,
 ): string {
+  const benchmarkValue = benchmarkMomentum?.[windowKey] ?? null;
   const points = rotationPoints(rows, windowKey, benchmarkValue);
   if (points.length === 0) return "선택 구간의 상대 모멘텀 자료가 없어 로테이션 지도를 그릴 수 없습니다.";
   const top = points[0];
@@ -96,10 +94,10 @@ export function rotationRead(
     : `${top.row.name} ${formatPp(top.relative)}가 가장 강한 모멘텀이지만 밴드 미확보로 사분면 밖에 있고`;
   const base = `${windowLabel} 기준 ${topClause}, S&P 500 대비 상회 ${beatCount}/${totalSectors}개 섹터입니다.`;
 
-  const previous = previousRotationWindow(windowKey);
-  if (previous === null) return `${base} 1주는 비교 구간이 없어 이동 비교는 다음 갱신에 반영됩니다.`;
-  const prevPoints = new Map(rotationPoints(rows, previous, benchmarkValue).map((point) => [point.row.key, point]));
-  if (prevPoints.size === 0) return `${base} 이전 구간 자료 미확보로 이동 비교는 다음 갱신에 반영됩니다.`;
+  const prevBenchmark = prevSnapshot?.benchmarkMomentum?.[windowKey] ?? null;
+  if (prevSnapshot === null) return `${base} 이전 스냅샷 없음 · 현재 사분면만 표시.`;
+  const prevPoints = new Map(rotationPoints(prevSnapshot.rows, windowKey, prevBenchmark).map((point) => [point.row.key, point]));
+  if (prevPoints.size === 0) return `${base} 직전 스냅샷에 비교 자료가 없어 이동 비교는 다음 갱신에 반영됩니다.`;
   const movers = points
     .filter((point) => {
       const prev = prevPoints.get(point.row.key);
@@ -107,6 +105,6 @@ export function rotationRead(
       return prev.quadrant !== point.quadrant;
     })
     .map((point) => `${point.row.name}→'${QUADRANT_LABEL[point.quadrant as QuadrantId]}'`);
-  if (movers.length === 0) return `${base} 이전 구간 대비 사분면 이동은 없습니다.`;
-  return `${base} 이전 구간 대비 사분면 이동: ${movers.join(" · ")}.`;
+  if (movers.length === 0) return `${base} 직전 스냅샷 대비 사분면 이동은 없습니다.`;
+  return `${base} 직전 스냅샷 대비 사분면 이동: ${movers.join(" · ")}.`;
 }
