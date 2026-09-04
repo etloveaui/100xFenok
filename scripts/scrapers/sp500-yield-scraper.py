@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,36 +19,40 @@ from bs4 import BeautifulSoup
 
 # Import shared utilities
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from scraper_utils import fetch_html
+from scraper_utils import extract_yield_percent, fetch_html
 
 SOURCE_URL = "https://www.slickcharts.com/sp500/yield"
 DEFAULT_OUTPUT = Path(__file__).with_name("sp500_yield.json")
 
+
+def _is_yield_heading(text: str) -> bool:
+    return extract_yield_percent(text, exact=True) is not None
+
+
 # The yield page carries no static data table (SvelteKit-hydrated headings),
-# so the attempt event asserts on the parsed value heading instead of table rows.
-CONTENT_ASSERTION = ("yield_value", "h1 + h2", r"\d+\.?\d*\s*%")
+# so the attempt event asserts on the parsed value heading instead of table
+# rows, using the exact rule the parser applies (unsigned, 0-30%).
+CONTENT_ASSERTION = ("yield_value", "h1 + h2", _is_yield_heading)
 
 
 def parse_yield(html: str) -> Dict[str, float | str]:
     """Extract dividend yield value from SlickCharts HTML."""
     soup = BeautifulSoup(html, "html.parser")
 
-    # Look for the yield percentage in common patterns
-    # Pattern 1: Large heading with percentage
+    # Pattern 1: value heading next to the title (exact unsigned percent,
+    # so a signed figure like -1% can never publish as +1.0).
     for elem in soup.find_all(["h1", "h2", "h3", "div", "span"]):
-        text = elem.get_text(strip=True)
-        match = re.search(r'(\d+\.?\d*)\s*%', text)
-        if match and len(text) < 20:  # Short text with percentage
-            yield_value = float(match.group(1))
-            return {"yield": yield_value}
+        value = extract_yield_percent(elem.get_text(strip=True), exact=True)
+        if value is not None:
+            return {"yield": value}
 
-    # Pattern 2: Look in meta or structured data
+    # Pattern 2: Look in meta or structured data.
     for meta in soup.find_all("meta"):
         content = meta.get("content", "")
         if "yield" in content.lower():
-            match = re.search(r'(\d+\.?\d*)\s*%', content)
-            if match:
-                return {"yield": float(match.group(1))}
+            value = extract_yield_percent(content, exact=False)
+            if value is not None:
+                return {"yield": value}
 
     raise ValueError("Unable to locate dividend yield on the page")
 

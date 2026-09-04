@@ -138,6 +138,27 @@ def _provider_throttled_attempt_tuple(status: int) -> Dict[str, Any]:
     )
 
 
+def extract_yield_percent(text: str, *, exact: bool) -> Optional[float]:
+    """Extract an unsigned dividend-yield percent, fail-closed.
+
+    Returns the value only when the percent is unsigned (a leading `-`/`+`
+    never silently flips sign) and lies within a plausible 0-30% band;
+    otherwise None. `exact=True` requires the whole text to be the value
+    (value headings); `exact=False` searches meta-style sentences.
+    """
+    cleaned = text.strip()
+    if exact:
+        match = re.fullmatch(r"(\d+(?:\.\d+)?)\s*%", cleaned)
+    else:
+        match = re.search(r"(?<![-+\d.])(\d+(?:\.\d+)?)\s*%", cleaned)
+    if not match:
+        return None
+    value = float(match.group(1))
+    if not 0.0 <= value <= 30.0:
+        return None
+    return value
+
+
 def _html_attempt_tuple(
     status: int,
     html: str,
@@ -156,13 +177,20 @@ def _html_attempt_tuple(
         )
     if content_assertion is not None:
         # Non-table pages (e.g. SvelteKit-hydrated yield pages) assert on the
-        # content the scraper actually parses: (id, css selector, pattern).
+        # content the scraper actually parses: (id, css selector, pattern or
+        # validator). A validator callable receives the matched text and must
+        # return a truthy value; use it to share the exact parse rule so the
+        # assertion can never accept what the parser rejects.
         assertion_id, selector, pattern = content_assertion
         matched_text = " ".join(
             element.get_text(" ", strip=True)
             for element in BeautifulSoup(html, "html.parser").select(selector)
         )
-        assertions = [{"id": assertion_id, "passed": bool(re.search(pattern, matched_text))}]
+        if callable(pattern):
+            passed = bool(pattern(matched_text))
+        else:
+            passed = bool(re.search(pattern, matched_text))
+        assertions = [{"id": assertion_id, "passed": passed}]
     else:
         has_table_rows = bool(BeautifulSoup(html, "html.parser").select("table tr"))
         assertions = [{"id": "table_rows", "passed": has_table_rows}]
@@ -353,10 +381,11 @@ def fetch_html(
         max_retries: Maximum retry attempts (default: 3)
         rate_limit: Delay between requests in seconds (default: 1.5)
         timeout: Request timeout in seconds (default: 30)
-        content_assertion: Optional (id, css selector, pattern) tuple asserting
-            on the parsed content instead of the default `table tr` presence.
-            For pages whose data is not a static table (e.g. hydrated yield
-            headings). A miss keeps the attempt fail-closed upstream.
+        content_assertion: Optional (id, css selector, pattern-or-validator)
+            tuple asserting on the parsed content instead of the default
+            `table tr` presence. For pages whose data is not a static table
+            (e.g. hydrated yield headings). A miss keeps the attempt
+            fail-closed upstream.
 
     Returns:
         HTML content as string
