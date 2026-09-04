@@ -75,6 +75,8 @@ export interface MarketChartFrameProps {
   sortLabels?: boolean;
   /** Connect sparse observations across dates contributed by denser peer series. */
   spanGaps?: boolean;
+  /** Opt in to independent ISO-date points; category union remains the shared default. */
+  xScaleMode?: "category" | "time";
   /** The caller already cut the data window before transforming/downsampling. */
   seriesAreRangeFiltered?: boolean;
 }
@@ -180,6 +182,7 @@ export function MarketChartFrame({
   onHiddenSeriesChange,
   sortLabels = false,
   spanGaps = false,
+  xScaleMode = "category",
   seriesAreRangeFiltered = false,
 }: MarketChartFrameProps) {
   const [internalRangeId, setInternalRangeId] = useState<string>(
@@ -331,6 +334,7 @@ export function MarketChartFrame({
         showLegend={showLegend && !showToggles}
         sortLabels={sortLabels}
         spanGaps={spanGaps}
+        xScaleMode={xScaleMode}
         suggestedMin={suggestedMin}
         suggestedMax={suggestedMax}
         yAxisTitle={yAxisTitle}

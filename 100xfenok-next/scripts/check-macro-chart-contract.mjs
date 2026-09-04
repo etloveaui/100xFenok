@@ -38,6 +38,7 @@ async function inspectStaticContracts() {
     registrySource,
     loaderSource,
     engineSource,
+    chartRegistrySource,
     chartThemeSource,
     macroStyleSource,
   ] = await Promise.all([
@@ -58,6 +59,7 @@ async function inspectStaticContracts() {
     readFile(new URL("../src/lib/macro-chart/registry.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/macro-chart/loader.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/market-valuation/charts/MarketChartEngineClient.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/market-valuation/charts/chartJsRegistry.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/chart-theme.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/styles/cp-w5-macro-chart.css", import.meta.url), "utf8"),
   ]);
@@ -86,7 +88,7 @@ async function inspectStaticContracts() {
     !engineSource.includes("spanGaps,") ||
     !macroSource.includes("spanGaps")
   ) {
-    addFailure(failures, "sparse-series-gap-contract", "macro charts must connect finite observations across union-axis dates");
+    addFailure(failures, "sparse-series-gap-contract", "macro charts must expose caller-controlled source-gap rendering");
   }
   if (!engineSource.includes("animation: false")) {
     addFailure(failures, "deterministic-chart-animation", "shared chart animation must be disabled for deterministic capture");
@@ -119,6 +121,38 @@ async function inspectStaticContracts() {
   }
   if (!macroSource.includes('spanGaps={false}')) {
     addFailure(failures, "macro-v2-missing-date-gaps", "Macro V2 must keep missing dates as visible gaps");
+  }
+  for (const token of [
+    'legacyChange && value === "change"',
+    'params.set("transformVersion", "2")',
+    'subtract: "a − b"',
+    'ratio: "a / b"',
+    'scale: "a × k"',
+    'formulaLabel: displayFormula',
+    'unitLabel: metadata.unitLabel',
+    'data-macro-v2-derived-legend={formula.operator}',
+    'data-macro-v2-formula-presets="guarded"',
+    'seriesById(preset.leftId) && seriesById(preset.rightId)',
+    'data-macro-v2-tile-evidence="analysis"',
+    'data-macro-v2-tile-evidence="lens"',
+    'buildMarketSeries(loaded, { alignDates: false, preserveCadenceGaps: true })',
+    'xScaleMode="time"',
+  ]) {
+    if (!macroSource.includes(token)) addFailure(failures, "macro-v2-derived-series", `${token} missing`);
+  }
+  for (const token of [
+    'const timePoints = item.points.map((point) => ({ x: Date.parse(point.label), y: point.value }))',
+    'data: xScaleMode === "time" ? timePoints : values',
+    'type: "time"',
+    'xScaleMode = "category"',
+  ]) {
+    if (!engineSource.includes(token)) addFailure(failures, "macro-v2-time-scale", `${token} missing`);
+  }
+  if (!loaderSource.includes("const alignDates = options.alignDates ?? true")) {
+    addFailure(failures, "macro-v2-shared-chart-default", "legacy date alignment must remain the loader default");
+  }
+  for (const token of ["TimeScale", "TimeSeriesScale", "_adapters._date.override"]) {
+    if (!chartRegistrySource.includes(token)) addFailure(failures, "macro-v2-time-adapter", `${token} missing`);
   }
   for (const token of ["min-height: 720px", "height: 360px", "var(--c-brand)", "var(--c-panel)"]) {
     if (!macroStyleSource.includes(token)) addFailure(failures, "macro-v2-light-system-layout", `${token} missing`);

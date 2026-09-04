@@ -30,6 +30,10 @@ export interface MarketChartPoint {
 export interface MarketChartSeries {
   id: string;
   label: string;
+  /** Human-readable formula used by derived-series legends and CSV headers. */
+  formulaLabel?: string;
+  /** Display unit for a derived series after its formula is applied. */
+  unitLabel?: string;
   points: readonly MarketChartPoint[];
   color?: string;
   colorToken?: MarketChartColorToken;
@@ -80,4 +84,6 @@ export interface MarketChartEngineProps {
   y1AxisTitle?: string;
   /** Use logarithmic y scales when every visible value is positive. */
   logScale?: boolean;
+  /** Opt-in per-series ISO-date points on a Chart.js time scale. */
+  xScaleMode?: "category" | "time";
 }

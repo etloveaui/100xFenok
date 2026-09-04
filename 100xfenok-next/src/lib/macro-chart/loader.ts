@@ -303,10 +303,49 @@ export function unitLabel(unit: MacroSeriesUnitKind): string {
   return "index";
 }
 
-export function buildMarketSeries(items: readonly LoadedMacroSeries[]): MarketChartSeries[] {
+type BuildMarketSeriesOptions = {
+  alignDates?: boolean;
+  preserveCadenceGaps?: boolean;
+};
+
+const EXPECTED_CADENCE_MS: Record<MacroOutputFrequency, number> = {
+  daily: 86_400_000,
+  weekly: 7 * 86_400_000,
+  monthly: 31 * 86_400_000,
+  quarterly: 92 * 86_400_000,
+};
+
+const GAP_THRESHOLD_MULTIPLIER: Record<MacroOutputFrequency, number> = {
+  daily: 5,
+  weekly: 1.8,
+  monthly: 1.6,
+  quarterly: 1.6,
+};
+
+function marketPointsWithCadenceGaps(item: LoadedMacroSeries): MarketChartSeries["points"] {
+  const points: Array<{ label: string; value: number | null }> = [];
+  const expected = EXPECTED_CADENCE_MS[item.outputFrequency];
+  const threshold = expected * GAP_THRESHOLD_MULTIPLIER[item.outputFrequency];
+  item.transformedPoints.forEach((point, index) => {
+    const previous = item.transformedPoints[index - 1];
+    const previousTime = previous ? Date.parse(previous.date) : Number.NaN;
+    const currentTime = Date.parse(point.date);
+    if (Number.isFinite(previousTime) && Number.isFinite(currentTime) && currentTime - previousTime > threshold) {
+      points.push({ label: new Date(previousTime + expected).toISOString().slice(0, 10), value: null });
+    }
+    points.push({ label: point.date, value: point.value });
+  });
+  return points;
+}
+
+export function buildMarketSeries(
+  items: readonly LoadedMacroSeries[],
+  options: BuildMarketSeriesOptions = {},
+): MarketChartSeries[] {
   const healthy = items.filter((item) => !item.error && item.transformedPoints.length > 0);
   const labels = buildAlignedLabels(healthy.map((item) => item.transformedPoints));
   const unitGroups = [...new Set(healthy.map((item) => transformedUnitGroup(item)))];
+  const alignDates = options.alignDates ?? true;
 
   return healthy.map((item, index) => {
     const transformedUnit = transformUnitLabel(item.transform, unitLabel(item.definition.unit));
@@ -318,7 +357,11 @@ export function buildMarketSeries(items: readonly LoadedMacroSeries[]): MarketCh
       lineRole: index === 0 ? "primary" : "secondary",
       unitGroup,
       yAxisId: unitGroups.indexOf(unitGroup) === 1 ? "y1" : "y",
-      points: alignMacroPoints(item.transformedPoints, labels),
+      points: alignDates
+        ? alignMacroPoints(item.transformedPoints, labels)
+        : options.preserveCadenceGaps
+          ? marketPointsWithCadenceGaps(item)
+          : item.transformedPoints.map((point) => ({ label: point.date, value: point.value })),
     };
   });
 }
@@ -335,5 +378,7 @@ export function transformedUnitGroup(item: Pick<LoadedMacroSeries, "definition" 
 export function transformedUnitGroupLabel(group: string): string {
   if (group === "level") return "지수 / 기준값";
   if (group === "percent") return "% / 스프레드 / YoY";
+  if (group === "ratio") return "비율";
+  if (group === "derived") return "합성값";
   return group;
 }

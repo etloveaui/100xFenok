@@ -97,21 +97,25 @@ function buildData(
   labels: readonly string[],
   theme: MarketChartTheme,
   spanGaps: boolean,
-): ChartData<MarketChartType, Array<number | null>, string> {
+  xScaleMode: "category" | "time",
+): ChartData<MarketChartType> {
   return {
-    labels: [...labels],
+    labels: xScaleMode === "category" ? [...labels] : undefined,
     datasets: series.map((item, index) => {
       const color = theme.seriesColor(item, index);
       const negativeColor = theme.negativeColor(item);
       const pointsByLabel = pointMap(item);
       const values = labels.map((label) => pointsByLabel.get(label)?.value ?? null);
+      const timeValues = item.points.map((point) => point.value);
+      const timePoints = item.points.map((point) => ({ x: Date.parse(point.label), y: point.value }));
+      const colorValues = xScaleMode === "time" ? timeValues : values;
       const isLine = (item.chartType ?? type) === "line";
       return {
         type: item.chartType ?? type,
         label: item.label,
-        data: values,
-        borderColor: isLine ? color : backgroundColors(values, color, negativeColor),
-        backgroundColor: backgroundColors(values, color, negativeColor),
+        data: xScaleMode === "time" ? timePoints : values,
+        borderColor: isLine ? color : backgroundColors(colorValues, color, negativeColor),
+        backgroundColor: backgroundColors(colorValues, color, negativeColor),
         borderWidth: isLine ? (item.lineRole === "primary" ? 2.5 : item.lineRole === "secondary" ? 1.5 : 2) : 0,
         borderDash: isLine && item.lineRole === "secondary" ? [6, 4] : undefined,
         pointRadius: isLine ? 0 : undefined,
@@ -139,6 +143,7 @@ function buildOptions({
   yAxisTitle,
   y1AxisTitle,
   logScale,
+  xScaleMode,
   theme,
 }: Required<Pick<MarketChartEngineProps, "ariaLabel" | "showLegend">> &
   Pick<
@@ -150,6 +155,7 @@ function buildOptions({
     | "yAxisTitle"
     | "y1AxisTitle"
     | "logScale"
+    | "xScaleMode"
   > & {
     labels: readonly string[];
     onMouseHover?: () => void;
@@ -164,7 +170,7 @@ function buildOptions({
     maintainAspectRatio: false,
     animation: false,
     interaction: {
-      mode: "index",
+      mode: xScaleMode === "time" ? "x" : "index",
       intersect: false,
     },
     onHover: (_event: ChartEvent, activeElements: ActiveElement[]) => {
@@ -175,7 +181,9 @@ function buildOptions({
         onHoverPoint(null);
         return;
       }
-      const label = labels[active.index];
+      const label = xScaleMode === "time"
+        ? series[active.datasetIndex]?.points[active.index]?.label
+        : labels[active.index];
       onHoverPoint(label ? buildHoverPoint(label, active.index, series) : null);
     },
     plugins: {
@@ -198,14 +206,14 @@ function buildOptions({
         titleColor: theme.token("ink"),
         titleFont: { family: uiFontFamily, size: 11, weight: "bold" },
         bodyFont: { family: uiFontFamily, size: 11, weight: "bold" },
-        mode: "index",
+        mode: xScaleMode === "time" ? "x" : "index",
         intersect: false,
         callbacks: {
           title(items: TooltipItem<MarketChartType>[]) {
             return items[0]?.label ?? ariaLabel;
           },
           label(item: TooltipItem<MarketChartType>) {
-            const raw = typeof item.raw === "number" ? item.raw : null;
+            const raw = toFiniteNumber(item.parsed.y);
             const label = item.dataset.label ? `${item.dataset.label}: ` : "";
             return `${label}${valueFormatter(raw)}`;
           },
@@ -213,16 +221,30 @@ function buildOptions({
       },
     },
     scales: {
-      x: {
-        grid: { display: false },
-        ticks: {
-          color: theme.token("ink3"),
-          font: { family: uiFontFamily, size: 10, weight: "bold" },
-          maxRotation: 0,
-          autoSkip: true,
-          autoSkipPadding: 16,
-        },
-      },
+      x: xScaleMode === "time"
+        ? {
+            type: "time",
+            grid: { display: false },
+            time: { tooltipFormat: "day" },
+            ticks: {
+              color: theme.token("ink3"),
+              font: { family: uiFontFamily, size: 10, weight: "bold" },
+              maxRotation: 0,
+              autoSkip: true,
+              autoSkipPadding: 16,
+            },
+          }
+        : {
+            type: "category",
+            grid: { display: false },
+            ticks: {
+              color: theme.token("ink3"),
+              font: { family: uiFontFamily, size: 10, weight: "bold" },
+              maxRotation: 0,
+              autoSkip: true,
+              autoSkipPadding: 16,
+            },
+          },
       y: {
         type: logScale ? "logarithmic" : "linear",
         suggestedMin,
@@ -276,6 +298,7 @@ export function MarketChartEngineClient({
   yAxisTitle,
   y1AxisTitle,
   logScale = false,
+  xScaleMode = "category",
 }: MarketChartEngineProps) {
   const theme = useMarketChartTheme();
   const [keyboardIndex, setKeyboardIndex] = useState<number | null>(null);
@@ -288,8 +311,8 @@ export function MarketChartEngineClient({
     [visibleSeries, sortLabels],
   );
   const data = useMemo(
-    () => buildData(type, visibleSeries, labels, theme, spanGaps),
-    [type, visibleSeries, labels, theme, spanGaps],
+    () => buildData(type, visibleSeries, labels, theme, spanGaps, xScaleMode),
+    [type, visibleSeries, labels, theme, spanGaps, xScaleMode],
   );
   const resetKeyboardHover = useMemo(
     () =>
@@ -315,6 +338,7 @@ export function MarketChartEngineClient({
         yAxisTitle,
         y1AxisTitle,
         logScale,
+        xScaleMode,
         theme,
       }),
     [
@@ -330,6 +354,7 @@ export function MarketChartEngineClient({
       yAxisTitle,
       y1AxisTitle,
       logScale,
+      xScaleMode,
       theme,
     ],
   );

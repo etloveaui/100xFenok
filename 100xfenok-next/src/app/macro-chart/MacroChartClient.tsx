@@ -61,10 +61,11 @@ const MACRO_AGGREGATION_IDS = new Set<MacroAggregation>(["average", "sum", "end"
 const MACRO_AXIS_IDS = new Set(["auto", "left", "right"]);
 const MACRO_COLOR_OPTIONS = okabeItoPalette.slice(0, 6);
 const MACRO_TEN_YEAR_COLOR = okabeItoPalette[1];
-const MACRO_FORMULA_OPERATORS = new Set<string>(["spread", "ratio"]);
+const MACRO_FORMULA_OPERATORS = new Set<string>(["subtract", "ratio", "scale"]);
 const MACRO_FORMULA_LABELS: Record<MacroFormulaOperator, string> = {
-  spread: "차이",
-  ratio: "비율 ×100",
+  subtract: "a − b",
+  ratio: "a / b",
+  scale: "a × k",
 };
 
 type LoadState =
@@ -80,16 +81,18 @@ type SelectedMacroSeries = {
   color?: string;
 };
 type MacroAxisId = "auto" | "left" | "right";
-type MacroFormulaOperator = "spread" | "ratio";
+type MacroFormulaOperator = "subtract" | "ratio" | "scale";
 type MacroFormulaSeries = {
   id: string;
   leftId: string;
-  rightId: string;
+  rightId?: string;
+  scalar?: number;
   operator: MacroFormulaOperator;
 };
 
-function isFormulaOperator(value: string): value is MacroFormulaOperator {
-  return MACRO_FORMULA_OPERATORS.has(value);
+function normalizeFormulaOperator(value: string): MacroFormulaOperator | null {
+  if (value === "spread") return "subtract";
+  return MACRO_FORMULA_OPERATORS.has(value) ? value as MacroFormulaOperator : null;
 }
 
 type InitialChartState = {
@@ -151,10 +154,15 @@ function defaultSelection(): SelectedMacroSeries[] {
   return cloneSelection(MACRO_CHART_PRESETS.find((preset) => preset.id === DEFAULT_PRESET_ID)?.series ?? []);
 }
 
-function coerceTransform(value: string | undefined, fallback: MacroValueTransform): MacroValueTransform {
+function coerceTransform(value: string | undefined, fallback: MacroValueTransform, legacyChange = false): MacroValueTransform {
+  if (legacyChange && value === "change") return "pctChange";
   return value && MACRO_TRANSFORM_IDS.has(value as MacroValueTransform)
     ? (value as MacroValueTransform)
     : fallback;
+}
+
+function serializeTransform(value: MacroValueTransform) {
+  return value;
 }
 
 function coerceFrequency(value: string | undefined, fallback: MacroOutputFrequency): MacroOutputFrequency {
@@ -193,9 +201,26 @@ function parseKnownHiddenIds(raw: string | null, knownIds: readonly string[]) {
     });
 }
 
-function formulaId(leftId: string, operator: MacroFormulaOperator, rightId: string) {
-  return `formula-${operator}-${leftId}-${rightId}`;
+function formulaId(leftId: string, operator: MacroFormulaOperator, operand: string | number) {
+  return `formula-${operator}-${leftId}-${operand}`;
 }
+
+type MacroFormulaPreset = {
+  id: string;
+  label: string;
+  leftId: string;
+  rightId: string;
+  operator: "subtract";
+};
+
+const MACRO_FORMULA_PRESET_CANDIDATES: readonly MacroFormulaPreset[] = [
+  { id: "yield-curve-10y-2y", label: "10Y − 2Y", leftId: "DGS10", rightId: "DGS2", operator: "subtract" },
+  { id: "credit-spread-hy-ig", label: "HY − IG", leftId: "HY_spread", rightId: "IG_spread", operator: "subtract" },
+];
+
+const AVAILABLE_MACRO_FORMULA_PRESETS = MACRO_FORMULA_PRESET_CANDIDATES.filter(
+  (preset) => Boolean(seriesById(preset.leftId) && seriesById(preset.rightId)),
+);
 
 const MACRO_ANALYSIS_LENSES: readonly MacroAnalysisLens[] = [
   {
@@ -241,10 +266,10 @@ const MACRO_ANALYSIS_LENSES: readonly MacroAnalysisLens[] = [
       axisById: { fdic_tier1: "right", HY_spread: "right", DGS10: "right" },
       formulas: [
         {
-          id: formulaId("bank_credit", "spread", "deposits"),
+          id: formulaId("bank_credit", "subtract", "deposits"),
           leftId: "bank_credit",
           rightId: "deposits",
-          operator: "spread",
+          operator: "subtract",
         },
       ],
     },
@@ -472,27 +497,32 @@ function parseFormulaSeries(raw: string | null, selected: readonly SelectedMacro
   return raw
     .split(",")
     .map((token) => token.split(":").map((part) => part.trim()))
-    .filter((parts): parts is [MacroFormulaOperator, string, string] => {
+    .map((parts) => {
       if (parts.length !== 3) return false;
-      const [operator, leftId, rightId] = parts;
-      if (!isFormulaOperator(operator) || leftId === rightId) return false;
-      if (!selectedIds.has(leftId) || !selectedIds.has(rightId)) return false;
-      const id = formulaId(leftId, operator, rightId);
+      const [rawOperator, leftId, operand] = parts;
+      const operator = normalizeFormulaOperator(rawOperator);
+      if (!operator || !selectedIds.has(leftId)) return false;
+      const scalar = operator === "scale" ? Number(operand) : undefined;
+      if (operator === "scale" && (typeof scalar !== "number" || !Number.isFinite(scalar) || scalar === 0)) return false;
+      if (operator !== "scale" && (leftId === operand || !selectedIds.has(operand))) return false;
+      const normalizedOperand = operator === "scale" ? scalar! : operand;
+      const id = formulaId(leftId, operator, normalizedOperand);
       if (seen.has(id)) return false;
       seen.add(id);
-      return true;
+      return {
+        id,
+        leftId,
+        rightId: operator === "scale" ? undefined : operand,
+        scalar: operator === "scale" ? scalar : undefined,
+        operator,
+      } satisfies MacroFormulaSeries;
     })
-    .slice(0, MAX_FORMULA_SERIES)
-    .map(([operator, leftId, rightId]) => ({
-      id: formulaId(leftId, operator, rightId),
-      leftId,
-      rightId,
-      operator,
-    }));
+    .filter((formula): formula is MacroFormulaSeries => formula !== false)
+    .slice(0, MAX_FORMULA_SERIES);
 }
 
 function formulaParam(formulas: readonly MacroFormulaSeries[]) {
-  return formulas.map((formula) => `${formula.operator}:${formula.leftId}:${formula.rightId}`).join(",");
+  return formulas.map((formula) => `${formula.operator}:${formula.leftId}:${formula.operator === "scale" ? formula.scalar : formula.rightId}`).join(",");
 }
 
 function parseAxisById(raw: string | null, selected: readonly SelectedMacroSeries[]) {
@@ -522,6 +552,7 @@ function parseAxisById(raw: string | null, selected: readonly SelectedMacroSerie
 
 function selectedWithUrlOptions(selected: readonly SelectedMacroSeries[], params: URLSearchParams) {
   const transforms = params.get("transform")?.split(",") ?? [];
+  const legacyChange = params.get("transformVersion") !== "2";
   const frequencies = params.get("frequency")?.split(",") ?? [];
   const aggregations = params.get("aggregation")?.split(",") ?? [];
   const colors = params.get("color")?.split(",") ?? [];
@@ -529,7 +560,7 @@ function selectedWithUrlOptions(selected: readonly SelectedMacroSeries[], params
     const definition = seriesById(item.id);
     return withSeriesDefaults({
       ...item,
-      transform: coerceTransform(transforms[index], item.transform ?? definition?.defaultTransform ?? "raw"),
+      transform: coerceTransform(transforms[index], item.transform ?? definition?.defaultTransform ?? "raw", legacyChange),
       frequency: coerceFrequency(frequencies[index], item.frequency ?? definition?.frequency ?? "daily"),
       aggregation: coerceAggregation(aggregations[index] ?? item.aggregation),
       color: MACRO_COLOR_OPTIONS.includes(colors[index] as (typeof MACRO_COLOR_OPTIONS)[number])
@@ -584,11 +615,11 @@ function safeReadUserPresets(): UserMacroPreset[] {
                     Boolean(
                       entry &&
                         typeof entry.leftId === "string" &&
-                        typeof entry.rightId === "string" &&
-                        typeof entry.operator === "string",
+                        typeof entry.operator === "string" &&
+                        (entry.operator === "scale" ? typeof entry.scalar === "number" : typeof entry.rightId === "string"),
                     ),
                 )
-                .map((entry) => `${entry.operator}:${entry.leftId}:${entry.rightId}`)
+                .map((entry) => formulaParam([entry]))
                 .join(","),
               selected,
             )
@@ -798,7 +829,7 @@ function downloadCsv(series: readonly MarketChartSeries[], selected: readonly Se
     "date",
     ...series.map((item) => {
       const transform = transformById.get(item.id);
-      return transform ? `${item.id}_${transform}_${rangeId}` : `${item.id}_computed_${rangeId}`;
+      return transform ? `${item.id}_${transform}_${rangeId}` : `${item.formulaLabel ?? item.label}_${rangeId}`;
     }),
   ];
   const sourceRow = ["__meta_source", ...series.map((item) => sourceKindLabel(seriesById(item.id)))];
@@ -892,11 +923,38 @@ function explicitRightAxisTitle(definitions: readonly MacroSeriesDefinition[], a
   return "보조축";
 }
 
+function formatFormulaScalar(value: number | undefined) {
+  return new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 4 }).format(value ?? 1);
+}
+
 function formulaLabel(formula: MacroFormulaSeries) {
   const left = seriesById(formula.leftId)?.shortLabel ?? formula.leftId;
-  const right = seriesById(formula.rightId)?.shortLabel ?? formula.rightId;
-  if (formula.operator === "ratio") return `${left}/${right} ×100`;
-  return `${left}-${right}`;
+  if (formula.operator === "scale") return `${left} × ${formatFormulaScalar(formula.scalar)}`;
+  const rightId = formula.rightId ?? "";
+  const right = seriesById(rightId)?.shortLabel ?? rightId;
+  if (formula.operator === "ratio") return `${left} / ${right}`;
+  return `${left} − ${right}`;
+}
+
+function formulaSeriesMetadata(
+  formula: MacroFormulaSeries,
+  left: MarketChartSeries,
+  right: MarketChartSeries | null,
+) {
+  const leftUnit = left.unitGroup ?? "level";
+  if (formula.operator === "ratio") {
+    return { unitGroup: "ratio", unitLabel: "비율", yAxisId: "y1" as const };
+  }
+  if (formula.operator === "scale") {
+    return { unitGroup: leftUnit, unitLabel: transformedUnitGroupLabel(leftUnit), yAxisId: left.yAxisId ?? "y" };
+  }
+  const rightUnit = right?.unitGroup ?? leftUnit;
+  const sameUnit = leftUnit === rightUnit;
+  return {
+    unitGroup: sameUnit ? leftUnit : "derived",
+    unitLabel: sameUnit ? transformedUnitGroupLabel(leftUnit) : "합성값",
+    yAxisId: sameUnit ? left.yAxisId ?? "y" : "y" as const,
+  };
 }
 
 function buildFormulaSeries(baseSeries: readonly MarketChartSeries[], formulas: readonly MacroFormulaSeries[]) {
@@ -904,30 +962,40 @@ function buildFormulaSeries(baseSeries: readonly MarketChartSeries[], formulas: 
   return formulas
     .map((formula): MarketChartSeries | null => {
       const left = byId.get(formula.leftId);
-      const right = byId.get(formula.rightId);
-      if (!left || !right) return null;
-      const rightByLabel = new Map(right.points.map((point) => [point.label, point.value]));
-      const points = left.points.map((point) => {
-          const rightValue = rightByLabel.get(point.label);
-          if (typeof point.value !== "number" || typeof rightValue !== "number") return { label: point.label, value: null };
-          if (formula.operator === "ratio") {
-            return {
-              label: point.label,
-              value: rightValue === 0 ? null : (point.value / rightValue) * 100,
-            };
-          }
-          return {
+      const right = formula.operator === "scale" ? null : formula.rightId ? byId.get(formula.rightId) ?? null : null;
+      if (!left || (formula.operator !== "scale" && !right)) return null;
+      const rightByLabel = new Map(right?.points.map((point) => [point.label, point.value]) ?? []);
+      const points = left.points.flatMap((point) => {
+        if (typeof point.value !== "number") return [{ label: point.label, value: null }];
+        if (formula.operator === "scale") {
+          return [{ label: point.label, value: point.value * (formula.scalar ?? 1) }];
+        }
+        if (!rightByLabel.has(point.label)) return [];
+        const rightValue = rightByLabel.get(point.label);
+        if (typeof rightValue !== "number") return [{ label: point.label, value: null }];
+        if (formula.operator === "ratio") {
+          return [{
             label: point.label,
-            value: point.value - rightValue,
-          };
-        });
+            value: rightValue === 0 ? null : point.value / rightValue,
+          }];
+        }
+        return [{
+          label: point.label,
+          value: point.value - rightValue,
+        }];
+      });
       if (!points.some((point) => typeof point.value === "number" && Number.isFinite(point.value))) return null;
+      const displayFormula = formulaLabel(formula);
+      const metadata = formulaSeriesMetadata(formula, left, right);
       return {
         id: formula.id,
-        label: formulaLabel(formula),
+        label: `${displayFormula} · ${metadata.unitLabel}`,
+        formulaLabel: displayFormula,
+        unitLabel: metadata.unitLabel,
+        color: okabeItoPalette[(baseSeries.length + formulas.indexOf(formula)) % okabeItoPalette.length],
         colorToken: "fairValue",
-        yAxisId: "y",
-        unitGroup: formula.operator === "ratio" ? "level" : "percent",
+        yAxisId: metadata.yAxisId,
+        unitGroup: metadata.unitGroup,
         paletteIndex: baseSeries.length + formulas.indexOf(formula),
         lineRole: "secondary",
         points,
@@ -1199,7 +1267,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const [macroContextId, setMacroContextId] = useState<MacroContextId>(initialMacroContextId);
   const [formulaLeftId, setFormulaLeftId] = useState(initialSelected[0]?.id ?? "");
   const [formulaRightId, setFormulaRightId] = useState(initialSelected[1]?.id ?? "");
-  const [formulaOperator, setFormulaOperator] = useState<MacroFormulaOperator>("spread");
+  const [formulaOperator, setFormulaOperator] = useState<MacroFormulaOperator>("subtract");
+  const [formulaScalar, setFormulaScalar] = useState("1");
   const [formulaNotice, setFormulaNotice] = useState<string | null>(null);
   const [userPresets, setUserPresets] = useState<UserMacroPreset[]>([]);
   const [clientStateReady, setClientStateReady] = useState(false);
@@ -1285,7 +1354,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     loadMacroSeries(selectedDefinitions, transformMap, { months: selectedRange?.months }, viewOptions)
       .then((loaded) => {
         if (cancelled) return;
-        const series = buildMarketSeries(loaded);
+        const series = buildMarketSeries(loaded, { alignDates: false, preserveCadenceGaps: true });
         if (!series.length && loaded.some((item) => item.error)) {
           setLoadState({ status: "error", message: "선택한 시리즈를 모두 불러오지 못했습니다." });
           return;
@@ -1308,7 +1377,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     const params = new URLSearchParams();
     params.set("macro", macroContextId);
     params.set("series", selected.map((item) => item.id).join(","));
-    params.set("transform", selected.map((item) => item.transform ?? seriesById(item.id)?.defaultTransform ?? "raw").join(","));
+    params.set("transform", selected.map((item) => serializeTransform(item.transform ?? seriesById(item.id)?.defaultTransform ?? "raw")).join(","));
+    params.set("transformVersion", "2");
     params.set("frequency", selected.map((item) => item.frequency ?? seriesById(item.id)?.frequency ?? "daily").join(","));
     params.set("aggregation", selected.map((item) => item.aggregation ?? "average").join(","));
     if (selected.some((item) => item.color)) params.set("color", selected.map((item) => item.color ?? "").join(","));
@@ -1348,7 +1418,10 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const applyChartState = useCallback((state: InitialChartState) => {
     const nextSelected = cloneSelection(state.selected).slice(0, MAX_SELECTED_SERIES);
     const nextSelectedIds = new Set(nextSelected.map((item) => item.id));
-    const nextFormulas = state.formulas.filter((formula) => nextSelectedIds.has(formula.leftId) && nextSelectedIds.has(formula.rightId));
+    const nextFormulas = state.formulas.filter((formula) =>
+      nextSelectedIds.has(formula.leftId) &&
+      (formula.operator === "scale" || Boolean(formula.rightId && nextSelectedIds.has(formula.rightId))),
+    );
     const nextChartIds = new Set([...nextSelectedIds, ...nextFormulas.map((formula) => formula.id)]);
     setSelected(nextSelected);
     setRangeId(MACRO_RANGE_IDS.has(state.rangeId) ? state.rangeId : DEFAULT_RANGE_ID);
@@ -1512,9 +1585,45 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     setSeriesEditorOpen(true);
   }, [applyChartState]);
 
+  const applyFormulaPreset = useCallback((preset: MacroFormulaPreset) => {
+    const presetFormulaId = formulaId(preset.leftId, preset.operator, preset.rightId);
+    if (formulas.length >= MAX_FORMULA_SERIES && !formulas.some((formula) => formula.id === presetFormulaId)) {
+      setFormulaNotice(`합성 시리즈는 최대 ${MAX_FORMULA_SERIES}개까지 추가할 수 있습니다.`);
+      return;
+    }
+    const missingIds = [preset.leftId, preset.rightId].filter((id) => !selected.some((item) => item.id === id));
+    if (selected.length + missingIds.length > MAX_SELECTED_SERIES) {
+      setFormulaNotice(`프리셋 적용에는 ${missingIds.length}개 시리즈 자리가 더 필요합니다.`);
+      return;
+    }
+    const nextFormula: MacroFormulaSeries = {
+      id: presetFormulaId,
+      leftId: preset.leftId,
+      rightId: preset.rightId,
+      operator: preset.operator,
+    };
+    setSelected((previous) => [
+      ...previous,
+      ...missingIds.map((id) => withSeriesDefaults({ id, transform: seriesById(id)?.defaultTransform ?? "raw" })),
+    ]);
+    setFormulas((previous) => previous.some((formula) => formula.id === nextFormula.id)
+      ? previous
+      : [...previous, nextFormula].slice(0, MAX_FORMULA_SERIES));
+    setFormulaNotice(`${preset.label} 합성식 추가됨`);
+  }, [formulas, selected]);
+
   const addFormula = useCallback(() => {
-    if (!currentFormulaLeftId || !currentFormulaRightId || currentFormulaLeftId === currentFormulaRightId) {
+    const nextFormulaScalar = Number(formulaScalar);
+    if (!currentFormulaLeftId) {
+      setFormulaNotice("시리즈를 먼저 선택하세요.");
+      return;
+    }
+    if (formulaOperator !== "scale" && (!currentFormulaRightId || currentFormulaLeftId === currentFormulaRightId)) {
       setFormulaNotice("서로 다른 시리즈 2개를 선택하세요.");
+      return;
+    }
+    if (formulaOperator === "scale" && (!Number.isFinite(nextFormulaScalar) || nextFormulaScalar === 0)) {
+      setFormulaNotice("k에는 0이 아닌 숫자를 입력하세요.");
       return;
     }
     if (formulas.length >= MAX_FORMULA_SERIES) {
@@ -1522,9 +1631,10 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       return;
     }
     const nextFormula: MacroFormulaSeries = {
-      id: formulaId(currentFormulaLeftId, formulaOperator, currentFormulaRightId),
+      id: formulaId(currentFormulaLeftId, formulaOperator, formulaOperator === "scale" ? nextFormulaScalar : currentFormulaRightId),
       leftId: currentFormulaLeftId,
-      rightId: currentFormulaRightId,
+      rightId: formulaOperator === "scale" ? undefined : currentFormulaRightId,
+      scalar: formulaOperator === "scale" ? nextFormulaScalar : undefined,
       operator: formulaOperator,
     };
     if (formulas.some((formula) => formula.id === nextFormula.id)) {
@@ -1533,7 +1643,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     }
     setFormulas((prev) => [...prev, nextFormula]);
     setFormulaNotice("합성 시리즈 추가됨");
-  }, [currentFormulaLeftId, currentFormulaRightId, formulaOperator, formulas]);
+  }, [currentFormulaLeftId, currentFormulaRightId, formulaOperator, formulaScalar, formulas]);
 
   const removeFormula = useCallback((formulaIdToRemove: string) => {
     setFormulas((prev) => prev.filter((formula) => formula.id !== formulaIdToRemove));
@@ -1712,6 +1822,16 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       change: series ? latestStepChange(series) : null,
     };
   }), [chartSeriesById, selected]);
+  const formulaLegendItems = useMemo(() => formulas.map((formula) => {
+    const series = chartSeriesById.get(formula.id);
+    return {
+      formula,
+      series,
+      color: series?.color ?? okabeItoPalette[(selected.length + formulas.indexOf(formula)) % okabeItoPalette.length],
+      latest: series ? latestFinitePoint(series)?.value ?? null : null,
+      change: series ? latestStepChange(series) : null,
+    };
+  }), [chartSeriesById, formulas, selected.length]);
 
   return (
     <div
@@ -1909,6 +2029,21 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                     ) : null}
                   </div>
                 ) : null)}
+                {formulaLegendItems.map(({ formula, series, color, latest, change }) => (
+                  <div key={formula.id} className="cpw5-macro-v2-legend__item" data-macro-v2-derived-legend={formula.operator}>
+                    <div className="cpw5-macro-v2-legend__chip">
+                      <i aria-hidden style={{ backgroundColor: color }} />
+                      <span>
+                        <b>{formulaLabel(formula)}</b>
+                        <small>{series?.unitLabel ?? "합성값"} · {series?.yAxisId === "y1" ? "오른쪽 축" : "왼쪽 축"}</small>
+                      </span>
+                      <span>
+                        <strong>{formatValue(latest)}</strong>
+                        <small className={change === null ? undefined : change >= 0 ? "positive" : "negative"}>{change === null ? "—" : `${change >= 0 ? "+" : ""}${formatValue(change)}`}</small>
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
               <div className="cpw5-macro-chart-rows" data-macro-chart-row-count={chartRows.length}>
               {chartRows.map((row, rowIndex) => (
@@ -1933,6 +2068,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                     }}
                     sortLabels
                     spanGaps={false}
+                    xScaleMode="time"
                     seriesAreRangeFiltered
                     heightClassName="cpw5-macro-v2-plot"
                     yAxisTitle={row.yAxisTitle}
@@ -1986,11 +2122,19 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
 
         <div className="cpw5-tile-row cpw5-macro-metrics" aria-label="매크로 분석 요약">
           {analysisCards.map((card) => (
-            <div key={card.label} className="cpw5-tile">
-              <p className="cpw5-tile__label">{card.label}</p>
-              <p className="cpw5-tile__value">{card.value}</p>
-              <p className="cpw5-tile__sub">{card.detail}</p>
-            </div>
+            <article key={card.label} className="cpw5-tile cpw5-macro-evidence-tile" data-macro-v2-tile-evidence="analysis">
+              <div className="cpw5-macro-evidence-tile__body">
+                <p className="cpw5-tile__label">{card.label}</p>
+                <p className="cpw5-tile__value">{card.value}</p>
+                <p className="cpw5-tile__sub">{card.detail}</p>
+              </div>
+              <EvidenceRail
+                freshness={evidenceFreshness}
+                source="현재 차트"
+                asOf={latestVisibleDate ?? "—"}
+                coverage={card.label}
+              />
+            </article>
           ))}
         </div>
       </section>
@@ -2005,16 +2149,23 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         </div>
         <div className="cpw5-macro-lens-row">
           {MACRO_ANALYSIS_LENSES.map((lens) => (
-            <button
-              key={lens.id}
-              type="button"
-              onClick={() => applyAnalysisLens(lens)}
-              className="cpw5-macro-lens-card"
-              data-macro-chart-lens={lens.id}
-            >
-              <strong>{lens.label}</strong>
-              <span>{lens.detail}</span>
-            </button>
+            <article key={lens.id} className="cpw5-macro-lens-card cpw5-macro-evidence-tile" data-macro-v2-tile-evidence="lens">
+              <button
+                type="button"
+                onClick={() => applyAnalysisLens(lens)}
+                className="cpw5-macro-lens-card__action"
+                data-macro-chart-lens={lens.id}
+              >
+                <strong>{lens.label}</strong>
+                <span>{lens.detail}</span>
+              </button>
+              <EvidenceRail
+                freshness="fixed"
+                source="카탈로그 조합"
+                asOf={MACRO_CATALOG_CURATED_AT}
+                coverage={`${lens.state.selected.length}개 시리즈`}
+              />
+            </article>
           ))}
         </div>
       </section>
@@ -2170,10 +2321,25 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             <div className="cpw5-macro-section-head">
               <div>
                 <h2>합성 시리즈</h2>
-                <p>현재 변환값 기준으로 차이·비율을 계산합니다.</p>
+                <p>현재 변환값을 a와 b로 두고 a − b, a / b, a × k를 계산합니다.</p>
               </div>
               <span>{formulas.length}/{MAX_FORMULA_SERIES}</span>
             </div>
+            {AVAILABLE_MACRO_FORMULA_PRESETS.length ? (
+              <div className="cpw5-macro-chip-grid" data-macro-v2-formula-presets="guarded">
+                {AVAILABLE_MACRO_FORMULA_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    className="cpw5-macro-chip-button"
+                    onClick={() => applyFormulaPreset(preset)}
+                  >
+                    <strong>{preset.label}</strong>
+                    <span>필요 시 두 시리즈를 함께 추가합니다.</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <div className="cpw5-macro-form-grid">
               <select
                 value={currentFormulaLeftId}
@@ -2185,7 +2351,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               >
                 {selected.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {seriesById(item.id)?.shortLabel ?? item.id}
+                    a · {seriesById(item.id)?.shortLabel ?? item.id}
                   </option>
                 ))}
               </select>
@@ -2197,29 +2363,42 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 aria-label="합성 계산식"
                 data-macro-chart-formula-control="operator"
               >
-                <option value="spread">{MACRO_FORMULA_LABELS.spread}</option>
+                <option value="subtract">{MACRO_FORMULA_LABELS.subtract}</option>
                 <option value="ratio">{MACRO_FORMULA_LABELS.ratio}</option>
+                <option value="scale">{MACRO_FORMULA_LABELS.scale}</option>
               </select>
-              <select
-                value={currentFormulaRightId}
-                onChange={(event) => setFormulaRightId(event.target.value)}
-                disabled={selected.length < 2}
-                className="cpw5-macro-select"
-                aria-label="합성 오른쪽 시리즈"
-                data-macro-chart-formula-control="right"
-              >
-                {selected
-                  .filter((item) => item.id !== currentFormulaLeftId)
-                  .map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {seriesById(item.id)?.shortLabel ?? item.id}
-                    </option>
-                  ))}
-              </select>
+              {formulaOperator === "scale" ? (
+                <input
+                  type="number"
+                  value={formulaScalar}
+                  step="any"
+                  onChange={(event) => setFormulaScalar(event.currentTarget.value)}
+                  className="cpw5-macro-input"
+                  aria-label="합성 배수 k"
+                  data-macro-chart-formula-control="scalar"
+                />
+              ) : (
+                <select
+                  value={currentFormulaRightId}
+                  onChange={(event) => setFormulaRightId(event.target.value)}
+                  disabled={selected.length < 2}
+                  className="cpw5-macro-select"
+                  aria-label="합성 오른쪽 시리즈"
+                  data-macro-chart-formula-control="right"
+                >
+                  {selected
+                    .filter((item) => item.id !== currentFormulaLeftId)
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        b · {seriesById(item.id)?.shortLabel ?? item.id}
+                      </option>
+                    ))}
+                </select>
+              )}
               <button
                 type="button"
                 onClick={addFormula}
-                disabled={selected.length < 2 || formulas.length >= MAX_FORMULA_SERIES}
+                disabled={(formulaOperator === "scale" ? selected.length < 1 : selected.length < 2) || formulas.length >= MAX_FORMULA_SERIES}
                 className="cpw5-macro-primary-button"
                 data-macro-chart-formula-control="add"
               >
@@ -2237,7 +2416,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                       {formulaLabel(formula)}
                     </span>
                     <b>
-                      {MACRO_FORMULA_LABELS[formula.operator]}
+                      {MACRO_FORMULA_LABELS[formula.operator]} · {chartSeriesById.get(formula.id)?.unitLabel ?? "합성값"}
                     </b>
                     <button
                       type="button"

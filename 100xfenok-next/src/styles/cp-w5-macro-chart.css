@@ -327,6 +327,33 @@
 .cpw5-macro-lens-card {
   flex: 0 0 min(220px, 82vw);
   scroll-snap-align: start;
+  overflow: hidden;
+  padding: 0;
+}
+
+.cpw5-macro-lens-card__action {
+  width: 100%;
+  min-height: 88px;
+  padding: 12px 14px;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.cpw5-macro-evidence-tile {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.cpw5-macro-metrics .cpw5-macro-evidence-tile {
+  overflow: hidden;
+  padding: 0;
+}
+
+.cpw5-macro-evidence-tile__body {
+  flex: 1;
   padding: 12px 14px;
 }
 
@@ -350,7 +377,7 @@
   white-space: nowrap;
 }
 
-.cpw5-macro-lens-card span,
+.cpw5-macro-lens-card__action > span,
 .cpw5-macro-compare-card span,
 .cpw5-macro-connection-grid span {
   display: block;
