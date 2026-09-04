@@ -1,9 +1,23 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-04T03:29:49.625Z",
+  "generated_at": "2026-09-04T04:00:52.272Z",
   "status": "open",
-  "open_incident_count": 16,
+  "open_incident_count": 17,
   "open_incidents": [
+    {
+      "workflow": "data-plane-serving-probe.yml",
+      "label": "Data Plane Serving Probe",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
     {
       "workflow": "fenok-edge-daily.yml",
       "label": "Fenok Edge Daily Data",
@@ -674,11 +688,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33833286943",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33833286943",
-    "observed_at": "2026-09-04T03:29:49.625Z",
+    "run_id": "33835122453",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33835122453",
+    "observed_at": "2026-09-04T04:00:52.272Z",
     "event": "workflow_run",
     "workflows": [
+      "data-plane-serving-probe.yml",
       "fenok-edge-daily.yml",
       "fenok-edge-krx-daily.yml",
       "fetch-edgar-filings.yml",
