@@ -1047,13 +1047,13 @@ function sparklineSegments(series: MarketChartSeries) {
 function LensSparkline({ series, state }: { series?: MarketChartSeries; state: MacroSurfaceState }) {
   const segments = series ? sparklineSegments(series) : [];
   if (state === "loading") {
-    return <div className="cpw5-macro-lens-sparkline cpw5-macro-lens-sparkline--loading" aria-hidden />;
+    return <div className="cpw5-macro-lens-sparkline cpw5-macro-lens-sparkline--loading" data-macro-v2-lens-sparkline="loading" aria-hidden />;
   }
   if (!segments.length) {
-    return <div className="cpw5-macro-lens-sparkline cpw5-macro-lens-sparkline--empty">불러오면 미리보기를 표시합니다.</div>;
+    return <div className="cpw5-macro-lens-sparkline cpw5-macro-lens-sparkline--empty" data-macro-v2-lens-sparkline="empty">불러오면 미리보기를 표시합니다.</div>;
   }
   return (
-    <svg className="cpw5-macro-lens-sparkline" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden>
+    <svg className="cpw5-macro-lens-sparkline" data-macro-v2-lens-sparkline="ready" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden>
       {segments.map((points, index) => (
         <polyline key={index} fill="none" stroke="var(--cp-accent)" strokeWidth="1.8" vectorEffect="non-scaling-stroke" points={points} />
       ))}
@@ -1671,6 +1671,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       formulas: preset.formulas,
       macroContextId: preset.macroContextId ?? macroContextId,
     });
+    setPresetName(preset.name);
+    window.setTimeout(() => document.querySelector('[data-macro-chart-hero="true"]')?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
   }, [applyChartState, macroContextId]);
 
   const applyAnalysisLens = useCallback((lens: MacroAnalysisLens) => {
@@ -2382,6 +2384,73 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         </div>
       </section>
 
+      <details
+        className="cpw5-macro-table-panel"
+        data-macro-v2-table-drawer="true"
+        data-macro-v2-table-state={tableState}
+        onToggle={(event) => setTableOpen(event.currentTarget.open)}
+      >
+        <summary>
+          <span className="cpw5-macro-table-panel__summary">
+            <span>표 보기</span>
+            <b>{`변환 후 값 · ${tableHeaderSummary}`}</b>
+          </span>
+          <span className="cpw5-macro-table-panel__meta">
+            {tableRows.length}개 관측일
+            <i aria-hidden>⌄</i>
+          </span>
+        </summary>
+        {tableOpen ? (
+          <div className="cpw5-macro-table-panel__body">
+            {tableState === "loading" ? (
+              <DelayedMacroTableSkeleton />
+            ) : tableState === "error" ? (
+              <EmptyState
+                reason="표 데이터를 불러오지 못했습니다"
+                nextRefresh="차트 데이터와 같은 소스를 다시 불러옵니다"
+                actionLabel="다시 시도"
+                onAction={() => setLoadRetryKey((value) => value + 1)}
+              />
+            ) : tableState === "empty" ? (
+              <EmptyState
+                reason="표시할 변환 후 값이 없습니다"
+                nextRefresh="시리즈를 선택하면 플롯된 관측값이 날짜별로 표시됩니다"
+              />
+            ) : (
+              <>
+                <div className="cpw5-macro-table-panel__tools">
+                  <span>{rangeLabel(rangeId)} 창구 · 차트와 동일한 변환 후 값</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      downloadCsv(visibleChartSeries, selected, rangeId);
+                      setExportNotice(`${rangeLabel(rangeId)} 변환 CSV 저장됨`);
+                    }}
+                  >
+                    CSV로 내보내기
+                  </button>
+                </div>
+                <CpDataTable
+                  columns={tableColumns}
+                  rows={tableRows}
+                  getRowKey={(row) => row.date}
+                  density="compact"
+                  caption={`플롯된 변환 후 값 · ${rangeLabel(rangeId)} 창구`}
+                />
+              </>
+            )}
+            <EvidenceRail
+              freshness={tableState === "ready" ? "fresh" : tableState === "stale" ? "partial" : tableState === "loading" ? "pending" : tableState === "error" ? "error" : "stale"}
+              source="현재 차트 표시값"
+              asOf={latestVisibleDate ?? "—"}
+              coverage={`${tableRows.length}개 관측일 · ${visibleChartSeries.length}개 시리즈`}
+              next={tableState === "empty" ? "시리즈 선택 필요" : undefined}
+              onRetry={tableState === "error" ? () => setLoadRetryKey((value) => value + 1) : undefined}
+            />
+          </div>
+        ) : null}
+      </details>
+
       <section className="cpw5-macro-insight-grid" aria-label="매크로 인사이트">
         <article className="cpw5-macro-insight-card">
           <span>{activeMacroContext.label}</span>
@@ -2652,17 +2721,21 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             </div>
           </section>
 
-          <section className="cpw5-macro-editor-block" data-macro-chart-collections="true">
+          <section
+            className="cpw5-macro-editor-block cpw5-macro-collection-editor"
+            data-macro-chart-collections="true"
+            data-macro-v2-collection-state={collectionState}
+          >
             <div className="cpw5-macro-section-head">
               <div>
-                <h2>내 프리셋</h2>
-                <p>선택·기간·숨김·축을 브라우저에 저장합니다.</p>
+                <h2>내 컬렉션</h2>
+                <p>현재 차트의 선택·변환·기간·숨김·축·합성식을 저장합니다.</p>
               </div>
               <span>{userPresets.length}/8</span>
             </div>
             <div className="cpw5-macro-inline-form">
               <label className="sr-only" htmlFor="macro-user-preset-name">
-                프리셋 이름
+                컬렉션 이름
               </label>
               <input
                 id="macro-user-preset-name"
@@ -2676,35 +2749,56 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 onClick={saveUserPreset}
                 className="cpw5-macro-primary-button"
               >
-                저장
+                현재 차트 저장
               </button>
             </div>
             <div className="cpw5-macro-status" role="status">
-              {presetNotice ?? "현재 선택·기간·숨김·축을 저장합니다."}
+              {presetNotice ?? (collectionStorageMode === "session"
+                ? "브라우저 저장소를 사용할 수 없어 이 세션에서만 유지합니다."
+                : "저장한 차트는 이 브라우저에서 다시 불러올 수 있습니다.")}
             </div>
             <div className="cpw5-macro-formula-list">
               {userPresets.length ? (
-                userPresets.map((preset) => (
-                  <div key={preset.id} className="cpw5-macro-selected-row">
-                    <button
-                      type="button"
-                      onClick={() => applyUserPreset(preset)}
-                      title={preset.name}
-                    >
+                userPresets.map((preset) => renamingPresetId === preset.id ? (
+                  <div key={preset.id} className="cpw5-macro-selected-row cpw5-macro-collection-row" data-collection-editing="true">
+                    <input
+                      value={renamePresetDraft}
+                      onChange={(event) => setRenamePresetDraft(event.currentTarget.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") renameUserPreset(preset.id);
+                        if (event.key === "Escape") {
+                          setRenamingPresetId(null);
+                          setRenamePresetDraft("");
+                        }
+                      }}
+                      maxLength={32}
+                      className="cpw5-macro-input"
+                      aria-label={`${preset.name} 새 이름`}
+                      autoFocus
+                    />
+                    <button type="button" onClick={() => renameUserPreset(preset.id)} data-macro-v2-collection-action="rename">
+                      확인
+                    </button>
+                    <button type="button" onClick={() => { setRenamingPresetId(null); setRenamePresetDraft(""); }}>
+                      취소
+                    </button>
+                  </div>
+                ) : (
+                  <div key={preset.id} className="cpw5-macro-selected-row cpw5-macro-collection-row">
+                    <button type="button" onClick={() => applyUserPreset(preset)} title={preset.name}>
                       <span>{preset.name}</span>
                       <b>{preset.selected.length}개 · {preset.rangeId}</b>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteUserPreset(preset.id)}
-                      aria-label={`${preset.name} 삭제`}
-                    >
+                    <button type="button" onClick={() => startRenameUserPreset(preset)} data-macro-v2-collection-action="rename" aria-label={`${preset.name} 이름 변경`}>
+                      이름 변경
+                    </button>
+                    <button type="button" onClick={() => deleteUserPreset(preset.id)} aria-label={`${preset.name} 삭제`}>
                       삭제
                     </button>
                   </div>
                 ))
               ) : (
-                <p className="cpw5-macro-empty-small">저장한 프리셋이 없습니다.</p>
+                <p className="cpw5-macro-empty-small">저장한 차트가 없습니다.</p>
               )}
             </div>
           </section>
