@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
 import TransitionLink from "@/components/TransitionLink";
+import { CpDataTable, type CpDataTableColumn } from "@/components/canvas-plus/kit";
 import { EmptyState, EvidenceRail, Panel, useDelayedLoading } from "@/components/ui";
 import { okabeItoPalette } from "@/lib/chart-theme";
 import { formatAsOf, freshnessDataState } from "@/lib/data-state";
@@ -136,6 +137,16 @@ type UserMacroPreset = {
   formulas: MacroFormulaSeries[];
   macroContextId?: MacroContextId;
   updatedAt: string;
+};
+
+type MacroSurfaceState = "loading" | "empty" | "error" | "stale" | "ready";
+type MacroTableRow = {
+  date: string;
+  values: Record<string, number | null>;
+};
+type UserPresetReadResult = {
+  presets: UserMacroPreset[];
+  persistent: boolean;
 };
 
 function cx(...parts: Array<string | false | null | undefined>) {
@@ -577,13 +588,13 @@ function selectedViewOptions(selected: readonly SelectedMacroSeries[]) {
   ]));
 }
 
-function safeReadUserPresets(): UserMacroPreset[] {
-  if (typeof window === "undefined") return [];
+function safeReadUserPresets(): UserPresetReadResult {
+  if (typeof window === "undefined") return { presets: [], persistent: false };
   try {
     const raw = window.localStorage.getItem(USER_PRESET_STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(parsed)) return [];
-    return parsed
+    if (!Array.isArray(parsed)) return { presets: [], persistent: false };
+    const presets = parsed
       .map((item): UserMacroPreset | null => {
         if (!item || typeof item !== "object") return null;
         const record = item as Partial<UserMacroPreset>;
@@ -641,8 +652,9 @@ function safeReadUserPresets(): UserMacroPreset[] {
       })
       .filter((item): item is UserMacroPreset => item !== null)
       .slice(0, 8);
+    return { presets, persistent: true };
   } catch {
-    return [];
+    return { presets: [], persistent: false };
   }
 }
 
@@ -1004,6 +1016,92 @@ function buildFormulaSeries(baseSeries: readonly MarketChartSeries[], formulas: 
     .filter((item): item is MarketChartSeries => item !== null);
 }
 
+function sparklineSegments(series: MarketChartSeries) {
+  const finiteValues = series.points.flatMap((point) =>
+    typeof point.value === "number" && Number.isFinite(point.value) ? [point.value] : [],
+  );
+  if (finiteValues.length < 2) return [];
+  const min = Math.min(...finiteValues);
+  const max = Math.max(...finiteValues);
+  const span = max - min || 1;
+  const denominator = Math.max(series.points.length - 1, 1);
+  const segments: string[] = [];
+  let active: string[] = [];
+  const flush = () => {
+    if (active.length >= 2) segments.push(active.join(" "));
+    active = [];
+  };
+  series.points.forEach((point, index) => {
+    if (typeof point.value !== "number" || !Number.isFinite(point.value)) {
+      flush();
+      return;
+    }
+    const x = (index / denominator) * 100;
+    const y = 29 - ((point.value - min) / span) * 26;
+    active.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+  });
+  flush();
+  return segments;
+}
+
+function LensSparkline({ series, state }: { series?: MarketChartSeries; state: MacroSurfaceState }) {
+  const segments = series ? sparklineSegments(series) : [];
+  if (state === "loading") {
+    return <div className="cpw5-macro-lens-sparkline cpw5-macro-lens-sparkline--loading" aria-hidden />;
+  }
+  if (!segments.length) {
+    return <div className="cpw5-macro-lens-sparkline cpw5-macro-lens-sparkline--empty">불러오면 미리보기를 표시합니다.</div>;
+  }
+  return (
+    <svg className="cpw5-macro-lens-sparkline" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden>
+      {segments.map((points, index) => (
+        <polyline key={index} fill="none" stroke="var(--cp-accent)" strokeWidth="1.8" vectorEffect="non-scaling-stroke" points={points} />
+      ))}
+    </svg>
+  );
+}
+
+function buildMacroTableRows(series: readonly MarketChartSeries[]): MacroTableRow[] {
+  const dates = new Set<string>();
+  const pointsBySeries = new Map<string, Map<string, number | null>>();
+  for (const item of series) {
+    const points = new Map<string, number | null>();
+    for (const point of item.points) {
+      dates.add(point.label);
+      points.set(point.label, point.value);
+    }
+    pointsBySeries.set(item.id, points);
+  }
+  return [...dates]
+    .sort((left, right) => right.localeCompare(left))
+    .map((date) => ({
+      date,
+      values: Object.fromEntries(series.map((item) => [item.id, pointsBySeries.get(item.id)?.get(date) ?? null])),
+    }));
+}
+
+function tableSeriesHeader(
+  series: MarketChartSeries,
+  selected: readonly SelectedMacroSeries[],
+  windowLabel: string,
+) {
+  if (series.formulaLabel) return `${series.formulaLabel} · 합성 · ${windowLabel}`;
+  const selection = selected.find((item) => item.id === series.id);
+  const definition = seriesById(series.id);
+  const transform = selection?.transform ?? definition?.defaultTransform ?? "raw";
+  return `${definition?.shortLabel ?? series.label} · ${MACRO_TRANSFORM_LABELS[transform]} · ${windowLabel}`;
+}
+
+function DelayedMacroTableSkeleton() {
+  const show = useDelayedLoading(true, 120);
+  if (!show) return null;
+  return (
+    <div className="cpw5-macro-table-skeleton" aria-label="변환 후 표 데이터를 준비하는 중입니다">
+      <i /><i /><i />
+    </div>
+  );
+}
+
 type MacroChartRow = {
   id: string;
   series: MarketChartSeries[];
@@ -1299,6 +1397,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const [formulaScalar, setFormulaScalar] = useState("1");
   const [formulaNotice, setFormulaNotice] = useState<string | null>(null);
   const [userPresets, setUserPresets] = useState<UserMacroPreset[]>([]);
+  const [collectionStorageMode, setCollectionStorageMode] = useState<"local" | "session">("local");
+  const [renamingPresetId, setRenamingPresetId] = useState<string | null>(null);
+  const [renamePresetDraft, setRenamePresetDraft] = useState("");
   const [clientStateReady, setClientStateReady] = useState(false);
   const [presetName, setPresetName] = useState("나의 매크로 뷰");
   const [presetNotice, setPresetNotice] = useState<string | null>(null);
@@ -1316,6 +1417,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const [editingSeriesId, setEditingSeriesId] = useState<string | null>(null);
   const [logScale, setLogScale] = useState(false);
   const [autoGroupAxes, setAutoGroupAxes] = useState(true);
+  const [tableOpen, setTableOpen] = useState(false);
 
   const selectedDefinitions = useMemo(
     () => selected.map((item) => seriesById(item.id)).filter((item): item is MacroSeriesDefinition => Boolean(item)),
@@ -1361,7 +1463,9 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       const params = new URLSearchParams(window.location.search);
       setLogScale(params.get("log") === "1");
       setAutoGroupAxes(params.get("axes") !== "manual");
-      setUserPresets(safeReadUserPresets());
+      const storedPresets = safeReadUserPresets();
+      setUserPresets(storedPresets.presets);
+      setCollectionStorageMode(storedPresets.persistent ? "local" : "session");
       setClientStateReady(true);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -1572,6 +1676,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
   const applyAnalysisLens = useCallback((lens: MacroAnalysisLens) => {
     applyChartState({ ...lens.state, macroContextId: macroContextFromParam(lens.id)?.id ?? DEFAULT_MACRO_CONTEXT_ID });
     setPresetName(`${lens.label.replace(" 렌즈", "")} 뷰`);
+    window.setTimeout(() => document.querySelector('[data-macro-chart-hero="true"]')?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
   }, [applyChartState]);
 
   const applyTopLens = useCallback((lens: (typeof MACRO_TOP_LENSES)[number]) => {
@@ -1679,6 +1784,13 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     setFormulaNotice("합성 시리즈 삭제됨");
   }, []);
 
+  const commitUserPresetList = useCallback((next: UserMacroPreset[], successMessage: string) => {
+    const persistent = writeUserPresets(next);
+    setUserPresets(next);
+    setCollectionStorageMode(persistent ? "local" : "session");
+    setPresetNotice(persistent ? successMessage : `${successMessage} · 이 브라우저 세션에만 저장됨`);
+  }, []);
+
   const saveUserPreset = useCallback(() => {
     if (!selected.length) {
       setPresetNotice("시리즈를 먼저 선택하세요.");
@@ -1698,23 +1810,41 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       updatedAt: new Date().toISOString(),
     };
     const next = [nextPreset, ...userPresets.filter((preset) => preset.name !== name)].slice(0, 8);
-    if (writeUserPresets(next)) {
-      setUserPresets(next);
-      setPresetNotice("프리셋 저장됨");
-    } else {
-      setPresetNotice("브라우저 저장소에 저장하지 못했습니다.");
-    }
-  }, [axisById, formulas, macroContextId, presetName, rangeId, selected, userPresets, visibleHiddenIds]);
+    commitUserPresetList(next, "컬렉션 저장됨");
+  }, [axisById, commitUserPresetList, formulas, macroContextId, presetName, rangeId, selected, userPresets, visibleHiddenIds]);
 
   const deleteUserPreset = useCallback((presetId: string) => {
     const next = userPresets.filter((preset) => preset.id !== presetId);
-    if (writeUserPresets(next)) {
-      setUserPresets(next);
-      setPresetNotice("프리셋 삭제됨");
-    } else {
-      setPresetNotice("브라우저 저장소를 갱신하지 못했습니다.");
+    commitUserPresetList(next, "컬렉션에서 삭제됨");
+    if (renamingPresetId === presetId) {
+      setRenamingPresetId(null);
+      setRenamePresetDraft("");
     }
-  }, [userPresets]);
+  }, [commitUserPresetList, renamingPresetId, userPresets]);
+
+  const startRenameUserPreset = useCallback((preset: UserMacroPreset) => {
+    setRenamingPresetId(preset.id);
+    setRenamePresetDraft(preset.name);
+    setPresetNotice(null);
+  }, []);
+
+  const renameUserPreset = useCallback((presetId: string) => {
+    const name = renamePresetDraft.trim().slice(0, 32);
+    if (!name) {
+      setPresetNotice("새 컬렉션 이름을 입력하세요.");
+      return;
+    }
+    if (userPresets.some((preset) => preset.id !== presetId && preset.name === name)) {
+      setPresetNotice("같은 이름의 컬렉션이 이미 있습니다.");
+      return;
+    }
+    const next = userPresets.map((preset) => preset.id === presetId
+      ? { ...preset, name, updatedAt: new Date().toISOString() }
+      : preset);
+    commitUserPresetList(next, "컬렉션 이름 변경됨");
+    setRenamingPresetId(null);
+    setRenamePresetDraft("");
+  }, [commitUserPresetList, renamePresetDraft, userPresets]);
 
   const activeLoadState = useMemo<LoadState>(
     () => (selectedDefinitions.length ? loadState : { status: "ready", series: [], loaded: [] }),
@@ -1860,6 +1990,49 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       change: series ? latestStepChange(series) : null,
     };
   }), [chartSeriesById, formulas, selected.length]);
+  const lensPreviewById = useMemo(() => new Map(MACRO_ANALYSIS_LENSES.map((lens) => {
+    const previewSeries = lens.state.selected
+      .map((item) => chartSeriesById.get(item.id))
+      .find((item) => item && sparklineSegments(item).length > 0);
+    const state: MacroSurfaceState = activeLoadState.status === "loading" || activeLoadState.status === "idle"
+      ? "loading"
+      : activeLoadState.status === "error"
+        ? "error"
+        : previewSeries
+          ? evidenceFreshness === "partial" || evidenceFreshness === "stale" ? "stale" : "ready"
+          : "empty";
+    return [lens.id, { series: previewSeries, state }] as const;
+  })), [activeLoadState.status, chartSeriesById, evidenceFreshness]);
+  const collectionState: MacroSurfaceState = !clientStateReady
+    ? "loading"
+    : collectionStorageMode === "session"
+      ? "stale"
+      : userPresets.length
+        ? "ready"
+        : "empty";
+  const tableRows = useMemo(() => buildMacroTableRows(visibleChartSeries), [visibleChartSeries]);
+  const tableHeaders = useMemo(
+    () => visibleChartSeries.map((series) => tableSeriesHeader(series, selected, rangeLabel(rangeId))),
+    [rangeId, selected, visibleChartSeries],
+  );
+  const tableHeaderSummary = tableHeaders.join(" · ") || "표시 시리즈 없음";
+  const tableColumns = useMemo<readonly CpDataTableColumn<MacroTableRow>[]>(() => [
+    { key: "date", header: "날짜", align: "left" },
+    ...visibleChartSeries.map((series, index) => ({
+      key: series.id,
+      header: tableHeaders[index] ?? series.label,
+      render: (row: MacroTableRow) => formatValue(row.values[series.id] ?? null),
+    })),
+  ], [tableHeaders, visibleChartSeries]);
+  const tableState: MacroSurfaceState = activeLoadState.status === "loading" || activeLoadState.status === "idle"
+    ? "loading"
+    : activeLoadState.status === "error"
+      ? "error"
+      : tableRows.length === 0
+        ? "empty"
+        : evidenceFreshness === "partial" || evidenceFreshness === "stale"
+          ? "stale"
+          : "ready";
 
   return (
     <div
@@ -2167,34 +2340,45 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         </div>
       </section>
 
-      <section className="cpw5-macro-lens-section" aria-label="분석 렌즈">
+      <section className="cpw5-macro-lens-section" aria-label="같이 보기" data-macro-v2-lens-collection="true">
         <div className="cpw5-macro-section-head">
           <div>
-            <h2>분석 렌즈</h2>
-            <p>한 번 누르면 차트 상태가 통째로 바뀝니다.</p>
+            <h2>같이 보기</h2>
+            <p>저장된 차트 조합을 미리 보고 영웅 차트로 불러옵니다.</p>
           </div>
-          <span>{MACRO_ANALYSIS_LENSES.length}개</span>
+          <button type="button" className="cpw5-macro-section-action" onClick={saveUserPreset} data-macro-v2-collection-save="hero">
+            + 현재 차트 저장
+          </button>
         </div>
         <div className="cpw5-macro-lens-row">
-          {MACRO_ANALYSIS_LENSES.map((lens) => (
-            <article key={lens.id} className="cpw5-macro-lens-card cpw5-macro-evidence-tile" data-macro-v2-tile-evidence="lens">
-              <button
-                type="button"
-                onClick={() => applyAnalysisLens(lens)}
-                className="cpw5-macro-lens-card__action"
-                data-macro-chart-lens={lens.id}
+          {MACRO_ANALYSIS_LENSES.map((lens) => {
+            const preview = lensPreviewById.get(lens.id);
+            return (
+              <article
+                key={lens.id}
+                className="cpw5-macro-lens-card cpw5-macro-evidence-tile"
+                data-macro-v2-tile-evidence="lens"
+                data-macro-v2-lens-preview-state={preview?.state ?? "empty"}
               >
-                <strong>{lens.label}</strong>
-                <span>{lens.detail}</span>
-              </button>
-              <EvidenceRail
-                freshness="fixed"
-                source="카탈로그 조합"
-                asOf={MACRO_CATALOG_CURATED_AT}
-                coverage={`${lens.state.selected.length}개 시리즈`}
-              />
-            </article>
-          ))}
+                <button
+                  type="button"
+                  onClick={() => applyAnalysisLens(lens)}
+                  className="cpw5-macro-lens-card__action"
+                  data-macro-chart-lens={lens.id}
+                >
+                  <strong>{lens.label}</strong>
+                  <LensSparkline series={preview?.series} state={preview?.state ?? "empty"} />
+                  <span>{lens.detail}</span>
+                </button>
+                <EvidenceRail
+                  freshness={preview?.state === "loading" ? "pending" : preview?.state === "error" ? "error" : preview?.state === "stale" ? "partial" : "fixed"}
+                  source={preview?.series ? "현재 로드 시리즈" : "카탈로그 조합"}
+                  asOf={preview?.series ? latestVisibleDate ?? "—" : MACRO_CATALOG_CURATED_AT}
+                  coverage={preview?.series ? `${preview.series.label} 미리보기` : `${lens.state.selected.length}개 시리즈`}
+                />
+              </article>
+            );
+          })}
         </div>
       </section>
 
