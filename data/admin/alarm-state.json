@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-04T10:31:46.794Z",
+  "generated_at": "2026-09-04T11:25:55.419Z",
   "status": "open",
-  "open_incident_count": 13,
+  "open_incident_count": 15,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -134,9 +134,23 @@
       "cadence_status": "not_due"
     },
     {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
       "workflow": "slickcharts-daily.yml",
       "label": "SlickCharts Daily",
-      "streak": 2,
+      "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
       "first_failing_run_url": null,
@@ -213,6 +227,20 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     }
   ],
   "lane_outcome_notified": {
@@ -464,7 +492,7 @@
         "attempt_gap"
       ],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 8
+      "data_freshness_age_hours_at_generation": 9
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -629,9 +657,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33863494972",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33863494972",
-    "observed_at": "2026-09-04T10:31:46.794Z",
+    "run_id": "33867751282",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33867751282",
+    "observed_at": "2026-09-04T11:25:55.419Z",
     "event": "workflow_run",
     "workflows": [
       "fenok-edge-krx-daily.yml",
@@ -642,11 +670,13 @@
       "fetch-stockanalysis.yml",
       "fetch-treasury-tga.yml",
       "fetch-yf-finance.yml",
+      "global-writer-queue-observer.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
       "slickcharts-symbols.yml",
-      "slickcharts-weekly.yml"
+      "slickcharts-weekly.yml",
+      "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
