@@ -146,7 +146,7 @@ function ActionButtons({
         aria-pressed={selected}
         title={selected ? "비교에서 제외" : full ? `비교는 최대 ${COMPARE_LIMIT}개` : "비교에 추가"}
         className={cx(
-          "inline-flex h-9 items-center rounded-md border px-2 text-[11px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-sm:min-h-11",
+          "inline-flex h-9 items-center rounded-md border px-2 text-[11px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11",
           selected
             ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
             : "border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-2)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]",
@@ -158,14 +158,14 @@ function ActionButtons({
       <TransitionLink
         href={ROUTES.portfolioTicker(stock.ticker)}
         title="관심 종목에 추가"
-        className="inline-flex h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-2 text-[11px] font-semibold text-[var(--c-ink-2)] transition hover:border-[var(--c-brand)] hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-sm:min-h-11"
+        className="inline-flex h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-2 text-[11px] font-semibold text-[var(--c-ink-2)] transition hover:border-[var(--c-brand)] hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11"
       >
         관심
       </TransitionLink>
       <TransitionLink
         href={ROUTES.stock(stock.ticker)}
         title="종목 상세로 열기"
-        className="inline-flex h-9 items-center rounded-md bg-[var(--c-brand)] px-2 text-[11px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-sm:min-h-11"
+        className="inline-flex h-9 items-center rounded-md bg-[var(--c-brand)] px-2 text-[11px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11"
       >
         열기
       </TransitionLink>
@@ -221,7 +221,7 @@ export default function ScreenerDiscover({
       { stage: "수집", detail: "Global Scouter 종목 집계", at: sourceDate, tone: sourceDate ? "ok" : "muted" },
     ];
     if (marketFactsDate) {
-      stages.push({ stage: "수집", detail: "시장 팩트 시세", at: marketFactsDate, tone: "ok" });
+      stages.push({ stage: "원천", detail: "시장 팩트 시세", at: marketFactsDate, tone: "ok" });
     }
     return stages;
   }, [dataReady, sourceDate, marketFactsDate]);
@@ -453,12 +453,14 @@ export default function ScreenerDiscover({
                 </p>
               </div>
               <EvidenceRail
-                freshness={dataReady ? "fresh" : "pending"}
+                freshness={freshness}
                 source={DISCOVER_SOURCE}
                 asOf={asOfLabel}
                 coverage={`${selected.ticker} 단일 종목`}
                 stages={discoverStages}
                 onEvidence={openStocksAnalyzerEvidence}
+                onRetry={failed ? () => window.location.reload() : undefined}
+                lkgAsOf={failed ? asOfLabel : undefined}
               />
             </Panel>
           ) : (
@@ -494,7 +496,7 @@ export default function ScreenerDiscover({
                   type="button"
                   onClick={() => onToggleCompare(stock.ticker)}
                   aria-label={`${stock.ticker} 비교에서 제외`}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--c-surface-2)] text-[14px] text-[var(--c-ink-3)] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-sm:h-11 max-sm:w-11"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--c-surface-2)] text-[14px] text-[var(--c-ink-3)] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:h-11 max-md:w-11"
                 >
                   ×
                 </button>
@@ -551,7 +553,7 @@ export default function ScreenerDiscover({
           eyebrow="두 번째 모드 미리보기"
           title="분석 — 워크벤치"
           right={
-            <Button variant="secondary" onClick={onOpenAnalyze} className="max-sm:min-h-11">
+            <Button variant="secondary" onClick={onOpenAnalyze} className="max-md:min-h-11">
               분석 모드 열기 →
             </Button>
           }

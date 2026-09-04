@@ -1938,6 +1938,7 @@ export default function ScreenerClient({
     setEpsGrowthMin("");
     setDividendYieldMin("");
     setDividendYieldMax("");
+    setDurabilityMin("");
     setRoeFy1Min("");
     setRet3yMin("");
     setRet5yMin("");
@@ -2076,7 +2077,7 @@ export default function ScreenerClient({
     setSavedPresets((prev) => prev.filter((p) => p.name !== name));
   }
 
-  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMin || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || dividendYieldMax || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || pegMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || shortEdgeMin || longEdgeMin || connectionFilter);
+  const hasFilters = Boolean(search || selectedSectors.length || selectedCountries.length || perMin || perMax || forwardPerMax || revenueGrowthMin || epsGrowthMin || dividendYieldMin || dividendYieldMax || durabilityMin || roeFy1Min || ret3yMin || ret5yMin || marketCapMin || marketCapMax || pbrMin || pbrMax || pegMax || roeMin || opmMin || return12mMin || profitableOnly || bandFilter || actionFilter || shortEdgeMin || longEdgeMin || connectionFilter);
 
   const ACTION_FILTER_LABEL: Record<ActionFilter, string> = {
     "": "",
@@ -2138,6 +2139,7 @@ export default function ScreenerClient({
     { active: Boolean(pegMax), label: `PEG ≤ ${pegMax}`, clear: () => setPegMax("") },
     { active: Boolean(roeMin), label: `ROE ≥ ${roeMin}%`, clear: () => setRoeMin("") },
     { active: Boolean(opmMin), label: `OPM ≥ ${opmMin}%`, clear: () => setOpmMin("") },
+    { active: Boolean(durabilityMin), label: `내구 수익성 ≥${durabilityMin}`, clear: () => setDurabilityMin("") },
     { active: Boolean(return12mMin), label: `12M 수익률 ≥ ${return12mMin}%`, clear: () => setReturn12mMin("") },
     ...(dividendYieldMin || dividendYieldMax
       ? [
@@ -2186,7 +2188,7 @@ export default function ScreenerClient({
   const valueCount = Number(Boolean(perMin)) + Number(Boolean(perMax)) + Number(Boolean(forwardPerMax)) + Number(Boolean(pbrMin)) + Number(Boolean(pbrMax)) + Number(Boolean(pegMax)) + Number(Boolean(bandFilter)) + Number(profitableOnly);
   const growthCount =
     Number(Boolean(revenueGrowthMin)) + Number(Boolean(epsGrowthMin)) + Number(Boolean(dividendYieldMin)) + Number(Boolean(dividendYieldMax)) + Number(Boolean(return12mMin)) + Number(Boolean(ret3yMin)) + Number(Boolean(ret5yMin));
-  const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(actionFilter)) + Number(Boolean(shortEdgeMin)) + Number(Boolean(longEdgeMin)) + Number(Boolean(connectionFilter));
+  const qualityCount = Number(Boolean(roeMin)) + Number(Boolean(roeFy1Min)) + Number(Boolean(opmMin)) + Number(Boolean(durabilityMin)) + Number(Boolean(actionFilter)) + Number(Boolean(shortEdgeMin)) + Number(Boolean(longEdgeMin)) + Number(Boolean(connectionFilter));
   const activeFilterCount = scaleCount + valueCount + growthCount + qualityCount;
   const pricedCount = sorted.filter((stock) => stock.price !== null).length;
   const missingPriceCount = Math.max(0, sorted.length - pricedCount);
@@ -2885,6 +2887,10 @@ export default function ScreenerClient({
                     <input type="number" inputMode="decimal" value={opmMin} onChange={(event) => setOpmMin(event.target.value)} placeholder="예: 15" className="cp-screener-control" />
                   </label>
                   <label className="cp-screener-field">
+                    <span className="cp-screener-field__label">내구 수익성 최소</span>
+                    <input type="number" inputMode="decimal" value={durabilityMin} onChange={(event) => setDurabilityMin(event.target.value)} placeholder="예: 50" className="cp-screener-control" />
+                  </label>
+                  <label className="cp-screener-field">
                     <span className="cp-screener-field__label">투자 신호</span>
                     <select value={actionFilter} onChange={(event) => setActionFilter(event.target.value as ActionFilter)} className="cp-screener-control">
                       <option value="">전체 신호</option>
@@ -3378,6 +3384,17 @@ export default function ScreenerClient({
                     value={opmMin}
                     onChange={(event) => setOpmMin(event.target.value)}
                     placeholder="예: 15"
+                    className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">내구 수익성 최소</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={durabilityMin}
+                    onChange={(event) => setDurabilityMin(event.target.value)}
+                    placeholder="예: 50"
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
                   />
                 </label>
