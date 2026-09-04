@@ -489,12 +489,12 @@ export function useSectorData(): SectorDataResult {
       };
 
       if (!isMountedRef.current) return;
-      const prev = snapshotRef.current;
+      const previousSnapshot = snapshotRef.current;
       if (benchmarkSourceDate !== null) {
         snapshotRef.current = { asOf: benchmarkSourceDate, rows, benchmarkMomentum };
       }
-      const shiftedPrev = benchmarkSourceDate !== null && prev !== null && prev.asOf !== null && prev.asOf !== benchmarkSourceDate
-        ? { rows: prev.rows, benchmarkMomentum: prev.benchmarkMomentum }
+      const shiftedPrev = benchmarkSourceDate !== null && previousSnapshot !== null && previousSnapshot.asOf !== null && previousSnapshot.asOf !== benchmarkSourceDate
+        ? { rows: previousSnapshot.rows, benchmarkMomentum: previousSnapshot.benchmarkMomentum }
         : null;
       setResult((current) => ({
         rows,
