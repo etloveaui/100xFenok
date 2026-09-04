@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-04T14:25:57.375Z",
+  "generated_at": "2026-09-04T18:00:31.353Z",
   "status": "open",
-  "open_incident_count": 18,
+  "open_incident_count": 19,
   "open_incidents": [
     {
       "workflow": "fenok-edge-daily.yml",
@@ -211,6 +211,20 @@
       "lane_outcome_lanes": [],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
+    },
+    {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
     },
     {
       "workflow": "slickcharts-daily.yml",
@@ -546,7 +560,7 @@
         "attempt_gap"
       ],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 12
+      "data_freshness_age_hours_at_generation": 15
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -711,10 +725,10 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33883472125",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33883472125",
-    "observed_at": "2026-09-04T14:25:57.375Z",
-    "event": "schedule",
+    "run_id": "33903385199",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33903385199",
+    "observed_at": "2026-09-04T18:00:31.353Z",
+    "event": "workflow_run",
     "workflows": [
       "fenok-edge-daily.yml",
       "fenok-edge-krx-daily.yml",
@@ -729,6 +743,7 @@
       "fetch-treasury-tga.yml",
       "fetch-us-indices-daily.yml",
       "fetch-yf-finance.yml",
+      "global-writer-queue-observer.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
