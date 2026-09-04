@@ -22,8 +22,10 @@ import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-c
 import { commonBasisShortTermView, screenerSortValue } from "@/lib/screener/common-basis-short-term";
 import { formatScreenerSourceDateLabel } from "@/lib/screener/source-dates";
 import ScreenerDesktopTable from "./ScreenerDesktopTable";
+import ScreenerDiscover from "./ScreenerDiscover";
 import ScreenerTanstackTable from "./ScreenerTanstackTable";
 import StockDetailPanel from "./StockDetailPanel";
+import type { QuestionCardDef, QuestionCardId } from "@/lib/screener/question-cards";
 import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 import type { MacroContextId } from "@/lib/macro-chart/context";
 import {
@@ -1302,6 +1304,7 @@ export default function ScreenerClient({
   initialActionFilter,
   initialConnectionFilter,
   initialFilters,
+  initialMode,
 }: {
   initialSearch?: string;
   initialSector?: string;
@@ -1310,6 +1313,7 @@ export default function ScreenerClient({
   initialActionFilter?: string;
   initialConnectionFilter?: string;
   initialFilters?: Partial<ScreenerFilterState>;
+  initialMode?: "discover" | "analyze";
 }) {
   const canvasPlusPreview = true;
   const initialFilterValues = initialFilters ?? defaultScreenerFilterState();
@@ -1426,6 +1430,37 @@ export default function ScreenerClient({
   const [profitableOnly, setProfitableOnly] = useState(() => initialFilterValues.profitableOnly ?? false);
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">(() => initialFilterValues.bandFilter ?? "");
   const [actionFilter, setActionFilter] = useState<ActionFilter>(() => coerceActionFilter(initialActionFilter || initialFilterValues.actionFilter));
+  // Screener V3 discover/analyze modes (?mode=discover|analyze, default discover).
+  const [screenerMode, setScreenerMode] = useState<"discover" | "analyze">(() => (initialMode === "analyze" ? "analyze" : "discover"));
+  const [activeCardId, setActiveCardId] = useState<QuestionCardId>("smart-value");
+  const [compareTickers, setCompareTickers] = useState<string[]>([]);
+
+  function setModeParam(next: "discover" | "analyze") {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("mode", next);
+    window.history.replaceState(null, "", url.toString());
+  }
+
+  function handleScreenerModeChange(next: "discover" | "analyze") {
+    setScreenerMode(next);
+    setModeParam(next);
+  }
+
+  function handleShowCardConditions(card: QuestionCardDef) {
+    applyFilterState({ ...defaultScreenerFilterState(), ...card.filters, sortKey: card.sortKey, sortDir: card.sortDir });
+    setScreenerMode("analyze");
+    // The filter-state URL-sync effect preserves the mode param (not in URL_KEYS).
+    setModeParam("analyze");
+  }
+
+  function handleToggleCompare(ticker: string) {
+    setCompareTickers((prev) => {
+      if (prev.includes(ticker)) return prev.filter((item) => item !== ticker);
+      if (prev.length >= 4) return prev;
+      return [...prev, ticker];
+    });
+  }
   // The URL keys are retained for old deep links, but each key now maps to one
   // explicit horizon. No legacy key may select the higher of Short and Long.
   const [shortEdgeMin, setShortEdgeMin] = useState<FenokEdgeFilter>(() => coerceFenokEdgeFilter(initialFilterValues.fenokEdgeMin));
@@ -2176,11 +2211,66 @@ export default function ScreenerClient({
     return () => window.cancelAnimationFrame(frame);
   }, [canvasPlusPreview, scaleCount, valueCount, growthCount, qualityCount]);
 
+  const modeToggle = (
+    <div className="flex flex-wrap items-center gap-3" data-screener-mode-toggle="true" role="group" aria-label="스크리너 모드">
+      <div className="inline-flex gap-0.5 rounded-lg bg-[var(--c-surface-2)] p-0.5">
+        {([
+          { id: "discover", label: "발견" },
+          { id: "analyze", label: "분석" },
+        ] as const).map((mode) => (
+          <button
+            key={mode.id}
+            type="button"
+            aria-pressed={screenerMode === mode.id}
+            onClick={() => handleScreenerModeChange(mode.id)}
+            className={screenerMode === mode.id
+              ? "inline-flex min-h-11 items-center rounded-md bg-[var(--c-brand)] px-4 text-[13px] font-semibold text-white transition"
+              : "inline-flex min-h-11 items-center rounded-md px-4 text-[13px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-ink)]"}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-[12px] text-[var(--c-ink-3)]">발견: 다섯 질문으로 시작 · 분석: 기존 워크벤치</p>
+    </div>
+  );
+
+  if (screenerMode === "discover") {
+    return (
+      <div
+        className="canvas-plus cp-screener-service"
+        data-canvas-plus-screener-service="true"
+        data-screener-mode="discover"
+      >
+        {modeToggle}
+        <div className="mt-3">
+          <ScreenerDiscover
+            key={activeCardId}
+            stocks={stocks}
+            dataReady={dataReady}
+            failed={failed}
+            sourceDate={screenerSourceDate}
+            marketFactsDate={marketFactsDate}
+            activeCardId={activeCardId}
+            onSelectCard={setActiveCardId}
+            onShowConditions={handleShowCardConditions}
+            onOpenAnalyze={() => handleScreenerModeChange("analyze")}
+            compareTickers={compareTickers}
+            onToggleCompare={handleToggleCompare}
+            onClearCompare={() => setCompareTickers([])}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="canvas-plus cp-screener-service"
       data-canvas-plus-screener-service="true"
+      data-screener-mode="analyze"
     >
+      {modeToggle}
       {canvasPlusPreview ? (
         <section data-canvas-plus-screener-title="true">
           <div className="flex flex-wrap items-end justify-between gap-3">

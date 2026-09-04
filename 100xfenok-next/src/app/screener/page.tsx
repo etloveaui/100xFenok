@@ -25,6 +25,7 @@ export default async function ScreenerPage({ searchParams }: Props) {
   const initialSector = firstParam(params.sector).trim();
   const initialMacroContextId = macroContextFromParam(firstParam(params.macro))?.id;
   const initialFilters = parseScreenerFilterState(params);
+  const initialMode = firstParam(params.mode) === "analyze" ? "analyze" : "discover";
   return (
     <div className="fnk-shell">
       <AppShell active="screener" title="스크리너" backHref={ROUTES.home}>
@@ -36,6 +37,7 @@ export default async function ScreenerPage({ searchParams }: Props) {
           initialActionFilter={firstParam(params.action)}
           initialConnectionFilter={firstParam(params.connection)}
           initialFilters={initialFilters}
+          initialMode={initialMode}
         />
       </AppShell>
     </div>
