@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 516,
-      "natural": true,
-      "observed_at": "2026-08-19T23:47:14Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 2344,
@@ -183,6 +170,20 @@
       "run_id": "33824182428",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 563,
+      "natural": true,
+      "observed_at": "2026-09-05T01:04:38Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "33934936590",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -204,12 +205,12 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 861,
+    "latency_ms": 563,
     "natural": true,
-    "observed_at": "2026-09-04T01:04:03Z",
+    "observed_at": "2026-09-05T01:04:38Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33824182428",
+    "run_id": "33934936590",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -221,9 +222,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-04T01:04:03Z",
+    "observed_at": "2026-09-05T01:04:38Z",
     "run_attempt": 1,
-    "run_id": "33824182428"
+    "run_id": "33934936590"
   },
   "lkg": {
     "fetched_at": "2026-09-02T01:26:32Z",
@@ -259,5 +260,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "NVDA",
-  "updated_at": "2026-09-04T01:04:03Z"
+  "updated_at": "2026-09-05T01:04:38Z"
 }
