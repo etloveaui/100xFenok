@@ -3,6 +3,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
+const isolated = process.env.QA_MOBILE_UX_ISOLATED === "1";
+const isolatedOrigin = new URL(baseUrl).origin;
+if (isolated && !["127.0.0.1", "localhost", "[::1]"].includes(new URL(baseUrl).hostname)) {
+  throw new Error("Isolated QA requires a loopback preview, never production.");
+}
+const blockedExternalRequests = [];
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
@@ -3316,7 +3322,7 @@ async function collectRouteChecks(page, route) {
       if (expectedTabIds.some((id) => !tabIds.includes(id))) {
         failures.push({ check: "superinvestors-tab-ids", detail: `tabs=${tabIds.join(",")}` });
       }
-      if (viewportWidth <= 600) {
+      if (viewportWidth <= 600 || window.matchMedia("(any-pointer: coarse)").matches) {
         for (const tab of tabBtns) {
           const rect = tab.getBoundingClientRect();
           const region = tab.closest(".sup-tabs")?.getBoundingClientRect();
@@ -3335,7 +3341,7 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "superinvestors-guru-detail", detail: "missing visible guru detail with quarter" });
         }
         const back = detail?.querySelector("[data-superinvestors-guru-back]");
-        if (!back || back.getBoundingClientRect().height <= 0) {
+        if (!back || back.getBoundingClientRect().height < 44) {
           failures.push({ check: "superinvestors-guru-back", detail: "missing visible back control" });
         }
       } else if (isStocksRoute) {
@@ -3362,6 +3368,16 @@ async function collectRouteChecks(page, route) {
         const holderCells = holderRows[0]?.querySelectorAll("th, td").length ?? 0;
         if (holderRows.length > 0 && holderCells !== 5) {
           failures.push({ check: "superinvestors-holder-row-cells", detail: `cells=${holderCells}` });
+        }
+        if (viewportWidth <= 1199) {
+          holderRows.slice(0, 5).forEach((row, index) => {
+            for (const cell of row.querySelectorAll("th, td")) {
+              const rect = cell.getBoundingClientRect();
+              if (rect.width <= 0 || rect.left < -1 || rect.right > viewportWidth + 1) {
+                failures.push({ check: "superinvestors-holder-fields-visible", detail: `row=${index} field=${cell.textContent?.trim().slice(0, 30)} left=${rect.left} right=${rect.right}` });
+              }
+            }
+          });
         }
         const overlap = document.querySelector("[data-superinvestors-overlap]");
         const overlapRows = Array.from(document.querySelectorAll("[data-superinvestors-overlap-row]"));
@@ -3442,7 +3458,7 @@ async function collectRouteChecks(page, route) {
         }
       });
       if (viewportWidth < 768) {
-        Array.from(document.querySelectorAll(".sup-holder-name"))
+        Array.from(document.querySelectorAll("[data-superinvestors-holder-row]"))
           .filter((node) => node.getBoundingClientRect().width > 0)
           .forEach((node, index) => {
             const rect = node.getBoundingClientRect();
@@ -4014,6 +4030,42 @@ if (viewports.length === 0) {
   throw new Error("No valid QA_MOBILE_UX_VIEWPORTS configured.");
 }
 
+async function collectInvestorNavigationChecks(page, route) {
+  if (!isolated || !route.includes("tab=investors")) return [];
+  const failures = [];
+  try {
+    const buttons = page.locator("[data-superinvestors-sort]");
+    for (const button of await buttons.all()) {
+      await button.click();
+      if (await button.getAttribute("aria-pressed") !== "true") {
+        failures.push({ check: "investor-sort-interaction", detail: await button.innerText() });
+      }
+    }
+    // Reset to the first sort before testing the same row's round trip.
+    await buttons.first().click();
+    const row = page.locator("[data-superinvestors-holder-row]").first();
+    const investorId = await row.getAttribute("data-superinvestors-holder-id");
+    await row.focus();
+    await page.keyboard.press("Enter");
+    const detail = page.locator("[data-superinvestors-guru-detail-view]");
+    await detail.waitFor({ state: "visible", timeout: 45000 });
+    if (await detail.getAttribute("data-superinvestors-holder-detail-id") !== investorId) {
+      failures.push({ check: "investor-open-identity", detail: `expected=${investorId}` });
+    }
+    await page.locator("[data-superinvestors-guru-back]").click();
+    await row.waitFor({ state: "visible", timeout: 45000 });
+    if (await row.getAttribute("data-superinvestors-holder-id") !== investorId) {
+      failures.push({ check: "investor-return-order", detail: `expected=${investorId}` });
+    }
+    if (new URL(page.url()).searchParams.has("guru")) {
+      failures.push({ check: "investor-return-url", detail: "guru context survived explicit list return" });
+    }
+  } catch (error) {
+    failures.push({ check: "investor-navigation", detail: String(error) });
+  }
+  return failures;
+}
+
 const browser = await chromium.launch({
   headless: true,
   ...(browserChannel ? { channel: browserChannel } : {}),
@@ -4025,6 +4077,7 @@ const captureEmulation = Boolean(outputDir);
 function contextOptionsFor(viewport) {
   return {
     viewport,
+    ...(isolated ? { serviceWorkers: "block" } : {}),
     ...(captureEmulation
       ? {
           hasTouch: true,
@@ -4039,6 +4092,14 @@ function contextOptionsFor(viewport) {
 try {
   for (const { name, viewport } of viewports) {
     const context = await browser.newContext(contextOptionsFor(viewport));
+    if (isolated) {
+      await context.route("**/*", async (requestRoute) => {
+        const url = new URL(requestRoute.request().url());
+        if (url.origin === isolatedOrigin) return requestRoute.continue();
+        blockedExternalRequests.push({ viewport: name, origin: url.origin, path: url.pathname });
+        return requestRoute.abort("blockedbyclient");
+      });
+    }
     await installQaPortfolio(context);
     const page = await context.newPage();
     let routeErrors = [];
@@ -4094,6 +4155,7 @@ try {
         await prepareDynamicRoute(page, route);
         const checks = await collectRouteChecks(page, route);
         result.failures = checks.failures;
+        result.failures.push(...await collectInvestorNavigationChecks(page, route));
         result.viewportWidth = checks.viewportWidth;
         result.scrollWidth = checks.scrollWidth;
         if (route.includes("/superinvestors?tab=stocks")) {
@@ -4172,6 +4234,7 @@ const summary = {
   total: results.length,
   failing: failing.length,
   strictMode,
+  ...(isolated ? { isolated: true, blockedExternalRequests } : {}),
   results,
 };
 
@@ -4205,6 +4268,6 @@ if (outputDir) {
   await writeFile(join(outputDir, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`, "utf8");
 }
 
-if (strictMode && failing.length > 0) {
+if (strictMode && (failing.length > 0 || (isolated && blockedExternalRequests.length > 0))) {
   process.exit(1);
 }

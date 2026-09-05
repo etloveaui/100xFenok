@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import { formatInteger, formatPercent } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
+import { currentJourneyReturnTo } from "@/lib/journey-context";
 import type {
   ByTickerData,
   BuyingPressureData,
@@ -13,7 +14,12 @@ import type {
   NewPositionsData,
   SummaryData,
 } from "@/lib/superinvestors/types";
-import { loadSignalBuyingPressure, loadSignalNewPositions } from "./signalFeeds";
+import {
+  loadSignalBuyingPressure,
+  loadSignalNewPositions,
+  loadSignalScores,
+  type SignalScoreData,
+} from "./signalFeeds";
 import WhoHoldsPanel from "./WhoHoldsPanel";
 import {
   FOLLOW_ROSTER_SIZE,
@@ -72,23 +78,27 @@ function HolderAvatars({ ids, total, summary }: { ids: string[]; total: number; 
   );
 }
 
-function ValueBandLine() {
+function ValueBandLine({ score }: { score?: SignalScoreData }) {
+  const short = score?.shortTermScore ?? null;
+  const long = score?.longTermScore ?? null;
+  const scoreAsOf = score?.asOf ?? null;
+  const scoreTitle = scoreAsOf ? `FENOK 신호 기준 ${scoreAsOf.slice(0, 10)}` : "FENOK 신호 기준일 미제공";
   return (
-    <span className="sup-band-row">
+    <span className="sup-band-row" title={scoreTitle} aria-label={scoreTitle}>
       <span className="sup-mute">밸류 밴드 —</span>
       <span className="sup-epills">
-        <span className="sup-epill">단기 —</span>
-        <span className="sup-epill">장기 —</span>
+        <span className="sup-epill">단기 {formatInteger(short)}</span>
+        <span className="sup-epill">장기 {formatInteger(long)}</span>
       </span>
     </span>
   );
 }
 
 function openStock(ticker: string) {
-  window.location.href = ROUTES.stock(ticker);
+  window.location.href = ROUTES.stock(ticker, currentJourneyReturnTo());
 }
 
-function NewBuyRow({ rank, summary }: { rank: NewBuyRank; summary: SummaryData | null }) {
+function NewBuyRow({ rank, summary, score }: { rank: NewBuyRank; summary: SummaryData | null; score?: SignalScoreData }) {
   const names = rank.buyers.slice(0, 2).map((b) => investorDisplayName(summary, b.investor));
   return (
     <button
@@ -109,7 +119,7 @@ function NewBuyRow({ rank, summary }: { rank: NewBuyRank; summary: SummaryData |
       <span className="sup-srow-change">
         <span className="sup-mute">평균 비중 변화 {rank.avgWeight === null ? "—" : `+${formatPercent(rank.avgWeight, { digits: 1 })}`}</span>
       </span>
-      <ValueBandLine />
+      <ValueBandLine score={score} />
     </button>
   );
 }
@@ -117,9 +127,11 @@ function NewBuyRow({ rank, summary }: { rank: NewBuyRank; summary: SummaryData |
 function PressureRow({
   rank,
   kind,
+  score,
 }: {
   rank: PressureRank;
   kind: "buy" | "sell";
+  score?: SignalScoreData;
 }) {
   return (
     <button
@@ -138,14 +150,13 @@ function PressureRow({
       <span className="sup-srow-change">
         <span className="sup-mute">평균 비중 변화 —</span>
       </span>
-      <ValueBandLine />
+      <ValueBandLine score={score} />
     </button>
   );
 }
 
-// Signal hero: three ranked lists over the loaded 13F feeds. Value band and
-// Edge scores have no ticker-level feed on this page, so rows show "—"
-// instead of a synthesized number — never fabricated.
+// Signal hero: three ranked lists over the loaded 13F feeds. The optional
+// score enrichment is independent of those lists and never fabricates values.
 export default function SignalPanel({
   summary,
   consensus,
@@ -166,11 +177,13 @@ export default function SignalPanel({
   const [attempt, setAttempt] = useState(0);
   const [newPositions, setNewPositions] = useState<NewPositionsData | null | undefined>(undefined);
   const [buyingPressure, setBuyingPressure] = useState<BuyingPressureData | null | undefined>(undefined);
+  const [signalScores, setSignalScores] = useState<Map<string, SignalScoreData> | null | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
     loadSignalNewPositions().then((d) => { if (!cancelled) setNewPositions(d); });
     loadSignalBuyingPressure().then((d) => { if (!cancelled) setBuyingPressure(d); });
+    loadSignalScores().then((d) => { if (!cancelled) setSignalScores(d); });
     return () => { cancelled = true; };
   }, [attempt]);
 
@@ -193,6 +206,26 @@ export default function SignalPanel({
   }, [newPositions, scope, topSet]);
   const increases = useMemo(() => buildPressureRanks(buyingPressure ?? null, "net_buyers"), [buyingPressure]);
   const decreases = useMemo(() => buildPressureRanks(buyingPressure ?? null, "net_sellers"), [buyingPressure]);
+
+  function scoreFor(ticker: string): SignalScoreData | undefined {
+    return signalScores?.get(ticker);
+  }
+
+  const scoreAsOfLabel = useMemo(() => {
+    if (signalScores === undefined) return "확인 중";
+    if (signalScores === null) return "미제공";
+    const dates = new Set(
+      [...newBuys, ...increases, ...decreases]
+        .map((rank) => signalScores.get(rank.ticker)?.asOf?.slice(0, 10) ?? null)
+        .filter((date): date is string => Boolean(date)),
+    );
+    if (dates.size === 1) return [...dates][0];
+    if (dates.size > 1) {
+      const sorted = [...dates].sort();
+      return `${sorted[0]} ~ ${sorted[sorted.length - 1]}`;
+    }
+    return "미제공";
+  }, [signalScores, newBuys, increases, decreases]);
 
   const loading = (!dataReady && !failed) || newPositions === undefined || buyingPressure === undefined;
   const feedsFailed = !loading && (newPositions === null || buyingPressure === null);
@@ -235,6 +268,9 @@ export default function SignalPanel({
             상위 컨빅션 {formatInteger(FOLLOW_ROSTER_SIZE)}명
           </button>
         </div>
+        <span className="sup-mute" aria-label={`FENOK 신호 기준일 ${scoreAsOfLabel}`}>
+          FENOK 신호 기준일 {scoreAsOfLabel}
+        </span>
       </div>
 
       <div className="sup-signal-grid">
@@ -249,7 +285,7 @@ export default function SignalPanel({
             <PanelHeader eyebrow="New buys" title="신규 매수 상위" right={<Pill>신규</Pill>} />
             {newBuys.length > 0 ? (
               newBuys.map((rank) => (
-                <NewBuyRow key={rank.ticker} rank={rank} summary={summary} />
+                <NewBuyRow key={rank.ticker} rank={rank} summary={summary} score={scoreFor(rank.ticker)} />
               ))
             ) : !loading && !failed && newPositions !== null ? (
               <EmptyState reason="표시할 신규 매수 종목이 없습니다" nextRefresh="다음 분기 공시 반영 후 갱신" />
@@ -279,7 +315,7 @@ export default function SignalPanel({
               <p className="sup-unfiltered sup-mute">팔로우 필터 비적용 · 전체 범위에서 확인</p>
             ) : increases.length > 0 ? (
               increases.map((rank) => (
-                <PressureRow key={rank.ticker} rank={rank} kind="buy" />
+                <PressureRow key={rank.ticker} rank={rank} kind="buy" score={scoreFor(rank.ticker)} />
               ))
             ) : !loading && !failed && buyingPressure !== null ? (
               <EmptyState reason="표시할 증가 상위 종목이 없습니다" nextRefresh="다음 분기 공시 반영 후 갱신" />
@@ -309,7 +345,7 @@ export default function SignalPanel({
               <p className="sup-unfiltered sup-mute">팔로우 필터 비적용 · 전체 범위에서 확인</p>
             ) : decreases.length > 0 ? (
               decreases.map((rank) => (
-                <PressureRow key={rank.ticker} rank={rank} kind="sell" />
+                <PressureRow key={rank.ticker} rank={rank} kind="sell" score={scoreFor(rank.ticker)} />
               ))
             ) : !loading && !failed && buyingPressure !== null ? (
               <EmptyState reason="표시할 감소 상위 종목이 없습니다" nextRefresh="다음 분기 공시 반영 후 갱신" />

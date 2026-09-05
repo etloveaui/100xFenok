@@ -343,6 +343,20 @@
   }
 }
 
+/* Intermediate tablets have enough room for a readable list. Let the
+ * supporting overlap/network rail follow it at the same content width. */
+@media (min-width: 761px) and (max-width: 1199px) {
+  .sup-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sup-rail {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
 @media (max-width: 760px) {
   .sup {
     padding: 12px 12px 28px;
@@ -352,19 +366,264 @@
     min-height: 44px;
   }
 
-  /* slice 9 mobile-390: holdings rows meet the 44px target. */
-  .sup-hold-table td,
-  .sup-holder-name-cell {
-    height: 44px;
+  /* Keep one data map and turn its five fields into labelled cards. This
+   * removes the hidden horizontal-only table on phones while preserving the
+   * row's click and keyboard behavior. */
+  .sup-hold-scroll {
+    overflow-x: visible;
+  }
+
+  .fnk-shell .sup-hold-scroll.scroll-hint-x {
+    overflow-x: visible;
+    box-shadow: none;
+  }
+
+  .fnk-shell .sup-hold-scroll.scroll-hint-x::after {
+    display: none;
+  }
+
+  .sup-hold-table {
+    display: block;
+    min-width: 0;
+  }
+
+  .sup-hold-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sup-hold-table tbody {
+    display: grid;
+    gap: 8px;
+  }
+
+  .sup-hold-table tr.sup-hold-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    min-height: 0;
+    padding: 6px 10px;
+    border: 1px solid var(--fnk-neutral-200);
+    border-radius: 8px;
+    background: var(--fnk-color-card);
+  }
+
+  .sup-hold-table th,
+  .sup-hold-table td {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    min-width: 0;
+    min-height: 52px;
+    height: auto;
+    padding: 7px 4px;
+    text-align: right;
+    white-space: normal;
+  }
+
+  .sup-hold-table th::before,
+  .sup-hold-table td::before {
+    content: attr(data-label);
+    align-self: stretch;
+    margin-bottom: 3px;
+    color: var(--fnk-neutral-500);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: right;
+  }
+
+  .sup-hold-table .sup-holder-name-cell {
+    grid-column: 1 / -1;
+    align-items: flex-start;
+    min-height: 52px;
+    padding-inline: 4px;
+    text-align: left;
+  }
+
+  .sup-hold-table .sup-holder-name-cell::before {
+    align-self: flex-start;
+    text-align: left;
   }
 
   .sup-holder-name {
-    min-height: 44px;
-    justify-content: center;
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    border-left: 0;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .sup-holder-name-text {
+    max-width: 100%;
+    white-space: normal;
+    line-height: 1.3;
+  }
+
+  .sup-holder-sub {
+    flex-wrap: wrap;
+  }
+
+  .sup-hold-table td[data-label="최대 비중"] {
+    align-items: flex-end;
+  }
+
+  .sup-hold-table .sup-top {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px 7px;
+  }
+
+  .sup-hold-row:hover {
+    background: var(--fnk-color-card);
+  }
+
+  .sup-hold-row:focus-visible {
+    outline: 2px solid var(--fnk-brand-interactive);
+    outline-offset: 2px;
   }
 
   .sup-detail-facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The investor profile presents identity and filing context as a compact
+ * evidence strip. Panels below retain their existing content and states while
+ * losing the nested oversized card treatment. */
+.sup-guru-shell {
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 10px;
+  background: var(--fnk-color-card);
+  box-shadow: none;
+}
+
+.sup-guru-back {
+  border-color: var(--fnk-neutral-200);
+  background: var(--fnk-color-card);
+  color: var(--fnk-neutral-700);
+}
+
+.sup-guru-back:hover {
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-brand-interactive);
+}
+
+.sup-guru-profile {
+  border-top: 1px solid var(--fnk-neutral-200);
+  background: var(--fnk-neutral-50);
+}
+
+.sup-guru-disclosures {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.sup-guru-disclosure {
+  min-width: 0;
+  padding: 9px 11px;
+  border-left: 3px solid var(--fnk-neutral-300);
+  border-radius: 6px;
+  background: var(--fnk-color-card);
+}
+
+.sup-guru-disclosure-quarter {
+  border-left-color: var(--fnk-color-warn);
+  background: var(--fnk-color-warn-soft);
+}
+
+.sup-guru-disclosure-lag {
+  border-left-color: var(--fnk-color-info);
+  background: var(--fnk-color-info-soft);
+}
+
+.sup-guru-disclosure-label {
+  margin: 0;
+  color: var(--fnk-neutral-500);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.sup-guru-disclosure-value {
+  margin: 4px 0 0;
+  color: var(--fnk-neutral-900);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.sup-guru-disclosure-note,
+.sup-guru-accession {
+  margin: 4px 0 0;
+  color: var(--fnk-neutral-500);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.sup-guru-sec-link {
+  min-height: 32px;
+  align-items: center;
+  color: var(--fnk-brand-interactive);
+}
+
+.sup-guru-sec-link:hover {
+  color: var(--fnk-brand-interactive-2);
+}
+
+.fnk-shell .sup-guru-panel {
+  border-color: var(--fnk-neutral-200);
+  border-radius: 8px;
+  background: var(--fnk-color-card);
+  box-shadow: none;
+}
+
+@media (max-width: 760px) {
+  .fnk-shell .sup-guru-shell {
+    padding: 12px;
+  }
+
+  .fnk-shell .sup-guru-profile {
+    padding: 12px;
+  }
+
+  .sup-guru-disclosures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "quarter lag"
+      "filing filing";
+  }
+
+  .sup-guru-disclosure-quarter { grid-area: quarter; }
+  .sup-guru-disclosure-filing {
+    grid-area: filing;
+    grid-column: 1 / -1;
+  }
+  .sup-guru-disclosure-lag { grid-area: lag; }
+}
+
+/* SEC and Back remain reachable at the same physical size on phones and
+ * coarse tablets. */
+@media (pointer: coarse), (any-pointer: coarse) {
+  .sup-guru-back,
+  .sup-guru-sec-link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -1098,9 +1357,24 @@
   }
 }
 
-/* Touch tablets retain the investor table while making sort controls
- * comfortably actionable. Fine-pointer desktop keeps the compact tabs. */
+/* Touch tablets use measured 44px controls for navigation and key detail
+ * actions. Fine-pointer desktop keeps the compact tabs. */
 @media (pointer: coarse) and (min-width: 761px), (any-pointer: coarse) and (min-width: 761px) {
+  .sup-tab,
+  .sup-guru-back,
+  .sup-guru-sec-link,
+  .cpw5-super-desktop-table a {
+    min-height: 44px;
+  }
+
+  .sup-tab,
+  .sup-guru-back,
+  .sup-guru-sec-link,
+  .cpw5-super-desktop-table a {
+    display: inline-flex;
+    align-items: center;
+  }
+
   .sup-sort-toggle {
     gap: 6px;
     flex-wrap: wrap;
