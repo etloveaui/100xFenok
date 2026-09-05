@@ -227,11 +227,11 @@ export default function WhoHoldsPanel({
             >
               <div><dt>{result.holderCount > 0 ? "보유 투자자" : "13F 근거 연결"}</dt><dd className="tabular-nums">{formatInteger(result.holderCount)}명</dd></div>
               <div><dt>신규</dt><dd className="tabular-nums sup-up">{result.change || newPositions ? `${formatInteger(result.newCount)}명` : "—"}</dd></div>
-              <div><dt>{result.change ? "비중확대" : "주식수 증가 투자자"}</dt><dd className="tabular-nums sup-up">{result.change ? formatInteger(result.change.increased_count) : result.pressure ? `${formatInteger(result.pressure.net_buyers)}명` : "—"}</dd></div>
-              <div><dt>{result.change ? "비중축소" : "주식수 감소 투자자"}</dt><dd className="tabular-nums sup-dn">{result.change ? formatInteger(result.change.decreased_count) : result.pressure ? `${formatInteger(result.pressure.net_sellers)}명` : "—"}</dd></div>
+              <div><dt>{result.change ? "비중확대" : "주식수 증가 투자자"}</dt><dd className="tabular-nums sup-up">{result.change ? `${formatInteger(result.change.increased_count)}명` : result.pressure ? `${formatInteger(result.pressure.net_buyers)}명` : "—"}</dd></div>
+              <div><dt>{result.change ? "비중축소" : "주식수 감소 투자자"}</dt><dd className="tabular-nums sup-dn">{result.change ? `${formatInteger(result.change.decreased_count)}명` : result.pressure ? `${formatInteger(result.pressure.net_sellers)}명` : "—"}</dd></div>
               {result.change ? <div><dt>평균 비중 변화</dt><dd className="tabular-nums">{formatWeightDelta(result.change.mean_weight_delta)}</dd></div> : null}
               {result.change ? <div><dt>비교 가능</dt><dd className="tabular-nums">{formatInteger(result.change.comparable_count)}명</dd></div> : null}
-              {result.change ? <div><dt>청산</dt><dd className="tabular-nums sup-dn">{formatInteger(result.change.sold_count)}</dd></div> : null}
+              {result.change ? <div><dt>청산</dt><dd className="tabular-nums sup-dn">{formatInteger(result.change.sold_count)}명</dd></div> : null}
               <div><dt>TOP10 편입 수</dt><dd className="tabular-nums">{result.top10Count === null ? "—" : formatInteger(result.top10Count)}</dd></div>
             </dl>
             {result.band ? (

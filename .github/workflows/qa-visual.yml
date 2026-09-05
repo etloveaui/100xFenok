@@ -106,7 +106,7 @@ jobs:
           QA_BASE_URL: http://127.0.0.1:3107
           QA_MOBILE_UX_ISOLATED: "1"
           QA_MOBILE_UX_VIEWPORTS: narrow,mobile,tablet-portrait,tablet-mid,tablet,tablet-landscape
-          QA_MOBILE_UX_ROUTES: /superinvestors,/superinvestors?tab=investors,/superinvestors?tab=stocks,/superinvestors?guru=blackrock,/superinvestors?tab=trades,/superinvestors?tab=insights,/superinvestors?tab=graph,/screener,/screener?mode=analyze
+          QA_MOBILE_UX_ROUTES: ${{ inputs.responsive_routes || '/superinvestors,/superinvestors?tab=investors,/superinvestors?tab=stocks,/superinvestors?guru=blackrock,/superinvestors?tab=trades,/superinvestors?tab=insights,/superinvestors?tab=graph,/screener,/screener?mode=analyze' }}
           QA_MOBILE_UX_OUTPUT_DIR: test-results/responsive
           NEXT_TELEMETRY_DISABLED: "1"
         run: |

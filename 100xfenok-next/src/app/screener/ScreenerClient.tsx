@@ -427,7 +427,7 @@ function GuruHolderBadge({
       data-testid="screener-guru-badge"
       data-ticker={stock.ticker}
       data-superinvestors-href={ROUTES.superinvestorsByTicker(stock.ticker)}
-      className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-violet-200 bg-white px-2 py-px text-[9px] font-black text-violet-700 transition hover:border-violet-400"
+      className="touch-target inline-flex shrink-0 items-center justify-center rounded-full border border-violet-200 bg-white px-2 py-px text-[9px] font-black text-violet-700 transition hover:border-violet-400"
       title={`${stock.ticker} 13F 보유 투자자 ${holders.toLocaleString("ko-KR")}명 · 투자자 화면에서 상세 보기`}
       onClick={(event) => {
         onBeforeNavigate?.();
