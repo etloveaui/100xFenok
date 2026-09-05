@@ -69,11 +69,14 @@ jobs:
           FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
           NEXT_TELEMETRY_DISABLED: "1"
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git rev-parse --show-toplevel
           node scripts/build-ink4-contrast-fixture.mjs
           npm run qa:superinvestor-signal-scores
           npm run build:runtime
 
       - name: Run isolated investor UI verification
+        shell: bash
         if: ${{ inputs.suite == 'investor-isolated' }}
         env:
           CI: "true"
