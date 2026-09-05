@@ -1,46 +1,43 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "damodaran",
-  "updated_at": "2026-08-30T01:17:17.521Z",
-  "retry_set": [
-    "damodaran"
-  ],
+  "updated_at": "2026-09-05T14:03:11.997Z",
+  "retry_set": [],
   "items": {
     "damodaran": {
       "key": "damodaran",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/damodaran/lkg/damodaran.json",
-        "payload_sha256": "637b144ecbab6d23e515f8b025e0048f41ff4fbec9bd63086ced60e981c375ef",
-        "source_as_of": "2026-04-01"
+        "path": "data/admin/damodaran/current/damodaran.json",
+        "payload_sha256": "4e2a4a7748afe7350438cbb45c85b1c146c1532c5b369c15b7585b100e151945",
+        "source_as_of": "2026-07-01"
       },
-      "updated_at": "2026-08-30T01:17:17.521Z",
+      "updated_at": "2026-09-05T14:03:11.997Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "637b144ecbab6d23e515f8b025e0048f41ff4fbec9bd63086ced60e981c375ef",
-        "source_as_of": "2026-04-01",
-        "run_id": "30249876677",
+        "payload_sha256": "4e2a4a7748afe7350438cbb45c85b1c146c1532c5b369c15b7585b100e151945",
+        "source_as_of": "2026-07-01",
+        "run_id": "33970137278",
         "run_attempt": 1,
-        "observed_at": "2026-07-27T08:28:35.146Z"
+        "observed_at": "2026-09-05T14:03:11.997Z"
       },
       "lkg": {
         "path": "data/admin/damodaran/lkg/damodaran.json",
         "payload_sha256": "637b144ecbab6d23e515f8b025e0048f41ff4fbec9bd63086ced60e981c375ef",
         "source_as_of": "2026-04-01"
       },
-      "latest_failure": {
+      "recovered_from_run_id": "31404207078",
+      "recovered_at": "2026-09-05T14:03:11.997Z",
+      "recovery_run_id": "33970137278",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "31404207078",
         "run_attempt": 1,
         "observed_at": "2026-08-10T15:33:39.862Z",
         "reason": "unexpected_error"
-      },
-      "latest_promotion_deferral": {
-        "run_id": "33285309104",
-        "run_attempt": 1,
-        "observed_at": "2026-08-30T01:17:17.521Z",
-        "reason": "recovery_not_advanced_by_provider"
       }
     }
   }
