@@ -15,6 +15,7 @@ on:
         options:
           - all
           - journey
+          - responsive
 
 concurrency:
   group: qa-visual-${{ github.ref }}
@@ -31,13 +32,13 @@ jobs:
   visual:
     name: visual-${{ matrix.project }}
     runs-on: ubuntu-latest
-    continue-on-error: ${{ inputs.suite != 'journey' }}
+    continue-on-error: ${{ inputs.suite == 'all' }}
     container:
       image: mcr.microsoft.com/playwright:v1.61.1-noble
     strategy:
       fail-fast: false
       matrix:
-        project: [desktop-1440, mobile-390]
+        project: ${{ fromJSON(inputs.suite == 'responsive' && '["mobile", "tablet"]' || '["desktop-1440", "mobile-390"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,11 +72,21 @@ jobs:
           case "$SUITE" in
             all) npm run qa:visual -- --project="$PROJECT";;
             journey) npm run qa:visual -- tests/visual/journey.spec.ts --project="$PROJECT";;
+            responsive)
+              case "$PROJECT" in
+                mobile) export QA_MOBILE_UX_VIEWPORTS="narrow,mobile";;
+                tablet) export QA_MOBILE_UX_VIEWPORTS="tablet-portrait,tablet-mid,tablet,tablet-landscape";;
+                *) echo "unsupported responsive viewport group" >&2; exit 64;;
+              esac
+              export QA_MOBILE_UX_ROUTES="/,/screener,/screener?mode=analyze,/stock/NVDA,/stock/NVDA?tab=financials,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock,/etfs,/etfs/SPY,/market-valuation,/regime,/sectors,/portfolio,/macro-chart"
+              export QA_MOBILE_UX_OUTPUT_DIR="test-results/responsive"
+              npm run qa:mobile-ux
+              ;;
             *) echo "unsupported visual suite" >&2; exit 64;;
           esac
 
       - name: Upload visual report
-        if: always()
+        if: always() && inputs.suite != 'responsive'
         uses: actions/upload-artifact@v4
         with:
           name: visual-report-${{ matrix.project }}
@@ -83,9 +94,17 @@ jobs:
           retention-days: 7
 
       - name: Upload visual diffs
-        if: always()
+        if: always() && inputs.suite != 'responsive'
         uses: actions/upload-artifact@v4
         with:
           name: visual-results-${{ matrix.project }}
           path: 100xfenok-next/test-results/visual/
+          retention-days: 7
+
+      - name: Upload responsive evidence
+        if: always() && inputs.suite == 'responsive'
+        uses: actions/upload-artifact@v4
+        with:
+          name: responsive-${{ matrix.project }}
+          path: 100xfenok-next/test-results/responsive/
           retention-days: 7

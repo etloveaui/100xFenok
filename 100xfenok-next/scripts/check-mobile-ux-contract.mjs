@@ -1,9 +1,14 @@
 import { chromium } from "playwright";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join, resolve } from "node:path";
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
+const outputDir = process.env.QA_MOBILE_UX_OUTPUT_DIR?.trim()
+  ? resolve(process.env.QA_MOBILE_UX_OUTPUT_DIR.trim())
+  : "";
 const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-console,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/changes,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/screener?mode=analyze,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock")
   .split(",")
   .map((route) => route.trim())
@@ -12,7 +17,10 @@ const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/macro-chart,/multi
 const viewportCatalog = {
   mobile: { width: 390, height: 844 },
   narrow: { width: 375, height: 812 },
+  "tablet-portrait": { width: 768, height: 1024 },
+  "tablet-mid": { width: 820, height: 1180 },
   tablet: { width: 1024, height: 1366 },
+  "tablet-landscape": { width: 1180, height: 820 },
   desktop: { width: 1280, height: 900 },
   wide: { width: 1440, height: 900 },
 };
@@ -75,14 +83,16 @@ async function prepareDynamicRoute(page, route) {
   const pathname = new URL(route, baseUrl).pathname.replace(/\/+$/, "") || "/";
 
   const readySelectors = {
-    "/etfs": ".etf-mobile-card",
+    // The mobile list is hidden above 760px; include the desktop table so
+    // tablet runs wait on the surface that is actually rendered.
+    "/etfs": ".etf-mobile-card, .etf-table-desktop",
     "/market-valuation": ".mv-trow",
     "/regime": "[data-regime-axis-summary-card]",
     "/sectors": "[data-sectors-flow-rows]",
   };
   const readySelector = readySelectors[pathname];
   if (readySelector) {
-    await page.locator(`${readySelector}:visible`).first().waitFor({ state: "visible", timeout: 45_000 });
+    await page.locator(readySelector).filter({ visible: true }).first().waitFor({ state: "visible", timeout: 45_000 });
   }
 
   if (pathname === "/etfs") {
@@ -126,6 +136,54 @@ async function prepareDynamicRoute(page, route) {
   if (pathname === "/superinvestors" && route.includes("guru=")) {
     await page.locator("[data-superinvestors-holder-detail]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
   }
+}
+
+function routeArtifactSlug(route) {
+  const url = new URL(route, baseUrl);
+  const value = `${url.pathname}${url.search}`
+    .replace(/^\/+|\/+$/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return value || "home";
+}
+
+async function captureBoundedScreenshots(page, route, viewportName, routeIndex) {
+  if (!outputDir) return null;
+
+  const routeDir = join(
+    outputDir,
+    viewportName,
+    `route-${String(routeIndex + 1).padStart(2, "0")}-${routeArtifactSlug(route)}`,
+  );
+  await mkdir(routeDir, { recursive: true });
+
+  const metrics = await page.evaluate(() => ({
+    scrollHeight: Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight ?? 0),
+    viewportHeight: window.innerHeight,
+  }).catch(() => ({ scrollHeight: 0, viewportHeight: 0 })));
+  const bottom = Math.max(0, metrics.scrollHeight - metrics.viewportHeight);
+  const positions = [
+    ["top", 0],
+    ["middle", Math.max(0, Math.round(bottom / 2))],
+    ["bottom", bottom],
+  ];
+  const screenshots = {};
+  const errors = [];
+
+  for (const [label, scrollY] of positions) {
+    const screenshotPath = join(routeDir, `${label}.png`);
+    try {
+      await page.evaluate((nextScrollY) => window.scrollTo(0, nextScrollY), scrollY);
+      await page.waitForTimeout(100);
+      await page.screenshot({ path: screenshotPath, animations: "disabled" });
+      screenshots[label] = screenshotPath;
+    } catch (error) {
+      errors.push({ label, detail: String(error) });
+    }
+  }
+
+  await page.evaluate(() => window.scrollTo(0, 0)).catch(() => {});
+  return { paths: screenshots, errors };
 }
 
 async function collectRouteChecks(page, route) {
@@ -3964,20 +4022,45 @@ const browser = await chromium.launch({
   ...(browserExecutablePath ? { executablePath: browserExecutablePath } : {}),
 });
 const results = [];
+const captureEmulation = Boolean(outputDir);
+
+function contextOptionsFor(viewport) {
+  return {
+    viewport,
+    ...(captureEmulation
+      ? {
+          hasTouch: true,
+          isMobile: viewport.width < 768,
+          deviceScaleFactor: 1,
+          reducedMotion: "reduce",
+        }
+      : {}),
+  };
+}
 
 try {
   for (const { name, viewport } of viewports) {
-    const context = await browser.newContext({ viewport });
+    const context = await browser.newContext(contextOptionsFor(viewport));
     await installQaPortfolio(context);
     const page = await context.newPage();
 
-    for (const route of routes) {
+    for (const [routeIndex, route] of routes.entries()) {
+      const emulation = {
+        hasTouch: captureEmulation,
+        isMobile: captureEmulation && viewport.width < 768,
+        deviceScaleFactor: captureEmulation ? 1 : null,
+        reducedMotion: captureEmulation ? "reduce" : null,
+      };
       const result = {
         viewport: name,
         route,
         status: null,
         failures: [],
       };
+      if (outputDir) {
+        result.viewportSize = viewport;
+        result.emulation = emulation;
+      }
 
       try {
         const response = await page.goto(routeUrl(route), {
@@ -4030,6 +4113,14 @@ try {
         result.failures = [{ check: "navigation", detail: String(error) }];
       }
 
+      if (outputDir) {
+        try {
+          result.screenshotPaths = await captureBoundedScreenshots(page, route, name, routeIndex);
+        } catch (error) {
+          result.screenshotPaths = { paths: {}, errors: [{ detail: String(error) }] };
+        }
+      }
+
       results.push(result);
     }
 
@@ -4047,7 +4138,35 @@ const summary = {
   results,
 };
 
+if (outputDir) {
+  Object.assign(summary, {
+    browser: browserChannel || (browserExecutablePath ? browserExecutablePath : "Playwright Chromium"),
+    emulation: {
+      hasTouch: captureEmulation,
+      isMobileRule: "viewport width < 768",
+      deviceScaleFactor: 1,
+      reducedMotion: "reduce",
+    },
+    viewports: viewports.map(({ name, viewport }) => ({
+      name,
+      ...viewport,
+      emulation: {
+        hasTouch: true,
+        isMobile: viewport.width < 768,
+        deviceScaleFactor: 1,
+        reducedMotion: "reduce",
+      },
+    })),
+    outputDir,
+  });
+}
+
 console.log(JSON.stringify(summary, null, 2));
+
+if (outputDir) {
+  await mkdir(outputDir, { recursive: true });
+  await writeFile(join(outputDir, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`, "utf8");
+}
 
 if (strictMode && failing.length > 0) {
   process.exit(1);
