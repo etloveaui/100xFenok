@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-data-health-kpi/v2",
-  "generated_at": "2026-09-05T19:13:07.403Z",
+  "generated_at": "2026-09-05T20:04:37.130Z",
   "status": "degraded",
   "status_label": "저하",
   "status_message": "12 required lane(s) are not ready; healthy lanes may still publish.",
@@ -21,15 +21,20 @@
   },
   "outcome_watchdog": {
     "schema_version": "lane-outcome-watchdog/v1",
-    "evaluated_at": "2026-09-05T19:13:07.403Z",
-    "basis": "canonical_file_source_as_of",
+    "evaluated_at": "2026-09-05T20:04:37.130Z",
+    "basis": "per_row_advance_basis",
     "threshold_multiplier": 1.5,
     "status": "overdue",
     "counts": {
       "monitored": 22,
-      "current": 8,
-      "overdue": 11,
-      "unobservable": 3
+      "current": 16,
+      "overdue": 6,
+      "unobservable": 0
+    },
+    "advance_bases": {
+      "canonical_file_source_as_of": 19,
+      "publish_outcome": 1,
+      "canonical_file_generated_at": 2
     },
     "rows": [
       {
@@ -38,8 +43,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-05",
-        "age_hours": 19.22,
-        "state": "current"
+        "age_hours": 20.08,
+        "state": "current",
+        "source_as_of": "2026-09-05",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "utc"
       },
       {
         "lane_id": "fred_yardeni",
@@ -47,8 +55,11 @@
         "cadence_hours": 168,
         "threshold_hours": 252,
         "last_advance": "2026-08-28",
-        "age_hours": 211.22,
-        "state": "current"
+        "age_hours": 212.08,
+        "state": "current",
+        "source_as_of": "2026-08-28",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "utc"
       },
       {
         "lane_id": "fdic_tier1",
@@ -56,8 +67,11 @@
         "cadence_hours": 2160,
         "threshold_hours": 3240,
         "last_advance": "2026-06-30",
-        "age_hours": 1627.22,
-        "state": "current"
+        "age_hours": 1628.08,
+        "state": "current",
+        "source_as_of": "2026-06-30",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "us_federal_business"
       },
       {
         "lane_id": "treasury_tga",
@@ -65,8 +79,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-03",
-        "age_hours": 67.22,
-        "state": "overdue"
+        "age_hours": 24,
+        "state": "current",
+        "source_as_of": "2026-09-03",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "us_federal_business"
       },
       {
         "lane_id": "defillama_stablecoins",
@@ -74,35 +91,47 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-05",
-        "age_hours": 19.22,
-        "state": "current"
+        "age_hours": 20.08,
+        "state": "current",
+        "source_as_of": "2026-09-05",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "utc"
       },
       {
         "lane_id": "yahoo_etf_fallback",
         "cadence_kind": "daily",
         "cadence_hours": 24,
         "threshold_hours": 36,
-        "last_advance": null,
-        "age_hours": null,
-        "state": "unobservable"
+        "last_advance": "2026-09-04T23:05:37Z",
+        "age_hours": 20.98,
+        "state": "current",
+        "source_as_of": null,
+        "advance_basis": "canonical_file_generated_at",
+        "calendar": "utc"
       },
       {
         "lane_id": "stockanalysis_etf_universe",
         "cadence_kind": "daily",
         "cadence_hours": 24,
         "threshold_hours": 36,
-        "last_advance": null,
-        "age_hours": null,
-        "state": "unobservable"
+        "last_advance": "2026-08-23T23:41:24Z",
+        "age_hours": 308.39,
+        "state": "overdue",
+        "source_as_of": null,
+        "advance_basis": "canonical_file_generated_at",
+        "calendar": "utc"
       },
       {
         "lane_id": "stockanalysis_etf_detail",
         "cadence_kind": "daily",
         "cadence_hours": 24,
         "threshold_hours": 36,
-        "last_advance": null,
-        "age_hours": null,
-        "state": "unobservable"
+        "last_advance": "2026-09-05T02:29:08.285Z",
+        "age_hours": 17.59,
+        "state": "current",
+        "source_as_of": null,
+        "advance_basis": "publish_outcome",
+        "calendar": "utc"
       },
       {
         "lane_id": "stockanalysis_stock_financial",
@@ -110,8 +139,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-04T23:05:14Z",
-        "age_hours": 20.13,
-        "state": "current"
+        "age_hours": 20.99,
+        "state": "current",
+        "source_as_of": "2026-09-04T23:05:14Z",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "utc"
       },
       {
         "lane_id": "sentiment",
@@ -119,8 +151,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-04",
-        "age_hours": 43.22,
-        "state": "overdue"
+        "age_hours": 0,
+        "state": "current",
+        "source_as_of": "2026-09-04",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "us_trading"
       },
       {
         "lane_id": "nasdaq_giw_sox",
@@ -128,8 +163,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-04",
-        "age_hours": 43.22,
-        "state": "overdue"
+        "age_hours": 0,
+        "state": "current",
+        "source_as_of": "2026-09-04",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "us_trading"
       },
       {
         "lane_id": "us_indices_daily",
@@ -137,8 +175,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-04",
-        "age_hours": 43.22,
-        "state": "overdue"
+        "age_hours": 0,
+        "state": "current",
+        "source_as_of": "2026-09-04",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "us_trading"
       },
       {
         "lane_id": "oecd_cli",
@@ -146,8 +187,11 @@
         "cadence_hours": 720,
         "threshold_hours": 1080,
         "last_advance": "2026-06-01",
-        "age_hours": 2323.22,
-        "state": "overdue"
+        "age_hours": 2324.08,
+        "state": "overdue",
+        "source_as_of": "2026-06-01",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "utc"
       },
       {
         "lane_id": "krx",
@@ -155,8 +199,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-02",
-        "age_hours": 91.22,
-        "state": "overdue"
+        "age_hours": 92.08,
+        "state": "overdue",
+        "source_as_of": "2026-09-02",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "utc"
       },
       {
         "lane_id": "slickcharts",
@@ -164,8 +211,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-08-30",
-        "age_hours": 163.22,
-        "state": "overdue"
+        "age_hours": 164.08,
+        "state": "overdue",
+        "source_as_of": "2026-08-30",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "utc"
       },
       {
         "lane_id": "edgar_filings",
@@ -173,8 +223,11 @@
         "cadence_hours": 168,
         "threshold_hours": 252,
         "last_advance": "2026-08-17",
-        "age_hours": 475.22,
-        "state": "overdue"
+        "age_hours": 476.08,
+        "state": "overdue",
+        "source_as_of": "2026-08-17",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "us_federal_business"
       },
       {
         "lane_id": "finra_short_volume",
@@ -182,8 +235,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-04",
-        "age_hours": 43.22,
-        "state": "overdue"
+        "age_hours": 0,
+        "state": "current",
+        "source_as_of": "2026-09-04",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "us_trading"
       },
       {
         "lane_id": "finra_ats_weekly",
@@ -191,8 +247,11 @@
         "cadence_hours": 168,
         "threshold_hours": 252,
         "last_advance": "2026-07-27",
-        "age_hours": 979.22,
-        "state": "overdue"
+        "age_hours": 980.08,
+        "state": "overdue",
+        "source_as_of": "2026-07-27",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "utc"
       },
       {
         "lane_id": "occ_options_volume",
@@ -200,8 +259,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-04",
-        "age_hours": 43.22,
-        "state": "overdue"
+        "age_hours": 0,
+        "state": "current",
+        "source_as_of": "2026-09-04",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "us_trading"
       },
       {
         "lane_id": "yahoo_private_options",
@@ -209,8 +271,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-05T05:55:33.431Z",
-        "age_hours": 13.29,
-        "state": "current"
+        "age_hours": 0,
+        "state": "current",
+        "source_as_of": "2026-09-05T05:55:33.431Z",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "us_trading"
       },
       {
         "lane_id": "apewisdom_attention",
@@ -218,8 +283,11 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-05",
-        "age_hours": 19.22,
-        "state": "current"
+        "age_hours": 20.08,
+        "state": "current",
+        "source_as_of": "2026-09-05",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "utc"
       },
       {
         "lane_id": "gdelt_news_tone",
@@ -227,15 +295,18 @@
         "cadence_hours": 24,
         "threshold_hours": 36,
         "last_advance": "2026-09-04T17:32:00.000Z",
-        "age_hours": 25.69,
-        "state": "current"
+        "age_hours": 26.54,
+        "state": "current",
+        "source_as_of": "2026-09-04T17:32:00.000Z",
+        "advance_basis": "canonical_file_source_as_of",
+        "calendar": "utc"
       }
     ]
   },
   "runtime": {
     "projection": "kpi_runtime_projection.v2",
     "built_at": "2026-09-05T13:02:33.628Z",
-    "evaluated_at": "2026-09-05T19:13:07.403Z",
+    "evaluated_at": "2026-09-05T20:04:37.130Z",
     "verdict": "degraded",
     "slot_status": "degraded",
     "status_message": "15 retained missed slot(s) recovered by later authoritative ready full snapshot(s). Recovery evidence: dispatch_snapshot:5, scheduled_slot:10.",
@@ -251,7 +322,7 @@
     "fetch_cron_skip_detection": {
       "schema_version": "fetch-cron-attempt-coverage/v1",
       "mode": "shadow",
-      "evaluated_at": "2026-09-05T19:13:03.441Z",
+      "evaluated_at": "2026-09-05T20:04:33.928Z",
       "status": "warning",
       "deployment_blocking": false,
       "counts": {
@@ -278,7 +349,7 @@
       {
         "family": "computed-signals",
         "result": "resumed",
-        "observed_at": "2026-09-05T18:18:07.812Z",
+        "observed_at": "2026-09-05T19:47:23.360Z",
         "gate_after": "ok"
       },
       {
@@ -404,7 +475,7 @@
       {
         "family": "treasury-tga",
         "result": "resumed",
-        "observed_at": "2026-09-05T14:17:51.591Z",
+        "observed_at": "2026-09-05T19:45:26.613Z",
         "gate_after": "ok"
       },
       {
@@ -416,7 +487,7 @@
       {
         "family": "yahoo-ticker-macro",
         "result": "published",
-        "observed_at": "2026-09-05T16:48:13.340Z",
+        "observed_at": "2026-09-05T19:01:29.315Z",
         "gate_after": "ok"
       }
     ]
@@ -684,7 +755,7 @@
               "collection_fresh_count": 0,
               "stale_count": 23,
               "collected_at_floor": "2026-09-02T04:32:55Z",
-              "collection_age_hours": 86.67,
+              "collection_age_hours": 87.528,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -883,7 +954,7 @@
               "collection_fresh_count": 0,
               "stale_count": 16,
               "collected_at_floor": "2026-09-02T04:33:09Z",
-              "collection_age_hours": 86.666,
+              "collection_age_hours": 87.524,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -940,7 +1011,7 @@
               "collection_fresh_count": 0,
               "stale_count": 3,
               "collected_at_floor": "2026-09-02T04:33:18Z",
-              "collection_age_hours": 86.664,
+              "collection_age_hours": 87.522,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -5478,7 +5549,7 @@
               "collection_fresh_count": 0,
               "stale_count": 5,
               "collected_at_floor": "2026-09-02T04:32:55Z",
-              "collection_age_hours": 86.67,
+              "collection_age_hours": 87.528,
               "max_age_hours": 50,
               "reason": "provider publishes no date; recency = collection time"
             },
@@ -5546,7 +5617,7 @@
       "calendar": "wall_clock",
       "max_staleness": 50,
       "required": false,
-      "age": 0.01,
+      "age": 0.87,
       "status": "ready"
     },
     {
@@ -5568,7 +5639,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 150.48,
+      "age": 151.34,
       "status": "ready"
     },
     {
@@ -5579,7 +5650,7 @@
       "calendar": "wall_clock",
       "max_staleness": 174,
       "required": true,
-      "age": 149.79,
+      "age": 150.65,
       "status": "ready"
     },
     {
@@ -5590,7 +5661,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 40.71,
+      "age": 41.57,
       "status": "ready"
     },
     {
@@ -5601,7 +5672,7 @@
       "calendar": "wall_clock",
       "max_staleness": 750,
       "required": true,
-      "age": 321.99,
+      "age": 322.85,
       "status": "ready"
     }
   ],
@@ -5662,7 +5733,7 @@
     },
     {
       "id": "data_supply_detection_floor",
-      "generated_at": "2026-09-05T19:13:03.441Z",
+      "generated_at": "2026-09-05T20:04:33.928Z",
       "public_mirror": false,
       "public_safe": false
     },
@@ -15076,7 +15147,7 @@
       "status_message": "Daily automation and deploy gates is ready.",
       "deployment_blocking": false,
       "required": true,
-      "as_of": "2026-09-05T19:13:07.905Z",
+      "as_of": "2026-09-05T20:04:37.547Z",
       "counts": {},
       "details": {
         "credential_dependent_for_build": false,
@@ -15479,7 +15550,7 @@
         ],
         "last_attempt": {
           "event_name": null,
-          "observed_at": "2026-09-05T14:16:26.299Z",
+          "observed_at": "2026-09-05T19:44:00.260Z",
           "outcome": "success",
           "failure_class": null
         },
@@ -15620,7 +15691,8 @@
       "reason": "ok",
       "artifact": {
         "source_as_of": null,
-        "source_as_of_reason": "dateless_by_provider"
+        "source_as_of_reason": "dateless_by_provider",
+        "generated_at": "2026-09-04T23:05:37Z"
       }
     },
     {
@@ -15665,7 +15737,8 @@
       "reason": "stale",
       "artifact": {
         "source_as_of": null,
-        "source_as_of_reason": "dateless_by_provider"
+        "source_as_of_reason": "dateless_by_provider",
+        "generated_at": "2026-08-23T23:41:24Z"
       }
     },
     {
@@ -15710,7 +15783,8 @@
       "reason": "stale",
       "artifact": {
         "source_as_of": null,
-        "source_as_of_reason": "dateless_by_provider"
+        "source_as_of_reason": "dateless_by_provider",
+        "generated_at": "2026-09-04T23:05:14Z"
       }
     },
     {
