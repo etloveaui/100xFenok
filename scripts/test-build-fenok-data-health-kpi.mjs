@@ -1922,6 +1922,8 @@ function readyCoreV2(now) {
       status_message: "Platform integrity gates are ready; degraded lanes may publish independently.",
       blocker_count: 0, blockers: [],
     },
+    // The ready core uses an empty hermetic publication-shard directory.
+    publication: { schema_version: "fenok-kpi-publication-outcomes/v1", families: [] },
     outcome_watchdog: buildOutcomeWatchdog(now, lanes),
     lanes,
     totals: { lanes: REQUIRED_LANE_IDS.length, ready: REQUIRED_LANE_IDS.length, degraded: 0, warning: 0, blocked: 0, unavailable: 0, required_not_ready: 0, platform_blocking_not_ready: 0 },
