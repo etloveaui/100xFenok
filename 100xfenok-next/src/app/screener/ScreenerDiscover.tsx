@@ -40,6 +40,8 @@ export interface ScreenerDiscoverProps {
   compareTickers: string[];
   onToggleCompare: (ticker: string) => void;
   onClearCompare: () => void;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
 }
 
 function cx(...parts: Array<string | false | undefined>) {
@@ -130,10 +132,14 @@ function ActionButtons({
   stock,
   compareTickers,
   onToggleCompare,
+  returnTo,
+  onBeforeNavigate,
 }: {
   stock: ScreenerStock;
   compareTickers: string[];
   onToggleCompare: (ticker: string) => void;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
 }) {
   const selected = compareTickers.includes(stock.ticker);
   const full = !selected && compareTickers.length >= COMPARE_LIMIT;
@@ -163,7 +169,8 @@ function ActionButtons({
         관심
       </TransitionLink>
       <TransitionLink
-        href={ROUTES.stock(stock.ticker)}
+        href={ROUTES.stock(stock.ticker, returnTo)}
+        onClick={onBeforeNavigate}
         title="종목 상세로 열기"
         className="inline-flex h-9 items-center rounded-md bg-[var(--c-brand)] px-2 text-[11px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11"
       >
@@ -186,6 +193,8 @@ export default function ScreenerDiscover({
   compareTickers,
   onToggleCompare,
   onClearCompare,
+  returnTo,
+  onBeforeNavigate,
 }: ScreenerDiscoverProps) {
   const card = getQuestionCard(activeCardId);
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
@@ -388,7 +397,7 @@ export default function ScreenerDiscover({
                       <span className="hidden w-24 shrink-0 md:block" title="PER 밴드 위치">
                         <PerBandBar current={stock.perBandCurrent} min={stock.perBandMin} avg={stock.perBandAvg} max={stock.perBandMax} />
                       </span>
-                      <ActionButtons stock={stock} compareTickers={compareTickers} onToggleCompare={onToggleCompare} />
+                      <ActionButtons stock={stock} compareTickers={compareTickers} onToggleCompare={onToggleCompare} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
                     </span>
                     <span className="block text-[11.5px] leading-snug text-[var(--c-ink-2)]">{card.why(stock)}</span>
                     <span className="flex items-center gap-2.5">

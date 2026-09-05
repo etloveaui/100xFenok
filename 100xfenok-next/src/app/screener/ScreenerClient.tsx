@@ -16,6 +16,7 @@ import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/forma
 import { bandPct, bandLabel, normalizeBandTuple, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
 import { formatDataDate, makeDataState } from "@/lib/data-state";
 import {
+  MAX_JOURNEY_SCROLL_Y,
   clearScreenerJourneySnapshot,
   currentJourneyReturnTo,
   readScreenerJourneySnapshot,
@@ -32,7 +33,7 @@ import ScreenerDesktopTable from "./ScreenerDesktopTable";
 import ScreenerDiscover from "./ScreenerDiscover";
 import ScreenerTanstackTable from "./ScreenerTanstackTable";
 import StockDetailPanel from "./StockDetailPanel";
-import type { QuestionCardDef, QuestionCardId } from "@/lib/screener/question-cards";
+import { SCREENER_QUESTION_CARDS, type QuestionCardDef, type QuestionCardId } from "@/lib/screener/question-cards";
 import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 import type { MacroContextId } from "@/lib/macro-chart/context";
 import {
@@ -1217,7 +1218,7 @@ function MobileStockCard({
               {stock.connection ? <ConnectionPills stock={stock} compact /> : null}
             </div>
           ) : null}
-          <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} />
+          <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
         </div>
       ) : null}
     </article>
@@ -1338,7 +1339,7 @@ function DesktopStockCard({
               </TransitionLink>
             </div>
           ) : null}
-          <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} />
+          <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
         </div>
       ) : null}
     </article>
@@ -1380,6 +1381,8 @@ export default function ScreenerClient({
   const screenerSourceDate = connectionIndexReady
     ? completeSourceFloor([sourceDate, connectionIndexDate])
     : sourceDate;
+  const [guruSettled, setGuruSettled] = useState(false);
+  const [actionSettled, setActionSettled] = useState(false);
   const [guruMap, setGuruMap] = useState<Record<string, number> | null>(null);
   const [actionMap, setActionMap] = useState<Record<string, ActionSummaryRecord> | null>(null);
 
@@ -1390,7 +1393,8 @@ export default function ScreenerClient({
       .then((j) => {
         if (!cancelled && j?.holders) setGuruMap(j.holders as Record<string, number>);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setGuruSettled(true); });
     return () => { cancelled = true; };
   }, []);
 
@@ -1403,7 +1407,8 @@ export default function ScreenerClient({
         for (const [symbol, row] of map) next[symbol] = row;
         setActionMap(next);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setActionSettled(true); });
     return () => { cancelled = true; };
   }, []);
 
@@ -1490,6 +1495,7 @@ export default function ScreenerClient({
     const url = new URL(window.location.href);
     url.searchParams.set("mode", next);
     window.history.replaceState(null, "", url.toString());
+    setJourneyReturnTo(currentJourneyReturnTo());
   }
 
   function handleScreenerModeChange(next: "discover" | "analyze") {
@@ -1525,6 +1531,14 @@ export default function ScreenerClient({
   const journeySourceRef = useRef<string | null | undefined>(undefined);
   const pendingJourneySnapshotRef = useRef<ScreenerJourneySnapshot | null | undefined>(undefined);
   const journeyRestoredRef = useRef(false);
+  const [journeyHydrated, setJourneyHydrated] = useState(false);
+  const journeyUserInteractedRef = useRef(false);
+  useEffect(() => {
+    const cancel = () => { journeyUserInteractedRef.current = true; };
+    const events = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    for (const event of events) window.addEventListener(event, cancel, { passive: true });
+    return () => { for (const event of events) window.removeEventListener(event, cancel); };
+  }, []);
   const [prevInitialSearch, setPrevInitialSearch] = useState(initialSearch);
   const [prevInitialSector, setPrevInitialSector] = useState(initialSector);
 
@@ -1784,17 +1798,21 @@ export default function ScreenerClient({
   const [scrollSignal, setScrollSignal] = useState<{ index: number; nonce: number } | null>(null);
   useEffect(() => {
     const snapshot = pendingJourneySnapshotRef.current;
-    if (journeyRestoredRef.current || snapshot === undefined || !dataReady) return;
+    if (journeyRestoredRef.current || snapshot === undefined || !dataReady || !guruSettled || !actionSettled) return;
     const source = journeySourceRef.current;
     if (snapshot === null) {
       journeyRestoredRef.current = true;
+      setJourneyHydrated(true);
       return;
     }
     const available = new Set(stocks.map((stock) => stock.ticker));
     const selected = snapshot?.selectedTickers.filter((ticker) => available.has(ticker)) ?? [];
-    if (snapshot) setSelectedTickers(new Set(selected));
-    if (sorted.length > 0) {
-      const index = Math.min(snapshot?.visibleIndex ?? 0, sorted.length - 1);
+    setSelectedTickers(new Set(selected));
+    setCompareTickers(snapshot.compareTickers?.filter((ticker) => available.has(ticker)) ?? []);
+    const card = SCREENER_QUESTION_CARDS.find((candidate) => candidate.id === snapshot.discoverCard);
+    if (card) setActiveCardId(card.id);
+    if (sorted.length > 0 && !journeyUserInteractedRef.current) {
+      const index = Math.min(snapshot.visibleIndex, sorted.length - 1);
       setCursor(index);
       setPage(Math.floor(index / PAGE_SIZE));
       setScrollSignal({ index, nonce: 1 });
@@ -1802,7 +1820,17 @@ export default function ScreenerClient({
     if (source) clearScreenerJourneySnapshot(source);
     pendingJourneySnapshotRef.current = null;
     journeyRestoredRef.current = true;
-  }, [dataReady, sorted.length, stocks]);
+    setJourneyHydrated(true);
+    if (snapshot.scrollY !== undefined) {
+      const frame = window.requestAnimationFrame(() => {
+        if (!journeyUserInteractedRef.current) {
+          window.scrollTo({ top: snapshot.scrollY, behavior: "auto" });
+          saveScreenerJourneySnapshot(source, { ...snapshot, selectedTickers: selected });
+        }
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+  }, [dataReady, guruSettled, actionSettled, sorted.length, stocks]);
   const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${durabilityMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${shortEdgeMin}|${longEdgeMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
@@ -1926,8 +1954,16 @@ export default function ScreenerClient({
     saveScreenerJourneySnapshot(currentJourneyReturnTo(), {
       selectedTickers: [...selectedTickers],
       visibleIndex: safeCursor,
+      compareTickers,
+      discoverCard: activeCardId,
+      scrollY: Math.round(Math.max(0, Math.min(window.scrollY, MAX_JOURNEY_SCROLL_Y))),
     });
-  }, [safeCursor, selectedTickers]);
+  }, [safeCursor, selectedTickers, compareTickers, activeCardId]);
+  useEffect(() => {
+    // Keep the restored context current for another Back/Forward round trip.
+    // Hydration prevents the empty mount state from replacing the saved selection.
+    if (journeyHydrated) saveJourneyBeforeNavigate();
+  }, [journeyHydrated, journeyReturnTo, saveJourneyBeforeNavigate]);
   const renderGuruHolderBadge = useCallback(
     (stock: ScreenerStock) => (
       <GuruHolderBadge
@@ -2370,6 +2406,8 @@ export default function ScreenerClient({
             compareTickers={compareTickers}
             onToggleCompare={handleToggleCompare}
             onClearCompare={() => setCompareTickers([])}
+            returnTo={journeyReturnTo}
+            onBeforeNavigate={saveJourneyBeforeNavigate}
           />
         </div>
       </div>
@@ -3911,6 +3949,8 @@ export default function ScreenerClient({
                   deselectPageRows={deselectPageRows}
                   onToggleExpandedTicker={onToggleExpandedTicker}
                   onResetFilters={resetFilters}
+                  returnTo={journeyReturnTo}
+                  onBeforeNavigate={saveJourneyBeforeNavigate}
                   renderCell={renderJourneyCell}
                   renderGuruHolderBadge={renderGuruHolderBadge}
                   selectPageRows={selectPageRows}
@@ -3926,6 +3966,8 @@ export default function ScreenerClient({
               preset={preset}
               selectedTickers={selectedTickers}
               onResetFilters={resetFilters}
+              returnTo={journeyReturnTo}
+              onBeforeNavigate={saveJourneyBeforeNavigate}
               sortDir={sortDir}
               sortKey={sortKey}
               deselectPageRows={deselectPageRows}

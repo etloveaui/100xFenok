@@ -46,10 +46,15 @@ assert.deepEqual(decodeScreenerJourneySnapshot(encoded), {
   selectedTickers: ["NVDA", "MSFT"],
   visibleIndex: 37,
 });
+const manySelected = Array.from({ length: 250 }, (_, index) => `T${index}`);
+assert.deepEqual(decodeScreenerJourneySnapshot(encodeScreenerJourneySnapshot({ selectedTickers: manySelected, visibleIndex: 0 }))?.selectedTickers, manySelected,
+  "selection across several pages must not truncate at 200 names");
+assert.deepEqual(decodeJourneyScrollSnapshot(JSON.stringify({ scrollY: 480, holdingsScrollTop: 220 })), { scrollY: 480, holdingsScrollTop: 220 });
+assert.equal(decodeJourneyScrollSnapshot(JSON.stringify({ scrollY: 480, holdingsScrollTop: -1 })), null);
 assert.equal(decodeScreenerJourneySnapshot("not-json"), null);
 assert.equal(decodeScreenerJourneySnapshot("x".repeat(MAX_JOURNEY_SNAPSHOT_LENGTH + 1)), null);
 assert.equal(decodeScreenerJourneySnapshot(JSON.stringify({ selectedTickers: ["NVDA"], visibleIndex: -1 })), null);
-assert.equal(decodeScreenerJourneySnapshot(JSON.stringify({ selectedTickers: ["NVDA", "bad ticker"], visibleIndex: 1 })), null);
+assert.equal(decodeScreenerJourneySnapshot(JSON.stringify({ selectedTickers: ["NVDA", "bad/ticker"], visibleIndex: 1 })), null);
 assert.equal(decodeScreenerJourneySnapshot(JSON.stringify({ selectedTickers: ["NVDA"], visibleIndex: 1, extra: "ignored" })), null,
   "snapshot state shape must stay explicit");
 assert.deepEqual(decodeJourneyScrollSnapshot(JSON.stringify({ scrollY: 480 })), { scrollY: 480 });
@@ -62,7 +67,7 @@ const storageAdapter = {
   setItem: (key: string, value: string) => { storage.set(key, value); },
   removeItem: (key: string) => { storage.delete(key); },
 };
-saveScreenerJourneySnapshot(storageAdapter, screenerOrigin, snapshot);
+saveScreenerJourneySnapshot(screenerOrigin, snapshot, storageAdapter);
 assert.deepEqual(consumeScreenerJourneySnapshot(storageAdapter, screenerOrigin), {
   selectedTickers: ["NVDA", "MSFT"],
   visibleIndex: 37,

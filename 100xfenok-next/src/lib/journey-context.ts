@@ -1,8 +1,8 @@
 import { isValidRouteTicker, normalizeForRouteTicker } from "@/lib/ticker";
 
 export const MAX_JOURNEY_CONTEXT_LENGTH = 2_048;
-export const MAX_JOURNEY_SNAPSHOT_LENGTH = 8_192;
-export const MAX_JOURNEY_SELECTED_TICKERS = 200;
+export const MAX_JOURNEY_SNAPSHOT_LENGTH = 262_144;
+export const MAX_JOURNEY_SELECTED_TICKERS = 10_000;
 export const MAX_JOURNEY_VISIBLE_INDEX = 100_000;
 export const MAX_JOURNEY_SCROLL_Y = 100_000;
 
@@ -14,10 +14,14 @@ const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f]/;
 export interface ScreenerJourneySnapshot {
   selectedTickers: string[];
   visibleIndex: number;
+  compareTickers?: string[];
+  discoverCard?: string;
+  scrollY?: number;
 }
 
 export interface JourneyScrollSnapshot {
   scrollY: number;
+  holdingsScrollTop?: number;
 }
 
 export interface JourneyStorage {
@@ -78,7 +82,7 @@ function normalizeSnapshot(snapshot: unknown): ScreenerJourneySnapshot | null {
   if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) return null;
   const record = snapshot as Record<string, unknown>;
   if (
-    Object.keys(record).length !== 2
+    Object.keys(record).some((key) => !["selectedTickers", "visibleIndex", "compareTickers", "discoverCard", "scrollY"].includes(key))
     || !Array.isArray(record.selectedTickers)
     || typeof record.visibleIndex !== "number"
     || !Number.isInteger(record.visibleIndex)
@@ -93,7 +97,18 @@ function normalizeSnapshot(snapshot: unknown): ScreenerJourneySnapshot | null {
     selectedTickers.push(ticker);
     if (selectedTickers.length >= MAX_JOURNEY_SELECTED_TICKERS) break;
   }
-  return { selectedTickers, visibleIndex: record.visibleIndex as number };
+  const compare = record.compareTickers;
+  if (compare !== undefined && (!Array.isArray(compare) || compare.length > 4 || compare.some((ticker) => normalizeSnapshotTicker(ticker) === null))) return null;
+  const card = record.discoverCard;
+  if (card !== undefined && (typeof card !== "string" || !/^[a-z-]{1,64}$/.test(card))) return null;
+  const y = record.scrollY;
+  if (y !== undefined && (typeof y !== "number" || !Number.isInteger(y) || y < 0 || y > MAX_JOURNEY_SCROLL_Y)) return null;
+  return {
+    selectedTickers, visibleIndex: record.visibleIndex,
+    ...(Array.isArray(compare) ? { compareTickers: compare.map((ticker) => normalizeSnapshotTicker(ticker)!) } : {}),
+    ...(typeof card === "string" ? { discoverCard: card } : {}),
+    ...(typeof y === "number" ? { scrollY: y } : {}),
+  };
 }
 
 export function encodeScreenerJourneySnapshot(snapshot: unknown): string {
@@ -190,9 +205,12 @@ export function clearScreenerJourneySnapshot(source: string | null | undefined):
 function normalizeScrollSnapshot(value: unknown): JourneyScrollSnapshot | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
-  if (Object.keys(record).length !== 1 || typeof record.scrollY !== "number" || !Number.isInteger(record.scrollY)) return null;
+  if (Object.keys(record).some((key) => key !== "scrollY" && key !== "holdingsScrollTop")) return null;
+  if (typeof record.scrollY !== "number" || !Number.isInteger(record.scrollY)) return null;
   if (record.scrollY < 0 || record.scrollY > MAX_JOURNEY_SCROLL_Y) return null;
-  return { scrollY: record.scrollY as number };
+  const top = record.holdingsScrollTop;
+  if (top !== undefined && (typeof top !== "number" || !Number.isInteger(top) || top < 0 || top > MAX_JOURNEY_SCROLL_Y)) return null;
+  return { scrollY: record.scrollY, ...(typeof top === "number" ? { holdingsScrollTop: top } : {}) };
 }
 
 export function encodeJourneyScrollSnapshot(snapshot: unknown): string {

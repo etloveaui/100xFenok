@@ -214,6 +214,8 @@ function ScreenerTanstackTableInner({
   sortKey,
   deselectPageRows,
   onResetFilters,
+  returnTo,
+  onBeforeNavigate,
   onToggleExpandedTicker,
   renderCell,
   renderGuruHolderBadge,
@@ -601,7 +603,7 @@ function ScreenerTanstackTableInner({
 	                        data-detail-ticker={canvasPlusPreview ? stock.ticker : undefined}
 	                        className={canvasPlusPreview ? "cp-screener-detail-shell" : undefined}
 	                      >
-	                        <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} />
+	                        <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
 	                      </div>
 	                    </td>
                   </tr>

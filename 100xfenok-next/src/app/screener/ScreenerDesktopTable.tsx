@@ -36,6 +36,8 @@ export type ScreenerDesktopTableProps = {
   sortKey: ScreenerSortKey;
   deselectPageRows: () => void;
   onResetFilters?: () => void;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
   onToggleExpandedTicker: (ticker: string) => void;
   renderCell: (stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnPreset) => ReactNode;
   renderGuruHolderBadge: (stock: ScreenerStock) => ReactNode;
@@ -64,6 +66,8 @@ export default function ScreenerDesktopTable({
   sortKey,
   deselectPageRows,
   onResetFilters,
+  returnTo,
+  onBeforeNavigate,
   onToggleExpandedTicker,
   renderCell,
   renderGuruHolderBadge,
@@ -182,7 +186,7 @@ export default function ScreenerDesktopTable({
                   >
 	                    <td colSpan={activeColumns.length + 1} className="p-0">
 	                      <div className={canvasPlusPreview ? "cp-screener-detail-shell" : undefined}>
-	                        <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} />
+	                        <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
 	                      </div>
 	                    </td>
                   </tr>

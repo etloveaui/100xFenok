@@ -2614,10 +2614,14 @@ export default function StockDetailPanel({
   ticker,
   stock,
   canvasPlusPreview = false,
+  returnTo,
+  onBeforeNavigate,
 }: {
   ticker: string;
   stock?: ScreenerStock;
   canvasPlusPreview?: boolean;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
 }) {
   const { detail, loading, error: detailError, retry: retryDetail } = useStockDetail(ticker);
   const { entries: f13Entries, error: f13Error, retry: retryF13 } = use13FData(ticker);
@@ -2720,7 +2724,7 @@ export default function StockDetailPanel({
             포트폴리오
           </TransitionLink>
           <TransitionLink
-            href={ROUTES.stock(ticker)}
+            href={ROUTES.stock(ticker, returnTo)} onClick={onBeforeNavigate}
             className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--brand-interactive)] bg-[color:color-mix(in_srgb,var(--brand-interactive)_8%,transparent)] px-3 text-[10px] font-black text-[var(--brand-interactive)] transition hover:bg-[color:color-mix(in_srgb,var(--brand-interactive)_14%,transparent)]"
           >
             <span className="rounded-full bg-[var(--brand-interactive)] px-2 py-0.5 text-[9px] font-black text-white">
@@ -2781,7 +2785,7 @@ export default function StockDetailPanel({
           </div>
 
           <div className="cpw4-cta-row">
-              <TransitionLink href={ROUTES.stock(ticker)} className="cpw4-primary-cta">
+              <TransitionLink href={ROUTES.stock(ticker, returnTo)} onClick={onBeforeNavigate} className="cpw4-primary-cta">
                 종목 상세 보기 →
               </TransitionLink>
               <TransitionLink href={ROUTES.portfolioTicker(ticker)} className="cpw4-secondary-cta">

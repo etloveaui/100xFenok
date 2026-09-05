@@ -393,7 +393,7 @@ function LatestHoldingsTable({ holdings, changes, returnTo, onBeforeNavigate }: 
         tabIndex={0}
         aria-label="최신 보유 및 청산 종목 표 가로 스크롤"
       >
-        <div className="max-h-[440px] overflow-y-auto">
+        <div data-journey-holdings-scroll className="max-h-[440px] overflow-y-auto">
         <table className="w-full min-w-[640px] text-xs">
           <thead>
             <tr className="sticky top-0 z-10 h-9 border-b border-slate-200 bg-white text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
@@ -469,6 +469,7 @@ function GuruDetailPanel({
   asOf,
   returnTo,
   onBeforeNavigate,
+  onReady,
 }: {
   id: string;
   summary: SummaryInvestor;
@@ -483,8 +484,12 @@ function GuruDetailPanel({
   asOf: string;
   returnTo?: string | null;
   onBeforeNavigate?: () => void;
+  onReady?: (id: string) => void;
 }) {
   const { data, loading, status } = useInvestorDetail(id);
+  useEffect(() => {
+    if (!loading) onReady?.(id);
+  }, [id, loading, onReady]);
   const [turnover, setTurnover] = useState<number | null | undefined>(undefined);
 
   const latest: InvestorFiling | null = data?.investor?.filings?.[data.investor.filings.length - 1] ?? null;
@@ -1473,6 +1478,7 @@ function GuruDetailView({
   asOf,
   returnTo,
   onBeforeNavigate,
+  onReady,
   onBack,
 }: {
   id: string;
@@ -1488,6 +1494,7 @@ function GuruDetailView({
   asOf: string;
   returnTo?: string | null;
   onBeforeNavigate?: () => void;
+  onReady?: (id: string) => void;
   onBack: () => void;
 }) {
   return (
@@ -1534,6 +1541,7 @@ function GuruDetailView({
           asOf={asOf}
           returnTo={returnTo}
           onBeforeNavigate={onBeforeNavigate}
+          onReady={onReady}
         />
       </div>
     </div>
@@ -1570,6 +1578,14 @@ export default function SuperinvestorsClient({
   const journeySourceRef = useRef<string | null | undefined>(undefined);
   const pendingJourneyScrollRef = useRef<ReturnType<typeof readJourneyScrollSnapshot> | undefined>(undefined);
   const journeyScrollRestoredRef = useRef(false);
+  const journeyUserInteractedRef = useRef(false);
+  const [readyGuruId, setReadyGuruId] = useState<string | null>(null);
+  useEffect(() => {
+    const cancel = () => { journeyUserInteractedRef.current = true; };
+    const events = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    for (const event of events) window.addEventListener(event, cancel, { passive: true });
+    return () => { for (const event of events) window.removeEventListener(event, cancel); };
+  }, []);
   const [prevInitial, setPrevInitial] = useState({ guru: initialGuru, tab: initialTab });
   if (prevInitial.guru !== initialGuru || prevInitial.tab !== initialTab) {
     setPrevInitial({ guru: initialGuru, tab: initialTab });
@@ -1781,7 +1797,7 @@ export default function SuperinvestorsClient({
   }, [consensus]);
 
   const loading = !dataReady && !failed;
-  const journeyContentReady = !loading && !tradesLoading && !pvLoading && !factorLoading;
+  const journeyContentReady = !loading && !tradesLoading && !pvLoading && !factorLoading && (!selectedGuruEntry || readyGuruId === expandedGuru);
   useEffect(() => {
     const snapshot = pendingJourneyScrollRef.current;
     const source = journeySourceRef.current;
@@ -1792,24 +1808,18 @@ export default function SuperinvestorsClient({
       journeyScrollRestoredRef.current = true;
       return;
     }
-    let cancelled = false;
-    const cancel = () => { cancelled = true; };
-    window.addEventListener("wheel", cancel, { passive: true, once: true });
-    window.addEventListener("touchstart", cancel, { passive: true, once: true });
-    window.addEventListener("pointerdown", cancel, { once: true });
-    window.addEventListener("keydown", cancel, { once: true });
     const frame = window.requestAnimationFrame(() => {
-      if (!cancelled) window.scrollTo({ top: snapshot.scrollY, behavior: "auto" });
+      if (!journeyUserInteractedRef.current) {
+        const holdings = document.querySelector<HTMLElement>("[data-journey-holdings-scroll]");
+        if (holdings && snapshot.holdingsScrollTop !== undefined) holdings.scrollTop = snapshot.holdingsScrollTop;
+        window.scrollTo({ top: snapshot.scrollY, behavior: "auto" });
+      }
       if (source) clearJourneyScrollSnapshot(source);
       pendingJourneyScrollRef.current = null;
       journeyScrollRestoredRef.current = true;
     });
     return () => {
       window.cancelAnimationFrame(frame);
-      window.removeEventListener("wheel", cancel);
-      window.removeEventListener("touchstart", cancel);
-      window.removeEventListener("pointerdown", cancel);
-      window.removeEventListener("keydown", cancel);
     };
   }, [journeyContentReady]);
   const investorCount = summary
@@ -1894,7 +1904,11 @@ export default function SuperinvestorsClient({
 
   function saveJourneyBeforeNavigate() {
     if (typeof window !== "undefined") {
-      saveJourneyScrollSnapshot(currentJourneyReturnTo(), { scrollY: Math.round(Math.max(0, Math.min(window.scrollY, MAX_JOURNEY_SCROLL_Y))) });
+      const holdings = document.querySelector<HTMLElement>("[data-journey-holdings-scroll]");
+      saveJourneyScrollSnapshot(currentJourneyReturnTo(), {
+        scrollY: Math.round(Math.max(0, Math.min(window.scrollY, MAX_JOURNEY_SCROLL_Y))),
+        ...(holdings ? { holdingsScrollTop: Math.round(Math.min(holdings.scrollTop, MAX_JOURNEY_SCROLL_Y)) } : {}),
+      });
     }
   }
 
@@ -1991,6 +2005,7 @@ export default function SuperinvestorsClient({
           returnTo={journeyReturnTo}
           onBeforeNavigate={saveJourneyBeforeNavigate}
           onBack={closeGuru}
+          onReady={setReadyGuruId}
         />
       ) : (
       <div className="sup-grid">
