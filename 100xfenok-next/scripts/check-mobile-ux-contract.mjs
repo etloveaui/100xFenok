@@ -112,8 +112,11 @@ async function prepareDynamicRoute(page, route) {
     // ?tab=investors opens the holders list).
     if (route.includes("guru=")) {
       await page.locator("[data-superinvestors-guru-detail-view]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
-      // the holdings table (scroll region) mounts after the detail fetch
-      await page.locator('.scroll-hint-x[role="region"]:visible').first().waitFor({ state: "visible", timeout: 45_000 });
+      // the holdings surface mounts after the detail fetch: wait on the guru
+      // top-holdings block itself, never on an unscoped scroll region (the tab
+      // strip is also a scroll-hint region and would satisfy a bare wait).
+      await page.locator("[data-superinvestor-guru-top-holdings]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+      await page.locator("[data-superinvestor-guru-holding-row]:visible, [data-superinvestor-guru-desktop-holding-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
     } else if (route.includes("tab=investors")) {
       await page.locator("[data-superinvestors-holder-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
     } else {

@@ -270,7 +270,9 @@ function sortConsensusByHolders(rows: ConsensusTicker[]): ConsensusTicker[] {
   });
 }
 
-function LatestHoldingsMobileCards({ rows, changeMap }: { rows: InvestorHolding[]; changeMap?: Map<string, { kind: HoldingChangeKind; pct: number }> }) {
+type HoldingRow = InvestorHolding & { liquidated?: boolean };
+
+function LatestHoldingsMobileCards({ rows, changeMap }: { rows: HoldingRow[]; changeMap?: Map<string, { kind: HoldingChangeKind; pct: number }> }) {
   return (
     <div
       className="cpw5-super-mobile-cards"
@@ -297,7 +299,7 @@ function LatestHoldingsMobileCards({ rows, changeMap }: { rows: InvestorHolding[
           <dl className="cpw5-super-mobile-card__metrics mt-3">
             <div className="cpw5-super-mobile-card__field">
               <dt>비중</dt>
-              <dd className="tabular-nums">{formatPercent(h.weight, { digits: 2 })}</dd>
+              <dd className="tabular-nums">{h.liquidated ? "—" : formatPercent(h.weight, { digits: 2 })}</dd>
             </div>
             <div className="cpw5-super-mobile-card__field">
               <dt>주식수</dt>
@@ -333,10 +335,26 @@ function LatestHoldingsTable({ holdings, changes }: { holdings: InvestorHolding[
         byTicker.set(h.ticker, { ...h });
       }
     }
-    return [...byTicker.values()]
+    const held = [...byTicker.values()]
       .sort((a, b) => (b.weight || 0) - (a.weight || 0))
       .slice(0, 50);
-  }, [holdings]);
+    // Fully liquidated positions are absent from the latest holdings, so the
+    // "청산" state can only be shown by appending them as explicit rows whose
+    // holding/price fields are unavailable (rendered as "—", never as 0).
+    const liquidated: HoldingRow[] = (changes?.sold ?? [])
+      .filter((entry) => entry?.ticker && !byTicker.has(entry.ticker))
+      .slice(0, 50)
+      .map((entry) => ({
+        ticker: entry.ticker,
+        cusip: `sold-${entry.ticker}`,
+        name: entry.name || entry.ticker,
+        shares: Number.NaN,
+        market_value: Number.NaN,
+        weight: Number.NaN,
+        liquidated: true,
+      }));
+    return [...held, ...liquidated];
+  }, [holdings, changes]);
   const changeMap = useMemo(() => buildHoldingChangeMap(changes), [changes]);
 
   if (rows.length === 0) {
@@ -374,6 +392,7 @@ function LatestHoldingsTable({ holdings, changes }: { holdings: InvestorHolding[
                 key={`${h.ticker}-${h.cusip}`}
                 data-superinvestor-guru-desktop-holding-row
                 data-superinvestor-guru-desktop-holding-ticker={h.ticker ?? ""}
+                data-superinvestor-guru-desktop-holding-liquidated={h.liquidated ? "true" : undefined}
                 className="h-11 border-b border-slate-100 last:border-b-0"
               >
                 <td className="px-2 py-2">
@@ -388,7 +407,7 @@ function LatestHoldingsTable({ holdings, changes }: { holdings: InvestorHolding[
                   {h.sector ? <span className="text-[10px] text-[var(--c-ink-3)]">{h.sector}</span> : null}
                 </td>
                 <td className="px-2 py-2 text-right">
-                  <span className="tabular-nums font-bold text-slate-900">{formatPercent(h.weight, { digits: 2 })}</span>
+                  <span className="tabular-nums font-bold text-slate-900">{h.liquidated ? "—" : formatPercent(h.weight, { digits: 2 })}</span>
                 </td>
                 <td className="px-2 py-2 text-center">
                   <HoldingChangePill change={h.ticker ? changeMap.get(h.ticker) : undefined} />
@@ -1930,17 +1949,14 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
                           }}
                         >
                           <th scope="row" className="sup-holder-name-cell">
-                            <button
-                              type="button"
-                              className="sup-holder-name"
-                              onClick={() => openGuru(id)}
-                            >
+                            {/* The row is the single interactive element; the name is plain content. */}
+                            <span className="sup-holder-name">
                               <span className="sup-holder-name-text">{inv.name}</span>
                               <span className="sup-holder-sub">
                                 {inv.group}
                                 {inv.is_stale ? <span className="sup-stale-badge">지연</span> : null}
                               </span>
-                            </button>
+                            </span>
                           </th>
                           <td className="tabular-nums">{formatCurrencyCompact(inv.aum, "USD")}</td>
                           <td className="tabular-nums">{formatInteger(inv.holdings_count)}개</td>
