@@ -236,7 +236,8 @@ class DataSupplyResolver:
             return self._commit_prepared(domain, transaction_id)
 
         if (
-            prior is None
+            domain == "etf_detail"
+            and prior is None
             and not primary_fresh
             and not fallback_fresh
             and prior_recovery.get("last_transition") == "unavailable"
@@ -252,6 +253,18 @@ class DataSupplyResolver:
             # killed the whole ETF publication (runs 33825689997, 33936218442).
             if set(latest) != set(policy.provider_names):
                 raise SchemaError("LKG/unavailable resolution requires complete provider evidence")
+            # Mirror the store's evidence time checks from
+            # prepare_unavailable_transition: a hold must not accept evidence
+            # the store itself would reject. _fresh treats a future source time
+            # as merely not fresh, so it is re-checked here explicitly.
+            for row in rows:
+                if _timestamp(row["observed_at"]) > decided:
+                    raise SchemaError("evidence observation cannot follow the decision time")
+            for row in latest.values():
+                if row["validation_status"] == "invalid":
+                    continue
+                if _timestamp(row["source_as_of"]) > decided:
+                    raise SchemaError("provider evidence source time follows the decision")
             if self.reconcile_pending_on_noop:
                 self.store.reconcile_committed_pending(domain)
             return active
@@ -340,7 +353,11 @@ class DataSupplyResolver:
         next_current = dict(active["current"])
         next_current[entity] = selected
         next_lkg = dict(active["lkg"])
-        if prior is None and prior_recovery.get("last_transition") == "unavailable":
+        if (
+            domain == "etf_detail"
+            and prior is None
+            and prior_recovery.get("last_transition") == "unavailable"
+        ):
             # Recovery from a known-unavailable state is an initial selection
             # again. The removal transition kept the expired selection in the
             # LKG map only as audit for the unavailable period; carrying it into
