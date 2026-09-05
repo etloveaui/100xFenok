@@ -2391,6 +2391,7 @@ export default function ScreenerClient({
         className="canvas-plus cp-screener-service"
         data-canvas-plus-screener-service="true"
         data-screener-mode="discover"
+        data-journey-ready={journeyHydrated}
       >
         {modeToggle}
         <div className="mt-3">
@@ -2421,6 +2422,7 @@ export default function ScreenerClient({
       className="canvas-plus cp-screener-service"
       data-canvas-plus-screener-service="true"
       data-screener-mode="analyze"
+      data-journey-ready={journeyHydrated}
     >
       {modeToggle}
       {canvasPlusPreview ? (

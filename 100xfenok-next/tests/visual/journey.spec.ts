@@ -187,7 +187,7 @@ test("journey: late enrichment respects a changed selection", async ({ page }) =
     release?.();
     const response = await responsePromise;
     await response.finished();
-    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expect(page.locator('[data-screener-mode="analyze"]')).toHaveAttribute("data-journey-ready", "true");
     await expect(checkbox).not.toBeChecked();
   } finally {
     release?.();
