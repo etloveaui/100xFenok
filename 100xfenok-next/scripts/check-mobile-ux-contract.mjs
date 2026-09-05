@@ -4262,6 +4262,51 @@ async function collectInvestorNavigationChecks(page, route) {
   return failures;
 }
 
+async function collectScreenerInvestorFlowChecks(page, route, viewportName) {
+  if (!isolated || route !== "/screener?mode=analyze" || !["mobile", "tablet-mid"].includes(viewportName)) return [];
+  const failures = [];
+  try {
+    const index = JSON.parse(await readFile(resolve("../data/sec-13f/analytics/guru_holders_index.json"), "utf8"));
+    const source = JSON.parse(await readFile(resolve("../data/global-scouter/core/stocks_analyzer.json"), "utf8"));
+    const universe = new Set((source.data ?? []).map((row) => String(row.symbol ?? "").trim().toUpperCase()).filter(Boolean));
+    const changes = index.holding_changes ?? {};
+    if (Object.keys(changes).length === 0) throw new Error("Generated public holding-change evidence is missing");
+    for (const [action, field] of [["guru_held", "held_count"], ["guru_new", "new_count"], ["guru_increased", "increased_count"]]) {
+      const expected = new Set(Object.entries(changes).filter(([ticker, row]) => universe.has(ticker) && row[field] > 0).map(([ticker]) => ticker));
+      // Exercise an actual current intersection, never a pinned ticker/count.
+      if (expected.size === 0) throw new Error(`No current public intersection for ${action}; positive flow coverage unavailable`);
+      await page.goto(routeUrl(`/screener?mode=analyze&action=${action}`), { waitUntil: "domcontentloaded", timeout: 45000 });
+      await page.locator('[data-screener-mode="analyze"][data-journey-ready="true"]').waitFor({ state: "visible", timeout: 45000 });
+      const badges = page.locator('[data-testid="screener-guru-badge"]:visible');
+      await badges.first().waitFor({ state: "visible", timeout: 45000 });
+      const displayed = await badges.evaluateAll((nodes) => [...new Set(nodes.map((node) => node.getAttribute("data-ticker")))]);
+      for (const ticker of displayed) {
+        if (!expected.has(ticker)) failures.push({ check: "screener-investor-filter", detail: `${action}: unexpected ticker=${ticker}` });
+      }
+      const badge = badges.first();
+      const ticker = await badge.getAttribute("data-ticker");
+      const sourceUrl = new URL(page.url());
+      if (sourceUrl.searchParams.get("action") !== action) failures.push({ check: "screener-investor-filter-url", detail: `${action}: ${sourceUrl.search}` });
+      const origin = `${sourceUrl.pathname}${sourceUrl.search}${sourceUrl.hash}`;
+      const href = new URL(await badge.getAttribute("href"), page.url());
+      if (href.searchParams.get("returnTo") !== origin) failures.push({ check: "screener-investor-origin", detail: `${action}: return origin missing or changed` });
+      await badge.click();
+      await page.locator(`[data-superinvestors-whoholds-result="${ticker}"]`).waitFor({ state: "visible", timeout: 45000 });
+      if (new URL(page.url()).searchParams.get("tab") !== "stocks") failures.push({ check: "screener-investor-tab", detail: page.url() });
+      const back = page.getByRole("link", { name: "스크리너로 돌아가기", exact: true }).filter({ visible: true }).first();
+      await back.click();
+      await page.locator('[data-screener-mode="analyze"][data-journey-ready="true"]').waitFor({ state: "visible", timeout: 45000 });
+      if (page.url() !== sourceUrl.href) failures.push({ check: "screener-investor-return", detail: `${action}: expected=${sourceUrl.href} actual=${page.url()}` });
+    }
+  } catch (error) {
+    failures.push({ check: "screener-investor-flow", detail: String(error) });
+  } finally {
+    await page.goto(routeUrl(route), { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.locator('[data-screener-mode="analyze"][data-journey-ready="true"]').waitFor({ state: "visible", timeout: 45000 });
+  }
+  return failures;
+}
+
 const browser = await (browserName === "webkit" ? webkit : chromium).launch({
   headless: true,
   ...(browserChannel ? { channel: browserChannel } : {}),
@@ -4382,6 +4427,7 @@ try {
           result.cardViewScrollWidth = cardViewChecks.scrollWidth;
           result.cardViewPeerHeightBefore = cardViewChecks.peerHeightBefore;
           result.cardViewPeerHeightAfter = cardViewChecks.peerHeightAfter;
+          result.failures.push(...await collectScreenerInvestorFlowChecks(page, route, name));
         }
         if (route.startsWith("/stock/") && route.includes("tab=financials")) {
           const financialChartChecks = await collectStockFinancialChartChecks(page, route);

@@ -1613,6 +1613,22 @@ function krxFailureResult({ store, artifact, run, reason, error = null }) {
   };
 }
 
+const KRX_ACCESS_REJECTED_HTTP_STATUSES = new Set([401, 403]);
+
+// Failure reason for a fetch whose validation did not pass. A threshold breach
+// in which every failed file was rejected with HTTP 401/403 is a provider
+// access rejection: "auth_error" is systemic in the LKG store (corrupt, exit 2)
+// and walking back to earlier dates cannot cure it. Any other failure among the
+// failed files (5xx, transport, parse, cache miss) keeps the soft "http_error".
+// Decided from the per-file records, never from the summary reason strings.
+export function krxFetchFailureReason(manifest, config) {
+  if (!(manifest?.summary?.failed_files > config?.failThreshold)) return "schema_drift";
+  const failedRecords = (manifest?.files ?? []).filter((file) => file?.status === "failed");
+  const accessRejected = failedRecords.length > 0
+    && failedRecords.every((file) => KRX_ACCESS_REJECTED_HTTP_STATUSES.has(Number(file.http_status)));
+  return accessRejected ? "auth_error" : "http_error";
+}
+
 export function applyKrxLkgContract({
   repoRoot = REPO_ROOT,
   bridgeIndexPath,
@@ -1950,7 +1966,7 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
         publicIndexClosesPath: config.publicIndexClosesPath,
         publicKosdaqMarketCapPath: config.publicKosdaqMarketCapPath,
         run: recoveryRun,
-        failureReason: manifest.summary.failed_files > config.failThreshold ? "http_error" : "schema_drift",
+        failureReason: krxFetchFailureReason(manifest, config),
       });
     }
   }

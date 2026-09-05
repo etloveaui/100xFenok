@@ -72,7 +72,9 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git rev-parse --show-toplevel
           node scripts/build-ink4-contrast-fixture.mjs
-          npm run qa:superinvestor-signal-scores
+          npm run qa:journey-continuity
+          node ../scripts/build-guru-holders-index.mjs
+          npm run build:fenok-data-health-kpi
           npm run cf:build
 
       - name: Run isolated investor UI verification
@@ -83,7 +85,7 @@ jobs:
           QA_BASE_URL: http://127.0.0.1:3107
           QA_MOBILE_UX_ISOLATED: "1"
           QA_MOBILE_UX_VIEWPORTS: narrow,mobile,tablet-portrait,tablet-mid,tablet,tablet-landscape
-          QA_MOBILE_UX_ROUTES: /superinvestors,/superinvestors?tab=investors,/superinvestors?tab=stocks,/superinvestors?guru=blackrock,/superinvestors?tab=trades,/superinvestors?tab=insights,/superinvestors?tab=graph
+          QA_MOBILE_UX_ROUTES: /superinvestors,/superinvestors?tab=investors,/superinvestors?tab=stocks,/superinvestors?guru=blackrock,/superinvestors?tab=trades,/superinvestors?tab=insights,/superinvestors?tab=graph,/screener,/screener?mode=analyze
           QA_MOBILE_UX_OUTPUT_DIR: test-results/responsive
           NEXT_TELEMETRY_DISABLED: "1"
         run: |
@@ -162,10 +164,13 @@ jobs:
           path: 100xfenok-next/test-results/responsive/
           retention-days: 7
 
-      - name: Upload regenerated contrast witness
+      - name: Upload regenerated investor evidence
         if: always() && inputs.suite == 'investor-isolated'
         uses: actions/upload-artifact@v4
         with:
-          name: investor-contrast-witness
-          path: 100xfenok-next/scripts/fixtures/ink4-contrast-sites.json
+          name: investor-derived-evidence
+          path: |
+            100xfenok-next/scripts/fixtures/ink4-contrast-sites.json
+            data/sec-13f/analytics/guru_holders_index.json
+            data/admin/fenok-data-health-kpi.json
           retention-days: 7

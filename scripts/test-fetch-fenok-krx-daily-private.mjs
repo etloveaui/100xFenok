@@ -1027,4 +1027,54 @@ for (const outage of [
   fs.rmSync(root, { recursive: true, force: true });
 }
 
+// B-KRX-ACCESS-FAILURE (d) mixed statuses: the classification is decided from
+// the per-file http_status records, not from a single summary string. 401 and
+// 403 interleaved across the 31 requests are both access rejections and stay
+// "auth_error"; a single non-access failure (503) among 403s means the run is
+// not provably a credential rejection and keeps the soft "http_error".
+for (const mixed of [
+  { name: "mixed_401_403", statuses: [401, 403], reason: "auth_error", corrupt: true, nonZeroExit: true },
+  { name: "mixed_403_503", statuses: [403, 503], reason: "http_error", corrupt: false, nonZeroExit: false },
+]) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), `fenok-krx-${mixed.name}-`));
+  const paths = recoveryPaths(root);
+  assert.equal(applyReady(root, "2026-07-14", "seed-run").kind, "success");
+  const tracked = trackedKrxOutputs(paths);
+  const before = tracked.map((target) => fs.readFileSync(target));
+
+  let requestIndex = 0;
+  const { result, calls } = await runAgainstStubbedProvider(root, `krx_daily_20260715_${mixed.name}`, () => {
+    const status = mixed.statuses[requestIndex % mixed.statuses.length];
+    requestIndex += 1;
+    return new Response("Rejected", { status, headers: { "content-type": "text/plain" } });
+  });
+
+  assert.equal(calls.length, 31);
+  assert.equal(result.summary.failed_files, 31);
+  assert.deepEqual(Object.keys(result.summary.failed_reasons).sort(), mixed.statuses.map((status) => `HTTP ${status}`),
+    `${mixed.name} must exercise both statuses`);
+  assert.equal(result.attempt_outcome, "failure");
+  assert.equal(result.recovery.updated, false);
+  assert.equal(result.recovery.reason, mixed.reason, `${mixed.name} must classify as ${mixed.reason}`);
+  assert.equal(result.recovery.corrupt, mixed.corrupt);
+  assert.equal(result.recovery.degraded, !mixed.corrupt);
+  if (mixed.nonZeroExit) assert.notEqual(result.exit_code, 0, `${mixed.name} must not be able to report success`);
+  else assert.equal(result.exit_code, 0, `${mixed.name} keeps the soft retained-LKG exit contract`);
+  tracked.forEach((target, index) => assert.deepEqual(fs.readFileSync(target), before[index],
+    `retained canonical output must be preserved under ${mixed.name}: ${path.basename(target)}`));
+  const state = readJson(path.join(root, "data/admin", KRX_LANE_ID, "index.json"));
+  assert.deepEqual(state.retry_set, [KRX_LKG_KEY]);
+  assert.equal(state.items[KRX_LKG_KEY].resolution_state, "lkg_primary");
+  assert.equal(state.items[KRX_LKG_KEY].latest_failure.reason, mixed.reason);
+
+  const outputPath = path.join(root, "github-output.txt");
+  writeGithubOutputs(result, outputPath);
+  const output = fs.readFileSync(outputPath, "utf8");
+  assert.match(output, /^attempt_outcome=failure$/mu);
+  assert.match(output, new RegExp(`^recovery_reason=${mixed.reason}$`, "mu"));
+  if (mixed.nonZeroExit) assert.doesNotMatch(output, /^recovery_exit_code=0$/mu);
+  assert.equal(`${JSON.stringify(result)}${output}`.includes("test-only-key"), false, "the key never leaks into result or outputs");
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
 console.log("test-fetch-fenok-krx-daily-private: ok");

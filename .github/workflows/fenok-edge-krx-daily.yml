@@ -165,10 +165,12 @@ jobs:
             CANDIDATE_OUTCOME="$(awk -F= '$1 == "attempt_outcome" { value=$2 } END { print value }' "$CANDIDATE_OUTPUT")"
             CANDIDATE_UPDATED="$(awk -F= '$1 == "recovery_updated" { value=$2 } END { print value }' "$CANDIDATE_OUTPUT")"
             CANDIDATE_EXIT_CODE="$(awk -F= '$1 == "recovery_exit_code" { value=$2 } END { print value }' "$CANDIDATE_OUTPUT")"
+            CANDIDATE_REASON="$(awk -F= '$1 == "recovery_reason" { value=$2 } END { print value }' "$CANDIDATE_OUTPUT")"
             if [ "$CANDIDATE_OUTCOME" != "success" ] && [ "$CANDIDATE_OUTCOME" != "failure" ]; then
               CANDIDATE_OUTCOME=failure
               CANDIDATE_UPDATED=false
               CANDIDATE_EXIT_CODE=2
+              CANDIDATE_REASON=missing_candidate_output
               {
                 echo "attempt_outcome=failure"
                 echo "recovery_updated=false"
@@ -208,6 +210,14 @@ jobs:
             fi
             rm -f "$CANDIDATE_OUTPUT"
             CANDIDATE_OUTPUT=""
+            if [ "$CANDIDATE_REASON" = "auth_error" ]; then
+              # A provider access rejection is date-independent: earlier dates
+              # cannot cure it, so stop the walkback here. This attempt's failure
+              # evidence is already in FINAL_CANDIDATE_OUTPUT and flows through
+              # the always() emit/commit steps below exactly like any failure.
+              echo "::error::KRX basDd=${CANDIDATE} was rejected by the provider (recovery_reason=auth_error); stopping walkback"
+              break
+            fi
             echo "::warning::KRX basDd=${CANDIDATE} did not promote (outcome=${CANDIDATE_OUTCOME}, updated=${CANDIDATE_UPDATED}); trying previous date if available"
           done
           cat "$FINAL_CANDIDATE_OUTPUT" >> "$STEP_OUTPUT"

@@ -94,7 +94,7 @@
     "qa:browser:mobile": "QA_VIEWPORTS=mobile,tablet,fold QA_ROUTES=/,/?tab=sectors,/?tab=liquidity,/?tab=sentiment,/market,/screener,/portfolio,/stock/NVDA,/stock/ZZZZ,/superinvestors,/market-valuation,/sectors,/etfs/SPY,/ib,/vr,/vr/?path=vr/vr-complete-system.html,/admin,/admin/design-lab?mode=native node .qa-playwright.js",
     "qa:mobile-ux": "node scripts/check-mobile-ux-contract.mjs",
     "qa:screener-common-basis-plumbing": "tsx scripts/test-screener-common-basis-plumbing.ts",
-    "qa:journey-continuity": "tsx scripts/test-journey-continuity.ts",
+    "qa:journey-continuity": "node --import tsx --test scripts/test-journey-continuity.ts scripts/test-superinvestor-signal-scores.ts ../scripts/test-build-guru-holders-index.mjs",
     "qa:superinvestor-signal-scores": "tsx scripts/test-superinvestor-signal-scores.ts",
     "qa:journey-continuity:verify": "npm run qa:journey-continuity && npm run qa:etf-unavailable && npm run build:version && npm run sync-static && npm run cf:build:next",
     "qa:screener-source-dates": "tsx scripts/test-screener-source-date-label.ts",

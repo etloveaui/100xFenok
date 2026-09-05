@@ -14,11 +14,26 @@ import {
   saveJourneyScrollSnapshot,
 } from "../src/lib/journey-context";
 import { ROUTES } from "../src/lib/routes";
+import {
+  coerceActionFilter,
+  parseScreenerFilterState,
+  serializeScreenerFilterState,
+} from "../src/lib/screener/filter-url";
 
 const tickerDestination = new URL(ROUTES.superinvestorsByTicker("NVDA"), "https://example.test");
 assert.equal(tickerDestination.searchParams.get("tab"), "stocks",
   "A stock-to-investor pivot must select the current stocks tab, not the removed by-ticker tab");
 assert.equal(tickerDestination.searchParams.get("ticker"), "NVDA");
+
+for (const action of ["guru_held", "guru_new", "guru_increased"] as const) {
+  assert.equal(coerceActionFilter(action), action,
+    `${action} must remain a valid action-filter value when a screener URL is decoded`);
+  const parsed = parseScreenerFilterState({ action });
+  assert.equal(parsed.actionFilter, action,
+    `${action} must survive the screener action-filter URL parser`);
+  assert.equal(serializeScreenerFilterState(parsed).get("action"), action,
+    `${action} must survive the screener action-filter URL serializer`);
+}
 
 const investorDestination = new URL(ROUTES.superinvestorsGuru("berkshire"), "https://example.test");
 assert.equal(investorDestination.searchParams.get("tab"), "investors",
