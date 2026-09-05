@@ -7,6 +7,10 @@ on:
         description: 'Target to photograph (defaults to the live Worker)'
         required: false
         default: 'https://100xfenok.etloveaui.workers.dev'
+      responsive_routes:
+        description: "Optional comma-separated routes for a focused responsive recheck"
+        required: false
+        default: ""
       suite:
         description: 'Interaction scope (all keeps the existing snapshot coverage)'
         required: false
@@ -68,6 +72,7 @@ jobs:
           PROJECT: ${{ matrix.project }}
           QA_BASE_URL: ${{ inputs.base_url || 'https://100xfenok.etloveaui.workers.dev' }}
           SUITE: ${{ inputs.suite || 'all' }}
+          RESPONSIVE_ROUTES: ${{ inputs.responsive_routes }}
         run: |
           case "$SUITE" in
             all) npm run qa:visual -- --project="$PROJECT";;
@@ -79,6 +84,7 @@ jobs:
                 *) echo "unsupported responsive viewport group" >&2; exit 64;;
               esac
               export QA_MOBILE_UX_ROUTES="/,/screener,/screener?mode=analyze,/stock/NVDA,/stock/NVDA?tab=financials,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock,/etfs,/etfs/SPY,/market-valuation,/regime,/sectors,/portfolio,/macro-chart,/superinvestors?tab=stocks"
+              if [ -n "$RESPONSIVE_ROUTES" ]; then export QA_MOBILE_UX_ROUTES="$RESPONSIVE_ROUTES"; fi
               export QA_MOBILE_UX_OUTPUT_DIR="test-results/responsive"
               npm run qa:mobile-ux
               ;;

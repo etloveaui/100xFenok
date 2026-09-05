@@ -1250,6 +1250,7 @@ function HoldingsTable({
                     type="button"
                     onClick={() => onEdit(r)}
                     className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg px-2 text-[10px] font-black transition hover:bg-slate-100"
+                    style={{ minHeight: 44, minWidth: 44 }}
                     aria-label={`${r.ticker} 수정 입력`}
                   >
                     수정

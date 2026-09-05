@@ -3809,6 +3809,12 @@ async function collectStockSummaryAxisClickChecks(page, route) {
   }
 
   await button.click({ timeout: 10000 });
+  // Consensus lives inside the user-expandable annual/quarterly detail.
+  const estimateDetails = page.locator('details[data-stock-tab-card="estimates-yf"]');
+  await estimateDetails.waitFor({ state: "visible", timeout: 15000 });
+  if ((await estimateDetails.getAttribute("open")) === null) {
+    await estimateDetails.locator("summary").click();
+  }
   await page.locator('[data-stock-estimates-consensus-summary]:visible').first()
     .waitFor({ state: "visible", timeout: 10000 })
     .catch(() => {});
@@ -4032,10 +4038,23 @@ try {
       }
 
       try {
-        const response = await page.goto(routeUrl(route), {
+        const navigationOptions = {
           waitUntil: outputDir ? "domcontentloaded" : "networkidle",
           timeout: 45000,
-        });
+        };
+        let response = await page.goto(routeUrl(route), navigationOptions);
+        if (response?.status() === 429) {
+          const requestedSeconds = Number(response.headers()["retry-after"]);
+          const delayMs = Number.isFinite(requestedSeconds) && requestedSeconds > 0
+            ? Math.max(1000, requestedSeconds * 1000)
+            : 60000;
+          // One bounded retry respects server backoff; a second 429 stays red.
+          if (delayMs <= 60000) {
+            result.navigationRetries = [{ status: 429, delayMs }];
+            await page.waitForTimeout(delayMs);
+            response = await page.goto(routeUrl(route), navigationOptions);
+          }
+        }
         result.status = response ? response.status() : null;
         if (response && !response.ok()) {
           result.failures.push({
