@@ -4,7 +4,7 @@ const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-console,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/changes,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/screener?mode=analyze,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors,/superinvestors?guru=blackrock")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-console,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/changes,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/screener?mode=analyze,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -108,8 +108,13 @@ async function prepareDynamicRoute(page, route) {
   }
   if (pathname === "/superinvestors") {
     await page.locator("[data-superinvestors-surface]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
-    // V3 default tab is signal (?guru= forces the investors tab instead).
+    // V3 default tab is signal (?guru= opens the dedicated guru detail view,
+    // ?tab=investors opens the holders list).
     if (route.includes("guru=")) {
+      await page.locator("[data-superinvestors-guru-detail-view]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+      // the holdings table (scroll region) mounts after the detail fetch
+      await page.locator('.scroll-hint-x[role="region"]:visible').first().waitFor({ state: "visible", timeout: 45_000 });
+    } else if (route.includes("tab=investors")) {
       await page.locator("[data-superinvestors-holder-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
     } else {
       await page.locator("[data-superinvestors-signal-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
@@ -3309,10 +3314,12 @@ async function collectRouteChecks(page, route) {
       if (!lagNote.includes("45")) {
         failures.push({ check: "superinvestors-13f-lag", detail: `footer=${lagNote.slice(0, 80)}` });
       }
-      // V3 tabs: holders/overlap live under the investors tab (?guru= forces
-      // it), the signal tab is the default view. Inactive tabs unmount, so
-      // each route asserts only its visible tab; hooks are unchanged.
+      // V3 tabs: holders/overlap live under the investors tab. S6: ?guru=
+      // opens a dedicated detail view that replaces the list; the list is
+      // asserted on the ?tab=investors route instead. Inactive tabs unmount,
+      // so each route asserts only its visible tab; hooks are unchanged.
       const isGuruRoute = currentRoute.includes("guru=");
+      const isInvestorsRoute = currentRoute.includes("tab=investors");
       const sortBtns = Array.from(document.querySelectorAll("[data-superinvestors-sort]"));
       const tabBtns = Array.from(document.querySelectorAll("[data-superinvestors-tab]"));
       if (tabBtns.length !== 6 || tabBtns.filter((btn) => btn.getAttribute("aria-selected") === "true").length !== 1) {
@@ -3324,6 +3331,17 @@ async function collectRouteChecks(page, route) {
         failures.push({ check: "superinvestors-tab-ids", detail: `tabs=${tabIds.join(",")}` });
       }
       if (isGuruRoute) {
+        const params = new URLSearchParams(currentRoute.split("?")[1] || "");
+        const guruId = params.get("guru") || "";
+        const detail = document.querySelector(`[data-superinvestors-guru-detail-view][data-superinvestors-holder-detail-id="${guruId}"]`);
+        if (!detail || detail.getBoundingClientRect().height <= 0 || !/\d{4}-Q\d/.test(detail.textContent || "")) {
+          failures.push({ check: "superinvestors-guru-detail", detail: "missing visible guru detail with quarter" });
+        }
+        const back = detail?.querySelector("[data-superinvestors-guru-back]");
+        if (!back || back.getBoundingClientRect().height <= 0) {
+          failures.push({ check: "superinvestors-guru-back", detail: "missing visible back control" });
+        }
+      } else if (isInvestorsRoute) {
         const holders = document.querySelector("[data-superinvestors-holders]");
         const holderRows = Array.from(document.querySelectorAll("[data-superinvestors-holder-row]"));
         const headCells = Array.from(holders?.querySelectorAll("thead th") || []);
@@ -3383,21 +3401,11 @@ async function collectRouteChecks(page, route) {
           }
         });
       }
+      // The graph teaser lives in the investors-tab rail; the guru detail
+      // view replaces that grid, so skip the teaser check on guru routes.
       const graphTeaser = document.querySelector("[data-superinvestors-graph-teaser]");
-      if (!graphTeaser || graphTeaser.getBoundingClientRect().height <= 0 || !/그래프 보기/.test(graphTeaser.textContent || "")) {
+      if (!isGuruRoute && (!graphTeaser || graphTeaser.getBoundingClientRect().height <= 0 || !/그래프 보기/.test(graphTeaser.textContent || ""))) {
         failures.push({ check: "superinvestors-graph-teaser", detail: "missing visible graph teaser" });
-      }
-      if (currentRoute.includes("guru=")) {
-        const params = new URLSearchParams(currentRoute.split("?")[1] || "");
-        const guruId = params.get("guru") || "";
-        const expandedRow = document.querySelector(`[data-superinvestors-holder-row][data-superinvestors-holder-id="${guruId}"]`);
-        const detail = document.querySelector(`[data-superinvestors-holder-detail][data-superinvestors-holder-detail-id="${guruId}"]`);
-        if (!expandedRow || expandedRow.getAttribute("data-superinvestors-holder-expanded") !== "true") {
-          failures.push({ check: "superinvestors-guru-expanded", detail: `expanded=${expandedRow?.getAttribute("data-superinvestors-holder-expanded") || ""} expected=${guruId}` });
-        }
-        if (!detail || detail.getBoundingClientRect().height <= 0 || !/\d{4}-Q\d/.test(detail.textContent || "")) {
-          failures.push({ check: "superinvestors-guru-detail", detail: "missing visible guru detail with quarter" });
-        }
       }
       sortBtns.forEach((btn, index) => {
         const rect = btn.getBoundingClientRect();

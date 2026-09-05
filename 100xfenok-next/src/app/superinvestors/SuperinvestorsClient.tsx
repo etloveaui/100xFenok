@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import TickerChip from "@/components/TickerChip";
@@ -10,6 +10,7 @@ import { Button, EmptyState, EvidenceRail, Panel, PanelHeader, Pill, Row } from 
 import { TabPanel, getPanelId, getTabId, useTabsBaseId } from "@/components/ui/Tabs";
 import {
   formatCurrencyCompact,
+  formatCurrency,
   formatCompactNumber,
   formatInteger,
   formatPercent,
@@ -122,6 +123,52 @@ function normalizeTradesRanking(data: unknown): TradesRankingData | null {
   };
 }
 
+type HoldingChangeKind = "new" | "increased" | "decreased" | "sold";
+
+const HOLDING_CHANGE_LABEL: Record<HoldingChangeKind, string> = {
+  new: "신규",
+  increased: "증가",
+  decreased: "감소",
+  sold: "청산",
+};
+
+const HOLDING_CHANGE_TONE: Record<HoldingChangeKind, string> = {
+  new: "bg-emerald-100 text-emerald-700",
+  increased: "bg-sky-100 text-sky-700",
+  decreased: "bg-amber-100 text-amber-700",
+  sold: "bg-rose-100 text-rose-700",
+};
+
+function buildHoldingChangeMap(
+  changes: InvestorFiling["changes_summary"] | undefined,
+): Map<string, { kind: HoldingChangeKind; pct: number }> {
+  const map = new Map<string, { kind: HoldingChangeKind; pct: number }>();
+  if (!changes) return map;
+  const kinds: HoldingChangeKind[] = ["new", "increased", "decreased", "sold"];
+  for (const kind of kinds) {
+    for (const entry of changes[kind] ?? []) {
+      if (!entry?.ticker || map.has(entry.ticker)) continue;
+      map.set(entry.ticker, {
+        kind,
+        pct: typeof entry.change_pct === "number" && Number.isFinite(entry.change_pct) ? entry.change_pct : NaN,
+      });
+    }
+  }
+  return map;
+}
+
+function HoldingChangePill({ change }: { change: { kind: HoldingChangeKind; pct: number } | undefined }) {
+  if (!change) return <span className="text-[var(--c-ink-3)]">—</span>;
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black ${HOLDING_CHANGE_TONE[change.kind]}`}
+      title={Number.isFinite(change.pct) ? `변화 ${change.pct}%` : undefined}
+    >
+      {HOLDING_CHANGE_LABEL[change.kind]}
+    </span>
+  );
+}
+
 function tradeShare(amount: number | null | undefined, totalAmount: number): number | null {
   if (amount === null || amount === undefined || Number.isNaN(amount) || totalAmount <= 0) return null;
   return (amount / totalAmount) * 100;
@@ -223,7 +270,7 @@ function sortConsensusByHolders(rows: ConsensusTicker[]): ConsensusTicker[] {
   });
 }
 
-function LatestHoldingsMobileCards({ rows }: { rows: InvestorHolding[] }) {
+function LatestHoldingsMobileCards({ rows, changeMap }: { rows: InvestorHolding[]; changeMap?: Map<string, { kind: HoldingChangeKind; pct: number }> }) {
   return (
     <div
       className="cpw5-super-mobile-cards"
@@ -256,6 +303,10 @@ function LatestHoldingsMobileCards({ rows }: { rows: InvestorHolding[] }) {
               <dt>주식수</dt>
               <dd className="tabular-nums">{formatCompactNumber(h.shares)}</dd>
             </div>
+            <div className="cpw5-super-mobile-card__field">
+              <dt>분기 변화</dt>
+              <dd><HoldingChangePill change={h.ticker ? changeMap?.get(h.ticker) : undefined} /></dd>
+            </div>
             <div className="cpw5-super-mobile-card__field cpw5-super-mobile-card__field--wide">
               <dt>시가총액</dt>
               <dd className="tabular-nums">{formatCurrencyCompact(h.market_value, "USD")}</dd>
@@ -267,7 +318,7 @@ function LatestHoldingsMobileCards({ rows }: { rows: InvestorHolding[] }) {
   );
 }
 
-function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
+function LatestHoldingsTable({ holdings, changes }: { holdings: InvestorHolding[]; changes?: InvestorFiling["changes_summary"] }) {
   const rows = useMemo(() => {
     // Filings carry one row per share class / CUSIP — aggregate by ticker.
     const byTicker = new Map<string, InvestorHolding>();
@@ -286,6 +337,7 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
       .sort((a, b) => (b.weight || 0) - (a.weight || 0))
       .slice(0, 50);
   }, [holdings]);
+  const changeMap = useMemo(() => buildHoldingChangeMap(changes), [changes]);
 
   if (rows.length === 0) {
     return (
@@ -295,20 +347,24 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
 
   return (
     <div data-superinvestor-guru-top-holdings className="space-y-2">
-      <LatestHoldingsMobileCards rows={rows} />
+      <LatestHoldingsMobileCards rows={rows} changeMap={changeMap} />
       <div
         className="cpw5-super-desktop-table scroll-hint-x -mx-1 px-1"
         role="region"
         tabIndex={0}
         aria-label="최신 보유 종목 표 가로 스크롤"
       >
-        <table className="w-full min-w-[480px] text-xs">
+        <div className="max-h-[440px] overflow-y-auto">
+        <table className="w-full min-w-[640px] text-xs">
           <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+            <tr className="sticky top-0 z-10 h-9 border-b border-slate-200 bg-white text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
               <th className="px-2 py-2 text-left">티커</th>
               <th className="px-2 py-2 text-left">종목</th>
               <th className="px-2 py-2 text-right">비중</th>
+              <th className="px-2 py-2 text-center">분기 변화</th>
               <th className="px-2 py-2 text-right">주식수</th>
+              <th className="px-2 py-2 text-right">보고가</th>
+              <th className="px-2 py-2 text-right">현재가</th>
               <th className="px-2 py-2 text-right">시가총액</th>
             </tr>
           </thead>
@@ -318,7 +374,7 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
                 key={`${h.ticker}-${h.cusip}`}
                 data-superinvestor-guru-desktop-holding-row
                 data-superinvestor-guru-desktop-holding-ticker={h.ticker ?? ""}
-                className="border-b border-slate-100 last:border-b-0"
+                className="h-11 border-b border-slate-100 last:border-b-0"
               >
                 <td className="px-2 py-2">
                   {h.ticker ? (
@@ -334,8 +390,17 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
                 <td className="px-2 py-2 text-right">
                   <span className="tabular-nums font-bold text-slate-900">{formatPercent(h.weight, { digits: 2 })}</span>
                 </td>
+                <td className="px-2 py-2 text-center">
+                  <HoldingChangePill change={h.ticker ? changeMap.get(h.ticker) : undefined} />
+                </td>
                 <td className="px-2 py-2 text-right">
                   <span className="tabular-nums text-slate-700">{formatCompactNumber(h.shares)}</span>
+                </td>
+                <td className="px-2 py-2 text-right">
+                  <span className="tabular-nums text-slate-700">{h.price_at_filing != null ? formatCurrency(h.price_at_filing, "USD", { digits: 2 }) : "—"}</span>
+                </td>
+                <td className="px-2 py-2 text-right">
+                  <span className="tabular-nums text-slate-700">{h.price_latest != null ? formatCurrency(h.price_latest, "USD", { digits: 2 }) : "—"}</span>
                 </td>
                 <td className="px-2 py-2 text-right">
                   <span className="tabular-nums text-slate-700">{formatCurrencyCompact(h.market_value, "USD")}</span>
@@ -344,6 +409,7 @@ function LatestHoldingsTable({ holdings }: { holdings: InvestorHolding[] }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
@@ -805,7 +871,7 @@ function GuruDetailPanel({
       ) : latest ? (
         <div className="mt-4">
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">Top 보유</p>
-          <LatestHoldingsTable holdings={latest.holdings ?? []} />
+          <LatestHoldingsTable holdings={latest.holdings ?? []} changes={latest.changes_summary} />
         </div>
       ) : status === "private" ? (
         <div className="mt-4">
@@ -1331,6 +1397,81 @@ function SectorRotationPanel({
     </Panel>
   );
 }
+function GuruDetailView({
+  id,
+  summary,
+  pvData,
+  pvLoading,
+  pvFailed,
+  onRetryPv,
+  factorData,
+  factorLoading,
+  factorFailed,
+  onRetryFactor,
+  asOf,
+  onBack,
+}: {
+  id: string;
+  summary: SummaryInvestor;
+  pvData: PortfolioViewsData | null;
+  pvLoading: boolean;
+  pvFailed: boolean;
+  onRetryPv?: () => void;
+  factorData: FactorExposuresSummaryData | null;
+  factorLoading: boolean;
+  factorFailed: boolean;
+  onRetryFactor?: () => void;
+  asOf: string;
+  onBack: () => void;
+}) {
+  return (
+    <div
+      data-superinvestors-guru-detail-view
+      data-superinvestors-holder-detail
+      data-superinvestors-holder-detail-id={id}
+      className="w-full"
+    >
+      <button
+        type="button"
+        onClick={onBack}
+        data-superinvestors-guru-back
+        className="inline-flex min-h-11 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+      >
+        ← 투자자 목록
+      </button>
+      <div className="mt-3 rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-600">
+              {summary.group}
+            </span>
+            {summary.is_stale ? <span className="sup-stale-badge ml-1">지연</span> : null}
+            <h2 className="mt-1 truncate text-lg font-black tracking-tight text-slate-950">{summary.name}</h2>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-slate-700">
+            <span>운용 자산 <b className="tabular-nums text-slate-900">{formatCurrencyCompact(summary.aum, "USD")}</b></span>
+            <span>보유 종목 <b className="tabular-nums text-slate-900">{formatInteger(summary.holdings_count)}개</b></span>
+            <span>기준 분기 <b className="tabular-nums text-slate-900">{summary.latest_quarter ?? summary.quarter ?? "—"}</b></span>
+          </div>
+        </div>
+        <GuruDetailPanel
+          id={id}
+          summary={summary}
+          pvData={pvData}
+          pvLoading={pvLoading}
+          pvFailed={pvFailed}
+          onRetryPv={onRetryPv}
+          factorData={factorData}
+          factorLoading={factorLoading}
+          factorFailed={factorFailed}
+          onRetryFactor={onRetryFactor}
+          asOf={asOf}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function SuperinvestorsClient({ initialGuru = null, initialTab = null }: { initialGuru?: string | null; initialTab?: string | null }) {
   const {
     consensus,
@@ -1525,15 +1666,13 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
     else {
       rows.sort(([a], [b]) => (turnover?.[b]?.turnover ?? -1) - (turnover?.[a]?.turnover ?? -1));
     }
-    if (expandedGuru) {
-      rows.sort(([a], [b]) => {
-        if (a === expandedGuru) return -1;
-        if (b === expandedGuru) return 1;
-        return 0;
-      });
-    }
     return rows;
-  }, [investors, sort, turnover, expandedGuru]);
+  }, [investors, sort, turnover]);
+
+  const selectedGuruEntry = useMemo(
+    () => (expandedGuru ? investors.find(([id]) => id === expandedGuru) ?? null : null),
+    [investors, expandedGuru],
+  );
 
   const overlapRows = useMemo(() => {
     if (!consensus) return [];
@@ -1609,12 +1748,14 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
     openEvidence("/data/sec-13f/by_ticker.json");
   }
 
-  function toggleGuru(id: string) {
-    setExpandedGuru((cur) => {
-      const next = cur === id ? null : id;
-      syncGuruParam(next);
-      return next;
-    });
+  function openGuru(id: string) {
+    setExpandedGuru(id);
+    syncGuruParam(id);
+  }
+
+  function closeGuru() {
+    setExpandedGuru(null);
+    syncGuruParam(null);
   }
 
   function selectTab(next: SupTab) {
@@ -1699,6 +1840,22 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
       </TabPanel>
 
       <TabPanel item={{ id: "investors" as SupTab, label: "투자자" }} active={tab === "investors"} idBase={tabsBaseId}>
+      {selectedGuruEntry ? (
+        <GuruDetailView
+          id={selectedGuruEntry[0]}
+          summary={selectedGuruEntry[1]}
+          pvData={pvData}
+          pvLoading={pvLoading}
+          pvFailed={pvFailed}
+          onRetryPv={retryPv}
+          factorData={factorData}
+          factorLoading={factorLoading}
+          factorFailed={factorFailed}
+          onRetryFactor={retryFactor}
+          asOf={asOfLabel}
+          onBack={closeGuru}
+        />
+      ) : (
       <div className="sup-grid">
         <Panel
           loading={loading}
@@ -1747,7 +1904,6 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
                   </thead>
                   <tbody>
                     {sortedInvestors.map(([id, inv]) => {
-                      const isOpen = expandedGuru === id;
                       const top = topHoldings.get(id);
                       const topTicker = top?.ticker ?? inv.top5?.[0] ?? null;
                       const change = turnover?.[id] ?? null;
@@ -1757,66 +1913,54 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
                           ? `신규 ${formatInteger(change.new_count)} · 청산 ${formatInteger(change.sold_count)}`
                           : "—";
                       return (
-                        <Fragment key={id}>
-                          <tr
-                            className="sup-hold-row"
-                            data-superinvestors-holder-row
-                            data-superinvestors-holder-id={id}
-                            data-superinvestors-holder-expanded={isOpen ? "true" : "false"}
-                          >
-                            <th scope="row" className="sup-holder-name-cell">
-                              <button
-                                type="button"
-                                className="sup-holder-name"
-                                aria-expanded={isOpen}
-                                onClick={() => toggleGuru(id)}
-                              >
-                                <span className="sup-holder-name-text">{inv.name}</span>
-                                <span className="sup-holder-sub">
-                                  {inv.group}
-                                  {inv.is_stale ? <span className="sup-stale-badge">지연</span> : null}
-                                </span>
-                              </button>
-                            </th>
-                            <td className="tabular-nums">{formatCurrencyCompact(inv.aum, "USD")}</td>
-                            <td className="tabular-nums">{formatInteger(inv.holdings_count)}개</td>
-                            <td>
-                              {topTicker ? (
-                                <span className="sup-top">
-                                  <span className="sup-mono">{topTicker}</span>
-                                  <span className="tabular-nums">{top ? formatPercent(top.weight, { digits: 1 }) : "—"}</span>
-                                </span>
-                              ) : (
-                                <span className="sup-mute">—</span>
-                              )}
-                            </td>
-                            <td
-                              className="tabular-nums"
-                              title={change ? `신규 ${change.new_count} · 청산 ${change.sold_count} · ${change.total_positions}포지션` : undefined}
+                        <tr
+                          key={id}
+                          className="sup-hold-row cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+                          data-superinvestors-holder-row
+                          data-superinvestors-holder-id={id}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`${inv.name} 상세 보기`}
+                          onClick={() => openGuru(id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openGuru(id);
+                            }
+                          }}
+                        >
+                          <th scope="row" className="sup-holder-name-cell">
+                            <button
+                              type="button"
+                              className="sup-holder-name"
+                              onClick={() => openGuru(id)}
                             >
-                              {changeValue}
-                            </td>
-                          </tr>
-                          {isOpen ? (
-                            <tr key={`${id}-detail`} className="sup-detail-row">
-                              <td colSpan={5} data-superinvestors-holder-detail data-superinvestors-holder-detail-id={id}>
-                                <GuruDetailPanel
-                                  id={id}
-                                  summary={inv}
-                                  pvData={pvData}
-                                  pvLoading={pvLoading}
-                                  pvFailed={pvFailed}
-                                  onRetryPv={retryPv}
-                                  factorData={factorData}
-                                  factorLoading={factorLoading}
-                                  factorFailed={factorFailed}
-                                  onRetryFactor={retryFactor}
-                                  asOf={asOfLabel}
-                                />
-                              </td>
-                            </tr>
-                          ) : null}
-                        </Fragment>
+                              <span className="sup-holder-name-text">{inv.name}</span>
+                              <span className="sup-holder-sub">
+                                {inv.group}
+                                {inv.is_stale ? <span className="sup-stale-badge">지연</span> : null}
+                              </span>
+                            </button>
+                          </th>
+                          <td className="tabular-nums">{formatCurrencyCompact(inv.aum, "USD")}</td>
+                          <td className="tabular-nums">{formatInteger(inv.holdings_count)}개</td>
+                          <td>
+                            {topTicker ? (
+                              <span className="sup-top">
+                                <span className="sup-mono">{topTicker}</span>
+                                <span className="tabular-nums">{top ? formatPercent(top.weight, { digits: 1 }) : "—"}</span>
+                              </span>
+                            ) : (
+                              <span className="sup-mute">—</span>
+                            )}
+                          </td>
+                          <td
+                            className="tabular-nums"
+                            title={change ? `신규 ${change.new_count} · 청산 ${change.sold_count} · ${change.total_positions}포지션` : undefined}
+                          >
+                            {changeValue}
+                          </td>
+                        </tr>
                       );
                     })}
                   </tbody>
@@ -1901,6 +2045,7 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
           />
         </div>
       </div>
+      )}
       </TabPanel>
 
       <TabPanel item={{ id: "stocks" as SupTab, label: "종목" }} active={tab === "stocks"} idBase={tabsBaseId}>
