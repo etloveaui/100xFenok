@@ -4433,13 +4433,15 @@ try {
       });
     }
     await installQaPortfolio(context);
-    const page = await context.newPage();
-    let routeErrors = [];
-    let routeRequests = [];
-    page.on("request", (request) => routeRequests.push(new URL(request.url()).pathname));
-    page.on("pageerror", (error) => routeErrors.push(String(error)));
-
     for (const [routeIndex, route] of routes.entries()) {
+      // Each route is an independent scenario. A fresh page prevents pending
+      // RSC requests from the previous document leaking errors into this one.
+      // Journey checks still navigate and restore within this same page.
+      const page = await context.newPage();
+      const routeErrors = [];
+      const routeRequests = [];
+      page.on("request", (request) => routeRequests.push(new URL(request.url()).pathname));
+      page.on("pageerror", (error) => routeErrors.push(String(error)));
       const emulation = {
         hasTouch: captureEmulation,
         isMobile: captureEmulation && viewport.width < 768,
@@ -4457,8 +4459,6 @@ try {
         result.emulation = emulation;
       }
 
-      routeErrors = [];
-      routeRequests = [];
       try {
         const navigationOptions = {
           waitUntil: outputDir ? "domcontentloaded" : "networkidle",
@@ -4550,7 +4550,6 @@ try {
         }
       }
 
-      result.pageErrors = routeErrors.slice(0, 8);
       if (outputDir) {
         result.capturedUrl = page.url();
         try {
@@ -4564,7 +4563,13 @@ try {
         }
       }
 
+      result.pageErrorCount = routeErrors.length;
+      result.pageErrors = routeErrors.slice(0, 8);
+      if (isolated && routeErrors.length > 0) {
+        result.failures.push({ check: "page-errors", detail: result.pageErrors.join(" | ") });
+      }
       results.push(result);
+      await page.close();
     }
 
     await context.close();

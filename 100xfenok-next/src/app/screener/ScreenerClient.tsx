@@ -1146,9 +1146,9 @@ function MobileStockCard({
             >
               {stock.actionLabel ?? "관찰"} · {stock.actionScore != null ? Math.round(stock.actionScore) : "—"}
             </span>
+            <GuruHolderBadge stock={stock} compact returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
             {!canvasPlusPreview ? (
               <>
-                <GuruHolderBadge stock={stock} compact returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
                 <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
                   {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
                 </span>

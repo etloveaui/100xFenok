@@ -195,7 +195,12 @@ export async function loadActionSummaryDocument(
   context?: StockAnalyzerDataProviderContext,
 ): Promise<ActionSummaryDocument | null> {
   if (context?.signal) {
-    return fetchActionSummaryDocument(context);
+    // Action summaries enrich the stock rows but do not own the base dataset.
+    // A caller-owned abort (for example, the stock provider's bounded request)
+    // must therefore degrade to an empty enrichment map so raw rows can still
+    // become ready. The standalone call below remains cached and settles on
+    // its own timeout for action-dependent filters and journey hydration.
+    return fetchActionSummaryDocument(context).catch(() => null);
   }
 
   if (cachedDocument && Date.now() - cachedDocumentAt < ACTION_SUMMARY_CACHE_TTL_MS) {
