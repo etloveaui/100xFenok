@@ -1,4 +1,4 @@
-import { isValidRouteTicker, normalizeForRouteTicker } from "@/lib/ticker";
+import { ROUTE_TICKER_PATTERN } from "@/lib/ticker";
 
 export const MAX_JOURNEY_CONTEXT_LENGTH = 2_048;
 export const MAX_JOURNEY_SNAPSHOT_LENGTH = 262_144;
@@ -74,8 +74,8 @@ export function withJourneyReturnTo(path: string, returnTo: string | null | unde
 
 function normalizeSnapshotTicker(value: unknown): string | null {
   if (typeof value !== "string") return null;
-  const normalized = normalizeForRouteTicker(value);
-  return isValidRouteTicker(normalized) ? normalized : null;
+  const normalized = value.trim().toUpperCase();
+  return ROUTE_TICKER_PATTERN.test(normalized) ? normalized : null;
 }
 
 function normalizeSnapshot(snapshot: unknown): ScreenerJourneySnapshot | null {
