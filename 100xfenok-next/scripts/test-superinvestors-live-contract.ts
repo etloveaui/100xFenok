@@ -10,6 +10,10 @@ const clientSource = fs.readFileSync(
   path.join(root, "src/app/superinvestors/SuperinvestorsClient.tsx"),
   "utf8",
 );
+const tabDataSource = fs.readFileSync(
+  path.join(root, "src/app/superinvestors/useInvestorTabData.ts"),
+  "utf8",
+);
 
 type Settled<T> = { data: T | null; failed: boolean };
 type ResolveLoad = (sources: {
@@ -43,7 +47,8 @@ test("public 13F requests use root-absolute canonical paths and a QA-safe timeou
   ]) {
     assert.ok(fs.readFileSync(path.join(root, "src/hooks/use13FData.ts"), "utf8").includes(requestPath));
   }
-  assert.ok(clientSource.includes('fetch13FJson<TurnoverData>("/data/sec-13f/analytics/turnover.json")'));
+  assert.ok(tabDataSource.includes('fetch13FJson<TurnoverData>("/data/sec-13f/analytics/turnover.json")'));
+  assert.ok(clientSource.includes("useInvestorTabData(tab, expandedGuru)"));
 });
 
 test("a healthy holder summary survives a consensus failure as partial data", () => {
