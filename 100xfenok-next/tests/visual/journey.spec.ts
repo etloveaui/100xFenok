@@ -111,9 +111,14 @@ test("journey: guru stock detail returns to the guru context", async ({ page }, 
   const holdingsScroll = page.locator('[data-journey-holdings-scroll]:visible');
   const holdingLinks = page.locator('[data-superinvestors-guru-detail-view] a[href^="/stock/"]:visible');
   await expect(holdingLinks.first()).toBeVisible();
-  const stockLink = desktop ? holdingLinks.nth(Math.min(8, await holdingLinks.count() - 1)) : holdingLinks.first();
+  if (desktop) {
+    await expect.poll(() => holdingLinks.count()).toBeGreaterThan(12);
+    await holdingsScroll.evaluate((node) => { node.scrollTop = 240; });
+  }
+  const stockLink = desktop ? holdingLinks.nth(12) : holdingLinks.first();
   await stockLink.scrollIntoViewIfNeeded();
   const expectedInnerTop = desktop ? await holdingsScroll.evaluate((node) => node.scrollTop) : 0;
+  if (desktop) expect(expectedInnerTop).toBeGreaterThan(0);
   await expect(stockLink).toHaveAttribute("href", /returnTo=/);
   const returnHref = await stockLink.getAttribute("href");
   expect(returnHref).toContain("returnTo=%2Fsuperinvestors");
@@ -125,7 +130,7 @@ test("journey: guru stock detail returns to the guru context", async ({ page }, 
   await explicitBack.click();
   await expect(page).toHaveURL(/\/superinvestors\?.*tab=investors.*guru=/);
   await expect(page.locator("[data-superinvestors-guru-detail-view]:visible")).toBeVisible();
-  if (desktop && expectedInnerTop > 0) {
+  if (desktop) {
     await expect.poll(() => holdingsScroll.evaluate((node) => node.scrollTop)).toBeGreaterThan(expectedInnerTop - 50);
   }
   await attachJourneyScreenshot(page, testInfo, "guru-return.png");
@@ -148,4 +153,43 @@ test("journey: default discovery retains its comparison selection", async ({ pag
   await expect(page.locator('[data-screener-mode="discover"]')).toBeVisible();
   await expect(compare).toHaveAttribute("aria-pressed", "true");
   await attachJourneyScreenshot(page, testInfo, "discovery-return.png");
+});
+
+
+test("journey: late enrichment respects a changed selection", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.goto("/screener?mode=analyze&ticker=NVDA", { waitUntil: "domcontentloaded" });
+  await page.locator('[data-screener-view-mode-option="card"]:visible').first().click();
+  const card = page.locator('[data-screener-stock-card]:visible').filter({ hasText: "NVDA" }).first();
+  const checkbox = card.locator('input[type="checkbox"]').first();
+  await checkbox.check();
+  const mobile = (page.viewportSize()?.width ?? 1440) <= 920;
+  if (mobile) {
+    const expand = card.getByRole("button", { name: /NVDA 상세/ });
+    if (await expand.getAttribute("aria-expanded") !== "true") await expand.click();
+  }
+  await card.getByRole("link", { name: mobile ? "종목 상세" : "상세", exact: true }).first().click();
+  await expect(page).toHaveURL(/\/stock\/NVDA\?.*returnTo=/);
+  let release: (() => void) | undefined;
+  let intercepted = false;
+  await page.route("**/data/sec-13f/analytics/guru_holders_index.json", async (route) => {
+    intercepted = true;
+    await new Promise<void>((resolve) => { release = resolve; });
+    await route.continue();
+  });
+  try {
+    await page.getByRole("link", { name: "스크리너로 돌아가기", exact: true }).filter({ visible: true }).click();
+    await expect.poll(() => intercepted).toBe(true);
+    await expect(checkbox).toBeVisible();
+    await checkbox.check();
+    await checkbox.uncheck();
+    const responsePromise = page.waitForResponse((response) => response.url().includes("guru_holders_index.json"));
+    release?.();
+    const response = await responsePromise;
+    await response.finished();
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expect(checkbox).not.toBeChecked();
+  } finally {
+    release?.();
+  }
 });

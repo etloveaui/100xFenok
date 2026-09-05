@@ -1800,7 +1800,9 @@ export default function ScreenerClient({
     const snapshot = pendingJourneySnapshotRef.current;
     if (journeyRestoredRef.current || snapshot === undefined || !dataReady || !guruSettled || !actionSettled) return;
     const source = journeySourceRef.current;
-    if (snapshot === null) {
+    if (snapshot === null || journeyUserInteractedRef.current) {
+      if (source) clearScreenerJourneySnapshot(source);
+      pendingJourneySnapshotRef.current = null;
       journeyRestoredRef.current = true;
       setJourneyHydrated(true);
       return;
