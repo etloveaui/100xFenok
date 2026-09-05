@@ -6,17 +6,21 @@ import type {
   BuyingPressureData,
   ConvictionData,
   FactorExposuresSummaryData,
+  GuruHoldersIndexData,
   NewPositionsData,
   PortfolioViewsData,
   TradesRankingData,
   TurnoverData,
 } from "@/lib/superinvestors/types";
+import type { PerBandIndex } from "@/features/stock-analyzer/data/per-band-provider";
 import { loadFactorExposuresSummary, loadPortfolioViews } from "./portfolioViewsLoader";
 import {
   loadSignalBuyingPressure,
   loadSignalConviction,
   loadSignalNewPositions,
+  loadSignalPerBands,
   loadSignalScores,
+  loadSignalTickerEvidence,
   type SignalScoreData,
 } from "./signalFeeds";
 
@@ -34,6 +38,8 @@ export interface InvestorSignalFeedState {
   buyingPressure: FeedState<BuyingPressureData>;
   conviction: FeedState<ConvictionData>;
   signalScores: FeedState<Map<string, SignalScoreData>>;
+  tickerEvidence: FeedState<GuruHoldersIndexData>;
+  perBands: FeedState<PerBandIndex>;
 }
 
 export interface InvestorTabDataState {
@@ -58,7 +64,9 @@ type FeedKey =
   | "newPositions"
   | "buyingPressure"
   | "conviction"
-  | "signalScores";
+  | "signalScores"
+  | "tickerEvidence"
+  | "perBands";
 
 type TabDataState = Omit<InvestorTabDataState, "retryTurnover" | "retryTrades" | "retryPortfolio" | "retryFactor" | "retrySignal" | "readyFor">;
 
@@ -77,6 +85,8 @@ function createInitialState(): TabDataState {
       buyingPressure: feed<BuyingPressureData>(),
       conviction: feed<ConvictionData>(),
       signalScores: feed<Map<string, SignalScoreData>>(),
+      tickerEvidence: feed<GuruHoldersIndexData>(),
+      perBands: feed<PerBandIndex>(),
     },
   };
 }
@@ -134,10 +144,12 @@ const LOADERS: Record<FeedKey, () => Promise<unknown>> = {
   buyingPressure: loadSignalBuyingPressure,
   conviction: loadSignalConviction,
   signalScores: loadSignalScores,
+  tickerEvidence: loadSignalTickerEvidence,
+  perBands: loadSignalPerBands,
 };
 
 function feedStateFor(state: TabDataState, key: FeedKey): FeedState<unknown> {
-  if (key === "newPositions" || key === "buyingPressure" || key === "conviction" || key === "signalScores") {
+  if (key === "newPositions" || key === "buyingPressure" || key === "conviction" || key === "signalScores" || key === "tickerEvidence" || key === "perBands") {
     return state.signal[key];
   }
   return state[key];
@@ -156,7 +168,7 @@ function requiredFeeds(tab: InvestorTab, guruId: string | null): FeedKey[] {
 }
 
 function stateForKey(state: TabDataState, key: FeedKey, next: FeedState<unknown>): TabDataState {
-  if (key === "newPositions" || key === "buyingPressure" || key === "conviction" || key === "signalScores") {
+  if (key === "newPositions" || key === "buyingPressure" || key === "conviction" || key === "signalScores" || key === "tickerEvidence" || key === "perBands") {
     return { ...state, signal: { ...state.signal, [key]: next } } as TabDataState;
   }
   return { ...state, [key]: next } as TabDataState;
@@ -230,6 +242,10 @@ export function useInvestorTabData(tab: InvestorTab, guruId: string | null): Inv
     const enteredSignal = tab === "signal" && previousTabRef.current !== "signal";
     previousTabRef.current = tab;
     for (const key of requiredFeeds(tab, guruId)) requestFeed(key);
+    if (tab === "signal" || tab === "stocks") {
+      requestFeed("tickerEvidence");
+      requestFeed("perBands");
+    }
     if (enteredSignal) refreshSignalScores();
   }, [tab, guruId, requestFeed, refreshSignalScores, retryEpoch]);
 
@@ -255,7 +271,7 @@ export function useInvestorTabData(tab: InvestorTab, guruId: string | null): Inv
   const retryPortfolio = useCallback(() => retryKeys(["portfolio"]), [retryKeys]);
   const retryFactor = useCallback(() => retryKeys(["factor"]), [retryKeys]);
   const retrySignal = useCallback(() => {
-    const signalKeys: FeedKey[] = ["newPositions", "buyingPressure", "conviction", "signalScores"];
+    const signalKeys: FeedKey[] = ["newPositions", "buyingPressure", "conviction", "signalScores", "tickerEvidence", "perBands"];
     retryKeys(signalKeys.filter((key) => {
       const current = feedStateFor(stateRef.current, key);
       return current.status === "error" || current.status === "unavailable";

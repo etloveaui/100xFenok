@@ -37,6 +37,12 @@ export interface ScreenerConnectionMeta {
 
 export interface ScreenerStock {
   guruHolders?: number | null;
+  guruNewCount?: number | null;
+  guruIncreasedCount?: number | null;
+  guruDecreasedCount?: number | null;
+  guruMeanWeightDelta?: number | null;
+  guruCurrentQuarter?: string | null;
+  guruPreviousQuarter?: string | null;
   actionScore?: number | null;
   fenokSignalConfidence?: string | null;
   fenokSignalCoverageRatio?: number | null;

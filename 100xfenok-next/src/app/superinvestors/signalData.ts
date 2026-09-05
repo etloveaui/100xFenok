@@ -124,8 +124,10 @@ export interface PressureRank {
   count: number;
 }
 
-// 증가/감소 상위: buying-pressure breadth counts. The generator's net_sellers
-// counts every share decrease, not full exits, so the third list reads 감소 —
+// 증가/감소 상위: buying-pressure breadth counts of investors whose share
+// count increased or decreased. These are investor counts, never quantities of
+// shares. The generator's net_sellers counts every share decrease, not full
+// exits, so the third list reads 감소 —
 // never 청산. holder_details carries no per-holder action (only current
 // investor/shares/weight), so no holder set can stand in as the actors: these
 // lists rank by the measured net count, show the count only, and say so on

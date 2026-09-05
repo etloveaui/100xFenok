@@ -185,6 +185,40 @@ export interface NewPositionsData {
   new_positions: NewPositionRow[];
 }
 
+/** Public cohort comparison for one ticker across exact adjacent 13F quarters. */
+export interface HoldingChangeSummary {
+  held_count: number;
+  new_count: number;
+  increased_count: number;
+  decreased_count: number;
+  unchanged_count: number;
+  sold_count: number;
+  comparable_count: number;
+  mean_weight_delta: number | null;
+  current_quarter: string;
+  previous_quarter: string;
+}
+
+export interface GuruHoldersIndexMetadata {
+  quarter?: string;
+  tickers?: number;
+  generated_at?: string;
+  change_coverage?: {
+    comparison_basis?: string;
+    current_quarter?: string;
+    previous_quarter?: string;
+    comparable_ticker_count?: number;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+export interface GuruHoldersIndexData {
+  metadata: GuruHoldersIndexMetadata;
+  holders: Record<string, number>;
+  holding_changes?: Record<string, HoldingChangeSummary>;
+}
+
 export interface HhiRow {
   investor: string;
   hhi: number;

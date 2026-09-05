@@ -18,6 +18,7 @@ import {
   MAX_JOURNEY_SCROLL_Y,
   clearJourneyScrollSnapshot,
   currentJourneyReturnTo,
+  journeyReturnTo as validateJourneyReturnTo,
   readJourneyScrollSnapshot,
   saveJourneyScrollSnapshot,
 } from "@/lib/journey-context";
@@ -163,6 +164,18 @@ function reload() {
 
 function openEvidence(path: string) {
   window.open(path, "_blank", "noopener");
+}
+
+function readSourceReturnTo(): string | null {
+  if (typeof window === "undefined") return null;
+  const raw = new URLSearchParams(window.location.search).get("returnTo");
+  const safe = validateJourneyReturnTo(raw);
+  if (!safe) return null;
+  try {
+    return new URL(safe, "https://journey.invalid").pathname === ROUTES.screener ? safe : null;
+  } catch {
+    return null;
+  }
 }
 
 function syncTabParam(tab: SupTab) {
@@ -1033,7 +1046,9 @@ export default function SuperinvestorsClient({
   const [expandedGuru, setExpandedGuru] = useState<string | null>(initialGuru);
   const [tab, setTab] = useState<SupTab>(() => resolveInitialTab(initialTab, initialGuru));
   const [journeyReturnTo, setJourneyReturnTo] = useState<string | null>(null);
+  const [sourceReturnTo, setSourceReturnTo] = useState<string | null>(null);
   const journeySourceRef = useRef<string | null | undefined>(undefined);
+  const sourceReturnRef = useRef<string | null | undefined>(undefined);
   const pendingJourneyScrollRef = useRef<ReturnType<typeof readJourneyScrollSnapshot> | undefined>(undefined);
   const journeyScrollRestoredRef = useRef(false);
   const journeyUserInteractedRef = useRef(false);
@@ -1057,10 +1072,18 @@ export default function SuperinvestorsClient({
     const source = currentJourneyReturnTo();
     journeySourceRef.current = source;
     setJourneyReturnTo(source);
+    const sourceReturn = readSourceReturnTo();
+    sourceReturnRef.current = sourceReturn;
+    setSourceReturnTo(sourceReturn);
   }
 
   useEffect(() => {
     const source = currentJourneyReturnTo();
+    const sourceReturn = readSourceReturnTo();
+    if (sourceReturn !== sourceReturnRef.current) {
+      sourceReturnRef.current = sourceReturn;
+      setSourceReturnTo(sourceReturn);
+    }
     if (source === journeySourceRef.current) return;
     journeySourceRef.current = source;
     setJourneyReturnTo(source);
@@ -1280,6 +1303,19 @@ export default function SuperinvestorsClient({
         </div>
       </div>
 
+      {sourceReturnTo ? (
+        <div className="mt-2">
+          <a
+            href={sourceReturnTo}
+            data-superinvestors-return-to-screener="true"
+            className="inline-flex min-h-11 items-center gap-1 rounded-full border border-[var(--c-line)] px-3 text-[11px] font-bold text-[var(--c-ink-2)] transition hover:border-[var(--c-brand)] hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+          >
+            <span aria-hidden="true">←</span>
+            <span>스크리너로 돌아가기</span>
+          </a>
+        </div>
+      ) : null}
+
       <div className="sup-tabs scroll-hint-x" role="region" tabIndex={0} aria-label="투자자 화면 탭 가로 스크롤">
         <div role="tablist" aria-label="투자자 화면 전환" className="sup-tablist">
           {SUP_TABS.map((item) => (
@@ -1313,6 +1349,7 @@ export default function SuperinvestorsClient({
           failed={failed}
           partialFeeds={partialFeeds}
           investorCount={investorCount}
+          returnTo={journeyReturnTo}
           onRetry={retry}
           signalFeeds={tabData.signal}
           onRetrySignal={retrySignal}

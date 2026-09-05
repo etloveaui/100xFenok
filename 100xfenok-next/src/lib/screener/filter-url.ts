@@ -10,6 +10,8 @@ import { SCREENER_SORT_KEYS, type ScreenerSortKey, type SortDir } from "./types"
 export type ActionFilter =
   | ""
   | "guru_held"
+  | "guru_new"
+  | "guru_increased"
   | "smart_money"
   | "value_momentum"
   | "index_core"
@@ -141,6 +143,8 @@ export function coerceColumnPreset(value: string | null | undefined): ColumnPres
 export function coerceActionFilter(value: string | null | undefined): ActionFilter {
   if (
     value === "guru_held" ||
+    value === "guru_new" ||
+    value === "guru_increased" ||
     value === "smart_money" ||
     value === "value_momentum" ||
     value === "index_core" ||

@@ -5,11 +5,15 @@ import {
   loadFenokSignalsSummaryDocument,
   type FenokSignalsSummaryRecord,
 } from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
+import { loadPerBandIndex } from "@/features/stock-analyzer/data/per-band-provider";
 import type {
   BuyingPressureData,
   ConvictionData,
+  GuruHoldersIndexData,
   NewPositionsData,
 } from "@/lib/superinvestors/types";
+import { loadGuruHoldersIndex } from "@/lib/superinvestors/ticker-evidence";
+import type { PerBandIndex } from "@/features/stock-analyzer/data/per-band-provider";
 
 export interface SignalScoreData {
   shortTermScore: number | null;
@@ -88,4 +92,14 @@ export function loadSignalConviction(): Promise<ConvictionData | null> {
     .then((d) => { if (!d) { cvPromise = null; return null; } cvCache = d; return d; })
     .catch(() => { cvPromise = null; return null; });
   return cvPromise;
+}
+
+/** Optional cross-surface evidence feed; provider owns cache and in-flight dedupe. */
+export function loadSignalTickerEvidence(): Promise<GuruHoldersIndexData | null> {
+  return loadGuruHoldersIndex();
+}
+
+/** Optional bounded PER-band enrichment; provider owns cache and in-flight dedupe. */
+export function loadSignalPerBands(): Promise<PerBandIndex | null> {
+  return loadPerBandIndex();
 }

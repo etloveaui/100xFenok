@@ -4189,6 +4189,52 @@ async function collectInvestorFeedRetryChecks(page, route, viewportName, request
   return failures;
 }
 
+async function collectInvestorEnrichmentFailureChecks(page, route, viewportName) {
+  if (!isolated || route !== "/superinvestors" || viewportName !== "mobile") return [];
+  const failures = [];
+  const paths = ["/data/sec-13f/analytics/guru_holders_index.json", "/data/global-scouter/core/per_bands_index.json"];
+  const urls = paths.map((path) => new URL(path, baseUrl).href);
+  const attempted = new Set();
+  const failFeed = (requestRoute) => {
+    attempted.add(new URL(requestRoute.request().url()).pathname);
+    return requestRoute.fulfill({ status: 503, contentType: "application/json", body: "{}" });
+  };
+  try {
+    const rows = page.locator("[data-superinvestors-signal-row]:visible");
+    const scoreClock = page.locator('span[aria-label^="FENOK 신호 기준일 "]').first();
+    const waitForScores = () => page.waitForFunction(() => {
+      const clock = document.querySelector('span[aria-label^="FENOK 신호 기준일 "]');
+      return clock && !clock.textContent.includes("확인 중");
+    }, null, { timeout: 45000 });
+    const readScores = () => rows.evaluateAll((nodes) => nodes.map((node) => `${node.getAttribute("data-superinvestors-signal-ticker")}:${Array.from(node.querySelectorAll(".sup-epill")).map((pill) => pill.textContent).join("|")}`).sort());
+    await waitForScores();
+    const baseline = await rows.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-superinvestors-signal-ticker")).sort());
+    if (!baseline.length) throw new Error("Enrichment failure control requires usable baseline signal rows");
+    const baselineScores = await readScores();
+    const baselineClock = await scoreClock.textContent();
+    if (!baselineScores.some((text) => /(?:단기|장기) \d/.test(text))) throw new Error("Score preservation control requires at least one real score");
+    for (const url of urls) await page.route(url, failFeed);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await prepareDynamicRoute(page, route);
+    await page.waitForFunction((count) => document.querySelectorAll("[data-superinvestors-signal-row]").length >= count, baseline.length, { timeout: 45000 });
+    const retained = await rows.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-superinvestors-signal-ticker")).sort());
+    if (JSON.stringify(retained) !== JSON.stringify(baseline)) throw new Error("Optional evidence failure changed the existing signal ticker lists");
+    await waitForScores();
+    if (JSON.stringify(await readScores()) !== JSON.stringify(baselineScores) || await scoreClock.textContent() !== baselineClock) throw new Error("Optional evidence failure changed existing FENOK scores or their source clock");
+    if (paths.some((path) => !attempted.has(path))) throw new Error("Optional evidence failure did not exercise both requested feeds");
+    await page.locator('[data-superinvestors-tab="stocks"]').click();
+    await prepareDynamicRoute(page, "/superinvestors?tab=stocks");
+    if (await page.locator('[data-superinvestors-tab="stocks"]').getAttribute("aria-selected") !== "true") throw new Error("Optional evidence failure blocked stock exploration");
+  } catch (error) {
+    failures.push({ check: "investor-optional-enrichment-failure", detail: String(error) });
+  } finally {
+    for (const url of urls) await page.unroute(url, failFeed);
+    await page.goto(routeUrl(route), { waitUntil: "domcontentloaded" });
+    await prepareDynamicRoute(page, route);
+  }
+  return failures;
+}
+
 async function collectInvestorHoldingReturnChecks(page, route, viewportName) {
   if (!isolated || !route.includes("guru=") || !["mobile", "tablet-landscape"].includes(viewportName)) return [];
   const failures = [];
@@ -4268,9 +4314,29 @@ async function collectScreenerInvestorFlowChecks(page, route, viewportName) {
   try {
     const index = JSON.parse(await readFile(resolve("../data/sec-13f/analytics/guru_holders_index.json"), "utf8"));
     const source = JSON.parse(await readFile(resolve("../data/global-scouter/core/stocks_analyzer.json"), "utf8"));
+    const perBands = JSON.parse(await readFile(resolve("../data/global-scouter/core/per_bands_index.json"), "utf8"));
+    const hasBand = (ticker) => {
+      const band = perBands.data?.[ticker];
+      return band && [band.current, band.min, band.max].every(Number.isFinite) && band.min < band.max;
+    };
     const universe = new Set((source.data ?? []).map((row) => String(row.symbol ?? "").trim().toUpperCase()).filter(Boolean));
     const changes = index.holding_changes ?? {};
     if (Object.keys(changes).length === 0) throw new Error("Generated public holding-change evidence is missing");
+    if (viewportName === "mobile") {
+      const actionUrl = new URL("/data/computed/stock_action_summary.json", baseUrl).href;
+      const heldRequests = [];
+      const holdAction = (requestRoute) => { heldRequests.push(requestRoute); };
+      try {
+        await page.route(actionUrl, holdAction);
+        await page.goto(routeUrl(route), { waitUntil: "domcontentloaded", timeout: 45000 });
+        await page.locator('[data-screener-mode="analyze"][data-journey-ready="true"]').waitFor({ state: "visible", timeout: 30000 });
+        if (!heldRequests.length) throw new Error("Action-summary timeout control did not intercept its request");
+        if (await page.locator('[data-testid="screener-guru-badge"]:visible').count() === 0) throw new Error("Action-summary timeout erased usable independent holding rows");
+      } finally {
+        await page.unroute(actionUrl, holdAction);
+        for (const requestRoute of heldRequests) await requestRoute.abort().catch(() => {});
+      }
+    }
     for (const [action, field] of [["guru_held", "held_count"], ["guru_new", "new_count"], ["guru_increased", "increased_count"]]) {
       const expected = new Set(Object.entries(changes).filter(([ticker, row]) => universe.has(ticker) && row[field] > 0).map(([ticker]) => ticker));
       // Exercise an actual current intersection, never a pinned ticker/count.
@@ -4283,16 +4349,41 @@ async function collectScreenerInvestorFlowChecks(page, route, viewportName) {
       for (const ticker of displayed) {
         if (!expected.has(ticker)) failures.push({ check: "screener-investor-filter", detail: `${action}: unexpected ticker=${ticker}` });
       }
-      const badge = badges.first();
+      const candidate = displayed.find((ticker) => hasBand(ticker) && changes[ticker]?.comparable_count > 0)
+        ?? displayed.find(hasBand)
+        ?? displayed[0];
+      const badge = page.locator(`[data-testid="screener-guru-badge"][data-ticker="${candidate}"]:visible`).first();
       const ticker = await badge.getAttribute("data-ticker");
       const sourceUrl = new URL(page.url());
       if (sourceUrl.searchParams.get("action") !== action) failures.push({ check: "screener-investor-filter-url", detail: `${action}: ${sourceUrl.search}` });
       const origin = `${sourceUrl.pathname}${sourceUrl.search}${sourceUrl.hash}`;
       const href = new URL(await badge.getAttribute("href"), page.url());
       if (href.searchParams.get("returnTo") !== origin) failures.push({ check: "screener-investor-origin", detail: `${action}: return origin missing or changed` });
+      const target = await badge.boundingBox();
+      if (!target || target.height < 44 || target.width < 44) failures.push({ check: "screener-investor-touch-target", detail: `${action}: ${JSON.stringify(target)}` });
       await badge.click();
       await page.locator(`[data-superinvestors-whoholds-result="${ticker}"]`).waitFor({ state: "visible", timeout: 45000 });
       if (new URL(page.url()).searchParams.get("tab") !== "stocks") failures.push({ check: "screener-investor-tab", detail: page.url() });
+      const evidence = page.locator(`[data-superinvestors-holding-evidence="${ticker}"]`);
+      await evidence.waitFor({ state: "visible", timeout: 45000 });
+      const facts = await evidence.evaluate((node) => Object.fromEntries(Array.from(node.children).map((item) => [item.querySelector("dt")?.textContent, item.querySelector("dd")?.textContent])));
+      const change = changes[ticker];
+      const delta = change.mean_weight_delta;
+      const expectedFacts = {
+        "보유 투자자": `${change.held_count.toLocaleString("ko-KR")}명`,
+        "비중확대": `${change.increased_count.toLocaleString("ko-KR")}명`,
+        "비중축소": `${change.decreased_count.toLocaleString("ko-KR")}명`,
+        "평균 비중 변화": delta === null ? "—" : `${delta > 0 ? "+" : ""}${(delta * 100).toFixed(2)}%p`,
+      };
+      for (const [label, expectedValue] of Object.entries(expectedFacts)) {
+        if (facts[label] !== expectedValue) failures.push({ check: "investor-holding-evidence-value", detail: `${ticker} ${label}: expected=${expectedValue}, actual=${facts[label]}` });
+      }
+      if (hasBand(ticker)) {
+        const band = page.locator(`[data-superinvestors-per-band="${ticker}"]`);
+        await band.waitFor({ state: "visible", timeout: 45000 });
+        if (await band.getAttribute("data-source-date") !== perBands.source_date) failures.push({ check: "investor-per-source-date", detail: ticker });
+        if (!(await band.innerText()).includes(`현재 ${perBands.data[ticker].current.toFixed(1)}x`)) failures.push({ check: "investor-per-current", detail: ticker });
+      }
       const back = page.getByRole("link", { name: "스크리너로 돌아가기", exact: true }).filter({ visible: true }).first();
       await back.click();
       await page.locator('[data-screener-mode="analyze"][data-journey-ready="true"]').waitFor({ state: "visible", timeout: 45000 });
@@ -4405,6 +4496,7 @@ try {
         if (isolated) result.dataRequests = [...new Set(routeRequests.filter((path) => path.startsWith("/data/")))];
         result.failures.push(...await collectInvestorTabSwitchChecks(page, route, name, routeRequests));
         result.failures.push(...await collectInvestorFeedRetryChecks(page, route, name, routeRequests));
+        result.failures.push(...await collectInvestorEnrichmentFailureChecks(page, route, name));
         result.failures.push(...await collectInvestorNavigationChecks(page, route));
         result.failures.push(...await collectInvestorHoldingReturnChecks(page, route, name));
         result.viewportWidth = checks.viewportWidth;

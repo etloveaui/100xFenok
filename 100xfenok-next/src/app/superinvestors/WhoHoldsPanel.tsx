@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
+import PerBandBar from "@/components/screener/PerBandBar";
 import { formatCurrencyCompact, formatInteger, formatPercent } from "@/lib/format";
 import type {
   ByTickerData,
@@ -32,6 +33,11 @@ interface WhoHoldsPanelProps {
 
 function normalizeTickerInput(value: string): string {
   return value.trim().toUpperCase().replace(/\s+/g, "");
+}
+
+function formatWeightDelta(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  return `${value > 0 ? "+" : ""}${(value * 100).toFixed(2)}%p`;
 }
 
 // "누가 들고 있나": ticker search over the loaded 13F feeds. Compact mode is
@@ -67,6 +73,12 @@ export default function WhoHoldsPanel({
   const conviction = signalFeeds.conviction.status === "not-requested" || signalFeeds.conviction.status === "loading"
     ? undefined
     : signalFeeds.conviction.data;
+  const tickerEvidence = signalFeeds.tickerEvidence.status === "not-requested" || signalFeeds.tickerEvidence.status === "loading"
+    ? undefined
+    : signalFeeds.tickerEvidence.data;
+  const perBands = signalFeeds.perBands.status === "not-requested" || signalFeeds.perBands.status === "loading"
+    ? undefined
+    : signalFeeds.perBands.data;
 
   useEffect(() => {
     setQuery(normalizedInitialTicker);
@@ -77,8 +89,13 @@ export default function WhoHoldsPanel({
     const set = new Set<string>();
     if (consensus) for (const key of Object.keys(consensus.consensus)) set.add(key);
     if (byTicker) for (const key of Object.keys(byTicker)) set.add(key);
+    if (tickerEvidence?.holding_changes) {
+      for (const [ticker, change] of Object.entries(tickerEvidence.holding_changes)) {
+        if (change.held_count > 0) set.add(ticker);
+      }
+    }
     return [...set].sort();
-  }, [consensus, byTicker]);
+  }, [consensus, byTicker, tickerEvidence]);
 
   const suggestions = useMemo(() => {
     const q = normalizeTickerInput(query);
@@ -91,15 +108,18 @@ export default function WhoHoldsPanel({
     if (!committed || !dataReady) return null;
     const entry = byTicker?.[committed] ?? null;
     const consensusRow = consensus?.consensus[committed] ?? null;
+    const change = tickerEvidence?.holding_changes?.[committed] ?? null;
     const details = entry && Array.isArray(entry.holder_details) ? entry.holder_details : [];
     const holders = [...details].sort((a, b) => (b.weight ?? -1) - (a.weight ?? -1));
-    const holderCount = holders.length > 0
+    const holderCount = change
+      ? change.held_count
+      : holders.length > 0
       ? holders.length
       : (Array.isArray(entry?.holders) ? entry.holders.length : (consensusRow?.holders_count ?? 0));
-    if (holderCount === 0 && !consensusRow) return null;
+    if (holderCount === 0 && !consensusRow && !entry && !change) return null;
     const pressure = buyingPressure?.buying_pressure[committed] ?? null;
-    let newCount = 0;
-    if (newPositions) {
+    let newCount = change?.new_count ?? 0;
+    if (!change && newPositions) {
       for (const p of newPositions.new_positions) {
         if (p?.ticker === committed) newCount += 1;
       }
@@ -112,12 +132,13 @@ export default function WhoHoldsPanel({
       }
     }
     const enhanced = enhancedConsensus?.enhanced_consensus[committed] ?? null;
-    return { holders, holderCount, pressure, newCount, top10Count, enhanced, holdersCount: consensusRow?.holders_count ?? holderCount };
-  }, [committed, dataReady, byTicker, consensus, buyingPressure, newPositions, conviction, enhancedConsensus]);
+    const band = perBands?.rows.get(committed) ?? null;
+    return { holders, holderCount, pressure, newCount, top10Count, enhanced, change, band, holdersCount: consensusRow?.holders_count ?? holderCount };
+  }, [committed, dataReady, byTicker, consensus, buyingPressure, newPositions, conviction, enhancedConsensus, tickerEvidence, perBands]);
 
   const grand = useMemo(() => buildGrandPortfolio(byTicker, compact ? 3 : 10), [byTicker, compact]);
   const loading = (!dataReady && !failed) || newPositions === undefined || buyingPressure === undefined || conviction === undefined;
-  const feedsFailed = !loading && [signalFeeds.newPositions, signalFeeds.buyingPressure, signalFeeds.conviction]
+  const feedsFailed = !loading && [signalFeeds.newPositions, signalFeeds.buyingPressure, signalFeeds.conviction, signalFeeds.tickerEvidence, signalFeeds.perBands]
     .some((feed) => feed.status === "error" || feed.status === "unavailable");
   const freshness: "pending" | "error" | "partial" | "stale" =
     loading ? "pending" : failed || (newPositions === null && buyingPressure === null && conviction === null) ? "error" : partialFeeds || feedsFailed ? "partial" : "stale";
@@ -138,7 +159,7 @@ export default function WhoHoldsPanel({
   }
 
   const coverage = dataReady && committed && result
-    ? `보유 ${formatInteger(result.holderCount)}명`
+    ? `${result.holderCount > 0 ? "보유" : "13F 근거 연결"} ${formatInteger(result.holderCount)}명`
     : coverageOf(quarter);
 
   return (
@@ -200,13 +221,35 @@ export default function WhoHoldsPanel({
                 <Pill>보유 {formatInteger(result.holdersCount)}명</Pill>
               )}
             </div>
-            <dl className="sup-whoholds-facts">
-              <div><dt>보유 투자자</dt><dd className="tabular-nums">{formatInteger(result.holderCount)}명</dd></div>
-              <div><dt>신규</dt><dd className="tabular-nums sup-up">{newPositions ? formatInteger(result.newCount) : "—"}</dd></div>
-              <div><dt>증가</dt><dd className="tabular-nums sup-up">{result.pressure ? formatInteger(result.pressure.net_buyers) : "—"}</dd></div>
-              <div><dt>감소</dt><dd className="tabular-nums sup-dn">{result.pressure ? formatInteger(result.pressure.net_sellers) : "—"}</dd></div>
+            <dl
+              className="sup-whoholds-facts"
+              data-superinvestors-holding-evidence={result.change ? committed : undefined}
+            >
+              <div><dt>{result.holderCount > 0 ? "보유 투자자" : "13F 근거 연결"}</dt><dd className="tabular-nums">{formatInteger(result.holderCount)}명</dd></div>
+              <div><dt>신규</dt><dd className="tabular-nums sup-up">{result.change || newPositions ? `${formatInteger(result.newCount)}명` : "—"}</dd></div>
+              <div><dt>{result.change ? "비중확대" : "주식수 증가 투자자"}</dt><dd className="tabular-nums sup-up">{result.change ? formatInteger(result.change.increased_count) : result.pressure ? `${formatInteger(result.pressure.net_buyers)}명` : "—"}</dd></div>
+              <div><dt>{result.change ? "비중축소" : "주식수 감소 투자자"}</dt><dd className="tabular-nums sup-dn">{result.change ? formatInteger(result.change.decreased_count) : result.pressure ? `${formatInteger(result.pressure.net_sellers)}명` : "—"}</dd></div>
+              {result.change ? <div><dt>평균 비중 변화</dt><dd className="tabular-nums">{formatWeightDelta(result.change.mean_weight_delta)}</dd></div> : null}
+              {result.change ? <div><dt>비교 가능</dt><dd className="tabular-nums">{formatInteger(result.change.comparable_count)}명</dd></div> : null}
+              {result.change ? <div><dt>청산</dt><dd className="tabular-nums sup-dn">{formatInteger(result.change.sold_count)}</dd></div> : null}
               <div><dt>TOP10 편입 수</dt><dd className="tabular-nums">{result.top10Count === null ? "—" : formatInteger(result.top10Count)}</dd></div>
             </dl>
+            {result.band ? (
+              <div
+                className="mt-3 border-t border-[var(--c-line-2)] pt-3"
+                data-superinvestors-per-band={committed}
+                data-source-date={perBands?.sourceDate ?? ""}
+                title={perBands?.sourceDate ? `PER 원천 ${perBands.sourceDate.slice(0, 10)}` : "PER 원천일 미제공"}
+              >
+                <div className="mb-1 text-[10px] font-bold text-[var(--c-ink-3)]">PER 밴드 · 원천 {perBands?.sourceDate?.slice(0, 10) ?? "—"}</div>
+                <PerBandBar current={result.band.current} min={result.band.min} avg={result.band.avg} max={result.band.max} />
+              </div>
+            ) : null}
+            {result.change ? (
+              <p className="mt-2 text-[10px] leading-snug text-[var(--c-ink-3)]">
+                {result.change.current_quarter} ↔ {result.change.previous_quarter} 공개 보유 목록 비교 · 신규·청산은 직전 분기 공개 보유 목록과 비교한 결과입니다. 공시 반영은 분기말 이후 최대 45일 지연될 수 있습니다.
+              </p>
+            ) : null}
             {!compact && result.holders.length > 0 ? (
               <ul className="sup-whoholds-list">
                 {result.holders.slice(0, 12).map((h) => (

@@ -64,16 +64,30 @@ jobs:
       # inside this one runner; browser requests to other origins are blocked.
       - name: Build isolated investor preview
         if: ${{ inputs.suite == 'investor-isolated' }}
+        shell: bash
         env:
           FENOK_REMOTE_HEAVY_NESTED_EXECUTION: "1"
           FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
           NEXT_TELEMETRY_DISABLED: "1"
         run: |
+          set -euo pipefail
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git rev-parse --show-toplevel
           node scripts/build-ink4-contrast-fixture.mjs
           npm run qa:journey-continuity
           node ../scripts/build-guru-holders-index.mjs
+          repo_root="$(git rev-parse --show-toplevel)"
+          floor_output="$(mktemp -d /tmp/investor-detection-floor-XXXXXX)"
+          trap 'rm -rf "$floor_output"' EXIT
+          mkdir -p "$repo_root/data/admin/data-supply-state/detection-attempts"
+          node ../scripts/build-data-supply-detection-floor.mjs \
+            --artifact-root "$repo_root" \
+            --attempt-shard-root "$repo_root/data/admin/data-supply-state/detection-attempts" \
+            --calendars "$repo_root/scripts/lib/data-supply-detection-calendars.json" \
+            --now "$(node -e 'process.stdout.write(new Date().toISOString())')" \
+            --output-root "$floor_output"
+          node ../scripts/build-data-supply-detection-floor.mjs --verify-report "$floor_output/data-supply-detection-floor.json"
+          install -m 0644 "$floor_output/data-supply-detection-floor.json" "$repo_root/data/admin/data-supply-detection-floor.json"
           npm run build:fenok-data-health-kpi
           npm run cf:build
 
@@ -173,4 +187,5 @@ jobs:
             100xfenok-next/scripts/fixtures/ink4-contrast-sites.json
             data/sec-13f/analytics/guru_holders_index.json
             data/admin/fenok-data-health-kpi.json
+            data/admin/data-supply-detection-floor.json
           retention-days: 7

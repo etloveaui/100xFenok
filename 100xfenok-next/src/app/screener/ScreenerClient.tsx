@@ -35,6 +35,8 @@ import ScreenerTanstackTable from "./ScreenerTanstackTable";
 import StockDetailPanel from "./StockDetailPanel";
 import { SCREENER_QUESTION_CARDS, type QuestionCardDef, type QuestionCardId } from "@/lib/screener/question-cards";
 import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
+import { holdingChangeFor, loadGuruHoldersIndex } from "@/lib/superinvestors/ticker-evidence";
+import type { GuruHoldersIndexData } from "@/lib/superinvestors/types";
 import type { MacroContextId } from "@/lib/macro-chart/context";
 import {
   updateScreenerUrl,
@@ -425,8 +427,8 @@ function GuruHolderBadge({
       data-testid="screener-guru-badge"
       data-ticker={stock.ticker}
       data-superinvestors-href={ROUTES.superinvestorsByTicker(stock.ticker)}
-      className="inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-white px-1.5 py-px text-[9px] font-black text-violet-700 transition hover:border-violet-400"
-      title={`${stock.ticker} 기관·고수 보유 ${holders.toLocaleString("ko-KR")}명 — 클릭하면 /superinvestors 종목별 보유로 이동`}
+      className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-violet-200 bg-white px-2 py-px text-[9px] font-black text-violet-700 transition hover:border-violet-400"
+      title={`${stock.ticker} 13F 보유 투자자 ${holders.toLocaleString("ko-KR")}명 · 투자자 화면에서 상세 보기`}
       onClick={(event) => {
         onBeforeNavigate?.();
         event.stopPropagation();
@@ -1383,20 +1385,22 @@ export default function ScreenerClient({
     : sourceDate;
   const [guruSettled, setGuruSettled] = useState(false);
   const [actionSettled, setActionSettled] = useState(false);
-  const [guruMap, setGuruMap] = useState<Record<string, number> | null>(null);
+  const [guruIndex, setGuruIndex] = useState<GuruHoldersIndexData | null>(null);
   const [actionMap, setActionMap] = useState<Record<string, ActionSummaryRecord> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/data/sec-13f/analytics/guru_holders_index.json")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => {
-        if (!cancelled && j?.holders) setGuruMap(j.holders as Record<string, number>);
+    loadGuruHoldersIndex()
+      .then((index) => {
+        if (!cancelled && index) setGuruIndex(index);
       })
       .catch(() => {})
       .finally(() => { if (!cancelled) setGuruSettled(true); });
     return () => { cancelled = true; };
   }, []);
+
+  const guruMap = guruIndex?.holders ?? null;
+  const holdingChanges = guruIndex?.holding_changes ?? {};
 
   useEffect(() => {
     let cancelled = false;
@@ -1413,12 +1417,22 @@ export default function ScreenerClient({
   }, []);
 
   const stocks = useMemo(() => {
-    if (!guruMap && !actionMap) return rawStocks;
+    if (!guruMap && !actionMap && Object.keys(holdingChanges).length === 0) return rawStocks;
     return rawStocks.map((s) => {
       const action = actionMap?.[s.ticker];
+      const change = holdingChangeFor(guruIndex, s.ticker);
       return {
         ...s,
-        guruHolders: action?.guruHolders ?? guruMap?.[s.ticker] ?? null,
+        // A current holding_changes row is authoritative for the public
+        // cohort, even when the legacy holders map has no key after a
+        // conservative CUSIP resolution.
+        guruHolders: change?.held_count ?? action?.guruHolders ?? guruMap?.[s.ticker] ?? null,
+        guruNewCount: change?.new_count ?? null,
+        guruIncreasedCount: change?.increased_count ?? null,
+        guruDecreasedCount: change?.decreased_count ?? null,
+        guruMeanWeightDelta: change?.mean_weight_delta ?? null,
+        guruCurrentQuarter: change?.current_quarter ?? null,
+        guruPreviousQuarter: change?.previous_quarter ?? null,
         actionScore: action?.actionScore ?? null,
         confidenceLabel: action?.confidenceLabel ?? null,
         actionLabel: action?.actionLabel ?? null,
@@ -1453,7 +1467,7 @@ export default function ScreenerClient({
         roeFy3: action?.roeFy3 ?? null,
       };
     });
-  }, [rawStocks, guruMap, actionMap]);
+  }, [rawStocks, guruMap, guruIndex, holdingChanges, actionMap]);
 
   const [search, setSearch] = useState(initialSearch);
   const [selectedSectors, setSelectedSectors] = useState<string[]>(() => {
@@ -1744,7 +1758,14 @@ export default function ScreenerClient({
       if (selectedCountries.length > 0 && !selectedCountries.includes(stock.country)) return false;
       if (profitableOnly && (stock.per === null || stock.per <= 0)) return false;
       if (actionFilter === "guru_held") {
-        if (!hasGuruHolders(stock)) return false;
+        const currentChange = holdingChangeFor(guruIndex, stock.ticker);
+        if (Object.keys(holdingChanges).length > 0
+          ? !currentChange || currentChange.held_count <= 0
+          : !hasGuruHolders(stock)) return false;
+      } else if (actionFilter === "guru_new") {
+        if (stock.guruNewCount === null || stock.guruNewCount === undefined || stock.guruNewCount <= 0) return false;
+      } else if (actionFilter === "guru_increased") {
+        if (stock.guruIncreasedCount === null || stock.guruIncreasedCount === undefined || stock.guruIncreasedCount <= 0) return false;
       } else if (actionFilter && stock.actionBucket !== actionFilter) {
         return false;
       }
@@ -2223,6 +2244,8 @@ export default function ScreenerClient({
   const ACTION_FILTER_LABEL: Record<ActionFilter, string> = {
     "": "",
     guru_held: "기관·고수 보유",
+    guru_new: "기관·고수 신규",
+    guru_increased: "기관·고수 비중확대",
     smart_money: "기관/고수 주목",
     value_momentum: "저평가+모멘텀",
     index_core: "지수 핵심",
@@ -2409,6 +2432,7 @@ export default function ScreenerClient({
             compareTickers={compareTickers}
             onToggleCompare={handleToggleCompare}
             onClearCompare={() => setCompareTickers([])}
+            holdingChanges={holdingChanges}
             returnTo={journeyReturnTo}
             onBeforeNavigate={saveJourneyBeforeNavigate}
           />
@@ -3037,9 +3061,11 @@ export default function ScreenerClient({
                   </label>
                   <label className="cp-screener-field">
                     <span className="cp-screener-field__label">투자 신호</span>
-                    <select value={actionFilter} onChange={(event) => setActionFilter(event.target.value as ActionFilter)} className="cp-screener-control">
+                    <select data-screener-action-filter value={actionFilter} onChange={(event) => setActionFilter(event.target.value as ActionFilter)} className="cp-screener-control">
                       <option value="">전체 신호</option>
                       <option value="guru_held">기관·고수 보유</option>
+                      <option value="guru_new">기관·고수 신규</option>
+                      <option value="guru_increased">기관·고수 비중확대</option>
                       <option value="smart_money">기관/고수 주목</option>
                       <option value="value_momentum">저평가+모멘텀</option>
                       <option value="index_core">지수 핵심</option>
@@ -3546,12 +3572,15 @@ export default function ScreenerClient({
                 <label className="flex flex-col gap-1">
                   <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">투자 신호</span>
                   <select
+                    data-screener-action-filter
                     value={actionFilter}
                     onChange={(event) => setActionFilter(event.target.value as ActionFilter)}
                     className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-interactive"
                   >
                     <option value="">전체 신호</option>
                     <option value="guru_held">기관·고수 보유</option>
+                    <option value="guru_new">기관·고수 신규</option>
+                    <option value="guru_increased">기관·고수 비중확대</option>
                     <option value="smart_money">기관/고수 주목</option>
                     <option value="value_momentum">저평가+모멘텀</option>
                     <option value="index_core">지수 핵심</option>

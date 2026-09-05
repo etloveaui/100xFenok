@@ -69,6 +69,7 @@ interface RawActionSummaryDocument {
 
 const ACTION_SUMMARY_PATH = "/data/computed/stock_action_summary.json";
 const ACTION_SUMMARY_CACHE_TTL_MS = 5 * 60 * 1000;
+export const ACTION_SUMMARY_FETCH_TIMEOUT_MS = 12_000;
 
 let cachedDocument: ActionSummaryDocument | null = null;
 let cachedDocumentAt = 0;
@@ -150,28 +151,44 @@ export function normalizeActionSummaryRecord(
 async function fetchActionSummaryDocument(
   context?: StockAnalyzerDataProviderContext,
 ): Promise<ActionSummaryDocument | null> {
-  const response = await fetch(ACTION_SUMMARY_PATH, {
-    signal: context?.signal,
-    cache: "no-store",
-  });
-  if (!response.ok) return null;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), ACTION_SUMMARY_FETCH_TIMEOUT_MS);
+  let removeParentAbort: (() => void) | undefined;
+  if (context?.signal) {
+    const abortFromParent = () => controller.abort();
+    if (context.signal.aborted) abortFromParent();
+    else {
+      context.signal.addEventListener("abort", abortFromParent, { once: true });
+      removeParentAbort = () => context.signal?.removeEventListener("abort", abortFromParent);
+    }
+  }
+  try {
+    const response = await fetch(ACTION_SUMMARY_PATH, {
+      signal: controller.signal,
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
 
-  const payload = (await response.json()) as RawActionSummaryDocument;
-  const fields = Array.isArray(payload.fields) ? payload.fields : [];
-  const rows = Array.isArray(payload.rows) ? payload.rows : [];
-  const normalizedRows = rows
-    .map((row) => normalizeActionSummaryRecord(row, fields))
-    .filter((row): row is ActionSummaryRecord => Boolean(row));
+    const payload = (await response.json()) as RawActionSummaryDocument;
+    const fields = Array.isArray(payload.fields) ? payload.fields : [];
+    const rows = Array.isArray(payload.rows) ? payload.rows : [];
+    const normalizedRows = rows
+      .map((row) => normalizeActionSummaryRecord(row, fields))
+      .filter((row): row is ActionSummaryRecord => Boolean(row));
 
-  return {
-    schema_version: payload.schema_version,
-    generated_at: payload.generated_at,
-    source_file: payload.source_file,
-    score_contract: payload.score_contract,
-    coverage: payload.coverage,
-    fields,
-    rows: normalizedRows,
-  };
+    return {
+      schema_version: payload.schema_version,
+      generated_at: payload.generated_at,
+      source_file: payload.source_file,
+      score_contract: payload.score_contract,
+      coverage: payload.coverage,
+      fields,
+      rows: normalizedRows,
+    };
+  } finally {
+    clearTimeout(timeoutId);
+    removeParentAbort?.();
+  }
 }
 
 export async function loadActionSummaryDocument(

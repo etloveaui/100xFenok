@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
+import PerBandBar from "@/components/screener/PerBandBar";
+import type { PerBandRecord } from "@/features/stock-analyzer/data/per-band-provider";
 import { formatInteger, formatPercent } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { currentJourneyReturnTo } from "@/lib/journey-context";
@@ -10,6 +12,7 @@ import type {
   ConsensusData,
   ConvictionEntriesData,
   EnhancedConsensusData,
+  HoldingChangeSummary,
   SummaryData,
 } from "@/lib/superinvestors/types";
 import type { SignalScoreData } from "./signalFeeds";
@@ -43,6 +46,7 @@ interface SignalPanelProps {
   failed: boolean;
   partialFeeds: boolean;
   investorCount: number | null;
+  returnTo?: string | null;
   onRetry: () => void;
   signalFeeds: InvestorSignalFeedState;
   onRetrySignal: () => void;
@@ -74,35 +78,70 @@ function HolderAvatars({ ids, total, summary }: { ids: string[]; total: number; 
   );
 }
 
-function ValueBandLine({ score }: { score?: SignalScoreData }) {
+function fmtWeightDelta(value: number | null | undefined): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  return `${value > 0 ? "+" : ""}${(value * 100).toFixed(2)}%p`;
+}
+
+function ValueBandLine({
+  score,
+  band,
+  perBandSourceDate,
+}: {
+  score?: SignalScoreData;
+  band?: PerBandRecord | null;
+  perBandSourceDate?: string | null;
+}) {
   const short = score?.shortTermScore ?? null;
   const long = score?.longTermScore ?? null;
   const scoreAsOf = score?.asOf ?? null;
   const scoreTitle = scoreAsOf ? `FENOK 신호 기준 ${scoreAsOf.slice(0, 10)}` : "FENOK 신호 기준일 미제공";
+  const perBandTitle = perBandSourceDate ? `PER 밴드 원천 ${perBandSourceDate.slice(0, 10)}` : "PER 밴드 원천일 미제공";
+  const title = `${scoreTitle} · ${perBandTitle}`;
   return (
-    <span className="sup-band-row" title={scoreTitle} aria-label={scoreTitle}>
-      <span className="sup-mute">밸류 밴드 —</span>
+    <div className="sup-band-row" title={title} aria-label={title}>
+      <span className="sup-mute">PER 밴드</span>
+      {band ? (
+        <div className="min-w-0 flex-1">
+          <PerBandBar current={band.current} min={band.min} avg={band.avg} max={band.max} />
+        </div>
+      ) : <span className="sup-mute">—</span>}
       <span className="sup-epills">
         <span className="sup-epill">단기 {formatInteger(short)}</span>
         <span className="sup-epill">장기 {formatInteger(long)}</span>
       </span>
-    </span>
+    </div>
   );
 }
 
-function openStock(ticker: string) {
-  window.location.href = ROUTES.stock(ticker, currentJourneyReturnTo());
+function stockHref(ticker: string, returnTo?: string | null): string {
+  return ROUTES.stock(ticker, returnTo === undefined ? currentJourneyReturnTo() : returnTo);
 }
 
-function NewBuyRow({ rank, summary, score }: { rank: NewBuyRank; summary: SummaryData | null; score?: SignalScoreData }) {
+function NewBuyRow({
+  rank,
+  summary,
+  score,
+  band,
+  perBandSourceDate,
+  returnTo,
+  quarter,
+}: {
+  rank: NewBuyRank;
+  summary: SummaryData | null;
+  score?: SignalScoreData;
+  band?: PerBandRecord | null;
+  perBandSourceDate?: string | null;
+  returnTo?: string | null;
+  quarter?: string | null;
+}) {
   const names = rank.buyers.slice(0, 2).map((b) => investorDisplayName(summary, b.investor));
   return (
-    <button
-      type="button"
+    <a
+      href={stockHref(rank.ticker, returnTo)}
       className="sup-srow"
       data-superinvestors-signal-row
       data-superinvestors-signal-ticker={rank.ticker}
-      onClick={() => openStock(rank.ticker)}
     >
       <span className="sup-srow-top">
         <span className="sup-mono sup-srow-ticker">{rank.ticker}</span>
@@ -113,10 +152,10 @@ function NewBuyRow({ rank, summary, score }: { rank: NewBuyRank; summary: Summar
         <span className="sup-srow-names">{names.join(" · ")}{rank.count > names.length ? " 외" : ""}</span>
       </span>
       <span className="sup-srow-change">
-        <span className="sup-mute">평균 비중 변화 {rank.avgWeight === null ? "—" : `+${formatPercent(rank.avgWeight, { digits: 1 })}`}</span>
+        <span className="sup-mute">평균 신규 보유 비중 {rank.avgWeight === null ? "—" : formatPercent(rank.avgWeight, { digits: 1 })}{quarter ? ` · ${quarter} 기준` : ""}</span>
       </span>
-      <ValueBandLine score={score} />
-    </button>
+      <ValueBandLine score={score} band={band} perBandSourceDate={perBandSourceDate} />
+    </a>
   );
 }
 
@@ -124,18 +163,27 @@ function PressureRow({
   rank,
   kind,
   score,
+  weightDelta,
+  band,
+  perBandSourceDate,
+  returnTo,
+  change,
 }: {
   rank: PressureRank;
   kind: "buy" | "sell";
   score?: SignalScoreData;
+  weightDelta?: number | null;
+  band?: PerBandRecord | null;
+  perBandSourceDate?: string | null;
+  returnTo?: string | null;
+  change?: HoldingChangeSummary | null;
 }) {
   return (
-    <button
-      type="button"
+    <a
+      href={stockHref(rank.ticker, returnTo)}
       className="sup-srow"
       data-superinvestors-signal-row
       data-superinvestors-signal-ticker={rank.ticker}
-      onClick={() => openStock(rank.ticker)}
     >
       <span className="sup-srow-top">
         <span className="sup-mono sup-srow-ticker">{rank.ticker}</span>
@@ -144,10 +192,10 @@ function PressureRow({
         </span>
       </span>
       <span className="sup-srow-change">
-        <span className="sup-mute">평균 비중 변화 —</span>
+        <span className="sup-mute">{kind === "buy" ? "주식수 증가 투자자" : "주식수 감소 투자자"} {formatInteger(rank.count)}명 · 평균 비중 변화 {fmtWeightDelta(weightDelta)}{change?.current_quarter && change.previous_quarter ? ` · ${change.current_quarter}↔${change.previous_quarter}` : ""}</span>
       </span>
-      <ValueBandLine score={score} />
-    </button>
+      <ValueBandLine score={score} band={band} perBandSourceDate={perBandSourceDate} />
+    </a>
   );
 }
 
@@ -165,6 +213,7 @@ export default function SignalPanel({
   failed,
   partialFeeds,
   investorCount,
+  returnTo,
   onRetry,
   signalFeeds,
   onRetrySignal,
@@ -182,6 +231,12 @@ export default function SignalPanel({
     signalFeeds.signalScores.data === null
     ? undefined
     : signalFeeds.signalScores.data;
+  const tickerEvidence = signalFeeds.tickerEvidence.status === "not-requested" || signalFeeds.tickerEvidence.status === "loading"
+    ? undefined
+    : signalFeeds.tickerEvidence.data;
+  const perBands = signalFeeds.perBands.status === "not-requested" || signalFeeds.perBands.status === "loading"
+    ? undefined
+    : signalFeeds.perBands.data;
 
   const roster = useMemo(
     () => selectFollowRoster(summary, convictionEntries, byTicker),
@@ -207,6 +262,18 @@ export default function SignalPanel({
     return signalScores?.get(ticker);
   }
 
+  function bandFor(ticker: string): PerBandRecord | null | undefined {
+    return perBands?.rows.get(ticker.toUpperCase());
+  }
+
+  function weightDeltaFor(ticker: string): number | null | undefined {
+    return tickerEvidence?.holding_changes?.[ticker.toUpperCase()]?.mean_weight_delta;
+  }
+
+  function changeFor(ticker: string): HoldingChangeSummary | null | undefined {
+    return tickerEvidence?.holding_changes?.[ticker.toUpperCase()];
+  }
+
   const scoreAsOfLabel = useMemo(() => {
     if (signalScores === undefined) return "확인 중";
     if (signalScores === null) return "미제공";
@@ -226,7 +293,9 @@ export default function SignalPanel({
   const loading = (!dataReady && !failed) || newPositions === undefined || buyingPressure === undefined;
   const feedsFailed = !loading && (
     signalFeeds.newPositions.status === "error" || signalFeeds.newPositions.status === "unavailable" ||
-    signalFeeds.buyingPressure.status === "error" || signalFeeds.buyingPressure.status === "unavailable"
+    signalFeeds.buyingPressure.status === "error" || signalFeeds.buyingPressure.status === "unavailable" ||
+    signalFeeds.tickerEvidence.status === "error" || signalFeeds.tickerEvidence.status === "unavailable" ||
+    signalFeeds.perBands.status === "error" || signalFeeds.perBands.status === "unavailable"
   );
   const freshness: "pending" | "error" | "partial" | "stale" =
     loading ? "pending" : failed || (newPositions === null && buyingPressure === null) ? "error" : partialFeeds || feedsFailed ? "partial" : "stale";
@@ -235,7 +304,7 @@ export default function SignalPanel({
   const newCoverage = followMode === "roster"
     ? `상위 컨빅션 ${formatInteger(roster.ids.length)}명 로스터: ${rosterNames.join(" · ") || "—"} · 신규 ≥${newBuyThreshold}명`
     : `전체 ${formatInteger(dataReady ? investorCount : null)}명 기준 · 신규 로스터 ≥${newBuyThreshold}명`;
-  const pressureCoverage = "13F 집계값 · 개별 투자자 내역 미제공";
+  const pressureCoverage = "13F 집계값 · 주식수 증가·감소 투자자 수 · 개별 투자자 내역 미제공";
 
   return (
     <div data-superinvestors-signal>
@@ -277,8 +346,17 @@ export default function SignalPanel({
           <div data-superinvestors-signal-list="new">
             <PanelHeader eyebrow="New buys" title="신규 매수 상위" right={<Pill>신규</Pill>} />
             {newBuys.length > 0 ? (
-              newBuys.map((rank) => (
-                <NewBuyRow key={rank.ticker} rank={rank} summary={summary} score={scoreFor(rank.ticker)} />
+                newBuys.map((rank) => (
+                <NewBuyRow
+                  key={rank.ticker}
+                  rank={rank}
+                  summary={summary}
+                  score={scoreFor(rank.ticker)}
+                  band={bandFor(rank.ticker)}
+                  perBandSourceDate={perBands?.sourceDate}
+                  returnTo={returnTo}
+                  quarter={newPositions?.metadata.quarter ?? quarter}
+                />
               ))
             ) : !loading && !failed && newPositions !== null ? (
               <EmptyState reason="표시할 신규 매수 종목이 없습니다" nextRefresh="다음 분기 공시 반영 후 갱신" />
@@ -307,8 +385,18 @@ export default function SignalPanel({
             {followMode === "roster" ? (
               <p className="sup-unfiltered sup-mute">팔로우 필터 비적용 · 전체 범위에서 확인</p>
             ) : increases.length > 0 ? (
-              increases.map((rank) => (
-                <PressureRow key={rank.ticker} rank={rank} kind="buy" score={scoreFor(rank.ticker)} />
+                increases.map((rank) => (
+                  <PressureRow
+                    key={rank.ticker}
+                    rank={rank}
+                    kind="buy"
+                    score={scoreFor(rank.ticker)}
+                    weightDelta={weightDeltaFor(rank.ticker)}
+                    change={changeFor(rank.ticker)}
+                    band={bandFor(rank.ticker)}
+                    perBandSourceDate={perBands?.sourceDate}
+                    returnTo={returnTo}
+                  />
               ))
             ) : !loading && !failed && buyingPressure !== null ? (
               <EmptyState reason="표시할 증가 상위 종목이 없습니다" nextRefresh="다음 분기 공시 반영 후 갱신" />
@@ -337,8 +425,18 @@ export default function SignalPanel({
             {followMode === "roster" ? (
               <p className="sup-unfiltered sup-mute">팔로우 필터 비적용 · 전체 범위에서 확인</p>
             ) : decreases.length > 0 ? (
-              decreases.map((rank) => (
-                <PressureRow key={rank.ticker} rank={rank} kind="sell" score={scoreFor(rank.ticker)} />
+                decreases.map((rank) => (
+                  <PressureRow
+                    key={rank.ticker}
+                    rank={rank}
+                    kind="sell"
+                    score={scoreFor(rank.ticker)}
+                    weightDelta={weightDeltaFor(rank.ticker)}
+                    change={changeFor(rank.ticker)}
+                    band={bandFor(rank.ticker)}
+                    perBandSourceDate={perBands?.sourceDate}
+                    returnTo={returnTo}
+                  />
               ))
             ) : !loading && !failed && buyingPressure !== null ? (
               <EmptyState reason="표시할 감소 상위 종목이 없습니다" nextRefresh="다음 분기 공시 반영 후 갱신" />

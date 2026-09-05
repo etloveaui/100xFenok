@@ -17,6 +17,7 @@ import {
 } from "@/lib/screener/question-cards";
 import { formatScreenerSourceDateLabel } from "@/lib/screener/source-dates";
 import type { ScreenerStock } from "@/lib/screener/types";
+import type { HoldingChangeSummary } from "@/lib/superinvestors/types";
 
 const DISCOVER_SOURCE = "Global Scouter · Fenok Signals · SEC 13F";
 const STOCKS_ANALYZER_URL = "/data/global-scouter/core/stocks_analyzer.json";
@@ -40,6 +41,7 @@ export interface ScreenerDiscoverProps {
   compareTickers: string[];
   onToggleCompare: (ticker: string) => void;
   onClearCompare: () => void;
+  holdingChanges?: Record<string, HoldingChangeSummary>;
   returnTo?: string | null;
   onBeforeNavigate?: () => void;
 }
@@ -71,6 +73,11 @@ function fmtSignedFrac(value: number | null | undefined): string {
   return formatSignedPercentDecimal(value, 1);
 }
 
+function fmtWeightDelta(value: number | null | undefined): string {
+  if (!finiteNumber(value)) return "—";
+  return `${value > 0 ? "+" : ""}${(value * 100).toFixed(2)}%p`;
+}
+
 function fmtCount(value: number | null): string {
   return `${value === null ? "—" : value.toLocaleString("ko-KR")}개`;
 }
@@ -96,8 +103,9 @@ function coverageText(results: ScreenerStock[]): string {
   const total = results.length;
   const band = results.filter(hasBand).length;
   const conviction = results.filter((stock) => finiteNumber(stock.fenokConvictionScore)).length;
-  const holders = results.filter((stock) => finiteNumber(stock.guruHolders)).length;
-  return `밴드 ${band}/${total} · 컨빅션 ${conviction}/${total} · 보유 ${holders}/${total}`;
+  const holders = results.filter((stock) => finiteNumber(stock.guruHolders) && stock.guruHolders > 0).length;
+  const evidenceOnly = results.filter((stock) => stock.guruHolders === 0).length;
+  return `밴드 ${band}/${total} · 컨빅션 ${conviction}/${total} · 보유 ${holders}/${total}${evidenceOnly > 0 ? ` · 13F 근거 연결 ${evidenceOnly}` : ""}`;
 }
 
 function MomentumSpark({ stock }: { stock: ScreenerStock }) {
@@ -193,6 +201,7 @@ export default function ScreenerDiscover({
   compareTickers,
   onToggleCompare,
   onClearCompare,
+  holdingChanges,
   returnTo,
   onBeforeNavigate,
 }: ScreenerDiscoverProps) {
@@ -220,6 +229,10 @@ export default function ScreenerDiscover({
   }, [stocks, card, dataReady]);
   const shown = results.slice(0, RESULT_LIMIT);
   const selected = (selectedTicker ? stockByTicker(stocks, selectedTicker) : null) ?? shown[0] ?? null;
+  const selectedChange = selected
+    ? holdingChanges?.[selected.ticker.toUpperCase()] ?? holdingChanges?.[selected.ticker] ?? null
+    : null;
+  const selectedHeldCount = selectedChange?.held_count ?? selected?.guruHolders ?? null;
   const compareStocks = compareTickers.map((ticker) => stockByTicker(stocks, ticker)).filter((stock): stock is ScreenerStock => stock !== null);
   const freshness = resultsFreshness(shown, dataReady, failed);
   // Evidence drawer stages, mirroring other pages: only feeds that actually
@@ -455,11 +468,25 @@ export default function ScreenerDiscover({
               <div className="border-t border-[var(--c-line-2)] px-4 py-3">
                 <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.04em] text-[var(--c-ink-3)]">13F 보유 최신</p>
                 <p className="text-[12px] font-semibold tabular-nums text-[var(--c-ink)]">
-                  보유 {finiteNumber(selected.guruHolders) ? selected.guruHolders.toLocaleString("ko-KR") : "—"}곳
+                  {finiteNumber(selectedHeldCount) && selectedHeldCount > 0 ? "보유" : "13F 근거 연결"} {finiteNumber(selectedHeldCount) ? selectedHeldCount.toLocaleString("ko-KR") : "—"}곳
                 </p>
-                <p className="mt-1 text-[10.5px] leading-snug text-[var(--c-ink-3)]">
-                  신규·증가 내역은 미제공 — 보유 수는 guru 집계 기준
-                </p>
+                {selectedChange ? (
+                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[10.5px] leading-snug text-[var(--c-ink-3)]">
+                    <span>신규 {selectedChange.new_count.toLocaleString("ko-KR")}곳</span>
+                    <span>비중확대 {selectedChange.increased_count.toLocaleString("ko-KR")}곳</span>
+                    <span>비중축소 {selectedChange.decreased_count.toLocaleString("ko-KR")}곳</span>
+                    <span>청산 {selectedChange.sold_count.toLocaleString("ko-KR")}곳</span>
+                    <span>평균 비중 변화 {fmtWeightDelta(selectedChange.mean_weight_delta)}</span>
+                    <span>비교 가능 {selectedChange.comparable_count.toLocaleString("ko-KR")}명</span>
+                  </div>
+                ) : (
+                  <p className="mt-1 text-[10.5px] leading-snug text-[var(--c-ink-3)]">분기 변화 집계 미제공 — 보유 수는 공개 13F 집계 기준</p>
+                )}
+                {selectedChange ? (
+                  <p className="mt-2 text-[10.5px] leading-snug text-[var(--c-ink-3)]">
+                    {selectedChange.current_quarter} ↔ {selectedChange.previous_quarter} 공개 보유 목록 비교 · 신규·청산은 직전 분기 공개 보유 목록과 비교한 결과입니다. 공시 반영은 분기말 이후 최대 45일 지연될 수 있습니다.
+                  </p>
+                ) : null}
               </div>
               <EvidenceRail
                 freshness={freshness}
