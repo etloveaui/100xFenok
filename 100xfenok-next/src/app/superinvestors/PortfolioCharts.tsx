@@ -116,7 +116,9 @@ export function PortfolioTreemap({ rows, quarterLabel, onSelectTicker }: Treemap
           label: "포트폴리오",
           // chartjs-chart-treemap contract: `tree` (flat objects) + `key`;
           // generated leaf points expose the source object at `raw._data`.
-          tree: displayRows as unknown as number[],
+          // React replaces generated `data` below on theme updates. A fresh
+          // tree identity makes the treemap controller regenerate its leaves.
+          tree: [...displayRows] as unknown as number[],
           key: "weight",
           data: [],
           borderColor: chartTheme.token("panel"),
