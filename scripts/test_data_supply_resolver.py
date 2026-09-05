@@ -329,6 +329,139 @@ class DataSupplyResolverTests(unittest.TestCase):
         self.assertNotIn("VYMI", active["current"])
         self.assertIn("VYMI", active["lkg"])
 
+    def expire_to_unavailable(self):
+        primary = self.publish(
+            provider="stockanalysis",
+            suffix="p0",
+            source_as_of="2026-07-10T00:00:00Z",
+            observed_at="2026-07-10T01:00:00Z",
+        )
+        self.resolver.resolve_etf_detail(
+            entity="VYMI", observations=[primary], decided_at="2026-07-10T01:00:01Z"
+        )
+        expired_failures = [
+            self.publish(
+                provider="stockanalysis",
+                suffix="pf2",
+                source_as_of="2026-07-25T03:00:00Z",
+                observed_at="2026-07-25T03:00:00Z",
+                status="invalid",
+            ),
+            self.publish(
+                provider="yahoo_finance",
+                suffix="ff2",
+                source_as_of="2026-07-25T03:00:00Z",
+                observed_at="2026-07-25T03:00:01Z",
+                status="invalid",
+            ),
+        ]
+        removed = self.resolver.resolve_etf_detail(
+            entity="VYMI",
+            observations=expired_failures,
+            decided_at="2026-07-25T03:00:02Z",
+        )
+        self.assertNotIn("VYMI", removed["current"])
+        self.assertEqual(removed["recovery"]["VYMI"]["last_transition"], "unavailable")
+        return removed
+
+    def still_stale(self, day):
+        return [
+            self.publish(
+                provider="stockanalysis",
+                suffix=f"pf{day}",
+                source_as_of=f"2026-07-{day}T03:00:00Z",
+                observed_at=f"2026-07-{day}T03:00:00Z",
+                status="invalid",
+            ),
+            self.publish(
+                provider="yahoo_finance",
+                suffix=f"ff{day}",
+                source_as_of=f"2026-07-{day}T03:00:00Z",
+                observed_at=f"2026-07-{day}T03:00:01Z",
+                status="invalid",
+            ),
+        ]
+
+    def test_known_unavailable_holds_unchanged_while_every_provider_stays_stale(self):
+        # Two-cycle regression for runs 33825689997 / 33936218442: after the
+        # committed removal, the next cycle with still-stale evidence must hold
+        # the honest unavailable state, not raise an initial-selection fault.
+        removed = self.expire_to_unavailable()
+        held = self.resolver.resolve_etf_detail(
+            entity="VYMI",
+            observations=self.still_stale(26),
+            decided_at="2026-07-26T03:00:02Z",
+        )
+        self.assertEqual(held, removed)
+        self.assertEqual(
+            self.store.read_active_domain("etf_detail")["transaction_id"],
+            removed["transaction_id"],
+        )
+        held_again = self.resolver.resolve_etf_detail(
+            entity="VYMI",
+            observations=self.still_stale(27),
+            decided_at="2026-07-27T03:00:02Z",
+        )
+        self.assertEqual(held_again, removed)
+
+    def test_known_unavailable_hold_requires_complete_provider_evidence(self):
+        self.expire_to_unavailable()
+        partial = [
+            self.publish(
+                provider="stockanalysis",
+                suffix="pf26",
+                source_as_of="2026-07-26T03:00:00Z",
+                observed_at="2026-07-26T03:00:00Z",
+                status="invalid",
+            )
+        ]
+        with self.assertRaisesRegex(SchemaError, "complete provider evidence"):
+            self.resolver.resolve_etf_detail(
+                entity="VYMI", observations=partial, decided_at="2026-07-26T03:00:02Z"
+            )
+
+    def test_known_unavailable_recovers_through_fresh_primary(self):
+        self.expire_to_unavailable()
+        fresh_primary = self.publish(
+            provider="stockanalysis",
+            suffix="p1",
+            source_as_of="2026-07-28T00:00:00Z",
+            observed_at="2026-07-28T01:00:00Z",
+        )
+        recovered = self.resolver.resolve_etf_detail(
+            entity="VYMI",
+            observations=[fresh_primary],
+            decided_at="2026-07-28T01:00:01Z",
+        )
+        self.assertEqual(recovered["current"]["VYMI"]["provider"], "stockanalysis")
+        self.assertEqual(recovered["current"]["VYMI"]["resolution_state"], "fresh_primary")
+        self.assertEqual(recovered["recovery"]["VYMI"]["last_transition"], "initial_primary")
+
+    def test_known_unavailable_recovers_through_fresh_fallback(self):
+        self.expire_to_unavailable()
+        fresh_fallback = self.publish(
+            provider="yahoo_finance",
+            suffix="f1",
+            source_as_of="2026-07-28T00:00:00Z",
+            observed_at="2026-07-28T01:00:00Z",
+        )
+        recovered = self.resolver.resolve_etf_detail(
+            entity="VYMI",
+            observations=[fresh_fallback],
+            decided_at="2026-07-28T01:00:01Z",
+        )
+        self.assertEqual(recovered["current"]["VYMI"]["provider"], "yahoo_finance")
+        self.assertEqual(recovered["current"]["VYMI"]["resolution_state"], "fresh_fallback")
+        self.assertEqual(recovered["recovery"]["VYMI"]["last_transition"], "initial_fallback")
+
+    def test_no_prior_without_unavailable_marker_still_fails_initial_selection(self):
+        with self.assertRaisesRegex(SchemaError, "no fresh provider candidate exists for initial selection"):
+            self.resolver.resolve_etf_detail(
+                entity="VYMI",
+                observations=self.still_stale(26),
+                decided_at="2026-08-26T03:00:02Z",
+            )
+
     def test_stock_detail_primary_has_domain_atomic_authority_over_fallback(self):
         primary = self.publish(
             provider="stockanalysis",
