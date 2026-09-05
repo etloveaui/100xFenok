@@ -466,6 +466,122 @@ class DataSupplyResolverTests(unittest.TestCase):
                 decided_at="2026-08-26T03:00:02Z",
             )
 
+    def test_known_unavailable_hold_rejects_evidence_observed_after_the_decision(self):
+        # Mirrors prepare_unavailable_transition: evidence observed after the
+        # decision time is rejected by the store, so the hold must reject it too.
+        self.expire_to_unavailable()
+        evidence = [
+            self.publish(
+                provider="stockanalysis",
+                suffix="pf27",
+                source_as_of="2026-07-27T03:00:00Z",
+                observed_at="2026-07-27T03:00:00Z",
+                status="invalid",
+            ),
+            self.publish(
+                provider="yahoo_finance",
+                suffix="ff27late",
+                source_as_of="2026-07-27T03:00:00Z",
+                observed_at="2026-07-27T04:00:00Z",
+                status="invalid",
+            ),
+        ]
+        with self.assertRaisesRegex(SchemaError, "cannot follow the decision time"):
+            self.resolver.resolve_etf_detail(
+                entity="VYMI", observations=evidence, decided_at="2026-07-27T03:00:02Z"
+            )
+
+    def test_known_unavailable_hold_rejects_valid_evidence_from_the_future(self):
+        # A valid observation dated after the decision is merely "not fresh" to
+        # _fresh (negative age), so without the mirrored checks the hold would
+        # silently accept it. validate_observation forbids observed_at before
+        # source_as_of, so a future source always comes with a future
+        # observation; either mirrored check must refuse it, never the hold.
+        self.expire_to_unavailable()
+        evidence = [
+            self.publish(
+                provider="stockanalysis",
+                suffix="pf27",
+                source_as_of="2026-07-27T03:00:00Z",
+                observed_at="2026-07-27T03:00:00Z",
+                status="invalid",
+            ),
+            self.publish(
+                provider="yahoo_finance",
+                suffix="ffuture",
+                source_as_of="2026-07-28T00:00:00Z",
+                observed_at="2026-07-28T00:00:01Z",
+            ),
+        ]
+        with self.assertRaisesRegex(SchemaError, "follows? the decision"):
+            self.resolver.resolve_etf_detail(
+                entity="VYMI", observations=evidence, decided_at="2026-07-27T03:00:02Z"
+            )
+        self.assertNotIn("VYMI", self.store.read_active_domain("etf_detail")["current"])
+
+    def expire_stock_to_unavailable(self):
+        primary = self.publish_stock(
+            provider="stockanalysis",
+            suffix="p1",
+            source_as_of="2026-07-10T00:00:00Z",
+            observed_at="2026-07-10T01:00:00Z",
+        )
+        self.resolve_stock([primary], "2026-07-10T01:00:01Z")
+        failures = [
+            self.publish_stock(
+                provider="stockanalysis",
+                suffix="pf",
+                source_as_of="2026-07-25T00:00:00Z",
+                observed_at="2026-07-25T00:00:00Z",
+                status="invalid",
+            ),
+            self.publish_stock(
+                provider="yahoo_finance",
+                suffix="ff",
+                source_as_of="2026-07-25T00:00:00Z",
+                observed_at="2026-07-25T00:00:01Z",
+                status="invalid",
+            ),
+        ]
+        active = self.resolve_stock(failures, "2026-07-25T00:00:02Z")
+        self.assertNotIn("AAPL", active["current"])
+        self.assertEqual(active["recovery"]["AAPL"]["last_transition"], "unavailable")
+
+    def test_stock_detail_does_not_acquire_the_etf_unavailable_hold(self):
+        # The incident and its authority are ETF-only: stock_detail keeps its
+        # existing behavior after an unavailable removal.
+        self.expire_stock_to_unavailable()
+        still_stale = [
+            self.publish_stock(
+                provider="stockanalysis",
+                suffix="pf26",
+                source_as_of="2026-07-26T00:00:00Z",
+                observed_at="2026-07-26T00:00:00Z",
+                status="invalid",
+            ),
+            self.publish_stock(
+                provider="yahoo_finance",
+                suffix="ff26",
+                source_as_of="2026-07-26T00:00:00Z",
+                observed_at="2026-07-26T00:00:01Z",
+                status="invalid",
+            ),
+        ]
+        with self.assertRaisesRegex(SchemaError, "no fresh provider candidate exists for initial selection"):
+            self.resolve_stock(still_stale, "2026-07-26T00:00:02Z")
+
+    def test_stock_detail_does_not_acquire_the_etf_audit_lkg_cleanup(self):
+        self.expire_stock_to_unavailable()
+        fresh_primary = self.publish_stock(
+            provider="stockanalysis",
+            suffix="p2",
+            source_as_of="2026-07-28T00:00:00Z",
+            observed_at="2026-07-28T01:00:00Z",
+        )
+        with self.assertRaisesRegex(SchemaError, "an initial selection cannot inject an LKG"):
+            self.resolve_stock([fresh_primary], "2026-07-28T01:00:01Z")
+        self.assertIn("AAPL", self.store.read_active_domain("stock_detail")["lkg"])
+
     def test_stock_detail_primary_has_domain_atomic_authority_over_fallback(self):
         primary = self.publish(
             provider="stockanalysis",
