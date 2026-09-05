@@ -160,7 +160,7 @@ async function captureBoundedScreenshots(page, route, viewportName, routeIndex) 
   const metrics = await page.evaluate(() => ({
     scrollHeight: Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight ?? 0),
     viewportHeight: window.innerHeight,
-  }).catch(() => ({ scrollHeight: 0, viewportHeight: 0 })));
+  })).catch(() => ({ scrollHeight: 0, viewportHeight: 0 }));
   const bottom = Math.max(0, metrics.scrollHeight - metrics.viewportHeight);
   const positions = [
     ["top", 0],
@@ -2798,6 +2798,13 @@ async function collectRouteChecks(page, route) {
         if (!searchInput || searchInput.getBoundingClientRect().height < 44) {
           failures.push({ check: "screener-search-target", detail: `height=${Math.round(searchInput?.getBoundingClientRect().height ?? 0)}` });
         }
+        if (searchInput) {
+          const style = window.getComputedStyle(searchInput);
+          const textWidth = searchInput.clientWidth - parseFloat(style.paddingLeft || "0") - parseFloat(style.paddingRight || "0");
+          if (textWidth < 120) {
+            failures.push({ check: "screener-search-readable-width", detail: `text width=${Math.round(textWidth)}px; ticker/company query is cramped` });
+          }
+        }
         Array.from(document.querySelectorAll("[data-canvas-plus-screener-title] form button"))
           .filter((node) => node.getBoundingClientRect().width > 0)
           .forEach((node, index) => {
@@ -3390,6 +3397,17 @@ async function collectRouteChecks(page, route) {
       const expectedTabIds = ["signal", "investors", "stocks", "trades", "insights", "graph"];
       if (expectedTabIds.some((id) => !tabIds.includes(id))) {
         failures.push({ check: "superinvestors-tab-ids", detail: `tabs=${tabIds.join(",")}` });
+      }
+      if (viewportWidth <= 600) {
+        for (const tab of tabBtns) {
+          const rect = tab.getBoundingClientRect();
+          const region = tab.closest(".sup-tabs")?.getBoundingClientRect();
+          const left = Math.max(0, region?.left ?? 0);
+          const right = Math.min(viewportWidth, region?.right ?? viewportWidth);
+          if (rect.left < left - 1 || rect.right > right + 1 || rect.height < 44) {
+            failures.push({ check: "superinvestors-tabs-discoverable", detail: `${tab.textContent?.trim()}: bounds=${Math.round(rect.left)}..${Math.round(rect.right)}, available=${Math.round(left)}..${Math.round(right)}, height=${Math.round(rect.height)}` });
+          }
+        }
       }
       if (isGuruRoute) {
         const params = new URLSearchParams(currentRoute.split("?")[1] || "");
@@ -4064,10 +4082,11 @@ try {
 
       try {
         const response = await page.goto(routeUrl(route), {
-          waitUntil: "networkidle",
+          waitUntil: outputDir ? "domcontentloaded" : "networkidle",
           timeout: 45000,
         });
         result.status = response ? response.status() : null;
+        if (outputDir) await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
         await page.waitForTimeout(250);
         await prepareDynamicRoute(page, route);
         const checks = await collectRouteChecks(page, route);
@@ -4116,8 +4135,12 @@ try {
       if (outputDir) {
         try {
           result.screenshotPaths = await captureBoundedScreenshots(page, route, name, routeIndex);
+          for (const error of result.screenshotPaths.errors) {
+            result.failures.push({ check: "responsive-capture", detail: error.detail });
+          }
         } catch (error) {
           result.screenshotPaths = { paths: {}, errors: [{ detail: String(error) }] };
+          result.failures.push({ check: "responsive-capture", detail: String(error) });
         }
       }
 
