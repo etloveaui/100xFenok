@@ -1,9 +1,23 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-05T07:17:30.342Z",
+  "generated_at": "2026-09-05T07:56:56.869Z",
   "status": "open",
-  "open_incident_count": 15,
+  "open_incident_count": 16,
   "open_incidents": [
+    {
+      "workflow": "deploy-worker.yml",
+      "label": "Deploy Worker (Cloudflare)",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 33948853416,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33948853416",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
     {
       "workflow": "fenok-edge-krx-daily.yml",
       "label": "Fenok Edge KRX Daily Data",
@@ -658,11 +672,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33952016713",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33952016713",
-    "observed_at": "2026-09-05T07:17:30.342Z",
+    "run_id": "33953839828",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33953839828",
+    "observed_at": "2026-09-05T07:56:56.869Z",
     "event": "workflow_run",
     "workflows": [
+      "deploy-worker.yml",
       "fenok-edge-krx-daily.yml",
       "fetch-edgar-filings.yml",
       "fetch-fdic.yml",
