@@ -103,6 +103,7 @@
     "qa:visual": "playwright test --config playwright.visual.config.ts",
     "qa:visual:update-baselines": "playwright test --config playwright.visual.config.ts --update-snapshots",
     "qa:stockanalysis": "node scripts/smoke-stockanalysis-routes.mjs",
+    "qa:etf-unavailable": "python3 ../scripts/test_resolve_etf_detail_candidates.py && python3 ../scripts/test_data_supply_resolver.py",
     "qa:routes": "npm run test:deploy-smoke-retry && npm run test:admin-redirects && npm run check:admin-redirects && node scripts/check-route-key-contract.mjs && node scripts/check-ticker-normalize-parity.mjs && npm run qa:stock-detail-panel-dedupe && node scripts/test-admin-static-auth-guard.mjs && node scripts/check-stock-analyzer-remap-readiness.mjs && npm run qa:canonical-root-inventory",
     "qa:worker-bundle-budget": "node scripts/check-worker-bundle-budget.mjs",
     "qa:worker-bundle-budget:update-baseline": "node scripts/check-worker-bundle-budget.mjs --update-baseline",

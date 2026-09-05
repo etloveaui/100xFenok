@@ -1067,6 +1067,112 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         recovered = DataSupplyStateStore(self.root, defer_maintenance=True).recover_domain("etf_detail")
         self.assertEqual(recovered["transaction_id"], active["transaction_id"])
 
+    def test_expired_emergency_lkg_reports_unavailable_instead_of_crashing(self) -> None:
+        # Runs 33825689997 (09-04) and 33936218442 (09-05) died on
+        # "did not produce a current selection for AKAF": the resolver had
+        # legitimately removed AKAF after its emergency LKG expired, and this
+        # module treated the store's own unavailable outcome as a schema fault,
+        # killing the whole ETF publication before git commit.
+        self.publish_pair("AKAF", "2026-08-01T00:00:00Z", "2026-08-01T00:00:01Z")
+        initial = resolve_entities(
+            self.store,
+            entities=["AKAF"],
+            decided_at="2026-08-01T01:00:00Z",
+        )
+        self.assertEqual(initial["results"][0]["resolution_state"], "fresh_fallback")
+
+        # 19 days later both providers are stale and the LKG is past the
+        # 14-day emergency TTL: the store removes the current selection.
+        result = resolve_entities(
+            self.store,
+            entities=["AKAF"],
+            decided_at="2026-08-20T00:00:00Z",
+        )
+        active = self.store.read_active_domain("etf_detail")
+        self.assertEqual(
+            result["results"],
+            [
+                {
+                    "entity": "AKAF",
+                    "provider": None,
+                    "resolution_state": "unavailable",
+                    "source_as_of": None,
+                    "transaction_id": active["transaction_id"],
+                    "committed": True,
+                }
+            ],
+        )
+        self.assertNotIn("AKAF", active["current"])
+        self.assertEqual(active["lkg"]["AKAF"]["source_as_of"], "2026-08-01T00:00:00Z")
+        self.assertEqual(active["recovery"]["AKAF"]["last_transition"], "unavailable")
+
+    def test_missing_current_without_unavailable_marker_still_fails_closed(self) -> None:
+        # Only the store's own unavailable transition may be reported as
+        # unavailable; any other missing selection remains a schema fault.
+        fake_active = {
+            "transaction_id": "tx-unexpected",
+            "current": {},
+            "lkg": {},
+            "recovery": {"AKAF": {"consecutive_green": 0, "last_transition": "none"}},
+        }
+        with mock.patch.object(
+            resolve_etf_detail_candidates,
+            "latest_recorded_observations",
+            return_value={"AKAF": []},
+        ), mock.patch.object(
+            resolve_etf_detail_candidates,
+            "resolve_with_single_retry",
+            return_value=(fake_active, False),
+        ):
+            with self.assertRaisesRegex(SchemaError, "did not produce a current selection for AKAF"):
+                resolve_entities(
+                    self.store,
+                    entities=["AKAF"],
+                    decided_at="2026-08-20T00:00:00Z",
+                )
+        fake_active["recovery"] = {}
+        with mock.patch.object(
+            resolve_etf_detail_candidates,
+            "latest_recorded_observations",
+            return_value={"AKAF": []},
+        ), mock.patch.object(
+            resolve_etf_detail_candidates,
+            "resolve_with_single_retry",
+            return_value=(fake_active, False),
+        ):
+            with self.assertRaisesRegex(SchemaError, "did not produce a current selection for AKAF"):
+                resolve_entities(
+                    self.store,
+                    entities=["AKAF"],
+                    decided_at="2026-08-20T00:00:00Z",
+                )
+
+    def test_cli_prints_unavailable_row_and_completes_maintenance(self) -> None:
+        self.publish_pair("AKAF", "2026-08-01T00:00:00Z", "2026-08-01T00:00:01Z")
+        resolve_entities(
+            self.store,
+            entities=["AKAF"],
+            decided_at="2026-08-01T01:00:00Z",
+        )
+        manifest = self.artifact_manifest("AKAF")
+        with mock.patch.object(
+            sys, "argv", self.cli_args(manifest, "2026-08-20T00:00:00Z")
+        ), mock.patch("sys.stdout", new_callable=io.StringIO) as stdout:
+            main()
+        printed = json.loads(stdout.getvalue())
+        self.assertEqual(printed["domain"], "etf_detail")
+        self.assertEqual(len(printed["results"]), 1)
+        row = printed["results"][0]
+        self.assertEqual(row["entity"], "AKAF")
+        self.assertIsNone(row["provider"])
+        self.assertEqual(row["resolution_state"], "unavailable")
+        self.assertIsNone(row["source_as_of"])
+        self.assertTrue(row["committed"])
+        active = DataSupplyStateStore(self.root, defer_maintenance=True).read_active_domain("etf_detail")
+        self.assertEqual(row["transaction_id"], active["transaction_id"])
+        self.assertNotIn("AKAF", active["current"])
+        self.assertEqual(active["recovery"]["AKAF"]["last_transition"], "unavailable")
+
     def test_workflow_runs_resolver_and_projection_inside_writer_before_git_commit(self) -> None:
         workflow = (SCRIPT_DIR.parent / ".github/workflows/fetch-stockanalysis.yml").read_text(
             encoding="utf-8"
