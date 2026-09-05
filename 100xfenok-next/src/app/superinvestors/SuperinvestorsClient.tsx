@@ -321,7 +321,7 @@ function LatestHoldingsMobileCards({ rows, changeMap }: { rows: HoldingRow[]; ch
 }
 
 function LatestHoldingsTable({ holdings, changes }: { holdings: InvestorHolding[]; changes?: InvestorFiling["changes_summary"] }) {
-  const rows = useMemo(() => {
+  const rows = useMemo<HoldingRow[]>(() => {
     // Filings carry one row per share class / CUSIP — aggregate by ticker.
     const byTicker = new Map<string, InvestorHolding>();
     for (const h of holdings) {
@@ -335,7 +335,7 @@ function LatestHoldingsTable({ holdings, changes }: { holdings: InvestorHolding[
         byTicker.set(h.ticker, { ...h });
       }
     }
-    const held = [...byTicker.values()]
+    const held: HoldingRow[] = [...byTicker.values()]
       .sort((a, b) => (b.weight || 0) - (a.weight || 0))
       .slice(0, 50);
     // Fully liquidated positions are absent from the latest holdings, so the
