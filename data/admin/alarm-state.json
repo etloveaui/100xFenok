@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-05T14:08:35.151Z",
+  "generated_at": "2026-09-05T16:08:44.994Z",
   "status": "open",
   "open_incident_count": 20,
   "open_incidents": [
@@ -310,12 +310,12 @@
     {
       "workflow": "worker-request-budget-alarm.yml",
       "label": "Worker Request Budget Alarm",
-      "streak": 1,
+      "streak": 2,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 33966554411,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33966554411",
       "alarm_reasons": [
-        "missed_schedule_window"
+        "failure_streak"
       ],
       "lane_outcome_lanes": [],
       "lost_schedule_slot_count": 0,
@@ -575,7 +575,7 @@
         "attempt_gap"
       ],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 12
+      "data_freshness_age_hours_at_generation": 14
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -740,10 +740,10 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "33970823294",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33970823294",
-    "observed_at": "2026-09-05T14:08:35.151Z",
-    "event": "workflow_run",
+    "run_id": "33976836309",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/33976836309",
+    "observed_at": "2026-09-05T16:08:44.994Z",
+    "event": "schedule",
     "workflows": [
       "fenok-edge-daily.yml",
       "fenok-edge-krx-daily.yml",
