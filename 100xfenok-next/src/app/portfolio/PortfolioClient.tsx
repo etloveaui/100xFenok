@@ -557,7 +557,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           )}
         </div>
         <div className="scroll-hint-x mt-3 -mx-1 hidden px-1 lg:block" role="region" tabIndex={0} aria-label="보유 종목 표 가로 스크롤">
-          <HoldingsTable rows={holdingRows} onDelete={handleDeleteHolding} />
+          <HoldingsTable rows={holdingRows} onEdit={handleEditHolding} onDelete={handleDeleteHolding} />
         </div>
         {missingCount > 0 && (
           <p className="mt-2 text-[10px] font-semibold text-slate-500">
@@ -1185,9 +1185,11 @@ function MobileHoldingCard({
 
 function HoldingsTable({
   rows,
+  onEdit,
   onDelete,
 }: {
   rows: HoldingRow[];
+  onEdit?: (row: HoldingRow) => void;
   onDelete?: (ticker: string) => void;
 }) {
   if (rows.length === 0) {
@@ -1207,7 +1209,7 @@ function HoldingsTable({
           <th className="px-2 py-2 text-right">손익</th>
           <th className="px-2 py-2 text-right">손익률</th>
           <th className="px-2 py-2 text-right">비중</th>
-          {onDelete ? <th className="px-2 py-2" /> : null}
+          {onEdit || onDelete ? <th className="px-2 py-2" /> : null}
         </tr>
       </thead>
       <tbody>
@@ -1240,9 +1242,20 @@ function HoldingsTable({
             <td className="px-2 py-2 text-right tabular-nums text-slate-500">
               {r.weight != null ? formatPercent(r.weight, { digits: 1 }) : "—"}
             </td>
-            {onDelete ? (
+            {onEdit || onDelete ? (
               <td className="px-2 py-2 text-right">
-                <button
+                <div className="inline-flex items-center gap-1">
+                {onEdit ? (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(r)}
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg px-2 text-[10px] font-black transition hover:bg-slate-100"
+                    aria-label={`${r.ticker} 수정 입력`}
+                  >
+                    수정
+                  </button>
+                ) : null}
+                {onDelete ? <button
                   type="button"
                   onClick={() => onDelete(r.ticker)}
                   className="inline-flex min-h-9 items-center rounded-lg px-2 text-[10px] font-black text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
@@ -1250,7 +1263,8 @@ function HoldingsTable({
                   aria-label={`${r.ticker} 삭제`}
                 >
                   삭제
-                </button>
+                </button> : null}
+                </div>
               </td>
             ) : null}
           </tr>

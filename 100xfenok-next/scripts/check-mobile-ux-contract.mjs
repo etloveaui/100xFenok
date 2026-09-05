@@ -92,6 +92,7 @@ async function prepareDynamicRoute(page, route) {
     "/etfs": ".etf-mobile-card, .etf-table-desktop",
     "/market-valuation": ".mv-trow",
     "/regime": "[data-regime-axis-summary-card]",
+    "/portfolio": '[data-portfolio-section="holdings"] button[aria-label$="삭제"]',
     "/sectors": "[data-sectors-flow-rows]",
   };
   const readySelector = readySelectors[pathname];
@@ -131,6 +132,8 @@ async function prepareDynamicRoute(page, route) {
       // strip is also a scroll-hint region and would satisfy a bare wait).
       await page.locator("[data-superinvestor-guru-top-holdings]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
       await page.locator("[data-superinvestor-guru-holding-row]:visible, [data-superinvestor-guru-desktop-holding-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    } else if (route.includes("tab=stocks")) {
+      await page.locator("[data-superinvestors-whoholds-input]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
     } else if (route.includes("tab=investors")) {
       await page.locator("[data-superinvestors-holder-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
     } else {
@@ -2924,7 +2927,7 @@ async function collectRouteChecks(page, route) {
       }
       [...editButtons, ...deleteButtons].forEach((node, index) => {
         const rect = node.getBoundingClientRect();
-        if (rect.width < 36 || rect.height < 36) {
+        if (rect.width < 44 || rect.height < 44) {
           failures.push({
             check: "portfolio-action-target",
             detail: `button ${index} ${Math.round(rect.width)}x${Math.round(rect.height)}`,
@@ -2938,7 +2941,7 @@ async function collectRouteChecks(page, route) {
       }
       connectionActions.forEach((node, index) => {
         const rect = node.getBoundingClientRect();
-        if (rect.width < 36 || rect.height < 36) {
+        if (rect.width < 44 || rect.height < 44) {
           failures.push({
             check: "portfolio-connection-action-target",
             detail: `action ${index} ${Math.round(rect.width)}x${Math.round(rect.height)}`,
@@ -3302,6 +3305,7 @@ async function collectRouteChecks(page, route) {
       // so each route asserts only its visible tab; hooks are unchanged.
       const isGuruRoute = currentRoute.includes("guru=");
       const isInvestorsRoute = currentRoute.includes("tab=investors");
+      const isStocksRoute = currentRoute.includes("tab=stocks");
       const sortBtns = Array.from(document.querySelectorAll("[data-superinvestors-sort]"));
       const tabBtns = Array.from(document.querySelectorAll("[data-superinvestors-tab]"));
       if (tabBtns.length !== 6 || tabBtns.filter((btn) => btn.getAttribute("aria-selected") === "true").length !== 1) {
@@ -3333,6 +3337,11 @@ async function collectRouteChecks(page, route) {
         const back = detail?.querySelector("[data-superinvestors-guru-back]");
         if (!back || back.getBoundingClientRect().height <= 0) {
           failures.push({ check: "superinvestors-guru-back", detail: "missing visible back control" });
+        }
+      } else if (isStocksRoute) {
+        const input = document.querySelector("[data-superinvestors-whoholds-input]");
+        if (!input || input.getBoundingClientRect().width <= 0) {
+          failures.push({ check: "superinvestors-stocks-search", detail: "missing visible stock holdings search" });
         }
       } else if (isInvestorsRoute) {
         const holders = document.querySelector("[data-superinvestors-holders]");
@@ -3423,7 +3432,7 @@ async function collectRouteChecks(page, route) {
       // The graph teaser lives in the investors-tab rail; the guru detail
       // view replaces that grid, so skip the teaser check on guru routes.
       const graphTeaser = document.querySelector("[data-superinvestors-graph-teaser]");
-      if (!isGuruRoute && (!graphTeaser || graphTeaser.getBoundingClientRect().height <= 0 || !/그래프 보기/.test(graphTeaser.textContent || ""))) {
+      if (isInvestorsRoute && !isGuruRoute && (!graphTeaser || graphTeaser.getBoundingClientRect().height <= 0 || !/그래프 보기/.test(graphTeaser.textContent || ""))) {
         failures.push({ check: "superinvestors-graph-teaser", detail: "missing visible graph teaser" });
       }
       sortBtns.forEach((btn, index) => {
