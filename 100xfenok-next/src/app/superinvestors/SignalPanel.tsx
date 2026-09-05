@@ -1,25 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import { formatInteger, formatPercent } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { currentJourneyReturnTo } from "@/lib/journey-context";
 import type {
   ByTickerData,
-  BuyingPressureData,
   ConsensusData,
   ConvictionEntriesData,
   EnhancedConsensusData,
-  NewPositionsData,
   SummaryData,
 } from "@/lib/superinvestors/types";
-import {
-  loadSignalBuyingPressure,
-  loadSignalNewPositions,
-  loadSignalScores,
-  type SignalScoreData,
-} from "./signalFeeds";
+import type { SignalScoreData } from "./signalFeeds";
+import type { InvestorSignalFeedState } from "./useInvestorTabData";
 import WhoHoldsPanel from "./WhoHoldsPanel";
 import {
   FOLLOW_ROSTER_SIZE,
@@ -50,6 +44,8 @@ interface SignalPanelProps {
   partialFeeds: boolean;
   investorCount: number | null;
   onRetry: () => void;
+  signalFeeds: InvestorSignalFeedState;
+  onRetrySignal: () => void;
 }
 
 function openEvidence(path: string) {
@@ -170,22 +166,22 @@ export default function SignalPanel({
   partialFeeds,
   investorCount,
   onRetry,
+  signalFeeds,
+  onRetrySignal,
 }: SignalPanelProps) {
   // Default scope is the whole cohort so the hero answers on first paint;
   // the conviction roster is the opt-in toggle.
   const [followMode, setFollowMode] = useState<FollowMode>("all");
-  const [attempt, setAttempt] = useState(0);
-  const [newPositions, setNewPositions] = useState<NewPositionsData | null | undefined>(undefined);
-  const [buyingPressure, setBuyingPressure] = useState<BuyingPressureData | null | undefined>(undefined);
-  const [signalScores, setSignalScores] = useState<Map<string, SignalScoreData> | null | undefined>(undefined);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadSignalNewPositions().then((d) => { if (!cancelled) setNewPositions(d); });
-    loadSignalBuyingPressure().then((d) => { if (!cancelled) setBuyingPressure(d); });
-    loadSignalScores().then((d) => { if (!cancelled) setSignalScores(d); });
-    return () => { cancelled = true; };
-  }, [attempt]);
+  const newPositions = signalFeeds.newPositions.status === "not-requested" || signalFeeds.newPositions.status === "loading"
+    ? undefined
+    : signalFeeds.newPositions.data;
+  const buyingPressure = signalFeeds.buyingPressure.status === "not-requested" || signalFeeds.buyingPressure.status === "loading"
+    ? undefined
+    : signalFeeds.buyingPressure.data;
+  const signalScores = (signalFeeds.signalScores.status === "not-requested" || signalFeeds.signalScores.status === "loading") &&
+    signalFeeds.signalScores.data === null
+    ? undefined
+    : signalFeeds.signalScores.data;
 
   const roster = useMemo(
     () => selectFollowRoster(summary, convictionEntries, byTicker),
@@ -228,15 +224,12 @@ export default function SignalPanel({
   }, [signalScores, newBuys, increases, decreases]);
 
   const loading = (!dataReady && !failed) || newPositions === undefined || buyingPressure === undefined;
-  const feedsFailed = !loading && (newPositions === null || buyingPressure === null);
+  const feedsFailed = !loading && (
+    signalFeeds.newPositions.status === "error" || signalFeeds.newPositions.status === "unavailable" ||
+    signalFeeds.buyingPressure.status === "error" || signalFeeds.buyingPressure.status === "unavailable"
+  );
   const freshness: "pending" | "error" | "partial" | "stale" =
     loading ? "pending" : failed || (newPositions === null && buyingPressure === null) ? "error" : partialFeeds || feedsFailed ? "partial" : "stale";
-
-  function retryFeeds() {
-    setNewPositions(undefined);
-    setBuyingPressure(undefined);
-    setAttempt((n) => n + 1);
-  }
 
   const rosterNames = roster.ids.map((id) => investorDisplayName(summary, id));
   const newCoverage = followMode === "roster"
@@ -278,7 +271,7 @@ export default function SignalPanel({
           loading={loading}
           error={!loading && (failed || newPositions === null)}
           errorDetail="신규 매수 집계를 불러오지 못했습니다."
-          onRetry={!loading && (failed || newPositions === null) ? (failed ? onRetry : retryFeeds) : undefined}
+          onRetry={!loading && (failed || newPositions === null) ? (failed ? onRetry : onRetrySignal) : undefined}
           retryLabel="다시 시도"
         >
           <div data-superinvestors-signal-list="new">
@@ -297,7 +290,7 @@ export default function SignalPanel({
             asOf={asOf}
             coverage={newCoverage}
             next="분기 종료 후 최대 45일"
-            onRetry={failed ? onRetry : feedsFailed ? retryFeeds : undefined}
+            onRetry={failed ? onRetry : feedsFailed ? onRetrySignal : undefined}
             onEvidence={dataReady && !failed && newPositions ? () => openEvidence("/data/sec-13f/analytics/new_positions.json") : undefined}
           />
         </Panel>
@@ -306,7 +299,7 @@ export default function SignalPanel({
           loading={loading}
           error={!loading && (failed || buyingPressure === null)}
           errorDetail="증가 집계를 불러오지 못했습니다."
-          onRetry={!loading && (failed || buyingPressure === null) ? (failed ? onRetry : retryFeeds) : undefined}
+          onRetry={!loading && (failed || buyingPressure === null) ? (failed ? onRetry : onRetrySignal) : undefined}
           retryLabel="다시 시도"
         >
           <div data-superinvestors-signal-list="increased">
@@ -327,7 +320,7 @@ export default function SignalPanel({
             asOf={asOf}
             coverage={pressureCoverage}
             next="분기 종료 후 최대 45일"
-            onRetry={failed ? onRetry : feedsFailed ? retryFeeds : undefined}
+            onRetry={failed ? onRetry : feedsFailed ? onRetrySignal : undefined}
             onEvidence={dataReady && !failed && buyingPressure ? () => openEvidence("/data/sec-13f/analytics/buying_pressure.json") : undefined}
           />
         </Panel>
@@ -336,7 +329,7 @@ export default function SignalPanel({
           loading={loading}
           error={!loading && (failed || buyingPressure === null)}
           errorDetail="감소 집계를 불러오지 못했습니다."
-          onRetry={!loading && (failed || buyingPressure === null) ? (failed ? onRetry : retryFeeds) : undefined}
+          onRetry={!loading && (failed || buyingPressure === null) ? (failed ? onRetry : onRetrySignal) : undefined}
           retryLabel="다시 시도"
         >
           <div data-superinvestors-signal-list="decreased">
@@ -357,7 +350,7 @@ export default function SignalPanel({
             asOf={asOf}
             coverage={pressureCoverage}
             next="분기 종료 후 최대 45일"
-            onRetry={failed ? onRetry : feedsFailed ? retryFeeds : undefined}
+            onRetry={failed ? onRetry : feedsFailed ? onRetrySignal : undefined}
             onEvidence={dataReady && !failed && buyingPressure ? () => openEvidence("/data/sec-13f/analytics/buying_pressure.json") : undefined}
           />
         </Panel>
@@ -373,6 +366,8 @@ export default function SignalPanel({
           failed={failed}
           partialFeeds={partialFeeds}
           onRetry={onRetry}
+          signalFeeds={signalFeeds}
+          onRetrySignal={onRetrySignal}
           compact
         />
       </div>

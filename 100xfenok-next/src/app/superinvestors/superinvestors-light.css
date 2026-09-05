@@ -1,5 +1,5 @@
 /* /superinvestors route — light-system layout namespace (slice 7b screen 2/2).
- * Layout only: head, holders table, overlap rows, rail grid, CTA. Panel
+ * Layout only: head, holders/trade rows, overlap rows, rail grid, CTA. Panel
  * chrome, type scale, colors, and states come from src/components/ui.
  * Token-pure: only var(--fnk-*) / var(--font-*) references, no raw colors,
  * no shadows, no gradients. Accent var(--fnk-brand-interactive) appears only
@@ -337,6 +337,210 @@
   color: var(--fnk-neutral-500);
 }
 
+/* Holdings and trade rankings share one semantic row presentation at every
+ * width. Wide screens retain a conventional table; phones use the same rows
+ * as two-column labelled grids so every field stays inside the route bounds. */
+
+.sup-responsive-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.sup-responsive-scroll--holdings {
+  max-height: 440px;
+  overflow-y: auto;
+}
+
+.sup-responsive-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.sup-responsive-table--holdings {
+  min-width: 760px;
+}
+
+.sup-responsive-table--trades {
+  min-width: 720px;
+}
+
+.sup-responsive-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 36px;
+  padding: 0 8px;
+  background: var(--fnk-color-card);
+  color: var(--fnk-neutral-500);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sup-responsive-row {
+  border-top: 1px solid var(--fnk-neutral-100);
+  transition: background-color 150ms ease;
+}
+
+.sup-responsive-row:hover {
+  background: var(--fnk-neutral-50);
+}
+
+.sup-responsive-table td {
+  height: 44px;
+  min-width: 0;
+  padding: 0 8px;
+  color: var(--fnk-neutral-700);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sup-responsive-table td:first-child,
+.sup-responsive-table th:first-child,
+.sup-responsive-table td:nth-child(2),
+.sup-responsive-table th:nth-child(2) {
+  text-align: left;
+}
+
+.sup-responsive-table--holdings td:nth-child(4),
+.sup-responsive-table--holdings th:nth-child(4) {
+  text-align: center;
+}
+
+.sup-responsive-table--trades td:nth-child(3),
+.sup-responsive-table--trades th:nth-child(3),
+.sup-responsive-table--trades td:nth-child(6),
+.sup-responsive-table--trades th:nth-child(6) {
+  text-align: left;
+}
+
+.sup-responsive-name {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sup-responsive-sub,
+.sup-responsive-code {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  color: var(--fnk-neutral-500);
+  font-size: 10px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sup-responsive-code {
+  color: var(--fnk-brand-interactive);
+  font-weight: 700;
+}
+
+.sup-responsive-sector {
+  display: inline-flex;
+  max-width: 150px;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sup-responsive-link {
+  display: inline-flex;
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 8px;
+  background: var(--fnk-color-card);
+  padding: 4px 8px;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.sup-responsive-link:hover,
+.sup-responsive-link:focus-visible {
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-brand-interactive);
+}
+
+.sup-responsive-link > .truncate {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sup-trades-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 10px;
+  background: var(--fnk-color-card);
+}
+
+.sup-trades-grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 1536px) {
+  .sup-trades-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.sup-trades-title {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  margin: 0;
+  border-bottom: 1px solid var(--fnk-neutral-200);
+  padding: 0 16px;
+  color: var(--fnk-neutral-900);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.sup-trades-toggle {
+  display: inline-flex;
+  min-height: 44px;
+  width: calc(100% - 24px);
+  align-items: center;
+  justify-content: center;
+  margin: 12px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 999px;
+  background: var(--fnk-color-card);
+  padding: 0 12px;
+  color: var(--fnk-neutral-700);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.sup-trades-toggle:hover,
+.sup-trades-toggle:focus-visible {
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-brand-interactive);
+}
+
 @media (max-width: 1024px) {
   .sup-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -501,11 +705,10 @@
 /* The investor profile presents identity and filing context as a compact
  * evidence strip. Panels below retain their existing content and states while
  * losing the nested oversized card treatment. */
-.sup-guru-shell {
-  border: 1px solid var(--fnk-neutral-200);
-  border-radius: 10px;
-  background: var(--fnk-color-card);
-  box-shadow: none;
+.sup-guru-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .sup-guru-back {
@@ -520,8 +723,17 @@
 }
 
 .sup-guru-profile {
-  border-top: 1px solid var(--fnk-neutral-200);
-  background: var(--fnk-neutral-50);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sup-guru-identity {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .sup-guru-disclosures {
@@ -585,22 +797,53 @@
   color: var(--fnk-brand-interactive-2);
 }
 
-.fnk-shell .sup-guru-panel {
-  border-color: var(--fnk-neutral-200);
-  border-radius: 8px;
-  background: var(--fnk-color-card);
-  box-shadow: none;
+.sup-guru-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--fnk-neutral-200);
+  border-bottom: 1px solid var(--fnk-neutral-200);
+}
+
+.sup-guru-stat-strip > div {
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.sup-guru-stat-strip > div + div {
+  border-left: 1px solid var(--fnk-neutral-100);
+}
+
+.sup-guru-stat-strip p {
+  margin: 0;
+  overflow: hidden;
+  color: var(--fnk-neutral-500);
+  font-size: 10px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sup-guru-stat-strip strong {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--fnk-neutral-900);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sup-guru-stat-skeleton {
+  width: 75%;
+  height: 22px;
+  margin-top: 4px;
+  border-radius: 4px;
+  background: var(--fnk-neutral-200);
 }
 
 @media (max-width: 760px) {
-  .fnk-shell .sup-guru-shell {
-    padding: 12px;
-  }
-
-  .fnk-shell .sup-guru-profile {
-    padding: 12px;
-  }
-
   .sup-guru-disclosures {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-areas:
@@ -614,6 +857,112 @@
     grid-column: 1 / -1;
   }
   .sup-guru-disclosure-lag { grid-area: lag; }
+
+  .sup-responsive-table {
+    display: block;
+    min-width: 0;
+  }
+
+  .sup-responsive-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .sup-responsive-table tbody {
+    display: grid;
+    gap: 8px;
+  }
+
+  .sup-responsive-table tr.sup-responsive-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    min-height: 0;
+    border: 1px solid var(--fnk-neutral-200);
+    border-radius: 8px;
+    background: var(--fnk-color-card);
+    padding: 6px 8px;
+  }
+
+  .sup-responsive-table td {
+    display: flex;
+    min-height: 52px;
+    height: auto;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 7px 4px;
+    text-align: right;
+    white-space: normal;
+  }
+
+  .sup-responsive-table td::before {
+    content: attr(data-label);
+    align-self: stretch;
+    margin-bottom: 3px;
+    color: var(--fnk-neutral-500);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: right;
+  }
+
+  .sup-responsive-table td:first-child,
+  .sup-responsive-table td:nth-child(2) {
+    text-align: left;
+  }
+
+  .sup-responsive-table--holdings td:nth-child(4),
+  .sup-responsive-table--trades td:nth-child(3),
+  .sup-responsive-table--trades td:nth-child(6) {
+    text-align: right;
+  }
+
+  .sup-responsive-table td:first-child::before,
+  .sup-responsive-table td:nth-child(2)::before {
+    text-align: left;
+  }
+
+  .sup-responsive-table td:nth-child(2) {
+    align-items: flex-start;
+  }
+
+  .sup-responsive-table .sup-responsive-name,
+  .sup-responsive-table .sup-responsive-sub,
+  .sup-responsive-table .sup-responsive-code {
+    max-width: 100%;
+  }
+
+  .sup-responsive-sector {
+    max-width: 100%;
+  }
+
+  .sup-responsive-link {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .sup-guru-stat-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sup-guru-stat-strip > div:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .sup-guru-stat-strip > div:nth-child(n + 3) {
+    border-top: 1px solid var(--fnk-neutral-100);
+  }
+
+  .sup-guru-stat-strip > div:nth-child(even) {
+    border-left: 1px solid var(--fnk-neutral-100);
+  }
 }
 
 /* SEC and Back remain reachable at the same physical size on phones and
@@ -1363,14 +1712,16 @@
   .sup-tab,
   .sup-guru-back,
   .sup-guru-sec-link,
-  .cpw5-super-desktop-table a {
+  .sup-responsive-table a,
+  .sup-responsive-link {
     min-height: 44px;
   }
 
   .sup-tab,
   .sup-guru-back,
   .sup-guru-sec-link,
-  .cpw5-super-desktop-table a {
+  .sup-responsive-table a,
+  .sup-responsive-link {
     display: inline-flex;
     align-items: center;
   }

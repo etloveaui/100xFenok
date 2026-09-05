@@ -5,15 +5,12 @@ import { EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components
 import { formatCurrencyCompact, formatInteger, formatPercent } from "@/lib/format";
 import type {
   ByTickerData,
-  BuyingPressureData,
   ConsensusData,
-  ConvictionData,
   EnhancedConsensusData,
-  NewPositionsData,
   SummaryData,
 } from "@/lib/superinvestors/types";
-import { loadSignalBuyingPressure, loadSignalConviction, loadSignalNewPositions } from "./signalFeeds";
 import { buildGrandPortfolio, investorDisplayName } from "./signalData";
+import type { InvestorSignalFeedState } from "./useInvestorTabData";
 
 interface WhoHoldsPanelProps {
   summary: SummaryData | null;
@@ -26,6 +23,8 @@ interface WhoHoldsPanelProps {
   failed: boolean;
   partialFeeds: boolean;
   onRetry: () => void;
+  signalFeeds: InvestorSignalFeedState;
+  onRetrySignal: () => void;
   initialTicker?: string | null;
   onTickerChange?: (ticker: string) => void;
   compact?: boolean;
@@ -49,6 +48,8 @@ export default function WhoHoldsPanel({
   failed,
   partialFeeds,
   onRetry,
+  signalFeeds,
+  onRetrySignal,
   initialTicker = null,
   onTickerChange,
   compact = false,
@@ -56,23 +57,21 @@ export default function WhoHoldsPanel({
   const normalizedInitialTicker = normalizeTickerInput(initialTicker ?? "");
   const [query, setQuery] = useState(normalizedInitialTicker);
   const [committed, setCommitted] = useState<string | null>(normalizedInitialTicker || null);
-  const [newPositions, setNewPositions] = useState<NewPositionsData | null | undefined>(undefined);
-  const [buyingPressure, setBuyingPressure] = useState<BuyingPressureData | null | undefined>(undefined);
-  const [conviction, setConviction] = useState<ConvictionData | null | undefined>(undefined);
-  const [attempt, setAttempt] = useState(0);
+
+  const newPositions = signalFeeds.newPositions.status === "not-requested" || signalFeeds.newPositions.status === "loading"
+    ? undefined
+    : signalFeeds.newPositions.data;
+  const buyingPressure = signalFeeds.buyingPressure.status === "not-requested" || signalFeeds.buyingPressure.status === "loading"
+    ? undefined
+    : signalFeeds.buyingPressure.data;
+  const conviction = signalFeeds.conviction.status === "not-requested" || signalFeeds.conviction.status === "loading"
+    ? undefined
+    : signalFeeds.conviction.data;
 
   useEffect(() => {
     setQuery(normalizedInitialTicker);
     setCommitted(normalizedInitialTicker || null);
   }, [normalizedInitialTicker]);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadSignalNewPositions().then((d) => { if (!cancelled) setNewPositions(d); });
-    loadSignalBuyingPressure().then((d) => { if (!cancelled) setBuyingPressure(d); });
-    loadSignalConviction().then((d) => { if (!cancelled) setConviction(d); });
-    return () => { cancelled = true; };
-  }, [attempt]);
 
   const tickers = useMemo(() => {
     const set = new Set<string>();
@@ -118,17 +117,11 @@ export default function WhoHoldsPanel({
 
   const grand = useMemo(() => buildGrandPortfolio(byTicker, compact ? 3 : 10), [byTicker, compact]);
   const loading = (!dataReady && !failed) || newPositions === undefined || buyingPressure === undefined || conviction === undefined;
-  const feedsFailed = !loading && (newPositions === null || buyingPressure === null || conviction === null);
+  const feedsFailed = !loading && [signalFeeds.newPositions, signalFeeds.buyingPressure, signalFeeds.conviction]
+    .some((feed) => feed.status === "error" || feed.status === "unavailable");
   const freshness: "pending" | "error" | "partial" | "stale" =
     loading ? "pending" : failed || (newPositions === null && buyingPressure === null && conviction === null) ? "error" : partialFeeds || feedsFailed ? "partial" : "stale";
   const emptyResult = committed !== null && dataReady && result === null && !loading;
-
-  function retryFeeds() {
-    setNewPositions(undefined);
-    setBuyingPressure(undefined);
-    setConviction(undefined);
-    setAttempt((n) => n + 1);
-  }
 
   function commit(value: string) {
     const q = normalizeTickerInput(value);
@@ -280,7 +273,7 @@ export default function WhoHoldsPanel({
         asOf={asOf}
         coverage={coverage}
         next="분기 종료 후 최대 45일"
-        onRetry={failed ? onRetry : feedsFailed ? retryFeeds : undefined}
+        onRetry={failed ? onRetry : feedsFailed ? onRetrySignal : undefined}
         onEvidence={dataReady && !failed ? () => window.open("/data/sec-13f/by_ticker.json", "_blank", "noopener") : undefined}
       />
     </Panel>

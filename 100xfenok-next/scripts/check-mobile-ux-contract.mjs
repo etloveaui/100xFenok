@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 const baseUrl = process.env.QA_BASE_URL || "http://127.0.0.1:3105";
@@ -182,9 +182,19 @@ async function captureBoundedScreenshots(page, route, viewportName, routeIndex) 
     viewportHeight: window.innerHeight,
   })).catch(() => ({ scrollHeight: 0, viewportHeight: 0 }));
   const bottom = Math.max(0, metrics.scrollHeight - metrics.viewportHeight);
+  const evidenceTarget = isolated && route.includes("guru=")
+    ? "[data-superinvestor-guru-top-holdings]"
+    : isolated && route.includes("tab=trades")
+      ? '[data-superinvestor-trades-panel][data-superinvestor-trades-side="bought"]'
+      : null;
+  const focusedMiddle = evidenceTarget ? await page.locator(evidenceTarget).first().evaluate((node) => {
+    const inner = node.querySelector("[data-journey-holdings-scroll]");
+    if (inner) inner.scrollTop = 0;
+    return Math.max(0, node.getBoundingClientRect().top + window.scrollY - 120);
+  }).catch(() => null) : null;
   const positions = [
     ["top", 0],
-    ["middle", Math.max(0, Math.round(bottom / 2))],
+    ["middle", focusedMiddle ?? Math.max(0, Math.round(bottom / 2))],
     ["bottom", bottom],
   ];
   const screenshots = {};
@@ -193,7 +203,7 @@ async function captureBoundedScreenshots(page, route, viewportName, routeIndex) 
   for (const [label, scrollY] of positions) {
     const screenshotPath = join(routeDir, `${label}.png`);
     try {
-      await page.evaluate((nextScrollY) => window.scrollTo(0, nextScrollY), scrollY);
+      await page.evaluate((nextScrollY) => window.scrollTo({ top: nextScrollY, left: 0, behavior: "instant" }), scrollY);
       await page.waitForTimeout(100);
       await page.screenshot({ path: screenshotPath, animations: "disabled" });
       screenshots[label] = screenshotPath;
@@ -3425,6 +3435,13 @@ async function collectRouteChecks(page, route) {
               }
             }
           });
+      } else if (/tab=(trades|insights|graph)(?:&|$)/.test(currentRoute)) {
+        const selectedTab = new URLSearchParams(currentRoute.split("?")[1] || "").get("tab");
+        const selectors = { trades: "[data-superinvestor-trades-panel]", insights: "[data-superinvestor-insights-status]", graph: "[data-superinvestors-graph]" };
+        const panel = document.querySelector(selectors[selectedTab]);
+        if (!panel || panel.getBoundingClientRect().height <= 0) failures.push({ check: "superinvestors-active-tab-content", detail: selectedTab });
+        const active = document.querySelector(`[data-superinvestors-tab="${selectedTab}"]`);
+        if (active?.getAttribute("aria-selected") !== "true") failures.push({ check: "superinvestors-active-tab-identity", detail: selectedTab });
       } else {
         const signalLists = Array.from(document.querySelectorAll("[data-superinvestors-signal-list]"))
           .filter((node) => node.getBoundingClientRect().height > 0);
@@ -4038,12 +4055,13 @@ if (viewports.length === 0) {
 }
 
 async function collectInvestorStructureChecks(page, route, requests) {
-  if (!isolated || !route.startsWith("/superinvestors")) return [];
-  const failures = await page.evaluate(() => {
+  if (!isolated || !route.startsWith("/superinvestors")) return { failures: [], observations: [] };
+  const observed = await page.evaluate(() => {
     const failures = [];
+    const observations = [];
     const visible = (node) => node instanceof HTMLElement && node.getClientRects().length > 0 && getComputedStyle(node).visibility !== "hidden";
     const pairs = [
-      ["holdings", "[data-superinvestor-guru-top-holdings]", "[data-superinvestor-guru-holding-card]", "[data-superinvestor-guru-desktop-holding-row]"],
+      ["holdings", "[data-superinvestor-guru-top-holdings]", "[data-superinvestor-guru-holding-card]", "tr[data-superinvestor-guru-holding-row], [data-superinvestor-guru-desktop-holding-row]"],
       ["bought", '[data-superinvestor-trades-panel][data-superinvestor-trades-side="bought"]', "[data-superinvestor-trades-card]", "tbody tr"],
       ["sold", '[data-superinvestor-trades-panel][data-superinvestor-trades-side="sold"]', "[data-superinvestor-trades-card]", "tbody tr"],
     ];
@@ -4052,10 +4070,12 @@ async function collectInvestorStructureChecks(page, route, requests) {
       if (!container || !visible(container)) continue;
       const cards = [...container.querySelectorAll(cardSelector)].filter(visible);
       const rows = [...container.querySelectorAll(tableSelector)].filter(visible);
+      observations.push({ name, cards: cards.length, rows: rows.length, firstRowFields: rows[0]?.querySelectorAll("td").length ?? 0 });
       if (cards.length > 0 && rows.length > 0) failures.push({ check: "investor-single-responsive-view", detail: `${name}: cards=${cards.length}, tableRows=${rows.length}` });
       if (!cards.length && !rows.length) failures.push({ check: "investor-responsive-content", detail: `${name}: no visible rows` });
-      if (name === "holdings" && window.innerWidth <= 760 && rows.length) {
-        const cells = [...rows[0].querySelectorAll("td")];
+      if (name === "holdings" && window.innerWidth <= 760) {
+        if (!rows.length) failures.push({ check: "investor-holding-fields", detail: "missing semantic holding row on phone" });
+        const cells = rows[0] ? [...rows[0].querySelectorAll("td")] : [];
         if (cells.length < 8) failures.push({ check: "investor-holding-fields", detail: `fields=${cells.length}` });
         for (const cell of cells) {
           const rect = cell.getBoundingClientRect();
@@ -4063,13 +4083,138 @@ async function collectInvestorStructureChecks(page, route, requests) {
         }
       }
     }
-    return failures;
+    return { failures, observations };
   });
+  const { failures } = observed;
   const url = new URL(route, baseUrl);
   const tab = url.searchParams.get("tab") || "signal";
+  const guruId = url.searchParams.get("guru");
+  if (guruId && /^[a-z0-9_-]+$/i.test(guruId)) {
+    const payload = JSON.parse(await readFile(resolve("../data/sec-13f/investors", `${guruId}.json`), "utf8"));
+    const filing = payload.investor.filings.at(-1);
+    const heldTickers = new Set(filing.holdings.map((holding) => holding.ticker).filter(Boolean));
+    // Preserve the pre-remodel top-50 held plus up-to-50 fully sold contract.
+    const soldCount = (filing.changes_summary?.sold ?? []).filter((holding) => holding.ticker && !heldTickers.has(holding.ticker)).length;
+    const expectedRows = Math.min(50, heldTickers.size) + Math.min(50, soldCount);
+    const holdingObservation = observed.observations.find((item) => item.name === "holdings");
+    if (holdingObservation) holdingObservation.expectedRows = expectedRows;
+    if (holdingObservation?.rows !== expectedRows) failures.push({ check: "investor-holding-row-preservation", detail: `expected=${expectedRows}, actual=${holdingObservation?.rows ?? 0}` });
+  }
+  // Guru charts consume portfolio_views and factor_exposures_summary;
+  // only trades_ranking is unrelated to this destination.
+  if (url.searchParams.has("guru") && requests.some((path) => path.endsWith("/trades_ranking.json"))) {
+    failures.push({ check: "investor-guru-independent-feeds", detail: "guru requested unrelated trades feed" });
+  }
   if (!url.searchParams.has("guru") && ["signal", "investors", "graph"].includes(tab)) {
     const unrelated = requests.filter((path) => /\/(trades_ranking|portfolio_views|factor_exposures_summary)\.json$/.test(path));
     if (unrelated.length) failures.push({ check: "investor-active-tab-feeds", detail: [...new Set(unrelated)].join(", ") });
+  }
+  return observed;
+}
+
+async function collectInvestorTabSwitchChecks(page, route, viewportName, requestPaths) {
+  if (!isolated || route !== "/superinvestors" || !["mobile", "tablet-landscape"].includes(viewportName)) return [];
+  const failures = [];
+  try {
+    for (const tab of ["stocks", "trades", "insights", "graph", "investors", "signal"]) {
+      const button = page.locator(`[data-superinvestors-tab="${tab}"]`);
+      await button.click();
+      await prepareDynamicRoute(page, `/superinvestors?tab=${tab}`);
+      if (await button.getAttribute("aria-selected") !== "true" || new URL(page.url()).searchParams.get("tab") !== tab) {
+        throw new Error(`tab selection/URL mismatch: ${tab}`);
+      }
+      if (tab === "trades") {
+        for (const side of ["bought", "sold"]) {
+          const panel = page.locator(`[data-superinvestor-trades-panel][data-superinvestor-trades-side="${side}"]`);
+          const rows = panel.locator("tbody tr");
+          const toggle = panel.locator('button[aria-pressed]');
+          if (await rows.count() !== 10) throw new Error(`${side}: expected 10 initial trade rows`);
+          await toggle.click();
+          if (await rows.count() <= 10 || await toggle.getAttribute("aria-pressed") !== "true") throw new Error(`${side}: trade expansion failed`);
+          await toggle.click();
+          if (await rows.count() !== 10) throw new Error(`${side}: trade collapse failed`);
+        }
+      }
+    }
+    const beforeReturn = requestPaths.length;
+    await page.locator('[data-superinvestors-tab="stocks"]').click();
+    await prepareDynamicRoute(page, "/superinvestors?tab=stocks");
+    await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+    const repeated = requestPaths.slice(beforeReturn).filter((path) => /\/(portfolio_views|trades_ranking|new_positions|buying_pressure|conviction)\.json$/.test(path));
+    if (repeated.length) failures.push({ check: "investor-settled-tab-feed-reuse", detail: repeated.join(", ") });
+    await page.locator('[data-superinvestors-tab="signal"]').click();
+    await prepareDynamicRoute(page, "/superinvestors");
+  } catch (error) {
+    failures.push({ check: "investor-tab-switch", detail: String(error) });
+  }
+  return failures;
+}
+
+async function collectInvestorFeedRetryChecks(page, route, viewportName, requestPaths) {
+  if (!isolated || route !== "/superinvestors" || viewportName !== "mobile") return [];
+  const failures = [];
+  const feedUrl = new URL("/data/sec-13f/analytics/new_positions.json", baseUrl).href;
+  const failFeed = (requestRoute) => requestRoute.fulfill({ status: 503, contentType: "application/json", body: "{}" });
+  try {
+    await page.route(feedUrl, failFeed);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    const errorStrip = page.locator(".stale-state").filter({ hasText: "신규 매수 집계를 불러오지 못했습니다." });
+    await errorStrip.waitFor({ state: "visible", timeout: 45000 });
+    const increases = page.locator('[data-superinvestors-signal-list="increased"]');
+    // One unavailable supplementary source must not erase the other lists.
+    await increases.waitFor({ state: "visible", timeout: 45000 });
+    await page.unroute(feedUrl, failFeed);
+    const beforeRetry = requestPaths.length;
+    await errorStrip.getByRole("button", { name: "다시 시도" }).click();
+    await page.locator('[data-superinvestors-signal-list="new"]').waitFor({ state: "visible", timeout: 45000 });
+    await errorStrip.waitFor({ state: "hidden", timeout: 45000 });
+    const retryRequests = requestPaths.slice(beforeRetry);
+    if (!retryRequests.some((path) => path.endsWith("/new_positions.json"))) throw new Error("retry did not request the failed source");
+    const unrelated = retryRequests.filter((path) => /\/(buying_pressure|conviction|portfolio_views|trades_ranking)\.json$/.test(path));
+    if (unrelated.length) throw new Error(`retry requested unrelated settled feeds: ${unrelated.join(", ")}`);
+  } catch (error) {
+    failures.push({ check: "investor-feed-retry-isolation", detail: String(error) });
+  } finally {
+    await page.unroute(feedUrl, failFeed);
+    if (failures.length) await page.goto(routeUrl(route), { waitUntil: "domcontentloaded" });
+    await prepareDynamicRoute(page, route);
+  }
+  return failures;
+}
+
+async function collectInvestorHoldingReturnChecks(page, route, viewportName) {
+  if (!isolated || !route.includes("guru=") || !["mobile", "tablet-landscape"].includes(viewportName)) return [];
+  const failures = [];
+  try {
+    const guruId = new URL(route, baseUrl).searchParams.get("guru");
+    const region = page.locator("[data-journey-holdings-scroll]:visible").first();
+    const links = page.locator('[data-superinvestor-guru-top-holdings] a[href*="/stock/"]:visible');
+    const tablet = viewportName === "tablet-landscape";
+    if (tablet) await region.evaluate((node) => { node.scrollTop = 240; });
+    const link = tablet ? links.nth(12) : links.first();
+    await link.scrollIntoViewIfNeeded();
+    const expectedScroll = tablet ? await region.evaluate((node) => node.scrollTop) : 0;
+    if (tablet && expectedScroll <= 0) throw new Error("holdings return requires a positive inner scroll baseline");
+    const href = await link.getAttribute("href");
+    const destination = new URL(href, page.url());
+    if (!/^\/stock\/[^/]+\/?$/.test(destination.pathname)) throw new Error("holding link is not a stock destination");
+    const returnTo = destination.searchParams.get("returnTo");
+    if (!returnTo || new URL(returnTo, baseUrl).searchParams.get("guru") !== guruId) throw new Error("holding link lost guru return context");
+    await link.click();
+    await page.waitForURL((url) => url.pathname.replace(/\/$/, "") === destination.pathname.replace(/\/$/, ""), { timeout: 45000 });
+    const back = page.locator('a[aria-label="투자자 화면으로 돌아가기"]:visible').first();
+    await back.waitFor({ state: "visible", timeout: 45000 });
+    await back.click();
+    await prepareDynamicRoute(page, route);
+    if (new URL(page.url()).searchParams.get("guru") !== guruId) throw new Error("return opened a different guru");
+    if (tablet) {
+      await page.waitForFunction(({ expected }) => {
+        const node = document.querySelector("[data-journey-holdings-scroll]");
+        return node && node.scrollTop > expected - 50;
+      }, { expected: expectedScroll }, { timeout: 10000 });
+    }
+  } catch (error) {
+    failures.push({ check: "investor-holding-return", detail: String(error) });
   }
   return failures;
 }
@@ -4202,9 +4347,14 @@ try {
         await prepareDynamicRoute(page, route);
         const checks = await collectRouteChecks(page, route);
         result.failures = checks.failures;
-        result.failures.push(...await collectInvestorStructureChecks(page, route, routeRequests));
+        const structureChecks = await collectInvestorStructureChecks(page, route, routeRequests);
+        result.failures.push(...structureChecks.failures);
+        if (isolated) result.investorStructure = structureChecks.observations;
         if (isolated) result.dataRequests = [...new Set(routeRequests.filter((path) => path.startsWith("/data/")))];
+        result.failures.push(...await collectInvestorTabSwitchChecks(page, route, name, routeRequests));
+        result.failures.push(...await collectInvestorFeedRetryChecks(page, route, name, routeRequests));
         result.failures.push(...await collectInvestorNavigationChecks(page, route));
+        result.failures.push(...await collectInvestorHoldingReturnChecks(page, route, name));
         result.viewportWidth = checks.viewportWidth;
         result.scrollWidth = checks.scrollWidth;
         if (route.includes("/superinvestors?tab=stocks")) {

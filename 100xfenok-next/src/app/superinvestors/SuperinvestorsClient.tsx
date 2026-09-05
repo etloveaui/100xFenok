@@ -4,14 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import TickerChip from "@/components/TickerChip";
-import TransitionLink from "@/components/TransitionLink";
-import { fetch13FJson, use13FData, useInvestorDetail } from "@/hooks/use13FData";
+import { use13FData, useInvestorDetail } from "@/hooks/use13FData";
 import { Button, EmptyState, EvidenceRail, Panel, PanelHeader, Pill, Row } from "@/components/ui";
 import { TabPanel, getPanelId, getTabId, useTabsBaseId } from "@/components/ui/Tabs";
 import {
   formatCurrencyCompact,
-  formatCurrency,
-  formatCompactNumber,
   formatInteger,
   formatPercent,
 } from "@/lib/format";
@@ -30,22 +27,23 @@ import type {
   ConsensusTicker,
   FactorExposuresSummaryData,
   InvestorFiling,
-  InvestorHolding,
   PortfolioViewsData,
   SectorHoldingsData,
   SectorHoldingsEntry,
   SummaryInvestor,
   TradesRankingData,
-  TradesRankingRow,
-  TurnoverData,
 } from "@/lib/superinvestors/types";
-import { loadFactorExposuresSummary, loadPortfolioViews } from "./portfolioViewsLoader";
 import { buildGraphNetwork } from "./graphNetwork";
 import GraphNetworkPanel, { GraphNetworkTeaser } from "./GraphNetworkPanel";
 import GuruTrendBlock from "./GuruTrendBlock";
 import InsightsTab from "./InsightsTab";
 import SignalPanel from "./SignalPanel";
 import WhoHoldsPanel from "./WhoHoldsPanel";
+import {
+  ResponsiveHoldingsTable,
+  ResponsiveTradeRankingPanel,
+} from "./InvestorResponsiveRows";
+import { useInvestorTabData } from "./useInvestorTabData";
 
 const ChartLoading = () => (
   <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-3)]">
@@ -121,71 +119,6 @@ function buildSectorRotationRows(
     .slice(0, 8);
 }
 
-function normalizeTradesRanking(data: unknown): TradesRankingData | null {
-  const raw = data as Partial<TradesRankingData> | null;
-  if (!raw?.metadata) return null;
-  return {
-    metadata: raw.metadata,
-    bought: Array.isArray(raw.bought) ? raw.bought : [],
-    sold: Array.isArray(raw.sold) ? raw.sold : [],
-  };
-}
-
-type HoldingChangeKind = "new" | "increased" | "decreased" | "sold";
-
-const HOLDING_CHANGE_LABEL: Record<HoldingChangeKind, string> = {
-  new: "신규",
-  increased: "증가",
-  decreased: "감소",
-  sold: "청산",
-};
-
-const HOLDING_CHANGE_TONE: Record<HoldingChangeKind, string> = {
-  new: "bg-emerald-100 text-emerald-700",
-  increased: "bg-sky-100 text-sky-700",
-  decreased: "bg-amber-100 text-amber-700",
-  sold: "bg-rose-100 text-rose-700",
-};
-
-function buildHoldingChangeMap(
-  changes: InvestorFiling["changes_summary"] | undefined,
-): Map<string, { kind: HoldingChangeKind; pct: number }> {
-  const map = new Map<string, { kind: HoldingChangeKind; pct: number }>();
-  if (!changes) return map;
-  const kinds: HoldingChangeKind[] = ["new", "increased", "decreased", "sold"];
-  for (const kind of kinds) {
-    for (const entry of changes[kind] ?? []) {
-      if (!entry?.ticker || map.has(entry.ticker)) continue;
-      map.set(entry.ticker, {
-        kind,
-        pct: typeof entry.change_pct === "number" && Number.isFinite(entry.change_pct) ? entry.change_pct : NaN,
-      });
-    }
-  }
-  return map;
-}
-
-function HoldingChangePill({ change }: { change: { kind: HoldingChangeKind; pct: number } | undefined }) {
-  if (!change) return <span className="text-[var(--c-ink-3)]">—</span>;
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black ${HOLDING_CHANGE_TONE[change.kind]}`}
-      title={Number.isFinite(change.pct) ? `변화 ${change.pct}%` : undefined}
-    >
-      {HOLDING_CHANGE_LABEL[change.kind]}
-    </span>
-  );
-}
-
-function tradeShare(amount: number | null | undefined, totalAmount: number): number | null {
-  if (amount === null || amount === undefined || Number.isNaN(amount) || totalAmount <= 0) return null;
-  return (amount / totalAmount) * 100;
-}
-
-function formatTradeShare(amount: number | null | undefined, totalAmount: number): string {
-  return formatPercent(tradeShare(amount, totalAmount), { digits: 1, fraction: false });
-}
-
 function fmtDateTimeKo(value: string | null | undefined): string | null {
   if (!value) return null;
   const date = new Date(value);
@@ -223,26 +156,6 @@ const HOLDER_SORTS: Array<{ key: HolderSort; label: string }> = [
   { key: "holdings", label: "보유종목 순" },
   { key: "change", label: "변화율 순" },
 ];
-
-// Turnover is shaped in the client (never in use13FData — window-2 owns that
-// hook). One bulk fetch covers the Holders "분기 변화" column for all rows.
-let turnoverCache: TurnoverData["by_investor"] | null | undefined;
-let turnoverPromise: Promise<TurnoverData["by_investor"] | null> | null = null;
-
-function loadTurnoverLocal(): Promise<TurnoverData["by_investor"] | null> {
-  if (turnoverCache !== undefined) return Promise.resolve(turnoverCache);
-  if (turnoverPromise) return turnoverPromise;
-  turnoverPromise = fetch13FJson<TurnoverData>("/data/sec-13f/analytics/turnover.json").then((data) => {
-    turnoverCache = data?.by_investor ?? null;
-    return turnoverCache;
-  }, (error) => {
-    // A rejected fetch must not pin the module slot: clear it so a manual
-    // retry can issue a fresh request instead of replaying the rejection.
-    turnoverPromise = null;
-    throw error;
-  });
-  return turnoverPromise;
-}
 
 function reload() {
   window.location.reload();
@@ -291,173 +204,13 @@ function sortConsensusByHolders(rows: ConsensusTicker[]): ConsensusTicker[] {
   });
 }
 
-type HoldingRow = InvestorHolding & { liquidated?: boolean };
-
-function LatestHoldingsMobileCards({ rows, changeMap, returnTo, onBeforeNavigate }: { rows: HoldingRow[]; changeMap?: Map<string, { kind: HoldingChangeKind; pct: number }>; returnTo?: string | null; onBeforeNavigate?: () => void }) {
-  return (
-    <div
-      className="cpw5-super-mobile-cards"
-      role="list"
-      aria-label="최신 보유 및 청산 종목 모바일 요약"
-    >
-      {rows.map((h) => (
-        <article
-          key={`${h.ticker}-${h.cusip}-mobile`}
-          data-superinvestor-guru-holding-card
-          data-superinvestor-guru-holding-card-ticker={h.ticker ?? ""}
-          data-superinvestor-guru-holding-row
-          data-superinvestor-guru-holding-ticker={h.ticker ?? ""}
-          role="listitem"
-          className="cpw5-super-mobile-card"
-        >
-          <div className="flex min-w-0 items-start justify-between gap-2">
-            {h.ticker ? <TickerChip ticker={h.ticker} variant="pill" href={ROUTES.stock(h.ticker, returnTo)} onClick={onBeforeNavigate} className="min-h-11 shrink-0" /> : null}
-            <div className="min-w-0 text-right">
-              <p className="truncate text-sm font-black text-slate-900">{h.name}</p>
-              {h.sector ? <p className="truncate text-[10px] font-semibold text-[var(--c-ink-3)]">{h.sector}</p> : null}
-            </div>
-          </div>
-          <dl className="cpw5-super-mobile-card__metrics mt-3">
-            <div className="cpw5-super-mobile-card__field">
-              <dt>비중</dt>
-              <dd className="tabular-nums">{h.liquidated ? "—" : formatPercent(h.weight, { digits: 2 })}</dd>
-            </div>
-            <div className="cpw5-super-mobile-card__field">
-              <dt>주식수</dt>
-              <dd className="tabular-nums">{formatCompactNumber(h.shares)}</dd>
-            </div>
-            <div className="cpw5-super-mobile-card__field">
-              <dt>분기 변화</dt>
-              <dd><HoldingChangePill change={h.ticker ? changeMap?.get(h.ticker) : undefined} /></dd>
-            </div>
-            <div className="cpw5-super-mobile-card__field cpw5-super-mobile-card__field--wide">
-              <dt>시가총액</dt>
-              <dd className="tabular-nums">{formatCurrencyCompact(h.market_value, "USD")}</dd>
-            </div>
-          </dl>
-        </article>
-      ))}
-    </div>
-  );
-}
-
-function LatestHoldingsTable({ holdings, changes, returnTo, onBeforeNavigate }: { holdings: InvestorHolding[]; changes?: InvestorFiling["changes_summary"]; returnTo?: string | null; onBeforeNavigate?: () => void }) {
-  const rows = useMemo<HoldingRow[]>(() => {
-    // Filings carry one row per share class / CUSIP — aggregate by ticker.
-    const byTicker = new Map<string, InvestorHolding>();
-    for (const h of holdings) {
-      if (!h.ticker) continue;
-      const cur = byTicker.get(h.ticker);
-      if (cur) {
-        cur.weight = (cur.weight || 0) + (h.weight || 0);
-        cur.shares = (cur.shares || 0) + (h.shares || 0);
-        cur.market_value = (cur.market_value || 0) + (h.market_value || 0);
-      } else {
-        byTicker.set(h.ticker, { ...h });
-      }
-    }
-    const held: HoldingRow[] = [...byTicker.values()]
-      .sort((a, b) => (b.weight || 0) - (a.weight || 0))
-      .slice(0, 50);
-    // Fully liquidated positions are absent from the latest holdings, so the
-    // "청산" state can only be shown by appending them as explicit rows whose
-    // holding/price fields are unavailable (rendered as "—", never as 0).
-    const liquidated: HoldingRow[] = (changes?.sold ?? [])
-      .filter((entry) => entry?.ticker && !byTicker.has(entry.ticker))
-      .slice(0, 50)
-      .map((entry) => ({
-        ticker: entry.ticker,
-        cusip: `sold-${entry.ticker}`,
-        name: entry.name || entry.ticker,
-        shares: Number.NaN,
-        market_value: Number.NaN,
-        weight: Number.NaN,
-        liquidated: true,
-      }));
-    return [...held, ...liquidated];
-  }, [holdings, changes]);
-  const changeMap = useMemo(() => buildHoldingChangeMap(changes), [changes]);
-
-  if (rows.length === 0) {
-    return (
-      <Panel empty emptyReason="보유 종목이 없습니다" emptyNextRefresh="다음 분기 공시 반영 후 갱신"><span>보유 종목이 없습니다</span></Panel>
-    );
-  }
-
-  return (
-    <div data-superinvestor-guru-top-holdings className="space-y-2">
-      <LatestHoldingsMobileCards rows={rows} changeMap={changeMap} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
-      <div
-        className="cpw5-super-desktop-table scroll-hint-x -mx-1 px-1"
-        role="region"
-        tabIndex={0}
-        aria-label="최신 보유 및 청산 종목 표 가로 스크롤"
-      >
-        <div data-journey-holdings-scroll className="max-h-[440px] overflow-y-auto">
-        <table className="w-full min-w-[640px] text-xs">
-          <thead>
-            <tr className="sticky top-0 z-10 h-9 border-b border-slate-200 bg-white text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
-              <th className="px-2 py-2 text-left">티커</th>
-              <th className="px-2 py-2 text-left">종목</th>
-              <th className="px-2 py-2 text-right">비중</th>
-              <th className="px-2 py-2 text-center">분기 변화</th>
-              <th className="px-2 py-2 text-right">주식수</th>
-              <th className="px-2 py-2 text-right">보고가</th>
-              <th className="px-2 py-2 text-right">현재가</th>
-              <th className="px-2 py-2 text-right">시가총액</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((h) => (
-              <tr
-                key={`${h.ticker}-${h.cusip}`}
-                data-superinvestor-guru-desktop-holding-row
-                data-superinvestor-guru-desktop-holding-ticker={h.ticker ?? ""}
-                data-superinvestor-guru-desktop-holding-liquidated={h.liquidated ? "true" : undefined}
-                className="h-11 border-b border-slate-100 last:border-b-0"
-              >
-                <td className="px-2 py-2">
-                  {h.ticker ? (
-                    <TickerChip ticker={h.ticker} variant="pill" href={ROUTES.stock(h.ticker, returnTo)} onClick={onBeforeNavigate} className="min-h-11" />
-                  ) : (
-                    <span className="text-[var(--c-ink-3)]">—</span>
-                  )}
-                </td>
-                <td className="px-2 py-2">
-                  <span className="block max-w-[200px] truncate font-semibold text-slate-700">{h.name}</span>
-                  {h.sector ? <span className="text-[10px] text-[var(--c-ink-3)]">{h.sector}</span> : null}
-                </td>
-                <td className="px-2 py-2 text-right">
-                  <span className="tabular-nums font-bold text-slate-900">{h.liquidated ? "—" : formatPercent(h.weight, { digits: 2 })}</span>
-                </td>
-                <td className="px-2 py-2 text-center">
-                  <HoldingChangePill change={h.ticker ? changeMap.get(h.ticker) : undefined} />
-                </td>
-                <td className="px-2 py-2 text-right">
-                  <span className="tabular-nums text-slate-700">{formatCompactNumber(h.shares)}</span>
-                </td>
-                <td className="px-2 py-2 text-right">
-                  <span className="tabular-nums text-slate-700">{h.price_at_filing != null ? formatCurrency(h.price_at_filing, "USD", { digits: 2 }) : "—"}</span>
-                </td>
-                <td className="px-2 py-2 text-right">
-                  <span className="tabular-nums text-slate-700">{h.price_latest != null ? formatCurrency(h.price_latest, "USD", { digits: 2 }) : "—"}</span>
-                </td>
-                <td className="px-2 py-2 text-right">
-                  <span className="tabular-nums text-slate-700">{formatCurrencyCompact(h.market_value, "USD")}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function GuruDetailPanel({
   id,
   summary,
+  turnover,
+  turnoverLoading,
+  turnoverFailed,
+  onRetryTurnover,
   pvData,
   pvLoading,
   pvFailed,
@@ -473,6 +226,10 @@ function GuruDetailPanel({
 }: {
   id: string;
   summary: SummaryInvestor;
+  turnover: number | null | undefined;
+  turnoverLoading: boolean;
+  turnoverFailed: boolean;
+  onRetryTurnover?: () => void;
   pvData: PortfolioViewsData | null;
   pvLoading: boolean;
   pvFailed: boolean;
@@ -490,7 +247,6 @@ function GuruDetailPanel({
   useEffect(() => {
     if (!loading) onReady?.(id);
   }, [id, loading, onReady]);
-  const [turnover, setTurnover] = useState<number | null | undefined>(undefined);
 
   const latest: InvestorFiling | null = data?.investor?.filings?.[data.investor.filings.length - 1] ?? null;
   const prev: InvestorFiling | null =
@@ -507,22 +263,6 @@ function GuruDetailPanel({
   const secBrowseUrl = cik
     ? `https://www.sec.gov/edgar/browse/?CIK=${encodeURIComponent(cik)}&owner=exclude&action=getcompany`
     : null;
-
-  useEffect(() => {
-    let cancelled = false;
-    loadTurnoverLocal().then(
-      (map) => {
-        if (cancelled) return;
-        const entry = map?.[id];
-        setTurnover(entry?.turnover ?? null);
-      },
-      () => {
-        if (cancelled) return;
-        setTurnover(null);
-      },
-    );
-    return () => { cancelled = true; };
-  }, [id]);
 
   const cohortCount = pvData?.metadata?.cohort_count ?? null;
   const plottableCount = useMemo(() => {
@@ -559,9 +299,10 @@ function GuruDetailPanel({
 
   const kpiError = !loading && status === "error";
   const kpiEmpty = !loading && status !== "error" && status !== "private" && !latest;
-  const kpiPartial = !loading && !kpiError && !kpiEmpty && (status === "private" || turnover == null);
+  const kpiPending = loading || turnoverLoading;
+  const kpiPartial = !kpiPending && !kpiError && !kpiEmpty && (status === "private" || turnover == null || turnoverFailed);
   const kpiFreshness: "pending" | "error" | "partial" | "stale" =
-    loading ? "pending" : kpiError ? "error" : kpiEmpty || kpiPartial ? "partial" : "stale";
+    kpiPending ? "pending" : kpiError ? "error" : kpiEmpty || kpiPartial ? "partial" : "stale";
   const kpiCoverage =
     status === "private"
       ? `요약 기준 ${latestQuarter} · 상세 비공개`
@@ -579,9 +320,23 @@ function GuruDetailPanel({
       data-superinvestor-guru-filing-date={filingDate}
       tabIndex={-1}
       aria-label={`${summary.name} 포트폴리오 상세`}
-      className="sup-guru-profile mt-3 p-4"
+      className="sup-guru-profile mt-3"
     >
-      <div data-superinvestor-guru-profile-hero className="sup-guru-disclosures mb-3">
+      <div data-superinvestor-guru-identity className="sup-guru-identity">
+        <div className="min-w-0">
+          <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-600">
+            {summary.group}
+          </span>
+          {summary.is_stale ? <span className="sup-stale-badge ml-1">지연</span> : null}
+          <h2 className="mt-1 truncate text-lg font-black tracking-tight text-slate-950">{summary.name}</h2>
+        </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-slate-700">
+          <span>운용 자산 <b className="tabular-nums text-slate-900">{formatCurrencyCompact(latest?.aum_total ?? summary.aum, "USD")}</b></span>
+          <span>보유 종목 <b className="tabular-nums text-slate-900">{formatInteger(latest?.holdings_count ?? summary.holdings_count)}개</b></span>
+          <span>기준 분기 <b className="tabular-nums text-slate-900">{latestQuarter}</b></span>
+        </div>
+      </div>
+      <div data-superinvestor-guru-profile-hero className="sup-guru-disclosures">
         <div className="sup-guru-disclosure sup-guru-disclosure-quarter">
           <p className="sup-guru-disclosure-label">13F 기준</p>
           <p data-superinvestor-guru-asof className="sup-guru-disclosure-value">
@@ -627,37 +382,35 @@ function GuruDetailPanel({
         </div>
       </div>
 
-      {/* Row 1 — KPI strip (panel lives inside a narrow card column — keep 2x2) */}
+      {/* Row 1 — unframed metric strip */}
       <Panel
-        className="sup-guru-panel"
-        loading={loading}
+        loading={kpiPending}
         empty={kpiEmpty}
         emptyReason="이 투자자의 자료 없음"
         emptyNextRefresh="다음 분기 공시 반영 후 갱신"
         error={kpiError}
         errorDetail="KPI 데이터를 불러오지 못했습니다."
         asOf={latestQuarter}
+        onRetry={!kpiError && turnoverFailed ? onRetryTurnover : undefined}
+        retryLabel="다시 시도"
       >
-      <div className="grid grid-cols-2 gap-2">
-        <KpiCard label="운용 자산" value={formatCurrencyCompact(latest?.aum_total ?? summary.aum, "USD")} isLoading={loading} dataKey="aum" />
-        <KpiCard
-          label="보유 종목"
-          value={latest ? formatInteger(latest.holdings_count) : "—"}
-          isLoading={loading}
-          dataKey="holdings"
-        />
-        <KpiCard
-          label="TOP 10 비중"
-          value={latest?.top_10_weight != null ? formatPercent(latest.top_10_weight, { digits: 1 }) : "—"}
-          isLoading={loading}
-          dataKey="top10"
-        />
-        <KpiCard
-          label="회전율"
-          value={turnover === undefined ? "..." : turnover === null ? "—" : formatPercent(turnover, { digits: 1 })}
-          isLoading={loading || turnover === undefined}
-          dataKey="turnover"
-        />
+      <div className="sup-guru-stat-strip" data-superinvestor-guru-metrics>
+        <div data-superinvestor-guru-kpi="aum">
+          <p>운용 자산</p>
+          {kpiPending ? <div className="sup-guru-stat-skeleton" /> : <strong>{formatCurrencyCompact(latest?.aum_total ?? summary.aum, "USD")}</strong>}
+        </div>
+        <div data-superinvestor-guru-kpi="holdings">
+          <p>보유 종목</p>
+          {kpiPending ? <div className="sup-guru-stat-skeleton" /> : <strong>{latest ? formatInteger(latest.holdings_count) : "—"}</strong>}
+        </div>
+        <div data-superinvestor-guru-kpi="top10">
+          <p>TOP 10 비중</p>
+          {kpiPending ? <div className="sup-guru-stat-skeleton" /> : <strong>{latest?.top_10_weight != null ? formatPercent(latest.top_10_weight, { digits: 1 }) : "—"}</strong>}
+        </div>
+        <div data-superinvestor-guru-kpi="turnover">
+          <p>회전율</p>
+          {kpiPending ? <div className="sup-guru-stat-skeleton" /> : <strong>{turnover == null ? "—" : formatPercent(turnover, { digits: 1 })}</strong>}
+        </div>
       </div>
         <EvidenceRail
           freshness={kpiFreshness}
@@ -665,6 +418,7 @@ function GuruDetailPanel({
           asOf={latestQuarter}
           coverage={kpiCoverage}
           next="분기 종료 후 최대 45일"
+          onRetry={!kpiError && turnoverFailed ? onRetryTurnover : undefined}
         />
       </Panel>
 
@@ -721,7 +475,6 @@ function GuruDetailPanel({
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 포트폴리오</p>
           <div className="mt-2 space-y-4">
             <Panel
-              className="sup-guru-panel"
               loading={pvLoading}
               empty={!pvLoading && !pvFailed && (!investorView || treemapRows.length === 0)}
               emptyReason={investorView ? "표시할 보유 비중 데이터가 없습니다" : "이 투자자의 자료 없음"}
@@ -751,7 +504,6 @@ function GuruDetailPanel({
               />
             </Panel>
             <Panel
-              className="sup-guru-panel"
               loading={pvLoading}
               empty={!pvLoading && !pvFailed && (!investorView || !hasSectorHistory)}
               emptyReason={investorView ? "표시할 섹터 구성 데이터가 없습니다" : "이 투자자의 자료 없음"}
@@ -785,7 +537,6 @@ function GuruDetailPanel({
               />
             </Panel>
             <Panel
-              className="sup-guru-panel"
               loading={pvLoading}
               empty={!pvLoading && !pvFailed && !investorView?.performance}
               emptyReason={investorView ? "표시할 성과 데이터가 없습니다" : "이 투자자의 자료 없음"}
@@ -819,7 +570,6 @@ function GuruDetailPanel({
       {/* Cohort cross-investor charts — full PortfolioViewsData required */}
       <div className="mt-4 space-y-3">
         <Panel
-          className="sup-guru-panel"
           loading={pvLoading}
           empty={scatterEmpty}
           emptyReason="표시할 위험·수익 데이터가 없습니다"
@@ -852,7 +602,6 @@ function GuruDetailPanel({
         </Panel>
 
         <Panel
-          className="sup-guru-panel"
           loading={pvLoading}
           empty={scatterEmpty}
           emptyReason="표시할 누적 수익 데이터가 없습니다"
@@ -885,7 +634,6 @@ function GuruDetailPanel({
         </Panel>
 
         <Panel
-          className="sup-guru-panel"
           loading={factorLoading}
           empty={radarEmpty}
           emptyReason={hasFactorRecord ? "표시할 팩터 노출 데이터가 없습니다" : "이 투자자의 자료 없음"}
@@ -927,7 +675,7 @@ function GuruDetailPanel({
       ) : latest ? (
         <div className="mt-4">
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 · 청산 종목</p>
-          <LatestHoldingsTable holdings={latest.holdings ?? []} changes={latest.changes_summary} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
+          <ResponsiveHoldingsTable holdings={latest.holdings ?? []} changes={latest.changes_summary} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
         </div>
       ) : status === "private" ? (
         <div className="mt-4">
@@ -942,299 +690,6 @@ function GuruDetailPanel({
   );
 }
 
-function KpiCard({
-  label,
-  value,
-  isLoading,
-  dataKey,
-}: {
-  label: string;
-  value: string;
-  isLoading?: boolean;
-  dataKey?: string;
-}) {
-  return (
-    <div data-superinvestor-guru-kpi={dataKey} className="min-w-0 rounded-xl border border-slate-200 bg-white p-3">
-      <p className="truncate text-[11px] font-medium text-slate-500">{label}</p>
-      {isLoading ? (
-        <div className="mt-1 h-6 w-3/4 rounded bg-slate-200" />
-      ) : (
-        <p className="mt-1 truncate text-lg font-black tracking-tight text-slate-950 tabular-nums sm:text-xl">
-          {value}
-        </p>
-      )}
-    </div>
-  );
-}
-
-type AmountColor = "emerald" | "rose";
-
-function TradeRankingMobileCard({
-  row,
-  totalAmount,
-  amountColor,
-  side,
-  actionLabel,
-  returnTo,
-  onBeforeNavigate,
-}: {
-  row: TradesRankingRow;
-  totalAmount: number;
-  amountColor: AmountColor;
-  side: "bought" | "sold";
-  actionLabel: (r: TradesRankingRow) => string | undefined;
-  returnTo?: string | null;
-  onBeforeNavigate?: () => void;
-}) {
-  const canonicalSector = normalizeSuperSector(row.sector_gics ?? row.sector, row.sector);
-  const amountTextClass = amountColor === "emerald" ? "text-emerald-700" : "text-rose-700";
-  const shareScopeLabel = side === "bought" ? "매수 상위권 내 비중" : "매도 상위권 내 비중";
-  return (
-    <article
-      data-superinvestor-trades-card
-      data-superinvestor-trades-card-side={side}
-      data-superinvestor-trades-card-ticker={row.ticker}
-      data-superinvestor-trades-row
-      data-superinvestor-trades-side={side}
-      data-superinvestor-trades-ticker={row.ticker}
-      role="listitem"
-      className="cpw5-super-mobile-card"
-    >
-      <div className="flex min-w-0 items-start gap-2">
-        <span className="shrink-0 pt-2 text-xs font-bold text-[var(--c-ink-3)]">#{row.rank}</span>
-        <TransitionLink
-          href={ROUTES.stock(row.ticker, returnTo)}
-          onClick={onBeforeNavigate}
-          data-superinvestor-trades-card-action
-          data-superinvestor-trades-card-stock-link
-          data-superinvestor-trades-action
-          data-superinvestor-trades-stock-link
-          className="inline-flex min-h-11 min-w-0 flex-1 flex-col justify-center rounded-xl border border-slate-200 bg-white px-3 py-1 transition hover:border-brand-interactive hover:text-brand-interactive"
-        >
-          <span className="truncate text-sm font-black text-slate-900">{row.name}</span>
-          <span className="mt-0.5 text-[10px] font-black text-brand-interactive">{row.ticker}</span>
-        </TransitionLink>
-      </div>
-      <dl className="cpw5-super-mobile-card__metrics mt-3">
-        <div className="cpw5-super-mobile-card__field">
-          <dt>섹터</dt>
-          <dd className="flex min-w-0 items-center gap-1">
-            <span
-              className="h-1.5 w-1.5 shrink-0 rounded-full"
-              style={{ backgroundColor: sectorColor(canonicalSector) }}
-            />
-            <span className="truncate">{sectorLabelKo(canonicalSector)}</span>
-          </dd>
-        </div>
-        <div className="cpw5-super-mobile-card__field">
-          <dt>{shareScopeLabel}</dt>
-          <dd className={` tabular-nums ${amountTextClass}`}>
-            {formatTradeShare(row.amount, totalAmount)}
-          </dd>
-        </div>
-        <div className="cpw5-super-mobile-card__field">
-          <dt>투자자</dt>
-          <dd className="tabular-nums text-slate-900">
-            {row.investors_count}
-            {actionLabel(row) ? <span className="ml-1 font-sans text-[10px] font-semibold text-[var(--c-ink-3)]">{actionLabel(row)}</span> : null}
-          </dd>
-        </div>
-        <div className="cpw5-super-mobile-card__field">
-          <dt>{amountColor === "emerald" ? "TOP 매수자" : "TOP 매도자"}</dt>
-          <dd className="min-w-0">
-            {row.top_investor?.id ? (
-              <TransitionLink
-                href={ROUTES.superinvestorsGuru(row.top_investor.id, returnTo)}
-                onClick={onBeforeNavigate}
-                data-superinvestor-trades-card-action
-                data-superinvestor-trades-card-investor-link
-                data-superinvestor-trades-action
-                data-superinvestor-trades-investor-link
-                className="inline-flex min-h-11 max-w-full items-center rounded-xl border border-slate-200 bg-white px-2 text-[10px] font-bold text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-                title={row.top_investor.name}
-              >
-                <span className="truncate">{row.top_investor.name}</span>
-              </TransitionLink>
-            ) : (
-              <span className="font-bold text-slate-700">—</span>
-            )}
-          </dd>
-        </div>
-      </dl>
-    </article>
-  );
-}
-
-function TradeRankingPanel({
-  title,
-  rows,
-  totalAmount,
-  amountColor,
-  side,
-  expanded,
-  onToggle,
-  actionLabel,
-  returnTo,
-  onBeforeNavigate,
-}: {
-  title: string;
-  rows: TradesRankingRow[];
-  totalAmount: number;
-  amountColor: AmountColor;
-  side: "bought" | "sold";
-  expanded: boolean;
-  onToggle: () => void;
-  actionLabel: (r: TradesRankingRow) => string | undefined;
-  returnTo?: string | null;
-  onBeforeNavigate?: () => void;
-}) {
-  const visibleRows = expanded ? rows : rows.slice(0, 10);
-  const amountTextClass = amountColor === "emerald" ? "text-emerald-700" : "text-rose-700";
-  const topLabel = amountColor === "emerald" ? "TOP 매수자" : "TOP 매도자";
-  const shareScopeLabel = side === "bought" ? "매수 상위권 내 비중" : "매도 상위권 내 비중";
-
-  if (rows.length === 0) {
-    return (
-      <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
-        <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
-        <Panel empty emptyReason="데이터가 없습니다" emptyNextRefresh="해당 분기 매매 데이터가 존재하지 않습니다."><span>데이터가 없습니다</span></Panel>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      data-superinvestor-trades-panel
-      data-superinvestor-trades-side={side}
-      className="cpw5-super-trades-panel rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4"
-    >
-      <h3 className="text-sm font-black tracking-tight text-slate-900">{title}</h3>
-      <div
-        className="cpw5-super-mobile-cards mt-3"
-        role="list"
-        aria-label={`${title} 모바일 요약`}
-      >
-        {visibleRows.map((row) => (
-          <TradeRankingMobileCard
-            key={`${row.ticker}-${row.rank}-mobile`}
-            row={row}
-            totalAmount={totalAmount}
-            amountColor={amountColor}
-            side={side}
-            actionLabel={actionLabel}
-            returnTo={returnTo}
-            onBeforeNavigate={onBeforeNavigate}
-          />
-        ))}
-      </div>
-      <div
-        data-superinvestor-trades-region
-        data-superinvestor-trades-side={side}
-        className="cpw5-super-desktop-table cpw5-super-trades-region scroll-hint-x mt-3 -mx-1 px-1"
-        role="region"
-        tabIndex={0}
-        aria-label={`${title} 표 가로 스크롤`}
-      >
-        <table className="cpw5-super-trades-table w-full min-w-0 table-fixed text-xs">
-          <colgroup>
-            <col className="w-[9%]" />
-            <col className="w-[23%]" />
-            <col className="w-[17%]" />
-            <col className="w-[14%]" />
-            <col className="w-[14%]" />
-            <col className="w-[23%]" />
-          </colgroup>
-          <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
-              <th className="px-2 py-2 text-left">순위</th>
-              <th className="px-2 py-2 text-left">종목</th>
-              <th className="px-2 py-2 text-left">섹터</th>
-              <th className="px-2 py-2 text-right">비중</th>
-              <th className="px-2 py-2 text-right">투자자</th>
-              <th className="px-2 py-2 text-left">{topLabel}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleRows.map((r) => {
-              const canonicalSector = normalizeSuperSector(r.sector_gics ?? r.sector, r.sector);
-              return (
-                <tr
-                  key={`${r.ticker}-${r.rank}`}
-                  data-superinvestor-trades-desktop-row
-                  data-superinvestor-trades-desktop-side={side}
-                  data-superinvestor-trades-desktop-ticker={r.ticker}
-                  className="border-b border-slate-100 last:border-b-0"
-                >
-                  <td className="min-w-0 px-1 py-2 sm:px-2">
-                    <span className="tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{r.rank}</span>
-                  </td>
-                  <td className="min-w-0 px-1 py-2 sm:px-2">
-                    <TransitionLink
-                      href={ROUTES.stock(r.ticker, returnTo)}
-                      onClick={onBeforeNavigate}
-                      data-superinvestor-trades-desktop-action
-                      data-superinvestor-trades-desktop-stock-link
-                      className="inline-flex min-h-11 w-full min-w-0 max-w-full flex-col justify-center rounded-xl border border-slate-200 bg-white px-2 py-1 transition hover:border-brand-interactive hover:text-brand-interactive"
-                    >
-                      <span className="block max-w-full truncate font-bold text-slate-900">{r.name}</span>
-                      <span className="mt-0.5 text-[10px] font-black text-brand-interactive">{r.ticker}</span>
-                    </TransitionLink>
-                  </td>
-                  <td className="min-w-0 px-1 py-2 sm:px-2">
-                    <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold sm:px-2">
-                      <span
-                        className="h-1.5 w-1.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: sectorColor(canonicalSector) }}
-                      />
-                      <span className="truncate">{sectorLabelKo(canonicalSector)}</span>
-                    </span>
-                  </td>
-                  <td className="min-w-0 px-1 py-2 text-right sm:px-2" title={shareScopeLabel}>
-                    <span className={` tabular-nums font-bold ${amountTextClass}`}>
-                      {formatTradeShare(r.amount, totalAmount)}
-                    </span>
-                  </td>
-                  <td className="min-w-0 px-1 py-2 text-right sm:px-2">
-                    <span className="tabular-nums font-bold text-slate-900">{r.investors_count}</span>
-                    {actionLabel(r) ? (
-                      <span className="block truncate text-[10px] font-semibold text-[var(--c-ink-3)]">{actionLabel(r)}</span>
-                    ) : null}
-                  </td>
-                  <td className="min-w-0 px-1 py-2 sm:px-2">
-                    {r.top_investor?.id ? (
-                      <TransitionLink
-                        href={ROUTES.superinvestorsGuru(r.top_investor.id, returnTo)}
-                        onClick={onBeforeNavigate}
-                        data-superinvestor-trades-desktop-action
-                        data-superinvestor-trades-desktop-investor-link
-                        className="inline-flex min-h-11 w-full min-w-0 max-w-full items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
-                        title={r.top_investor.name}
-                      >
-                        <span className="truncate">{r.top_investor.name}</span>
-                      </TransitionLink>
-                    ) : (
-                      <span className="block truncate text-[10px] font-bold text-slate-700">—</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      {rows.length > 10 ? (
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-pressed={expanded}
-          className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
-        >
-          {expanded ? "접기" : "전체 50개 보기"}
-        </button>
-      ) : null}
-    </div>
-  );
-}
 function CohortTreemapPanel({
   pvData,
   pvLoading,
@@ -1474,6 +929,10 @@ function SectorRotationPanel({
 function GuruDetailView({
   id,
   summary,
+  turnover,
+  turnoverLoading,
+  turnoverFailed,
+  onRetryTurnover,
   pvData,
   pvLoading,
   pvFailed,
@@ -1490,6 +949,10 @@ function GuruDetailView({
 }: {
   id: string;
   summary: SummaryInvestor;
+  turnover: number | null | undefined;
+  turnoverLoading: boolean;
+  turnoverFailed: boolean;
+  onRetryTurnover?: () => void;
   pvData: PortfolioViewsData | null;
   pvLoading: boolean;
   pvFailed: boolean;
@@ -1509,7 +972,7 @@ function GuruDetailView({
       data-superinvestors-guru-detail-view
       data-superinvestors-holder-detail
       data-superinvestors-holder-detail-id={id}
-      className="w-full"
+      className="sup-guru-layout w-full"
     >
       <button
         type="button"
@@ -1519,38 +982,26 @@ function GuruDetailView({
       >
         ← 투자자 목록
       </button>
-      <div className="sup-guru-shell mt-3 p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-600">
-              {summary.group}
-            </span>
-            {summary.is_stale ? <span className="sup-stale-badge ml-1">지연</span> : null}
-            <h2 className="mt-1 truncate text-lg font-black tracking-tight text-slate-950">{summary.name}</h2>
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-slate-700">
-            <span>운용 자산 <b className="tabular-nums text-slate-900">{formatCurrencyCompact(summary.aum, "USD")}</b></span>
-            <span>보유 종목 <b className="tabular-nums text-slate-900">{formatInteger(summary.holdings_count)}개</b></span>
-            <span>기준 분기 <b className="tabular-nums text-slate-900">{summary.latest_quarter ?? summary.quarter ?? "—"}</b></span>
-          </div>
-        </div>
-        <GuruDetailPanel
-          id={id}
-          summary={summary}
-          pvData={pvData}
-          pvLoading={pvLoading}
-          pvFailed={pvFailed}
-          onRetryPv={onRetryPv}
-          factorData={factorData}
-          factorLoading={factorLoading}
-          factorFailed={factorFailed}
-          onRetryFactor={onRetryFactor}
-          asOf={asOf}
-          returnTo={returnTo}
-          onBeforeNavigate={onBeforeNavigate}
-          onReady={onReady}
-        />
-      </div>
+      <GuruDetailPanel
+        id={id}
+        summary={summary}
+        turnover={turnover}
+        turnoverLoading={turnoverLoading}
+        turnoverFailed={turnoverFailed}
+        onRetryTurnover={onRetryTurnover}
+        pvData={pvData}
+        pvLoading={pvLoading}
+        pvFailed={pvFailed}
+        onRetryPv={onRetryPv}
+        factorData={factorData}
+        factorLoading={factorLoading}
+        factorFailed={factorFailed}
+        onRetryFactor={onRetryFactor}
+        asOf={asOf}
+        returnTo={returnTo}
+        onBeforeNavigate={onBeforeNavigate}
+        onReady={onReady}
+      />
     </div>
   );
 }
@@ -1615,143 +1066,26 @@ export default function SuperinvestorsClient({
     setJourneyReturnTo(source);
     pendingJourneyScrollRef.current = readJourneyScrollSnapshot(source);
   });
-  const [turnover, setTurnover] = useState<TurnoverData["by_investor"] | null | undefined>(undefined);
-  const [turnoverError, setTurnoverError] = useState(false);
-  const [tradesData, setTradesData] = useState<TradesRankingData | null>(null);
-  const [tradesLoading, setTradesLoading] = useState(true);
-  const [tradesFailed, setTradesFailed] = useState(false);
   const [tradesBoughtExpanded, setTradesBoughtExpanded] = useState(false);
   const [tradesSoldExpanded, setTradesSoldExpanded] = useState(false);
-  const [pvData, setPvData] = useState<PortfolioViewsData | null>(null);
-  const [pvLoading, setPvLoading] = useState(true);
-  const [pvFailed, setPvFailed] = useState(false);
-  const [factorData, setFactorData] = useState<FactorExposuresSummaryData | null>(null);
-  const [factorLoading, setFactorLoading] = useState(true);
-  const [factorFailed, setFactorFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadTurnoverLocal().then(
-      (map) => {
-        if (!cancelled) {
-          setTurnover(map);
-          setTurnoverError(false);
-        }
-      },
-      () => {
-        // Turnover shapes only the "분기 변화" column: a fetch rejection is
-        // an error state on the Holders rail, never a silent pending cell.
-        if (!cancelled) {
-          setTurnover(null);
-          setTurnoverError(true);
-        }
-      },
-    );
-    return () => { cancelled = true; };
-  }, []);
-
-  function retryTurnover() {
-    setTurnoverError(false);
-    setTurnover(undefined);
-    loadTurnoverLocal().then(
-      (map) => {
-        setTurnover(map);
-      },
-      () => {
-        setTurnover(null);
-        setTurnoverError(true);
-      },
-    );
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setTradesLoading(true);
-      setTradesFailed(false);
-      try {
-        const json = normalizeTradesRanking(
-          await fetch13FJson<unknown>("/data/sec-13f/analytics/trades_ranking.json"),
-        );
-        if (!json) throw new Error("Invalid trades_ranking shape");
-        if (!cancelled) setTradesData(json);
-      } catch {
-        if (!cancelled) setTradesFailed(true);
-      } finally {
-        if (!cancelled) setTradesLoading(false);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, []);
-
-  function loadPv() {
-    setPvLoading(true);
-    setPvFailed(false);
-    loadPortfolioViews().then((data) => {
-      setPvData(data);
-      setPvFailed(!data);
-      setPvLoading(false);
-    }).catch(() => {
-      setPvData(null);
-      setPvFailed(true);
-      setPvLoading(false);
-    });
-  }
-
-  function loadFactor() {
-    setFactorLoading(true);
-    setFactorFailed(false);
-    loadFactorExposuresSummary().then((data) => {
-      setFactorData(data);
-      setFactorFailed(!data);
-      setFactorLoading(false);
-    }).catch(() => {
-      setFactorData(null);
-      setFactorFailed(true);
-      setFactorLoading(false);
-    });
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-    loadPortfolioViews().then((data) => {
-      if (cancelled) return;
-      setPvData(data);
-      setPvFailed(!data);
-      setPvLoading(false);
-    }).catch(() => {
-      if (cancelled) return;
-      setPvData(null);
-      setPvFailed(true);
-      setPvLoading(false);
-    });
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadFactorExposuresSummary().then((data) => {
-      if (cancelled) return;
-      setFactorData(data);
-      setFactorFailed(!data);
-      setFactorLoading(false);
-    }).catch(() => {
-      if (cancelled) return;
-      setFactorData(null);
-      setFactorFailed(true);
-      setFactorLoading(false);
-    });
-    return () => { cancelled = true; };
-  }, []);
-
-  function retryPv() {
-    loadPv();
-  }
-
-  function retryFactor() {
-    loadFactor();
-  }
+  const tabData = useInvestorTabData(tab, expandedGuru);
+  const turnover = tabData.turnover.data;
+  const turnoverLoading = tabData.turnover.status === "not-requested" || tabData.turnover.status === "loading";
+  const turnoverError = tabData.turnover.status === "error" || tabData.turnover.status === "unavailable";
+  const tradesData = tabData.trades.data;
+  const tradesLoading = tabData.trades.status === "not-requested" || tabData.trades.status === "loading";
+  const tradesFailed = tabData.trades.status === "error" || tabData.trades.status === "unavailable";
+  const pvData = tabData.portfolio.data;
+  const pvLoading = tabData.portfolio.status === "not-requested" || tabData.portfolio.status === "loading";
+  const pvFailed = tabData.portfolio.status === "error" || tabData.portfolio.status === "unavailable";
+  const factorData = tabData.factor.data;
+  const factorLoading = tabData.factor.status === "not-requested" || tabData.factor.status === "loading";
+  const factorFailed = tabData.factor.status === "error" || tabData.factor.status === "unavailable";
+  const retryTurnover = tabData.retryTurnover;
+  const retryTrades = tabData.retryTrades;
+  const retryPv = tabData.retryPortfolio;
+  const retryFactor = tabData.retryFactor;
+  const retrySignal = tabData.retrySignal;
 
   const investors = useMemo<[string, SummaryInvestor][]>(
     () => (summary ? Object.entries(summary.investors) : []),
@@ -1804,7 +1138,8 @@ export default function SuperinvestorsClient({
   }, [consensus]);
 
   const loading = !dataReady && !failed;
-  const journeyContentReady = !loading && !tradesLoading && !pvLoading && !factorLoading && (!selectedGuruEntry || readyGuruId === expandedGuru);
+  const guruContentReady = tab !== "investors" || !selectedGuruEntry || readyGuruId === expandedGuru;
+  const journeyContentReady = !loading && tabData.readyFor(tab, expandedGuru) && guruContentReady;
   useEffect(() => {
     const snapshot = pendingJourneyScrollRef.current;
     const source = journeySourceRef.current;
@@ -1979,6 +1314,8 @@ export default function SuperinvestorsClient({
           partialFeeds={partialFeeds}
           investorCount={investorCount}
           onRetry={retry}
+          signalFeeds={tabData.signal}
+          onRetrySignal={retrySignal}
         />
         <div className="sup-signal-teaser">
           <GraphNetworkTeaser
@@ -2000,6 +1337,10 @@ export default function SuperinvestorsClient({
         <GuruDetailView
           id={selectedGuruEntry[0]}
           summary={selectedGuruEntry[1]}
+          turnover={turnover?.[selectedGuruEntry[0]]?.turnover ?? null}
+          turnoverLoading={turnoverLoading}
+          turnoverFailed={turnoverError}
+          onRetryTurnover={retryTurnover}
           pvData={pvData}
           pvLoading={pvLoading}
           pvFailed={pvFailed}
@@ -2229,6 +1570,8 @@ export default function SuperinvestorsClient({
           failed={failed}
           partialFeeds={partialFeeds}
           onRetry={retry}
+          signalFeeds={tabData.signal}
+          onRetrySignal={retrySignal}
           initialTicker={focusedTicker}
           onTickerChange={(ticker) => {
             syncTickerParam(ticker);
@@ -2273,7 +1616,7 @@ export default function SuperinvestorsClient({
           ) : null}
 
           {tradesLoading ? (
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="sup-trades-grid">
               {[0, 1].map((p) => (
                 <div key={p} className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-3 shadow-[var(--sh-sm)] sm:p-4">
                   <div className="h-5 w-1/3 rounded bg-slate-200" />
@@ -2286,12 +1629,13 @@ export default function SuperinvestorsClient({
               ))}
             </div>
           ) : tradesFailed ? (
-            <div className="rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-              매매랭킹 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.2rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+              <span>매매랭킹 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</span>
+              <Button variant="secondary" onClick={retryTrades}>다시 시도</Button>
             </div>
           ) : tradesData ? (
-            <div className="grid gap-4 lg:grid-cols-2">
-              <TradeRankingPanel
+            <div className="sup-trades-grid">
+              <ResponsiveTradeRankingPanel
                 title="많이 매수된 종목"
                 rows={tradesData.bought}
                 totalAmount={tradesBoughtAmount}
@@ -2307,7 +1651,7 @@ export default function SuperinvestorsClient({
                     : undefined
                 }
               />
-              <TradeRankingPanel
+              <ResponsiveTradeRankingPanel
                 title="많이 매도된 종목"
                 rows={tradesData.sold}
                 totalAmount={tradesSoldAmount}
