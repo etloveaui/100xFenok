@@ -340,6 +340,14 @@ class DataSupplyResolver:
         next_current = dict(active["current"])
         next_current[entity] = selected
         next_lkg = dict(active["lkg"])
+        if prior is None and prior_recovery.get("last_transition") == "unavailable":
+            # Recovery from a known-unavailable state is an initial selection
+            # again. The removal transition kept the expired selection in the
+            # LKG map only as audit for the unavailable period; carrying it into
+            # the initial selection trips the store's "initial selection cannot
+            # inject an LKG" invariant and would kill the lane on the very run
+            # that recovers the entity. The lineage stays in resolution history.
+            next_lkg.pop(entity, None)
         changed = prior != selected
         if changed and prior is not None and not is_same_provider_refresh(
             prior, selected, transition
