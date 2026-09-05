@@ -20,6 +20,7 @@ on:
           - all
           - journey
           - responsive
+          - investor-isolated
 
 concurrency:
   group: qa-visual-${{ github.ref }}
@@ -36,13 +37,14 @@ jobs:
   visual:
     name: visual-${{ matrix.project }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     continue-on-error: ${{ inputs.suite == 'all' }}
     container:
       image: mcr.microsoft.com/playwright:v1.61.1-noble
     strategy:
       fail-fast: false
       matrix:
-        project: ${{ fromJSON(inputs.suite == 'responsive' && '["mobile", "tablet"]' || '["desktop-1440", "mobile-390"]') }}
+        project: ${{ fromJSON(inputs.suite == 'investor-isolated' && '["isolated"]' || inputs.suite == 'responsive' && '["mobile", "tablet"]' || '["desktop-1440", "mobile-390"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,6 +59,43 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Owner-requested UI iteration must not repeatedly load production.
+      # Reuse the guarded runtime build and serve its checked-in public data
+      # inside this one runner; browser requests to other origins are blocked.
+      - name: Build isolated investor preview
+        if: ${{ inputs.suite == 'investor-isolated' }}
+        env:
+          FENOK_REMOTE_HEAVY_NESTED_EXECUTION: "1"
+          FENOK_REMOTE_HEAVY_EXPECTED_REVISION: ${{ github.sha }}
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          node scripts/build-ink4-contrast-fixture.mjs
+          npm run qa:superinvestor-signal-scores
+          npm run build:runtime
+
+      - name: Run isolated investor UI verification
+        if: ${{ inputs.suite == 'investor-isolated' }}
+        env:
+          CI: "true"
+          QA_BASE_URL: http://127.0.0.1:3107
+          QA_MOBILE_UX_ISOLATED: "1"
+          QA_MOBILE_UX_VIEWPORTS: narrow,mobile,tablet-portrait,tablet-mid,tablet,tablet-landscape
+          QA_MOBILE_UX_ROUTES: /superinvestors,/superinvestors?tab=investors,/superinvestors?tab=stocks,/superinvestors?guru=blackrock
+          QA_MOBILE_UX_OUTPUT_DIR: test-results/responsive
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          set -euo pipefail
+          npm run start:qa -- --hostname 127.0.0.1 --port 3107 > /tmp/investor-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          ready=false
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3107/superinvestors/ -o /dev/null; then ready=true; break; fi
+            sleep 2
+          done
+          if [ "$ready" != true ]; then cat /tmp/investor-preview.log; exit 1; fi
+          npm run qa:mobile-ux
+
       # This workflow used to build the app itself with a raw
       # NEXT_BUILD_TARGET=cloudflare next build, a combination no real build
       # path uses: the runtime build targets runtime and the Cloudflare build
@@ -67,6 +106,7 @@ jobs:
       # build and server layers are removed rather than repaired and the run
       # photographs the deployed site directly.
       - name: Run visual QA against the deployed site
+        if: ${{ inputs.suite != 'investor-isolated' }}
         env:
           CI: "true"
           PROJECT: ${{ matrix.project }}
@@ -92,7 +132,7 @@ jobs:
           esac
 
       - name: Upload visual report
-        if: always() && inputs.suite != 'responsive'
+        if: always() && inputs.suite != 'responsive' && inputs.suite != 'investor-isolated'
         uses: actions/upload-artifact@v4
         with:
           name: visual-report-${{ matrix.project }}
@@ -100,7 +140,7 @@ jobs:
           retention-days: 7
 
       - name: Upload visual diffs
-        if: always() && inputs.suite != 'responsive'
+        if: always() && inputs.suite != 'responsive' && inputs.suite != 'investor-isolated'
         uses: actions/upload-artifact@v4
         with:
           name: visual-results-${{ matrix.project }}
@@ -108,9 +148,17 @@ jobs:
           retention-days: 7
 
       - name: Upload responsive evidence
-        if: always() && inputs.suite == 'responsive'
+        if: always() && (inputs.suite == 'responsive' || inputs.suite == 'investor-isolated')
         uses: actions/upload-artifact@v4
         with:
           name: responsive-${{ matrix.project }}
           path: 100xfenok-next/test-results/responsive/
+          retention-days: 7
+
+      - name: Upload regenerated contrast witness
+        if: always() && inputs.suite == 'investor-isolated'
+        uses: actions/upload-artifact@v4
+        with:
+          name: investor-contrast-witness
+          path: 100xfenok-next/scripts/fixtures/ink4-contrast-sites.json
           retention-days: 7

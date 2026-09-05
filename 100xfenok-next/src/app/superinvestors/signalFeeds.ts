@@ -1,11 +1,44 @@
 "use client";
 
 import { fetch13FJson } from "@/hooks/use13FData";
+import {
+  loadFenokSignalsSummaryDocument,
+  type FenokSignalsSummaryRecord,
+} from "@/features/stock-analyzer/data/fenok-signals-summary-provider";
 import type {
   BuyingPressureData,
   ConvictionData,
   NewPositionsData,
 } from "@/lib/superinvestors/types";
+
+export interface SignalScoreData {
+  shortTermScore: number | null;
+  longTermScore: number | null;
+  asOf: string | null;
+}
+
+function finiteScore(value: number | null | undefined): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function nonEmptyString(value: string | null | undefined): string | null {
+  const text = typeof value === "string" ? value.trim() : "";
+  return text || null;
+}
+
+/** Keep the stock-detail/screener headline precedence and preserve nulls. */
+export function signalScoreDataFromRecord(
+  record: Pick<
+    FenokSignalsSummaryRecord,
+    "shortTermConvictionScore" | "shortTermScore" | "longTermConvictionScore" | "longTermScore" | "asOf"
+  >,
+): SignalScoreData {
+  return {
+    shortTermScore: finiteScore(record.shortTermConvictionScore) ?? finiteScore(record.shortTermScore),
+    longTermScore: finiteScore(record.longTermConvictionScore) ?? finiteScore(record.longTermScore),
+    asOf: nonEmptyString(record.asOf),
+  };
+}
 
 // Signal-tab feeds live beside the page (never in use13FData — window-2 owns
 // that hook). Same module-cache pattern as InsightsTab: one fetch per file,
@@ -36,6 +69,17 @@ export function loadSignalBuyingPressure(): Promise<BuyingPressureData | null> {
 
 let cvCache: ConvictionData | null = null;
 let cvPromise: Promise<ConvictionData | null> | null = null;
+
+/** Reuse the shared provider's bounded cache, in-flight dedupe and TTL. */
+export async function loadSignalScores(): Promise<Map<string, SignalScoreData> | null> {
+  try {
+    const document = await loadFenokSignalsSummaryDocument();
+    if (!document) return null;
+    return new Map(document.rows.map((row) => [row.symbol, signalScoreDataFromRecord(row)]));
+  } catch {
+    return null;
+  }
+}
 
 export function loadSignalConviction(): Promise<ConvictionData | null> {
   if (cvCache) return Promise.resolve(cvCache);

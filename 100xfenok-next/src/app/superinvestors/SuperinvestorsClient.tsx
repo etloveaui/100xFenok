@@ -579,24 +579,24 @@ function GuruDetailPanel({
       data-superinvestor-guru-filing-date={filingDate}
       tabIndex={-1}
       aria-label={`${summary.name} 포트폴리오 상세`}
-      className="mt-3 rounded-[1.2rem] border border-slate-200 bg-slate-50 p-4"
+      className="sup-guru-profile mt-3 p-4"
     >
-      <div data-superinvestor-guru-profile-hero className="mb-3 grid gap-2 sm:grid-cols-3">
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">13F 기준</p>
-          <p data-superinvestor-guru-asof className="mt-1 text-sm font-black text-amber-950">
+      <div data-superinvestor-guru-profile-hero className="sup-guru-disclosures mb-3">
+        <div className="sup-guru-disclosure sup-guru-disclosure-quarter">
+          <p className="sup-guru-disclosure-label">13F 기준</p>
+          <p data-superinvestor-guru-asof className="sup-guru-disclosure-value">
             {latestQuarter}
           </p>
-          <p className="mt-1 text-[10px] font-semibold text-amber-700">
+          <p className="sup-guru-disclosure-note">
             보고 기준일 {reportDate}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">공시일</p>
-          <p data-superinvestor-guru-filing className="mt-1 text-sm font-black text-slate-950">
+        <div className="sup-guru-disclosure sup-guru-disclosure-filing">
+          <p className="sup-guru-disclosure-label">공시일</p>
+          <p data-superinvestor-guru-filing className="sup-guru-disclosure-value">
             {filingDate}
           </p>
-          <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+          <p className="sup-guru-disclosure-note">
             {latest?.form ?? "SEC 13F 데이터 변환"}
           </p>
           {secBrowseUrl ? (
@@ -604,24 +604,24 @@ function GuruDetailPanel({
               href={secBrowseUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-2 inline-flex text-[10px] font-black text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-950"
+              className="sup-guru-sec-link mt-2 inline-flex text-[10px] font-black underline underline-offset-2"
             >
               SEC 원문 탐색 ↗
             </a>
           ) : null}
           {latest?.accession_number ? (
-            <p className="mt-1 break-all text-[9px] font-semibold text-[var(--c-ink-3)]">
+            <p className="sup-guru-accession mt-1 break-all text-[9px] font-semibold">
               접수번호 {latest.accession_number}
             </p>
           ) : null}
         </div>
         <div
           data-superinvestor-guru-lag-disclosure
-          className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2"
+          className="sup-guru-disclosure sup-guru-disclosure-lag"
         >
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-sky-700">공시 지연</p>
-          <p className="mt-1 text-sm font-black text-sky-950">최대 45일</p>
-          <p className="mt-1 text-[10px] font-semibold text-sky-700">
+          <p className="sup-guru-disclosure-label">공시 지연</p>
+          <p className="sup-guru-disclosure-value">최대 45일</p>
+          <p className="sup-guru-disclosure-note">
             오늘 보유가 아니라 분기 보고치
           </p>
         </div>
@@ -629,6 +629,7 @@ function GuruDetailPanel({
 
       {/* Row 1 — KPI strip (panel lives inside a narrow card column — keep 2x2) */}
       <Panel
+        className="sup-guru-panel"
         loading={loading}
         empty={kpiEmpty}
         emptyReason="이 투자자의 자료 없음"
@@ -720,6 +721,7 @@ function GuruDetailPanel({
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 포트폴리오</p>
           <div className="mt-2 space-y-4">
             <Panel
+              className="sup-guru-panel"
               loading={pvLoading}
               empty={!pvLoading && !pvFailed && (!investorView || treemapRows.length === 0)}
               emptyReason={investorView ? "표시할 보유 비중 데이터가 없습니다" : "이 투자자의 자료 없음"}
@@ -749,6 +751,7 @@ function GuruDetailPanel({
               />
             </Panel>
             <Panel
+              className="sup-guru-panel"
               loading={pvLoading}
               empty={!pvLoading && !pvFailed && (!investorView || !hasSectorHistory)}
               emptyReason={investorView ? "표시할 섹터 구성 데이터가 없습니다" : "이 투자자의 자료 없음"}
@@ -782,6 +785,7 @@ function GuruDetailPanel({
               />
             </Panel>
             <Panel
+              className="sup-guru-panel"
               loading={pvLoading}
               empty={!pvLoading && !pvFailed && !investorView?.performance}
               emptyReason={investorView ? "표시할 성과 데이터가 없습니다" : "이 투자자의 자료 없음"}
@@ -815,6 +819,7 @@ function GuruDetailPanel({
       {/* Cohort cross-investor charts — full PortfolioViewsData required */}
       <div className="mt-4 space-y-3">
         <Panel
+          className="sup-guru-panel"
           loading={pvLoading}
           empty={scatterEmpty}
           emptyReason="표시할 위험·수익 데이터가 없습니다"
@@ -847,6 +852,7 @@ function GuruDetailPanel({
         </Panel>
 
         <Panel
+          className="sup-guru-panel"
           loading={pvLoading}
           empty={scatterEmpty}
           emptyReason="표시할 누적 수익 데이터가 없습니다"
@@ -879,6 +885,7 @@ function GuruDetailPanel({
         </Panel>
 
         <Panel
+          className="sup-guru-panel"
           loading={factorLoading}
           empty={radarEmpty}
           emptyReason={hasFactorRecord ? "표시할 팩터 노출 데이터가 없습니다" : "이 투자자의 자료 없음"}
@@ -1508,11 +1515,11 @@ function GuruDetailView({
         type="button"
         onClick={onBack}
         data-superinvestors-guru-back
-        className="inline-flex min-h-11 items-center gap-1 rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
+        className="sup-guru-back inline-flex min-h-11 items-center gap-1 rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.1em] transition"
       >
         ← 투자자 목록
       </button>
-      <div className="mt-3 rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
+      <div className="sup-guru-shell mt-3 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-600">
@@ -2081,7 +2088,7 @@ export default function SuperinvestorsClient({
                             }
                           }}
                         >
-                          <th scope="row" className="sup-holder-name-cell">
+                          <th scope="row" className="sup-holder-name-cell" data-label="투자자">
                             {/* The row is the single interactive element; the name is plain content. */}
                             <span className="sup-holder-name">
                               <span className="sup-holder-name-text">{inv.name}</span>
@@ -2091,9 +2098,9 @@ export default function SuperinvestorsClient({
                               </span>
                             </span>
                           </th>
-                          <td className="tabular-nums">{formatCurrencyCompact(inv.aum, "USD")}</td>
-                          <td className="tabular-nums">{formatInteger(inv.holdings_count)}개</td>
-                          <td>
+                          <td className="tabular-nums" data-label="AUM">{formatCurrencyCompact(inv.aum, "USD")}</td>
+                          <td className="tabular-nums" data-label="보유종목">{formatInteger(inv.holdings_count)}개</td>
+                          <td data-label="최대 비중">
                             {topTicker ? (
                               <span className="sup-top">
                                 <span className="sup-mono">{topTicker}</span>
@@ -2105,6 +2112,7 @@ export default function SuperinvestorsClient({
                           </td>
                           <td
                             className="tabular-nums"
+                            data-label="분기 변화"
                             title={change ? `신규 ${change.new_count} · 청산 ${change.sold_count} · ${change.total_positions}포지션` : undefined}
                           >
                             {changeValue}
