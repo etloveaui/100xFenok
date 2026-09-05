@@ -142,6 +142,13 @@ async function prepareDynamicRoute(page, route) {
       await page.locator("[data-superinvestors-whoholds-input]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
     } else if (route.includes("tab=investors")) {
       await page.locator("[data-superinvestors-holder-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    } else if (route.includes("tab=trades")) {
+      await page.locator("[data-superinvestor-trades-panel]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+      await page.locator("[data-superinvestor-trades-row]:visible, [data-superinvestor-trades-region] tbody tr:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    } else if (route.includes("tab=insights")) {
+      await page.locator("[data-superinvestor-insights-status]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
+    } else if (route.includes("tab=graph")) {
+      await page.locator("[data-superinvestors-graph]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
     } else {
       await page.locator("[data-superinvestors-signal-row]:visible").first().waitFor({ state: "visible", timeout: 45_000 });
     }
@@ -4030,6 +4037,43 @@ if (viewports.length === 0) {
   throw new Error("No valid QA_MOBILE_UX_VIEWPORTS configured.");
 }
 
+async function collectInvestorStructureChecks(page, route, requests) {
+  if (!isolated || !route.startsWith("/superinvestors")) return [];
+  const failures = await page.evaluate(() => {
+    const failures = [];
+    const visible = (node) => node instanceof HTMLElement && node.getClientRects().length > 0 && getComputedStyle(node).visibility !== "hidden";
+    const pairs = [
+      ["holdings", "[data-superinvestor-guru-top-holdings]", "[data-superinvestor-guru-holding-card]", "[data-superinvestor-guru-desktop-holding-row]"],
+      ["bought", '[data-superinvestor-trades-panel][data-superinvestor-trades-side="bought"]', "[data-superinvestor-trades-card]", "tbody tr"],
+      ["sold", '[data-superinvestor-trades-panel][data-superinvestor-trades-side="sold"]', "[data-superinvestor-trades-card]", "tbody tr"],
+    ];
+    for (const [name, selector, cardSelector, tableSelector] of pairs) {
+      const container = document.querySelector(selector);
+      if (!container || !visible(container)) continue;
+      const cards = [...container.querySelectorAll(cardSelector)].filter(visible);
+      const rows = [...container.querySelectorAll(tableSelector)].filter(visible);
+      if (cards.length > 0 && rows.length > 0) failures.push({ check: "investor-single-responsive-view", detail: `${name}: cards=${cards.length}, tableRows=${rows.length}` });
+      if (!cards.length && !rows.length) failures.push({ check: "investor-responsive-content", detail: `${name}: no visible rows` });
+      if (name === "holdings" && window.innerWidth <= 760 && rows.length) {
+        const cells = [...rows[0].querySelectorAll("td")];
+        if (cells.length < 8) failures.push({ check: "investor-holding-fields", detail: `fields=${cells.length}` });
+        for (const cell of cells) {
+          const rect = cell.getBoundingClientRect();
+          if (!visible(cell) || rect.left < -1 || rect.right > window.innerWidth + 1) failures.push({ check: "investor-holding-field-contained", detail: cell.textContent.slice(0, 60) });
+        }
+      }
+    }
+    return failures;
+  });
+  const url = new URL(route, baseUrl);
+  const tab = url.searchParams.get("tab") || "signal";
+  if (!url.searchParams.has("guru") && ["signal", "investors", "graph"].includes(tab)) {
+    const unrelated = requests.filter((path) => /\/(trades_ranking|portfolio_views|factor_exposures_summary)\.json$/.test(path));
+    if (unrelated.length) failures.push({ check: "investor-active-tab-feeds", detail: [...new Set(unrelated)].join(", ") });
+  }
+  return failures;
+}
+
 async function collectInvestorNavigationChecks(page, route) {
   if (!isolated || !route.includes("tab=investors")) return [];
   const failures = [];
@@ -4103,6 +4147,8 @@ try {
     await installQaPortfolio(context);
     const page = await context.newPage();
     let routeErrors = [];
+    let routeRequests = [];
+    page.on("request", (request) => routeRequests.push(new URL(request.url()).pathname));
     page.on("pageerror", (error) => routeErrors.push(String(error)));
 
     for (const [routeIndex, route] of routes.entries()) {
@@ -4124,6 +4170,7 @@ try {
       }
 
       routeErrors = [];
+      routeRequests = [];
       try {
         const navigationOptions = {
           waitUntil: outputDir ? "domcontentloaded" : "networkidle",
@@ -4155,6 +4202,8 @@ try {
         await prepareDynamicRoute(page, route);
         const checks = await collectRouteChecks(page, route);
         result.failures = checks.failures;
+        result.failures.push(...await collectInvestorStructureChecks(page, route, routeRequests));
+        if (isolated) result.dataRequests = [...new Set(routeRequests.filter((path) => path.startsWith("/data/")))];
         result.failures.push(...await collectInvestorNavigationChecks(page, route));
         result.viewportWidth = checks.viewportWidth;
         result.scrollWidth = checks.scrollWidth;
