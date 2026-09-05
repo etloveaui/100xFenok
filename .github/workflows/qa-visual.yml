@@ -7,6 +7,14 @@ on:
         description: 'Target to photograph (defaults to the live Worker)'
         required: false
         default: 'https://100xfenok.etloveaui.workers.dev'
+      suite:
+        description: 'Interaction scope (all keeps the existing snapshot coverage)'
+        required: false
+        type: choice
+        default: all
+        options:
+          - all
+          - journey
 
 concurrency:
   group: qa-visual-${{ github.ref }}
@@ -58,7 +66,13 @@ jobs:
           CI: "true"
           PROJECT: ${{ matrix.project }}
           QA_BASE_URL: ${{ inputs.base_url || 'https://100xfenok.etloveaui.workers.dev' }}
-        run: npm run qa:visual -- --project="$PROJECT"
+          SUITE: ${{ inputs.suite || 'all' }}
+        run: |
+          case "$SUITE" in
+            all) npm run qa:visual -- --project="$PROJECT";;
+            journey) npm run qa:visual -- tests/visual/journey.spec.ts --project="$PROJECT";;
+            *) echo "unsupported visual suite" >&2; exit 64;;
+          esac
 
       - name: Upload visual report
         if: always()

@@ -412,12 +412,14 @@ export default function AppShell({
   active,
   title,
   backHref,
+  backLabel = "뒤로",
   freshness,
   children,
 }: {
   active?: ShellPage;
   title: string;
   backHref?: string;
+  backLabel?: string;
   freshness?: DataState | null;
   children: ReactNode;
 }) {
@@ -544,7 +546,7 @@ export default function AppShell({
       <header className={`appbar ${searching ? "searching" : ""}`}>
         <div className="appbar-main">
           {backHref ? (
-            <TransitionLink href={backHref} className="back" aria-label="뒤로">
+            <TransitionLink href={backHref} className="back" aria-label={backLabel}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 18l-6-6 6-6" />
               </svg>

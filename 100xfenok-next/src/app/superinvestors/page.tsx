@@ -20,10 +20,11 @@ export default async function SuperinvestorsPage({ searchParams }: Props) {
   const params = searchParams ? await searchParams : {};
   const initialGuru = firstParam(params.guru).trim();
   const initialTab = firstParam(params.tab).trim();
+  const initialTicker = firstParam(params.ticker).trim().toUpperCase();
   return (
     <div className="fnk-shell">
       <AppShell active="superinvestors" title="투자자">
-        <SuperinvestorsClient initialGuru={initialGuru || null} initialTab={initialTab || null} />
+        <SuperinvestorsClient initialGuru={initialGuru || null} initialTab={initialTab || null} initialTicker={initialTicker || null} />
       </AppShell>
     </div>
   );

@@ -26,6 +26,8 @@ interface WhoHoldsPanelProps {
   failed: boolean;
   partialFeeds: boolean;
   onRetry: () => void;
+  initialTicker?: string | null;
+  onTickerChange?: (ticker: string) => void;
   compact?: boolean;
 }
 
@@ -47,14 +49,22 @@ export default function WhoHoldsPanel({
   failed,
   partialFeeds,
   onRetry,
+  initialTicker = null,
+  onTickerChange,
   compact = false,
 }: WhoHoldsPanelProps) {
-  const [query, setQuery] = useState("");
-  const [committed, setCommitted] = useState<string | null>(null);
+  const normalizedInitialTicker = normalizeTickerInput(initialTicker ?? "");
+  const [query, setQuery] = useState(normalizedInitialTicker);
+  const [committed, setCommitted] = useState<string | null>(normalizedInitialTicker || null);
   const [newPositions, setNewPositions] = useState<NewPositionsData | null | undefined>(undefined);
   const [buyingPressure, setBuyingPressure] = useState<BuyingPressureData | null | undefined>(undefined);
   const [conviction, setConviction] = useState<ConvictionData | null | undefined>(undefined);
   const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    setQuery(normalizedInitialTicker);
+    setCommitted(normalizedInitialTicker || null);
+  }, [normalizedInitialTicker]);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,10 +135,13 @@ export default function WhoHoldsPanel({
     if (!q) return;
     if (tickers.includes(q)) {
       setCommitted(q);
+      onTickerChange?.(q);
       return;
     }
     const prefix = tickers.filter((t) => t.startsWith(q));
-    setCommitted(prefix[0] ?? q);
+    const next = prefix[0] ?? q;
+    setCommitted(next);
+    onTickerChange?.(next);
   }
 
   const coverage = dataReady && committed && result
@@ -174,7 +187,7 @@ export default function WhoHoldsPanel({
                   type="button"
                   className="sup-whoholds-chip sup-mono"
                   data-superinvestors-whoholds-suggest={t}
-                  onClick={() => { setQuery(t); setCommitted(t); }}
+                  onClick={() => { setQuery(t); setCommitted(t); onTickerChange?.(t); }}
                 >
                   {t}
                 </button>
@@ -246,7 +259,7 @@ export default function WhoHoldsPanel({
                       <button
                         type="button"
                         className="sup-mono sup-grand-ticker"
-                        onClick={() => { setQuery(row.ticker); setCommitted(row.ticker); }}
+                        onClick={() => { setQuery(row.ticker); setCommitted(row.ticker); onTickerChange?.(row.ticker); }}
                       >
                         {row.ticker}
                       </button>

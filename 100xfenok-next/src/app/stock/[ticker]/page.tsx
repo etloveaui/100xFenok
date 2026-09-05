@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import MacroContextCard from "@/components/macro/MacroContextCard";
+import TransitionLink from "@/components/TransitionLink";
 import AppShell from "@/components/shell/AppShell";
+import { journeyReturnTo } from "@/lib/journey-context";
 import { macroContextFromParam } from "@/lib/macro-chart/context";
 import { ROUTES } from "@/lib/routes";
 import { canonicalPath } from "@/lib/site-url";
@@ -9,7 +11,7 @@ import StockDetailClient from "./StockDetailClient";
 
 interface Props {
   params: Promise<{ ticker: string }>;
-  searchParams?: Promise<{ tab?: string | string[]; macro?: string | string[] }>;
+  searchParams?: Promise<{ tab?: string | string[]; macro?: string | string[]; returnTo?: string | string[] }>;
 }
 
 const STOCK_DETAIL_TABS = ["overview", "etf", "statistics", "estimates", "financials", "ownership", "filings"] as const;
@@ -42,9 +44,23 @@ export default async function StockDetailPage({ params, searchParams }: Props) {
   const requestedTab = firstParam(query.tab);
   const initialTab = isStockDetailInitialTab(requestedTab) ? requestedTab : undefined;
   const initialMacroContextId = macroContextFromParam(firstParam(query.macro))?.id;
+  const returnTo = journeyReturnTo(firstParam(query.returnTo));
+  const backLabel = returnTo?.startsWith("/superinvestors")
+    ? "투자자 화면으로 돌아가기"
+    : returnTo
+      ? "스크리너로 돌아가기"
+      : "뒤로";
   return (
     <div className="fnk-shell">
-      <AppShell title={symbol} backHref={ROUTES.screenerTicker(symbol)}>
+      <AppShell title={symbol} backHref={returnTo ?? ROUTES.screenerTicker(symbol)} backLabel={backLabel}>
+        <TransitionLink
+          href={returnTo ?? ROUTES.screenerTicker(symbol)}
+          aria-label={returnTo ? backLabel : "스크리너로 돌아가기"}
+          className="mb-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--c-ink-2)] hover:text-[var(--brand-interactive)] max-[920px]:hidden"
+        >
+          <span aria-hidden="true">←</span>
+          {returnTo ? backLabel : "스크리너로 돌아가기"}
+        </TransitionLink>
         {initialMacroContextId ? (
           <MacroContextCard contextId={initialMacroContextId} surface="stock" className="mb-[var(--s4)]" />
         ) : null}

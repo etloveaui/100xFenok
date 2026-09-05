@@ -1,4 +1,5 @@
 import { normalizeForRouteTicker } from "@/lib/ticker";
+import { withJourneyReturnTo } from "@/lib/journey-context";
 
 export type ProductRoutePath = `/${string}`;
 
@@ -36,15 +37,15 @@ export const ROUTES = {
   dataConsole: "/admin/data-console",
   stockAnalyzer: "/tools/stock-analyzer",
   stockAnalyzerNative: "/tools/stock-analyzer/native",
-  stock: (ticker: string) => `/stock/${encodeURIComponent(normalizeForRouteTicker(ticker))}`,
-  stockFilings: (ticker: string) => `/stock/${encodeURIComponent(normalizeForRouteTicker(ticker))}?tab=filings`,
+  stock: (ticker: string, returnTo?: string | null) => withJourneyReturnTo(`/stock/${encodeURIComponent(normalizeForRouteTicker(ticker))}`, returnTo),
+  stockFilings: (ticker: string, returnTo?: string | null) => withJourneyReturnTo(`/stock/${encodeURIComponent(normalizeForRouteTicker(ticker))}?tab=filings`, returnTo),
   etf: (ticker: string) => `/etfs/${encodeURIComponent(normalizeForRouteTicker(ticker))}`,
   screenerTicker: (ticker: string) => withQuery("/screener", { ticker: normalizeForRouteTicker(ticker) }),
   portfolioTicker: (ticker: string) => withQuery("/portfolio", { ticker: normalizeForRouteTicker(ticker) }),
-  superinvestorsByTicker: (ticker: string) =>
-    withQuery("/superinvestors", { tab: "by-ticker", ticker: normalizeForRouteTicker(ticker) }),
-  superinvestorsGuru: (guru: string) =>
-    withQuery("/superinvestors", { tab: "gurus", guru: String(guru ?? "").trim() }),
+  superinvestorsByTicker: (ticker: string, returnTo?: string | null) =>
+    withJourneyReturnTo(withQuery("/superinvestors", { tab: "stocks", ticker: normalizeForRouteTicker(ticker) }), returnTo),
+  superinvestorsGuru: (guru: string, returnTo?: string | null) =>
+    withJourneyReturnTo(withQuery("/superinvestors", { tab: "investors", guru: String(guru ?? "").trim() }), returnTo),
   etfCompareTickers: (tickers: readonly string[]) =>
     withQuery("/etfs/compare", { tickers: tickers.map(normalizeForRouteTicker).filter(Boolean).join(",") }),
   macroChartQuery: (query: string | URLSearchParams | Record<string, string | number | boolean | null | undefined>) =>

@@ -15,6 +15,13 @@ import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/typ
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
 import { bandPct, bandLabel, normalizeBandTuple, BAND_CHEAP, BAND_RICH } from "@/lib/screener/bands";
 import { formatDataDate, makeDataState } from "@/lib/data-state";
+import {
+  clearScreenerJourneySnapshot,
+  currentJourneyReturnTo,
+  readScreenerJourneySnapshot,
+  saveScreenerJourneySnapshot,
+  type ScreenerJourneySnapshot,
+} from "@/lib/journey-context";
 import { ROUTES } from "@/lib/routes";
 import { estimateCompletenessFromValues, estimateCompletenessTone, hasEstimateGap } from "@/lib/estimate-completeness";
 import { interpretStockMetrics } from "@/lib/screener/deterministicRules";
@@ -398,18 +405,31 @@ function hasGuruHolders(stock: ScreenerStock): boolean {
   return guruHoldersCount(stock) !== null;
 }
 
-function GuruHolderBadge({ stock, compact = false }: { stock: ScreenerStock; compact?: boolean }) {
+function GuruHolderBadge({
+  stock,
+  compact = false,
+  returnTo,
+  onBeforeNavigate,
+}: {
+  stock: ScreenerStock;
+  compact?: boolean;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
+}) {
   const holders = guruHoldersCount(stock);
   if (holders === null) return null;
   return (
     <TransitionLink
-      href={ROUTES.superinvestorsByTicker(stock.ticker)}
+      href={ROUTES.superinvestorsByTicker(stock.ticker, returnTo)}
       data-testid="screener-guru-badge"
       data-ticker={stock.ticker}
       data-superinvestors-href={ROUTES.superinvestorsByTicker(stock.ticker)}
       className="inline-flex shrink-0 items-center rounded-full border border-violet-200 bg-white px-1.5 py-px text-[9px] font-black text-violet-700 transition hover:border-violet-400"
       title={`${stock.ticker} 기관·고수 보유 ${holders.toLocaleString("ko-KR")}명 — 클릭하면 /superinvestors 종목별 보유로 이동`}
-      onClick={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        onBeforeNavigate?.();
+        event.stopPropagation();
+      }}
     >
       {compact ? `고수 ${holders}` : `기관·고수 ${holders}`}
     </TransitionLink>
@@ -559,13 +579,15 @@ function renderCell(
   key: ScreenerSortKey,
   preset?: ColumnPreset,
   surface: "desktop" | "mobile" = "desktop",
+  returnTo?: string | null,
+  onBeforeNavigate?: () => void,
 ): React.ReactNode {
   switch (key) {
     case "ticker":
       return (
         <span className="flex min-w-0 flex-wrap items-center gap-1.5">
           <span className="font-mono text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
-          <GuruHolderBadge stock={stock} compact />
+          <GuruHolderBadge stock={stock} compact returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
         </span>
       );
     case "name":
@@ -1052,6 +1074,8 @@ function MobileStockCard({
   preset,
   selected,
   canvasPlusPreview,
+  returnTo,
+  onBeforeNavigate,
   onToggle,
   onSelectedChange,
 }: {
@@ -1061,6 +1085,8 @@ function MobileStockCard({
   preset: ColumnPreset;
   selected: boolean;
   canvasPlusPreview: boolean;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
   onToggle: () => void;
   onSelectedChange: () => void;
 }) {
@@ -1090,7 +1116,7 @@ function MobileStockCard({
           />
           선택
         </label>
-        <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)]">
+        <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)]">
           {stock.connection?.singleStockEtfs?.length ? "ETF 연결" : "단일 종목"}
         </span>
       </div>
@@ -1119,7 +1145,7 @@ function MobileStockCard({
             </span>
             {!canvasPlusPreview ? (
               <>
-                <GuruHolderBadge stock={stock} compact />
+                <GuruHolderBadge stock={stock} compact returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
                 <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
                   {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
                 </span>
@@ -1177,7 +1203,14 @@ function MobileStockCard({
         <div id={detailId} className={canvasPlusPreview ? "cp-screener-detail-shell" : "border-t border-[var(--c-line-2)]"}>
           {canvasPlusPreview ? (
             <div className="cpw5-expanded-meta">
-              <GuruHolderBadge stock={stock} compact />
+              <TransitionLink
+                href={ROUTES.stock(stock.ticker, returnTo)}
+                onClick={onBeforeNavigate}
+                className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] px-2 text-[10px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+              >
+                종목 상세
+              </TransitionLink>
+              <GuruHolderBadge stock={stock} compact returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
               <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
                 {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
               </span>
@@ -1198,6 +1231,8 @@ function DesktopStockCard({
   preset,
   selected,
   canvasPlusPreview,
+  returnTo,
+  onBeforeNavigate,
   onToggle,
   onSelectedChange,
 }: {
@@ -1207,6 +1242,8 @@ function DesktopStockCard({
   preset: ColumnPreset;
   selected: boolean;
   canvasPlusPreview: boolean;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
   onToggle: () => void;
   onSelectedChange: () => void;
 }) {
@@ -1233,7 +1270,8 @@ function DesktopStockCard({
           선택
         </label>
         <TransitionLink
-          href={ROUTES.stock(stock.ticker)}
+          href={ROUTES.stock(stock.ticker, returnTo)}
+          onClick={onBeforeNavigate}
           className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] px-3 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)] transition hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]"
         >
           상세
@@ -1253,7 +1291,7 @@ function DesktopStockCard({
         <button type="button" onClick={onToggle} className="min-w-0 flex-1 text-left">
           <span className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="font-mono text-lg font-black text-slate-950">{stock.ticker}</span>
-            <GuruHolderBadge stock={stock} compact />
+            <GuruHolderBadge stock={stock} compact returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
               {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
             </span>
@@ -1289,6 +1327,17 @@ function DesktopStockCard({
       </div>
       {expanded ? (
         <div id={detailId} className={canvasPlusPreview ? "cp-screener-detail-shell" : "border-t border-[var(--c-line-2)]"}>
+          {canvasPlusPreview ? (
+            <div className="cpw5-expanded-meta">
+              <TransitionLink
+                href={ROUTES.stock(stock.ticker, returnTo)}
+                onClick={onBeforeNavigate}
+                className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] px-2 text-[10px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+              >
+                종목 상세
+              </TransitionLink>
+            </div>
+          ) : null}
           <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} />
         </div>
       ) : null}
@@ -1472,6 +1521,10 @@ export default function ScreenerClient({
   const [page, setPage] = useState(0);
   const [expandedTicker, setExpandedTicker] = useState<string | null>(() => initialSearch || null);
   const [selectedTickers, setSelectedTickers] = useState<ReadonlySet<string>>(() => new Set());
+  const [journeyReturnTo, setJourneyReturnTo] = useState<string | null>(null);
+  const journeySourceRef = useRef<string | null | undefined>(undefined);
+  const pendingJourneySnapshotRef = useRef<ScreenerJourneySnapshot | null | undefined>(undefined);
+  const journeyRestoredRef = useRef(false);
   const [prevInitialSearch, setPrevInitialSearch] = useState(initialSearch);
   const [prevInitialSector, setPrevInitialSector] = useState(initialSector);
 
@@ -1490,6 +1543,14 @@ export default function ScreenerClient({
   const [viewMode, setViewMode] = useState<ScreenerViewMode>("table");
   const [density, setDensity] = useState<ScreenerDensity>("standard");
   const [columnMenuOpen, setColumnMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const source = currentJourneyReturnTo();
+    if (source === journeySourceRef.current) return;
+    journeySourceRef.current = source;
+    setJourneyReturnTo(source);
+    pendingJourneySnapshotRef.current = readScreenerJourneySnapshot(source);
+  }, []);
 
   useEffect(() => {
     if (initialColumnPreset) return;
@@ -1602,6 +1663,7 @@ export default function ScreenerClient({
     if (next !== window.location.href) {
       window.history.replaceState(null, "", next);
     }
+    setJourneyReturnTo(currentJourneyReturnTo());
   }, [
     search,
     selectedSectors,
@@ -1720,6 +1782,27 @@ export default function ScreenerClient({
 
   const [cursor, setCursor] = useState(0);
   const [scrollSignal, setScrollSignal] = useState<{ index: number; nonce: number } | null>(null);
+  useEffect(() => {
+    const snapshot = pendingJourneySnapshotRef.current;
+    if (journeyRestoredRef.current || snapshot === undefined || !dataReady) return;
+    const source = journeySourceRef.current;
+    if (snapshot === null) {
+      journeyRestoredRef.current = true;
+      return;
+    }
+    const available = new Set(stocks.map((stock) => stock.ticker));
+    const selected = snapshot?.selectedTickers.filter((ticker) => available.has(ticker)) ?? [];
+    if (snapshot) setSelectedTickers(new Set(selected));
+    if (sorted.length > 0) {
+      const index = Math.min(snapshot?.visibleIndex ?? 0, sorted.length - 1);
+      setCursor(index);
+      setPage(Math.floor(index / PAGE_SIZE));
+      setScrollSignal({ index, nonce: 1 });
+    }
+    if (source) clearScreenerJourneySnapshot(source);
+    pendingJourneySnapshotRef.current = null;
+    journeyRestoredRef.current = true;
+  }, [dataReady, sorted.length, stocks]);
   const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${durabilityMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${shortEdgeMin}|${longEdgeMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
   if (prevStateKey !== stateKey) {
@@ -1837,13 +1920,30 @@ export default function ScreenerClient({
     setExpandedTicker((prev) => (prev === ticker ? null : ticker));
   }, []);
 
-  const renderGuruHolderBadge = useCallback(
-    (stock: ScreenerStock) => <GuruHolderBadge stock={stock} compact />,
-    [],
-  );
-
   const router = useRouter();
   const safeCursor = sorted.length > 0 ? Math.min(cursor, sorted.length - 1) : 0;
+  const saveJourneyBeforeNavigate = useCallback(() => {
+    saveScreenerJourneySnapshot(currentJourneyReturnTo(), {
+      selectedTickers: [...selectedTickers],
+      visibleIndex: safeCursor,
+    });
+  }, [safeCursor, selectedTickers]);
+  const renderGuruHolderBadge = useCallback(
+    (stock: ScreenerStock) => (
+      <GuruHolderBadge
+        stock={stock}
+        compact
+        returnTo={journeyReturnTo}
+        onBeforeNavigate={saveJourneyBeforeNavigate}
+      />
+    ),
+    [journeyReturnTo, saveJourneyBeforeNavigate],
+  );
+  const renderJourneyCell = useCallback(
+    (stock: ScreenerStock, key: ScreenerSortKey, preset?: ColumnPreset) =>
+      renderCell(stock, key, preset, "desktop", journeyReturnTo, saveJourneyBeforeNavigate),
+    [journeyReturnTo, saveJourneyBeforeNavigate],
+  );
   const mobileListRef = useRef<HTMLDivElement | null>(null);
   const mobileVirtualizer = useVirtualizer({
     count: sorted.length,
@@ -1915,7 +2015,10 @@ export default function ScreenerClient({
     } else if (event.key === "Enter") {
       event.preventDefault();
       const stock = sorted[safeCursor];
-      if (stock) router.push(ROUTES.stock(stock.ticker));
+      if (stock) {
+        saveJourneyBeforeNavigate();
+        router.push(ROUTES.stock(stock.ticker, journeyReturnTo));
+      }
     }
   }
 
@@ -3731,6 +3834,8 @@ export default function ScreenerClient({
                         preset={preset}
                         selected={selectedTickers.has(stock.ticker)}
                         canvasPlusPreview={canvasPlusPreview}
+                        returnTo={journeyReturnTo}
+                        onBeforeNavigate={saveJourneyBeforeNavigate}
                         onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
                         onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
                       />
@@ -3765,6 +3870,8 @@ export default function ScreenerClient({
                     preset={preset}
                     selected={selectedTickers.has(stock.ticker)}
                     canvasPlusPreview={canvasPlusPreview}
+                    returnTo={journeyReturnTo}
+                    onBeforeNavigate={saveJourneyBeforeNavigate}
                     onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
                     onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
                   />
@@ -3804,7 +3911,7 @@ export default function ScreenerClient({
                   deselectPageRows={deselectPageRows}
                   onToggleExpandedTicker={onToggleExpandedTicker}
                   onResetFilters={resetFilters}
-                  renderCell={renderCell}
+                  renderCell={renderJourneyCell}
                   renderGuruHolderBadge={renderGuruHolderBadge}
                   selectPageRows={selectPageRows}
                   toggleSelectedTicker={toggleSelectedTicker}
@@ -3823,7 +3930,7 @@ export default function ScreenerClient({
               sortKey={sortKey}
               deselectPageRows={deselectPageRows}
               onToggleExpandedTicker={onToggleExpandedTicker}
-              renderCell={renderCell}
+              renderCell={renderJourneyCell}
               renderGuruHolderBadge={renderGuruHolderBadge}
               selectPageRows={selectPageRows}
               toggleSelectedTicker={toggleSelectedTicker}

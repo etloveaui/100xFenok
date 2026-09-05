@@ -12,6 +12,7 @@ interface TickerChipProps {
   variant?: TickerChipVariant;
   href?: string;
   className?: string;
+  onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
 const LINK_CLASSES: Record<TickerChipVariant, string> = {
@@ -34,6 +35,7 @@ export default function TickerChip({
   variant = "inline",
   href,
   className,
+  onClick,
 }: TickerChipProps) {
   const normalized = normalizeForRouteTicker(ticker);
   const display = label ?? normalized ?? ticker;
@@ -44,7 +46,7 @@ export default function TickerChip({
   }
 
   return (
-    <TransitionLink href={href ?? ROUTES.stock(normalized)} className={cx(LINK_CLASSES[variant], className)}>
+    <TransitionLink href={href ?? ROUTES.stock(normalized)} className={cx(LINK_CLASSES[variant], className)} onClick={onClick}>
       {display}
     </TransitionLink>
   );

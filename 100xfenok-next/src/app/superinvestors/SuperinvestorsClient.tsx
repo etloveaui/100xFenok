@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import TickerChip from "@/components/TickerChip";
@@ -16,6 +16,14 @@ import {
   formatPercent,
 } from "@/lib/format";
 import { ROUTES, withQuery } from "@/lib/routes";
+import { isValidRouteTicker, normalizeForRouteTicker } from "@/lib/ticker";
+import {
+  MAX_JOURNEY_SCROLL_Y,
+  clearJourneyScrollSnapshot,
+  currentJourneyReturnTo,
+  readJourneyScrollSnapshot,
+  saveJourneyScrollSnapshot,
+} from "@/lib/journey-context";
 import { CANONICAL_SECTORS, resolveSector, sectorColor, sectorLabelKo } from "@/lib/design/sectorMap";
 import type { CanonicalSector } from "@/lib/design/sectorMap";
 import type {
@@ -204,6 +212,8 @@ const SUP_TABS: Array<{ id: SupTab; label: string }> = [
 
 function resolveInitialTab(value: string | null, guru: string | null): SupTab {
   if (guru) return "investors";
+  if (value === "by-ticker") return "stocks";
+  if (value === "gurus") return "investors";
   if (value === "investors" || value === "stocks" || value === "graph" || value === "signal" || value === "trades" || value === "insights") return value;
   return "signal";
 }
@@ -263,6 +273,17 @@ function syncGuruParam(guru: string | null) {
   if (nextUrl !== currentUrl) window.history.replaceState(window.history.state, "", nextUrl);
 }
 
+function syncTickerParam(ticker: string) {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  params.set("tab", "stocks");
+  params.set("ticker", ticker);
+  const queryString = params.toString();
+  const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ""}${window.location.hash}`;
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextUrl !== currentUrl) window.history.replaceState(window.history.state, "", nextUrl);
+}
+
 function sortConsensusByHolders(rows: ConsensusTicker[]): ConsensusTicker[] {
   return [...rows].sort((a, b) => {
     if (a.holders_count !== b.holders_count) return b.holders_count - a.holders_count;
@@ -272,7 +293,7 @@ function sortConsensusByHolders(rows: ConsensusTicker[]): ConsensusTicker[] {
 
 type HoldingRow = InvestorHolding & { liquidated?: boolean };
 
-function LatestHoldingsMobileCards({ rows, changeMap }: { rows: HoldingRow[]; changeMap?: Map<string, { kind: HoldingChangeKind; pct: number }> }) {
+function LatestHoldingsMobileCards({ rows, changeMap, returnTo, onBeforeNavigate }: { rows: HoldingRow[]; changeMap?: Map<string, { kind: HoldingChangeKind; pct: number }>; returnTo?: string | null; onBeforeNavigate?: () => void }) {
   return (
     <div
       className="cpw5-super-mobile-cards"
@@ -290,7 +311,7 @@ function LatestHoldingsMobileCards({ rows, changeMap }: { rows: HoldingRow[]; ch
           className="cpw5-super-mobile-card"
         >
           <div className="flex min-w-0 items-start justify-between gap-2">
-            {h.ticker ? <TickerChip ticker={h.ticker} variant="pill" className="min-h-11 shrink-0" /> : null}
+            {h.ticker ? <TickerChip ticker={h.ticker} variant="pill" href={ROUTES.stock(h.ticker, returnTo)} onClick={onBeforeNavigate} className="min-h-11 shrink-0" /> : null}
             <div className="min-w-0 text-right">
               <p className="truncate text-sm font-black text-slate-900">{h.name}</p>
               {h.sector ? <p className="truncate text-[10px] font-semibold text-[var(--c-ink-3)]">{h.sector}</p> : null}
@@ -320,7 +341,7 @@ function LatestHoldingsMobileCards({ rows, changeMap }: { rows: HoldingRow[]; ch
   );
 }
 
-function LatestHoldingsTable({ holdings, changes }: { holdings: InvestorHolding[]; changes?: InvestorFiling["changes_summary"] }) {
+function LatestHoldingsTable({ holdings, changes, returnTo, onBeforeNavigate }: { holdings: InvestorHolding[]; changes?: InvestorFiling["changes_summary"]; returnTo?: string | null; onBeforeNavigate?: () => void }) {
   const rows = useMemo<HoldingRow[]>(() => {
     // Filings carry one row per share class / CUSIP — aggregate by ticker.
     const byTicker = new Map<string, InvestorHolding>();
@@ -365,7 +386,7 @@ function LatestHoldingsTable({ holdings, changes }: { holdings: InvestorHolding[
 
   return (
     <div data-superinvestor-guru-top-holdings className="space-y-2">
-      <LatestHoldingsMobileCards rows={rows} changeMap={changeMap} />
+      <LatestHoldingsMobileCards rows={rows} changeMap={changeMap} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
       <div
         className="cpw5-super-desktop-table scroll-hint-x -mx-1 px-1"
         role="region"
@@ -397,7 +418,7 @@ function LatestHoldingsTable({ holdings, changes }: { holdings: InvestorHolding[
               >
                 <td className="px-2 py-2">
                   {h.ticker ? (
-                    <TickerChip ticker={h.ticker} variant="pill" className="min-h-11" />
+                    <TickerChip ticker={h.ticker} variant="pill" href={ROUTES.stock(h.ticker, returnTo)} onClick={onBeforeNavigate} className="min-h-11" />
                   ) : (
                     <span className="text-[var(--c-ink-3)]">—</span>
                   )}
@@ -446,6 +467,8 @@ function GuruDetailPanel({
   factorFailed,
   onRetryFactor,
   asOf,
+  returnTo,
+  onBeforeNavigate,
 }: {
   id: string;
   summary: SummaryInvestor;
@@ -458,6 +481,8 @@ function GuruDetailPanel({
   factorFailed: boolean;
   onRetryFactor?: () => void;
   asOf: string;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
 }) {
   const { data, loading, status } = useInvestorDetail(id);
   const [turnover, setTurnover] = useState<number | null | undefined>(undefined);
@@ -890,7 +915,7 @@ function GuruDetailPanel({
       ) : latest ? (
         <div className="mt-4">
           <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 · 청산 종목</p>
-          <LatestHoldingsTable holdings={latest.holdings ?? []} changes={latest.changes_summary} />
+          <LatestHoldingsTable holdings={latest.holdings ?? []} changes={latest.changes_summary} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
         </div>
       ) : status === "private" ? (
         <div className="mt-4">
@@ -938,12 +963,16 @@ function TradeRankingMobileCard({
   amountColor,
   side,
   actionLabel,
+  returnTo,
+  onBeforeNavigate,
 }: {
   row: TradesRankingRow;
   totalAmount: number;
   amountColor: AmountColor;
   side: "bought" | "sold";
   actionLabel: (r: TradesRankingRow) => string | undefined;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
 }) {
   const canonicalSector = normalizeSuperSector(row.sector_gics ?? row.sector, row.sector);
   const amountTextClass = amountColor === "emerald" ? "text-emerald-700" : "text-rose-700";
@@ -962,7 +991,8 @@ function TradeRankingMobileCard({
       <div className="flex min-w-0 items-start gap-2">
         <span className="shrink-0 pt-2 text-xs font-bold text-[var(--c-ink-3)]">#{row.rank}</span>
         <TransitionLink
-          href={ROUTES.stock(row.ticker)}
+          href={ROUTES.stock(row.ticker, returnTo)}
+          onClick={onBeforeNavigate}
           data-superinvestor-trades-card-action
           data-superinvestor-trades-card-stock-link
           data-superinvestor-trades-action
@@ -1002,7 +1032,8 @@ function TradeRankingMobileCard({
           <dd className="min-w-0">
             {row.top_investor?.id ? (
               <TransitionLink
-                href={ROUTES.superinvestorsGuru(row.top_investor.id)}
+                href={ROUTES.superinvestorsGuru(row.top_investor.id, returnTo)}
+                onClick={onBeforeNavigate}
                 data-superinvestor-trades-card-action
                 data-superinvestor-trades-card-investor-link
                 data-superinvestor-trades-action
@@ -1031,6 +1062,8 @@ function TradeRankingPanel({
   expanded,
   onToggle,
   actionLabel,
+  returnTo,
+  onBeforeNavigate,
 }: {
   title: string;
   rows: TradesRankingRow[];
@@ -1040,6 +1073,8 @@ function TradeRankingPanel({
   expanded: boolean;
   onToggle: () => void;
   actionLabel: (r: TradesRankingRow) => string | undefined;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
 }) {
   const visibleRows = expanded ? rows : rows.slice(0, 10);
   const amountTextClass = amountColor === "emerald" ? "text-emerald-700" : "text-rose-700";
@@ -1075,6 +1110,8 @@ function TradeRankingPanel({
             amountColor={amountColor}
             side={side}
             actionLabel={actionLabel}
+            returnTo={returnTo}
+            onBeforeNavigate={onBeforeNavigate}
           />
         ))}
       </div>
@@ -1121,7 +1158,8 @@ function TradeRankingPanel({
                   </td>
                   <td className="min-w-0 px-1 py-2 sm:px-2">
                     <TransitionLink
-                      href={ROUTES.stock(r.ticker)}
+                      href={ROUTES.stock(r.ticker, returnTo)}
+                      onClick={onBeforeNavigate}
                       data-superinvestor-trades-desktop-action
                       data-superinvestor-trades-desktop-stock-link
                       className="inline-flex min-h-11 w-full min-w-0 max-w-full flex-col justify-center rounded-xl border border-slate-200 bg-white px-2 py-1 transition hover:border-brand-interactive hover:text-brand-interactive"
@@ -1153,7 +1191,8 @@ function TradeRankingPanel({
                   <td className="min-w-0 px-1 py-2 sm:px-2">
                     {r.top_investor?.id ? (
                       <TransitionLink
-                        href={ROUTES.superinvestorsGuru(r.top_investor.id)}
+                        href={ROUTES.superinvestorsGuru(r.top_investor.id, returnTo)}
+                        onClick={onBeforeNavigate}
                         data-superinvestor-trades-desktop-action
                         data-superinvestor-trades-desktop-investor-link
                         className="inline-flex min-h-11 w-full min-w-0 max-w-full items-center rounded-xl border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive"
@@ -1262,6 +1301,8 @@ function SectorRotationPanel({
   tradesLoading,
   tradesFailed,
   bySector,
+  returnTo,
+  onBeforeNavigate,
 }: {
   pvData: PortfolioViewsData | null;
   pvLoading: boolean;
@@ -1271,6 +1312,8 @@ function SectorRotationPanel({
   tradesLoading: boolean;
   tradesFailed: boolean;
   bySector: SectorHoldingsData | null;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
 }) {
   const [sortMode, setSortMode] = useState<RotationSort>("abs");
   const rotation = useMemo(() => {
@@ -1390,7 +1433,7 @@ function SectorRotationPanel({
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {chips.length > 0 ? (
-                      chips.map((ticker) => <TickerChip key={ticker} ticker={ticker} variant="inline" className="inline-flex min-h-11 items-center" />)
+                      chips.map((ticker) => <TickerChip key={ticker} ticker={ticker} variant="inline" href={ROUTES.stock(ticker, returnTo)} onClick={onBeforeNavigate} className="inline-flex min-h-11 items-center" />)
                     ) : (
                       <span className="text-[10px] font-bold text-slate-700">—</span>
                     )}
@@ -1428,6 +1471,8 @@ function GuruDetailView({
   factorFailed,
   onRetryFactor,
   asOf,
+  returnTo,
+  onBeforeNavigate,
   onBack,
 }: {
   id: string;
@@ -1441,6 +1486,8 @@ function GuruDetailView({
   factorFailed: boolean;
   onRetryFactor?: () => void;
   asOf: string;
+  returnTo?: string | null;
+  onBeforeNavigate?: () => void;
   onBack: () => void;
 }) {
   return (
@@ -1485,13 +1532,23 @@ function GuruDetailView({
           factorFailed={factorFailed}
           onRetryFactor={onRetryFactor}
           asOf={asOf}
+          returnTo={returnTo}
+          onBeforeNavigate={onBeforeNavigate}
         />
       </div>
     </div>
   );
 }
 
-export default function SuperinvestorsClient({ initialGuru = null, initialTab = null }: { initialGuru?: string | null; initialTab?: string | null }) {
+export default function SuperinvestorsClient({
+  initialGuru = null,
+  initialTab = null,
+  initialTicker = null,
+}: {
+  initialGuru?: string | null;
+  initialTab?: string | null;
+  initialTicker?: string | null;
+}) {
   const {
     consensus,
     enhancedConsensus,
@@ -1509,6 +1566,10 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
   const [sort, setSort] = useState<HolderSort>("aum");
   const [expandedGuru, setExpandedGuru] = useState<string | null>(initialGuru);
   const [tab, setTab] = useState<SupTab>(() => resolveInitialTab(initialTab, initialGuru));
+  const [journeyReturnTo, setJourneyReturnTo] = useState<string | null>(null);
+  const journeySourceRef = useRef<string | null | undefined>(undefined);
+  const pendingJourneyScrollRef = useRef<ReturnType<typeof readJourneyScrollSnapshot> | undefined>(undefined);
+  const journeyScrollRestoredRef = useRef(false);
   const [prevInitial, setPrevInitial] = useState({ guru: initialGuru, tab: initialTab });
   if (prevInitial.guru !== initialGuru || prevInitial.tab !== initialTab) {
     setPrevInitial({ guru: initialGuru, tab: initialTab });
@@ -1517,6 +1578,20 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
   }
   const tabsBaseId = useTabsBaseId("sup");
   const router = useRouter();
+
+  function refreshJourneyReturnTo() {
+    const source = currentJourneyReturnTo();
+    journeySourceRef.current = source;
+    setJourneyReturnTo(source);
+  }
+
+  useEffect(() => {
+    const source = currentJourneyReturnTo();
+    if (source === journeySourceRef.current) return;
+    journeySourceRef.current = source;
+    setJourneyReturnTo(source);
+    pendingJourneyScrollRef.current = readJourneyScrollSnapshot(source);
+  });
   const [turnover, setTurnover] = useState<TurnoverData["by_investor"] | null | undefined>(undefined);
   const [turnoverError, setTurnoverError] = useState(false);
   const [tradesData, setTradesData] = useState<TradesRankingData | null>(null);
@@ -1692,7 +1767,8 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
     () => (expandedGuru ? investors.find(([id]) => id === expandedGuru) ?? null : null),
     [investors, expandedGuru],
   );
-
+  const focusedTickerCandidate = normalizeForRouteTicker(initialTicker);
+  const focusedTicker = isValidRouteTicker(focusedTickerCandidate) ? focusedTickerCandidate : null;
   const overlapRows = useMemo(() => {
     if (!consensus) return [];
     return sortConsensusByHolders(Object.values(consensus.consensus)).slice(0, 4);
@@ -1705,6 +1781,37 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
   }, [consensus]);
 
   const loading = !dataReady && !failed;
+  const journeyContentReady = !loading && !tradesLoading && !pvLoading && !factorLoading;
+  useEffect(() => {
+    const snapshot = pendingJourneyScrollRef.current;
+    const source = journeySourceRef.current;
+    if (journeyScrollRestoredRef.current || snapshot === undefined || !journeyContentReady) return;
+    if (snapshot === null) {
+      if (source) clearJourneyScrollSnapshot(source);
+      pendingJourneyScrollRef.current = null;
+      journeyScrollRestoredRef.current = true;
+      return;
+    }
+    let cancelled = false;
+    const cancel = () => { cancelled = true; };
+    window.addEventListener("wheel", cancel, { passive: true, once: true });
+    window.addEventListener("touchstart", cancel, { passive: true, once: true });
+    window.addEventListener("pointerdown", cancel, { once: true });
+    window.addEventListener("keydown", cancel, { once: true });
+    const frame = window.requestAnimationFrame(() => {
+      if (!cancelled) window.scrollTo({ top: snapshot.scrollY, behavior: "auto" });
+      if (source) clearJourneyScrollSnapshot(source);
+      pendingJourneyScrollRef.current = null;
+      journeyScrollRestoredRef.current = true;
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("wheel", cancel);
+      window.removeEventListener("touchstart", cancel);
+      window.removeEventListener("pointerdown", cancel);
+      window.removeEventListener("keydown", cancel);
+    };
+  }, [journeyContentReady]);
   const investorCount = summary
     ? (consensus?.metadata?.current_cohort_investors ??
       summary?.metadata?.investor_count ??
@@ -1770,16 +1877,25 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
   function openGuru(id: string) {
     setExpandedGuru(id);
     syncGuruParam(id);
+    refreshJourneyReturnTo();
   }
 
   function closeGuru() {
     setExpandedGuru(null);
     syncGuruParam(null);
+    refreshJourneyReturnTo();
   }
 
   function selectTab(next: SupTab) {
     setTab(next);
     syncTabParam(next);
+    refreshJourneyReturnTo();
+  }
+
+  function saveJourneyBeforeNavigate() {
+    if (typeof window !== "undefined") {
+      saveJourneyScrollSnapshot(currentJourneyReturnTo(), { scrollY: Math.round(Math.max(0, Math.min(window.scrollY, MAX_JOURNEY_SCROLL_Y))) });
+    }
   }
 
   return (
@@ -1872,6 +1988,8 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
           factorFailed={factorFailed}
           onRetryFactor={retryFactor}
           asOf={asOfLabel}
+          returnTo={journeyReturnTo}
+          onBeforeNavigate={saveJourneyBeforeNavigate}
           onBack={closeGuru}
         />
       ) : (
@@ -2071,7 +2189,10 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
           pvLoading={pvLoading}
           pvFailed={pvFailed}
           onRetryPv={retryPv}
-          onSelectTicker={(ticker) => router.push(ROUTES.stock(ticker))}
+          onSelectTicker={(ticker) => {
+            saveJourneyBeforeNavigate();
+            router.push(ROUTES.stock(ticker, journeyReturnTo));
+          }}
         />
         <WhoHoldsPanel
           summary={summary}
@@ -2084,6 +2205,11 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
           failed={failed}
           partialFeeds={partialFeeds}
           onRetry={retry}
+          initialTicker={focusedTicker}
+          onTickerChange={(ticker) => {
+            syncTickerParam(ticker);
+            refreshJourneyReturnTo();
+          }}
         />
         </div>
       </TabPanel>
@@ -2099,6 +2225,8 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
             tradesLoading={tradesLoading}
             tradesFailed={tradesFailed}
             bySector={bySector}
+            returnTo={journeyReturnTo}
+            onBeforeNavigate={saveJourneyBeforeNavigate}
           />
           {tradesData ? (
             <div className="space-y-1">
@@ -2147,6 +2275,8 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
                 side="bought"
                 expanded={tradesBoughtExpanded}
                 onToggle={() => setTradesBoughtExpanded((v) => !v)}
+                returnTo={journeyReturnTo}
+                onBeforeNavigate={saveJourneyBeforeNavigate}
                 actionLabel={(r) =>
                   r.new_count != null && r.new_count > 0
                     ? `${r.new_count}개 신규`
@@ -2161,6 +2291,8 @@ export default function SuperinvestorsClient({ initialGuru = null, initialTab = 
                 side="sold"
                 expanded={tradesSoldExpanded}
                 onToggle={() => setTradesSoldExpanded((v) => !v)}
+                returnTo={journeyReturnTo}
+                onBeforeNavigate={saveJourneyBeforeNavigate}
                 actionLabel={(r) =>
                   r.exit_count != null && r.exit_count > 0
                     ? `${r.exit_count}개 청산`
