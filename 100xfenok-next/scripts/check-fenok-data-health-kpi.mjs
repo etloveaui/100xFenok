@@ -45,10 +45,18 @@ import {
   projectRecoveryRecoveredSet,
   projectRecoveryRetrySet,
   validateProducerRecoveryAttempt,
+  publishOutcomeFamilyForLane,
+  publicationFamiliesByName,
+  observedAdvanceMs,
+  sourceAdvanceMs,
+  buildPublicationOutcomes,
+  OUTCOME_WATCHDOG_BASIS,
+  OUTCOME_ADVANCE_BASES,
+  PUBLISH_OUTCOME_SUCCESS_RESULTS,
 } from "../../scripts/build-fenok-data-health-kpi.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "../../scripts/lib/data-supply-detection-config.mjs";
 import { hasStructuredGithubRunBinding } from "../../scripts/lib/data-supply-lkg-store.mjs";
-import { buildFetchCronAttemptCoverage } from "../../scripts/build-data-supply-detection-floor.mjs";
+import { buildFetchCronAttemptCoverage, evaluateFreshness } from "../../scripts/build-data-supply-detection-floor.mjs";
 import { inspectSlickchartsCompositeLiveIntegrity } from "../../scripts/lib/slickcharts-composite-recovery.mjs";
 import { LANE_REGISTRY } from "../../scripts/lib/lane-registry.mjs";
 
@@ -462,7 +470,11 @@ export function checkDetectionFloorLane(lane, errors, expectedConfig) {
   }
 }
 
-export function checkOutcomeWatchdog(rootDoc, errors) {
+export function checkOutcomeWatchdog(rootDoc, errors, { dataRoot = null } = {}) {
+  if (dataRoot) {
+    push(errors, JSON.stringify(rootDoc?.publication) === JSON.stringify(buildPublicationOutcomes({ dataRoot })),
+      "publication differs from canonical publish-outcome shards");
+  }
   const watchdog = rootDoc?.outcome_watchdog;
   push(errors, watchdog && typeof watchdog === "object" && !Array.isArray(watchdog),
     "outcome_watchdog object is required in v2");
@@ -471,13 +483,14 @@ export function checkOutcomeWatchdog(rootDoc, errors) {
     `outcome_watchdog schema is invalid: ${watchdog.schema_version}`);
   push(errors, watchdog.evaluated_at === rootDoc.generated_at,
     "outcome_watchdog.evaluated_at must equal the KPI generated_at clock");
-  push(errors, watchdog.basis === "canonical_file_source_as_of",
-    "outcome_watchdog basis must be canonical_file_source_as_of");
+  push(errors, watchdog.basis === OUTCOME_WATCHDOG_BASIS,
+    `outcome_watchdog basis must be ${OUTCOME_WATCHDOG_BASIS}`);
   push(errors, watchdog.threshold_multiplier === OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER,
     "outcome_watchdog threshold_multiplier differs from the canonical contract");
 
   const lanesById = new Map((Array.isArray(rootDoc?.lanes) ? rootDoc.lanes : [])
     .map((row) => [row?.id, row]));
+  const familiesByName = publicationFamiliesByName(rootDoc?.publication ?? null);
   const expectedRegistryRows = LANE_REGISTRY.lanes.filter((entry) =>
     entry.enforcement === "live"
     && entry.lane_class === "detection_floor"
@@ -489,38 +502,88 @@ export function checkOutcomeWatchdog(rootDoc, errors) {
     `outcome_watchdog monitored lane count mismatch: ${rows.length} vs ${expectedRegistryRows.length}`);
   const nowMs = new Date(rootDoc.generated_at).getTime();
   const expectedCounts = { monitored: expectedRegistryRows.length, current: 0, overdue: 0, unobservable: 0 };
+  const expectedBases = Object.fromEntries(OUTCOME_ADVANCE_BASES.map((basis) => [basis, 0]));
   for (let index = 0; index < expectedRegistryRows.length; index += 1) {
     const registryLane = expectedRegistryRows[index];
-    const lane = lanesById.get(registryLane.id);
+    const laneId = registryLane.id;
+    const lane = lanesById.get(laneId);
     const row = rows[index];
-    const lastAdvance = lane?.artifact?.source_as_of ?? null;
-    const lastAdvanceMs = typeof lastAdvance === "string" ? new Date(lastAdvance).getTime() : NaN;
+    // Independent re-derivation of the B-OUTCOME-CLOCKS advance rule from the
+    // KPI's own evidence (lane artifact + publication block), never from the row.
+    const freshness = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === laneId)?.freshness ?? null;
+    const sourceAsOf = lane?.artifact?.source_as_of ?? null;
+    const family = publishOutcomeFamilyForLane(registryLane);
+    const publicationFamily = family ? familiesByName.get(family) ?? null : null;
+    let lastAdvance = null;
+    let advanceBasis = null;
+    let advanceMs = NaN;
+    const sourceMs = sourceAdvanceMs(sourceAsOf, nowMs, freshness, FETCH_CRON_CALENDARS);
+    if (sourceMs !== null) {
+      lastAdvance = sourceAsOf;
+      advanceBasis = "canonical_file_source_as_of";
+      advanceMs = sourceMs;
+    } else {
+      const publishedMs = publicationFamily && PUBLISH_OUTCOME_SUCCESS_RESULTS.includes(publicationFamily.result)
+        ? observedAdvanceMs(publicationFamily.observed_at, nowMs)
+        : null;
+      const generatedMs = publishedMs === null ? observedAdvanceMs(lane?.artifact?.generated_at, nowMs) : null;
+      if (publishedMs !== null) {
+        lastAdvance = publicationFamily.observed_at;
+        advanceBasis = "publish_outcome";
+        advanceMs = publishedMs;
+      } else if (generatedMs !== null) {
+        lastAdvance = lane.artifact.generated_at;
+        advanceBasis = "canonical_file_generated_at";
+        advanceMs = generatedMs;
+      }
+    }
     const cadenceHours = OUTCOME_WATCHDOG_CADENCE_HOURS[registryLane.cadence.kind];
     const thresholdHours = cadenceHours * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER;
-    const ageHours = Number.isFinite(lastAdvanceMs) && Number.isFinite(nowMs)
-      ? Math.round(((nowMs - lastAdvanceMs) / 3600000) * 100) / 100
-      : null;
+    let ageHours = null;
+    if (Number.isFinite(advanceMs) && Number.isFinite(nowMs)) {
+      if (freshness?.unit === "business_days") {
+        try {
+          const folded = evaluateFreshness(lastAdvance, freshness, rootDoc.generated_at, FETCH_CRON_CALENDARS);
+          ageHours = Number.isFinite(folded.age) ? folded.age * 24 : null;
+        } catch (error) {
+          push(errors, false, `${laneId}: outcome age could not be folded by calendar ${freshness.calendar}: ${error?.message ?? error}`);
+        }
+      } else {
+        ageHours = Math.round(((nowMs - advanceMs) / 3600000) * 100) / 100;
+      }
+    }
     const state = ageHours === null
       ? "unobservable"
       : ageHours > thresholdHours ? "overdue" : "current";
     expectedCounts[state] += 1;
-    push(errors, row?.lane_id === registryLane.id,
+    if (advanceBasis !== null) expectedBases[advanceBasis] += 1;
+    push(errors, row?.lane_id === laneId,
       `outcome_watchdog.rows[${index}].lane_id is not registry ordered`);
     push(errors, row?.cadence_kind === registryLane.cadence.kind,
-      `${registryLane.id}: outcome cadence_kind differs from the registry`);
+      `${laneId}: outcome cadence_kind differs from the registry`);
     push(errors, row?.cadence_hours === cadenceHours,
-      `${registryLane.id}: outcome cadence_hours differs from the canonical contract`);
+      `${laneId}: outcome cadence_hours differs from the canonical contract`);
     push(errors, row?.threshold_hours === thresholdHours,
-      `${registryLane.id}: outcome threshold_hours differs from the canonical contract`);
+      `${laneId}: outcome threshold_hours differs from the canonical contract`);
+    push(errors, row?.source_as_of === sourceAsOf,
+      `${laneId}: outcome source_as_of must preserve the canonical file source_as_of verbatim`);
+    push(errors, !(row?.advance_basis === "publish_outcome" && sourceMs !== null),
+      `${laneId}: outcome advance_basis publish_outcome contradicts a non-null source_as_of`);
+    push(errors, row?.advance_basis === advanceBasis,
+      `${laneId}: outcome advance_basis ${row?.advance_basis} differs from ${advanceBasis}`);
     push(errors, row?.last_advance === lastAdvance,
-      `${registryLane.id}: outcome last_advance differs from canonical file source_as_of`);
+      `${laneId}: outcome last_advance differs from the ${advanceBasis ?? "unobservable"} advance`);
+    push(errors, row?.calendar === (freshness?.calendar ?? null),
+      `${laneId}: outcome calendar differs from the lane's declared detection calendar`);
     push(errors, row?.age_hours === ageHours,
-      `${registryLane.id}: outcome age_hours differs from the KPI clock`);
+      `${laneId}: outcome age_hours differs from the KPI clock`);
     push(errors, row?.state === state,
-      `${registryLane.id}: outcome state ${row?.state} differs from ${state}`);
+      `${laneId}: outcome state ${row?.state} differs from ${state}`);
   }
   push(errors, JSON.stringify(watchdog.counts) === JSON.stringify(expectedCounts),
     "outcome_watchdog counts do not reconcile with per-lane states");
+  push(errors, JSON.stringify(watchdog.advance_bases) === JSON.stringify(expectedBases),
+    "outcome_watchdog advance_bases do not reconcile with per-lane advance bases");
   const expectedStatus = expectedCounts.overdue > 0 ? "overdue" : "ready";
   push(errors, watchdog.status === expectedStatus,
     `outcome_watchdog status ${watchdog.status} differs from ${expectedStatus}`);
@@ -1565,7 +1628,7 @@ export function validateV2({
   validateCoreShape(publicDoc, errors, SCHEMA_VERSION_V2, warnings);
   scanForbiddenTokens(publicKpiPath, errors);
   checkV2Runtime(rootDoc, { errors, warnings }, nowIso, { context, strict });
-  checkOutcomeWatchdog(rootDoc, errors);
+  checkOutcomeWatchdog(rootDoc, errors, { dataRoot: path.resolve(path.dirname(rootKpiPath), "..") });
   checkFetchCronSourceParity(rootDoc, rootKpiPath, { errors, warnings });
   checkSourceSla(rootDoc, { errors, warnings }, nowIso);
   checkRecoveryStateSources(rootDoc, rootKpiPath, errors, { slickchartsRepoRoot });

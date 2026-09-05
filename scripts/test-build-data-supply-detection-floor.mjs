@@ -28,6 +28,7 @@ import {
   detectAndProject,
   evaluateAttemptCadence,
   evaluateFreshness,
+  foldGeneratedAt,
   loadAttemptShards,
   pathsOverlap,
   prepareOutputContext,
@@ -1169,6 +1170,15 @@ function runAttemptShardChecks(artifactRoot) {
 }
 
 function runBaselineAndArtifactChecks() {
+  const clockRow = (generated_at) => ({ source_as_of: null, status: "ready", generated_at });
+  const old = clockRow("2026-07-09T00:00:00Z");
+  const recent = clockRow("2026-07-11T00:00:00Z");
+  const clockNow = "2026-07-12T00:00:00Z";
+  assert.deepEqual(foldGeneratedAt([recent, old], clockNow), { generated_at: old.generated_at }, "a recently generated member cannot mask an older member");
+  assert.deepEqual(foldGeneratedAt([old, recent], clockNow), { generated_at: old.generated_at }, "generation folding is independent of tied member ordering");
+  assert.deepEqual(foldGeneratedAt([recent, clockRow(null)], clockNow), { generated_at: null }, "a missing member clock cannot imply full generation coverage");
+  assert.deepEqual(foldGeneratedAt([recent, clockRow("2026-07-13T00:00:00Z")], clockNow), { generated_at: null }, "future member clocks are not valid coverage");
+  assert.deepEqual(foldGeneratedAt([recent, { source_as_of: "2026-07-11", status: "ready" }], clockNow), {}, "a mixed source-dated composite never substitutes generation for source freshness");
   const artifactRoot = materializeArtifacts("all_valid");
   const report = buildDetectionReport({
     artifactRoot: artifactRoot.raw,
@@ -1178,6 +1188,29 @@ function runBaselineAndArtifactChecks() {
   });
   assert.deepEqual(report, expectedFixture.baseline.expected_report);
   assert.equal(createSha(reportBytes(report)), expectedFixture.baseline.report_file_sha256);
+
+  // B-OUTCOME-CLOCKS: a source-dateless lane (every artifact contract
+  // not_applicable) projects its artifact's own generated_at honestly next to
+  // source_as_of=null; source-dated lanes and missing artifacts never carry the
+  // key, and the validator accepts only canonical UTC or null on dateless rows.
+  for (const id of ["stockanalysis_etf_universe", "yahoo_etf_fallback"]) {
+    assert.equal(lane(report, id).artifact.source_as_of, null, `${id} stays provider-dateless`);
+    assert.equal(lane(report, id).artifact.generated_at, "2026-07-11T00:00:00Z",
+      `${id} projects the fixture artifact's generated_at without promoting it into source_as_of`);
+  }
+  assert.equal(Object.hasOwn(lane(report, "treasury_tga").artifact, "generated_at"), false,
+    "a source-dated lane never carries generated_at");
+  assert.equal(Object.hasOwn(lane(report, "stockanalysis_etf_detail").artifact, "generated_at"), false,
+    "a missing dateless artifact projects no generated_at (nothing is fabricated)");
+  const generatedAtNull = clone(report);
+  lane(generatedAtNull, "stockanalysis_etf_universe").artifact.generated_at = null;
+  assert.equal(validateDetectionReport(generatedAtNull), true, "null generated_at is an honest dateless row");
+  const generatedAtMalformed = clone(report);
+  lane(generatedAtMalformed, "stockanalysis_etf_universe").artifact.generated_at = "2026-07-11";
+  assertThrowsCode(() => validateDetectionReport(generatedAtMalformed), "clock_error");
+  const generatedAtOnDated = clone(report);
+  lane(generatedAtOnDated, "treasury_tga").artifact.generated_at = "2026-07-11T00:00:00Z";
+  assertThrowsCode(() => validateDetectionReport(generatedAtOnDated), "schema_error");
 
   const staleStockFinancialRoot = materializeArtifacts("all_valid");
   const staleStatePath = path.join(

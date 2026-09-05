@@ -59,6 +59,7 @@ const {
   readRimFiveCanonicalHealth,
   buildRuntime,
   buildOutcomeWatchdog,
+  buildPublicationOutcomes,
   buildPayload,
   enumerateDueSlots,
   deriveMissedSlots,
@@ -5500,6 +5501,328 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
     "weekend folding applies only to lanes that declare a business-day calendar",
   );
   ok("outcome watchdog folds business-day lanes by their declared calendar and keeps plain-hour lanes on wall-clock");
+}
+
+// B-OUTCOME-CLOCKS (i)-(iii): calendar identity, a true weekday overdue, and
+// evidence that must never count as an advance.
+{
+  const laneRow = (id, artifact) => ({ id, as_of: artifact.source_as_of ?? null, artifact });
+  const dateless = { source_as_of: null, source_as_of_reason: "dateless_by_provider" };
+  const rowsOf = (watchdog) => new Map(watchdog.rows.map((entry) => [entry.lane_id, entry]));
+
+  // (i) Monday 2026-10-12 is a federal holiday (Columbus Day) but a trading
+  // day: the same Friday 10-09 advance read on Tuesday 10-13 12:00Z is one
+  // federal business day old (treasury_tga: current) yet two trading days old
+  // (finra_short_volume: overdue). The row's calendar is the lane's own.
+  const holidayControl = rowsOf(buildOutcomeWatchdog("2026-10-13T12:00:00Z", [
+    laneRow("treasury_tga", { source_as_of: "2026-10-09" }),
+    laneRow("finra_short_volume", { source_as_of: "2026-10-09" }),
+  ]));
+  assert.equal(holidayControl.get("treasury_tga").state, "current",
+    "federal calendar: Columbus Day does not elapse, one business day since Friday");
+  assert.equal(holidayControl.get("treasury_tga").age_hours, 24);
+  assert.equal(holidayControl.get("treasury_tga").calendar, "us_federal_business");
+  assert.equal(holidayControl.get("finra_short_volume").state, "overdue",
+    "trading calendar: Columbus Day is a trading day, two business days since Friday");
+  assert.equal(holidayControl.get("finra_short_volume").age_hours, 48);
+  assert.equal(holidayControl.get("finra_short_volume").calendar, "us_trading");
+
+  // (ii) A Monday advance still unrefreshed on Thursday is overdue on a
+  // business-day calendar (three weekday business days, no weekend involved).
+  const weekdayOverdue = rowsOf(buildOutcomeWatchdog("2026-09-17T12:00:00Z", [
+    laneRow("treasury_tga", { source_as_of: "2026-09-14" }),
+    laneRow("occ_options_volume", { source_as_of: "2026-09-14" }),
+  ]));
+  for (const id of ["treasury_tga", "occ_options_volume"]) {
+    assert.equal(weekdayOverdue.get(id).state, "overdue", `${id}: Monday advance read on Thursday is overdue`);
+    assert.equal(weekdayOverdue.get(id).age_hours, 72);
+    assert.equal(weekdayOverdue.get(id).advance_basis, "canonical_file_source_as_of");
+  }
+
+  // (iii) A future or malformed publication observed_at, a failed result, and a
+  // future/malformed generated_at never count: the row stays unobservable.
+  const now = "2026-09-05T20:00:00Z";
+  const publicationOf = (result, observedAt) => ({
+    schema_version: "fenok-kpi-publication-outcomes/v1",
+    families: [{ family: "stockanalysis-etf-detail", result, observed_at: observedAt, gate_after: "ok" }],
+  });
+  for (const [label, publication] of [
+    ["future observed_at", publicationOf("published", "2026-09-05T21:00:00Z")],
+    ["malformed observed_at", publicationOf("published", "not-a-timestamp")],
+    ["offset observed_at", publicationOf("published", "2026-09-05T02:29:08+00:00")],
+    ["failed result", publicationOf("failed", "2026-09-05T02:29:08Z")],
+    ["gate_blocked result", publicationOf("gate_blocked", "2026-09-05T02:29:08Z")],
+    ["null result", publicationOf(null, "2026-09-05T02:29:08Z")],
+  ]) {
+    const row = rowsOf(buildOutcomeWatchdog(now, [
+      laneRow("stockanalysis_etf_detail", dateless),
+    ], undefined, { publication })).get("stockanalysis_etf_detail");
+    assert.equal(row.state, "unobservable", `${label} must not count as an advance`);
+    assert.equal(row.last_advance, null, `${label}: no advance is fabricated`);
+    assert.equal(row.advance_basis, null, `${label}: no basis is claimed`);
+    assert.equal(row.source_as_of, null);
+  }
+  for (const [label, generatedAt] of [
+    ["future generated_at", "2026-09-06T00:00:00Z"],
+    ["date-only generated_at", "2026-09-05"],
+    ["null generated_at", null],
+  ]) {
+    const row = rowsOf(buildOutcomeWatchdog(now, [
+      laneRow("stockanalysis_etf_universe", { ...dateless, generated_at: generatedAt }),
+    ])).get("stockanalysis_etf_universe");
+    assert.equal(row.state, "unobservable", `${label} must not count as an advance`);
+    assert.equal(row.advance_basis, null);
+  }
+  // A publish outcome bound to ANOTHER family never advances this lane.
+  const foreignFamily = rowsOf(buildOutcomeWatchdog(now, [
+    laneRow("stockanalysis_etf_detail", dateless),
+  ], undefined, {
+    publication: {
+      schema_version: "fenok-kpi-publication-outcomes/v1",
+      families: [{ family: "fred-macro", result: "published", observed_at: "2026-09-05T02:29:08Z", gate_after: "ok" }],
+    },
+  })).get("stockanalysis_etf_detail");
+  assert.equal(foreignFamily.state, "unobservable");
+  assert.equal(foreignFamily.advance_basis, null);
+  // Precedence: a canonical source date wins over a newer publish outcome and
+  // over generated_at; a publish outcome wins over generated_at.
+  const precedence = rowsOf(buildOutcomeWatchdog(now, [
+    laneRow("treasury_tga", { source_as_of: "2026-09-04", generated_at: "2026-09-05T18:00:00Z" }),
+    laneRow("stockanalysis_etf_universe", { ...dateless, generated_at: "2026-09-05T18:00:00Z" }),
+  ], undefined, {
+    publication: {
+      schema_version: "fenok-kpi-publication-outcomes/v1",
+      families: [
+        { family: "treasury-tga", result: "published", observed_at: "2026-09-05T19:00:00Z", gate_after: "ok" },
+      ],
+    },
+  }));
+  assert.equal(precedence.get("treasury_tga").advance_basis, "canonical_file_source_as_of");
+  assert.equal(precedence.get("treasury_tga").last_advance, "2026-09-04");
+  assert.equal(precedence.get("stockanalysis_etf_universe").advance_basis, "canonical_file_generated_at",
+    "a lane with no publish-outcome family falls through to generated_at");
+  assert.deepEqual(buildOutcomeWatchdog(now, [
+    laneRow("treasury_tga", { source_as_of: "2026-09-04" }),
+    laneRow("stockanalysis_etf_universe", { ...dateless, generated_at: "2026-09-05T18:00:00Z" }),
+    laneRow("stockanalysis_etf_detail", dateless),
+  ], undefined, { publication: publicationOf("published", "2026-09-05T19:00:00Z") }).advance_bases, {
+    canonical_file_source_as_of: 1,
+    publish_outcome: 1,
+    canonical_file_generated_at: 1,
+  });
+  ok("outcome watchdog keeps calendar identity per lane, ages weekdays honestly, and refuses non-evidence advances");
+}
+
+// B-OUTCOME-CLOCKS checker: the checker re-derives every row from the KPI's own
+// evidence (lane artifact + publication block + lane calendar) and fails closed
+// on a contradiction (publish_outcome basis next to a non-null source date), a
+// state that disagrees with the recomputation, or evidence removed from under a
+// row.
+{
+  const laneRow = (id, artifact) => ({ id, as_of: artifact.source_as_of ?? null, artifact });
+  const dateless = { source_as_of: null, source_as_of_reason: "dateless_by_provider" };
+  const now = "2026-09-12T23:00:00Z"; // Saturday
+  const publication = {
+    schema_version: "fenok-kpi-publication-outcomes/v1",
+    families: [{ family: "stockanalysis-etf-detail", result: "resumed", observed_at: "2026-09-12T02:29:08.285Z", gate_after: "ok" }],
+  };
+  const lanes = [
+    laneRow("treasury_tga", { source_as_of: "2026-09-11" }),
+    laneRow("defillama_stablecoins", { source_as_of: "2026-09-11" }),
+    laneRow("stockanalysis_etf_universe", { ...dateless, generated_at: "2026-09-12T00:00:00Z" }),
+    laneRow("stockanalysis_etf_detail", dateless),
+    laneRow("yahoo_etf_fallback", dateless),
+  ];
+  const watchdog = buildOutcomeWatchdog(now, lanes, undefined, { publication });
+  const rows = new Map(watchdog.rows.map((entry) => [entry.lane_id, entry]));
+  assert.equal(rows.get("treasury_tga").state, "current", "Friday advance on Saturday, federal calendar");
+  assert.equal(rows.get("defillama_stablecoins").state, "overdue", "47h wall-clock on a calendar_days lane");
+  assert.equal(rows.get("stockanalysis_etf_universe").advance_basis, "canonical_file_generated_at");
+  assert.equal(rows.get("stockanalysis_etf_detail").advance_basis, "publish_outcome");
+  assert.equal(rows.get("stockanalysis_etf_detail").state, "current");
+  assert.equal(rows.get("yahoo_etf_fallback").state, "unobservable");
+  assert.deepEqual(watchdog.counts, { monitored: 5, current: 3, overdue: 1, unobservable: 1 });
+  const rootDoc = () => ({ generated_at: now, lanes: structuredClone(lanes), publication: structuredClone(publication), outcome_watchdog: structuredClone(watchdog) });
+  const cleanErrors = [];
+  checkOutcomeWatchdog(rootDoc(), cleanErrors);
+  assert.deepEqual(cleanErrors, [], "checker accepts calendar-folded, publish-outcome and generated_at rows it can re-derive");
+
+  const contradiction = rootDoc();
+  contradiction.outcome_watchdog.rows.find((entry) => entry.lane_id === "treasury_tga").advance_basis = "publish_outcome";
+  const contradictionErrors = [];
+  checkOutcomeWatchdog(contradiction, contradictionErrors);
+  assert.ok(contradictionErrors.some((message) => /treasury_tga: outcome advance_basis publish_outcome contradicts a non-null source_as_of/.test(message)),
+    `publish_outcome next to a source date must fail closed: ${JSON.stringify(contradictionErrors)}`);
+
+  const stateTamper = rootDoc();
+  stateTamper.outcome_watchdog.rows.find((entry) => entry.lane_id === "treasury_tga").state = "overdue";
+  const stateErrors = [];
+  checkOutcomeWatchdog(stateTamper, stateErrors);
+  assert.ok(stateErrors.some((message) => /treasury_tga: outcome state overdue differs from current/.test(message)),
+    "a state that disagrees with the calendar recomputation must fail closed");
+
+  const flatClockTamper = rootDoc();
+  const tgaRow = flatClockTamper.outcome_watchdog.rows.find((entry) => entry.lane_id === "treasury_tga");
+  tgaRow.age_hours = 47;
+  tgaRow.state = "overdue";
+  flatClockTamper.outcome_watchdog.counts = { monitored: 5, current: 2, overdue: 2, unobservable: 1 };
+  flatClockTamper.outcome_watchdog.status = "overdue";
+  const flatClockErrors = [];
+  checkOutcomeWatchdog(flatClockTamper, flatClockErrors);
+  assert.ok(flatClockErrors.some((message) => /treasury_tga: outcome age_hours differs from the KPI clock/.test(message)),
+    "a flat wall-clock age on a business-day lane must fail closed");
+
+  const evidenceRemoved = rootDoc();
+  evidenceRemoved.publication = { schema_version: "fenok-kpi-publication-outcomes/v1", families: [] };
+  const evidenceErrors = [];
+  checkOutcomeWatchdog(evidenceRemoved, evidenceErrors);
+  assert.ok(evidenceErrors.some((message) => /stockanalysis_etf_detail: outcome advance_basis publish_outcome differs from null/.test(message)),
+    "a publish_outcome row without the publication evidence must fail closed");
+  assert.ok(evidenceErrors.some((message) => /advance_bases do not reconcile/.test(message)));
+
+  const relabeled = rootDoc();
+  const detailRow = relabeled.outcome_watchdog.rows.find((entry) => entry.lane_id === "stockanalysis_etf_detail");
+  detailRow.source_as_of = detailRow.last_advance; // publication relabeled as the source date
+  const relabeledErrors = [];
+  checkOutcomeWatchdog(relabeled, relabeledErrors);
+  assert.ok(relabeledErrors.some((message) => /stockanalysis_etf_detail: outcome source_as_of must preserve the canonical file source_as_of verbatim/.test(message)));
+  assert.ok(relabeledErrors.some((message) => /stockanalysis_etf_detail: outcome advance_basis publish_outcome contradicts a non-null source_as_of/.test(message)));
+
+  const legacyBasis = rootDoc();
+  legacyBasis.outcome_watchdog.basis = "canonical_file_source_as_of";
+  const legacyErrors = [];
+  checkOutcomeWatchdog(legacyBasis, legacyErrors);
+  assert.deepEqual(legacyErrors, ["outcome_watchdog basis must be per_row_advance_basis"]);
+  ok("outcome watchdog checker re-derives calendar/publication/generated_at rows and fails closed on contradiction or tamper");
+}
+
+// B-OUTCOME-CLOCKS (iv): end to end through the real build path (runBuilder on
+// a hermetic root): a persisted publish-outcome shard tail and a source-dateless
+// lane's generated_at reach the KPI outcome watchdog with the right basis, the
+// publication block is built BEFORE the watchdog, and the real checker accepts
+// the built root while rejecting a tampered basis.
+{
+  const now = "2026-07-14T12:00:00.000Z";
+  const tmp = mkTmp("outcome-clocks-e2e");
+  const slickchartsLiveRoot = mkTmp("outcome-clocks-e2e-slickcharts");
+  fs.cpSync(
+    path.join(HERMETIC_FIXTURE_ROOT, "data", "slickcharts"),
+    path.join(slickchartsLiveRoot, "data", "slickcharts"),
+    { recursive: true },
+  );
+  const installedReport = structuredClone(DETECTION_BASELINE_REPORT);
+  const universeGeneratedAt = "2026-07-14T00:00:00Z"; // 12h before now -> current on the daily cadence
+  const universeRow = installedReport.lanes.find((item) => item.id === "stockanalysis_etf_universe");
+  universeRow.artifact = { ...universeRow.artifact, generated_at: universeGeneratedAt };
+  const fallbackRow = installedReport.lanes.find((item) => item.id === "yahoo_etf_fallback");
+  fallbackRow.artifact = { ...fallbackRow.artifact, generated_at: null }; // honest null: nothing to age
+  writeJson(path.join(tmp, "data", "admin", "data-supply-detection-floor.json"), installedReport);
+  const publishedAt = "2026-07-14T02:29:08.285Z"; // 9.51h before now
+  const shardRecord = (result, observedAt) => ({
+    family: "stockanalysis-etf-detail",
+    result,
+    generation_id: null,
+    receipt_id: null,
+    pointer_before: null,
+    pointer_after: null,
+    gate_before: "ok",
+    gate_after: "ok",
+    observed_at: observedAt,
+    source_as_of: null,
+    binding: null,
+  });
+  writeJson(path.join(tmp, "data", "admin", "data-supply-state", "publish-outcomes", "stockanalysis-etf-detail.json"), {
+    schema_version: "plane-publish-outcome-shard/v2",
+    family: "stockanalysis-etf-detail",
+    records: [shardRecord("failed", "2026-07-13T02:29:08.285Z"), shardRecord("published", publishedAt)],
+  });
+  writeReadyRecoveryIndex(tmp, "yahoo-hourly-ticker", "yahoo_hourly_ticker", ["TQQQ.json", "SOXL.json"]);
+  writeReadyRecoveryIndex(tmp, "us-indices-daily", "us_indices_daily", ["sp500.json", "nasdaq.json", "nasdaq100.json", "sox.json"]);
+  writeReadySlickchartsComposite(tmp, "2026-07-14T11:00:00Z", slickchartsLiveRoot);
+  const { root, public: pub } = runBuilder(tmp, {}, now, { slickchartsRepoRoot: slickchartsLiveRoot });
+
+  assert.equal(root.publication.families.find((entry) => entry.family === "stockanalysis-etf-detail")?.result, "published",
+    "the shard tail (latest observed_at) is the publication evidence");
+  assert.equal(root.outcome_watchdog.basis, "per_row_advance_basis");
+  const rows = new Map(root.outcome_watchdog.rows.map((entry) => [entry.lane_id, entry]));
+  const detail = rows.get("stockanalysis_etf_detail");
+  assert.equal(detail.advance_basis, "publish_outcome");
+  assert.equal(detail.last_advance, publishedAt);
+  assert.equal(detail.age_hours, 9.51);
+  assert.equal(detail.state, "current", "a missing dateless artifact with a successful publish tail is an observed advance");
+  assert.equal(detail.source_as_of, null);
+  assert.equal(root.lanes.find((item) => item.id === "stockanalysis_etf_detail").artifact.source_as_of, null,
+    "publication never becomes the lane's source date");
+  const universe = rows.get("stockanalysis_etf_universe");
+  assert.equal(universe.advance_basis, "canonical_file_generated_at");
+  assert.equal(universe.last_advance, universeGeneratedAt);
+  assert.equal(universe.age_hours, 12);
+  assert.equal(universe.state, "current");
+  assert.equal(universe.source_as_of, null);
+  assert.deepEqual(root.lanes.find((item) => item.id === "stockanalysis_etf_universe").artifact, {
+    source_as_of: null,
+    source_as_of_reason: "dateless_by_provider",
+    generated_at: universeGeneratedAt,
+  }, "mapDetectionFloorRow passes the floor's generated_at through verbatim");
+  const fallback = rows.get("yahoo_etf_fallback");
+  assert.equal(fallback.state, "unobservable");
+  assert.equal(fallback.advance_basis, null);
+  assert.equal(root.lanes.find((item) => item.id === "yahoo_etf_fallback").artifact.generated_at, null);
+  const tga = rows.get("treasury_tga");
+  assert.equal(tga.advance_basis, "canonical_file_source_as_of");
+  assert.equal(tga.calendar, "us_federal_business");
+  assert.equal(tga.source_as_of, installedReport.lanes.find((item) => item.id === "treasury_tga").artifact.source_as_of);
+  assert.equal(tga.last_advance, tga.source_as_of);
+  assert.equal(pub.outcome_watchdog.rows.find((entry) => entry.lane_id === "stockanalysis_etf_detail").advance_basis, "publish_outcome",
+    "the public projection carries the per-row basis");
+
+  const builtErrors = [];
+  checkOutcomeWatchdog(root, builtErrors, { dataRoot: path.join(tmp, "data") });
+  assert.deepEqual(builtErrors, [], "the real checker accepts the built root's outcome watchdog");
+  const forged = structuredClone(root);
+  forged.publication.families.find((item) => item.family === "stockanalysis-etf-detail").observed_at = "2026-07-14T11:00:00Z";
+  forged.outcome_watchdog = buildOutcomeWatchdog(now, forged.lanes, undefined, { publication: forged.publication });
+  const forgedErrors = [];
+  checkOutcomeWatchdog(forged, forgedErrors, { dataRoot: path.join(tmp, "data") });
+  assert.ok(forgedErrors.some((message) => message.includes("publication differs from canonical publish-outcome shards")), "internally consistent forged publication must fail persisted-source parity");
+  const tamperedRoot = structuredClone(root);
+  tamperedRoot.outcome_watchdog.rows.find((entry) => entry.lane_id === "treasury_tga").advance_basis = "publish_outcome";
+  const tamperedErrors = [];
+  checkOutcomeWatchdog(tamperedRoot, tamperedErrors);
+  assert.ok(tamperedErrors.some((message) => /treasury_tga: outcome advance_basis publish_outcome contradicts a non-null source_as_of/.test(message)));
+  ok("publish-outcome shard tail and dateless generated_at reach the outcome watchdog end to end with honest bases");
+}
+
+{
+  const now = "2026-07-14T12:00:00Z";
+  const publication = { families: [{ family: "stockanalysis-etf-detail", result: "published", observed_at: "2026-07-14T11:00:00Z", gate_after: "ok" }] };
+  const localFuture = buildOutcomeWatchdog("2026-07-14T01:00:00Z", [{ id: "treasury_tga", artifact: { source_as_of: "2026-07-14" } }]).rows[0];
+  assert.equal(localFuture.advance_basis, null, "a date still in the future on the lane calendar is not a source advance");
+  assert.equal(localFuture.state, "unobservable");
+  for (const sourceAsOf of ["not-a-date", "2026-02-30", "2026-07-15", "2026-07-15T00:00:00Z", "2026-07-13T24:00:00Z"]) {
+    const laneRows = [{ id: "stockanalysis_etf_detail", artifact: { source_as_of: sourceAsOf } }];
+    const row = buildOutcomeWatchdog(now, laneRows, undefined, { publication }).rows[0];
+    assert.equal(row.advance_basis, "publish_outcome", `${sourceAsOf} must not block a valid fallback clock`);
+    assert.equal(row.source_as_of, sourceAsOf, "invalid source evidence remains verbatim, never relabeled");
+    assert.equal(row.age_hours, 1);
+    assert.equal(buildOutcomeWatchdog(now, laneRows).rows[0].state, "unobservable", "invalid/future source alone is never current");
+  }
+  const tmp = mkTmp("outcome-clock-invalid-shards");
+  const outcomeDir = path.join(tmp, "data", "admin", "data-supply-state", "publish-outcomes");
+  const record = { family: "stockanalysis-etf-detail", result: "published", generation_id: null, receipt_id: null, pointer_before: null, pointer_after: null, gate_before: "ok", gate_after: "ok", observed_at: "2026-07-14T11:00:00Z", source_as_of: null, binding: null };
+  const shard = { schema_version: "plane-publish-outcome-shard/v2", family: record.family, records: [record] };
+  const file = path.join(outcomeDir, "stockanalysis-etf-detail.json");
+  for (const invalid of [{ ...shard, schema_version: "invented" }, { ...shard, records: [{ family: record.family, result: "published", observed_at: record.observed_at }] }]) {
+    writeJson(file, invalid);
+    assert.deepEqual(buildPublicationOutcomes({ dataRoot: path.join(tmp, "data") }).families, [], "malformed persisted publication is not advancement evidence");
+  }
+  writeJson(file, { ...shard, family: "yahoo-etf-fallback", records: [{ ...record, family: "yahoo-etf-fallback" }] });
+  assert.deepEqual(buildPublicationOutcomes({ dataRoot: path.join(tmp, "data") }).families, [], "publication family must match the persisted filename");
+  for (const schema of ["plane-publish-outcome-shard/v1", "plane-publish-outcome-shard/v2"]) {
+    writeJson(file, { ...shard, schema_version: schema });
+    assert.equal(buildPublicationOutcomes({ dataRoot: path.join(tmp, "data") }).families[0]?.result, "published", "valid historical and current publication schemas remain readable");
+  }
+  ok("invalid/future source clocks and forged publication evidence cannot manufacture advancement");
 }
 
 console.log(`\n# ${passed} fixtures passed`);

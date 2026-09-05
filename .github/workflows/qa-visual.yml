@@ -74,6 +74,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git rev-parse --show-toplevel
           node scripts/build-ink4-contrast-fixture.mjs
+          node --input-type=module -e 'import { emitDetectionExpectedFixture } from "../scripts/build-data-supply-detection-floor.mjs"; emitDetectionExpectedFixture();'
           npm run qa:journey-continuity
           node ../scripts/build-guru-holders-index.mjs
           repo_root="$(git rev-parse --show-toplevel)"
@@ -185,6 +186,8 @@ jobs:
           name: investor-derived-evidence
           path: |
             100xfenok-next/scripts/fixtures/ink4-contrast-sites.json
+            scripts/fixtures/data_supply/detection_floor/cases.expected.json
+            100xfenok-next/public/data/admin/fenok-data-health-kpi.json
             data/sec-13f/analytics/guru_holders_index.json
             data/admin/fenok-data-health-kpi.json
             data/admin/data-supply-detection-floor.json

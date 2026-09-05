@@ -556,6 +556,29 @@ function reasonResult(reason, extra = {}) {
   return { status, reason, ...extra };
 }
 
+function honestGeneratedAt(document) {
+  const value = isPlainObject(document) ? document.generated_at : null;
+  if (typeof value !== "string" || !RFC3339_UTC.test(value)) return null;
+  try {
+    strictUtc(value, "generated_at");
+  } catch {
+    return null;
+  }
+  return value;
+}
+
+// A lane/member is generated only as recently as its oldest required input.
+// Missing, future, or unreadable members withhold the aggregate clock.
+export function foldGeneratedAt(rows, nowValue) {
+  if (!rows.some((row) => Object.hasOwn(row, "generated_at"))
+    || rows.some((row) => row.source_as_of !== null)) return {};
+  const nowMs = Date.parse(nowValue);
+  const values = rows.map((row) => honestGeneratedAt(row));
+  if (!Number.isFinite(nowMs) || rows.some((row) => !["ready", "stale"].includes(row.status))
+    || values.some((value) => value === null || Date.parse(value) > nowMs)) return { generated_at: null };
+  return { generated_at: values.reduce((oldest, value) => Date.parse(value) < Date.parse(oldest) ? value : oldest) };
+}
+
 function evaluateArtifactFile(contract, resolved, artifactRootInfo, fsModule = fs) {
   let document;
   let fd = null;
@@ -586,7 +609,13 @@ function evaluateArtifactFile(contract, resolved, artifactRootInfo, fsModule = f
     const reason = assertion.kind === "min_rows" || assertion.kind === "min_keys" || assertion.kind === "non_empty_series" ? "empty_payload" : "schema_drift";
     return reasonResult(reason, { source_as_of: null });
   }
-  if (contract.source_selector.kind === "not_applicable") return reasonResult("ok", { source_as_of: null, source_required: false });
+  if (contract.source_selector.kind === "not_applicable") {
+    // B-OUTCOME-CLOCKS: a source-dateless artifact still records when it was
+    // generated. Project that clock honestly (canonical UTC or null) so the
+    // KPI outcome watchdog can observe the lane's advance without ever
+    // relabeling it as a provider source date.
+    return reasonResult("ok", { source_as_of: null, source_required: false, generated_at: honestGeneratedAt(document) });
+  }
   let source;
   try {
     source = extractSourceAsOf(document, contract.source_selector);
@@ -1410,6 +1439,7 @@ function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPa
   const artifactWorst = worstResult(artifacts);
   const sourceAsOf = foldSourceTimes(artifacts, lane.freshness);
   const hasSourceContract = artifacts.some((artifact) => artifact.source_required !== false);
+  const generatedAtProjection = hasSourceContract ? {} : foldGeneratedAt(artifacts, now);
   const providerDatelessAttemptContract = (
     artifactWorst.status === "ready"
     && !hasSourceContract
@@ -1447,6 +1477,7 @@ function evaluateMember(lane, member, attemptsByKey, artifactRootInfo, claimedPa
       source_as_of: sourceAsOf,
       age: freshness.age ?? null,
       unit: lane.freshness.unit,
+      ...generatedAtProjection,
     },
   };
 }
@@ -1510,6 +1541,7 @@ export function buildDetectionReport({
         source_as_of: laneSource,
         age: artifactWorst.age,
         unit: lane.freshness.unit,
+        ...foldGeneratedAt(members.map((member) => member.artifact), now),
       },
       affected_surface_ids: [...lane.affected_surface_ids],
     };
@@ -1565,7 +1597,13 @@ function validateEndpointReport(row, context) {
 }
 
 function validateArtifactReport(row, context, freshnessPolicy) {
-  exactKeys(row, ["status", "reason", "source_as_of", "age", "unit"], context);
+  exactKeys(row, ["status", "reason", "source_as_of", "age", "unit"], context, ["generated_at"]);
+  if (Object.hasOwn(row, "generated_at")) {
+    // Optional, source-dateless only: the artifact's own generation clock,
+    // canonical UTC or null. It is never a stand-in for source_as_of.
+    if (row.source_as_of !== null) fail("schema_error", `${context}.generated_at is only projected for source-dateless artifacts`);
+    if (row.generated_at !== null) strictUtc(row.generated_at, `${context}.generated_at`);
+  }
   validateStatusReason(row, context, { allowUnavailableSchemaDrift: row.source_as_of === null });
   if (row.unit !== freshnessPolicy.unit) fail("schema_error", `${context}.unit does not match config`);
   if (row.source_as_of !== null) strictUtc(row.source_as_of, `${context}.source_as_of`, { allowDate: true });

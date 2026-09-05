@@ -3,12 +3,14 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   buildFetchCronAttemptCoverage,
+  evaluateFreshness,
   validateAttemptShard,
   validateDetectionReport,
 } from "./build-data-supply-detection-floor.mjs";
 import { DATA_SUPPLY_DETECTION_CONFIG } from "./lib/data-supply-detection-config.mjs";
 import { hasStructuredGithubRunBinding } from "./lib/data-supply-lkg-store.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
+import { validatePublishOutcomeShard } from "./lib/publish-outcome-shard.mjs";
 import {
   SLICKCHARTS_COMPOSITE_MEMBERS,
   inspectSlickchartsCompositeLiveIntegrity,
@@ -472,10 +474,139 @@ export function slaStatusForAge(age, maxStaleness) {
   return age <= Number(maxStaleness) ? "ready" : "stale";
 }
 
-export function buildOutcomeWatchdog(nowIso, laneRows, registry = LANE_REGISTRY) {
+// ── Outcome watchdog (B-OUTCOME-CLOCKS) ─────────────────────────────────────
+//
+// Each monitored lane resolves ONE advance clock, first hit wins:
+//   (a) artifact.source_as_of            -> "canonical_file_source_as_of"
+//   (b) registry-bound publish-outcome family whose latest result is a
+//       successful publish (observed_at valid, not future)
+//                                        -> "publish_outcome"
+//   (c) artifact.generated_at (valid, not future)
+//                                        -> "canonical_file_generated_at"
+//   (d) none                             -> last_advance null, "unobservable"
+// The row keeps source_as_of verbatim (null under b/c): publication or
+// generation time is an observed advance, never a relabeled source date.
+// Age: lanes whose detection freshness policy is business_days are folded by
+// the lane's own declared calendar through the floor's evaluateFreshness
+// (age = business days x 24); every other lane keeps flat wall-clock hours.
+export const OUTCOME_WATCHDOG_BASIS = "per_row_advance_basis";
+export const OUTCOME_ADVANCE_BASES = Object.freeze([
+  "canonical_file_source_as_of",
+  "publish_outcome",
+  "canonical_file_generated_at",
+]);
+// Successful real publishes per scripts/lib/publish-outcome-shard.mjs
+// (PUBLISH_OUTCOME_RESULTS): gate_blocked/failed never advance a lane.
+export const PUBLISH_OUTCOME_SUCCESS_RESULTS = Object.freeze(["published", "resumed"]);
+const PUBLISH_OUTCOME_SHARD_PATTERN = /^data\/admin\/data-supply-state\/publish-outcomes\/([a-z][a-z0-9_-]{0,95})\.json$/;
+const OUTCOME_ADVANCE_STAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+
+export function publishOutcomeFamilyForLane(registryLane) {
+  const shards = Array.isArray(registryLane?.commit_shards) ? registryLane.commit_shards : [];
+  for (const shard of shards) {
+    const match = typeof shard === "string" ? shard.match(PUBLISH_OUTCOME_SHARD_PATTERN) : null;
+    if (match) return match[1];
+  }
+  return null;
+}
+
+// A canonical UTC stamp that is real and not after the KPI clock; else null.
+export function observedAdvanceMs(value, nowMs) {
+  if (typeof value !== "string" || !OUTCOME_ADVANCE_STAMP.test(value)) return null;
+  if (!isRealCalendarDate(value.slice(0, 10))) return null;
+  const ms = new Date(value).getTime();
+  return Number.isFinite(ms) && ms <= nowMs && new Date(ms).toISOString().slice(0, 19) === value.slice(0, 19) ? ms : null;
+}
+
+export function sourceAdvanceMs(value, nowMs, freshness = null, calendars = FETCH_CRON_CALENDARS) {
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    if (!isRealCalendarDate(value)) return null;
+    const ms = Date.parse(value);
+    if (!Number.isFinite(ms) || ms > nowMs || !Number.isFinite(nowMs)) return null;
+    if (freshness && evaluateFreshness(value, freshness, new Date(nowMs).toISOString(), calendars).reason === "future_source") return null;
+    return ms;
+  }
+  return observedAdvanceMs(value, nowMs);
+}
+
+export function evaluateOutcomeWatchdogRow({
+  registryLane,
+  laneEntry,
+  publicationFamily = null,
+  nowIso,
+  calendars = FETCH_CRON_CALENDARS,
+}) {
+  const nowMs = new Date(nowIso).getTime();
+  const freshness = DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === registryLane.id)?.freshness ?? null;
+  const sourceAsOf = laneEntry?.artifact?.source_as_of ?? null;
+  let lastAdvance = null;
+  let advanceBasis = null;
+  let advanceMs = NaN;
+  const sourceMs = sourceAdvanceMs(sourceAsOf, nowMs, freshness, calendars);
+  if (sourceMs !== null) {
+    lastAdvance = sourceAsOf;
+    advanceBasis = "canonical_file_source_as_of";
+    advanceMs = sourceMs;
+  } else {
+    const publishedMs = publicationFamily && PUBLISH_OUTCOME_SUCCESS_RESULTS.includes(publicationFamily.result)
+      ? observedAdvanceMs(publicationFamily.observed_at, nowMs)
+      : null;
+    const generatedMs = publishedMs === null ? observedAdvanceMs(laneEntry?.artifact?.generated_at, nowMs) : null;
+    if (publishedMs !== null) {
+      lastAdvance = publicationFamily.observed_at;
+      advanceBasis = "publish_outcome";
+      advanceMs = publishedMs;
+    } else if (generatedMs !== null) {
+      lastAdvance = laneEntry.artifact.generated_at;
+      advanceBasis = "canonical_file_generated_at";
+      advanceMs = generatedMs;
+    }
+  }
+  const cadenceHours = OUTCOME_WATCHDOG_CADENCE_HOURS[registryLane.cadence.kind];
+  const thresholdHours = cadenceHours * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER;
+  let ageHours = null;
+  if (Number.isFinite(advanceMs) && Number.isFinite(nowMs)) {
+    if (freshness?.unit === "business_days") {
+      const folded = evaluateFreshness(lastAdvance, freshness, nowIso, calendars);
+      ageHours = Number.isFinite(folded.age) ? folded.age * 24 : null;
+    } else {
+      ageHours = Math.round(((nowMs - advanceMs) / 3600000) * 100) / 100;
+    }
+  }
+  const state = ageHours === null
+    ? "unobservable"
+    : ageHours > thresholdHours ? "overdue" : "current";
+  return {
+    lane_id: registryLane.id,
+    cadence_kind: registryLane.cadence.kind,
+    cadence_hours: cadenceHours,
+    threshold_hours: thresholdHours,
+    last_advance: lastAdvance,
+    age_hours: ageHours,
+    state,
+    source_as_of: sourceAsOf,
+    advance_basis: advanceBasis,
+    calendar: freshness?.calendar ?? null,
+  };
+}
+
+export function publicationFamiliesByName(publication) {
+  const families = Array.isArray(publication?.families) ? publication.families : [];
+  return new Map(families
+    .filter((entry) => entry && typeof entry === "object" && !Array.isArray(entry) && typeof entry.family === "string")
+    .map((entry) => [entry.family, entry]));
+}
+
+export function buildOutcomeWatchdog(
+  nowIso,
+  laneRows,
+  registry = LANE_REGISTRY,
+  { publication = null, calendars = null } = {},
+) {
   const nowMs = new Date(nowIso).getTime();
   if (!Number.isFinite(nowMs)) throw new Error(`outcome watchdog now is invalid: ${nowIso}`);
   const lanesById = new Map((Array.isArray(laneRows) ? laneRows : []).map((row) => [row?.id, row]));
+  const familiesByName = publicationFamiliesByName(publication);
   const rows = registry.lanes
     .filter((entry) => entry.enforcement === "live"
       && entry.lane_class === "detection_floor"
@@ -483,34 +614,27 @@ export function buildOutcomeWatchdog(nowIso, laneRows, registry = LANE_REGISTRY)
     .flatMap((entry) => {
       const laneEntry = lanesById.get(entry.id);
       if (!laneEntry) return [];
-      const lastAdvance = laneEntry?.artifact?.source_as_of ?? null;
-      const advanceMs = typeof lastAdvance === "string" ? new Date(lastAdvance).getTime() : NaN;
-      const cadenceHours = OUTCOME_WATCHDOG_CADENCE_HOURS[entry.cadence.kind];
-      const thresholdHours = cadenceHours * OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER;
-      const ageHours = Number.isFinite(advanceMs)
-        ? Math.round(((nowMs - advanceMs) / 3600000) * 100) / 100
-        : null;
-      const state = ageHours === null
-        ? "unobservable"
-        : ageHours > thresholdHours ? "overdue" : "current";
-      return [{
-        lane_id: entry.id,
-        cadence_kind: entry.cadence.kind,
-        cadence_hours: cadenceHours,
-        threshold_hours: thresholdHours,
-        last_advance: lastAdvance,
-        age_hours: ageHours,
-        state,
-      }];
+      const family = publishOutcomeFamilyForLane(entry);
+      return [evaluateOutcomeWatchdogRow({
+        registryLane: entry,
+        laneEntry,
+        publicationFamily: family ? familiesByName.get(family) ?? null : null,
+        nowIso,
+        calendars: calendars ?? FETCH_CRON_CALENDARS,
+      })];
     });
   const counts = rows.reduce((acc, row) => {
     acc[row.state] += 1;
     return acc;
   }, { current: 0, overdue: 0, unobservable: 0 });
+  const advanceBases = rows.reduce((acc, row) => {
+    if (row.advance_basis !== null) acc[row.advance_basis] += 1;
+    return acc;
+  }, Object.fromEntries(OUTCOME_ADVANCE_BASES.map((basis) => [basis, 0])));
   return {
     schema_version: "lane-outcome-watchdog/v1",
     evaluated_at: nowIso,
-    basis: "canonical_file_source_as_of",
+    basis: OUTCOME_WATCHDOG_BASIS,
     threshold_multiplier: OUTCOME_WATCHDOG_THRESHOLD_MULTIPLIER,
     status: counts.overdue > 0 ? "overdue" : "ready",
     counts: {
@@ -519,6 +643,7 @@ export function buildOutcomeWatchdog(nowIso, laneRows, registry = LANE_REGISTRY)
       overdue: counts.overdue,
       unobservable: counts.unobservable,
     },
+    advance_bases: advanceBases,
     rows,
   };
 }
@@ -1507,6 +1632,21 @@ export function mapDetectionFloorRow(row, recoveryState = undefined, options = {
   if (!providerDateless && (row.artifact.status === "ready" || row.artifact.status === "stale") && sourceAsOf === null) {
     throw new Error(`detection floor ${laneId} artifact status contradicts null source_as_of`);
   }
+  // B-OUTCOME-CLOCKS: the floor projects generated_at only for source-dateless
+  // artifacts. Pass it through verbatim (never invent it) so the outcome
+  // watchdog can observe the lane's advance without touching source_as_of.
+  const generatedAtCarried = Object.hasOwn(row.artifact, "generated_at");
+  if (generatedAtCarried && row.artifact.generated_at !== null
+    && !(typeof row.artifact.generated_at === "string"
+      && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(row.artifact.generated_at)
+      && isRealCalendarDate(row.artifact.generated_at.slice(0, 10))
+      && Number.isFinite(new Date(row.artifact.generated_at).getTime()))) {
+    throw new Error(`detection floor ${laneId} artifact.generated_at is malformed`);
+  }
+  if (generatedAtCarried && sourceAsOf !== null) {
+    throw new Error(`detection floor ${laneId} artifact.generated_at is only projected for source-dateless artifacts`);
+  }
+  const generatedAtProjection = generatedAtCarried ? { generated_at: row.artifact.generated_at } : {};
 
   const targetRecovery = Object.hasOwn(DETECTION_RECOVERY_CONFIG, row.id) && recoveryState !== undefined;
   const recoveryRetrySet = targetRecovery ? null : projectRecoveryRetrySet(recoveryState, row.id);
@@ -1539,8 +1679,8 @@ export function mapDetectionFloorRow(row, recoveryState = undefined, options = {
     ...result,
     reason: targetRecovery && row.reason === "ok" && result.status !== "ready" ? "recovery_degraded" : row.reason,
     artifact: providerDateless
-      ? { source_as_of: sourceAsOf, source_as_of_reason: "dateless_by_provider" }
-      : { source_as_of: sourceAsOf },
+      ? { source_as_of: sourceAsOf, source_as_of_reason: "dateless_by_provider", ...generatedAtProjection }
+      : { source_as_of: sourceAsOf, ...generatedAtProjection },
   };
 }
 
@@ -3565,7 +3705,9 @@ function readPublishOutcomeShards({ dataRoot = DATA_ROOT } = {}) {
   for (const name of [...names].sort()) {
     if (!name.endsWith(".json")) continue;
     try {
-      shards.push(JSON.parse(fs.readFileSync(path.join(dataRoot, PUBLISH_OUTCOME_STATE_DIR, name), "utf8")));
+      const shard = JSON.parse(fs.readFileSync(path.join(dataRoot, PUBLISH_OUTCOME_STATE_DIR, name), "utf8"));
+      validatePublishOutcomeShard(shard, name.slice(0, -5));
+      shards.push(shard);
     } catch {
       continue;
     }
@@ -3691,7 +3833,10 @@ export function buildPayload(
       Object.assign(laneEntry.details, LAST_ATTEMPT_STORELESS_DETAIL);
     }
   }
-  const outcomeWatchdog = buildOutcomeWatchdog(nowIso, lanes);
+  // Publication outcomes are read before the watchdog so a lane whose canonical
+  // file carries no source date can still observe its successful publish.
+  const publication = buildPublicationOutcomes({ dataRoot });
+  const outcomeWatchdog = buildOutcomeWatchdog(nowIso, lanes, LANE_REGISTRY, { publication });
   const { overallStatus, totals, deploymentIntegrity } = summarize(lanes);
   const nonReadyChecks = lanes.flatMap((item) => (item.checks || [])
     .filter((entry) => entry.status !== "ready")
@@ -3750,7 +3895,7 @@ export function buildPayload(
     deployment_integrity: deploymentIntegrity,
     outcome_watchdog: outcomeWatchdog,
     runtime,
-    publication: buildPublicationOutcomes({ dataRoot }),
+    publication,
     source_sla: sourceSla,
     source_artifacts: buildSourceArtifacts({
       coverageIndex,
