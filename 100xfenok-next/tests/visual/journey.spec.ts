@@ -1,11 +1,24 @@
 import { test, expect } from "@playwright/test";
-import type { Page, TestInfo } from "@playwright/test";
+import type { Locator, Page, TestInfo } from "@playwright/test";
 
 async function attachJourneyScreenshot(page: Page, testInfo: TestInfo, name: string) {
   await testInfo.attach(name, {
     body: await page.screenshot({ fullPage: false }),
     contentType: "image/png",
   });
+}
+
+async function selectCard(card: Locator, selected: boolean) {
+  const checkbox = card.locator('input[type="checkbox"]').first();
+  await expect(checkbox).toBeVisible();
+  if (await checkbox.isChecked() !== selected) {
+    const label = card.locator('[data-screener-checkbox-target]').first();
+    // The label owns the existing 44px pointer target, including its overlay.
+    await label.evaluate((node) => node.scrollIntoView({ block: "center" }));
+    await label.click();
+  }
+  if (selected) await expect(checkbox).toBeChecked();
+  else await expect(checkbox).not.toBeChecked();
 }
 
 test("journey: stock investor pivot keeps the canonical tab and ticker", async ({ page }, testInfo) => {
@@ -27,18 +40,18 @@ test("journey: stock investor pivot keeps the canonical tab and ticker", async (
 
 test("journey: screener stock return keeps the exact filter URL and selected ticker", async ({ page }, testInfo) => {
   test.setTimeout(90_000);
-  const source = "/screener?ticker=NVDA&sector=Technology&mode=analyze";
+  const source = `/screener?ticker=NVDA&sector=${encodeURIComponent("반도체")}&mode=analyze`;
   const response = await page.goto(source, { waitUntil: "domcontentloaded" });
   expect(response?.status(), "screener response").toBeLessThan(400);
 
-  const cardMode = page.locator('[data-screener-view-mode-option="card"]:visible').first();
-  await expect(cardMode).toBeVisible();
-  await cardMode.click();
-  const card = page.locator('[data-screener-stock-card]:visible').filter({ hasText: "NVDA" }).first();
   const mobile = (page.viewportSize()?.width ?? 1440) <= 920;
-  const checkbox = card.locator('input[type="checkbox"]').first();
-  await expect(checkbox).toBeVisible();
-  await checkbox.check();
+  if (!mobile) {
+    const cardMode = page.locator('[data-screener-view-mode-option="card"]:visible').first();
+    await expect(cardMode).toBeVisible();
+    await cardMode.click();
+  }
+  const card = page.locator('[data-screener-stock-card]:visible').filter({ hasText: "NVDA" }).first();
+  await selectCard(card, true);
   if (mobile) {
     const expand = card.getByRole("button", { name: /NVDA 상세/ });
     if (await expand.getAttribute("aria-expanded") !== "true") await expand.click();
@@ -62,9 +75,11 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
   await expect(explicitBack).toHaveAttribute("aria-label", "스크리너로 돌아가기");
   await explicitBack.click();
   await expect(page).toHaveURL(expectedSource.href);
-  const restoredCardMode = page.locator('[data-screener-view-mode-option="card"]:visible').first();
-  await expect(restoredCardMode).toBeVisible();
-  await expect(restoredCardMode).toHaveAttribute("aria-pressed", "true");
+  if (!mobile) {
+    const restoredCardMode = page.locator('[data-screener-view-mode-option="card"]:visible').first();
+    await expect(restoredCardMode).toBeVisible();
+    await expect(restoredCardMode).toHaveAttribute("aria-pressed", "true");
+  }
   await expect(page.locator('[data-screener-mode="analyze"]')).toHaveAttribute("data-journey-ready", "true");
   const restoredCard = page.locator('[data-screener-stock-card]:visible').filter({ hasText: "NVDA" }).first();
   await expect(restoredCard.locator('input[type="checkbox"]').first()).toBeChecked();
@@ -80,9 +95,11 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
   await expect(page).toHaveURL(/\/stock\/NVDA\?.*returnTo=/);
   await page.goBack();
   await expect(page).toHaveURL(expectedSource.href);
-  const backCardMode = page.locator('[data-screener-view-mode-option="card"]:visible').first();
-  await expect(backCardMode).toBeVisible();
-  await expect(backCardMode).toHaveAttribute("aria-pressed", "true");
+  if (!mobile) {
+    const backCardMode = page.locator('[data-screener-view-mode-option="card"]:visible').first();
+    await expect(backCardMode).toBeVisible();
+    await expect(backCardMode).toHaveAttribute("aria-pressed", "true");
+  }
   await expect(page.locator('[data-screener-mode="analyze"]')).toHaveAttribute("data-journey-ready", "true");
   const backCard = page.locator('[data-screener-stock-card]:visible').filter({ hasText: "NVDA" }).first();
   await expect(backCard.locator('input[type="checkbox"]').first()).toBeChecked();
@@ -91,7 +108,7 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
   await page.goBack();
   await expect(page.locator('[data-screener-mode="analyze"]')).toHaveAttribute("data-journey-ready", "true");
   await expect(backCard.locator('input[type="checkbox"]').first()).toBeChecked();
-  await backCard.locator('input[type="checkbox"]').first().uncheck();
+  await selectCard(backCard, false);
   if (mobile) {
     const expand = backCard.getByRole("button", { name: /NVDA 상세/ });
     if (await expand.getAttribute("aria-expanded") !== "true") await expand.click();
@@ -164,11 +181,11 @@ test("journey: default discovery retains its comparison selection", async ({ pag
 test("journey: late enrichment respects a changed selection", async ({ page }) => {
   test.setTimeout(90_000);
   await page.goto("/screener?mode=analyze&ticker=NVDA", { waitUntil: "domcontentloaded" });
-  await page.locator('[data-screener-view-mode-option="card"]:visible').first().click();
+  const mobile = (page.viewportSize()?.width ?? 1440) <= 920;
+  if (!mobile) await page.locator('[data-screener-view-mode-option="card"]:visible').first().click();
   const card = page.locator('[data-screener-stock-card]:visible').filter({ hasText: "NVDA" }).first();
   const checkbox = card.locator('input[type="checkbox"]').first();
-  await checkbox.check();
-  const mobile = (page.viewportSize()?.width ?? 1440) <= 920;
+  await selectCard(card, true);
   if (mobile) {
     const expand = card.getByRole("button", { name: /NVDA 상세/ });
     if (await expand.getAttribute("aria-expanded") !== "true") await expand.click();
@@ -186,8 +203,8 @@ test("journey: late enrichment respects a changed selection", async ({ page }) =
     await page.getByRole("link", { name: "스크리너로 돌아가기", exact: true }).filter({ visible: true }).click();
     await expect.poll(() => intercepted).toBe(true);
     await expect(checkbox).toBeVisible();
-    await checkbox.check();
-    await checkbox.uncheck();
+    await selectCard(card, true);
+    await selectCard(card, false);
     const responsePromise = page.waitForResponse((response) => response.url().includes("guru_holders_index.json"));
     release?.();
     const response = await responsePromise;
