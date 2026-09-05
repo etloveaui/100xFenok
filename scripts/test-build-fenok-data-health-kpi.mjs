@@ -5687,8 +5687,11 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   detailRow.source_as_of = detailRow.last_advance; // publication relabeled as the source date
   const relabeledErrors = [];
   checkOutcomeWatchdog(relabeled, relabeledErrors);
-  assert.ok(relabeledErrors.some((message) => /stockanalysis_etf_detail: outcome source_as_of must preserve the canonical file source_as_of verbatim/.test(message)));
-  assert.ok(relabeledErrors.some((message) => /stockanalysis_etf_detail: outcome advance_basis publish_outcome contradicts a non-null source_as_of/.test(message)));
+  // The canonical source remains null; the forged row is rejected by parity,
+  // while its unchanged publication basis still matches the canonical evidence.
+  assert.deepEqual(relabeledErrors, [
+    "stockanalysis_etf_detail: outcome source_as_of must preserve the canonical file source_as_of verbatim",
+  ]);
 
   const legacyBasis = rootDoc();
   legacyBasis.outcome_watchdog.basis = "canonical_file_source_as_of";
