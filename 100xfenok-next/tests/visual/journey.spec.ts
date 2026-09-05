@@ -58,7 +58,7 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
     await expect(card.locator('[id^="screener-mobile-detail-NVDA"]')).toBeVisible();
   }
   const detailLink = mobile
-    ? card.getByRole("link", { name: "종목 상세" })
+    ? card.getByRole("link", { name: "종목 상세", exact: true }).first()
     : card.getByRole("link", { name: "상세" }).first();
   const expectedSource = new URL(page.url());
   await expect(detailLink).toHaveAttribute("href", /returnTo=/);
@@ -89,7 +89,7 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
     await expect(restoredCard.locator('[id^="screener-mobile-detail-NVDA"]')).toBeVisible();
   }
   const restoredDetailLink = mobile
-    ? restoredCard.getByRole("link", { name: "종목 상세" })
+    ? restoredCard.getByRole("link", { name: "종목 상세", exact: true }).first()
     : restoredCard.getByRole("link", { name: "상세" }).first();
   await restoredDetailLink.click();
   await expect(page).toHaveURL(/\/stock\/NVDA\?.*returnTo=/);
