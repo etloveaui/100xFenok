@@ -3397,8 +3397,8 @@ async function collectRouteChecks(page, route) {
               }
             });
             for (let cellIndex = 1; cellIndex < cellRects.length; cellIndex += 1) {
-              if (cellRects[cellIndex - 1].right > cellRects[cellIndex].left + 1) {
-                failures.push({ check: "superinvestors-overlap-cell-collision", detail: `row=${index} cells=${cellIndex - 1}/${cellIndex} right=${Math.round(cellRects[cellIndex - 1].right)} nextLeft=${Math.round(cellRects[cellIndex].left)}` });
+              if (cellRects[cellIndex].left - cellRects[cellIndex - 1].right < 7) {
+                failures.push({ check: "superinvestors-overlap-cell-separation", detail: `row=${index} cells=${cellIndex - 1}/${cellIndex} right=${Math.round(cellRects[cellIndex - 1].right)} nextLeft=${Math.round(cellRects[cellIndex].left)}` });
               }
             }
           });
@@ -3462,6 +3462,29 @@ async function collectRouteChecks(page, route) {
       failures,
     };
   }, route);
+}
+
+async function collectCohortPaintProbe(page) {
+  const samples = [];
+  for (const delayMs of [100, 1000, 5000]) {
+    await page.waitForTimeout(delayMs);
+    samples.push(await page.evaluate(() => {
+      const panel = document.querySelector("[data-superinvestor-cohort-treemap]");
+      const canvas = panel?.querySelector("canvas");
+      if (!canvas) return { canvas: false, count: panel?.getAttribute("data-superinvestor-cohort-treemap-count") };
+      const rect = canvas.getBoundingClientRect();
+      const style = getComputedStyle(canvas);
+      let ink = 0;
+      try {
+        const pixels = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+        for (let i = 0; i < pixels.length; i += 64) {
+          if (pixels[i + 3] > 0 && Math.min(pixels[i], pixels[i + 1], pixels[i + 2]) < 240) ink += 1;
+        }
+      } catch (error) { return { canvas: true, error: String(error) }; }
+      return { canvas: true, width: rect.width, height: rect.height, backingWidth: canvas.width, backingHeight: canvas.height, ink, opacity: style.opacity, visibility: style.visibility };
+    }));
+  }
+  return samples;
 }
 
 async function collectScreenerExpandedChecks(page, route) {
@@ -4018,6 +4041,8 @@ try {
     const context = await browser.newContext(contextOptionsFor(viewport));
     await installQaPortfolio(context);
     const page = await context.newPage();
+    let routeErrors = [];
+    page.on("pageerror", (error) => routeErrors.push(String(error)));
 
     for (const [routeIndex, route] of routes.entries()) {
       const emulation = {
@@ -4037,6 +4062,7 @@ try {
         result.emulation = emulation;
       }
 
+      routeErrors = [];
       try {
         const navigationOptions = {
           waitUntil: outputDir ? "domcontentloaded" : "networkidle",
@@ -4070,6 +4096,13 @@ try {
         result.failures = checks.failures;
         result.viewportWidth = checks.viewportWidth;
         result.scrollWidth = checks.scrollWidth;
+        if (route.includes("/superinvestors?tab=stocks")) {
+          result.cohortPaint = await collectCohortPaintProbe(page);
+          const last = result.cohortPaint.at(-1);
+          if (!last?.canvas || !(last.ink > 20) || last.opacity === "0" || last.visibility === "hidden") {
+            result.failures.push({ check: "superinvestors-cohort-painted", detail: JSON.stringify(result.cohortPaint) });
+          }
+        }
         if (route.startsWith("/screener")) {
           const expandedChecks = await collectScreenerExpandedChecks(page, route);
           result.failures.push(...expandedChecks.failures);
@@ -4111,6 +4144,7 @@ try {
         }
       }
 
+      result.pageErrors = routeErrors.slice(0, 8);
       if (outputDir) {
         result.capturedUrl = page.url();
         try {
