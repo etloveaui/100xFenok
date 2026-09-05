@@ -60,7 +60,7 @@ jobs:
         run: npm ci
 
       # Owner-requested UI iteration must not repeatedly load production.
-      # Reuse the guarded runtime build and serve its checked-in public data
+      # Reuse the guarded production build and serve its checked-in public data
       # inside this one runner; browser requests to other origins are blocked.
       - name: Build isolated investor preview
         if: ${{ inputs.suite == 'investor-isolated' }}
@@ -73,7 +73,7 @@ jobs:
           git rev-parse --show-toplevel
           node scripts/build-ink4-contrast-fixture.mjs
           npm run qa:superinvestor-signal-scores
-          npm run build:runtime
+          npm run cf:build
 
       - name: Run isolated investor UI verification
         shell: bash
