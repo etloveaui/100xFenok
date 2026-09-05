@@ -64,7 +64,8 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
   await expect(page).toHaveURL(expectedSource.href);
   const restoredCardMode = page.locator('[data-screener-view-mode-option="card"]:visible').first();
   await expect(restoredCardMode).toBeVisible();
-  await restoredCardMode.click();
+  await expect(restoredCardMode).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator('[data-screener-mode="analyze"]')).toHaveAttribute("data-journey-ready", "true");
   const restoredCard = page.locator('[data-screener-stock-card]:visible').filter({ hasText: "NVDA" }).first();
   await expect(restoredCard.locator('input[type="checkbox"]').first()).toBeChecked();
   if (mobile) {
@@ -81,12 +82,14 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
   await expect(page).toHaveURL(expectedSource.href);
   const backCardMode = page.locator('[data-screener-view-mode-option="card"]:visible').first();
   await expect(backCardMode).toBeVisible();
-  await backCardMode.click();
+  await expect(backCardMode).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator('[data-screener-mode="analyze"]')).toHaveAttribute("data-journey-ready", "true");
   const backCard = page.locator('[data-screener-stock-card]:visible').filter({ hasText: "NVDA" }).first();
   await expect(backCard.locator('input[type="checkbox"]').first()).toBeChecked();
   await page.goForward();
   await expect(page).toHaveURL(/\/stock\/NVDA\?.*returnTo=/);
   await page.goBack();
+  await expect(page.locator('[data-screener-mode="analyze"]')).toHaveAttribute("data-journey-ready", "true");
   await expect(backCard.locator('input[type="checkbox"]').first()).toBeChecked();
   await backCard.locator('input[type="checkbox"]').first().uncheck();
   if (mobile) {
@@ -96,6 +99,7 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
   await backCard.getByRole("link", { name: mobile ? "종목 상세" : "상세", exact: true }).first().click();
   await expect(page).toHaveURL(/\/stock\/NVDA\?.*returnTo=/);
   await page.getByRole("link", { name: "스크리너로 돌아가기", exact: true }).filter({ visible: true }).click();
+  await expect(page.locator('[data-screener-mode="analyze"]')).toHaveAttribute("data-journey-ready", "true");
   await expect(backCard.locator('input[type="checkbox"]').first()).not.toBeChecked();
   await attachJourneyScreenshot(page, testInfo, "screener-return.png");
 });
@@ -151,6 +155,7 @@ test("journey: default discovery retains its comparison selection", async ({ pag
   await expect(page).toHaveURL(/\/stock\/[^/?]+\?.*returnTo=/);
   await page.getByRole("link", { name: "스크리너로 돌아가기", exact: true }).filter({ visible: true }).click();
   await expect(page.locator('[data-screener-mode="discover"]')).toBeVisible();
+  await expect(page.locator('[data-screener-mode="discover"]')).toHaveAttribute("data-journey-ready", "true");
   await expect(compare).toHaveAttribute("aria-pressed", "true");
   await attachJourneyScreenshot(page, testInfo, "discovery-return.png");
 });
