@@ -277,7 +277,7 @@ function LatestHoldingsMobileCards({ rows, changeMap }: { rows: HoldingRow[]; ch
     <div
       className="cpw5-super-mobile-cards"
       role="list"
-      aria-label="최신 보유 종목 모바일 요약"
+      aria-label="최신 보유 및 청산 종목 모바일 요약"
     >
       {rows.map((h) => (
         <article
@@ -370,7 +370,7 @@ function LatestHoldingsTable({ holdings, changes }: { holdings: InvestorHolding[
         className="cpw5-super-desktop-table scroll-hint-x -mx-1 px-1"
         role="region"
         tabIndex={0}
-        aria-label="최신 보유 종목 표 가로 스크롤"
+        aria-label="최신 보유 및 청산 종목 표 가로 스크롤"
       >
         <div className="max-h-[440px] overflow-y-auto">
         <table className="w-full min-w-[640px] text-xs">
@@ -889,7 +889,7 @@ function GuruDetailPanel({
         </div>
       ) : latest ? (
         <div className="mt-4">
-          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">Top 보유</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 · 청산 종목</p>
           <LatestHoldingsTable holdings={latest.holdings ?? []} changes={latest.changes_summary} />
         </div>
       ) : status === "private" ? (
