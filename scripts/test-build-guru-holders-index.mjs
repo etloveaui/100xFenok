@@ -5,7 +5,7 @@
 // so the test never reads or mutates the working tree's data payload.
 
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -39,9 +39,10 @@ function filing(quarter, holdings) {
   };
 }
 
-function holding(ticker, weight) {
+function holding(ticker, weight, cusip) {
   const row = { ticker };
   if (weight !== undefined) row.weight = weight;
+  if (cusip !== undefined) row.cusip = cusip;
   return row;
 }
 
@@ -76,13 +77,33 @@ try {
   writeJson("data/sec-13f/analytics/consensus.json", {
     metadata: {
       quarter: "2026-Q2",
-      total_investors: 6,
-      current_cohort_investors: 6,
+      total_investors: 10,
+      current_cohort_investors: 10,
     },
     consensus: {
       AAA: { holders_list: ["alpha", "beta", "gamma"] },
       XYZ: { holders_list: ["missing"] },
       BAD: { holders_list: ["invalid"] },
+      CUS: { holders_list: ["cusip"] },
+      NEW: { holders_list: ["conflict"] },
+      NEG: { holders_list: ["controls"] },
+      OVER: { holders_list: ["controls"] },
+      SAME: { holders_list: ["controls"] },
+    },
+  });
+  writeJson("data/sec-13f/summary.json", {
+    investors: {
+      alpha: { quarter: "2026-Q2", latest_quarter: "2026-Q2", is_stale: false },
+      beta: { quarter: "2026-Q2", latest_quarter: "2026-Q2", is_stale: false },
+      gamma: { quarter: "2026-Q2", latest_quarter: "2026-Q2", is_stale: false },
+      sold: { quarter: "2026-Q2", latest_quarter: "2026-Q2", is_stale: false },
+      missing: { quarter: "2026-Q2", latest_quarter: "2026-Q2", is_stale: false },
+      invalid: { quarter: "2026-Q2", latest_quarter: "2026-Q2", is_stale: false },
+      cusip: { quarter: "2026-Q2", latest_quarter: "2026-Q2", is_stale: false },
+      conflict: { quarter: "2026-Q2", latest_quarter: "2026-Q2", is_stale: false },
+      controls: { quarter: "2026-Q2", latest_quarter: "2026-Q2", is_stale: false },
+      stale: { quarter: "2026-Q1", latest_quarter: "2026-Q1", is_stale: true },
+      griffin: { quarter: "2026-Q2", latest_quarter: "2026-Q2", is_stale: false },
     },
   });
 
@@ -116,16 +137,38 @@ try {
     filing("2026-Q1", [holding("BAD", 0.08)]),
     filing("2026-Q2", [holding("BAD")]),
   ]));
+  // The issuer retained its CUSIP while the current filing omitted ticker;
+  // the stable CUSIP must resolve to the prior ticker before comparison.
+  writeJson("data/sec-13f/investors/cusip.json", investorFile("cusip", [
+    filing("2026-Q2", [holding(null, 0.05, "111111111")]),
+    filing("2026-Q1", [holding("CUS", 0.04, "111111111")]),
+  ]));
+  // A CUSIP carrying different tickers across the two filings is ambiguous;
+  // it must not fabricate a new/sold/comparable transition.
+  writeJson("data/sec-13f/investors/conflict.json", investorFile("conflict", [
+    filing("2026-Q1", [holding("OLD", 0.06, "222222222")]),
+    filing("2026-Q2", [holding("NEW", 0.07, "222222222")]),
+  ]));
+  // Invalid ratios and malformed symbols are retained as neither zero nor a
+  // guessed comparable transition; equivalent sums must remain unchanged.
+  writeJson("data/sec-13f/investors/controls.json", investorFile("controls", [
+    filing("2026-Q1", [holding("NEG", 0.1), holding("OVER", 0.8), holding("SAME", 0.3)]),
+    filing("2026-Q2", [
+      holding("NEG", -0.01),
+      holding("OVER", 1.2),
+      holding("SAME", 0.1),
+      holding("SAME", 0.2),
+      holding({ malformed: "ticker" }, 0.25),
+    ]),
+  ]));
   // This filer is stale because its latest filing is Q1; it must not enter
   // the current cohort even though it has a distinctive prior-quarter ticker.
   writeJson("data/sec-13f/investors/stale.json", investorFile("stale", [
     filing("2026-Q1", [holding("STALE", 0.5)]),
   ]));
-  // The public route excludes this private investor file entirely.
-  writeJson("data/sec-13f/investors/griffin.json", investorFile("griffin", [
-    filing("2026-Q1", [holding("PRIVATE", 0.4)]),
-    filing("2026-Q2", [holding("PRIVATE", 0.4)]),
-  ]));
+  // The public route excludes this private investor file before reading; the
+  // poison payload proves a private file cannot break the public build.
+  fs.writeFileSync(path.join(fixtureInvestors, "griffin.json"), "{malformed private payload");
 
   execFileSync(process.execPath, [path.join(fixtureScripts, "build-guru-holders-index.mjs")], {
     cwd: fixtureRoot,
@@ -138,8 +181,17 @@ try {
   ));
 
   assert.equal(output.metadata.quarter, "2026-Q2");
-  assert.equal(output.metadata.tickers, 3);
-  assert.deepEqual(output.holders, { AAA: 3, XYZ: 1, BAD: 1 });
+  assert.equal(output.metadata.tickers, 8);
+  assert.deepEqual(output.holders, {
+    AAA: 3,
+    XYZ: 1,
+    BAD: 1,
+    CUS: 1,
+    NEW: 1,
+    NEG: 1,
+    OVER: 1,
+    SAME: 1,
+  });
   assert.ok(output.holding_changes && typeof output.holding_changes === "object",
     "builder must emit holding_changes");
 
@@ -179,21 +231,157 @@ try {
     current_quarter: "2026-Q2",
     previous_quarter: "2026-Q1",
   });
+  assert.deepEqual(output.holding_changes.CUS, {
+    held_count: 1,
+    new_count: 0,
+    increased_count: 1,
+    decreased_count: 0,
+    unchanged_count: 0,
+    sold_count: 0,
+    comparable_count: 1,
+    mean_weight_delta: 0.01,
+    current_quarter: "2026-Q2",
+    previous_quarter: "2026-Q1",
+  });
+  assert.deepEqual(output.holding_changes.NEW, {
+    held_count: 1,
+    new_count: 0,
+    increased_count: 0,
+    decreased_count: 0,
+    unchanged_count: 0,
+    sold_count: 0,
+    comparable_count: 0,
+    mean_weight_delta: null,
+    current_quarter: "2026-Q2",
+    previous_quarter: "2026-Q1",
+  });
+  assert.deepEqual(output.holding_changes.NEG, {
+    held_count: 1,
+    new_count: 0,
+    increased_count: 0,
+    decreased_count: 0,
+    unchanged_count: 0,
+    sold_count: 0,
+    comparable_count: 0,
+    mean_weight_delta: null,
+    current_quarter: "2026-Q2",
+    previous_quarter: "2026-Q1",
+  });
+  assert.deepEqual(output.holding_changes.OVER, output.holding_changes.NEG);
+  assert.deepEqual(output.holding_changes.SAME, {
+    held_count: 1,
+    new_count: 0,
+    increased_count: 0,
+    decreased_count: 0,
+    unchanged_count: 1,
+    sold_count: 0,
+    comparable_count: 1,
+    mean_weight_delta: 0,
+    current_quarter: "2026-Q2",
+    previous_quarter: "2026-Q1",
+  });
+  assert.equal(Object.hasOwn(output.holding_changes, "OLD"), false);
+  assert.equal(Object.hasOwn(output.holding_changes, "[OBJECT OBJECT]"), false);
   assert.equal(Object.hasOwn(output.holding_changes, "PRIVATE"), false);
   assert.equal(Object.hasOwn(output.holding_changes, "STALE"), false);
 
   // Coverage metadata is required to make missing prior filings and the
   // private route exclusion observable without publishing investor identities.
   assert.deepEqual(output.metadata.change_coverage, {
-    eligible: 6,
-    comparable: 5,
+    eligible: 9,
+    comparable: 8,
     missing_previous: 1,
     public_excluded: 1,
+    comparison_basis: "public_retained_holdings",
+    unresolved_mapping_count: 2,
     current_quarter: "2026-Q2",
     previous_quarter: "2026-Q1",
   });
   assert.equal(JSON.stringify(output.holding_changes).includes("alpha"), false);
   assert.equal(JSON.stringify(output.holding_changes).includes("griffin"), false);
+
+  const outputPath = path.join(fixtureAnalytics, "guru_holders_index.json");
+  const priorOutput = fs.readFileSync(outputPath);
+  const builderPath = path.join(fixtureScripts, "build-guru-holders-index.mjs");
+  const runExpectedFailure = (label) => {
+    const result = spawnSync(process.execPath, [builderPath], {
+      cwd: fixtureRoot,
+      encoding: "utf8",
+    });
+    assert.notEqual(result.status, 0, `${label} must fail closed`);
+    assert.deepEqual(fs.readFileSync(outputPath), priorOutput,
+      `${label} must preserve the previous output artifact`);
+  };
+
+  const missingAlpha = path.join(fixtureInvestors, "alpha.json.missing");
+  fs.renameSync(path.join(fixtureInvestors, "alpha.json"), missingAlpha);
+  try {
+    runExpectedFailure("missing expected current investor file");
+  } finally {
+    fs.renameSync(missingAlpha, path.join(fixtureInvestors, "alpha.json"));
+  }
+
+  const betaPath = path.join(fixtureInvestors, "beta.json");
+  const betaBytes = fs.readFileSync(betaPath);
+  const betaPayload = JSON.parse(betaBytes);
+  const betaCurrent = betaPayload.investor.filings.find((row) => row.quarter === "2026-Q2");
+  betaCurrent.holdings = {};
+  fs.writeFileSync(betaPath, `${JSON.stringify(betaPayload)}\n`);
+  try {
+    runExpectedFailure("malformed current holdings array");
+  } finally {
+    fs.writeFileSync(betaPath, betaBytes);
+  }
+
+  const betaRestored = JSON.parse(betaBytes);
+  const betaPrior = betaRestored.investor.filings.find((row) => row.quarter === "2026-Q1");
+  betaPrior.holdings = null;
+  fs.writeFileSync(betaPath, `${JSON.stringify(betaRestored)}\n`);
+  try {
+    runExpectedFailure("malformed prior holdings array");
+  } finally {
+    fs.writeFileSync(betaPath, betaBytes);
+  }
+
+  const consensusPath = path.join(fixtureAnalytics, "consensus.json");
+  const consensusBytes = fs.readFileSync(consensusPath);
+  const malformedConsensus = JSON.parse(consensusBytes);
+  malformedConsensus.metadata.quarter = null;
+  fs.writeFileSync(consensusPath, `${JSON.stringify(malformedConsensus)}\n`);
+  try {
+    runExpectedFailure("malformed consensus quarter");
+  } finally {
+    fs.writeFileSync(consensusPath, consensusBytes);
+  }
+
+  const nonStringConsensusQuarter = JSON.parse(consensusBytes);
+  nonStringConsensusQuarter.metadata.quarter = { value: "2026-Q2" };
+  fs.writeFileSync(consensusPath, `${JSON.stringify(nonStringConsensusQuarter)}\n`);
+  try {
+    runExpectedFailure("non-string consensus quarter");
+  } finally {
+    fs.writeFileSync(consensusPath, consensusBytes);
+  }
+
+  const summaryPath = path.join(fixtureRoot, "data/sec-13f/summary.json");
+  const summaryBytes = fs.readFileSync(summaryPath);
+  const missingSummaryField = JSON.parse(summaryBytes);
+  delete missingSummaryField.investors.alpha.is_stale;
+  fs.writeFileSync(summaryPath, `${JSON.stringify(missingSummaryField)}\n`);
+  try {
+    runExpectedFailure("missing summary row field");
+  } finally {
+    fs.writeFileSync(summaryPath, summaryBytes);
+  }
+
+  const mismatchedCohort = JSON.parse(consensusBytes);
+  mismatchedCohort.metadata.current_cohort_investors = 9;
+  fs.writeFileSync(consensusPath, `${JSON.stringify(mismatchedCohort)}\n`);
+  try {
+    runExpectedFailure("current cohort count mismatch");
+  } finally {
+    fs.writeFileSync(consensusPath, consensusBytes);
+  }
 } finally {
   fs.rmSync(fixtureRoot, { recursive: true, force: true });
 }
