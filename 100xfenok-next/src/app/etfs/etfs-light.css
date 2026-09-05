@@ -578,6 +578,11 @@
     height: 44px;
   }
 
+  .etf-mobile-title {
+    min-height: 44px;
+    align-items: center;
+  }
+
   .etf-tool-row {
     min-height: 44px;
   }
@@ -588,5 +593,39 @@
 
   .etf-seg-pill {
     height: 44px;
+  }
+}
+
+/* Touch tablets keep the desktop table/card composition while enlarging
+ * controls to a comfortable hit area. Fine-pointer desktop remains compact. */
+@media (pointer: coarse) and (min-width: 761px), (any-pointer: coarse) and (min-width: 761px) {
+  .etf-search,
+  .etf-filter-field select {
+    height: 44px;
+  }
+
+  .etf-seg-pills {
+    gap: 8px;
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .etf-seg-pill {
+    height: 44px;
+    padding-inline: 12px;
+  }
+
+  .etf-load-more {
+    height: 44px;
+  }
+
+  .etf-table-ticker {
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .etf-tool-row {
+    min-height: 44px;
+    padding-block: 12px;
   }
 }

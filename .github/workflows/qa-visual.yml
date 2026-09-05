@@ -78,7 +78,7 @@ jobs:
                 tablet) export QA_MOBILE_UX_VIEWPORTS="tablet-portrait,tablet-mid,tablet,tablet-landscape";;
                 *) echo "unsupported responsive viewport group" >&2; exit 64;;
               esac
-              export QA_MOBILE_UX_ROUTES="/,/screener,/screener?mode=analyze,/stock/NVDA,/stock/NVDA?tab=financials,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock,/etfs,/etfs/SPY,/market-valuation,/regime,/sectors,/portfolio,/macro-chart"
+              export QA_MOBILE_UX_ROUTES="/,/screener,/screener?mode=analyze,/stock/NVDA,/stock/NVDA?tab=financials,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock,/etfs,/etfs/SPY,/market-valuation,/regime,/sectors,/portfolio,/macro-chart,/superinvestors?tab=stocks"
               export QA_MOBILE_UX_OUTPUT_DIR="test-results/responsive"
               npm run qa:mobile-ux
               ;;

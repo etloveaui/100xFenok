@@ -2151,6 +2151,7 @@ export default function SuperinvestorsClient({
                   return (
                     <Row
                       key={row.ticker}
+                      className="sup-olap-row"
                       data-superinvestors-overlap-row
                       data-superinvestors-overlap-ticker={row.ticker}
                       data-superinvestors-overlap-holders={row.holders_count}

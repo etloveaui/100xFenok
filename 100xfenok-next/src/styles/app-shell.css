@@ -363,7 +363,7 @@
   .fnk-shell .appbar .back{width:44px; height:44px; border-radius:10px; background:none; border:0; color:var(--c-ink-2); display:grid; place-items:center; flex:none}
   .fnk-shell .appbar .back:hover{background:var(--c-surface-2)}
   .fnk-shell .appbar .back svg{width:22px; height:22px}
-  .fnk-shell .appbar-logo{display:inline-flex; align-items:center; justify-content:center; flex:none}
+  .fnk-shell .appbar-logo{min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; flex:none}
   .fnk-shell .appbar .title{min-width:0; flex:1 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:19px; font-weight:700; letter-spacing:-.02em}
   .fnk-shell .appbar .mstat{display:inline-flex; min-width:0; max-width:26vw; flex:0 1 auto; align-items:center; gap:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600; color:var(--c-ink-2)}
   .fnk-shell .appbar .mstat .dot{width:6px; height:6px; border-radius:50%; background:var(--c-neutral)}
@@ -479,4 +479,34 @@
   .fnk-shell *,
   .fnk-shell *::before,
   .fnk-shell *::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.01ms !important}
+}
+
+/* Touch targets follow pointer capability, including tablets using the desktop shell. */
+@media (pointer: coarse) {
+  .fnk-shell .evidence-rail-row,
+  .fnk-shell .stale-state {
+    height: auto;
+    min-height: 44px;
+    flex-wrap: wrap;
+    white-space: normal;
+    padding-block: 4px;
+  }
+  .fnk-shell .stale-state { gap: 4px 12px; }
+  .fnk-shell .stale-state__retry { margin-left: auto; flex-shrink: 0; }
+  .fnk-shell .evidence-rail-action,
+  .fnk-shell .stale-state__retry {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .fnk-shell .typeahead-preview__close {
+    width: 44px;
+    height: 44px;
+  }
+  .fnk-shell .typeahead-preview__secondary,
+  .fnk-shell .typeahead-preview__primary {
+    min-height: 44px;
+  }
 }

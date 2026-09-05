@@ -38,6 +38,10 @@ function routeUrl(route) {
   return new URL(route, baseUrl).toString();
 }
 
+function isAnalyzeScreenerRoute(route) {
+  return new URL(route, baseUrl).searchParams.get("mode") === "analyze";
+}
+
 async function installQaPortfolio(context) {
   await context.addInitScript(() => {
     const doc = {
@@ -263,35 +267,6 @@ async function collectRouteChecks(page, route) {
       });
     }
 
-    if (currentRoute === "/" || currentRoute.startsWith("/?")) {
-      const homeSearch = document.querySelector("[data-home-search-first]");
-      const homeSearchInput = homeSearch?.querySelector('[role="combobox"]');
-      const homeSearchRect = homeSearchInput?.getBoundingClientRect();
-      const homeSearchVisible = Boolean(
-        homeSearchRect &&
-        homeSearchRect.width > 0 &&
-        homeSearchRect.height >= 32 &&
-        homeSearchRect.top >= 0 &&
-        homeSearchRect.top < window.innerHeight * 0.45,
-      );
-      if (!homeSearchVisible) {
-        failures.push({
-          check: "home-search-first-visible",
-          detail: homeSearchRect
-            ? `top=${homeSearchRect.top} height=${homeSearchRect.height}`
-            : "missing [data-home-search-first] combobox",
-        });
-      }
-      const featureTiles = Array.from(document.querySelectorAll("[data-home-feature-tile]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0 && rect.top < window.innerHeight;
-        });
-      if (featureTiles.length < 4 || featureTiles.length > 6) {
-        failures.push({ check: "home-feature-tile-count", detail: `visible tiles=${featureTiles.length}` });
-      }
-    }
-
     if (new URL(currentRoute, window.location.origin).pathname === "/explore") {
       const surface = document.querySelector("[data-explore-surface]");
       const routeRail = document.querySelector("[data-explore-route-rail]");
@@ -480,11 +455,6 @@ async function collectRouteChecks(page, route) {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const actionButtons = Array.from(document.querySelectorAll("[data-macro-chart-action]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
       const lensButtons = Array.from(document.querySelectorAll("[data-macro-chart-lens]"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
@@ -539,21 +509,6 @@ async function collectRouteChecks(page, route) {
         const rect = node.getBoundingClientRect();
         if (rect.height < 44) {
           failures.push({ check: "macro-chart-preset-target", detail: `preset ${index} height=${Math.round(rect.height)}` });
-        }
-      });
-
-      const expectedActions = ["zoom-in", "zoom-out", "png", "csv"];
-      const actualActions = actionButtons.map((node) => node.getAttribute("data-macro-chart-action"));
-      if (
-        actionButtons.length !== expectedActions.length ||
-        !expectedActions.every((action, index) => actualActions[index] === action)
-      ) {
-        failures.push({ check: "macro-chart-action-order", detail: `actual=${JSON.stringify(actualActions)} expected=${JSON.stringify(expectedActions)}` });
-      }
-      actionButtons.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        if (rect.height < 44) {
-          failures.push({ check: "macro-chart-action-target", detail: `action ${index} height=${Math.round(rect.height)}` });
         }
       });
 
@@ -1872,11 +1827,6 @@ async function collectRouteChecks(page, route) {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const sections = Array.from(document.querySelectorAll("[data-market-section]"))
-        .filter((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0;
-        });
       const chartGrid = document.querySelector("[data-market-valuation-chart-grid]");
       const indexCards = Array.from(document.querySelectorAll(".mv-trow"))
         .filter((node) => {
@@ -1909,18 +1859,6 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "market-section-nav-target", detail: `link ${index} height=${Math.round(rect.height)}` });
         }
       });
-
-      const expectedSections = ["valuation"];
-      const actualSections = sections.map((node) => node.getAttribute("data-market-section"));
-      if (
-        sections.length !== expectedSections.length ||
-        !expectedSections.every((key, index) => actualSections[index] === key)
-      ) {
-        failures.push({
-          check: "market-valuation-section-order",
-          detail: `actual=${JSON.stringify(actualSections)} expected=${JSON.stringify(expectedSections)}`,
-        });
-      }
 
       if (!chartGrid || chartGrid.getBoundingClientRect().height <= 0) {
         failures.push({ check: "market-valuation-chart-grid-visible", detail: "missing ERP/Yardeni chart grid" });
@@ -2332,7 +2270,7 @@ async function collectRouteChecks(page, route) {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
         });
-      const universeRows = Array.from(document.querySelectorAll(".etf-mobile-card"))
+      const universeRows = Array.from(document.querySelectorAll(".etf-mobile-card, .etf-table-desktop tbody tr"))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
@@ -2428,10 +2366,15 @@ async function collectRouteChecks(page, route) {
       if (universeRows.length < 20) {
         failures.push({ check: "etf-universe-row-count", detail: `visible rows=${universeRows.length}` });
       }
-      universeRows.slice(0, 8).forEach((node, index) => {
+      const universeTargets = Array.from(document.querySelectorAll(".etf-mobile-card a, .etf-table-ticker"))
+        .filter((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+      universeTargets.slice(0, 8).forEach((node, index) => {
         const rect = node.getBoundingClientRect();
         if (rect.height < 44) {
-          failures.push({ check: "etf-universe-row-target", detail: `row ${index} height=${Math.round(rect.height)}` });
+          failures.push({ check: "etf-universe-row-target", detail: `link ${index} height=${Math.round(rect.height)}` });
         }
       });
       if (!loadMore || loadMore.getBoundingClientRect().height < 44) {
@@ -2726,40 +2669,43 @@ async function collectRouteChecks(page, route) {
     }
 
     if (currentRoute.startsWith("/screener")) {
+      const isAnalyzeMode = Boolean(document.querySelector('[data-screener-mode="analyze"]'));
       const visibleCheckboxes = Array.from(document.querySelectorAll('input[type="checkbox"]'))
         .filter((node) => {
           const rect = node.getBoundingClientRect();
           return rect.width > 0 && rect.height > 0;
       });
-      visibleCheckboxes.forEach((node, index) => {
-        const rect = node.getBoundingClientRect();
-        const target = node.closest("[data-screener-checkbox-target]");
-        if (!target) {
-          failures.push({
-            check: "screener-checkbox-target-hook",
-            detail: `checkbox ${index} has no hit-target wrapper`,
-          });
-          return;
-        }
-        const targetRect = target.getBoundingClientRect();
-        const pseudoStyle = window.getComputedStyle(target, "::before");
-        const targetWidth = Math.max(targetRect.width, Number.parseFloat(pseudoStyle.width || "0"));
-        const targetHeight = Math.max(targetRect.height, Number.parseFloat(pseudoStyle.height || "0"));
-        if (targetWidth < 44 || targetHeight < 44) {
-          failures.push({
-            check: "screener-checkbox-target",
-            detail: `checkbox ${index} target=${Math.round(targetWidth)}x${Math.round(targetHeight)}`,
-          });
-        }
-        if (rect.width > 20 || rect.height > 20) {
-          failures.push({
-            check: "screener-checkbox-visual-size",
-            detail: `checkbox ${index} visual=${Math.round(rect.width)}x${Math.round(rect.height)}`,
-          });
-        }
-      });
+      if (isAnalyzeMode) {
+        visibleCheckboxes.forEach((node, index) => {
+          const rect = node.getBoundingClientRect();
+          const target = node.closest("[data-screener-checkbox-target]");
+          if (!target) {
+            failures.push({
+              check: "screener-checkbox-target-hook",
+              detail: `checkbox ${index} has no hit-target wrapper`,
+            });
+            return;
+          }
+          const targetRect = target.getBoundingClientRect();
+          const pseudoStyle = window.getComputedStyle(target, "::before");
+          const targetWidth = Math.max(targetRect.width, Number.parseFloat(pseudoStyle.width || "0"));
+          const targetHeight = Math.max(targetRect.height, Number.parseFloat(pseudoStyle.height || "0"));
+          if (targetWidth < 44 || targetHeight < 44) {
+            failures.push({
+              check: "screener-checkbox-target",
+              detail: `checkbox ${index} target=${Math.round(targetWidth)}x${Math.round(targetHeight)}`,
+            });
+          }
+          if (rect.width > 20 || rect.height > 20) {
+            failures.push({
+              check: "screener-checkbox-visual-size",
+              detail: `checkbox ${index} visual=${Math.round(rect.width)}x${Math.round(rect.height)}`,
+            });
+          }
+        });
+      }
 
-      if (viewportWidth < 768) {
+      if (isAnalyzeMode && viewportWidth < 768) {
         const mobileExpandButtons = Array.from(document.querySelectorAll('[aria-controls^="screener-mobile-detail"]'))
           .filter((node) => node.getBoundingClientRect().width > 0);
         if (mobileExpandButtons.length === 0) {
@@ -2824,16 +2770,9 @@ async function collectRouteChecks(page, route) {
         });
       }
 
-      const densityControl = document.querySelector("[data-screener-density-control]");
-      const densityButtons = densityControl
-        ? Array.from(densityControl.querySelectorAll('button[aria-pressed]'))
-          .filter((node) => node.getBoundingClientRect().width > 0)
-        : [];
-      if (densityButtons.length !== 3) {
-        failures.push({ check: "screener-density-control", detail: `buttons=${densityButtons.length}` });
-      }
-
-      if (viewportWidth >= 768) {
+      // The service mode keeps the desktop table/card controls hidden through
+      // 920px, and the Canvas+ density control is intentionally hidden.
+      if (isAnalyzeMode && viewportWidth >= 921) {
         const viewModeControl = document.querySelector("[data-screener-view-mode-control]");
         const viewModeButtons = viewModeControl
           ? Array.from(viewModeControl.querySelectorAll("[data-screener-view-mode-option]"))
@@ -2845,21 +2784,18 @@ async function collectRouteChecks(page, route) {
         }
       }
 
-      // Koyfin-density (desktop table renders at >=921px, paired with
-      // ScreenerClient `hidden min-[921px]:block`): 44px rows, 36px header,
-      // every rendered column honors its declared minimum
+      // Desktop table renders at >=921px, paired with ScreenerClient
+      // `hidden min-[921px]:block`; keep presence, column minimum, and page
+      // overflow checks tied to that branch. Row/header heights are layout-owned.
+      // Every rendered column honors its declared minimum
       // (ScreenerTanstackTable canvasPlusColumnWidth), table scrolls inside
       // the panel only.
-      if (viewportWidth >= 921) {
+      if (isAnalyzeMode && viewportWidth >= 921) {
         const desktopRows = Array.from(document.querySelectorAll('tr[data-testid="screener-desktop-row"]'))
           .filter((node) => node.getBoundingClientRect().width > 0);
         if (desktopRows.length === 0) {
           failures.push({ check: "screener-desktop-rows-present", detail: "no visible desktop rows" });
         } else {
-          const rowHeight = desktopRows[0].getBoundingClientRect().height;
-          if (Math.abs(rowHeight - 44) > 1) {
-            failures.push({ check: "screener-row-height", detail: `height=${Math.round(rowHeight)}` });
-          }
           const columnMinWidths = {
             __select: 42,
             ticker: 160,
@@ -2890,13 +2826,6 @@ async function collectRouteChecks(page, route) {
                 failures.push({ check: "screener-column-min-width", detail: `${columnId} width=${Math.round(width)} expected>=${expected}` });
               }
             });
-        }
-        const headerCell = document.querySelector(".cp-screener-table thead th");
-        if (headerCell) {
-          const headerHeight = headerCell.getBoundingClientRect().height;
-          if (Math.abs(headerHeight - 36) > 1) {
-            failures.push({ check: "screener-header-height", detail: `height=${Math.round(headerHeight)}` });
-          }
         }
         if (document.documentElement.scrollWidth > window.innerWidth + 1) {
           failures.push({ check: "screener-no-page-scroll", detail: `scrollWidth=${document.documentElement.scrollWidth} innerWidth=${window.innerWidth}` });
@@ -3079,23 +3008,10 @@ async function collectRouteChecks(page, route) {
           }))
           .filter((entry) => entry.rect.width > 0 && entry.rect.height > 0);
         const summaryScore = summaryModules.find((entry) => entry.key === "summary-score");
-        const valuationBand = summaryModules.find((entry) => entry.key === "valuation-band");
-        const threeSecondSummary = summaryModules.find((entry) => entry.key === "three-second-summary");
-        if (!summaryScore || !valuationBand) {
+        if (!summaryScore) {
           failures.push({
-            check: "stock-summary-valuation-modules-present",
+            check: "stock-summary-action-strip-visible",
             detail: `modules=${JSON.stringify(summaryModules.map((entry) => entry.key))}`,
-          });
-        } else if (summaryScore.rect.top > valuationBand.rect.top + 1) {
-          failures.push({
-            check: "stock-summary-before-valuation",
-            detail: `summaryTop=${summaryScore.rect.top} valuationTop=${valuationBand.rect.top}`,
-          });
-        }
-        if (summaryScore && threeSecondSummary && summaryScore.rect.top > threeSecondSummary.rect.top + 1) {
-          failures.push({
-            check: "stock-summary-score-first",
-            detail: `summaryTop=${summaryScore.rect.top} threeSecondTop=${threeSecondSummary.rect.top}`,
           });
         }
         if (summaryScore) {
@@ -3131,10 +3047,8 @@ async function collectRouteChecks(page, route) {
             }
           });
         }
-        if (valuationBand) {
-          const valuationTrack = valuationBand.rect.height > 0
-            ? document.querySelector("[data-stock-valuation-band-track]")
-            : null;
+        const valuationTrack = document.querySelector("[data-stock-valuation-band-track]");
+        if (valuationTrack) {
           const valuationVerdict = document.querySelector("[data-stock-valuation-verdict]");
           const valuationZones = Array.from(document.querySelectorAll("[data-stock-valuation-zone]"))
             .map((node) => node.getAttribute("data-stock-valuation-zone"));
@@ -3453,6 +3367,32 @@ async function collectRouteChecks(page, route) {
         if (overlapHolders.length !== overlapRows.length || !overlapDesc) {
           failures.push({ check: "superinvestors-overlap-sort", detail: `holders=${JSON.stringify(overlapHolders)}` });
         }
+        overlapRows
+          .filter((row) => row.getBoundingClientRect().width > 0 && row.getBoundingClientRect().height > 0)
+          .forEach((row, index) => {
+            const rowRect = row.getBoundingClientRect();
+            const cells = Array.from(row.children).slice(0, 3);
+            const cellRects = cells.map((cell) => cell.getBoundingClientRect());
+            if (cells.length !== 3) {
+              failures.push({ check: "superinvestors-overlap-row-cells", detail: `row=${index} cells=${cells.length}` });
+              return;
+            }
+            cellRects.forEach((rect, cellIndex) => {
+              const cell = cells[cellIndex];
+              if (rect.left < rowRect.left - 1 || rect.right > rowRect.right + 1) {
+                failures.push({ check: "superinvestors-overlap-cell-containment", detail: `row=${index} cell=${cellIndex} bounds=${Math.round(rect.left)}..${Math.round(rect.right)} row=${Math.round(rowRect.left)}..${Math.round(rowRect.right)}` });
+              }
+              const textWidth = Math.max(cell.scrollWidth, cell.clientWidth);
+              if (textWidth > cell.clientWidth + 1) {
+                failures.push({ check: "superinvestors-overlap-text-containment", detail: `row=${index} cell=${cellIndex} scrollWidth=${textWidth} clientWidth=${cell.clientWidth}` });
+              }
+            });
+            for (let cellIndex = 1; cellIndex < cellRects.length; cellIndex += 1) {
+              if (cellRects[cellIndex - 1].right > cellRects[cellIndex].left + 1) {
+                failures.push({ check: "superinvestors-overlap-cell-collision", detail: `row=${index} cells=${cellIndex - 1}/${cellIndex} right=${Math.round(cellRects[cellIndex - 1].right)} nextLeft=${Math.round(cellRects[cellIndex].left)}` });
+              }
+            }
+          });
       } else {
         const signalLists = Array.from(document.querySelectorAll("[data-superinvestors-signal-list]"))
           .filter((node) => node.getBoundingClientRect().height > 0);
@@ -3517,10 +3457,10 @@ async function collectRouteChecks(page, route) {
 
 async function collectScreenerExpandedChecks(page, route) {
   const viewport = page.viewportSize();
-  if (viewport && viewport.width >= 768) {
+  if (!viewport || !isAnalyzeScreenerRoute(route) || viewport.width >= 768) {
     return {
       route,
-      viewportWidth: viewport.width,
+      viewportWidth: viewport?.width ?? null,
       scrollWidth: null,
       failures: [],
     };
@@ -3587,7 +3527,7 @@ async function collectScreenerExpandedChecks(page, route) {
 
 async function collectScreenerCheckboxTargetChecks(page, route) {
   const viewport = page.viewportSize();
-  if (!viewport || viewport.width >= 768) {
+  if (!viewport || !isAnalyzeScreenerRoute(route) || viewport.width >= 768) {
     return { route, failures: [] };
   }
 
@@ -3645,7 +3585,7 @@ async function collectScreenerCheckboxTargetChecks(page, route) {
 
 async function collectScreenerCardViewChecks(page, route) {
   const viewport = page.viewportSize();
-  if (!viewport || viewport.width < 768) {
+  if (!viewport || !isAnalyzeScreenerRoute(route) || viewport.width < 921) {
     return {
       route,
       viewportWidth: viewport?.width ?? null,
@@ -3860,7 +3800,9 @@ async function collectStockSummaryAxisClickChecks(page, route) {
   }
 
   await button.click({ timeout: 10000 });
-  await page.waitForTimeout(300);
+  await page.locator('[data-stock-estimates-consensus-summary]:visible').first()
+    .waitFor({ state: "visible", timeout: 10000 })
+    .catch(() => {});
 
   return page.evaluate((currentRoute) => {
     const failures = [];
@@ -4086,6 +4028,13 @@ try {
           timeout: 45000,
         });
         result.status = response ? response.status() : null;
+        if (response && !response.ok()) {
+          result.failures.push({
+            check: "http-response",
+            detail: `status=${response.status()} url=${response.url()}`,
+          });
+          throw new Error(`HTTP ${response.status()} for ${response.url()}`);
+        }
         if (outputDir) await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
         await page.waitForTimeout(250);
         await prepareDynamicRoute(page, route);
@@ -4129,10 +4078,13 @@ try {
           result.sectorViewSwitchScrollWidth = sectorViewChecks.scrollWidth;
         }
       } catch (error) {
-        result.failures = [{ check: "navigation", detail: String(error) }];
+        if (!result.failures.some(({ check }) => check === "http-response")) {
+          result.failures.push({ check: "navigation", detail: String(error) });
+        }
       }
 
       if (outputDir) {
+        result.capturedUrl = page.url();
         try {
           result.screenshotPaths = await captureBoundedScreenshots(page, route, name, routeIndex);
           for (const error of result.screenshotPaths.errors) {

@@ -2511,7 +2511,7 @@ export default function ScreenerClient({
               )}
             </div>
 
-            <form className="flex min-h-9 min-w-0 flex-1 items-center gap-2" onSubmit={(event) => event.preventDefault()}>
+            <form className="flex min-h-9 min-w-0 flex-1 items-center gap-2 max-[600px]:order-last max-[600px]:basis-full max-[600px]:w-full" onSubmit={(event) => event.preventDefault()}>
               <label className="sr-only" htmlFor="cp-screener-search-input">
                 티커 또는 종목명 검색
               </label>

@@ -22,6 +22,6 @@ export function Stat({ label, value, sub, className = "", highlight }: StatProps
   );
 }
 
-export function StatStrip({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`flex bg-white border border-[#e2e8f0] rounded-[8px] overflow-hidden divide-x divide-[#e2e8f0] ${className}`}>{children}</div>;
+export function StatStrip({ children, className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={`flex bg-white border border-[#e2e8f0] rounded-[8px] overflow-hidden divide-x divide-[#e2e8f0] ${className}`} {...props}>{children}</div>;
 }

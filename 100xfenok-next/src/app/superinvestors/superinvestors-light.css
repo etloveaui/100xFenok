@@ -295,6 +295,10 @@
 /* Overlap rows reuse the shared Row primitive; only the cell type treatment
  * lives here. The shared Row already owns hover/focus states. */
 
+.sup-rail .sup-olap-row {
+  grid-template-columns: minmax(0, 1fr) max-content max-content;
+}
+
 .sup-olap-holders {
   display: inline-flex;
   align-items: baseline;
@@ -302,7 +306,7 @@
   min-width: 0;
   color: var(--fnk-neutral-700);
   font-size: 12px;
-  overflow: hidden;
+  white-space: nowrap;
 }
 
 .sup-olap-holders b {
@@ -1064,5 +1068,44 @@
     border-radius: 8px;
     overflow: hidden;
     margin-top: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  /* Six primary tabs remain visible without horizontal scrolling on phones. */
+  .fnk-shell .sup-tabs.scroll-hint-x {
+    overflow-x: visible;
+    box-shadow: none;
+  }
+
+  .fnk-shell .sup-tabs.scroll-hint-x::after {
+    display: none;
+  }
+
+  .sup-tablist {
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sup-tab {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    padding-inline: 8px;
+  }
+}
+
+/* Touch tablets retain the investor table while making sort controls
+ * comfortably actionable. Fine-pointer desktop keeps the compact tabs. */
+@media (pointer: coarse) and (min-width: 761px), (any-pointer: coarse) and (min-width: 761px) {
+  .sup-sort-toggle {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .sup-sort-btn {
+    min-height: 44px;
   }
 }
