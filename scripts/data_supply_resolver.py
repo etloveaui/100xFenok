@@ -235,6 +235,27 @@ class DataSupplyResolver:
             )
             return self._commit_prepared(domain, transaction_id)
 
+        if (
+            prior is None
+            and not primary_fresh
+            and not fallback_fresh
+            and prior_recovery.get("last_transition") == "unavailable"
+        ):
+            # Known-unavailable hold: the store already removed this entity's
+            # current selection after complete negative evidence and an expired
+            # emergency LKG (prepare_unavailable_transition). While every
+            # provider stays stale that outcome is held unchanged and honestly,
+            # with the same complete-evidence guard as the LKG/unavailable path.
+            # Any fresh candidate below still takes the normal initial path, so
+            # recovery precedence is untouched. Without this branch the cycle
+            # after a committed removal raised an initial-selection fault and
+            # killed the whole ETF publication (runs 33825689997, 33936218442).
+            if set(latest) != set(policy.provider_names):
+                raise SchemaError("LKG/unavailable resolution requires complete provider evidence")
+            if self.reconcile_pending_on_noop:
+                self.store.reconcile_committed_pending(domain)
+            return active
+
         if prior is None:
             if primary_fresh:
                 selected = self._selection(primary, decided_at=decided_at, primary=True)

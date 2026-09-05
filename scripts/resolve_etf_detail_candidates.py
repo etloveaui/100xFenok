@@ -265,7 +265,27 @@ def resolve_entities(
         )
         selected = active["current"].get(entity)
         if selected is None:
-            raise SchemaError(f"ETF resolver did not produce a current selection for {entity}")
+            # The store removes an entity's current selection only through
+            # prepare_unavailable_transition, after complete negative provider
+            # evidence and an expired emergency LKG, and it marks that outcome in
+            # the recovery ledger. That is a legitimate, honest resolution and
+            # must be reported as such rather than kill the whole ETF
+            # publication (runs 33825689997 and 33936218442 died here on AKAF).
+            # Any other missing selection is still a schema fault.
+            recovery = active.get("recovery", {}).get(entity) or {}
+            if recovery.get("last_transition") != "unavailable":
+                raise SchemaError(f"ETF resolver did not produce a current selection for {entity}")
+            results.append(
+                {
+                    "entity": entity,
+                    "provider": None,
+                    "resolution_state": "unavailable",
+                    "source_as_of": None,
+                    "transaction_id": active["transaction_id"],
+                    "committed": committed,
+                }
+            )
+            continue
         results.append(
             {
                 "entity": entity,
