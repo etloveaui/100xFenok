@@ -1245,7 +1245,8 @@ function HoldingsTable({
                 <button
                   type="button"
                   onClick={() => onDelete(r.ticker)}
-                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg px-2 text-[10px] font-black text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
+                  className="inline-flex min-h-9 items-center rounded-lg px-2 text-[10px] font-black text-slate-500 transition hover:bg-rose-50 hover:text-rose-600"
+                  style={{ minHeight: 44, minWidth: 44, justifyContent: "center" }}
                   aria-label={`${r.ticker} 삭제`}
                 >
                   삭제
