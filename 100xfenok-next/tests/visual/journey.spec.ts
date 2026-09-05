@@ -49,6 +49,10 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
     : card.getByRole("link", { name: "상세" }).first();
   const expectedSource = new URL(page.url());
   await expect(detailLink).toHaveAttribute("href", /returnTo=/);
+  if (mobile) {
+    const target = await detailLink.boundingBox();
+    expect(target?.height ?? 0, "mobile detail touch target").toBeGreaterThanOrEqual(44);
+  }
   expect(new URL(await detailLink.getAttribute("href") ?? "", page.url()).searchParams.get("returnTo"))
     .toBe(`${expectedSource.pathname}${expectedSource.search}${expectedSource.hash}`);
   await detailLink.click();
@@ -57,7 +61,7 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
   await expect(explicitBack).toBeVisible();
   await expect(explicitBack).toHaveAttribute("aria-label", "스크리너로 돌아가기");
   await explicitBack.click();
-  await expect(page).toHaveURL(/\/screener\?ticker=NVDA&sector=Technology/);
+  await expect(page).toHaveURL(expectedSource.href);
   const restoredCardMode = page.locator('[data-screener-view-mode-option="card"]:visible').first();
   await expect(restoredCardMode).toBeVisible();
   await restoredCardMode.click();
@@ -74,7 +78,7 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
   await restoredDetailLink.click();
   await expect(page).toHaveURL(/\/stock\/NVDA\?.*returnTo=/);
   await page.goBack();
-  await expect(page).toHaveURL(/\/screener\?ticker=NVDA&sector=Technology/);
+  await expect(page).toHaveURL(expectedSource.href);
   const backCardMode = page.locator('[data-screener-view-mode-option="card"]:visible').first();
   await expect(backCardMode).toBeVisible();
   await backCardMode.click();
