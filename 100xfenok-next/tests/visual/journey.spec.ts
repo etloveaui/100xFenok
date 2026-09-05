@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect } from "@playwright/test";
 import type { Page, TestInfo } from "@playwright/test";
 
 async function attachJourneyScreenshot(page: Page, testInfo: TestInfo, name: string) {

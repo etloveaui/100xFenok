@@ -45,7 +45,7 @@ export default async function StockDetailPage({ params, searchParams }: Props) {
   const initialTab = isStockDetailInitialTab(requestedTab) ? requestedTab : undefined;
   const initialMacroContextId = macroContextFromParam(firstParam(query.macro))?.id;
   const returnTo = journeyReturnTo(firstParam(query.returnTo));
-  const backLabel = returnTo?.startsWith("/superinvestors")
+  const backLabel = returnTo?.startsWith(ROUTES.superinvestors)
     ? "투자자 화면으로 돌아가기"
     : returnTo
       ? "스크리너로 돌아가기"
