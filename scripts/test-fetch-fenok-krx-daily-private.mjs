@@ -888,4 +888,143 @@ function readOptionalJson(filePath) {
   fs.rmSync(root, { recursive: true, force: true });
 }
 
+// B-KRX-ACCESS-FAILURE harness: drive the real run() against a stubbed
+// provider. The stub records only whether a non-empty AUTH_KEY header was
+// sent; the key value itself never reaches an assertion message or output.
+function stubKrxProvider(respond) {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push({
+      url: String(url),
+      sentNonEmptyKey: typeof init?.headers?.AUTH_KEY === "string" && init.headers.AUTH_KEY.length > 0,
+    });
+    return respond(String(url), init);
+  };
+  return {
+    calls,
+    restore() {
+      globalThis.fetch = originalFetch;
+    },
+  };
+}
+
+async function runAgainstStubbedProvider(root, runId, respond) {
+  const paths = recoveryPaths(root);
+  const provider = stubKrxProvider(respond);
+  const previousKey = process.env.KRX_OPEN_API_AUTH_KEY;
+  process.env.KRX_OPEN_API_AUTH_KEY = "test-only-key";
+  try {
+    const result = await run([
+      "--end-date", "20260715",
+      "--run-id", runId,
+      "--output-root", path.join(root, "_private/admin/fenok-edge-korea/daily", runId),
+      "--bridge-index", paths.bridgeIndexPath,
+      "--public-bridge-history", paths.publicBridgeHistoryPath,
+      "--public-index-closes", paths.publicIndexClosesPath,
+      "--public-kosdaq-market-cap", paths.publicKosdaqMarketCapPath,
+      "--concurrency", "1",
+      "--sleep-ms", "0",
+      "--scheduled-run",
+    ], {
+      lkgRepoRoot: root,
+      runId,
+      eventName: "schedule",
+      observedAt: "2026-07-15T10:31:01.000Z",
+    });
+    return { result, calls: provider.calls };
+  } finally {
+    provider.restore();
+    if (previousKey === undefined) delete process.env.KRX_OPEN_API_AUTH_KEY;
+    else process.env.KRX_OPEN_API_AUTH_KEY = previousKey;
+  }
+}
+
+function trackedKrxOutputs(paths) {
+  return [
+    paths.bridgeIndexPath,
+    paths.publicBridgeHistoryPath,
+    paths.publicIndexClosesPath,
+    paths.publicKosdaqMarketCapPath,
+  ];
+}
+
+// B-KRX-ACCESS-FAILURE (a): every KRX request is rejected with HTTP 401/403
+// while a complete valid LKG exists. Run 33883974197 hit this with a
+// non-empty injected key and exited green because every failed-file
+// threshold breach maps to the soft "http_error" reason. Access rejection
+// is systemic: the retained outputs must stay byte-identical, but the run
+// must classify the failure as "auth_error" and exit non-zero.
+for (const status of [403, 401]) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), `fenok-krx-access-rejected-${status}-`));
+  const paths = recoveryPaths(root);
+  assert.equal(applyReady(root, "2026-07-14", "seed-run").kind, "success");
+  const tracked = trackedKrxOutputs(paths);
+  const before = tracked.map((target) => fs.readFileSync(target));
+
+  const { result, calls } = await runAgainstStubbedProvider(
+    root,
+    `krx_daily_20260715_http_${status}`,
+    () => new Response("Forbidden", { status, headers: { "content-type": "text/plain" } }),
+  );
+
+  assert.equal(calls.length, 31, "every endpoint is attempted exactly once for the single date");
+  assert.ok(calls.every((call) => call.sentNonEmptyKey), "the rejection happened with a non-empty key present");
+  assert.equal(result.summary.failed_files, 31);
+  assert.deepEqual(result.summary.failed_reasons, { [`HTTP ${status}`]: 31 });
+  assert.equal(result.attempt_outcome, "failure");
+  assert.equal(result.recovery.updated, false);
+  tracked.forEach((target, index) => assert.deepEqual(fs.readFileSync(target), before[index],
+    `retained canonical output must be preserved under HTTP ${status}: ${path.basename(target)}`));
+  const state = readJson(path.join(root, "data/admin", KRX_LANE_ID, "index.json"));
+  assert.deepEqual(state.retry_set, [KRX_LKG_KEY]);
+  assert.equal(state.items[KRX_LKG_KEY].resolution_state, "lkg_primary", "the prior LKG stays the retained primary");
+
+  assert.equal(result.recovery.reason, "auth_error",
+    `HTTP ${status} on every request is a provider access rejection, not a generic http_error`);
+  assert.equal(state.items[KRX_LKG_KEY].latest_failure.reason, "auth_error");
+  assert.equal(result.recovery.corrupt, true, "access rejection is systemic even with a complete LKG");
+  assert.equal(result.recovery.degraded, false);
+  assert.notEqual(result.exit_code, 0, "an access-rejected run must not be able to report success");
+
+  const outputPath = path.join(root, "github-output.txt");
+  writeGithubOutputs(result, outputPath);
+  const output = fs.readFileSync(outputPath, "utf8");
+  assert.match(output, /^attempt_outcome=failure$/mu);
+  assert.match(output, /^recovery_reason=auth_error$/mu);
+  assert.doesNotMatch(output, /^recovery_exit_code=0$/mu, "the workflow step must receive a non-zero recovery exit code");
+  assert.equal(`${JSON.stringify(result)}${output}`.includes("test-only-key"), false, "the key never leaks into result or outputs");
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
+// B-KRX-ACCESS-FAILURE (b) contrast: a generic provider outage (5xx) or a
+// transport failure with the same complete LKG keeps the existing soft
+// retained-LKG contract: reason "http_error", degraded, exit 0, outputs
+// untouched. Only access rejection is promoted to a systemic failure.
+for (const outage of [
+  { name: "http_503", respond: () => new Response("Service Unavailable", { status: 503 }) },
+  { name: "transport_timeout", respond: () => { throw new Error("fetch failed: request timed out"); } },
+]) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), `fenok-krx-outage-${outage.name}-`));
+  const paths = recoveryPaths(root);
+  assert.equal(applyReady(root, "2026-07-14", "seed-run").kind, "success");
+  const tracked = trackedKrxOutputs(paths);
+  const before = tracked.map((target) => fs.readFileSync(target));
+
+  const { result, calls } = await runAgainstStubbedProvider(root, `krx_daily_20260715_${outage.name}`, outage.respond);
+
+  assert.equal(calls.length, 31);
+  assert.equal(result.summary.failed_files, 31);
+  assert.equal(result.attempt_outcome, "failure");
+  assert.equal(result.recovery.reason, "http_error", `${outage.name} stays a generic http_error`);
+  assert.equal(result.recovery.degraded, true);
+  assert.equal(result.recovery.corrupt, false);
+  assert.equal(result.exit_code, 0, `${outage.name} with a retained LKG keeps the soft exit contract`);
+  tracked.forEach((target, index) => assert.deepEqual(fs.readFileSync(target), before[index]));
+  const state = readJson(path.join(root, "data/admin", KRX_LANE_ID, "index.json"));
+  assert.deepEqual(state.retry_set, [KRX_LKG_KEY]);
+  assert.equal(state.items[KRX_LKG_KEY].latest_failure.reason, "http_error");
+  fs.rmSync(root, { recursive: true, force: true });
+}
+
 console.log("test-fetch-fenok-krx-daily-private: ok");

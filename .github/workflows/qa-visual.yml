@@ -97,7 +97,11 @@ jobs:
             sleep 2
           done
           if [ "$ready" != true ]; then cat /tmp/investor-preview.log; exit 1; fi
-          npm run qa:mobile-ux
+          chromium_status=0
+          QA_BROWSER_NAME=chromium QA_MOBILE_UX_OUTPUT_DIR=test-results/responsive/chromium npm run qa:mobile-ux || chromium_status=$?
+          webkit_status=0
+          QA_BROWSER_NAME=webkit QA_MOBILE_UX_VIEWPORTS=mobile,tablet-portrait,tablet-mid QA_MOBILE_UX_OUTPUT_DIR=test-results/responsive/webkit npm run qa:mobile-ux || webkit_status=$?
+          if [ "$chromium_status" -ne 0 ] || [ "$webkit_status" -ne 0 ]; then exit 1; fi
 
       # This workflow used to build the app itself with a raw
       # NEXT_BUILD_TARGET=cloudflare next build, a combination no real build

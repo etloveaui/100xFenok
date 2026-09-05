@@ -1,4 +1,4 @@
-import { chromium } from "playwright";
+import { chromium, webkit } from "playwright";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
@@ -12,6 +12,13 @@ const blockedExternalRequests = [];
 const strictMode = process.env.QA_MOBILE_UX_STRICT !== "0";
 const browserChannel = process.env.QA_BROWSER_CHANNEL || "";
 const browserExecutablePath = process.env.QA_CHROMIUM_EXECUTABLE_PATH || "";
+const browserName = process.env.QA_BROWSER_NAME || "chromium";
+if (!["chromium", "webkit"].includes(browserName)) {
+  throw new Error("QA_BROWSER_NAME must be chromium or webkit.");
+}
+if (browserName === "webkit" && (browserChannel || browserExecutablePath)) {
+  throw new Error("Chromium channel/executable overrides cannot be used with WebKit.");
+}
 const outputDir = process.env.QA_MOBILE_UX_OUTPUT_DIR?.trim()
   ? resolve(process.env.QA_MOBILE_UX_OUTPUT_DIR.trim())
   : "";
@@ -4255,7 +4262,7 @@ async function collectInvestorNavigationChecks(page, route) {
   return failures;
 }
 
-const browser = await chromium.launch({
+const browser = await (browserName === "webkit" ? webkit : chromium).launch({
   headless: true,
   ...(browserChannel ? { channel: browserChannel } : {}),
   ...(browserExecutablePath ? { executablePath: browserExecutablePath } : {}),
@@ -4439,7 +4446,7 @@ const summary = {
 
 if (outputDir) {
   Object.assign(summary, {
-    browser: browserChannel || (browserExecutablePath ? browserExecutablePath : "Playwright Chromium"),
+    browser: browserChannel || browserExecutablePath || `Playwright ${browserName === "webkit" ? "WebKit" : "Chromium"}`,
     emulation: {
       hasTouch: captureEmulation,
       isMobileRule: "viewport width < 768",

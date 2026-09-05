@@ -5341,5 +5341,166 @@ for (const [runId, delayMin] of [["26765173733", 368], ["27940007940", 364]]) {
   ok("recovery-source ordering is provably irrelevant to the built KPI payload");
 }
 
+// B-OUTCOME-CLOCKS (a): a lane whose canonical file carries no provider date
+// (stockanalysis_etf_detail: detection selector not_applicable, so the lane row's
+// artifact.source_as_of is structurally null) but whose in-repo publish-outcome
+// shard tail is a real successful outcome ("published"/"resumed") has an OBSERVED
+// advance. The watchdog must not report it "unobservable". The advance is the
+// publication time and is declared as such (advance_basis "publish_outcome");
+// the metric observation date stays null — publication never masquerades as
+// the source's own as-of. The evidence arrives as the builder's existing
+// publication block (buildPublicationOutcomes output, one family per shard;
+// the lane -> family binding is the registry commit_shards publish-outcome
+// entry, not a new mapping). Live reproduction: 2026-09-05T02:22Z KPI showed
+// last_advance null while publish-outcomes/stockanalysis-etf-detail.json's tail
+// record was result "published", observed_at 2026-09-05T02:29:08Z.
+{
+  const laneRow = (id, artifact) => ({ id, as_of: artifact.source_as_of ?? null, artifact });
+  const dateless = { source_as_of: null, source_as_of_reason: "dateless_by_provider" };
+  const publishedAt = "2026-09-05T02:29:08.285Z";
+  const now = "2026-09-05T20:00:00.000Z"; // 17.51h after publication; daily threshold 36h
+  const publicationFor = (result) => ({
+    schema_version: "fenok-kpi-publication-outcomes/v1",
+    families: [{ family: "stockanalysis-etf-detail", result, observed_at: publishedAt, gate_after: "ok" }],
+  });
+  const watchdog = buildOutcomeWatchdog(now, [
+    laneRow("stockanalysis_etf_detail", dateless),
+  ], undefined, { publication: publicationFor("published") });
+  const row = watchdog.rows.find((entry) => entry.lane_id === "stockanalysis_etf_detail");
+  assert.ok(row, "stockanalysis_etf_detail must stay a monitored daily row");
+  assert.equal(row.state, "current",
+    "a successful publish outcome 17.5h ago is an observed advance inside the daily threshold, not unobservable");
+  assert.equal(row.advance_basis, "publish_outcome",
+    "the row must declare that its advance came from the publish-outcome shard, not from a canonical source date");
+  assert.equal(row.last_advance, publishedAt, "last_advance is the publication observed_at");
+  assert.equal(row.age_hours, 17.51, "age_hours is measured from the publication time on the KPI clock");
+  assert.equal(row.source_as_of, null,
+    "publication must not be relabeled as the metric observation date: the source as-of stays null");
+  assert.deepEqual(watchdog.counts, { monitored: 1, current: 1, overdue: 0, unobservable: 0 });
+  assert.equal(watchdog.status, "ready");
+
+  // A failed/blocked tail is not an advance: the row stays honestly unobservable.
+  for (const result of ["failed", "gate_blocked"]) {
+    const notAdvanced = buildOutcomeWatchdog(now, [
+      laneRow("stockanalysis_etf_detail", dateless),
+    ], undefined, { publication: publicationFor(result) });
+    const failedRow = notAdvanced.rows.find((entry) => entry.lane_id === "stockanalysis_etf_detail");
+    assert.equal(failedRow.state, "unobservable", `a ${result} publish outcome must not count as an advance`);
+    assert.equal(failedRow.last_advance, null);
+    assert.equal(failedRow.advance_basis, null);
+  }
+  ok("outcome watchdog observes a dateless lane's advance from its successful publish outcome without relabeling the source date");
+}
+
+// B-OUTCOME-CLOCKS (b): lanes whose detection source_selector is
+// notApplicableSource() (stockanalysis_etf_universe, yahoo_etf_fallback) have a
+// canonical/coverage artifact whose generated_at advances on every successful
+// run (etf_universe.json / coverage/etf_detail.json both carry generated_at).
+// That generation time is the lane's honest advance evidence: the row must be
+// neither "unobservable" nor "current" by fiat. It is aged against the lane's
+// declared cadence from generated_at, declared as advance_basis
+// "canonical_file_generated_at", and the source as-of stays null (provider
+// publishes no aggregate source date). No generated_at => still unobservable;
+// nothing is fabricated.
+{
+  const laneRow = (id, artifact) => ({ id, as_of: artifact.source_as_of ?? null, artifact });
+  const dateless = { source_as_of: null, source_as_of_reason: "dateless_by_provider" };
+  const now = "2026-09-05T20:00:00Z";
+  const universeGeneratedAt = "2026-09-04T23:41:24Z"; // 20.31h -> current
+  const fallbackGeneratedAt = "2026-09-02T23:05:37Z"; // 68.91h -> overdue (daily threshold 36h)
+  const watchdog = buildOutcomeWatchdog(now, [
+    laneRow("stockanalysis_etf_universe", { ...dateless, generated_at: universeGeneratedAt }),
+    laneRow("yahoo_etf_fallback", { ...dateless, generated_at: fallbackGeneratedAt }),
+  ]);
+  const rows = new Map(watchdog.rows.map((entry) => [entry.lane_id, entry]));
+  const universe = rows.get("stockanalysis_etf_universe");
+  assert.equal(universe.state, "current",
+    "a dateless lane regenerated 20h ago is current on its daily cadence, not unobservable");
+  assert.equal(universe.advance_basis, "canonical_file_generated_at");
+  assert.equal(universe.last_advance, universeGeneratedAt);
+  assert.equal(universe.age_hours, 20.31);
+  assert.equal(universe.source_as_of, null, "generated_at must not be presented as a source observation date");
+  const fallback = rows.get("yahoo_etf_fallback");
+  assert.equal(fallback.state, "overdue",
+    "a dateless lane whose artifact was last generated 69h ago is overdue, not current-by-source and not unobservable");
+  assert.equal(fallback.advance_basis, "canonical_file_generated_at");
+  assert.equal(fallback.last_advance, fallbackGeneratedAt);
+  assert.equal(fallback.source_as_of, null);
+  assert.deepEqual(watchdog.counts, { monitored: 2, current: 1, overdue: 1, unobservable: 0 });
+
+  const withoutEvidence = buildOutcomeWatchdog(now, [
+    laneRow("stockanalysis_etf_universe", dateless),
+  ]);
+  const bare = withoutEvidence.rows.find((entry) => entry.lane_id === "stockanalysis_etf_universe");
+  assert.equal(bare.state, "unobservable", "no source date and no generated_at stays unobservable (no fabrication)");
+  assert.equal(bare.advance_basis, null);
+  ok("outcome watchdog ages notApplicableSource lanes from their canonical artifact generated_at without inventing a source date");
+}
+
+// B-OUTCOME-CLOCKS (c): daily lanes whose detection freshness policy already
+// declares unit business_days with a market/federal calendar (treasury_tga:
+// us_federal_business; finra_short_volume: us_trading) must not accrue weekend
+// hours as staleness. A Friday advance read on Saturday/Sunday is current; the
+// same Friday advance read on Tuesday (two business days later) is overdue. The
+// fold reuses the lane's own declared calendar (DATA_SUPPLY_DETECTION_CONFIG
+// freshness.unit/calendar) and the market-calendar business-hour helper the
+// builder already imports for the per-source SLA path -- no second clock. A
+// daily lane declared on plain calendar days (defillama_stablecoins, utc) is
+// the control and keeps flat wall-clock hours. Live reproduction: Saturday
+// 2026-09-05 02:22Z showed treasury_tga/finra_short_volume/occ_options_volume
+// overdue at ~50h vs 36h after a normal Friday advance.
+{
+  const laneRow = (id, artifact) => ({ id, as_of: artifact.source_as_of ?? null, artifact });
+  const freshnessOf = (id) => DATA_SUPPLY_DETECTION_CONFIG.lanes.find((item) => item.id === id).freshness;
+  assert.equal(freshnessOf("treasury_tga").unit, "business_days");
+  assert.equal(freshnessOf("treasury_tga").calendar, "us_federal_business");
+  assert.equal(freshnessOf("finra_short_volume").unit, "business_days");
+  assert.equal(freshnessOf("finra_short_volume").calendar, "us_trading");
+  assert.equal(freshnessOf("defillama_stablecoins").unit, "calendar_days");
+  assert.equal(freshnessOf("defillama_stablecoins").calendar, "utc");
+
+  const fridayAdvance = "2026-09-11"; // Friday; date-only, as the detection floor stamps these lanes
+  const businessDayLanes = ["treasury_tga", "finra_short_volume"];
+  const rowsFor = (now) => new Map(buildOutcomeWatchdog(now, [
+    ...businessDayLanes.map((id) => laneRow(id, { source_as_of: fridayAdvance })),
+    laneRow("defillama_stablecoins", { source_as_of: fridayAdvance }),
+  ]).rows.map((entry) => [entry.lane_id, entry]));
+
+  // Saturday 23:00Z: 47h wall-clock (> 36h) but only Friday's 24 business hours elapsed.
+  const saturday = rowsFor("2026-09-12T23:00:00Z");
+  // Sunday 23:00Z: 71h wall-clock, still 24 business hours.
+  const sunday = rowsFor("2026-09-13T23:00:00Z");
+  for (const id of businessDayLanes) {
+    for (const [label, rows] of [["Saturday", saturday], ["Sunday", sunday]]) {
+      const row = rows.get(id);
+      assert.equal(row.state, "current",
+        `${id}: a Friday advance evaluated on ${label} is current on its business-day calendar`);
+      assert.ok(row.age_hours <= row.threshold_hours,
+        `${id}: ${label} age must be folded by the lane calendar (got ${row.age_hours}h vs ${row.threshold_hours}h)`);
+      assert.equal(row.calendar, freshnessOf(id).calendar,
+        `${id}: the row declares the calendar its age was folded with`);
+      assert.equal(row.advance_basis, "canonical_file_source_as_of");
+      assert.equal(row.source_as_of, fridayAdvance);
+    }
+  }
+  // Tuesday 23:00Z: Friday + Monday + 23h of Tuesday = 71 business hours -> overdue.
+  const tuesday = rowsFor("2026-09-15T23:00:00Z");
+  for (const id of businessDayLanes) {
+    assert.equal(tuesday.get(id).state, "overdue",
+      `${id}: a Friday advance still unrefreshed on Tuesday is overdue on its business-day calendar`);
+  }
+  // Control: the 7-day provider lane stays on plain hours and is overdue on Saturday.
+  assert.equal(saturday.get("defillama_stablecoins").state, "overdue",
+    "a calendar_days/utc daily lane keeps flat wall-clock aging (47h > 36h on Saturday)");
+  assert.equal(saturday.get("defillama_stablecoins").age_hours, 47);
+  assert.equal(saturday.get("defillama_stablecoins").calendar, "utc");
+  assert.deepEqual(
+    { current: saturday.get("treasury_tga").state, control: saturday.get("defillama_stablecoins").state },
+    { current: "current", control: "overdue" },
+    "weekend folding applies only to lanes that declare a business-day calendar",
+  );
+  ok("outcome watchdog folds business-day lanes by their declared calendar and keeps plain-hour lanes on wall-clock");
+}
+
 console.log(`\n# ${passed} fixtures passed`);
 await import("./test-product-surface-stamp-v2.mjs");

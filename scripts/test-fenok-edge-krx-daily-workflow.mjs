@@ -110,7 +110,7 @@ function outputValues(outputPath) {
   );
 }
 
-function executeWalkbackScenario({ allDegraded = false, contradictorySuccess = false } = {}) {
+function executeWalkbackScenario({ allDegraded = false, contradictorySuccess = false, accessRejected = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "krx-workflow-walkback-"));
   const binDir = path.join(root, "bin");
   const scriptsDir = path.join(root, "scripts");
@@ -142,6 +142,18 @@ function executeWalkbackScenario({ allDegraded = false, contradictorySuccess = f
     "  '',",
     "].join('\\n'));",
     "process.exitCode = 0;",
+    "// B-KRX-ACCESS-FAILURE: an access-rejected candidate overrides whatever the",
+    "// candidate would otherwise report (awk/outputValues read the last value).",
+    "if (process.env.KRX_TEST_ACCESS_REJECTED === 'true') {",
+    "  fs.appendFileSync(process.env.GITHUB_OUTPUT, [",
+    "    'attempt_outcome=failure',",
+    "    'recovery_updated=false',",
+    "    'recovery_exit_code=2',",
+    "    'recovery_reason=auth_error',",
+    "    '',",
+    "  ].join('\\n'));",
+    "  process.exitCode = 2;",
+    "}",
     "",
   ].join("\n"));
   fs.writeFileSync(stepOutput, "");
@@ -183,6 +195,7 @@ function executeWalkbackScenario({ allDegraded = false, contradictorySuccess = f
       FENOK_KRX_PLAN_ONLY: "false",
       KRX_TEST_ALL_DEGRADED: String(allDegraded),
       KRX_TEST_CONTRADICTORY_SUCCESS: String(contradictorySuccess),
+      KRX_TEST_ACCESS_REJECTED: String(accessRejected),
       KRX_TEST_CALL_LOG: callLog,
     },
   });
@@ -223,6 +236,27 @@ function executeWalkbackScenario({ allDegraded = false, contradictorySuccess = f
   assert.equal(contradictory.outputs.recovery_reason, "contradictory_success_exit_code");
   assert.doesNotMatch(contradictory.stdout, /Resolved KRX basDd=/,
     "non-zero producer recovery output must never declare a resolved candidate");
+}
+
+// B-KRX-ACCESS-FAILURE (c): when the fetcher signals a provider access
+// rejection (recovery_reason=auth_error, recovery_exit_code=2, process exit 2)
+// the refresh step must fail, must not print the soft retained-LKG warning,
+// and must not spend the walkback budget on earlier dates: a credential
+// rejection is date-independent (run 33883974197 burned 6 dates x 31 calls
+// on HTTP 403 before exiting green).
+{
+  const rejected = executeWalkbackScenario({ accessRejected: true });
+  assert.notEqual(rejected.status, 0,
+    "a provider access rejection must fail the refresh step even though the retained LKG is intact");
+  assert.equal(rejected.outputs.attempt_outcome, "failure");
+  assert.equal(rejected.outputs.recovery_updated, "false");
+  assert.equal(rejected.outputs.recovery_reason, "auth_error");
+  assert.equal(rejected.outputs.recovery_exit_code, "2");
+  assert.doesNotMatch(rejected.stdout, /walkback exhausted with retained LKG/,
+    "an access rejection is not a soft retained-LKG outcome");
+  assert.doesNotMatch(rejected.stdout, /Resolved KRX basDd=/);
+  assert.deepEqual(rejected.calls, ["20260715"],
+    "walkback must stop at the first access-rejected candidate; earlier dates cannot cure a credential rejection");
 }
 
 console.log("test-fenok-edge-krx-daily-workflow: ok");
