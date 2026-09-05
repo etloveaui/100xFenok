@@ -436,6 +436,9 @@ class DataSupplyResolverTests(unittest.TestCase):
         self.assertEqual(recovered["current"]["VYMI"]["provider"], "stockanalysis")
         self.assertEqual(recovered["current"]["VYMI"]["resolution_state"], "fresh_primary")
         self.assertEqual(recovered["recovery"]["VYMI"]["last_transition"], "initial_primary")
+        # The expired audit LKG from the removal is superseded by the fresh
+        # initial selection; it must not ride into the initial transition.
+        self.assertNotIn("VYMI", recovered["lkg"])
 
     def test_known_unavailable_recovers_through_fresh_fallback(self):
         self.expire_to_unavailable()
@@ -453,6 +456,7 @@ class DataSupplyResolverTests(unittest.TestCase):
         self.assertEqual(recovered["current"]["VYMI"]["provider"], "yahoo_finance")
         self.assertEqual(recovered["current"]["VYMI"]["resolution_state"], "fresh_fallback")
         self.assertEqual(recovered["recovery"]["VYMI"]["last_transition"], "initial_fallback")
+        self.assertNotIn("VYMI", recovered["lkg"])
 
     def test_no_prior_without_unavailable_marker_still_fails_initial_selection(self):
         with self.assertRaisesRegex(SchemaError, "no fresh provider candidate exists for initial selection"):
