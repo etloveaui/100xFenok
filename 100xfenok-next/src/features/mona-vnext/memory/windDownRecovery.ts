@@ -136,7 +136,7 @@ export class WindDownRecoveryError extends Error {
 
   constructor(
     readonly code: WindDownRecoveryErrorCode,
-    message = code,
+    message: string = code,
   ) {
     super(message);
     this.name = "WindDownRecoveryError";
