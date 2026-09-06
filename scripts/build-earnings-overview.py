@@ -731,6 +731,8 @@ def _release_eps_row(rows: list[list[str]]) -> tuple[int | float, int | float]:
         if label == "earnings per share":
             saw_marker = True
             continue
+        if saw_marker and label not in {"", "basic", "diluted"}:
+            break
         if saw_marker and label == "diluted":
             values = [_release_number(cell) for cell in row[1:]]
             values = [value for value in values if value is not None]
@@ -833,6 +835,8 @@ def parse_msft_release_table(
             continue
         if "non-gaap" in table_text or "adjusted" in table_text or "reconciliation" in caption:
             continue
+        if not re.search(r"\bin millions\b", table_text):
+            continue
         if not re.search(
             r"\bthree months ended\s+[a-z]+\s+\d{1,2}",
             table_text,
@@ -870,6 +874,8 @@ def parse_msft_release_table(
         raise ValueError("Microsoft pretax row does not reconcile")
 
     period_end = _release_period_end(selected)
+    if _release_years(selected)[:2] != [period_end.year, period_end.year - 1]:
+        raise ValueError("Microsoft comparative year columns are not current then prior")
     expected_source_url = msft_release_url_for_period(
         {"end": period_end.isoformat()}
     )
@@ -1007,20 +1013,30 @@ def _period_is_partial_derived(period: Mapping[str, Any]) -> bool:
 def _merge_confirmed_fields(
     candidate: Mapping[str, Any], previous: Mapping[str, Any]
 ) -> dict[str, Any]:
-    merged = deepcopy(dict(candidate))
-    candidate_income = candidate.get("income")
-    previous_income = previous.get("income")
+    current_income = candidate.get("income")
+    prior_income = previous.get("income")
+    # A previously confirmed issuer quarter can survive an equal, EPS-less
+    # annual-minus-nine-month derivation, but the whole sourced period travels
+    # together. Never attach an old EPS to changed income or a new source URL.
     if (
         _period_is_partial_derived(candidate)
-        and isinstance(candidate_income, Mapping)
-        and isinstance(previous_income, Mapping)
+        and candidate.get("end") == previous.get("end")
+        and isinstance(current_income, Mapping)
+        and isinstance(prior_income, Mapping)
+        and current_income.get("dilutedEps") is None
+        and _finite_number(prior_income.get("dilutedEps")) is not None
     ):
-        income = dict(candidate_income)
-        for metric in METRICS:
-            if income.get(metric) is None and previous_income.get(metric) is not None:
-                income[metric] = previous_income[metric]
-        merged["income"] = income
-    return merged
+        comparable = [metric for metric in METRICS if metric not in {"dilutedEps", "afterTaxOther"}]
+        same_financials = all(
+            _finite_number(current_income.get(metric)) is not None
+            and _finite_number(prior_income.get(metric)) is not None
+            and _close(current_income[metric], prior_income[metric])
+            for metric in comparable
+        )
+        same_adjustment = _close(current_income.get("afterTaxOther") or 0, prior_income.get("afterTaxOther") or 0)
+        if same_financials and same_adjustment:
+            return deepcopy(dict(previous))
+    return deepcopy(dict(candidate))
 
 
 def _document_is_valid(document: Any, ticker: str) -> bool:

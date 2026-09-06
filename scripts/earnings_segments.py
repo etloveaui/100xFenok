@@ -905,6 +905,8 @@ def _extract_msft_plain_segments(
         parser.close()
     except Exception:
         return None
+    if parser._stack:
+        return None
 
     for table in parser.tables:
         rows = _expand_plain_rows(table)

@@ -254,7 +254,7 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
   const enrollment = derivePublicPlaneEnrollment(FAMILIES);
   assert.deepEqual(
     enrollment.exact.filter(([, family]) => family === FAMILY),
-    TICKERS.map((ticker) => [`/data/earnings-overview/${ticker}.json`, FAMILY]),
+    [...TICKERS].sort().map((ticker) => [`/data/earnings-overview/${ticker}.json`, FAMILY]),
   );
   assert.deepEqual(PLANE_ENROLLMENT_EXACT.filter(([, family]) => family === FAMILY), enrollment.exact.filter(([, family]) => family === FAMILY), "committed Worker enrollment must match the verified bounded family");
   assert.equal(
