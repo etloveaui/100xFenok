@@ -9,6 +9,7 @@ for (const test of tests) {
 }
 for (const [command, args] of [
   ["python3", ["../scripts/test_build_earnings_overview.py"]],
+  ["python3", ["../scripts/test_earnings_segments.py"]],
   [process.execPath, ["../scripts/test-earnings-overview-cloud-contract.mjs"]],
 ]) {
   const result = spawnSync(command, args, { stdio: "inherit" });

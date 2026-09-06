@@ -137,6 +137,28 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Upload verified earnings data
+        if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'qa:earnings-overview-data' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-earnings-data
+          path: |
+            data/earnings-overview/AAPL.json
+            data/earnings-overview/AMZN.json
+            data/earnings-overview/MSFT.json
+            data/earnings-overview/META.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload earnings UI evidence
+        if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:earnings-overview-isolated' || inputs.script == 'qa:earnings-overview-browser') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: earnings-overview-ui
+          path: 100xfenok-next/test-results/earnings-overview/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Emit completion receipt
         if: always()
         working-directory: .

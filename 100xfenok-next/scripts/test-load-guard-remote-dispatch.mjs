@@ -301,6 +301,30 @@ assert.doesNotMatch(workflow, /secrets\.|cache:|npm run cf:deploy|wrangler deplo
 // paths, conditions or retention changes remain rejected.
 const expectedUploads = [
   [
+    "      - name: Upload verified earnings data",
+    "        if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'qa:earnings-overview-data' }}",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          name: verified-earnings-data",
+    "          path: |",
+    "            data/earnings-overview/AAPL.json",
+    "            data/earnings-overview/AMZN.json",
+    "            data/earnings-overview/MSFT.json",
+    "            data/earnings-overview/META.json",
+    "          if-no-files-found: error",
+    "          retention-days: 7",
+  ].join("\n"),
+  [
+    "      - name: Upload earnings UI evidence",
+    "        if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:earnings-overview-isolated' || inputs.script == 'qa:earnings-overview-browser') }}",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          name: earnings-overview-ui",
+    "          path: 100xfenok-next/test-results/earnings-overview/*.png",
+    "          if-no-files-found: ignore",
+    "          retention-days: 7",
+  ].join("\n"),
+  [
     "      - name: Upload synthetic WIND DOWN UI evidence",
     "        if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:winddown-preservation-isolated' || inputs.script == 'qa:winddown-continuity-isolated') }}",
     "        uses: actions/upload-artifact@v4",

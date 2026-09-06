@@ -1,0 +1,56 @@
+<!doctype html>
+<html xmlns:ix="http://www.xbrl.org/2013/inlineXBRL" xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:xbrldi="http://xbrl.org/2006/xbrldi">
+<body>
+  <ix:header>
+    <xbrli:unit id="USD"><xbrli:measure>iso4217:USD</xbrli:measure></xbrli:unit>
+  </ix:header>
+  <xbrli:context id="c18">
+    <xbrli:period><xbrli:startDate>2026-03-29</xbrli:startDate><xbrli:endDate>2026-06-27</xbrli:endDate></xbrli:period>
+  </xbrli:context>
+  <xbrli:context id="c10">
+    <xbrli:period><xbrli:startDate>2026-03-29</xbrli:startDate><xbrli:endDate>2026-06-27</xbrli:endDate></xbrli:period>
+    <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">us-gaap:ProductMember</xbrldi:explicitMember>
+  </xbrli:context>
+  <xbrli:context id="c14">
+    <xbrli:period><xbrli:startDate>2026-03-29</xbrli:startDate><xbrli:endDate>2026-06-27</xbrli:endDate></xbrli:period>
+    <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">us-gaap:ServiceMember</xbrldi:explicitMember>
+  </xbrli:context>
+  <xbrli:context id="c57">
+    <xbrli:period><xbrli:startDate>2026-03-29</xbrli:startDate><xbrli:endDate>2026-06-27</xbrli:endDate></xbrli:period>
+    <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">aapl:IPhoneMember</xbrldi:explicitMember>
+  </xbrli:context>
+  <xbrli:context id="c61">
+    <xbrli:period><xbrli:startDate>2026-03-29</xbrli:startDate><xbrli:endDate>2026-06-27</xbrli:endDate></xbrli:period>
+    <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">aapl:MacMember</xbrldi:explicitMember>
+  </xbrli:context>
+  <xbrli:context id="c65">
+    <xbrli:period><xbrli:startDate>2026-03-29</xbrli:startDate><xbrli:endDate>2026-06-27</xbrli:endDate></xbrli:period>
+    <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">aapl:IPadMember</xbrldi:explicitMember>
+  </xbrli:context>
+  <xbrli:context id="c69">
+    <xbrli:period><xbrli:startDate>2026-03-29</xbrli:startDate><xbrli:endDate>2026-06-27</xbrli:endDate></xbrli:period>
+    <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">aapl:WearablesHomeAndAccessoriesMember</xbrldi:explicitMember>
+  </xbrli:context>
+  <!-- A wrong-period fact with the same member must never override c57. -->
+  <xbrli:context id="c57-ytd">
+    <xbrli:period><xbrli:startDate>2026-01-01</xbrli:startDate><xbrli:endDate>2026-06-27</xbrli:endDate></xbrli:period>
+    <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">aapl:IPhoneMember</xbrldi:explicitMember>
+  </xbrli:context>
+  <xbrli:context id="c57-prior-year">
+    <xbrli:period><xbrli:startDate>2025-03-30</xbrli:startDate><xbrli:endDate>2025-06-28</xbrli:endDate></xbrli:period>
+    <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">aapl:IPhoneMember</xbrldi:explicitMember>
+  </xbrli:context>
+  <table>
+    <tbody>
+      <tr><td>Products</td><td><ix:nonFraction contextRef="c10" name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" unitRef="USD" scale="6" decimals="-3">78,678</ix:nonFraction></td></tr>
+      <tr><td>iPhone</td><td><ix:nonFraction contextRef="c57" name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" unitRef="USD" scale="6" decimals="-3">54,252</ix:nonFraction></td></tr>
+      <tr><td>Mac</td><td><ix:nonFraction contextRef="c61" name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" unitRef="USD" scale="6" decimals="-3">10,352</ix:nonFraction></td></tr>
+      <tr><td>iPad</td><td><ix:nonFraction contextRef="c65" name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" unitRef="USD" scale="6" decimals="-3">6,191</ix:nonFraction></td></tr>
+      <tr><td>Wearables, Home and Accessories</td><td><ix:nonFraction contextRef="c69" name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" unitRef="USD" scale="6" decimals="-3">7,883</ix:nonFraction></td></tr>
+      <tr><td>Services</td><td><ix:nonFraction contextRef="c14" name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" unitRef="USD" scale="6" decimals="-3">30,739</ix:nonFraction></td></tr>
+      <tr><td>iPhone YTD</td><td><ix:nonFraction contextRef="c57-ytd" name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" unitRef="USD" scale="6" decimals="-3">1</ix:nonFraction></td></tr>
+      <tr><td>iPhone prior year</td><td><ix:nonFraction contextRef="c57-prior-year" name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" unitRef="USD" scale="6" decimals="-3">2</ix:nonFraction></td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

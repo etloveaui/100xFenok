@@ -134,6 +134,8 @@ assertIncludes(expanded, "Apple Inc.", "the panel identifies the company");
 assertIncludes(expanded, "USD", "the panel states the currency");
 assertIncludes(expanded, "2026년 2분기", "the panel states the selected period label");
 assertIncludes(expanded, "2026-06-30", "the panel states the actual quarter end");
+assertIncludes(expanded, "제출 2026-07-31", "the panel states the filing date");
+assertIncludes(expanded, "갱신 2026-08-01", "the panel states the document refresh date");
 assertIncludes(expanded, "Apple 10-Q", "the panel states the source identity");
 assertIncludes(
   expanded,
@@ -145,6 +147,8 @@ assertIncludes(expanded, "EPS", "the panel labels per-share earnings");
 assertIncludes(expanded, "영업이익률", "the panel labels operating margin");
 assertIncludes(expanded, "순이익", "the panel labels net income");
 assertIncludes(expanded, "최근 분기", "the panel provides recent-quarter comparison context");
+assertIncludes(expanded, "전분기 대비", "recent-quarter percentage changes are explicitly labeled QoQ");
+assertIncludes(expanded, "전년 동기 비교율 없음", "summary percentage changes state when YoY has no valid baseline");
 assertIncludes(expanded, "제품", "valid supplied revenue segments are visible");
 assertIncludes(expanded, "서비스", "valid supplied revenue segments are visible");
 assertNotIncludes(expanded, "예상치", "the actual-only panel does not invent estimates");
@@ -160,6 +164,8 @@ assert.match(
   /<option\b[^>]*value="2026-06-30"[^>]*>[\s\S]*?2026년 2분기[\s\S]*?<\/option>/,
   "the selected option carries the actual quarter end value",
 );
+assert.match(expanded, /aria-label="매출 최근 분기 비교 차트"/, "recent revenue comparison includes a visual bar chart");
+assert.match(expanded, /aria-label="EPS 최근 분기 비교 차트"/, "recent EPS comparison includes a signed visual bar chart");
 
 assertIncludes(expanded, 'data-earnings-flow="sankey"', "positive income data uses a Sankey flow");
 for (const node of [
@@ -180,6 +186,23 @@ for (const node of [
 }
 assertNotIncludes(expanded, "width:-", "positive flow never emits a negative width");
 assertNotIncludes(expanded, "width: -", "positive flow never emits a negative width");
+assertNotIncludes(expanded, "NaN", "segmented flow geometry never emits non-finite coordinates");
+const sankeyStart = expanded.indexOf('data-earnings-flow="sankey"');
+assert.ok(sankeyStart >= 0, "segmented flow marker exists before geometry is inspected");
+const segmentedFlowHtml = expanded.slice(sankeyStart);
+const segmentedViewBox = segmentedFlowHtml.match(/viewBox="0 0 ([0-9.]+) ([0-9.]+)"/);
+assert.ok(segmentedViewBox, "segmented flow exposes a finite SVG viewBox");
+const segmentedViewBoxWidth = Number(segmentedViewBox?.[1]);
+assert.ok(segmentedViewBoxWidth >= 1100, "segmented six-column flow reserves a wide viewBox");
+const flowNodeBounds = Array.from(segmentedFlowHtml.matchAll(/data-flow-x="([0-9.]+)" data-flow-width="([0-9.]+)"/g));
+assert.ok(flowNodeBounds.length > 0, "segmented flow exposes node bounds for layout verification");
+for (const [, xText, widthText] of flowNodeBounds) {
+  const x = Number(xText);
+  const width = Number(widthText);
+  assert.ok(Number.isFinite(x) && Number.isFinite(width), "flow node bounds stay finite");
+  assert.ok(x >= 0 && x + width <= segmentedViewBoxWidth, "every segmented flow node stays inside the viewBox");
+}
+assert.match(segmentedFlowHtml, /data-flow-column="5" data-flow-x="[0-9.]+"/, "the final segmented column is laid out explicitly");
 
 const compact = renderToStaticMarkup(
   createElement(EarningsOverviewPanel, { document, compact: true }),
@@ -216,6 +239,61 @@ assert.match(
   "missing net income renders a placeholder within the net-income metric",
 );
 assertNotIncludes(missingHtml, "$0", "missing numbers are not silently converted to zero");
+
+const missingCurrentNegativeBaseline = {
+  ...document,
+  periods: [
+    makePeriod({ ...actualIncome, dilutedEps: null }),
+    makePeriod(
+      { ...priorIncome, dilutedEps: -0.3 },
+      {
+        end: "2026-03-31",
+        label: "2026년 1분기",
+        source: {
+          name: "Apple 10-Q",
+          url: "https://example.com/aapl-10q-q1",
+          filedAt: "2026-05-01",
+        },
+        segments: [],
+        segmentBasis: null,
+      },
+    ),
+  ],
+};
+const missingCurrentNegativeBaselineHtml = renderToStaticMarkup(
+  createElement(EarningsOverviewPanel, { document: missingCurrentNegativeBaseline }),
+);
+assertIncludes(
+  missingCurrentNegativeBaselineHtml,
+  "비교값 없음",
+  "a missing current value never becomes a false transition from a negative baseline",
+);
+
+const missingCurrentPositiveBaseline = {
+  ...document,
+  periods: [
+    makePeriod({ ...actualIncome, dilutedEps: null }),
+    makePeriod(priorIncome, {
+      end: "2026-03-31",
+      label: "2026년 1분기",
+      source: {
+        name: "Apple 10-Q",
+        url: "https://example.com/aapl-10q-q1",
+        filedAt: "2026-05-01",
+      },
+      segments: [],
+      segmentBasis: null,
+    }),
+  ],
+};
+const missingCurrentPositiveBaselineHtml = renderToStaticMarkup(
+  createElement(EarningsOverviewPanel, { document: missingCurrentPositiveBaseline }),
+);
+assertIncludes(
+  missingCurrentPositiveBaselineHtml,
+  "직전 분기 $1.20 · 비교값 없음",
+  "a missing current value never becomes a false percentage comparison from a positive baseline",
+);
 
 const lossPeriod = makePeriod(
   {
@@ -284,6 +362,27 @@ assertNotIncludes(unsafeHtml, "<svg onload", "segment names remain text, never e
 assertNotIncludes(unsafeHtml, "<script>", "notes remain text, never executable markup");
 assertIncludes(unsafeHtml, "&lt;strong", "company names are HTML-escaped");
 assertIncludes(unsafeHtml, "&lt;img", "source names are HTML-escaped");
+
+const unsafeHttpSourceHtml = renderToStaticMarkup(
+  createElement(EarningsOverviewPanel, {
+    document: {
+      ...document,
+      periods: [
+        makePeriod(actualIncome, {
+          source: {
+            ...makePeriod(actualIncome).source,
+            url: "http://example.com/insecure",
+          },
+        }),
+      ],
+    },
+  }),
+);
+assertNotIncludes(
+  unsafeHttpSourceHtml,
+  'href="http://example.com/insecure"',
+  "non-HTTPS source URLs stay non-clickable",
+);
 
 const retainedDocument: EarningsDocument = {
   ...document,

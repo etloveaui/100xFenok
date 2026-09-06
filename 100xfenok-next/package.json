@@ -228,7 +228,10 @@
     "qa:rim-sustainable-public": "node ../scripts/test-build-fenok-rim-sustainable-public-projection.mjs && tsx scripts/check-rim-sustainable-render-contract.tsx",
     "qa:methodology-axis": "tsx scripts/check-methodology-axis-contract.ts",
     "qa:benchmark-ordinals": "tsx scripts/check-benchmark-ordinals-contract.ts",
-    "qa:earnings-overview": "node scripts/check-earnings-overview.mjs"
+    "qa:earnings-overview": "node scripts/check-earnings-overview.mjs",
+    "qa:earnings-overview-data": "python3 ../scripts/build-earnings-overview.py --refresh --output-dir ../data/earnings-overview",
+    "qa:earnings-overview-isolated": "bash scripts/check-earnings-overview-isolated.sh",
+    "qa:earnings-overview-browser": "tsx scripts/check-earnings-overview-browser.ts"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",

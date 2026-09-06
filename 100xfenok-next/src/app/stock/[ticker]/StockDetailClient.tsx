@@ -1,5 +1,7 @@
 "use client";
 
+import EarningsOverview from "@/components/earnings/EarningsOverview";
+
 import { Fragment, type KeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TransitionLink from "@/components/TransitionLink";
 import CpButton from "@/components/canvas-plus/CpButton";
@@ -3293,6 +3295,7 @@ export default function StockDetailClient({
     }
     return (
       <div className="grid gap-4">
+        {activeStockTab === "financials" && <EarningsOverview ticker={symbol} />}
         {yfAvailable ? (
           <section className="panel stock-tab-panel">
             <div className="panel-b">{renderYfTab(activeStockTab, yfData, industryBench)}</div>
@@ -3437,6 +3440,7 @@ export default function StockDetailClient({
   function renderFinancialsCpTab(showSkeleton: boolean) {
     return (
       <div className="cp-stock-tab-financials">
+        <EarningsOverview ticker={symbol} />
         {showSkeleton ? (
           <div className="cp-stock-tab-loading">
             <SkeletonSection />
