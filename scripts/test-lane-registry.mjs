@@ -649,6 +649,9 @@ function clone(value) {
     // natural run, so assert the pending set is a SUBSET of the known
     // pre-launch lanes rather than an exact list.
     const pendingLanes = new Set([
+      // The first bounded earnings refresh creates its actual attempt report.
+      // Do not fabricate a successful report just to enroll the new store.
+      "earnings_overview",
       "edgar_filings",
       "fred_yardeni",
       "occ_options_volume",
