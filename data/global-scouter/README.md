@@ -119,6 +119,13 @@ The payload total excludes this README and `schema.json`: 1,084 files.
 
 ### raw/ (v2.3.0)
 
+The 2026-09-04 source gives both Berkshire share classes the identical FY+1 EPS
+observation `46563.02`, despite their different per-share scales. This exact dated
+observation is withheld from structured consensus with a rejection reason; the
+raw source is preserved. FY+2/FY+3 and separate forward EPS are unaffected. The
+analyzer uses the latest dated validated FY+1 observation when the structured
+series exists, and never restores a rejected value from raw consensus.
+
 | File | Count | Description |
 |------|-------|-------------|
 | `raw/companies_a_company.json` | 1,066 | A_Company 52-column raw table |
