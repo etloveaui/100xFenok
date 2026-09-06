@@ -296,17 +296,30 @@ assert.match(workflow, /cloudflare-build\) npm run cf:build;;/);
 assert.match(workflow, /contracts\) npm run verify:contracts;;/);
 assert.match(workflow, /sec13f-contract\) npm run qa:sec13f-contract;;/);
 assert.doesNotMatch(workflow, /secrets\.|cache:|npm run cf:deploy|wrangler deploy|run:\s*\$\{\{ inputs\./);
-// Only the two bounded, read-only evidence exports are admitted. A changed
-// path, condition, retention policy, or extra upload still fails this contract.
+// Only these bounded, read-only evidence exports are admitted. Keep this
+// contract aligned when an existing workflow export changes; extra uploads,
+// paths, conditions or retention changes remain rejected.
 const expectedUploads = [
   [
     "      - name: Upload synthetic WIND DOWN UI evidence",
-    "        if: ${{ always() && inputs.suite == 'npm-script' && inputs.script == 'qa:winddown-preservation-isolated' }}",
+    "        if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:winddown-preservation-isolated' || inputs.script == 'qa:winddown-continuity-isolated') }}",
     "        uses: actions/upload-artifact@v4",
     "        with:",
     "          name: winddown-preservation-ui",
-    "          path: 100xfenok-next/test-results/winddown-preservation/*-records.png",
+    "          path: 100xfenok-next/test-results/winddown-preservation/*.png",
     "          if-no-files-found: ignore",
+    "          retention-days: 7",
+  ].join("\n"),
+  [
+    "      - name: Upload WIND DOWN practice projection",
+    "        if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'qa:winddown-practice-publication' }}",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          name: winddown-practice-projection",
+    "          path: |",
+    "            100xfenok-next/src/generated/winddown-published-lkg.ts",
+    "            data/winddown/runtime-lkg/blobs/*.json",
+    "          if-no-files-found: error",
     "          retention-days: 7",
   ].join("\n"),
   [
