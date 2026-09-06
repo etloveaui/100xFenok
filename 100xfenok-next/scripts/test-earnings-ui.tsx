@@ -41,17 +41,18 @@ function installCssModuleLoader(): () => void {
   };
 }
 
-const restoreCssModuleLoader = installCssModuleLoader();
-const { EarningsOverviewPanel } = await import(componentUrl.href);
-restoreCssModuleLoader();
+async function main(): Promise<void> {
+  const restoreCssModuleLoader = installCssModuleLoader();
+  try {
+    const { EarningsOverviewPanel } = await import(componentUrl.href);
 
-function assertIncludes(html: string, needle: string, message: string): void {
-  assert.ok(html.includes(needle), `${message}: expected ${JSON.stringify(needle)}`);
-}
+    function assertIncludes(html: string, needle: string, message: string): void {
+      assert.ok(html.includes(needle), `${message}: expected ${JSON.stringify(needle)}`);
+    }
 
-function assertNotIncludes(html: string, needle: string, message: string): void {
-  assert.ok(!html.includes(needle), `${message}: did not expect ${JSON.stringify(needle)}`);
-}
+    function assertNotIncludes(html: string, needle: string, message: string): void {
+      assert.ok(!html.includes(needle), `${message}: did not expect ${JSON.stringify(needle)}`);
+    }
 
 const actualIncome: EarningsIncome = {
   revenue: 125_000_000_000,
@@ -295,4 +296,13 @@ const retainedHtml = renderToStaticMarkup(
 assertIncludes(retainedHtml, "새 관측을 확인하지 못해 이전 분기를 유지합니다.", "retained data explains why it is shown");
 assertIncludes(retainedHtml, "2026-06-30", "retained data keeps the period date visible");
 
-console.log("[test-earnings-ui] RED contract ready");
+    console.log("[test-earnings-ui] RED contract ready");
+  } finally {
+    restoreCssModuleLoader();
+  }
+}
+
+void main().catch((error: unknown) => {
+  console.error(error);
+  process.exitCode = 1;
+});
