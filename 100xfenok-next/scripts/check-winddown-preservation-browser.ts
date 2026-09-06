@@ -283,6 +283,11 @@ function attachContinuityDiagnostics(page: Page, engine: Engine["id"], base: URL
       && locationUrl !== null
       && apiPath(locationUrl.href) === "/api/winddown/live/report";
     if (isSyntheticReportFailure) return;
+    const isExpectedStoryImageFailure = new URL(page.url()).searchParams.get("story-missing-image") === "1"
+      && locationUrl?.origin === base.origin
+      && locationUrl?.pathname === "/images/winddown/story/beginnings-v1.png"
+      && /^Failed to load resource: the server responded with a status of 404(?: \(.*\))?$/.test(message.text());
+    if (isExpectedStoryImageFailure) return;
     // Client-side metadata updates may report this exact WebKit notice at
     // the framework chunk rather than at the destination document.
     const viewportLocation = locationUrl?.origin === base.origin
@@ -316,7 +321,10 @@ function attachContinuityDiagnostics(page: Page, engine: Engine["id"], base: URL
   page.on("requestfailed", (request) => {
     if (diagnostics.blockedRequests.includes(request.url())) return;
     const failure = request.failure()?.errorText ?? "unknown";
-    if (failure.includes("ERR_ABORTED") && new URL(request.url()).searchParams.has("_rsc")) return;
+    const failedUrl = new URL(request.url());
+    if (request.method() === "GET" && failedUrl.origin === base.origin
+      && failedUrl.pathname.startsWith("/winddown") && failedUrl.searchParams.has("_rsc")
+      && ["net::ERR_ABORTED", "Load request cancelled"].includes(failure)) return;
     if (request.method() === "GET" && request.url().startsWith(`blob:${base.origin}/`)
       && ["net::ERR_ABORTED", "Load request cancelled"].includes(failure)
       && diagnostics.verifiedDownloadUrls.includes(request.url())) return;
@@ -461,10 +469,15 @@ async function wireStoryNetwork(
       }
       const option = STORY_CEREMONY_OPTIONS[slotId].find((candidate) => candidate.id === optionId);
       assert(option, "synthetic ceremony POST must use a server-owned option");
-      habit = storyHabitFixture({
+      const nextHabit = storyHabitFixture({
         ...progress,
         choice: { slotId, optionId, label: option.label },
       });
+      nextHabit.ceremony.slots = nextHabit.ceremony.slots.map((slot) => ({
+        ...slot,
+        choice: slot.id === slotId ? slot.choice : habit.ceremony.slots.find((prior) => prior.id === slot.id)?.choice ?? null,
+      }));
+      habit = nextHabit;
       await handler.fulfill(jsonResponse({ ok: true, status: "committed", ceremony: habit.ceremony }));
       return;
     }
@@ -1638,7 +1651,8 @@ async function closeStoryJourneyForCapture(page: Page) {
       if (await summary.count()) await summary.click();
     }
   }
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
+  await page.waitForFunction(() => window.scrollY <= 1);
 }
 
 async function waitForStoryReady(page: Page) {
@@ -1740,9 +1754,8 @@ async function assertStoryPanelLayout(page: Page, viewport: Viewport) {
   await assertLayout(page);
   if (viewport.width < 768) return;
   const result = await page.evaluate(() => {
-    const find = (selectors: string[]) => selectors.map((selector) => document.querySelector(selector)).find(Boolean) as HTMLElement | undefined;
-    const stage = find(["[data-story-scene]"]);
-    const mission = find(["[data-story-mission]"]);
+    const stage = document.querySelector("[data-story-scene]");
+    const mission = document.querySelector("[data-story-mission]");
     if (!stage || !mission) return { hooks: false, alongside: false };
     const stageRect = stage.getBoundingClientRect();
     const missionRect = mission.getBoundingClientRect();

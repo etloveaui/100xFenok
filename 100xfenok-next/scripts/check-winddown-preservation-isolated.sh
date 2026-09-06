@@ -17,7 +17,15 @@ if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "story" ]; then
   npm run test:winddown-story-gate
 fi
 npm run build:version
-npm run sync-static
+if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "story" ]; then
+  # Story requests use committed art and intercepted synthetic APIs. Reuse the
+  # pushed public assets and generate only build imports; financial derivation
+  # is unrelated to this isolated surface and remains in the production build.
+  npm run build:lane-runid-map
+  npm run build:static-route-manifest
+else
+  npm run sync-static
+fi
 if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "continuity" ]; then
   npm run test:winddown-continuity-gate
 elif [ "${WINDDOWN_QA_SCOPE:-preservation}" != "story" ]; then
