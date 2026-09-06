@@ -23,6 +23,8 @@ if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "story" ]; then
   # is unrelated to this isolated surface and remains in the production build.
   npm run build:lane-runid-map
   npm run build:static-route-manifest
+  mkdir -p public/data/catalog
+  cp ../data/catalog/macro-series.json public/data/catalog/macro-series.json
 else
   npm run sync-static
 fi
