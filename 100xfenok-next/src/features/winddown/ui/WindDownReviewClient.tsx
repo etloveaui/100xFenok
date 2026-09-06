@@ -15,6 +15,7 @@ import {
 } from "@/features/winddown/review/engine";
 import {
   archiveWindDownReviewDraft,
+  clearWindDownReviewDraftAfterExport,
   createWindDownReviewDraft,
   loadWindDownReviewDraft,
   loadWindDownReviewDraftRecovery,
@@ -222,6 +223,19 @@ function getWindDownReviewDraftStorage(): WindDownReviewDraftStorage | null {
   }
 }
 
+function downloadWindDownReviewRaw(raw: string) {
+  const url = URL.createObjectURL(
+    new Blob([raw], { type: "application/json" }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "winddown-review-draft-recovery.json";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 function ReviewChipInput({
   exercise,
   selectedIds,
@@ -306,6 +320,7 @@ export default function WindDownReviewClient() {
   const [draftRecoveryNotice, setDraftRecoveryNotice] = useState<string | null>(null);
   const [draftRecoveryAvailable, setDraftRecoveryAvailable] = useState(false);
   const [draftRecoveryActionAvailable, setDraftRecoveryActionAvailable] = useState(false);
+  const [draftExportAcknowledgmentAvailable, setDraftExportAcknowledgmentAvailable] = useState(false);
   const [draftStorageNotice, setDraftStorageNotice] = useState<string | null>(null);
   const [recallAssistVisible, setRecallAssistVisible] = useState(false);
   const loadSequence = useRef(0);
@@ -317,6 +332,7 @@ export default function WindDownReviewClient() {
   const draftStorageRef = useRef<WindDownReviewDraftStorage | null>(null);
   const draftWritesAllowedRef = useRef(true);
   const draftRecoveryRawRef = useRef<string | null>(null);
+  const draftExportedRawRef = useRef<string | null>(null);
 
   const setReviewSession = useCallback((next: WindDownReviewState | null) => {
     sessionRef.current = next;
@@ -383,10 +399,12 @@ export default function WindDownReviewClient() {
     setDraftRecoveryNotice(null);
     setDraftRecoveryAvailable(false);
     setDraftRecoveryActionAvailable(false);
+    setDraftExportAcknowledgmentAvailable(false);
     setDraftStorageNotice(null);
     draftStorageRef.current = getWindDownReviewDraftStorage();
     draftWritesAllowedRef.current = true;
     draftRecoveryRawRef.current = null;
+    draftExportedRawRef.current = null;
     try {
       const response = await fetch("/api/winddown/study?mode=review", {
         cache: "no-store",
@@ -432,6 +450,7 @@ export default function WindDownReviewClient() {
         if (loaded.status === "stale" || loaded.status === "malformed") {
           draftWritesAllowedRef.current = false;
           draftRecoveryRawRef.current = loaded.raw;
+          draftExportedRawRef.current = null;
           setDraftRecoveryAvailable(true);
           setDraftRecoveryActionAvailable(true);
           setDraftRecoveryNotice(
@@ -471,9 +490,11 @@ export default function WindDownReviewClient() {
       );
       return;
     }
-    draftRecoveryRawRef.current = archived.raw;
+    draftRecoveryRawRef.current = null;
+    draftExportedRawRef.current = null;
     setDraftRecoveryAvailable(true);
     setDraftRecoveryActionAvailable(false);
+    setDraftExportAcknowledgmentAvailable(false);
     const currentSession = sessionRef.current;
     if (!currentSession) {
       draftWritesAllowedRef.current = false;
@@ -500,6 +521,73 @@ export default function WindDownReviewClient() {
     );
   }, [persistDraft]);
 
+  const clearExportedDraftAndContinue = useCallback(() => {
+    const exportedRaw = draftExportedRawRef.current;
+    if (exportedRaw === null) {
+      setDraftRecoveryNotice(
+        "먼저 이전 기록을 내려받아 파일을 보관했는지 확인해 줘.",
+      );
+      return;
+    }
+    const cleared = clearWindDownReviewDraftAfterExport(
+      draftStorageRef.current,
+      exportedRaw,
+    );
+    if (cleared.status === "unavailable") {
+      if (cleared.reason === "export-mismatch" && cleared.currentRaw !== undefined) {
+        draftRecoveryRawRef.current = cleared.currentRaw;
+        draftExportedRawRef.current = null;
+        setDraftExportAcknowledgmentAvailable(false);
+        setDraftRecoveryActionAvailable(true);
+        setDraftRecoveryAvailable(true);
+        setDraftRecoveryNotice(
+          "활성 기록이 바뀌어서 새 기록으로 바꾸지 않았어. 현재 기록을 다시 내려받은 뒤 확인해 줘.",
+        );
+      } else {
+        setDraftRecoveryNotice(
+          "저장 상태를 확인하지 못했어. 내려받은 파일을 보관하고 다시 시도해.",
+        );
+      }
+      return;
+    }
+    const currentSession = sessionRef.current;
+    if (!currentSession) {
+      draftWritesAllowedRef.current = false;
+      setDraftExportAcknowledgmentAvailable(false);
+      setDraftRecoveryActionAvailable(false);
+      setDraftRecoveryNotice(
+        "이전 기록은 확인했지만 현재 복습 화면을 찾지 못했어. 새로 불러오면 이어갈 수 있어.",
+      );
+      return;
+    }
+    draftWritesAllowedRef.current = true;
+    const saved = persistDraft(
+      currentSession,
+      answerRef.current,
+      selectedChipIdsRef.current,
+    );
+    if (!saved) {
+      draftWritesAllowedRef.current = false;
+      setDraftExportAcknowledgmentAvailable(false);
+      setDraftRecoveryActionAvailable(false);
+      setDraftRecoveryNotice(
+        "이전 기록은 확인했지만 새 이어하기 기록을 저장하지 못했어. 복습은 계속할 수 있어.",
+      );
+      return;
+    }
+    draftExportedRawRef.current = null;
+    draftRecoveryRawRef.current = null;
+    setDraftExportAcknowledgmentAvailable(false);
+    setDraftRecoveryActionAvailable(false);
+    const recovery = loadWindDownReviewDraftRecovery(draftStorageRef.current);
+    setDraftRecoveryAvailable(recovery.status === "available");
+    setDraftRecoveryNotice(
+      cleared.status === "missing"
+        ? "이전 기록은 이미 비워져 있었어. 현재 복습을 새 이어하기 기록으로 저장했어."
+        : "파일을 보관했어. 현재 복습을 새 이어하기 기록으로 저장했어.",
+    );
+  }, [persistDraft]);
+
   const downloadDraftRecovery = useCallback(() => {
     const rawFromActive = draftRecoveryRawRef.current;
     const recovery = rawFromActive !== null
@@ -513,17 +601,23 @@ export default function WindDownReviewClient() {
       );
       return;
     }
-    const url = URL.createObjectURL(
-      new Blob([recovery.raw], { type: "application/json" }),
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "winddown-review-draft-recovery.json";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
-    setDraftRecoveryNotice("이전 기록 보관본을 내려받았어.");
+    try {
+      downloadWindDownReviewRaw(recovery.raw);
+    } catch {
+      setDraftRecoveryNotice(
+        "파일 내려받기를 시작하지 못했어. 원본은 그대로 남아 있어.",
+      );
+      return;
+    }
+    if (rawFromActive !== null) {
+      draftExportedRawRef.current = rawFromActive;
+      setDraftExportAcknowledgmentAvailable(true);
+      setDraftRecoveryNotice(
+        "파일 내려받기를 시작했어. 파일을 보관했다면 아래에서 새 기록으로 이어가.",
+      );
+    } else {
+      setDraftRecoveryNotice("이전 복습 보관본 내려받기를 시작했어.");
+    }
   }, []);
 
   const commit = useCallback(
@@ -1264,7 +1358,7 @@ export default function WindDownReviewClient() {
                         type="button"
                         data-draft-recovery-action="archive"
                         onClick={archiveRejectedDraftAndContinue}
-                        className="min-h-[44px] flex-1 rounded-xl bg-[var(--wd-danger)] px-4 text-xs font-black text-[var(--wd-bg)]"
+                        className="min-h-[48px] flex-1 rounded-xl bg-[var(--wd-danger)] px-4 text-xs font-black text-[var(--wd-bg)]"
                       >
                         이전 기록 보관하고 이어가기
                       </button>
@@ -1273,9 +1367,24 @@ export default function WindDownReviewClient() {
                       type="button"
                       data-draft-recovery-action="download"
                       onClick={downloadDraftRecovery}
-                      className="min-h-[44px] flex-1 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-4 text-xs font-black text-[var(--wd-text)]"
+                      className="min-h-[48px] flex-1 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-4 text-xs font-black text-[var(--wd-text)]"
                     >
                       보관한 기록 내려받기
+                    </button>
+                  </div>
+                ) : null}
+                {draftExportAcknowledgmentAvailable ? (
+                  <div className="mt-3 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] p-3 text-left">
+                    <p className="text-xs font-semibold leading-5 text-white/65">
+                      내려받은 파일을 안전한 곳에 보관했다면, 브라우저의 활성 기록을 비우고 새 이어하기 기록을 만들 수 있어. 저장된 서버 복습 기록에는 영향을 주지 않아.
+                    </p>
+                    <button
+                      type="button"
+                      data-draft-recovery-action="acknowledge-export"
+                      onClick={clearExportedDraftAndContinue}
+                      className="mt-3 min-h-[48px] w-full rounded-xl bg-[var(--wd-accent)] px-4 text-xs font-black text-[var(--wd-bg)]"
+                    >
+                      파일을 보관했어 · 새 기록으로 이어가기
                     </button>
                   </div>
                 ) : null}

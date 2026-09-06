@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import {
   chromium,
@@ -960,6 +960,33 @@ async function runReviewContinuity(
     await typed.waitFor({ state: "visible" });
     assert.equal(await typed.inputValue(), "Fresh answer after recovery", "archiving malformed bytes must restore new same-tab continuity");
 
+    const conflictingDraft = "{second unreadable review draft";
+    await page.addInitScript(key => {
+      const raw = sessionStorage.getItem("winddown:qa:next-rejected-draft");
+      if (raw !== null) {
+        sessionStorage.setItem(key, raw);
+        sessionStorage.removeItem("winddown:qa:next-rejected-draft");
+      }
+    }, WINDDOWN_REVIEW_DRAFT_STORAGE_KEY);
+    await page.evaluate(raw => sessionStorage.setItem("winddown:qa:next-rejected-draft", raw), conflictingDraft);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator('[data-draft-recovery-action="archive"]').click();
+    const acknowledgeExport = page.locator('[data-draft-recovery-action="acknowledge-export"]');
+    assert.equal(await acknowledgeExport.count(), 0, "clearing requires an explicit export first");
+    const downloadPromise = page.waitForEvent("download");
+    await page.locator('[data-draft-recovery-action="download"]').click();
+    const download = await downloadPromise;
+    const downloadedPath = await download.path();
+    assert(downloadedPath, "rejected draft download must be available");
+    assert.equal(readFileSync(downloadedPath, "utf8"), conflictingDraft, "download preserves exact rejected active bytes");
+    assert.equal(await page.evaluate(key => sessionStorage.getItem(key), WINDDOWN_REVIEW_DRAFT_STORAGE_KEY), conflictingDraft, "export alone must not clear active bytes");
+    await acknowledgeExport.click();
+    assert.equal(await page.evaluate(key => sessionStorage.getItem(key), WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY), malformedDraft, "export acknowledgment must retain the older archive");
+    await page.getByRole("button", { name: "직접 입력", exact: true }).click();
+    await typed.fill("Fresh answer after exported recovery");
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await typed.waitFor({ state: "visible" });
+    assert.equal(await typed.inputValue(), "Fresh answer after exported recovery", "explicit export acknowledgment restores same-tab continuity");
 
     await page.evaluate(() => sessionStorage.setItem("winddown:qa:review-reset", "1"));
     await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });

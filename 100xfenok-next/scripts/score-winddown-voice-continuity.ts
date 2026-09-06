@@ -411,8 +411,8 @@ async function main() {
     // 24 turns of Korean text with BOTH userText and modelText at 600 characters each
     // Each Hangul character is 3 UTF-8 bytes: 600 * 3 = 1,800 bytes per speaker
     // 3,600+ bytes per turn * 24 turns = ~86 KiB, cleanly establishing > 48 KiB keepalive
-    const koreanUserText = "오늘 저녁에 따뜻한 디카페인 커피 한 잔과 편안하게 쉴 수 있는 자리를 부탁드립니다. 감사합니다. ".repeat(8).slice(0, 600);
-    const koreanModelText = "네, 주문하신 따뜻한 디카페인 커피를 준비해 드리겠습니다. 편안한 자리에서 좋은 시간 보내세요. 언제든 말씀하세요. ".repeat(8).slice(0, 600);
+    const koreanUserText = "오늘 저녁에 따뜻한 디카페인 커피 한 잔과 편안하게 쉴 수 있는 자리를 부탁드립니다. 감사합니다. ".repeat(20).slice(0, 600);
+    const koreanModelText = "네, 주문하신 따뜻한 디카페인 커피를 준비해 드리겠습니다. 편안한 자리에서 좋은 시간 보내세요. 언제든 말씀하세요. ".repeat(20).slice(0, 600);
     assert.equal(koreanUserText.length, 600, "user text must be exactly 600 characters");
     assert.equal(koreanModelText.length, 600, "model text must be exactly 600 characters");
 

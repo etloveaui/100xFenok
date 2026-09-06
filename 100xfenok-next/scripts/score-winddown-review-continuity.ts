@@ -14,6 +14,7 @@ import {
   WINDDOWN_REVIEW_DRAFT_SCHEMA_VERSION,
   WINDDOWN_REVIEW_DRAFT_STORAGE_KEY,
   archiveWindDownReviewDraft,
+  clearWindDownReviewDraftAfterExport,
   createWindDownReviewDraft,
   loadWindDownReviewDraftRecovery,
   loadWindDownReviewDraft,
@@ -346,6 +347,38 @@ const failedArchive = archiveWindDownReviewDraft(failedRecoveryStorage);
 assert.equal(failedArchive.status, "unavailable", "recovery copy failures must remain non-fatal");
 assert.equal(failedRecoveryStorage.activeValue, staleRaw, "copy failure must retain the active rejected draft");
 
+const exportedRawStorage = new MemorySessionStorage();
+const exportedRaw = `${"malformed".repeat(60_000)}!`;
+exportedRawStorage.value = exportedRaw;
+const oversizedNormalArchive = archiveWindDownReviewDraft(exportedRawStorage);
+assert.equal(oversizedNormalArchive.status, "unavailable", "normal archive must refuse an oversized malformed active draft");
+assert.equal(exportedRawStorage.value, exportedRaw, "normal archive refusal must retain the oversized active raw");
+const retainedArchive = "retained archive bytes";
+exportedRawStorage.setItem(WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY, retainedArchive);
+const exportedClear = clearWindDownReviewDraftAfterExport(exportedRawStorage, exportedRaw);
+assert.equal(exportedClear.status, "cleared", "an explicit export acknowledgment may clear an oversized active raw");
+assert.equal(exportedRawStorage.value, null);
+assert.equal(
+  exportedRawStorage.getItem(WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY),
+  retainedArchive,
+  "explicit export clearing must never replace the retained recovery archive",
+);
+
+const mismatchedExportStorage = new MemorySessionStorage();
+mismatchedExportStorage.value = "current rejected raw";
+mismatchedExportStorage.setItem(WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY, retainedArchive);
+const mismatchedExport = clearWindDownReviewDraftAfterExport(
+  mismatchedExportStorage,
+  "previously downloaded raw",
+);
+assert.equal(mismatchedExport.status, "unavailable", "export acknowledgment must refuse when active raw changed");
+assert.equal(mismatchedExportStorage.value, "current rejected raw", "raw mismatch must retain the current active raw");
+assert.equal(
+  mismatchedExportStorage.getItem(WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY),
+  retainedArchive,
+  "raw mismatch must retain the existing recovery archive",
+);
+
 assert.equal(load(new ThrowingSessionStorage("get")).status, "unavailable", "review must survive unavailable sessionStorage reads");
 const writeFailure = saveWindDownReviewDraft(
   new ThrowingSessionStorage("set"),
@@ -395,7 +428,12 @@ assert.equal(twoMatch.pairs.length, 2, "a two-card repair must use two real sent
 assert.equal(twoMatch.tiles.length, 4);
 assert(twoMatch.pairs.every((pair) => pair.id.startsWith("card:")));
 
-const noCreditAfterRepair = applyWindDownReviewAction(retry, {
+const retryForGrade = applyWindDownReviewAction(retry, {
+  type: "submit-retry",
+  answer: "I am ready",
+});
+assert.equal(retryForGrade.state.phase, "grading-retry");
+const noCreditAfterRepair = applyWindDownReviewAction(retryForGrade.state, {
   type: "retry-graded",
   exact: true,
 });
@@ -416,9 +454,12 @@ assert.equal(client.includes("sessionStorage"), true, "continuity must use priva
 assert.equal(client.includes("localStorage"), false, "review continuity must never spill into localStorage");
 assert(client.includes("loadWindDownReviewDraft") && client.includes("saveWindDownReviewDraft"));
 assert(client.includes("archiveWindDownReviewDraft"));
+assert(client.includes("clearWindDownReviewDraftAfterExport"));
 assert(client.includes("이전 기록 보관하고 이어가기"));
 assert(client.includes("data-draft-recovery-action=\"archive\""));
 assert(client.includes("data-draft-recovery-action=\"download\""));
+assert(client.includes("파일을 보관했어 · 새 기록으로 이어가기"));
+assert(client.includes("data-draft-recovery-action=\"acknowledge-export\""));
 assert(client.includes("draftWritesAllowedRef.current = true"));
 assert(client.includes('window.addEventListener("pagehide"'));
 assert(client.includes("persistDraft(next.state"));

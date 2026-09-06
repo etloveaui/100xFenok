@@ -190,6 +190,20 @@ export type WindDownReviewDraftRecoveryLoadResult =
         | "recovery-too-large";
     };
 
+export type WindDownReviewDraftExportClearResult =
+  | { status: "missing" }
+  | { status: "cleared"; raw: string }
+  | {
+      status: "unavailable";
+      reason:
+        | "storage-unavailable"
+        | "storage-read-failed"
+        | "export-mismatch"
+        | "active-clear-unsupported"
+        | "active-clear-failed";
+      currentRaw?: string;
+    };
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
@@ -958,13 +972,11 @@ export function saveWindDownReviewDraft(
 export function archiveWindDownReviewDraft(
   storage: WindDownReviewDraftStorage | null | undefined,
 ): WindDownReviewDraftRecoveryResult {
-  if (
-    !storage ||
-    typeof storage.getItem !== "function" ||
-    typeof storage.setItem !== "function" ||
-    typeof storage.removeItem !== "function"
-  ) {
+  if (!storage || typeof storage.getItem !== "function" || typeof storage.setItem !== "function") {
     return { status: "unavailable", reason: "storage-unavailable" };
+  }
+  if (typeof storage.removeItem !== "function") {
+    return { status: "unavailable", reason: "active-clear-unsupported" };
   }
 
   let raw: string | null;
@@ -1016,6 +1028,47 @@ export function archiveWindDownReviewDraft(
     return { status: "unavailable", reason: "active-clear-failed" };
   }
   return { status: "archived", raw };
+}
+
+export function clearWindDownReviewDraftAfterExport(
+  storage: WindDownReviewDraftStorage | null | undefined,
+  exportedRaw: string,
+): WindDownReviewDraftExportClearResult {
+  if (!storage || typeof storage.getItem !== "function") {
+    return { status: "unavailable", reason: "storage-unavailable" };
+  }
+  if (typeof storage.removeItem !== "function") {
+    return { status: "unavailable", reason: "active-clear-unsupported" };
+  }
+
+  let currentRaw: string | null;
+  try {
+    currentRaw = storage.getItem(WINDDOWN_REVIEW_DRAFT_STORAGE_KEY);
+  } catch {
+    return { status: "unavailable", reason: "storage-read-failed" };
+  }
+  if (currentRaw === null) return { status: "missing" };
+  if (currentRaw !== exportedRaw) {
+    return {
+      status: "unavailable",
+      reason: "export-mismatch",
+      currentRaw,
+    };
+  }
+
+  try {
+    storage.removeItem(WINDDOWN_REVIEW_DRAFT_STORAGE_KEY);
+  } catch {
+    return { status: "unavailable", reason: "active-clear-failed" };
+  }
+  try {
+    if (storage.getItem(WINDDOWN_REVIEW_DRAFT_STORAGE_KEY) !== null) {
+      return { status: "unavailable", reason: "active-clear-failed" };
+    }
+  } catch {
+    return { status: "unavailable", reason: "active-clear-failed" };
+  }
+  return { status: "cleared", raw: exportedRaw };
 }
 
 export function loadWindDownReviewDraftRecovery(
