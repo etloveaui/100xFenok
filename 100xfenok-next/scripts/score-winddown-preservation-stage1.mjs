@@ -1,6 +1,12 @@
 import { spawnSync } from "node:child_process";
 
-const suites = [
+const continuity = process.argv.includes("--continuity");
+const label = continuity ? "continuity" : "preservation";
+const suites = continuity ? [
+  "score-winddown-conversation-history.ts",
+  "score-winddown-review-continuity.ts",
+  "score-winddown-voice-continuity.ts",
+] : [
   "score-winddown-preservation.ts",
   "score-winddown-review-legacy.ts",
   "score-winddown-learn-resume.ts",
@@ -10,9 +16,9 @@ const suites = [
 ];
 let failures = 0;
 for (const suite of suites) {
-  console.log(`\nWIND DOWN preservation: ${suite}`);
+  console.log(`\nWIND DOWN ${label}: ${suite}`);
   const result = spawnSync("tsx", [`scripts/${suite}`], { stdio: "inherit" });
   if (result.status !== 0 || result.error) failures += 1;
 }
-console.log(`\nWIND DOWN preservation: ${suites.length} suites, ${failures} failed`);
+console.log(`\nWIND DOWN ${label}: ${suites.length} suites, ${failures} failed`);
 process.exitCode = failures ? 1 : 0;
