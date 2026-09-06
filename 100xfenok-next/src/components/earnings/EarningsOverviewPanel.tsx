@@ -200,7 +200,7 @@ function makeSummaryMetrics(period: EarningsPeriod, periods: EarningsPeriod[]): 
 }
 
 function nodeLabel(node: IncomeFlowNode): string {
-  if (node.id.startsWith("segment-")) return node.label;
+  if (node.id.startsWith("segment-") || node.id === "afterTaxOther") return node.label;
   return flowLabels[node.id] ?? node.label;
 }
 

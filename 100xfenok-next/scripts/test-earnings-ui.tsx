@@ -318,6 +318,18 @@ assert.match(lossHtml, /[−-]\s*5/, "the loss fallback shows a signed negative 
 assertNotIncludes(lossHtml, "width:-", "loss fallback never asks SVG for a negative width");
 assertNotIncludes(lossHtml, "width: -", "loss fallback never asks SVG for a negative width");
 
+for (const adjustment of [-1_000_000_000, 1_000_000_000]) {
+  const adjustedPeriod = makePeriod({
+    ...actualIncome,
+    afterTaxOther: adjustment,
+    netIncome: actualIncome.netIncome! + adjustment,
+  }, { segments: [] });
+  const adjustedHtml = renderToStaticMarkup(createElement(EarningsOverviewPanel, {
+    document: { ...document, periods: [adjustedPeriod] },
+  }));
+  assertIncludes(adjustedHtml, adjustment < 0 ? "세후 지분법손실" : "세후 지분법이익", "after-tax Sankey labels preserve whether the adjustment adds or subtracts income");
+}
+
 const invalidSegments = makePeriod(actualIncome, {
   segments: [
     { name: "잘못된 제품", revenue: 80_000_000_000 },
