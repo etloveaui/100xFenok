@@ -200,6 +200,8 @@ assert.equal("token" in metadata, false);
 assert.equal("setup" in metadata, false);
 assert.equal("reportProof" in metadata, false);
 assert.doesNotMatch(JSON.stringify(metadata), /ephemeral-client-token|server-secret-test-key/);
+const tamperedProof = `${session.reportProof.slice(0, -1)}${session.reportProof.endsWith("0") ? "1" : "0"}`;
+assert.notEqual(tamperedProof, session.reportProof, "tamper fixture must change the signature");
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "roleplay",
   productSessionId: roleplay.productSessionId,
@@ -228,7 +230,7 @@ assert.equal(await verifyWindDownVoiceSessionProofChain({
   productSessionId: roleplay.productSessionId,
   descriptor: createWindDownRoleplayDescriptor("cafe-order"),
   conversationIds: [session.conversationId],
-  sessionProofs: [`${session.reportProof.slice(0, -1)}0`],
+  sessionProofs: [tamperedProof],
   startedAtIso: session.startedAt,
   stoppedAtIso: "2026-07-31T00:10:00.000Z",
   nowMs: Date.parse("2026-07-31T00:10:00.000Z"),
