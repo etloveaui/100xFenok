@@ -23,7 +23,7 @@ async function assertNoOverflow(page: Page) {
   assert.ok(dimensions.scroll <= dimensions.width + 2, `page overflows: ${JSON.stringify(dimensions)}`);
   const panel = page.locator("[data-earnings-overview]:visible");
   const box = await panel.boundingBox();
-  assert.ok(box && box.x >= -1 && box.x + box.width <= dimensions.width + 2, "earnings panel stays inside viewport");
+  assert.ok(box && box.x >= -1 && box.x + box.width <= dimensions.width + 2, `earnings panel stays inside viewport: ${JSON.stringify({ box, dimensions })}`);
 }
 
 async function verifyDocument(page: Page, ticker: string, compact: boolean) {
@@ -193,7 +193,15 @@ async function main() {
       }
     } catch (error) {
       if (activePage && !activePage.isClosed()) {
-        console.error("[earnings-browser] failed interaction", { url: activePage.url(), body: (await activePage.locator("body").innerText()).slice(0, 3000) });
+        const layout = await activePage.locator("[data-earnings-overview]:visible").first().evaluate(el => {
+          const chain = [];
+          for (let node: Element | null = el; node; node = node.parentElement) {
+            const style = getComputedStyle(node);
+            chain.push({ tag: node.tagName, class: node.className, width: node.getBoundingClientRect().width, minWidth: style.minWidth, columns: style.gridTemplateColumns, overflow: style.overflow });
+          }
+          return chain;
+        }).catch(() => []);
+        console.error("[earnings-browser] failed interaction", { url: activePage.url(), layout, body: (await activePage.locator("body").innerText()).slice(0, 3000) });
         await activePage.screenshot({ path: `${out}/failure-${engine.name}.png`, fullPage: true }).catch(() => {});
       }
       throw error;
