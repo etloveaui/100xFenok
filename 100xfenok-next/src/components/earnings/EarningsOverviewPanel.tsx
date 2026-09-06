@@ -64,9 +64,9 @@ const flowLabels: Record<string, string> = {
 };
 
 const flowColors = {
-  income: "#3679c9",
-  profit: "#e58b3b",
-  expense: "#b77950",
+  income: "var(--c-brand)",
+  profit: "var(--c-up)",
+  expense: "var(--c-warn)",
 } as const;
 
 const toneClasses: Record<NonNullable<SummaryMetric["tone"]>, string> = {
@@ -476,7 +476,7 @@ function ComparisonMiniBar({
   const baseline = 39;
   const scale = 27 / maxValue;
   const bar = (value: number | null, x: number, color: string, id: string): ReactNode => {
-    if (!isFiniteNumber(value)) return <rect key={id} x={x} y={baseline} width="22" height="2" rx="1" fill="#d9e3ef" opacity="0.8" />;
+    if (!isFiniteNumber(value)) return <rect key={id} x={x} y={baseline} width="22" height="2" rx="1" fill="var(--c-line-2)" opacity="0.8" />;
     const height = Math.abs(value) * scale;
     return <rect key={id} x={x} y={value >= 0 ? baseline - height : baseline} width="22" height={height} rx="5" fill={color} opacity="0.9" data-comparison-value={String(value)} />;
   };
@@ -484,9 +484,9 @@ function ComparisonMiniBar({
   return (
     <div className={styles.miniChartWrap}>
       <svg className={styles.miniChart} viewBox="0 0 116 76" role="img" aria-label={`${label} 최근 분기 비교 차트`}>
-        <line x1="7" x2="109" y1={baseline} y2={baseline} stroke="#cbd8e7" strokeWidth="1" />
-        {bar(previous, 23, "#a8bfdc", "previous")}
-        {bar(current, 71, "#e58b3b", "current")}
+        <line x1="7" x2="109" y1={baseline} y2={baseline} stroke="var(--c-line-2)" strokeWidth="1" />
+        {bar(previous, 23, "color-mix(in srgb, var(--c-brand) 38%, var(--c-panel))", "previous")}
+        {bar(current, 71, "var(--c-up)", "current")}
         <text x="34" y="66" textAnchor="middle" className={styles.miniChartLabel}>직전</text>
         <text x="82" y="66" textAnchor="middle" className={styles.miniChartLabel}>선택</text>
       </svg>

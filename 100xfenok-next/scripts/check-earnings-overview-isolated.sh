@@ -5,11 +5,10 @@ export NEXT_TELEMETRY_DISABLED=1
 export QA_BASE_URL=http://127.0.0.1:3107
 npm run qa:earnings-overview
 npm run qa:registry-contracts
-npm run build:version
-npm run sync-static
 npx playwright install --with-deps chromium webkit
 bash scripts/load-guard.sh --assert-nested
-NEXT_BUILD_TARGET=cloudflare npm run cf:build:next
+# Exercise the exact production build chain before browser acceptance.
+npm run cf:build
 server_pid=""
 server_log="${RUNNER_TEMP:-/tmp}/earnings-overview-server.log"
 cleanup() {
