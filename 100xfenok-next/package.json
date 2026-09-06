@@ -228,7 +228,9 @@
     "qa:rim-sustainable-public": "node ../scripts/test-build-fenok-rim-sustainable-public-projection.mjs && tsx scripts/check-rim-sustainable-render-contract.tsx",
     "qa:methodology-axis": "tsx scripts/check-methodology-axis-contract.ts",
     "qa:benchmark-ordinals": "tsx scripts/check-benchmark-ordinals-contract.ts",
-    "test:winddown-story": "tsx scripts/score-winddown-story.ts"
+    "test:winddown-story": "tsx scripts/score-winddown-story.ts",
+    "test:winddown-story-gate": "npm run test:winddown-story && tsx scripts/score-winddown-artist-voice.ts && npm run test:winddown-game && npm run test:winddown-voice && npm run test:winddown-habit && npm run test:winddown-preservation-stage1 && npm run test:winddown-continuity && node scripts/check-route-key-contract.mjs",
+    "qa:winddown-story-isolated": "WINDDOWN_QA_SCOPE=story bash scripts/check-winddown-preservation-isolated.sh"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",

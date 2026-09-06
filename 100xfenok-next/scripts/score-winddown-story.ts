@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { getWindDownVoiceScenario } from '../src/features/winddown/voice/product';
+import { getWindDownVoiceScenario, evaluateWindDownRoleplay } from '../src/features/winddown/voice/product';
 import { WIND_DOWN_CHAPTERS } from '../src/features/winddown/game/model/tour';
 
 async function main() {
@@ -26,7 +26,10 @@ for (const chapter of WIND_DOWN_CHAPTERS) {
     assert.equal(story.storyEpisodeById(episode.id), episode);
     for (const text of [episode.title, episode.location, episode.setup, episode.dialogue, episode.objective, episode.englishExample, episode.reflection]) assert.ok(text.trim().length > 2);
     assert.ok(['luna', 'nova', 'sol', 'mira'].includes(episode.guide));
-    assert.ok(getWindDownVoiceScenario(episode.scenarioId));
+    const scenario = getWindDownVoiceScenario(episode.scenarioId);
+    assert.ok(scenario);
+    const exampleEvidence = evaluateWindDownRoleplay(scenario, [{ conversationId: 'story-example', turnSeq: 1, userText: episode.englishExample, modelText: 'Thanks for sharing.', finalized: true, sttDrift: false, interrupted: false }]);
+    assert.ok(exampleEvidence.evidence.length > 0, `${episode.id} example must support an actual authored expression marker`);
     const href = new URL(story.storyRoleplayHref(episode), 'https://local.invalid');
     assert.equal(href.pathname, '/winddown/roleplay');
     assert.equal(href.searchParams.get('story'), episode.id);

@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { currentChapter } from "@/features/winddown/game/model/progress";
+import { storyEpisodesForChapter } from "@/features/winddown/game/model/story";
+import WindDownStoryScene from "@/features/winddown/game/ui/WindDownStoryScene";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   WindDownLumi,
@@ -257,6 +260,7 @@ export default function WindDownHabitHomeClient() {
   const projection = habit?.projection ?? null;
   const tonight = habit?.tonight ?? null;
   const game = habit?.game ?? null;
+  const currentStory = game ? storyEpisodesForChapter(currentChapter(game.xp).id)[0] : undefined;
   const latestHistory = projection?.questHistory.slice(0, 3) ?? [];
   const nextAction = tonight ? nextActionDetails[tonight.nextAction] : null;
   const lumiState: WindDownLumiState =
@@ -272,7 +276,7 @@ export default function WindDownHabitHomeClient() {
 
   return (
     <main className="min-h-[100dvh] overflow-x-hidden bg-[var(--wd-bg)] text-[var(--wd-ink)]">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-[max(env(safe-area-inset-top),22px)]">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-[max(env(safe-area-inset-top),22px)]">
         <header className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">WIND DOWN</p>
@@ -344,19 +348,23 @@ export default function WindDownHabitHomeClient() {
               </div>
             </section>
 
-            <section className="mt-5 rounded-[28px] border border-[var(--wd-line)] bg-[var(--wd-card-solid)] p-5">
+            <section aria-label="현재 성장 이야기" className="mt-5 overflow-hidden rounded-[28px] border border-[var(--wd-line)] bg-[var(--wd-card-solid)]">
+              {currentStory ? <WindDownStoryScene sceneKey={currentStory.sceneKey} title={currentStory.title} compact /> : null}
+              <div className="p-5">
               <div className="flex items-center justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                   <p className="text-[11px] font-black tracking-[0.16em] text-[var(--wd-accent)]">WORLD TOUR</p>
-                  <h2 className="mt-1 text-lg font-bold">공부한 만큼 열린 무대</h2>
+                  <h2 className="mt-1 text-lg font-bold">{currentStory?.title ?? "공부한 만큼 열린 무대"}</h2>
                 </div>
-                <Link href="/winddown/game" className="inline-flex min-h-[48px] shrink-0 items-center rounded-full border border-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-accent)] transition active:scale-[.98] motion-reduce:transition-none">
+                <Link href={currentStory ? `/winddown/game?story=${encodeURIComponent(currentStory.id)}` : "/winddown/game"} className="inline-flex min-h-[48px] shrink-0 items-center rounded-full border border-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-accent)] transition active:scale-[.98] motion-reduce:transition-none">
                   투어 보기
                 </Link>
               </div>
               <p className="mt-2 text-sm font-medium leading-6 text-[var(--wd-muted)]">
-                저장된 문장 {game.creditedAnswerCount}개와 복습 별 {game.collectedReviewStarCount}개가 {game.xp} XP로 이어졌어.
+                {currentStory?.setup}
               </p>
+              <p className="mt-2 text-xs leading-5 text-[var(--wd-muted)]">저장된 문장 {game.creditedAnswerCount}개와 복습 별 {game.collectedReviewStarCount}개가 {game.xp} XP로 이어졌어.</p>
+              </div>
             </section>
 
             <section className="mt-5 rounded-[28px] border border-[var(--wd-line)] bg-[var(--wd-card-solid)] p-5">
