@@ -380,6 +380,16 @@ export default function WindDownGameClient({
           <p className={styles.eyebrow}>{chapterAct?.tag ?? "ACT"} · {chapterAct?.name ?? ""}</p>
           <h1 className={styles.title}>{episode.title}</h1>
           <p className={styles.location}>{episode.location} · {stateLabel} · 지금의 무대: {here.label}</p>
+          {chosenCeremonies.length > 0 ? (
+            <div className={styles.identityLine} aria-label="저장된 팀 이름">
+              {chosenCeremonies.map((slot) => slot.choice ? (
+                <span className={styles.identityItem} key={slot.id}>
+                  <span className={styles.identityLabel}>{slot.label}</span>
+                  <span className={styles.identityValue}>{slot.choice.label}</span>
+                </span>
+              ) : null)}
+            </div>
+          ) : null}
         </header>
 
         <div className={styles.stageGrid}>
@@ -430,36 +440,36 @@ export default function WindDownGameClient({
               <Link href={action.href} className={styles.generalLink}>{action.label}</Link>
             </div>
           </section>
-        </div>
 
-        <section className={styles.reading} aria-label="이야기 이어 읽기">
-          <p className={styles.eyebrow}>STORY CONTINUATION</p>
-          <h2 className={styles.sectionTitle}>이야기 이어 읽기</h2>
-          <p className={styles.readingText}>{episode.reflection}</p>
-          <p className={styles.readingNote}>성장 기록은 저장된 학습과 복습을 따라 이어져.</p>
-          {episode.keepsake ? <span className={styles.keepsake}>이야기 속 기념물 · {episode.keepsake}</span> : null}
-          <button
-            type="button"
-            className={`${styles.disclosure} motion-reduce:transition-none`}
-            aria-expanded={dialogueOpen}
-            onClick={() => setDialogueOpen((open) => !open)}
-          >
-            <span>대화와 영어 예시 보기</span>
-            <span className={styles.disclosureMarker} aria-hidden="true">{dialogueOpen ? "−" : "+"}</span>
-          </button>
-          {dialogueOpen ? (
-            <div className={styles.dialogueGrid}>
-              <div className={styles.dialogueCard}>
-                <p className={styles.dialogueLabel}>DIALOGUE</p>
-                <p className={styles.dialogueText}>{episode.dialogue}</p>
+          <section className={styles.reading} aria-label="이야기 이어 읽기">
+            <p className={styles.eyebrow}>STORY CONTINUATION</p>
+            <h2 className={styles.sectionTitle}>이야기 이어 읽기</h2>
+            <p className={styles.readingText}>{episode.reflection}</p>
+            <p className={styles.readingNote}>성장 기록은 저장된 학습과 복습을 따라 이어져.</p>
+            {episode.keepsake ? <span className={styles.keepsake}>이야기 속 기념물 · {episode.keepsake}</span> : null}
+            <button
+              type="button"
+              className={`${styles.disclosure} motion-reduce:transition-none`}
+              aria-expanded={dialogueOpen}
+              onClick={() => setDialogueOpen((open) => !open)}
+            >
+              <span>대화와 영어 예시 보기</span>
+              <span className={styles.disclosureMarker} aria-hidden="true">{dialogueOpen ? "−" : "+"}</span>
+            </button>
+            {dialogueOpen ? (
+              <div className={styles.dialogueGrid}>
+                <div className={styles.dialogueCard}>
+                  <p className={styles.dialogueLabel}>DIALOGUE</p>
+                  <p className={styles.dialogueText}>{episode.dialogue}</p>
+                </div>
+                <div className={styles.dialogueCard}>
+                  <p className={styles.dialogueLabel}>ENGLISH EXAMPLE</p>
+                  <p className={styles.dialogueText}>{episode.englishExample}</p>
+                </div>
               </div>
-              <div className={styles.dialogueCard}>
-                <p className={styles.dialogueLabel}>ENGLISH EXAMPLE</p>
-                <p className={styles.dialogueText}>{episode.englishExample}</p>
-              </div>
-            </div>
-          ) : null}
-        </section>
+            ) : null}
+          </section>
+        </div>
 
         <StoryJourney
           acts={WIND_DOWN_CONTENT_PACK.acts}

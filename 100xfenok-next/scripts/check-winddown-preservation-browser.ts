@@ -1656,6 +1656,52 @@ async function waitForStoryImage(page: Page) {
   }, undefined, { timeout: 20_000 });
 }
 
+async function assertReducedMotionStorySettled(page: Page) {
+  const readRafCount = () => page.evaluate(() => (window as Window & { __windDownQaRafCalls?: number }).__windDownQaRafCalls ?? 0);
+  const rafSamples = [await readRafCount()];
+  await page.waitForTimeout(220);
+  rafSamples.push(await readRafCount());
+  await page.waitForTimeout(220);
+  rafSamples.push(await readRafCount());
+  const deltas = rafSamples.slice(1).map((sample, index) => sample - rafSamples[index]);
+  assert.ok(deltas.every((delta) => delta <= 1), `reduced-motion story must settle RAF work after readiness: ${JSON.stringify({ rafSamples, deltas })}`);
+
+  const activeMotion = await page.evaluate(() => {
+    const roots = [
+      document.querySelector("[data-story-scene]"),
+      document.querySelector("[data-story-mission]"),
+      document.querySelector('[aria-label="우리의 아홉 막"]'),
+    ].filter((root): root is Element => Boolean(root));
+    const elements = new Set<Element>();
+    for (const root of roots) {
+      elements.add(root);
+      for (const descendant of root.querySelectorAll("*")) elements.add(descendant);
+    }
+    return [...elements]
+      .map((element) => {
+        const style = getComputedStyle(element);
+        const transitionDurations = style.transitionDuration.split(",").map((duration) => Number.parseFloat(duration));
+        const animationDurations = style.animationDuration.split(",").map((duration) => Number.parseFloat(duration));
+        return {
+          element: `${element.tagName.toLowerCase()}${element.className ? `.${String(element.className).replace(/\s+/g, ".")}` : ""}`,
+          animationName: style.animationName,
+          animationPlayState: style.animationPlayState,
+          animationDurations,
+          transitionProperty: style.transitionProperty,
+          transitionDurations,
+          activeAnimation: style.animationName !== "none"
+            && style.animationPlayState === "running"
+            && animationDurations.some((duration) => duration > 0),
+          activeTransition: style.transitionProperty !== "none"
+            && transitionDurations.some((duration) => duration > 0),
+        };
+      })
+      .filter((entry) => entry.activeAnimation || entry.activeTransition)
+      .slice(0, 20);
+  });
+  assert.deepEqual(activeMotion, [], `reduced-motion story must not leave active animation or transition: ${JSON.stringify(activeMotion)}`);
+}
+
 async function storyLink(page: Page, episodeId: string) {
   const encoded = encodeURIComponent(episodeId);
   const candidate = page.locator(`a[href*="/winddown/roleplay"][href*="story=${encoded}"]`).first();
@@ -1673,6 +1719,7 @@ async function assertStoryState(page: Page, episodeId: string, expected: "curren
       ?? element.textContent
       ?? "";
   });
+  assert.equal(state, expected, `${episodeId} must distinguish current, replay, and preview`);
   if (expected === "preview") {
     assert.match(state, /preview|미리|잠겨|예정|future/i, `${episodeId} must be visibly marked as a future preview`);
     const practiceLinks = await page.locator(`a[href*="/winddown/roleplay"][href*="story=${encodeURIComponent(episodeId)}"]`).count();
@@ -1684,7 +1731,7 @@ async function assertStoryState(page: Page, episodeId: string, expected: "curren
 
 async function assertStoryActCoverage(page: Page) {
   for (const tag of ["ACT I", "ACT II", "ACT III", "ACT IV", "ACT V", "ACT VI", "ACT VII", "ACT VIII", "ACT IX"]) {
-    assert.ok(await page.getByText(tag, { exact: false }).count() > 0, `story tour must render ${tag}`);
+    assert.ok(await page.getByText(tag, { exact: true }).count() > 0, `story tour must render ${tag}`);
   }
 }
 
@@ -1764,7 +1811,7 @@ async function runStoryContext(
     await assertStoryState(page, "coachella", progress.xp === 0 ? "preview" : "replay");
     await assertStoryState(page, "grammy-acceptance", progress.xp === 0 ? "preview" : "current");
     assert.equal(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches), true, "story context must honor reduced motion");
-    assert.equal(await page.evaluate(() => (window as Window & { __windDownQaRafCalls?: number }).__windDownQaRafCalls ?? 0), 0, "reduced-motion story must not schedule RAF work");
+    await assertReducedMotionStorySettled(page);
     assert.equal(await page.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "story navigation must not request microphone access");
     await assertStoryPanelLayout(page, viewport);
     if (progress.xp >= 1698 && [390, 768, 820].includes(viewport.width)) {
@@ -1776,17 +1823,17 @@ async function runStoryContext(
     if (progress.xp >= 1698) {
       assert.ok(await page.getByRole("button", { name: "LUMEN", exact: true }).count() > 0, "group ceremony must show a valid server-owned name");
       await page.getByRole("button", { name: "LUMEN", exact: true }).click();
-      await page.getByText(/LUMEN/).first().waitFor({ state: "visible", timeout: 20_000 });
+      await page.locator('[aria-label="우리의 이름"] li').filter({ hasText: "LUMEN" }).waitFor({ state: "visible", timeout: 20_000 });
       await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
-      await page.getByText(/LUMEN/).first().waitFor({ state: "visible", timeout: 20_000 });
+      await page.locator('[aria-label="우리의 이름"] li').filter({ hasText: "LUMEN" }).waitFor({ state: "visible", timeout: 20_000 });
       assert.ok(await page.getByRole("button", { name: "First Light", exact: true }).count() > 0, "debut ceremony must show a valid server-owned name");
       await page.getByRole("button", { name: "First Light", exact: true }).click();
-      await page.getByText(/First Light/).first().waitFor({ state: "visible", timeout: 20_000 });
+      await page.locator('[aria-label="우리의 이름"] li').filter({ hasText: "First Light" }).waitFor({ state: "visible", timeout: 20_000 });
       await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
-      await page.getByText(/First Light/).first().waitFor({ state: "visible", timeout: 20_000 });
+      await page.locator('[aria-label="우리의 이름"] li').filter({ hasText: "First Light" }).waitFor({ state: "visible", timeout: 20_000 });
       assert.ok(await page.getByRole("button", { name: "GLOW", exact: true }).count() > 0, "fandom ceremony must show a valid server-owned name");
       await page.getByRole("button", { name: "GLOW", exact: true }).click();
-      await page.getByText(/GLOW/).first().waitFor({ state: "visible", timeout: 20_000 });
+      await page.locator('[aria-label="우리의 이름"] li').filter({ hasText: "GLOW" }).waitFor({ state: "visible", timeout: 20_000 });
       await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
       for (const labelText of ["LUMEN", "First Light", "GLOW"]) {
         await page.getByText(new RegExp(labelText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))).first().waitFor({ state: "visible", timeout: 20_000 });
@@ -1907,6 +1954,7 @@ async function runStoryContext(
         await recoveryRetry.waitFor({ state: "visible", timeout: 20_000 });
         await recoveryRetry.click();
         await recoveryPage.getByText("이전 대화를 원래 기록으로 보관했어.", { exact: true }).waitFor({ state: "visible", timeout: 20_000 });
+        assert.equal(await recoveryPage.getByRole("link", { name: "이 무대로 돌아가기", exact: true }).getAttribute("href"), "/winddown/game?story=grammy-acceptance", "saved report must retain a direct return to the selected story");
         assert.equal(recoveryDiagnostics.voiceReportPostCount, 1, "recovered report must upload only after retry");
         assert.equal(recoveryDiagnostics.voiceReportBodies[0], JSON.stringify(recoveryFixture.report), "recovered retry must preserve the original report bytes");
         assert.equal(recoveryDiagnostics.voiceSessionPostCount, 0, "recovered retry must not open a new voice session");
