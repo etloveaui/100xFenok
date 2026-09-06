@@ -232,6 +232,7 @@ function attachDiagnostics(page: Page, engine: Engine["id"], base: URL) {
 }
 
 type ContinuityDiagnostics = {
+  verifiedDownloadUrls: string[];
   consoleErrors: string[];
   compatibilityNotices: string[];
   pageErrors: string[];
@@ -251,6 +252,7 @@ type ContinuityDiagnostics = {
 
 function attachContinuityDiagnostics(page: Page, engine: Engine["id"], base: URL): ContinuityDiagnostics {
   const diagnostics: ContinuityDiagnostics = {
+    verifiedDownloadUrls: [],
     consoleErrors: [],
     compatibilityNotices: [],
     pageErrors: [],
@@ -281,20 +283,25 @@ function attachContinuityDiagnostics(page: Page, engine: Engine["id"], base: URL
       && locationUrl !== null
       && apiPath(locationUrl.href) === "/api/winddown/live/report";
     if (isSyntheticReportFailure) return;
+    // Client-side metadata updates may report this exact WebKit notice at
+    // the framework chunk rather than at the destination document.
+    const viewportLocation = locationUrl?.origin === base.origin
+      && /^\/_next\/static\/chunks\/[A-Za-z0-9._-]+\.js$/.test(locationUrl.pathname)
+      ? new URL(page.url()) : locationUrl;
     if (
       engine === "webkit"
       && message.text() === 'Viewport argument key "interactive-widget" not recognized and ignored.'
-      && locationUrl?.origin === base.origin
-      && locationUrl !== null
-      && ["/winddown/review", "/winddown/conversations", "/winddown/roleplay", "/winddown/drill"].includes(apiPath(locationUrl.href))
-      && (apiPath(locationUrl.href) !== "/winddown/drill"
-        ? locationUrl.search === ""
-        : (locationUrl.searchParams.size === 1 && locationUrl.searchParams.get("practice") === "1")
-          || (locationUrl.searchParams.size === 1 && locationUrl.searchParams.get("material") === "synthetic-material-002")
-          || (locationUrl.searchParams.size === 3
-            && locationUrl.searchParams.get("conversation") === "wd-continuity-session-001"
-            && locationUrl.searchParams.get("turn") === "1"
-            && locationUrl.searchParams.get("source") === "wd-continuity-conversation-001"))
+      && viewportLocation?.origin === base.origin
+      && viewportLocation !== null
+      && ["/winddown/review", "/winddown/conversations", "/winddown/roleplay", "/winddown/drill"].includes(apiPath(viewportLocation.href))
+      && (apiPath(viewportLocation.href) !== "/winddown/drill"
+        ? viewportLocation.search === ""
+        : (viewportLocation.searchParams.size === 1 && viewportLocation.searchParams.get("practice") === "1")
+          || (viewportLocation.searchParams.size === 1 && viewportLocation.searchParams.get("material") === "synthetic-material-002")
+          || (viewportLocation.searchParams.size === 3
+            && viewportLocation.searchParams.get("conversation") === "wd-continuity-session-001"
+            && viewportLocation.searchParams.get("turn") === "1"
+            && viewportLocation.searchParams.get("source") === "wd-continuity-conversation-001"))
     ) {
       diagnostics.compatibilityNotices.push(JSON.stringify({ text: message.text(), location }));
       return;
@@ -306,7 +313,10 @@ function attachContinuityDiagnostics(page: Page, engine: Engine["id"], base: URL
     if (diagnostics.blockedRequests.includes(request.url())) return;
     const failure = request.failure()?.errorText ?? "unknown";
     if (failure.includes("ERR_ABORTED") && new URL(request.url()).searchParams.has("_rsc")) return;
-    diagnostics.pageErrors.push(`request:${request.method()}:${failure}`);
+    if (request.method() === "GET" && request.url().startsWith(`blob:${base.origin}/`)
+      && ["net::ERR_ABORTED", "Load request cancelled"].includes(failure)
+      && diagnostics.verifiedDownloadUrls.includes(request.url())) return;
+    diagnostics.pageErrors.push(`request:${request.method()}:${request.url()}:${failure}`);
   });
   return diagnostics;
 }
@@ -947,6 +957,7 @@ async function runReviewContinuity(
     const typed = page.getByLabel("영어로 직접 입력", { exact: true });
     await typed.waitFor({ state: "visible", timeout: 20_000 });
     await typed.fill("I can");
+    await page.waitForLoadState("networkidle", { timeout: 10_000 });
     await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
     await typed.waitFor({ state: "visible", timeout: 20_000 });
     assert.equal(await typed.inputValue(), "I can", "typed partial answer must survive reload");
@@ -959,11 +970,13 @@ async function runReviewContinuity(
         sessionStorage.setItem("winddown:qa:malformed-review-seeded", "1");
       }
     }, { key: WINDDOWN_REVIEW_DRAFT_STORAGE_KEY, raw: malformedDraft });
+    await page.waitForLoadState("networkidle", { timeout: 10_000 });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.locator('[data-draft-recovery-action="archive"]').click();
     assert.equal(await page.evaluate(key => sessionStorage.getItem(key), WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY), malformedDraft);
     await page.getByRole("button", { name: "직접 입력", exact: true }).click();
     await typed.fill("Fresh answer after recovery");
+    await page.waitForLoadState("networkidle", { timeout: 10_000 });
     await page.reload({ waitUntil: "domcontentloaded" });
     await typed.waitFor({ state: "visible" });
     assert.equal(await typed.inputValue(), "Fresh answer after recovery", "archiving malformed bytes must restore new same-tab continuity");
@@ -977,6 +990,7 @@ async function runReviewContinuity(
       }
     }, WINDDOWN_REVIEW_DRAFT_STORAGE_KEY);
     await page.evaluate(raw => sessionStorage.setItem("winddown:qa:next-rejected-draft", raw), conflictingDraft);
+    await page.waitForLoadState("networkidle", { timeout: 10_000 });
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.locator('[data-draft-recovery-action="archive"]').click();
     const acknowledgeExport = page.locator('[data-draft-recovery-action="acknowledge-export"]');
@@ -987,6 +1001,11 @@ async function runReviewContinuity(
     const downloadedPath = await download.path();
     assert(downloadedPath, "rejected draft download must be available");
     assert.equal(readFileSync(downloadedPath, "utf8"), conflictingDraft, "download preserves exact rejected active bytes");
+    if (download.url().startsWith(`blob:${base.origin}/`)) {
+      diagnostics.verifiedDownloadUrls.push(download.url());
+      diagnostics.pageErrors = diagnostics.pageErrors.filter(entry =>
+        !["net::ERR_ABORTED", "Load request cancelled"].some(reason => entry === `request:GET:${download.url()}:${reason}`));
+    }
     assert.equal(await page.evaluate(key => sessionStorage.getItem(key), WINDDOWN_REVIEW_DRAFT_STORAGE_KEY), conflictingDraft, "export alone must not clear active bytes");
     await assertLayout(page);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-review-recovery.png`), fullPage: true });
@@ -994,11 +1013,13 @@ async function runReviewContinuity(
     assert.equal(await page.evaluate(key => sessionStorage.getItem(key), WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY), malformedDraft, "export acknowledgment must retain the older archive");
     await page.getByRole("button", { name: "직접 입력", exact: true }).click();
     await typed.fill("Fresh answer after exported recovery");
+    await page.waitForLoadState("networkidle", { timeout: 10_000 });
     await page.reload({ waitUntil: "domcontentloaded" });
     await typed.waitFor({ state: "visible" });
     assert.equal(await typed.inputValue(), "Fresh answer after exported recovery", "explicit export acknowledgment restores same-tab continuity");
 
     await page.evaluate(() => sessionStorage.setItem("winddown:qa:review-reset", "1"));
+    await page.waitForLoadState("networkidle", { timeout: 10_000 });
     await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
     const availableChips = page.locator('[aria-label="고를 단어"] button');
     await availableChips.first().waitFor({ state: "visible", timeout: 20_000 });
@@ -1007,6 +1028,7 @@ async function runReviewContinuity(
     await selected.first().waitFor({ state: "visible", timeout: 20_000 });
     const selectedLabel = await selected.first().textContent();
     assert(selectedLabel?.trim(), "chip partial selection must contain a label");
+    await page.waitForLoadState("networkidle", { timeout: 10_000 });
     await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
     await page.locator('[aria-label="선택한 단어"] button').first().waitFor({ state: "visible", timeout: 20_000 });
     assert.equal(
@@ -1016,6 +1038,7 @@ async function runReviewContinuity(
     );
 
     await page.evaluate(() => sessionStorage.setItem("winddown:qa:review-reset", "1"));
+    await page.waitForLoadState("networkidle", { timeout: 10_000 });
     await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
     await page.getByRole("button", { name: "직접 입력", exact: true }).click();
     await page.getByLabel("영어로 직접 입력", { exact: true }).fill("wrong answer");
@@ -1031,6 +1054,7 @@ async function runReviewContinuity(
     await page.getByLabel("영어로 다시 입력", { exact: true }).fill(REVIEW_CARDS[0].en);
     await page.getByRole("button", { name: "한 번만 다시 확인하기", exact: true }).click();
     await page.getByRole("button", { name: "같은 기록 다시 저장하기", exact: true }).waitFor({ state: "visible" });
+    await page.waitForLoadState("networkidle", { timeout: 10_000 });
     await page.reload({ waitUntil: "domcontentloaded" });
     const retryCommit = page.getByRole("button", { name: "같은 기록 다시 저장하기", exact: true });
     await retryCommit.waitFor({ state: "visible" });

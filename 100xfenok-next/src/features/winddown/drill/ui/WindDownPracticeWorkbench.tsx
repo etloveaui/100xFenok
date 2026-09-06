@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { WindDownDeviceSpeechPractice } from "@/features/winddown/speech/WindDownDeviceSpeechPractice";
 import {
   applyWindDownPracticeAction,
@@ -32,6 +32,15 @@ const THEME_LABELS: Record<string, string> = {
 };
 
 const METHODS = Object.keys(METHOD_LABELS) as WindDownPracticeMethod[];
+
+const SELECT_CLASS = "mt-2 min-h-[48px] min-w-0 max-w-full w-full appearance-none rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] pl-3 pr-10 text-sm font-black text-[var(--wd-text)]";
+const SELECT_STYLE: CSSProperties = {
+  colorScheme: "dark",
+  backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23b9afd7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")",
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 12px center",
+  backgroundSize: "16px",
+};
 
 function selectedTargetMaterialId(response: WindDownPracticeResponse): string | null {
   if (response.target.kind === "canonical-material") return response.target.materialId;
@@ -155,7 +164,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
           {themes.length > 0 ? (
             <label className="block text-xs font-black text-[var(--wd-muted)]">
               주제
-              <select data-practice-theme value={themeFilter} onChange={(event) => { const nextTheme = event.target.value; setThemeFilter(nextTheme); const nextMaterial = (nextTheme === "all" ? response.materials : response.materials.filter((candidate) => candidate.practice?.theme?.trim() === nextTheme))[0]; if (nextMaterial) chooseMaterial(nextMaterial.id); }} className="mt-2 min-h-[48px] min-w-0 max-w-full w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 text-sm font-black text-[var(--wd-text)]">
+              <select data-practice-theme value={themeFilter} onChange={(event) => { const nextTheme = event.target.value; setThemeFilter(nextTheme); const nextMaterial = (nextTheme === "all" ? response.materials : response.materials.filter((candidate) => candidate.practice?.theme?.trim() === nextTheme))[0]; if (nextMaterial) chooseMaterial(nextMaterial.id); }} className={SELECT_CLASS} style={SELECT_STYLE}>
                 <option value="all">전체</option>
                 {themes.map((theme) => <option key={theme} value={theme}>{THEME_LABELS[theme] ?? theme}</option>)}
               </select>
@@ -163,7 +172,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
           ) : null}
           <label className="block text-xs font-black text-[var(--wd-muted)]">
             연습할 문장
-            <select data-practice-material value={materialId ?? ""} onChange={(event) => chooseMaterial(event.target.value)} className="mt-2 min-h-[48px] min-w-0 max-w-full w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 text-sm font-black text-[var(--wd-text)]">
+            <select data-practice-material value={materialId ?? ""} onChange={(event) => chooseMaterial(event.target.value)} className={SELECT_CLASS} style={SELECT_STYLE}>
             {filteredMaterials.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.ko}</option>)}
           </select>
           </label>
@@ -172,7 +181,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
 
       <label className="mt-4 block text-xs font-black text-[var(--wd-muted)]">
         연습 방법
-        <select data-practice-method value={method} onChange={(event) => setMethod(event.target.value as WindDownPracticeMethod)} className="mt-2 min-h-[48px] w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 text-sm font-black text-[var(--wd-text)]">
+        <select data-practice-method value={method} onChange={(event) => setMethod(event.target.value as WindDownPracticeMethod)} className={SELECT_CLASS} style={SELECT_STYLE}>
           {availableMethods.map((candidate) => <option key={candidate} value={candidate}>{METHOD_LABELS[candidate]}</option>)}
         </select>
       </label>

@@ -127,8 +127,8 @@ export default function WindDownDrillClient() {
         <header>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">WIND DOWN · QUICK DRILL</p>
-              <h1 className="mt-1 text-xl font-black">다섯 번, 한 번에 하나</h1>
+              <p className="text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">WIND DOWN · {view === "board" ? "QUICK DRILL" : "PRACTICE"}</p>
+              <h1 className="mt-1 text-xl font-black">{view === "board" ? "다섯 번, 한 번에 하나" : "오늘의 문장 연습"}</h1>
             </div>
             <Link href="/winddown" className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-[var(--wd-border)] px-4 text-xs font-black text-[var(--wd-muted)]">
               나가기
