@@ -69,8 +69,8 @@ const VIEWPORTS: Viewport[] = [
 ];
 
 const ENGINES: Engine[] = [
-  { id: "chromium", type: chromium },
   { id: "webkit", type: webkit },
+  { id: "chromium", type: chromium },
 ];
 
 const CARDS: WindDownLearnCard[] = [
@@ -183,7 +183,7 @@ function attachDiagnostics(page: Page) {
   let recordsGetCount = 0;
   let recordsPostCount = 0;
   page.on("console", (message) => {
-    if (message.type() === "error") consoleErrors.push(message.text());
+    if (message.type() === "error") consoleErrors.push(JSON.stringify({ text: message.text(), location: message.location() }));
   });
   page.on("pageerror", (error) => pageErrors.push(error.message));
   page.on("requestfailed", (request) => {
@@ -350,10 +350,10 @@ async function assertLayout(page: Page) {
   assert.equal(result.undersized.length, 0, `tap target under 44px: ${JSON.stringify(result.undersized)}`);
 }
 
-function assertDiagnostics(diagnostics: ReturnType<typeof attachDiagnostics>) {
-  assert.equal(diagnostics.consoleErrors.length, 0, `browser console errors: ${diagnostics.consoleErrors.length}`);
-  assert.equal(diagnostics.pageErrors.length, 0, `browser page errors: ${diagnostics.pageErrors.length}`);
-  assert.equal(diagnostics.blockedRequests.length, 0, `unexpected external/data/API requests: ${diagnostics.blockedRequests.length}`);
+function assertDiagnostics(diagnostics: ReturnType<typeof attachDiagnostics>, scenario: string) {
+  assert.equal(diagnostics.consoleErrors.length, 0, `${scenario} browser console errors: ${JSON.stringify(diagnostics.consoleErrors)}`);
+  assert.equal(diagnostics.pageErrors.length, 0, `${scenario} browser page errors: ${JSON.stringify(diagnostics.pageErrors)}`);
+  assert.equal(diagnostics.blockedRequests.length, 0, `${scenario} unexpected external/data/API requests: ${JSON.stringify(diagnostics.blockedRequests)}`);
 }
 
 async function runScenario(
@@ -432,7 +432,7 @@ async function runScenario(
       await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-records.png`), fullPage: true });
       await assertLayout(page);
     }
-    assertDiagnostics(diagnostics);
+    assertDiagnostics(diagnostics, `${engine.id}/${viewport.id}/${scenario}`);
     return `${engine.id}/${viewport.id}/${scenario}`;
   } finally {
     await page.close();
