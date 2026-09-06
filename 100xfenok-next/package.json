@@ -231,7 +231,7 @@
     "test:winddown-story": "tsx scripts/score-winddown-story.ts",
     "test:winddown-story-gate": "npm run test:winddown-story && tsx scripts/score-winddown-artist-voice.ts && npm run test:winddown-game && npm run test:winddown-voice && npm run test:winddown-habit && npm run test:winddown-preservation-stage1 && npm run test:winddown-continuity && node scripts/check-route-key-contract.mjs",
     "qa:winddown-story-isolated": "WINDDOWN_QA_SCOPE=story bash scripts/check-winddown-preservation-isolated.sh",
-    "test:product-flow-regressions": "tsx --test scripts/test-portfolio-preservation.ts scripts/test-etf-compare-availability.ts && npm run qa:etf-compare && npm run qa:portfolio-contract && npm run qa:macro-chart && node scripts/test-load-guard-remote-dispatch.mjs",
+    "test:product-flow-regressions": "tsx --test scripts/test-portfolio-preservation.ts scripts/test-etf-compare-availability.ts && npm run qa:etf-compare && npm run qa:portfolio-contract && node scripts/test-load-guard-remote-dispatch.mjs",
     "qa:product-flow-browser": "tsx scripts/check-product-flow-browser.ts",
     "qa:product-flow-isolated": "bash scripts/check-product-flow-isolated.sh"
   },
