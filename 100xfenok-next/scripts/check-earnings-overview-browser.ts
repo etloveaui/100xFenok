@@ -83,6 +83,23 @@ async function verifyDocument(page: Page, ticker: string, compact: boolean) {
 async function capturePanel(page: Page, ticker: string, name: string) {
   const viewport = page.viewportSize()!;
   const panel = page.locator(`[data-earnings-overview="${ticker}"]:visible`);
+  if (await panel.getAttribute("data-earnings-compact") === "true") {
+    // Capture real scroll positions inside the screener's bounded table/list;
+    // a full element screenshot would include regions clipped by that ancestor.
+    await panel.locator("header").evaluate(el => el.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" }));
+    await page.screenshot({ path: `${out}/${name}-summary.png` });
+    const flow = panel.getByRole("region", { name: "손익 흐름 가로 스크롤" });
+    await flow.evaluate(el => {
+      el.scrollLeft = 0;
+      el.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
+    });
+    await page.screenshot({ path: `${out}/${name}-flow-start.png` });
+    if (viewport.width < 600) {
+      await flow.evaluate(el => { el.scrollLeft = el.scrollWidth; });
+      await page.screenshot({ path: `${out}/${name}-flow-end.png` });
+    }
+    return;
+  }
   const box = await panel.boundingBox();
   assert.ok(box);
   try {
