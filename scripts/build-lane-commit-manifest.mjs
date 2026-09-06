@@ -85,6 +85,8 @@ const UPDATE_MANIFEST_TRIGGER_PATHS = [
   // Scheduled/manual reconciliation and every unrelated data trigger remain.
   ...computedSignalsSourceTriggerExclusions(),
   "!data/stockanalysis/**",
+  "!data/earnings-overview/**",
+  "!data/admin/earnings_overview/**",
   "!data/slickcharts/discovery-summary.json",
   "!data/slickcharts/membership-changes.json",
   "!data/slickcharts/universe.json",

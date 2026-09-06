@@ -352,7 +352,7 @@ function clone(value) {
       acc[lane.lane_class] = (acc[lane.lane_class] ?? 0) + 1;
       return acc;
     }, {});
-    assert.deepEqual(byClass, { detection_floor: 31, auxiliary: 3 }, "lane_class partition drifted");
+    assert.deepEqual(byClass, { detection_floor: 31, auxiliary: 4 }, "lane_class partition drifted");
     assert.equal(registryLaneById("yahoo_batch_quote_history").lane_class, "detection_floor",
       "yahoo_batch_quote_history is a standard detection-floor producer");
     assert.equal(
@@ -649,6 +649,9 @@ function clone(value) {
     // natural run, so assert the pending set is a SUBSET of the known
     // pre-launch lanes rather than an exact list.
     const pendingLanes = new Set([
+      // The first bounded earnings refresh creates its actual attempt report.
+      // Do not fabricate a successful report just to enroll the new store.
+      "earnings_overview",
       "edgar_filings",
       "fred_yardeni",
       "occ_options_volume",

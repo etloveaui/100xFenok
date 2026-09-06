@@ -215,6 +215,166 @@ const DEFAULT_PUBLISH_OUTCOMES_ROOT = path.join(
 //                    { per_asset_key } reads the named top-level key from every
 //                    enrolled JSON payload, stores each asset's own date and
 //                    reports the conservative minimum for the family.
+const EARNINGS_OVERVIEW_FILES = Object.freeze([
+  "AAPL.json",
+  "AMZN.json",
+  "MSFT.json",
+  "META.json",
+]);
+const EARNINGS_OVERVIEW_TICKERS = Object.freeze(
+  EARNINGS_OVERVIEW_FILES.map((file) => file.slice(0, -5)),
+);
+const EARNINGS_OVERVIEW_MANIFEST_PREFIX = "public/data/earnings-overview";
+const EARNINGS_OVERVIEW_TOP_LEVEL_KEYS = Object.freeze([
+  "schemaVersion",
+  "ticker",
+  "companyName",
+  "currency",
+  "updatedAt",
+  "status",
+  "notice",
+  "periods",
+]);
+const EARNINGS_OVERVIEW_PERIOD_KEYS = Object.freeze([
+  "end",
+  "label",
+  "income",
+  "source",
+  "segments",
+  "segmentBasis",
+  "notes",
+]);
+const EARNINGS_OVERVIEW_INCOME_KEYS = Object.freeze([
+  "revenue",
+  "costOfRevenue",
+  "grossProfit",
+  "operatingExpenses",
+  "operatingIncome",
+  "pretaxIncome",
+  "incomeTax",
+  "netIncome",
+  "dilutedEps",
+]);
+const EARNINGS_OVERVIEW_SOURCE_KEYS = Object.freeze(["name", "url", "filedAt"]);
+const EARNINGS_OVERVIEW_SEGMENT_KEYS = Object.freeze(["name", "revenue"]);
+const EARNINGS_OVERVIEW_SOURCE_AS_OF = Object.freeze({
+  files: Object.freeze(Object.fromEntries(
+    EARNINGS_OVERVIEW_FILES.map((file) => [file, {
+      max_date: { array: "periods", key: "end" },
+    }]),
+  )),
+});
+
+function earningsOverviewExactKeys(value, expected) {
+  return value !== null
+    && typeof value === "object"
+    && !Array.isArray(value)
+    && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...expected].sort());
+}
+
+function earningsOverviewIsoDay(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/u.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return parsed.getUTCFullYear() === year
+    && parsed.getUTCMonth() === month - 1
+    && parsed.getUTCDate() === day;
+}
+
+// The public boundary repeats the small, stable parts of the producer/TS
+// contract so malformed or cross-ticker documents cannot enter R2. Financial
+// reconciliation remains owned by the producer and shared UI model; this
+// validator checks closed shapes, finite values, safe source links, and the
+// filename/payload identity available at publication time.
+function validateEarningsOverviewPublicPayload({ asset, bytes }) {
+  let value;
+  try {
+    value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  } catch {
+    return false;
+  }
+  if (!earningsOverviewExactKeys(value, EARNINGS_OVERVIEW_TOP_LEVEL_KEYS)) return false;
+  if (value.schemaVersion !== 1
+    || !EARNINGS_OVERVIEW_TICKERS.includes(value.ticker)
+    || typeof value.companyName !== "string"
+    || value.companyName.trim() === ""
+    || value.companyName.length > 160
+    || typeof value.updatedAt !== "string"
+    || !Number.isFinite(Date.parse(value.updatedAt))
+    || value.currency !== "USD"
+    || !["current", "retained"].includes(value.status)
+    || (value.notice !== null && typeof value.notice !== "string")
+    || !Array.isArray(value.periods)
+    || value.periods.length === 0
+    || value.periods.length > 8) {
+    return false;
+  }
+  const updatedDay = value.updatedAt.slice(0, 10);
+  let previousEnd = null;
+  const seenEnds = new Set();
+  for (const period of value.periods) {
+    if (!earningsOverviewExactKeys(period, EARNINGS_OVERVIEW_PERIOD_KEYS)
+      || typeof period.label !== "string"
+      || period.label.trim() === ""
+      || !earningsOverviewIsoDay(period.end)
+      || seenEnds.has(period.end)
+      || (earningsOverviewIsoDay(updatedDay) && period.end > updatedDay)
+      || (previousEnd !== null && period.end >= previousEnd)
+      || !(earningsOverviewExactKeys(period.income, EARNINGS_OVERVIEW_INCOME_KEYS) || earningsOverviewExactKeys(period.income, [...EARNINGS_OVERVIEW_INCOME_KEYS, "afterTaxOther"]))
+      || !earningsOverviewExactKeys(period.source, EARNINGS_OVERVIEW_SOURCE_KEYS)
+      || !Array.isArray(period.segments)
+      || period.segments.length > 30
+      || (period.segmentBasis !== null && typeof period.segmentBasis !== "string")
+      || !Array.isArray(period.notes)
+      || period.notes.length > 30
+      || period.notes.some((note) => typeof note !== "string")) {
+      return false;
+    }
+    for (const metric of EARNINGS_OVERVIEW_INCOME_KEYS) {
+      const observation = period.income[metric];
+      if (observation !== null && (typeof observation !== "number" || !Number.isFinite(observation))) {
+        return false;
+      }
+    }
+    const i = period.income;
+    const finite = v => typeof v === "number" && Number.isFinite(v);
+    const near = (a, b) => Math.abs(a-b) <= Math.max(0.01, Math.abs(a)*1e-8, Math.abs(b)*1e-8);
+    if (!finite(i.revenue) || i.revenue <= 0 || !finite(i.afterTaxOther ?? 0)) return false;
+    for (const [a,b,c] of [["revenue","costOfRevenue","grossProfit"],["grossProfit","operatingExpenses","operatingIncome"]]) {
+      if ([i[a],i[b],i[c]].every(finite) && !near(i[a]-i[b],i[c])) return false;
+    }
+    if ([i.pretaxIncome,i.incomeTax,i.netIncome].every(finite) && !near(i.pretaxIncome-i.incomeTax+(i.afterTaxOther ?? 0),i.netIncome)) return false;
+    if (period.segments.length && !near(period.segments.reduce((sum, segment) => sum + segment.revenue,0),i.revenue)) return false;
+    if (typeof period.source.name !== "string" || period.source.name.trim() === "") return false;
+    try {
+      if (new URL(period.source.url).protocol !== "https:") return false;
+    } catch {
+      return false;
+    }
+    if (period.source.filedAt !== null && !earningsOverviewIsoDay(period.source.filedAt)) return false;
+    for (const segment of period.segments) {
+      if (!earningsOverviewExactKeys(segment, EARNINGS_OVERVIEW_SEGMENT_KEYS)
+        || typeof segment.name !== "string"
+        || segment.name.trim() === ""
+        || typeof segment.revenue !== "number"
+        || !Number.isFinite(segment.revenue)
+        || segment.revenue < 0) {
+        return false;
+      }
+    }
+    seenEnds.add(period.end);
+    previousEnd = period.end;
+  }
+
+  if (asset?.path !== undefined) {
+    if (typeof asset.path !== "string" || !asset.path.startsWith(`${EARNINGS_OVERVIEW_MANIFEST_PREFIX}/`)) return false;
+    const filename = asset.path.slice(EARNINGS_OVERVIEW_MANIFEST_PREFIX.length + 1);
+    if (!EARNINGS_OVERVIEW_FILES.includes(filename)
+      || value.ticker !== filename.slice(0, -5)) return false;
+  }
+  return true;
+}
+
 // P5+ adds more families here.
 export const FAMILIES = {
   "oecd-cli": {
@@ -542,6 +702,20 @@ export const FAMILIES = {
     // the class_a and bytes plans already use.
     plan: { class_a: 12_000, class_b: 34_000, bytes: 2_200_000_000 },
     policy: { max_assets: 7_000, max_total_bytes: 1_300_000_000 },
+  },
+  "earnings-overview": {
+    root: "data/earnings-overview",
+    manifest_prefix: EARNINGS_OVERVIEW_MANIFEST_PREFIX,
+    files: [...EARNINGS_OVERVIEW_FILES],
+    privacy_class: "public",
+    source_as_of: EARNINGS_OVERVIEW_SOURCE_AS_OF,
+    // The daily refresh observes quarterly provider filings. Its source clock
+    // intentionally remains the newest period end in each document; cadence
+    // detection must not mistake that honest quarter-end age for a failed
+    // daily refresh attempt.
+    plan: { class_a: 20, class_b: 40, bytes: 400_000 },
+    policy: { max_assets: 4, max_total_bytes: 200_000 },
+    validate_public_payload: validateEarningsOverviewPublicPayload,
   },
   "yahoo-finance": {
     // Shadow-only first slice. quarter_closes has a different source clock and

@@ -463,6 +463,51 @@ const lanes = [
     ],
   }),
   record({
+    id: "earnings_overview",
+    label: "SEC quarterly earnings overview",
+    owner_workflow: ".github/workflows/refresh-earnings-overview.yml",
+    provider_members: null,
+    provider_refs: [{ provider_id: "sec_edgar", role: "source", members: null }],
+    store_kind: "payload",
+    lane_class: "auxiliary",
+    cadence: {
+      kind: "daily",
+      provenance: {
+        kind: "github_workflow",
+        evidence: ".github/workflows/refresh-earnings-overview.yml",
+      },
+    },
+    // The workflow attempts a daily refresh, while each document's truthful
+    // source clock remains its newest reported quarter. Keep this shadow until
+    // the dedicated detection-config member is admitted by the detection-floor
+    // owner; the cloud family itself is independently bounded and publishable.
+    enforcement: "shadow",
+    privacy_class: "public_mirror",
+    admin_store: "data/admin/earnings_overview",
+    canonical_outputs: ["data/earnings-overview"],
+    public_mirror: ["100xfenok-next/public/data/earnings-overview"],
+    commit_shards: [
+      publishOutcomeShard("earnings-overview"),
+      "data/admin/earnings_overview",
+      "data/earnings-overview",
+      "100xfenok-next/public/data/earnings-overview",
+    ],
+    recovery_store: null,
+    declared_exception:
+      "bounded four-document producer retains each last valid document in the canonical set; no separate admin LKG index exists yet, so the admin refresh summary and publish outcome are the durable control-plane evidence; detection-floor enrollment remains shadow",
+    script_sources: [
+      "scripts/build-earnings-overview.py",
+      "scripts/publish-cloud-data-generation.mjs",
+      "scripts/persist-cloud-publish-outcome.mjs",
+    ],
+    caller_workflows: {
+      ".github/workflows/fetch-stockanalysis.yml": {
+        commit_shards: [],
+        script_sources: [".github/workflows/refresh-earnings-overview.yml"],
+      },
+    },
+  }),
+  record({
     id: "stockanalysis_surfaces",
     label: "StockAnalysis public surfaces",
     owner_workflow: ".github/workflows/fetch-stockanalysis.yml",
@@ -1740,6 +1785,16 @@ workflow_policies[".github/workflows/fetch-stockanalysis.yml"] = lanePolicy(".gi
   commitSpec("data/stockanalysis/backfill/history_gap_report_latest.json", "file"),
   commitSpec("data/yf/finance/_summary.json", "file"),
 ]);
+workflow_policies[".github/workflows/refresh-earnings-overview.yml"] = lanePolicy(".github/workflows/refresh-earnings-overview.yml", {
+  always_if_exists: [
+    commitSpec(publishOutcomeShard("earnings-overview"), "file"),
+    commitSpec("data/admin/earnings_overview", "directory"),
+  ],
+  success_if_exists: [
+    commitSpec("data/earnings-overview", "directory", true),
+    commitSpec("100xfenok-next/public/data/earnings-overview", "directory", true),
+  ],
+});
 workflow_policies[".github/workflows/global-scouter-shadow-publish.yml"] = policy(["global_scouter"], {
   // This caller stages evidence only. The owner-run canonical/public bundle
   // remains outside the caller's Git staging boundary.
@@ -1875,6 +1930,16 @@ export const PLANE_CANONICAL_COMMIT_MODES = Object.freeze([
 // is mandatory in every case; only its shape, the publisher's blocking
 // semantics and the location of the canonical commit may differ.
 export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
+  "earnings-overview": Object.freeze({
+    workflow: ".github/workflows/refresh-earnings-overview.yml",
+    non_blocking_publisher: false,
+    detached_persistence: true,
+    canonical_commit: "earlier_sibling_job",
+    canonical_commit_reason: "the refresh job commits the validated documents and static fallback before its dependent publish job starts; only refresh and outcome persistence acquire the shared Git writer lock",
+    strict_gate: true,
+    strict_gate_reason: "the scheduled refresh must fail when no cloud generation is published; a blocked or failed publish still uploads and persists its outcome so retained values do not conceal an unsuccessful refresh",
+    reason: "publication and evidence persistence use separate jobs to avoid holding the Git writer lock during cloud I/O, while the publisher remains blocking and persistence runs after unsuccessful publication",
+  }),
   damodaran: Object.freeze({
     workflow: ".github/workflows/fetch-damodaran-shadow.yml",
     non_blocking_publisher: true,

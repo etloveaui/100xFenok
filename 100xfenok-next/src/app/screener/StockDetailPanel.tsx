@@ -1,6 +1,7 @@
 "use client";
 
 import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
+import EarningsOverview from "@/components/earnings/EarningsOverview";
 import TransitionLink from "@/components/TransitionLink";
 import DataStateNotice from "@/components/DataStateNotice";
 import { type FenokSignalRadarHexagonAxis } from "@/components/screener/FenokSignalRadarHexagon";
@@ -2628,6 +2629,8 @@ export default function StockDetailPanel({
 
   if (loading) {
     return (
+      <div className="col-span-full">
+      <EarningsOverview ticker={ticker} compact />
       <DataStateNotice
         state={makeDataState({
           status: "pending",
@@ -2635,12 +2638,15 @@ export default function StockDetailPanel({
         })}
         className="col-span-full border-t border-[var(--c-line-2)]"
       />
+      </div>
     );
   }
 
   if (!detail) {
     if (detailError) {
       return (
+        <div className="col-span-full">
+        <EarningsOverview ticker={ticker} compact />
         <DataStateNotice
           state={makeDataState({
             status: "unavailable",
@@ -2650,9 +2656,12 @@ export default function StockDetailPanel({
           onAction={retryDetail}
           className="col-span-full border-t border-[var(--c-line-2)]"
         />
+        </div>
       );
     }
     return (
+      <div className="col-span-full">
+      <EarningsOverview ticker={ticker} compact />
       <DataStateNotice
         state={makeDataState({
           status: "unavailable",
@@ -2660,6 +2669,7 @@ export default function StockDetailPanel({
         })}
         className="col-span-full border-t border-[var(--c-line-2)]"
       />
+      </div>
     );
   }
 
@@ -2695,6 +2705,7 @@ export default function StockDetailPanel({
     axes.map((axis) => ({ key: axis.key, label: axis.fullLabel, score: axis.score, referenceOnly: axis.referenceOnly }));
   return (
     <div className="col-span-full border-t border-[var(--c-line-2)] bg-[var(--c-surface-2)]/50 px-2 py-3 sm:p-4">
+      <EarningsOverview ticker={ticker} compact />
       {stock && (hasShortTermSignal || hasLongTermSignal) ? (
         <div className="mb-4">
           <SharedEdgePanel
@@ -2747,6 +2758,7 @@ export default function StockDetailPanel({
 
   return (
     <div className="cpw4-detail-panel">
+      <EarningsOverview ticker={ticker} compact />
       {stock ? (
         <>
           <div className="cpw4-detail-context">

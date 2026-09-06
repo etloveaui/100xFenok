@@ -33,6 +33,7 @@ assert.deepEqual(
 assert.deepEqual(FINAL_WORKER_FIRST_PATTERNS, [
   "/data/computed/*",
   "/data/damodaran/*",
+  "/data/earnings-overview/*",
   "/data/edgar-korean-summaries/*",
   "/data/global-scouter/*",
   "/data/indices/*",
@@ -41,7 +42,7 @@ assert.deepEqual(FINAL_WORKER_FIRST_PATTERNS, [
   "/data/slickcharts/*",
   "/data/yardney/*",
   "/data/sec-13f/investors/griffin.json",
-], "selective contract preserves the nine public families plus Griffin");
+], "selective contract preserves the ten public families plus Griffin");
 assert.equal(FINAL_WORKER_FIRST_PATTERNS.includes("/data/*"), false, "broad data glob is absent");
 assert.equal(FINAL_WORKER_FIRST_PATTERNS.some((pattern) => pattern.startsWith("!")), false, "no negative override can bypass Worker-first");
 assert.equal(Object.isFrozen(FINAL_WORKER_FIRST_PATTERNS), true, "Worker-first list is immutable");
