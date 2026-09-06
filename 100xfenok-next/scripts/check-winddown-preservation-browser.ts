@@ -174,8 +174,9 @@ async function login(base: URL): Promise<string> {
   return match[1];
 }
 
-function attachDiagnostics(page: Page) {
+function attachDiagnostics(page: Page, engine: Engine["id"], base: URL) {
   const consoleErrors: string[] = [];
+  const compatibilityNotices: string[] = [];
   const pageErrors: string[] = [];
   const failedRequests = new Set<string>();
   const blockedRequests: string[] = [];
@@ -183,7 +184,23 @@ function attachDiagnostics(page: Page) {
   let recordsGetCount = 0;
   let recordsPostCount = 0;
   page.on("console", (message) => {
-    if (message.type() === "error") consoleErrors.push(JSON.stringify({ text: message.text(), location: message.location() }));
+    if (message.type() !== "error") return;
+    const entry = JSON.stringify({ text: message.text(), location: message.location() });
+    const location = message.location().url;
+    // WebKit reports this unsupported viewport key as an error. Preserve the
+    // Android keyboard behavior and retain this exact, source-bound notice.
+    // https://bugs.webkit.org/show_bug.cgi?id=259770
+    if (
+      engine === "webkit"
+      && message.text() === 'Viewport argument key "interactive-widget" not recognized and ignored.'
+      && ["/winddown/learn/", "/winddown/records/"].some((pathname) =>
+        location === new URL(pathname, base).href,
+      )
+    ) {
+      compatibilityNotices.push(entry);
+      return;
+    }
+    consoleErrors.push(entry);
   });
   page.on("pageerror", (error) => pageErrors.push(error.message));
   page.on("requestfailed", (request) => {
@@ -194,6 +211,7 @@ function attachDiagnostics(page: Page) {
   });
   return {
     consoleErrors,
+    compatibilityNotices,
     pageErrors,
     failedRequests,
     blockedRequests,
@@ -351,6 +369,9 @@ async function assertLayout(page: Page) {
 }
 
 function assertDiagnostics(diagnostics: ReturnType<typeof attachDiagnostics>, scenario: string) {
+  if (diagnostics.compatibilityNotices.length > 0) {
+    console.log(`NOTICE ${scenario} WebKit viewport compatibility: ${JSON.stringify(diagnostics.compatibilityNotices)}`);
+  }
   assert.equal(diagnostics.consoleErrors.length, 0, `${scenario} browser console errors: ${JSON.stringify(diagnostics.consoleErrors)}`);
   assert.equal(diagnostics.pageErrors.length, 0, `${scenario} browser page errors: ${JSON.stringify(diagnostics.pageErrors)}`);
   assert.equal(diagnostics.blockedRequests.length, 0, `${scenario} unexpected external/data/API requests: ${JSON.stringify(diagnostics.blockedRequests)}`);
@@ -382,7 +403,7 @@ async function runScenario(
     sameSite: "Lax",
   }]);
   const page = await context.newPage();
-  const diagnostics = attachDiagnostics(page);
+  const diagnostics = attachDiagnostics(page, engine.id, base);
   await wireSyntheticNetwork(page, base, scenario, fixture, diagnostics);
   try {
     const route = scenario === "records" ? "/winddown/records/" : "/winddown/learn/";
