@@ -1,5 +1,5 @@
 {
-  "registry_digest": "61f100e6c383b23ec7bf344e3f477001d352ac33183aeb2c103d144c192a596e",
+  "registry_digest": "77738e5149bcc236274811fd31bde47a6781ae27fceb752b30c1ca51b2ed22db",
   "registry_schema": "lane-registry/v3",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -566,6 +566,8 @@
       "!data/admin/fdic_tier1/**",
       "!data/admin/sentiment/**",
       "!data/stockanalysis/**",
+      "!data/earnings-overview/**",
+      "!data/admin/earnings_overview/**",
       "!data/slickcharts/discovery-summary.json",
       "!data/slickcharts/membership-changes.json",
       "!data/slickcharts/universe.json",
@@ -1790,6 +1792,40 @@
         ],
         "required_on_success": [],
         "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/refresh-earnings-overview.yml": {
+      "exclude": [],
+      "lanes": [
+        "earnings_overview"
+      ],
+      "stages": {
+        "always_if_exists": [
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-state/publish-outcomes/earnings-overview.json",
+            "required": false
+          },
+          {
+            "kind": "directory",
+            "path": "data/admin/earnings_overview",
+            "required": false
+          }
+        ],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "directory",
+            "path": "data/earnings-overview",
+            "required": true
+          },
+          {
+            "kind": "directory",
+            "path": "100xfenok-next/public/data/earnings-overview",
+            "required": true
+          }
+        ],
         "success_verify_not_plan_if_exists": []
       }
     },

@@ -5,6 +5,11 @@ The extractor deliberately has no network or filing-selection policy.  The
 caller supplies the HTML, the exact period start/end dates, and the already
 verified absolute revenue total.  Only revenue facts whose contexts match
 those dates and whose unit is USD are considered.
+
+Microsoft's official earnings release is a controlled exception: its segment
+results are published as a plain HTML table rather than inline XBRL.  That
+fallback still requires a dated GAAP quarter header, a table unit, and an
+exact reconciliation to the caller-supplied total.
 """
 
 from __future__ import annotations
@@ -47,6 +52,29 @@ _SUBTOTAL_RE = re.compile(
     r"^(?:all(?: segments?)?|consolidated|eliminations?|products|subtotal|total(?: revenue| sales| net sales)?)$",
     re.IGNORECASE,
 )
+_PLAIN_SEGMENT_TITLE_RE = re.compile(
+    r"\bsegment\s+(?:results?|revenues?)\b", re.IGNORECASE
+)
+_PLAIN_NON_GAAP_RE = re.compile(
+    r"\bnon\s*[-\u2010\u2011\u2012\u2013\u2014]?\s*gaap\b|\bconstant\s+currency\b",
+    re.IGNORECASE,
+)
+_PLAIN_UNIT_RE = re.compile(r"\bin\s+millions\b", re.IGNORECASE)
+_PLAIN_QUARTER_RE = re.compile(r"\bthree\s+months?\s+ended\b", re.IGNORECASE)
+_PLAIN_YEAR_RE = re.compile(r"(?<!\d)(\d{4})(?!\d)")
+_PLAIN_REVENUE_RE = re.compile(r"^revenues?$", re.IGNORECASE)
+_PLAIN_METRIC_RE = re.compile(
+    r"^(?:cost(?:\s+of)?\s+revenue|operating\s+(?:expenses?|income)|"
+    r"net\s+(?:income|sales)|gross\s+profit|total(?:\s+revenue|\s+sales|\s+net\s+sales)?|"
+    r"revenue\s+growth|percentage\s+change.*)$",
+    re.IGNORECASE,
+)
+_FACT_METRIC_LABEL_RE = re.compile(
+    r"^(?:revenues?|net\s+sales|cost(?:\s+of)?\s+revenue|"
+    r"operating\s+(?:expenses?|income)|net\s+income|gross\s+profit|"
+    r"total(?:\s+revenue|\s+sales|\s+net\s+sales)?)$",
+    re.IGNORECASE,
+)
 
 
 @dataclass
@@ -67,6 +95,33 @@ class _Unit:
 @dataclass
 class _Row:
     cells: list[list[str]] = field(default_factory=list)
+
+
+@dataclass
+class _PlainCell:
+    text: list[str] = field(default_factory=list)
+    colspan: int = 1
+    rowspan: int = 1
+
+
+@dataclass
+class _PlainRow:
+    cells: list[_PlainCell] = field(default_factory=list)
+
+
+@dataclass
+class _PlainTable:
+    table_id: str | None = None
+    caption: list[str] = field(default_factory=list)
+    rows: list[_PlainRow] = field(default_factory=list)
+
+
+@dataclass
+class _PlainTableFrame:
+    table: _PlainTable
+    row: _PlainRow | None = None
+    cell_index: int | None = None
+    in_caption: bool = False
 
 
 @dataclass
@@ -198,7 +253,9 @@ def _is_usd_unit(unit_ref: str | None, units: dict[str, _Unit]) -> bool:
 
 def _clean_row_label(value: str) -> str:
     value = _normalise_text(value).strip(" :")
-    value = re.sub(r"\s*(?:\*+|†+|‡+|\[\d+\]|\(\d+\))$", "", value).strip(" :")
+    value = re.sub(
+        r"\s*(?:\*+|†+|‡+|®+|™+|\[\d+\]|\(\d+\))$", "", value
+    ).strip(" :")
     return value
 
 
@@ -229,7 +286,11 @@ def _fact_label(fact: _Fact, member: str) -> str:
     if fact.row is not None and fact.cell_index is not None:
         for cell in fact.row.cells[: fact.cell_index]:
             candidate = _clean_row_label("".join(cell))
-            if candidate and re.search(r"[A-Za-z]", candidate):
+            if (
+                candidate
+                and re.search(r"[A-Za-z]", candidate)
+                and not _FACT_METRIC_LABEL_RE.fullmatch(candidate)
+            ):
                 return candidate
     return _member_label(member)
 
@@ -300,6 +361,7 @@ class _InlineXbrlParser(HTMLParser):
         self._capture: tuple[str, Any] | None = None
         self._capture_text: list[str] = []
         self._fact: _Fact | None = None
+        self._fact_stack: list[_Fact] = []
         self._rows: list[_Row] = []
         self._cell_indices: list[int | None] = []
         self._fact_order = 0
@@ -372,7 +434,11 @@ class _InlineXbrlParser(HTMLParser):
                 self._capture_text = []
         elif tag == "ix:nonfraction":
             if self._fact is not None:
-                self.malformed = True
+                # Inline XBRL permits a fact to contain another fact when a
+                # narrative value embeds a more specific tagged value (for
+                # example, a par-value statement).  Keep the outer fact on a
+                # stack so the inner fact cannot invalidate the whole filing.
+                self._fact_stack.append(self._fact)
             nil = any(key.endswith(":nil") or key == "nil" for key in attrs) and any(
                 str(value).lower() == "true"
                 for key, value in attrs.items()
@@ -403,7 +469,7 @@ class _InlineXbrlParser(HTMLParser):
                 self.malformed = True
             else:
                 self.facts.append(self._fact)
-                self._fact = None
+                self._fact = self._fact_stack.pop() if self._fact_stack else None
         elif tag in {"xbrli:startdate", "xbrli:enddate", "xbrldi:explicitmember", "xbrli:measure"}:
             if self._capture is None:
                 self.malformed = True
@@ -459,10 +525,416 @@ class _InlineXbrlParser(HTMLParser):
             self._rows[-1].cells[self._cell_indices[-1]].append(data)
 
     def finish(self) -> None:
-        if self._fact is not None or self._context is not None or self._unit is not None:
+        if (
+            self._fact is not None
+            or self._fact_stack
+            or self._context is not None
+            or self._unit is not None
+        ):
             self.malformed = True
         if self._capture is not None or self._relevant_stack:
             self.malformed = True
+
+
+class _PlainHtmlTableParser(HTMLParser):
+    """Collect table cells without imposing XML-like nesting on HTML."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.tables: list[_PlainTable] = []
+        self._stack: list[_PlainTableFrame] = []
+
+    @staticmethod
+    def _span(attrs: dict[str, str | None], name: str) -> int:
+        value = attrs.get(name)
+        if value is None or not re.fullmatch(r"\d+", value.strip()):
+            return 1
+        return max(1, min(64, int(value)))
+
+    def handle_starttag(self, raw_tag: str, attrs_list: list[tuple[str, str | None]]) -> None:
+        tag = _tag_name(raw_tag)
+        attrs = {key.lower(): value for key, value in attrs_list}
+        if tag == "table":
+            table = _PlainTable(table_id=attrs.get("id"))
+            self.tables.append(table)
+            self._stack.append(_PlainTableFrame(table=table))
+            return
+        if not self._stack:
+            return
+        frame = self._stack[-1]
+        if tag == "caption":
+            frame.in_caption = True
+        elif tag == "tr":
+            frame.row = _PlainRow()
+            frame.table.rows.append(frame.row)
+            frame.cell_index = None
+        elif tag in {"td", "th"} and frame.row is not None:
+            frame.row.cells.append(
+                _PlainCell(
+                    colspan=self._span(attrs, "colspan"),
+                    rowspan=self._span(attrs, "rowspan"),
+                )
+            )
+            frame.cell_index = len(frame.row.cells) - 1
+
+    def handle_startendtag(self, raw_tag: str, attrs_list: list[tuple[str, str | None]]) -> None:
+        self.handle_starttag(raw_tag, attrs_list)
+        self.handle_endtag(raw_tag)
+
+    def handle_endtag(self, raw_tag: str) -> None:
+        tag = _tag_name(raw_tag)
+        if tag == "table":
+            if self._stack:
+                self._stack.pop()
+            return
+        if not self._stack:
+            return
+        frame = self._stack[-1]
+        if tag == "caption":
+            frame.in_caption = False
+        elif tag in {"td", "th"}:
+            frame.cell_index = None
+        elif tag == "tr":
+            frame.row = None
+            frame.cell_index = None
+
+    def handle_data(self, data: str) -> None:
+        if not self._stack:
+            return
+        frame = self._stack[-1]
+        if frame.in_caption:
+            frame.table.caption.append(data)
+        if frame.row is not None and frame.cell_index is not None:
+            frame.row.cells[frame.cell_index].text.append(data)
+
+
+def _plain_cell_text(cell: _PlainCell) -> str:
+    return _normalise_text("".join(cell.text))
+
+
+def _expand_plain_rows(table: _PlainTable) -> list[list[str]]:
+    """Expand HTML spans into column-addressable rows.
+
+    The Microsoft release uses a separator column between each current/prior
+    value and groups the quarter and annual headers with ``colspan``.  Keeping
+    the expansion local to the fallback makes the column lookup deterministic
+    while tolerating the issuer's empty spacer cells and ``rowspan`` headers.
+    """
+
+    rows: list[list[str]] = []
+    active: dict[int, tuple[str, int]] = {}
+    for source_row in table.rows:
+        occupied = {column: text for column, (text, _remaining) in active.items()}
+        column = 0
+        for cell in source_row.cells:
+            while column in occupied:
+                column += 1
+            text = _plain_cell_text(cell)
+            for offset in range(cell.colspan):
+                target = column + offset
+                occupied[target] = text
+                if cell.rowspan > 1:
+                    active[target] = (text, cell.rowspan)
+            column += cell.colspan
+
+        if occupied:
+            width = max(occupied) + 1
+            rows.append([occupied.get(index, "") for index in range(width)])
+        else:
+            rows.append([])
+
+        next_active: dict[int, tuple[str, int]] = {}
+        for target, (text, remaining) in active.items():
+            if remaining > 1:
+                next_active[target] = (text, remaining - 1)
+        active = next_active
+    return rows
+
+
+def _plain_table_text(table: _PlainTable) -> str:
+    parts = [_normalise_text("".join(table.caption))]
+    for row in table.rows:
+        parts.extend(_plain_cell_text(cell) for cell in row.cells)
+    return _normalise_text(" ".join(parts))
+
+
+def _plain_table_title(table: _PlainTable, rows: list[list[str]]) -> str:
+    parts = [_normalise_text("".join(table.caption))]
+    # Issuer table titles and units appear before the body.  Limiting this
+    # scan prevents a distant narrative footnote from becoming a title.
+    for row in rows[:12]:
+        parts.extend(text for text in row if text)
+    return _normalise_text(" ".join(parts))
+
+
+def _plain_date_in_header(text: str, period_end: date) -> bool:
+    text = _normalise_text(text).lower()
+    month_name = period_end.strftime("%B").lower()
+    month_abbreviation = period_end.strftime("%b").lower().rstrip(".")
+    day = str(period_end.day)
+    if re.search(
+        rf"\b(?:{re.escape(month_name)}|{re.escape(month_abbreviation)})\s+0?{day}\b",
+        text,
+    ):
+        return True
+    if re.search(rf"\b0?{period_end.month}[/-]0?{period_end.day}\b", text):
+        return True
+    return bool(
+        re.search(
+            rf"\b0?{period_end.day}\s+(?:{re.escape(month_name)}|{re.escape(month_abbreviation)})\b",
+            text,
+        )
+    )
+
+
+def _plain_year(text: str, year: int) -> bool:
+    return any(int(match) == year for match in _PLAIN_YEAR_RE.findall(text))
+
+
+def _plain_quarter_column(rows: list[list[str]], period_end: date) -> tuple[int, int] | None:
+    """Find the current quarter value column and its header row.
+
+    A valid candidate must expose both the exact quarter end date and the
+    current/prior end years inside that quarter's header span.  Annual columns
+    therefore cannot be mistaken for the requested quarter.
+    """
+
+    current_year = period_end.year
+    prior_year = current_year - 1
+    for header_index, row in enumerate(rows):
+        for column, text in enumerate(row):
+            if not text or not _PLAIN_QUARTER_RE.search(text):
+                continue
+
+            span_start = column
+            while span_start > 0 and row[span_start - 1] == text:
+                span_start -= 1
+            span_end = column
+            while span_end + 1 < len(row) and row[span_end + 1] == text:
+                span_end += 1
+
+            date_in_span = _plain_date_in_header(text, period_end)
+            if not date_in_span:
+                # Some releases put the period label and its month/day on
+                # adjacent header rows while keeping the same colspan.
+                for date_row in rows[header_index + 1 : header_index + 4]:
+                    if any(
+                        index < len(date_row)
+                        and _plain_date_in_header(date_row[index], period_end)
+                        for index in range(span_start, span_end + 1)
+                    ):
+                        date_in_span = True
+                        break
+            if not date_in_span:
+                continue
+
+            search_end = min(len(rows), header_index + 10)
+            for year_row in rows[header_index + 1 : search_end]:
+                current_columns = [
+                    index
+                    for index in range(span_start, span_end + 1)
+                    if index < len(year_row) and _plain_year(year_row[index], current_year)
+                ]
+                prior_columns = [
+                    index
+                    for index in range(span_start, span_end + 1)
+                    if index < len(year_row) and _plain_year(year_row[index], prior_year)
+                ]
+                if current_columns and prior_columns and current_columns[0] != prior_columns[0]:
+                    return current_columns[0], header_index
+    return None
+
+
+def _plain_number(text: str) -> Decimal | None:
+    """Parse one displayed amount, preserving its sign and blank markers."""
+
+    value = _parse_numeric_text([text], None, None)
+    if value is not None:
+        return value
+    # A small number of issuer tables append footnote marks directly to the
+    # amount.  Strip only terminal marks after a failed strict parse.
+    cleaned = re.sub(r"(?<=\d)[*\u2020\u2021]+$", "", _normalise_text(text)).strip()
+    if cleaned != text:
+        return _parse_numeric_text([cleaned], None, None)
+    return None
+
+
+def _plain_row_label(row: list[str], current_column: int) -> str:
+    # Labels are normally in the first cell.  Looking through the current
+    # column as well handles a leading blank label cell without treating an
+    # amount as text.
+    for text in row[: max(1, current_column + 1)]:
+        label = _clean_row_label(text).rstrip(" :")
+        if label and re.search(r"[A-Za-z]", label) and _plain_number(label) is None:
+            return label
+    return ""
+
+
+def _plain_revenue_marker(label: str) -> bool:
+    return bool(_PLAIN_REVENUE_RE.fullmatch(_normalise_text(label).rstrip(" :")))
+
+
+def _plain_metric_label(label: str) -> bool:
+    return bool(_PLAIN_METRIC_RE.fullmatch(_normalise_text(label).rstrip(" :")))
+
+
+def _plain_segment_label(label: str) -> bool:
+    label = _normalise_text(label).rstrip(" :")
+    if not label or not re.search(r"[A-Za-z]", label):
+        return False
+    if _plain_revenue_marker(label) or _plain_metric_label(label):
+        return False
+    if _SUBTOTAL_RE.fullmatch(label):
+        return False
+    return True
+
+
+def _plain_segment_value(row: list[str], current_column: int) -> Decimal | None:
+    if current_column >= len(row):
+        return None
+    value = _plain_number(row[current_column])
+    if value is None or value <= 0:
+        return None
+    return value * Decimal(1_000_000)
+
+
+def _plain_heading_revenue_rows(
+    rows: list[list[str]], current_column: int, start_row: int
+) -> list[tuple[str, Decimal]]:
+    """Read ``segment heading`` followed by a ``Revenue`` row tables."""
+
+    records: list[tuple[str, Decimal]] = []
+    pending_segment = ""
+    for row in rows[start_row:]:
+        label = _plain_row_label(row, current_column)
+        if _plain_revenue_marker(label):
+            if pending_segment:
+                value = _plain_segment_value(row, current_column)
+                if value is not None:
+                    records.append((pending_segment, value))
+            pending_segment = ""
+            continue
+        if not label or _plain_metric_label(label):
+            pending_segment = ""
+            continue
+        if _plain_segment_label(label) and not any(
+            _plain_number(text) is not None for text in row
+        ):
+            pending_segment = label
+        else:
+            pending_segment = ""
+    return records
+
+
+def _plain_revenue_section_rows(
+    rows: list[list[str]], current_column: int, start_row: int
+) -> list[tuple[str, Decimal]]:
+    """Read a ``Revenue`` marker followed by segment-name rows."""
+
+    records: list[tuple[str, Decimal]] = []
+    index = start_row
+    while index < len(rows):
+        label = _plain_row_label(rows[index], current_column)
+        if not _plain_revenue_marker(label):
+            index += 1
+            continue
+        index += 1
+        while index < len(rows):
+            row = rows[index]
+            label = _plain_row_label(row, current_column)
+            if not label:
+                index += 1
+                continue
+            if not _plain_segment_label(label):
+                break
+            value = _plain_segment_value(row, current_column)
+            if value is None:
+                break
+            records.append((label, value))
+            index += 1
+    return records
+
+
+def _plain_reconciled_segments(
+    records: list[tuple[str, Decimal]], expected: Decimal
+) -> list[dict[str, int | float | str]] | None:
+    if len(records) < 2:
+        return None
+    names = [name for name, _value in records]
+    if len(set(names)) != len(names):
+        return None
+    if sum((value for _name, value in records), Decimal(0)) != expected:
+        return None
+    return [
+        {"name": name, "revenue": _output_number(value)}
+        for name, value in records
+    ]
+
+
+def _extract_msft_plain_segments(
+    html: str, start: str, end: str, expected: Decimal
+) -> dict[str, Any] | None:
+    if not _valid_date(start) or not _valid_date(end) or start >= end:
+        return None
+    try:
+        period_start = date.fromisoformat(start)
+        period_end = date.fromisoformat(end)
+    except ValueError:
+        return None
+
+    # The release's segment table is a calendar quarter even though MSFT's
+    # fiscal year ends in June.  Refuse YTD and other arbitrary spans before
+    # inspecting table text.
+    if period_end.month not in {3, 6, 9, 12} or period_start.day != 1:
+        return None
+    expected_start = date(period_end.year, period_end.month - 2, 1)
+    following_month = period_end.month + 1
+    following_year = period_end.year
+    if following_month == 13:
+        following_month = 1
+        following_year += 1
+    following_start = date(following_year, following_month, 1)
+    if period_start != expected_start or period_end != date.fromordinal(
+        following_start.toordinal() - 1
+    ):
+        return None
+
+    parser = _PlainHtmlTableParser()
+    try:
+        parser.feed(html)
+        parser.close()
+    except Exception:
+        return None
+
+    for table in parser.tables:
+        rows = _expand_plain_rows(table)
+        title = _plain_table_title(table, rows)
+        table_text = _plain_table_text(table)
+        if not _PLAIN_SEGMENT_TITLE_RE.search(title):
+            continue
+        if _PLAIN_NON_GAAP_RE.search(table_text) or not _PLAIN_UNIT_RE.search(table_text):
+            continue
+        header = _plain_quarter_column(rows, period_end)
+        if header is None:
+            continue
+        current_column, header_row = header
+        start_row = header_row + 1
+        candidates = (
+            _plain_heading_revenue_rows(rows, current_column, start_row),
+            _plain_revenue_section_rows(rows, current_column, start_row),
+        )
+        for records in candidates:
+            segments = _plain_reconciled_segments(records, expected)
+            if segments is not None:
+                return {
+                    "segments": segments,
+                    "segmentBasis": "사업부별 매출",
+                    "notes": [
+                        "공시의 분기별 사업 매출 합계를 전체 매출과 대조했습니다.",
+                        "공시 표의 백만 달러 금액을 달러 단위로 환산했습니다.",
+                    ],
+                }
+    return None
 
 
 def _axis_basis(axis: str) -> str:
@@ -515,11 +987,11 @@ def extract_revenue_segments(
         parser.close()
         parser.finish()
     except (AssertionError, HTMLParserError, ValueError, TypeError):
-        return None
+        return _extract_msft_plain_segments(html, start, end, expected) if ticker_key == "MSFT" else None
     except Exception:
         # HTMLParser is intentionally treated as an untrusted input boundary;
         # a malformed issuer response must never reach the earnings document.
-        return None
+        return _extract_msft_plain_segments(html, start, end, expected) if ticker_key == "MSFT" else None
     if parser.malformed:
         return None
 
@@ -529,7 +1001,7 @@ def extract_revenue_segments(
         if context.start == start and context.end == end and _valid_date(context.start) and _valid_date(context.end)
     }
     if not contexts:
-        return None
+        return _extract_msft_plain_segments(html, start, end, expected) if ticker_key == "MSFT" else None
 
     groups: dict[tuple[str, tuple[tuple[str, str], ...]], _Group] = {}
     for fact in parser.facts:
@@ -580,7 +1052,7 @@ def extract_revenue_segments(
             leaves, removed = result
             valid.append((group, leaves, removed))
     if not valid:
-        return None
+        return _extract_msft_plain_segments(html, start, end, expected) if ticker_key == "MSFT" else None
 
     preferred = _PREFERRED_AXES.get(ticker_key, _AXIS_ORDER)
     axis_rank = {axis: index for index, axis in enumerate(preferred)}

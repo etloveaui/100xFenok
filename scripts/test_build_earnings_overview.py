@@ -301,6 +301,18 @@ class BuildEarningsOverviewTest(unittest.TestCase):
         self.assertEqual(period["segments"], [])
         self.assertIsNone(period["segmentBasis"])
 
+    def test_msft_table_requires_explicit_million_unit(self) -> None:
+        html = load_fixture_text("msft_release_table_fixture.html")
+        self.assertIn("millions", html.lower())
+        with self.assertRaises(ValueError):
+            self.mod.parse_msft_release_table(html.replace("millions", "thousands"))
+
+    def test_msft_table_rejects_reversed_comparative_year_columns(self) -> None:
+        html = load_fixture_text("msft_release_table_fixture.html")
+        self.assertIn("<th>2026</th><th>2025</th>", html)
+        with self.assertRaises(ValueError):
+            self.mod.parse_msft_release_table(html.replace("<th>2026</th><th>2025</th>", "<th>2025</th><th>2026</th>"))
+
     def test_msft_release_parser_validates_gaap_header_and_required_rows(self) -> None:
         source_url = "https://www.microsoft.com/en-us/investor/earnings/fy-2026-q4/press-release-webcast"
         supplement = self.mod.parse_msft_release_table(

@@ -79,6 +79,32 @@ class EarningsSegmentsTest(unittest.TestCase):
         )
         self.assertEqual(values(result)[0], ("iPhone", 54_252_000_000))
 
+    def test_nested_inline_facts_do_not_invalidate_full_filing(self) -> None:
+        html = """
+        <xbrli:context id="c0"><xbrli:period>
+          <xbrli:startDate>2026-04-01</xbrli:startDate>
+          <xbrli:endDate>2026-06-30</xbrli:endDate>
+        </xbrli:period></xbrli:context>
+        <xbrli:context id="c1"><xbrli:period>
+          <xbrli:startDate>2026-04-01</xbrli:startDate>
+          <xbrli:endDate>2026-06-30</xbrli:endDate>
+          <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">aapl:iPhoneMember</xbrldi:explicitMember>
+        </xbrli:period></xbrli:context>
+        <xbrli:context id="c2"><xbrli:period>
+          <xbrli:startDate>2026-04-01</xbrli:startDate>
+          <xbrli:endDate>2026-06-30</xbrli:endDate>
+          <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">aapl:MacMember</xbrldi:explicitMember>
+        </xbrli:period></xbrli:context>
+        <xbrli:unit id="usd"><xbrli:measure>iso4217:USD</xbrli:measure></xbrli:unit>
+        <table><tr><td>Common stock $<ix:nonFraction contextRef="c0" name="us-gaap:CommonStockParOrStatedValuePerShare" unitRef="usd">0<ix:nonFraction contextRef="c0" name="us-gaap:CommonStockParOrStatedValuePerShare" unitRef="usd">.01</ix:nonFraction></ix:nonFraction></td></tr>
+        <tr><th>iPhone</th><td><ix:nonFraction contextRef="c1" name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" unitRef="usd">100</ix:nonFraction></td></tr>
+        <tr><th>Mac</th><td><ix:nonFraction contextRef="c2" name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" unitRef="usd">200</ix:nonFraction></td></tr></table>
+        """
+        result = self.mod.extract_revenue_segments(
+            "AAPL", html, "2026-04-01", "2026-06-30", 300
+        )
+        self.assertEqual(values(result), [("iPhone", 100), ("Mac", 200)])
+
     def test_amzn_prefers_reportable_segments_over_product_sales_group(self) -> None:
         result = self.mod.extract_revenue_segments(
             "AMZN",

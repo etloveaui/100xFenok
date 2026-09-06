@@ -3,7 +3,7 @@
   "generated_at": "2026-09-06T13:09:54.253Z",
   "source_schema_version": "lane-registry/v3",
   "purpose": "Admin-safe lane metadata and derived control-room projection for the owner data dashboard. No store roots, attempt/recovery paths, run identities, or repository directory structure.",
-  "lane_count": 34,
+  "lane_count": 35,
   "lanes": [
     {
       "id": "fred_macro",
@@ -124,6 +124,18 @@
       "enforcement": "live",
       "privacy_class": "public_mirror",
       "owner_workflow": "fetch-stockanalysis.yml"
+    },
+    {
+      "id": "earnings_overview",
+      "label": "SEC quarterly earnings overview",
+      "store_kind": "payload",
+      "cadence": {
+        "kind": "daily",
+        "provider": "SEC EDGAR"
+      },
+      "enforcement": "shadow",
+      "privacy_class": "public_mirror",
+      "owner_workflow": "refresh-earnings-overview.yml"
     },
     {
       "id": "stockanalysis_surfaces",

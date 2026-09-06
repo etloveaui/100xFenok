@@ -11,6 +11,8 @@ for (const [command, args] of [
   ["python3", ["../scripts/test_build_earnings_overview.py"]],
   ["python3", ["../scripts/test_earnings_segments.py"]],
   [process.execPath, ["../scripts/test-earnings-overview-cloud-contract.mjs"]],
+  [process.execPath, ["../scripts/test-cloud-data-plane-routing-authority.mjs"]],
+  [process.execPath, ["scripts/test-load-guard-remote-dispatch.mjs"]],
 ]) {
   const result = spawnSync(command, args, { stdio: "inherit" });
   if (result.error) console.error(result.error);

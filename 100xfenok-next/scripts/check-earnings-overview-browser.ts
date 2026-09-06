@@ -89,6 +89,11 @@ async function main() {
           await verifyDocument(page, ticker, false);
           await page.locator(`[data-earnings-overview="${ticker}"]`).screenshot({ path: `${out}/${engine.name}-${viewport.name}-${ticker}.png` });
         }
+        if (engine.name === "chromium" && viewport.name === "desktop") {
+          await page.goto(`${base}/stock/NVDA?tab=financials`, { waitUntil: "domcontentloaded" });
+          await page.getByRole("tab", { name: "재무", exact: true }).waitFor({ timeout: 90_000 });
+          assert.equal(await page.locator("[data-earnings-overview], [data-testid=earnings-overview-state]").count(), 0, "unsupported tickers keep the existing financial view without an empty earnings feature");
+        }
         await page.goto(`${base}/screener?ticker=AAPL`, { waitUntil: "domcontentloaded" });
         await verifyDocument(page, "AAPL", true);
         await page.locator('[data-earnings-overview="AAPL"]').screenshot({ path: `${out}/${engine.name}-${viewport.name}-screener.png` });

@@ -18,6 +18,7 @@ import {
   LANE_REGISTRY,
   PLANE_PUBLISH_OUTCOME_BINDINGS,
 } from "./lib/lane-registry.mjs";
+import { PLANE_ENROLLMENT_EXACT } from "../100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs";
 import { derivePublicPlaneEnrollment } from "./lib/plane-enrollment-derivation.mjs";
 
 const FAMILY = "earnings-overview";
@@ -255,6 +256,7 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
     enrollment.exact.filter(([, family]) => family === FAMILY),
     TICKERS.map((ticker) => [`/data/earnings-overview/${ticker}.json`, FAMILY]),
   );
+  assert.deepEqual(PLANE_ENROLLMENT_EXACT.filter(([, family]) => family === FAMILY), enrollment.exact.filter(([, family]) => family === FAMILY), "committed Worker enrollment must match the verified bounded family");
   assert.equal(
     enrollment.prefixes.some(({ family }) => family === FAMILY),
     false,
