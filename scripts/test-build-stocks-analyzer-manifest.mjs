@@ -196,6 +196,27 @@ try {
   assert.equal(berkshire.epsForward, 12, "existing dotted Yahoo file remains connected");
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(fixtureRoot, companyPath), "utf8")).records,
     companyRecords, "raw provider spelling remains unchanged");
+  // A deliberate converter rejection must never be restored from the raw sheet.
+  writeFixture("data/global-scouter/stocks/detail/BRK.B.json", {
+    eps_consensus: { weekly: { fy_plus_1: [
+      { date: source_date, value: null, rejection_reason: "source_duplicate_across_share_classes" },
+    ] } },
+  });
+  writeFixture("data/global-scouter/stocks/detail/BRK.A.json", {
+    eps_consensus: { weekly: { fy_plus_1: [
+      { date: "2026-08-28", value: 32000 },
+      { date: source_date, value: 33000 },
+    ] } },
+  });
+  run = runBuilder();
+  assert.equal(run.status, 0, run.stderr);
+  const validated = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+  assert.equal(validated.data.find((row) => row.symbol === "BRK.B").eps, undefined,
+    "rejected structured EPS must not fall back to raw EPS");
+  assert.equal(validated.data.find((row) => row.symbol === "BRK.A").eps, 33000,
+    "structured EPS selects latest dated observation and preserves valid large values");
+  assert.equal(validated.data.find((row) => row.symbol === "BRK.B").epsForward, 12,
+    "separate forward EPS remains available");
   const lastGood = fs.readFileSync(outputPath, "utf8");
   for (const [relative, records] of [[companyPath, companyRecords], [consensusPath, consensusRecords]]) {
     writeFixture(relative, { source_date, records: [...records, { ...records[0], key: "BRK.A" }] });
