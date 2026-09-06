@@ -31,7 +31,7 @@ global-scouter/
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (22 items)
 ├── indicators/              # v2.1.0
-│   └── economic.json        # Economic indicators (1,074 records)
+│   └── economic.json        # Economic indicators (1,076 records)
 ├── raw/                     # v2.3.0
     ├── manifest.json        # Raw layer file catalog
     ├── companies_a_company.json
@@ -122,13 +122,13 @@ The payload total excludes this README and `schema.json`: 1,084 files.
 | File | Count | Description |
 |------|-------|-------------|
 | `raw/companies_a_company.json` | 1,066 | A_Company 52-column raw table |
-| `raw/company_master_m_company.json` | 5,774 | M_Company master universe table |
+| `raw/company_master_m_company.json` | 5,763 | M_Company master universe table |
 | `raw/eps_consensus_t_eps_c.json` | 1,066 | T_EPS C weekly consensus raw table |
 | `raw/growth_consensus_t_growth_c.json` | 1,066 | T_Growth C raw table |
 | `raw/valuation_s_valuation.json` | 46 | S_Valuation PER/PBR/growth raw rows |
 | `raw/etfs_m_etfs.json` | 22 | M_ETFs raw table |
-| `raw/etfs_a_etfs.json` | 302 | A_ETFs 160-column raw table |
-| `raw/workbook_inventory.json` | 1,347 sheets | Workbook sheet inventory and categories |
+| `raw/etfs_a_etfs.json` | 303 | A_ETFs 160-column raw table |
+| `raw/workbook_inventory.json` | 1,348 sheets | Workbook sheet inventory and categories |
 
 ### etfs/index.json (v2.1.0)
 
@@ -153,7 +153,7 @@ The payload total excludes this README and `schema.json`: 1,084 files.
 
 ```json
 {
-  "count": 1074,
+  "count": 1076,
   "records": [
     {
       "date": "2026-01-02",
@@ -193,6 +193,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.4.0 | 2026-09-06 | Weekly refresh (2026-09-04 source): 1,066 stocks, unchanged canonical identities; 1,076 economic observations including the formerly skipped latest row; 22 ETFs; PER bands 98.2% (1,047). Berkshire source names BRKA/BRKB retain canonical BRK.A/BRK.B and original raw spellings. Derived indexes follow the existing hosted refresh chain. |
 | 2.4.0 | 2026-08-30 | Weekly data refresh (2026-08-28 source): 1,066 stocks (0 net, same ticker set), 1,074 indicators (+1), 22 ETFs, per_bands 98.2% (1,047), 9 raw files; downstream analyzer and revision artifacts follow the existing hosted rebuild path. |
 | 2.4.0 | 2026-08-23 | Weekly data refresh (2026-08-21 source): 1,066 stocks (0 net, same ticker set), 1,073 indicators (+1), 22 ETFs, per_bands 98.2% (1,047), 9 raw files; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
 | 2.4.0 | 2026-08-16 | Weekly data refresh (2026-08-14 source): 1,066 stocks (0 net, same ticker set), 1,072 indicators (+1), 22 ETFs, per_bands 98.2% (1,047), 9 raw files; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
@@ -230,4 +231,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-08-30*
+*Last Updated: 2026-09-06*
