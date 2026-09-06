@@ -9,7 +9,7 @@ const exists = (rel) => existsSync(path.join(root, rel));
 const TOUR = "src/features/winddown/game/model/tour.ts";
 const ROSTER = "src/features/winddown/game/model/roster.ts";
 const CONTRACT = "src/features/winddown/game/model/contract.ts";
-const SCENES = "src/features/winddown/game/ui/scenes.ts";
+const SCENES = "src/features/winddown/game/ui/WindDownStoryScene.tsx";
 const PROGRESS = "src/features/winddown/game/model/progress.ts";
 const CEREMONY = "src/features/winddown/game/model/ceremony.ts";
 const CLIENT = "src/features/winddown/game/ui/WindDownGameClient.tsx";
@@ -48,6 +48,7 @@ const ceremonyApi = read(CEREMONY_API);
 const roster = read(ROSTER);
 const contract = read(CONTRACT);
 const scenes = read(SCENES);
+const sceneStyles = read("src/features/winddown/game/ui/artist-story.module.css");
 const home = read(HOME);
 const habitApi = read(HABIT_API);
 const coordinator = read(COORDINATOR);
@@ -103,34 +104,23 @@ assert.equal(
   false,
   "game client must not resolve colour from the themeable --fnk-neutral ramp",
 );
-assert.equal(
-  /#[0-9a-fA-F]{6}/.test(
-    scenes.replace(/"--wd-[a-z-]+",\s*"#[0-9a-fA-F]{6}"/g, ""),
-  ),
-  false,
-  "scenes may only carry hex inside an explicit --wd-* token fallback",
-);
-assert.equal(
-  scenes.includes("--wd-"),
-  true,
-  "scenes must resolve colour from scoped --wd-* tokens",
-);
+assert.equal(sceneStyles.includes("var(--wd-"), true, "illustrated stage styling uses scoped night tokens");
 assert.equal(
   client.includes("var(--wd-"),
   true,
   "game client must resolve colour from the scoped --wd-* tokens",
 );
 
-/* 4. reduced motion is honoured by the animation loop, not only by CSS */
+/* 4. the responsive illustrated stage replaces the permanent canvas loop */
 assert.equal(
-  client.includes("prefers-reduced-motion"),
+  client.includes("WindDownStoryScene"),
   true,
-  "game client must gate its animation loop on prefers-reduced-motion",
+  "game client must consume the responsive illustrated story scene",
 );
 assert.equal(
-  client.includes("cancelAnimationFrame"),
+  client.includes("prefers-reduced-motion") || client.includes("motion-reduce"),
   true,
-  "game client must stop its animation loop rather than leaking a frame callback",
+  "the story scene must retain a complete reduced-motion path",
 );
 
 /* 5. content is data: acts, chapters and regions are declared, not branched on */
@@ -147,24 +137,14 @@ assert.equal(
   "scenes must resolve through a registry, never a switch over chapter ids",
 );
 assert.equal(
-  /isBuilt\(\s*x\s*,/.test(scenes),
+  client.includes("requestAnimationFrame") || client.includes("paintScene"),
   false,
-  "scenes must not hash animated x for build state",
+  "the game client must not retain continuous canvas redraw",
 );
 assert.equal(
-  scenes.includes("identity: number"),
-  true,
-  "scenes must gate build state on a stable identity",
-);
-assert.equal(
-  client.includes('role="img"') && client.includes("orientationchange"),
-  true,
-  "the reduced-motion canvas must repaint on rotate and expose image semantics",
-);
-assert.equal(
-  (client.match(/\}, \[paint, reduced, status\]\);/g) ?? []).length,
-  2,
-  "both animation effects must depend on ready status so a zero-XP canvas paints after mount",
+  /<canvas\b/.test(client),
+  false,
+  "the game client must render the authored story stage instead of a canvas",
 );
 
 const memberCount = (roster.match(/\n    roleLabel:/g) ?? []).length;
@@ -172,7 +152,7 @@ assert.equal(memberCount, 4, `expected exactly four members, found ${memberCount
 assert.equal(
   contract.includes("members: WIND_DOWN_MEMBERS")
     && client.includes("memberForChapter")
-    && scenes.includes("WindDownMember"),
+    && client.includes("WIND_DOWN_MEMBERS"),
   true,
   "the content pack roster must change both copy and the tour scene",
 );
@@ -187,10 +167,11 @@ assert.equal(
 assert.equal(
   contract.includes("learner.seed")
     && client.includes("memberForChapter")
-    && client.includes("모나의 고정 시드")
+    && client.includes("WIND_DOWN_MEMBERS")
+    && client.includes("episode?.guide")
     && !client.includes("setMemberId"),
   true,
-  "the learner seed must deterministically drive the scene without a fake local preference",
+  "authored episode guides must resolve through the roster while preserving deterministic fallback",
 );
 assert.equal(
   client.includes("매일 19 XP면 예상 약")
@@ -214,7 +195,8 @@ assert.equal(
 assert.equal(
   coordinator.includes("projectWindDownGameProgress(events)")
     && habitApi.includes("game:")
-    && home.includes('href="/winddown/game"')
+    && home.includes("storyEpisodesForChapter")
+    && home.includes("/winddown/game?story=")
     && client.includes('href="/winddown"'),
   true,
   "receipt progress and home/back navigation must be wired end to end",

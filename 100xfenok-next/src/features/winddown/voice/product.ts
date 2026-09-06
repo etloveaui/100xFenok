@@ -164,6 +164,321 @@ const SCENARIOS = [
       },
     ],
   },
+  {
+    id: "artist-audition",
+    version: WIND_DOWN_VOICE_POLICY_VERSION,
+    title: "오디션 룸에서 첫 소개",
+    eyebrow: "ROLEPLAY · EXPRESSION MARKERS · 3 GOALS",
+    scene: "작은 오디션 룸에서 심사 코치에게 자신을 소개하고 긴장한 마음으로 첫 질문에 답해봐요.",
+    coachRole: "patient singer audition coach",
+    openingLine: "Welcome to the audition room. Please tell me about yourself.",
+    goals: [
+      {
+        id: "introduction",
+        label: "표현 힌트: 내 역할 소개하기",
+        matchAny: [
+          "i am a vocalist",
+          "i sing with our group",
+        ],
+      },
+      {
+        id: "artist-goal",
+        label: "표현 힌트: 음악으로 전하고 싶은 목표",
+        matchAny: [
+          "i want to inspire people",
+          "i hope to connect through music",
+        ],
+      },
+      {
+        id: "repeat-question",
+        label: "표현 힌트: 다시 말해 달라고 하기",
+        matchAny: [
+          "could you repeat that",
+          "please say that again",
+        ],
+      },
+    ],
+  },
+  {
+    id: "team-rehearsal",
+    version: WIND_DOWN_VOICE_POLICY_VERSION,
+    title: "팀 리허설 다시 맞추기",
+    eyebrow: "ROLEPLAY · EXPRESSION MARKERS · 3 GOALS",
+    scene: "늦은 밤 리허설실에서 후렴구의 타이밍을 맞추며 팀원과 다음 연습 순서를 정해봐요.",
+    coachRole: "supportive bandmate and rehearsal partner",
+    openingLine: "The rehearsal is running late. How should we plan the next take?",
+    goals: [
+      {
+        id: "next-rehearsal",
+        label: "표현 힌트: 다음 연습 제안하기",
+        matchAny: [
+          "rehearse the chorus again",
+          "practice the bridge once more",
+        ],
+      },
+      {
+        id: "planning-reason",
+        label: "표현 힌트: 제안한 이유 덧붙이기",
+        matchAny: [
+          "because timing needs work",
+          "so we stay together",
+        ],
+      },
+      {
+        id: "teammate-response",
+        label: "표현 힌트: 팀원 의견에 답하기",
+        matchAny: [
+          "that makes sense to me",
+          "i can help with that",
+        ],
+      },
+    ],
+  },
+  {
+    id: "fan-meeting",
+    version: WIND_DOWN_VOICE_POLICY_VERSION,
+    title: "첫 팬 미팅에서 인사하기",
+    eyebrow: "ROLEPLAY · EXPRESSION MARKERS · 3 GOALS",
+    scene: "첫 음악방송 우승 뒤 작은 팬 미팅 테이블에서 사인 앨범을 건네며 팬과 이야기해봐요.",
+    coachRole: "warm fan meeting host",
+    openingLine: "A fan is waiting by the signed album table. What would you say?",
+    goals: [
+      {
+        id: "fan-greeting",
+        label: "표현 힌트: 팬에게 인사하기",
+        matchAny: [
+          "nice to meet you",
+          "thanks for coming tonight",
+        ],
+      },
+      {
+        id: "personal-detail",
+        label: "표현 힌트: 노래 이야기 덧붙이기",
+        matchAny: [
+          "my favorite song is starlight",
+          "i wrote this song",
+        ],
+      },
+      {
+        id: "fan-thanks",
+        label: "표현 힌트: 응원에 고마움 전하기",
+        matchAny: [
+          "thanks for supporting us",
+          "i am grateful you stayed",
+        ],
+      },
+    ],
+  },
+  {
+    id: "artist-interview",
+    version: WIND_DOWN_VOICE_POLICY_VERSION,
+    title: "아티스트 인터뷰 이어가기",
+    eyebrow: "ROLEPLAY · EXPRESSION MARKERS · 3 GOALS",
+    scene: "다양한 인터뷰와 방송 현장에서 새 노래의 이야기를 전하고 진행자의 후속 질문에 답해봐요.",
+    coachRole: "curious artist press interviewer",
+    openingLine: "The interview is live. What would you like people to know?",
+    goals: [
+      {
+        id: "interview-answer",
+        label: "표현 힌트: 질문에 내 이야기로 답하기",
+        matchAny: [
+          "our new song tells a story",
+          "we made this together",
+        ],
+      },
+      {
+        id: "interview-example",
+        label: "표현 힌트: 구체적인 예 덧붙이기",
+        matchAny: [
+          "our chorus grew from rehearsal",
+          "our practice shaped the song",
+        ],
+      },
+      {
+        id: "interview-clarification",
+        label: "표현 힌트: 질문을 확인하기",
+        matchAny: [
+          "could you clarify that",
+          "do you mean the writing process",
+        ],
+      },
+    ],
+  },
+  {
+    id: "creative-repair",
+    version: WIND_DOWN_VOICE_POLICY_VERSION,
+    title: "의견 충돌 뒤 무대 고치기",
+    eyebrow: "ROLEPLAY · EXPRESSION MARKERS · 3 GOALS",
+    scene: "앙코르 편곡을 두고 의견이 갈린 공연장 백스테이지에서 서로의 생각을 듣고 다음 연습을 정해봐요.",
+    coachRole: "direct but thoughtful creative partner",
+    openingLine: "We disagree about the encore ending. How can we fix the plan together?",
+    goals: [
+      {
+        id: "creative-preference",
+        label: "표현 힌트: 내 무대 선호 말하기",
+        matchAny: [
+          "i prefer a quiet ending",
+          "an acoustic ending fits",
+        ],
+      },
+      {
+        id: "creative-acknowledgement",
+        label: "표현 힌트: 다른 의견 인정하기",
+        matchAny: [
+          "i understand your idea",
+          "you are right about that",
+        ],
+      },
+      {
+        id: "creative-next-step",
+        label: "표현 힌트: 함께 해볼 다음 단계",
+        matchAny: [
+          "let's test both endings",
+          "we can try both ideas",
+        ],
+      },
+    ],
+  },
+  {
+    id: "acceptance-speech",
+    version: WIND_DOWN_VOICE_POLICY_VERSION,
+    title: "시상식에서 성장 돌아보기",
+    eyebrow: "ROLEPLAY · EXPRESSION MARKERS · 3 GOALS",
+    scene: "시상식 무대에서 지금까지의 성장과 고마운 사람, 앞으로의 바람을 차분히 말해봐요.",
+    coachRole: "steady award ceremony producer",
+    openingLine: "The ceremony is quiet. Please share what this moment means.",
+    goals: [
+      {
+        id: "achievement",
+        label: "표현 힌트: 이 순간의 의미 말하기",
+        matchAny: [
+          "this award means a lot",
+          "we grew together",
+        ],
+      },
+      {
+        id: "specific-thanks",
+        label: "표현 힌트: 고마운 팀 언급하기",
+        matchAny: [
+          "i want to thank our team",
+          "thank you for believing in us",
+        ],
+      },
+      {
+        id: "lesson-and-hope",
+        label: "표현 힌트: 배운 점이나 바람 말하기",
+        matchAny: [
+          "practice taught me patience",
+          "i hope we inspire others",
+        ],
+      },
+    ],
+  },
+  {
+    id: "tour-arrival",
+    version: WIND_DOWN_VOICE_POLICY_VERSION,
+    title: "해외 공연장 길 묻기",
+    eyebrow: "ROLEPLAY · EXPRESSION MARKERS · 3 GOALS",
+    scene: "해외 투어 첫날 공연장 안내 데스크에서 콘서트홀 위치를 묻고 안내를 확인해봐요.",
+    coachRole: "helpful venue assistant",
+    openingLine: "Welcome to the venue. How can I help you find the concert hall?",
+    goals: [
+      {
+        id: "concert-directions",
+        label: "표현 힌트: 콘서트홀 위치 묻기",
+        matchAny: [
+          "where is the concert hall",
+          "how do i reach the venue",
+        ],
+      },
+      {
+        id: "directions-clarification",
+        label: "표현 힌트: 안내를 다시 확인하기",
+        matchAny: [
+          "could you repeat those directions",
+          "do i turn left here",
+        ],
+      },
+      {
+        id: "venue-thanks",
+        label: "표현 힌트: 도움에 고마움 전하기",
+        matchAny: [
+          "thank you for your help",
+          "thanks for showing me",
+        ],
+      },
+    ],
+  },
+  {
+    id: "festival-audience",
+    version: WIND_DOWN_VOICE_POLICY_VERSION,
+    title: "축제 무대에서 관객 맞이하기",
+    eyebrow: "ROLEPLAY · EXPRESSION MARKERS · 3 GOALS",
+    scene: "축제 무대 리허설 뒤 관객을 맞이하며 노래를 소개하고 함께 부를 순간을 만들어봐요.",
+    coachRole: "energetic festival stage coach",
+    openingLine: "The crowd is ready. How will you welcome them before the song?",
+    goals: [
+      {
+        id: "crowd-greeting",
+        label: "표현 힌트: 관객에게 인사하기",
+        matchAny: [
+          "welcome to our show",
+          "we are glad you are here",
+        ],
+      },
+      {
+        id: "song-introduction",
+        label: "표현 힌트: 노래 소개하기",
+        matchAny: [
+          "this song is about finding courage",
+          "our next song tells a story",
+        ],
+      },
+      {
+        id: "sing-together",
+        label: "표현 힌트: 함께 노래 부르기 권하기",
+        matchAny: [
+          "sing along with us",
+          "let's sing this together",
+        ],
+      },
+    ],
+  },
+  {
+    id: "career-reflection",
+    version: WIND_DOWN_VOICE_POLICY_VERSION,
+    title: "팀과 지나온 길 돌아보기",
+    eyebrow: "ROLEPLAY · EXPRESSION MARKERS · 3 GOALS",
+    scene: "공연이 끝난 뒤 팀 연습실에서 동료와 지나온 성장과 고마움, 다음 꿈을 조용히 돌아봐요.",
+    coachRole: "thoughtful bandmate reflection partner",
+    openingLine: "The show is over. What have you learned from this journey?",
+    goals: [
+      {
+        id: "growth-reflection",
+        label: "표현 힌트: 함께 이룬 성장 돌아보기",
+        matchAny: [
+          "we have grown so much",
+          "i learned from mistakes",
+        ],
+      },
+      {
+        id: "teammate-thanks",
+        label: "표현 힌트: 함께한 팀에 고마움 전하기",
+        matchAny: [
+          "thank you for standing by me",
+          "i appreciate our team",
+        ],
+      },
+      {
+        id: "future-hope",
+        label: "표현 힌트: 다음 바람 말하기",
+        matchAny: [
+          "i hope to keep learning",
+          "we will try new things",
+        ],
+      },
+    ],
+  },
 ] as const satisfies readonly WindDownVoiceScenario[];
 
 export const WINDDOWN_VOICE_SCENARIOS = SCENARIOS;

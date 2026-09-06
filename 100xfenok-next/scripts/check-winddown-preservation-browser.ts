@@ -11,7 +11,7 @@ import {
 } from "playwright";
 import { applyWindDownLearnAction, createWindDownLearnSession, type WindDownLearnAction, type WindDownLearnCard, type WindDownLearnState } from "../src/features/winddown/learn/engine";
 import { buildWindDownVoiceReport } from "../src/features/winddown/voice/report";
-import { createWindDownRoleplayDescriptor } from "../src/features/winddown/voice/product";
+import { createWindDownRoleplayDescriptor, getWindDownVoiceScenario } from "../src/features/winddown/voice/product";
 import {
   WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY,
   WIND_DOWN_VOICE_FROZEN_STORAGE_KEY,
@@ -293,9 +293,13 @@ function attachContinuityDiagnostics(page: Page, engine: Engine["id"], base: URL
       && message.text() === 'Viewport argument key "interactive-widget" not recognized and ignored.'
       && viewportLocation?.origin === base.origin
       && viewportLocation !== null
-      && ["/winddown/review", "/winddown/conversations", "/winddown/roleplay", "/winddown/drill"].includes(apiPath(viewportLocation.href))
-      && (apiPath(viewportLocation.href) !== "/winddown/drill"
-        ? viewportLocation.search === ""
+      && ["/winddown", "/winddown/game", "/winddown/review", "/winddown/conversations", "/winddown/roleplay", "/winddown/drill"].includes(apiPath(viewportLocation.href))
+      && (apiPath(viewportLocation.href) === "/winddown/game"
+        ? [...viewportLocation.searchParams.keys()].every((key) => key === "story")
+        : apiPath(viewportLocation.href) === "/winddown/roleplay"
+          ? [...viewportLocation.searchParams.keys()].sort().join(",") === "scenario,story"
+        : apiPath(viewportLocation.href) !== "/winddown/drill"
+          ? viewportLocation.search === ""
         : (viewportLocation.searchParams.size === 1 && viewportLocation.searchParams.get("practice") === "1")
           || (viewportLocation.searchParams.size === 1 && viewportLocation.searchParams.get("material") === "synthetic-material-002")
           || (viewportLocation.searchParams.size === 3
@@ -324,6 +328,181 @@ function attachContinuityDiagnostics(page: Page, engine: Engine["id"], base: URL
 function apiPath(value: string): string {
   const pathname = new URL(value).pathname;
   return pathname.replace(/\/+$/, "") || "/";
+}
+
+type StoryProgress = {
+  xp: number;
+  currentLevel: number;
+  choice: { slotId: "group" | "debut-song" | "fandom"; optionId: string; label: string } | null;
+};
+
+const STORY_CEREMONY_OPTIONS = {
+  group: [
+    { id: "lumen", label: "LUMEN" },
+    { id: "moonrise", label: "MOONRISE" },
+    { id: "afterglow", label: "AFTERGLOW" },
+  ],
+  "debut-song": [
+    { id: "first-light", label: "First Light" },
+    { id: "stay-awake", label: "Stay Awake" },
+    { id: "into-the-night", label: "Into the Night" },
+  ],
+  fandom: [
+    { id: "glow", label: "GLOW" },
+    { id: "dreamers", label: "DREAMERS" },
+    { id: "moonbeam", label: "MOONBEAM" },
+  ],
+} as const;
+
+function storyCeremony(progress: StoryProgress) {
+  const slots = [
+    { id: "group" as const, label: "그룹 이름", unlockLevel: 7 },
+    { id: "debut-song" as const, label: "데뷔곡", unlockLevel: 10 },
+    { id: "fandom" as const, label: "팬덤 이름", unlockLevel: 13 },
+  ];
+  return {
+    schemaVersion: 1 as const,
+    status: "ready" as const,
+    catalogVersion: "2.0.0" as const,
+    generatorVersion: "mastery-v2" as const,
+    optionSetId: "wdc2set-0123456789abcdef",
+    learnerId: "mona" as const,
+    currentLevel: progress.currentLevel,
+    slots: slots.map((slot) => {
+      const choice = progress.choice?.slotId === slot.id
+        ? {
+            schemaVersion: 1 as const,
+            slotId: slot.id,
+            optionId: progress.choice.optionId,
+            label: progress.choice.label,
+            levelAtCommit: progress.currentLevel,
+            committedAtIso: ISSUED_AT,
+          }
+        : null;
+      return {
+        ...slot,
+        unlocked: progress.currentLevel >= slot.unlockLevel,
+        optionSource: "fallback-insufficient-mastery" as const,
+        options: progress.currentLevel >= slot.unlockLevel ? STORY_CEREMONY_OPTIONS[slot.id] : [],
+        choice,
+      };
+    }),
+  };
+}
+
+function storyHabitFixture(progress: StoryProgress) {
+  const constellation = Array.from({ length: 7 }, (_, index) => ({
+    kstDay: `2026-09-${String(10 - index).padStart(2, "0")}`,
+    completed: index > 1,
+    activities: index > 1 ? ["learn" as const, "review" as const] : [],
+  }));
+  return {
+    ok: true,
+    projection: {
+      currentKstDay: HABIT_DAY,
+      streak: { nights: 5 },
+      constellation,
+      questHistory: [
+        { activity: "learn" as const, kstDay: HABIT_DAY },
+        { activity: "review" as const, kstDay: HABIT_DAY },
+      ],
+    },
+    game: {
+      schemaVersion: 1 as const,
+      xp: progress.xp,
+      creditedAnswerCount: progress.xp > 0 ? 423 : 0,
+      collectedReviewStarCount: progress.xp > 0 ? 169 : 0,
+      creditedNightCount: progress.xp > 0 ? 90 : 0,
+    },
+    ceremony: storyCeremony(progress),
+    tonight: {
+      completed: false,
+      nextAction: "review" as const,
+      learnCreditedCount: 0,
+      learnTarget: 5,
+      reviewCompletedCount: 0,
+      reviewTarget: 2,
+      voiceCompleted: false,
+      estimatedMinutes: 10,
+    },
+  };
+}
+
+async function wireStoryNetwork(
+  page: Page,
+  base: URL,
+  progress: StoryProgress,
+  diagnostics: ContinuityDiagnostics,
+  recovery?: ReturnType<typeof continuityVoiceFixture>,
+) {
+  let habit = storyHabitFixture(progress);
+  await page.route("**/*", async (handler) => {
+    const request = handler.request();
+    const requestUrl = new URL(request.url());
+    const normalizedApiPath = apiPath(request.url());
+    const sameOrigin = requestUrl.origin === base.origin;
+    if (!sameOrigin || requestUrl.pathname === "/data" || requestUrl.pathname.startsWith("/data/")) {
+      diagnostics.blockedRequests.push(`${request.method()} ${request.url()}`);
+      await handler.abort("blockedbyclient");
+      return;
+    }
+    if (normalizedApiPath === "/api/winddown/habit" && request.method() === "GET") {
+      await handler.fulfill(jsonResponse(habit));
+      return;
+    }
+    if (normalizedApiPath === "/api/winddown/game/ceremony" && request.method() === "POST") {
+      let payload: { slotId?: unknown; optionId?: unknown } | null = null;
+      try { payload = request.postDataJSON() as { slotId?: unknown; optionId?: unknown }; } catch { payload = null; }
+      const slotId = payload?.slotId;
+      const optionId = payload?.optionId;
+      if ((slotId !== "group" && slotId !== "debut-song" && slotId !== "fandom") || typeof optionId !== "string") {
+        await handler.fulfill(jsonResponse({ ok: false, error: "INVALID_SYNTHETIC_CEREMONY" }, 400));
+        return;
+      }
+      const option = STORY_CEREMONY_OPTIONS[slotId].find((candidate) => candidate.id === optionId);
+      assert(option, "synthetic ceremony POST must use a server-owned option");
+      habit = storyHabitFixture({
+        ...progress,
+        choice: { slotId, optionId, label: option.label },
+      });
+      await handler.fulfill(jsonResponse({ ok: true, status: "committed", ceremony: habit.ceremony }));
+      return;
+    }
+    if (recovery && normalizedApiPath === "/api/winddown/live/report" && request.method() === "POST") {
+      diagnostics.voiceReportPostCount += 1;
+      const body = request.postData() ?? "";
+      assert.equal(body, JSON.stringify(recovery.report), "story recovery must transmit the frozen prior report bytes");
+      diagnostics.voiceReportBodies.push(body);
+      await handler.fulfill(jsonResponse({
+        ok: true,
+        duplicate: false,
+        habitCredited: false,
+        receipt: {
+          schemaVersion: 1,
+          activity: "roleplay",
+          productSessionId: recovery.report.productSessionId,
+          finalDigest: recovery.finalDigest,
+          committedAtIso: recovery.report.stoppedAtIso,
+          report: recovery.report,
+        },
+      }));
+      return;
+    }
+    if (requestUrl.pathname.startsWith("/api/")) {
+      diagnostics.apiRequests.push(request.url());
+      diagnostics.blockedRequests.push(`${request.method()} ${request.url()}`);
+      await handler.abort("blockedbyclient");
+      return;
+    }
+    // A single explicitly requested query exercises the text fallback. Normal
+    // story captures keep the authored raster art available for visual review.
+    const missingImageMode = new URL(page.url()).searchParams.get("story-missing-image") === "1";
+    if (missingImageMode && request.method() === "GET" && /\.(?:avif|gif|jpe?g|png|webp)$/i.test(requestUrl.pathname)) {
+      await handler.fulfill({ status: 404, contentType: "text/plain", body: "synthetic story image unavailable" });
+      return;
+    }
+    await handler.continue();
+  });
 }
 
 async function wireSyntheticNetwork(
@@ -1422,6 +1601,353 @@ async function runContinuityContext(
   }
 }
 
+const STORY_VIEWPORTS: Record<Engine["id"], Viewport[]> = {
+  chromium: [
+    { id: "phone-390", width: 390, height: 844, isMobile: true, hasTouch: true },
+    { id: "tablet-820", width: 820, height: 1180, isMobile: true, hasTouch: true },
+    { id: "desktop-1024", width: 1024, height: 900, isMobile: false, hasTouch: false },
+  ],
+  webkit: [
+    { id: "phone-390", width: 390, height: 844, isMobile: true, hasTouch: true },
+    { id: "tablet-768", width: 768, height: 1024, isMobile: true, hasTouch: true },
+  ],
+};
+
+async function firstStoryLocator(page: Page, episodeId: string) {
+  await revealStoryJourney(page);
+  const candidate = page.locator(`[data-story-episode-id="${episodeId}"]`).first();
+  await candidate.waitFor({ state: "attached", timeout: 20_000 });
+  return candidate;
+}
+
+async function revealStoryJourney(page: Page) {
+  const journey = page.locator('[aria-label="우리의 아홉 막"]').first();
+  if (!(await journey.count())) return;
+  const details = journey.locator("xpath=ancestor-or-self::details[1]").first();
+  if (!(await details.count()) || await details.getAttribute("open") !== null) return;
+  const summary = details.locator("summary").first();
+  if (await summary.count()) await summary.click();
+}
+
+async function closeStoryJourneyForCapture(page: Page) {
+  const journey = page.locator('[aria-label="우리의 아홉 막"]').first();
+  if (await journey.count()) {
+    const details = journey.locator("xpath=ancestor-or-self::details[1]").first();
+    if (await details.count() && await details.getAttribute("open") !== null) {
+      const summary = details.locator("summary").first();
+      if (await summary.count()) await summary.click();
+    }
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+}
+
+async function waitForStoryReady(page: Page) {
+  await page.locator('[data-story-scene="practice"]').waitFor({ state: "visible", timeout: 20_000 });
+  await page.locator('[data-story-episode-id="practice-first-note"]').waitFor({ state: "attached", timeout: 20_000 });
+  await revealStoryJourney(page);
+}
+
+async function waitForStoryImage(page: Page) {
+  const image = page.locator("[data-story-scene] img").first();
+  await image.waitFor({ state: "visible", timeout: 20_000 });
+  await page.waitForFunction(() => {
+    const candidate = document.querySelector("[data-story-scene] img");
+    return candidate instanceof HTMLImageElement && candidate.complete && candidate.naturalWidth > 0;
+  }, undefined, { timeout: 20_000 });
+}
+
+async function storyLink(page: Page, episodeId: string) {
+  const encoded = encodeURIComponent(episodeId);
+  const candidate = page.locator(`a[href*="/winddown/roleplay"][href*="story=${encoded}"]`).first();
+  await candidate.waitFor({ state: "visible", timeout: 20_000 });
+  return candidate;
+}
+
+async function assertStoryState(page: Page, episodeId: string, expected: "current" | "replay" | "preview") {
+  const card = await firstStoryLocator(page, episodeId);
+  const state = await card.evaluate((node) => {
+    const element = node.closest("[data-story-state], [data-winddown-story-state], [data-episode-state]") ?? node;
+    return element.getAttribute("data-story-state")
+      ?? element.getAttribute("data-winddown-story-state")
+      ?? element.getAttribute("data-episode-state")
+      ?? element.textContent
+      ?? "";
+  });
+  if (expected === "preview") {
+    assert.match(state, /preview|미리|잠겨|예정|future/i, `${episodeId} must be visibly marked as a future preview`);
+    const practiceLinks = await page.locator(`a[href*="/winddown/roleplay"][href*="story=${encodeURIComponent(episodeId)}"]`).count();
+    assert.equal(practiceLinks, 0, `${episodeId} future preview must not expose a roleplay CTA`);
+  } else {
+    assert.doesNotMatch(state, /preview|미리|잠겨|예정|future/i, `${episodeId} must remain accessible`);
+  }
+}
+
+async function assertStoryActCoverage(page: Page) {
+  for (const tag of ["ACT I", "ACT II", "ACT III", "ACT IV", "ACT V", "ACT VI", "ACT VII", "ACT VIII", "ACT IX"]) {
+    assert.ok(await page.getByText(tag, { exact: false }).count() > 0, `story tour must render ${tag}`);
+  }
+}
+
+async function assertStoryPanelLayout(page: Page, viewport: Viewport) {
+  await assertLayout(page);
+  if (viewport.width < 768) return;
+  const result = await page.evaluate(() => {
+    const find = (selectors: string[]) => selectors.map((selector) => document.querySelector(selector)).find(Boolean) as HTMLElement | undefined;
+    const stage = find(["[data-story-scene]"]);
+    const mission = find(["[data-story-mission]"]);
+    if (!stage || !mission) return { hooks: false, alongside: false };
+    const stageRect = stage.getBoundingClientRect();
+    const missionRect = mission.getBoundingClientRect();
+    return {
+      hooks: true,
+      alongside: Math.abs(stageRect.top - missionRect.top) < 40
+        && (stageRect.right <= missionRect.left + 2 || missionRect.right <= stageRect.left + 2),
+    };
+  });
+  assert.equal(result.hooks, true, "tablet story must expose stage and mission panel hooks");
+  assert.equal(result.alongside, true, "tablet story must place stage and mission alongside");
+}
+
+async function runStoryContext(
+  browser: Browser,
+  base: URL,
+  sessionCookie: string,
+  engine: Engine,
+  viewport: Viewport,
+  progress: StoryProgress,
+): Promise<string> {
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    screen: { width: viewport.width, height: viewport.height },
+    deviceScaleFactor: viewport.isMobile ? 2 : 1,
+    isMobile: viewport.isMobile,
+    hasTouch: viewport.hasTouch,
+    reducedMotion: "reduce",
+    serviceWorkers: "block",
+  });
+  await context.addCookies([{
+    name: "fenok_admin_session",
+    value: sessionCookie,
+    domain: base.hostname,
+    path: "/",
+    secure: base.protocol === "https:",
+    sameSite: "Lax",
+  }]);
+  const page = await context.newPage();
+  const diagnostics = attachContinuityDiagnostics(page, engine.id, base);
+  await page.addInitScript(() => {
+    const target = window as Window & { __windDownQaRafCalls?: number; __windDownGetUserMediaCalls?: number };
+    target.__windDownQaRafCalls = 0;
+    target.__windDownGetUserMediaCalls = 0;
+    const requestAnimationFrameOriginal = window.requestAnimationFrame.bind(window);
+    window.requestAnimationFrame = (callback) => {
+      target.__windDownQaRafCalls = (target.__windDownQaRafCalls ?? 0) + 1;
+      return requestAnimationFrameOriginal(callback);
+    };
+    const mediaDevices = navigator.mediaDevices;
+    if (!mediaDevices) return;
+    const original = mediaDevices.getUserMedia.bind(mediaDevices);
+    mediaDevices.getUserMedia = async (...args: Parameters<MediaDevices["getUserMedia"]>) => {
+      target.__windDownGetUserMediaCalls = (target.__windDownGetUserMediaCalls ?? 0) + 1;
+      return original(...args);
+    };
+  });
+  await wireStoryNetwork(page, base, progress, diagnostics);
+  const label = `${engine.id}/${viewport.id}/xp-${progress.xp}`;
+  try {
+    const response = await page.goto(new URL("/winddown/game?story=practice-first-note", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+    assert(response && response.status() < 400, `story game returned HTTP ${response?.status() ?? "no response"}`);
+    await waitForStoryReady(page);
+    await assertStoryActCoverage(page);
+    await assertStoryState(page, "practice-first-note", progress.xp === 0 ? "current" : "replay");
+    await assertStoryState(page, "audition-number", progress.xp === 0 ? "preview" : "replay");
+    await assertStoryState(page, "coachella", progress.xp === 0 ? "preview" : "replay");
+    await assertStoryState(page, "grammy-acceptance", progress.xp === 0 ? "preview" : "current");
+    assert.equal(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches), true, "story context must honor reduced motion");
+    assert.equal(await page.evaluate(() => (window as Window & { __windDownQaRafCalls?: number }).__windDownQaRafCalls ?? 0), 0, "reduced-motion story must not schedule RAF work");
+    assert.equal(await page.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "story navigation must not request microphone access");
+    await assertStoryPanelLayout(page, viewport);
+    if (progress.xp >= 1698 && [390, 768, 820].includes(viewport.width)) {
+      await closeStoryJourneyForCapture(page);
+      await waitForStoryImage(page);
+      await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-story-practice.png`), fullPage: true });
+    }
+
+    if (progress.xp >= 1698) {
+      assert.ok(await page.getByRole("button", { name: "LUMEN", exact: true }).count() > 0, "group ceremony must show a valid server-owned name");
+      await page.getByRole("button", { name: "LUMEN", exact: true }).click();
+      await page.getByText(/LUMEN/).first().waitFor({ state: "visible", timeout: 20_000 });
+      await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
+      await page.getByText(/LUMEN/).first().waitFor({ state: "visible", timeout: 20_000 });
+      assert.ok(await page.getByRole("button", { name: "First Light", exact: true }).count() > 0, "debut ceremony must show a valid server-owned name");
+      await page.getByRole("button", { name: "First Light", exact: true }).click();
+      await page.getByText(/First Light/).first().waitFor({ state: "visible", timeout: 20_000 });
+      await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
+      await page.getByText(/First Light/).first().waitFor({ state: "visible", timeout: 20_000 });
+      assert.ok(await page.getByRole("button", { name: "GLOW", exact: true }).count() > 0, "fandom ceremony must show a valid server-owned name");
+      await page.getByRole("button", { name: "GLOW", exact: true }).click();
+      await page.getByText(/GLOW/).first().waitFor({ state: "visible", timeout: 20_000 });
+      await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
+      for (const labelText of ["LUMEN", "First Light", "GLOW"]) {
+        await page.getByText(new RegExp(labelText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))).first().waitFor({ state: "visible", timeout: 20_000 });
+      }
+    }
+
+    if (progress.xp >= 1698) {
+      const coachella = await firstStoryLocator(page, "coachella");
+      await coachella.click();
+      await page.getByText(/Coachella|코첼라/).first().waitFor({ state: "visible", timeout: 20_000 });
+      if (viewport.width === 820 || viewport.width === 768) {
+        await closeStoryJourneyForCapture(page);
+        await waitForStoryImage(page);
+        await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-story-coachella.png`), fullPage: true });
+      }
+
+      const grammy = await firstStoryLocator(page, "grammy-acceptance");
+      await grammy.click();
+      await page.getByText(/Grammy|그래미/).first().waitFor({ state: "visible", timeout: 20_000 });
+      if (viewport.width === 390 || viewport.width === 768 || viewport.width === 820 || viewport.width === 1024) {
+        await closeStoryJourneyForCapture(page);
+        await waitForStoryImage(page);
+        await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-story-grammy.png`), fullPage: true });
+      }
+
+      const broadcast = await firstStoryLocator(page, "first-broadcast-lights");
+      await broadcast.click();
+      await page.getByText(/방송|broadcast|음악방송/i).first().waitFor({ state: "visible", timeout: 20_000 });
+      if (viewport.width === 390 || viewport.width === 768 || viewport.width === 820) {
+        await closeStoryJourneyForCapture(page);
+        await waitForStoryImage(page);
+        await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-story-broadcast.png`), fullPage: true });
+      }
+
+      await (await firstStoryLocator(page, "grammy-acceptance")).click();
+      const roleplay = await storyLink(page, "grammy-acceptance");
+      const roleplayHref = await roleplay.getAttribute("href");
+      assert(roleplayHref, "Grammy story must expose a roleplay handoff");
+      const roleplayUrl = new URL(roleplayHref, base);
+      assert.equal(roleplayUrl.pathname, "/winddown/roleplay");
+      assert.equal(roleplayUrl.searchParams.get("story"), "grammy-acceptance");
+      const scenario = roleplayUrl.searchParams.get("scenario");
+      assert(scenario, "story roleplay handoff must carry an authored scenario identifier");
+      assert.equal([...roleplayUrl.searchParams.keys()].sort().join(","), "scenario,story");
+      await Promise.all([
+        page.waitForURL((url) => url.pathname.replace(/\/+$/, "") === "/winddown/roleplay" && url.searchParams.get("story") === "grammy-acceptance", { timeout: 20_000 }),
+        roleplay.click(),
+      ]);
+      await page.locator('[aria-label="무대 연습 안내"]').waitFor({ state: "visible", timeout: 20_000 });
+      const storyAsideText = await page.locator('[aria-label="무대 연습 안내"]').innerText();
+      assert.match(storyAsideText, /그래미|Grammy/);
+      const chooser = page.getByRole("button", { name: "다른 상황 고르기", exact: true });
+      if (await chooser.count()) await chooser.click();
+      const selectedScenario = page.locator('button[aria-pressed="true"]:visible').first();
+      const authoredScenarioTitle = getWindDownVoiceScenario(scenario)?.title;
+      assert(authoredScenarioTitle, `story roleplay scenario ${scenario} must resolve through the server-owned catalog`);
+      await selectedScenario.waitFor({ state: "visible", timeout: 20_000 });
+      assert.match((await selectedScenario.textContent())?.trim() ?? "", new RegExp(authoredScenarioTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), "roleplay must preselect the authored story scenario");
+      assert.equal(diagnostics.voiceSessionPostCount, 0, "story roleplay must not auto-open a voice session");
+      assert.equal(await page.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "story roleplay must not auto-request microphone access");
+      const returnLink = page.getByRole("link", { name: "무대로 돌아가기", exact: true });
+      await returnLink.waitFor({ state: "visible", timeout: 20_000 });
+      const returnHref = await returnLink.getAttribute("href");
+      assert(returnHref, "story roleplay must expose a return link");
+      const returnUrl = new URL(returnHref, base);
+      assert.equal(returnUrl.pathname, "/winddown/game");
+      assert.equal(returnUrl.searchParams.get("story"), "grammy-acceptance");
+      assert.equal([...returnUrl.searchParams.keys()].join(","), "story");
+      await Promise.all([
+        page.waitForURL((url) => url.pathname.replace(/\/+$/, "") === "/winddown/game" && url.searchParams.get("story") === "grammy-acceptance", { timeout: 20_000 }),
+        returnLink.click(),
+      ]);
+      await page.getByText(/Grammy|그래미/).first().waitFor({ state: "visible", timeout: 20_000 });
+    } else {
+      for (const episodeId of ["coachella", "grammy-acceptance"]) {
+        assert.equal(await page.locator(`a[href*="/winddown/roleplay"][href*="story=${episodeId}"]`).count(), 0, `${episodeId} preview must not expose a roleplay CTA`);
+      }
+      await page.goto(new URL("/winddown/roleplay?scenario=acceptance-speech&story=grammy-acceptance", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+      await page.locator('[aria-label="무대 연습 안내"]').waitFor({ state: "visible", timeout: 20_000 });
+      await page.getByText(/아직 열리지 않은 무대/).first().waitFor({ state: "visible", timeout: 20_000 });
+      const futureStart = page.getByRole("button", { name: "미리보기 무대", exact: true });
+      await futureStart.waitFor({ state: "visible", timeout: 20_000 });
+      assert.equal(await futureStart.isDisabled(), true, "future story roleplay must keep preview start disabled");
+      assert.equal(diagnostics.voiceSessionPostCount, 0, "future story roleplay must not open a voice session");
+      assert.equal(await page.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "future story roleplay must not request microphone access");
+      await page.goto(new URL("/winddown/game?story=practice-first-note", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+      await waitForStoryReady(page);
+    }
+
+    if (progress.xp >= 1698) {
+      const recoveryFixture = continuityVoiceFixture();
+      const recoveryPage = await context.newPage();
+      const recoveryDiagnostics = attachContinuityDiagnostics(recoveryPage, engine.id, base);
+      await recoveryPage.addInitScript(({ key, outbox }) => {
+        localStorage.clear();
+        sessionStorage.clear();
+        localStorage.setItem(key, JSON.stringify(outbox));
+        (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls = 0;
+        const mediaDevices = navigator.mediaDevices;
+        if (!mediaDevices) return;
+        const original = mediaDevices.getUserMedia.bind(mediaDevices);
+        mediaDevices.getUserMedia = async (...args: Parameters<MediaDevices["getUserMedia"]>) => {
+          const target = window as Window & { __windDownGetUserMediaCalls?: number };
+          target.__windDownGetUserMediaCalls = (target.__windDownGetUserMediaCalls ?? 0) + 1;
+          return original(...args);
+        };
+      }, { key: WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY, outbox: recoveryFixture.outbox });
+      await wireStoryNetwork(recoveryPage, base, progress, recoveryDiagnostics, recoveryFixture);
+      try {
+        const recoveryResponse = await recoveryPage.goto(new URL("/winddown/roleplay?scenario=acceptance-speech&story=grammy-acceptance", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+        assert(recoveryResponse && recoveryResponse.status() < 400, `story recovery returned HTTP ${recoveryResponse?.status() ?? "no response"}`);
+        await recoveryPage.locator('[aria-label="이전 대화 복구"]').waitFor({ state: "visible", timeout: 20_000 });
+        await recoveryPage.locator('[aria-label="무대 연습 안내"]').getByText("돌아갈 무대", { exact: true }).waitFor({ state: "visible", timeout: 20_000 });
+        assert.equal(await recoveryPage.getByText("카페에서 주문하기", { exact: true }).count(), 1, "recovered report must preserve its original scenario identity");
+        assert.equal(recoveryDiagnostics.voiceReportPostCount, 0, "recovered report must wait for the explicit retry action");
+        assert.equal(await recoveryPage.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "recovered report must not request microphone access");
+        const recoveryRetry = recoveryPage.getByRole("button", { name: "같은 보고서 다시 저장", exact: true });
+        await recoveryRetry.waitFor({ state: "visible", timeout: 20_000 });
+        await recoveryRetry.click();
+        await recoveryPage.getByText("이전 대화를 원래 기록으로 보관했어.", { exact: true }).waitFor({ state: "visible", timeout: 20_000 });
+        assert.equal(recoveryDiagnostics.voiceReportPostCount, 1, "recovered report must upload only after retry");
+        assert.equal(recoveryDiagnostics.voiceReportBodies[0], JSON.stringify(recoveryFixture.report), "recovered retry must preserve the original report bytes");
+        assert.equal(recoveryDiagnostics.voiceSessionPostCount, 0, "recovered retry must not open a new voice session");
+        await assertLayout(recoveryPage);
+        assertContinuityDiagnostics(recoveryDiagnostics, `${engine.id}/${viewport.id}/story-recovery`);
+      } catch (error) {
+        await captureContinuityFailure(recoveryPage, `${engine.id}-${viewport.id}-story-recovery`, recoveryDiagnostics, error);
+        throw error;
+      } finally {
+        await recoveryPage.close();
+      }
+    }
+
+    await page.goto(new URL("/winddown/", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+    const homeStory = page.locator('[aria-label="현재 성장 이야기"]');
+    await homeStory.waitFor({ state: "visible", timeout: 20_000 });
+    const homeTour = homeStory.getByRole("link", { name: "투어 보기", exact: true });
+    const homeHref = await homeTour.getAttribute("href");
+    assert(homeHref && new URL(homeHref, base).searchParams.has("story"), "home must enter the current story scene");
+    for (const href of ["/winddown/learn", "/winddown/review", "/winddown/drill", "/winddown/roleplay", "/winddown/conversations", "/winddown/records"]) {
+      assert.ok(await page.locator(`a[href^="${href}"]`).count() > 0, `home must retain ${href} access`);
+    }
+    await assertLayout(page);
+    if (engine.id === "chromium" && viewport.width === 390 && progress.xp === 0) {
+      await page.goto(new URL("/winddown/game?story=practice-first-note&story-missing-image=1", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+      await page.getByText(/그림을 잠시 불러오지 못했어/).waitFor({ state: "visible", timeout: 20_000 });
+      await assertStoryState(page, "practice-first-note", "current");
+      await assertLayout(page);
+    }
+    assert.equal(diagnostics.voiceSessionPostCount, 0, `${label} must not open a session during navigation`);
+    assertContinuityDiagnostics(diagnostics, label);
+    return label;
+  } catch (error) {
+    await captureContinuityFailure(page, `${engine.id}-${viewport.id}-story-${progress.xp}`, diagnostics, error);
+    throw error;
+  } finally {
+    await page.close();
+    await context.close();
+  }
+}
+
 async function main() {
   const base = new URL(BASE_URL);
   assertWindDownQaTarget(BASE_URL, process.env.WINDDOWN_QA_ISOLATED);
@@ -1448,6 +1974,34 @@ async function main() {
     assert.equal(failures.length, 0, `continuity failures: ${JSON.stringify(failures)}`);
     assert.equal(results.length, 20);
     console.log(`PASS winddown-continuity-browser - ${results.length} focused synthetic Chromium/WebKit cases`);
+    return;
+  }
+  if (process.env.WINDDOWN_QA_SCOPE === "story") {
+    const failures: string[] = [];
+    for (const engine of ENGINES) {
+      const browser = await engine.type.launch({ headless: true });
+      try {
+        for (const viewport of STORY_VIEWPORTS[engine.id]) {
+          for (const progress of [
+            { xp: 0, currentLevel: 1, choice: null },
+            { xp: 1698, currentLevel: 61, choice: null },
+          ] satisfies StoryProgress[]) {
+            try {
+              const result = await runStoryContext(browser, base, sessionCookie, engine, viewport, progress);
+              results.push(result);
+              console.log(`PASS ${result}`);
+            } catch (error) {
+              failures.push(`${engine.id}/${viewport.id}/xp-${progress.xp}: ${error instanceof Error ? error.message : String(error)}`);
+            }
+          }
+        }
+      } finally {
+        await browser.close();
+      }
+    }
+    assert.equal(failures.length, 0, `story failures: ${JSON.stringify(failures)}`);
+    assert.equal(results.length, 10);
+    console.log(`PASS winddown-story-browser - ${results.length} focused synthetic Chromium/WebKit story cases`);
     return;
   }
   for (const engine of ENGINES) {

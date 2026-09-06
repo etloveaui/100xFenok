@@ -2,18 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { WindDownChapter } from "@/features/winddown/game/model/tour";
-import {
-  chapterGrowth,
-  currentChapter,
-  isChapterUnlocked,
-  levelFromXp,
-  nextChapter,
-  nightsToReach,
-  xpIntoLevel,
-  xpNeededForLevel,
-} from "@/features/winddown/game/model/progress";
-import { SCENE_PAINTERS, paintScene } from "@/features/winddown/game/ui/scenes";
 import {
   DEFAULT_LEARNER,
   WIND_DOWN_CONTENT_PACK,
@@ -26,6 +14,27 @@ import {
   type WindDownCeremonyProjection,
   type WindDownCeremonySlotId,
 } from "@/features/winddown/game/model/ceremony";
+import {
+  chapterGrowth,
+  currentChapter,
+  levelFromXp,
+  nextChapter,
+  nightsToReach,
+  xpIntoLevel,
+  xpNeededForLevel,
+} from "@/features/winddown/game/model/progress";
+import {
+  WIND_DOWN_STORY_EPISODES,
+  storyEpisodeById,
+  storyEpisodeState,
+  storyEpisodesForChapter,
+  storyRoleplayHref,
+} from "@/features/winddown/game/model/story";
+import { WIND_DOWN_MEMBERS } from "@/features/winddown/game/model/roster";
+import type { WindDownChapter } from "@/features/winddown/game/model/tour";
+import StoryJourney from "./StoryJourney";
+import WindDownStoryScene from "./WindDownStoryScene";
+import styles from "./artist-story.module.css";
 
 type Props = {
   /** Identity is presentation-only here; progress always comes from receipts. */
@@ -47,6 +56,8 @@ type GameHabitResponse = {
   ceremony: WindDownCeremonyProjection;
   nextAction: NextAction;
 };
+
+type WindDownStoryEpisode = (typeof WIND_DOWN_STORY_EPISODES)[number];
 
 const ACTIONS: Record<NextAction, { href: string; label: string }> = {
   review: { href: "/winddown/review", label: "복습 이어하기" },
@@ -99,6 +110,41 @@ function ceremonyFrom(value: unknown): WindDownCeremonyProjection | null {
     : null;
 }
 
+function chapterForEpisode(
+  episode: WindDownStoryEpisode | null,
+): WindDownChapter | null {
+  return episode
+    ? WIND_DOWN_CONTENT_PACK.chapters.find(
+        (chapter) => chapter.id === episode.chapterId,
+      ) ?? null
+    : null;
+}
+
+function viewingState(
+  episode: WindDownStoryEpisode,
+  chapter: WindDownChapter,
+  current: WindDownChapter,
+  xp: number,
+): "current" | "replay" | "preview" {
+  if (storyEpisodeState(episode, xp) === "preview") return "preview";
+  return chapter.id === current.id ? "current" : "replay";
+}
+
+function viewingStateLabel(state: "current" | "replay" | "preview") {
+  return state === "current"
+    ? "현재 커리어"
+    : state === "replay"
+      ? "다시보기"
+      : "미리보기";
+}
+
+function generalPreparationCopy(action: NextAction) {
+  if (action === "review") return "오늘 복습할 문장을 먼저 떠올려 봐요.";
+  if (action === "learn") return "오늘의 새 문장 다섯 개를 익혀요.";
+  if (action === "roleplay") return "오늘의 일반 말하기 준비를 이어가요.";
+  return "점수 없이 오늘을 편하게 더 말해요.";
+}
+
 export default function WindDownGameClient({
   learner = DEFAULT_LEARNER,
 }: Props) {
@@ -106,10 +152,8 @@ export default function WindDownGameClient({
   const [habit, setHabit] = useState<GameHabitResponse | null>(null);
   const requestSequence = useRef(0);
   const ceremonyRequestPending = useRef(false);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const frameRef = useRef<number | null>(null);
-  const [reduced, setReduced] = useState(false);
-  const [selected, setSelected] = useState<WindDownChapter | null>(null);
+  const [selectedEpisodeId, setSelectedEpisodeId] = useState<string | null>(null);
+  const [dialogueOpen, setDialogueOpen] = useState(false);
   const [ceremonyStatus, setCeremonyStatus] = useState<
     "idle" | "saving" | "conflict" | "refreshed" | "error"
   >("idle");
@@ -120,10 +164,22 @@ export default function WindDownGameClient({
   const here = useMemo(() => currentChapter(xp), [xp]);
   const next = useMemo(() => nextChapter(xp), [xp]);
   const growth = useMemo(() => chapterGrowth(xp), [xp]);
-  const chapter = selected ?? here;
+  const selectedEpisode = useMemo(
+    () => selectedEpisodeId ? storyEpisodeById(selectedEpisodeId) : null,
+    [selectedEpisodeId],
+  );
+  const chapter = useMemo(
+    () => chapterForEpisode(selectedEpisode) ?? here,
+    [here, selectedEpisode],
+  );
+  const episode = useMemo(
+    () => selectedEpisode ?? storyEpisodesForChapter(chapter.id)[0] ?? null,
+    [chapter.id, selectedEpisode],
+  );
   const member = useMemo(
-    () => memberForChapter(WIND_DOWN_CONTENT_PACK, learner, chapter.id),
-    [chapter.id, learner],
+    () => WIND_DOWN_MEMBERS.find((candidate) => candidate.id === episode?.guide)
+      ?? memberForChapter(WIND_DOWN_CONTENT_PACK, learner, chapter.id),
+    [chapter.id, episode?.guide, learner],
   );
 
   const loadProgress = useCallback(async () => {
@@ -196,70 +252,38 @@ export default function WindDownGameClient({
     }
   }, []);
 
+  const selectEpisode = useCallback((nextEpisode: WindDownStoryEpisode) => {
+    setSelectedEpisodeId(nextEpisode.id);
+    setDialogueOpen(false);
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("story", nextEpisode.id);
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+    const stageHeading = document.getElementById("winddown-story-stage-heading");
+    if (stageHeading) {
+      stageHeading.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "start",
+      });
+    }
+  }, []);
+
   useEffect(() => {
     void loadProgress();
   }, [loadProgress]);
 
   useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const apply = () => setReduced(query.matches);
-    apply();
-    query.addEventListener("change", apply);
-    return () => query.removeEventListener("change", apply);
+    const requestedStory = new URLSearchParams(window.location.search).get("story");
+    if (!requestedStory) return;
+    const validatedEpisode = storyEpisodeById(requestedStory);
+    if (validatedEpisode) setSelectedEpisodeId(validatedEpisode.id);
   }, []);
-
-  const paint = useCallback(
-    (time: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const context = canvas.getContext("2d");
-      if (!context) return;
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      if (canvas.width !== width * ratio || canvas.height !== height * ratio) {
-        canvas.width = width * ratio;
-        canvas.height = height * ratio;
-      }
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      paintScene(context, {
-        scene: chapter.scene,
-        width,
-        height,
-        time,
-        growth: chapter.id === here.id ? growth : 1,
-        member,
-      });
-    },
-    [chapter, growth, here.id, member],
-  );
-
-  useEffect(() => {
-    if (!reduced || status !== "ready") return undefined;
-    paint(0);
-    const repaint = () => paint(0);
-    window.addEventListener("resize", repaint);
-    window.addEventListener("orientationchange", repaint);
-    return () => {
-      window.removeEventListener("resize", repaint);
-      window.removeEventListener("orientationchange", repaint);
-    };
-  }, [paint, reduced, status]);
-
-  useEffect(() => {
-    if (reduced || status !== "ready") return undefined;
-    const loop = (time: number) => {
-      paint(time);
-      frameRef.current = window.requestAnimationFrame(loop);
-    };
-    frameRef.current = window.requestAnimationFrame(loop);
-    return () => {
-      if (frameRef.current !== null) {
-        window.cancelAnimationFrame(frameRef.current);
-        frameRef.current = null;
-      }
-    };
-  }, [paint, reduced, status]);
 
   const forecast = next ? nightsToReach(next.unlockLevel, xp) : 0;
   const action = habit ? ACTIONS[habit.nextAction] : null;
@@ -276,223 +300,280 @@ export default function WindDownGameClient({
 
   if (!isContentPackValid(WIND_DOWN_CONTENT_PACK)) {
     return (
-      <main role="alert" className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pt-[max(env(safe-area-inset-top),20px)] text-[var(--wd-text)]">
-        <h1 className="mt-16 text-xl font-bold">투어 콘텐츠를 안전하게 열지 못했어.</h1>
-        <Link href="/winddown" className="mt-5 inline-flex min-h-[44px] items-center text-sm font-black text-[var(--wd-accent)]">
-          오늘 밤으로 돌아가기
-        </Link>
+      <main className={styles.page} role="alert">
+        <div className={styles.shell}>
+          <section className={styles.statusPanel} style={{ background: "var(--wd-surface)" }}>
+            <h1 className={styles.statusTitle}>투어 콘텐츠를 안전하게 열지 못했어.</h1>
+            <Link href="/winddown" className={`${styles.button} ${styles.secondaryButton} ${styles.statusRetry} motion-reduce:transition-none`}>
+              오늘 밤으로 돌아가기
+            </Link>
+          </section>
+        </div>
       </main>
     );
   }
 
   if (status === "loading" || !habit || !action) {
     return (
-      <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-[max(env(safe-area-inset-top),20px)] text-[var(--wd-text)]">
-        <Link href="/winddown" className="inline-flex min-h-[44px] items-center text-sm font-black text-[var(--wd-accent)]">
-          ← 오늘 밤으로
-        </Link>
-        {status === "loading" ? (
-          <section aria-busy="true" className="mt-8 rounded-[24px] border border-[var(--wd-border)] p-6" style={{ background: "var(--wd-surface)" }}>
-            <h1 className="text-xl font-bold">학습 기록으로 투어를 여는 중</h1>
-            <p className="mt-2 text-sm text-[var(--wd-text-muted)]">저장된 완료 기록만 확인하고 있어.</p>
-          </section>
-        ) : (
-          <section role="alert" className="mt-8 rounded-[24px] border border-[var(--wd-border)] p-6" style={{ background: "var(--wd-surface)" }}>
-            <h1 className="text-xl font-bold">투어 기록을 열지 못했어.</h1>
-            <p className="mt-2 text-sm text-[var(--wd-text-muted)]">경험치를 추측하지 않았어. 다시 확인해 줘.</p>
-            <button
-              type="button"
-              onClick={() => void loadProgress()}
-              className="mt-5 inline-flex min-h-[44px] w-full items-center justify-center rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
-            >
-              다시 불러오기
-            </button>
-          </section>
-        )}
+      <main className={styles.page}>
+        <div className={styles.shell}>
+          <nav className={styles.topbar} aria-label="월드 투어 이동">
+            <Link href="/winddown" className={styles.backLink}>← 오늘 밤</Link>
+            <span className={styles.brand}>WIND DOWN</span>
+            <span className={styles.topContext}>투어 기록</span>
+          </nav>
+          {status === "loading" ? (
+            <section aria-busy="true" className={styles.statusPanel} style={{ background: "var(--wd-surface)" }}>
+              <h1 className={styles.statusTitle}>학습 기록으로 투어를 여는 중</h1>
+              <p className={styles.statusCopy}>저장된 완료 기록만 확인하고 있어.</p>
+            </section>
+          ) : (
+            <section role="alert" className={styles.statusPanel} style={{ background: "var(--wd-surface)" }}>
+              <h1 className={styles.statusTitle}>투어 기록을 열지 못했어.</h1>
+              <p className={styles.statusCopy}>경험치를 추측하지 않았어. 다시 확인해 줘.</p>
+              <button
+                type="button"
+                onClick={() => void loadProgress()}
+                className={`${styles.button} ${styles.primaryButton} ${styles.statusRetry} motion-reduce:transition-none`}
+              >
+                다시 불러오기
+              </button>
+            </section>
+          )}
+        </div>
       </main>
     );
   }
 
+  if (!episode) {
+    return (
+      <main className={styles.page} role="alert">
+        <div className={styles.shell}>
+          <section className={styles.statusPanel} style={{ background: "var(--wd-surface)" }}>
+            <h1 className={styles.statusTitle}>이야기를 안전하게 열지 못했어.</h1>
+            <p className={styles.statusCopy}>저장된 학습 기록은 그대로야. 다음 장면을 준비하고 있어.</p>
+            <Link href="/winddown" className={`${styles.button} ${styles.secondaryButton} ${styles.statusRetry} motion-reduce:transition-none`}>
+              오늘 밤으로 돌아가기
+            </Link>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  const state = viewingState(episode, chapter, here, xp);
+  const stateLabel = viewingStateLabel(state);
+  const roleplayHref = state === "preview" ? null : storyRoleplayHref(episode);
+  const chapterAct = WIND_DOWN_CONTENT_PACK.acts.find((act) => act.id === chapter.act);
+  const progressPercent = Math.round((xpIntoLevel(xp) / xpNeededForLevel(xp)) * 100);
+
   return (
-    <main className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col gap-4 px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-[max(env(safe-area-inset-top),20px)] text-[var(--wd-text)]">
-      <nav aria-label="월드 투어 이동" className="flex items-center justify-between gap-3">
-        <Link href="/winddown" className="inline-flex min-h-[44px] items-center text-sm font-black text-[var(--wd-accent)]">
-          ← 오늘 밤
-        </Link>
-        <Link href={action.href} className="inline-flex min-h-[44px] items-center rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)]">
-          {action.label}
-        </Link>
-      </nav>
-      <header>
-        <p className="text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">
-          {WIND_DOWN_CONTENT_PACK.acts.find((act) => act.id === chapter.act)?.tag ?? "ACT"} ·{" "}
-          {WIND_DOWN_CONTENT_PACK.acts.find((act) => act.id === chapter.act)?.name ?? ""}
-        </p>
-        <h1 className="mt-1 text-[28px] font-semibold tracking-tight">{chapter.label}</h1>
-        <p className="mt-2 text-sm font-medium text-[var(--wd-text-muted)]">
-          {chapter.country} · {chapter.beat}
-        </p>
-      </header>
+    <main className={styles.page}>
+      <div className={styles.shell}>
+        <nav className={styles.topbar} aria-label="월드 투어 이동">
+          <Link href="/winddown" className={styles.backLink}>← 오늘 밤</Link>
+          <span className={styles.brand}>WIND DOWN</span>
+          <span className={styles.topContext}>{chapterAct?.tag ?? "ACT"} · {episode.location}</span>
+        </nav>
 
-      <section
-        className="overflow-hidden rounded-[24px] border border-[var(--wd-border)]"
-        style={{ background: "var(--wd-surface)" }}
-      >
-        <canvas
-          ref={canvasRef}
-          role="img"
-          className="block h-[196px] w-full"
-          aria-label={`${chapter.label} 무대에서 ${member.name}와 함께 걷는 장면. ${chapter.beat}`}
-        >
-          {`${chapter.label} · ${chapter.country}. ${chapter.beat}`}
-        </canvas>
-      </section>
+        <header className={styles.heading} id="winddown-story-stage-heading">
+          <p className={styles.eyebrow}>{chapterAct?.tag ?? "ACT"} · {chapterAct?.name ?? ""}</p>
+          <h1 className={styles.title}>{episode.title}</h1>
+          <p className={styles.location}>{episode.location} · {stateLabel} · 지금의 무대: {here.label}</p>
+        </header>
 
-      <section className="rounded-[24px] border border-[var(--wd-border)] p-5" style={{ background: "var(--wd-surface)" }}>
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-[11px] font-black tracking-[0.16em] text-[var(--wd-accent)]">TOUR PROGRESS</p>
-          <span className="text-xs font-bold text-[var(--wd-text-muted)]">Lv.{level}</span>
-        </div>
-        <div className="mt-3 h-[7px] overflow-hidden rounded-full" style={{ background: "var(--wd-border)" }}>
-          <i
-            className="block h-full rounded-full"
-            style={{
-              width: `${Math.round((xpIntoLevel(xp) / xpNeededForLevel(xp)) * 100)}%`,
-              background: "var(--wd-accent)",
-            }}
-          />
-        </div>
-        <p className="mt-2 text-xs font-bold text-[var(--wd-text-muted)]">
-          {next
-            ? `${next.label} 개방까지 Lv.${next.unlockLevel} · 매일 19 XP면 예상 약 ${forecast}일`
-            : "마지막 장까지 열었어."}
-        </p>
-        <p className="mt-1 text-xs font-bold text-[var(--wd-text-muted)]">
-          {here.label} 성장 {Math.round(growth * 100)}% · 저장된 학습 기록이 쌓일 때 자라
-        </p>
-        <p className="mt-1 text-xs font-bold text-[var(--wd-text-muted)]">
-          저장된 문장 {habit.game.creditedAnswerCount}개 · 복습 별 {habit.game.collectedReviewStarCount}개 · {habit.game.creditedNightCount}밤
-        </p>
-      </section>
+        <div className={styles.stageGrid}>
+          <section
+            className={styles.stageColumn}
+            aria-label={`${episode.title} 이야기 장면`}
+            data-story-stage="true"
+          >
+            <WindDownStoryScene
+              sceneKey={episode.sceneKey}
+              title={episode.title}
+              caption={episode.dialogue}
+            />
+          </section>
 
-      <section aria-label="챕터 목록">
-        <ul className="flex gap-2 overflow-x-auto pb-1">
-          {WIND_DOWN_CONTENT_PACK.chapters.map((item) => {
-            const open = isChapterUnlocked(item, xp);
-            return (
-              <li key={item.id} className="shrink-0">
-                <button
-                  type="button"
-                  disabled={!open}
-                  aria-pressed={item.id === chapter.id}
-                  onClick={() => setSelected(item)}
-                  className="flex min-h-[76px] w-[104px] flex-col justify-between rounded-[18px] border p-3 text-left disabled:opacity-40"
-                  style={{
-                    borderColor: item.id === chapter.id ? "var(--wd-accent)" : "var(--wd-border)",
-                    background: "var(--wd-surface)",
-                  }}
-                >
-                  <span className="text-[13px] font-black">{item.label}</span>
-                  <span className="text-[10px] font-bold tracking-[0.1em] text-[var(--wd-text-muted)]">
-                    {open ? item.country : `Lv.${item.unlockLevel}`}
+          <section className={styles.missionPanel} aria-label="오늘의 연습" data-story-mission="true">
+            <div>
+              <p className={styles.eyebrow}>TODAY'S PRACTICE</p>
+              <h2 className={styles.missionHeading}>오늘의 연습</h2>
+              <p className={styles.missionSetup}>{episode.setup}</p>
+              <span className={styles.missionState}>{stateLabel}</span>
+              <div className={styles.missionGuide}>
+                <p className={styles.missionGuideLabel}>STORY GUIDE · 이야기 안내</p>
+                <p className={styles.missionGuideName}>{member.name} · {member.roleLabel}</p>
+                <p className={styles.missionGuideCopy}>{member.voice.greet}</p>
+              </div>
+            </div>
+            <div>
+              <p className={styles.missionObjective}>{episode.objective}</p>
+              <div className={styles.missionActions}>
+                {roleplayHref ? (
+                  <Link href={roleplayHref} className={`${styles.button} ${styles.primaryButton} motion-reduce:transition-none`}>
+                    연습 시작
+                  </Link>
+                ) : (
+                  <span className={`${styles.button} ${styles.disabledButton}`} aria-disabled="true">
+                    미리보기 · 연습은 아직 열리지 않았어
                   </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+                )}
+                <p className={styles.generalCopy}>마이크는 직접 시작해요.</p>
+              </div>
+            </div>
+            <div className={styles.generalAction}>
+              <div>
+                <p className={styles.generalLabel}>오늘의 기본 연습</p>
+                <p className={styles.generalCopy}>{generalPreparationCopy(habit.nextAction)}</p>
+              </div>
+              <Link href={action.href} className={styles.generalLink}>{action.label}</Link>
+            </div>
+          </section>
+        </div>
 
-      <section
-        aria-label="우리의 이름"
-        className="rounded-[24px] border border-[var(--wd-border)] p-5"
-        style={{ background: "var(--wd-surface)" }}
-      >
-        <p className="text-[11px] font-black tracking-[0.16em] text-[var(--wd-accent)]">OUR STORY</p>
-        {chosenCeremonies.length > 0 ? (
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {chosenCeremonies.map((slot) => (
-              <li
-                key={slot.id}
-                className="max-w-full break-words rounded-full border border-[var(--wd-border)] px-3 py-2 text-xs font-black"
-              >
-                {slot.label} · {slot.choice?.label}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        {ceremonyUnavailable ? (
-          <div className={chosenCeremonies.length > 0 ? "mt-5" : "mt-2"}>
-            <h2 className="text-lg font-bold">이름 후보를 지금 불러오지 못했어.</h2>
-            <p className="mt-2 text-sm font-medium text-[var(--wd-text-muted)]">
-              학습과 투어 기록은 그대로야. 출판된 문장 자료가 다시 열리면 여기서 이어갈 수 있어.
-            </p>
-          </div>
-        ) : openCeremony ? (
-          <div className={chosenCeremonies.length > 0 ? "mt-5" : "mt-2"}>
-            <p className="text-xs font-black text-[var(--wd-accent)]">
-              학습 기록이 Lv.{openCeremony.unlockLevel}을 열었어
-            </p>
-            <h2 className="mt-1 text-lg font-bold">{openCeremony.label}을 정할 순간</h2>
-            <p className="mt-2 text-sm font-medium text-[var(--wd-text-muted)]">
-              {openCeremony.optionSource === "mastery-derived"
-                ? "모나가 여러 밤 복습에서 계속 다시 잡아낸 문장으로 만든 후보야. 한 번 정하면 공식 이름으로 남아."
-                : "아직 후보로 만들 숙달 문장이 부족해 첫 이름 후보를 준비했어. 한 번 정하면 공식 이름으로 남아."}
-            </p>
-            <div className="mt-4 grid gap-2">
-              {openCeremony.options.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  disabled={ceremonyStatus === "saving"}
-                  onClick={() => void commitCeremony(
-                    openCeremony.id,
-                    option.id,
-                    openCeremony.label,
-                  )}
-                  className="inline-flex min-h-[44px] w-full items-center justify-center break-words rounded-2xl border border-[var(--wd-border)] px-4 text-sm font-black disabled:opacity-50"
-                  style={{ background: "var(--wd-bg)" }}
-                >
-                  {option.label}
-                </button>
+        <section className={styles.reading} aria-label="이야기 이어 읽기">
+          <p className={styles.eyebrow}>STORY CONTINUATION</p>
+          <h2 className={styles.sectionTitle}>이야기 이어 읽기</h2>
+          <p className={styles.readingText}>{episode.reflection}</p>
+          <p className={styles.readingNote}>성장 기록은 저장된 학습과 복습을 따라 이어져.</p>
+          {episode.keepsake ? <span className={styles.keepsake}>이야기 속 기념물 · {episode.keepsake}</span> : null}
+          <button
+            type="button"
+            className={`${styles.disclosure} motion-reduce:transition-none`}
+            aria-expanded={dialogueOpen}
+            onClick={() => setDialogueOpen((open) => !open)}
+          >
+            <span>대화와 영어 예시 보기</span>
+            <span className={styles.disclosureMarker} aria-hidden="true">{dialogueOpen ? "−" : "+"}</span>
+          </button>
+          {dialogueOpen ? (
+            <div className={styles.dialogueGrid}>
+              <div className={styles.dialogueCard}>
+                <p className={styles.dialogueLabel}>DIALOGUE</p>
+                <p className={styles.dialogueText}>{episode.dialogue}</p>
+              </div>
+              <div className={styles.dialogueCard}>
+                <p className={styles.dialogueLabel}>ENGLISH EXAMPLE</p>
+                <p className={styles.dialogueText}>{episode.englishExample}</p>
+              </div>
+            </div>
+          ) : null}
+        </section>
+
+        <StoryJourney
+          acts={WIND_DOWN_CONTENT_PACK.acts}
+          chapters={WIND_DOWN_CONTENT_PACK.chapters}
+          episodes={WIND_DOWN_STORY_EPISODES}
+          xp={xp}
+          currentChapterId={here.id}
+          selectedEpisodeId={episode.id}
+          onSelect={selectEpisode}
+        />
+
+        <section className={styles.ceremony} aria-label="우리의 이름">
+          <p className={styles.eyebrow}>OUR STORY</p>
+          <h2 className={styles.sectionTitle}>우리 팀의 기념 이름</h2>
+          {chosenCeremonies.length > 0 ? (
+            <ul className={styles.ceremonyChoices}>
+              {chosenCeremonies.map((slot) => (
+                <li key={slot.id} className={styles.choiceChip}>
+                  {slot.label} · {slot.choice?.label}
+                </li>
               ))}
+            </ul>
+          ) : null}
+          {ceremonyUnavailable ? (
+            <div>
+              <p className={styles.readingText}>이름 후보를 지금 불러오지 못했어.</p>
+              <p className={styles.ceremonyCopy}>학습과 투어 기록은 그대로야. 출판된 문장 자료가 다시 열리면 여기서 이어갈 수 있어.</p>
+            </div>
+          ) : openCeremony ? (
+            <div>
+              <p className={styles.readingNote}>학습 기록이 Lv.{openCeremony.unlockLevel}을 열었어</p>
+              <h3 className={styles.missionObjective}>{openCeremony.label}을 정할 순간</h3>
+              <p className={styles.ceremonyCopy}>
+                {openCeremony.optionSource === "mastery-derived"
+                  ? "모나가 여러 밤 복습에서 계속 다시 잡아낸 문장으로 만든 후보야. 한 번 정하면 공식 이름으로 남아."
+                  : "아직 후보로 만들 숙달 문장이 부족해 첫 이름 후보를 준비했어. 한 번 정하면 공식 이름으로 남아."}
+              </p>
+              <div className={styles.ceremonyButtons}>
+                {openCeremony.options.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    disabled={ceremonyStatus === "saving"}
+                    onClick={() => void commitCeremony(
+                      openCeremony.id,
+                      option.id,
+                      openCeremony.label,
+                    )}
+                    className={styles.ceremonyButton}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : nextCeremony ? (
+            <p className={styles.ceremonyCopy}>다음 이야기 · {nextCeremony.label}은 Lv.{nextCeremony.unlockLevel}에 열려.</p>
+          ) : (
+            <p className={styles.ceremonyCopy}>우리 팀의 공식 이야기가 모두 정해졌어.</p>
+          )}
+          <p aria-live="polite" className={styles.statusText}>
+            {ceremonyStatus === "saving"
+              ? `${ceremonyStatusSlotLabel}을 공식 이름으로 저장하는 중…`
+              : ceremonyStatus === "conflict"
+                ? `${ceremonyStatusSlotLabel}은 다른 화면에서 먼저 정해져 저장된 이름을 불러왔어.`
+              : ceremonyStatus === "refreshed"
+                ? `${ceremonyStatusSlotLabel} 후보가 갱신되어 최신 목록을 불러왔어.`
+              : ceremonyStatus === "error"
+                ? `${ceremonyStatusSlotLabel}을 저장하지 못했어. 연결을 확인하고 다시 눌러 줘.`
+                : ""}
+          </p>
+        </section>
+
+        <section className={styles.progress} aria-label="저장된 학습 진행">
+          <div className={styles.sectionHeader}>
+            <div>
+              <p className={styles.eyebrow}>SAVED LEARNING</p>
+              <h2 className={styles.sectionTitle}>저장된 학습으로 나아가기</h2>
+            </div>
+            <span className={styles.missionState}>Lv.{level}</span>
+          </div>
+          <div className={styles.progressMeter} aria-label={`현재 레벨 진행 ${progressPercent}%`}>
+            <i className={styles.progressMeterFill} style={{ width: `${progressPercent}%` }} />
+          </div>
+          <p className={styles.progressCopy}>
+            {next
+              ? `${next.label} 개방까지 Lv.${next.unlockLevel} · 매일 19 XP면 예상 약 ${forecast}일`
+              : "마지막 장까지 열었어."}
+          </p>
+          <p className={styles.progressCopy}>
+            {here.label} 성장 {Math.round(growth * 100)}% · 저장된 학습 기록이 쌓일 때 자라
+          </p>
+          <div className={styles.progressStats}>
+            <div className={styles.progressStat}>
+              <span className={styles.progressStatLabel}>저장된 문장</span>
+              <span className={styles.progressStatValue}>{habit.game.creditedAnswerCount}</span>
+            </div>
+            <div className={styles.progressStat}>
+              <span className={styles.progressStatLabel}>복습 별</span>
+              <span className={styles.progressStatValue}>{habit.game.collectedReviewStarCount}</span>
+            </div>
+            <div className={styles.progressStat}>
+              <span className={styles.progressStatLabel}>완료한 밤</span>
+              <span className={styles.progressStatValue}>{habit.game.creditedNightCount}</span>
             </div>
           </div>
-        ) : nextCeremony ? (
-          <p className="mt-3 text-sm font-bold text-[var(--wd-text-muted)]">
-            다음 이야기 · {nextCeremony.label}은 Lv.{nextCeremony.unlockLevel}에 열려.
-          </p>
-        ) : (
-          <p className="mt-3 text-sm font-bold text-[var(--wd-text-muted)]">
-            우리 팀의 공식 이야기가 모두 정해졌어.
-          </p>
-        )}
-        <p aria-live="polite" className="mt-3 min-h-5 text-xs font-bold text-[var(--wd-text-muted)]">
-          {ceremonyStatus === "saving"
-            ? `${ceremonyStatusSlotLabel}을 공식 이름으로 저장하는 중…`
-            : ceremonyStatus === "conflict"
-              ? `${ceremonyStatusSlotLabel}은 다른 화면에서 먼저 정해져 저장된 이름을 불러왔어.`
-            : ceremonyStatus === "refreshed"
-              ? `${ceremonyStatusSlotLabel} 후보가 갱신되어 최신 목록을 불러왔어.`
-            : ceremonyStatus === "error"
-              ? `${ceremonyStatusSlotLabel}을 저장하지 못했어. 연결을 확인하고 다시 눌러 줘.`
-              : ""}
-        </p>
-      </section>
+        </section>
 
-      <section aria-label="함께 걷는 멤버" className="rounded-[24px] border border-[var(--wd-border)] p-5" style={{ background: "var(--wd-surface)" }}>
-        <p className="text-[11px] font-black tracking-[0.16em] text-[var(--wd-accent)]">COMPANION</p>
-        <h2 className="mt-1 text-lg font-bold">{member.name} · {member.roleLabel}</h2>
-        <p className="mt-2 text-sm font-medium text-[var(--wd-text-muted)]">{member.voice.greet}</p>
-        <p className="mt-3 text-xs font-bold text-[var(--wd-text-muted)]">
-          모나의 고정 시드로 네 멤버가 장면마다 번갈아 안내해.
-        </p>
-      </section>
-
-      <p className="pb-2 text-center text-[11px] font-bold text-[var(--wd-text-muted)]">
-        공부해서 얻은 경험치로만 나아가. 시간 제한도 실패도 없어. 장면 {Object.keys(SCENE_PAINTERS).length}종 ·
-        콘텐츠 {WIND_DOWN_CONTENT_PACK.id} {WIND_DOWN_CONTENT_PACK.version} · {learner.name}
-      </p>
+        <nav className={styles.footer} aria-label="나의 학습 기록">
+          <Link href="/winddown/conversations" className={styles.footerLink}>대화 보관함 <span aria-hidden="true">→</span></Link>
+          <Link href="/winddown/records" className={styles.footerLink}>학습 기록 보관 <span aria-hidden="true">→</span></Link>
+          <Link href="/winddown" className={styles.footerLink}>오늘 밤으로 돌아가기 <span aria-hidden="true">→</span></Link>
+        </nav>
+      </div>
     </main>
   );
 }

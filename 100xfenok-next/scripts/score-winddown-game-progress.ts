@@ -14,9 +14,8 @@ import {
 import type {
   WindDownHabitCompletionEvent,
 } from "../src/features/winddown/habit/domain";
-import {
-  SCENE_PAINTERS,
-} from "../src/features/winddown/game/ui/scenes";
+import { storyEpisodesForChapter } from "../src/features/winddown/game/model/story";
+import { storyArtFor } from "../src/features/winddown/game/model/storyArt";
 import {
   buildWindDownCeremonyOptionCatalog,
   commitWindDownCeremonyChoice,
@@ -88,9 +87,9 @@ assert.deepEqual(
 assert.equal(isContentPackValid(WIND_DOWN_CONTENT_PACK), true);
 assert(
   WIND_DOWN_CONTENT_PACK.chapters.every(
-    (chapter) => typeof SCENE_PAINTERS[chapter.scene] === "function",
+    (chapter) => storyEpisodesForChapter(chapter.id).every((episode) => storyArtFor(episode.sceneKey).src.startsWith("/images/winddown/story/")),
   ),
-  "every chapter scene key must resolve to a concrete painter",
+  "every chapter story must resolve to a local authored illustration",
 );
 const openingMembers = WIND_DOWN_CONTENT_PACK.chapters
   .slice(0, 4)

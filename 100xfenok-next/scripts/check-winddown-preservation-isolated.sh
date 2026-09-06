@@ -15,7 +15,9 @@ export QA_SCREENSHOT_DIR="test-results/winddown-preservation"
 bash scripts/load-guard.sh --assert-nested
 npm run build:version
 npm run sync-static
-if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "continuity" ]; then
+if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "story" ]; then
+  npm run test:winddown-story-gate
+elif [ "${WINDDOWN_QA_SCOPE:-preservation}" = "continuity" ]; then
   npm run test:winddown-continuity-gate
 else
   npm run test:winddown-preservation-gate
