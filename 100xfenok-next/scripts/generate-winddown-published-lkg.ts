@@ -21,6 +21,7 @@ import {
   windDownLkgBlobPath,
   windDownLkgBody,
   windDownLkgPointerPath,
+  windDownRuntimePracticeFromSourceMetadata,
   windDownRuntimeProjectionBody,
   windDownRuntimeProjectionText,
   type WindDownMaterialLkg,
@@ -147,12 +148,18 @@ export function buildWindDownRuntimeProjection(
     kind: "winddown-material-runtime-projection" as const,
     sourceContentDigest: lkg.contentDigest,
     sourceArtifactDigest: lkg.artifactDigest,
-    materials: lkg.materials.map((material) => ({
-      id: material.id,
-      ko: material.ko,
-      en: material.en,
-      acceptedVariants: [...material.acceptedVariants],
-    })),
+    materials: lkg.materials.map((material) => {
+      const practice = windDownRuntimePracticeFromSourceMetadata(
+        material.sourceMetadata,
+      );
+      return {
+        id: material.id,
+        ko: material.ko,
+        en: material.en,
+        acceptedVariants: [...material.acceptedVariants],
+        ...(practice ? { practice } : {}),
+      };
+    }),
     aliases: lkg.migration.legacyAliasMap.map((entry) => ({ ...entry })),
     quarantine,
     lunaQuarantinedMaterialIds: lkg.lunaQuarantine.map(

@@ -89,10 +89,31 @@ export type WindDownMaterialLkgPointer = {
 
 export const WINDDOWN_RUNTIME_PROJECTION_SCHEMA_VERSION = 1 as const;
 
+/**
+ * Practice metadata is a deliberately small public projection of the
+ * authored source metadata. Keep these limits aligned with the practice
+ * response contract so a published projection cannot become an unbounded
+ * learner payload.
+ */
+export const WINDDOWN_RUNTIME_PRACTICE_LIMITS = {
+  patternLength: 160,
+  themeLength: 80,
+  variationLength: 240,
+  variationCount: 8,
+} as const;
+
+export type WindDownRuntimePractice = {
+  pattern: string | null;
+  variationsEn: string[];
+  theme: string | null;
+};
+
 export type WindDownRuntimeMaterial = Pick<
   WindDownLkgMaterial,
   "id" | "ko" | "en" | "acceptedVariants"
->;
+> & {
+  practice?: WindDownRuntimePractice;
+};
 
 export type WindDownRuntimeQuarantineEntry = {
   canonicalId: string | null;
@@ -579,9 +600,16 @@ function assertRuntimeMaterial(
   value: unknown,
 ): asserts value is WindDownRuntimeMaterial {
   if (!isRecord(value)) throw new Error("runtime_material_invalid");
+  const hasPractice = Object.hasOwn(value, "practice");
   assertExactKeys(
     value,
-    ["id", "ko", "en", "acceptedVariants"],
+    [
+      "id",
+      "ko",
+      "en",
+      "acceptedVariants",
+      ...(hasPractice ? ["practice"] : []),
+    ],
     "runtime_material",
   );
   for (const key of ["id", "ko", "en"] as const) {
@@ -593,6 +621,122 @@ function assertRuntimeMaterial(
     value.acceptedVariants,
     "runtime_material_accepted_variants",
   );
+  if (hasPractice) assertWindDownRuntimePractice(value.practice);
+}
+
+export function assertWindDownRuntimePractice(
+  value: unknown,
+): asserts value is WindDownRuntimePractice {
+  if (!isRecord(value)) throw new Error("runtime_practice_invalid");
+  assertExactKeys(
+    value,
+    ["pattern", "variationsEn", "theme"],
+    "runtime_practice",
+  );
+  for (const [key, limit, label] of [
+    [
+      "pattern",
+      WINDDOWN_RUNTIME_PRACTICE_LIMITS.patternLength,
+      "runtime_practice_pattern",
+    ],
+    [
+      "theme",
+      WINDDOWN_RUNTIME_PRACTICE_LIMITS.themeLength,
+      "runtime_practice_theme",
+    ],
+  ] as const) {
+    const text = value[key];
+    if (
+      text !== null &&
+      (typeof text !== "string" ||
+        !text.trim() ||
+        text !== text.trim() ||
+        text.length > limit)
+    ) {
+      throw new Error(`${label}_invalid`);
+    }
+  }
+  if (
+    !Array.isArray(value.variationsEn) ||
+    value.variationsEn.length >
+      WINDDOWN_RUNTIME_PRACTICE_LIMITS.variationCount
+  ) {
+    throw new Error("runtime_practice_variations_invalid");
+  }
+  const variations = value.variationsEn;
+  const seen = new Set<string>();
+  for (const variation of variations) {
+    if (
+      typeof variation !== "string" ||
+      !variation.trim() ||
+      variation !== variation.trim() ||
+      variation.length > WINDDOWN_RUNTIME_PRACTICE_LIMITS.variationLength ||
+      seen.has(variation)
+    ) {
+      throw new Error("runtime_practice_variations_invalid");
+    }
+    seen.add(variation);
+  }
+  if (
+    value.pattern === null &&
+    value.theme === null &&
+    variations.length === 0
+  ) {
+    throw new Error("runtime_practice_empty");
+  }
+}
+
+function boundedNullableText(
+  value: unknown,
+  limit: number,
+): string | null | undefined {
+  if (value === null) return null;
+  if (
+    typeof value !== "string" ||
+    !value.trim() ||
+    value !== value.trim() ||
+    value.length > limit
+  ) {
+    return undefined;
+  }
+  return value;
+}
+
+/**
+ * Select only validated authored practice fields from a static LKG material.
+ * Invalid or empty metadata is omitted as a unit so the runtime never exposes
+ * a partial or unbounded practice record.
+ */
+export function windDownRuntimePracticeFromSourceMetadata(
+  value: unknown,
+): WindDownRuntimePractice | undefined {
+  if (!isRecord(value)) return undefined;
+
+  const pattern = boundedNullableText(
+    value.pattern,
+    WINDDOWN_RUNTIME_PRACTICE_LIMITS.patternLength,
+  );
+  const theme = boundedNullableText(
+    value.theme,
+    WINDDOWN_RUNTIME_PRACTICE_LIMITS.themeLength,
+  );
+  if (pattern === undefined || theme === undefined) return undefined;
+  if (!Array.isArray(value.variationsEn)) return undefined;
+  const candidate: unknown = {
+    pattern,
+    variationsEn: value.variationsEn,
+    theme,
+  };
+  try {
+    assertWindDownRuntimePractice(candidate);
+    return {
+      pattern: candidate.pattern,
+      variationsEn: [...candidate.variationsEn],
+      theme: candidate.theme,
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 function assertRuntimeAliases(

@@ -3,12 +3,14 @@ import type { MonaVnextExpression } from "@/features/mona-vnext/coach/coachPolic
 import { listTeacherApprovedMonaVnextExpressionEntries } from "@/features/mona-vnext/server/teacherMaterialBank";
 import {
   assertWindDownRuntimeProjection,
+  assertWindDownRuntimePractice,
   assertWindDownRuntimeProjectionPointer,
   canonicalWindDownLkgJson,
   windDownRuntimeProjectionBody,
   type WindDownLkgAdvisorGate,
   type WindDownLkgAliasEntry,
   type WindDownLkgAdvisorOverlay,
+  type WindDownRuntimePractice,
   type WindDownRuntimeProjection,
 } from "@/features/winddown/content/lkgContract";
 import { WINDDOWN_PUBLISHED_LKG_BUILD } from "@/generated/winddown-published-lkg";
@@ -37,6 +39,10 @@ export type WindDownStudyAdvisorMetadata = Pick<
   | "evidence"
   | "enrichment"
 >;
+
+export type WindDownStudyPracticeMetadata = WindDownRuntimePractice & {
+  materialId: string;
+};
 
 export type WindDownStudyMaterialMetadata = {
   source: "published-lkg" | "legacy-fallback";
@@ -68,6 +74,9 @@ export type WindDownStudyMaterialSelection = {
   advisorForExpressionIds(
     expressionIds: string[],
   ): WindDownStudyAdvisorMetadata[];
+  practiceForExpressionIds(
+    expressionIds: string[],
+  ): WindDownStudyPracticeMetadata[];
 };
 
 type PublishedStaticMaterial = {
@@ -75,6 +84,7 @@ type PublishedStaticMaterial = {
   ko: string;
   en: string;
   acceptedVariants: string[];
+  practice?: WindDownRuntimePractice;
 };
 
 type QuarantinedId = {
@@ -95,6 +105,20 @@ function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null;
+}
+
+function staticPractice(value: unknown): WindDownRuntimePractice | undefined {
+  if (value === undefined) return undefined;
+  try {
+    assertWindDownRuntimePractice(value);
+    return {
+      pattern: value.pattern,
+      variationsEn: [...value.variationsEn],
+      theme: value.theme,
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 function staticMaterial(value: unknown): PublishedStaticMaterial | null {
@@ -118,7 +142,14 @@ function staticMaterial(value: unknown): PublishedStaticMaterial | null {
         ),
       )
     : [];
-  return { id, ko, en, acceptedVariants };
+  const practice = staticPractice(source.practice);
+  return {
+    id,
+    ko,
+    en,
+    acceptedVariants,
+    ...(practice ? { practice } : {}),
+  };
 }
 
 function quarantineIds(values: unknown[]): QuarantinedId[] {
@@ -251,6 +282,11 @@ function publishedSelection(
   const advisors = new Map(
     projection.advisorOverlay.map((entry) => [entry.materialId, entry]),
   );
+  const practice = new Map(
+    projection.materials.flatMap((entry) =>
+      entry.practice ? [[entry.id, entry.practice] as const] : [],
+    ),
+  );
 
   return {
     entries,
@@ -309,6 +345,20 @@ function publishedSelection(
         const advisor = advisors.get(id);
         return advisor ? [cloneAdvisor(advisor)] : [];
       }),
+    practiceForExpressionIds: (expressionIds) =>
+      uniqueStrings(expressionIds).flatMap((id) => {
+        const metadata = practice.get(id);
+        return metadata
+          ? [
+              {
+                materialId: id,
+                pattern: metadata.pattern,
+                variationsEn: [...metadata.variationsEn],
+                theme: metadata.theme,
+              },
+            ]
+          : [];
+      }),
   };
 }
 
@@ -359,6 +409,7 @@ function legacyFallbackSelection(
       },
     },
     advisorForExpressionIds: () => [],
+    practiceForExpressionIds: () => [],
   };
 }
 

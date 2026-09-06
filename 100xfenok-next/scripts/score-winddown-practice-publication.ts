@@ -3,13 +3,20 @@ import { createHash } from "node:crypto";
 import {
   assertWindDownRuntimeProjection,
   canonicalWindDownLkgJson,
+  windDownLkgBody,
+  windDownRuntimePracticeFromSourceMetadata,
   windDownRuntimeProjectionBody,
+  type WindDownLkgMaterial,
+  type WindDownMaterialLkg,
   type WindDownRuntimeProjection,
 } from "../src/features/winddown/content/lkgContract";
 import {
   buildWindDownRuntimeProjection,
   readCurrentWindDownPublishedLkg,
 } from "./generate-winddown-published-lkg";
+import {
+  buildWindDownStudyMaterialFromRuntimeProjection,
+} from "../src/features/winddown/server/publishedMaterialAdapter";
 
 const AUDIT_ROOT = "src/generated/winddown-published-lkg.audit";
 const MAX_PATTERN_LENGTH = 160;
@@ -140,6 +147,28 @@ function withoutPractice(
   };
 }
 
+function lkgWithSourceMetadata(
+  lkg: WindDownMaterialLkg,
+  materialId: string,
+  patch: Partial<WindDownLkgMaterial["sourceMetadata"]>,
+): WindDownMaterialLkg {
+  const candidate: WindDownMaterialLkg = {
+    ...lkg,
+    materials: lkg.materials.map((material) =>
+      material.id === materialId
+        ? {
+            ...material,
+            sourceMetadata: { ...material.sourceMetadata, ...patch },
+          }
+        : material,
+    ),
+  };
+  return {
+    ...candidate,
+    contentDigest: sha256(canonicalWindDownLkgJson(windDownLkgBody(candidate))),
+  };
+}
+
 const lkg = readCurrentWindDownPublishedLkg({ lkgRoot: AUDIT_ROOT });
 const projection = buildWindDownRuntimeProjection(lkg);
 assertWindDownRuntimeProjection(projection);
@@ -164,6 +193,59 @@ for (const material of projection.materials) {
   assertPublicMaterialShape(material);
 }
 
+const authored = lkg.materials.find(
+  (material) => material.id === EXPECTED_AUTHORED_PRACTICE[0].id,
+);
+assert(authored);
+const authoredPractice = windDownRuntimePracticeFromSourceMetadata(
+  authored.sourceMetadata,
+);
+assert(authoredPractice);
+assert.deepEqual(
+  authoredPractice,
+  {
+    pattern: EXPECTED_AUTHORED_PRACTICE[0].pattern,
+    variationsEn: EXPECTED_AUTHORED_PRACTICE[0].variationsEn,
+    theme: EXPECTED_AUTHORED_PRACTICE[0].theme,
+  },
+  "source metadata must map to the frozen public practice shape",
+);
+for (const [label, patch] of [
+  ["overlong pattern", { pattern: "x".repeat(MAX_PATTERN_LENGTH + 1) }],
+  ["duplicate variations", { variationsEn: ["same", "same"] }],
+  ["overlong theme", { theme: "x".repeat(MAX_THEME_LENGTH + 1) }],
+] as const) {
+  const malformedProjection = buildWindDownRuntimeProjection(
+    lkgWithSourceMetadata(lkg, authored.id, patch),
+  );
+  const malformedMaterial = malformedProjection.materials.find(
+    (material) => material.id === authored.id,
+  );
+  assert(malformedMaterial);
+  assert.equal(
+    "practice" in malformedMaterial,
+    false,
+    `${label} must be omitted from the public projection`,
+  );
+
+  const invalidRuntime = {
+    ...projection,
+    materials: projection.materials.map((material) =>
+      material.id === authored.id
+        ? {
+            ...material,
+            practice: { ...authoredPractice, ...patch },
+          }
+        : material,
+    ),
+  };
+  assert.throws(
+    () => assertWindDownRuntimeProjection(invalidRuntime),
+    /runtime_practice_/,
+    `${label} must fail the runtime practice contract`,
+  );
+}
+
 const legacyProjection = withoutPractice(projection);
 assertWindDownRuntimeProjection(legacyProjection);
 for (const material of legacyProjection.materials) {
@@ -175,6 +257,37 @@ for (const material of legacyProjection.materials) {
   ]);
   assertPublicMaterialShape(material);
 }
+
+const selection = buildWindDownStudyMaterialFromRuntimeProjection({
+  runtimeProjection: projection,
+  dueExpressionIds: [],
+  deferredExpressionIds: [],
+});
+assert.deepEqual(
+  selection.practiceForExpressionIds([
+    EXPECTED_AUTHORED_PRACTICE[0].id,
+    "missing-material",
+    EXPECTED_AUTHORED_PRACTICE[0].id,
+    EXPECTED_AUTHORED_PRACTICE[1].id,
+  ]),
+  EXPECTED_AUTHORED_PRACTICE.map(({ id, ...practice }) => ({
+    materialId: id,
+    ...practice,
+  })),
+  "adapter practice selection must read only the verified projection and dedupe IDs",
+);
+const legacySelection = buildWindDownStudyMaterialFromRuntimeProjection({
+  runtimeProjection: legacyProjection,
+  dueExpressionIds: [],
+  deferredExpressionIds: [],
+});
+assert.deepEqual(
+  legacySelection.practiceForExpressionIds([
+    EXPECTED_AUTHORED_PRACTICE[0].id,
+  ]),
+  [],
+  "legacy four-field projections must remain practice-compatible",
+);
 
 console.log(
   `[PASS] Wind Down practice publication: ${EXPECTED_AUTHORED_PRACTICE.length} authored samples and legacy projection compatibility`,
