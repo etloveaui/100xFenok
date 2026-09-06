@@ -313,6 +313,13 @@ class BuildEarningsOverviewTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.mod.parse_msft_release_table(html.replace("<th>2026</th><th>2025</th>", "<th>2025</th><th>2026</th>"))
 
+    def test_msft_missing_eps_does_not_use_diluted_share_count(self) -> None:
+        html = load_fixture_text("msft_release_table_fixture.html")
+        eps_row = '<tr><th>Diluted</th><td>$4.81</td><td>$3.65</td></tr>'
+        self.assertIn(eps_row, html)
+        with self.assertRaises(ValueError):
+            self.mod.parse_msft_release_table(html.replace(eps_row, ""))
+
     def test_msft_release_parser_validates_gaap_header_and_required_rows(self) -> None:
         source_url = "https://www.microsoft.com/en-us/investor/earnings/fy-2026-q4/press-release-webcast"
         supplement = self.mod.parse_msft_release_table(

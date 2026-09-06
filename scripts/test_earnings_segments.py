@@ -174,6 +174,11 @@ class EarningsSegmentsTest(unittest.TestCase):
             )
         )
 
+    def test_msft_truncated_segment_table_is_rejected(self) -> None:
+        html = fixture("msft_segment_revenue_quarter.html")
+        html = html[:html.rfind("</table>")]
+        self.assertIsNone(self.mod.extract_revenue_segments("MSFT", html, "2026-04-01", "2026-06-30", 90_007_000_000))
+
     def test_msft_non_gaap_segment_table_cannot_supply_revenue(self) -> None:
         html = fixture("msft_segment_revenue_quarter.html")
         html = html.replace("SEGMENT REVENUE AND OPERATING INCOME", "NON-GAAP SEGMENT REVENUE")
