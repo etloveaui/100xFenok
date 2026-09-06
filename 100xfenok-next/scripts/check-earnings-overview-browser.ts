@@ -70,7 +70,12 @@ async function verifyDocument(page: Page, ticker: string, compact: boolean) {
       // Quarter changes deliberately close the lazy flow. Wait for that state
       // before reopening, so WebKit cannot apply a queued select change later.
       await panel.locator("details:not([open])").filter({ has: page.locator("summary").filter({ hasText: "상세 손익 흐름 보기" }) }).waitFor();
-      await panel.getByText("상세 손익 흐름 보기", { exact: false }).click();
+      const flowSummary = panel.locator("summary").filter({ hasText: "상세 손익 흐름 보기" });
+      // Use the same keyboard activation as the initial expansion. Mobile
+      // WebKit can scroll this nested list between pointer down and up.
+      await flowSummary.focus();
+      assert.equal(await flowSummary.evaluate(el => el === document.activeElement), true, "flow summary has keyboard focus");
+      await page.keyboard.press("Space");
     }
   }
   const scrollRegion = panel.getByRole("region", { name: "손익 흐름 가로 스크롤" });
