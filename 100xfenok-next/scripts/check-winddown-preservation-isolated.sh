@@ -13,13 +13,14 @@ export QA_BASE_URL="http://127.0.0.1:3107"
 export QA_SCREENSHOT_DIR="test-results/winddown-preservation"
 
 bash scripts/load-guard.sh --assert-nested
-npm run build:version
-npm run sync-static
 if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "story" ]; then
   npm run test:winddown-story-gate
-elif [ "${WINDDOWN_QA_SCOPE:-preservation}" = "continuity" ]; then
+fi
+npm run build:version
+npm run sync-static
+if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "continuity" ]; then
   npm run test:winddown-continuity-gate
-else
+elif [ "${WINDDOWN_QA_SCOPE:-preservation}" != "story" ]; then
   npm run test:winddown-preservation-gate
 fi
 npx playwright install --with-deps chromium webkit
