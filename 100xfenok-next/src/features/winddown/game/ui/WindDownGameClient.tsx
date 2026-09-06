@@ -20,8 +20,6 @@ import {
   levelFromXp,
   nextChapter,
   nightsToReach,
-  xpIntoLevel,
-  xpNeededForLevel,
 } from "@/features/winddown/game/model/progress";
 import {
   WIND_DOWN_STORY_EPISODES,
@@ -366,7 +364,7 @@ export default function WindDownGameClient({
   const stateLabel = viewingStateLabel(state);
   const roleplayHref = state === "preview" ? null : storyRoleplayHref(episode);
   const chapterAct = WIND_DOWN_CONTENT_PACK.acts.find((act) => act.id === chapter.act);
-  const progressPercent = Math.round((xpIntoLevel(xp) / xpNeededForLevel(xp)) * 100);
+  const progressPercent = Math.round(growth * 100);
 
   return (
     <main className={styles.page}>
@@ -552,7 +550,7 @@ export default function WindDownGameClient({
             </div>
             <span className={styles.missionState}>Lv.{level}</span>
           </div>
-          <div className={styles.progressMeter} aria-label={`현재 레벨 진행 ${progressPercent}%`}>
+          <div className={styles.progressMeter} role="progressbar" aria-label="현재 무대 성장" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent}>
             <i className={styles.progressMeterFill} style={{ width: `${progressPercent}%` }} />
           </div>
           <p className={styles.progressCopy}>

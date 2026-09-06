@@ -325,6 +325,9 @@ function attachContinuityDiagnostics(page: Page, engine: Engine["id"], base: URL
     if (request.method() === "GET" && failedUrl.origin === base.origin
       && failedUrl.pathname.startsWith("/winddown") && failedUrl.searchParams.has("_rsc")
       && ["net::ERR_ABORTED", "Load request cancelled"].includes(failure)) return;
+    if (request.method() === "GET" && failedUrl.origin === base.origin
+      && request.resourceType() === "image" && /^\/images\/winddown\/story\/[a-z-]+-v1\.png$/.test(failedUrl.pathname)
+      && ["net::ERR_ABORTED", "Load request cancelled"].includes(failure)) return;
     if (request.method() === "GET" && request.url().startsWith(`blob:${base.origin}/`)
       && ["net::ERR_ABORTED", "Load request cancelled"].includes(failure)
       && diagnostics.verifiedDownloadUrls.includes(request.url())) return;
@@ -1828,7 +1831,8 @@ async function runStoryContext(
     await assertReducedMotionStorySettled(page);
     assert.equal(await page.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "story navigation must not request microphone access");
     await assertStoryPanelLayout(page, viewport);
-    assert.equal(await page.locator('[aria-label^="현재 레벨 진행"] > i').evaluate((node) => getComputedStyle(node).display === "block" && node.getBoundingClientRect().height > 0), true, "progress fill must have visible block geometry");
+    assert.equal(await page.locator('[aria-label="현재 무대 성장"] > i').evaluate((node) => getComputedStyle(node).display === "block" && node.getBoundingClientRect().height > 0), true, "progress fill must have visible block geometry");
+    assert.equal(await page.getByRole("progressbar", { name: "현재 무대 성장" }).getAttribute("aria-valuenow"), progress.xp === 0 ? "0" : "100", "growth bar must match the authoritative current chapter, including the final stage");
     if (progress.xp >= 1698 && [390, 768, 820].includes(viewport.width)) {
       await closeStoryJourneyForCapture(page);
       await waitForStoryImage(page);

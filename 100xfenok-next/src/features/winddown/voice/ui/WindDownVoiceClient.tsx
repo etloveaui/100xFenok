@@ -95,7 +95,7 @@ type Props = {
   activity: WindDownVoiceActivity;
   initialScenarioId?: WindDownVoiceScenarioId;
   /** Validated navigation context only, never report or completion evidence. */
-  storyReturn?: { id: string; title: string; scenarioId: WindDownVoiceScenarioId };
+  storyReturn?: { id: string; title: string; location: string; scenarioId: WindDownVoiceScenarioId };
 };
 
 type ReportState =
@@ -808,6 +808,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
             <aside aria-label="무대 연습 안내" className="mb-5 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface)] p-4">
               <p className="text-xs font-bold tracking-wide text-[var(--wd-accent)]">{recoveringPriorReport || !isStoryScenario ? "돌아갈 무대" : storyAccess === "preview" ? "아직 열리지 않은 무대" : "무대에서 이어온 연습"}</p>
               <p className="mt-1 text-lg font-semibold">{storyReturn.title}</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--wd-muted)]">{storyReturn.location}</p>
               <p className="mt-2 text-sm leading-6 text-[var(--wd-muted)]">
                 {recoveringPriorReport ? "먼저 이전 대화를 보관하고 있어. 이 무대의 새 연습과는 별개인 기록이야."
                   : !isStoryScenario ? "다른 상황을 골랐어. 연습을 마치면 원래 무대로 돌아갈 수 있어."
