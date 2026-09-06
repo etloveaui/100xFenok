@@ -114,6 +114,18 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: Upload verified Scouter data projections
+        if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'build:verification-pins' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-scouter-projections
+          path: |
+            data/admin/lane-registry-projection.json
+            100xfenok-next/public/data/admin/lane-registry-projection.json
+            scripts/fixtures/cloud-data-plane/global-scouter-migration-demand.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Emit completion receipt
         if: always()
         working-directory: .
