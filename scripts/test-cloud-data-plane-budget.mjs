@@ -356,7 +356,12 @@ const measuredGlobalScouterDemand = JSON.parse(fs.readFileSync(
   assert.equal(measurement.unique_object_count, scope.manifest.totals.file_count);
   assert.equal(measurement.payload_bytes, scope.manifest.totals.bytes);
   assert.equal(measurement.asset_count, 1082);
-  assert.equal(measurement.payload_bytes, 87_687_952);
+  // The scope projection follows weekly source updates. Verify the measured
+  // bytes against the shipped limit instead of freezing one week's payload.
+  const scouterPolicy = FAMILIES["global-scouter"].policy;
+  assert.ok(measurement.payload_bytes > 0);
+  assert.ok(measurement.payload_bytes <= scouterPolicy.max_total_bytes);
+  assert.ok(measurement.asset_count <= scouterPolicy.max_assets);
   assert.equal(measurement.manifest_bytes_per_generation, measuredGlobalScouterDemand.r2.manifests.bytes);
   assert.deepEqual(measurement.manifest_bytes_provenance, {
     status: "measured_local",
@@ -378,11 +383,11 @@ const measuredGlobalScouterDemand = JSON.parse(fs.readFileSync(
     requestDemand: measuredGlobalScouterDemand,
   });
   assert.deepEqual(budget.assumptions.r2_slots, ["current", "previous", "in_progress"]);
-  assert.deepEqual(budget.r2.slots.current, { bytes: 87_687_952, objects: 1082, complete: true });
-  assert.deepEqual(budget.r2.slots.previous, { bytes: 87_687_952, objects: 1082, complete: true });
-  assert.deepEqual(budget.r2.slots.in_progress, { bytes: 87_687_952, objects: 1082, complete: true });
+  assert.deepEqual(budget.r2.slots.current, { bytes: scope.inventory.bytes, objects: 1082, complete: true });
+  assert.deepEqual(budget.r2.slots.previous, { bytes: scope.inventory.bytes, objects: 1082, complete: true });
+  assert.deepEqual(budget.r2.slots.in_progress, { bytes: scope.inventory.bytes, objects: 1082, complete: true });
   assert.equal(budget.r2.peak_objects.lower_bound, 3246);
-  assert.equal(budget.r2.metrics.decimal_gb_month.lower_bound, 0.263063856);
+  assert.equal(budget.r2.metrics.decimal_gb_month.lower_bound, scope.inventory.bytes * 3 / 1_000_000_000);
   assert.equal(budget.r2.class_a_breakdown.put.lower_bound, 5415);
   assert.equal(budget.r2.class_a_breakdown.list.lower_bound, 10);
   assert.equal(budget.r2.class_a_breakdown.delete_free.lower_bound, 5410);
