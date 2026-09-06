@@ -451,6 +451,25 @@ class BuildEarningsOverviewTest(unittest.TestCase):
         self.assertNotEqual(document["updatedAt"], NOW)
         self.assertEqual(document["periods"][0]["source"]["filedAt"], "2026-05-01")
 
+    def test_after_tax_equity_result_is_separate_from_income_tax(self) -> None:
+        facts = deepcopy(load_fixture("aapl_companyfacts.json"))
+        facts["cik"] = 1018724
+        gaap = facts["facts"]["us-gaap"]
+        equity = []
+        for observation in gaap["NetIncomeLoss"]["units"]["USD"]:
+            if observation.get("start") == "2026-04-01" and observation.get("end") == "2026-06-30":
+                adjustment = deepcopy(observation)
+                adjustment["val"] = -11_000_000
+                equity.append(adjustment)
+                observation["val"] -= 11_000_000
+        self.assertTrue(equity)
+        gaap["IncomeLossFromEquityMethodInvestments"] = {"units": {"USD": equity}}
+        document, validation = call_normalizer(self.mod, "AMZN", facts)
+        self.assertTrue(validation_ok(validation), validation)
+        income = period_for(document, "2026-06-30")["income"]
+        self.assertEqual(income["afterTaxOther"], -11_000_000)
+        self.assertEqual(income["pretaxIncome"] - income["incomeTax"] + income["afterTaxOther"], income["netIncome"])
+
     def test_unsupported_ticker_cannot_be_promoted(self) -> None:
         facts = load_fixture("aapl_companyfacts.json")
         try:

@@ -469,7 +469,7 @@ const lanes = [
     provider_members: null,
     provider_refs: [{ provider_id: "sec_edgar", role: "source", members: null }],
     store_kind: "payload",
-    lane_class: "detection_floor",
+    lane_class: "auxiliary",
     cadence: {
       kind: "daily",
       provenance: {
@@ -484,11 +484,9 @@ const lanes = [
     enforcement: "shadow",
     privacy_class: "public_mirror",
     admin_store: "data/admin/earnings_overview",
-    detection_attempt: attemptShard("earnings_overview"),
     canonical_outputs: ["data/earnings-overview"],
     public_mirror: ["100xfenok-next/public/data/earnings-overview"],
     commit_shards: [
-      attemptShard("earnings_overview"),
       publishOutcomeShard("earnings-overview"),
       "data/admin/earnings_overview",
       "data/earnings-overview",

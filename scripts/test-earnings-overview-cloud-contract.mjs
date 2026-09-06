@@ -217,9 +217,10 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
     { provider_id: "sec_edgar", role: "source", members: null },
   ]);
   assert.deepEqual(lane.roots.canonical_outputs, [CANONICAL_ROOT]);
-  assert.equal(lane.roots.detection_attempt, DETECTION_SHARD);
+  assert.equal(lane.lane_class, "auxiliary");
+  assert.equal(lane.roots.detection_attempt, null, "unadmitted detection attempt is not fabricated");
   assert.ok(lane.commit_shards.includes(CANONICAL_ROOT));
-  assert.ok(lane.commit_shards.includes(DETECTION_SHARD));
+  assert.ok(lane.commit_shards.includes("data/admin/earnings_overview"));
   assert.ok(lane.script_sources?.includes("scripts/build-earnings-overview.py"));
 
   assert.deepEqual(PLANE_PUBLISH_OUTCOME_BINDINGS[FAMILY], {
@@ -235,8 +236,8 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
     "outcome evidence must be staged on every run",
   );
   assert.ok(
-    workflowPolicy.stages.always_if_exists.some((spec) => spec.path === DETECTION_SHARD),
-    "detection evidence must be staged on every run",
+    workflowPolicy.stages.always_if_exists.some((spec) => spec.path === "data/admin/earnings_overview"),
+    "real refresh outcome evidence must be staged on every run",
   );
   assert.ok(
     expectAssetSpec(workflowPolicy, CANONICAL_ROOT),
@@ -288,6 +289,8 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
   assert.match(reusable, /\[skip ci\]/u);
   assert.match(reusable, /data\/earnings-overview/u);
 
+  const deployWorkflow = await readFile(new URL("../.github/workflows/deploy-worker.yml", import.meta.url), "utf8");
+  assert.ok(deployWorkflow.includes("'!100xfenok-next/public/data/earnings-overview/**'"), "static LKG refresh cannot trigger a Worker UI deployment");
   const updateManifest = await readFile(new URL("../.github/workflows/update-manifest.yml", import.meta.url), "utf8");
   assert.ok(updateManifest.includes("'!data/earnings-overview/**'"), "earnings data refresh cannot trigger full UI reconciliation");
   assert.ok(updateManifest.includes("'!data/admin/earnings_overview/**'"));

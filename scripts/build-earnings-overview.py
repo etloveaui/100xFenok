@@ -1353,6 +1353,7 @@ def _enrich_latest_segments(ticker, document, companyfacts, fetch_official, rele
                         if o["end"] == period["end"] and o["kind"] == "quarter"
                         and _source_from_observation(SUPPORTED_COMPANIES[ticker]["cik"], o) == period["source"]]
         if not observations:
+            print(f"{ticker}: segments skipped: no exact quarter/source observation", file=sys.stderr)
             return
         anchor = max(observations, key=_observation_sort_key)
         cik = SUPPORTED_COMPANIES[ticker]["cik"]
@@ -1360,6 +1361,7 @@ def _enrich_latest_segments(ticker, document, companyfacts, fetch_official, rele
         recent = submissions.get("filings", {}).get("recent", {})
         accessions = recent.get("accessionNumber", [])
         if anchor["accn"] not in accessions:
+            print(f"{ticker}: segments skipped: accession absent from recent filings", file=sys.stderr)
             return
         index = accessions.index(anchor["accn"])
         primary = recent.get("primaryDocument", [])[index]
@@ -1373,6 +1375,8 @@ def _enrich_latest_segments(ticker, document, companyfacts, fetch_official, rele
         period["segments"] = result["segments"]
         period["segmentBasis"] = result["segmentBasis"]
         period["notes"].extend(result["notes"])
+    else:
+        print(f"{ticker}: segments skipped: source table did not reconcile for {start}/{period['end']}", file=sys.stderr)
 
 
 def build_documents(
