@@ -26,10 +26,16 @@ const PROFILE_RECORD_PAGE_PREFIX = "mona-vnext-learning-profile:v2:records:";
 const PROFILE_APPLIED_PAGE_PREFIX = "mona-vnext-learning-profile:v2:applied:";
 const PROFILE_LEGACY_KV_SOURCE_KEY =
   "mona-vnext-learning-profile:legacy-kv-source";
+export const WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_MANIFEST_KEY =
+  "mona-vnext-learning-profile:legacy-kv-source:v2:manifest";
+export const WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_CHUNK_PREFIX =
+  "mona-vnext-learning-profile:legacy-kv-source:v2:chunk:";
 
 /** Keep a comfortable margin below the 2 MiB SQLite DO key/value limit. */
 export const WIND_DOWN_PAGE_VALUE_BYTE_LIMIT = 512 * 1024;
+export const WIND_DOWN_DO_VALUE_BYTE_LIMIT = 2 * 1024 * 1024;
 const STORAGE_LIST_PAGE_SIZE = 100;
+const LEGACY_SOURCE_CHUNK_CODE_UNIT_LIMIT = 64 * 1024;
 
 export type WindDownStorageListOptions = {
   limit?: number;
@@ -108,6 +114,14 @@ type ProfilePageState = {
   recordPages: ProfileRecordPage[];
   appliedPages: ProfileAppliedPage[];
   profile: MonaVnextLearningProfile;
+};
+
+type LegacyKvSourceManifest = {
+  schemaVersion: typeof STORAGE_VERSION;
+  kind: "legacy-kv-source";
+  encoding: "utf8";
+  chunkCount: number;
+  byteLength: number;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -272,6 +286,25 @@ function normalizeProfileAppliedPage(
         kind: "learning-profile-applied-page",
         page,
         appliedEventIds: value.appliedEventIds as string[],
+      }
+    : null;
+}
+
+function normalizeLegacyKvSourceManifest(
+  value: unknown,
+): LegacyKvSourceManifest | null {
+  if (!isRecord(value)) return null;
+  return value.schemaVersion === STORAGE_VERSION
+    && value.kind === "legacy-kv-source"
+    && value.encoding === "utf8"
+    && validCount(value.chunkCount)
+    && validCount(value.byteLength)
+    ? {
+        schemaVersion: STORAGE_VERSION,
+        kind: "legacy-kv-source",
+        encoding: "utf8",
+        chunkCount: value.chunkCount,
+        byteLength: value.byteLength,
       }
     : null;
 }
@@ -643,13 +676,149 @@ export async function writeMonaVnextLearningProfile(
 
 export const WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_KEY = PROFILE_LEGACY_KV_SOURCE_KEY;
 
+function splitLegacyKvSource(raw: string) {
+  const chunks: string[] = [];
+  let start = 0;
+  while (start < raw.length) {
+    // A conservative UTF-16 bound keeps even escaped/control-heavy chunks
+    // below the 512 KiB page limit; never split a surrogate pair.
+    let end = Math.min(
+      raw.length,
+      start + LEGACY_SOURCE_CHUNK_CODE_UNIT_LIMIT,
+    );
+    if (
+      end < raw.length
+      && end > start
+      && raw.charCodeAt(end - 1) >= 0xd800
+      && raw.charCodeAt(end - 1) <= 0xdbff
+      && raw.charCodeAt(end) >= 0xdc00
+      && raw.charCodeAt(end) <= 0xdfff
+    ) {
+      end -= 1;
+    }
+    const chunk = raw.slice(start, end);
+    if (
+      chunk.length === 0
+      || serializedByteLength(chunk) > WIND_DOWN_PAGE_VALUE_BYTE_LIMIT
+    ) {
+      throw new WindDownPagedStorageError("WINDDOWN_STORAGE_PAGE_TOO_LARGE");
+    }
+    chunks.push(chunk);
+    start = end;
+  }
+  return chunks;
+}
+
+function normalizeLegacyKvSourceChunk(value: unknown): string | null {
+  return typeof value === "string"
+    && serializedByteLength(value) <= WIND_DOWN_PAGE_VALUE_BYTE_LIMIT
+    ? value
+    : null;
+}
+
+/** Read the exact legacy KV payload from its compatibility key or source pages. */
+export async function readWindDownLegacyKvSource(
+  storage: WindDownPagedStorageTransaction,
+) {
+  const rawManifest = await storage.get<unknown>(
+    WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_MANIFEST_KEY,
+  );
+  if (rawManifest === undefined) {
+    const legacy = await storage.get<unknown>(PROFILE_LEGACY_KV_SOURCE_KEY);
+    if (legacy === undefined) return null;
+    if (typeof legacy !== "string") {
+      throw new WindDownPagedStorageError("WINDDOWN_STORAGE_MANIFEST_INVALID");
+    }
+    return legacy;
+  }
+
+  const manifest = normalizeLegacyKvSourceManifest(rawManifest);
+  if (!manifest) {
+    throw new WindDownPagedStorageError("WINDDOWN_STORAGE_MANIFEST_INVALID");
+  }
+  const chunks = await readIndexedPages<string>({
+    storage,
+    prefix: WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_CHUNK_PREFIX,
+    pageCount: manifest.chunkCount,
+    normalize: (value) => normalizeLegacyKvSourceChunk(value),
+  });
+  if (!chunks) {
+    throw new WindDownPagedStorageError("WINDDOWN_STORAGE_MANIFEST_INVALID");
+  }
+  const raw = chunks.join("");
+  if (new TextEncoder().encode(raw).byteLength !== manifest.byteLength) {
+    throw new WindDownPagedStorageError("WINDDOWN_STORAGE_MANIFEST_INVALID");
+  }
+  return raw;
+}
+
 /** Store an exact legacy KV payload once, before any normalized seed is written. */
 export async function preserveWindDownLegacyKvSource(
   storage: WindDownPagedStorageTransaction,
   raw: string,
 ) {
-  const existing = await storage.get<unknown>(PROFILE_LEGACY_KV_SOURCE_KEY);
-  if (existing === undefined) {
-    await storage.put(PROFILE_LEGACY_KV_SOURCE_KEY, raw);
+  const existingManifest = await storage.get<unknown>(
+    WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_MANIFEST_KEY,
+  );
+  if (existingManifest !== undefined) {
+    await readWindDownLegacyKvSource(storage);
+    return;
   }
+  const existing = await storage.get<unknown>(PROFILE_LEGACY_KV_SOURCE_KEY);
+  if (existing !== undefined) {
+    if (typeof existing !== "string") {
+      throw new WindDownPagedStorageError("WINDDOWN_STORAGE_MANIFEST_INVALID");
+    }
+    return;
+  }
+  if (serializedByteLength(raw) <= WIND_DOWN_PAGE_VALUE_BYTE_LIMIT) {
+    await storage.put(PROFILE_LEGACY_KV_SOURCE_KEY, raw);
+    return;
+  }
+
+  const chunks = splitLegacyKvSource(raw);
+  for (let page = 0; page < chunks.length; page += 1) {
+    await storage.put(
+      pageKey(WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_CHUNK_PREFIX, page),
+      chunks[page],
+    );
+  }
+  await storage.put<LegacyKvSourceManifest>(
+    WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_MANIFEST_KEY,
+    {
+      schemaVersion: STORAGE_VERSION,
+      kind: "legacy-kv-source",
+      encoding: "utf8",
+      chunkCount: chunks.length,
+      byteLength: new TextEncoder().encode(raw).byteLength,
+    },
+  );
+}
+
+export function shouldPageMonaVnextLearningProfileSeed(
+  raw: string,
+  profile: MonaVnextLearningProfile,
+) {
+  // SQLite bounds the key and value together; reserve the maximum key size.
+  const seedValueLimit = WIND_DOWN_DO_VALUE_BYTE_LIMIT - 2_048;
+  return serializedByteLength(raw) > seedValueLimit
+    || serializedByteLength(profile) > seedValueLimit;
+}
+
+/** Preserve a legacy KV seed, then choose a legacy row or active pages safely. */
+export async function initializeMonaVnextLearningProfileFromLegacyKv(
+  storage: WindDownPagedStorageTransaction,
+  raw: string | null,
+) {
+  if (raw !== null) {
+    await preserveWindDownLegacyKvSource(storage, raw);
+  }
+  const profile = raw === null
+    ? createEmptyMonaVnextLearningProfile()
+    : normalizeMonaVnextLearningProfile(JSON.parse(raw));
+  if (raw !== null && shouldPageMonaVnextLearningProfileSeed(raw, profile)) {
+    return writeMonaVnextLearningProfile(storage, profile);
+  }
+  await storage.put(WIND_DOWN_PROFILE_LEGACY_STORAGE_KEY, profile);
+  return profile;
 }

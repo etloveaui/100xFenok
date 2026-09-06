@@ -544,7 +544,9 @@ await expectError(
 );
 
 const wrangler = readFileSync(path.join(process.cwd(), "wrangler.jsonc"), "utf8");
-const wranglerConfig = JSON.parse(wrangler) as {
+const parsedWrangler = ts.parseConfigFileTextToJson("wrangler.jsonc", wrangler);
+assert.equal(parsedWrangler.error, undefined, "Worker configuration must be valid JSONC");
+const wranglerConfig = parsedWrangler.config as {
   observability?: {
     enabled?: boolean;
     logs?: {

@@ -8,6 +8,7 @@ export NEXT_ADMIN_PASSWORD_HASH="ec2cdb05a5c068029063f9b110bf80fa04630c989080f20
 export NEXT_ADMIN_SESSION_SECRET="winddown-stage1-synthetic-session-${GITHUB_RUN_ID:?}"
 export WINDDOWN_QA_ADMIN_PASSWORD="winddown-stage1-synthetic-admin"
 export WINDDOWN_QA_ISOLATED="1"
+export WINDDOWN_DATA_WORKSPACE="qa"
 export QA_BASE_URL="http://127.0.0.1:3107"
 export QA_SCREENSHOT_DIR="test-results/winddown-preservation"
 

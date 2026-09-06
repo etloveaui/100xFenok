@@ -33,6 +33,10 @@ export type WindDownCeremonyMaterialContext = {
     id: string;
     en: string;
   }>;
+  aliases?: Array<{
+    legacyV1Id: string;
+    canonicalId: string;
+  }>;
 };
 
 export type WindDownCeremonyMasteryEvidence = {
@@ -225,9 +229,12 @@ export function normalizeWindDownCeremonySelection(
 export function normalizeWindDownCeremonyMaterialContext(
   value: unknown,
 ): WindDownCeremonyMaterialContext | null {
+  const baseKeys = ["schemaVersion", "contentDigest", "entries"] as const;
+  const hasAliases = isRecord(value)
+    && hasExactKeys(value, [...baseKeys, "aliases"]);
   if (
     !isRecord(value)
-    || !hasExactKeys(value, ["schemaVersion", "contentDigest", "entries"])
+    || (!hasExactKeys(value, baseKeys) && !hasAliases)
     || value.schemaVersion !== 1
     || typeof value.contentDigest !== "string"
     || !/^[a-f0-9]{64}$/.test(value.contentDigest)
@@ -257,10 +264,37 @@ export function normalizeWindDownCeremonyMaterialContext(
     seen.add(candidate.id);
     entries.push({ id: candidate.id, en });
   }
+  let aliases: WindDownCeremonyMaterialContext["aliases"];
+  if (hasAliases) {
+    if (!Array.isArray(value.aliases) || value.aliases.length > 10_000) {
+      return null;
+    }
+    const legacyIds = new Set<string>();
+    aliases = [];
+    for (const candidate of value.aliases) {
+      if (
+        !isRecord(candidate)
+        || !hasExactKeys(candidate, ["legacyV1Id", "canonicalId"])
+        || typeof candidate.legacyV1Id !== "string"
+        || typeof candidate.canonicalId !== "string"
+        || !/^[A-Za-z0-9._:-]{1,120}$/.test(candidate.legacyV1Id)
+        || !/^[A-Za-z0-9._:-]{1,120}$/.test(candidate.canonicalId)
+        || legacyIds.has(candidate.legacyV1Id)
+      ) {
+        return null;
+      }
+      legacyIds.add(candidate.legacyV1Id);
+      aliases.push({
+        legacyV1Id: candidate.legacyV1Id,
+        canonicalId: candidate.canonicalId,
+      });
+    }
+  }
   return {
     schemaVersion: 1,
     contentDigest: value.contentDigest,
     entries,
+    ...(aliases ? { aliases } : {}),
   };
 }
 

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { WIND_DOWN_PROFILE_MANIFEST_STORAGE_KEY } from "../src/features/mona-vnext/memory/windDownPagedStorage";
 import {
   WINDDOWN_RECOVERY_MAX_BYTES,
   WINDDOWN_RECOVERY_SEAL_KEY,
@@ -21,6 +22,7 @@ const PROFILE_STORAGE_KEY = "mona-vnext-learning-profile";
 const PROFILE_KV_KEY = "data/mona-vnext/owner-test/learning-profile.json";
 const FIXED_CREATED_AT_ISO = "2026-09-06T00:00:00.000Z";
 const PAGE_SIZE = 3;
+const MAX_DO_VALUE_BYTES = 2 * 1024 * 1024;
 
 type ListOptions = {
   limit?: number;
@@ -46,6 +48,13 @@ function compareUtf8Keys(left: string, right: string): number {
   return leftBytes.length - rightBytes.length;
 }
 
+function jsonValueByteLength(value: unknown): number {
+  const serialized = JSON.stringify(value);
+  return serialized === undefined
+    ? Number.POSITIVE_INFINITY
+    : new TextEncoder().encode(serialized).byteLength;
+}
+
 /** A deterministic synthetic SQLite DO storage with rollback and paging. */
 class MemoryCoordinatorStorage {
   readonly values = new Map<string, unknown>();
@@ -54,7 +63,10 @@ class MemoryCoordinatorStorage {
   readonly transactionCalls: number[] = [];
   failOnPutKey: string | null = null;
 
-  constructor(initial: Map<string, unknown> = new Map()) {
+  constructor(
+    initial: Map<string, unknown> = new Map(),
+    private readonly maxValueBytes = Number.POSITIVE_INFINITY,
+  ) {
     for (const [key, value] of initial) {
       this.values.set(key, structuredClone(value));
     }
@@ -67,6 +79,9 @@ class MemoryCoordinatorStorage {
   async put<T>(key: string, value: T): Promise<void> {
     if (key === this.failOnPutKey) {
       throw new Error(`CONTROLLED_PUT_FAILURE:${key}`);
+    }
+    if (jsonValueByteLength(value) > this.maxValueBytes) {
+      throw new Error(`DO_VALUE_TOO_LARGE:${key}`);
     }
     this.writes.push(key);
     this.values.set(key, structuredClone(value));
@@ -395,6 +410,16 @@ async function main() {
   assert.equal(fallbackSnapshot.snapshotDigest !== snapshot.snapshotDigest, true);
   assert.equal(validateWindDownRecoverySnapshot(fallbackSnapshot).ok, true);
 
+  const pagedKv = new MemoryLegacyKv(legacyRaw);
+  const pagedSource = new MemoryCoordinatorStorage(new Map([
+    [WIND_DOWN_PROFILE_MANIFEST_STORAGE_KEY, { schemaVersion: 2, kind: "learning-profile", recordPageCount: 0, appliedEventIdPageCount: 0, recordCount: 0, appliedEventIdCount: 0, updatedAt: null }],
+  ]));
+  const pagedSnapshot = await exportWindDownRecoverySnapshot({ storage: pagedSource, legacyKv: pagedKv });
+  assert.equal(pagedSnapshot.recordCount, 1);
+  assert.equal(pagedSnapshot.legacyKvRecords.length, 0, "active paged profile must not duplicate a mutable KV mirror");
+  assert.equal(pagedKv.reads.length, 0);
+  assert.equal(pagedSource.writes.length, 0);
+
   const fallbackTarget = new MemoryCoordinatorStorage();
   const fallbackTargetName = recoveryCopyNameForSnapshot(fallbackSnapshot.snapshotDigest);
   const fallbackRestore = await restoreWindDownRecoverySnapshot({
@@ -412,11 +437,20 @@ async function main() {
     "legacy fallback must restore the original raw KV string in the separate copy",
   );
 
-  const boundarySource = new MemoryCoordinatorStorage(
-    new Map([["winddown-boundary", { payload: "b".repeat(4_900_000) }]]),
-  );
+  const boundaryRecords = new Map<string, unknown>();
+  for (let index = 1; index <= 2; index += 1) {
+    boundaryRecords.set(
+      `winddown-boundary:${String(index).padStart(2, "0")}`,
+      { payload: "b".repeat(1_000_000) },
+    );
+  }
+  // Place a non-BMP character exactly across the first fixed UTF-16 chunk
+  // boundary so chunking must preserve the surrogate pair.
+  const boundaryLegacyRaw = `${"l".repeat(65_535)}\u{1F600}${"l".repeat(3_100_000 - 65_537)}`;
+  const boundarySource = new MemoryCoordinatorStorage(boundaryRecords, MAX_DO_VALUE_BYTES);
   const boundaryPreview = await exportWindDownRecoverySnapshot({
     storage: boundarySource,
+    legacyKv: new MemoryLegacyKv(boundaryLegacyRaw),
     pageSize: PAGE_SIZE,
     maxBytes: WINDDOWN_RECOVERY_MAX_BYTES,
     createdAtIso: FIXED_CREATED_AT_ISO,
@@ -424,17 +458,18 @@ async function main() {
   assert.ok(
     boundaryPreview.byteCount > WINDDOWN_RECOVERY_MAX_BYTES - 200_000
       && boundaryPreview.byteCount <= WINDDOWN_RECOVERY_MAX_BYTES,
-    "boundary fixture must remain valid while exercising the transport ceiling",
+    `boundary fixture byteCount=${boundaryPreview.byteCount}, maxBytes=${WINDDOWN_RECOVERY_MAX_BYTES}`,
   );
+  assert.equal(boundaryPreview.legacyRecordCount, 1);
   const boundarySnapshot = await exportWindDownRecoverySnapshot({
-    storage: new MemoryCoordinatorStorage(
-      new Map([["winddown-boundary", { payload: "b".repeat(4_900_000) }]]),
-    ),
+    storage: new MemoryCoordinatorStorage(boundaryRecords, MAX_DO_VALUE_BYTES),
+    legacyKv: new MemoryLegacyKv(boundaryLegacyRaw),
     pageSize: PAGE_SIZE,
     maxBytes: boundaryPreview.byteCount,
     createdAtIso: FIXED_CREATED_AT_ISO,
   });
-  const boundaryTarget = new MemoryCoordinatorStorage();
+  assert.equal(boundarySnapshot.snapshotDigest, boundaryPreview.snapshotDigest);
+  const boundaryTarget = new MemoryCoordinatorStorage(new Map(), MAX_DO_VALUE_BYTES);
   const boundaryRestore = await restoreWindDownRecoverySnapshot({
     storage: boundaryTarget,
     snapshot: boundarySnapshot,
@@ -442,11 +477,54 @@ async function main() {
     maxBytes: boundarySnapshot.byteCount,
   });
   assert.equal(boundaryRestore.duplicate, false);
-  assert.deepEqual(
-    boundaryTarget.values.get("winddown-boundary"),
-    boundarySnapshot.records.find((record) => record.key === "winddown-boundary")?.value,
-    "a valid near-limit snapshot must restore before its internal seal metadata is counted",
+  for (const [key, value] of boundaryRecords) {
+    assert.deepEqual(
+      boundaryTarget.values.get(key),
+      value,
+      `a valid near-limit snapshot must restore row ${key} before its internal seal metadata is counted`,
+    );
+  }
+  const boundaryLegacyBaseKey = `winddown-recovery:legacy:${encodeURIComponent(PROFILE_KV_KEY)}`;
+  const boundaryChunkKeys = [...boundaryTarget.values.keys()]
+    .filter((key) => key.startsWith(`${boundaryLegacyBaseKey}:chunk:`))
+    .sort(compareUtf8Keys);
+  assert.ok(boundaryChunkKeys.length > 1, "oversized legacy fallback must use ordered chunks");
+  const firstBoundaryChunk = boundaryTarget.values.get(boundaryChunkKeys[0] ?? "");
+  const secondBoundaryChunk = boundaryTarget.values.get(boundaryChunkKeys[1] ?? "");
+  assert.equal(typeof firstBoundaryChunk, "string");
+  assert.equal(typeof secondBoundaryChunk, "string");
+  const firstBoundaryCodeUnit = (firstBoundaryChunk as string).charCodeAt(
+    (firstBoundaryChunk as string).length - 1,
   );
+  const secondBoundaryCodeUnit = (secondBoundaryChunk as string).charCodeAt(0);
+  assert.equal(
+    firstBoundaryCodeUnit >= 0xd800 && firstBoundaryCodeUnit <= 0xdbff,
+    false,
+    "UTF-16 high surrogate must not be left at a chunk boundary",
+  );
+  assert.equal(
+    secondBoundaryCodeUnit >= 0xdc00 && secondBoundaryCodeUnit <= 0xdfff,
+    false,
+    "UTF-16 low surrogate must not start a chunk",
+  );
+  const reconstructedBoundaryLegacy = boundaryChunkKeys.map((key) => {
+    const value = boundaryTarget.values.get(key);
+    assert.equal(typeof value, "string", `legacy chunk is not a string: ${key}`);
+    return value as string;
+  }).join("");
+  assert.equal(reconstructedBoundaryLegacy, boundaryLegacyRaw, "legacy raw fallback changed during chunk restore");
+  const boundaryManifest = boundaryTarget.values.get(boundaryLegacyBaseKey);
+  assert(boundaryManifest && typeof boundaryManifest === "object");
+  assert.equal((boundaryManifest as Record<string, unknown>).chunkCount, boundaryChunkKeys.length);
+  const boundaryWriteCount = boundaryTarget.writes.length;
+  const boundaryDuplicate = await restoreWindDownRecoverySnapshot({
+    storage: boundaryTarget,
+    snapshot: boundarySnapshot,
+    targetName: recoveryCopyNameForSnapshot(boundarySnapshot.snapshotDigest),
+    maxBytes: boundarySnapshot.byteCount,
+  });
+  assert.equal(boundaryDuplicate.duplicate, true);
+  assert.equal(boundaryTarget.writes.length, boundaryWriteCount, "chunked duplicate restore must not write");
 
   const targetName = recoveryCopyNameForSnapshot(snapshot.snapshotDigest);
   assert.equal(targetName, `recoverycopy:${snapshot.snapshotDigest}`);

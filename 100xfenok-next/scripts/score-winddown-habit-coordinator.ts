@@ -54,6 +54,10 @@ const ceremonyMaterial = {
     { id: "ceremony-hard", en: "I need poison." },
     { id: "ceremony-later-miss", en: "I regret this." },
   ],
+  aliases: [
+    { legacyV1Id: "legacy-ceremony-material-4", canonicalId: "ceremony-material-4" },
+    { legacyV1Id: "legacy-ceremony-later-miss", canonicalId: "ceremony-later-miss" },
+  ],
 };
 
 function correctAction(): WindDownLearnAction {
@@ -316,6 +320,8 @@ async function main() {
     const hard = entry.id === "ceremony-hard";
     const chips = index < 9 || hard;
     const laterMiss = entry.id === "ceremony-later-miss";
+    const legacyOnly = entry.id === "ceremony-material-4";
+    const canonicalCollision = laterMiss;
     const successfulReviews = hard ? 1 : index < 3 ? 2 : 3;
     const reviewCycleId =
       `winddown-review:${String(index + 1).padStart(64, "0")}`;
@@ -337,9 +343,12 @@ async function main() {
         receipt,
       }),
     );
-    storedProfile.records[entry.id] = {
+    const recordKey = legacyOnly
+      ? "legacy-ceremony-material-4"
+      : entry.id;
+    storedProfile.records[recordKey] = {
       ...templateRecord,
-      expressionId: entry.id,
+      expressionId: recordKey,
       lastVerdict: laterMiss ? "miss" : chips || hard ? "close" : "canonical",
       lastRating: laterMiss ? "again" : chips || hard ? "hard" : "good",
       lastReviewedAt: reviewedAt,
@@ -352,6 +361,23 @@ async function main() {
         lapses: 0,
       },
     };
+    if (canonicalCollision) {
+      storedProfile.records["legacy-ceremony-later-miss"] = {
+        ...templateRecord,
+        expressionId: "legacy-ceremony-later-miss",
+        lastVerdict: "close",
+        lastRating: "hard",
+        lastReviewedAt: "2026-08-01T12:30:00.000Z",
+        lastInputMode: "chips",
+        card: {
+          ...templateRecord.card,
+          stability: 3_000,
+          state: State.Review,
+          reps: 3,
+          lapses: 0,
+        },
+      };
+    }
   });
   await writeMonaVnextLearningProfile(storage, storedProfile);
   for (const event of masteryEvents) {
@@ -367,7 +393,7 @@ async function main() {
     slots: Array<{
       id: string;
       optionSource: string;
-      options: Array<{ label: string }>;
+      options: Array<{ id: string; label: string }>;
     }>;
   };
   assert.equal(
@@ -395,7 +421,43 @@ async function main() {
     !learnedLabels.includes("POISON"),
     "one chips success must not qualify a phrase for permanent naming",
   );
-  assert(!learnedLabels.includes("REGRET"));
+  assert(
+    learnedLabels.includes("Give Me A Minute"),
+    "legacy-only mastery must remain eligible through the published alias",
+  );
+  assert(
+    !learnedLabels.includes("Regret This"),
+    "a canonical profile record must win over a stronger legacy alias record",
+  );
+
+  const masteryDebutSong = masteryCeremony.slots.find(
+    (slot) => slot.id === "debut-song",
+  );
+  assert(masteryDebutSong);
+  const legacyMasteryOption = masteryDebutSong.options.find(
+    (option) => option.label === "Give Me A Minute",
+  );
+  assert(legacyMasteryOption);
+  const committedLegacyMasteryCeremony = await command({
+    operation: "commit-winddown-ceremony-choice",
+    slotId: "debut-song",
+    optionId: legacyMasteryOption.id,
+    ceremonyMaterial,
+  });
+  assert.equal(committedLegacyMasteryCeremony.response.status, 200);
+  assert.equal(committedLegacyMasteryCeremony.body.duplicate, false);
+  const committedChoice = committedLegacyMasteryCeremony.body.choice as {
+    slotId: string;
+    optionId: string;
+    label: string;
+  };
+  assert.equal(committedChoice.slotId, "debut-song");
+  assert.equal(committedChoice.optionId, legacyMasteryOption.id);
+  assert.equal(
+    committedChoice.label,
+    "Give Me A Minute",
+    "commit must persist the generated option backed by legacy-keyed mastery",
+  );
 
   const missingReceiptKey =
     `winddown-review-receipt:winddown-review:${"1".padStart(64, "0")}`;

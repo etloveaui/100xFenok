@@ -22,7 +22,13 @@ import {
   type WindDownHabitCompletionEvent,
 } from "../src/features/winddown/habit/domain";
 import {
+  WIND_DOWN_DO_VALUE_BYTE_LIMIT,
+  WIND_DOWN_PAGE_VALUE_BYTE_LIMIT,
+  WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_KEY,
+  WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_CHUNK_PREFIX,
+  WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_MANIFEST_KEY,
   readMonaVnextLearningProfile,
+  readWindDownLegacyKvSource,
   readWindDownHabitEvents,
 } from "../src/features/mona-vnext/memory/windDownPagedStorage";
 
@@ -91,6 +97,19 @@ function cloneForStorage<T>(value: T): T {
   return structuredClone(value);
 }
 
+function serializedValueByteLength(value: unknown) {
+  const serialized = JSON.stringify(value);
+  assert.equal(typeof serialized, "string");
+  return new TextEncoder().encode(serialized).byteLength;
+}
+
+function assertStorageValueFits(value: unknown) {
+  assert(
+    serializedValueByteLength(value) <= WIND_DOWN_DO_VALUE_BYTE_LIMIT,
+    `synthetic DO value exceeds ${WIND_DOWN_DO_VALUE_BYTE_LIMIT} bytes`,
+  );
+}
+
 function createCoordinatorHarness(
   seed: Record<string, unknown> = {},
   options: CoordinatorHarnessOptions = {},
@@ -99,6 +118,7 @@ function createCoordinatorHarness(
   const writes: string[] = [];
   const listCalls: StorageListOptions[] = [];
   for (const [key, value] of Object.entries(seed)) {
+    assertStorageValueFits(value);
     values.set(key, cloneForStorage(value));
   }
 
@@ -107,6 +127,7 @@ function createCoordinatorHarness(
       return cloneForStorage(values.get(key)) as T | undefined;
     },
     async put<T>(key: string, value: T) {
+      assertStorageValueFits(value);
       writes.push(key);
       values.set(key, cloneForStorage(value));
     },
@@ -536,6 +557,84 @@ async function caseLegacyKvRawSeedIsRetained() {
   );
 }
 
+async function caseLargeLegacyKvSeedIsPagedAndRecoverable() {
+  const normalizedProfile = syntheticProfileWithRecords(1_001);
+  const legacyRaw = `${JSON.stringify({
+    ...normalizedProfile,
+    legacyOpaque: {
+      sourceOrder: ["z", "a"],
+      unicodePayload: `x${"🙂".repeat(600_000)}`,
+    },
+  }, null, 2)}\n`;
+  assert(
+    serializedValueByteLength(legacyRaw) > WIND_DOWN_DO_VALUE_BYTE_LIMIT,
+    "fixture must exceed the synthetic 2 MiB DO value ceiling",
+  );
+
+  const harness = createCoordinatorHarness({}, { legacyKvRaw: legacyRaw });
+  const result = await harness.command({ operation: "read-learning-profile" });
+  assert.equal(result.response.status, 200);
+  const seeded = result.body.profile as MonaVnextLearningProfile;
+  assert.equal(Object.keys(seeded.records).length, 1_001);
+  for (let index = 0; index < 1_001; index += 1) {
+    const expressionId = `synthetic-profile-expression-${String(index).padStart(4, "0")}`;
+    assert.equal(seeded.records[expressionId]?.expressionId, expressionId);
+  }
+
+  assert.equal(
+    harness.values.has(PROFILE_STORAGE_KEY),
+    false,
+    "an oversized KV seed must initialize active pages directly",
+  );
+  assert.equal(
+    harness.values.has(WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_KEY),
+    false,
+    "an oversized raw source must use ordered source pages",
+  );
+  const sourceManifest = harness.values.get(
+    WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_MANIFEST_KEY,
+  ) as { chunkCount: number; byteLength: number } | undefined;
+  assert(sourceManifest);
+  assert(sourceManifest.chunkCount > 1);
+  const sourceChunks = [...harness.values.entries()]
+    .filter(([key]) => key.startsWith(WIND_DOWN_PROFILE_LEGACY_KV_SOURCE_CHUNK_PREFIX));
+  assert.equal(sourceChunks.length, sourceManifest.chunkCount);
+  const orderedChunkValues: string[] = [];
+  for (const [, chunk] of sourceChunks.sort(
+    ([left], [right]) => left.localeCompare(right),
+  )) {
+    assert(typeof chunk === "string");
+    assert(serializedValueByteLength(chunk) <= WIND_DOWN_PAGE_VALUE_BYTE_LIMIT);
+    orderedChunkValues.push(chunk);
+  }
+  for (let index = 1; index < orderedChunkValues.length; index += 1) {
+    const previous = orderedChunkValues[index - 1];
+    const current = orderedChunkValues[index];
+    const previousCodeUnit = previous.charCodeAt(previous.length - 1);
+    const currentCodeUnit = current.charCodeAt(0);
+    assert(
+      !(previousCodeUnit >= 0xd800 && previousCodeUnit <= 0xdbff
+        && currentCodeUnit >= 0xdc00 && currentCodeUnit <= 0xdfff),
+      "source pages must not split a UTF-16 surrogate pair",
+    );
+  }
+  const restoredRaw = await readWindDownLegacyKvSource(harness.state.storage);
+  assert.equal(restoredRaw, legacyRaw);
+  assert.equal(
+    new TextEncoder().encode(restoredRaw ?? "").byteLength,
+    sourceManifest.byteLength,
+  );
+
+  const restoredProfile = await readMonaVnextLearningProfile(
+    harness.state.storage,
+  );
+  assert.equal(Object.keys(restoredProfile.records).length, 1_001);
+  for (let index = 0; index < 1_001; index += 1) {
+    const expressionId = `synthetic-profile-expression-${String(index).padStart(4, "0")}`;
+    assert.equal(restoredProfile.records[expressionId]?.expressionId, expressionId);
+  }
+}
+
 function syntheticProfileWithAppliedEventIds(count: number): MonaVnextLearningProfile {
   return {
     ...createEmptyMonaVnextLearningProfile(),
@@ -623,6 +722,10 @@ const cases: PreservationCase[] = [
   {
     name: "legacy KV seed retains exact raw source copy",
     run: caseLegacyKvRawSeedIsRetained,
+  },
+  {
+    name: "oversized legacy KV seed is paged with exact raw recovery",
+    run: caseLargeLegacyKvSeedIsPagedAndRecoverable,
   },
   {
     name: "profile apply preserves 4001 applied event IDs",

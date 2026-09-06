@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { WIND_DOWN_PROFILE_MANIFEST_STORAGE_KEY } from "./windDownPagedStorage";
 
 export const WINDDOWN_RECOVERY_SCHEMA_VERSION = 1 as const;
 export const WINDDOWN_RECOVERY_KIND = "winddown-coordinator-recovery-snapshot" as const;
@@ -21,6 +22,9 @@ export const WINDDOWN_RECOVERY_INTERNAL_PREFIX = "winddown-recovery:";
 export const WINDDOWN_RECOVERY_SEAL_KEY = `${WINDDOWN_RECOVERY_INTERNAL_PREFIX}seal:v1`;
 export const WINDDOWN_RECOVERY_RECEIPT_KEY = `${WINDDOWN_RECOVERY_INTERNAL_PREFIX}receipt:v1`;
 export const WINDDOWN_RECOVERY_LEGACY_COPY_PREFIX = `${WINDDOWN_RECOVERY_INTERNAL_PREFIX}legacy:`;
+export const WINDDOWN_RECOVERY_LEGACY_CHUNK_MAX_CODE_UNITS = 64 * 1024;
+export const WINDDOWN_RECOVERY_LEGACY_CHUNK_MAX_JSON_BYTES = 512 * 1024;
+export const WINDDOWN_RECOVERY_LEGACY_CHUNK_SUFFIX = ":chunk:";
 
 export type WindDownRecoveryListOptions = {
   limit?: number;
@@ -53,6 +57,16 @@ export type WindDownRecoverySnapshotRecord = {
 export type WindDownRecoveryLegacyRecord = {
   key: string;
   rawValue: string;
+};
+
+export type WindDownRecoveryLegacyChunkManifest = {
+  schemaVersion: typeof WINDDOWN_RECOVERY_SCHEMA_VERSION;
+  kind: "winddown-recovery-legacy-chunk-manifest";
+  encoding: "utf8-chunks";
+  sourceKey: string;
+  chunkCount: number;
+  rawValueByteCount: number;
+  jsonValueByteCount: number;
 };
 
 export type WindDownRecoverySnapshot = {
@@ -392,6 +406,102 @@ function snapshotEnvelopeBytes(snapshot: {
   });
 }
 
+type LegacyCopyProjection = {
+  records: WindDownRecoverySnapshotRecord[];
+  rawValue: string;
+  rawValueKeys: string[];
+};
+
+function legacyChunkKeyForBase(baseKey: string, index: number): string {
+  if (!Number.isSafeInteger(index) || index < 0) {
+    throw new WindDownRecoveryError(
+      "WINDDOWN_RECOVERY_LEGACY_INVALID",
+      "WINDDOWN_RECOVERY_LEGACY_INVALID:chunk-index",
+    );
+  }
+  return `${baseKey}${WINDDOWN_RECOVERY_LEGACY_CHUNK_SUFFIX}${String(index).padStart(8, "0")}`;
+}
+
+function isHighSurrogate(codeUnit: number): boolean {
+  return codeUnit >= 0xd800 && codeUnit <= 0xdbff;
+}
+
+function isLowSurrogate(codeUnit: number): boolean {
+  return codeUnit >= 0xdc00 && codeUnit <= 0xdfff;
+}
+
+function splitLegacyRawValue(
+  rawValue: string,
+  baseKey: string,
+): Array<{ key: string; value: string }> {
+  const chunks: Array<{ key: string; value: string }> = [];
+  let start = 0;
+  while (start < rawValue.length) {
+    let end = Math.min(
+      start + WINDDOWN_RECOVERY_LEGACY_CHUNK_MAX_CODE_UNITS,
+      rawValue.length,
+    );
+    // Keep a UTF-16 surrogate pair together so the reconstructed string is
+    // byte-identical after concatenation, including non-BMP characters.
+    if (
+      end < rawValue.length
+      && isHighSurrogate(rawValue.charCodeAt(end - 1))
+      && isLowSurrogate(rawValue.charCodeAt(end))
+    ) {
+      end -= 1;
+    }
+    if (end <= start) {
+      throw new WindDownRecoveryError(
+        "WINDDOWN_RECOVERY_LEGACY_INVALID",
+        "WINDDOWN_RECOVERY_LEGACY_INVALID:chunk-boundary",
+      );
+    }
+    const value = rawValue.slice(start, end);
+    // The fixed code-unit bound has a 128 KiB margin below the 512 KiB JSON
+    // payload limit even when every code unit is escaped as six bytes.
+    if (jsonStringByteLength(value) > WINDDOWN_RECOVERY_LEGACY_CHUNK_MAX_JSON_BYTES) {
+      throw new WindDownRecoveryError(
+        "WINDDOWN_RECOVERY_LEGACY_INVALID",
+        "WINDDOWN_RECOVERY_LEGACY_INVALID:chunk-size",
+      );
+    }
+    chunks.push({
+      key: legacyChunkKeyForBase(baseKey, chunks.length),
+      value,
+    });
+    start = end;
+  }
+  return chunks;
+}
+
+function legacyCopyProjection(record: WindDownRecoveryLegacyRecord): LegacyCopyProjection {
+  const baseKey = legacyCopyKeyForSnapshotKey(record.key);
+  const jsonValueByteCount = jsonStringByteLength(record.rawValue);
+  if (jsonValueByteCount <= WINDDOWN_RECOVERY_LEGACY_CHUNK_MAX_JSON_BYTES) {
+    return {
+      records: [{ key: baseKey, value: record.rawValue }],
+      rawValue: record.rawValue,
+      rawValueKeys: [baseKey],
+    };
+  }
+
+  const chunks = splitLegacyRawValue(record.rawValue, baseKey);
+  const manifest: WindDownRecoveryLegacyChunkManifest = {
+    schemaVersion: WINDDOWN_RECOVERY_SCHEMA_VERSION,
+    kind: "winddown-recovery-legacy-chunk-manifest",
+    encoding: "utf8-chunks",
+    sourceKey: record.key,
+    chunkCount: chunks.length,
+    rawValueByteCount: utf8ByteLength(record.rawValue),
+    jsonValueByteCount,
+  };
+  return {
+    records: [{ key: baseKey, value: manifest }, ...chunks],
+    rawValue: record.rawValue,
+    rawValueKeys: chunks.map((chunk) => chunk.key),
+  };
+}
+
 function snapshotDigest(snapshot: {
   schemaVersion: typeof WINDDOWN_RECOVERY_SCHEMA_VERSION;
   kind: typeof WINDDOWN_RECOVERY_KIND;
@@ -563,9 +673,10 @@ export async function exportWindDownRecoverySnapshot(args: {
     // legacy mirror. This keeps the fallback read nonmutating and lets the
     // paged scan include its raw bytes in the bounded size check.
     const profileRecord = await transaction.get<unknown>(WINDDOWN_RECOVERY_PROFILE_STORAGE_KEY);
+    const profileManifest = await transaction.get<unknown>(WIND_DOWN_PROFILE_MANIFEST_STORAGE_KEY);
     const legacyKvRecords: WindDownRecoveryLegacyRecord[] = [];
     const legacySizer = new CanonicalJsonArraySizer();
-    if (profileRecord === undefined && args.legacyKv) {
+    if (profileRecord === undefined && profileManifest === undefined && args.legacyKv) {
       const rawValue = await args.legacyKv.get(legacyProfileKey);
       if (rawValue !== null) {
         if (typeof rawValue !== "string") {
@@ -921,7 +1032,9 @@ function expectedRestoredRecords(
   const expected = new Map<string, unknown>();
   for (const record of snapshot.records) expected.set(record.key, record.value);
   for (const legacyRecord of snapshot.legacyKvRecords) {
-    expected.set(legacyCopyKeyForSnapshotKey(legacyRecord.key), legacyRecord.rawValue);
+    for (const record of legacyCopyProjection(legacyRecord).records) {
+      expected.set(record.key, record.value);
+    }
   }
   expected.set(WINDDOWN_RECOVERY_RECEIPT_KEY, receipt);
   expected.set(WINDDOWN_RECOVERY_SEAL_KEY, seal);
@@ -959,6 +1072,32 @@ function assertExactTarget(
       throw new WindDownRecoveryError(
         "WINDDOWN_RECOVERY_TARGET_CORRUPT",
         `WINDDOWN_RECOVERY_TARGET_CORRUPT:missing-key:${key}`,
+      );
+    }
+  }
+}
+
+function assertLegacyRawCopies(
+  targetRecords: readonly WindDownRecoverySnapshotRecord[],
+  snapshot: WindDownRecoverySnapshot,
+): void {
+  const values = new Map(targetRecords.map((record) => [record.key, record.value]));
+  for (const legacyRecord of snapshot.legacyKvRecords) {
+    const projection = legacyCopyProjection(legacyRecord);
+    const reconstructed = projection.rawValueKeys.map((key) => {
+      const value = values.get(key);
+      if (typeof value !== "string") {
+        throw new WindDownRecoveryError(
+          "WINDDOWN_RECOVERY_TARGET_CORRUPT",
+          `WINDDOWN_RECOVERY_TARGET_CORRUPT:legacy-chunk:${legacyRecord.key}`,
+        );
+      }
+      return value;
+    }).join("");
+    if (reconstructed !== projection.rawValue) {
+      throw new WindDownRecoveryError(
+        "WINDDOWN_RECOVERY_TARGET_CORRUPT",
+        `WINDDOWN_RECOVERY_TARGET_CORRUPT:legacy-content:${legacyRecord.key}`,
       );
     }
   }
@@ -1028,6 +1167,7 @@ async function verifyCompleteTarget(
     receipt,
   );
   assertExactTarget(targetRecords, expected);
+  assertLegacyRawCopies(targetRecords, snapshot);
   // Keep the argument in the verification seam so callers cannot accidentally
   // verify a target against a receipt from another deterministic copy.
   if (targetName !== receipt.targetName || snapshot.snapshotDigest !== receipt.snapshotDigest) {
@@ -1128,7 +1268,9 @@ export async function restoreWindDownRecoverySnapshot(args: {
         await transaction.put(record.key, cloneJsonValue(record.value, `$.records[${record.key}]`));
       }
       for (const record of snapshot.legacyKvRecords) {
-        await transaction.put(legacyCopyKeyForSnapshotKey(record.key), record.rawValue);
+        for (const copy of legacyCopyProjection(record).records) {
+          await transaction.put(copy.key, copy.value);
+        }
       }
       await transaction.put(WINDDOWN_RECOVERY_RECEIPT_KEY, receipt);
       // Publish the recovery-only marker last, after every source value and

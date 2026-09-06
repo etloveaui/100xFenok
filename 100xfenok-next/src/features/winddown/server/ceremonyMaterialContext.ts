@@ -46,6 +46,7 @@ export function buildWindDownCeremonyMaterialContext(
       id: entry.id,
       en: entry.en,
     })),
+    aliases: material.aliases,
   });
   if (!context) {
     throw new WindDownCeremonyMaterialError(

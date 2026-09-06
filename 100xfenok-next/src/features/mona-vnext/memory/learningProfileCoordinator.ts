@@ -1,7 +1,6 @@
 import { State } from "ts-fsrs";
 import {
   applyMonaVnextLearningEvents,
-  createEmptyMonaVnextLearningProfile,
   normalizeMonaVnextLearningProfile,
   type MonaVnextLearningProfile,
 } from "@/features/mona-vnext/memory/fsrsLearningProfile";
@@ -66,7 +65,7 @@ import {
 import { resolveWindDownStorageScope } from "@/features/mona-vnext/memory/windDownStorageScope";
 import {
   appendWindDownHabitEvent,
-  preserveWindDownLegacyKvSource,
+  initializeMonaVnextLearningProfileFromLegacyKv,
   readMonaVnextLearningProfile,
   readWindDownHabitEvents,
   writeMonaVnextLearningProfile,
@@ -76,7 +75,10 @@ import {
 } from "@/features/mona-vnext/memory/windDownPagedStorage";
 
 import { handleWindDownRecoveryCoordinatorRequest } from "./windDownRecoveryCoordinator";
-import type { WindDownReviewAlias } from "@/features/winddown/server/reviewIdentity";
+import {
+  prepareWindDownLearningRecordResolver,
+  type WindDownReviewAlias,
+} from "@/features/winddown/server/reviewIdentity";
 
 const PROFILE_STORAGE_KEY = WIND_DOWN_PROFILE_LEGACY_STORAGE_KEY;
 const RECEIPT_STORAGE_PREFIX = "winddown-review-receipt:";
@@ -220,14 +222,7 @@ async function initialProfile(
     if (stored !== undefined && stored !== null) {
       return normalizeMonaVnextLearningProfile(stored);
     }
-    if (raw !== null) {
-      await preserveWindDownLegacyKvSource(transaction, raw);
-    }
-    const profile = raw
-      ? normalizeMonaVnextLearningProfile(JSON.parse(raw))
-      : createEmptyMonaVnextLearningProfile();
-    await transaction.put(PROFILE_STORAGE_KEY, profile);
-    return profile;
+    return initializeMonaVnextLearningProfileFromLegacyKv(transaction, raw);
   });
 }
 
@@ -383,6 +378,7 @@ async function readCeremonyMasteryEvidence(args: {
   storage: StorageTransactionLike;
   events: readonly WindDownHabitCompletionEvent[];
   profile: MonaVnextLearningProfile;
+  aliases?: readonly WindDownReviewAlias[];
 }): Promise<WindDownCeremonyMasteryEvidence[] | null> {
   const reviewEvents = args.events.filter(
     (event) => event.source.kind === "review-credit-receipt",
@@ -397,6 +393,10 @@ async function readCeremonyMasteryEvidence(args: {
       ),
     ),
   })));
+  const resolver = prepareWindDownLearningRecordResolver({
+    profile: args.profile,
+    aliases: args.aliases,
+  });
   const evidence: WindDownCeremonyMasteryEvidence[] = [];
   for (const { event, receipt } of receipts) {
     if (
@@ -409,7 +409,7 @@ async function readCeremonyMasteryEvidence(args: {
       || stored.materialId !== event.source.materialId
       || stored.reviewedAt !== event.occurredAtIso
     ) return null;
-    const profileRecord = args.profile.records[event.source.materialId];
+    const profileRecord = resolver.resolve(event.source.materialId)?.record;
     const typedMastery = (
       stored.inputMode === "typed"
       && stored.rating === "good"
@@ -609,6 +609,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
           storage: transaction,
           events,
           profile,
+          aliases: ceremonyMaterial?.aliases,
         });
         ceremony = mastery
           ? projectWindDownCeremony(
@@ -697,6 +698,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
         storage: transaction,
         events,
         profile,
+        aliases: ceremonyMaterial.aliases,
       });
       if (!mastery) {
         return {

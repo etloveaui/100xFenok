@@ -255,7 +255,51 @@ async function corruptCoordinatorState(kind: "session" | "attempt") {
   assert.deepEqual([...values], before, "rejected state must remain intact for recovery");
 }
 
+function incorrectAction(state: WindDownLearnState): WindDownLearnAction {
+  const exercise = state.queue[0]!;
+  if (exercise.kind === "meaning-choice") {
+    const wrong = exercise.choices.find((choice) => choice.id !== exercise.correctChoiceId);
+    assert(wrong);
+    return { type: "choose-meaning", cardId: exercise.card.id, choiceId: wrong.id };
+  }
+  return { type: "submit-sentence", cardId: exercise.card.id, tokenIds: [...exercise.canonicalTokenIds].reverse() };
+}
+
+function assertValidTransition(state: WindDownLearnState) {
+  const resumed = callResolver(resolverInput({ state }));
+  assert(resumed, "engine-generated state must remain resumable");
+  assert.deepEqual(resumed.state, state, "resuming must preserve mistakes, practice and credits");
+}
+
 const cases: Case[] = [
+  {
+    name: "miss, practice-only interlude and completion remain resumable",
+    run: () => {
+      let state = createWindDownLearnSession({ cards: firstBootstrap.cards, seed: manifest.seed });
+      assertValidTransition(state);
+      const miss = applyWindDownLearnAction(state, incorrectAction(state));
+      assert.equal(miss.outcome, "miss");
+      state = miss.state;
+      assertValidTransition(state);
+      while (state.creditedCardIds.length < 4) {
+        state = applyWindDownLearnAction(state, correctAction(state)).state;
+        assertValidTransition(state);
+      }
+      const finalMiss = applyWindDownLearnAction(state, incorrectAction(state));
+      assert.equal(finalMiss.outcome, "miss");
+      state = finalMiss.state;
+      assert.equal(state.queue[0]?.creditPolicy, "practice-only");
+      assertValidTransition(state);
+      state = applyWindDownLearnAction(state, incorrectAction(state)).state;
+      assertValidTransition(state);
+      for (let turn = 0; !state.isComplete && turn < 5; turn++) {
+        state = applyWindDownLearnAction(state, correctAction(state)).state;
+        assertValidTransition(state);
+      }
+      assert.equal(state.isComplete, true);
+      assert(state.completion?.mistakeRecap.length);
+    },
+  },
   { name: "corrupt stored session blocks without rewriting records", run: () => corruptCoordinatorState("session") },
   { name: "corrupt duplicate receipt blocks without rewriting records", run: () => corruptCoordinatorState("attempt") },
   {
