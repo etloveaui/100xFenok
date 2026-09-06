@@ -114,6 +114,7 @@ async function capturePanel(page: Page, ticker: string, name: string) {
 }
 
 async function main() {
+  const failures: string[] = [];
   for (const engine of [{ name: "chromium", type: chromium }, { name: "webkit", type: webkit }]) {
     const browser = await engine.type.launch();
     let activePage: Page | undefined;
@@ -133,6 +134,7 @@ async function main() {
           await page.goto(`${base}/stock/${ticker}?tab=financials`, { waitUntil: "domcontentloaded" });
           await verifyDocument(page, ticker, false);
           await capturePanel(page, ticker, `${engine.name}-${viewport.name}-${ticker}`);
+          console.log(`[earnings-browser] passed ${engine.name}/${viewport.name}/stock/${ticker}`);
         }
         if (engine.name === "chromium" && viewport.name === "desktop") {
           await page.goto(`${base}/stock/NVDA?tab=financials`, { waitUntil: "domcontentloaded" });
@@ -147,6 +149,7 @@ async function main() {
         await verifyDocument(page, "AAPL", true);
         await capturePanel(page, "AAPL", `${engine.name}-${viewport.name}-screener`);
         assert.deepEqual(errors, [], "no uncaught browser exceptions");
+        console.log(`[earnings-browser] passed ${engine.name}/${viewport.name}/screener`);
         await context.close();
       }
       if (!live && engine.name === "chromium") {
@@ -221,9 +224,10 @@ async function main() {
         console.error("[earnings-browser] failed interaction", { url: activePage.url(), layout, body: (await activePage.locator("body").innerText()).slice(0, 3000) });
         await activePage.screenshot({ path: `${out}/failure-${engine.name}.png`, fullPage: true }).catch(() => {});
       }
-      throw error;
+      failures.push(`${engine.name}: ${String(error)}`);
     } finally { await browser.close(); }
   }
+  assert.deepEqual(failures, [], "all browser engines must pass; failures in one engine do not suppress evidence from the other");
   console.log("[earnings-browser] four official companies, shared surfaces, period selection, desktop/mobile, Chromium/WebKit, retry and signed loss passed");
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

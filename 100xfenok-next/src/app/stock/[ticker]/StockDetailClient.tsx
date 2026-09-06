@@ -3439,7 +3439,7 @@ export default function StockDetailClient({
   // → 배당 카드 → 전체 재무제표 아코디언 (CompactFinancialTable/yf/FinancialCandidate/RawDepth).
   function renderFinancialsCpTab(showSkeleton: boolean) {
     return (
-      <div className="cp-stock-tab-financials">
+      <div className="cp-stock-tab-financials" style={{ gridTemplateColumns: "minmax(0, 1fr)" }}>
         <EarningsOverview ticker={symbol} />
         {showSkeleton ? (
           <div className="cp-stock-tab-loading">
