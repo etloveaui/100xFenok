@@ -35,7 +35,7 @@ export default async function WindDownRoleplayPage({ searchParams }: {
   const scenario = getWindDownVoiceScenario(typeof query.scenario === "string" ? query.scenario : null);
   const episode = storyEpisodeById(typeof query.story === "string" ? query.story : "");
   const storyReturn = episode && scenario?.id === episode.scenarioId
-    ? { id: episode.id, title: episode.title, scenarioId: episode.scenarioId }
+    ? { id: episode.id, title: episode.title, location: episode.location, scenarioId: episode.scenarioId }
     : undefined;
 
   return (
