@@ -116,10 +116,48 @@
   line-height: 1.6;
 }
 
+.identityLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.identityItem {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: baseline;
+  gap: 6px;
+  border: 1px solid color-mix(in oklab, var(--wd-stage-gold) 30%, var(--wd-border));
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: color-mix(in oklab, var(--wd-stage-gold) 6%, var(--wd-surface));
+}
+
+.identityLabel {
+  flex: 0 0 auto;
+  color: var(--wd-text-muted);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.identityValue {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--wd-stage-gold);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .stageGrid {
   display: grid;
   gap: 16px;
   align-items: stretch;
+}
+
+.stageGrid > .reading {
+  margin-top: 0;
 }
 
 .stageColumn {
@@ -858,7 +896,22 @@
 
   .stageGrid {
     grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.95fr);
+    grid-template-areas:
+      "stage mission"
+      "reading mission";
     gap: 18px;
+  }
+
+  .stageColumn {
+    grid-area: stage;
+  }
+
+  .stageGrid > .reading {
+    grid-area: reading;
+  }
+
+  .missionPanel {
+    grid-area: mission;
   }
 
   .sceneFrame {

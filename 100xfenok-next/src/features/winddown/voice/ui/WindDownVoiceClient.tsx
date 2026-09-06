@@ -1151,6 +1151,11 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
               <p className="mt-3 text-xs font-semibold text-[var(--wd-muted)]">
                 {reportState.receipt.committedAtIso.slice(0, 16).replace("T", " ")}
               </p>
+              {storyHref ? (
+                <Link href={storyHref} className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-accent)] active:scale-[.98] motion-reduce:transition-none">
+                  이 무대로 돌아가기
+                </Link>
+              ) : null}
               {!reportState.habitCredited ? (
                 activity === "roleplay" && journeyTargets.length === 0 ? (
                   <>
