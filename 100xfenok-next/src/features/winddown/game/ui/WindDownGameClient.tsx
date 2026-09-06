@@ -265,6 +265,7 @@ export default function WindDownGameClient({
     );
     const stageHeading = document.getElementById("winddown-story-stage-heading");
     if (stageHeading) {
+      stageHeading.focus({ preventScroll: true });
       stageHeading.scrollIntoView({
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
           ? "auto"
@@ -376,7 +377,7 @@ export default function WindDownGameClient({
           <span className={styles.topContext}>{chapterAct?.tag ?? "ACT"} · {episode.location}</span>
         </nav>
 
-        <header className={styles.heading} id="winddown-story-stage-heading">
+        <header className={styles.heading} id="winddown-story-stage-heading" tabIndex={-1}>
           <p className={styles.eyebrow}>{chapterAct?.tag ?? "ACT"} · {chapterAct?.name ?? ""}</p>
           <h1 className={styles.title}>{episode.title}</h1>
           <p className={styles.location}>{episode.location} · {stateLabel} · 지금의 무대: {here.label}</p>

@@ -200,6 +200,8 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
       : createWindDownLiveTalkDescriptor(WIND_DOWN_LIVE_TALK_TOPICS[0].id)
   ), [activity, initialScenarioId]);
   const [descriptor, setDescriptor] = useState<WindDownVoiceDescriptor>(defaultDescriptor);
+  const isStoryScenario = Boolean(storyReturn && descriptor.activity === "roleplay" && descriptor.scenarioId === storyReturn.scenarioId);
+  const selectedStoryAccess = isStoryScenario ? storyAccess : "open";
   const [settings, setSettings] = useState<WindDownVoiceClientSettings>(WIND_DOWN_VOICE_DEFAULT_SETTINGS);
   const [transcriptState, setTranscriptState] = useState<MonaVnextTranscriptState>(
     () => createMonaVnextTranscriptState(startConversationId()),
@@ -637,7 +639,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
   ]);
 
   const start = useCallback(() => {
-    if (storyAccess !== "open") return;
+    if (selectedStoryAccess !== "open") return;
     if (live.status === "listening" || live.status === "connecting" || live.status === "setup-wait") return;
     if (reportState.phase === "pending") return;
 
@@ -668,7 +670,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
     setTranscriptState(freshTranscript);
     setReportState({ phase: "idle", frozen: null, receipt: null, error: null });
     void live.start();
-  }, [live, reportState, restoring, corruptNotice, storyAccess]);
+  }, [live, reportState, restoring, corruptNotice, selectedStoryAccess]);
 
   const reportRetry = useCallback(() => {
     if (reportState.phase !== "error" || !reportState.frozen) return;
@@ -804,18 +806,17 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
         <main className="flex flex-1 flex-col py-6">
           {storyReturn ? (
             <aside aria-label="무대 연습 안내" className="mb-5 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface)] p-4">
-              <p className="text-xs font-bold tracking-wide text-[var(--wd-accent)]">{recoveringPriorReport ? "돌아갈 무대" : storyAccess === "preview" ? "아직 열리지 않은 무대" : "무대에서 이어온 연습"}</p>
+              <p className="text-xs font-bold tracking-wide text-[var(--wd-accent)]">{recoveringPriorReport || !isStoryScenario ? "돌아갈 무대" : storyAccess === "preview" ? "아직 열리지 않은 무대" : "무대에서 이어온 연습"}</p>
               <p className="mt-1 text-lg font-semibold">{storyReturn.title}</p>
               <p className="mt-2 text-sm leading-6 text-[var(--wd-muted)]">
-                {storyAccess === "checking" ? "저장된 성장 기록을 확인하고 있어."
+                {recoveringPriorReport ? "먼저 이전 대화를 보관하고 있어. 이 무대의 새 연습과는 별개인 기록이야."
+                  : !isStoryScenario ? "다른 상황을 골랐어. 연습을 마치면 원래 무대로 돌아갈 수 있어."
+                  : storyAccess === "checking" ? "저장된 성장 기록을 확인하고 있어."
                   : storyAccess === "preview" ? "이 무대는 미리보기야. 열린 무대로 돌아가 연습을 이어가자."
                   : storyAccess === "error" ? "무대 기록을 확인하지 못했어. 확인 후에 연습을 시작할 수 있어."
-                  : recoveringPriorReport ? "먼저 이전 대화를 보관하고 있어. 이 무대의 새 연습과는 별개인 기록이야."
-                  : descriptor.activity === "roleplay" && descriptor.scenarioId === storyReturn.scenarioId
-                  ? "이 장면의 표현을 연습해 봐. 시작을 눌러야 마이크가 켜져."
-                  : "다른 상황을 골랐어. 연습을 마치면 원래 무대로 돌아갈 수 있어."}
+                  : "이 장면의 표현을 연습해 봐. 시작을 눌러야 마이크가 켜져."}
               </p>
-              {storyAccess === "error" ? <button type="button" onClick={() => void checkStoryAccess()} className="mt-2 min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4 text-sm font-bold">무대 기록 다시 확인</button> : null}
+              {isStoryScenario && storyAccess === "error" ? <button type="button" onClick={() => void checkStoryAccess()} className="mt-2 min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4 text-sm font-bold">무대 기록 다시 확인</button> : null}
               <p className="mt-1 text-xs leading-5 text-[var(--wd-muted)]">연습한 대화는 보관함에서 다시 볼 수 있어. 성장 경험치는 기존 학습·복습 기준으로 쌓여.</p>
             </aside>
           ) : null}
@@ -1229,10 +1230,10 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
             <button
               type="button"
               onClick={start}
-              disabled={storyAccess !== "open" || restoring || busy || reportState.phase === "pending" || reportState.phase === "success"}
+              disabled={selectedStoryAccess !== "open" || restoring || busy || reportState.phase === "pending" || reportState.phase === "success"}
               className="min-h-[56px] w-full rounded-[22px] bg-[var(--wd-accent)] px-5 text-[15px] font-black text-[var(--wd-bg)] transition active:scale-[.98] disabled:opacity-45 motion-reduce:transition-none"
             >
-              {storyAccess === "checking" ? "무대 기록 확인 중" : storyAccess === "preview" ? "미리보기 무대" : storyAccess === "error" ? "무대 기록 확인 필요" : busy ? "연결하는 중" : live.status === "blocked" || live.status === "error" ? "권한 확인 후 다시 연결" : activity === "roleplay" ? "장면 시작하기" : "대화 시작하기"}
+              {selectedStoryAccess === "checking" ? "무대 기록 확인 중" : selectedStoryAccess === "preview" ? "미리보기 무대" : selectedStoryAccess === "error" ? "무대 기록 확인 필요" : busy ? "연결하는 중" : live.status === "blocked" || live.status === "error" ? "권한 확인 후 다시 연결" : activity === "roleplay" ? "장면 시작하기" : "대화 시작하기"}
             </button>
           )}
         </footer>
