@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { getWindDownVoiceScenario } from '../src/features/winddown/voice/product';
 import { WIND_DOWN_CHAPTERS } from '../src/features/winddown/game/model/tour';
 
+async function main() {
 const scenarioIds = ['artist-audition', 'team-rehearsal', 'fan-meeting', 'artist-interview', 'creative-repair', 'acceptance-speech'];
 for (const id of scenarioIds) {
   const scenario = getWindDownVoiceScenario(id);
@@ -44,3 +45,6 @@ assert.equal(game.includes('requestAnimationFrame'), false, 'Static story scenes
 assert.equal(game.includes('paintScene'), false, 'The approved illustrated stage replaces the primitive painter');
 assert.ok(game.includes('WindDownStoryScene'), 'Game consumes the responsive illustrated scene');
 console.log(`WIND DOWN story PASS: ${episodes.length} episodes, 24 legacy anchors, 6 authored situation families`);
+
+}
+main().catch((error) => { console.error(error); process.exitCode = 1; });
