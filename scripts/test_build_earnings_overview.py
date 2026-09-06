@@ -280,6 +280,30 @@ class BuildEarningsOverviewTest(unittest.TestCase):
             "Q4 derivation must carry an explicit caveat",
         )
 
+    def test_changed_derived_q4_does_not_inherit_eps_from_another_source(self) -> None:
+        facts = load_fixture("msft_q4_companyfacts.json")
+        supplement = self.mod.parse_msft_release_table(load_fixture_text("msft_release_table_fixture.html"))
+        previous, _ = call_normalizer(self.mod, "MSFT", facts, supplement=supplement)
+        document, validation = call_normalizer(self.mod, "MSFT", facts, previous=previous)
+        self.assertTrue(validation_ok(validation))
+        q4 = period_for(document, "2026-06-30")
+        self.assertEqual(q4["income"]["revenue"], 90_000_000_000)
+        self.assertIsNone(q4["income"]["dilutedEps"], "changed income cannot inherit an unrelated source's EPS")
+        self.assertIn("sec.gov", q4["source"]["url"])
+
+    def test_equal_derived_q4_preserves_the_complete_confirmed_source(self) -> None:
+        facts = load_fixture("msft_q4_companyfacts.json")
+        base, _ = call_normalizer(self.mod, "MSFT", facts)
+        supplement = self.mod.parse_msft_release_table(load_fixture_text("msft_release_table_fixture.html"))
+        supplement["values"] = deepcopy(period_for(base, "2026-06-30")["income"])
+        supplement["values"]["dilutedEps"] = 4.5
+        previous, _ = call_normalizer(self.mod, "MSFT", facts, supplement=supplement)
+        document, validation = call_normalizer(self.mod, "MSFT", facts, previous=previous)
+        self.assertTrue(validation_ok(validation))
+        q4 = period_for(document, "2026-06-30")
+        self.assertEqual(q4["income"]["dilutedEps"], 4.5)
+        self.assertEqual(q4["source"], period_for(previous, "2026-06-30")["source"], "confirmed EPS retains its real issuer source as a complete period")
+
     def test_amzn_missing_tax_and_pretax_stay_null_and_gross_is_explicitly_derived(self) -> None:
         document, validation = call_normalizer(
             self.mod, "AMZN", load_fixture("amzn_companyfacts.json")

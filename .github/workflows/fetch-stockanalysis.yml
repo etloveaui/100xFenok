@@ -920,5 +920,8 @@ jobs:
     if: >-
       github.event_name == 'schedule' &&
       github.event.schedule == '20 21 * * *'
+    permissions:
+      contents: write
+      actions: read
     uses: ./.github/workflows/refresh-earnings-overview.yml
     secrets: inherit
