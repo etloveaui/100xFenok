@@ -190,7 +190,7 @@ function chunkValues<T>(
   return pages;
 }
 
-function validCount(value: unknown) {
+function validCount(value: unknown): value is number {
   return typeof value === "number"
     && Number.isSafeInteger(value)
     && value >= 0;

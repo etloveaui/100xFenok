@@ -19,7 +19,11 @@ npm run test:winddown-preservation-gate
 npx playwright install --with-deps chromium webkit
 
 bash scripts/load-guard.sh --assert-nested
-NEXT_BUILD_TARGET=cloudflare npm run cf:build:next
+if ! NEXT_BUILD_TARGET=cloudflare npm run cf:build:next; then
+  # Next reports only its first type error; collect the complete diagnostics.
+  npx tsc --noEmit --incremental false
+  exit 1
+fi
 
 server_pid=""
 server_log="${RUNNER_TEMP:-/tmp}/winddown-preservation-server.log"
