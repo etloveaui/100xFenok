@@ -9,6 +9,7 @@ import {
   type Download,
   type Locator,
   type Page,
+  type Request,
   type Route,
 } from "playwright";
 
@@ -80,9 +81,11 @@ type CaseRuntime = {
   readonly blockedForeign: string[];
   readonly unexpectedDataPaths: string[];
   readonly expectedFailurePaths: Set<string>;
+  readonly expectedCancellations: string[];
   readonly requestFailures: string[];
   readonly mode?: EtfMode;
   stockRequestCount: number;
+  stockResponseCount: number;
   stockReleased: boolean;
   releaseStock(): void;
 };
@@ -101,6 +104,7 @@ type CaseReceipt = {
   error?: string;
   blocked_foreign?: string[];
   unexpected_data_paths?: string[];
+  expected_cancellations?: string[];
   request_failures?: string[];
 };
 
@@ -258,7 +262,7 @@ function etfPayload(ticker: string, mode: EtfMode): { status: number; body: unkn
 
 function marketFacts(): JsonObject {
   const output: JsonObject = {};
-  for (const ticker of ["QQQ", "SPY", "VOO", "DISJA", "DISJB", "NULL", "UNAVAILABLE", "FAILED"]) {
+  for (const ticker of ["QQQ", "SPY", "VOO", "DISJA", "DISJB", "NULL", "UNAVAIL", "FAILED"]) {
     output[ticker] = {
       ticker,
       asset_type: "etf",
@@ -291,8 +295,11 @@ function etfUniverse(): JsonObject {
 
 function macroFixtures(pathname: string): unknown | undefined {
   const points = [
-    { date: "2025-01-02", value: 100 },
-    { date: "2025-06-02", value: 105 },
+    { date: "2026-09-01", value: 100 },
+    { date: "2026-09-02", value: 102 },
+    { date: "2026-09-03", value: 104 },
+    { date: "2026-09-04", value: 107 },
+    { date: "2026-09-05", value: 108 },
     { date: FIXTURE_DATE, value: 110 },
   ];
   if (pathname === "/data/indices/sp500.json") return points;
@@ -313,10 +320,13 @@ class FixtureRouter implements CaseRuntime {
   readonly blockedForeign: string[] = [];
   readonly unexpectedDataPaths: string[] = [];
   readonly expectedFailurePaths = new Set<string>();
+  readonly expectedCancellations: string[] = [];
   readonly requestFailures: string[] = [];
   readonly mode: EtfMode;
   stockRequestCount = 0;
+  stockResponseCount = 0;
   stockReleased = false;
+  private readonly harnessAbortedRequests = new WeakSet<Request>();
   private readonly options: FixtureRuntimeOptions;
   private stockWaiters: Array<() => void> = [];
 
@@ -336,11 +346,25 @@ class FixtureRouter implements CaseRuntime {
     return new Promise((resolve) => this.stockWaiters.push(resolve));
   }
 
+  markHarnessAborted(request: Request): void {
+    this.harnessAbortedRequests.add(request);
+  }
+
+  isHarnessAborted(request: Request): boolean {
+    return this.harnessAbortedRequests.has(request);
+  }
+
   async handle(route: Route): Promise<void> {
-    const requestUrl = new URL(route.request().url());
+    const request = route.request();
+    const requestUrl = new URL(request.url());
     if (requestUrl.origin !== QA_ORIGIN) {
       this.blockedForeign.push(requestUrl.origin);
       await route.abort("blockedbyclient");
+      return;
+    }
+    if (isHarnessRscRequest(request, requestUrl)) {
+      this.markHarnessAborted(request);
+      await route.abort("aborted");
       return;
     }
     if (!requestUrl.pathname.startsWith("/data/") && !requestUrl.pathname.startsWith("/api/")) {
@@ -361,6 +385,7 @@ class FixtureRouter implements CaseRuntime {
     }
     if (response.status >= 400) this.expectedFailurePaths.add(requestUrl.pathname);
     await route.fulfill(jsonResponse(response.body, response.status));
+    if (requestUrl.pathname === "/data/global-scouter/core/stocks_analyzer.json") this.stockResponseCount += 1;
   }
 
   private dataResponse(pathname: string): { status: number; body: unknown } | undefined {
@@ -375,6 +400,22 @@ class FixtureRouter implements CaseRuntime {
     if (pathname.startsWith("/data/computed/market_facts/shards/")) return { status: 200, body: marketFacts() };
     if (pathname.startsWith("/data/yf/finance/")) return { status: 200, body: { data: { info: { currentPrice: 100 } } } };
     if (pathname === "/api/data/stockanalysis/etf-universe") return { status: 200, body: etfUniverse() };
+
+    const tickerSurfacesMatch = pathname.match(/^\/api\/data\/stockanalysis\/ticker\/([^/]+)\/surfaces\/?$/);
+    if (tickerSurfacesMatch) {
+      const ticker = decodeURIComponent(tickerSurfacesMatch[1] ?? "").toUpperCase();
+      return {
+        status: 200,
+        body: {
+          schema_version: "stockanalysis-ticker-surfaces/v1",
+          generated_at: `${FIXTURE_DATE}T00:00:00.000Z`,
+          source: "synthetic product-flow fixture",
+          ticker,
+          counts: { asset_filter: "all", surfaces_checked: 0, surfaces_matched: 0, rows_returned: 0 },
+          sections: { earnings: [], actions: [], markets: [], etfs: [], ipo: [], industry: [] },
+        },
+      };
+    }
 
     const etfMatch = pathname.match(/^\/api\/data\/stockanalysis\/etfs\/([^/]+)\/?$/);
     if (etfMatch) {
@@ -422,6 +463,7 @@ async function readDownload(download: Download): Promise<string> {
 }
 
 async function screenshot(page: Page, label: string): Promise<void> {
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: join(SCREENSHOT_DIR, `${label}.png`), fullPage: true });
 }
 
@@ -467,6 +509,38 @@ async function portfolioInputs(page: Page) {
   };
 }
 
+async function waitForPortfolioEditor(page: Page, name: string): Promise<void> {
+  await waitForCondition(async () => {
+    const holdings = page.locator('[data-portfolio-section="holdings"]');
+    const addHolding = page.locator('[data-portfolio-section="add-holding"]');
+    if (await holdings.count() !== 1 || await addHolding.count() !== 1) return false;
+    return (await page.locator("body").innerText().catch(() => "")).includes(name);
+  }, `seeded portfolio editor did not become interactive for ${name}`, WAIT_DATA_MS);
+}
+
+async function fillPortfolioImport(page: Page, value: string): Promise<void> {
+  const input = page.locator("[data-portfolio-import-json-input]");
+  const action = page.locator("[data-portfolio-import-json-action]");
+  await waitForCondition(async () => {
+    return await input.count() === 1
+      && await action.count() === 1
+      && await input.isVisible()
+      && await input.isEditable()
+      && await action.isVisible();
+  }, "portfolio import controls did not become interactive", WAIT_DATA_MS);
+  await input.fill(value);
+  await waitForCondition(async () => {
+    return await input.inputValue() === value && await action.isEnabled();
+  }, "portfolio import action did not enable after paste", WAIT_SHORT_MS);
+  await action.click();
+}
+
+async function portfolioActionButton(page: Page, name: string): Promise<Locator> {
+  const button = page.getByRole("button", { name, exact: true });
+  await waitForCondition(async () => await button.count() === 1 && await button.isVisible() && await button.isEnabled(), `portfolio ${name} action did not become interactive`);
+  return button;
+}
+
 async function storageErrorVisible(page: Page): Promise<boolean> {
   const candidates = page.locator('[role="alert"], [role="status"], [aria-live], [data-portfolio-save-error], [data-portfolio-storage-error]');
   const count = await candidates.count();
@@ -481,6 +555,7 @@ async function storageErrorVisible(page: Page): Promise<boolean> {
 
 async function emptyPortfolioCase(page: Page, _runtime: CaseRuntime, condition: BrowserCondition): Promise<void> {
   await gotoPath(page, "/portfolio/");
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
   await waitForCondition(async () => await page.locator("[data-portfolio-local-boundary]").count() > 0, "empty portfolio boundary did not render");
   await screenshot(page, `portfolio-empty-${condition.name}`);
   assert.equal(
@@ -488,8 +563,7 @@ async function emptyPortfolioCase(page: Page, _runtime: CaseRuntime, condition: 
     1,
     "empty portfolio must expose a direct restore/import input",
   );
-  await page.locator('[data-portfolio-import-json-input]').fill(JSON.stringify(portfolioCore));
-  await page.locator('[data-portfolio-import-json-action]').click();
+  await fillPortfolioImport(page, JSON.stringify(portfolioCore));
   await waitForCondition(async () => (await portfolioPortfolios(page)).length === 1, "empty device must restore directly without a placeholder portfolio");
   const [restored] = await portfolioPortfolios(page);
   assert.deepEqual(restored.holdings, portfolioCore.holdings);
@@ -499,16 +573,14 @@ async function emptyPortfolioCase(page: Page, _runtime: CaseRuntime, condition: 
 async function exportImportCase(page: Page, _runtime: CaseRuntime, condition: BrowserCondition): Promise<void> {
   await seedStorage(page, portfolioDoc([portfolioCore]));
   await gotoPath(page, "/portfolio/");
-  await waitForCondition(async () => await page.locator('[data-portfolio-section="holdings"]').count() === 1, "portfolio editor did not render");
+  await waitForPortfolioEditor(page, portfolioCore.name);
   await screenshot(page, `portfolio-editor-${condition.name}`);
   const exportButton = page.locator("[data-portfolio-export-json-action]");
   const [download] = await Promise.all([page.waitForEvent("download", { timeout: WAIT_SHORT_MS }), exportButton.click()]);
   const exportedBytes = await readDownload(download);
   const exported = JSON.parse(exportedBytes) as JsonObject;
   assert.equal(download.suggestedFilename().endsWith(".json"), true, "portfolio export must be a JSON download");
-  const importInput = page.locator("[data-portfolio-import-json-input]");
-  await importInput.fill(exportedBytes);
-  await page.locator("[data-portfolio-import-json-action]").click();
+  await fillPortfolioImport(page, exportedBytes);
   await waitForCondition(async () => (await portfolioPortfolios(page)).length === 2, "imported portfolio was not persisted");
   const stored = await portfolioPortfolios(page);
   const sameName = stored.filter((portfolio) => portfolio.name === exported.name);
@@ -528,14 +600,14 @@ async function storageAddFailureCase(page: Page, _runtime: CaseRuntime): Promise
   const raw = portfolioDoc([portfolioOld]);
   await seedStorage(page, raw, true);
   await gotoPath(page, "/portfolio/");
-  await waitForCondition(async () => await page.locator('[data-portfolio-section="add-holding"]').count() === 1, "portfolio add form did not render");
+  await waitForPortfolioEditor(page, portfolioOld.name);
   await enableStorageFailure(page);
   const inputs = await portfolioInputs(page);
   await inputs.ticker.fill("NVDA");
   await inputs.shares.fill("3");
   await inputs.cost.fill("120");
-  await page.getByRole("button", { name: "추가", exact: true }).click();
-  await new Promise((resolve) => setTimeout(resolve, 180));
+  await (await portfolioActionButton(page, "추가")).click();
+  await waitForCondition(() => storageErrorVisible(page), "failed add did not announce a storage error");
   assert.equal(await portfolioRaw(page), raw, "failed add must preserve old stored bytes");
   const stored = await portfolioPortfolios(page);
   assert.equal(stored.length, 1, "failed add must not append a record");
@@ -549,15 +621,14 @@ async function storageImportFailureCase(page: Page, _runtime: CaseRuntime): Prom
   const raw = portfolioDoc([portfolioOld]);
   await seedStorage(page, raw, true);
   await gotoPath(page, "/portfolio/");
-  await waitForCondition(async () => await page.locator('[data-portfolio-import-json-input]').count() === 1, "portfolio import form did not render");
+  await waitForPortfolioEditor(page, portfolioOld.name);
   await enableStorageFailure(page);
   const imported = cloneJson(portfolioCore);
   imported.id = "p-import-failure";
   const importBytes = JSON.stringify(imported, null, 2);
   const input = page.locator("[data-portfolio-import-json-input]");
-  await input.fill(importBytes);
-  await page.locator("[data-portfolio-import-json-action]").click();
-  await new Promise((resolve) => setTimeout(resolve, 180));
+  await fillPortfolioImport(page, importBytes);
+  await waitForCondition(() => storageErrorVisible(page), "failed import did not announce a storage error");
   assert.equal(await portfolioRaw(page), raw, "failed import must preserve old stored bytes");
   assert.equal((await portfolioPortfolios(page)).length, 1, "failed import must not append a record");
   assert.equal(await input.inputValue(), importBytes, "failed import must preserve pasted bytes");
@@ -567,7 +638,7 @@ async function storageImportFailureCase(page: Page, _runtime: CaseRuntime): Prom
 async function importLegacy(page: Page): Promise<void> {
   await seedStorage(page, portfolioDoc([{ id: "p-placeholder", name: "Existing", currency: "USD", cash: 0, holdings: [] }]));
   await gotoPath(page, "/portfolio/");
-  await waitForCondition(async () => await page.locator('[data-portfolio-import-json-input]').count() === 1, "legacy import form did not render");
+  await waitForPortfolioEditor(page, "Existing");
   const legacy = {
     portfolios: {
       [legacyPortfolio.name]: {
@@ -576,9 +647,12 @@ async function importLegacy(page: Page): Promise<void> {
       },
     },
   };
-  await page.locator('[data-portfolio-import-json-input]').fill(JSON.stringify(legacy));
-  await page.locator('[data-portfolio-import-json-action]').click();
+  await fillPortfolioImport(page, JSON.stringify(legacy));
   await waitForCondition(async () => (await portfolioPortfolios(page)).some((portfolio) => portfolio.name === legacyPortfolio.name), "legacy portfolio was not imported");
+  await waitForCondition(async () => {
+    const action = legacyActionButton(page, "수정 입력");
+    return await action.count() === 1 && await action.isVisible() && await action.isEnabled();
+  }, "legacy portfolio row action did not become interactive", WAIT_DATA_MS);
 }
 
 function legacyActionButton(page: Page, action: "수정 입력" | "삭제") {
@@ -628,6 +702,7 @@ async function stalePortfolioEditCase(page: Page): Promise<void> {
   ] };
   await seedStorage(page, portfolioDoc([duplicate, { id: "p-other", name: "Other Portfolio", currency: "USD", cash: 0, holdings: [] }]));
   await gotoPath(page, "/portfolio/");
+  await waitForPortfolioEditor(page, duplicate.name);
   const editButtons = page.getByRole("button", { name: /BRK\/B.*수정 입력/ });
   await editButtons.nth(1).click();
   const inputs = await portfolioInputs(page);
@@ -708,7 +783,7 @@ function runtimeModeTicker(runtime: CaseRuntime): string {
   if (mode === "disjoint") return "DISJB";
   if (mode === "failed") return "FAILED";
   if (mode === "null") return "NULL";
-  return "UNAVAILABLE";
+  return "UNAVAIL";
 }
 
 function runtimeMode(runtime: CaseRuntime): EtfMode {
@@ -790,10 +865,10 @@ async function paletteInputSelectionCase(page: Page): Promise<void> {
 
 async function openMobileTypeahead(page: Page): Promise<Locator> {
   const open = page.locator('button[aria-label="검색 열기"]:visible');
-  assert.equal(await open.count(), 1, "mobile search must expose an open control");
+  await waitForCondition(async () => await open.count() === 1 && await open.isEnabled(), "mobile search did not expose an interactive open control", WAIT_DATA_MS);
   await open.click();
   const input = page.locator('input[role="combobox"]:visible');
-  assert.equal(await input.count(), 1, "mobile search must expose one visible combobox");
+  await waitForCondition(async () => await input.count() === 1 && await input.isEditable(), "mobile search did not expose an interactive combobox");
   return input;
 }
 
@@ -805,7 +880,12 @@ async function typeaheadStaleCase(page: Page, runtime: CaseRuntime): Promise<voi
   await input.fill("");
   await page.locator("[data-portfolio-local-boundary]").click();
   runtime.releaseStock();
-  await new Promise((resolve) => setTimeout(resolve, 260));
+  await waitForCondition(() => runtime.stockResponseCount > 0, "delayed typeahead data did not fulfill");
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
+  await waitForCondition(async () => {
+    return await input.getAttribute("aria-expanded") === "false"
+      && await page.locator('ul[role="listbox"]:visible').count() === 0;
+  }, "dismissed typeahead reopened after stale data resolved");
   assert.equal(await input.inputValue(), "", "clearing typeahead must preserve an empty query");
   assert.equal(await input.getAttribute("aria-expanded"), "false", "dismissed typeahead must remain closed after stale data resolves");
   assert.equal(await page.locator('ul[role="listbox"]:visible').count(), 0, "dismissed typeahead must not reopen from stale data");
@@ -821,7 +901,12 @@ async function typeaheadStaleDismissCase(page: Page, runtime: CaseRuntime): Prom
   await waitForCondition(() => runtime.stockRequestCount > 0, "delayed typeahead search did not start");
   await page.locator("[data-portfolio-local-boundary]").click();
   runtime.releaseStock();
-  await new Promise((resolve) => setTimeout(resolve, 260));
+  await waitForCondition(() => runtime.stockResponseCount > 0, "delayed typeahead data did not fulfill");
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
+  await waitForCondition(async () => {
+    return await input.getAttribute("aria-expanded") === "false"
+      && await page.locator('ul[role="listbox"]:visible').count() === 0;
+  }, "dismissed nonempty typeahead reopened after stale data resolved");
   assert.equal(await input.inputValue(), "AAPL", "dismissing typeahead must preserve the nonempty query");
   assert.equal(await input.getAttribute("aria-expanded"), "false", "dismissed nonempty typeahead must remain closed after stale data resolves");
   assert.equal(await page.locator('ul[role="listbox"]:visible').count(), 0, "dismissed nonempty typeahead must not reopen from stale data");
@@ -884,7 +969,28 @@ function makeCases(): BrowserCase[] {
   return cases;
 }
 
+/*
+ * These are the exact full-document destinations whose Next RSC prefetches
+ * this synthetic harness aborts. Keeping the paths finite means an aborted
+ * document, data request, or foreign request still remains a browser error.
+ */
 const INTENTIONAL_RSC_ABORT_PATHS = new Set([
+  "/",
+  "/screener",
+  "/stock/AAPL",
+  "/stock/NVDA",
+  "/stock/KORU",
+  "/market/events",
+  "/stock/SCHD",
+  "/stock/MSFT",
+  "/stock/SPY",
+  "/stock/BRKB",
+  "/etfs",
+  "/etfs/SPY",
+  "/etfs/FAILED",
+  "/etfs/NULL",
+  "/etfs/UNAVAIL",
+  "/etfs/DISJB",
   "/portfolio",
   "/portfolio/",
   "/etfs/QQQ",
@@ -897,11 +1003,28 @@ const INTENTIONAL_RSC_ABORT_PATHS = new Set([
   "/market-valuation/",
 ]);
 
-function isIntentionalRscAbort(requestUrl: URL, failure: string): boolean {
-  return requestUrl.origin === QA_ORIGIN
+function isHarnessRscRequest(request: Request, requestUrl: URL): boolean {
+  return request.method() === "GET"
+    && !request.isNavigationRequest()
+    && requestUrl.origin === QA_ORIGIN
     && requestUrl.searchParams.has("_rsc")
-    && INTENTIONAL_RSC_ABORT_PATHS.has(requestUrl.pathname)
+    && INTENTIONAL_RSC_ABORT_PATHS.has(requestUrl.pathname);
+}
+
+function isIntentionalRscAbort(request: Request, requestUrl: URL, failure: string): boolean {
+  return isHarnessRscRequest(request, requestUrl)
     && (failure === "net::ERR_ABORTED" || failure === "Load request cancelled");
+}
+
+function requestFailureDetail(request: Request, requestUrl: URL, failure: string): string {
+  const headers = request.headers();
+  const purpose = headers["purpose"] ?? headers["sec-purpose"] ?? "";
+  const classification = [
+    request.resourceType(),
+    request.isNavigationRequest() ? "navigation" : "subresource",
+    requestUrl.searchParams.has("_rsc") ? "rsc" : "non-rsc",
+  ].join("/");
+  return `${request.method()} ${requestUrl.pathname} [${classification}${purpose ? ` purpose=${purpose}` : ""}] ${failure}`;
 }
 
 async function runCondition(browser: Browser, condition: BrowserCondition, receipts: CaseReceipt[]): Promise<void> {
@@ -923,14 +1046,17 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
       page.on("requestfailed", (request) => {
         const url = new URL(request.url());
         const failure = request.failure()?.errorText ?? "unknown";
-        if (url.origin === QA_ORIGIN
-          && !router.expectedFailurePaths.has(url.pathname)
-          && !isIntentionalRscAbort(url, failure)) {
-          router.requestFailures.push(`${request.method()} ${url.pathname}`);
+        if (url.origin !== QA_ORIGIN) return;
+        if (router.isHarnessAborted(request) && isIntentionalRscAbort(request, url, failure)) {
+          router.expectedCancellations.push(requestFailureDetail(request, url, failure));
+          return;
         }
+        router.requestFailures.push(`requestfailed: ${requestFailureDetail(request, url, failure)}`);
       });
       page.on("console", (message) => {
         if (message.type() !== "error") return;
+        if (condition.name === "webkit"
+          && message.text() === 'Viewport argument key "interactive-widget" not recognized and ignored.') return;
         const location = message.location().url;
         let locationPath = "";
         try {
@@ -956,6 +1082,7 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
         duration_ms: Date.now() - started,
         blocked_foreign: [...new Set(router.blockedForeign)],
         unexpected_data_paths: [...new Set(router.unexpectedDataPaths)],
+        expected_cancellations: router.expectedCancellations,
         request_failures: router.requestFailures,
       });
     } catch (error) {
@@ -973,6 +1100,7 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
         error: error instanceof Error ? error.stack ?? error.message : String(error),
         blocked_foreign: [...new Set(router.blockedForeign)],
         unexpected_data_paths: [...new Set(router.unexpectedDataPaths)],
+        expected_cancellations: router.expectedCancellations,
         request_failures: router.requestFailures,
       });
     } finally {
