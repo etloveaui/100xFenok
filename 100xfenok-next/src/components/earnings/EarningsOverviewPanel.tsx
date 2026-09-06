@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 
 import {
   buildIncomeFlow,
@@ -326,10 +326,11 @@ function SankeyFlow({ flow, period }: { flow: IncomeFlow; period: EarningsPeriod
         </div>
         <FlowLegend />
       </div>
+      <p className={styles.flowScrollHint}>좌우로 움직여 전체 흐름을 확인하세요.</p>
       <div className={styles.flowViewport} tabIndex={0} role="region" aria-label="손익 흐름 가로 스크롤">
         <svg
           className={styles.flowSvg}
-          style={{ minWidth: width }}
+          style={{ "--earnings-flow-width": `${width}px` } as CSSProperties}
           viewBox={`0 0 ${width} ${height}`}
           role="img"
           aria-label={`${period.label} 실제 손익 흐름`}
@@ -366,6 +367,7 @@ function SankeyFlow({ flow, period }: { flow: IncomeFlow; period: EarningsPeriod
                   data-flow-bar-height={String(layout.height)}
                   className={styles.flowNode}
                 >
+                  <title>{`${nodeLabel(node)} · ${formatFlowValue(node.value)}`}</title>
                   <rect x={layout.x} y={layout.y} width={layout.width} height={layout.height} rx="7" fill={fill} opacity="0.96" />
                   <text x={layout.x + layout.width + 13} y={layout.slotY + layout.slotHeight / 2 - 2} textAnchor="start" className={styles.flowNodeLabel}>
                     {truncatedFlowLabel(node)}

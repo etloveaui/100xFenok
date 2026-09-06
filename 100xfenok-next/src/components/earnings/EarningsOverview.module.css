@@ -493,9 +493,26 @@
 .flowSvg {
   display: block;
   width: 100%;
-  min-width: 1180px;
+  min-width: 0;
   height: auto;
   padding-top: 12px;
+}
+
+.flowScrollHint {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .flowSvg {
+    min-width: var(--earnings-flow-width);
+  }
+
+  .flowScrollHint {
+    display: block;
+    margin: 12px 0 0;
+    color: var(--earnings-muted);
+    font-size: 11px;
+  }
 }
 
 .flowNode {

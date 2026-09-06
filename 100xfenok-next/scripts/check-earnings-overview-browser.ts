@@ -29,7 +29,13 @@ async function assertNoOverflow(page: Page) {
 async function verifyDocument(page: Page, ticker: string, compact: boolean) {
   const document = documents.get(ticker)!;
   const panel = page.locator(`[data-earnings-overview="${ticker}"]`);
-  await panel.waitFor({ state: "visible", timeout: 90_000 });
+  try {
+    await panel.waitFor({ state: "visible", timeout: 90_000 });
+  } catch (error) {
+    console.error("[earnings-browser] missing panel", { url: page.url(), ticker, compact, body: (await page.locator("body").innerText()).slice(0, 3000) });
+    await page.screenshot({ path: `${out}/failure-${ticker}-${compact ? "screener" : "stock"}.png`, fullPage: true });
+    throw error;
+  }
   assert.equal(await panel.count(), 1, "exactly one shared earnings panel per surface");
   assert.equal(await panel.getAttribute("data-earnings-compact"), String(compact));
   assert.equal(await panel.locator("[data-earnings-metric]").count(), 4);
@@ -64,10 +70,28 @@ async function verifyDocument(page: Page, ticker: string, compact: boolean) {
       assert.ok(bounds.content > bounds.width, "mobile income flow has reachable horizontal content");
       await scrollRegion.focus();
       await page.keyboard.press("End");
+    } else if (page.viewportSize()!.width >= 1200) {
+      assert.ok(bounds.content <= bounds.width + 2, "desktop income flow includes the final profit labels without horizontal clipping");
     }
     assert.equal(await scrollRegion.getAttribute("tabindex"), "0");
   }
   await assertNoOverflow(page);
+}
+
+async function capturePanel(page: Page, ticker: string, name: string) {
+  const viewport = page.viewportSize()!;
+  const panel = page.locator(`[data-earnings-overview="${ticker}"]`);
+  const box = await panel.boundingBox();
+  assert.ok(box);
+  try {
+    // Preserve the tested width while giving the complete panel room below
+    // the app's fixed navigation in the evidence capture.
+    await page.setViewportSize({ width: viewport.width, height: Math.ceil(box.height) + 220 });
+    await panel.evaluate(el => window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - 150, behavior: "instant" }));
+    await panel.screenshot({ path: `${out}/${name}.png` });
+  } finally {
+    await page.setViewportSize(viewport);
+  }
 }
 
 async function main() {
@@ -87,16 +111,17 @@ async function main() {
         for (const ticker of viewport.name === "desktop" && engine.name === "chromium" ? tickers : ["AAPL"]) {
           await page.goto(`${base}/stock/${ticker}?tab=financials`, { waitUntil: "domcontentloaded" });
           await verifyDocument(page, ticker, false);
-          await page.locator(`[data-earnings-overview="${ticker}"]`).screenshot({ path: `${out}/${engine.name}-${viewport.name}-${ticker}.png` });
+          await capturePanel(page, ticker, `${engine.name}-${viewport.name}-${ticker}`);
         }
         if (engine.name === "chromium" && viewport.name === "desktop") {
           await page.goto(`${base}/stock/NVDA?tab=financials`, { waitUntil: "domcontentloaded" });
           await page.getByRole("tab", { name: "재무", exact: true }).waitFor({ timeout: 90_000 });
           assert.equal(await page.locator("[data-earnings-overview], [data-testid=earnings-overview-state]").count(), 0, "unsupported tickers keep the existing financial view without an empty earnings feature");
         }
-        await page.goto(`${base}/screener?ticker=AAPL`, { waitUntil: "domcontentloaded" });
+        await page.goto(`${base}/screener?ticker=AAPL&mode=analyze`, { waitUntil: "domcontentloaded" });
+        await page.getByRole("button", { name: "AAPL 상세 펼치기", exact: true }).click({ timeout: 90_000 });
         await verifyDocument(page, "AAPL", true);
-        await page.locator('[data-earnings-overview="AAPL"]').screenshot({ path: `${out}/${engine.name}-${viewport.name}-screener.png` });
+        await capturePanel(page, "AAPL", `${engine.name}-${viewport.name}-screener`);
         assert.deepEqual(errors, [], "no uncaught browser exceptions");
         await context.close();
       }
@@ -153,7 +178,7 @@ async function main() {
         await lossPage.locator('[data-earnings-flow="bridge"]').waitFor({ timeout: 90_000 });
         assert.equal(await lossPage.locator('[data-earnings-flow-node="nonOperatingIncome"]').getAttribute("data-flow-value"), "1000000000");
         await assertNoOverflow(lossPage);
-        await lossPage.locator('[data-earnings-overview="META"]').screenshot({ path: `${out}/chromium-mobile-loss.png` });
+        await capturePanel(lossPage, "META", "chromium-mobile-loss");
         await lossContext.close();
       }
     } finally { await browser.close(); }
