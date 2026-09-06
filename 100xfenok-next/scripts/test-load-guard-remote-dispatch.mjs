@@ -295,7 +295,40 @@ assert.match(workflow, /static-build\) npm run build:static;;/);
 assert.match(workflow, /cloudflare-build\) npm run cf:build;;/);
 assert.match(workflow, /contracts\) npm run verify:contracts;;/);
 assert.match(workflow, /sec13f-contract\) npm run qa:sec13f-contract;;/);
-assert.doesNotMatch(workflow, /secrets\.|actions\/upload-artifact|cache:|npm run cf:deploy|wrangler deploy|run:\s*\$\{\{ inputs\./);
+assert.doesNotMatch(workflow, /secrets\.|cache:|npm run cf:deploy|wrangler deploy|run:\s*\$\{\{ inputs\./);
+// Only the two bounded, read-only evidence exports are admitted. A changed
+// path, condition, retention policy, or extra upload still fails this contract.
+const expectedUploads = [
+  [
+    "      - name: Upload synthetic WIND DOWN UI evidence",
+    "        if: ${{ always() && inputs.suite == 'npm-script' && inputs.script == 'qa:winddown-preservation-isolated' }}",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          name: winddown-preservation-ui",
+    "          path: 100xfenok-next/test-results/winddown-preservation/*-records.png",
+    "          if-no-files-found: ignore",
+    "          retention-days: 7",
+  ].join("\n"),
+  [
+    "      - name: Upload verified Scouter data projections",
+    "        if: ${{ success() && inputs.suite == 'npm-script' && inputs.script == 'build:verification-pins' }}",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          name: verified-scouter-projections",
+    "          path: |",
+    "            data/admin/lane-registry-projection.json",
+    "            100xfenok-next/public/data/admin/lane-registry-projection.json",
+    "            scripts/fixtures/cloud-data-plane/global-scouter-migration-demand.json",
+    "          if-no-files-found: error",
+    "          retention-days: 7",
+  ].join("\n"),
+];
+let nonExportWorkflow = workflow;
+for (const block of expectedUploads) {
+  assert.ok(nonExportWorkflow.includes(block), "evidence export must match its bounded contract");
+  nonExportWorkflow = nonExportWorkflow.replace(block, "");
+}
+assert.doesNotMatch(nonExportWorkflow, /actions\/upload-artifact/);
 
 const deployWorkflow = fs.readFileSync(DEPLOY_WORKFLOW, "utf8");
 assert.match(deployWorkflow, /name: Build \(OpenNext Cloudflare\)[\s\S]*?run: npm run cf:build[\s\S]*?FENOK_REMOTE_HEAVY_NESTED_EXECUTION: "1"/, "Deploy Worker hosted build must opt into nested execution");
