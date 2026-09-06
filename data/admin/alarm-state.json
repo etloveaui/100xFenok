@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-06T17:08:57.685Z",
+  "generated_at": "2026-09-06T17:36:21.117Z",
   "status": "open",
-  "open_incident_count": 11,
+  "open_incident_count": 10,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -52,22 +52,6 @@
         "plane_freshness_unavailable"
       ],
       "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
-    {
-      "workflow": "fetch-fenok-apewisdom.yml",
-      "label": "Fetch Fenok ApeWisdom Attention Proxy",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "lane_outcome_overdue"
-      ],
-      "lane_outcome_lanes": [
-        "apewisdom_attention"
-      ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
     },
@@ -131,6 +115,7 @@
         "unrecovered_overdue"
       ],
       "lane_outcome_lanes": [
+        "stockanalysis_etf_detail",
         "stockanalysis_etf_universe"
       ],
       "lost_schedule_slot_count": 0,
@@ -193,7 +178,8 @@
     "sentiment": "2026-09-05",
     "us_indices_daily": "2026-09-05",
     "nasdaq_giw_sox": "2026-09-05",
-    "stockanalysis_etf_universe": "2026-09-06"
+    "stockanalysis_etf_universe": "2026-09-06",
+    "stockanalysis_etf_detail": "2026-09-06"
   },
   "watched_workflows": [
     {
@@ -598,15 +584,14 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "34047582349",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34047582349",
-    "observed_at": "2026-09-06T17:08:57.685Z",
-    "event": "schedule",
+    "run_id": "34049007265",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34049007265",
+    "observed_at": "2026-09-06T17:36:21.117Z",
+    "event": "workflow_run",
     "workflows": [
       "fenok-edge-krx-daily.yml",
       "fetch-edgar-filings.yml",
       "fetch-fdic.yml",
-      "fetch-fenok-apewisdom.yml",
       "fetch-fenok-news-tone.yml",
       "fetch-finra-ats-weekly.yml",
       "fetch-oecd-cli.yml",
