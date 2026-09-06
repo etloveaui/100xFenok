@@ -4,6 +4,7 @@ bash scripts/load-guard.sh --assert-nested
 export NEXT_TELEMETRY_DISABLED=1
 export QA_BASE_URL=http://127.0.0.1:3107
 npm run qa:earnings-overview
+npm run qa:registry-contracts
 npm run build:version
 npm run sync-static
 npx playwright install --with-deps chromium webkit

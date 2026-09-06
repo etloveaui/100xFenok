@@ -713,7 +713,7 @@ export const FAMILIES = {
     // intentionally remains the newest period end in each document; cadence
     // detection must not mistake that honest quarter-end age for a failed
     // daily refresh attempt.
-    plan: { class_a: 20, class_b: 20, bytes: 400_000 },
+    plan: { class_a: 20, class_b: 40, bytes: 400_000 },
     policy: { max_assets: 4, max_total_bytes: 200_000 },
     validate_public_payload: validateEarningsOverviewPublicPayload,
   },
