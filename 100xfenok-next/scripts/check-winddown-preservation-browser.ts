@@ -1814,6 +1814,7 @@ async function runStoryContext(
     await assertReducedMotionStorySettled(page);
     assert.equal(await page.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "story navigation must not request microphone access");
     await assertStoryPanelLayout(page, viewport);
+    assert.equal(await page.locator('[aria-label^="현재 레벨 진행"] > i').evaluate((node) => getComputedStyle(node).display === "block" && node.getBoundingClientRect().height > 0), true, "progress fill must have visible block geometry");
     if (progress.xp >= 1698 && [390, 768, 820].includes(viewport.width)) {
       await closeStoryJourneyForCapture(page);
       await waitForStoryImage(page);
@@ -1843,6 +1844,7 @@ async function runStoryContext(
     if (progress.xp >= 1698) {
       const coachella = await firstStoryLocator(page, "coachella");
       await coachella.click();
+      assert.equal(await page.evaluate(() => document.activeElement?.id), "winddown-story-stage-heading", "closing the journey must move focus to the selected stage");
       await page.getByText(/Coachella|코첼라/).first().waitFor({ state: "visible", timeout: 20_000 });
       if (viewport.width === 820 || viewport.width === 768) {
         await closeStoryJourneyForCapture(page);
@@ -1917,6 +1919,12 @@ async function runStoryContext(
       const futureStart = page.getByRole("button", { name: "미리보기 무대", exact: true });
       await futureStart.waitFor({ state: "visible", timeout: 20_000 });
       assert.equal(await futureStart.isDisabled(), true, "future story roleplay must keep preview start disabled");
+      await page.getByRole("button", { name: "다른 상황 고르기", exact: true }).click();
+      await page.locator("#winddown-scenario-picker button").filter({ hasText: getWindDownVoiceScenario("cafe-order")!.title }).click();
+      assert.equal(await page.getByRole("button", { name: "장면 시작하기", exact: true }).isDisabled(), false, "choosing generic practice must remain usable from a future preview");
+      await page.getByRole("button", { name: "다른 상황 고르기", exact: true }).click();
+      await page.locator("#winddown-scenario-picker button").filter({ hasText: getWindDownVoiceScenario("acceptance-speech")!.title }).click();
+      assert.equal(await futureStart.isDisabled(), true, "returning to the future story scenario must restore its preview gate");
       assert.equal(diagnostics.voiceSessionPostCount, 0, "future story roleplay must not open a voice session");
       assert.equal(await page.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "future story roleplay must not request microphone access");
       await page.goto(new URL("/winddown/game?story=practice-first-note", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });

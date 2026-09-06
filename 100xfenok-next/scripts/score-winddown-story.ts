@@ -4,7 +4,7 @@ import { getWindDownVoiceScenario, evaluateWindDownRoleplay } from '../src/featu
 import { WIND_DOWN_CHAPTERS } from '../src/features/winddown/game/model/tour';
 
 async function main() {
-const scenarioIds = ['artist-audition', 'team-rehearsal', 'fan-meeting', 'artist-interview', 'creative-repair', 'acceptance-speech'];
+const scenarioIds = ['artist-audition', 'team-rehearsal', 'fan-meeting', 'artist-interview', 'creative-repair', 'acceptance-speech', 'tour-arrival', 'festival-audience', 'career-reflection'];
 for (const id of scenarioIds) {
   const scenario = getWindDownVoiceScenario(id);
   assert.ok(scenario, `Artist situation ${id} must resolve to a real server-owned voice scenario`);
@@ -47,7 +47,7 @@ const game = readFileSync('src/features/winddown/game/ui/WindDownGameClient.tsx'
 assert.equal(game.includes('requestAnimationFrame'), false, 'Static story scenes must not retain continuous canvas redraw');
 assert.equal(game.includes('paintScene'), false, 'The approved illustrated stage replaces the primitive painter');
 assert.ok(game.includes('WindDownStoryScene'), 'Game consumes the responsive illustrated scene');
-console.log(`WIND DOWN story PASS: ${episodes.length} episodes, 24 legacy anchors, 6 authored situation families`);
+console.log(`WIND DOWN story PASS: ${episodes.length} episodes, 24 legacy anchors, ${scenarioIds.length} authored situations across six families`);
 
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });
