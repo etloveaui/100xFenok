@@ -1004,16 +1004,22 @@ const INTENTIONAL_RSC_ABORT_PATHS = new Set([
 ]);
 
 function isHarnessRscRequest(request: Request, requestUrl: URL): boolean {
+  const headers = request.headers();
+  const prefetch = headers["next-router-prefetch"];
+  const isPrefetch = prefetch === "1" || prefetch === "2"
+    || typeof headers["next-router-segment-prefetch"] === "string";
   return request.method() === "GET"
     && !request.isNavigationRequest()
+    && isPrefetch
     && requestUrl.origin === QA_ORIGIN
     && requestUrl.searchParams.has("_rsc")
     && INTENTIONAL_RSC_ABORT_PATHS.has(requestUrl.pathname);
 }
 
-function isIntentionalRscAbort(request: Request, requestUrl: URL, failure: string): boolean {
+function isIntentionalRscAbort(request: Request, requestUrl: URL, failure: string, engine: BrowserCondition["name"]): boolean {
   return isHarnessRscRequest(request, requestUrl)
-    && (failure === "net::ERR_ABORTED" || failure === "Load request cancelled");
+    && (failure === "net::ERR_ABORTED" || failure === "Load request cancelled"
+      || (engine === "webkit" && failure === "Blocked by Web Inspector"));
 }
 
 function requestFailureDetail(request: Request, requestUrl: URL, failure: string): string {
@@ -1047,7 +1053,7 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
         const url = new URL(request.url());
         const failure = request.failure()?.errorText ?? "unknown";
         if (url.origin !== QA_ORIGIN) return;
-        if (router.isHarnessAborted(request) && isIntentionalRscAbort(request, url, failure)) {
+        if (router.isHarnessAborted(request) && isIntentionalRscAbort(request, url, failure, condition.name)) {
           router.expectedCancellations.push(requestFailureDetail(request, url, failure));
           return;
         }

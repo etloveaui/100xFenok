@@ -1424,12 +1424,16 @@ function PortfolioImportSection({
   title?: string;
   description?: string;
 }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
+
   return (
     <div data-portfolio-import-section className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
       <h2 className="text-sm font-black tracking-tight text-slate-900">{title}</h2>
       <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">{description}</p>
       <textarea
         value={importText}
+        disabled={!ready}
         onChange={(e) => {
           setImportText(e.target.value);
           setImportError(null);
@@ -1448,7 +1452,7 @@ function PortfolioImportSection({
       <button
         type="button"
         onClick={onImport}
-        disabled={!importText.trim()}
+        disabled={!ready || !importText.trim()}
         data-portfolio-import-json-action
         className="mt-2 inline-flex min-h-11 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/10 disabled:opacity-40 sm:min-h-8"
       >
