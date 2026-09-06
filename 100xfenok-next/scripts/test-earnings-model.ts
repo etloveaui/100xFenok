@@ -35,6 +35,7 @@ async function main() {
   const loss = structuredClone(period); loss.segments=[]; loss.segmentBasis=null;
   loss.income.operatingExpenses=80; loss.income.operatingIncome=-20; loss.income.pretaxIncome=-15; loss.income.incomeTax=0; loss.income.netIncome=-15;
   assert.equal(buildIncomeFlow(loss).kind,"bridge", "losses require signed presentation instead of negative Sankey widths");
+  assert.equal(buildIncomeFlow(loss).nodes.find((n: {id: string}) => n.id === "nonOperatingIncome")?.value, 5, "signed bridge preserves non-operating income");
   const taxCredit=structuredClone(period); taxCredit.income.incomeTax=-5;taxCredit.income.netIncome=50;
   assert.equal(buildIncomeFlow(taxCredit).kind,"bridge", "tax credit remains explicitly signed");
   const otherExpense=structuredClone(period);otherExpense.income.pretaxIncome=35;otherExpense.income.netIncome=25;
