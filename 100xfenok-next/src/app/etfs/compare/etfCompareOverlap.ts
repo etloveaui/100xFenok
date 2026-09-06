@@ -39,6 +39,8 @@ export interface HoldingEntry {
   weight: number;
 }
 
+export type PairAvailability = "ready" | "unavailable";
+
 export interface PairOverlap {
   left: EtfCompareRow;
   right: EtfCompareRow;
@@ -50,7 +52,8 @@ export interface PairOverlap {
     rightWeight: number;
     minWeight: number;
   }>;
-  overlapWeight: number;
+  overlapWeight: number | null;
+  availability: PairAvailability;
 }
 
 export const MAX_COMPARE_TICKERS = 4;
@@ -90,7 +93,7 @@ export function holdingEntries(row: EtfCompareRow): HoldingEntry[] {
   return holdings.slice(0, 25).flatMap((holding) => {
     const key = holdingKey(holding);
     const weight = isFiniteNumber(holding.weight_pct) ? holding.weight_pct : null;
-    if (!key || weight === null) return [];
+    if (!key || weight === null || weight < 0) return [];
     const symbol = typeof holding.symbol === "string" && holding.symbol.trim() ? cleanSymbol(holding.symbol) : "—";
     return [{
       key,
@@ -102,8 +105,20 @@ export function holdingEntries(row: EtfCompareRow): HoldingEntry[] {
 }
 
 export function overlapFor(left: EtfCompareRow, right: EtfCompareRow): PairOverlap {
-  const leftMap = new Map(holdingEntries(left).map((entry) => [entry.key, entry]));
+  const leftEntries = holdingEntries(left);
   const rightEntries = holdingEntries(right);
+  const unavailable = left.failed || right.failed || leftEntries.length === 0 || rightEntries.length === 0;
+  if (unavailable) {
+    return {
+      left,
+      right,
+      common: [],
+      overlapWeight: null,
+      availability: "unavailable",
+    };
+  }
+
+  const leftMap = new Map(leftEntries.map((entry) => [entry.key, entry]));
   const common = rightEntries
     .flatMap((rightEntry) => {
       const leftEntry = leftMap.get(rightEntry.key);
@@ -125,6 +140,7 @@ export function overlapFor(left: EtfCompareRow, right: EtfCompareRow): PairOverl
     right,
     common,
     overlapWeight: common.reduce((sum, item) => sum + item.minWeight, 0),
+    availability: "ready",
   };
 }
 
@@ -158,6 +174,7 @@ export function buildCompareCsv(rows: EtfCompareRow[], overlaps: PairOverlap[] =
     "overlap_weight_pct",
     "holdings_as_of",
     "detail_status",
+    "availability",
   ];
   const summaryRows = rows.map((row) => [
     "summary",
@@ -171,20 +188,56 @@ export function buildCompareCsv(rows: EtfCompareRow[], overlaps: PairOverlap[] =
     "",
     row.data?.normalized?.holdings_updated ?? "",
     row.data?.detail_status ?? "",
+    "",
   ]);
-  const overlapRows = overlaps.flatMap((pair) => pair.common.map((item) => [
-    "overlap",
-    "",
-    pair.left.ticker,
-    pair.right.ticker,
-    item.symbol,
-    item.name,
-    item.leftWeight,
-    item.rightWeight,
-    item.minWeight,
-    "",
-    "",
-  ]));
+  const overlapRows = overlaps.flatMap((pair) => {
+    if (pair.availability === "unavailable") {
+      return [[
+        "overlap",
+        "",
+        pair.left.ticker,
+        pair.right.ticker,
+        "",
+        "",
+        "",
+        "",
+        null,
+        "",
+        "",
+        pair.availability,
+      ]];
+    }
+    if (pair.common.length === 0) {
+      return [[
+        "overlap",
+        "",
+        pair.left.ticker,
+        pair.right.ticker,
+        "",
+        "",
+        "",
+        "",
+        0,
+        "",
+        "",
+        pair.availability,
+      ]];
+    }
+    return pair.common.map((item) => [
+      "overlap",
+      "",
+      pair.left.ticker,
+      pair.right.ticker,
+      item.symbol,
+      item.name,
+      item.leftWeight,
+      item.rightWeight,
+      item.minWeight,
+      "",
+      "",
+      pair.availability,
+    ]);
+  });
   return [header, ...summaryRows, ...overlapRows]
     .map((row) => row.map(csvCell).join(","))
     .join("\n");

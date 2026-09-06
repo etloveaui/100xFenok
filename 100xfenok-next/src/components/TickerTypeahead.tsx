@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import TickerChip from "@/components/TickerChip";
 import { ROUTES } from "@/lib/routes";
@@ -146,11 +146,24 @@ export default function TickerTypeahead({
   const optionRefs = useRef<Array<HTMLLIElement | null>>([]);
   const debounceRef = useRef<number>(0);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const searchGenerationRef = useRef(0);
+  const composingRef = useRef(false);
 
-  const doSearch = (q: string) => {
-    if (!q.trim()) { setSuggestions([]); setOpen(false); return; }
+  const invalidateSearch = useCallback(() => {
+    searchGenerationRef.current += 1;
+    window.clearTimeout(debounceRef.current);
+    debounceRef.current = 0;
+    setSuggestions([]);
+    setActiveIdx(-1);
+    setLoading(false);
+  }, []);
+
+  const doSearch = (q: string, generation: number) => {
+    if (searchGenerationRef.current !== generation) return;
+    if (!q.trim()) { invalidateSearch(); setOpen(false); return; }
     setLoading(true);
     Promise.all([loadStocks(), loadGurus()]).then(([stocks, gurus]) => {
+      if (searchGenerationRef.current !== generation) return;
       const sMatches = matchStocks(q, stocks);
       const gMatches = matchGurus(q, gurus);
       const items: Suggestion[] = sMatches.map((s) => ({ type: "stock" as const, key: `s:${s.symbol}`, stock: s }));
@@ -168,11 +181,17 @@ export default function TickerTypeahead({
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
     setValue(v);
+    const generation = ++searchGenerationRef.current;
     clearTimeout(debounceRef.current);
-    debounceRef.current = window.setTimeout(() => doSearch(v), 120);
+    setSuggestions([]);
+    setActiveIdx(-1);
+    setLoading(false);
+    setOpen(false);
+    debounceRef.current = window.setTimeout(() => doSearch(v, generation), 120);
   };
 
   const selectItem = (s: Suggestion) => {
+    invalidateSearch();
     if (s.type === "stock" && s.stock) {
       const ticker = normalizeForRouteTicker(s.stock.symbol);
       if (onStockSelect) onStockSelect(ticker);
@@ -185,6 +204,12 @@ export default function TickerTypeahead({
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
+    if (composingRef.current || e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229 || e.key === "Process") return;
+    if (e.key === "Escape") {
+      invalidateSearch();
+      setOpen(false);
+      return;
+    }
     if (!open) return;
     const selectable = suggestions.filter((s) => s.type !== "divider");
     if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx((i) => Math.min(i + 1, selectable.length - 1)); return; }
@@ -195,10 +220,10 @@ export default function TickerTypeahead({
       if (sel) selectItem(sel);
       return;
     }
-    if (e.key === "Escape") { setOpen(false); return; }
   };
 
   const handleSubmit = () => {
+    invalidateSearch();
     if (activeIdx >= 0) {
       const selectable = suggestions.filter((s) => s.type !== "divider");
       const sel = selectable[activeIdx];
@@ -217,10 +242,18 @@ export default function TickerTypeahead({
   // Click outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        invalidateSearch();
+        setOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, [invalidateSearch]);
+
+  useEffect(() => () => {
+    searchGenerationRef.current += 1;
+    window.clearTimeout(debounceRef.current);
   }, []);
 
   const selectableItems = suggestions.filter((s) => s.type !== "divider");
@@ -239,6 +272,7 @@ export default function TickerTypeahead({
 
   const doSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
+    if (composingRef.current || (e.nativeEvent as KeyboardEvent).isComposing) return;
     handleSubmit();
   };
 
@@ -258,6 +292,8 @@ export default function TickerTypeahead({
           value={value}
           onChange={onChange}
           onKeyDown={onKeyDown}
+          onCompositionStart={() => { composingRef.current = true; }}
+          onCompositionEnd={() => { composingRef.current = false; }}
           onFocus={() => { if (suggestions.length > 0) setOpen(true); }}
           placeholder={placeholder}
           className={className}

@@ -255,6 +255,10 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
   /* Global open shortcuts + g s / g h sequences (palette closed). */
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.isComposing || e.key === "Process" || e.keyCode === 229) {
+        gArmedAt.current = 0;
+        return;
+      }
       const target = e.target as HTMLElement | null;
       const isEditable =
         e.target instanceof HTMLInputElement ||
@@ -290,21 +294,20 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
     if (!open) return;
     document.documentElement.dataset.cpOpen = "1";
     const onJK = (e: KeyboardEvent) => {
+      if (e.isComposing || e.key === "Process" || e.keyCode === 229) return;
       const target = e.target as HTMLElement | null;
+      const isQueryInput = e.target instanceof HTMLInputElement;
       const isEditable =
-        e.target instanceof HTMLInputElement ||
+        isQueryInput ||
         e.target instanceof HTMLTextAreaElement ||
         e.target instanceof HTMLSelectElement ||
         (target?.isContentEditable ?? false);
-      if (isEditable) {
-        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-          // allow arrow navigation while typing — fall through
-        } else if (e.key.length === 1 || e.key === "Escape") {
-          if (e.key === "Escape") { e.preventDefault(); setOpen(false); }
-          return;
-        }
-      }
       if (e.key === "Escape") { e.preventDefault(); setOpen(false); return; }
+      if (isEditable) {
+        if (!isQueryInput || !["ArrowDown", "ArrowUp", "Enter"].includes(e.key)) return;
+      }
+      const nativeInteractive = !isQueryInput && target?.closest?.("button, a, input, textarea, select, summary, [contenteditable='true'], [role='button'], [role='option']");
+      if (nativeInteractive) return;
       if (e.key === "j" || e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, flat.length - 1)); return; }
       if (e.key === "k" || e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); return; }
       if (!isEditable && (e.key === "w" || e.key === "c")) {

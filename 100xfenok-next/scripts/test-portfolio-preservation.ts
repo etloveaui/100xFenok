@@ -296,7 +296,7 @@ test("parsePortfolioImport: malformed one-of-many rejects complete document with
 
   assert.throws(
     () => parse(corruptHoldingJson, () => "id-x"),
-    /invalid|unsupported|shares|number|negative/i,
+    /invalid|unsupported|shares|number|negative|보유|주식|올바르지|지원하지|숫자/i,
     "Must reject entire document on invalid holding; no silent drop of bad rows",
   );
 
@@ -323,7 +323,7 @@ test("parsePortfolioImport: malformed one-of-many rejects complete document with
 
   assert.throws(
     () => parse(corruptPortfolioJson, () => "id-y"),
-    /invalid|unsupported|currency/i,
+    /invalid|unsupported|currency|통화|올바르지|지원하지/i,
     "Must reject entire multi-portfolio document if one portfolio is invalid",
   );
 });
@@ -335,14 +335,14 @@ test("parsePortfolioImport: currency and numeric validation rejects non-finite o
   // Negative cash
   assert.throws(
     () => parse(JSON.stringify({ name: "P", currency: "USD", cash: -500, holdings: [] })),
-    /cash|nonnegative|invalid/i,
+    /cash|nonnegative|invalid|현금|올바르지|숫자/i,
     "Negative cash must be rejected",
   );
 
   // Non-finite cash (string with NaN or Infinity)
   assert.throws(
     () => parse('{"name":"P","currency":"USD","cash":"NaN","holdings":[]}'),
-    /cash|number|invalid/i,
+    /cash|number|invalid|현금|올바르지|숫자/i,
     "NaN cash must be rejected",
   );
 
@@ -367,21 +367,112 @@ test("parsePortfolioImport: currency and numeric validation rejects non-finite o
         holdings: [{ ticker: "AAPL", shares: 1, avg_cost: -10 }],
       }),
     ),
-    /cost|nonnegative|invalid/i,
+    /cost|nonnegative|invalid|매입가|올바르지|숫자/i,
     "Negative avg_cost must be rejected",
   );
 
   // Invalid JSON syntax
   assert.throws(
     () => parse("not-valid-json"),
-    /json|syntax|parse/i,
+    /json|syntax|parse|형식|오류/i,
     "Malformed JSON syntax must be rejected",
   );
 
   // Unsupported root shape
   assert.throws(
     () => parse(JSON.stringify(["not", "an", "object"])),
-    /unsupported|shape|invalid/i,
+    /unsupported|shape|invalid|지원하지|루트|형식/i,
     "Unsupported root array must be rejected",
+  );
+});
+test("parsePortfolioImport: preserves exact lowercase, punctuation, and portfolio name without transformation", () => {
+  assert.strictEqual(typeof portfolioLib.parsePortfolioImport, "function", "parsePortfolioImport must be exported");
+  const parse = portfolioLib.parsePortfolioImport!;
+
+  const inputJson = JSON.stringify({
+    id: "p-case-test",
+    name: " My Custom Portfolio @2026 (Lowercase & Punctuation) ",
+    currency: "USD",
+    cash: 500,
+    holdings: [
+      { ticker: " $brk/b ", shares: 3, avg_cost: 450.5 },
+      { ticker: "aapl.us", shares: 10, avg_cost: 175.2 },
+      { ticker: "BF.B", shares: 4, avg_cost: 50 },
+    ],
+  });
+
+  const parsed = parse(inputJson, () => "p-id-case");
+  assert.strictEqual(parsed.length, 1);
+  assert.strictEqual(parsed[0].name, " My Custom Portfolio @2026 (Lowercase & Punctuation) ");
+  assert.strictEqual(parsed[0].holdings[0].ticker, " $brk/b ", "Accepted ticker bytes must be preserved exactly");
+  assert.strictEqual(parsed[0].holdings[1].ticker, "aapl.us", "Dot and lowercase in aapl.us must be preserved exactly");
+  assert.strictEqual(parsed[0].holdings[2].ticker, "BF.B", "Punctuation in BF.B must be preserved exactly");
+});
+
+test("parsePortfolioImport: rejects malformed v1 objects and unsupported versions atomically", () => {
+  assert.strictEqual(typeof portfolioLib.parsePortfolioImport, "function", "parsePortfolioImport must be exported");
+  const parse = portfolioLib.parsePortfolioImport!;
+
+  // Unsupported version (version 2)
+  assert.throws(
+    () => parse(JSON.stringify({ version: 2, portfolios: [] }), () => "id-v2"),
+    /version|버전|지원하지/i,
+    "Unsupported version must be rejected",
+  );
+
+  // Modern v1 portfolio missing required name
+  assert.throws(
+    () => parse(JSON.stringify({ version: 2, portfolios: { Legacy: { cash: 0, holdings: [] } } }), () => "id-v2-map"),
+    /버전|지원하지/,
+    "Unsupported versions cannot bypass validation through a legacy-shaped map",
+  );
+
+  assert.throws(
+    () => parse('{"name":"Overflow","currency":"USD","cash":1e999,"holdings":[]}', () => "id-infinite"),
+    /현금|숫자/,
+    "JSON numeric overflow must reject rather than become a null stored amount",
+  );
+
+  assert.throws(
+    () => parse(
+      JSON.stringify({
+        version: 1,
+        portfolios: [
+          { currency: "USD", cash: 100, holdings: [] },
+        ],
+      }),
+      () => "id-noname",
+    ),
+    /name|이름|올바르지/i,
+    "Modern v1 portfolio missing name must be rejected atomically",
+  );
+
+  // Modern v1 portfolio missing cash
+  assert.throws(
+    () => parse(
+      JSON.stringify({
+        version: 1,
+        portfolios: [
+          { name: "No Cash", currency: "USD", holdings: [] },
+        ],
+      }),
+      () => "id-nocash",
+    ),
+    /cash|현금|올바르지/i,
+    "Modern v1 portfolio missing cash must be rejected atomically",
+  );
+
+  // Modern single portfolio missing currency
+  assert.throws(
+    () => parse(
+      JSON.stringify({
+        name: "No Currency",
+        cash: 500,
+        holdings: [],
+      }),
+      () => "id-nocurr",
+    ),
+    /currency|통화|올바르지|USD/i,
+    "Modern single portfolio missing currency must be rejected atomically",
   );
 });

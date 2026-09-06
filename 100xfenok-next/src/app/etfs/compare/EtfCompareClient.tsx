@@ -122,8 +122,13 @@ function CompareSummaryCard({ row }: { row: EtfCompareClientRow }) {
 
 function OverlapCard({ pair }: { pair: PairOverlap }) {
   const topCommon = pair.common.slice(0, 8);
+  const unavailable = pair.availability === "unavailable";
   return (
-    <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3" data-etf-compare-overlap-card="true">
+    <div
+      className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/80 px-3 py-3"
+      data-etf-compare-overlap-card="true"
+      data-etf-compare-overlap-availability={pair.availability}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-sm font-black text-[var(--c-ink)]">
@@ -134,12 +139,25 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
           <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">상위 25개 보유 항목 기준</p>
         </div>
         <div className="text-right">
-          <p className="tabular-nums text-lg font-black text-[var(--c-ink)]">{fmtPercent(pair.overlapWeight)}</p>
-          <p className="text-[10px] font-bold text-[var(--c-ink-3)]">최소 비중 합계</p>
+          {unavailable ? (
+            <>
+              <p className="text-sm font-black text-amber-800">확인 불가</p>
+              <p className="text-[10px] font-bold text-[var(--c-ink-3)]">보유 데이터 부족</p>
+            </>
+          ) : (
+            <>
+              <p className="tabular-nums text-lg font-black text-[var(--c-ink)]">{fmtPercent(pair.overlapWeight)}</p>
+              <p className="text-[10px] font-bold text-[var(--c-ink-3)]">최소 비중 합계</p>
+            </>
+          )}
         </div>
       </div>
       <div className="mt-3 overflow-x-auto" role="region" aria-label={`${pair.left.ticker} ${pair.right.ticker} 공통 보유 항목`} tabIndex={0}>
-        {topCommon.length ? (
+        {unavailable ? (
+          <p className="rounded-lg bg-amber-50 px-3 py-3 text-xs font-semibold text-amber-900">
+            두 ETF의 유효한 상위 25개 보유 항목을 확인할 수 없어 겹침을 계산하지 않았습니다.
+          </p>
+        ) : topCommon.length ? (
           <table className="w-full min-w-[440px] text-xs">
             <thead>
               <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
@@ -185,7 +203,7 @@ function downloadCompareCsv(rows: EtfCompareRow[], overlaps: PairOverlap[]) {
 
 export default function EtfCompareClient({ initialTickers }: { initialTickers: string }) {
   const initial = parseTickers(initialTickers);
-  const [tickers, setTickers] = useState(initial.length >= 2 ? initial : ["SPY", "VOO"]);
+  const [tickers, setTickers] = useState(initial.length > 0 ? initial : ["SPY", "VOO"]);
   const [input, setInput] = useState(tickers.join(", "));
   const tickersKey = tickers.join(",");
   const [loadState, setLoadState] = useState<{
@@ -219,7 +237,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = parseTickers(input);
-    if (next.length < 2) return;
+    if (next.length === 0) return;
     setTickers(next);
     setInput(next.join(", "));
     window.history.replaceState(null, "", ROUTES.etfCompareTickers(next));
@@ -279,6 +297,13 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
                 <CompareSummaryCard key={row.ticker} row={row} />
               ))}
             </div>
+
+            {tickers.length === 1 ? (
+              <div className="rounded-xl border border-brand-200 bg-brand-50 px-3 py-3" data-etf-compare-single-selection="true" role="status">
+                <p className="text-sm font-black text-[var(--c-ink)]">비교할 ETF를 하나 더 추가하세요.</p>
+                <p className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">위 입력란에 티커를 하나 더 입력한 뒤 비교를 누르면 겹침을 확인할 수 있습니다.</p>
+              </div>
+            ) : null}
 
             <div className="grid gap-3 xl:grid-cols-2">
               {overlaps.map((pair) => (

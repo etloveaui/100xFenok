@@ -103,14 +103,24 @@ test("CSV marks unavailable pairs without exporting numeric zero", () => {
     row("MISSING", [], { data: null }),
     validComparator,
   ));
-  const csv = buildCompareCsv([unavailable.left, unavailable.right], [unavailable]);
+  const readyZero = expectedPair(overlapFor(
+    row("LEFT", [{ symbol: "AAPL", name: "Apple Inc", weight_pct: 6.8 }]),
+    validComparator,
+  ));
+  const csv = buildCompareCsv(
+    [unavailable.left, unavailable.right, readyZero.left, readyZero.right],
+    [unavailable, readyZero],
+  );
   const lines = csv.split("\n");
   const header = lines[0]?.split(",") ?? [];
   const overlapWeightIndex = header.indexOf("overlap_weight_pct");
   const unavailableLine = lines.find((line) => /(?:^|,)unavailable(?:,|$)/.test(line));
+  const readyZeroLine = lines.find((line) => /(?:^|,)ready(?:,|$)/.test(line));
 
   assert.ok(unavailableLine, "CSV must preserve the unavailable state for the pair");
   assert.notEqual(overlapWeightIndex, -1, "CSV must retain the overlap weight column");
   assert.equal(unavailableLine?.split(",")[overlapWeightIndex], "");
   assert.doesNotMatch(unavailableLine ?? "", /(?:^|,)0(?:,|$)/);
+  assert.ok(readyZeroLine, "CSV must retain a ready zero-overlap pair summary");
+  assert.equal(readyZeroLine?.split(",")[overlapWeightIndex], "0");
 });

@@ -2200,11 +2200,11 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 <button
                   type="button"
                   onClick={() => {
-                    if (!ready) return;
-                    downloadCsv(chartSeries, selected, rangeId);
+                    if (!ready || visibleChartSeries.length === 0) return;
+                    downloadCsv(visibleChartSeries, selected, rangeId);
                     setExportNotice(`${rangeLabel(rangeId)} 변환 CSV 저장됨`);
                   }}
-                  disabled={!ready || chartSeries.length === 0}
+                  disabled={!ready || visibleChartSeries.length === 0}
                 >CSV</button>
               </div>
             </div>
@@ -2506,9 +2506,11 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   <button
                     type="button"
                     onClick={() => {
+                      if (!ready || visibleChartSeries.length === 0) return;
                       downloadCsv(visibleChartSeries, selected, rangeId);
                       setExportNotice(`${rangeLabel(rangeId)} 변환 CSV 저장됨`);
                     }}
+                    disabled={!ready || visibleChartSeries.length === 0}
                   >
                     CSV로 내보내기
                   </button>
