@@ -13,11 +13,12 @@ export QA_BASE_URL="http://127.0.0.1:3107"
 export QA_SCREENSHOT_DIR="test-results/winddown-preservation"
 
 bash scripts/load-guard.sh --assert-nested
+npm run build:version
+npm run sync-static
 npm run test:winddown-preservation-gate
 npx playwright install --with-deps chromium webkit
 
 bash scripts/load-guard.sh --assert-nested
-npm run build:version
 NEXT_BUILD_TARGET=cloudflare npm run cf:build:next
 
 server_pid=""
