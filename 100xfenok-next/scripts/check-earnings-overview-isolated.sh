@@ -6,7 +6,10 @@ export QA_BASE_URL=http://127.0.0.1:3107
 npm run qa:earnings-overview
 npm run qa:registry-contracts
 npm run build:version
-npm run sync-static
+# Stock/screener QA consumes the committed canonical data through the normal
+# public mirror. Full estate derivation and legacy-site copying belong to the
+# production build; repeating them dominates a focused interaction rerun.
+node scripts/sync-public-data.mjs --write
 npx playwright install --with-deps chromium webkit
 bash scripts/load-guard.sh --assert-nested
 NEXT_BUILD_TARGET=cloudflare npm run cf:build:next

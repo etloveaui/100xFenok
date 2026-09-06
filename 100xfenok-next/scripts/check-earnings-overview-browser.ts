@@ -97,6 +97,7 @@ async function capturePanel(page: Page, ticker: string, name: string) {
 async function main() {
   for (const engine of [{ name: "chromium", type: chromium }, { name: "webkit", type: webkit }]) {
     const browser = await engine.type.launch();
+    let activePage: Page | undefined;
     try {
       for (const viewport of [{ name: "desktop", width: 1440, height: 1100 }, { name: "mobile", width: 390, height: 844 }]) {
         const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height }, reducedMotion: "reduce" });
@@ -106,6 +107,7 @@ async function main() {
           await route.fulfill({ status: document ? 200 : 404, contentType: "application/json", body: JSON.stringify(document ?? {}) });
         });
         const page = await context.newPage();
+        activePage = page;
         const errors: string[] = [];
         page.on("pageerror", error => errors.push(error.message));
         for (const ticker of viewport.name === "desktop" && engine.name === "chromium" ? tickers : ["AAPL"]) {
@@ -119,6 +121,9 @@ async function main() {
           assert.equal(await page.locator("[data-earnings-overview], [data-testid=earnings-overview-state]").count(), 0, "unsupported tickers keep the existing financial view without an empty earnings feature");
         }
         await page.goto(`${base}/screener?ticker=AAPL&mode=analyze`, { waitUntil: "domcontentloaded" });
+        const expansion = page.getByRole("button", { name: /^AAPL 상세 (접기|펼치기)$/ });
+        await expansion.waitFor({ state: "visible", timeout: 90_000 });
+        if (await expansion.getAttribute("aria-expanded") === "true") await expansion.click();
         await page.getByRole("button", { name: "AAPL 상세 펼치기", exact: true }).click({ timeout: 90_000 });
         await verifyDocument(page, "AAPL", true);
         await capturePanel(page, "AAPL", `${engine.name}-${viewport.name}-screener`);
@@ -133,6 +138,7 @@ async function main() {
           await route.fulfill({ status: requests === 1 ? 503 : 200, contentType: "application/json", body: JSON.stringify(requests === 1 ? {} : documents.get("AAPL")) });
         });
         const page = await context.newPage();
+        activePage = page;
         await page.goto(`${base}/stock/AAPL?tab=financials`, { waitUntil: "domcontentloaded" });
         await page.getByRole("button", { name: "다시 불러오기", exact: true }).click({ timeout: 90_000 });
         await verifyDocument(page, "AAPL", false);
@@ -154,6 +160,7 @@ async function main() {
           await route.fulfill({ status: failed ? 503 : 200, contentType: "application/json", body: JSON.stringify(failed ? {} : refreshRequests === 1 ? oldDocument : documents.get("AAPL")) });
         });
         const refreshPage = await refreshContext.newPage();
+        activePage = refreshPage;
         await refreshPage.goto(`${base}/stock/AAPL?tab=financials`, { waitUntil: "domcontentloaded" });
         const refreshPanel = refreshPage.locator('[data-earnings-overview="AAPL"]');
         await refreshPanel.waitFor({ timeout: 90_000 });
@@ -174,6 +181,7 @@ async function main() {
         income.incomeTax = -1_000_000_000; income.netIncome = -3_000_000_000; income.dilutedEps = -1;
         await lossContext.route("**/data/earnings-overview/META.json", route => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(loss) }));
         const lossPage = await lossContext.newPage();
+        activePage = lossPage;
         await lossPage.goto(`${base}/stock/META?tab=financials`, { waitUntil: "domcontentloaded" });
         await lossPage.locator('[data-earnings-flow="bridge"]').waitFor({ timeout: 90_000 });
         assert.equal(await lossPage.locator('[data-earnings-flow-node="nonOperatingIncome"]').getAttribute("data-flow-value"), "1000000000");
@@ -181,6 +189,12 @@ async function main() {
         await capturePanel(lossPage, "META", "chromium-mobile-loss");
         await lossContext.close();
       }
+    } catch (error) {
+      if (activePage && !activePage.isClosed()) {
+        console.error("[earnings-browser] failed interaction", { url: activePage.url(), body: (await activePage.locator("body").innerText()).slice(0, 3000) });
+        await activePage.screenshot({ path: `${out}/failure-${engine.name}.png`, fullPage: true }).catch(() => {});
+      }
+      throw error;
     } finally { await browser.close(); }
   }
   console.log("[earnings-browser] four official companies, shared surfaces, period selection, desktop/mobile, Chromium/WebKit, retry and signed loss passed");
