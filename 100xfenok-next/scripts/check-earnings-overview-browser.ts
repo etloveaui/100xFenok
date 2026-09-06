@@ -207,6 +207,8 @@ async function main() {
         await lossPage.goto(`${base}/stock/META?tab=financials`, { waitUntil: "domcontentloaded" });
         await lossPage.locator('[data-earnings-flow="bridge"]').waitFor({ timeout: 90_000 });
         assert.equal(await lossPage.locator('[data-earnings-flow-node="nonOperatingIncome"]').getAttribute("data-flow-value"), "1000000000");
+        const lossLabels = await lossPage.locator('[data-earnings-flow="bridge"] [data-earnings-flow-node] > span').allTextContents();
+        assert.ok(lossLabels.length > 0 && lossLabels.every(label => label.trim().length > 0), "every signed financial value has an explicit label, including zero after-tax adjustments");
         await assertNoOverflow(lossPage);
         await capturePanel(lossPage, "META", "chromium-mobile-loss");
         await lossContext.close();

@@ -57,6 +57,7 @@ const flowLabels: Record<string, string> = {
   operatingIncome: "영업이익",
   pretaxIncome: "세전이익",
   incomeTax: "법인세",
+  afterTaxOther: "세후 기타손익",
   netIncome: "순이익",
   nonOperatingIncome: "영업외 수익",
   nonOperatingExpense: "영업외 비용",
