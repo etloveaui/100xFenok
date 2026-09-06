@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { createRequire } from "node:module";
 
 import { projectFenokShortTermFields } from "../src/hooks/useScreenerData";
-import { passesFenokEdgeFilters } from "../src/app/screener/ScreenerClient";
-import { rankFenokEdgeAxes } from "../src/app/screener/StockDetailPanel";
 import {
   commonBasisShortTermView,
   screenerSortValue,
@@ -16,6 +15,27 @@ import {
   updateScreenerUrl,
 } from "../src/lib/screener/filter-url";
 import type { ScreenerStock } from "../src/lib/screener/types";
+
+// Register CSS modules before loading the screener's shared earnings dependency.
+const testRequire = createRequire(import.meta.url);
+const previousCssLoader = testRequire.extensions[".css"];
+testRequire.extensions[".css"] = (module, filename) => {
+  const classNames = new Set(
+    Array.from(fs.readFileSync(filename, "utf8").matchAll(/\.([A-Za-z_][A-Za-z0-9_-]*)/g), match => match[1]),
+  );
+  module.exports = Object.fromEntries(Array.from(classNames, name => [name, name]));
+};
+let screener: typeof import("../src/app/screener/ScreenerClient");
+let sharedPanel: typeof import("../src/app/screener/StockDetailPanel");
+try {
+  screener = testRequire("../src/app/screener/ScreenerClient");
+  sharedPanel = testRequire("../src/app/screener/StockDetailPanel");
+} finally {
+  if (previousCssLoader) testRequire.extensions[".css"] = previousCssLoader;
+  else delete testRequire.extensions[".css"];
+}
+const { passesFenokEdgeFilters } = screener;
+const { rankFenokEdgeAxes } = sharedPanel;
 
 const usEnrichedSignal = {
   symbol: "USX",

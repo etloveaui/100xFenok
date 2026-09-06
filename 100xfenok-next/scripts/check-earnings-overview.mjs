@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 
-const tests = ["scripts/test-earnings-model.ts", "scripts/test-earnings-ui.tsx", "scripts/test-stock-detail-panel-dedupe.tsx"];
+const tests = ["scripts/test-earnings-model.ts", "scripts/test-earnings-ui.tsx", "scripts/test-stock-detail-panel-dedupe.tsx", "scripts/test-screener-common-basis-plumbing.ts"];
 let failed = false;
 for (const test of tests) {
   const result = spawnSync(process.execPath, ["--import", "tsx", test], { stdio: "inherit" });
