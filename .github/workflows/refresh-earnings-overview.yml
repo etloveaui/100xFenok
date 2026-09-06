@@ -138,6 +138,10 @@ jobs:
           git fetch origin main
           git checkout -B main origin/main
 
+      - name: Capture exact published checkout
+        id: source_identity
+        run: echo "git_commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Publish earnings overview generation to the cloud data plane
         id: publish_cloud_generation
         env:
@@ -145,6 +149,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+          PUBLISH_BINDING_GIT_COMMIT: ${{ steps.source_identity.outputs.git_commit }}
         run: node scripts/publish-cloud-data-generation.mjs --family=earnings-overview --json
 
       - name: Report source refresh failure
@@ -203,11 +208,64 @@ jobs:
           name: earnings-overview-outcome-${{ github.run_id }}-${{ github.run_attempt }}
           path: data/admin/data-supply-state/publish-outcomes
 
+      - name: Confirm published checkout from current origin
+        id: origin_readback
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          shard=data/admin/data-supply-state/publish-outcomes/earnings-overview.json
+          BINDING_GIT_COMMIT="$(
+            node --input-type=module - "$shard" <<'NODE'
+          import fs from "node:fs";
+          const shard = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+          const commit = shard.records?.at(-1)?.binding?.git_commit ?? "";
+          if (!/^[0-9a-f]{40}$/u.test(commit)) {
+            throw new Error("latest earnings overview outcome has no exact git binding");
+          }
+          process.stdout.write(commit);
+          NODE
+          )"
+          ORIGIN_READBACK=not_confirmed
+          for compare_attempt in 1 2 3; do
+            COMPARE_STATUS="$(
+              gh api "repos/$GITHUB_REPOSITORY/compare/$BINDING_GIT_COMMIT...main" --jq '.status' 2>/dev/null
+            )" || COMPARE_STATUS=""
+            case "$COMPARE_STATUS" in
+              identical|ahead)
+                ORIGIN_READBACK=confirmed
+                break
+                ;;
+              behind|diverged)
+                break
+                ;;
+              *)
+                if [ "$compare_attempt" -lt 3 ]; then sleep $((compare_attempt * 2)); fi
+                ;;
+            esac
+          done
+          echo "git_commit=$BINDING_GIT_COMMIT" >> "$GITHUB_OUTPUT"
+          echo "origin_readback=$ORIGIN_READBACK" >> "$GITHUB_OUTPUT"
+
       - name: Persist earnings overview publish outcome
         if: ${{ always() }}
+        env:
+          BINDING_GIT_COMMIT: ${{ steps.origin_readback.outputs.git_commit }}
+          BINDING_ORIGIN_READBACK: ${{ steps.origin_readback.outputs.origin_readback }}
         run: >-
           node scripts/persist-cloud-publish-outcome.mjs
           --family=earnings-overview
           --workflow=.github/workflows/refresh-earnings-overview.yml
           --publisher-outcome=${{ needs.publish-earnings-overview.outputs.publisher_outcome }}
-          --binding-from-current-origin
+          --binding-git-commit="$BINDING_GIT_COMMIT"
+          --binding-origin-readback="$BINDING_ORIGIN_READBACK"
+
+      - name: Enforce confirmed earnings overview origin binding
+        if: ${{ always() }}
+        env:
+          BINDING_ORIGIN_READBACK: ${{ steps.origin_readback.outputs.origin_readback }}
+        run: |
+          if [ "$BINDING_ORIGIN_READBACK" != "confirmed" ]; then
+            echo "::error::earnings overview origin readback was not confirmed" >&2
+            exit 75
+          fi
