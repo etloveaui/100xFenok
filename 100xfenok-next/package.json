@@ -42,6 +42,8 @@
     "qa:winddown-continuity-isolated": "WINDDOWN_QA_SCOPE=continuity bash scripts/check-winddown-preservation-isolated.sh",
     "test:winddown-continuity-gate": "npm run test:winddown-continuity && npm run test:winddown-practice && npm run test:winddown-preservation-stage1 && npm run test:winddown-review && npm run test:winddown-voice && npm run test:winddown-drill && npm run test:winddown-device-speech && node scripts/check-route-key-contract.mjs",
     "test:winddown-practice": "tsx scripts/score-winddown-practice.ts",
+    "test:winddown-practice-publication": "tsx scripts/score-winddown-practice-publication.ts",
+    "qa:winddown-practice-publication": "npm run test:winddown-practice-publication && tsx scripts/generate-winddown-published-lkg.ts --lkg-root src/generated/winddown-published-lkg.audit --public-root .. && git diff --exit-code -- src/generated/winddown-published-lkg.audit",
     "test:winddown-continuity": "node scripts/score-winddown-preservation-stage1.mjs --continuity",
     "test:winddown-preservation-stage1": "node scripts/score-winddown-preservation-stage1.mjs",
     "test:winddown-v2": "tsx scripts/score-winddown-v2-contract.ts && npm run check:winddown-owner-ready -- --source-only && npm run test:winddown-material-v2 && npm run test:winddown-learn && npm run test:winddown-review && npm run test:winddown-drill && npm run test:winddown-device-speech && npm run test:winddown-lumi && npm run test:winddown-game && npm run test:winddown-voice && npm run test:winddown-habit && npm run test:winddown-luna-receipt && npm run test:winddown-luna-runner && npm run test:winddown-lkg && npm run test:winddown-luna-orchestration && npm run test:winddown-runtime-consumption",
