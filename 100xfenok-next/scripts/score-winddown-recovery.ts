@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  WINDDOWN_RECOVERY_MAX_BYTES,
   WINDDOWN_RECOVERY_SEAL_KEY,
   exportWindDownRecoverySnapshot,
   recoveryCopyNameForSnapshot,
@@ -10,10 +11,10 @@ import {
 /**
  * Stage 1 contract for the recovery primitive.
  *
- * This script is intentionally written before the production module. The
- * hosted RED run is expected to report the missing module first. The module
- * must then satisfy these behavioral checks without changing coordinator
- * routes or initializing the learner profile as a side effect of export.
+ * This executable contract was written before the production module and keeps
+ * the RED-to-GREEN boundary explicit. The module must satisfy these checks
+ * without changing coordinator routes or initializing the learner profile as
+ * a side effect of export.
  */
 
 const PROFILE_STORAGE_KEY = "mona-vnext-learning-profile";
@@ -313,6 +314,13 @@ async function main() {
     "WINDDOWN_RECOVERY_SNAPSHOT_INVALID",
   );
 
+  const unknownFieldSnapshot = clone(snapshot) as typeof snapshot & {
+    unknownFutureField?: unknown;
+  };
+  unknownFieldSnapshot.unknownFutureField = { mustNotBeIgnored: true };
+  const unknownFieldValidation = validateWindDownRecoverySnapshot(unknownFieldSnapshot);
+  assert.equal(unknownFieldValidation.ok, false, "unknown envelope fields must not be silently ignored");
+
   const poisoned = clone(snapshot);
   poisoned.records.push({
     key: WINDDOWN_RECOVERY_SEAL_KEY,
@@ -339,7 +347,7 @@ async function main() {
       maxBytes: 1,
       createdAtIso: FIXED_CREATED_AT_ISO,
     }),
-    "WINDDOWN_RECOVERY_SIZE_LIMIT",
+    "WINDDOWN_RECOVERY_TOO_LARGE",
   );
   assert.equal(
     sizeLimitedSource.listCalls.length,
@@ -387,6 +395,59 @@ async function main() {
   assert.equal(fallbackSnapshot.snapshotDigest !== snapshot.snapshotDigest, true);
   assert.equal(validateWindDownRecoverySnapshot(fallbackSnapshot).ok, true);
 
+  const fallbackTarget = new MemoryCoordinatorStorage();
+  const fallbackTargetName = recoveryCopyNameForSnapshot(fallbackSnapshot.snapshotDigest);
+  const fallbackRestore = await restoreWindDownRecoverySnapshot({
+    storage: fallbackTarget,
+    snapshot: fallbackSnapshot,
+    targetName: fallbackTargetName,
+    maxBytes: 2_000_000,
+  });
+  assert.equal(fallbackRestore.legacyRecordCount, 1);
+  assert.equal(
+    fallbackTarget.values.get(
+      `winddown-recovery:legacy:${encodeURIComponent(PROFILE_KV_KEY)}`,
+    ),
+    legacyRaw,
+    "legacy fallback must restore the original raw KV string in the separate copy",
+  );
+
+  const boundarySource = new MemoryCoordinatorStorage(
+    new Map([["winddown-boundary", { payload: "b".repeat(4_900_000) }]]),
+  );
+  const boundaryPreview = await exportWindDownRecoverySnapshot({
+    storage: boundarySource,
+    pageSize: PAGE_SIZE,
+    maxBytes: WINDDOWN_RECOVERY_MAX_BYTES,
+    createdAtIso: FIXED_CREATED_AT_ISO,
+  });
+  assert.ok(
+    boundaryPreview.byteCount > WINDDOWN_RECOVERY_MAX_BYTES - 200_000
+      && boundaryPreview.byteCount <= WINDDOWN_RECOVERY_MAX_BYTES,
+    "boundary fixture must remain valid while exercising the transport ceiling",
+  );
+  const boundarySnapshot = await exportWindDownRecoverySnapshot({
+    storage: new MemoryCoordinatorStorage(
+      new Map([["winddown-boundary", { payload: "b".repeat(4_900_000) }]]),
+    ),
+    pageSize: PAGE_SIZE,
+    maxBytes: boundaryPreview.byteCount,
+    createdAtIso: FIXED_CREATED_AT_ISO,
+  });
+  const boundaryTarget = new MemoryCoordinatorStorage();
+  const boundaryRestore = await restoreWindDownRecoverySnapshot({
+    storage: boundaryTarget,
+    snapshot: boundarySnapshot,
+    targetName: recoveryCopyNameForSnapshot(boundarySnapshot.snapshotDigest),
+    maxBytes: boundarySnapshot.byteCount,
+  });
+  assert.equal(boundaryRestore.duplicate, false);
+  assert.deepEqual(
+    boundaryTarget.values.get("winddown-boundary"),
+    boundarySnapshot.records.find((record) => record.key === "winddown-boundary")?.value,
+    "a valid near-limit snapshot must restore before its internal seal metadata is counted",
+  );
+
   const targetName = recoveryCopyNameForSnapshot(snapshot.snapshotDigest);
   assert.equal(targetName, `recoverycopy:${snapshot.snapshotDigest}`);
   const target = new MemoryCoordinatorStorage();
@@ -402,6 +463,7 @@ async function main() {
   assert.equal(first.snapshotDigest, snapshot.snapshotDigest);
   assert.equal(first.recordCount, sourceRecords.size);
   assert(first.receipt && typeof first.receipt === "object");
+  assert.ok(target.listCalls.length > 1, "first restore must page a complete read-back verification");
   assert.equal(
     (first.receipt as Record<string, unknown>).receiptId,
     `winddown-recovery:${snapshot.snapshotDigest}`,
@@ -461,7 +523,7 @@ async function main() {
   );
   await expectRecoveryError(
     () => restoreWindDownRecoverySnapshot({ storage: nonEmptyTarget, snapshot, targetName }),
-    "WINDDOWN_RECOVERY_TARGET_NONEMPTY",
+    "WINDDOWN_RECOVERY_TARGET_NOT_EMPTY",
   );
   assert.equal(nonEmptyTarget.writes.length, 0);
 
@@ -473,7 +535,7 @@ async function main() {
       targetName,
       maxBytes: 1,
     }),
-    "WINDDOWN_RECOVERY_SIZE_LIMIT",
+    "WINDDOWN_RECOVERY_TOO_LARGE",
   );
   assert.equal(sizeLimitedTarget.writes.length, 0, "size failure must happen before restore writes");
 
@@ -493,7 +555,7 @@ async function main() {
   const nonEmptyBefore = clone([...nonEmptyCopy.values.entries()]);
   await expectRecoveryError(
     () => restoreWindDownRecoverySnapshot({ storage: nonEmptyCopy, snapshot, targetName }),
-    "WINDDOWN_RECOVERY_TARGET_NONEMPTY",
+    "WINDDOWN_RECOVERY_TARGET_NOT_EMPTY",
   );
   assert.deepEqual([...nonEmptyCopy.values.entries()], nonEmptyBefore);
 

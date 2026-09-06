@@ -24,12 +24,12 @@ import {
 import {
   applyWindDownLearnAction,
   createWindDownLearnSession,
+  normalizeWindDownLearnState,
   type WindDownLearnAction,
   type WindDownLearnCard,
   type WindDownLearnState,
 } from "@/features/winddown/learn/engine";
 import {
-  appendWindDownHabitCompletionEvent,
   createWindDownHabitCompletionEvent,
   getWindDownHabitKstDay,
   projectWindDownHabit,
@@ -63,17 +63,27 @@ import {
   normalizeWindDownVoiceJourneyTargets,
   type WindDownVoiceJourneyTarget,
 } from "@/features/winddown/voice/journeyTarget";
+import { resolveWindDownStorageScope } from "@/features/mona-vnext/memory/windDownStorageScope";
+import {
+  appendWindDownHabitEvent,
+  preserveWindDownLegacyKvSource,
+  readMonaVnextLearningProfile,
+  readWindDownHabitEvents,
+  writeMonaVnextLearningProfile,
+  type WindDownPagedStorageTransaction,
+  WIND_DOWN_PROFILE_MANIFEST_STORAGE_KEY,
+  WIND_DOWN_PROFILE_LEGACY_STORAGE_KEY,
+} from "@/features/mona-vnext/memory/windDownPagedStorage";
 
-const PROFILE_STORAGE_KEY = "mona-vnext-learning-profile";
+import { handleWindDownRecoveryCoordinatorRequest } from "./windDownRecoveryCoordinator";
+import type { WindDownReviewAlias } from "@/features/winddown/server/reviewIdentity";
+
+const PROFILE_STORAGE_KEY = WIND_DOWN_PROFILE_LEGACY_STORAGE_KEY;
 const RECEIPT_STORAGE_PREFIX = "winddown-review-receipt:";
 const VOICE_REPORT_STORAGE_PREFIX = "winddown-voice-report:";
-const HABIT_EVENTS_STORAGE_KEY = "winddown-habit-events";
 const LEARN_SESSION_STORAGE_PREFIX = "winddown-learn-session:";
 const LEARN_ATTEMPT_STORAGE_PREFIX = "winddown-learn-attempt:";
 const CEREMONY_STORAGE_KEY = "winddown-game-ceremony:v1";
-const PROFILE_KV_KEY =
-  `data/${MONA_VNEXT_DATA_NAMESPACE}/owner-test/learning-profile.json`;
-
 type KvNamespaceLike = {
   get(key: string): Promise<string | null>;
   put(
@@ -83,10 +93,7 @@ type KvNamespaceLike = {
   ): Promise<unknown>;
 };
 
-type StorageTransactionLike = {
-  get<T>(key: string): Promise<T | undefined>;
-  put<T>(key: string, value: T): Promise<void>;
-};
+type StorageTransactionLike = WindDownPagedStorageTransaction;
 
 export type WindDownReviewCoordinatorState = {
   blockConcurrencyWhile<T>(callback: () => Promise<T>): Promise<T>;
@@ -99,6 +106,7 @@ export type WindDownReviewCoordinatorState = {
 
 export type WindDownReviewCoordinatorEnv = {
   MONA_VNEXT_KV: KvNamespaceLike;
+  WINDDOWN_DATA_WORKSPACE?: unknown;
 };
 
 export type MonaVnextProfileCoordinatorCommand =
@@ -110,6 +118,7 @@ export type MonaVnextProfileCoordinatorCommand =
       input: WindDownReviewCycleInput;
       material: WindDownReviewCycleMaterial | null;
       activeMaterialIds: string[];
+      aliases?: readonly WindDownReviewAlias[];
       currentContentDigest: string;
       nowIso: string;
     }
@@ -177,24 +186,58 @@ async function initialProfile(
   state: WindDownReviewCoordinatorState,
   env: WindDownReviewCoordinatorEnv,
 ) {
-  const stored = await state.storage.get<MonaVnextLearningProfile>(
-    PROFILE_STORAGE_KEY,
-  );
-  if (stored) return normalizeMonaVnextLearningProfile(stored);
-  const raw = await env.MONA_VNEXT_KV.get(PROFILE_KV_KEY);
-  const profile = raw
-    ? normalizeMonaVnextLearningProfile(JSON.parse(raw))
-    : createEmptyMonaVnextLearningProfile();
-  await state.storage.put(PROFILE_STORAGE_KEY, profile);
-  return profile;
+  const existing = await state.storage.transaction(async (transaction) => {
+    const activeManifest = await transaction.get<unknown>(
+      WIND_DOWN_PROFILE_MANIFEST_STORAGE_KEY,
+    );
+    if (activeManifest !== undefined) {
+      return readMonaVnextLearningProfile(transaction);
+    }
+    const stored = await transaction.get<MonaVnextLearningProfile>(
+      PROFILE_STORAGE_KEY,
+    );
+    if (stored !== undefined && stored !== null) {
+      return normalizeMonaVnextLearningProfile(stored);
+    }
+    return null;
+  });
+  if (existing) return existing;
+
+  const scope = resolveWindDownStorageScope(env.WINDDOWN_DATA_WORKSPACE);
+  const raw = scope.allowLegacySeed
+    ? await env.MONA_VNEXT_KV.get(scope.profileMirrorKey)
+    : null;
+  return state.storage.transaction(async (transaction) => {
+    const activeManifest = await transaction.get<unknown>(
+      WIND_DOWN_PROFILE_MANIFEST_STORAGE_KEY,
+    );
+    if (activeManifest !== undefined) {
+      return readMonaVnextLearningProfile(transaction);
+    }
+    const stored = await transaction.get<MonaVnextLearningProfile>(
+      PROFILE_STORAGE_KEY,
+    );
+    if (stored !== undefined && stored !== null) {
+      return normalizeMonaVnextLearningProfile(stored);
+    }
+    if (raw !== null) {
+      await preserveWindDownLegacyKvSource(transaction, raw);
+    }
+    const profile = raw
+      ? normalizeMonaVnextLearningProfile(JSON.parse(raw))
+      : createEmptyMonaVnextLearningProfile();
+    await transaction.put(PROFILE_STORAGE_KEY, profile);
+    return profile;
+  });
 }
 
 async function mirrorProfile(
   env: WindDownReviewCoordinatorEnv,
   profile: MonaVnextLearningProfile,
 ) {
+  const scope = resolveWindDownStorageScope(env.WINDDOWN_DATA_WORKSPACE);
   await env.MONA_VNEXT_KV.put(
-    PROFILE_KV_KEY,
+    scope.profileMirrorKey,
     `${JSON.stringify(
       {
         ...profile,
@@ -316,9 +359,18 @@ function normalizeLearnCards(
 }
 
 async function readHabitEvents(storage: StorageTransactionLike) {
-  return (await storage.get<WindDownHabitCompletionEvent[]>(
-    HABIT_EVENTS_STORAGE_KEY,
-  )) ?? [];
+  return readWindDownHabitEvents(storage);
+}
+
+async function readProfile(storage: StorageTransactionLike) {
+  return readMonaVnextLearningProfile(storage);
+}
+
+async function writeProfile(
+  storage: StorageTransactionLike,
+  profile: MonaVnextLearningProfile,
+) {
+  return writeMonaVnextLearningProfile(storage, profile);
 }
 
 async function readCeremonyRecord(storage: StorageTransactionLike) {
@@ -398,12 +450,7 @@ async function appendHabitEvent(
   transaction: StorageTransactionLike,
   candidate: WindDownHabitCompletionEvent,
 ) {
-  const appended = appendWindDownHabitCompletionEvent(
-    await readHabitEvents(transaction),
-    candidate,
-  );
-  await transaction.put(HABIT_EVENTS_STORAGE_KEY, appended.events);
-  return appended;
+  return appendWindDownHabitEvent(transaction, candidate);
 }
 
 function normalizeVoiceReportReceipt(value: unknown): WindDownVoiceReportReceipt | null {
@@ -482,11 +529,31 @@ function normalizeActiveMaterialIds(value: unknown) {
   return [...new Set(ids)];
 }
 
+function normalizeReviewAliases(value: unknown): WindDownReviewAlias[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 10_000) return null;
+  const aliases: WindDownReviewAlias[] = [];
+  const canonicalByLegacy = new Map<string, string>();
+  for (const item of value) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+    const { legacyV1Id, canonicalId } = item as Record<string, unknown>;
+    if (typeof legacyV1Id !== "string" || typeof canonicalId !== "string"
+      || !/^[A-Za-z0-9._:-]{1,120}$/.test(legacyV1Id)
+      || !/^[A-Za-z0-9._:-]{1,120}$/.test(canonicalId)) return null;
+    const previous = canonicalByLegacy.get(legacyV1Id);
+    if (previous && previous !== canonicalId) return null;
+    if (!previous) aliases.push({ legacyV1Id, canonicalId });
+    canonicalByLegacy.set(legacyV1Id, canonicalId);
+  }
+  return aliases;
+}
+
 export async function handleMonaVnextProfileCoordinatorRequest(
   state: WindDownReviewCoordinatorState,
   env: WindDownReviewCoordinatorEnv,
   request: Request,
 ) {
+  resolveWindDownStorageScope(env.WINDDOWN_DATA_WORKSPACE);
   if (request.method !== "POST") {
     return noStoreJson({ error: "METHOD_NOT_ALLOWED" }, 405);
   }
@@ -496,6 +563,9 @@ export async function handleMonaVnextProfileCoordinatorRequest(
   if (!body || typeof body.operation !== "string") {
     return noStoreJson({ error: "INVALID_PROFILE_COORDINATOR_COMMAND" }, 400);
   }
+
+  const recoveryResponse = await handleWindDownRecoveryCoordinatorRequest(state, env, request, body);
+  if (recoveryResponse) return recoveryResponse;
 
   if (body.operation === "read-learning-profile") {
     const initializedProfile = await initialProfile(state, env);
@@ -531,10 +601,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       const game = projectWindDownGameProgress(events);
       const currentLevel = levelFromXp(game.xp);
       const ceremonyRecord = await readCeremonyRecord(transaction);
-      const profile =
-        (await transaction.get<MonaVnextLearningProfile>(
-          PROFILE_STORAGE_KEY,
-        )) ?? createEmptyMonaVnextLearningProfile();
+      const profile = await readProfile(transaction);
       if (!ceremonyRecord) return { status: "state-invalid" as const };
       let ceremony;
       if (ceremonyMaterial) {
@@ -625,10 +692,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       const events = await readHabitEvents(transaction);
       const game = projectWindDownGameProgress(events);
       const currentLevel = levelFromXp(game.xp);
-      const profile =
-        (await transaction.get<MonaVnextLearningProfile>(
-          PROFILE_STORAGE_KEY,
-        )) ?? createEmptyMonaVnextLearningProfile();
+      const profile = await readProfile(transaction);
       const mastery = await readCeremonyMasteryEvidence({
         storage: transaction,
         events,
@@ -731,16 +795,21 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       action,
     }));
     const result = await state.storage.transaction(async (transaction) => {
-      const existingAttempt =
-        (await transaction.get<StoredWindDownLearnAttempt>(
-          learnAttemptKey(attemptId),
-        )) ?? null;
-      if (existingAttempt) {
+      const existingAttempt = await transaction.get<StoredWindDownLearnAttempt>(learnAttemptKey(attemptId));
+      if (existingAttempt !== undefined) {
+        if (!existingAttempt || typeof existingAttempt !== "object" || Array.isArray(existingAttempt)) {
+          return { status: 422, duplicate: false, profileDirty: false, profile: null, receipt: null };
+        }
+        const normalizedState = normalizeWindDownLearnState(existingAttempt.state, { cards, seed: manifest.seed });
+        if (!normalizedState || existingAttempt.schemaVersion !== 1
+          || existingAttempt.attemptId !== attemptId
+          || (existingAttempt.reward !== 0 && existingAttempt.reward !== 1)
+          || !["miss", "practice", "correct", "complete"].includes(existingAttempt.outcome)) {
+          return { status: 422, duplicate: false, profileDirty: false, profile: null, receipt: null };
+        }
         if (existingAttempt.requestDigest === requestDigest) {
           const profile = existingAttempt.reward === 1
-            ? (await transaction.get<MonaVnextLearningProfile>(
-                PROFILE_STORAGE_KEY,
-              )) ?? createEmptyMonaVnextLearningProfile()
+            ? await readProfile(transaction)
             : null;
           return {
               status: 200,
@@ -750,7 +819,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
               // duplicates so a safe retry repairs that split state.
               profileDirty: existingAttempt.reward === 1,
               profile,
-              receipt: existingAttempt,
+              receipt: { ...existingAttempt, state: normalizedState },
             };
         }
         return {
@@ -763,11 +832,22 @@ export async function handleMonaVnextProfileCoordinatorRequest(
       }
 
       const sessionKey = learnSessionKey(manifest.habitKstDay);
-      const existingSession =
-        (await transaction.get<StoredWindDownLearnSession>(sessionKey)) ?? null;
+      const existingSession = await transaction.get<StoredWindDownLearnSession>(sessionKey);
+      if (existingSession !== undefined && (!existingSession || typeof existingSession !== "object" || Array.isArray(existingSession))) {
+        return { status: 422, duplicate: false, profileDirty: false, profile: null, receipt: null };
+      }
+      const storedManifest = existingSession
+        ? normalizeWindDownLearnSessionManifest(existingSession.manifest)
+        : null;
+      const validatedState = existingSession
+        ? normalizeWindDownLearnState(existingSession.state, { cards, seed: manifest.seed })
+        : null;
+      if (existingSession && (!storedManifest || !validatedState)) {
+        return { status: 422, duplicate: false, profileDirty: false, profile: null, receipt: null };
+      }
       if (
-        existingSession
-        && !sameLearnManifestIdentity(existingSession.manifest, manifest)
+        storedManifest
+        && !sameLearnManifestIdentity(storedManifest, manifest)
       ) {
         return {
           status: 409,
@@ -777,7 +857,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
           receipt: null,
         };
       }
-      const currentState = existingSession?.state
+      const currentState = validatedState
         ?? createWindDownLearnSession({ cards, seed: manifest.seed });
       const applied = applyWindDownLearnAction(currentState, action);
       if (applied.outcome === "invalid") {
@@ -790,10 +870,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
         };
       }
 
-      let profile =
-        (await transaction.get<MonaVnextLearningProfile>(
-          PROFILE_STORAGE_KEY,
-        )) ?? createEmptyMonaVnextLearningProfile();
+      let profile = await readProfile(transaction);
       let profileDirty = false;
       if (applied.reward === 1) {
         const recovered = currentState.mistakes.some(
@@ -816,7 +893,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
         }
         profile = applyMonaVnextLearningEvents(profile, [learningEvent]);
         profileDirty = true;
-        await transaction.put(PROFILE_STORAGE_KEY, profile);
+        await writeProfile(transaction, profile);
       }
 
       let completionReceipt: WindDownHabitLearnCreditReceipt | null = null;
@@ -864,6 +941,9 @@ export async function handleMonaVnextProfileCoordinatorRequest(
         receipt,
       };
     });
+    if (result.status === 422) {
+      return noStoreJson({ error: "WINDDOWN_LEARN_RESUME_UNAVAILABLE" }, 409);
+    }
     if (result.status === 409) {
       return noStoreJson({ error: "WINDDOWN_LEARN_ATTEMPT_CONFLICT" }, 409);
     }
@@ -897,15 +977,13 @@ export async function handleMonaVnextProfileCoordinatorRequest(
         ? inputRecord.reviewCycleId
         : "";
     const activeMaterialIds = normalizeActiveMaterialIds(body.activeMaterialIds);
-    if (!activeMaterialIds) {
+    const aliases = normalizeReviewAliases(body.aliases);
+    if (!activeMaterialIds || !aliases) {
       return noStoreJson({ error: "INVALID_PROFILE_COORDINATOR_COMMAND" }, 400);
     }
     try {
       const result = await state.storage.transaction(async (transaction) => {
-        const profile =
-          (await transaction.get<MonaVnextLearningProfile>(
-            PROFILE_STORAGE_KEY,
-          )) ?? createEmptyMonaVnextLearningProfile();
+        const profile = await readProfile(transaction);
         const existingReceipt = cycleId
           ? (await transaction.get<unknown>(
               receiptKey(cycleId),
@@ -913,6 +991,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
           : null;
         const committed = await commitWindDownReviewCycleState({
           profile,
+          aliases,
           existingReceipt,
           input,
           material:
@@ -928,7 +1007,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
           nowIso: typeof body.nowIso === "string" ? body.nowIso : "",
         });
         if (!committed.duplicate) {
-          await transaction.put(PROFILE_STORAGE_KEY, committed.profile);
+          await writeProfile(transaction, committed.profile);
           await transaction.put(
             receiptKey(committed.receipt.reviewCycleId),
             committed.receipt,
@@ -945,6 +1024,7 @@ export async function handleMonaVnextProfileCoordinatorRequest(
           ...committed,
           ...summarizeWindDownReviewQueue({
             profile: committed.profile,
+            aliases,
             nowIso:
               typeof body.nowIso === "string" ? body.nowIso : "",
             activeMaterialIds,

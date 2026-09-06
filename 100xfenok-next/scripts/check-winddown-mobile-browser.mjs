@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { chromium } from "playwright";
+import { assertWindDownQaTarget } from "./winddown-qa-target.mjs";
 
 const args = process.argv.slice(2);
 const baseUrl = readArg("--base-url");
@@ -66,7 +67,7 @@ function print(item) {
 function assertArgs() {
   if (!baseUrl) throw new Error("usage: node scripts/check-winddown-mobile-browser.mjs --base-url <https://host>");
   if (!adminPassword) throw new Error("QA_ADMIN_PASSWORD is required to create the browser-only admin session");
-  const parsed = new URL(baseUrl);
+  const parsed = assertWindDownQaTarget(baseUrl, process.env.WINDDOWN_QA_ISOLATED);
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
     throw new Error(`unsupported --base-url protocol: ${parsed.protocol}`);
   }
@@ -97,7 +98,7 @@ async function inspectViewport(page, route, viewport) {
   const blockedPosts = [];
   const blockedLiveRequests = [];
   const blockedFailures = new Set();
-  let learnResumeIntercepted = 0;
+  let learnResponseCount = 0;
   let learnCardCount = null;
 
   const recordBlocked = (request, target) => {
@@ -154,8 +155,7 @@ async function inspectViewport(page, route, viewport) {
         && typeof body.learnSession === "object"
       ) {
         learnCardCount = Array.isArray(body.cards) ? body.cards.length : null;
-        body.learnSession.resumeState = null;
-        learnResumeIntercepted += 1;
+        learnResponseCount += 1;
         await handler.fulfill({ response, json: body });
         return;
       }
@@ -268,8 +268,8 @@ async function inspectViewport(page, route, viewport) {
   if (inspection.infiniteAnimations.length > 0) {
     failures.push(`infinite animations: ${inspection.infiniteAnimations.join(", ")}`);
   }
-  if (route.id === "learn" && learnResumeIntercepted !== 1) {
-    failures.push(`Learn GET resumeState interception count ${learnResumeIntercepted}, expected 1`);
+  if (route.id === "learn" && learnResponseCount !== 1) {
+    failures.push(`Learn GET response count ${learnResponseCount}, expected 1`);
   }
   if (route.id === "learn" && learnCardCount !== 5) {
     failures.push(`Learn GET card count ${learnCardCount ?? "missing"}, expected 5`);

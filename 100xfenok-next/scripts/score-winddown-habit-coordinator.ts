@@ -17,6 +17,11 @@ import {
   createWindDownHabitCompletionEvent,
   type WindDownHabitCompletionEvent,
 } from "../src/features/winddown/habit/domain";
+import {
+  appendWindDownHabitEvent,
+  readMonaVnextLearningProfile,
+  writeMonaVnextLearningProfile,
+} from "../src/features/mona-vnext/memory/windDownPagedStorage";
 
 const cards: WindDownLearnCard[] = Array.from({ length: 5 }, (_, index) => ({
   id: `learn-card-${index + 1}`,
@@ -261,7 +266,9 @@ async function main() {
       }),
     );
   }
-  values.set("winddown-habit-events", ceremonyEvents);
+  for (const event of ceremonyEvents) {
+    await appendWindDownHabitEvent(storage, event);
+  }
 
   const committedCeremony = await command({
     operation: "commit-winddown-ceremony-choice",
@@ -292,7 +299,7 @@ async function main() {
   );
 
   const storedProfile = structuredClone(
-    values.get("mona-vnext-learning-profile"),
+    await readMonaVnextLearningProfile(storage),
   ) as {
     records: Record<string, {
       expressionId: string;
@@ -346,8 +353,10 @@ async function main() {
       },
     };
   });
-  values.set("mona-vnext-learning-profile", storedProfile);
-  values.set("winddown-habit-events", masteryEvents);
+  await writeMonaVnextLearningProfile(storage, storedProfile);
+  for (const event of masteryEvents) {
+    await appendWindDownHabitEvent(storage, event);
+  }
   const masteryHabit = await command({
     operation: "read-winddown-habit",
     nowIso: "2026-07-31T10:07:30.000Z",

@@ -89,7 +89,10 @@ function normalizeCard(value: WindDownLearnCard): WindDownLearnCard | null {
   const acceptedVariants = Array.isArray(value.acceptedVariants)
     ? [
         ...new Set(
-          value.acceptedVariants.map((item) => item.trim()).filter(Boolean),
+          value.acceptedVariants
+            .filter((item): item is string => typeof item === "string")
+            .map((item) => item.trim())
+            .filter(Boolean),
         ),
       ]
     : [];
@@ -338,6 +341,367 @@ function practiceOnly(exercise: WindDownLearnExercise): WindDownLearnExercise {
     card: { ...exercise.card },
     tokens: exercise.tokens.map((token) => ({ ...token })),
     canonicalTokenIds: [...exercise.canonicalTokenIds],
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasExactKeys(
+  value: Record<string, unknown>,
+  expectedKeys: readonly string[],
+): boolean {
+  const expected = new Set(expectedKeys);
+  const actual = Object.keys(value);
+  return actual.length === expected.size && actual.every((key) => expected.has(key));
+}
+
+function normalizeStateCard(value: unknown): WindDownLearnCard | null {
+  if (!isRecord(value)) return null;
+  if (
+    typeof value.id !== "string"
+    || typeof value.ko !== "string"
+    || typeof value.en !== "string"
+    || (
+      value.acceptedVariants !== undefined
+      && (
+        !Array.isArray(value.acceptedVariants)
+        || !value.acceptedVariants.every((item) => typeof item === "string")
+      )
+    )
+  ) return null;
+  return normalizeCard(value as unknown as WindDownLearnCard);
+}
+
+function normalizeStateCards(
+  cards: readonly WindDownLearnCard[],
+): WindDownLearnCard[] | null {
+  if (!Array.isArray(cards) || cards.length !== WINDDOWN_LEARN_CREDIT_TARGET) {
+    return null;
+  }
+  const normalized = cards.map(normalizeStateCard);
+  if (normalized.some((card) => !card)) return null;
+  const result = normalized as WindDownLearnCard[];
+  return new Set(result.map((card) => card.id)).size === result.length
+    ? result
+    : null;
+}
+
+function sameStringArray(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function sameCard(
+  value: unknown,
+  expected: WindDownLearnCard,
+): boolean {
+  if (!isRecord(value)) return false;
+  const expectedKeys = expected.acceptedVariants
+    ? ["id", "ko", "en", "acceptedVariants"]
+    : ["id", "ko", "en"];
+  if (!hasExactKeys(value, expectedKeys)) return false;
+  return value.id === expected.id
+    && value.ko === expected.ko
+    && value.en === expected.en
+    && (
+      expected.acceptedVariants
+        ? Array.isArray(value.acceptedVariants)
+          && value.acceptedVariants.every((item): item is string => typeof item === "string")
+          && sameStringArray(value.acceptedVariants, expected.acceptedVariants)
+        : true
+    );
+}
+
+function sameChoice(value: unknown, expected: WindDownLearnChoice): boolean {
+  return isRecord(value)
+    && hasExactKeys(value, ["id", "text"])
+    && value.id === expected.id
+    && value.text === expected.text;
+}
+
+function sameToken(value: unknown, expected: WindDownLearnToken): boolean {
+  return isRecord(value)
+    && hasExactKeys(value, ["id", "text"])
+    && value.id === expected.id
+    && value.text === expected.text;
+}
+
+function normalizeStateExercise(
+  value: unknown,
+  expected: WindDownLearnExercise,
+): WindDownLearnExercise | null {
+  if (!isRecord(value)) return null;
+  if (value.kind !== expected.kind || value.creditPolicy !== "eligible") return null;
+  if (!sameCard(value.card, expected.card)) return null;
+  if (expected.kind === "meaning-choice") {
+    if (
+      !hasExactKeys(value, [
+        "kind",
+        "creditPolicy",
+        "card",
+        "choices",
+        "correctChoiceId",
+      ])
+      || !Array.isArray(value.choices)
+      || value.choices.length !== expected.choices.length
+      || !value.choices.every((choice, index) =>
+        sameChoice(choice, expected.choices[index]!),
+      )
+      || value.correctChoiceId !== expected.correctChoiceId
+    ) return null;
+    return expected;
+  }
+  if (
+    !hasExactKeys(value, [
+      "kind",
+      "creditPolicy",
+      "card",
+      "tokens",
+      "canonicalTokenIds",
+    ])
+    || !Array.isArray(value.tokens)
+    || value.tokens.length !== expected.tokens.length
+    || !value.tokens.every((token, index) =>
+      sameToken(token, expected.tokens[index]!),
+    )
+    || !Array.isArray(value.canonicalTokenIds)
+    || !value.canonicalTokenIds.every((tokenId): tokenId is string =>
+      typeof tokenId === "string",
+    )
+    || !sameStringArray(value.canonicalTokenIds, expected.canonicalTokenIds)
+  ) return null;
+  return expected;
+}
+
+function normalizeStateQueueExercise(
+  value: unknown,
+  expected: WindDownLearnExercise,
+  creditPolicy: WindDownLearnCreditPolicy,
+): WindDownLearnExercise | null {
+  if (!isRecord(value) || value.creditPolicy !== creditPolicy) return null;
+  if (creditPolicy === "eligible") {
+    return normalizeStateExercise(value, expected);
+  }
+  const practice = practiceOnly(expected);
+  if (value.kind !== practice.kind || !sameCard(value.card, practice.card)) return null;
+  if (practice.kind === "meaning-choice") {
+    if (
+      !hasExactKeys(value, [
+        "kind",
+        "creditPolicy",
+        "card",
+        "choices",
+        "correctChoiceId",
+      ])
+      || !Array.isArray(value.choices)
+      || value.choices.length !== practice.choices.length
+      || !value.choices.every((choice, index) =>
+        sameChoice(choice, practice.choices[index]!),
+      )
+      || value.correctChoiceId !== practice.correctChoiceId
+    ) return null;
+    return practice;
+  }
+  if (
+    !hasExactKeys(value, [
+      "kind",
+      "creditPolicy",
+      "card",
+      "tokens",
+      "canonicalTokenIds",
+    ])
+    || !Array.isArray(value.tokens)
+    || value.tokens.length !== practice.tokens.length
+    || !value.tokens.every((token, index) =>
+      sameToken(token, practice.tokens[index]!),
+    )
+    || !Array.isArray(value.canonicalTokenIds)
+    || !value.canonicalTokenIds.every((tokenId): tokenId is string =>
+      typeof tokenId === "string",
+    )
+    || !sameStringArray(value.canonicalTokenIds, practice.canonicalTokenIds)
+  ) return null;
+  return practice;
+}
+
+function normalizeStateMistake(
+  value: unknown,
+  expectedByCardId: Record<string, WindDownLearnExercise>,
+): WindDownLearnMistakeRecap | null {
+  if (!isRecord(value) || !hasExactKeys(value, ["card", "exerciseKind"])) return null;
+  if (value.exerciseKind !== "meaning-choice" && value.exerciseKind !== "sentence-builder") {
+    return null;
+  }
+  const card = isRecord(value.card) && typeof value.card.id === "string"
+    ? value.card.id
+    : null;
+  const expectedExercise = card ? expectedByCardId[card] : undefined;
+  if (!expectedExercise || expectedExercise.kind !== value.exerciseKind) return null;
+  if (!sameCard(value.card, expectedExercise.card)) return null;
+  return { card: expectedExercise.card, exerciseKind: expectedExercise.kind };
+}
+
+/**
+ * Validate and canonicalize a persisted Learn state against the current
+ * five-card material set. The returned state contains only engine-generated
+ * exercises, so callers can safely resume it without trusting raw JSON.
+ */
+export function normalizeWindDownLearnState(
+  value: unknown,
+  args: {
+    cards: readonly WindDownLearnCard[];
+    seed: string;
+  },
+): WindDownLearnState | null {
+  if (!isRecord(value)) return null;
+  const seed = typeof args.seed === "string" ? args.seed.trim() : "";
+  const cards = normalizeStateCards(args.cards);
+  if (!seed || !cards) return null;
+  let expected: WindDownLearnState;
+  try {
+    expected = createWindDownLearnSession({ cards, seed });
+  } catch {
+    return null;
+  }
+  if (
+    !hasExactKeys(value, [
+      "schemaVersion",
+      "seed",
+      "targetActions",
+      "queue",
+      "exerciseByCardId",
+      "creditedCardIds",
+      "earnedRewards",
+      "mistakes",
+      "isComplete",
+      "completion",
+    ])
+    || value.schemaVersion !== 1
+    || value.seed !== seed
+    || value.targetActions !== WINDDOWN_LEARN_CREDIT_TARGET
+    || typeof value.earnedRewards !== "number"
+    || !Number.isSafeInteger(value.earnedRewards)
+    || value.earnedRewards < 0
+    || value.earnedRewards > WINDDOWN_LEARN_CREDIT_TARGET
+    || typeof value.isComplete !== "boolean"
+    || !Array.isArray(value.creditedCardIds)
+    || value.creditedCardIds.length > WINDDOWN_LEARN_CREDIT_TARGET
+    || !value.creditedCardIds.every((cardId): cardId is string =>
+      typeof cardId === "string",
+    )
+  ) return null;
+
+  const expectedCardIds = Object.keys(expected.exerciseByCardId);
+  const expectedCardIdSet = new Set(expectedCardIds);
+  const creditedCardIds = value.creditedCardIds;
+  if (
+    new Set(creditedCardIds).size !== creditedCardIds.length
+    || creditedCardIds.some((cardId) => !expectedCardIdSet.has(cardId))
+    || value.earnedRewards !== creditedCardIds.length
+  ) return null;
+  const credited = new Set(creditedCardIds);
+
+  if (!isRecord(value.exerciseByCardId)) return null;
+  if (!hasExactKeys(value.exerciseByCardId, expectedCardIds)) return null;
+  for (const cardId of expectedCardIds) {
+    if (!normalizeStateExercise(value.exerciseByCardId[cardId], expected.exerciseByCardId[cardId]!)) {
+      return null;
+    }
+  }
+
+  if (!Array.isArray(value.queue) || value.queue.length > 10) return null;
+  if (value.isComplete !== (creditedCardIds.length === WINDDOWN_LEARN_CREDIT_TARGET)) return null;
+  if (value.isComplete ? value.queue.length !== 0 : value.queue.length === 0) return null;
+  const normalizedQueue: WindDownLearnExercise[] = [];
+  const queuedEligible = new Set<string>();
+  const queuedPractice = new Set<string>();
+  for (const rawExercise of value.queue) {
+    if (!isRecord(rawExercise) || !isRecord(rawExercise.card) || typeof rawExercise.card.id !== "string") {
+      return null;
+    }
+    const cardId = rawExercise.card.id;
+    const expectedExercise = expected.exerciseByCardId[cardId];
+    if (!expectedExercise) return null;
+    const creditPolicy = rawExercise.creditPolicy;
+    if (creditPolicy !== "eligible" && creditPolicy !== "practice-only") return null;
+    const normalizedExercise = normalizeStateQueueExercise(
+      rawExercise,
+      expectedExercise,
+      creditPolicy,
+    );
+    if (!normalizedExercise) return null;
+    if (creditPolicy === "eligible") {
+      if (credited.has(cardId) || queuedEligible.has(cardId)) return null;
+      queuedEligible.add(cardId);
+    } else {
+      if (!credited.has(cardId) || queuedPractice.has(cardId)) return null;
+      queuedPractice.add(cardId);
+    }
+    normalizedQueue.push(normalizedExercise);
+  }
+  for (const cardId of expectedCardIds) {
+    if (!credited.has(cardId) && !queuedEligible.has(cardId)) return null;
+    if (credited.has(cardId) && queuedEligible.has(cardId)) return null;
+  }
+
+  if (!Array.isArray(value.mistakes) || value.mistakes.length > WINDDOWN_LEARN_CREDIT_TARGET) return null;
+  const normalizedMistakes: WindDownLearnMistakeRecap[] = [];
+  const mistakeIds = new Set<string>();
+  for (const rawMistake of value.mistakes) {
+    const mistake = normalizeStateMistake(rawMistake, expected.exerciseByCardId);
+    if (!mistake || mistakeIds.has(mistake.card.id)) return null;
+    mistakeIds.add(mistake.card.id);
+    normalizedMistakes.push(mistake);
+  }
+
+  let completion: WindDownLearnCompletion | null = null;
+  if (value.isComplete) {
+    if (!isRecord(value.completion) || !hasExactKeys(value.completion, ["creditedCardIds", "mistakeRecap"])) return null;
+    if (
+      !Array.isArray(value.completion.creditedCardIds)
+      || !value.completion.creditedCardIds.every((cardId): cardId is string => typeof cardId === "string")
+      || !sameStringArray(value.completion.creditedCardIds, creditedCardIds)
+      || !Array.isArray(value.completion.mistakeRecap)
+      || value.completion.mistakeRecap.length !== normalizedMistakes.length
+    ) return null;
+    const normalizedCompletionMistakes: WindDownLearnMistakeRecap[] = [];
+    for (const rawMistake of value.completion.mistakeRecap) {
+      const mistake = normalizeStateMistake(rawMistake, expected.exerciseByCardId);
+      if (!mistake || !mistakeIds.has(mistake.card.id)) return null;
+      normalizedCompletionMistakes.push(mistake);
+    }
+    if (
+      !normalizedCompletionMistakes.every((mistake, index) => {
+        const expectedMistake = normalizedMistakes[index];
+        return expectedMistake?.card.id === mistake.card.id
+          && expectedMistake.exerciseKind === mistake.exerciseKind;
+      })
+    ) return null;
+    completion = {
+      creditedCardIds: [...creditedCardIds],
+      mistakeRecap: normalizedCompletionMistakes,
+    };
+  } else if (value.completion !== null) {
+    return null;
+  }
+
+  return {
+    schemaVersion: 1,
+    seed,
+    targetActions: WINDDOWN_LEARN_CREDIT_TARGET,
+    queue: normalizedQueue,
+    exerciseByCardId: Object.fromEntries(
+      expectedCardIds.map((cardId) => [cardId, expected.exerciseByCardId[cardId]]),
+    ),
+    creditedCardIds: [...creditedCardIds],
+    earnedRewards: value.earnedRewards,
+    mistakes: normalizedMistakes,
+    isComplete: value.isComplete,
+    completion,
   };
 }
 

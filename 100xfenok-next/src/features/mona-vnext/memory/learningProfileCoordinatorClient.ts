@@ -15,8 +15,14 @@ import type {
   WindDownCeremonySelection,
 } from "@/features/winddown/game/model/ceremony";
 
+import { resolveWindDownStorageScope } from "@/features/mona-vnext/memory/windDownStorageScope";
+import {
+  recoveryCopyNameForSnapshot,
+  validateWindDownRecoverySnapshot,
+  type WindDownRecoverySnapshot,
+} from "@/features/mona-vnext/memory/windDownRecovery";
+
 const COORDINATOR_BINDING = "WINDDOWN_REVIEW_COORDINATOR";
-const COORDINATOR_OBJECT_NAME = "mona-vnext-learning-profile-v1";
 
 export class MonaVnextProfileCoordinatorError extends Error {
   constructor(
@@ -55,16 +61,19 @@ async function coordinatorNamespace() {
   if (!isDurableObjectNamespace(namespace)) {
     throw new Error(`${COORDINATOR_BINDING}_BINDING_MISSING`);
   }
-  return namespace;
+  const scope = resolveWindDownStorageScope(
+    (env as Record<string, unknown>).WINDDOWN_DATA_WORKSPACE,
+  );
+  return { namespace, scope };
 }
 
-export async function invokeMonaVnextProfileCoordinator(
-  command: MonaVnextProfileCoordinatorCommand,
+async function invokeCoordinatorStub(
+  stub: DurableObjectStubLike,
+  command: unknown,
+  pathname = "/profile-coordinator",
 ) {
-  const namespace = await coordinatorNamespace();
-  const stub = namespace.get(namespace.idFromName(COORDINATOR_OBJECT_NAME));
   const response = await stub.fetch(
-    new Request("https://winddown.internal/profile-coordinator", {
+    new Request(`https://winddown.internal${pathname}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(command),
@@ -81,6 +90,52 @@ export async function invokeMonaVnextProfileCoordinator(
     throw new MonaVnextProfileCoordinatorError(code, response.status);
   }
   return body;
+}
+
+export async function invokeMonaVnextProfileCoordinator(
+  command: MonaVnextProfileCoordinatorCommand,
+) {
+  const { namespace, scope } = await coordinatorNamespace();
+  return invokeCoordinatorStub(namespace.get(namespace.idFromName(scope.objectName)), command);
+}
+
+export async function exportWindDownRecordsThroughCoordinator() {
+  const { namespace, scope } = await coordinatorNamespace();
+  const body = await invokeCoordinatorStub(
+    namespace.get(namespace.idFromName(scope.objectName)),
+    { operation: "export-recovery-snapshot" },
+  );
+  if (!validateWindDownRecoverySnapshot(body.snapshot).ok) {
+    throw new MonaVnextProfileCoordinatorError("WINDDOWN_RECOVERY_SNAPSHOT_INVALID", 503);
+  }
+  return body.snapshot as WindDownRecoverySnapshot;
+}
+
+export async function verifyWindDownRecoveryCopyThroughCoordinator(value: unknown) {
+  if (!validateWindDownRecoverySnapshot(value).ok) {
+    throw new MonaVnextProfileCoordinatorError("WINDDOWN_RECOVERY_SNAPSHOT_INVALID", 400);
+  }
+  const snapshot = value as WindDownRecoverySnapshot;
+  const { namespace } = await coordinatorNamespace();
+  const name = recoveryCopyNameForSnapshot(snapshot.snapshotDigest);
+  const body = await invokeCoordinatorStub(
+    namespace.get(namespace.idFromName(name)),
+    { operation: "restore-recovery-copy", snapshot },
+    `/recovery-copy/${snapshot.snapshotDigest}`,
+  );
+  if (
+    body.snapshotDigest !== snapshot.snapshotDigest
+    || body.recordCount !== snapshot.recordCount
+    || body.legacyRecordCount !== snapshot.legacyKvRecords.length
+  ) {
+    throw new MonaVnextProfileCoordinatorError("WINDDOWN_RECOVERY_TARGET_CORRUPT", 409);
+  }
+  return {
+    ok: true,
+    recordCount: body.recordCount,
+    legacyRecordCount: body.legacyRecordCount,
+    duplicate: body.duplicate === true,
+  };
 }
 
 export async function readMonaVnextLearningProfileThroughCoordinator() {

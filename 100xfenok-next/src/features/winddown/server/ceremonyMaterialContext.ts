@@ -4,6 +4,7 @@ import {
 } from "@/features/winddown/game/model/ceremony";
 import {
   loadWindDownStudyMaterial,
+  type WindDownStudyMaterialSelection,
 } from "@/features/winddown/server/publishedMaterialAdapter";
 
 export class WindDownCeremonyMaterialError extends Error {
@@ -22,6 +23,12 @@ export async function loadWindDownCeremonyMaterialContext():
     dueExpressionIds: [],
     deferredExpressionIds: [],
   });
+  return buildWindDownCeremonyMaterialContext(material);
+}
+
+export function buildWindDownCeremonyMaterialContext(
+  material: WindDownStudyMaterialSelection,
+): WindDownCeremonyMaterialContext {
   if (
     material.metadata.source !== "published-lkg"
     || material.metadata.publicationStatus !== "active"

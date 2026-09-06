@@ -51,7 +51,6 @@ await check("QA profile bootstrap never reads learner mirror", async () => {
 });
 
 await check("browser QA cannot target a real learner host", async () => {
-  // @ts-expect-error Plain-JS script boundary is intentionally shared by Node QA tools.
   const { assertWindDownQaTarget } = await import("./winddown-qa-target.mjs");
   assert.doesNotThrow(() => assertWindDownQaTarget("http://127.0.0.1:3107", "1"));
   for (const target of ["https://100xfenok.etloveaui.workers.dev", "https://example.org", "http://127.0.0.1.evil.example", "file:///tmp/page"]) {

@@ -43,8 +43,6 @@ export type MonaVnextLearningProfile = {
 };
 
 const scheduler = fsrs({ enable_fuzz: false });
-const MAX_PROFILE_RECORDS = 1000;
-const MAX_APPLIED_EVENT_IDS = 4000;
 
 function finiteNumber(value: unknown, fallback = 0) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
@@ -159,7 +157,7 @@ export function normalizeMonaVnextLearningProfile(value: unknown): MonaVnextLear
     : {};
   const records: Record<string, MonaVnextLearningRecord> = {};
 
-  for (const [key, raw] of Object.entries(rawRecords).slice(-MAX_PROFILE_RECORDS)) {
+  for (const [key, raw] of Object.entries(rawRecords)) {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
     const record = raw as Record<string, unknown>;
     const expressionId = typeof record.expressionId === "string"
@@ -184,7 +182,6 @@ export function normalizeMonaVnextLearningProfile(value: unknown): MonaVnextLear
   const appliedEventIds = Array.isArray(source.appliedEventIds)
     ? source.appliedEventIds
       .filter((item): item is string => typeof item === "string" && item.length > 0)
-      .slice(-MAX_APPLIED_EVENT_IDS)
     : [];
 
   return {
@@ -230,13 +227,12 @@ export function applyMonaVnextLearningEvents(
   }
 
   const recordEntries = Object.entries(records)
-    .sort((a, b) => a[1].lastReviewedAt.localeCompare(b[1].lastReviewedAt))
-    .slice(-MAX_PROFILE_RECORDS);
+    .sort((a, b) => a[1].lastReviewedAt.localeCompare(b[1].lastReviewedAt));
   return {
     ...profile,
     updatedAt,
     records: Object.fromEntries(recordEntries),
-    appliedEventIds: appliedEventIds.slice(-MAX_APPLIED_EVENT_IDS),
+    appliedEventIds,
   };
 }
 

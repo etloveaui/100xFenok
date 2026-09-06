@@ -436,6 +436,11 @@ export default function WindDownHabitHomeClient() {
             ) : null}
           </>
         ) : null}
+        <footer className="mt-8 border-t border-[var(--wd-line)] pt-4">
+          <Link href="/winddown/records" className="inline-flex min-h-12 items-center gap-2 text-sm font-semibold text-[var(--wd-muted)]">
+            학습 기록 보관 <span aria-hidden="true">→</span>
+          </Link>
+        </footer>
       </div>
     </main>
   );

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { handleMonaVnextProfileCoordinatorRequest } from "../src/features/mona-vnext/memory/learningProfileCoordinator";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import {
@@ -217,8 +218,46 @@ const learnClientSource = readFileSync(
   "utf8",
 );
 
-type Case = { name: string; run: () => void };
+type Case = { name: string; run: () => void | Promise<void> };
+async function corruptCoordinatorState(kind: "session" | "attempt") {
+  const values = new Map<string, unknown>();
+  type Transaction = {
+    get<T>(key: string): Promise<T | undefined>;
+    put<T>(key: string, value: T): Promise<void>;
+  };
+  const storage = {
+    async get<T>(key: string) { return values.get(key) as T | undefined; },
+    async put<T>(key: string, value: T) { values.set(key, structuredClone(value)); },
+    async transaction<T>(fn: (tx: Transaction) => Promise<T>) { return fn(storage); },
+  };
+  const state = { storage, blockConcurrencyWhile: async <T>(fn: () => Promise<T>) => fn() };
+  const env = { MONA_VNEXT_KV: { get: async () => null, put: async () => {} } };
+  const firstState = createWindDownLearnSession({ cards: firstBootstrap.cards, seed: manifest.seed });
+  const command = {
+    operation: "commit-learn-attempt", manifest, cards: firstBootstrap.cards,
+    attemptId: "preservation-attempt-1", action: correctAction(firstState), nowIso: now.toISOString(),
+  };
+  const invoke = (body: typeof command) => handleMonaVnextProfileCoordinatorRequest(state, env,
+    new Request("https://winddown.internal/profile-coordinator", { method: "POST", body: JSON.stringify(body) }));
+  assert.equal((await invoke(command)).status, 200);
+  const key = kind === "session"
+    ? `winddown-learn-session:${habitKstDay}`
+    : `winddown-learn-attempt:${command.attemptId}`;
+  const stored = structuredClone(values.get(key)) as { state: Record<string, unknown> };
+  stored.state.queue = [];
+  values.set(key, stored);
+  const before = structuredClone([...values]);
+  const response = await invoke(kind === "session"
+    ? { ...command, attemptId: "preservation-attempt-2" }
+    : command);
+  assert.equal(response.status, 409, "corrupt durable state must produce a recoverable conflict");
+  assert.equal((await response.json()).error, "WINDDOWN_LEARN_RESUME_UNAVAILABLE");
+  assert.deepEqual([...values], before, "rejected state must remain intact for recovery");
+}
+
 const cases: Case[] = [
+  { name: "corrupt stored session blocks without rewriting records", run: () => corruptCoordinatorState("session") },
+  { name: "corrupt duplicate receipt blocks without rewriting records", run: () => corruptCoordinatorState("attempt") },
   {
     name: "valid resume wins when reload has only four fresh cards",
     run: () => {
@@ -470,7 +509,7 @@ async function main(): Promise<void> {
   const failures: string[] = [];
   for (const testCase of cases) {
     try {
-      testCase.run();
+      await testCase.run();
       console.log(`PASS ${testCase.name}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

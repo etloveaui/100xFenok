@@ -13,6 +13,7 @@ import {
   type WindDownReviewCycleReceipt,
 } from "@/features/winddown/server/reviewCycle";
 import { loadWindDownStudyMaterial } from "@/features/winddown/server/publishedMaterialAdapter";
+import type { WindDownReviewAlias } from "@/features/winddown/server/reviewIdentity";
 
 export class WindDownReviewPersistenceError extends Error {
   constructor(
@@ -27,6 +28,7 @@ export class WindDownReviewPersistenceError extends Error {
 type ActiveMaterialContext = {
   material: WindDownReviewCycleMaterial | null;
   activeMaterialIds: string[];
+  aliases: WindDownReviewAlias[];
   contentDigest: string;
 };
 
@@ -57,6 +59,7 @@ async function loadActiveMaterialContext(
         }
       : null,
     activeMaterialIds: material.entries.map((entry) => entry.id),
+    aliases: material.aliases,
     contentDigest: material.metadata.contentDigest,
   };
 }
@@ -76,6 +79,7 @@ export async function gradeWindDownReviewRecall(
     material: context.material,
     currentContentDigest: context.contentDigest,
     nowIso: now.toISOString(),
+    aliases: context.aliases,
   });
 }
 
@@ -99,6 +103,7 @@ export async function persistWindDownReviewCycle(
     activeMaterialIds: context.activeMaterialIds,
     currentContentDigest: context.contentDigest,
     nowIso: now.toISOString(),
+    aliases: context.aliases,
   });
   const receipt = normalizeWindDownReviewCycleReceipt(response.receipt);
   const remainingDueCount = response.remainingDueCount;

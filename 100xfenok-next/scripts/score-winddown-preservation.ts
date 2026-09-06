@@ -21,23 +21,19 @@ import {
   createWindDownHabitCompletionEvent,
   type WindDownHabitCompletionEvent,
 } from "../src/features/winddown/habit/domain";
+import {
+  readMonaVnextLearningProfile,
+  readWindDownHabitEvents,
+} from "../src/features/mona-vnext/memory/windDownPagedStorage";
 
 /**
- * Stage 1 regression suite for the follow-up lossless storage implementation.
- *
- * Proposed production design (intentionally not implemented here): keep the
- * legacy single-key rows intact, copy them forward once on the first write
- * into deterministic byte-bounded archive pages, and publish a manifest only
- * after every page is present. A manifest should carry schema version,
- * generation, page size, page count, total count, and a content digest. Page
- * values must stay below the Durable Object SQLite key/value limit, and page
- * keys must be scoped by the deployment-owned workspace. Later writes append
- * only to a habit tail page or mutate changed profile pages; they do not make
- * a full new historical generation. A read prefers a complete manifest,
- * otherwise reads the untouched legacy row; it must not initialize migration
- * state. A partially copied generation is ignored and a retry is idempotent.
- * The coordinator should use the Durable Object list cursor to enumerate page
- * keys rather than assume one monolithic value.
+ * Stage 1 regression suite for the lossless storage implementation. It keeps
+ * legacy single-key rows intact, copies them forward once on the first write
+ * into deterministic byte-bounded pages, and publishes a manifest only after
+ * every page is present. Later writes append to a habit tail page or mutate
+ * changed profile pages. Reads use a complete manifest and list cursor, or
+ * the untouched legacy row when no manifest exists; a partial manifest fails
+ * closed.
  *
  * Habit pages should hold immutable receipt-backed events. The coordinator
  * must load all pages for streak, XP, and game projections while leaving the
@@ -51,9 +47,8 @@ import {
  * the exact expression IDs and FSRS fields, keep the old profile row as an
  * untouched compatibility source, mutate only changed profile pages, and
  * atomically publish page metadata after copy-forward. The Durable Object
- * remains authoritative; the KV mirror is a scoped, retryable projection whose
- * manifest/pages (or full snapshot when it
- * fits) must carry the complete profile and a digest. A mirror failure must
+ * remains authoritative; the KV mirror is a scoped, retryable projection that
+ * carries the complete profile. A mirror failure must
  * leave the committed DO receipt/state intact so a duplicate retry repairs it.
  * When a legacy KV seed is used, persist its exact raw string under a separate
  * original-source DO key before writing any normalized profile or mirror; never
@@ -332,6 +327,9 @@ async function caseHabitAppendRetryPreservesHistory() {
   assert(afterRetry);
   assert.equal(afterRetry.length, legacyEvents.length);
   assert.deepEqual(afterRetry, legacyEvents);
+  const persisted = await readWindDownHabitEvents(harness.state.storage);
+  assert.equal(persisted.length, legacyEvents.length + 1);
+  assertSameEventIds(persisted, [...legacyEvents, appendedEvent]);
 
   const read = await harness.command({
     operation: "read-winddown-habit",
@@ -381,6 +379,9 @@ async function caseHabitAppendThenReadPreservesHistory() {
     JSON.stringify(harness.values.get(PROFILE_STORAGE_KEY)),
     JSON.stringify(legacyProfile),
   );
+  const persisted = await readWindDownHabitEvents(harness.state.storage);
+  assert.equal(persisted.length, legacyEvents.length + 1);
+  assertSameEventIds(persisted, [...legacyEvents, appendedEvent]);
 
   const read = await harness.command({
     operation: "read-winddown-habit",
@@ -508,6 +509,10 @@ async function caseCoordinatorReadPreservesRecords() {
     JSON.stringify(harness.values.get(PROFILE_STORAGE_KEY)),
     JSON.stringify(rawProfile),
   );
+  assert.equal(
+    Object.keys((await readMonaVnextLearningProfile(harness.state.storage)).records).length,
+    1_001,
+  );
 }
 
 async function caseLegacyKvRawSeedIsRetained() {
@@ -582,6 +587,10 @@ async function caseCoordinatorReadPreservesAppliedEventIds() {
   assert.equal(
     JSON.stringify(harness.values.get(PROFILE_STORAGE_KEY)),
     JSON.stringify(rawProfile),
+  );
+  assert.equal(
+    (await readMonaVnextLearningProfile(harness.state.storage)).appliedEventIds.length,
+    4_001,
   );
 }
 

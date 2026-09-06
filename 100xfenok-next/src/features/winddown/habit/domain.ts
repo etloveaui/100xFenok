@@ -19,7 +19,6 @@ import {
 export const WIND_DOWN_HABIT_SCHEMA_VERSION = 1 as const;
 export const WIND_DOWN_HABIT_CONSTELLATION_NIGHTS = 7 as const;
 export const WIND_DOWN_HABIT_MAX_QUEST_HISTORY = 28 as const;
-export const WIND_DOWN_HABIT_MAX_PROJECTION_EVENTS = 1_000 as const;
 export const WIND_DOWN_HABIT_DAY_CUTOFF_HOUR_KST = 5 as const;
 export const WIND_DOWN_HABIT_DAY_CUTOFF_MINUTE_KST = 30 as const;
 
@@ -609,9 +608,6 @@ function stableEventJson(event: WindDownHabitCompletionEvent) {
 }
 
 function uniqueEvents(values: readonly unknown[]): WindDownHabitCompletionEvent[] {
-  if (values.length > WIND_DOWN_HABIT_MAX_PROJECTION_EVENTS) {
-    return invalid("INVALID_HABIT_PROJECTION");
-  }
   const byId = new Map<string, WindDownHabitCompletionEvent>();
   for (const value of values) {
     const event = normalizeWindDownHabitCompletionEvent(value);

@@ -7,6 +7,7 @@ import {
   canonicalWindDownLkgJson,
   windDownRuntimeProjectionBody,
   type WindDownLkgAdvisorGate,
+  type WindDownLkgAliasEntry,
   type WindDownLkgAdvisorOverlay,
   type WindDownRuntimeProjection,
 } from "@/features/winddown/content/lkgContract";
@@ -59,6 +60,7 @@ export type WindDownStudyMaterialMetadata = {
 
 export type WindDownStudyMaterialSelection = {
   entries: MonaVnextExpression[];
+  aliases: WindDownLkgAliasEntry[];
   dueExpressionIds: string[];
   deferredExpressionIds: string[];
   resolution: WindDownStudyMaterialResolution;
@@ -252,6 +254,7 @@ function publishedSelection(
 
   return {
     entries,
+    aliases: projection.aliases.map((alias) => ({ ...alias })),
     dueExpressionIds: [],
     deferredExpressionIds: [],
     resolution: {
@@ -315,6 +318,7 @@ function legacyFallbackSelection(
   const approved = listTeacherApprovedMonaVnextExpressionEntries();
   return {
     entries: approved.entries,
+    aliases: [],
     dueExpressionIds: [],
     deferredExpressionIds: [],
     resolution: {

@@ -105,6 +105,15 @@ jobs:
             *) echo "unsupported suite" >&2; exit 64;;
           esac
 
+      - name: Upload synthetic WIND DOWN UI evidence
+        if: ${{ always() && inputs.suite == 'npm-script' && inputs.script == 'qa:winddown-preservation-isolated' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: winddown-preservation-ui
+          path: 100xfenok-next/test-results/winddown-preservation/*-records.png
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Emit completion receipt
         if: always()
         working-directory: .

@@ -6,6 +6,7 @@ import {
   WINDDOWN_LEARN_CREDIT_TARGET,
   applyWindDownLearnAction,
   createWindDownLearnSession,
+  normalizeWindDownLearnState,
   type WindDownLearnAction,
   type WindDownLearnCard,
   type WindDownLearnState,
@@ -55,6 +56,27 @@ type StudyResponse = {
   };
 };
 
+type LearnAvailability =
+  | "loading"
+  | "ready"
+  | "resume-unavailable"
+  | "no-new-material";
+
+type LearnUnavailableResponse = {
+  schemaVersion: 1;
+  mode: "learn";
+  modelOpened: false;
+  error:
+    | "WINDDOWN_LEARN_RESUME_UNAVAILABLE"
+    | "WINDDOWN_LEARN_NO_NEW_MATERIAL";
+  availability: Exclude<LearnAvailability, "loading" | "ready">;
+  links: {
+    review: "/winddown/review";
+    drill: "/winddown/drill";
+    home: "/winddown";
+  };
+};
+
 type ProgressPayload = {
   schemaVersion: 2;
   activity: "learn";
@@ -88,31 +110,114 @@ function newAttemptId(sessionId: string) {
   return `${sessionId}:${suffix}`;
 }
 
-function isLearnState(value: unknown): value is WindDownLearnState {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  const source = value as Partial<WindDownLearnState>;
-  return source.schemaVersion === 1
-    && source.targetActions === WINDDOWN_LEARN_CREDIT_TARGET
-    && Array.isArray(source.queue)
-    && Array.isArray(source.creditedCardIds)
-    && Array.isArray(source.mistakes)
-    && typeof source.isComplete === "boolean";
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isIsoDate(value: unknown): value is string {
+  return typeof value === "string" && Number.isFinite(Date.parse(value));
+}
+
+function isLearnCard(value: unknown): value is WindDownLearnCard {
+  if (!isRecord(value)) return false;
+  return typeof value.id === "string"
+    && value.id.length > 0
+    && value.id.trim() === value.id
+    && typeof value.ko === "string"
+    && value.ko.length > 0
+    && value.ko.trim() === value.ko
+    && typeof value.en === "string"
+    && value.en.length > 0
+    && value.en.trim() === value.en
+    && (
+      value.acceptedVariants === undefined
+      || (
+        Array.isArray(value.acceptedVariants)
+        && value.acceptedVariants.every((item) => typeof item === "string")
+      )
+    );
+}
+
+function isLearnManifest(
+  value: unknown,
+): value is StudyResponse["learnSession"]["manifest"] {
+  if (!isRecord(value)) return false;
+  const cardIds = value.cardIds;
+  const issuedAt = value.issuedAtIso;
+  const expiresAt = value.expiresAtIso;
+  return value.schemaVersion === 1
+    && typeof value.sessionId === "string"
+    && value.sessionId.length > 0
+    && typeof value.habitKstDay === "string"
+    && /^\d{4}-\d{2}-\d{2}$/.test(value.habitKstDay)
+    && typeof value.seed === "string"
+    && value.seed.length > 0
+    && Array.isArray(cardIds)
+    && cardIds.length === WINDDOWN_LEARN_CREDIT_TARGET
+    && cardIds.every((cardId) => typeof cardId === "string" && cardId.length > 0)
+    && new Set(cardIds).size === cardIds.length
+    && typeof value.contentDigest === "string"
+    && /^[a-f0-9]{64}$/.test(value.contentDigest)
+    && isIsoDate(issuedAt)
+    && isIsoDate(expiresAt)
+    && Date.parse(expiresAt) > Date.parse(issuedAt);
+}
+
+function isUnavailableResponse(
+  value: unknown,
+): value is LearnUnavailableResponse {
+  if (!isRecord(value)) return false;
+  const links = value.links;
+  const availability = value.availability;
+  return value.schemaVersion === 1
+    && value.mode === "learn"
+    && value.modelOpened === false
+    && (
+      value.error === "WINDDOWN_LEARN_RESUME_UNAVAILABLE"
+      || value.error === "WINDDOWN_LEARN_NO_NEW_MATERIAL"
+    )
+    && (
+      availability === "resume-unavailable"
+      || availability === "no-new-material"
+    )
+    && isRecord(links)
+    && links.review === "/winddown/review"
+    && links.drill === "/winddown/drill"
+    && links.home === "/winddown";
 }
 
 function isStudyResponse(value: unknown): value is StudyResponse {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  if (!isRecord(value)) return false;
   const source = value as Partial<StudyResponse>;
-  return (
-    source.schemaVersion === 1 &&
-    source.mode === "learn" &&
-    source.modelOpened === false &&
-    Array.isArray(source.cards) &&
-    source.material?.source === "published-lkg" &&
-    source.material.publicationStatus === "active" &&
-    typeof source.material.contentDigest === "string" &&
-    typeof source.learnSession?.proof === "string" &&
-    typeof source.learnSession.manifest?.sessionId === "string"
-  );
+  if (
+    source.schemaVersion !== 1
+    || source.mode !== "learn"
+    || source.modelOpened !== false
+    || !Array.isArray(source.cards)
+    || source.cards.length !== WINDDOWN_LEARN_CREDIT_TARGET
+    || !source.cards.every(isLearnCard)
+  ) return false;
+  const material = source.material;
+  if (!isRecord(material) || material.source !== "published-lkg" || material.publicationStatus !== "active") {
+    return false;
+  }
+  const contentDigest = material.contentDigest;
+  if (typeof contentDigest !== "string") return false;
+  const learnSession = source.learnSession;
+  if (!isRecord(learnSession) || typeof learnSession.proof !== "string" || learnSession.proof.length === 0) {
+    return false;
+  }
+  const manifest = learnSession.manifest;
+  return isLearnManifest(manifest)
+    && "resumeState" in learnSession
+    && manifest.contentDigest === contentDigest;
+}
+
+class LearnAvailabilityError extends Error {
+  constructor(readonly availability: Exclude<LearnAvailability, "loading" | "ready">) {
+    super(`winddown_learn_${availability}`);
+    this.name = "LearnAvailabilityError";
+  }
 }
 
 export default function WindDownLearnClient() {
@@ -125,9 +230,13 @@ export default function WindDownLearnClient() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
+  const [availability, setAvailability] = useState<LearnAvailability>(
+    "loading",
+  );
 
   const loadQuest = useCallback(async () => {
     setStatus("loading");
+    setAvailability("loading");
     setFeedback(null);
     setSelectedTokenIds([]);
     try {
@@ -137,6 +246,9 @@ export default function WindDownLearnClient() {
         { cache: "no-store" },
       );
       const body: unknown = await response.json();
+      if (isUnavailableResponse(body)) {
+        throw new LearnAvailabilityError(body.availability);
+      }
       if (
         !response.ok ||
         !isStudyResponse(body) ||
@@ -144,21 +256,32 @@ export default function WindDownLearnClient() {
       ) {
         throw new Error("winddown_learn_bootstrap_invalid");
       }
+      const nextState = body.learnSession.resumeState === null
+        ? createWindDownLearnSession({
+            cards: body.cards,
+            seed: body.learnSession.manifest.seed,
+          })
+        : normalizeWindDownLearnState(body.learnSession.resumeState, {
+            cards: body.cards,
+            seed: body.learnSession.manifest.seed,
+          });
+      if (!nextState) {
+        throw new LearnAvailabilityError("resume-unavailable");
+      }
       setSessionProof(body.learnSession.proof);
       setManifestSessionId(body.learnSession.manifest.sessionId);
-      setSession(
-        isLearnState(body.learnSession.resumeState)
-          ? body.learnSession.resumeState
-          : createWindDownLearnSession({
-              cards: body.cards,
-              seed: body.learnSession.manifest.seed,
-            }),
-      );
+      setSession(nextState);
+      setAvailability("ready");
       setStatus("ready");
-    } catch {
+    } catch (error) {
       setSession(null);
       setSessionProof(null);
       setManifestSessionId(null);
+      setAvailability(
+        error instanceof LearnAvailabilityError
+          ? error.availability
+          : "resume-unavailable",
+      );
       setStatus("error");
     }
   }, []);
@@ -237,32 +360,46 @@ export default function WindDownLearnClient() {
     return () => window.clearTimeout(timeoutId);
   }, [canShowIdleAssist, current?.card.id, current?.kind, selectedTokenIds]);
 
-  const persistProgress = useCallback(async (payload: ProgressPayload) => {
-    const response = await fetch("/api/winddown/progress", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const body = (await response.json().catch(() => null)) as {
-      persisted?: boolean;
-      outcome?: Feedback["outcome"];
-      state?: unknown;
-    } | null;
-    if (
-      !response.ok
-      || body?.persisted !== true
-      || !isLearnState(body.state)
-      || (
-        body.outcome !== "miss"
-        && body.outcome !== "practice"
-        && body.outcome !== "correct"
-        && body.outcome !== "complete"
-      )
-    ) {
-      throw new Error("winddown_learn_progress_failed");
-    }
-    return { outcome: body.outcome, state: body.state };
-  }, []);
+  const persistProgress = useCallback(
+    async (
+      payload: ProgressPayload,
+      stateContext: WindDownLearnState,
+    ) => {
+      const response = await fetch("/api/winddown/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const body = (await response.json().catch(() => null)) as {
+        persisted?: boolean;
+        outcome?: Feedback["outcome"];
+        state?: unknown;
+      } | null;
+      const cards = Object.values(stateContext.exerciseByCardId).map(
+        (exercise) => exercise.card,
+      );
+      const state = normalizeWindDownLearnState(body?.state, {
+        cards,
+        seed: stateContext.seed,
+      });
+      const outcome = body?.outcome;
+      if (
+        !response.ok
+        || body?.persisted !== true
+        || !state
+        || (
+          outcome !== "miss"
+          && outcome !== "practice"
+          && outcome !== "correct"
+          && outcome !== "complete"
+        )
+      ) {
+        throw new Error("winddown_learn_progress_failed");
+      }
+      return { outcome, state };
+    },
+    [],
+  );
 
   const saveFeedback = useCallback(
     async (currentFeedback: Feedback) => {
@@ -270,7 +407,10 @@ export default function WindDownLearnClient() {
       const attemptId = currentFeedback.progress.attemptId;
       setFeedback({ ...currentFeedback, saveError: false });
       try {
-        const persisted = await persistProgress(currentFeedback.progress);
+        const persisted = await persistProgress(
+          currentFeedback.progress,
+          currentFeedback.nextState,
+        );
         setFeedback((latest) =>
           latest && latest.progress?.attemptId === attemptId
             ? {
@@ -341,7 +481,10 @@ export default function WindDownLearnClient() {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] min-h-[100dvh] overflow-y-auto bg-[var(--wd-bg)] text-[var(--wd-text)]">
+    <div
+      data-winddown-learn-availability={availability}
+      className="fixed inset-0 z-[70] min-h-[100dvh] overflow-y-auto bg-[var(--wd-bg)] text-[var(--wd-text)]"
+    >
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-[max(env(safe-area-inset-top),18px)]">
         <header>
           <div className="flex items-center justify-between gap-4">
@@ -391,15 +534,43 @@ export default function WindDownLearnClient() {
           ) : null}
 
           {status === "error" ? (
-            <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-7 text-center">
-              <p className="text-lg font-black">문장을 안전하게 열지 못했어.</p>
-              <p className="mt-2 text-sm font-semibold leading-6 text-[var(--wd-text-muted)]">
-                이전 소재로 조용히 바꾸지 않았어. 다시 불러오면 돼.
+            <section
+              className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-7 text-center"
+            >
+              <p className="text-lg font-black">
+                {availability === "no-new-material"
+                  ? "오늘은 새 문장이 없어."
+                  : "공부하던 내용을 불러오지 못했어."}
               </p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-[var(--wd-text-muted)]">
+                {availability === "no-new-material"
+                  ? "다른 연습으로 이어가거나 오늘 여정으로 돌아가면 돼."
+                  : "진행 기록은 보관되어 있어. 다시 불러오거나 다른 연습을 선택해 줘."}
+              </p>
+              <div className="mt-6 grid gap-3">
+                <Link
+                  href="/winddown/review"
+                  className="inline-flex min-h-14 items-center justify-center rounded-2xl border border-[var(--wd-border)] px-5 text-sm font-black text-[var(--wd-text)]"
+                >
+                  복습으로 이동
+                </Link>
+                <Link
+                  href="/winddown/drill"
+                  className="inline-flex min-h-14 items-center justify-center rounded-2xl border border-[var(--wd-border)] px-5 text-sm font-black text-[var(--wd-text)]"
+                >
+                  짧게 연습하기
+                </Link>
+                <Link
+                  href="/winddown"
+                  className="inline-flex min-h-14 items-center justify-center rounded-2xl border border-[var(--wd-border)] px-5 text-sm font-black text-[var(--wd-text)]"
+                >
+                  오늘 여정 보기
+                </Link>
+              </div>
               <button
                 type="button"
                 onClick={() => void loadQuest()}
-                className="mt-6 min-h-14 w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
+                className="mt-3 min-h-14 w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]"
               >
                 다시 불러오기
               </button>

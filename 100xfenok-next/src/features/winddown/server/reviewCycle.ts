@@ -8,6 +8,10 @@ import {
 import { buildLearningEvent } from "@/features/mona-vnext/memory/srsBridge";
 import type { MonaVnextLearningRating } from "@/features/mona-vnext/memory/srsBridge";
 import type { MonaVnextExpression } from "@/features/mona-vnext/coach/coachPolicy";
+import {
+  prepareWindDownLearningRecordResolver,
+  type WindDownReviewAlias,
+} from "@/features/winddown/server/reviewIdentity";
 
 export const WINDDOWN_REVIEW_CYCLE_SCHEMA_VERSION = 1 as const;
 
@@ -80,6 +84,7 @@ type CommitArgs = {
   material: WindDownReviewCycleMaterial | null;
   currentContentDigest: string;
   nowIso: string;
+  aliases?: readonly WindDownReviewAlias[];
 };
 
 type GradeArgs = Omit<CommitArgs, "existingReceipt">;
@@ -303,23 +308,27 @@ export async function buildWindDownReviewCards(args: {
   profile: MonaVnextLearningProfile;
   contentDigest: string;
   nowIso: string;
+  aliases?: readonly WindDownReviewAlias[];
 }) {
   const nowMs = Date.parse(args.nowIso);
   if (!Number.isFinite(nowMs) || !SHA256_HEX.test(args.contentDigest)) {
     throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
   }
-  const profile = normalizeMonaVnextLearningProfile(args.profile);
+  const resolver = prepareWindDownLearningRecordResolver({
+    profile: args.profile,
+    aliases: args.aliases,
+  });
   const cards = await Promise.all(args.cards.map(async (card) => {
-    const record = profile.records[card.id];
-    if (!record || Date.parse(record.card.dueAtIso) > nowMs) return null;
+    const resolved = resolver.resolve(card.id);
+    if (!resolved || Date.parse(resolved.record.card.dueAtIso) > nowMs) return null;
     return {
       ...card,
       reviewCycleId: await createWindDownReviewCycleId({
         materialId: card.id,
         contentDigest: args.contentDigest,
-        record,
+        record: resolved.record,
       }),
-      dueAtIso: record.card.dueAtIso,
+      dueAtIso: resolved.record.card.dueAtIso,
     };
   }));
   return cards.filter(
@@ -423,6 +432,7 @@ async function validateReviewCycleContext(args: {
   material: WindDownReviewCycleMaterial | null;
   currentContentDigest: string;
   nowIso: string;
+  aliases?: readonly WindDownReviewAlias[];
 }) {
   if (args.contentDigest !== args.currentContentDigest) {
     throw new WindDownReviewCycleError("MATERIAL_VERSION_CHANGED", 409);
@@ -434,20 +444,28 @@ async function validateReviewCycleContext(args: {
   if (!Number.isFinite(nowMs)) {
     throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
   }
-  const profile = normalizeMonaVnextLearningProfile(args.profile);
-  const record = profile.records[args.materialId];
-  if (!record || Date.parse(record.card.dueAtIso) > nowMs) {
+  const resolver = prepareWindDownLearningRecordResolver({
+    profile: args.profile,
+    aliases: args.aliases,
+  });
+  const resolved = resolver.resolve(args.materialId);
+  if (!resolved || Date.parse(resolved.record.card.dueAtIso) > nowMs) {
     throw new WindDownReviewCycleError("REVIEW_CYCLE_NOT_DUE", 409);
   }
   const expectedCycleId = await createWindDownReviewCycleId({
     materialId: args.materialId,
     contentDigest: args.contentDigest,
-    record,
+    record: resolved.record,
   });
   if (args.reviewCycleId !== expectedCycleId) {
     throw new WindDownReviewCycleError("REVIEW_CYCLE_STALE", 409);
   }
-  return { nowMs, profile, material: args.material };
+  return {
+    nowMs,
+    profile: resolver.profile,
+    material: args.material,
+    recordKey: resolved.recordKey,
+  };
 }
 
 export async function gradeWindDownReviewAttemptState(args: GradeArgs) {
@@ -460,6 +478,7 @@ export async function gradeWindDownReviewAttemptState(args: GradeArgs) {
     material: args.material,
     currentContentDigest: args.currentContentDigest,
     nowIso: args.nowIso,
+    aliases: args.aliases,
   });
   if (input.attempt.revealedBefore) {
     return { outcome: "revealed" as const, needsRepair: true };
@@ -474,18 +493,33 @@ export function summarizeWindDownReviewQueue(args: {
   profile: MonaVnextLearningProfile;
   nowIso: string;
   activeMaterialIds?: Iterable<string>;
+  aliases?: readonly WindDownReviewAlias[];
 }) {
   const nowMs = Date.parse(args.nowIso);
   if (!Number.isFinite(nowMs)) {
     throw new WindDownReviewCycleError("INVALID_REVIEW_CYCLE", 400);
   }
-  const activeIds = args.activeMaterialIds
-    ? new Set(args.activeMaterialIds)
-    : null;
-  const records = Object.values(
-    normalizeMonaVnextLearningProfile(args.profile).records,
-  )
-    .filter((record) => !activeIds || activeIds.has(record.expressionId))
+  const resolver = prepareWindDownLearningRecordResolver({
+    profile: args.profile,
+    aliases: args.aliases,
+  });
+  const canonicalByLegacyId = new Map(
+    (args.aliases ?? []).map((alias) => [alias.legacyV1Id, alias.canonicalId]),
+  );
+  const candidateIds = new Set(
+    (args.activeMaterialIds
+      ? [...args.activeMaterialIds]
+      : [
+        ...resolver.recordKeys,
+        ...(args.aliases ?? []).map((alias) => alias.canonicalId),
+      ]
+    ).map((id) => canonicalByLegacyId.get(id) ?? id),
+  );
+  const records = [...candidateIds]
+    .flatMap((canonicalId) => {
+      const resolved = resolver.resolve(canonicalId);
+      return resolved ? [resolved.record] : [];
+    })
     .sort((left, right) =>
       Date.parse(left.card.dueAtIso) - Date.parse(right.card.dueAtIso) ||
       left.expressionId.localeCompare(right.expressionId)
@@ -528,7 +562,7 @@ export async function commitWindDownReviewCycleState(args: CommitArgs) {
     };
   }
 
-  const { nowMs, profile, material } = await validateReviewCycleContext({
+  const { nowMs, profile, material, recordKey } = await validateReviewCycleContext({
     profile: args.profile,
     reviewCycleId: input.reviewCycleId,
     materialId: input.materialId,
@@ -536,6 +570,7 @@ export async function commitWindDownReviewCycleState(args: CommitArgs) {
     material: args.material,
     currentContentDigest: args.currentContentDigest,
     nowIso: args.nowIso,
+    aliases: args.aliases,
   });
 
   const result = outcome({
@@ -545,7 +580,7 @@ export async function commitWindDownReviewCycleState(args: CommitArgs) {
   });
   const reviewedAt = new Date(nowMs).toISOString();
   const learningEvent = buildLearningEvent({
-    expressionId: input.materialId,
+    expressionId: recordKey,
     verdict: result.verdict,
     atIso: reviewedAt,
     sessionId: input.reviewCycleId,

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { assertWindDownQaTarget } from "./winddown-qa-target.mjs";
 
 type Status = "PASS" | "WARN" | "FAIL";
 
@@ -217,6 +218,10 @@ async function liveChecks(): Promise<Check[]> {
   }
 
   const cookie = existingSessionCookie();
+  if (cookie) {
+    try { assertWindDownQaTarget(base.toString(), process.env.WINDDOWN_QA_ISOLATED); }
+    catch { return [check("learner-storage-isolation", "FAIL", "Authenticated WIND DOWN preflight requires isolated loopback storage; study GET can initialize records")]; }
+  }
   const checks: Check[] = [];
   let authenticated = false;
 
@@ -277,7 +282,7 @@ async function liveChecks(): Promise<Check[]> {
       checks.push(check(
         `live-read-${endpoint.id}`,
         response.status === expected ? "PASS" : "FAIL",
-        `GET ${endpoint.route} HTTP ${response.status}; expected ${expected} without any mutation request`,
+        `GET ${endpoint.route} HTTP ${response.status}; expected ${expected}; authenticated checks require isolated storage`,
       ));
     } catch (error) {
       checks.push(check(

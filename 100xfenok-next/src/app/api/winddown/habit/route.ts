@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
-  classifyMonaVnextLearningProfile,
-} from "@/features/mona-vnext/memory/fsrsLearningProfile";
+  classifyWindDownReviewProfile,
+} from "@/features/winddown/server/reviewIdentity";
 import {
   readMonaVnextLearningProfileThroughCoordinator,
   readWindDownHabitThroughCoordinator,
@@ -18,9 +18,12 @@ import {
   normalizeWindDownCeremonyProjection,
 } from "@/features/winddown/game/model/ceremony";
 import {
-  loadWindDownCeremonyMaterialContext,
+  buildWindDownCeremonyMaterialContext,
   WindDownCeremonyMaterialError,
 } from "@/features/winddown/server/ceremonyMaterialContext";
+
+import { loadWindDownStudyMaterial } from "@/features/winddown/server/publishedMaterialAdapter";
+import { selectWindDownLearnResume } from "@/features/winddown/server/learnResume";
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
@@ -52,12 +55,10 @@ export async function GET() {
   }
   try {
     const now = new Date();
-    const ceremonyMaterial = await loadWindDownCeremonyMaterialContext().catch(
-      (error) => {
-        if (error instanceof WindDownCeremonyMaterialError) return null;
-        throw error;
-      },
-    );
+    const material = await loadWindDownStudyMaterial({ dueExpressionIds: [], deferredExpressionIds: [] });
+    let ceremonyMaterial = null;
+    try { ceremonyMaterial = buildWindDownCeremonyMaterialContext(material); }
+    catch (error) { if (!(error instanceof WindDownCeremonyMaterialError)) throw error; }
     const [habit, profile] = await Promise.all([
       readWindDownHabitThroughCoordinator(now, ceremonyMaterial),
       readMonaVnextLearningProfileThroughCoordinator(),
@@ -93,12 +94,17 @@ export async function GET() {
     const activeLearn = isRecord(habit.activeLearn)
       ? habit.activeLearn
       : null;
-    const activeLearnState = isRecord(activeLearn?.state)
-      ? activeLearn.state
+    const activeLearnState = activeLearn && material.metadata.contentDigest
+      ? selectWindDownLearnResume({
+          entries: material.entries,
+          manifest: activeLearn.manifest,
+          state: activeLearn.state,
+          habitKstDay: currentKstDay,
+          contentDigest: material.metadata.contentDigest,
+          now,
+        })?.state
       : null;
-    const activeCredited = Array.isArray(activeLearnState?.creditedCardIds)
-      ? activeLearnState.creditedCardIds.length
-      : 0;
+    const activeCredited = activeLearnState?.creditedCardIds.length ?? 0;
     const learnCompleted = tonightEvents.some(
       (event) => event.activity === "learn",
     );
@@ -108,10 +114,12 @@ export async function GET() {
     const reviewCompletedCount = tonightEvents.filter(
       (event) => event.activity === "review",
     ).length;
-    const dueCount = classifyMonaVnextLearningProfile(
+    const dueCount = classifyWindDownReviewProfile({
       profile,
-      now,
-    ).dueExpressionIds.length;
+      activeMaterialIds: material.entries.map((entry) => entry.id),
+      aliases: material.aliases,
+      nowIso: now.toISOString(),
+    }).dueExpressionIds.length;
     const { target: reviewTarget } = getWindDownReviewJourneyTarget({
       completedCount: reviewCompletedCount,
       dueCount,

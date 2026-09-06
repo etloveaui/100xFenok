@@ -77,6 +77,25 @@ export class WindDownReviewCoordinator extends DurableObject {
   }
 
   async fetch(request: Request) {
+    const pathname = new URL(request.url).pathname;
+    if (pathname.startsWith("/recovery-copy/")) {
+      const digest = /^\/recovery-copy\/([a-f0-9]{64})$/.exec(pathname)?.[1];
+      const actualId = (this.coordinatorState as WindDownReviewCoordinatorState & {
+        id?: { toString(): string };
+      }).id;
+      const namespace = (this.coordinatorEnv as WindDownReviewCoordinatorEnv & {
+        WINDDOWN_REVIEW_COORDINATOR?: { idFromName(name: string): { toString(): string } };
+      }).WINDDOWN_REVIEW_COORDINATOR;
+      if (
+        !digest || !actualId || !namespace
+        || actualId.toString() !== namespace.idFromName(`recoverycopy:${digest}`).toString()
+      ) {
+        return new Response(JSON.stringify({ error: "WINDDOWN_RECOVERY_TARGET_UNSAFE" }), {
+          status: 403,
+          headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+        });
+      }
+    }
     return this.coordinatorState.blockConcurrencyWhile(() =>
       handleMonaVnextProfileCoordinatorRequest(
         this.coordinatorState,

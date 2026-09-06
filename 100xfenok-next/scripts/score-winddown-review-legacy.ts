@@ -18,9 +18,12 @@ import {
   commitWindDownReviewCycleState,
   createWindDownReviewCycleId,
   gradeWindDownReviewAttemptState,
+  summarizeWindDownReviewQueue,
   type WindDownReviewCycleInput,
+  type WindDownReviewGradeInput,
 } from "../src/features/winddown/server/reviewCycle";
 import type { WindDownRuntimeProjection } from "../src/features/winddown/content/lkgContract";
+import { classifyWindDownReviewProfile } from "../src/features/winddown/server/reviewIdentity";
 
 /**
  * Stage 1 RED contract for the review alias boundary.
@@ -89,6 +92,18 @@ function reviewInput(reviewCycleId: string): WindDownReviewCycleInput {
     contentDigest,
     inputMode: "typed",
     attempts: [{ answer: material.en, revealedBefore: false }],
+  };
+}
+
+function reviewGradeInput(reviewCycleId: string): WindDownReviewGradeInput {
+  return {
+    schemaVersion: 1,
+    activity: "review",
+    reviewCycleId,
+    materialId: canonicalId,
+    contentDigest,
+    inputMode: "typed",
+    attempt: { answer: material.en, revealedBefore: false },
   };
 }
 
@@ -184,6 +199,7 @@ async function main() {
     });
     assert.deepEqual(selection.dueExpressionIds, [canonicalId]);
     assert.equal(selection.resolution.due.aliasResolvedCount, 1);
+    assert.deepEqual(selection.aliases, aliases);
   });
 
   await check("review card builder includes a due legacy profile record", async () => {
@@ -213,12 +229,13 @@ async function main() {
     record: legacyRecord,
   });
   const legacyInput = reviewInput(legacyCycleId);
+  const legacyGradeInput = reviewGradeInput(legacyCycleId);
 
   await check("review validator accepts canonical input against a legacy record", async () => {
     assert.deepEqual(
       await gradeReviewAttempt({
         profile: legacyProfile,
-        input: legacyInput,
+        input: legacyGradeInput,
         material,
         currentContentDigest: contentDigest,
         nowIso,
@@ -245,6 +262,17 @@ async function main() {
     assert.deepEqual(Object.keys(committed.profile.records), [legacyId]);
     assert.equal(committed.profile.records[legacyId]?.card.reps, before.records[legacyId]!.card.reps + 1);
     assert.equal(committed.profile.records[canonicalId], undefined);
+  });
+
+  await check("queue summary canonicalizes an omitted legacy-only active id", () => {
+    assert.deepEqual(
+      summarizeWindDownReviewQueue({
+        profile: legacyProfile,
+        aliases,
+        nowIso,
+      }),
+      { remainingDueCount: 1, nextDueAtIso: legacyRecord.card.dueAtIso },
+    );
   });
 
   await check("review commit retry is idempotent for a legacy-keyed record", async () => {
@@ -318,6 +346,89 @@ async function main() {
       collisionProfile.records[canonicalId]!.card.reps + 1,
     );
     assert.deepEqual(Object.keys(committed.profile.records).sort(), [canonicalId, legacyId].sort());
+  });
+
+  await check("canonical future schedule excludes a legacy-due collision", () => {
+    const canonicalProfile = learningProfile(canonicalId, "canonical-future-fixture");
+    const canonicalRecord = canonicalProfile.records[canonicalId];
+    assert(canonicalRecord);
+    const collisionProfile: MonaVnextLearningProfile = {
+      ...canonicalProfile,
+      records: {
+        [legacyId]: structuredClone(legacyRecord),
+        [canonicalId]: {
+          ...structuredClone(canonicalRecord),
+          card: {
+            ...canonicalRecord.card,
+            dueAtIso: "2099-01-01T00:00:00.000Z",
+          },
+        },
+      },
+    };
+    assert.deepEqual(
+      classifyWindDownReviewProfile({
+        profile: collisionProfile,
+        activeMaterialIds: [canonicalId],
+        aliases,
+        nowIso: "2026-09-06T00:00:00.000Z",
+      }),
+      {
+        dueExpressionIds: [],
+        deferredExpressionIds: [canonicalId],
+      },
+    );
+    assert.deepEqual(
+      summarizeWindDownReviewQueue({
+        profile: collisionProfile,
+        aliases,
+        nowIso: "2026-09-06T00:00:00.000Z",
+      }),
+      { remainingDueCount: 0, nextDueAtIso: "2099-01-01T00:00:00.000Z" },
+    );
+  });
+
+  await check("multiple legacy aliases choose latest review without duplicate scheduling", async () => {
+    const firstAlias = "mona-life-legacy-a";
+    const secondAlias = "mona-life-legacy-b";
+    const multipleAliases: ReviewAlias[] = [
+      { legacyV1Id: firstAlias, canonicalId },
+      { legacyV1Id: secondAlias, canonicalId },
+    ];
+    const multiProfile: MonaVnextLearningProfile = {
+      ...legacyProfile,
+      records: {
+        [firstAlias]: {
+          ...structuredClone(legacyRecord),
+          expressionId: firstAlias,
+          lastReviewedAt: "2026-07-01T00:00:00.000Z",
+          card: { ...legacyRecord.card, dueAtIso: "2026-08-01T00:00:00.000Z" },
+        },
+        [secondAlias]: {
+          ...structuredClone(legacyRecord),
+          expressionId: secondAlias,
+          lastReviewedAt: "2026-08-01T00:00:00.000Z",
+          card: { ...legacyRecord.card, dueAtIso: "2026-09-05T00:00:00.000Z" },
+        },
+      },
+    };
+    const cards = await buildReviewCards({
+      cards: [material],
+      profile: multiProfile,
+      contentDigest,
+      nowIso: "2026-09-06T00:00:00.000Z",
+      aliases: multipleAliases,
+    });
+    assert.equal(cards.length, 1);
+    assert.equal(cards[0]?.dueAtIso, "2026-09-05T00:00:00.000Z");
+    assert.deepEqual(
+      classifyWindDownReviewProfile({
+        profile: multiProfile,
+        activeMaterialIds: [canonicalId],
+        aliases: multipleAliases,
+        nowIso: "2026-09-06T00:00:00.000Z",
+      }),
+      { dueExpressionIds: [canonicalId], deferredExpressionIds: [] },
+    );
   });
 
   await check("coordinator retry mirrors one legacy-keyed commit after a transient failure", async () => {

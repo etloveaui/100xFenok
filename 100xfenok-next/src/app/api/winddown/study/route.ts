@@ -14,15 +14,16 @@ import {
 import { buildWindDownStudyBootstrap } from "@/features/winddown/server/studyBootstrap";
 import { loadWindDownStudyMaterial } from "@/features/winddown/server/publishedMaterialAdapter";
 import { buildWindDownReviewCards } from "@/features/winddown/server/reviewCycle";
+import { classifyWindDownReviewProfile } from "@/features/winddown/server/reviewIdentity";
 import {
   getWindDownHabitKstDay,
 } from "@/features/winddown/habit/domain";
 import {
   createWindDownLearnSessionProof,
-  normalizeWindDownLearnSessionManifest,
   WIND_DOWN_LEARN_SESSION_TTL_MS,
   type WindDownLearnSessionManifest,
 } from "@/features/winddown/server/learnSessionProof";
+import { selectWindDownLearnResume } from "@/features/winddown/server/learnResume";
 import {
   getWindDownReviewJourneyTarget,
 } from "@/features/winddown/model/productContract";
@@ -45,6 +46,27 @@ function noStoreJson(body: unknown, status = 200) {
   return NextResponse.json(body, {
     status,
     headers: { "Cache-Control": "no-store" },
+  });
+}
+
+const LEARN_ACTION_LINKS = {
+  review: "/winddown/review",
+  drill: "/winddown/drill",
+  home: "/winddown",
+} as const;
+
+function learnUnavailable(
+  error: "WINDDOWN_LEARN_RESUME_UNAVAILABLE" | "WINDDOWN_LEARN_NO_NEW_MATERIAL",
+) {
+  return noStoreJson({
+    schemaVersion: 1,
+    mode: "learn",
+    modelOpened: false,
+    error,
+    availability: error === "WINDDOWN_LEARN_NO_NEW_MATERIAL"
+      ? "no-new-material"
+      : "resume-unavailable",
+    links: LEARN_ACTION_LINKS,
   });
 }
 
@@ -73,15 +95,17 @@ export async function GET(request: Request) {
       learningProfile,
       now,
     );
+    const material = await loadWindDownStudyMaterial(learningSelection);
     const learning = {
       updatedAt: learningProfile.updatedAt,
       recordCount: Object.keys(learningProfile.records).length,
-      ...learningSelection,
+      ...classifyWindDownReviewProfile({
+        profile: learningProfile,
+        activeMaterialIds: material.entries.map((entry) => entry.id),
+        aliases: material.aliases,
+        nowIso: now.toISOString(),
+      }),
     };
-    const material = await loadWindDownStudyMaterial({
-      dueExpressionIds: learning.dueExpressionIds,
-      deferredExpressionIds: learning.deferredExpressionIds,
-    });
     const habitKstDay = getWindDownHabitKstDay(now);
     const projection = isRecord(habit.projection) ? habit.projection : null;
     const questHistory = Array.isArray(projection?.questHistory)
@@ -100,8 +124,8 @@ export async function GET(request: Request) {
         ? `${habitKstDay}:learn`
         : normalizeWindDownStudySeed(url.searchParams.get("seed"), mode),
       entries: material.entries,
-      dueExpressionIds: material.dueExpressionIds,
-      deferredExpressionIds: material.deferredExpressionIds,
+      dueExpressionIds: learning.dueExpressionIds,
+      deferredExpressionIds: learning.deferredExpressionIds,
       count: mode === "review"
         ? reviewJourney.remaining
         : WINDDOWN_LEARN_CREDIT_TARGET,
@@ -126,6 +150,7 @@ export async function GET(request: Request) {
       cards = await buildWindDownReviewCards({
         cards: bootstrap.cards,
         profile: learningProfile,
+        aliases: material.aliases,
         contentDigest: material.metadata.contentDigest,
         nowIso: now.toISOString(),
       });
@@ -134,37 +159,44 @@ export async function GET(request: Request) {
         selectedCount: cards.length,
       };
     } else {
-      if (
-        material.metadata.source !== "published-lkg"
-        || material.metadata.publicationStatus !== "active"
-        || !material.metadata.contentDigest
-        || cards.length !== WINDDOWN_LEARN_CREDIT_TARGET
-      ) {
-        return noStoreJson({ error: "WINDDOWN_MATERIAL_UNAVAILABLE" }, 503);
-      }
       const activeLearn =
         habit.activeLearn
         && typeof habit.activeLearn === "object"
         && !Array.isArray(habit.activeLearn)
           ? habit.activeLearn as Record<string, unknown>
           : null;
-      const activeManifest = normalizeWindDownLearnSessionManifest(
-        activeLearn?.manifest,
-      );
-      const byId = new Map(material.entries.map((entry) => [entry.id, entry]));
-      const resumedCards = activeManifest
-        && activeManifest.habitKstDay === habitKstDay
-        && activeManifest.contentDigest === material.metadata.contentDigest
-          ? activeManifest.cardIds.flatMap((id) => {
-              const card = byId.get(id);
-              return card ? [card] : [];
-            })
-          : [];
+      const hasActiveLearn =
+        habit.activeLearn !== null && habit.activeLearn !== undefined;
+      if (
+        material.metadata.source !== "published-lkg"
+        || material.metadata.publicationStatus !== "active"
+        || !material.metadata.contentDigest
+      ) {
+        return hasActiveLearn
+          ? learnUnavailable("WINDDOWN_LEARN_RESUME_UNAVAILABLE")
+          : noStoreJson({ error: "WINDDOWN_MATERIAL_UNAVAILABLE" }, 503);
+      }
+      const resumed = hasActiveLearn
+        ? selectWindDownLearnResume({
+            entries: material.entries,
+            manifest: activeLearn?.manifest,
+            state: activeLearn?.state,
+            habitKstDay,
+            contentDigest: material.metadata.contentDigest,
+            now,
+          })
+        : null;
+      if (hasActiveLearn && !resumed) {
+        return learnUnavailable("WINDDOWN_LEARN_RESUME_UNAVAILABLE");
+      }
+      if (!hasActiveLearn && cards.length !== WINDDOWN_LEARN_CREDIT_TARGET) {
+        return learnUnavailable("WINDDOWN_LEARN_NO_NEW_MATERIAL");
+      }
       const issuedAtMs = now.getTime();
       const manifest: WindDownLearnSessionManifest =
-        activeManifest && resumedCards.length === WINDDOWN_LEARN_CREDIT_TARGET
+        resumed
           ? {
-              ...activeManifest,
+              ...resumed.manifest,
               issuedAtIso: now.toISOString(),
               expiresAtIso: new Date(
                 issuedAtMs + WIND_DOWN_LEARN_SESSION_TTL_MS,
@@ -182,13 +214,18 @@ export async function GET(request: Request) {
                 issuedAtMs + WIND_DOWN_LEARN_SESSION_TTL_MS,
               ).toISOString(),
             };
-      if (resumedCards.length === WINDDOWN_LEARN_CREDIT_TARGET) {
-        cards = resumedCards;
+      if (resumed) {
+        cards = resumed.cards;
+        inventory = {
+          ...inventory,
+          selectedCount: cards.length,
+          insufficientFreshCount: 0,
+        };
       }
       learnSession = {
         manifest,
         proof: await createWindDownLearnSessionProof(manifest),
-        resumeState: activeLearn?.state ?? null,
+        resumeState: resumed?.state ?? null,
       };
     }
     return noStoreJson({
