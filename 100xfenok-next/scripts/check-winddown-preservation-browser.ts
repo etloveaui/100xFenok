@@ -1973,7 +1973,10 @@ async function runStoryContext(
         assert(recoveryResponse && recoveryResponse.status() < 400, `story recovery returned HTTP ${recoveryResponse?.status() ?? "no response"}`);
         await recoveryPage.locator('[aria-label="이전 대화 복구"]').waitFor({ state: "visible", timeout: 20_000 });
         await recoveryPage.locator('[aria-label="무대 연습 안내"]').getByText("돌아갈 무대", { exact: true }).waitFor({ state: "visible", timeout: 20_000 });
-        assert.equal(await recoveryPage.getByText("카페에서 주문하기", { exact: true }).count(), 1, "recovered report must preserve its original scenario identity");
+        const recoveredScenario = recoveryFixture.report.descriptor.activity === "roleplay"
+          ? getWindDownVoiceScenario(recoveryFixture.report.descriptor.scenarioId) : null;
+        assert(recoveredScenario, "recovery fixture must resolve its original scenario");
+        await recoveryPage.locator('[aria-label="이전 대화 복구"]').getByRole("heading", { name: `이전 대화 복구 · ${recoveredScenario.title}`, exact: true }).waitFor({ state: "visible", timeout: 20_000 });
         assert.equal(recoveryDiagnostics.voiceReportPostCount, 0, "recovered report must wait for the explicit retry action");
         assert.equal(await recoveryPage.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "recovered report must not request microphone access");
         const recoveryRetry = recoveryPage.getByRole("button", { name: "같은 보고서 다시 저장", exact: true });
