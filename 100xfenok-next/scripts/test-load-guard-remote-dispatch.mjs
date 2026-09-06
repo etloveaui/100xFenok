@@ -301,8 +301,20 @@ assert.doesNotMatch(workflow, /secrets\.|cache:|npm run cf:deploy|wrangler deplo
 // paths, conditions or retention changes remain rejected.
 const expectedUploads = [
   [
+    "      - name: Upload synthetic product flow evidence",
+    "        if: ${{ always() && inputs.suite == 'npm-script' && inputs.script == 'qa:product-flow-isolated' }}",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          name: product-flow-ui",
+    "          path: |",
+    "            100xfenok-next/test-results/product-flow/*.png",
+    "            100xfenok-next/test-results/product-flow/*.json",
+    "          if-no-files-found: ignore",
+    "          retention-days: 7",
+  ].join("\n"),
+  [
     "      - name: Upload synthetic WIND DOWN UI evidence",
-    "        if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:winddown-preservation-isolated' || inputs.script == 'qa:winddown-continuity-isolated') }}",
+    "        if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:winddown-preservation-isolated' || inputs.script == 'qa:winddown-continuity-isolated' || inputs.script == 'qa:winddown-story-isolated') }}",
     "        uses: actions/upload-artifact@v4",
     "        with:",
     "          name: winddown-preservation-ui",
