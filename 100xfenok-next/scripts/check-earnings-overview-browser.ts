@@ -21,14 +21,16 @@ const documents = new Map(tickers.map(ticker => {
 async function assertNoOverflow(page: Page) {
   const dimensions = await page.evaluate(() => ({ width: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth }));
   assert.ok(dimensions.scroll <= dimensions.width + 2, `page overflows: ${JSON.stringify(dimensions)}`);
-  const panel = page.locator("[data-earnings-overview]").first();
+  const panel = page.locator("[data-earnings-overview]:visible");
   const box = await panel.boundingBox();
   assert.ok(box && box.x >= -1 && box.x + box.width <= dimensions.width + 2, "earnings panel stays inside viewport");
 }
 
 async function verifyDocument(page: Page, ticker: string, compact: boolean) {
   const document = documents.get(ticker)!;
-  const panel = page.locator(`[data-earnings-overview="${ticker}"]`);
+  // The screener retains desktop and mobile trees across CSS breakpoints.
+  // Assert uniqueness in the active surface, excluding its hidden peer tree.
+  const panel = page.locator(`[data-earnings-overview="${ticker}"]:visible`);
   try {
     await panel.waitFor({ state: "visible", timeout: 90_000 });
   } catch (error) {
@@ -36,7 +38,7 @@ async function verifyDocument(page: Page, ticker: string, compact: boolean) {
     await page.screenshot({ path: `${out}/failure-${ticker}-${compact ? "screener" : "stock"}.png`, fullPage: true });
     throw error;
   }
-  assert.equal(await panel.count(), 1, "exactly one shared earnings panel per surface");
+  assert.equal(await panel.count(), 1, "exactly one visible shared earnings panel per surface");
   assert.equal(await panel.getAttribute("data-earnings-compact"), String(compact));
   assert.equal(await panel.locator("[data-earnings-metric]").count(), 4);
   const select = panel.locator("select");
@@ -80,7 +82,7 @@ async function verifyDocument(page: Page, ticker: string, compact: boolean) {
 
 async function capturePanel(page: Page, ticker: string, name: string) {
   const viewport = page.viewportSize()!;
-  const panel = page.locator(`[data-earnings-overview="${ticker}"]`);
+  const panel = page.locator(`[data-earnings-overview="${ticker}"]:visible`);
   const box = await panel.boundingBox();
   assert.ok(box);
   try {
