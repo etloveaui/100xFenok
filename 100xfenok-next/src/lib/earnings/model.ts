@@ -88,7 +88,7 @@ export function buildIncomeFlow(period: EarningsPeriod): IncomeFlow {
   const afterTaxOther = i.afterTaxOther ?? 0;
   if (metrics.filter(m => m !== "dilutedEps").some(m => amount(m) < 0)) {
     if (other !== 0) node(other > 0 ? "nonOperatingIncome" : "nonOperatingExpense", "영업외손익", other, offset + 3, other > 0 ? "income" : "expense");
-    if (afterTaxOther !== 0) node("afterTaxOther", "세후 지분법손익", afterTaxOther, offset + 4, afterTaxOther > 0 ? "income" : "expense");
+    if (afterTaxOther !== 0) node("afterTaxOther", afterTaxOther > 0 ? "세후 지분법이익" : "세후 지분법손실", afterTaxOther, offset + 4, afterTaxOther > 0 ? "income" : "expense");
     return { kind: "bridge", nodes, links: [], reason: "적자·세금 환급을 포함한 실제 부호로 표시합니다." };
   }
   if (hasSegments) period.segments.forEach((segment, index) => { node(`segment-${index}`, segment.name, segment.revenue, 0, "income"); link(`segment-${index}`, "revenue", segment.revenue); });
@@ -109,7 +109,7 @@ export function buildIncomeFlow(period: EarningsPeriod): IncomeFlow {
   }
   link("pretaxIncome", "netIncome", amount("netIncome") - Math.max(0, afterTaxOther));
   if (afterTaxOther !== 0) {
-    node("afterTaxOther", "세후 지분법손익", Math.abs(afterTaxOther), offset + (afterTaxOther > 0 ? 3 : 4), afterTaxOther > 0 ? "income" : "expense");
+    node("afterTaxOther", afterTaxOther > 0 ? "세후 지분법이익" : "세후 지분법손실", Math.abs(afterTaxOther), offset + (afterTaxOther > 0 ? 3 : 4), afterTaxOther > 0 ? "income" : "expense");
     if (afterTaxOther > 0) link("afterTaxOther", "netIncome", afterTaxOther);
     else link("pretaxIncome", "afterTaxOther", -afterTaxOther);
   }

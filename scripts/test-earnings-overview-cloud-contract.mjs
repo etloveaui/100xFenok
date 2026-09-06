@@ -195,7 +195,7 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
     });
     assert.deepEqual(
       built.manifest.assets.map((asset) => [asset.path, asset.source_as_of]),
-      TICKERS.map((ticker) => [
+      [...TICKERS].sort().map((ticker) => [
         `${MANIFEST_PREFIX}/${ticker}.json`,
         sourceEnds[`${ticker}.json`],
       ]),
