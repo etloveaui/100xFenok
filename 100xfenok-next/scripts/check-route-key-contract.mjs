@@ -43,15 +43,15 @@ const ROUTE_SCOPE_CLASSIFICATION_ACK = {
   source: {
     path: "../../../docs/research/20260702_route_scope_classification.md",
     lines: "1-105",
-    note: "Lane C corrected route-scope classification source; the 2026-08-30 owner decision moves three retired public roots and the new archive hub into admin-internal scope",
+    note: "Lane C corrected route-scope classification source; the 2026-08-30 owner decision moves three retired public roots and the new archive hub into admin-internal scope; 2026-09-06 adds the authenticated WIND DOWN records page to the existing Mona out-of-scope family",
   },
-  page_route_count: 60,
+  page_route_count: 61,
   core_covered_count: 17,
   needs_route_owner_probe_count: 0,
   legacy_bridge_closed_count: 9,
   admin_internal_count: 15,
   closed_alias_count: 4,
-  out_of_scope_count: 15,
+  out_of_scope_count: 16,
   blocked_actions: ["route_patch", "redirect", "delete", "deploy", "public_mutation"],
   core_covered_representative_routes: [
     "/etfs/SPY",

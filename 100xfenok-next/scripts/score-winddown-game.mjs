@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
@@ -225,11 +225,15 @@ assert.equal(
   true,
   "the home card must narrow game progress before rendering receipt totals",
 );
-assert.equal(
-  routeContract.includes("page_route_count: 58")
-    && routeContract.includes("out_of_scope_count: 15"),
-  true,
-  "the authenticated game route must be acknowledged by the route-scope count",
+const appPages = readdirSync(path.join(root, "src/app"), { recursive: true })
+  .filter((entry) => entry.endsWith("page.tsx"));
+const acknowledgedPageCount = Number(routeContract.match(/page_route_count:\s*(\d+)/)?.[1]);
+const acknowledgedExternalCount = Number(routeContract.match(/out_of_scope_count:\s*(\d+)/)?.[1]);
+assert.equal(acknowledgedPageCount, appPages.length, "route acknowledgement must match the current page inventory");
+assert(
+  appPages.includes("winddown/game/page.tsx")
+    && acknowledgedExternalCount >= appPages.filter((entry) => entry.startsWith("winddown/")).length,
+  "the authenticated game route must remain within the acknowledged Mona route family",
 );
 
 /* 6. naming is a receipt-gated, one-time ceremony inside the tour, never local
