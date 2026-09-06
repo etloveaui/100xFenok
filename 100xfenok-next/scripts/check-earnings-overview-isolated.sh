@@ -10,6 +10,8 @@ npm run build:version
 # public mirror. Full estate derivation and legacy-site copying belong to the
 # production build; repeating them dominates a focused interaction rerun.
 node scripts/sync-public-data.mjs --write
+npm run build:lane-runid-map
+npm run build:static-route-manifest
 npx playwright install --with-deps chromium webkit
 bash scripts/load-guard.sh --assert-nested
 NEXT_BUILD_TARGET=cloudflare npm run cf:build:next
