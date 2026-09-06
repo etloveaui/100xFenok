@@ -132,9 +132,10 @@ export function extractWindDownVoicePracticeSeeds(
 
     // Resolve canonical journey material if available
     let materialId: string | undefined;
-    if (journeyTargets.length > 0) {
+    const normalizedLearnerText = matchingTurn.userText?.trim().toLowerCase();
+    if (journeyTargets.length > 0 && normalizedLearnerText) {
       const matched = journeyTargets.find((jt) =>
-        jt.en.toLowerCase() === matchingTurn.userText.trim().toLowerCase(),
+        jt.en.toLowerCase() === normalizedLearnerText,
       );
       if (matched) {
         materialId = matched.materialId;

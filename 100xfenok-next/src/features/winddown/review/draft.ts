@@ -18,7 +18,7 @@ export const WINDDOWN_REVIEW_DRAFT_STORAGE_KEY =
   "winddown-review:draft:v1" as const;
 export const WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY =
   "winddown-review:draft:recovery:v1" as const;
-export const WINDDOWN_REVIEW_DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000 as const;
+export const WINDDOWN_REVIEW_DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 const MAX_DRAFT_CARDS = 100;
 const MAX_REVIEW_ATTEMPTS = 2;

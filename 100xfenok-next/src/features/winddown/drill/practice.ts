@@ -90,12 +90,6 @@ function exactKeys(value: Record<string, unknown>, keys: readonly string[]) {
   return actual.length === expected.length && actual.every((key, index) => key === expected[index]);
 }
 
-function oneValue(params: URLSearchParams, key: string): string | null | undefined {
-  const values = params.getAll(key);
-  if (values.length > 1) return undefined;
-  return values[0] ?? null;
-}
-
 function safeId(value: string | null): value is string {
   return value !== null && SAFE_ID.test(value);
 }
@@ -124,11 +118,11 @@ export function parseWindDownPracticeQuery(
   const duplicate = entries.find((key, index) => entries.indexOf(key) !== index);
   if (duplicate) return { kind: "error", code: "duplicate-query-key" };
 
-  const practice = oneValue(params, "practice");
-  const material = oneValue(params, "material");
-  const conversation = oneValue(params, "conversation");
-  const turn = oneValue(params, "turn");
-  const source = oneValue(params, "source");
+  const practice = params.get("practice");
+  const material = params.get("material");
+  const conversation = params.get("conversation");
+  const turn = params.get("turn");
+  const source = params.get("source");
   const hasPractice = practice !== null;
   const hasMaterial = material !== null;
   const hasConversation = conversation !== null;

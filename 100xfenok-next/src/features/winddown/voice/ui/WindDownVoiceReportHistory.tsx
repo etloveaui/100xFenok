@@ -340,8 +340,12 @@ export default function WindDownVoiceReportHistory() {
                 </h3>
                 <div className="space-y-3">
                   {detailReceipt.report.turns.map((turn) => {
-                    const correctionPresentation =
-                      deriveWindDownVoiceCorrectionPresentation(turn);
+                    const correction = detailReceipt.report.outcome.corrections.find(
+                      candidate => candidate.conversationId === turn.conversationId && candidate.turnSeq === turn.turnSeq,
+                    );
+                    const correctionPresentation = correction
+                      ? deriveWindDownVoiceCorrectionPresentation(correction)
+                      : null;
 
                     return (
                       <div
