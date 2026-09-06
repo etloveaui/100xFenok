@@ -70,7 +70,7 @@ export default function WindDownRecordsClient() {
 
   return (
     <main data-winddown-records className="mx-auto min-h-[100dvh] w-full max-w-3xl px-5 pb-16 pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-8">
-      <Link href="/winddown" className="inline-flex min-h-12 items-center gap-2 text-sm font-semibold text-[var(--wd-muted)]">
+      <Link href="/winddown" className="inline-flex min-h-[48px] items-center gap-2 text-sm font-semibold text-[var(--wd-muted)]">
         <span aria-hidden="true">←</span> 오늘의 학습
       </Link>
       <header className="mb-9 mt-7">
@@ -82,7 +82,7 @@ export default function WindDownRecordsClient() {
         <section className="rounded-3xl border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6 sm:p-8" aria-labelledby="records-download-title">
           <h2 id="records-download-title" className="text-xl font-bold">기록 내려받기</h2>
           <p className="mt-3 text-sm leading-7 text-[var(--wd-muted)]">학습·복습 진도, 완료 기록, 저장된 대화 보고서와 여정 선택을 함께 보관해요.</p>
-          <button type="button" disabled={busy} onClick={() => void downloadRecords()} className="mt-6 min-h-12 w-full rounded-2xl bg-[var(--wd-accent)] px-5 py-3 font-bold text-[var(--wd-bg)] disabled:opacity-50 sm:w-auto">
+          <button type="button" disabled={busy} onClick={() => void downloadRecords()} className="mt-6 min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 py-3 font-bold text-[var(--wd-bg)] disabled:opacity-50 sm:w-auto">
             기록 내려받기
           </button>
           <p role="status" className="mt-3 break-words text-sm leading-6 text-[var(--wd-muted)]">{download.text}</p>
@@ -94,8 +94,8 @@ export default function WindDownRecordsClient() {
           <input id="winddown-backup-file" type="file" accept="application/json,.json" disabled={busy} onChange={(event) => {
             setFile(event.target.files?.[0] ?? null);
             setRecovery({ kind: "idle", text: "" });
-          }} className="mt-3 block min-h-12 w-full min-w-0 rounded-xl border border-[var(--wd-border)] text-sm text-[var(--wd-muted)] file:mr-3 file:min-h-12 file:border-0 file:bg-[var(--wd-surface-raised)] file:px-4 file:font-semibold file:text-[var(--wd-text)]" />
-          <button type="button" disabled={!file || busy} onClick={() => void verifyBackup()} className="mt-5 min-h-12 w-full rounded-2xl border border-[var(--wd-accent)] px-5 py-3 font-bold text-[var(--wd-accent)] disabled:opacity-50 sm:w-auto">
+          }} className="mt-3 block min-h-[48px] w-full min-w-0 rounded-xl border border-[var(--wd-border)] text-sm text-[var(--wd-muted)] file:mr-3 file:min-h-[48px] file:border-0 file:bg-[var(--wd-surface-raised)] file:px-4 file:font-semibold file:text-[var(--wd-text)]" />
+          <button type="button" disabled={!file || busy} onClick={() => void verifyBackup()} className="mt-5 min-h-[48px] w-full rounded-2xl border border-[var(--wd-accent)] px-5 py-3 font-bold text-[var(--wd-accent)] disabled:opacity-50 sm:w-auto">
             복구 확인
           </button>
           <p role="status" data-winddown-recovery-status={recovery.kind} className="mt-3 break-words text-sm leading-6 text-[var(--wd-muted)]">{recovery.text}</p>

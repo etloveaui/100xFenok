@@ -338,7 +338,7 @@ async function assertLayout(page: Page) {
       return style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity) > 0 && rect.width > 0 && rect.height > 0;
     }).map((element) => {
       const rect = (element as HTMLElement).getBoundingClientRect();
-      return { width: rect.width, height: rect.height };
+      return { tag: element.tagName, label: element.textContent?.trim().slice(0, 70), width: rect.width, height: rect.height };
     });
     return {
       scrollWidth: document.documentElement.scrollWidth,
@@ -347,7 +347,7 @@ async function assertLayout(page: Page) {
     };
   });
   assert.ok(result.scrollWidth <= result.viewportWidth + 1, `horizontal overflow ${result.scrollWidth}/${result.viewportWidth}`);
-  assert.equal(result.undersized.length, 0, `tap target under 44px (${result.undersized.length})`);
+  assert.equal(result.undersized.length, 0, `tap target under 44px: ${JSON.stringify(result.undersized)}`);
 }
 
 function assertDiagnostics(diagnostics: ReturnType<typeof attachDiagnostics>) {
@@ -429,8 +429,8 @@ async function runScenario(
       assert.equal(recoveryConfirmed, true, "recovery must expose the exact verified success state");
       assert.equal(diagnostics.recordsGetCount, 1, "records GET must be intercepted exactly once");
       assert.equal(diagnostics.recordsPostCount, 1, "records POST must be intercepted exactly once");
-      await assertLayout(page);
       await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-records.png`), fullPage: true });
+      await assertLayout(page);
     }
     assertDiagnostics(diagnostics);
     return `${engine.id}/${viewport.id}/${scenario}`;
