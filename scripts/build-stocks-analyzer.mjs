@@ -64,6 +64,16 @@ function completeSourceFloor(values) {
   return dates.length > 0 && dates.every(Boolean) ? [...dates].sort().at(0) : null;
 }
 
+function canonicalScouterTicker(value, existing, source) {
+  // The provider renamed these worksheets in September 2026. Keep the
+  // platform's dotted identities while leaving the raw evidence unchanged.
+  const ticker = value === "BRKA" ? "BRK.A" : value === "BRKB" ? "BRK.B" : value;
+  if ((ticker === "BRK.A" || ticker === "BRK.B") && existing.has(ticker)) {
+    throw new Error(`Ambiguous Global Scouter alias for ${ticker} in ${source}`);
+  }
+  return ticker;
+}
+
 /* ── 1. stocks_index (base) ── */
 const index = loadJson(PATHS.stocksIndex);
 
@@ -73,7 +83,7 @@ const cmMap = new Map();
 
 for (const rec of cm.records) {
   const v = rec.values;
-  const ticker = rec.key;
+  const ticker = canonicalScouterTicker(rec.key, cmMap, "company master");
   if (!ticker) continue;
 
   cmMap.set(ticker, {
@@ -109,7 +119,7 @@ const globalScouterSourceDateReason = globalScouterSourceDate
 const EPS_SECTION_INDICES = [21, 22, 23, 24, 25, 26];
 
 for (const rec of ec.records) {
-  const ticker = rec.key;
+  const ticker = canonicalScouterTicker(rec.key, ecMap, "EPS consensus");
   if (!ticker) continue;
 
   let eps;
