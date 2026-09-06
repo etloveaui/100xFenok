@@ -74,12 +74,21 @@ async function verifyDocument(page: Page, ticker: string, compact: boolean) {
       // Use the same keyboard activation as the initial expansion. Mobile
       // WebKit can scroll this nested list between pointer down and up.
       await flowSummary.focus();
-      assert.equal(await flowSummary.evaluate(el => el === document.activeElement), true, "flow summary has keyboard focus");
+      assert.equal(await flowSummary.evaluate(el => el === el.ownerDocument.activeElement), true, "flow summary has keyboard focus");
       await page.keyboard.press("Space");
     }
   }
   const scrollRegion = panel.getByRole("region", { name: "손익 흐름 가로 스크롤" });
   await scrollRegion.waitFor({ state: "visible" });
+  if (compact) {
+    const flowSummary = panel.locator("summary").filter({ hasText: "상세 손익 흐름 보기" });
+    await flowSummary.focus();
+    await page.keyboard.press("Space");
+    await scrollRegion.waitFor({ state: "hidden" });
+    await flowSummary.evaluate(el => el.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" }));
+    await flowSummary.click();
+    await scrollRegion.waitFor({ state: "visible" });
+  }
   assert.equal(await panel.locator('[data-earnings-flow-node="revenue"]').getAttribute("data-flow-value"), String(document.periods[0].income.revenue), "restored flow belongs to the latest quarter");
   {
     const bounds = await scrollRegion.evaluate(el => ({ width: el.clientWidth, content: el.scrollWidth }));
