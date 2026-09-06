@@ -268,7 +268,7 @@ export default function WindDownGameClient({
       stageHeading.focus({ preventScroll: true });
       stageHeading.scrollIntoView({
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? "auto"
+          ? "instant"
           : "smooth",
         block: "start",
       });
