@@ -190,7 +190,7 @@ export function buildCompareCsv(rows: EtfCompareRow[], overlaps: PairOverlap[] =
     row.data?.detail_status ?? "",
     "",
   ]);
-  const overlapRows = overlaps.flatMap((pair) => {
+  const overlapRows = overlaps.flatMap<(string | number | null)[]>((pair) => {
     if (pair.availability === "unavailable") {
       return [[
         "overlap",
