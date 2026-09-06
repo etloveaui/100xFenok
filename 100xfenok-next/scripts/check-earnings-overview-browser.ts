@@ -77,6 +77,12 @@ async function verifyDocument(page: Page, ticker: string, compact: boolean) {
     }
     assert.equal(await scrollRegion.getAttribute("tabindex"), "0");
   }
+  if (page.viewportSize()!.width < 600) {
+    for (const comparison of await panel.locator("[data-earnings-comparison]").getByText(/^직전 분기 /).all()) {
+      const textFits = await comparison.evaluate(el => el.scrollWidth <= el.clientWidth + 1);
+      assert.ok(textFits, "mobile previous-quarter value and change remain fully readable");
+    }
+  }
   await assertNoOverflow(page);
 }
 
@@ -88,6 +94,8 @@ async function capturePanel(page: Page, ticker: string, name: string) {
     // a full element screenshot would include regions clipped by that ancestor.
     await panel.locator("header").evaluate(el => el.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" }));
     await page.screenshot({ path: `${out}/${name}-summary.png` });
+    await panel.locator("[data-earnings-comparison]").evaluate(el => el.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" }));
+    await page.screenshot({ path: `${out}/${name}-comparison.png` });
     const flow = panel.getByRole("region", { name: "손익 흐름 가로 스크롤" });
     await flow.evaluate(el => {
       el.scrollLeft = 0;

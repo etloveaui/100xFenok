@@ -768,7 +768,7 @@
   }
 
   .comparisonRow {
-    grid-template-columns: auto minmax(0, 1fr) 108px;
+    grid-template-columns: minmax(0, 1fr) auto;
     column-gap: 6px;
   }
 
@@ -782,6 +782,13 @@
     overflow: visible;
     white-space: normal;
     line-height: 1.4;
+  }
+
+  .miniChartWrap {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    width: 116px;
+    justify-self: center;
   }
 
   .flowLegend {
