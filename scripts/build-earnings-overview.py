@@ -42,6 +42,7 @@ METRICS = (
     "incomeTax",
     "netIncome",
     "dilutedEps",
+    "afterTaxOther",
 )
 
 CONCEPTS: dict[str, tuple[str, ...]] = {
@@ -63,6 +64,7 @@ CONCEPTS: dict[str, tuple[str, ...]] = {
     "incomeTax": ("IncomeTaxExpenseBenefit",),
     "netIncome": ("NetIncomeLoss",),
     "dilutedEps": ("EarningsPerShareDiluted",),
+    "afterTaxOther": ("IncomeLossFromEquityMethodInvestments",),
 }
 
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
@@ -346,7 +348,7 @@ def _msft_quarter_start(end: date) -> date:
 
 
 def _new_income() -> dict[str, int | float | None]:
-    return {metric: None for metric in METRICS}
+    return {metric: (0 if metric == "afterTaxOther" else None) for metric in METRICS}
 
 
 def _validate_and_derive(
@@ -360,6 +362,7 @@ def _validate_and_derive(
     pretax = income["pretaxIncome"]
     tax = income["incomeTax"]
     net = income["netIncome"]
+    after_tax_other = income.get("afterTaxOther") or 0
 
     if gross is None and revenue is not None and cost is not None:
         income["grossProfit"] = revenue - cost
@@ -370,7 +373,7 @@ def _validate_and_derive(
         expenses = income["operatingExpenses"]
         notes.append("매출총이익에서 영업이익을 차감해 영업비용을 계산했습니다.")
     if pretax is None and net is not None and tax is not None:
-        income["pretaxIncome"] = net + tax
+        income["pretaxIncome"] = net + tax - after_tax_other
         pretax = income["pretaxIncome"]
         notes.append("순이익과 법인세비용을 더해 세전이익을 계산했습니다.")
 
@@ -394,7 +397,7 @@ def _validate_and_derive(
         pretax is not None
         and tax is not None
         and net is not None
-        and not _close(pretax, net + tax)
+        and not _close(pretax - tax + after_tax_other, net)
     ):
         notes.append(f"{identity}: 세전이익·법인세·순이익이 일치하지 않습니다.")
         return False
@@ -419,6 +422,8 @@ def _period_from_group(
         if observation is not None:
             income[metric] = observation["value"]
     notes = ["SEC 공식 제출자료의 실제 분기 관측값입니다."]
+    if income.get("afterTaxOther"):
+        notes.append("세후 지분법손익은 법인세와 구분해 순이익에 반영했습니다.")
     if not _validate_and_derive(income, notes, f"{ticker} {start}/{end}"):
         return None
     return {
@@ -1056,7 +1061,7 @@ def _document_is_valid(document: Any, ticker: str) -> bool:
         if not isinstance(period.get("label"), str) or not period["label"]:
             return False
         income = period.get("income")
-        if not isinstance(income, Mapping) or set(income) != set(METRICS):
+        if not isinstance(income, Mapping) or set(income) not in (set(METRICS), set(METRICS) - {"afterTaxOther"}):
             return False
         for value in income.values():
             if value is None or (
@@ -1335,6 +1340,41 @@ def _write_json(path: Path, value: Mapping[str, Any]) -> None:
                 pass
 
 
+def _enrich_latest_segments(ticker, document, companyfacts, fetch_official, release_html=None, supplement=None):
+    from earnings_segments import extract_revenue_segments
+    period = document["periods"][0]
+    if ticker == "MSFT":
+        if not release_html or not supplement or supplement["period"]["end"] != period["end"]:
+            return
+        html = release_html
+        start = supplement["period"]["start"]
+    else:
+        observations = [o for o in _iter_metric_observations(companyfacts, "revenue")
+                        if o["end"] == period["end"] and o["kind"] == "quarter"
+                        and _source_from_observation(SUPPORTED_COMPANIES[ticker]["cik"], o) == period["source"]]
+        if not observations:
+            return
+        anchor = max(observations, key=_observation_sort_key)
+        cik = SUPPORTED_COMPANIES[ticker]["cik"]
+        submissions = fetch_official(_fetch_json, f"https://data.sec.gov/submissions/CIK{cik}.json")
+        recent = submissions.get("filings", {}).get("recent", {})
+        accessions = recent.get("accessionNumber", [])
+        if anchor["accn"] not in accessions:
+            return
+        index = accessions.index(anchor["accn"])
+        primary = recent.get("primaryDocument", [])[index]
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+\.html?", primary):
+            return
+        url = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{anchor['accn'].replace('-', '')}/{primary}"
+        html = fetch_official(_fetch_text, url)
+        start = anchor["start"]
+    result = extract_revenue_segments(ticker, html, start, period["end"], period["income"]["revenue"])
+    if result:
+        period["segments"] = result["segments"]
+        period["segmentBasis"] = result["segmentBasis"]
+        period["notes"].extend(result["notes"])
+
+
 def build_documents(
     facts_dir: Path | None,
     output_dir: Path,
@@ -1386,11 +1426,13 @@ def build_documents(
             else:
                 companyfacts = _load_json(_find_facts_file(facts_dir, ticker))
             supplement = None
+            release_html = None
             if ticker == "MSFT" and refresh:
                 hint = _latest_period_hint(companyfacts)
                 url = msft_release_url_for_period(hint)
+                release_html = fetch_official(_fetch_text, url)
                 supplement = parse_msft_release_table(
-                    fetch_official(_fetch_text, url),
+                    release_html,
                     source_url=url,
                 )
             document, validation = normalize_companyfacts(
@@ -1400,6 +1442,11 @@ def build_documents(
                 now=now,
                 supplement=supplement,
             )
+            if refresh and document and validation.get("ok"):
+                try:
+                    _enrich_latest_segments(ticker, document, companyfacts, fetch_official, release_html, supplement)
+                except (HTTPError, URLError, OSError, ValueError, IndexError, KeyError) as error:
+                    document["periods"][0]["notes"].append("사업별 매출 자료를 확인하지 못해 해당 구분은 생략했습니다.")
         except (FileNotFoundError, HTTPError, URLError, OSError, ValueError, RuntimeError) as error:
             validation = {"ok": False, "errors": [str(error)], "periods": 0}
 
@@ -1428,6 +1475,11 @@ def build_documents(
                 validation["periods"] = len(document.get("periods", []))
             else:
                 document = None
+        if document is not None and document.get("status") == "retained" and _document_is_valid(document, ticker):
+            try:
+                _write_json(previous_path, document)
+            except OSError:
+                pass
         results[ticker] = {"document": document, "validation": validation}
     return results
 
@@ -1437,6 +1489,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--facts-dir", type=Path, required=False)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--refresh", action="store_true", help="fetch official SEC/issuer sources")
+    parser.add_argument("--report-path", type=Path, default=None)
     parser.add_argument("--now", default=None, help="fixed UTC timestamp for deterministic output")
     return parser
 
@@ -1446,6 +1499,12 @@ def main(argv: list[str] | None = None) -> int:
     if not args.refresh and args.facts_dir is None:
         _parser().error("--facts-dir is required unless --refresh is set")
     results = build_documents(args.facts_dir, args.output_dir, refresh=args.refresh, now=args.now)
+    if args.report_path:
+        _write_json(args.report_path, {"attemptedAt": _iso_timestamp(args.now), "tickers": {
+            ticker: {"ok": result["validation"].get("ok") is True,
+                     "periods": result["validation"].get("periods", 0),
+                     "errors": result["validation"].get("errors", [])}
+            for ticker, result in results.items()}})
     for ticker, result in results.items():
         if not result["validation"].get("ok"):
             print(f"{ticker}: {result['validation'].get('errors', [])}", file=sys.stderr)

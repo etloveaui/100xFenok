@@ -11,9 +11,13 @@ function incomeErrors(period: EarningsPeriod): string[] {
   const errors: string[] = [];
   for (const metric of metrics) if (i[metric] !== null && !finite(i[metric])) errors.push(`invalid ${metric}`);
   if (!finite(i.revenue) || i.revenue <= 0) errors.push("positive revenue required");
-  for (const [a, b, result] of [["revenue", "costOfRevenue", "grossProfit"], ["grossProfit", "operatingExpenses", "operatingIncome"], ["pretaxIncome", "incomeTax", "netIncome"]] as const) {
+  for (const [a, b, result] of [["revenue", "costOfRevenue", "grossProfit"], ["grossProfit", "operatingExpenses", "operatingIncome"]] as const) {
     if (finite(i[a]) && finite(i[b]) && finite(i[result]) && !near(i[a] - i[b], i[result])) errors.push(`${a}-${b} must equal ${result}`);
   }
+  const afterTaxOther = i.afterTaxOther ?? 0;
+  if (!finite(afterTaxOther)) errors.push("invalid after-tax adjustment");
+  if (finite(i.pretaxIncome) && finite(i.incomeTax) && finite(i.netIncome) && finite(afterTaxOther)
+    && !near(i.pretaxIncome - i.incomeTax + afterTaxOther, i.netIncome)) errors.push("after-tax income must reconcile");
   return errors;
 }
 
@@ -80,7 +84,11 @@ export function buildIncomeFlow(period: EarningsPeriod): IncomeFlow {
   const node = (id: string, label: string, value: number, column: number, kind: IncomeFlowNode["kind"]) => nodes.push({ id, label, value, column, kind });
   const link = (from: string, to: string, value: number) => { if (value > 0) links.push({ from, to, value }); };
   for (const [index, [id, label]] of stages.entries()) node(id, label, amount(id as EarningsMetric), index + offset, index === 0 ? "income" : "profit");
+  const other = amount("pretaxIncome") - amount("operatingIncome");
+  const afterTaxOther = i.afterTaxOther ?? 0;
   if (metrics.filter(m => m !== "dilutedEps").some(m => amount(m) < 0)) {
+    if (other !== 0) node(other > 0 ? "nonOperatingIncome" : "nonOperatingExpense", "영업외손익", other, offset + 3, other > 0 ? "income" : "expense");
+    if (afterTaxOther !== 0) node("afterTaxOther", "세후 지분법손익", afterTaxOther, offset + 4, afterTaxOther > 0 ? "income" : "expense");
     return { kind: "bridge", nodes, links: [], reason: "적자·세금 환급을 포함한 실제 부호로 표시합니다." };
   }
   if (hasSegments) period.segments.forEach((segment, index) => { node(`segment-${index}`, segment.name, segment.revenue, 0, "income"); link(`segment-${index}`, "revenue", segment.revenue); });
@@ -91,7 +99,6 @@ export function buildIncomeFlow(period: EarningsPeriod): IncomeFlow {
   link("revenue", "costOfRevenue", amount("costOfRevenue"));
   link("grossProfit", "operatingIncome", amount("operatingIncome"));
   link("grossProfit", "operatingExpenses", amount("operatingExpenses"));
-  const other = amount("pretaxIncome") - amount("operatingIncome");
   if (other >= 0) {
     link("operatingIncome", "pretaxIncome", amount("operatingIncome"));
     if (other > 0) { node("nonOperatingIncome", "영업외손익·순증", other, offset + 2, "income"); link("nonOperatingIncome", "pretaxIncome", other); }
@@ -100,7 +107,12 @@ export function buildIncomeFlow(period: EarningsPeriod): IncomeFlow {
     node("nonOperatingExpense", "영업외손익·순감", -other, offset + 3, "expense");
     link("operatingIncome", "nonOperatingExpense", -other);
   }
-  link("pretaxIncome", "netIncome", amount("netIncome"));
+  link("pretaxIncome", "netIncome", amount("netIncome") - Math.max(0, afterTaxOther));
+  if (afterTaxOther !== 0) {
+    node("afterTaxOther", "세후 지분법손익", Math.abs(afterTaxOther), offset + (afterTaxOther > 0 ? 3 : 4), afterTaxOther > 0 ? "income" : "expense");
+    if (afterTaxOther > 0) link("afterTaxOther", "netIncome", afterTaxOther);
+    else link("pretaxIncome", "afterTaxOther", -afterTaxOther);
+  }
   link("pretaxIncome", "incomeTax", amount("incomeTax"));
   return { kind: "sankey", nodes, links, reason: null };
 }

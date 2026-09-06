@@ -911,3 +911,14 @@ jobs:
           # This job intentionally has no checkout, so gh cannot infer the
           # repository from a local git remote. Name it explicitly.
           gh workflow run update-manifest.yml --repo ${{ github.repository }} --ref main
+
+  # The daily stock overview schedule also starts the SEC earnings refresh, but
+  # this job has no dependency on acquire-stockanalysis or its provider result.
+  # The reusable workflow owns its own writer lock, cloud publication and
+  # publish-outcome persistence.
+  refresh-earnings-overview:
+    if: >-
+      github.event_name == 'schedule' &&
+      github.event.schedule == '20 21 * * *'
+    uses: ./.github/workflows/refresh-earnings-overview.yml
+    secrets: inherit

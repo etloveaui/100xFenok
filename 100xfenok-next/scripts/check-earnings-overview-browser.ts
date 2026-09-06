@@ -39,7 +39,8 @@ async function verifyDocument(page: Page, ticker: string, compact: boolean) {
   assert.equal(await source.count(), 1, "selected period links to its primary source");
   if (compact) {
     assert.equal(await panel.locator("[data-earnings-flow]").count(), 0, "compact flow is lazy");
-    await panel.getByText("상세 손익 흐름 보기", { exact: false }).click();
+    await panel.getByText("상세 손익 흐름 보기", { exact: false }).focus();
+    await page.keyboard.press("Space");
   }
   await panel.locator('[data-earnings-flow="sankey"]').waitFor();
   for (const metric of ["revenue", "operatingIncome", "netIncome"] as const) {
@@ -48,11 +49,23 @@ async function verifyDocument(page: Page, ticker: string, compact: boolean) {
   assert.equal(await panel.locator('[data-earnings-metric="dilutedEps"] strong').textContent(), `$${document.periods[0].income.dilutedEps!.toFixed(2)}`, `${ticker} displayed EPS is official GAAP`);
   if (document.periods.length > 1) {
     await select.focus();
-    await select.selectOption(document.periods[1].end);
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
     assert.equal(await select.inputValue(), document.periods[1].end);
     assert.equal(await panel.locator(`a[href="${document.periods[1].source.url}"]`).count(), 1);
-    await select.selectOption(document.periods[0].end);
+    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press("Enter");
     if (compact) await panel.getByText("상세 손익 흐름 보기", { exact: false }).click();
+  }
+  const scrollRegion = panel.getByRole("region", { name: "손익 흐름 가로 스크롤" });
+  if (await scrollRegion.count()) {
+    const bounds = await scrollRegion.evaluate(el => ({ width: el.clientWidth, content: el.scrollWidth }));
+    if (page.viewportSize()!.width < 600) {
+      assert.ok(bounds.content > bounds.width, "mobile income flow has reachable horizontal content");
+      await scrollRegion.focus();
+      await page.keyboard.press("End");
+    }
+    assert.equal(await scrollRegion.getAttribute("tabindex"), "0");
   }
   await assertNoOverflow(page);
 }
@@ -96,6 +109,33 @@ async function main() {
         assert.equal(requests, 2, "retry re-fetches a failed official document");
         await context.close();
 
+        const refreshContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+        await refreshContext.addInitScript(() => {
+          const originalNow = Date.now;
+          (window as unknown as { earningsClockOffset: number }).earningsClockOffset = 0;
+          Date.now = () => originalNow() + (window as unknown as { earningsClockOffset: number }).earningsClockOffset;
+        });
+        const oldDocument = structuredClone(documents.get("AAPL")!);
+        oldDocument.periods = oldDocument.periods.slice(1);
+        let refreshRequests = 0;
+        await refreshContext.route("**/data/earnings-overview/AAPL.json", async route => {
+          refreshRequests += 1;
+          const failed = refreshRequests === 2;
+          await route.fulfill({ status: failed ? 503 : 200, contentType: "application/json", body: JSON.stringify(failed ? {} : refreshRequests === 1 ? oldDocument : documents.get("AAPL")) });
+        });
+        const refreshPage = await refreshContext.newPage();
+        await refreshPage.goto(`${base}/stock/AAPL?tab=financials`, { waitUntil: "domcontentloaded" });
+        const refreshPanel = refreshPage.locator('[data-earnings-overview="AAPL"]');
+        await refreshPanel.waitFor({ timeout: 90_000 });
+        assert.equal(await refreshPanel.locator("select").inputValue(), oldDocument.periods[0].end);
+        await refreshPage.getByRole("tab", { name: "요약", exact: true }).click();
+        await refreshPage.evaluate(() => { (window as unknown as { earningsClockOffset: number }).earningsClockOffset = 360_000; });
+        await refreshPage.getByRole("tab", { name: "재무", exact: true }).click();
+        await refreshPage.getByRole("button", { name: "다시 불러오기", exact: true }).click({ timeout: 90_000 });
+        await refreshPage.waitForFunction(end => document.querySelector('[data-earnings-overview="AAPL"] select') instanceof HTMLSelectElement && (document.querySelector('[data-earnings-overview="AAPL"] select') as HTMLSelectElement).value === end, documents.get("AAPL")!.periods[0].end);
+        assert.equal(refreshRequests, 3, "cached source failure retains data, offers retry, and refresh selects latest quarter");
+        await refreshContext.close();
+
         const lossContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
         const loss: EarningsDocument = structuredClone(documents.get("META")!);
         const income = loss.periods[0].income;
@@ -106,6 +146,7 @@ async function main() {
         const lossPage = await lossContext.newPage();
         await lossPage.goto(`${base}/stock/META?tab=financials`, { waitUntil: "domcontentloaded" });
         await lossPage.locator('[data-earnings-flow="bridge"]').waitFor({ timeout: 90_000 });
+        assert.equal(await lossPage.locator('[data-earnings-flow-node="nonOperatingIncome"]').getAttribute("data-flow-value"), "1000000000");
         await assertNoOverflow(lossPage);
         await lossPage.locator('[data-earnings-overview="META"]').screenshot({ path: `${out}/chromium-mobile-loss.png` });
         await lossContext.close();

@@ -40,7 +40,10 @@ export default function EarningsOverview({ ticker, compact = false }: { ticker: 
 
   if (!supported.has(symbol)) return null;
   const current = result?.ticker === symbol ? result : null;
-  if (current?.document) return <EarningsOverviewPanel document={current.document} compact={compact} />;
+  if (current?.document) return <>
+    <EarningsOverviewPanel key={symbol} document={current.document} compact={compact} />
+    {current.failed && <button type="button" className="mb-4 rounded-lg border border-slate-300 px-3 py-2 text-sm" onClick={() => retry(value => value + 1)}>다시 불러오기</button>}
+  </>;
   return (
     <section aria-label={`${symbol} 분기 실적`} aria-busy={!current?.failed} className="rounded-2xl border border-slate-200 bg-white p-5 my-4" data-testid="earnings-overview-state">
       <p role="status" className="text-sm text-slate-600">{current?.failed ? "공식 분기 실적을 불러오지 못했습니다." : "공식 분기 실적을 불러오는 중입니다."}</p>

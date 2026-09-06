@@ -1,5 +1,5 @@
 export type EarningsMetric = "revenue" | "costOfRevenue" | "grossProfit" | "operatingExpenses" | "operatingIncome" | "pretaxIncome" | "incomeTax" | "netIncome" | "dilutedEps";
-export type EarningsIncome = Record<EarningsMetric, number | null>;
+export type EarningsIncome = Record<EarningsMetric, number | null> & { afterTaxOther?: number | null };
 export type EarningsSource = { name: string; url: string; filedAt: string | null };
 export type EarningsSegment = { name: string; revenue: number };
 export type EarningsPeriod = {

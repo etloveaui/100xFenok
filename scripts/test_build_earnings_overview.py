@@ -160,7 +160,7 @@ class BuildEarningsOverviewTest(unittest.TestCase):
             self.assertTrue(period["label"])
             income = period.get("income")
             self.assertIsInstance(income, Mapping)
-            self.assertEqual(set(income), expected_metrics)
+            self.assertEqual(set(income) - {"afterTaxOther"}, expected_metrics)
             for metric, value in income.items():
                 assert_finite_or_none(self, value, f"{label}.income.{metric}")
             source = period.get("source")

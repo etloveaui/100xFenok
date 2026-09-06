@@ -21,6 +21,6 @@ for (const [ticker, expected] of Object.entries(official)) {
   if (period) for (const metric of ["revenue", "costOfRevenue", "operatingIncome", "netIncome", "dilutedEps"] as const) {
     assert.equal(period.income[metric], expected[metric], `${ticker} ${metric} must match the official GAAP acceptance source`);
   }
-  console.log(`[earnings-data] ${ticker}: ${document.periods.length} validated quarters; latest ${document.periods[0].end}; official baseline ${period ? "matched" : "outside retention window"}`);
+  console.log(`[earnings-data] ${ticker}: ${document.periods.length} validated quarters; latest ${document.periods[0].end}; ${document.periods[0].segments.length} reconciled segments; official baseline ${period ? "matched" : "outside retention window"}`);
 }
 assert.ok(totalBytes <= 200_000, "four earnings documents must stay within their publication byte bound");

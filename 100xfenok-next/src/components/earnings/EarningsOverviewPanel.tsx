@@ -326,7 +326,7 @@ function SankeyFlow({ flow, period }: { flow: IncomeFlow; period: EarningsPeriod
         </div>
         <FlowLegend />
       </div>
-      <div className={styles.flowViewport}>
+      <div className={styles.flowViewport} tabIndex={0} role="region" aria-label="손익 흐름 가로 스크롤">
         <svg
           className={styles.flowSvg}
           style={{ minWidth: width }}
@@ -391,13 +391,16 @@ function BridgeFlow({ flow, period }: { flow: IncomeFlow; period: EarningsPeriod
     "grossProfit",
     "operatingExpenses",
     "operatingIncome",
+    "nonOperatingIncome",
+    "nonOperatingExpense",
     "pretaxIncome",
     "incomeTax",
+    "afterTaxOther",
     "netIncome",
   ].flatMap((id) => {
-    const value = period.income[id as EarningsMetric];
-    if (!isFiniteNumber(value)) return [];
     const existing = flowNodesById.get(id);
+    const value = existing?.value ?? period.income[id as EarningsMetric];
+    if (!isFiniteNumber(value)) return [];
     const kind: IncomeFlowNode["kind"] = existing?.kind ?? (value < 0 ? "expense" : "income");
     return [{
       id,
@@ -521,8 +524,8 @@ function RecentQuarterComparison({ current, previous }: { current: EarningsPerio
 }
 
 export function EarningsOverviewPanel({ document, compact = false }: EarningsOverviewPanelProps) {
-  const periods = document.periods ?? [];
-  const [selectedEnd, setSelectedEnd] = useState(periods[0]?.end ?? "");
+  const periods = useMemo(() => [...(document.periods ?? [])].sort((a, b) => b.end.localeCompare(a.end)), [document.periods]);
+  const [selectedEnd, setSelectedEnd] = useState<string | null>(null);
   const [flowExpanded, setFlowExpanded] = useState(false);
   const selectedIndex = Math.max(0, periods.findIndex((period) => period.end === selectedEnd));
   const selectedPeriod = periods[selectedIndex];

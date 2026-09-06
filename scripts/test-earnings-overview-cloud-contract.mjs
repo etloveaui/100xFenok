@@ -21,10 +21,11 @@ import {
 import { derivePublicPlaneEnrollment } from "./lib/plane-enrollment-derivation.mjs";
 
 const FAMILY = "earnings-overview";
-const WORKFLOW = ".github/workflows/fetch-stockanalysis.yml";
+const WORKFLOW = ".github/workflows/refresh-earnings-overview.yml";
+const CALLER_WORKFLOW = ".github/workflows/fetch-stockanalysis.yml";
 const TICKERS = ["AAPL", "AMZN", "MSFT", "META"];
 const OUTCOME_SHARD = "data/admin/data-supply-state/publish-outcomes/earnings-overview.json";
-const DETECTION_SHARD = "data/admin/data-supply-state/detection-attempts/stockanalysis_earnings_overview.json";
+const DETECTION_SHARD = "data/admin/data-supply-state/detection-attempts/earnings_overview.json";
 const CANONICAL_ROOT = "data/earnings-overview";
 const MANIFEST_PREFIX = "public/data/earnings-overview";
 const MAX_TOTAL_BYTES = 200_000;
@@ -47,7 +48,7 @@ function expectAssetSpec(policy, expectedPath) {
 }
 
 function validIncome() {
-  return Object.fromEntries(INCOME_METRICS.map((metric, index) => [metric, index === 8 ? 1.25 : (index + 1) * 1_000_000]));
+  return { revenue: 100e6, costOfRevenue: 40e6, grossProfit: 60e6, operatingExpenses: 20e6, operatingIncome: 40e6, pretaxIncome: 45e6, incomeTax: 10e6, netIncome: 35e6, dilutedEps: 1.25 };
 }
 
 function validPeriod(ticker, end, label) {
@@ -270,16 +271,33 @@ function validDocument(ticker, newestEnd, olderEnd, updatedAt = "2026-09-06T12:0
   );
 }
 
-// The daily 21:20 UTC StockAnalysis schedule owns a separate earnings refresh
-// path so an unrelated provider failure cannot suppress this four-file family.
+// The daily 21:20 UTC StockAnalysis schedule calls the independent reusable
+// earnings workflow so an unrelated provider failure cannot suppress this
+// four-file family. The reusable workflow also remains manually dispatchable
+// for the bounded initial publish.
 {
-  const workflow = await readFile(new URL("../.github/workflows/fetch-stockanalysis.yml", import.meta.url), "utf8");
-  assert.match(workflow, /cron:\s*['"]20 21 \* \* \*['"]/u);
-  assert.match(workflow, /build-earnings-overview\.py\s+--refresh/u);
-  assert.match(workflow, /--output-dir\s+data\/earnings-overview/u);
-  assert.match(workflow, /publish-cloud-data-generation\.mjs\s+--family=earnings-overview/u);
-  assert.match(workflow, /persist-cloud-publish-outcome\.mjs[\s\S]*--family=earnings-overview/u);
-  assert.match(workflow, /data\/earnings-overview/u);
+  const reusable = await readFile(new URL("../.github/workflows/refresh-earnings-overview.yml", import.meta.url), "utf8");
+  assert.match(reusable, /workflow_call:/u);
+  assert.match(reusable, /workflow_dispatch:/u);
+  assert.match(reusable, /build-earnings-overview\.py\s+--refresh/u);
+  assert.match(reusable, /--output-dir\s+data\/earnings-overview/u);
+  assert.match(reusable, /publish-cloud-data-generation\.mjs\s+--family=earnings-overview/u);
+  assert.match(reusable, /persist-cloud-publish-outcome\.mjs[\s\S]*--family=earnings-overview/u);
+  assert.match(reusable, /fenok-data-writer-refs\/heads\/main/u);
+  assert.match(reusable, /git fetch origin main/u);
+  assert.match(reusable, /\[skip ci\]/u);
+  assert.match(reusable, /data\/earnings-overview/u);
+
+  const updateManifest = await readFile(new URL("../.github/workflows/update-manifest.yml", import.meta.url), "utf8");
+  assert.ok(updateManifest.includes("'!data/earnings-overview/**'"), "earnings data refresh cannot trigger full UI reconciliation");
+  assert.ok(updateManifest.includes("'!data/admin/earnings_overview/**'"));
+  const caller = await readFile(new URL("../.github/workflows/fetch-stockanalysis.yml", import.meta.url), "utf8");
+  assert.match(caller, /cron:\s*['"]20 21 \* \* \*['"]/u);
+  const callerJobStart = caller.indexOf("  refresh-earnings-overview:");
+  assert.notEqual(callerJobStart, -1, `${CALLER_WORKFLOW} must call the earnings workflow`);
+  const callerBlock = caller.slice(callerJobStart);
+  assert.match(callerBlock, /uses:\s*\.\/\.github\/workflows\/refresh-earnings-overview\.yml/u);
+  assert.doesNotMatch(callerBlock, /needs:\s*acquire-stockanalysis/u, "earnings refresh must be independent of StockAnalysis success");
 }
 
 process.stdout.write("test-earnings-overview-cloud-contract: ok\n");

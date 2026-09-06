@@ -42,6 +42,9 @@ async function main() {
   const expenseFlow=buildIncomeFlow(otherExpense);
   assert.equal(expenseFlow.kind,"sankey");
   assert.equal(expenseFlow.links.find((l: {to: string})=>l.to==="nonOperatingExpense")?.value,5);
+  const equityLoss=structuredClone(period);equityLoss.income.afterTaxOther=-1;equityLoss.income.netIncome=34;
+  assert.equal(validateEarningsDocument({...document, periods:[equityLoss]}).ok,true,"after-tax equity income is separate from tax");
+  assert.equal(buildIncomeFlow(equityLoss).links.find((l: {to: string})=>l.to==="afterTaxOther")?.value,1);
   const unavailable=structuredClone(period);unavailable.income.grossProfit=null;
   assert.equal(buildIncomeFlow(unavailable).kind,"unavailable");
   const prior=structuredClone(period); prior.end="2025-06-30";prior.income.revenue=80;prior.income.dilutedEps=1.5;

@@ -313,6 +313,7 @@ const lossHtml = renderToStaticMarkup(
   }),
 );
 assertIncludes(lossHtml, 'data-earnings-flow="bridge"', "losses use a signed bridge fallback");
+assertIncludes(lossHtml, 'data-earnings-flow-node="nonOperatingExpense"', "signed bridge explicitly shows non-operating expense");
 assert.match(lossHtml, /[−-]\s*5/, "the loss fallback shows a signed negative value");
 assertNotIncludes(lossHtml, "width:-", "loss fallback never asks SVG for a negative width");
 assertNotIncludes(lossHtml, "width: -", "loss fallback never asks SVG for a negative width");
