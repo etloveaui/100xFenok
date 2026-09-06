@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 import { projectFenokShortTermFields } from "../src/hooks/useScreenerData";
 import {
@@ -35,7 +37,7 @@ try {
   else delete testRequire.extensions[".css"];
 }
 const { passesFenokEdgeFilters } = screener;
-const { rankFenokEdgeAxes } = sharedPanel;
+const { rankFenokEdgeAxes, SharedEdgePanel } = sharedPanel;
 
 const usEnrichedSignal = {
   symbol: "USX",
@@ -205,8 +207,16 @@ assert.doesNotMatch(
 );
 
 const panelSource = fs.readFileSync(path.join(appRoot, "src/app/screener/StockDetailPanel.tsx"), "utf8");
-assert.match(panelSource, /rankFenokEdgeAxes\(shortTermAxes, "desc", 3\)/, "Short strengths must use the reference-only-safe ranking helper");
-assert.match(panelSource, /rankFenokEdgeAxes\(shortTermAxes, "asc", 1\)/, "Short weaknesses must use the reference-only-safe ranking helper");
+// The shared panel now displays all axes instead of a ranked top/bottom subset.
+// Both entry variants must preserve the reference-only flag into that renderer.
+assert.match(panelSource, /shortRows=\{toSharedRows\(shortTermAxes\)\}/, "the standard panel must use shared Short rows");
+assert.match(panelSource, /const toSharedRows[\s\S]*?referenceOnly: axis\.referenceOnly/, "shared Short rows must retain reference-only identity");
+assert.match(panelSource, /shortRows=\{shortTermAxes\.map[\s\S]*?referenceOnly: axis\.referenceOnly/, "the preview panel must also retain reference-only identity");
+const referenceHtml = renderToStaticMarkup(createElement(SharedEdgePanel, {
+  title: "Reference-axis regression", shortScore: 61, longScore: null,
+  shortRows: [{ key: "off-exchange", label: "장외거래", score: 99, referenceOnly: true }], longRows: [],
+}));
+assert.ok(referenceHtml.includes("장외거래 · 참고"), "a reference axis must remain visibly distinct from directional inputs");
 assert.match(panelSource, /function rankFenokEdgeAxes[\s\S]*!axis\.referenceOnly/, "Short ranking helper must exclude reference-only axes");
 assert.match(panelSource, /shortTermBasis\.sourceInputCount[\s\S]*?\/3–5/, "Panel must disclose Short N/3–5 inputs");
 assert.match(panelSource, /shortTermBasis\.exclusionNote|장외거래 참고축\(평균 제외\)/, "Panel must disclose off-exchange exclusion from Short averaging");
