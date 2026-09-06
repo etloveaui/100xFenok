@@ -944,6 +944,8 @@ async function runReviewContinuity(
     await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
     await typed.waitFor({ state: "visible", timeout: 20_000 });
     assert.equal(await typed.inputValue(), "I can", "typed partial answer must survive reload");
+    await assertLayout(page);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-review-input.png`), fullPage: true });
     const malformedDraft = "{unreadable review draft";
     await page.addInitScript(({ key, raw }) => {
       if (!sessionStorage.getItem("winddown:qa:malformed-review-seeded")) {
@@ -980,6 +982,8 @@ async function runReviewContinuity(
     assert(downloadedPath, "rejected draft download must be available");
     assert.equal(readFileSync(downloadedPath, "utf8"), conflictingDraft, "download preserves exact rejected active bytes");
     assert.equal(await page.evaluate(key => sessionStorage.getItem(key), WINDDOWN_REVIEW_DRAFT_STORAGE_KEY), conflictingDraft, "export alone must not clear active bytes");
+    await assertLayout(page);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-review-recovery.png`), fullPage: true });
     await acknowledgeExport.click();
     assert.equal(await page.evaluate(key => sessionStorage.getItem(key), WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY), malformedDraft, "export acknowledgment must retain the older archive");
     await page.getByRole("button", { name: "직접 입력", exact: true }).click();
@@ -1011,6 +1015,8 @@ async function runReviewContinuity(
     await page.getByLabel("영어로 직접 입력", { exact: true }).fill("wrong answer");
     await page.getByRole("button", { name: "답 확인하기", exact: true }).click();
     await page.locator('[data-repair-kind="single-card"]').waitFor({ state: "visible", timeout: 20_000 });
+    await assertLayout(page);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-review-repair.png`), fullPage: true });
     const repairCard = page.getByRole("button", { name: `${REVIEW_CARDS[0].en} 영어`, exact: true });
     const repairCue = page.getByRole("button", { name: `${REVIEW_CARDS[0].ko} 한국어`, exact: true });
     await repairCard.click();

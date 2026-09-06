@@ -14,7 +14,7 @@ assert.ok(route.includes("loadWindDownStudyMaterial"));
 assert.ok(route.includes('source !== "published-lkg"'));
 assert.ok(route.includes('publicationStatus !== "active"'));
 assert.ok(route.includes("material.entries.length < 3"));
-assert.ok(route.includes('headers: { "Cache-Control": "no-store" }'));
+assert.ok(route.includes('headers: { "Cache-Control": "private, no-store" }'));
 assert.ok(page.includes("AdminAccessGate") && page.includes("WindDownDrillClient"));
 for (const forbidden of ["Gemini", "WebSocket", "getUserMedia", "SpeechRecognition", "microphone", "/api/winddown/progress", "/api/winddown/review"]) {
   assert.equal(`${route}\n${client}`.includes(forbidden), false, `Drill must not reference ${forbidden}`);
