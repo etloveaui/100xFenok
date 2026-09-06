@@ -427,7 +427,7 @@ const REVIEW_CARDS: ReviewCard[] = [
     id: "winddown-review-card-001",
     ko: "오늘은 천천히 시작해요",
     en: "I can start slowly.",
-    reviewCycleId: "winddown-review:synthetic-001",
+    reviewCycleId: `winddown-review:${"b".repeat(64)}`,
     dueAtIso: "2026-09-06T00:00:00.000Z",
   },
 ];
@@ -917,6 +917,12 @@ function assertContinuityDiagnostics(
   assert.equal(diagnostics.blockedRequests.length, 0, `${label} unexpected external/data/API requests: ${JSON.stringify(diagnostics.blockedRequests)}`);
 }
 
+async function captureContinuityFailure(page: Page, label: string, diagnostics: unknown, error: unknown) {
+  const body = await page.locator("body").innerText({ timeout: 3_000 }).catch(() => "unavailable");
+  console.error(JSON.stringify({ case: label, error: error instanceof Error ? error.stack : String(error), body: body.slice(0, 6_000), diagnostics }));
+  await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${label}-failure.png`), fullPage: true, timeout: 5_000 }).catch(() => undefined);
+}
+
 async function runReviewContinuity(
   context: BrowserContext,
   base: URL,
@@ -1039,6 +1045,9 @@ async function runReviewContinuity(
     }
     assertContinuityDiagnostics(diagnostics, `${engine.id}/${viewport.id}/review-continuity`);
     return `${engine.id}/${viewport.id}/review-continuity`;
+  } catch (error) {
+    await captureContinuityFailure(page, `${engine.id}-${viewport.id}-review`, diagnostics, error);
+    throw error;
   } finally {
     await page.close();
   }
@@ -1089,6 +1098,9 @@ async function runArchiveContinuity(
     }
     assertContinuityDiagnostics(diagnostics, `${engine.id}/${viewport.id}/archive-continuity`);
     return `${engine.id}/${viewport.id}/archive-continuity`;
+  } catch (error) {
+    await captureContinuityFailure(page, `${engine.id}-${viewport.id}-archive`, diagnostics, error);
+    throw error;
   } finally {
     await page.close();
   }
@@ -1212,6 +1224,9 @@ async function runPracticeContinuity(
     }
     assertContinuityDiagnostics(diagnostics, `${engine.id}/${viewport.id}/practice-continuity`);
     return `${engine.id}/${viewport.id}/practice-continuity`;
+  } catch (error) {
+    await captureContinuityFailure(page, `${engine.id}-${viewport.id}-practice`, diagnostics, error);
+    throw error;
   } finally {
     await page.close();
   }
@@ -1288,6 +1303,9 @@ async function runVoiceContinuity(
     assert.equal(await outboxPage.evaluate((key) => localStorage.getItem(key), WIND_DOWN_VOICE_FROZEN_STORAGE_KEY), null, "matching acknowledgment must clear the active frozen report");
     assert.equal(await outboxPage.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "report retry must not request microphone access");
     await assertLayout(outboxPage);
+  } catch (error) {
+    await captureContinuityFailure(outboxPage, `${engine.id}-${viewport.id}-voice-outbox`, outboxDiagnostics, error);
+    throw error;
   } finally {
     await outboxPage.close();
   }
@@ -1326,6 +1344,9 @@ async function runVoiceContinuity(
     assert.equal(checkpointDiagnostics.voiceSessionPostCount, 0, "checkpoint restore must not open a voice session automatically");
     assert.equal(checkpointDiagnostics.voiceReportPostCount, 0, "checkpoint restore must not upload a report automatically");
     await assertLayout(checkpointPage);
+  } catch (error) {
+    await captureContinuityFailure(checkpointPage, `${engine.id}-${viewport.id}-voice-checkpoint`, checkpointDiagnostics, error);
+    throw error;
   } finally {
     await checkpointPage.close();
   }
@@ -1360,12 +1381,18 @@ async function runContinuityContext(
     sameSite: "Lax",
   }]);
   try {
-    return [
-      await runReviewContinuity(context, base, engine, viewport),
-      await runArchiveContinuity(context, base, engine, viewport),
-      await runPracticeContinuity(context, base, engine, viewport),
-      await runVoiceContinuity(context, base, engine, viewport),
-    ];
+    const results: string[] = [];
+    const failures: string[] = [];
+    for (const run of [runReviewContinuity, runArchiveContinuity, runPracticeContinuity, runVoiceContinuity]) {
+      try {
+        const result = await run(context, base, engine, viewport);
+        results.push(result);
+        console.log(`PASS ${result}`);
+      } catch (error) {
+        failures.push(`${engine.id}/${viewport.id}/${run.name}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+    return { results, failures };
   } finally {
     await context.close();
   }
@@ -1381,18 +1408,20 @@ async function main() {
   const sessionCookie = await login(base);
   const results: string[] = [];
   if (process.env.WINDDOWN_QA_SCOPE === "continuity") {
+    const failures: string[] = [];
     for (const engine of ENGINES) {
       const browser = await engine.type.launch({ headless: true });
       try {
         for (const viewport of CONTINUITY_VIEWPORTS[engine.id]) {
           const cases = await runContinuityContext(browser, base, sessionCookie, engine, viewport);
-          results.push(...cases);
-          for (const result of cases) console.log(`PASS ${result}`);
+          results.push(...cases.results);
+          failures.push(...cases.failures);
         }
       } finally {
         await browser.close();
       }
     }
+    assert.equal(failures.length, 0, `continuity failures: ${JSON.stringify(failures)}`);
     assert.equal(results.length, 20);
     console.log(`PASS winddown-continuity-browser - ${results.length} focused synthetic Chromium/WebKit cases`);
     return;
@@ -1415,6 +1444,6 @@ async function main() {
 }
 
 void main().catch((error) => {
-  console.error(`FAIL winddown-preservation-browser - ${error instanceof Error ? error.message : String(error)}`);
+  console.error(`FAIL winddown-preservation-browser - ${error instanceof Error ? error.stack : String(error)}`);
   process.exitCode = 1;
 });
