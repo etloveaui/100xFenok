@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import sys
 import unittest
 
 
@@ -26,6 +27,7 @@ def load_module():
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Cannot load earnings segment extractor from {MODULE_PATH}")
     module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -67,6 +69,16 @@ class EarningsSegmentsTest(unittest.TestCase):
         self.assertNotIn("Products", [name for name, _value in values(result)])
         self.assertEqual(sum(value for _name, value in values(result)), 109_417_000_000)
 
+    def test_nested_presentation_table_does_not_invalidate_valid_xbrl_facts(self) -> None:
+        result = self.mod.extract_revenue_segments(
+            "AAPL",
+            fixture("aapl_product_quarter.html"),
+            "2026-03-29",
+            "2026-06-27",
+            109_417_000_000,
+        )
+        self.assertEqual(values(result)[0], ("iPhone", 54_252_000_000))
+
     def test_amzn_prefers_reportable_segments_over_product_sales_group(self) -> None:
         result = self.mod.extract_revenue_segments(
             "AMZN",
@@ -102,6 +114,49 @@ class EarningsSegmentsTest(unittest.TestCase):
             [("Family of Apps", 60_370_000_000), ("Reality Labs", 431_000_000)],
         )
         self.assertNotIn("Advertising", [name for name, _value in values(result)])
+
+    def test_msft_reads_current_quarter_revenue_rows_from_official_segment_table(self) -> None:
+        result = self.mod.extract_revenue_segments(
+            "MSFT",
+            fixture("msft_segment_revenue_quarter.html"),
+            "2026-04-01",
+            "2026-06-30",
+            90_007_000_000,
+        )
+        self.assertIsNotNone(result)
+        self.assertEqual(result["segmentBasis"], "사업부별 매출")
+        self.assertEqual(
+            values(result),
+            [
+                ("Productivity and Business Processes", 37_847_000_000),
+                ("Intelligent Cloud", 39_306_000_000),
+                ("More Personal Computing", 12_854_000_000),
+            ],
+        )
+        self.assertEqual(sum(value for _name, value in values(result)), 90_007_000_000)
+
+    def test_msft_plain_table_requires_matching_quarter_header_and_total(self) -> None:
+        html = fixture("msft_segment_revenue_quarter.html")
+        self.assertIsNone(
+            self.mod.extract_revenue_segments(
+                "MSFT", html, "2025-04-01", "2025-06-30", 90_007_000_000
+            )
+        )
+        self.assertIsNone(
+            self.mod.extract_revenue_segments(
+                "MSFT", html, "2026-04-01", "2026-06-30", 90_008_000_000
+            )
+        )
+
+    def test_msft_non_gaap_segment_table_cannot_supply_revenue(self) -> None:
+        html = fixture("msft_segment_revenue_quarter.html")
+        html = html.replace("SEGMENT REVENUE AND OPERATING INCOME", "NON-GAAP SEGMENT REVENUE")
+        html = html.replace("SEGMENT RESULTS", "NON-GAAP RECONCILIATION")
+        self.assertIsNone(
+            self.mod.extract_revenue_segments(
+                "MSFT", html, "2026-04-01", "2026-06-30", 90_007_000_000
+            )
+        )
 
     def test_exact_start_and_end_reject_ytd_and_prior_year_contexts(self) -> None:
         html = fixture("aapl_product_quarter.html")

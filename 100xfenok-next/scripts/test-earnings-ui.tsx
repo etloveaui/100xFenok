@@ -395,7 +395,7 @@ const retainedHtml = renderToStaticMarkup(
 assertIncludes(retainedHtml, "새 관측을 확인하지 못해 이전 분기를 유지합니다.", "retained data explains why it is shown");
 assertIncludes(retainedHtml, "2026-06-30", "retained data keeps the period date visible");
 
-    console.log("[test-earnings-ui] RED contract ready");
+    console.log("[earnings-ui] renderer, source, comparison and flow geometry checks passed");
   } finally {
     restoreCssModuleLoader();
   }

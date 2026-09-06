@@ -233,6 +233,27 @@ class BuildEarningsOverviewTest(unittest.TestCase):
         self.assertNotIn("2024-06-30", ends, "oldest excess quarter should be pruned")
         self.assertEqual(len(ends), 8)
 
+    def test_period_label_uses_period_end_when_filing_fy_is_republished(self) -> None:
+        facts = deepcopy(load_fixture("aapl_companyfacts.json"))
+        for namespace_facts in facts["facts"].values():
+            for fact in namespace_facts.values():
+                if not isinstance(fact, Mapping):
+                    continue
+                for unit_values in fact.get("units", {}).values():
+                    for observation in unit_values:
+                        if observation.get("end") == "2025-06-30":
+                            observation["fy"] = 2026
+                            observation["fp"] = "Q3"
+        document, validation = call_normalizer(self.mod, "AAPL", facts)
+        self.assertTrue(validation_ok(validation))
+        prior = period_for(document, "2025-06-30")
+        self.assertIsNotNone(prior)
+        self.assertEqual(prior["label"], "FY2025 Q3")
+
+    def test_aapl_fiscal_identity_handles_early_next_month_53_week_ends(self) -> None:
+        self.assertEqual(self.mod._period_label("AAPL", "2023-04-01"), "FY2023 Q2")
+        self.assertEqual(self.mod._period_label("AAPL", "2022-10-01"), "FY2022 Q4")
+
     def test_q4_annual_minus_same_fiscal_year_nine_months_withholds_eps(self) -> None:
         document, validation = call_normalizer(
             self.mod, "MSFT", load_fixture("msft_q4_companyfacts.json")
@@ -325,6 +346,22 @@ class BuildEarningsOverviewTest(unittest.TestCase):
                     "MICROSOFT CORPORATION", "MICROSOFT CORPORATION NON-GAAP"
                 ),
                 source_url=source_url,
+            )
+
+    def test_msft_release_parser_binds_non_q4_period_and_rejects_wrong_url(self) -> None:
+        html = load_fixture_text("msft_release_table_fixture.html").replace(
+            "June 30", "September 30"
+        )
+        source_url = "https://www.microsoft.com/en-us/investor/earnings/fy-2027-q1/press-release-webcast"
+        supplement = self.mod.parse_msft_release_table(html, source_url=source_url)
+        self.assertEqual(
+            supplement["period"],
+            {"label": "FY2027 Q1", "start": "2026-07-01", "end": "2026-09-30"},
+        )
+        with self.assertRaises(ValueError):
+            self.mod.parse_msft_release_table(
+                html,
+                source_url="https://www.microsoft.com/en-us/investor/earnings/fy-2026-q4/press-release-webcast",
             )
 
     def test_msft_release_supplement_supersedes_annual_ytd_q4_derivation(self) -> None:
@@ -421,6 +458,17 @@ class BuildEarningsOverviewTest(unittest.TestCase):
         except (KeyError, ValueError):
             return
         self.assertFalse(validation_ok(validation), "only the four allowlisted tickers are supported")
+
+    def test_companyfacts_cik_is_required_and_must_match_ticker(self) -> None:
+        missing = deepcopy(load_fixture("aapl_companyfacts.json"))
+        missing.pop("cik")
+        with self.assertRaises(ValueError):
+            call_normalizer(self.mod, "AAPL", missing)
+
+        mismatched = deepcopy(load_fixture("aapl_companyfacts.json"))
+        mismatched["cik"] = 789019
+        with self.assertRaises(ValueError):
+            call_normalizer(self.mod, "AAPL", mismatched)
 
 
 if __name__ == "__main__":

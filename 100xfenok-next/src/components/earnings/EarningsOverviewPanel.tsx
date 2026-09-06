@@ -322,13 +322,14 @@ function SankeyFlow({ flow, period }: { flow: IncomeFlow; period: EarningsPeriod
         <div>
           <span className={styles.eyebrow}>INCOME FLOW</span>
           <h3>매출에서 순이익까지</h3>
-          <p>실제 공시값을 단계별로 연결해 보여줍니다.</p>
+          <p>실제 공시값을 단계별로 연결해 보여줍니다. 영업비용은 매출원가를 제외한 금액입니다.</p>
         </div>
         <FlowLegend />
       </div>
       <div className={styles.flowViewport}>
         <svg
           className={styles.flowSvg}
+          style={{ minWidth: width }}
           viewBox={`0 0 ${width} ${height}`}
           role="img"
           aria-label={`${period.label} 실제 손익 흐름`}
@@ -470,7 +471,7 @@ function ComparisonMiniBar({
   const scale = 27 / maxValue;
   const bar = (value: number | null, x: number, color: string, id: string): ReactNode => {
     if (!isFiniteNumber(value)) return <rect key={id} x={x} y={baseline} width="22" height="2" rx="1" fill="#d9e3ef" opacity="0.8" />;
-    const height = Math.max(3, Math.abs(value) * scale);
+    const height = Math.abs(value) * scale;
     return <rect key={id} x={x} y={value >= 0 ? baseline - height : baseline} width="22" height={height} rx="5" fill={color} opacity="0.9" data-comparison-value={String(value)} />;
   };
 

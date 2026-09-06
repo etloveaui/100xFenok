@@ -42,6 +42,10 @@ async function verifyDocument(page: Page, ticker: string, compact: boolean) {
     await panel.getByText("상세 손익 흐름 보기", { exact: false }).click();
   }
   await panel.locator('[data-earnings-flow="sankey"]').waitFor();
+  for (const metric of ["revenue", "operatingIncome", "netIncome"] as const) {
+    assert.equal(await panel.locator(`[data-earnings-flow-node="${metric}"]`).getAttribute("data-flow-value"), String(document.periods[0].income[metric]), `${ticker} ${metric} matches the verified official document`);
+  }
+  assert.equal(await panel.locator('[data-earnings-metric="dilutedEps"] strong').textContent(), `$${document.periods[0].income.dilutedEps!.toFixed(2)}`, `${ticker} displayed EPS is official GAAP`);
   if (document.periods.length > 1) {
     await select.focus();
     await select.selectOption(document.periods[1].end);
