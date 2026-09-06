@@ -153,7 +153,7 @@ jobs:
           echo 'Source refresh failed for at least one ticker; prior validated values were retained.' >&2
           exit 1
 
-      - name: Upload earnings overview publish outcome
+      - name: Upload earnings overview publish outcome shard
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:

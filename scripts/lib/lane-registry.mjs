@@ -1930,6 +1930,16 @@ export const PLANE_CANONICAL_COMMIT_MODES = Object.freeze([
 // is mandatory in every case; only its shape, the publisher's blocking
 // semantics and the location of the canonical commit may differ.
 export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
+  "earnings-overview": Object.freeze({
+    workflow: ".github/workflows/refresh-earnings-overview.yml",
+    non_blocking_publisher: false,
+    detached_persistence: true,
+    canonical_commit: "earlier_sibling_job",
+    canonical_commit_reason: "the refresh job commits the validated documents and static fallback before its dependent publish job starts; only refresh and outcome persistence acquire the shared Git writer lock",
+    strict_gate: true,
+    strict_gate_reason: "the scheduled refresh must fail when no cloud generation is published; a blocked or failed publish still uploads and persists its outcome so retained values do not conceal an unsuccessful refresh",
+    reason: "publication and evidence persistence use separate jobs to avoid holding the Git writer lock during cloud I/O, while the publisher remains blocking and persistence runs after unsuccessful publication",
+  }),
   damodaran: Object.freeze({
     workflow: ".github/workflows/fetch-damodaran-shadow.yml",
     non_blocking_publisher: true,
