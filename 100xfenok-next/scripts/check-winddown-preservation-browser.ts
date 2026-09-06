@@ -1719,7 +1719,8 @@ async function assertStoryState(page: Page, episodeId: string, expected: "curren
       ?? element.textContent
       ?? "";
   });
-  assert.equal(state, expected, `${episodeId} must distinguish current, replay, and preview`);
+  const expectedLabel = { current: "현재 무대", replay: "다시보기", preview: "미리보기" }[expected];
+  assert.equal(state, expectedLabel, `${episodeId} must distinguish current, replay, and preview`);
   if (expected === "preview") {
     assert.match(state, /preview|미리|잠겨|예정|future/i, `${episodeId} must be visibly marked as a future preview`);
     const practiceLinks = await page.locator(`a[href*="/winddown/roleplay"][href*="story=${encodeURIComponent(episodeId)}"]`).count();
