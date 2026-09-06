@@ -146,6 +146,17 @@ for (const [symbol] of Object.entries(index.stocks)) {
     // detail file missing
   }
 
+  // Structured consensus carries converter quality decisions. An empty or
+  // rejected series is authoritative and must not be back-filled from raw EPS.
+  const epsWeekly = detail?.eps_consensus?.weekly?.fy_plus_1;
+  if (Array.isArray(epsWeekly)) {
+    const observations = epsWeekly
+      .map((point) => ({ date: sourceDate(point?.date), value: toFiniteNumber(point?.value) }))
+      .filter((point) => point.date && point.value !== undefined)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    ecMap.set(symbol, { eps: observations[0]?.value });
+  }
+
   const pb = detail?.per_bands;
   const current = toFiniteNumber(pb?.current);
   const min = toFiniteNumber(pb?.min_8y);
