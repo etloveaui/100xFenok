@@ -11,6 +11,25 @@
 
 Stock screening, ETF benchmarks, economic indicators, and source-sheet raw tables exported from Global Scouter tool.
 
+### Berkshire source correction (2026-09-04 snapshot)
+
+Structured Berkshire B history normalizes duplicated A-class EPS, BPS, CPS and SPS
+using the official 1:1,500 economic share ratio. Historical price multiples and
+EPS growth derived from those values are recalculated from the corrected inputs.
+Historical Class B PEG is withheld because its source growth definition is not
+recoverable from the supplied fields; a zero or an invented PEG is not substituted.
+The underlying company statements and raw source layers remain unchanged.
+The 2021–2025 normalized EPS values agree with the rounded Class B figures in the
+[2023 annual report](https://www.berkshirehathaway.com/2023ar/2023ar.pdf) and
+[2025 annual report](https://www.berkshirehathaway.com/2025ar/2025ar.pdf).
+
+For both Berkshire classes, the September 4 consensus observation is aligned to
+the detail sheet's explicit 2026, 2027 and 2028 annual estimate columns. This
+replaces the summary sheet's misplaced actual/forecast values; it does not turn
+historical earnings into a forecast. Correction provenance accompanies the
+structured data. The override is bounded to this source snapshot and validated
+source evidence; it must not silently normalize a future supplier release.
+
 ## Structure
 
 ```

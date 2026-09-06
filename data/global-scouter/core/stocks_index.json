@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-06T15:41:52.388323",
+  "generated_at": "2026-09-06T18:23:59.654194",
   "source_date": "2026-09-04",
   "count": 1066,
   "stocks": {
@@ -263,7 +263,306 @@
       "pe": 23.074783401732784,
       "pb": 1.35,
       "dy": 0.0,
-      "r12": 0.03805284319356672
+      "r12": 0.03805284319356672,
+      "data_quality": {
+        "code": "berkshire_class_b_unit_normalization",
+        "detector": "class_a_b_duplicate_finite_per_share_with_1_1500_price_scale",
+        "action": "divide_class_b_historical_per_share_by_1500_and_recompute_derived_ratios",
+        "source_date": "2026-09-04",
+        "share_ratio": 1500,
+        "source_sha256": "2952c907fdf62f3f8e994d8c83bca5cb5e76a50b583d0774296134408f08b11b",
+        "affected_fields": [
+          "eps_consensus.BRK.A.fy_plus_1",
+          "eps_consensus.BRK.A.fy_plus_2",
+          "eps_consensus.BRK.A.fy_plus_3",
+          "eps_consensus.BRK.A.weekly_change",
+          "eps_consensus.BRK.B.fy_plus_1",
+          "eps_consensus.BRK.B.fy_plus_2",
+          "eps_consensus.BRK.B.fy_plus_3",
+          "eps_consensus.BRK.B.weekly_change",
+          "growth_consensus.earnings_3y",
+          "growth_consensus.earnings_7y",
+          "growth_estimates.eps_growth",
+          "per_share.bps",
+          "per_share.cps",
+          "per_share.eps",
+          "per_share.sps",
+          "valuation.pbr",
+          "valuation.pbr_band",
+          "valuation.pcr",
+          "valuation.peg",
+          "valuation.per",
+          "valuation.per_band",
+          "valuation.psr"
+        ],
+        "unresolved_fields": [
+          "valuation.peg"
+        ],
+        "withheld_fields": {
+          "valuation.peg": "Historical Class B PEG is withheld because the source PEG definition cannot be established from the supplied fields."
+        },
+        "raw_preserved": true,
+        "provenance": {
+          "official_evidence": [
+            {
+              "url": "https://www.berkshirehathaway.com/2025ar/2025ar.pdf",
+              "pdf_page": 94,
+              "claim": "2025/2024/2023 Class B per-share figures use the 1/1500 Class A scale"
+            },
+            {
+              "url": "https://www.berkshirehathaway.com/2023ar/2023ar.pdf",
+              "pdf_page": 96,
+              "claim": "2023/2022/2021 restated Class B per-share figures use the 1/1500 Class A scale"
+            }
+          ],
+          "workbook_evidence": {
+            "duplicate_cells": [
+              {
+                "field": "eps",
+                "index": 0,
+                "value": 59553.83
+              },
+              {
+                "field": "eps",
+                "index": 1,
+                "value": -15494.16
+              },
+              {
+                "field": "eps",
+                "index": 2,
+                "value": 66411.99
+              },
+              {
+                "field": "eps",
+                "index": 3,
+                "value": 61900.09
+              },
+              {
+                "field": "eps",
+                "index": 4,
+                "value": 46563.02
+              },
+              {
+                "field": "bps",
+                "index": 0,
+                "value": 341627.02
+              },
+              {
+                "field": "bps",
+                "index": 1,
+                "value": 323361.59
+              },
+              {
+                "field": "bps",
+                "index": 2,
+                "value": 388195.87
+              },
+              {
+                "field": "bps",
+                "index": 3,
+                "value": 450112.29
+              },
+              {
+                "field": "bps",
+                "index": 4,
+                "value": 497227.0
+              },
+              {
+                "field": "cps",
+                "index": 0,
+                "value": 26107.48
+              },
+              {
+                "field": "cps",
+                "index": 1,
+                "value": 25427.54
+              },
+              {
+                "field": "cps",
+                "index": 2,
+                "value": 33954.5
+              },
+              {
+                "field": "cps",
+                "index": 3,
+                "value": 21278.13
+              },
+              {
+                "field": "cps",
+                "index": 4,
+                "value": 31962.43
+              },
+              {
+                "field": "sps",
+                "index": 0,
+                "value": 182882.17
+              },
+              {
+                "field": "sps",
+                "index": 1,
+                "value": 205612.44
+              },
+              {
+                "field": "sps",
+                "index": 2,
+                "value": 251561.21
+              },
+              {
+                "field": "sps",
+                "index": 3,
+                "value": 258348.64
+              },
+              {
+                "field": "sps",
+                "index": 4,
+                "value": 258266.47
+              }
+            ],
+            "price_scale_cells": [
+              {
+                "index": 0,
+                "a": 450662.0,
+                "b": 299.0
+              },
+              {
+                "index": 1,
+                "a": 468710.96,
+                "b": 308.9
+              },
+              {
+                "index": 2,
+                "a": 542625.03,
+                "b": 356.66
+              },
+              {
+                "index": 3,
+                "a": 680920.0,
+                "b": 453.28
+              },
+              {
+                "index": 4,
+                "a": 754800.0,
+                "b": 502.65
+              }
+            ],
+            "strong": true
+          },
+          "source_annual_period": {
+            "fy1": "2026/12(E)",
+            "fy2": "2027/12(E)",
+            "fy3": "2028/12(E)"
+          },
+          "source_annual_period_by_ticker": {
+            "BRK.A": {
+              "fy1": "2026/12(E)",
+              "fy2": "2027/12(E)",
+              "fy3": "2028/12(E)"
+            },
+            "BRK.B": {
+              "fy1": "2026/12(E)",
+              "fy2": "2027/12(E)",
+              "fy3": "2028/12(E)"
+            }
+          },
+          "historical_original_source_values": {
+            "eps": [
+              59553.83,
+              -15494.16,
+              66411.99,
+              61900.09,
+              46563.02
+            ],
+            "bps": [
+              341627.02,
+              323361.59,
+              388195.87,
+              450112.29,
+              497227.0
+            ],
+            "cps": [
+              26107.48,
+              25427.54,
+              33954.5,
+              21278.13,
+              31962.43
+            ],
+            "sps": [
+              182882.17,
+              205612.44,
+              251561.21,
+              258348.64,
+              258266.47
+            ]
+          },
+          "historical_replacement_values": {
+            "eps": [
+              39.702553333333334,
+              -10.32944,
+              44.274660000000004,
+              41.26672666666666,
+              31.04201333333333
+            ],
+            "bps": [
+              227.75134666666668,
+              215.57439333333335,
+              258.79724666666664,
+              300.07486,
+              331.48466666666667
+            ],
+            "cps": [
+              17.404986666666666,
+              16.951693333333335,
+              22.636333333333333,
+              14.18542,
+              21.308286666666667
+            ],
+            "sps": [
+              121.92144666666668,
+              137.07496,
+              167.70747333333333,
+              172.23242666666667,
+              172.17764666666667
+            ]
+          },
+          "forecast_original_source_values": {
+            "fy_plus_1": 46563.02,
+            "fy_plus_2": 21.8,
+            "fy_plus_3": 22.35
+          },
+          "forecast_replacement_values": {
+            "fy1": 21.8,
+            "fy2": 21.98,
+            "fy3": 22.35
+          },
+          "forecast_original_source_values_by_ticker": {
+            "BRK.A": {
+              "fy_plus_1": 46563.02,
+              "fy_plus_2": 32309.53,
+              "fy_plus_3": 33905.49
+            },
+            "BRK.B": {
+              "fy_plus_1": 46563.02,
+              "fy_plus_2": 21.8,
+              "fy_plus_3": 22.35
+            }
+          },
+          "forecast_replacement_values_by_ticker": {
+            "BRK.A": {
+              "fy1": 32309.53,
+              "fy2": 32498.87,
+              "fy3": 33905.49
+            },
+            "BRK.B": {
+              "fy1": 21.8,
+              "fy2": 21.98,
+              "fy3": 22.35
+            }
+          },
+          "withheld_fields": {
+            "valuation.peg": "Historical Class B PEG is withheld because the source PEG definition cannot be established from the supplied fields."
+          }
+        }
+      }
     },
     "V": {
       "n": "Visa Class A",
