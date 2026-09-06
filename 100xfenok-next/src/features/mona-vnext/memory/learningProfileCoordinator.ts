@@ -80,6 +80,12 @@ import {
   type WindDownReviewAlias,
 } from "@/features/winddown/server/reviewIdentity";
 
+import {
+  parseWindDownConversationQuery,
+  summarizeWindDownConversation,
+  type WindDownConversationQuery,
+} from "@/features/winddown/server/conversationHistory";
+
 const PROFILE_STORAGE_KEY = WIND_DOWN_PROFILE_LEGACY_STORAGE_KEY;
 const RECEIPT_STORAGE_PREFIX = "winddown-review-receipt:";
 const VOICE_REPORT_STORAGE_PREFIX = "winddown-voice-report:";
@@ -112,6 +118,7 @@ export type WindDownReviewCoordinatorEnv = {
 };
 
 export type MonaVnextProfileCoordinatorCommand =
+  | ({ operation: "read-winddown-conversations" } & WindDownConversationQuery)
   | {
       operation: "read-learning-profile";
     }
@@ -566,6 +573,54 @@ export async function handleMonaVnextProfileCoordinatorRequest(
 
   const recoveryResponse = await handleWindDownRecoveryCoordinatorRequest(state, env, request, body);
   if (recoveryResponse) return recoveryResponse;
+
+  // Archive reads deliberately precede profile initialization and never mutate rows.
+  if (body.operation === "read-winddown-conversations") {
+    const { operation: _operation, ...queryInput } = body;
+    const query = parseWindDownConversationQuery(queryInput);
+    if (!query) return noStoreJson({ error: "INVALID_CONVERSATION_QUERY" }, 400);
+    try {
+      const readVerified = async (key: string, value: unknown) => {
+        const receipt = normalizeVoiceReportReceipt(value);
+        if (!receipt || voiceReportKey(receipt.productSessionId) !== key
+          || receipt.finalDigest !== await sha256Hex(JSON.stringify(receipt.report))) {
+          throw new Error("WINDDOWN_CONVERSATION_CORRUPT");
+        }
+        // Return the immutable stored form, not a rewritten legacy normalization.
+        return value as WindDownVoiceReportReceipt;
+      };
+      if (query.session) {
+        const key = voiceReportKey(query.session);
+        const stored = await state.storage.get<unknown>(key);
+        if (stored === undefined) return noStoreJson({ error: "WINDDOWN_CONVERSATION_NOT_FOUND" }, 404);
+        return noStoreJson({ ok: true, receipt: await readVerified(key, stored) });
+      }
+      if (!state.storage.list) throw new Error("WINDDOWN_CONVERSATION_LIST_UNAVAILABLE");
+      const rows = await state.storage.list({
+        prefix: VOICE_REPORT_STORAGE_PREFIX,
+        limit: 11,
+        ...(query.cursor ? { startAfter: voiceReportKey(query.cursor) } : {}),
+      });
+      if (!(rows instanceof Map) || rows.size > 11) throw new Error("WINDDOWN_CONVERSATION_LIST_INVALID");
+      const items = [];
+      let lastKey = query.cursor ? voiceReportKey(query.cursor) : "";
+      let lastSessionId: string | null = null;
+      for (const [key, value] of rows) {
+        if (!key.startsWith(VOICE_REPORT_STORAGE_PREFIX) || key <= lastKey) {
+          throw new Error("WINDDOWN_CONVERSATION_LIST_INVALID");
+        }
+        const receipt = await readVerified(key, value);
+        if (items.length < 10) {
+          items.push(summarizeWindDownConversation(receipt));
+          lastSessionId = receipt.productSessionId;
+        }
+        lastKey = key;
+      }
+      return noStoreJson({ ok: true, items, nextCursor: rows.size > 10 ? lastSessionId : null });
+    } catch {
+      return noStoreJson({ error: "WINDDOWN_CONVERSATIONS_UNAVAILABLE" }, 503);
+    }
+  }
 
   if (body.operation === "read-learning-profile") {
     const initializedProfile = await initialProfile(state, env);

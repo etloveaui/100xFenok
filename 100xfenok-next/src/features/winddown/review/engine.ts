@@ -38,6 +38,7 @@ export type WindDownReviewCommitInput = {
 
 export type WindDownReviewResult = {
   materialId: string;
+  reviewCycleId?: string;
   rating: "good" | "hard" | "again";
   reward: 0 | 1;
 };
@@ -211,35 +212,6 @@ function uniqueCards(cards: readonly WindDownReviewCard[]) {
   });
 }
 
-function wordEdges(value: string) {
-  const words = value.trim().match(/[A-Za-z0-9']+/g) ?? [];
-  return {
-    first: words[0] ?? value.trim(),
-    last: words.at(-1) ?? value.trim(),
-  };
-}
-
-function fallbackRepairPairs(card: WindDownReviewCard): WindDownMatchPair[] {
-  const edges = wordEdges(card.en);
-  return [
-    {
-      id: `card:${card.id}`,
-      leftLabel: card.en,
-      rightLabel: card.ko,
-    },
-    {
-      id: "opening",
-      leftLabel: edges.first,
-      rightLabel: "첫 단어",
-    },
-    {
-      id: "closing",
-      leftLabel: edges.last,
-      rightLabel: "마지막 단어",
-    },
-  ];
-}
-
 function repairPairs(args: {
   card: WindDownReviewCard;
   cards: readonly WindDownReviewCard[];
@@ -259,15 +231,7 @@ function repairPairs(args: {
     leftLabel: card.en,
     rightLabel: card.ko,
   }));
-  if (sentencePairs.length === 3) return sentencePairs;
-
-  const fallback = fallbackRepairPairs(target);
-  return [
-    ...sentencePairs,
-    ...fallback.filter(
-      (pair) => !sentencePairs.some((candidate) => candidate.id === pair.id),
-    ),
-  ].slice(0, 3);
+  return sentencePairs;
 }
 
 function shuffledTiles(pairs: WindDownMatchPair[], seed: string) {
@@ -615,7 +579,13 @@ export function applyWindDownReviewAction(
   if (action.type === "commit-succeeded") {
     if (state.phase !== "committing" || !state.commitInput) return invalid(state);
     const queue = state.queue.slice(1);
-    const results = [...state.results, action.result];
+    const results = [
+      ...state.results,
+      {
+        ...action.result,
+        reviewCycleId: action.result.reviewCycleId ?? card.reviewCycleId,
+      },
+    ];
     return {
       state: {
         ...state,

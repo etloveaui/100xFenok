@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import {
   WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY,
+  WIND_DOWN_VOICE_FROZEN_STORAGE_KEY,
+  WIND_DOWN_VOICE_RETAINED_STORAGE_KEY,
+  retainWindDownVoiceRecovery,
+  saveWindDownVoiceFrozen,
   WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY,
   WIND_DOWN_VOICE_OUTBOX_MAX_BYTES,
   acknowledgeWindDownVoiceOutbox,
@@ -8,6 +12,7 @@ import {
   clearWindDownVoiceCheckpoint,
   createWindDownVoiceRecoveryDraft,
   readWindDownVoiceCheckpoint,
+  readWindDownVoiceFrozen,
   readWindDownVoiceOutbox,
   saveWindDownVoiceCheckpoint,
   saveWindDownVoiceOutbox,
@@ -334,7 +339,8 @@ async function main() {
     storage.shouldFailGet = false;
 
     // Blocked storage set returns STORAGE_UNAVAILABLE and permits draft export
-    storage.shouldFailSet = true;
+    const quotaStorage = new MemoryStorage();
+    quotaStorage.shouldFailSet = true;
     const report = buildWindDownVoiceReport({
       schemaVersion: 1,
       activity: "roleplay",
@@ -358,7 +364,35 @@ async function main() {
       attempts: 0,
     };
 
-    const blockedResult = saveWindDownVoiceOutbox(storage, entry);
+    for (const raw of ["", " "]) {
+      const blankStorage = new MemoryStorage();
+      blankStorage.setItem(WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY, raw);
+      assert.equal(readWindDownVoiceOutbox(blankStorage).status, "corrupt");
+      const blockedOutbox = saveWindDownVoiceOutbox(blankStorage, entry);
+      assert.equal(blockedOutbox.ok, false);
+      if (!blockedOutbox.ok) assert.equal(blockedOutbox.code, "OUTBOX_CORRUPT_BYTES_RETAINED");
+      assert.equal(blankStorage.getItem(WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY), raw);
+      blankStorage.removeItem(WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY);
+      blankStorage.setItem(WIND_DOWN_VOICE_FROZEN_STORAGE_KEY, raw);
+      assert.equal(readWindDownVoiceFrozen(blankStorage).status, "corrupt");
+      const blockedFrozen = saveWindDownVoiceFrozen(blankStorage, report);
+      assert.equal(blockedFrozen.ok, false);
+      if (!blockedFrozen.ok) assert.equal(blockedFrozen.code, "FROZEN_CORRUPT_BYTES_RETAINED");
+      assert.equal(blankStorage.getItem(WIND_DOWN_VOICE_FROZEN_STORAGE_KEY), raw);
+      blankStorage.removeItem(WIND_DOWN_VOICE_FROZEN_STORAGE_KEY);
+      blankStorage.setItem(WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY, raw);
+      assert.equal(readWindDownVoiceCheckpoint(blankStorage).status, "corrupt");
+      const checkpoint: WindDownVoiceSessionCheckpoint = { schemaVersion: 1, productSessionId: report.productSessionId, activity: report.activity,
+        descriptor: report.descriptor, conversationIds: report.conversationIds, sessionProofs: report.sessionProofs,
+        startedAtIso: report.startedAtIso ?? "2026-07-31T00:00:00.000Z", checkpointAtIso: report.stoppedAtIso, turns: report.turns,
+        metrics: { turnCount: report.metrics.turnCount ?? report.turns.length, interruptionCount: report.metrics.interruptionCount ?? 0 } };
+      const blockedCheckpoint = saveWindDownVoiceCheckpoint(blankStorage, checkpoint);
+      assert.equal(blockedCheckpoint.ok, false);
+      if (!blockedCheckpoint.ok) assert.equal(blockedCheckpoint.code, "CHECKPOINT_CORRUPT_BYTES_RETAINED");
+      assert.equal(blankStorage.getItem(WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY), raw);
+    }
+    assert.equal(storage.getItem(WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY), corruptPayload);
+    const blockedResult = saveWindDownVoiceOutbox(quotaStorage, entry);
     assert.equal(blockedResult.ok, false);
     assert.equal(blockedResult.code, "STORAGE_UNAVAILABLE");
 
@@ -439,6 +473,15 @@ async function main() {
       attempts: 0,
     };
 
+    assert.deepEqual(saveWindDownVoiceFrozen(storage, largeReport), { ok: true });
+    const frozenBytes = storage.getItem(WIND_DOWN_VOICE_FROZEN_STORAGE_KEY);
+    storage.shouldFailSet = true;
+    assert.equal(saveWindDownVoiceOutbox(storage, largeEntry).ok, false);
+    assert.equal(storage.getItem(WIND_DOWN_VOICE_FROZEN_STORAGE_KEY), frozenBytes, "failed promotion keeps exact frozen bytes");
+    storage.shouldFailSet = false;
+    const changedReport = buildWindDownVoiceReport({ ...largeReport, stoppedAtIso: "2026-07-31T00:11:00.000Z" });
+    assert.equal(saveWindDownVoiceFrozen(storage, changedReport).ok, false);
+    assert.equal(storage.getItem(WIND_DOWN_VOICE_FROZEN_STORAGE_KEY), frozenBytes);
     const outboxResult = saveWindDownVoiceOutbox(storage, largeEntry);
     assert.deepEqual(outboxResult, { ok: true }, "outbox must store >48 KiB multibyte report with envelope allowance");
     assert.equal(WIND_DOWN_VOICE_OUTBOX_MAX_BYTES, 264 * 1024);
@@ -448,18 +491,17 @@ async function main() {
   // Fixture 6: private-ID-only practice links, turn sequence beyond 24, and receipt extraction
   // --------------------------------------------------------------------------
   {
-    // Canonical material IDs permit colon and turn sequence can be positive integer > 24
+    // Conversation citations remain separate from canonical material targets.
     const citation = {
       conversation: "wd-session-practice-001",
       turn: 42,
       source: "conv-local-source-777",
-      material: "material:cafe:decaf-01",
     };
 
     const url = buildWindDownVoicePracticeUrl(citation);
     assert.equal(
       url,
-      "/winddown/drill?conversation=wd-session-practice-001&turn=42&source=conv-local-source-777&material=material%3Acafe%3Adecaf-01",
+      "/winddown/drill?conversation=wd-session-practice-001&turn=42&source=conv-local-source-777",
     );
 
     // Zero learner transcript in URL
@@ -469,6 +511,7 @@ async function main() {
     // Parse valid URL with turn 42
     const parsed = parseWindDownVoicePracticeUrl(url);
     assert.deepEqual(parsed, citation);
+    assert.equal(parseWindDownVoicePracticeUrl(url + "&material=material%3Acafe"), null);
 
     // Parser rejects duplicate parameters
     assert.equal(
@@ -547,7 +590,7 @@ async function main() {
     assert.equal(seeds[0].citation.turn, 1);
     assert.equal(
       seeds[0].practiceUrl,
-      "/winddown/drill?conversation=wd-session-practice-001&turn=1&source=conv-test-001&material=material%3Acafe%3Adecaf-01",
+      "/winddown/drill?conversation=wd-session-practice-001&turn=1&source=conv-test-001",
     );
   }
 
@@ -646,6 +689,23 @@ async function main() {
     assert.equal(readWindDownVoiceCheckpoint(storage).status, "empty");
   }
 
+  {
+    const storage = new MemoryStorage();
+    const original = '{"unparsed":"original checkpoint bytes"';
+    storage.map.set(WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY, original);
+    storage.shouldFailSet = true;
+    assert.equal(retainWindDownVoiceRecovery(storage).ok, false);
+    assert.equal(storage.getItem(WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY), original);
+    storage.shouldFailSet = false;
+    assert.equal(retainWindDownVoiceRecovery(storage).ok, true);
+    assert.equal(storage.getItem(WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY), null);
+    const retained = JSON.parse(storage.getItem(WIND_DOWN_VOICE_RETAINED_STORAGE_KEY)!);
+    assert.equal(retained.entries[0][0].value, original, "retaining permits a new voice session without deleting recovery bytes");
+    storage.map.set(WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY, original);
+    storage.map.set(WIND_DOWN_VOICE_RETAINED_STORAGE_KEY, "malformed retained archive");
+    assert.equal(retainWindDownVoiceRecovery(storage).ok, false);
+    assert.equal(storage.getItem(WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY), original);
+  }
   console.log(
     "PASS winddown-voice-continuity - durable outbox, no-overwrite, exact ack, multibyte 256KiB cap, and private practice links",
   );

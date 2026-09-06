@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { cookies } from "next/headers";
 import AdminAccessGate from "@/components/AdminAccessGate";
-import WindDownDrillClient from "@/features/winddown/drill/ui/WindDownDrillClient";
+import WindDownVoiceReportHistory from "@/features/winddown/voice/ui/WindDownVoiceReportHistory";
 import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
 
+export const dynamic = "force-dynamic";
+export const revalidate = false;
+
 export const metadata: Metadata = {
-  title: "Quick Drill · Wind-Down",
-  description: "다섯 라운드와 회상·듣기·말하기를 이어가는 WIND DOWN 문장 연습",
+  title: "대화 보관함 · WIND DOWN",
+  description: "저장된 역할 대화와 자유 대화 기록을 확인해요.",
   robots: { index: false, follow: false },
 };
 
-export default async function WindDownDrillPage() {
+export default async function WindDownConversationsPage() {
   const cookieStore = await cookies();
   const authenticated = await verifyAdminSessionToken(
     cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null,
@@ -22,17 +24,15 @@ export default async function WindDownDrillPage() {
 
   if (!authenticated) {
     return (
-      <div data-immersive-route="winddown">
+      <div data-immersive-route="winddown-conversations">
         <AdminAccessGate />
       </div>
     );
   }
 
   return (
-    <div data-immersive-route="winddown">
-      <Suspense fallback={<p role="status" className="p-6 text-center">연습을 준비하고 있어.</p>}>
-        <WindDownDrillClient />
-      </Suspense>
+    <div data-immersive-route="winddown-conversations">
+      <WindDownVoiceReportHistory />
     </div>
   );
 }

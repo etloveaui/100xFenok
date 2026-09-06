@@ -73,7 +73,7 @@ const ACTIVITIES: Array<{
     id: "drill",
     href: "/winddown/drill",
     label: "Quick Drill",
-    description: "점수와 콤보로 다섯 라운드",
+    description: "다섯 라운드와 문장별 자유 연습",
   },
   {
     id: "roleplay",
@@ -437,9 +437,14 @@ export default function WindDownHabitHomeClient() {
           </>
         ) : null}
         <footer className="mt-8 border-t border-[var(--wd-line)] pt-4">
-          <Link href="/winddown/records" className="inline-flex min-h-[48px] items-center gap-2 text-sm font-semibold text-[var(--wd-muted)]">
-            학습 기록 보관 <span aria-hidden="true">→</span>
-          </Link>
+          <nav aria-label="나의 학습 기록" className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <Link href="/winddown/conversations" className="inline-flex min-h-[48px] items-center gap-2 text-sm font-semibold text-[var(--wd-muted)]">
+              대화 보관함 <span aria-hidden="true">→</span>
+            </Link>
+            <Link href="/winddown/records" className="inline-flex min-h-[48px] items-center gap-2 text-sm font-semibold text-[var(--wd-muted)]">
+              학습 기록 보관 <span aria-hidden="true">→</span>
+            </Link>
+          </nav>
         </footer>
       </div>
     </main>

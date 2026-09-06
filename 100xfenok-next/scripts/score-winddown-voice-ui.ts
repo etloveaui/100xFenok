@@ -374,7 +374,7 @@ assert.throws(() => buildWindDownVoiceReport({
   }],
 }), /turn_invalid/, "overlong correction text must reject instead of slice");
 
-assert.throws(() => buildWindDownVoiceReport({
+const largeForegroundReport = buildWindDownVoiceReport({
   ...roleplayReport,
   completionReason: "learner-stop",
   turns: Array.from({ length: WIND_DOWN_VOICE_REPORT_MAX_TURNS }, (_, index) => ({
@@ -384,7 +384,9 @@ assert.throws(() => buildWindDownVoiceReport({
     modelText: "나".repeat(WIND_DOWN_VOICE_REPORT_MAX_TURN_TEXT_CHARS),
     correctionText: undefined,
   })),
-}), /too_large/, "an oversized UTF-8 report must reject before pagehide dispatch");
+});
+assert.equal(isWindDownVoiceReport(largeForegroundReport), true, "valid long reports can use foreground transport");
+assert.throws(() => serializeWindDownVoiceKeepaliveBody(largeForegroundReport), /too_large/, "background transport retains its smaller byte cap");
 
 for (const completionReason of ["idle-timeout", "session-limit"] as const) {
   const automaticallyStopped = buildWindDownVoiceReport({
@@ -551,7 +553,7 @@ for (const required of [
   "min-h-[44px]",
   "min-h-[56px]",
   "motion-reduce:transition-none",
-  "overflow-x-hidden",
+  "[overflow-wrap:anywhere]",
   "같은 보고서 다시 저장",
   "pagehide",
   "visibilitychange",

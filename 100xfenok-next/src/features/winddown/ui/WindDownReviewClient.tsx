@@ -14,6 +14,14 @@ import {
   type WindDownReviewState,
 } from "@/features/winddown/review/engine";
 import {
+  archiveWindDownReviewDraft,
+  createWindDownReviewDraft,
+  loadWindDownReviewDraft,
+  loadWindDownReviewDraftRecovery,
+  saveWindDownReviewDraft,
+  type WindDownReviewDraftStorage,
+} from "@/features/winddown/review/draft";
+import {
   WindDownLumi,
   type WindDownLumiState,
 } from "@/features/winddown/ui/WindDownLumi";
@@ -36,6 +44,8 @@ type StudyResponse = {
     contentDigest: string;
   };
 };
+
+const SHA256_HEX = /^[a-f0-9]{64}$/;
 
 type ReviewApiErrorCode =
   | "REVIEW_CYCLE_STALE"
@@ -100,7 +110,8 @@ function isStudyResponse(value: unknown): value is StudyResponse {
       source.cards.every(isReviewCard) &&
       material?.source === "published-lkg" &&
       material.publicationStatus === "active" &&
-      typeof material.contentDigest === "string",
+      typeof material.contentDigest === "string" &&
+      SHA256_HEX.test(material.contentDigest),
   );
 }
 
@@ -203,6 +214,14 @@ function queueProgress(state: WindDownReviewState | null, initialCount: number) 
   return Math.round((state.results.length / initialCount) * 100);
 }
 
+function getWindDownReviewDraftStorage(): WindDownReviewDraftStorage | null {
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
 function ReviewChipInput({
   exercise,
   selectedIds,
@@ -239,6 +258,8 @@ function ReviewChipInput({
             key={chip.id}
             type="button"
             disabled={disabled}
+            aria-pressed="true"
+            aria-label={`${chip.text} 선택됨 · 눌러서 제거`}
             onClick={() => onChange(selectedIds.filter((id) => id !== chip.id))}
             className="min-h-[44px] min-w-[44px] max-w-full break-words rounded-xl px-3 text-sm font-black text-[var(--wd-bg)] disabled:opacity-40"
             style={{ backgroundColor: accent }}
@@ -257,6 +278,7 @@ function ReviewChipInput({
               key={chip.id}
               type="button"
               disabled={disabled || isSelected}
+              aria-pressed={isSelected}
               onClick={() => onChange([...selectedIds, chip.id])}
               className={[
                 "min-h-[44px] min-w-[44px] max-w-full break-words rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-sm font-black disabled:opacity-25",
@@ -281,18 +303,90 @@ export default function WindDownReviewClient() {
   const [answer, setAnswer] = useState("");
   const [selectedChipIds, setSelectedChipIds] = useState<string[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
+  const [draftRecoveryNotice, setDraftRecoveryNotice] = useState<string | null>(null);
+  const [draftRecoveryAvailable, setDraftRecoveryAvailable] = useState(false);
+  const [draftRecoveryActionAvailable, setDraftRecoveryActionAvailable] = useState(false);
+  const [draftStorageNotice, setDraftStorageNotice] = useState<string | null>(null);
   const [recallAssistVisible, setRecallAssistVisible] = useState(false);
   const loadSequence = useRef(0);
   const typedInput = useRef<HTMLInputElement>(null);
+  const sessionRef = useRef<WindDownReviewState | null>(null);
+  const answerRef = useRef("");
+  const selectedChipIdsRef = useRef<string[]>([]);
+  const allCardsRef = useRef<WindDownReviewCard[]>([]);
+  const draftStorageRef = useRef<WindDownReviewDraftStorage | null>(null);
+  const draftWritesAllowedRef = useRef(true);
+  const draftRecoveryRawRef = useRef<string | null>(null);
+
+  const setReviewSession = useCallback((next: WindDownReviewState | null) => {
+    sessionRef.current = next;
+    setSession(next);
+  }, []);
+
+  const setReviewAnswer = useCallback((next: string) => {
+    answerRef.current = next;
+    setAnswer(next);
+  }, []);
+
+  const setReviewChipIds = useCallback((next: string[]) => {
+    selectedChipIdsRef.current = next;
+    setSelectedChipIds(next);
+  }, []);
+
+  const persistDraft = useCallback(
+    (
+      nextState: WindDownReviewState,
+      nextAnswer = answerRef.current,
+      nextSelectedChipIds = selectedChipIdsRef.current,
+    ): boolean => {
+      if (!draftWritesAllowedRef.current) return false;
+      const storage = draftStorageRef.current;
+      if (!storage) {
+        setDraftStorageNotice(
+          "기기 저장공간을 사용할 수 없어. 복습은 계속할 수 있지만 같은 화면 복구가 제한돼.",
+        );
+        return false;
+      }
+      try {
+        const draft = createWindDownReviewDraft({
+          state: nextState,
+          cards: allCardsRef.current,
+          answer: nextAnswer,
+          selectedChipIds: nextSelectedChipIds,
+        });
+        const saved = saveWindDownReviewDraft(storage, draft);
+        if (saved.status !== "saved") {
+          setDraftStorageNotice(
+            "복습은 계속할 수 있어. 기기 저장공간이 가득 차서 이어하기 기록은 남기지 못했어.",
+          );
+          return false;
+        }
+        return true;
+      } catch {
+        setDraftStorageNotice(
+          "복습은 계속할 수 있어. 이어하기 기록을 기기 저장공간에 남기지 못했어.",
+        );
+        return false;
+      }
+    },
+    [],
+  );
 
   const loadQueue = useCallback(async (reloadNotice: string | null = null) => {
     const sequence = loadSequence.current + 1;
     loadSequence.current = sequence;
     setStatus("loading");
-    setSession(null);
-    setAnswer("");
-    setSelectedChipIds([]);
+    setReviewSession(null);
+    setReviewAnswer("");
+    setReviewChipIds([]);
     setNotice(reloadNotice);
+    setDraftRecoveryNotice(null);
+    setDraftRecoveryAvailable(false);
+    setDraftRecoveryActionAvailable(false);
+    setDraftStorageNotice(null);
+    draftStorageRef.current = getWindDownReviewDraftStorage();
+    draftWritesAllowedRef.current = true;
+    draftRecoveryRawRef.current = null;
     try {
       const response = await fetch("/api/winddown/study?mode=review", {
         cache: "no-store",
@@ -302,19 +396,61 @@ export default function WindDownReviewClient() {
         throw new Error("winddown_review_bootstrap_invalid");
       }
       if (loadSequence.current !== sequence) return;
-      setInitialCount(body.cards.length);
-      setSession(
-        createWindDownReviewSession({
-          cards: body.cards,
-          contentDigest: body.material.contentDigest,
-        }),
-      );
+      const freshState = createWindDownReviewSession({
+        cards: body.cards,
+        contentDigest: body.material.contentDigest,
+      });
+      const loaded = loadWindDownReviewDraft({
+        storage: draftStorageRef.current,
+        cards: body.cards,
+        contentDigest: body.material.contentDigest,
+        nowIso: new Date().toISOString(),
+      });
+      const recovery = loadWindDownReviewDraftRecovery(draftStorageRef.current);
+      setDraftRecoveryAvailable(recovery.status === "available");
+      if (loaded.status === "resumed") {
+        allCardsRef.current = loaded.draft.cards;
+        setInitialCount(loaded.draft.cards.length);
+        setReviewSession(loaded.state);
+        setReviewAnswer(loaded.answer);
+        setReviewChipIds(loaded.selectedChipIds);
+        setNotice(
+          reloadNotice ??
+            (loaded.reconciled
+              ? "복습 대기열이 바뀌어도 이어갈 수 있게 기록을 맞췄어."
+              : "이전 복습 화면에서 이어갈게."),
+        );
+        if (recovery.status === "available") {
+          setDraftRecoveryNotice("이전 복습 보관본을 내려받을 수 있어.");
+        }
+      } else {
+        allCardsRef.current = body.cards;
+        setInitialCount(body.cards.length);
+        setReviewSession(freshState);
+        setReviewAnswer("");
+        setReviewChipIds([]);
+        if (loaded.status === "stale" || loaded.status === "malformed") {
+          draftWritesAllowedRef.current = false;
+          draftRecoveryRawRef.current = loaded.raw;
+          setDraftRecoveryAvailable(true);
+          setDraftRecoveryActionAvailable(true);
+          setDraftRecoveryNotice(
+            "이전 복습 기록을 이어갈 수 없어 새 대기열을 열었어. 보관한 뒤 현재 복습을 이어갈 수 있어.",
+          );
+        } else if (loaded.status === "unavailable") {
+          setDraftRecoveryNotice(
+            "기기 저장공간을 사용할 수 없어. 복습은 계속할 수 있지만 같은 화면 복구가 제한돼.",
+          );
+        } else if (recovery.status === "available") {
+          setDraftRecoveryNotice("이전 복습 보관본을 내려받을 수 있어.");
+        }
+      }
       setStatus("ready");
     } catch {
       if (loadSequence.current !== sequence) return;
       setStatus("error");
     }
-  }, []);
+  }, [setReviewAnswer, setReviewChipIds, setReviewSession]);
 
   useEffect(() => {
     void loadQueue();
@@ -323,6 +459,72 @@ export default function WindDownReviewClient() {
   const reloadForCycleChange = useCallback(() => {
     void loadQueue("복습 순서가 바뀌어서 오늘의 대기열을 새로 불렀어.");
   }, [loadQueue]);
+
+  const archiveRejectedDraftAndContinue = useCallback(() => {
+    const storage = draftStorageRef.current;
+    const archived = archiveWindDownReviewDraft(storage);
+    if (archived.status !== "archived") {
+      setDraftRecoveryNotice(
+        archived.status === "missing"
+          ? "보관할 이전 기록을 찾지 못했어. 현재 복습은 계속할 수 있어."
+          : "이전 기록을 보관하지 못했어. 원본은 그대로 남아 있으니 다시 시도해.",
+      );
+      return;
+    }
+    draftRecoveryRawRef.current = archived.raw;
+    setDraftRecoveryAvailable(true);
+    setDraftRecoveryActionAvailable(false);
+    const currentSession = sessionRef.current;
+    if (!currentSession) {
+      draftWritesAllowedRef.current = false;
+      setDraftRecoveryNotice(
+        "이전 기록은 보관했지만 현재 복습 화면을 찾지 못했어. 새로 불러오면 이어갈 수 있어.",
+      );
+      return;
+    }
+    draftWritesAllowedRef.current = true;
+    const saved = persistDraft(
+      currentSession,
+      answerRef.current,
+      selectedChipIdsRef.current,
+    );
+    if (!saved) {
+      draftWritesAllowedRef.current = false;
+      setDraftRecoveryNotice(
+        "이전 기록은 보관했지만 새 이어하기 기록을 저장하지 못했어. 복습은 계속할 수 있어.",
+      );
+      return;
+    }
+    setDraftRecoveryNotice(
+      "이전 기록을 보관했어. 현재 복습을 새 이어하기 기록으로 저장했어.",
+    );
+  }, [persistDraft]);
+
+  const downloadDraftRecovery = useCallback(() => {
+    const rawFromActive = draftRecoveryRawRef.current;
+    const recovery = rawFromActive !== null
+      ? { status: "available" as const, raw: rawFromActive }
+      : loadWindDownReviewDraftRecovery(draftStorageRef.current);
+    if (recovery.status !== "available") {
+      setDraftRecoveryNotice(
+        recovery.status === "missing"
+          ? "내려받을 보관 기록이 없어. 먼저 이전 기록을 보관해 줘."
+          : "보관 기록을 읽지 못했어. 복습은 계속할 수 있어.",
+      );
+      return;
+    }
+    const url = URL.createObjectURL(
+      new Blob([recovery.raw], { type: "application/json" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "winddown-review-draft-recovery.json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    setDraftRecoveryNotice("이전 기록 보관본을 내려받았어.");
+  }, []);
 
   const commit = useCallback(
     async (committingState: WindDownReviewState) => {
@@ -346,14 +548,16 @@ export default function WindDownReviewClient() {
           type: "commit-succeeded",
           result: {
             materialId: receipt.materialId,
+            reviewCycleId: receipt.reviewCycleId,
             rating: receipt.rating,
             reward: receipt.reward,
           },
         });
         if (next.outcome === "invalid") throw new ReviewApiError("REVIEW_API_FAILED");
-        setSession(next.state);
-        setAnswer("");
-        setSelectedChipIds([]);
+        setReviewSession(next.state);
+        setReviewAnswer("");
+        setReviewChipIds([]);
+        persistDraft(next.state, "", []);
         setNotice(
           receipt.rating === "good"
             ? "좋아. 정확히 기억했어."
@@ -369,10 +573,13 @@ export default function WindDownReviewClient() {
         const failed = applyWindDownReviewAction(committingState, {
           type: "commit-failed",
         });
-        if (failed.outcome !== "invalid") setSession(failed.state);
+        if (failed.outcome !== "invalid") {
+          setReviewSession(failed.state);
+          persistDraft(failed.state);
+        }
       }
     },
-    [reloadForCycleChange],
+    [persistDraft, reloadForCycleChange, setReviewAnswer, setReviewChipIds, setReviewSession],
   );
 
   const grade = useCallback(
@@ -412,8 +619,18 @@ export default function WindDownReviewClient() {
             : { type: "retry-graded", exact },
         );
         if (next.outcome === "invalid") throw new ReviewApiError("REVIEW_API_FAILED");
-        setSession(next.state);
-        if (next.state.phase === "match") setAnswer("");
+        const shouldClearAnswer =
+          next.state.phase === "match" || next.state.phase === "committing";
+        const nextAnswer = shouldClearAnswer ? "" : answerRef.current;
+        const nextSelectedChipIds = shouldClearAnswer
+          ? []
+          : selectedChipIdsRef.current;
+        setReviewSession(next.state);
+        if (shouldClearAnswer) {
+          setReviewAnswer("");
+          setReviewChipIds([]);
+        }
+        persistDraft(next.state, nextAnswer, nextSelectedChipIds);
         if (next.state.phase === "committing") void commit(next.state);
       } catch (error) {
         if (error instanceof ReviewApiError && RELOAD_QUEUE_CODES.has(error.code)) {
@@ -425,10 +642,20 @@ export default function WindDownReviewClient() {
             ? { type: "first-grade-failed" }
             : { type: "retry-grade-failed" },
         );
-        if (failed.outcome !== "invalid") setSession(failed.state);
+        if (failed.outcome !== "invalid") {
+          setReviewSession(failed.state);
+          persistDraft(failed.state);
+        }
       }
     },
-    [commit, reloadForCycleChange],
+    [
+      commit,
+      persistDraft,
+      reloadForCycleChange,
+      setReviewAnswer,
+      setReviewChipIds,
+      setReviewSession,
+    ],
   );
 
   const submitFirst = (submittedAnswer: string) => {
@@ -438,8 +665,9 @@ export default function WindDownReviewClient() {
       answer: submittedAnswer,
     });
     if (next.outcome === "invalid") return;
-    setSession(next.state);
+    setReviewSession(next.state);
     setNotice(null);
+    persistDraft(next.state, submittedAnswer, selectedChipIdsRef.current);
     void grade(next.state, "first");
   };
 
@@ -447,8 +675,11 @@ export default function WindDownReviewClient() {
     if (!session || isBusy(session)) return;
     const next = applyWindDownReviewAction(session, { type: "reveal" });
     if (next.outcome === "invalid") return;
-    setSession(next.state);
+    setReviewSession(next.state);
+    setReviewAnswer("");
+    setReviewChipIds([]);
     setNotice(null);
+    persistDraft(next.state, "", []);
     void commit(next.state);
   };
 
@@ -459,8 +690,9 @@ export default function WindDownReviewClient() {
       answer: submittedAnswer,
     });
     if (next.outcome === "invalid") return;
-    setSession(next.state);
+    setReviewSession(next.state);
     setNotice(null);
+    persistDraft(next.state, submittedAnswer, selectedChipIdsRef.current);
     void grade(next.state, "retry");
   };
 
@@ -472,7 +704,8 @@ export default function WindDownReviewClient() {
         : { type: "retry-retry-grade" },
     );
     if (next.outcome === "invalid") return;
-    setSession(next.state);
+    setReviewSession(next.state);
+    persistDraft(next.state);
     void grade(next.state, stage);
   };
 
@@ -480,7 +713,8 @@ export default function WindDownReviewClient() {
     if (!session || isBusy(session)) return;
     const next = applyWindDownReviewAction(session, { type: "retry-commit" });
     if (next.outcome === "invalid") return;
-    setSession(next.state);
+    setReviewSession(next.state);
+    persistDraft(next.state);
     void commit(next.state);
   };
 
@@ -491,7 +725,24 @@ export default function WindDownReviewClient() {
       tileId,
     });
     if (next.outcome === "invalid") return;
-    setSession(next.state);
+    setReviewSession(next.state);
+    persistDraft(next.state);
+  };
+
+  const updateAnswer = (nextAnswer: string) => {
+    setReviewAnswer(nextAnswer);
+    const currentSession = sessionRef.current;
+    if (currentSession && !isBusy(currentSession)) {
+      persistDraft(currentSession, nextAnswer, selectedChipIdsRef.current);
+    }
+  };
+
+  const updateSelectedChipIds = (nextSelectedChipIds: string[]) => {
+    setReviewChipIds(nextSelectedChipIds);
+    const currentSession = sessionRef.current;
+    if (currentSession && !isBusy(currentSession)) {
+      persistDraft(currentSession, answerRef.current, nextSelectedChipIds);
+    }
   };
 
   const busy = isBusy(session);
@@ -522,16 +773,23 @@ export default function WindDownReviewClient() {
       inputMode,
     });
     if (next.outcome === "invalid") return;
-    setSession(next.state);
-    setAnswer("");
-    setSelectedChipIds([]);
+    setReviewSession(next.state);
+    setReviewAnswer("");
+    setReviewChipIds([]);
     setNotice(null);
+    persistDraft(next.state, "", []);
   };
 
   useEffect(() => {
-    setAnswer("");
-    setSelectedChipIds([]);
-  }, [current?.id]);
+    const onPageHide = () => {
+      const currentSession = sessionRef.current;
+      if (currentSession) {
+        persistDraft(currentSession, answerRef.current, selectedChipIdsRef.current);
+      }
+    };
+    window.addEventListener("pagehide", onPageHide);
+    return () => window.removeEventListener("pagehide", onPageHide);
+  }, [persistDraft]);
 
   useEffect(() => {
     if (
@@ -750,7 +1008,7 @@ export default function WindDownReviewClient() {
                         <ReviewChipInput
                           exercise={chipExercise}
                           selectedIds={selectedChipIds}
-                          onChange={setSelectedChipIds}
+                          onChange={updateSelectedChipIds}
                           disabled={busy}
                           assistVisible={recallAssistVisible}
                         />
@@ -764,7 +1022,7 @@ export default function WindDownReviewClient() {
                             ref={typedInput}
                             id="review-answer"
                             value={answer}
-                            onChange={(event) => setAnswer(event.target.value)}
+                            onChange={(event) => updateAnswer(event.target.value)}
                             onKeyDown={(event) => {
                               if (
                                 event.key === "Enter" &&
@@ -831,7 +1089,7 @@ export default function WindDownReviewClient() {
               ) : null}
 
               {status === "ready" && session && ["grade-error-first", "grade-error-retry"].includes(session.phase) ? (
-                <div className="flex min-h-[408px] flex-col justify-center text-center">
+                <div role="alert" aria-live="polite" className="flex min-h-[408px] flex-col justify-center text-center">
                   <p className="text-4xl" aria-hidden>↻</p>
                   <h2 className="mt-5 text-xl font-black">채점 결과를 아직 받지 못했어.</h2>
                   <p className="mt-3 text-sm font-semibold leading-6 text-white/60">문장과 복습 순서는 그대로야. 같은 기록으로 다시 확인할게.</p>
@@ -848,8 +1106,20 @@ export default function WindDownReviewClient() {
               {status === "ready" && current && session?.phase === "match" && session.match ? (
                 <div className="flex min-h-[408px] flex-col">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full border border-[var(--wd-listening)] bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[var(--wd-listening)]">MATCH REPAIR</span>
-                    <span className="text-xs font-black text-white/50">3쌍을 맞추면 재도전</span>
+                    {session.match.pairs.length === 1 ? (
+                      <span data-repair-kind="single-card" className="rounded-full border border-[var(--wd-listening)] bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[var(--wd-listening)]">
+                        한 문장 다시 익히기
+                      </span>
+                    ) : session.match.pairs.length === 2 ? (
+                      <span data-repair-kind="two-card" className="rounded-full border border-[var(--wd-listening)] bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[var(--wd-listening)]">
+                        두 문장 다시 익히기
+                      </span>
+                    ) : (
+                      <span data-repair-kind="three-card" className="rounded-full border border-[var(--wd-listening)] bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[var(--wd-listening)]">
+                        MATCH REPAIR
+                      </span>
+                    )}
+                    <span className="text-xs font-black text-white/50">{session.match.pairs.length}쌍을 맞추면 재도전</span>
                   </div>
                   <h2 className="mt-5 text-xl font-black">문장의 조각을 다시 연결해 봐.</h2>
                   <p className="mt-2 text-sm font-semibold leading-6 text-white/55">잘못 짝지은 카드만 잠깐 표시돼. 이 보드는 어떤 기록도 남기지 않아.</p>
@@ -863,6 +1133,9 @@ export default function WindDownReviewClient() {
                           key={tile.id}
                           type="button"
                           disabled={busy || matched}
+                          aria-pressed={Boolean(selected || matched)}
+                          aria-describedby={wrong ? "review-match-feedback" : undefined}
+                          aria-label={`${tile.label} ${tile.side === "left" ? "영어" : "한국어"}`}
                           onClick={() => selectMatchTile(tile.id)}
                           className={[
                             "min-h-20 min-w-0 break-words rounded-2xl border px-3 py-3 text-left text-sm font-black leading-snug transition motion-reduce:transition-none",
@@ -878,9 +1151,9 @@ export default function WindDownReviewClient() {
                     })}
                   </div>
                   {session.match.wrongTileIds.length > 0 ? (
-                    <p aria-live="polite" className="mt-4 text-center text-sm font-black text-[var(--wd-danger)]">아직 아니야. 다른 짝을 골라 봐.</p>
+                    <p id="review-match-feedback" role="status" aria-live="polite" className="mt-4 text-center text-sm font-black text-[var(--wd-danger)]">아직 아니야. 다른 짝을 골라 봐.</p>
                   ) : null}
-                  <p className="mt-auto pt-4 text-center text-xs font-bold text-white/45">{session.match.matchedPairIds.length}/3 연결</p>
+                  <p className="mt-auto pt-4 text-center text-xs font-bold text-white/45">{session.match.matchedPairIds.length}/{session.match.pairs.length} 연결</p>
                 </div>
               ) : null}
 
@@ -906,7 +1179,7 @@ export default function WindDownReviewClient() {
                       <ReviewChipInput
                         exercise={chipExercise}
                         selectedIds={selectedChipIds}
-                        onChange={setSelectedChipIds}
+                        onChange={updateSelectedChipIds}
                         disabled={busy}
                         assistVisible={false}
                         accent="var(--wd-listening)"
@@ -921,7 +1194,7 @@ export default function WindDownReviewClient() {
                           ref={typedInput}
                           id="review-retry"
                           value={answer}
-                          onChange={(event) => setAnswer(event.target.value)}
+                          onChange={(event) => updateAnswer(event.target.value)}
                           onKeyDown={(event) => {
                             if (
                               event.key === "Enter" &&
@@ -962,7 +1235,7 @@ export default function WindDownReviewClient() {
               ) : null}
 
               {status === "ready" && session?.phase === "commit-error" ? (
-                <div className="flex min-h-[408px] flex-col justify-center text-center">
+                <div role="alert" aria-live="polite" className="flex min-h-[408px] flex-col justify-center text-center">
                   <p className="text-4xl" aria-hidden>⌁</p>
                   <h2 className="mt-5 text-xl font-black">복습 기록이 아직 완료되지 않았어.</h2>
                   <p className="mt-3 text-sm font-semibold leading-6 text-white/60">답과 복습 주기는 그대로 보관했어. 같은 기록만 다시 전송해.</p>
@@ -977,6 +1250,42 @@ export default function WindDownReviewClient() {
               ) : null}
             </section>
 
+            {draftRecoveryNotice ? (
+              <div
+                className="mt-4 rounded-2xl border border-[var(--wd-danger)]/30 bg-[var(--wd-danger)]/5 p-4 text-center"
+              >
+                <p role="status" aria-live="polite" className="text-sm font-bold text-[var(--wd-danger)]">
+                  {draftRecoveryNotice}
+                </p>
+                {draftRecoveryAvailable ? (
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                    {draftRecoveryActionAvailable ? (
+                      <button
+                        type="button"
+                        data-draft-recovery-action="archive"
+                        onClick={archiveRejectedDraftAndContinue}
+                        className="min-h-[44px] flex-1 rounded-xl bg-[var(--wd-danger)] px-4 text-xs font-black text-[var(--wd-bg)]"
+                      >
+                        이전 기록 보관하고 이어가기
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      data-draft-recovery-action="download"
+                      onClick={downloadDraftRecovery}
+                      className="min-h-[44px] flex-1 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-4 text-xs font-black text-[var(--wd-text)]"
+                    >
+                      보관한 기록 내려받기
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            {draftStorageNotice ? (
+              <p role="status" aria-live="polite" className="mt-4 text-center text-sm font-bold text-white/60">
+                {draftStorageNotice}
+              </p>
+            ) : null}
             {notice ? <p aria-live="polite" className="mt-4 text-center text-sm font-bold text-white/65">{notice}</p> : null}
           </main>
 

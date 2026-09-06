@@ -1,19 +1,20 @@
 import {
-  WIND_DOWN_VOICE_REPORT_MAX_BYTES,
+  WIND_DOWN_VOICE_REPORT_KEEPALIVE_MAX_BYTES,
   WIND_DOWN_VOICE_REPORT_MAX_TURNS,
 } from "@/features/winddown/voice/report";
 
 /**
  * Browser-side limits used before a final voice report is dispatched.
  *
- * These are intentionally stricter than browser keepalive limits. A final
- * report either fits the documented mini-session envelope or is not sent at
- * all; the caller must surface that failure instead of claiming a save.
+ * Pagehide keepalive payloads are strictly capped at 48 KiB due to browser
+ * Beacon/keepalive constraints. Larger valid multibyte reports (up to 256 KiB)
+ * stay in the persistent localStorage outbox and upload via normal foreground fetch.
  */
 export const WIND_DOWN_IDLE_TIMEOUT_MS = 3 * 60 * 1000;
 export const WIND_DOWN_MAX_SESSION_MS = 10 * 60 * 1000;
 export const WIND_DOWN_MAX_FINALIZED_TURNS = WIND_DOWN_VOICE_REPORT_MAX_TURNS;
-export const WIND_DOWN_KEEPALIVE_MAX_BYTES = WIND_DOWN_VOICE_REPORT_MAX_BYTES;
+export const WIND_DOWN_KEEPALIVE_MAX_BYTES =
+  WIND_DOWN_VOICE_REPORT_KEEPALIVE_MAX_BYTES;
 
 export function windDownVoiceTimeoutDelays(input: {
   nowMs: number;

@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import {
   applyWindDownPracticeAction,
   createWindDownPracticeSession,
+  isWindDownPracticeResponse,
   parseWindDownPracticeQuery,
+  windDownPracticeListeningTexts,
   type WindDownPracticeMaterial,
   type WindDownPracticeQuery,
 } from "../src/features/winddown/drill/practice";
@@ -13,6 +15,11 @@ const material: WindDownPracticeMaterial = {
   ko: "나는 준비됐어.",
   en: "I am ready.",
   acceptedVariants: ["I'm ready."],
+  practice: {
+    pattern: "I am [state].",
+    variationsEn: ["I'm [state].", "I am ready."],
+    theme: "self-talk",
+  },
 };
 
 function query(values: Record<string, string | string[]>): URLSearchParams {
@@ -120,6 +127,57 @@ assert.equal(complete.phase, "complete");
 assert.equal(complete.score, 0);
 assert.equal(complete.xp, 0);
 
+const voiceCitation = {
+  productSessionId: "winddown-product-session-1",
+  sourceConversationId: "winddown-source-conversation-2",
+  turnSeq: 7,
+} as const;
+const voiceResponse = {
+  ok: true,
+  schemaVersion: 1,
+  mode: "practice",
+  modelOpened: false,
+  material: {
+    source: "published-lkg",
+    publicationStatus: "active",
+    contentDigest: "a".repeat(64),
+  },
+  materials: [material],
+  target: { kind: "voice-correction", citation: voiceCitation },
+  voiceCorrection: {
+    citation: voiceCitation,
+    learnerText: "I am ready",
+    modelCorrection: "A received correction, never a canonical answer.",
+  },
+} as const;
+assert.equal(isWindDownPracticeResponse(voiceResponse), true);
+assert.equal(
+  isWindDownPracticeResponse({
+    ...voiceResponse,
+    voiceCorrection: {
+      ...voiceResponse.voiceCorrection,
+      citation: { ...voiceCitation, sourceConversationId: "another-source" },
+    },
+  }),
+  false,
+  "a correction receipt must match the requested citation exactly",
+);
+assert.equal(
+  isWindDownPracticeResponse({
+    ...voiceResponse,
+    materials: [{ ...material, practice: { ...material.practice!, variationsEn: ["same", "same"] } }],
+  }),
+  false,
+  "authored variation references must be unique",
+);
+const legacyMaterial = { ...material };
+delete legacyMaterial.practice;
+assert.equal(
+  isWindDownPracticeResponse({ ...voiceResponse, materials: [legacyMaterial] }),
+  true,
+  "legacy four-field materials remain valid",
+);
+
 const voiceCorrectionSession = createWindDownPracticeSession({
   method: "recall-reveal",
   seed: "voice-correction",
@@ -162,6 +220,64 @@ assert.deepEqual(linked.steps.map((step) => step.method), [
 ]);
 assert.equal(linked.steps.every((step) => step.materialId === material.id), true);
 assert.equal(linked.steps.every((step) => step.creditPolicy === "practice-only"), true);
+assert.equal(linked.phase, "recall");
+assert.equal(linked.stepIndex, 0);
+assert.equal(linked.currentStep?.method, "recall-reveal");
+
+const linkedListening = applyWindDownPracticeAction(
+  applyWindDownPracticeAction(
+    applyWindDownPracticeAction(linked, { type: "submit-response", text: "I am ready" }),
+    { type: "reveal" },
+  ),
+  { type: "complete" },
+);
+assert.equal(linkedListening.phase, "listening");
+assert.equal(linkedListening.stepIndex, 1);
+assert.equal(linkedListening.currentStep?.method, "listening-variants");
+assert.equal(
+  applyWindDownPracticeAction(linkedListening, { type: "complete" }),
+  linkedListening,
+  "linked practice cannot skip the listening stage",
+);
+
+const linkedResponse = applyWindDownPracticeAction(linkedListening, { type: "advance" });
+assert.equal(linkedResponse.phase, "response");
+assert.equal(linkedResponse.stepIndex, 2);
+assert.equal(linkedResponse.currentStep?.method, "audio-first-response");
+const linkedFinal = applyWindDownPracticeAction(
+  applyWindDownPracticeAction(
+    applyWindDownPracticeAction(linkedResponse, { type: "submit-response", text: "I am ready" }),
+    { type: "reveal" },
+  ),
+  { type: "complete" },
+);
+assert.equal(linkedFinal.phase, "complete");
+assert.equal(linkedFinal.stepIndex, 3);
+assert.equal(linkedFinal.score, 0);
+assert.equal(linkedFinal.xp, 0);
+
+const listening = createWindDownPracticeSession({
+  material,
+  method: "listening-variants",
+  seed: "listening-contract",
+});
+assert.equal(listening.phase, "listening", "listening starts with audio controls available");
+assert.equal(applyWindDownPracticeAction(listening, { type: "advance" }).phase, "complete");
+assert.deepEqual(windDownPracticeListeningTexts(material), ["I am ready.", "I'm ready.", "I'm [state]."]);
+
+const patternSession = createWindDownPracticeSession({
+  material,
+  method: "pattern-transform",
+  seed: "pattern-contract",
+});
+assert.equal(patternSession.phase, "response");
+const patternRevealed = applyWindDownPracticeAction(
+  applyWindDownPracticeAction(patternSession, { type: "submit-response", text: "I am calm" }),
+  { type: "reveal" },
+);
+assert.equal(patternRevealed.revealText, material.practice?.pattern);
+assert.equal(patternRevealed.score, 0);
+assert.equal(patternRevealed.xp, 0);
 
 console.log(
   "PASS winddown-practice - disjoint targets, hidden reveal order, and practice-only semantics",

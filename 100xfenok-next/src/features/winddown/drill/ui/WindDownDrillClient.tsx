@@ -1,8 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { isWindDownDrillResponsePayload } from "@/features/winddown/drill/clientContract";
+import WindDownPracticeWorkbench from "@/features/winddown/drill/ui/WindDownPracticeWorkbench";
+import {
+  isWindDownPracticeResponse,
+  type WindDownPracticeResponse,
+} from "@/features/winddown/drill/practice";
 import {
   WINDDOWN_DRILL_ROUND_TARGET,
   applyWindDownDrillAction,
@@ -11,10 +17,18 @@ import {
 } from "@/features/winddown/drill/engine";
 
 export default function WindDownDrillClient() {
+  const searchParams = useSearchParams();
+  const queryString = searchParams.toString();
+  const requestRef = useRef(0);
+  const boardLoadedRef = useRef(false);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [session, setSession] = useState<WindDownDrillState | null>(null);
+  const [view, setView] = useState<"board" | "practice">("board");
+  const [practiceStatus, setPracticeStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [practiceResponse, setPracticeResponse] = useState<WindDownPracticeResponse | null>(null);
 
   const loadDrill = useCallback(async () => {
+    const requestId = ++requestRef.current;
     setStatus("loading");
     try {
       const response = await fetch("/api/winddown/drill", { cache: "no-store" });
@@ -22,17 +36,58 @@ export default function WindDownDrillClient() {
       if (!response.ok || !isWindDownDrillResponsePayload(body)) {
         throw new Error("winddown_drill_bootstrap_invalid");
       }
+      if (requestRef.current !== requestId) return;
       setSession(body.session);
       setStatus("ready");
     } catch {
+      if (requestRef.current !== requestId) return;
       setSession(null);
       setStatus("error");
     }
   }, []);
 
+  const loadPractice = useCallback(async (search = "?practice=1") => {
+    const requestId = ++requestRef.current;
+    setView("practice");
+    setPracticeStatus("loading");
+    try {
+      const response = await fetch(`/api/winddown/drill${search || "?practice=1"}`, { cache: "no-store" });
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok || !isWindDownPracticeResponse(body)) {
+        throw new Error("winddown_practice_bootstrap_invalid");
+      }
+      if (requestRef.current !== requestId) return;
+      setPracticeResponse(body);
+      setPracticeStatus("ready");
+    } catch {
+      if (requestRef.current !== requestId) return;
+      setPracticeResponse(null);
+      setPracticeStatus("error");
+    }
+  }, []);
+
+  const openBoard = useCallback(() => {
+    ++requestRef.current;
+    setView("board");
+    setPracticeStatus("idle");
+    setPracticeResponse(null);
+    if (!session) {
+      boardLoadedRef.current = true;
+      void loadDrill();
+    }
+  }, [loadDrill, session]);
+
   useEffect(() => {
-    void loadDrill();
-  }, [loadDrill]);
+    if (queryString) {
+      void loadPractice(`?${queryString}`);
+      return;
+    }
+    setView("board");
+    if (!boardLoadedRef.current || !session) {
+      boardLoadedRef.current = true;
+      void loadDrill();
+    }
+  }, [loadDrill, loadPractice, queryString, session]);
 
   const round = session?.rounds[session.roundIndex] ?? null;
   const progress = session
@@ -79,19 +134,44 @@ export default function WindDownDrillClient() {
               나가기
             </Link>
           </div>
-          <div className="mt-5 grid grid-cols-[1fr_auto_auto] items-center gap-3">
-            <div className="h-2 overflow-hidden rounded-full bg-[var(--wd-surface-raised)]">
-              <div
-                className="h-full rounded-full bg-[var(--wd-accent)] transition-[width] duration-300 motion-reduce:transition-none"
-                style={{ width: `${progress}%` }}
-              />
+          {view === "board" ? (
+            <div className="mt-5 grid grid-cols-[1fr_auto_auto] items-center gap-3">
+              <div className="h-2 overflow-hidden rounded-full bg-[var(--wd-surface-raised)]">
+                <div
+                  className="h-full rounded-full bg-[var(--wd-accent)] transition-[width] duration-300 motion-reduce:transition-none"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className="text-xs font-black tabular-nums text-[var(--wd-muted)]">{roundLabel}/{WINDDOWN_DRILL_ROUND_TARGET}</span>
+              <span className="rounded-full bg-[var(--wd-surface)] px-3 py-2 text-xs font-black tabular-nums">{session?.score ?? 0}점</span>
             </div>
-            <span className="text-xs font-black tabular-nums text-[var(--wd-muted)]">{roundLabel}/{WINDDOWN_DRILL_ROUND_TARGET}</span>
-            <span className="rounded-full bg-[var(--wd-surface)] px-3 py-2 text-xs font-black tabular-nums">{session?.score ?? 0}점</span>
+          ) : null}
+          <div role="tablist" aria-label="WIND DOWN 학습" className="mt-4 grid grid-cols-2 gap-2">
+            <button role="tab" aria-selected={view === "board"} type="button" onClick={openBoard} className={`min-h-[48px] rounded-2xl border px-3 text-xs font-black ${view === "board" ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]" : "border-[var(--wd-border)] bg-[var(--wd-surface)] text-[var(--wd-muted)]"}`}>Quick Drill</button>
+            <button role="tab" aria-selected={view === "practice"} data-winddown-practice-tab type="button" onClick={() => void loadPractice(queryString ? `?${queryString}` : "?practice=1")} className={`min-h-[48px] rounded-2xl border px-3 text-xs font-black ${view === "practice" ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]" : "border-[var(--wd-border)] bg-[var(--wd-surface)] text-[var(--wd-muted)]"}`}>문장 연습</button>
           </div>
         </header>
 
         <main className="flex flex-1 flex-col justify-center py-6">
+          {view === "practice" ? (
+            practiceStatus === "loading" ? (
+              <section aria-busy="true" className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-8 text-center">
+                <p className="text-lg font-black">문장 연습 준비 중</p>
+                <p className="mt-2 text-sm font-semibold text-[var(--wd-muted)]">연습할 문장을 확인하고 있어.</p>
+              </section>
+            ) : practiceStatus === "error" ? (
+              <section role="alert" className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-7 text-center">
+                <h2 className="text-xl font-black">문장 연습을 열지 못했어.</h2>
+                <p className="mt-3 text-sm font-semibold text-[var(--wd-muted)]">연습할 문장을 다시 확인해 줘.</p>
+                <button type="button" onClick={() => void loadPractice(queryString ? `?${queryString}` : "?practice=1")} className="mt-6 min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)]">다시 불러오기</button>
+              </section>
+            ) : practiceResponse ? (
+              <WindDownPracticeWorkbench response={practiceResponse} onBack={openBoard} />
+            ) : null
+          ) : null}
+
+          {view === "board" ? (
+            <>
           {status === "loading" ? (
             <section aria-busy="true" aria-live="polite" className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-8 text-center">
               <p className="text-lg font-black">Quick Drill 준비 중</p>
@@ -155,6 +235,8 @@ export default function WindDownDrillClient() {
                 오늘 밤으로
               </Link>
             </section>
+          ) : null}
+            </>
           ) : null}
         </main>
 

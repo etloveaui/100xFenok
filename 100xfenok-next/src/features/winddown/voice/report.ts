@@ -17,7 +17,10 @@ import {
 } from "@/features/winddown/voice/product";
 
 export const WIND_DOWN_VOICE_REPORT_SCHEMA_VERSION = 1 as const;
-export const WIND_DOWN_VOICE_REPORT_MAX_BYTES = 48 * 1024;
+export const WIND_DOWN_VOICE_REPORT_KEEPALIVE_MAX_BYTES = 48 * 1024;
+export const WIND_DOWN_VOICE_REPORT_NORMAL_MAX_BYTES = 256 * 1024;
+export const WIND_DOWN_VOICE_REPORT_MAX_BYTES =
+  WIND_DOWN_VOICE_REPORT_KEEPALIVE_MAX_BYTES;
 export const WIND_DOWN_VOICE_REPORT_MAX_TURNS = 24;
 export const WIND_DOWN_VOICE_REPORT_MAX_TURN_TEXT_CHARS = 640;
 export const WIND_DOWN_VOICE_REPORT_MAX_CORRECTION_CHARS =
@@ -564,7 +567,7 @@ export function buildWindDownVoiceReport(
     metrics: normalizeMetrics(input.metrics),
     outcome,
   };
-  if (serializedByteLength(report) > WIND_DOWN_VOICE_REPORT_MAX_BYTES) {
+  if (serializedByteLength(report) > WIND_DOWN_VOICE_REPORT_NORMAL_MAX_BYTES) {
     throw new Error("winddown_voice_report_too_large");
   }
   return report;
@@ -788,7 +791,7 @@ export function isWindDownVoiceReport(value: unknown): value is WindDownVoiceRep
     || report.turns.length > WIND_DOWN_VOICE_REPORT_MAX_TURNS
     || !report.turns.every(isCanonicalTurn)
     || !isCanonicalMetrics(report.metrics)
-    || serializedByteLength(report) > WIND_DOWN_VOICE_REPORT_MAX_BYTES
+    || serializedByteLength(report) > WIND_DOWN_VOICE_REPORT_NORMAL_MAX_BYTES
   ) return false;
   const conversationIds = report.conversationIds as string[];
   const turns = report.turns as WindDownVoiceFinalizedTurn[];

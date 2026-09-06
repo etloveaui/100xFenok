@@ -10,8 +10,12 @@ import {
 } from "../src/features/winddown/review/engine";
 import {
   WINDDOWN_REVIEW_DRAFT_MAX_AGE_MS,
+  WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY,
   WINDDOWN_REVIEW_DRAFT_SCHEMA_VERSION,
+  WINDDOWN_REVIEW_DRAFT_STORAGE_KEY,
+  archiveWindDownReviewDraft,
   createWindDownReviewDraft,
+  loadWindDownReviewDraftRecovery,
   loadWindDownReviewDraft,
   saveWindDownReviewDraft,
   type WindDownReviewDraftStorage,
@@ -46,27 +50,46 @@ const cards: WindDownReviewCard[] = [
 ];
 
 class MemorySessionStorage implements WindDownReviewDraftStorage {
-  value: string | null = null;
+  private readonly values = new Map<string, string>();
 
-  getItem(_key: string) {
-    return this.value;
+  get value() {
+    return this.getItem(WINDDOWN_REVIEW_DRAFT_STORAGE_KEY);
   }
 
-  setItem(_key: string, value: string) {
-    this.value = value;
+  set value(next: string | null) {
+    if (next === null) this.removeItem(WINDDOWN_REVIEW_DRAFT_STORAGE_KEY);
+    else this.setItem(WINDDOWN_REVIEW_DRAFT_STORAGE_KEY, next);
+  }
+
+  getItem(key: string) {
+    return this.values.get(key) ?? null;
+  }
+
+  setItem(key: string, value: string) {
+    this.values.set(key, value);
+  }
+
+  removeItem(key: string) {
+    this.values.delete(key);
   }
 }
 
 class ThrowingSessionStorage implements WindDownReviewDraftStorage {
+  activeValue: string | null = null;
+
   constructor(private readonly operation: "get" | "set") {}
 
-  getItem(_key: string) {
+  getItem(key: string) {
     if (this.operation === "get") throw new Error("SESSION_STORAGE_UNAVAILABLE");
-    return null;
+    return key === WINDDOWN_REVIEW_DRAFT_STORAGE_KEY ? this.activeValue : null;
   }
 
   setItem(_key: string, _value: string) {
     throw new Error("SESSION_STORAGE_QUOTA_EXCEEDED");
+  }
+
+  removeItem(_key: string) {
+    throw new Error("SESSION_STORAGE_UNAVAILABLE");
   }
 }
 
@@ -208,6 +231,65 @@ assert.equal(commitResume.state.phase, "commit-error", "in-flight commit must re
 assert.deepEqual(commitResume.state.commitInput, pendingCommitPayload, "commit retry must retain the exact idempotent payload");
 assert.equal(commitResume.state.results.length, 0, "restoring a pending commit must never fabricate progress");
 
+const missingPendingCommitStorage = new MemorySessionStorage();
+save(missingPendingCommitStorage, commitPending);
+const missingPendingCommitResume = assertResumed(
+  load(missingPendingCommitStorage, { cards: cards.slice(1) }),
+);
+assert.equal(
+  missingPendingCommitResume.state.phase,
+  "commit-error",
+  "a missing fresh due card must leave a pending commit as an explicit retry",
+);
+assert.equal(
+  missingPendingCommitResume.state.queue[0]?.reviewCycleId,
+  cards[0]!.reviewCycleId,
+  "the exact pending canonical card must remain available for manual retry",
+);
+assert.deepEqual(
+  missingPendingCommitResume.state.commitInput,
+  pendingCommitPayload,
+  "a missing fresh due card must retain the exact pending commit payload",
+);
+const manualMissingPendingRetry = applyWindDownReviewAction(
+  missingPendingCommitResume.state,
+  { type: "retry-commit" },
+);
+assert.equal(manualMissingPendingRetry.state.phase, "committing");
+assert.deepEqual(manualMissingPendingRetry.state.commitInput, pendingCommitPayload);
+assert.equal(manualMissingPendingRetry.state.results.length, 0, "manual retry must not fabricate a receipt");
+
+let committed = applyWindDownReviewAction(initial, {
+  type: "set-input-mode",
+  inputMode: "typed",
+}).state;
+committed = applyWindDownReviewAction(committed, {
+  type: "submit-first",
+  answer: "I am ready",
+}).state;
+committed = applyWindDownReviewAction(committed, {
+  type: "first-graded",
+  exact: true,
+}).state;
+committed = applyWindDownReviewAction(committed, {
+  type: "commit-succeeded",
+  result: {
+    materialId: cards[0]!.id,
+    reviewCycleId: cards[0]!.reviewCycleId,
+    rating: "good",
+    reward: 1,
+  },
+}).state;
+const committedStorage = new MemorySessionStorage();
+save(committedStorage, committed);
+const committedResume = assertResumed(load(committedStorage));
+assert.deepEqual(
+  committedResume.state.queue.map((card) => card.reviewCycleId),
+  cards.slice(1).map((card) => card.reviewCycleId),
+  "already committed review cycles must never replay when the due queue still includes them",
+);
+assert.equal(committedResume.state.results.length, 1);
+
 const staleStorage = new MemorySessionStorage();
 save(staleStorage, initial);
 const staleRaw = staleStorage.value;
@@ -240,6 +322,29 @@ const malformedRaw = malformedStorage.value;
 const malformed = load(malformedStorage);
 assert.equal(malformed.status, "malformed");
 assert.equal(malformedStorage.value, malformedRaw, "malformed drafts must remain retained");
+
+const recoveryStorage = new MemorySessionStorage();
+recoveryStorage.value = staleRaw;
+const archived = archiveWindDownReviewDraft(recoveryStorage);
+assert.equal(archived.status, "archived", "explicit recovery must copy a rejected draft before clearing the active slot");
+assert.equal(recoveryStorage.value, null, "the active slot clears only after the recovery copy is verified");
+assert.equal(recoveryStorage.getItem(WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY), staleRaw);
+const recoveredRaw = loadWindDownReviewDraftRecovery(recoveryStorage);
+assert.equal(recoveredRaw.status, "available");
+if (recoveredRaw.status === "available") assert.equal(recoveredRaw.raw, staleRaw, "recovery must preserve exact raw bytes");
+
+const conflictingRecoveryStorage = new MemorySessionStorage();
+conflictingRecoveryStorage.value = staleRaw;
+conflictingRecoveryStorage.setItem(WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY, "existing archive");
+const conflictingArchive = archiveWindDownReviewDraft(conflictingRecoveryStorage);
+assert.equal(conflictingArchive.status, "unavailable", "an existing different recovery archive must never be overwritten");
+assert.equal(conflictingRecoveryStorage.value, staleRaw, "archive conflict must retain the active rejected draft");
+
+const failedRecoveryStorage = new ThrowingSessionStorage("set");
+failedRecoveryStorage.activeValue = staleRaw;
+const failedArchive = archiveWindDownReviewDraft(failedRecoveryStorage);
+assert.equal(failedArchive.status, "unavailable", "recovery copy failures must remain non-fatal");
+assert.equal(failedRecoveryStorage.activeValue, staleRaw, "copy failure must retain the active rejected draft");
 
 assert.equal(load(new ThrowingSessionStorage("get")).status, "unavailable", "review must survive unavailable sessionStorage reads");
 const writeFailure = saveWindDownReviewDraft(
@@ -310,7 +415,18 @@ assert.equal(engine.includes('id: "closing"'), false, "fake last-word repair pai
 assert.equal(client.includes("sessionStorage"), true, "continuity must use private same-tab sessionStorage");
 assert.equal(client.includes("localStorage"), false, "review continuity must never spill into localStorage");
 assert(client.includes("loadWindDownReviewDraft") && client.includes("saveWindDownReviewDraft"));
-assert(client.includes("SINGLE-CARD REPAIR") && client.includes("TWO-CARD REPAIR"));
+assert(client.includes("archiveWindDownReviewDraft"));
+assert(client.includes("이전 기록 보관하고 이어가기"));
+assert(client.includes("data-draft-recovery-action=\"archive\""));
+assert(client.includes("data-draft-recovery-action=\"download\""));
+assert(client.includes("draftWritesAllowedRef.current = true"));
+assert(client.includes('window.addEventListener("pagehide"'));
+assert(client.includes("persistDraft(next.state"));
+assert(
+  client.includes("한 문장 다시 익히기") &&
+    client.includes("두 문장 다시 익히기"),
+  "short repair UI must use the approved Korean labels",
+);
 assert(
   client.includes('data-repair-kind="single-card"') &&
     client.includes('data-repair-kind="two-card"'),
@@ -318,6 +434,7 @@ assert(
 );
 assert(client.includes("aria-pressed") && client.includes("aria-live=\"polite\""), "choice and match/error feedback must expose state accessibly");
 assert(client.includes("session.match.pairs.length"), "repair progress must follow the actual pair count");
+assert(client.includes("SHA256_HEX") && client.includes("SHA256_HEX.test(material.contentDigest)"), "study responses must require a SHA-256 hex digest");
 
 console.log(
   "PASS winddown-review-continuity - draft round-trip, fail-closed recovery, exact retries, meaningful short repairs, and accessibility contract",

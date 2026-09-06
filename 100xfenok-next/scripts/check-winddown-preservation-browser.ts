@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import {
@@ -9,9 +10,18 @@ import {
   type Page,
 } from "playwright";
 import { applyWindDownLearnAction, createWindDownLearnSession, type WindDownLearnAction, type WindDownLearnCard, type WindDownLearnState } from "../src/features/winddown/learn/engine";
+import { buildWindDownVoiceReport } from "../src/features/winddown/voice/report";
+import { createWindDownRoleplayDescriptor } from "../src/features/winddown/voice/product";
+import {
+  WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY,
+  WIND_DOWN_VOICE_FROZEN_STORAGE_KEY,
+  WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY,
+} from "../src/features/winddown/voice/pendingStorage";
+import { WINDDOWN_REVIEW_DRAFT_STORAGE_KEY, WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY } from "../src/features/winddown/review/draft";
 import { assertWindDownQaTarget } from "./winddown-qa-target.mjs";
 
 type Scenario = "resume" | "shortage" | "malformed-resume" | "records";
+type ContinuityCase = "review" | "archive" | "voice" | "practice";
 type Engine = { id: "chromium" | "webkit"; type: typeof chromium | typeof webkit };
 type Viewport = {
   id: string;
@@ -221,6 +231,86 @@ function attachDiagnostics(page: Page, engine: Engine["id"], base: URL) {
   };
 }
 
+type ContinuityDiagnostics = {
+  consoleErrors: string[];
+  compatibilityNotices: string[];
+  pageErrors: string[];
+  blockedRequests: string[];
+  apiRequests: string[];
+  reviewStudyGetCount: number;
+  reviewGradePostCount: number;
+  reviewCommitPostCount: number;
+  conversationsListGetCount: number;
+  conversationsDetailGetCount: number;
+  voiceSessionPostCount: number;
+  voiceReportPostCount: number;
+  voiceReportBodies: string[];
+  practiceGetCount: number;
+  practiceQueries: string[];
+};
+
+function attachContinuityDiagnostics(page: Page, engine: Engine["id"], base: URL): ContinuityDiagnostics {
+  const diagnostics: ContinuityDiagnostics = {
+    consoleErrors: [],
+    compatibilityNotices: [],
+    pageErrors: [],
+    blockedRequests: [],
+    apiRequests: [],
+    reviewStudyGetCount: 0,
+    reviewGradePostCount: 0,
+    reviewCommitPostCount: 0,
+    conversationsListGetCount: 0,
+    conversationsDetailGetCount: 0,
+    voiceSessionPostCount: 0,
+    voiceReportPostCount: 0,
+    voiceReportBodies: [],
+    practiceGetCount: 0,
+    practiceQueries: [],
+  };
+  page.on("console", (message) => {
+    if (message.type() !== "error") return;
+    const location = message.location().url;
+    let locationUrl: URL | null = null;
+    try { locationUrl = new URL(location); } catch { locationUrl = null; }
+    const isSyntheticReportFailure = [
+      "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+      "Failed to load resource: the server responded with a status of 503 ()",
+      "Failed to load resource: the server responded with a status of 503",
+    ].includes(message.text())
+      && locationUrl?.origin === base.origin
+      && locationUrl !== null
+      && apiPath(locationUrl.href) === "/api/winddown/live/report";
+    if (isSyntheticReportFailure) return;
+    if (
+      engine === "webkit"
+      && message.text() === 'Viewport argument key "interactive-widget" not recognized and ignored.'
+      && locationUrl?.origin === base.origin
+      && locationUrl !== null
+      && ["/winddown/review", "/winddown/conversations", "/winddown/roleplay", "/winddown/drill"].includes(apiPath(locationUrl.href))
+      && (apiPath(locationUrl.href) !== "/winddown/drill"
+        ? locationUrl.search === ""
+        : (locationUrl.searchParams.size === 1 && locationUrl.searchParams.get("practice") === "1")
+          || (locationUrl.searchParams.size === 1 && locationUrl.searchParams.get("material") === "synthetic-material-002")
+          || (locationUrl.searchParams.size === 3
+            && locationUrl.searchParams.get("conversation") === "wd-continuity-session-001"
+            && locationUrl.searchParams.get("turn") === "1"
+            && locationUrl.searchParams.get("source") === "wd-continuity-conversation-001"))
+    ) {
+      diagnostics.compatibilityNotices.push(JSON.stringify({ text: message.text(), location }));
+      return;
+    }
+    diagnostics.consoleErrors.push(JSON.stringify({ text: message.text(), location }));
+  });
+  page.on("pageerror", (error) => diagnostics.pageErrors.push(error.message));
+  page.on("requestfailed", (request) => {
+    if (diagnostics.blockedRequests.includes(request.url())) return;
+    const failure = request.failure()?.errorText ?? "unknown";
+    if (failure.includes("ERR_ABORTED") && new URL(request.url()).searchParams.has("_rsc")) return;
+    diagnostics.pageErrors.push(`request:${request.method()}:${failure}`);
+  });
+  return diagnostics;
+}
+
 function apiPath(value: string): string {
   const pathname = new URL(value).pathname;
   return pathname.replace(/\/+$/, "") || "/";
@@ -324,6 +414,348 @@ async function wireSyntheticNetwork(
   });
 }
 
+type ReviewCard = {
+  id: string;
+  ko: string;
+  en: string;
+  reviewCycleId: string;
+  dueAtIso: string;
+};
+
+const REVIEW_CARDS: ReviewCard[] = [
+  {
+    id: "winddown-review-card-001",
+    ko: "오늘은 천천히 시작해요",
+    en: "I can start slowly.",
+    reviewCycleId: "winddown-review:synthetic-001",
+    dueAtIso: "2026-09-06T00:00:00.000Z",
+  },
+];
+
+function reviewStudyFixture() {
+  return {
+    schemaVersion: 1 as const,
+    mode: "review" as const,
+    modelOpened: false as const,
+    cards: REVIEW_CARDS,
+    material: {
+      source: "published-lkg" as const,
+      publicationStatus: "active" as const,
+      contentDigest: CONTENT_DIGEST,
+    },
+  };
+}
+
+function continuityVoiceFixture() {
+  const report = buildWindDownVoiceReport({
+    schemaVersion: 1,
+    activity: "roleplay",
+    productSessionId: "wd-continuity-session-001",
+    descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+    conversationIds: ["wd-continuity-conversation-001"],
+    sessionProofs: [`${"A".repeat(80)}.${"a".repeat(64)}`],
+    startedAtIso: "2026-09-06T00:00:00.000Z",
+    stoppedAtIso: "2026-09-06T00:01:00.000Z",
+    completionReason: "learner-stop",
+    turns: [{
+      conversationId: "wd-continuity-conversation-001",
+      turnSeq: 1,
+      userText: "I want coffee.",
+      modelText: "Sure! A more polite way is: I'd like a coffee, please.",
+      finalized: true,
+      sttDrift: false,
+      interrupted: false,
+      correctionText: "I'd like a coffee, please.",
+    }],
+    metrics: { turnCount: 1, interruptionCount: 0 },
+  });
+  const finalDigest = createHash("sha256").update(JSON.stringify(report)).digest("hex");
+  const outbox = {
+    schemaVersion: 1,
+    productSessionId: report.productSessionId,
+    activity: report.activity,
+    finalDigest,
+    report,
+    stagedAtIso: report.stoppedAtIso,
+    attempts: 1,
+    lastError: "synthetic continuity retry",
+  };
+  const checkpoint = {
+    schemaVersion: 1,
+    productSessionId: "wd-continuity-checkpoint-001",
+    activity: "roleplay",
+    conversationIds: ["wd-continuity-checkpoint-conv-001"],
+    sessionProofs: [`${"B".repeat(80)}.${"b".repeat(64)}`],
+    descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+    startedAtIso: "2026-09-06T00:00:00.000Z",
+    turns: [{
+      conversationId: "wd-continuity-checkpoint-conv-001",
+      turnSeq: 1,
+      userText: "Hi there.",
+      modelText: "Hello!",
+      finalized: true,
+      sttDrift: false,
+      interrupted: false,
+    }],
+    metrics: { turnCount: 1, interruptionCount: 0 },
+    checkpointAtIso: "2026-09-06T00:00:30.000Z",
+  };
+  return { report, finalDigest, outbox, checkpoint };
+}
+
+function continuityArchiveFixture() {
+  const voice = continuityVoiceFixture();
+  const receipt = {
+    schemaVersion: 1 as const,
+    activity: "roleplay" as const,
+    productSessionId: voice.report.productSessionId,
+    finalDigest: voice.finalDigest,
+    committedAtIso: voice.report.stoppedAtIso,
+    report: voice.report,
+  };
+  return {
+    first: {
+      productSessionId: voice.report.productSessionId,
+      activity: "roleplay" as const,
+      committedAtIso: receipt.committedAtIso,
+      scenarioTitle: "카페에서 주문하기",
+      correctionCount: 1,
+    },
+    second: {
+      productSessionId: "wd-continuity-session-002",
+      activity: "live-talk" as const,
+      committedAtIso: "2026-09-05T23:00:00.000Z",
+      scenarioTitle: "오늘을 천천히 풀기",
+      correctionCount: 0,
+    },
+    receipt,
+  };
+}
+
+const PRACTICE_PATTERN = "I am [state].";
+const PRACTICE_MATERIALS = [
+  {
+    id: "synthetic-material-002",
+    ko: "나는 준비가 되었어요",
+    en: "I am ready.",
+    acceptedVariants: ["I'm ready."],
+    practice: { pattern: PRACTICE_PATTERN, variationsEn: ["I'm [state].", "I am ready."], theme: "selftalk-emotion" },
+  },
+  {
+    id: "synthetic-material-003",
+    ko: "잠시 쉬어도 괜찮아요",
+    en: "It is okay to pause.",
+    acceptedVariants: [],
+    practice: { pattern: null, variationsEn: [], theme: "free" },
+  },
+  {
+    id: "synthetic-material-004",
+    ko: "나는 다시 시도할 수 있어요",
+    en: "I can try again.",
+    acceptedVariants: [],
+    practice: { pattern: null, variationsEn: [], theme: "selftalk-emotion" },
+  },
+];
+
+function practiceResponse(target: Record<string, unknown>, voiceCorrection?: Record<string, unknown>) {
+  return {
+    ok: true,
+    schemaVersion: 1,
+    mode: "practice",
+    modelOpened: false,
+    material: { source: "published-lkg", publicationStatus: "active", contentDigest: CONTENT_DIGEST },
+    materials: PRACTICE_MATERIALS,
+    target,
+    ...(voiceCorrection ? { voiceCorrection } : {}),
+  };
+}
+
+async function wireContinuityNetwork(
+  page: Page,
+  base: URL,
+  continuityCase: ContinuityCase,
+  diagnostics: ContinuityDiagnostics,
+) {
+  const archive = continuityArchiveFixture();
+  let gradeCount = 0;
+  let firstReviewCommitBody: string | null = null;
+  await page.route("**/*", async (handler) => {
+    const request = handler.request();
+    const requestUrl = new URL(request.url());
+    const normalizedApiPath = apiPath(request.url());
+    const sameOrigin = requestUrl.origin === base.origin;
+    if (!sameOrigin || requestUrl.pathname === "/data" || requestUrl.pathname.startsWith("/data/")) {
+      diagnostics.blockedRequests.push(`${request.method()} ${request.url()}`);
+      await handler.abort("blockedbyclient");
+      return;
+    }
+    const routeIsExplicitlyTested = continuityCase === "review"
+      ? normalizedApiPath === "/api/winddown/study" || normalizedApiPath === "/api/winddown/review"
+      : continuityCase === "archive"
+        ? normalizedApiPath === "/api/winddown/conversations"
+        : continuityCase === "practice"
+          ? normalizedApiPath === "/api/winddown/conversations" || normalizedApiPath === "/api/winddown/drill"
+          : continuityCase === "voice"
+            ? normalizedApiPath === "/api/winddown/live/report"
+            : false;
+    if (requestUrl.pathname.startsWith("/api/") && !routeIsExplicitlyTested) {
+      if (normalizedApiPath === "/api/winddown/live/session") diagnostics.voiceSessionPostCount += 1;
+      if (normalizedApiPath === "/api/winddown/live/report") diagnostics.voiceReportPostCount += 1;
+      diagnostics.apiRequests.push(request.url());
+      diagnostics.blockedRequests.push(`${request.method()} ${request.url()}`);
+      await handler.abort("blockedbyclient");
+      return;
+    }
+    if (normalizedApiPath === "/api/winddown/study" && request.method() === "GET") {
+      diagnostics.apiRequests.push(request.url());
+      if (requestUrl.searchParams.get("mode") !== "review" || requestUrl.searchParams.size !== 1) {
+        diagnostics.blockedRequests.push(`${request.method()} ${request.url()}`);
+        await handler.abort("blockedbyclient");
+        return;
+      }
+      diagnostics.reviewStudyGetCount += 1;
+      const study = reviewStudyFixture();
+      await handler.fulfill(jsonResponse(firstReviewCommitBody ? { ...study, cards: [] } : study));
+      return;
+    }
+    if (normalizedApiPath === "/api/winddown/review" && request.method() === "POST") {
+      diagnostics.apiRequests.push(request.url());
+      let body: Record<string, unknown> | null = null;
+      try { body = request.postDataJSON() as Record<string, unknown>; } catch { body = null; }
+      if (!body || body.activity !== "review") {
+        diagnostics.blockedRequests.push(`${request.method()} ${request.url()}`);
+        await handler.abort("blockedbyclient");
+        return;
+      }
+      if (body.operation === "grade-recall") {
+        diagnostics.reviewGradePostCount += 1;
+        gradeCount += 1;
+        await handler.fulfill(jsonResponse({ ok: true, operation: "grade-recall", outcome: gradeCount === 1 ? "again" : "correct", needsRepair: gradeCount === 1 }));
+        return;
+      }
+      if (body.operation === "commit-review-cycle") {
+        diagnostics.reviewCommitPostCount += 1;
+        const submitted = request.postData() ?? "";
+        if (firstReviewCommitBody === null) {
+          firstReviewCommitBody = submitted;
+          // Simulate a committed operation whose acknowledgment was truncated.
+          await handler.fulfill(jsonResponse({ ok: true, operation: "commit-review-cycle" }));
+          return;
+        }
+        assert.equal(submitted, firstReviewCommitBody, "manual retry must preserve the exact lost-ack commit body");
+        await handler.fulfill(jsonResponse({
+          ok: true,
+          operation: "commit-review-cycle",
+          duplicate: true,
+          receipt: {
+            reviewCycleId: REVIEW_CARDS[0].reviewCycleId,
+            materialId: REVIEW_CARDS[0].id,
+            rating: "hard",
+            reward: 1,
+            inputMode: "typed",
+          },
+          remainingDueCount: 0,
+          nextDueAtIso: null,
+        }));
+        return;
+      }
+      diagnostics.blockedRequests.push(`${request.method()} ${request.url()}`);
+      await handler.abort("blockedbyclient");
+      return;
+    }
+    if (normalizedApiPath === "/api/winddown/conversations" && request.method() === "GET") {
+      diagnostics.apiRequests.push(request.url());
+      const params = requestUrl.searchParams;
+      if (params.size > 1 || (params.has("cursor") && params.get("cursor") !== "continuity-page-1") || (params.has("session") && params.get("session") !== archive.first.productSessionId)) {
+        diagnostics.blockedRequests.push(`${request.method()} ${request.url()}`);
+        await handler.abort("blockedbyclient");
+        return;
+      }
+      if (params.has("session")) {
+        diagnostics.conversationsDetailGetCount += 1;
+        await handler.fulfill(jsonResponse({ ok: true, receipt: archive.receipt }));
+        return;
+      }
+      diagnostics.conversationsListGetCount += 1;
+      if (continuityCase === "archive" && diagnostics.conversationsListGetCount === 1) {
+        await handler.fulfill(jsonResponse({ ok: true, items: [{}], nextCursor: null }));
+        return;
+      }
+      await handler.fulfill(jsonResponse({
+        ok: true,
+        items: params.get("cursor") ? [archive.second] : [archive.first],
+        nextCursor: params.get("cursor") ? null : "continuity-page-1",
+      }));
+      return;
+    }
+    if (normalizedApiPath === "/api/winddown/drill" && request.method() === "GET") {
+      diagnostics.apiRequests.push(request.url());
+      diagnostics.practiceGetCount += 1;
+      diagnostics.practiceQueries.push(requestUrl.search);
+      const params = requestUrl.searchParams;
+      const isCorrection = params.get("conversation") === archive.first.productSessionId
+        && params.get("turn") === "1"
+        && params.get("source") === "wd-continuity-conversation-001"
+        && params.size === 3;
+      const isCanonical = params.get("material") === "synthetic-material-002" && params.size === 1;
+      const isGeneric = params.get("practice") === "1" && params.size === 1;
+      if (isCorrection) {
+        const correction = archive.receipt.report.outcome.corrections[0];
+        assert(correction, "synthetic archive fixture must contain one correction");
+        await handler.fulfill(jsonResponse(practiceResponse(
+          { kind: "voice-correction", citation: { productSessionId: archive.first.productSessionId, sourceConversationId: "wd-continuity-conversation-001", turnSeq: 1 } },
+          { citation: { productSessionId: archive.first.productSessionId, sourceConversationId: "wd-continuity-conversation-001", turnSeq: 1 }, learnerText: correction.learnerText, modelCorrection: correction.correctionText },
+        )));
+        return;
+      }
+      if (isCanonical) {
+        await handler.fulfill(jsonResponse(practiceResponse({ kind: "canonical-material", materialId: "synthetic-material-002" })));
+        return;
+      }
+      if (isGeneric) {
+        await handler.fulfill(jsonResponse(practiceResponse({ kind: "generic" })));
+        return;
+      }
+      diagnostics.blockedRequests.push(`${request.method()} ${request.url()}`);
+      await handler.abort("blockedbyclient");
+      return;
+    }
+    if (continuityCase === "voice" && normalizedApiPath === "/api/winddown/live/report" && request.method() === "POST") {
+      diagnostics.apiRequests.push(request.url());
+      diagnostics.voiceReportPostCount += 1;
+      diagnostics.voiceReportBodies.push(request.postData() ?? "");
+      if (diagnostics.voiceReportPostCount === 1) {
+        await handler.fulfill(jsonResponse({ error: "SYNTHETIC_REPORT_SAVE_FAILED" }, 503));
+        return;
+      }
+      const body = request.postData() ?? "";
+      const frozenFixture = continuityVoiceFixture();
+      assert.equal(body, JSON.stringify(frozenFixture.report), "successful retry must transmit the frozen report bytes");
+      await handler.fulfill(jsonResponse({
+        ok: true,
+        duplicate: false,
+        habitCredited: false,
+        receipt: {
+          schemaVersion: 1,
+          activity: "roleplay",
+          productSessionId: frozenFixture.report.productSessionId,
+          finalDigest: frozenFixture.finalDigest,
+          committedAtIso: frozenFixture.report.stoppedAtIso,
+          report: frozenFixture.report,
+        },
+      }));
+      return;
+    }
+    if (requestUrl.pathname.startsWith("/api/")) {
+      diagnostics.apiRequests.push(request.url());
+      diagnostics.blockedRequests.push(`${request.method()} ${request.url()}`);
+      await handler.abort("blockedbyclient");
+      return;
+    }
+    await handler.continue();
+  });
+}
+
 async function waitForText(page: Page, text: RegExp | string) {
   const locator = typeof text === "string" ? page.getByText(text, { exact: true }).first() : page.getByText(text).first();
   await locator.waitFor({ state: "visible", timeout: 20_000 });
@@ -402,7 +834,7 @@ async function runScenario(
     secure: base.protocol === "https:",
     sameSite: "Lax",
   }]);
-  const page = await context.newPage();
+    const page = await context.newPage();
   const diagnostics = attachDiagnostics(page, engine.id, base);
   await wireSyntheticNetwork(page, base, scenario, fixture, diagnostics);
   try {
@@ -461,6 +893,451 @@ async function runScenario(
   }
 }
 
+const CONTINUITY_VIEWPORTS: Record<Engine["id"], Viewport[]> = {
+  chromium: [
+    { id: "phone-390", width: 390, height: 844, isMobile: true, hasTouch: true },
+    { id: "tablet-820", width: 820, height: 1180, isMobile: true, hasTouch: true },
+    { id: "desktop-1024", width: 1024, height: 900, isMobile: false, hasTouch: false },
+  ],
+  webkit: [
+    { id: "phone-390", width: 390, height: 844, isMobile: true, hasTouch: true },
+    { id: "tablet-768", width: 768, height: 1024, isMobile: true, hasTouch: true },
+  ],
+};
+
+function assertContinuityDiagnostics(
+  diagnostics: ContinuityDiagnostics,
+  label: string,
+) {
+  if (diagnostics.compatibilityNotices.length > 0) {
+    console.log(`NOTICE ${label} WebKit viewport compatibility: ${JSON.stringify(diagnostics.compatibilityNotices)}`);
+  }
+  assert.equal(diagnostics.consoleErrors.length, 0, `${label} browser console errors: ${JSON.stringify(diagnostics.consoleErrors)}`);
+  assert.equal(diagnostics.pageErrors.length, 0, `${label} browser page errors: ${JSON.stringify(diagnostics.pageErrors)}`);
+  assert.equal(diagnostics.blockedRequests.length, 0, `${label} unexpected external/data/API requests: ${JSON.stringify(diagnostics.blockedRequests)}`);
+}
+
+async function runReviewContinuity(
+  context: BrowserContext,
+  base: URL,
+  engine: Engine,
+  viewport: Viewport,
+): Promise<string> {
+  const page = await context.newPage();
+  const diagnostics = attachContinuityDiagnostics(page, engine.id, base);
+  await wireContinuityNetwork(page, base, "review", diagnostics);
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("winddown:qa:review-reset")) {
+      localStorage.clear();
+      sessionStorage.clear();
+      sessionStorage.setItem("winddown:qa:malformed-review-seeded", "1");
+    }
+  });
+  try {
+    const response = await page.goto(new URL("/winddown/review/", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+    assert(response && response.status() < 400, `review returned HTTP ${response?.status() ?? "no response"}`);
+    await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => undefined);
+    await page.getByRole("button", { name: "직접 입력", exact: true }).click();
+    const typed = page.getByLabel("영어로 직접 입력", { exact: true });
+    await typed.waitFor({ state: "visible", timeout: 20_000 });
+    await typed.fill("I can");
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
+    await typed.waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await typed.inputValue(), "I can", "typed partial answer must survive reload");
+    const malformedDraft = "{unreadable review draft";
+    await page.addInitScript(({ key, raw }) => {
+      if (!sessionStorage.getItem("winddown:qa:malformed-review-seeded")) {
+        sessionStorage.setItem(key, raw);
+        sessionStorage.setItem("winddown:qa:malformed-review-seeded", "1");
+      }
+    }, { key: WINDDOWN_REVIEW_DRAFT_STORAGE_KEY, raw: malformedDraft });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.locator('[data-draft-recovery-action="archive"]').click();
+    assert.equal(await page.evaluate(key => sessionStorage.getItem(key), WINDDOWN_REVIEW_DRAFT_RECOVERY_STORAGE_KEY), malformedDraft);
+    await page.getByRole("button", { name: "직접 입력", exact: true }).click();
+    await typed.fill("Fresh answer after recovery");
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await typed.waitFor({ state: "visible" });
+    assert.equal(await typed.inputValue(), "Fresh answer after recovery", "archiving malformed bytes must restore new same-tab continuity");
+
+
+    await page.evaluate(() => sessionStorage.setItem("winddown:qa:review-reset", "1"));
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
+    const availableChips = page.locator('[aria-label="고를 단어"] button');
+    await availableChips.first().waitFor({ state: "visible", timeout: 20_000 });
+    await availableChips.first().click();
+    const selected = page.locator('[aria-label="선택한 단어"] button');
+    await selected.first().waitFor({ state: "visible", timeout: 20_000 });
+    const selectedLabel = await selected.first().textContent();
+    assert(selectedLabel?.trim(), "chip partial selection must contain a label");
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
+    await page.locator('[aria-label="선택한 단어"] button').first().waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(
+      (await page.locator('[aria-label="선택한 단어"] button').first().textContent())?.trim(),
+      selectedLabel?.trim(),
+      "chip partial selection must survive reload",
+    );
+
+    await page.evaluate(() => sessionStorage.setItem("winddown:qa:review-reset", "1"));
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
+    await page.getByRole("button", { name: "직접 입력", exact: true }).click();
+    await page.getByLabel("영어로 직접 입력", { exact: true }).fill("wrong answer");
+    await page.getByRole("button", { name: "답 확인하기", exact: true }).click();
+    await page.locator('[data-repair-kind="single-card"]').waitFor({ state: "visible", timeout: 20_000 });
+    const repairCard = page.getByRole("button", { name: `${REVIEW_CARDS[0].en} 영어`, exact: true });
+    const repairCue = page.getByRole("button", { name: `${REVIEW_CARDS[0].ko} 한국어`, exact: true });
+    await repairCard.click();
+    await repairCue.click();
+    await waitForText(page, "ONE RETRY");
+    await page.getByLabel("영어로 다시 입력", { exact: true }).fill(REVIEW_CARDS[0].en);
+    await page.getByRole("button", { name: "한 번만 다시 확인하기", exact: true }).click();
+    await page.getByRole("button", { name: "같은 기록 다시 저장하기", exact: true }).waitFor({ state: "visible" });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    const retryCommit = page.getByRole("button", { name: "같은 기록 다시 저장하기", exact: true });
+    await retryCommit.waitFor({ state: "visible" });
+    assert.equal(diagnostics.reviewCommitPostCount, 1, "reload must not automatically replay a lost acknowledgment");
+    await retryCommit.click();
+    await waitForText(page, "오늘의 복습을 마쳤어.");
+    assert.equal(diagnostics.reviewGradePostCount, 2, "one-card repair must grade first answer and retry once");
+    assert.equal(diagnostics.reviewCommitPostCount, 2, "one-card repair must retry only the exact lost-ack operation once");
+    await assertLayout(page);
+    if (viewport.width === 390 || viewport.width === 820 || viewport.width === 768) {
+      await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-review-continuity.png`), fullPage: true });
+    }
+    assertContinuityDiagnostics(diagnostics, `${engine.id}/${viewport.id}/review-continuity`);
+    return `${engine.id}/${viewport.id}/review-continuity`;
+  } finally {
+    await page.close();
+  }
+}
+
+async function runArchiveContinuity(
+  context: BrowserContext,
+  base: URL,
+  engine: Engine,
+  viewport: Viewport,
+): Promise<string> {
+  const page = await context.newPage();
+  const diagnostics = attachContinuityDiagnostics(page, engine.id, base);
+  await wireContinuityNetwork(page, base, "archive", diagnostics);
+  const archive = continuityArchiveFixture();
+  try {
+    const response = await page.goto(new URL("/winddown/conversations/", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+    assert(response && response.status() < 400, `conversations returned HTTP ${response?.status() ?? "no response"}`);
+    await waitForText(page, "대화 목록 응답 형식이 올바르지 않습니다.");
+    await page.getByRole("button", { name: "다시 시도", exact: true }).click();
+    await page.locator("[data-winddown-conversations]").waitFor({ state: "visible", timeout: 20_000 });
+    const firstItem = page.locator(`[data-conversation-id="${archive.first.productSessionId}"]`);
+    await firstItem.waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.locator("[data-conversation-id]").count(), 1, "archive first page must contain one item");
+    await page.getByRole("button", { name: "더 보기", exact: true }).click();
+    await page.locator(`[data-conversation-id="${archive.second.productSessionId}"]`).waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.locator("[data-conversation-id]").count(), 2, "archive pagination must append one item");
+    assert.equal(await page.locator("[data-conversation-id]").evaluateAll((nodes) => new Set(nodes.map((node) => node.getAttribute("data-conversation-id"))).size), 2, "archive pagination must preserve unique IDs");
+    await firstItem.click();
+    const detail = page.locator("[data-conversation-detail]");
+    await detail.waitFor({ state: "visible", timeout: 20_000 });
+    const practiceLink = page.locator("[data-winddown-practice-link]").first();
+    await practiceLink.waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.locator("[data-winddown-correction-item]").count(), 1, "archive detail must show cited correction");
+    const href = await practiceLink.getAttribute("href");
+    assert(href, "archive correction must expose a practice link");
+    const practiceUrl = new URL(href, base);
+    assert.equal(practiceUrl.pathname, "/winddown/drill");
+    assert.equal(practiceUrl.searchParams.get("conversation"), archive.first.productSessionId);
+    assert.equal(practiceUrl.searchParams.get("turn"), "1");
+    assert.equal(practiceUrl.searchParams.get("source"), "wd-continuity-conversation-001");
+    assert.equal(practiceUrl.searchParams.has("learner"), false, "practice link must carry citation IDs only");
+    assert.equal(diagnostics.conversationsListGetCount, 3, "archive malformed-response retry and pagination must use bounded GETs");
+    assert.equal(diagnostics.conversationsDetailGetCount, 1, "archive detail must use one exact session query");
+    await assertLayout(page);
+    if (viewport.width === 390 || viewport.width === 820 || viewport.width === 768) {
+      await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-archive-continuity.png`), fullPage: true });
+    }
+    assertContinuityDiagnostics(diagnostics, `${engine.id}/${viewport.id}/archive-continuity`);
+    return `${engine.id}/${viewport.id}/archive-continuity`;
+  } finally {
+    await page.close();
+  }
+}
+
+async function runPracticeContinuity(
+  context: BrowserContext,
+  base: URL,
+  engine: Engine,
+  viewport: Viewport,
+): Promise<string> {
+  const page = await context.newPage();
+  const diagnostics = attachContinuityDiagnostics(page, engine.id, base);
+  await wireContinuityNetwork(page, base, "practice", diagnostics);
+  const archive = continuityArchiveFixture();
+  const expectedCorrection = archive.receipt.report.outcome.corrections[0]?.correctionText;
+  assert(expectedCorrection, "synthetic archive fixture must contain one correction");
+  await page.addInitScript(() => {
+    (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls = 0;
+    const mediaDevices = navigator.mediaDevices;
+    if (!mediaDevices) return;
+    const original = mediaDevices.getUserMedia.bind(mediaDevices);
+    mediaDevices.getUserMedia = async (...args: Parameters<MediaDevices["getUserMedia"]>) => {
+      const target = window as Window & { __windDownGetUserMediaCalls?: number };
+      target.__windDownGetUserMediaCalls = (target.__windDownGetUserMediaCalls ?? 0) + 1;
+      return original(...args);
+    };
+  });
+  try {
+    const response = await page.goto(new URL("/winddown/conversations/", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+    assert(response && response.status() < 400, `practice archive returned HTTP ${response?.status() ?? "no response"}`);
+    const firstItem = page.locator(`[data-conversation-id="${archive.first.productSessionId}"]`);
+    await firstItem.waitFor({ state: "visible", timeout: 20_000 });
+    await firstItem.click();
+    const correctionLink = page.locator("[data-winddown-practice-link]").first();
+    await correctionLink.waitFor({ state: "visible", timeout: 20_000 });
+    const expectedCorrectionUrl = new URL(await correctionLink.getAttribute("href") ?? "", base);
+    assert.equal(expectedCorrectionUrl.searchParams.get("conversation"), "wd-continuity-session-001");
+    assert.equal(expectedCorrectionUrl.searchParams.get("turn"), "1");
+    assert.equal(expectedCorrectionUrl.searchParams.get("source"), "wd-continuity-conversation-001");
+    await Promise.all([
+      page.waitForURL((url) => (url.pathname.replace(/\/+$/, "") || "/") === "/winddown/drill" && url.searchParams.get("conversation") === "wd-continuity-session-001", { timeout: 20_000 }),
+      correctionLink.click(),
+    ]);
+    await page.locator("[data-winddown-practice]").waitFor({ state: "visible", timeout: 20_000 });
+    const answer = page.getByLabel("연습 답변", { exact: true });
+    await answer.fill("my recalled sentence");
+    await page.getByRole("button", { name: "확인", exact: true }).click();
+    await page.locator("[data-practice-reveal]").waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.locator("[data-practice-reveal-text]").count(), 0, "practice must keep the reference hidden until explicit reveal");
+    await page.locator("[data-practice-reveal]").click();
+    await page.locator("[data-practice-reveal-text]").waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.locator("[data-practice-reveal-text]").getByText(expectedCorrection, { exact: true }).count(), 1, "voice correction practice must reveal the saved correction exactly");
+    await page.getByRole("button", { name: "연습 마치기", exact: true }).click();
+    await waitForText(page, "연습을 마쳤어. 자유 연습은 복습 점수에 반영되지 않아.");
+
+    await page.goto(new URL("/winddown/drill/?practice=1", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+    await page.locator("[data-winddown-practice]").waitFor({ state: "visible", timeout: 20_000 });
+    const themeSelect = page.locator("[data-practice-theme]");
+    const materialSelect = page.locator("[data-practice-material]");
+    await themeSelect.waitFor({ state: "visible", timeout: 20_000 });
+    await themeSelect.selectOption("selftalk-emotion");
+    const materialOptions = await materialSelect.locator("option").allTextContents();
+    assert.deepEqual(materialOptions, ["나는 준비가 되었어요", "나는 다시 시도할 수 있어요"], "topic filtering must retain only the matching Korean materials");
+    for (const englishAnswer of PRACTICE_MATERIALS.map((material) => material.en)) {
+      assert(materialOptions.every((option) => !option.includes(englishAnswer)), `generic practice selector must not leak English answer: ${englishAnswer}`);
+    }
+    await materialSelect.selectOption("synthetic-material-002");
+    await page.locator("[data-practice-method]").selectOption("linked-recall-listen-response");
+    await page.locator("ol li").first().waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.locator("ol li").count(), 3, "linked practice must expose recall, listening variants, and audio response stages");
+    await page.locator('[aria-label="연결 연습 1/3"]').waitFor({ state: "visible", timeout: 20_000 });
+    await page.getByLabel("연습 답변", { exact: true }).fill("I am ready.");
+    await page.getByRole("button", { name: "확인", exact: true }).click();
+    assert.equal(await page.getByRole("button", { name: "연습 마치기", exact: true }).count(), 0, "linked practice must not finish before the first reveal");
+    await page.locator("[data-practice-reveal]").click();
+    await page.locator("[data-practice-reveal-text]").waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.locator("[data-practice-reveal-text]").getByText("I am ready.", { exact: true }).count(), 1, "canonical practice must reveal the selected material");
+    assert.equal(await page.getByRole("button", { name: "연습 마치기", exact: true }).count(), 0, "linked practice must require the remaining stages after the first reveal");
+    await page.getByRole("button", { name: "다음 단계", exact: true }).click();
+    await page.locator('[aria-label="연결 연습 2/3"]').waitFor({ state: "visible", timeout: 20_000 });
+    const listeningHeading = page.locator("p").filter({ hasText: /^다른 표현 듣기$/ });
+    await listeningHeading.waitFor({ state: "visible", timeout: 20_000 });
+    await page.getByRole("button", { name: "표현 2", exact: true }).click();
+    assert.equal(await page.locator('[aria-label="기기 음성 연습"]').count(), 1, "linked listening stage must expose the audio fallback controls");
+    assert.equal(await page.getByRole("button", { name: "연습 마치기", exact: true }).count(), 0, "linked practice must not finish during listening");
+    await page.locator("[data-practice-advance]").click();
+    await page.locator('[aria-label="연결 연습 3/3"]').waitFor({ state: "visible", timeout: 20_000 });
+    await page.locator('[aria-label="기기 음성 연습"]').waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.getByRole("button", { name: "문장 듣기", exact: true }).count(), 1, "linked audio-response stage must expose explicit listening");
+    await page.getByLabel("연습 답변", { exact: true }).fill("I am ready.");
+    await page.getByRole("button", { name: "확인", exact: true }).click();
+    await page.locator("[data-practice-reveal]").click();
+    await page.locator("[data-practice-reveal-text]").waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.locator("[data-practice-reveal-text]").getByText("I am ready.", { exact: true }).count(), 1, "linked audio-response stage must reveal the selected material");
+    assert.equal(await page.getByRole("button", { name: "연습 마치기", exact: true }).count(), 1, "linked practice must expose completion only after the final reveal");
+    await page.getByRole("button", { name: "연습 마치기", exact: true }).click();
+    await waitForText(page, "연습을 마쳤어. 자유 연습은 복습 점수에 반영되지 않아.");
+
+    await page.locator("[data-practice-method]").selectOption("pattern-transform");
+    await page.locator("[data-practice-pattern]").waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.locator("[data-practice-pattern]").getByText(PRACTICE_PATTERN, { exact: true }).count(), 1, "pattern practice must show the authored pattern exactly");
+    await page.getByLabel("연습 답변", { exact: true }).fill("I can begin calmly.");
+    await page.getByRole("button", { name: "확인", exact: true }).click();
+    assert.equal(await page.locator("[data-practice-reveal-text]").count(), 0, "pattern practice must keep the authored pattern hidden until explicit reveal");
+    await page.locator("[data-practice-reveal]").click();
+    await page.locator("[data-practice-reveal-text]").waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await page.locator("[data-practice-reveal-text]").getByText(PRACTICE_PATTERN, { exact: true }).count(), 1, "pattern practice must reveal the authored pattern exactly");
+    await page.getByRole("button", { name: "연습 마치기", exact: true }).click();
+    await waitForText(page, "연습을 마쳤어. 자유 연습은 복습 점수에 반영되지 않아.");
+    assert.equal(diagnostics.practiceGetCount, 2, "practice continuity must fetch correction and generic targets exactly once");
+    assert.equal(diagnostics.conversationsListGetCount, 1, "practice continuity must load the archive list exactly once");
+    assert.equal(diagnostics.conversationsDetailGetCount, 1, "practice continuity must load the cited archive detail exactly once");
+    assert.equal(diagnostics.blockedRequests.filter((request) => /\/api\/winddown\/(?:progress|xp)(?:[/?]|$)/.test(request)).length, 0, "practice must not POST learner progress or XP");
+    assert.equal(diagnostics.voiceSessionPostCount, 0, "practice must not open a voice session automatically");
+    assert.equal(diagnostics.voiceReportPostCount, 0, "practice must not upload a voice report");
+    assert.equal(await page.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "practice must not request microphone access automatically");
+    await assertLayout(page);
+    if (viewport.width === 390 || viewport.width === 820 || viewport.width === 768) {
+      await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${engine.id}-${viewport.id}-practice-continuity.png`), fullPage: true });
+    }
+    assertContinuityDiagnostics(diagnostics, `${engine.id}/${viewport.id}/practice-continuity`);
+    return `${engine.id}/${viewport.id}/practice-continuity`;
+  } finally {
+    await page.close();
+  }
+}
+
+async function runVoiceContinuity(
+  context: BrowserContext,
+  base: URL,
+  engine: Engine,
+  viewport: Viewport,
+): Promise<string> {
+  const fixture = continuityVoiceFixture();
+  const diagnostics: ContinuityDiagnostics[] = [];
+  const outboxPage = await context.newPage();
+  const outboxDiagnostics = attachContinuityDiagnostics(outboxPage, engine.id, base);
+  diagnostics.push(outboxDiagnostics);
+  await wireContinuityNetwork(outboxPage, base, "voice", outboxDiagnostics);
+  await outboxPage.addInitScript(({ key, outbox, marker }) => {
+    if (sessionStorage.getItem(marker) !== "seeded") {
+      localStorage.clear();
+      sessionStorage.clear();
+      localStorage.setItem(key, JSON.stringify(outbox));
+      sessionStorage.setItem(marker, "seeded");
+    }
+    (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls = 0;
+    const mediaDevices = navigator.mediaDevices;
+    if (mediaDevices) {
+      const original = mediaDevices.getUserMedia.bind(mediaDevices);
+      mediaDevices.getUserMedia = async (...args: Parameters<MediaDevices["getUserMedia"]>) => {
+        const target = window as Window & { __windDownGetUserMediaCalls?: number };
+        target.__windDownGetUserMediaCalls = (target.__windDownGetUserMediaCalls ?? 0) + 1;
+        return original(...args);
+      };
+    }
+  }, { key: WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY, outbox: fixture.outbox, marker: "winddown:qa:outbox-seeded" });
+  try {
+    const response = await outboxPage.goto(new URL("/winddown/roleplay/", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+    assert(response && response.status() < 400, `roleplay outbox returned HTTP ${response?.status() ?? "no response"}`);
+    await outboxPage.locator("[data-winddown-voice-recovery]").waitFor({ state: "visible", timeout: 20_000 });
+    await outboxPage.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
+    await outboxPage.locator("[data-winddown-voice-recovery]").waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await outboxPage.getByRole("button", { name: "같은 보고서 다시 저장", exact: true }).count(), 1);
+    assert.equal(await outboxPage.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "null")?.report?.stoppedAtIso, WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY), fixture.report.stoppedAtIso, "outbox reload must preserve stoppedAt");
+    assert.equal(await outboxPage.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "null")?.finalDigest, WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY), fixture.finalDigest, "outbox reload must preserve final digest");
+    assert.equal(outboxDiagnostics.voiceReportPostCount, 0, "report upload must wait for the explicit retry action");
+    assert.equal(await outboxPage.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "outbox restore must require manual interaction before microphone access");
+    const retry = outboxPage.locator("[data-winddown-voice-recovery]").getByRole("button", { name: "같은 보고서 다시 저장", exact: true });
+    const failedReportResponse = outboxPage.waitForResponse((candidate) => apiPath(candidate.url()) === "/api/winddown/live/report" && candidate.status() === 503, { timeout: 20_000 });
+    await retry.click();
+    await failedReportResponse;
+    await outboxPage.locator("[data-winddown-voice-recovery]").waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(outboxDiagnostics.voiceReportPostCount, 1, "first report POST must occur only after retry");
+    assert.equal(outboxDiagnostics.voiceReportBodies[0], JSON.stringify(fixture.report), "first report POST must transmit the frozen report body");
+    assert.equal(await outboxPage.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "null")?.report?.stoppedAtIso, WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY), fixture.report.stoppedAtIso, "failed upload must preserve outbox stoppedAt");
+    assert.equal(await outboxPage.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "null")?.finalDigest, WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY), fixture.finalDigest, "failed upload must preserve outbox digest");
+    assert.equal(await outboxPage.evaluate((key) => localStorage.getItem(key), WIND_DOWN_VOICE_FROZEN_STORAGE_KEY), JSON.stringify(fixture.report), "failed upload must preserve the frozen report");
+    const successfulReportResponse = outboxPage.waitForResponse((candidate) => apiPath(candidate.url()) === "/api/winddown/live/report" && candidate.status() === 200, { timeout: 20_000 });
+    await retry.click();
+    const successfulReport = await successfulReportResponse;
+    const successfulPayload = await successfulReport.json() as {
+      duplicate?: unknown;
+      habitCredited?: unknown;
+      receipt?: { productSessionId?: unknown; finalDigest?: unknown; report?: unknown };
+    };
+    assert.equal(successfulPayload.duplicate, false, "successful retry must report a non-duplicate acknowledgment");
+    assert.equal(successfulPayload.habitCredited, false, "synthetic retry must not credit a habit");
+    assert.equal(successfulPayload.receipt?.productSessionId, fixture.report.productSessionId, "successful receipt must identify the frozen session");
+    assert.equal(successfulPayload.receipt?.finalDigest, fixture.finalDigest, "successful receipt must acknowledge the frozen digest");
+    assert.deepEqual(successfulPayload.receipt?.report, fixture.report, "successful receipt must return the frozen report");
+    await waitForText(outboxPage, /대화는 저장됐지만 오늘 말하기는 아직 0\/1이야\./);
+    assert.equal(outboxDiagnostics.voiceReportPostCount, 2, "second report POST must require a second explicit retry");
+    assert.equal(outboxDiagnostics.voiceReportBodies[1], outboxDiagnostics.voiceReportBodies[0], "retry must transmit the exact same report body");
+    assert.equal(await outboxPage.evaluate((key) => localStorage.getItem(key), WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY), null, "matching acknowledgment must clear the active outbox");
+    assert.equal(await outboxPage.evaluate((key) => localStorage.getItem(key), WIND_DOWN_VOICE_FROZEN_STORAGE_KEY), null, "matching acknowledgment must clear the active frozen report");
+    assert.equal(await outboxPage.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "report retry must not request microphone access");
+    await assertLayout(outboxPage);
+  } finally {
+    await outboxPage.close();
+  }
+
+  const checkpointPage = await context.newPage();
+  const checkpointDiagnostics = attachContinuityDiagnostics(checkpointPage, engine.id, base);
+  diagnostics.push(checkpointDiagnostics);
+  await wireContinuityNetwork(checkpointPage, base, "voice", checkpointDiagnostics);
+  await checkpointPage.addInitScript(({ key, checkpoint, marker }) => {
+    if (sessionStorage.getItem(marker) !== "seeded") {
+      localStorage.clear();
+      sessionStorage.clear();
+      localStorage.setItem(key, JSON.stringify(checkpoint));
+      sessionStorage.setItem(marker, "seeded");
+    }
+    (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls = 0;
+    const mediaDevices = navigator.mediaDevices;
+    if (mediaDevices) {
+      const original = mediaDevices.getUserMedia.bind(mediaDevices);
+      mediaDevices.getUserMedia = async (...args: Parameters<MediaDevices["getUserMedia"]>) => {
+        const target = window as Window & { __windDownGetUserMediaCalls?: number };
+        target.__windDownGetUserMediaCalls = (target.__windDownGetUserMediaCalls ?? 0) + 1;
+        return original(...args);
+      };
+    }
+  }, { key: WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY, checkpoint: fixture.checkpoint, marker: "winddown:qa:checkpoint-seeded" });
+  try {
+    const response = await checkpointPage.goto(new URL("/winddown/roleplay/", base).toString(), { waitUntil: "domcontentloaded", timeout: 45_000 });
+    assert(response && response.status() < 400, `roleplay checkpoint returned HTTP ${response?.status() ?? "no response"}`);
+    await checkpointPage.locator("[data-winddown-voice-recovery]").waitFor({ state: "visible", timeout: 20_000 });
+    await checkpointPage.reload({ waitUntil: "domcontentloaded", timeout: 45_000 });
+    await checkpointPage.locator("[data-winddown-voice-recovery]").waitFor({ state: "visible", timeout: 20_000 });
+    assert.equal(await checkpointPage.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "null")?.checkpointAtIso, WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY), fixture.checkpoint.checkpointAtIso, "checkpoint reload must preserve checkpoint bytes");
+    assert.equal(await checkpointPage.locator("[data-winddown-voice-recovery]").getByRole("button", { name: "같은 보고서 다시 저장", exact: true }).count(), 1, "checkpoint-only restore must expose the manual retry recovery action");
+    assert.equal(await checkpointPage.evaluate(() => (window as Window & { __windDownGetUserMediaCalls?: number }).__windDownGetUserMediaCalls ?? 0), 0, "checkpoint reload must require manual interaction before microphone access");
+    assert.equal(checkpointDiagnostics.voiceSessionPostCount, 0, "checkpoint restore must not open a voice session automatically");
+    assert.equal(checkpointDiagnostics.voiceReportPostCount, 0, "checkpoint restore must not upload a report automatically");
+    await assertLayout(checkpointPage);
+  } finally {
+    await checkpointPage.close();
+  }
+  for (const item of diagnostics) assertContinuityDiagnostics(item, `${engine.id}/${viewport.id}/voice-continuity`);
+  assert.equal(diagnostics.reduce((sum, item) => sum + item.voiceSessionPostCount, 0), 0, "voice reload must not auto-open a session");
+  assert.equal(outboxDiagnostics.voiceReportPostCount, 2, "voice report uploads must be limited to the two explicit retry actions");
+  return `${engine.id}/${viewport.id}/voice-continuity`;
+}
+
+async function runContinuityContext(
+  browser: Browser,
+  base: URL,
+  sessionCookie: string,
+  engine: Engine,
+  viewport: Viewport,
+) {
+  const context = await browser.newContext({
+    viewport: { width: viewport.width, height: viewport.height },
+    screen: { width: viewport.width, height: viewport.height },
+    deviceScaleFactor: viewport.isMobile ? 2 : 1,
+    isMobile: viewport.isMobile,
+    hasTouch: viewport.hasTouch,
+    reducedMotion: "reduce",
+    serviceWorkers: "block",
+  });
+  await context.addCookies([{
+    name: "fenok_admin_session",
+    value: sessionCookie,
+    domain: base.hostname,
+    path: "/",
+    secure: base.protocol === "https:",
+    sameSite: "Lax",
+  }]);
+  try {
+    return [
+      await runReviewContinuity(context, base, engine, viewport),
+      await runArchiveContinuity(context, base, engine, viewport),
+      await runPracticeContinuity(context, base, engine, viewport),
+      await runVoiceContinuity(context, base, engine, viewport),
+    ];
+  } finally {
+    await context.close();
+  }
+}
+
 async function main() {
   const base = new URL(BASE_URL);
   assertWindDownQaTarget(BASE_URL, process.env.WINDDOWN_QA_ISOLATED);
@@ -470,6 +1347,23 @@ async function main() {
   const fixture = makeFixture();
   const sessionCookie = await login(base);
   const results: string[] = [];
+  if (process.env.WINDDOWN_QA_SCOPE === "continuity") {
+    for (const engine of ENGINES) {
+      const browser = await engine.type.launch({ headless: true });
+      try {
+        for (const viewport of CONTINUITY_VIEWPORTS[engine.id]) {
+          const cases = await runContinuityContext(browser, base, sessionCookie, engine, viewport);
+          results.push(...cases);
+          for (const result of cases) console.log(`PASS ${result}`);
+        }
+      } finally {
+        await browser.close();
+      }
+    }
+    assert.equal(results.length, 20);
+    console.log(`PASS winddown-continuity-browser - ${results.length} focused synthetic Chromium/WebKit cases`);
+    return;
+  }
   for (const engine of ENGINES) {
     const browser = await engine.type.launch({ headless: true });
     try {

@@ -34,6 +34,8 @@ import {
 import type { WindDownVoiceSessionResponse } from "@/features/winddown/voice/sessionContract";
 import {
   buildWindDownVoiceReport,
+  isWindDownVoiceReport,
+  WIND_DOWN_VOICE_REPORT_NORMAL_MAX_BYTES,
   isWindDownVoiceReportResponse,
   type WindDownVoiceCompletionReason,
   type WindDownVoiceReport,
@@ -52,8 +54,40 @@ import {
   shouldFinalizeWindDownVoiceForVisibility,
   windDownVoiceTimeoutDelays,
 } from "@/features/winddown/voice/ui/mobileVoiceSafety";
+import {
+  acknowledgeWindDownVoiceOutbox,
+  retainWindDownVoiceRecovery,
+  WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY,
+  WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY,
+  WIND_DOWN_VOICE_FROZEN_STORAGE_KEY,
+  WIND_DOWN_VOICE_RETAINED_STORAGE_KEY,
+  buildWindDownVoiceReportFromCheckpoint,
+  createWindDownVoiceRecoveryDraft,
+  readWindDownVoiceCheckpoint,
+  readWindDownVoiceFrozen,
+  readWindDownVoiceOutbox,
+  saveWindDownVoiceCheckpoint,
+  saveWindDownVoiceFrozen,
+  saveWindDownVoiceOutbox,
+  verifyOutboxEntryDigest,
+  type StorageLike,
+  type WindDownVoiceOutboxEntry,
+  type WindDownVoiceSessionCheckpoint,
+} from "@/features/winddown/voice/pendingStorage";
+import { extractWindDownVoicePracticeSeeds } from "@/features/winddown/voice/practiceSeed";
 
 const REPORT_ENDPOINT = "/api/winddown/live/report/" as const;
+// Access is deferred to guarded helper calls, including browsers that deny storage.
+const voiceStorage: StorageLike = {
+  getItem: key => window.localStorage.getItem(key),
+  setItem: (key, value) => window.localStorage.setItem(key, value),
+  removeItem: key => window.localStorage.removeItem(key),
+};
+async function reportDigest(report: WindDownVoiceReport) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(report)));
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
 
 type Props = {
   activity: WindDownVoiceActivity;
@@ -165,6 +199,17 @@ export default function WindDownVoiceClient({ activity }: Props) {
   const finalizingRef = useRef(false);
   const finishAndReportRef = useRef<(reason: WindDownVoiceCompletionReason, keepalive?: boolean) => void>(() => undefined);
   const autoBeginConversationRef = useRef<string | null>(null);
+  const interruptionCountRef = useRef(0);
+  const frozenReportRef = useRef<WindDownVoiceReport | null>(null);
+  const [restoring, setRestoring] = useState(true);
+  const [hasRetained, setHasRetained] = useState(false);
+  const [storageWarning, setStorageWarning] = useState<string | null>(null);
+  const [startGuardNotice, setStartGuardNotice] = useState<string | null>(null);
+  const [corruptNotice, setCorruptNotice] = useState<{
+    kind: "outbox" | "frozen" | "checkpoint";
+    error: string;
+    raw: unknown;
+  } | null>(null);
   const [reportState, setReportState] = useState<ReportState>({
     phase: "idle",
     frozen: null,
@@ -184,7 +229,28 @@ export default function WindDownVoiceClient({ activity }: Props) {
     if (hasReachedWindDownVoiceTurnLimit(next.length)) {
       queueMicrotask(() => finishAndReportRef.current("session-limit"));
     }
-  }, []);
+    if (startedAtRef.current && conversationIdsRef.current.length > 0) {
+      const checkpoint: WindDownVoiceSessionCheckpoint = {
+        schemaVersion: 1,
+        productSessionId: productSessionIdRef.current,
+        activity,
+        conversationIds: [...conversationIdsRef.current],
+        sessionProofs: [...sessionProofsRef.current],
+        descriptor,
+        startedAtIso: startedAtRef.current,
+        turns: next,
+        metrics: {
+          turnCount: next.length,
+          interruptionCount: interruptionCountRef.current,
+        },
+        checkpointAtIso: new Date().toISOString(),
+      };
+      const saveRes = saveWindDownVoiceCheckpoint(voiceStorage, checkpoint);
+      if (!saveRes.ok) {
+        setStorageWarning("진행 상황을 로컬에 저장하지 못했어. 브라우저 저장공간을 확인해줘.");
+      }
+    }
+  }, [activity, descriptor]);
 
   const onServerContent = useCallback((content: MonaVnextServerContent) => {
     // Partial STT may keep the active conversation alive, but it is never
@@ -217,7 +283,28 @@ export default function WindDownVoiceClient({ activity }: Props) {
       setTranscriptState(next);
     }
     autoBeginConversationRef.current = null;
-  }, []);
+    if (startedAtRef.current && conversationIdsRef.current.length > 0) {
+      const checkpoint: WindDownVoiceSessionCheckpoint = {
+        schemaVersion: 1,
+        productSessionId: productSessionIdRef.current,
+        activity,
+        conversationIds: [...conversationIdsRef.current],
+        sessionProofs: [...sessionProofsRef.current],
+        descriptor,
+        startedAtIso: startedAtRef.current,
+        turns: turnsRef.current,
+        metrics: {
+          turnCount: turnsRef.current.length,
+          interruptionCount: interruptionCountRef.current,
+        },
+        checkpointAtIso: new Date().toISOString(),
+      };
+      const saveRes = saveWindDownVoiceCheckpoint(voiceStorage, checkpoint);
+      if (!saveRes.ok) {
+        setStorageWarning("진행 상황을 로컬에 저장하지 못했어. 브라우저 저장공간을 확인해줘.");
+      }
+    }
+  }, [activity, descriptor]);
 
   const discardPendingTranscript = useCallback((session: WindDownVoiceSessionResponse) => {
     // A resumed socket is a provider boundary even when Gemini reuses the
@@ -233,6 +320,10 @@ export default function WindDownVoiceClient({ activity }: Props) {
   }, []);
 
   const requestSession = useCallback((options: WindDownVoiceSessionRequestOptions) => {
+    if (options.resumedFromConversationId && conversationIdsRef.current.length >= 5) {
+      queueMicrotask(() => finishAndReportRef.current("session-limit"));
+      return Promise.reject(new Error("WIND_DOWN_VOICE_SESSION_CHAIN_LIMIT"));
+    }
     return requestWindDownVoiceSession({
       descriptor,
       settings: options.settings,
@@ -269,6 +360,55 @@ export default function WindDownVoiceClient({ activity }: Props) {
   const sendLiveText = live.sendText;
 
   useEffect(() => {
+    interruptionCountRef.current = live.metrics.interruptionCount ?? 0;
+  }, [live.metrics.interruptionCount]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const restore = async () => {
+      try { setHasRetained(voiceStorage.getItem(WIND_DOWN_VOICE_RETAINED_STORAGE_KEY) !== null); } catch { /* ordinary read reports unavailable below */ }
+      const outbox = readWindDownVoiceOutbox(voiceStorage);
+      const frozen = readWindDownVoiceFrozen(voiceStorage);
+      const checkpoint = readWindDownVoiceCheckpoint(voiceStorage);
+      for (const [kind, result] of [["outbox", outbox], ["frozen", frozen], ["checkpoint", checkpoint]] as const) {
+        if (result.status === "corrupt") {
+          setCorruptNotice({ kind, error: "이전 기록을 읽지 못했어. 원본은 바꾸지 않고 남겨 두었어.", raw: result.raw });
+          return;
+        }
+        if (result.status === "storage-unavailable") {
+          setStorageWarning("브라우저 임시 저장을 사용할 수 없어. 화면을 닫기 전에 기록을 파일로 보관해줘.");
+          return;
+        }
+      }
+      let report: WindDownVoiceReport | null = null;
+      if (outbox.status === "valid") {
+        const verified = await verifyOutboxEntryDigest(outbox.entry);
+        if (cancelled) return;
+        if (!verified || (frozen.status === "valid" && JSON.stringify(frozen.report) !== JSON.stringify(outbox.entry.report))) {
+          setCorruptNotice({ kind: "outbox", error: "보관된 기록끼리 일치하지 않아. 원본을 내려받아 확인할 수 있어.", raw: outbox.entry });
+          return;
+        }
+        report = outbox.entry.report;
+      } else if (frozen.status === "valid") {
+        report = frozen.report;
+      } else if (checkpoint.status === "valid") {
+        try {
+          report = buildWindDownVoiceReportFromCheckpoint(checkpoint.checkpoint, "pagehide", checkpoint.checkpoint.checkpointAtIso);
+        } catch {
+          setCorruptNotice({ kind: "checkpoint", error: "중단 전 기록은 남아 있지만 보고서로 정리하지 못했어. 원본을 내려받아줘.", raw: checkpoint.checkpoint });
+          return;
+        }
+      }
+      if (report && !cancelled) {
+        frozenReportRef.current = report;
+        setReportState({ phase: "error", frozen: report, receipt: null, error: "중단 전 대화가 이 브라우저에 남아 있어. 저장을 다시 시도하거나 원본을 내려받아줘." });
+      }
+    };
+    void restore().finally(() => { if (!cancelled) setRestoring(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
     if (liveStatus !== "listening" || !liveSession) return;
     if (autoBeginConversationRef.current === liveSession.conversationId) return;
     if (sendLiveText("Begin now.")) autoBeginConversationRef.current = liveSession.conversationId;
@@ -293,39 +433,66 @@ export default function WindDownVoiceClient({ activity }: Props) {
     endedAtIso: live.status === "stopped" ? new Date().toISOString() : null,
   }), [live.status, turns]);
 
-  const submitFrozenReport = useCallback(async (
-    report: WindDownVoiceReport,
-    serialized: { body: string; byteLength: number },
-    keepalive = false,
-  ) => {
+  const practiceSeeds = useMemo(() => {
+    const receipt = reportState.receipt;
+    if (!receipt || !isWindDownVoiceReport(receipt.report)) return [];
+    return extractWindDownVoicePracticeSeeds({ ...receipt, report: receipt.report });
+  }, [reportState.receipt]);
+
+  const submitFrozenReport = useCallback(async (report: WindDownVoiceReport, keepalive = false) => {
+    frozenReportRef.current = report;
     setReportState({ phase: "pending", frozen: report, receipt: null, error: null });
     try {
+      // Freeze before the asynchronous digest, even for a checkpoint-only retry.
+      const frozenSave = saveWindDownVoiceFrozen(voiceStorage, report);
+      if (!frozenSave.ok && frozenSave.code !== "STORAGE_UNAVAILABLE") throw new Error("다른 임시 기록이 남아 있어. 원본을 먼저 보관해줘.");
+      if (!frozenSave.ok) setStorageWarning("브라우저 임시 저장에 실패했어. 화면을 닫기 전에 원본을 내려받아줘.");
+      const finalDigest = await reportDigest(report);
+      const prior = readWindDownVoiceOutbox(voiceStorage);
+      if (prior.status === "valid" && !(await verifyOutboxEntryDigest(prior.entry))) throw new Error("보관된 보고서가 일치하지 않아. 원본을 확인해줘.");
+      const entry: WindDownVoiceOutboxEntry = {
+        schemaVersion: 1, productSessionId: report.productSessionId, activity: report.activity,
+        report, finalDigest, stagedAtIso: prior.status === "valid" ? prior.entry.stagedAtIso : new Date().toISOString(),
+        attempts: prior.status === "valid" ? prior.entry.attempts + 1 : 1,
+      };
+      const staged = saveWindDownVoiceOutbox(voiceStorage, entry);
+      if (!staged.ok && staged.code !== "STORAGE_UNAVAILABLE") throw new Error("전송 대기 기록이 일치하지 않아. 원본을 먼저 보관해줘.");
+      if (!staged.ok) setStorageWarning("브라우저 임시 저장에 실패했어. 서버 저장이 확인될 때까지 이 화면을 유지해줘.");
+      const body = JSON.stringify(report);
+      const byteLength = new TextEncoder().encode(body).byteLength;
+      if (byteLength > WIND_DOWN_VOICE_REPORT_NORMAL_MAX_BYTES) throw new Error("보고서가 전송 한도를 넘어 원본으로 보관해야 해.");
+      if (keepalive) {
+        try { serializeWindDownVoiceKeepaliveBody(report); }
+        catch { throw new Error("대화가 길어 화면 밖에서는 전송하지 못했어. 같은 보고서 다시 저장을 눌러줘."); }
+      }
       const response = await fetch(REPORT_ENDPOINT, {
-        method: "POST",
-        cache: "no-store",
-        keepalive,
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: serialized.body,
+        method: "POST", cache: "no-store", keepalive,
+        headers: { "Content-Type": "application/json", Accept: "application/json" }, body,
       });
       const payload: unknown = await response.json().catch(() => null);
       if (!response.ok || !isWindDownVoiceReportResponse(payload)) {
-        throw new Error(`WIND_DOWN_VOICE_REPORT_HTTP_${response.status}`);
+        if (response.status === 401) throw new Error("로그인을 다시 확인한 뒤 저장해줘. 임시 기록은 지우지 않았어.");
+        if (response.status === 403) throw new Error("이 대화의 저장 인증 시간이 지났어. 원본을 파일로 보관해줘.");
+        if (response.status === 409) throw new Error("이미 저장된 대화와 내용이 달라. 원본을 내려받아 확인해줘.");
+        throw new Error(reportErrorText());
       }
-      setReportState({
-        phase: "success",
-        frozen: report,
-        receipt: payload.receipt,
-        habitCredited: payload.habitCredited,
-        error: null,
-      });
-    } catch {
-      setReportState({ phase: "error", frozen: report, receipt: null, error: reportErrorText() });
+      if (payload.receipt.productSessionId !== report.productSessionId
+        || payload.receipt.activity !== report.activity || payload.receipt.finalDigest !== finalDigest
+        || !isWindDownVoiceReport(payload.receipt.report)
+        || JSON.stringify(payload.receipt.report) !== body) throw new Error("저장 확인 내용이 원본과 일치하지 않아. 임시 기록을 유지할게.");
+      const ack = acknowledgeWindDownVoiceOutbox(voiceStorage, payload.receipt);
+      if (!ack.ok) setStorageWarning("서버 저장은 확인했어. 브라우저 임시 사본은 정리되지 않아 그대로 남겨 두었어.");
+      else setStorageWarning(null);
+      setReportState({ phase: "success", frozen: report, receipt: payload.receipt, habitCredited: payload.habitCredited, error: null });
+    } catch (error) {
+      setReportState({ phase: "error", frozen: report, receipt: null, error: error instanceof Error ? error.message : reportErrorText() });
     }
   }, []);
 
   const finishAndReport = useCallback((completionReason: WindDownVoiceCompletionReason, keepalive = false) => {
     if (
       finalizingRef.current
+      || frozenReportRef.current !== null
       || reportState.phase === "pending"
       || !hasStartedVoiceSessionRef.current
       || !startedAtRef.current
@@ -363,9 +530,12 @@ export default function WindDownVoiceClient({ activity }: Props) {
           interruptionCount: live.metrics.interruptionCount,
         },
       });
-      const serialized = serializeWindDownVoiceKeepaliveBody(report);
+
+      frozenReportRef.current = report;
+      const frozenSave = saveWindDownVoiceFrozen(voiceStorage, report);
+      if (!frozenSave.ok) setStorageWarning("브라우저에 임시 기록을 보관하지 못했어. 화면을 닫기 전에 원본을 내려받아줘.");
       live.stop("stopped");
-      void submitFrozenReport(report, serialized, keepalive).finally(() => {
+      void submitFrozenReport(report, keepalive).finally(() => {
         finalizingRef.current = false;
       });
     } catch {
@@ -446,7 +616,19 @@ export default function WindDownVoiceClient({ activity }: Props) {
 
   const start = useCallback(() => {
     if (live.status === "listening" || live.status === "connecting" || live.status === "setup-wait") return;
+    if (reportState.phase === "pending") return;
+
+    if (restoring) return;
+    const pending = [readWindDownVoiceOutbox(voiceStorage), readWindDownVoiceFrozen(voiceStorage), readWindDownVoiceCheckpoint(voiceStorage)];
+    if (corruptNotice || reportState.phase === "error" || (reportState.phase === "build-error" && turnsRef.current.length > 0) || pending.some(item => item.status === "valid" || item.status === "corrupt")) {
+      setStartGuardNotice("이전 대화의 임시 기록이 남아 있어. 먼저 저장을 다시 시도하거나 원본을 보관해줘.");
+      return;
+    }
+    setStartGuardNotice(null);
+    setCorruptNotice(null);
+    setStorageWarning(null);
     finalizingRef.current = false;
+    frozenReportRef.current = null;
     turnsRef.current = [];
     setTurns([]);
     conversationIdsRef.current = [];
@@ -462,24 +644,58 @@ export default function WindDownVoiceClient({ activity }: Props) {
     setTranscriptState(freshTranscript);
     setReportState({ phase: "idle", frozen: null, receipt: null, error: null });
     void live.start();
-  }, [live]);
+  }, [live, reportState, restoring, corruptNotice]);
 
   const reportRetry = useCallback(() => {
-    if (reportState.phase !== "error") return;
-    try {
-      void submitFrozenReport(
-        reportState.frozen,
-        serializeWindDownVoiceKeepaliveBody(reportState.frozen),
-      );
-    } catch {
-      setReportState({
-        phase: "build-error",
-        frozen: null,
-        receipt: null,
-        error: "보고서 크기를 안전한 전송 한도 안에 넣지 못했어. 저장되었다고 표시하지 않을게.",
-      });
-    }
+    if (reportState.phase !== "error" || !reportState.frozen) return;
+    void submitFrozenReport(reportState.frozen);
   }, [reportState, submitFrozenReport]);
+
+  const downloadRecoveryDraft = useCallback(() => {
+    try {
+      const records: Record<string, string> = {};
+      for (const key of [WIND_DOWN_VOICE_OUTBOX_STORAGE_KEY, WIND_DOWN_VOICE_FROZEN_STORAGE_KEY, WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY, WIND_DOWN_VOICE_RETAINED_STORAGE_KEY]) {
+        try { const raw = voiceStorage.getItem(key); if (raw !== null) records[key] = raw; } catch { /* retain in-memory fallback */ }
+      }
+      const payload = {
+        records, frozen: reportState.frozen, unreadable: corruptNotice?.raw ?? null,
+        confirmedTurns: turnsRef.current, conversationIds: conversationIdsRef.current,
+        sessionProofs: sessionProofsRef.current, startedAtIso: startedAtRef.current,
+      };
+      const draftJson = createWindDownVoiceRecoveryDraft(payload);
+      if (new TextEncoder().encode(draftJson).byteLength > 5 * 1024 * 1024) throw new Error("recovery_download_too_large");
+      const url = URL.createObjectURL(new Blob([draftJson], { type: "application/json" }));
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "winddown-voice-recovery.json";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch {
+      setStorageWarning("원본 파일을 만들지 못했어. 기록은 그대로 두었으니 이 화면을 유지해줘.");
+    }
+  }, [corruptNotice, reportState.frozen]);
+
+  const retainPrevious = useCallback(() => {
+    const pending = reportState.frozen ?? frozenReportRef.current ?? (turnsRef.current.length > 0 ? {
+      productSessionId: productSessionIdRef.current, activity, descriptor,
+      startedAtIso: startedAtRef.current, turns: turnsRef.current,
+      conversationIds: conversationIdsRef.current, sessionProofs: sessionProofsRef.current,
+    } : null);
+    const retained = retainWindDownVoiceRecovery(voiceStorage, pending);
+    if (!retained.ok) {
+      setStorageWarning("이전 기록을 별도로 보관하지 못했어. 원본을 유지한 채 새 대화를 기다리고 있어.");
+      return;
+    }
+    setHasRetained(true);
+    hasStartedVoiceSessionRef.current = false;
+    frozenReportRef.current = null;
+    setReportState({ phase: "idle", frozen: null, receipt: null, error: null });
+    setCorruptNotice(null);
+    setStartGuardNotice(null);
+    setStorageWarning("이전 기록을 이 브라우저에 따로 보관했어. 원본 기록 내려받기로 언제든 파일로 보관할 수 있어.");
+  }, [activity, descriptor, reportState.frozen]);
 
   const error = live.metrics.lastError;
   const listening = live.status === "listening";
@@ -537,7 +753,7 @@ export default function WindDownVoiceClient({ activity }: Props) {
                         : "주제를 골랐다면 편하게 시작해";
 
   return (
-    <div className="min-h-[100dvh] overflow-x-hidden bg-[var(--wd-bg)] text-[var(--wd-text)]">
+    <div className="min-h-[100dvh] [overflow-wrap:anywhere] bg-[var(--wd-bg)] text-[var(--wd-text)]">
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-[max(env(safe-area-inset-top),18px)]">
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -555,6 +771,58 @@ export default function WindDownVoiceClient({ activity }: Props) {
         </header>
 
         <main className="flex flex-1 flex-col py-6">
+          {restoring ? <p role="status" className="mb-4 text-sm">중단 전 기록을 확인하고 있어…</p> : null}
+          {hasRetained ? <button type="button" onClick={downloadRecoveryDraft} className="mb-4 min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4 text-sm font-semibold">보관한 원본 기록 내려받기</button> : null}
+          {storageWarning ? (
+            <div role="alert" className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs font-semibold text-amber-200">
+              <p>{storageWarning}</p>
+              <button type="button" onClick={downloadRecoveryDraft} className="mt-2 min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4">원본 기록 내려받기</button>
+            </div>
+          ) : null}
+          {startGuardNotice ? (
+            <div role="alert" className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs font-semibold text-amber-200">
+              <p>{startGuardNotice}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={downloadRecoveryDraft}
+                  className="min-h-[44px] rounded-xl bg-amber-500 px-4 text-xs font-black text-black active:scale-[.98] motion-reduce:transition-none"
+                >
+                  원본 기록 내려받기
+                </button>
+                <button type="button" onClick={retainPrevious} className="min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4 text-xs font-bold">이전 기록 따로 보관하기</button>
+                <button
+                  type="button"
+                  onClick={() => setStartGuardNotice(null)}
+                  className="min-h-[44px] rounded-xl border border-[var(--wd-border)] px-4 text-xs font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          ) : null}
+          {corruptNotice ? (
+            <section role="alert" className="mb-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-xs font-semibold text-rose-200">
+              <p className="font-bold">이전 대화 기록 확인이 필요해</p>
+              <p className="mt-1">{corruptNotice.error}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={downloadRecoveryDraft}
+                  className="min-h-[44px] rounded-xl border border-rose-400 bg-rose-500/20 px-4 text-xs font-bold text-rose-100 active:scale-[.98] motion-reduce:transition-none"
+                >
+                  원본 기록 내려받기
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCorruptNotice(null)}
+                  className="min-h-[44px] rounded-xl border border-[var(--wd-border)] px-4 text-xs font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none"
+                >
+                  닫기
+                </button>
+              </div>
+            </section>
+          ) : null}
           {activity === "roleplay" ? (
             <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-5 shadow-2xl">
               <p className="text-[11px] font-black tracking-[.15em] text-[var(--wd-accent)]">SCENE</p>
@@ -756,7 +1024,19 @@ export default function WindDownVoiceClient({ activity }: Props) {
               </div>
               {reportState.frozen.outcome.corrections.length > 0 ? (
                 <div className="mt-5 border-t border-[var(--wd-border)] pt-4">
-                  <h3 className="text-sm font-black">교정</h3>
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-black">교정</h3>
+
+                  </div>
+                  <div className="mt-3 grid gap-2">
+                    {practiceSeeds.map(seed => (
+                      <Link key={`${seed.citation.source}:${seed.citation.turn}`} href={seed.practiceUrl}
+                        data-winddown-practice-link data-turn-citation={seed.citation.turn}
+                        className="inline-flex min-h-[48px] items-center rounded-xl bg-[var(--wd-accent-soft)] px-3 py-2 text-xs font-bold break-words [overflow-wrap:anywhere]">
+                        {seed.learnerText} · 이어서 연습하기
+                      </Link>
+                    ))}
+                  </div>
                   <div className="mt-3 space-y-3">
                     {reportState.frozen.outcome.corrections.map((correction) => {
                       const presentation =
@@ -826,15 +1106,22 @@ export default function WindDownVoiceClient({ activity }: Props) {
           ) : null}
 
           {reportState.phase === "error" || reportState.phase === "build-error" ? (
-            <section role="alert" className="mt-5 rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-5 text-center">
+            <section data-winddown-voice-recovery role="alert" className="mt-5 rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-5 text-center">
               <h2 className="text-lg font-black">
                 {reportState.phase === "error" ? "대화는 끝났지만 보고를 저장하지 못했어." : "대화를 정리하지 못했어."}
               </h2>
               <p className="mt-2 text-sm font-semibold text-[var(--wd-muted)]">{reportState.error}</p>
               {reportState.phase === "error" ? (
-                <button type="button" onClick={reportRetry} className="mt-5 min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)] active:scale-[.98] motion-reduce:transition-none">같은 보고서 다시 저장</button>
+                <div className="mt-5 flex flex-col gap-2">
+                  <button type="button" onClick={retainPrevious} className="min-h-[48px] w-full rounded-2xl border border-[var(--wd-border)] px-4 text-xs font-bold">이전 기록 따로 보관하기</button>
+                  <button type="button" onClick={reportRetry} className="min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)] active:scale-[.98] motion-reduce:transition-none">같은 보고서 다시 저장</button>
+                  <button type="button" onClick={downloadRecoveryDraft} className="min-h-[44px] w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 text-xs font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none">원본 기록 내려받기</button>
+                </div>
               ) : (
-                <button type="button" onClick={start} className="mt-5 min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)] active:scale-[.98] motion-reduce:transition-none">대화 다시 시작</button>
+                <div className="mt-5 flex flex-col gap-2">
+                  <button type="button" onClick={start} className="min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)] active:scale-[.98] motion-reduce:transition-none">대화 다시 시작</button>
+                  <button type="button" onClick={downloadRecoveryDraft} className="min-h-[44px] w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 text-xs font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none">원본 기록 내려받기</button>
+                </div>
               )}
             </section>
           ) : null}
@@ -868,7 +1155,7 @@ export default function WindDownVoiceClient({ activity }: Props) {
             <button
               type="button"
               onClick={start}
-              disabled={busy || reportState.phase === "pending" || reportState.phase === "success"}
+              disabled={restoring || busy || reportState.phase === "pending" || reportState.phase === "success"}
               className="min-h-[56px] w-full rounded-[22px] bg-[var(--wd-accent)] px-5 text-[15px] font-black text-[var(--wd-bg)] transition active:scale-[.98] disabled:opacity-45 motion-reduce:transition-none"
             >
               {busy ? "연결하는 중" : live.status === "blocked" || live.status === "error" ? "권한 확인 후 다시 연결" : activity === "roleplay" ? "장면 시작하기" : "대화 시작하기"}

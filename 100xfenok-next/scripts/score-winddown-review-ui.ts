@@ -53,10 +53,18 @@ assert.equal(
   "duplicate visible labels must still have unique tile IDs",
 );
 const duplicateLabelMatch = createWindDownLocalMatch({
-  card: { ...cards[0]!, id: "one-word", en: "Go" },
-  cards: [{ ...cards[0]!, id: "one-word", en: "Go" }],
+  card: { ...cards[0]!, id: "duplicate-label-a", en: "Go" },
+  cards: [
+    { ...cards[0]!, id: "duplicate-label-a", en: "Go" },
+    { ...cards[1]!, id: "duplicate-label-b", en: "Go", ko: "어서 가자." },
+  ],
   seed: "duplicate-label-review-match",
 });
+assert.equal(
+  duplicateLabelMatch.pairs.length,
+  2,
+  "duplicate-label coverage must use two genuine sentence cards",
+);
 assert.ok(
   duplicateLabelMatch.tiles.filter((tile) => tile.label === "Go").length >= 2,
   "the repair fixture must contain duplicate visible labels",

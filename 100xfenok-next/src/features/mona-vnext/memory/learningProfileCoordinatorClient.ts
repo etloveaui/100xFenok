@@ -1,3 +1,4 @@
+import type { WindDownConversationQuery } from "@/features/winddown/server/conversationHistory";
 import type {
   MonaVnextProfileCoordinatorCommand,
   WindDownVoiceReportReceipt,
@@ -204,4 +205,9 @@ export async function commitWindDownLearnAttemptThroughCoordinator(args: {
     action: args.action,
     nowIso: args.now.toISOString(),
   });
+}
+
+/** Bounded archive lookup; the coordinator never initializes learning state here. */
+export async function readWindDownConversationsThroughCoordinator(query: WindDownConversationQuery = {}) {
+  return invokeMonaVnextProfileCoordinator({ operation: "read-winddown-conversations", ...query });
 }
