@@ -351,7 +351,7 @@ const expectedUploads = [
   ].join("\n"),
   [
     "      - name: Upload synthetic WIND DOWN UI evidence",
-    "        if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:winddown-preservation-isolated' || inputs.script == 'qa:winddown-continuity-isolated') }}",
+    "        if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:winddown-preservation-isolated' || inputs.script == 'qa:winddown-continuity-isolated' || inputs.script == 'qa:winddown-story-isolated') }}",
     "        uses: actions/upload-artifact@v4",
     "        with:",
     "          name: winddown-preservation-ui",
