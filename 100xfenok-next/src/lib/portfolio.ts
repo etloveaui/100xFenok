@@ -1,4 +1,4 @@
-\"use client\";
+"use client";
 
 /**
  * Portfolio — device-local personalization (Wave D P-2).
