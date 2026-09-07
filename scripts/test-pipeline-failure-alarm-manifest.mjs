@@ -203,7 +203,11 @@ function tolerantUnits(root) {
     const source = fs.readFileSync(path.join(dir, file), "utf8");
     const lines = source.split("\n");
     for (let index = 0; index < lines.length; index += 1) {
-      if (!/^\s*continue-on-error:\s*true\s*$/.test(lines[index])) continue;
+      // Literal true and an expression are both tolerance. Matching only the
+      // literal let qa-visual switch to `${{ inputs.suite == 'all' }}` and
+      // disappear from this scan entirely, which read as a dead record rather
+      // than as a unit the contract had stopped watching.
+      if (!/^\s*continue-on-error:\s*(?:true|\$\{\{.+\}\})\s*$/.test(lines[index])) continue;
       const indent = lines[index].match(/^\s*/)[0].length;
       // Walk back to whichever owns it: a step's "- name:" or a job key. A
       // job-level tolerance makes the whole job's failure invisible.
