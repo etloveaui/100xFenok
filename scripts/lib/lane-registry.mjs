@@ -1950,12 +1950,20 @@ export const PLANE_PUBLISHER_EXCEPTIONS = Object.freeze({
   "yahoo-finance": Object.freeze({
     workflow: ".github/workflows/fetch-yf-finance.yml",
     non_blocking_publisher: false,
-    detached_persistence: false,
+    detached_persistence: true,
     conditional_persistence: true,
-    canonical_commit: "earlier_same_job",
-    canonical_commit_reason: "the canonical write is 'Commit and push fetched Yahoo source data' in this same publish job; only the origin readback runs between that push and publication, so the commit is this job's own and merely not adjacent",
+    canonical_commit: "earlier_sibling_job",
+    canonical_commit_reason: "the canonical write is 'Commit and push fetched Yahoo source data' in the publish-yf-finance job, and the publish-yf-cloud job declares needs: publish-yf-finance, so the source revision is ordered by the job graph",
     reason:
-      "the shadow publisher runs only after the Git origin readback confirms, so an unconfirmed readback means no generation was published and there is no outcome to persist; persistence still begins at always() so a failed or blocked publish on a confirmed readback is recorded",
+      "the shadow publisher checks out the confirmed source commit without the shared writer lock, then uploads one outcome shard for a short persistence tail; a failed or blocked publication still reaches that tail, while an unconfirmed source readback skips publication and creates no fabricated outcome",
+  }),
+  "edgar-korean-summaries": Object.freeze({
+    workflow: ".github/workflows/fetch-edgar-filings.yml",
+    non_blocking_publisher: false,
+    detached_persistence: true,
+    canonical_commit: "earlier_sibling_job",
+    canonical_commit_reason: "the canonical write is 'Commit and push' in the fetch-edgar-filings job, and the publish-edgar-cloud job declares needs: fetch-edgar-filings, so the exact source revision is ordered by the job graph",
+    reason: "the EDGAR cloud publisher checks out the source revision after fetch, summary validation and origin readback; only source Git and outcome persistence take the shared writer lock, and a failed publication still carries its outcome shard to persistence",
   }),
   "fdic-tier1": Object.freeze({
     workflow: ".github/workflows/fetch-fdic.yml",

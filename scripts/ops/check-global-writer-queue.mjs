@@ -37,18 +37,20 @@ function asPositiveInteger(value, name, { zero = false } = {}) {
 export function deriveWriterJobTargets(inventory) {
   const derived = {};
   for (const entry of inventory) {
-    if (entry.groupScope !== "job" || entry.needs.length === 0) continue;
+    if (entry.groupScope !== "job") continue;
     const workflow = path.basename(entry.workflow);
     const target = {
       job_name: entry.job,
-      eligibility_predecessor: entry.needs[0],
+      eligibility_predecessors: [...entry.needs],
       parent_run_statuses: [...PARENT_RUN_STATUSES],
       candidate_statuses: [...CANDIDATE_STATUSES],
     };
-    if (derived[workflow] && JSON.stringify(derived[workflow]) !== JSON.stringify(target)) {
-      throw new Error(`writer inventory has conflicting job targets for ${workflow}`);
+    const targets = derived[workflow] ??= [];
+    const existing = targets.find((item) => item.job_name === target.job_name);
+    if (existing && JSON.stringify(existing) !== JSON.stringify(target)) {
+      throw new Error(`writer inventory has conflicting job targets for ${workflow}/${entry.job}`);
     }
-    derived[workflow] = target;
+    if (!existing) targets.push(target);
   }
   return derived;
 }
@@ -228,12 +230,12 @@ export async function fetchWorkflowRuns({ policy, owner, repo, token, fetchImpl 
       workflowCount += pageRuns.length;
       if (pageRuns.length < perPage) break;
     }
-    const jobTarget = policy.job_level_targets[workflow];
-    if (!jobTarget) {
+    const jobTargets = policy.job_level_targets[workflow];
+    if (!jobTargets) {
       runs.push(...workflowRuns);
       continue;
     }
-    const parentRuns = workflowRuns.filter((run) => jobTarget.parent_run_statuses.includes(run.status));
+    const parentRuns = workflowRuns.filter((run) => jobTargets.some((target) => target.parent_run_statuses.includes(run.status)));
     if (parentRuns.length > policy.api.max_job_runs) {
       throw new Error(`${workflow} active run count exceeds max_job_runs=${policy.api.max_job_runs}`);
     }
@@ -266,27 +268,38 @@ export async function fetchWorkflowRuns({ policy, owner, repo, token, fetchImpl 
         jobCount += pageJobs.length;
         if (pageJobs.length < perPage) break;
       }
-      const predecessor = jobs.find(
-        (job) => job.name === jobTarget.eligibility_predecessor && hasValidCompletedAt(job),
-      );
-      const eligibleAt = predecessor?.completed_at || null;
-      runs.push(
-        ...jobs
-          .filter((job) => job.name === jobTarget.job_name)
-          .filter((job) => !jobTarget.candidate_statuses.includes(job.status) || eligibleAt !== null)
-          .map((job) => ({
-            ...job,
-            id: parentRun.id,
-            job_id: job.id,
-            workflow,
-            observation_level: "job",
-            writer_job: jobTarget.job_name,
-            eligibility_predecessor: jobTarget.eligibility_predecessor,
-            eligible_at: eligibleAt,
-            candidate_statuses: jobTarget.candidate_statuses,
-            created_at: eligibleAt,
-          })),
-      );
+      // Read the jobs once, then observe every short writer section. A tail
+      // does not wait for the writer lock until ALL its dependencies finish;
+      // otherwise a long cloud upload would be reported as Git contention.
+      for (const jobTarget of jobTargets) {
+        const predecessors = jobTarget.eligibility_predecessors.map((name) => jobs.find(
+          (job) => job.name === name && hasValidCompletedAt(job),
+        ));
+        let eligibleAt = null;
+        if (predecessors.length === 0) {
+          const startedAt = parentRun.run_started_at || parentRun.created_at;
+          if (typeof startedAt === "string" && Number.isFinite(Date.parse(startedAt))) eligibleAt = startedAt;
+        } else if (predecessors.every(Boolean)) {
+          eligibleAt = new Date(Math.max(...predecessors.map((job) => Date.parse(job.completed_at)))).toISOString();
+        }
+        runs.push(
+          ...jobs
+            .filter((job) => job.name === jobTarget.job_name)
+            .filter((job) => !jobTarget.candidate_statuses.includes(job.status) || eligibleAt !== null)
+            .map((job) => ({
+              ...job,
+              id: parentRun.id,
+              job_id: job.id,
+              workflow,
+              observation_level: "job",
+              writer_job: jobTarget.job_name,
+              eligibility_predecessors: jobTarget.eligibility_predecessors,
+              eligible_at: eligibleAt,
+              candidate_statuses: jobTarget.candidate_statuses,
+              created_at: eligibleAt,
+            })),
+        );
+      }
     }
   }
   return runs;

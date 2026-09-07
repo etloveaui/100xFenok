@@ -140,7 +140,17 @@ for (const forbidden of ["git add", "git commit", "git push", "persist-cloud-pub
 assert.match(cloudJob, /publish-cloud-data-generation\.mjs/);
 assert.match(cloudJob, /ref: \$\{\{ needs\.publish-yf-finance\.outputs\.pushed_sha \}\}/,
   "the cloud job must publish the read-back source revision, not a moving branch");
+assert.match(cloudJob, /persist-credentials: false/);
+assert.match(cloudJob, /needs\.acquire-yf-finance\.result == 'success'/,
+  "failed acquisition still records source evidence but cannot publish a cloud candidate");
+const failureDispatch = extractStepSpan(publishJob, "Publish failed Yahoo attempt evidence");
+assert.match(failureDispatch, /always\(\)/);
+assert.match(failureDispatch, /steps\.readback\.outputs\.confirmed == 'true'/);
+assert.doesNotMatch(failureDispatch, /needs\.publish-yf-cloud/,
+  "source failure evidence must not depend on the cloud job that the failure skips");
 assert.match(outcomeJob, /fenok-data-writer-refs\/heads\/main/);
+assert.match(outcomeJob, /ref: \$\{\{ needs\.publish-yf-finance\.outputs\.pushed_sha \}\}/,
+  "outcome merge starts at the same snapshot as publication before rebasing onto main");
 assert.match(outcomeJob, /persist-cloud-publish-outcome\.mjs/);
 assert.doesNotMatch(outcomeJob, /publish-cloud-data-generation\.mjs/);
 assert.match(outcomeJob, /always\(\)/, "failed publication must still reach outcome persistence");
@@ -156,8 +166,12 @@ assert.match(edgarSource, /fenok-data-writer-refs\/heads\/main/);
 assert.doesNotMatch(edgarSource, /publish-cloud-data-generation\.mjs/);
 assert.doesNotMatch(edgarCloud, /fenok-data-writer-refs\/heads\/main/);
 assert.match(edgarCloud, /ref: \$\{\{ needs\.fetch-edgar-filings\.outputs\.source_sha \}\}/);
+assert.match(edgarCloud, /persist-credentials: false/);
+assert.match(edgarCloud, /outputs\.plan_only != 'true'/);
+assert.match(edgarCloud, /outputs\.verify_outcome == 'success'/);
 assert.match(edgarCloud, /publish-cloud-data-generation\.mjs/);
 assert.match(edgarOutcome, /fenok-data-writer-refs\/heads\/main/);
+assert.match(edgarOutcome, /ref: \$\{\{ needs\.fetch-edgar-filings\.outputs\.source_sha \}\}/);
 assert.match(edgarOutcome, /persist-cloud-publish-outcome\.mjs/);
 assert.doesNotMatch(edgarOutcome, /publish-cloud-data-generation\.mjs/);
 assert.match(edgarOutcome, /always\(\)/);

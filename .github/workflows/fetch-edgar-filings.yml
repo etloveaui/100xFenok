@@ -47,7 +47,9 @@ permissions:
   contents: write
 
 concurrency:
-  group: fenok-data-writer-refs/heads/main
+  # Keep EDGAR runs serialized against each other, while allowing their cloud
+  # publication to run outside the shared Git writer queue.
+  group: edgar-korean-summaries-pipeline-${{ github.ref }}
   cancel-in-progress: false
   queue: max
 
@@ -55,6 +57,19 @@ jobs:
   fetch-edgar-filings:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    # Acquisition, validation and the canonical source commit are the only
+    # parts of this job that need the global writer lock.
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
+    outputs:
+      source_sha: ${{ steps.persist_edgar_state.outputs.source_sha }}
+      readback_confirmed: ${{ steps.readback.outputs.confirmed }}
+      origin_readback: ${{ steps.readback.outputs.origin_readback }}
+      plan_only: ${{ steps.fetch_edgar.outputs.plan_only }}
+      fetch_outcome: ${{ steps.fetch_edgar.outcome }}
+      verify_outcome: ${{ steps.verify_edgar.outcome }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -99,6 +114,7 @@ jobs:
           INPUT_CONTROLLED_FAILURE_KEY: ${{ github.event.inputs.controlled_failure_key || '' }}
         run: |
           echo "EDGAR_PLAN_ONLY=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_ENV"
+          echo "plan_only=${INPUT_PLAN_ONLY:-false}" >> "$GITHUB_OUTPUT"
           ARGS=(--filings-per-ticker "${INPUT_FILINGS_PER_TICKER:-12}" --forms "${INPUT_FORMS:-10-K,10-Q,8-K,20-F,40-F,6-K}" --sleep "${INPUT_SLEEP:-0.6}")
           if [ -n "$INPUT_TICKERS" ]; then ARGS+=(--tickers "$INPUT_TICKERS"); fi
           if [ "$INPUT_FULL_UNIVERSE" = "true" ]; then
@@ -124,6 +140,7 @@ jobs:
 
       - name: Commit and push
         if: ${{ always() }}
+        id: persist_edgar_state
         env:
           GH_TOKEN: ${{ github.token }}
           FETCH_OUTCOME: ${{ steps.fetch_edgar.outcome }}
@@ -149,6 +166,7 @@ jobs:
           fi
           if git diff --staged --quiet; then
             echo "No EDGAR filing timeline changes to publish"
+            echo "source_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git commit -m "data: update edgar filing timeline"
@@ -160,6 +178,7 @@ jobs:
               continue
             fi
             if git push; then
+              echo "source_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             echo "git push race on attempt ${attempt}; retrying after rebase"
@@ -167,16 +186,203 @@ jobs:
           done
           echo "git push failed after retrying concurrent main updates"
           exit 1
+      - name: Read back EDGAR source commit from origin/main
+        id: readback
+        if: ${{ steps.persist_edgar_state.outcome == 'success' && steps.persist_edgar_state.outputs.source_sha != '' }}
+        env:
+          SOURCE_SHA: ${{ steps.persist_edgar_state.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          git fetch --deepen=50 origin main || git fetch origin main
+          REMOTE_SHA="$(git rev-parse origin/main)"
+          if [ "$SOURCE_SHA" = "$REMOTE_SHA" ]; then
+            echo "origin/main readback confirmed at $SOURCE_SHA"
+          elif git merge-base --is-ancestor "$SOURCE_SHA" origin/main; then
+            echo "origin/main readback confirmed: $SOURCE_SHA is an ancestor of $REMOTE_SHA"
+          else
+            echo "::error::origin/main readback did not contain EDGAR source commit $SOURCE_SHA" >&2
+            echo "origin_readback=not_confirmed" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          echo "confirmed=true" >> "$GITHUB_OUTPUT"
+          echo "origin_readback=confirmed" >> "$GITHUB_OUTPUT"
+
+  # Cloud publication reads the exact source revision confirmed by the locked
+  # source job. It performs no Git write and uses only a family-local group.
+  publish-edgar-cloud:
+    needs: fetch-edgar-filings
+    if: >-
+      always() &&
+      needs.fetch-edgar-filings.result == 'success' &&
+      needs.fetch-edgar-filings.outputs.plan_only != 'true' &&
+      needs.fetch-edgar-filings.outputs.fetch_outcome == 'success' &&
+      needs.fetch-edgar-filings.outputs.verify_outcome == 'success' &&
+      needs.fetch-edgar-filings.outputs.readback_confirmed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    concurrency:
+      group: edgar-korean-summaries-cloud-${{ github.ref }}
+      cancel-in-progress: false
+      queue: max
+    outputs:
+      publisher_outcome: ${{ steps.publish_cloud_generation.outcome }}
+      outcome_shard_sha256: ${{ steps.prepare_outcome_shard.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.fetch-edgar-filings.outputs.source_sha }}
+          fetch-depth: 1
+          filter: blob:none
+          persist-credentials: false
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            100xfenok-next/scripts
+            100xfenok-next/src/lib
+            data/admin/data-supply-state/publish-outcomes
+            data/edgar
+            data/edgar-korean-summaries
+
+      - name: Confirm exact EDGAR source checkout
+        env:
+          EXPECTED_SHA: ${{ needs.fetch-edgar-filings.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          ACTUAL_SHA="$(git rev-parse HEAD)"
+          [ "$ACTUAL_SHA" = "$EXPECTED_SHA" ] \
+            || { echo "::error::EDGAR cloud checkout is not the confirmed source commit" >&2; exit 1; }
+
+      - name: Remove any pre-existing EDGAR outcome shard
+        run: rm -f data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Publish edgar-korean-summaries generation to the cloud data plane
         id: publish_cloud_generation
-        if: ${{ steps.fetch_edgar.outcome == 'success' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: aeeb5ea3affe55a2219d08ea02dad9e1
           DATA_PLANE_ENDPOINT: https://100xfenok.etloveaui.workers.dev/internal/cloud-data-plane
           DATA_PLANE_WRITE_KEY: ${{ secrets.DATA_PLANE_WRITE_KEY }}
+          PUBLISH_BINDING_GIT_COMMIT: ${{ needs.fetch-edgar-filings.outputs.source_sha }}
         run: node scripts/publish-cloud-data-generation.mjs --family=edgar-korean-summaries --tolerate-gate-block --json
+
+      - name: Prepare EDGAR outcome shard
+        id: prepare_outcome_shard
+        if: ${{ always() }}
+        run: |
+          set -euo pipefail
+          SHARD=data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json
+          [ -s "$SHARD" ] \
+            || { echo "::error::EDGAR publisher produced no outcome shard" >&2; exit 1; }
+          node --input-type=module - "$SHARD" <<'NODE'
+          import fs from "node:fs";
+          import { validatePublishOutcomeShard } from "./scripts/lib/publish-outcome-shard.mjs";
+          const [shardPath] = process.argv.slice(2);
+          const shard = JSON.parse(fs.readFileSync(shardPath, "utf8"));
+          validatePublishOutcomeShard(shard, "edgar-korean-summaries");
+          if (shard.records.length === 0) throw new Error("EDGAR outcome shard has no records");
+          NODE
+          echo "sha256=$(sha256sum "$SHARD" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - name: Upload EDGAR outcome shard
+        id: upload_outcome_shard
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgar-korean-summaries-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          path: data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json
+          if-no-files-found: error
+          retention-days: 1
+
+  # The global writer lock is held only while this job merges and persists the
+  # one owned outcome shard. A checkout copy can never substitute for a missing
+  # or stale artifact from the cloud job.
+  persist-edgar-cloud-outcome:
+    needs:
+      - fetch-edgar-filings
+      - publish-edgar-cloud
+    if: >-
+      always() &&
+      needs.publish-edgar-cloud.result != 'cancelled' &&
+      needs.publish-edgar-cloud.result != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      actions: read
+    concurrency:
+      group: fenok-data-writer-refs/heads/main
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.fetch-edgar-filings.outputs.source_sha }}
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            scripts
+            .github/workflows
+            100xfenok-next/scripts
+            100xfenok-next/src/lib
+            data/admin/data-supply-state/publish-outcomes
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Remove any checkout copy of EDGAR outcome
+        run: rm -f data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json
+
+      - name: Download EDGAR outcome shard
+        uses: actions/download-artifact@v4
+        with:
+          name: edgar-korean-summaries-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/edgar-korean-summaries-outcome
+          github-token: ${{ github.token }}
+          run-id: ${{ github.run_id }}
+
+      - name: Validate EDGAR outcome artifact
+        env:
+          EXPECTED_SHA256: ${{ needs.publish-edgar-cloud.outputs.outcome_shard_sha256 }}
+        run: |
+          set -euo pipefail
+          ART="$RUNNER_TEMP/edgar-korean-summaries-outcome"
+          SHARD="$ART/edgar-korean-summaries.json"
+          [ -s "$SHARD" ] \
+            || { echo "::error::EDGAR outcome shard is missing or empty" >&2; exit 1; }
+          [[ "$EXPECTED_SHA256" =~ ^[0-9a-f]{64}$ ]] \
+            || { echo "::error::EDGAR outcome shard digest is invalid" >&2; exit 1; }
+          ACTUAL_SHA256="$(sha256sum "$SHARD" | awk '{print $1}')"
+          [ "$ACTUAL_SHA256" = "$EXPECTED_SHA256" ] \
+            || { echo "::error::EDGAR outcome shard digest mismatch" >&2; exit 1; }
+          node --input-type=module - "$SHARD" <<'NODE'
+          import fs from "node:fs";
+          import { validatePublishOutcomeShard } from "./scripts/lib/publish-outcome-shard.mjs";
+          const [shardPath] = process.argv.slice(2);
+          const shard = JSON.parse(fs.readFileSync(shardPath, "utf8"));
+          validatePublishOutcomeShard(shard, "edgar-korean-summaries");
+          if (shard.records.length === 0) throw new Error("EDGAR outcome shard has no records");
+          NODE
+          cp "$SHARD" data/admin/data-supply-state/publish-outcomes/edgar-korean-summaries.json
 
       - name: Persist edgar-korean-summaries publish outcome
         if: ${{ always() }}
-        run: node scripts/persist-cloud-publish-outcome.mjs --family=edgar-korean-summaries --workflow=.github/workflows/fetch-edgar-filings.yml --publisher-outcome=${{ steps.publish_cloud_generation.outcome }}
+        env:
+          BINDING_GIT_COMMIT: ${{ needs.fetch-edgar-filings.outputs.source_sha }}
+          BINDING_ORIGIN_READBACK: ${{ needs.fetch-edgar-filings.outputs.origin_readback }}
+        run: >-
+          node scripts/persist-cloud-publish-outcome.mjs
+          --family=edgar-korean-summaries
+          --workflow=.github/workflows/fetch-edgar-filings.yml
+          --publisher-outcome=${{ needs.publish-edgar-cloud.outputs.publisher_outcome }}
+          --binding-git-commit="$BINDING_GIT_COMMIT"
+          --binding-origin-readback="$BINDING_ORIGIN_READBACK"
+          --branch=main

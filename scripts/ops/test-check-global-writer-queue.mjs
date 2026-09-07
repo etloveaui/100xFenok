@@ -146,6 +146,20 @@ function fixtureFetch(fixture) {
   assert.equal(afterUpload.oldestCandidateAgeMinutes, 1, "53 minutes of cloud work are excluded from writer wait");
 }
 
+{
+  const observed = await fetchWorkflowRuns({
+    policy: { ...policy, workflows: ["root.yml"], job_level_targets: splitTargets },
+    owner: "octo", repo: "repo",
+    fetchImpl: fixtureFetch({
+      workflow_runs: [{ id: 9902, head_branch: "main", status: "in_progress", created_at: "2026-07-21T02:00:00Z", run_started_at: "2026-07-21T02:59:00Z" }],
+      jobs_by_run: { 9902: [{ id: 5, name: "source", status: "queued", completed_at: null }] },
+    }),
+  });
+  const queuedRoot = evaluateQueue(observed, { now: NOW, maxDepth: 3, maxAgeMinutes: 30 });
+  assert.equal(queuedRoot.candidateDepth, 1, "root source writes are still represented alongside detached tails");
+  assert.equal(queuedRoot.oldestCandidateAgeMinutes, 1, "root writer wait starts when its workflow run started");
+}
+
 const stockanalysisPolicy = {
   ...policy,
   workflows: ["fetch-stockanalysis.yml"],
