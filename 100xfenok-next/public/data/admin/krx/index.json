@@ -1,47 +1,44 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "krx",
-  "updated_at": "2026-09-04T14:31:19.800Z",
-  "retry_set": [
-    "bridge"
-  ],
+  "updated_at": "2026-09-07T16:00:37.273Z",
+  "retry_set": [],
   "items": {
     "bridge": {
       "key": "bridge",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/krx/lkg/bridge.json",
-        "payload_sha256": "5e20eba73e4ac4ffedb02101a2dfe42b05e81202bf242ad82dd6d08eca820246",
-        "source_as_of": "2026-09-02"
+        "path": "data/admin/fenok-edge-korea-krx-daily-index.json",
+        "payload_sha256": "feebe65b5b4c71a4d17fdce506f3b410d7c6e427ac09e1b5514e148b535deb50",
+        "source_as_of": "2026-09-04"
       },
       "lkg": {
         "path": "data/admin/krx/lkg/bridge.json",
         "payload_sha256": "5e20eba73e4ac4ffedb02101a2dfe42b05e81202bf242ad82dd6d08eca820246",
         "source_as_of": "2026-09-02"
       },
-      "updated_at": "2026-09-04T14:31:19.800Z",
+      "updated_at": "2026-09-07T16:00:37.273Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "5e20eba73e4ac4ffedb02101a2dfe42b05e81202bf242ad82dd6d08eca820246",
-        "source_as_of": "2026-09-02",
-        "run_id": "33768295216",
+        "payload_sha256": "feebe65b5b4c71a4d17fdce506f3b410d7c6e427ac09e1b5514e148b535deb50",
+        "source_as_of": "2026-09-04",
+        "run_id": "34141027922",
         "run_attempt": 1,
-        "observed_at": "2026-09-03T14:42:41.668Z"
+        "observed_at": "2026-09-07T16:00:37.273Z"
       },
       "last_recovered_failure": {
-        "run_id": "33523582153",
+        "run_id": "34141027922",
         "run_attempt": 1,
-        "observed_at": "2026-09-01T15:10:43.553Z",
+        "observed_at": "2026-09-07T16:00:25.410Z",
         "reason": "schema_drift"
       },
-      "latest_failure": {
-        "run_id": "33883974197",
-        "run_attempt": 1,
-        "observed_at": "2026-09-04T14:31:19.800Z",
-        "reason": "http_error"
-      }
+      "recovered_from_run_id": "34141027922",
+      "recovered_at": "2026-09-07T16:00:37.273Z",
+      "recovery_run_id": "34141027922",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule"
     }
   }
 }

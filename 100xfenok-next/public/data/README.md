@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-09-06
+> **Last Updated**: 2026-09-07
 > **Total Files**: 30,493 JSON files
 > **Update Rules**: `.claude/rules/data-documentation.md`
 
@@ -35,7 +35,7 @@
 
 ### Valuation Data (benchmarks/, damodaran/)
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
-- Benchmarks latest: 32,247 records, 2010-01-01 ~ 2026-08-28, 38 sections (micro_sectors +과창판 STAR50), 870 S&P 500 data points (DEC-275 history-preservation merge)
+- Benchmarks latest: 32,285 records, 2010-01-01 ~ 2026-09-04, 38 sections (micro_sectors +과창판 STAR50), 871 S&P 500 data points (DEC-275 history-preservation merge)
 - Benchmarks v3.8: `summaries.json` includes 1W/1M/3M/6M/YTD and yearly source summaries for price, EPS, PER, PBR, and ROE (2,404 non-null values + 66 null placeholders)
 - Damodaran: industries (96 w/ beta, margins, EVA), extended US industry metrics (11 datasets), non-US regional metrics (7 regions x 17 datasets), ERP (178 countries, Apr 2026), historical ERP (66 years), credit ratings
 - Yardney: Feno Yardeni S&P 500 fair value model, 1,894 weekly public valuation records through 2026-08-14, latest fair value 6,341.71 and premium +22.77%; raw bond-yield components are excluded from public payloads
@@ -51,7 +51,7 @@
 ### Macro Data (macro/)
 - FRED banking series: daily, weekly, quarterly; the daily collector now also requests Korea 10Y government yield (`IRLTLT01KRM156N`) for RIM inputs
 - FDIC Tier1 capital ratio quarterly history
-- Activity surveys: 934 records; OECD CLI through 2026-06, major-country manufacturing/services PMI and ISM components through 2026-07
+- Activity surveys: 940 records; OECD CLI, major-country manufacturing/services PMI and ISM components through 2026-08
 - Root compatibility files are still published during migration
 
 ### Calendar Data (calendar/)
