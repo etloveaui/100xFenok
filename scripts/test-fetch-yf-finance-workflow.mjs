@@ -175,5 +175,11 @@ assert.match(edgarOutcome, /ref: \$\{\{ needs\.fetch-edgar-filings\.outputs\.sou
 assert.match(edgarOutcome, /persist-cloud-publish-outcome\.mjs/);
 assert.doesNotMatch(edgarOutcome, /publish-cloud-data-generation\.mjs/);
 assert.match(edgarOutcome, /always\(\)/);
+for (const tail of [outcomeJob, edgarOutcome]) {
+  assert.doesNotMatch(tail, /result != 'cancelled'/,
+    "cancellation must not discard a fresh outcome artifact already emitted by the cloud job");
+  assert.match(tail, /result != 'skipped'/,
+    "a cloud job that never ran must not start an outcome writer");
+}
 
 console.log("test-fetch-yf-finance-workflow: ok");

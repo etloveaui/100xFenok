@@ -309,7 +309,6 @@ jobs:
       - publish-edgar-cloud
     if: >-
       always() &&
-      needs.publish-edgar-cloud.result != 'cancelled' &&
       needs.publish-edgar-cloud.result != 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 20

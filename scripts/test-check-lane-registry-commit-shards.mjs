@@ -365,11 +365,12 @@ scripts/publish-slickcharts-attempt.sh \
 // Every primary owner must carry every admin shard its lanes declare. This is
 // the fleet gate; the focused cases above prove that its helper evidence fails
 // closed instead of borrowing another workflow's policy.
-function assertOwnerFleet(registry) {
+function assertOwnerFleet(registry, workflowOverrides = {}) {
   for (const workflowRel of [...new Set(registry.lanes
     .map((lane) => lane.owner_workflow)
     .filter(Boolean))].sort()) {
-    const workflowText = fs.readFileSync(path.join(REPO_ROOT, workflowRel), "utf8");
+    const workflowText = workflowOverrides[workflowRel]
+      ?? fs.readFileSync(path.join(REPO_ROOT, workflowRel), "utf8");
     const result = checkWorkflowCommitShardsAgainstRegistry({
       workflowText,
       workflowRel,
@@ -386,6 +387,21 @@ const yahooWorkflow = ".github/workflows/fetch-yf-finance.yml";
 missingYahooOutcome.workflow_policies[yahooWorkflow].stages.always_if_exists =
   missingYahooOutcome.workflow_policies[yahooWorkflow].stages.always_if_exists
     .filter(({ path: pathValue }) => pathValue !== "data/admin/data-supply-state/publish-outcomes/yahoo-finance.json");
-assert.throws(() => assertOwnerFleet(missingYahooOutcome), /yahoo-finance\.json/);
+assert.doesNotThrow(
+  () => assertOwnerFleet(missingYahooOutcome),
+  "the detached tail remains an alternate ownership proof when only the manifest entry is absent",
+);
+// The real workflow also names the shard in its detached cloud-publish tail
+// (remove, upload and copy), which is a second independent proof of ownership.
+// Remove both rails in this synthetic negative; mutating the registry policy
+// alone should not be expected to fail while the workflow still explicitly
+// carries the same shard path.
+const yahooWithoutOutcomeProof = fs
+  .readFileSync(path.join(REPO_ROOT, yahooWorkflow), "utf8")
+  .replaceAll("data/admin/data-supply-state/publish-outcomes/yahoo-finance.json", "");
+assert.throws(
+  () => assertOwnerFleet(missingYahooOutcome, { [yahooWorkflow]: yahooWithoutOutcomeProof }),
+  /yahoo-finance\.json/,
+);
 
 console.log("test-check-lane-registry-commit-shards: ok");
