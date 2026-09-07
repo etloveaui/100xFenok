@@ -201,6 +201,7 @@ jobs:
           node-version: '22'
 
       - name: Download earnings overview publish outcome
+        id: download_outcome_shard
         if: ${{ always() }}
         continue-on-error: true
         uses: actions/download-artifact@v4
@@ -212,9 +213,15 @@ jobs:
         id: origin_readback
         env:
           GH_TOKEN: ${{ github.token }}
+          OUTCOME_SHARD_DOWNLOAD: ${{ steps.download_outcome_shard.outcome }}
         run: |
           set -euo pipefail
           shard=data/admin/data-supply-state/publish-outcomes/earnings-overview.json
+          # The download above is tolerant, so name its result here rather than
+          # letting a missing artifact surface as an opaque parse error below.
+          if [ "$OUTCOME_SHARD_DOWNLOAD" != "success" ]; then
+            echo "publish-outcome artifact did not download ($OUTCOME_SHARD_DOWNLOAD); reading whatever the checkout carries" >&2
+          fi
           BINDING_GIT_COMMIT="$(
             node --input-type=module - "$shard" <<'NODE'
           import fs from "node:fs";
