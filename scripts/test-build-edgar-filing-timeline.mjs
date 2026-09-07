@@ -793,10 +793,13 @@ assert.deepEqual(edgar.endpoint_contract.assertions, [{
 }
 
 {
+  // The attempt shard is staged through the generated lane manifest, not by a
+  // literal path in this workflow, so its coverage lives in the registry gate
+  // inside test-build-edgar-lkg-recovery.mjs. Asserting the path text here only
+  // broke on that refactor.
   const workflow = fs.readFileSync(path.join(REPO_ROOT, ".github/workflows/fetch-edgar-filings.yml"), "utf8");
   assert.match(workflow, /node scripts\/test-build-edgar-filing-timeline\.mjs/);
   assert.match(workflow, /node scripts\/test-build-edgar-lkg-recovery\.mjs/);
-  assert.match(workflow, /detection-attempts\/edgar_filings\.json/);
   assert.match(workflow, /10-K,10-Q,8-K,20-F,40-F,6-K/);
   assert.match(workflow, /qa:edgar-translations/);
   assert.match(workflow, /- name: Commit and push\n\s+if: \$\{\{ always\(\) \}\}/);
