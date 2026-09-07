@@ -413,6 +413,13 @@ class FixtureRouter implements CaseRuntime {
     if (macro !== undefined) return { status: 200, body: macro };
     if (pathname === "/data/global-scouter/core/stocks_analyzer.json") return { status: 200, body: stockDataset() };
     if (pathname === "/data/computed/stock_action_summary.json") return { status: 200, body: actionSummary() };
+    // Exact empty/unavailable contracts for the real AAPL stock/screener journey.
+    if (pathname === "/data/computed/fenok_signals_summary.json") return { status: 200, body: { fields: [], rows: [] } };
+    if (pathname === "/data/sec-13f/analytics/guru_holders_index.json") return { status: 200, body: {} };
+    if (pathname === "/data/sec-13f/by_ticker.json") return { status: 200, body: { AAPL: { holder_details: [] } } };
+    if (pathname === "/data/global-scouter/stocks/detail/AAPL.json") return { status: 200, body: { years: [], income_statement: {} } };
+    if (pathname === "/api/data/stockanalysis/stocks/AAPL" || pathname === "/api/data/stockanalysis/financials/AAPL") return { status: 200, body: {} };
+    if (pathname === "/data/damodaran/industry_benchmarks.json") return { status: 200, body: {} };
     if (pathname === "/data/computed/entity_graph_stock_index.json") return { status: 200, body: graphIndex() };
     if (pathname === "/data/computed/entity_graph_stock_services.json") return { status: 200, body: serviceIndex() };
     if (pathname === "/data/benchmarks/summaries.json") return { status: 200, body: benchmarkSummary() };
@@ -965,6 +972,9 @@ async function searchOptionalReadinessCase(page: Page, runtime: CaseRuntime, con
   runtime.releaseOptional();
   await waitForCondition(async () => await result.count() === 1, "stock result did not arrive after optional data release", WAIT_DATA_MS);
   runtime.searchMetrics.first_result_ms = firstResultMs ?? Date.now() - started;
+  const resultBox = await result.boundingBox();
+  assert(resultBox && resultBox.height >= 44, "stock search touch target must be at least 44px high");
+  runtime.searchMetrics.result_height_px = resultBox.height;
   if (!palette) {
     await waitForCondition(async () => await page.locator('[role="option"]:visible').filter({ hasText: "Synthetic AAPL Investor" }).count() === 1, "late investor result must remain available");
     if (activeBefore) assert.equal(await input.getAttribute("aria-activedescendant"), activeBefore, "late investor results must preserve the selected stock");
@@ -988,6 +998,65 @@ async function typeaheadOptionalDismissCase(page: Page, runtime: CaseRuntime): P
   assert.equal(await input.inputValue(), "AAPL");
   assert.equal(await input.getAttribute("aria-expanded"), "false", "late optional results reopened dismissed search");
   assert.equal(await page.locator('ul[role="listbox"]:visible').count(), 0);
+}
+
+async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition: BrowserCondition, preview = false): Promise<void> {
+  await gotoPath(page, "/screener?ticker=AAPL&mode=analyze");
+  const ready = page.locator('[data-canvas-plus-screener-service][data-screener-mode="analyze"][data-journey-ready="true"]');
+  const filter = page.locator('input[data-canvas-plus-screener-search="true"]');
+  await waitForCondition(async () => await ready.count() === 1, "source screener did not become ready", WAIT_DATA_MS);
+  assert.equal(await filter.inputValue(), "AAPL");
+  const card = page.locator('[data-canvas-plus-screener-card="mobile"]:visible').filter({ has: page.locator('button[aria-label="AAPL 상세 접기"]') });
+  const selected = card.getByRole("checkbox", { name: "선택", exact: true });
+  await selected.check();
+  await waitForCondition(async () => (await page.locator('[data-canvas-plus-screener-selection-actions]').innerText()).includes("1개 선택"), "source selection did not settle");
+  const source = new URL(page.url());
+  const returnTo = `${source.pathname.replace(/\/+$/, "")}${source.search}${source.hash}`;
+  let sourceScroll = 0;
+  if (preview) {
+    const input = await openMobileTypeahead(page);
+    await input.fill("AAPL");
+    const result = page.locator('[role="option"]:visible').filter({ hasText: "Synthetic Apple" });
+    await waitForCondition(async () => await result.count() === 1, "search stock option did not appear");
+    await result.tap();
+    const drawer = page.locator('[data-testid="typeahead-preview"]');
+    await waitForCondition(async () => await drawer.count() === 1, "stock preview did not open");
+    const full = drawer.getByRole("link", { name: "전체 보기", exact: true });
+    const box = await full.boundingBox();
+    assert(box && box.height >= 44, "stock preview primary touch target must be at least 44px high");
+    assert.equal(new URL((await full.getAttribute("href"))!, QA_BASE_URL).searchParams.get("returnTo"), returnTo);
+    await full.tap();
+  } else {
+    await page.evaluate(() => window.scrollTo(0, 600));
+    sourceScroll = await page.evaluate(() => window.scrollY);
+    const dialog = await paletteOpen(page);
+    const input = dialog.locator("input");
+    await input.fill("AAPL");
+    await waitForCondition(async () => await dialog.locator("button").filter({ has: page.locator("span.font-medium", { hasText: /^AAPL$/ }) }).count() === 1, "palette AAPL result did not appear");
+    await input.press("Enter");
+  }
+  await waitForCondition(() => pagePath(page) === "/stock/AAPL", "search did not reach real stock detail", WAIT_DATA_MS);
+  await waitForCondition(async () => await page.locator('[data-canvas-plus-stock-detail-preview] h1').count() === 1, "real stock hero did not render", WAIT_DATA_MS);
+  assert.equal(new URL(page.url()).searchParams.get("returnTo"), returnTo, "stock detail must retain the full originating filter context");
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  assert(overflow <= 1, `stock detail causes ${overflow}px horizontal viewport overflow`);
+  await screenshot(page, `search-stock-${preview ? "preview" : "palette"}-${condition.name}`);
+  if (preview) {
+    const back = page.locator('.appbar a[aria-label="스크리너로 돌아가기"]');
+    assert.equal(new URL((await back.getAttribute("href"))!, QA_BASE_URL).search, source.search);
+    await back.tap();
+  } else {
+    await page.goBack({ waitUntil: "domcontentloaded" });
+  }
+  await waitForCondition(async () => await ready.count() === 1, "returning screener did not restore ready state", WAIT_DATA_MS);
+  assert.equal(new URL(page.url()).search, source.search, "return navigation must preserve filters and analysis mode");
+  assert.equal(await filter.inputValue(), "AAPL");
+  assert.equal(await selected.isChecked(), true, "return navigation must preserve selected stock");
+  if (!preview) {
+    await waitForCondition(async () => Math.abs(await page.evaluate(() => window.scrollY) - sourceScroll) <= 80, "browser Back must restore the source scroll position");
+    runtime.searchMetrics = { source_scroll_y: sourceScroll, restored_scroll_y: await page.evaluate(() => window.scrollY) };
+  }
+  await screenshot(page, `search-return-${preview ? "preview" : "palette"}-${condition.name}`);
 }
 
 async function readCsvDownload(page: Page, button: Locator): Promise<string> {
@@ -1038,6 +1107,8 @@ function makeCases(): BrowserCase[] {
     { name: "typeahead-optional-readiness", options: { delayedOptionalSearch: true }, run: searchOptionalReadinessCase },
     { name: "palette-optional-readiness", options: { delayedOptionalSearch: true }, run: (page, runtime, condition) => searchOptionalReadinessCase(page, runtime, condition, true) },
     { name: "typeahead-optional-dismiss", options: { delayedOptionalSearch: true }, run: typeaheadOptionalDismissCase },
+    { name: "search-stock-browser-return", run: searchStockReturnCase },
+    { name: "search-preview-app-return", run: (page, runtime, condition) => searchStockReturnCase(page, runtime, condition, true) },
     { name: "macro-csv-visible", run: macroCsvVisibleCase },
   ];
   for (const mode of ["unavailable", "failed", "null", "disjoint"] as const) {
