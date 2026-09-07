@@ -125,4 +125,41 @@ for (const forbidden of ["git add", "git commit", "git push", "git pull", "gh wo
   }
 }
 
+// Cloud transfer is not a Git write. Keeping it inside the writer job held
+// every other producer behind 20-53 minutes of upload/readback work. Check
+// job boundaries, including the separate outcome writer, rather than timing
+// or a particular spelling of the publisher command.
+assert.doesNotMatch(publishJob, /publish-cloud-data-generation\.mjs/,
+  "Yahoo cloud upload must not occupy the global Git writer job");
+const cloudJob = extractJobSpan(workflowText, "publish-yf-cloud");
+const outcomeJob = extractJobSpan(workflowText, "persist-yf-cloud-outcome");
+assert.doesNotMatch(cloudJob, /fenok-data-writer-refs\/heads\/main/);
+for (const forbidden of ["git add", "git commit", "git push", "persist-cloud-publish-outcome.mjs"]) {
+  assert.ok(!cloudJob.includes(forbidden), `cloud-only job must not contain ${forbidden}`);
+}
+assert.match(cloudJob, /publish-cloud-data-generation\.mjs/);
+assert.match(cloudJob, /ref: \$\{\{ needs\.publish-yf-finance\.outputs\.pushed_sha \}\}/,
+  "the cloud job must publish the read-back source revision, not a moving branch");
+assert.match(outcomeJob, /fenok-data-writer-refs\/heads\/main/);
+assert.match(outcomeJob, /persist-cloud-publish-outcome\.mjs/);
+assert.doesNotMatch(outcomeJob, /publish-cloud-data-generation\.mjs/);
+assert.match(outcomeJob, /always\(\)/, "failed publication must still reach outcome persistence");
+
+const edgarText = fs.readFileSync(new URL("../.github/workflows/fetch-edgar-filings.yml", import.meta.url), "utf8");
+const edgarHeader = edgarText.split(/^jobs:/m)[0];
+assert.doesNotMatch(edgarHeader, /fenok-data-writer-refs\/heads\/main/,
+  "EDGAR must not hold the global writer lock across its whole workflow");
+const edgarSource = extractJobSpan(edgarText, "fetch-edgar-filings");
+const edgarCloud = extractJobSpan(edgarText, "publish-edgar-cloud");
+const edgarOutcome = extractJobSpan(edgarText, "persist-edgar-cloud-outcome");
+assert.match(edgarSource, /fenok-data-writer-refs\/heads\/main/);
+assert.doesNotMatch(edgarSource, /publish-cloud-data-generation\.mjs/);
+assert.doesNotMatch(edgarCloud, /fenok-data-writer-refs\/heads\/main/);
+assert.match(edgarCloud, /ref: \$\{\{ needs\.fetch-edgar-filings\.outputs\.source_sha \}\}/);
+assert.match(edgarCloud, /publish-cloud-data-generation\.mjs/);
+assert.match(edgarOutcome, /fenok-data-writer-refs\/heads\/main/);
+assert.match(edgarOutcome, /persist-cloud-publish-outcome\.mjs/);
+assert.doesNotMatch(edgarOutcome, /publish-cloud-data-generation\.mjs/);
+assert.match(edgarOutcome, /always\(\)/);
+
 console.log("test-fetch-yf-finance-workflow: ok");

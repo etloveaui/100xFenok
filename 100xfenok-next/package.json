@@ -190,6 +190,7 @@
     "qa:cloud-data-plane-budget:fixtures": "node ../scripts/test-cloud-data-plane-budget.mjs",
     "qa:cloud-data-plane-generation": "node ../scripts/test-cloud-data-plane-generation.mjs",
     "qa:cloud-data-plane-publisher": "node ../scripts/test-cloud-data-plane-publisher.mjs && node ../scripts/test-cloud-data-plane-global-scouter-shadow.mjs",
+    "qa:cloud-publish-writer": "node ../scripts/test-fetch-yf-finance-workflow.mjs && node ../scripts/test-build-edgar-filing-timeline.mjs && node ../scripts/test-build-edgar-lkg-recovery.mjs && node ../scripts/test-persist-cloud-publish-outcome.mjs && node ../scripts/test-check-lane-registry-commit-shards.mjs && node ../scripts/ops/test-workflow-credential-wiring.mjs && node ../scripts/ops/test-check-global-writer-queue.mjs",
     "qa:cloud-data-plane-budget": "node ../scripts/check-cloud-data-plane-budget.mjs --format json",
     "report:cloud-data-plane-budget": "node ../scripts/check-cloud-data-plane-budget.mjs --format json",
     "qa:lane-registry-projection": "node ../scripts/test-lane-registry-projection.mjs",
