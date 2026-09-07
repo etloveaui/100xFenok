@@ -534,6 +534,30 @@ class PublicDataSupplyMaterializerTests(unittest.TestCase):
         })
         self.assertEqual(materializer.reconcile_public()["stale_deleted"], 0)
 
+    def test_reconcile_prunes_a_payload_the_canonical_projection_dropped(self):
+        materializer, _ = self.fixture.materializer()
+        materializer.write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
+        self.fixture.copy_projection_public()
+        self.fixture.seed_stockanalysis_reconcile()
+        payloads = self.fixture.public_data_root / "computed/data-supply/etf-detail/payloads"
+        stale = payloads / "DROPPED.json"
+        stale.write_bytes(b"{}\n")
+        result = materializer.reconcile_public()
+        self.assertEqual(result["stale_deleted"], 1)
+        self.assertFalse(stale.exists())
+        self.assertEqual(result["postcondition"]["public_projection_payloads"], 2)
+        self.assertEqual(materializer.reconcile_public()["stale_deleted"], 0)
+
+    def test_reconcile_still_fails_closed_on_a_missing_public_payload(self):
+        materializer, _ = self.fixture.materializer()
+        materializer.write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)
+        self.fixture.copy_projection_public()
+        self.fixture.seed_stockanalysis_reconcile()
+        payloads = self.fixture.public_data_root / "computed/data-supply/etf-detail/payloads"
+        (payloads / "FRESH.json").unlink()
+        with self.assertRaisesRegex(MaterializationError, "projection payload FRESH is missing"):
+            materializer.reconcile_public()
+
     def test_reconcile_rejects_out_of_set_and_primary_difference_without_deletion(self):
         materializer, _ = self.fixture.materializer()
         materializer.write_canonical(generated_at="2026-07-11T01:00:00Z", bootstrap_enrollment=True)

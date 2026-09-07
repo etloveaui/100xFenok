@@ -563,6 +563,13 @@ jobs:
               cd 100xfenok-next
               npm run build:data-supply-public
               node scripts/sync-public-data.mjs --write
+              # The generic data->public copy adds and overwrites but never
+              # deletes, so a ticker dropping to `unavailable` leaves its
+              # public payload behind and every later directory-walking check
+              # reads it as an orphan (AKAF, 2026-09-07, run 34071869290).
+              # Reconcile the mirror here so the published commit already
+              # carries the deletion instead of failing the next build.
+              npm run reconcile:data-supply-public-mirror
             )
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-stockanalysis.yml \

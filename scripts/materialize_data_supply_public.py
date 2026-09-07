@@ -820,6 +820,33 @@ class PublicDataSupplyMaterializer:
             raise MaterializationError("public reconcile journal binding mismatch")
         return plan
 
+    def _prune_public_projection(self, public_root: Path, canonical_files: set[str]) -> int:
+        """Delete public projection files the canonical projection no longer owns.
+
+        The public projection is an exact mirror of the canonical tree, but the
+        generic data->public copy only adds and overwrites. When a ticker falls
+        back to `unavailable` its canonical payload is removed while the public
+        copy survives, and every later directory-walking check reads that
+        survivor as an orphan. Pruning here keeps the mirror a mirror; a payload
+        that is missing instead of extra still fails closed in the tree load
+        below, because only the copy step can supply it.
+        """
+        if public_root.is_symlink() or not public_root.is_dir():
+            raise MaterializationError(f"public projection root is unsafe: {public_root}")
+        deleted = 0
+        for path in public_root.rglob("*"):
+            if path.is_symlink():
+                raise MaterializationError(f"public projection contains symlink: {path}")
+            if path.is_dir():
+                continue
+            if not path.is_file():
+                raise MaterializationError(f"public projection contains special file: {path}")
+            if path.relative_to(public_root).as_posix() in canonical_files:
+                continue
+            path.unlink()
+            deleted += 1
+        return deleted
+
     def reconcile_public(self) -> dict[str, Any]:
         canonical = self._load_projection_tree(self.canonical_root)
         generated_at = canonical.index.get("generated_at")
@@ -827,6 +854,9 @@ class PublicDataSupplyMaterializer:
         if canonical.index != projection.index or canonical.enrollment != projection.enrollment or canonical.payloads != projection.payloads:
             raise MaterializationError("canonical projection does not match active snapshot")
         public_projection_root = self.public_data_root / "computed/data-supply/etf-detail"
+        deleted = self._prune_public_projection(
+            public_projection_root, self._tree_files(self.canonical_root)
+        )
         public_projection = self._load_projection_tree(public_projection_root)
         if (
             (public_projection_root / "index.json").read_bytes() != (self.canonical_root / "index.json").read_bytes()
@@ -848,7 +878,6 @@ class PublicDataSupplyMaterializer:
                 f"public StockAnalysis ETF shard-only root contains direct files: {sorted(public_files)[:5]}"
             )
 
-        deleted = 0
         yahoo_count = 0
         true_count = 0
         postcondition = {

@@ -1182,6 +1182,7 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         stage_call = "scripts/stage-lane-manifest.sh"
         build_call = "npm run build:data-supply-public"
         reconcile_call = "node scripts/sync-public-data.mjs --write"
+        mirror_reconcile_call = "npm run reconcile:data-supply-public-mirror"
         self.assertNotIn(resolve_call, workflow.split("  publish-stockanalysis:\n", 1)[0])
         self.assertIn("group: fenok-data-writer-refs/heads/main", publish)
         self.assertLess(publish.index("audit-stage"), publish.index(resolve_call))
@@ -1189,7 +1190,8 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         self.assertLess(publish.index(resolve_call), post_resolver_stage)
         self.assertLess(post_resolver_stage, publish.index(build_call))
         self.assertLess(publish.index(build_call), publish.index(reconcile_call))
-        self.assertLess(publish.index(reconcile_call), publish.index("git commit"))
+        self.assertLess(publish.index(reconcile_call), publish.index(mirror_reconcile_call))
+        self.assertLess(publish.index(mirror_reconcile_call), publish.index("git commit"))
         self.assertNotIn("fetched_at", (SCRIPT_DIR / "resolve_etf_detail_candidates.py").read_text())
 
     def test_producer_records_policy_bound_yahoo_endpoint_family(self) -> None:
