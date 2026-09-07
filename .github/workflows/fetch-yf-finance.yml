@@ -490,7 +490,16 @@ jobs:
     # The serialized critical section is apply, stage, commit, push and
     # readback — not the provider fetch. Cap it so a stuck publish cannot hold
     # the global writer queue for the acquisition timeout.
-    timeout-minutes: 45
+    #
+    # 45 -> 75 on 2026-09-07. The cap was sized for that git section, which run
+    # 34083099765 completed in 22 seconds, but the job also carries the cloud
+    # shadow publication, and that measured 23.7 minutes of upload plus a
+    # further 29 minutes of byte-parity readback at 6,580 objects. Every run
+    # since the publication joined this job has been cancelled at 45 minutes
+    # and the yahoo-finance family has no successful outcome on record. The
+    # remaining structural problem — that a cloud upload holds the Git writer
+    # lock at all — is registered as B-CLOUD-PUBLISH-HOLDS-GIT-LOCK.
+    timeout-minutes: 75
     env:
       YF_PLAN_ONLY: ${{ needs.acquire-yf-finance.outputs.plan_only }}
     concurrency:
