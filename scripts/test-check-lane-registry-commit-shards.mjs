@@ -9,11 +9,14 @@ import {
   checkWorkflowCommitShardsAgainstRegistry,
   extractManifestStageInvocations,
   extractManifestWrapperBindings,
+  extractWorkflowShardAllowlist,
 } from "./check-lane-registry-commit-shards.mjs";
 import { LANE_REGISTRY } from "./lib/lane-registry.mjs";
 
 const WORKFLOW = ".github/workflows/fetch-fred-macro.yml";
 const PUBLISH_OUTCOME = "data/admin/data-supply-state/publish-outcomes/fred-macro.json";
+const YAHOO_OUTCOME_ROOT = "data/admin/data-supply-state/publish-outcomes";
+const YAHOO_OUTCOME = `${YAHOO_OUTCOME_ROOT}/yahoo-finance.json`;
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const WEEKLY = ".github/workflows/slickcharts-weekly.yml";
 
@@ -386,19 +389,28 @@ const missingYahooOutcome = structuredClone(LANE_REGISTRY);
 const yahooWorkflow = ".github/workflows/fetch-yf-finance.yml";
 missingYahooOutcome.workflow_policies[yahooWorkflow].stages.always_if_exists =
   missingYahooOutcome.workflow_policies[yahooWorkflow].stages.always_if_exists
-    .filter(({ path: pathValue }) => pathValue !== "data/admin/data-supply-state/publish-outcomes/yahoo-finance.json");
+    .filter(({ path: pathValue }) => pathValue !== YAHOO_OUTCOME);
 assert.doesNotThrow(
   () => assertOwnerFleet(missingYahooOutcome),
   "the detached tail remains an alternate ownership proof when only the manifest entry is absent",
 );
-// The real workflow also names the shard in its detached cloud-publish tail
-// (remove, upload and copy), which is a second independent proof of ownership.
-// Remove both rails in this synthetic negative; mutating the registry policy
-// alone should not be expected to fail while the workflow still explicitly
-// carries the same shard path.
+// This legacy whole-file gate accepts exact path literals and covering parent
+// directories, including the tail's sparse-checkout outcome directory. Remove
+// those plus the manifest policy in this negative; keep the separate publisher
+// contract responsible for proving that the owned shard is actually persisted.
 const yahooWithoutOutcomeProof = fs
   .readFileSync(path.join(REPO_ROOT, yahooWorkflow), "utf8")
-  .replaceAll("data/admin/data-supply-state/publish-outcomes/yahoo-finance.json", "");
+  .replaceAll(YAHOO_OUTCOME, "")
+  .replaceAll(YAHOO_OUTCOME_ROOT, "");
+const yahooWithoutOutcomeAllowlist = extractWorkflowShardAllowlist(yahooWithoutOutcomeProof, { required: false });
+assert.equal(
+  yahooWithoutOutcomeAllowlist.some((pathValue) => (
+    pathValue === YAHOO_OUTCOME
+    || YAHOO_OUTCOME.startsWith(`${pathValue}/`)
+  )),
+  false,
+  `synthetic Yahoo negative must remove exact and parent allowlist proof: ${JSON.stringify(yahooWithoutOutcomeAllowlist)}`,
+);
 assert.throws(
   () => assertOwnerFleet(missingYahooOutcome, { [yahooWorkflow]: yahooWithoutOutcomeProof }),
   /yahoo-finance\.json/,

@@ -887,7 +887,7 @@ jobs:
           cp "$SHARD" data/admin/data-supply-state/publish-outcomes/yahoo-finance.json
 
       - name: Persist Yahoo finance shadow outcome
-        if: ${{ always() }}
+        if: ${{ always() && needs.publish-yf-cloud.result != 'skipped' }}
         env:
           BINDING_GIT_COMMIT: ${{ needs.publish-yf-finance.outputs.pushed_sha }}
           BINDING_ORIGIN_READBACK: ${{ needs.publish-yf-finance.outputs.origin_readback }}
