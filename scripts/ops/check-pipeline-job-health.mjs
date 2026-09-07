@@ -947,6 +947,35 @@ export const PLANE_CEILING_UNSCHEDULED_REASONS = Object.freeze({
 // family -> the crons its producer declares, and the grace declared for them.
 // Both come from existing authorities: the detection config owns the schedule
 // and the detection calendar owns the grace. Nothing is hand-copied here.
+function onBlockOf(yaml) {
+  const jobsAt = yaml.search(/^jobs:/m);
+  return yaml.slice(0, jobsAt >= 0 ? jobsAt : yaml.length);
+}
+
+function cronsDeclaredIn(yaml) {
+  return [...new Set([...onBlockOf(yaml).matchAll(/-\s*cron:\s*'([^']+)'/g)].map((m) => m[1]))];
+}
+
+// Crons of every workflow that `uses:` the given reusable workflow. Only the
+// callers' own schedules count; a caller that is itself reusable contributes
+// nothing rather than recursing, which keeps this a single hop.
+function callerCronsFor(workflow) {
+  const dir = path.join(REPO_ROOT, ".github/workflows");
+  const target = workflow.replace(/^\.github\/workflows\//, "");
+  let entries = [];
+  try { entries = fs.readdirSync(dir); } catch { return []; }
+  const crons = new Set();
+  for (const entry of entries) {
+    if (!entry.endsWith(".yml") && !entry.endsWith(".yaml")) continue;
+    if (entry === target) continue;
+    let yaml = null;
+    try { yaml = fs.readFileSync(path.join(dir, entry), "utf8"); } catch { continue; }
+    if (!yaml.includes(`uses: ./.github/workflows/${target}`)) continue;
+    for (const cron of cronsDeclaredIn(yaml)) crons.add(cron);
+  }
+  return [...crons];
+}
+
 export function resolveFamilyCadence(family, {
   bindings = PLANE_PUBLISH_OUTCOME_BINDINGS,
   config = DATA_SUPPLY_DETECTION_CONFIG,
@@ -965,8 +994,15 @@ export function resolveFamilyCadence(family, {
     const file = path.join(REPO_ROOT, workflow);
     let yaml = null;
     try { yaml = fs.readFileSync(file, "utf8"); } catch { return null; }
-    const onBlock = yaml.slice(0, yaml.search(/^jobs:/m) >= 0 ? yaml.search(/^jobs:/m) : yaml.length);
-    crons = [...new Set([...onBlock.matchAll(/-\s*cron:\s*'([^']+)'/g)].map((m) => m[1]))];
+    crons = cronsDeclaredIn(yaml);
+    if (crons.length === 0 && /^\s{2}workflow_call:/m.test(onBlockOf(yaml))) {
+      // A reusable workflow carries no schedule of its own; its caller does.
+      // earnings-overview is called as an independent job by the StockAnalysis
+      // schedule (2026-09-07), so reading only the bound file left a genuinely
+      // daily family with no age axis at all. Follow the call edge instead of
+      // declaring the family unscheduled, which would be the wrong answer.
+      crons = callerCronsFor(workflow);
+    }
   }
   if (crons.length === 0) return null;
 

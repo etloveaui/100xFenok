@@ -91,6 +91,15 @@ if (byName["slickcharts-history"] !== undefined) {
   const cadence = resolveFamilyCadence("fred-macro");
   assert.ok(Array.isArray(cadence.crons) && cadence.crons.length > 0, "fred-macro must resolve its producer crons");
   assert.ok(Number.isFinite(cadence.graceHours) && cadence.graceHours > 0, "and the grace declared for them");
+
+  // A reusable workflow has no cron of its own, so the resolver has to follow
+  // the call edge to whoever schedules it. Reading only the bound file left
+  // earnings-overview, a daily family, with no age axis at all.
+  const reusable = resolveFamilyCadence("earnings-overview");
+  assert.ok(
+    Array.isArray(reusable?.crons) && reusable.crons.length > 0,
+    "a workflow_call family must inherit its callers' crons instead of losing the age axis",
+  );
 }
 assert.equal(planeCeilingForFamily("not-a-family"), null, "an unknown family must not invent a ceiling");
 
