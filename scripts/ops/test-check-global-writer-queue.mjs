@@ -9,11 +9,22 @@ import {
   buildJobsApiUrl,
   fetchWorkflowRuns,
   main,
+  deriveWriterJobTargets,
 } from "./check-global-writer-queue.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const fixturePath = (name) => path.join(HERE, "fixtures", "global-writer-queue", `${name}.json`);
 const readFixture = (name) => JSON.parse(fs.readFileSync(fixturePath(name), "utf8"));
+const splitTargets = deriveWriterJobTargets([
+  { workflow: ".github/workflows/split.yml", groupScope: "job", job: "save-source", needs: ["acquire"] },
+  { workflow: ".github/workflows/split.yml", groupScope: "job", job: "save-outcome", needs: ["save-source", "upload"] },
+  { workflow: ".github/workflows/root.yml", groupScope: "job", job: "source", needs: [] },
+]);
+assert.deepEqual(splitTargets["split.yml"].map((target) => target.job_name), ["save-source", "save-outcome"],
+  "one workflow may release the writer lock during cloud I/O and reacquire it for evidence");
+assert.deepEqual(splitTargets["split.yml"][1].eligibility_predecessors, ["save-source", "upload"],
+  "outcome queue eligibility waits for every dependency, including the cloud upload");
+assert.equal(splitTargets["root.yml"][0].job_name, "source", "root writer jobs remain observable");
 const policy = loadPolicy();
 const NOW = "2026-07-21T03:00:00Z";
 
@@ -31,15 +42,15 @@ assert.ok(policy.thresholds.max_depth >= 0, "queue-depth threshold is configurab
 assert.ok(policy.thresholds.max_age_minutes >= 0, "queue-age threshold is configurable");
 assert.equal(policy.alert.output, "workflow-failure-and-json", "alert output is machine-readable and non-mutating");
 assert.equal(policy.alert.unknown_exit_code, 3, "unknown observation has a distinct nonzero exit");
-assert.deepEqual(policy.job_level_targets["fetch-stockanalysis.yml"], {
+assert.deepEqual(policy.job_level_targets["fetch-stockanalysis.yml"][0], {
   job_name: "publish-stockanalysis",
-  eligibility_predecessor: "acquire-stockanalysis",
+  eligibility_predecessors: ["acquire-stockanalysis"],
   parent_run_statuses: ["queued", "requested", "waiting", "pending", "in_progress"],
   candidate_statuses: ["queued", "waiting", "pending"],
 }, "StockAnalysis observes only its writer-owning publish job");
-assert.deepEqual(policy.job_level_targets["pipeline-failure-alarm.yml"], {
+assert.deepEqual(policy.job_level_targets["pipeline-failure-alarm.yml"][0], {
   job_name: "persist-alarm-state",
-  eligibility_predecessor: "check",
+  eligibility_predecessors: ["check"],
   parent_run_statuses: ["queued", "requested", "waiting", "pending", "in_progress"],
   candidate_statuses: ["queued", "waiting", "pending"],
 }, "the alarm observes only its dependent global-writer persistence job");
@@ -106,6 +117,33 @@ function fixtureFetch(fixture) {
     }
     throw new Error(`unexpected fixture URL: ${requestUrl}`);
   };
+}
+
+// A slow cloud stage is not writer contention. Once it completes, only the
+// time since the last dependency completed contributes to the tail's age.
+{
+  const fixture = {
+    workflow_runs: [{ id: 9901, head_branch: "main", status: "in_progress", created_at: "2026-07-21T02:00:00Z" }],
+    jobs_by_run: { 9901: [
+      { id: 1, name: "acquire", status: "completed", completed_at: "2026-07-21T02:05:00Z" },
+      { id: 2, name: "save-source", status: "completed", completed_at: "2026-07-21T02:06:00Z" },
+      { id: 3, name: "upload", status: "in_progress", completed_at: null },
+      { id: 4, name: "save-outcome", status: "queued", completed_at: null },
+    ] },
+  };
+  const splitPolicy = { ...policy, workflows: ["split.yml"], job_level_targets: splitTargets };
+  let calls = 0;
+  const transport = fixtureFetch(fixture);
+  const fetchImpl = async (url) => { if (url.includes("/jobs?")) calls += 1; return transport(url); };
+  let observed = await fetchWorkflowRuns({ policy: splitPolicy, owner: "octo", repo: "repo", fetchImpl });
+  assert.equal(evaluateQueue(observed, { now: NOW, maxDepth: 0, maxAgeMinutes: 0 }).candidateDepth, 0,
+    "a queued tail is not eligible while cloud I/O is running");
+  assert.equal(calls, 1, "multiple writer targets share one jobs API read per parent run");
+  fixture.jobs_by_run[9901][2] = { id: 3, name: "upload", status: "completed", completed_at: "2026-07-21T02:59:00Z" };
+  observed = await fetchWorkflowRuns({ policy: splitPolicy, owner: "octo", repo: "repo", fetchImpl: fixtureFetch(fixture) });
+  const afterUpload = evaluateQueue(observed, { now: NOW, maxDepth: 3, maxAgeMinutes: 30 });
+  assert.equal(afterUpload.candidateDepth, 1);
+  assert.equal(afterUpload.oldestCandidateAgeMinutes, 1, "53 minutes of cloud work are excluded from writer wait");
 }
 
 const stockanalysisPolicy = {
