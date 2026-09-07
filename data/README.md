@@ -51,7 +51,7 @@
 ### Macro Data (macro/)
 - FRED banking series: daily, weekly, quarterly; the daily collector now also requests Korea 10Y government yield (`IRLTLT01KRM156N`) for RIM inputs
 - FDIC Tier1 capital ratio quarterly history
-- Activity surveys: 934 records; OECD CLI through 2026-06, major-country manufacturing/services PMI and ISM components through 2026-07
+- Activity surveys: 940 records; OECD CLI, major-country manufacturing/services PMI and ISM components through 2026-08
 - Root compatibility files are still published during migration
 
 ### Calendar Data (calendar/)
