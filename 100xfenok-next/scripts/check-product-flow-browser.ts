@@ -74,6 +74,7 @@ type EtfMode = "valid" | "unavailable" | "failed" | "null" | "disjoint";
 
 type FixtureRuntimeOptions = {
   delayedInitialStock?: boolean;
+  delayedOptionalSearch?: boolean;
   etfMode?: EtfMode;
 };
 
@@ -87,7 +88,10 @@ type CaseRuntime = {
   stockRequestCount: number;
   stockResponseCount: number;
   stockReleased: boolean;
+  optionalResponseCount: number;
+  searchMetrics: Record<string, number | boolean>;
   releaseStock(): void;
+  releaseOptional(): void;
 };
 
 type BrowserCase = {
@@ -101,6 +105,7 @@ type CaseReceipt = {
   case: string;
   status: "passed" | "failed";
   duration_ms: number;
+  search_metrics?: Record<string, number | boolean>;
   error?: string;
   blocked_foreign?: string[];
   unexpected_data_paths?: string[];
@@ -326,6 +331,10 @@ class FixtureRouter implements CaseRuntime {
   stockRequestCount = 0;
   stockResponseCount = 0;
   stockReleased = false;
+  optionalResponseCount = 0;
+  searchMetrics: Record<string, number | boolean> = {};
+  private optionalReleased = false;
+  private optionalWaiters: Array<() => void> = [];
   private readonly harnessAbortedRequests = new WeakSet<Request>();
   private readonly options: FixtureRuntimeOptions;
   private stockWaiters: Array<() => void> = [];
@@ -339,6 +348,11 @@ class FixtureRouter implements CaseRuntime {
     this.stockReleased = true;
     const waiters = this.stockWaiters.splice(0);
     for (const resolve of waiters) resolve();
+  }
+
+  releaseOptional() {
+    this.optionalReleased = true;
+    for (const resolve of this.optionalWaiters.splice(0)) resolve();
   }
 
   private waitForStockRelease(): Promise<void> {
@@ -377,6 +391,11 @@ class FixtureRouter implements CaseRuntime {
       await this.waitForStockRelease();
     }
 
+    const optionalSearch = requestUrl.pathname === "/data/computed/stock_action_summary.json"
+      || requestUrl.pathname === "/data/sec-13f/analytics/portfolio_views.json";
+    if (optionalSearch && this.options.delayedOptionalSearch && !this.optionalReleased) {
+      await new Promise<void>((resolve) => this.optionalWaiters.push(resolve));
+    }
     const response = this.dataResponse(requestUrl.pathname);
     if (response === undefined) {
       this.unexpectedDataPaths.push(requestUrl.pathname);
@@ -386,6 +405,7 @@ class FixtureRouter implements CaseRuntime {
     if (response.status >= 400) this.expectedFailurePaths.add(requestUrl.pathname);
     await route.fulfill(jsonResponse(response.body, response.status));
     if (requestUrl.pathname === "/data/global-scouter/core/stocks_analyzer.json") this.stockResponseCount += 1;
+    if (optionalSearch) this.optionalResponseCount += 1;
   }
 
   private dataResponse(pathname: string): { status: number; body: unknown } | undefined {
@@ -396,7 +416,7 @@ class FixtureRouter implements CaseRuntime {
     if (pathname === "/data/computed/entity_graph_stock_index.json") return { status: 200, body: graphIndex() };
     if (pathname === "/data/computed/entity_graph_stock_services.json") return { status: 200, body: serviceIndex() };
     if (pathname === "/data/benchmarks/summaries.json") return { status: 200, body: benchmarkSummary() };
-    if (pathname === "/data/sec-13f/analytics/portfolio_views.json") return { status: 200, body: { investors: {} } };
+    if (pathname === "/data/sec-13f/analytics/portfolio_views.json") return { status: 200, body: { investors: this.options.delayedOptionalSearch ? { synthetic: { name: "Synthetic AAPL Investor" } } : {} } };
     if (pathname.startsWith("/data/computed/market_facts/shards/")) return { status: 200, body: marketFacts() };
     if (pathname.startsWith("/data/yf/finance/")) return { status: 200, body: { data: { info: { currentPrice: 100 } } } };
     if (pathname === "/api/data/stockanalysis/etf-universe") return { status: 200, body: etfUniverse() };
@@ -794,11 +814,14 @@ function pagePath(page: Page): string {
   return new URL(page.url()).pathname.replace(/\/+$/, "") || "/";
 }
 
-async function paletteOpen(page: Page): Promise<Locator> {
-  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
-  await page.keyboard.press("/");
+async function paletteOpen(page: Page, waitForIdle = true): Promise<Locator> {
+  if (waitForIdle) await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
   const dialog = page.locator('[role="dialog"][aria-label="명령 팔레트"]');
-  await waitForCondition(async () => await dialog.count() === 1 && await dialog.locator("input").count() === 1, "command palette did not hydrate");
+  await waitForCondition(async () => {
+    if (await dialog.count() === 1 && await dialog.locator("input").count() === 1) return true;
+    await page.keyboard.press("/");
+    return false;
+  }, "command palette did not hydrate");
   return dialog;
 }
 
@@ -912,6 +935,61 @@ async function typeaheadStaleDismissCase(page: Page, runtime: CaseRuntime): Prom
   assert.equal(await page.locator('ul[role="listbox"]:visible').count(), 0, "dismissed nonempty typeahead must not reopen from stale data");
 }
 
+async function searchOptionalReadinessCase(page: Page, runtime: CaseRuntime, condition: BrowserCondition, palette = false): Promise<void> {
+  await gotoPath(page, "/portfolio/");
+  const dialog = palette ? await paletteOpen(page, false) : null;
+  const input = dialog ? dialog.locator("input") : await openMobileTypeahead(page);
+  const result = dialog
+    ? dialog.locator("button").filter({ has: page.locator("span.font-medium", { hasText: /^AAPL$/ }) })
+    : page.locator('[role="option"]:visible').filter({ hasText: "Synthetic Apple" });
+  const started = Date.now();
+  await input.fill("AAPL");
+  let firstResultMs: number | undefined;
+  const holdUntil = started + 1_500;
+  while (Date.now() < holdUntil) {
+    if (firstResultMs === undefined && await result.count() === 1) firstResultMs = Date.now() - started;
+    await new Promise((resolve) => setTimeout(resolve, 40));
+  }
+  runtime.searchMetrics = {
+    optional_hold_ms: Date.now() - started,
+    identity_responses_before_release: runtime.stockResponseCount,
+    optional_responses_before_release: runtime.optionalResponseCount,
+    result_before_optional_release: firstResultMs !== undefined,
+  };
+  let activeBefore: string | null = null;
+  if (!palette && firstResultMs !== undefined) {
+    await input.press("ArrowDown");
+    activeBefore = await input.getAttribute("aria-activedescendant");
+    assert(activeBefore, "stock result must be keyboard selectable before optional data");
+  }
+  runtime.releaseOptional();
+  await waitForCondition(async () => await result.count() === 1, "stock result did not arrive after optional data release", WAIT_DATA_MS);
+  runtime.searchMetrics.first_result_ms = firstResultMs ?? Date.now() - started;
+  if (!palette) {
+    await waitForCondition(async () => await page.locator('[role="option"]:visible').filter({ hasText: "Synthetic AAPL Investor" }).count() === 1, "late investor result must remain available");
+    if (activeBefore) assert.equal(await input.getAttribute("aria-activedescendant"), activeBefore, "late investor results must preserve the selected stock");
+  }
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  assert(overflow <= 1, `search causes ${overflow}px horizontal viewport overflow`);
+  await screenshot(page, `search-${palette ? "palette" : "typeahead"}-${condition.name}`);
+  assert.equal(runtime.searchMetrics.optional_responses_before_release, 0, "optional gate must be held during readiness measurement");
+  assert(runtime.stockResponseCount > 0, "core identity fixture must actually be requested");
+  assert(firstResultMs !== undefined, "stock suggestions waited for optional action/investor data despite ready identities");
+}
+
+async function typeaheadOptionalDismissCase(page: Page, runtime: CaseRuntime): Promise<void> {
+  await gotoPath(page, "/portfolio/");
+  const input = await openMobileTypeahead(page);
+  await input.fill("AAPL");
+  await waitForCondition(() => runtime.stockResponseCount > 0, "stock identity request did not resolve");
+  await page.locator("[data-portfolio-local-boundary]").click();
+  runtime.releaseOptional();
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
+  assert.equal(await input.inputValue(), "AAPL");
+  assert.equal(await input.getAttribute("aria-expanded"), "false", "late optional results reopened dismissed search");
+  assert.equal(await page.locator('ul[role="listbox"]:visible').count(), 0);
+}
+
 async function readCsvDownload(page: Page, button: Locator): Promise<string> {
   const [download] = await Promise.all([page.waitForEvent("download", { timeout: WAIT_SHORT_MS }), button.click()]);
   return readDownload(download);
@@ -957,6 +1035,9 @@ function makeCases(): BrowserCase[] {
     { name: "palette-input-selection", run: paletteInputSelectionCase },
     { name: "typeahead-stale-clear", options: { delayedInitialStock: true }, run: typeaheadStaleCase },
     { name: "typeahead-stale-dismiss", options: { delayedInitialStock: true }, run: typeaheadStaleDismissCase },
+    { name: "typeahead-optional-readiness", options: { delayedOptionalSearch: true }, run: searchOptionalReadinessCase },
+    { name: "palette-optional-readiness", options: { delayedOptionalSearch: true }, run: (page, runtime, condition) => searchOptionalReadinessCase(page, runtime, condition, true) },
+    { name: "typeahead-optional-dismiss", options: { delayedOptionalSearch: true }, run: typeaheadOptionalDismissCase },
     { name: "macro-csv-visible", run: macroCsvVisibleCase },
   ];
   for (const mode of ["unavailable", "failed", "null", "disjoint"] as const) {
@@ -1086,6 +1167,7 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
         case: testCase.name,
         status: "passed",
         duration_ms: Date.now() - started,
+        search_metrics: router.searchMetrics,
         blocked_foreign: [...new Set(router.blockedForeign)],
         unexpected_data_paths: [...new Set(router.unexpectedDataPaths)],
         expected_cancellations: router.expectedCancellations,
@@ -1103,6 +1185,7 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
         case: testCase.name,
         status: "failed",
         duration_ms: Date.now() - started,
+        search_metrics: router.searchMetrics,
         error: error instanceof Error ? error.stack ?? error.message : String(error),
         blocked_foreign: [...new Set(router.blockedForeign)],
         unexpected_data_paths: [...new Set(router.unexpectedDataPaths)],
@@ -1111,6 +1194,7 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
       });
     } finally {
       router.releaseStock();
+      router.releaseOptional();
       if (context) await context.close().catch(() => undefined);
     }
   }
