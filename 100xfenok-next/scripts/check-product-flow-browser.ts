@@ -832,12 +832,12 @@ function pagePath(page: Page): string {
   return new URL(page.url()).pathname.replace(/\/+$/, "") || "/";
 }
 
-async function paletteOpen(page: Page, waitForIdle = true): Promise<Locator> {
+async function paletteOpen(page: Page, waitForIdle = true, shortcut = "/"): Promise<Locator> {
   if (waitForIdle) await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
   const dialog = page.locator('[role="dialog"][aria-label="명령 팔레트"]');
   await waitForCondition(async () => {
     if (await dialog.count() === 1 && await dialog.locator("input").count() === 1) return true;
-    await page.keyboard.press("/");
+    await page.keyboard.press(shortcut);
     return false;
   }, "command palette did not hydrate");
   return dialog;
@@ -1046,6 +1046,7 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   const filter = page.locator('input[data-canvas-plus-screener-search="true"]');
   await waitForCondition(async () => await ready.count() === 1, "source screener did not become ready", WAIT_DATA_MS);
   assert.equal(await filter.inputValue(), "AAPL");
+  await waitForCondition(async () => (await page.locator('[data-testid="earnings-overview-state"]').innerText()).includes("공식 분기 실적을 불러오지 못했습니다."), "source earnings fixture did not settle before navigation", WAIT_DATA_MS);
   const card = page.locator('[data-canvas-plus-screener-card="mobile"]:visible').filter({ has: page.locator('button[aria-label="AAPL 상세 접기"]') });
   const selected = card.getByRole("checkbox", { name: "선택", exact: true });
   // The existing label's 44px pseudo-element owns the checkbox tap target.
@@ -1071,7 +1072,8 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   } else {
     await page.evaluate(() => window.scrollTo(0, 600));
     sourceScroll = await page.evaluate(() => window.scrollY);
-    const dialog = await paletteOpen(page);
+    // Ctrl+K is the global opener even while the source checkbox retains focus.
+    const dialog = await paletteOpen(page, false, "Control+k");
     const input = dialog.locator("input");
     await input.fill("AAPL");
     await waitForCondition(async () => await dialog.locator("button").filter({ has: page.locator("span.font-medium", { hasText: /^AAPL$/ }) }).count() === 1, "palette AAPL result did not appear");
