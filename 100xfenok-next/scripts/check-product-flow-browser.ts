@@ -1081,6 +1081,7 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   }
   await waitForCondition(() => pagePath(page) === "/stock/AAPL", "search did not reach real stock detail", WAIT_DATA_MS);
   await waitForCondition(async () => await page.locator('[data-canvas-plus-stock-detail-preview] h1').count() === 1, "real stock hero did not render", WAIT_DATA_MS);
+  await waitForCondition(async () => (await page.locator('[data-testid="earnings-overview-state"]').innerText()).includes("공식 분기 실적을 불러오지 못했습니다."), "detail earnings fixture did not settle before returning", WAIT_DATA_MS);
   assert.equal(new URL(page.url()).searchParams.get("returnTo"), returnTo, "stock detail must retain the full originating filter context");
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   assert(overflow <= 1, `stock detail causes ${overflow}px horizontal viewport overflow`);
