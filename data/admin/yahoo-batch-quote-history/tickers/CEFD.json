@@ -116,31 +116,57 @@
       "run_id": "31143656628",
       "schedule": "7 0 * * 0-5",
       "shard": "60/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 572,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-08T01:28:08Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-07T03:16:08Z",
-    "history_as_of": "2026-08-06",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CEFD.json",
-    "payload_sha256": "a013ee04d765706e081f9cc7c0df9ce221a89b8acd095590687fe482b7869fdd",
-    "quote_as_of": "2026-08-06T16:19:26Z",
-    "source_as_of": "2026-08-06"
+    "fetched_at": "2026-09-08T01:15:59Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/CEFD.json",
+    "payload_sha256": "47583cd662b2c71bc46021cf09396c958ba339332ccc213301590b5025b2f0b9",
+    "quote_as_of": "2026-09-02T15:32:51Z",
+    "source_as_of": "2026-09-02T15:32:51Z"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 570,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-07T03:14:39Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31143656628",
-    "schedule": "7 0 * * 0-5",
-    "shard": "60/72"
+    "run_id": "34175958781",
+    "schedule": "20 23 * * 1-5",
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-08-07T03:16:08Z",
@@ -153,17 +179,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-06",
-    "observed_at": "2026-08-07T03:14:39Z",
-    "payload_sha256": "d23cd1e361ba5dc79c5ddb17bd544f75645fb54e905cc6aca51945d0d8dfe894",
-    "quote_as_of": "2026-08-06T16:19:26Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "59985155fd7f2229891e8dea689fd1563d34567c5212ac6ce8b63438ba92ccb1",
+    "quote_as_of": "2026-09-02T15:32:51Z",
     "run_attempt": 1,
-    "run_id": "31143656628",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06"
+    "source_as_of": "2026-09-02T15:32:51Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -176,5 +202,5 @@
     "source_as_of": "2026-08-06"
   },
   "ticker": "CEFD",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-08T01:28:08Z"
 }

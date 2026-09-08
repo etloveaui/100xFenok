@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 450,
-      "natural": true,
-      "observed_at": "2026-08-13T00:15:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31652949582",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 385,
       "natural": true,
       "observed_at": "2026-08-14T00:21:34Z",
@@ -181,12 +168,26 @@
       "run_id": "33824182428",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for KMI despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 663,
+      "natural": true,
+      "observed_at": "2026-09-08T01:28:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-04T01:09:20Z",
     "history_as_of": "2026-09-03",
-    "path": "data/yf/finance/KMI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KMI.json",
     "payload_sha256": "2240becf2dcc884a8511828ffc1e844f1d88bb800c37e57e756ad359cb4f80a6",
     "quote_as_of": "2026-09-03T20:00:02Z",
     "source_as_of": "2026-09-03"
@@ -197,16 +198,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for KMI despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 833,
+    "latency_ms": 663,
     "natural": true,
-    "observed_at": "2026-09-04T01:04:03Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33824182428",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for KMI despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "run_attempt": 1,
+    "run_id": "34175958781"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-04T01:09:20Z",
+    "history_as_of": "2026-09-03",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/KMI.json",
+    "payload_sha256": "2240becf2dcc884a8511828ffc1e844f1d88bb800c37e57e756ad359cb4f80a6",
+    "quote_as_of": "2026-09-03T20:00:02Z",
+    "source_as_of": "2026-09-03"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -220,9 +242,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-03"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "KMI",
-  "updated_at": "2026-09-04T01:04:03Z"
+  "updated_at": "2026-09-08T01:28:08Z"
 }

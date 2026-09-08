@@ -1,32 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 542,
-      "natural": true,
-      "observed_at": "2026-08-14T23:52:56Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31851174388",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 628,
-      "natural": true,
-      "observed_at": "2026-08-19T23:42:29Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -183,35 +157,60 @@
       "run_id": "33934936590",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 640,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-08T01:28:08Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:25:15Z",
-    "history_as_of": "2026-09-01",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CSCO.json",
-    "payload_sha256": "e8a241c800660b3b2f94dc4e4794e4e5bd6e3c81a94517539e2de4f773d8cfc7",
-    "quote_as_of": "2026-09-01T20:00:01Z",
-    "source_as_of": "2026-09-01"
+    "fetched_at": "2026-09-08T01:16:49Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/CSCO.json",
+    "payload_sha256": "5ce6e14169b988dc1c672361f328e27eac4dcde128a776ee3faceac7a1629b5e",
+    "quote_as_of": "2026-09-04T20:00:01Z",
+    "source_as_of": "2026-09-04"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 508,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-05T01:04:38Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "33934936590",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -234,18 +233,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:22:18Z",
-    "payload_sha256": "fb1180e38edcc77e323ada7eea4ec315b3790e5696304ac53d800624263727ee",
-    "quote_as_of": "2026-09-01T20:00:01Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "09ae1c5c36848148a04ad3f235e9bdb023f7b15fb58e2b778ce4f64b8a23d949",
+    "quote_as_of": "2026-09-04T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-08T01:15:39Z",
+  "recovered_from_run_id": "33934936590",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "34175958781",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CSCO",
-  "updated_at": "2026-09-05T01:04:38Z"
+  "updated_at": "2026-09-08T01:28:08Z"
 }

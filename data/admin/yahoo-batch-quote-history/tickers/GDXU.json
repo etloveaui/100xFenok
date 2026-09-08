@@ -116,31 +116,57 @@
       "run_id": "31631524598",
       "schedule": "7 18 * * 0-5",
       "shard": "45/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 488,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-08T01:24:17Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T19:18:03Z",
-    "history_as_of": "2026-08-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GDXU.json",
-    "payload_sha256": "7ce56116d08f508c67cf967ce6d0895ec316874fa512cb4f19c3b0d6562691c3",
-    "quote_as_of": "2026-08-12T19:17:08Z",
-    "source_as_of": "2026-08-12"
+    "fetched_at": "2026-09-08T01:16:21Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/GDXU.json",
+    "payload_sha256": "c538b62658552fa13767ab40e478c79a1165d38aec606deb1857fa3353d3d2f4",
+    "quote_as_of": "2026-09-04T20:00:00Z",
+    "source_as_of": "2026-09-04"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1122,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-12T19:14:55Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:24:17Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31631524598",
-    "schedule": "7 18 * * 0-5",
-    "shard": "45/72"
+    "run_id": "34175958781",
+    "schedule": "20 23 * * 1-5",
+    "shard": "2/5"
   },
   "lkg": {
     "fetched_at": "2026-08-12T19:18:03Z",
@@ -153,17 +179,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-12",
-    "observed_at": "2026-08-12T19:14:55Z",
-    "payload_sha256": "195c1f7a6ee37bc6254cbfe2124cb47aa424045633d97a2a04107f8847ade123",
-    "quote_as_of": "2026-08-12T19:17:08Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "9e1d841e8bc0fd78751cb25e31568826bcf119c035932835df35f4a32a918d07",
+    "quote_as_of": "2026-09-04T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31631524598",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-12"
+    "source_as_of": "2026-09-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -176,5 +202,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "GDXU",
-  "updated_at": "2026-08-21T23:43:33Z"
+  "updated_at": "2026-09-08T01:24:17Z"
 }

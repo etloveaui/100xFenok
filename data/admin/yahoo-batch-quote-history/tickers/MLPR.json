@@ -103,31 +103,57 @@
       "run_id": "31582524321",
       "schedule": "7 8 * * 0-5",
       "shard": "40/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 468,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-08T01:20:41Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T09:26:04Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MLPR.json",
-    "payload_sha256": "f270cd41a75af50a6acaed935a5b2aa26874208a42e44e00cf335d494a511523",
-    "quote_as_of": "2026-08-10T19:28:48Z",
-    "source_as_of": "2026-08-10T19:28:48Z"
+    "fetched_at": "2026-09-08T01:16:19Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/MLPR.json",
+    "payload_sha256": "77389b4ea68146bb37253f167c079885cc64ec493229259561285fb05735ed3a",
+    "quote_as_of": "2026-09-03T15:39:59Z",
+    "source_as_of": "2026-09-03T15:39:59Z"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1012,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-12T09:23:29Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:20:41Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31582524321",
-    "schedule": "7 8 * * 0-5",
-    "shard": "40/72"
+    "run_id": "34175958781",
+    "schedule": "20 23 * * 1-5",
+    "shard": "1/5"
   },
   "lkg": {
     "fetched_at": "2026-08-12T09:26:04Z",
@@ -140,17 +166,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T09:23:29Z",
-    "payload_sha256": "042dc6a18517b9bf65dcf194e156efd368abc9dbf7ccafbf6d25d7ff053b4323",
-    "quote_as_of": "2026-08-10T19:28:48Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "d6d20a2c4d6112ebf0320968dc3bc9222f536ba0ed6c9e26112297d80ed0dc30",
+    "quote_as_of": "2026-09-03T15:39:59Z",
     "run_attempt": 1,
-    "run_id": "31582524321",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-10T19:28:48Z"
+    "source_as_of": "2026-09-03T15:39:59Z"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -163,5 +189,5 @@
     "source_as_of": "2026-08-10T19:28:48Z"
   },
   "ticker": "MLPR",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-08T01:20:41Z"
 }

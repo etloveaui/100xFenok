@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 483,
-      "natural": true,
-      "observed_at": "2026-08-19T23:53:46Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 2703,
@@ -185,15 +172,28 @@
       "run_id": "33934936590",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 545,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:14:17Z",
-    "history_as_of": "2026-09-01",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AMZN.json",
-    "payload_sha256": "6f6b89b05ad0c36ca934a7fcec25a0dde3d74b9f02b874d427e566efe3415173",
-    "quote_as_of": "2026-09-01T20:00:01Z",
-    "source_as_of": "2026-09-01"
+    "fetched_at": "2026-09-08T01:16:37Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/AMZN.json",
+    "payload_sha256": "4bf174e676f2b46f0ba372ca2e6fd6226601969655bb9f920eb46c8e54b1f215",
+    "quote_as_of": "2026-09-04T20:00:01Z",
+    "source_as_of": "2026-09-04"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -201,31 +201,18 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 565,
+    "latency_ms": 545,
     "natural": true,
-    "observed_at": "2026-09-05T01:04:38Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33934936590",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "last_recovered_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-    "failure_kind": "unexpected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-08-29T04:12:42Z",
-    "run_attempt": 1,
-    "run_id": "33233193884"
-  },
-  "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -248,23 +235,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:11:48Z",
-    "payload_sha256": "bbcc7e7fc895ec4e44ec80341f20ede0877fe3ebb798529e4913fcf724cd2217",
-    "quote_as_of": "2026-09-01T20:00:01Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "350c6ed294e5e0bb99c0782c9b02ab34b8a65a4e3e5e425611b02b5168ec0cca",
+    "quote_as_of": "2026-09-04T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-04"
   },
-  "recovered_at": "2026-09-01T01:52:51Z",
-  "recovered_from_run_id": "33233193884",
+  "recovered_at": "2026-09-08T01:15:39Z",
+  "recovered_from_run_id": "33934936590",
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
-  "recovery_run_id": "33460327385",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovery_run_id": "34175958781",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AMZN",
-  "updated_at": "2026-09-05T01:04:38Z"
+  "updated_at": "2026-09-08T01:15:39Z"
 }

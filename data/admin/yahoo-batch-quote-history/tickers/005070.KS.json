@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 371,
-      "natural": true,
-      "observed_at": "2026-08-12T00:39:41Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 417,
       "natural": true,
       "observed_at": "2026-08-13T00:15:42Z",
@@ -181,12 +168,26 @@
       "run_id": "33577879211",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for 005070.KS despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1025,
+      "natural": true,
+      "observed_at": "2026-09-08T01:28:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-02T01:28:06Z",
     "history_as_of": "2026-09-02",
-    "path": "data/yf/finance/005070.KS.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/005070.KS.json",
     "payload_sha256": "2739c873e45d85cba6fd21cb12b18cda609cbd2d5cf9c1c5817e55be5c37546a",
     "quote_as_of": "2026-09-02T01:07:50Z",
     "source_as_of": "2026-09-02"
@@ -197,16 +198,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for 005070.KS despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 729,
+    "latency_ms": 1025,
     "natural": true,
-    "observed_at": "2026-09-02T01:27:36Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for 005070.KS despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "run_attempt": 1,
+    "run_id": "34175958781"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-02T01:28:06Z",
+    "history_as_of": "2026-09-02",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/005070.KS.json",
+    "payload_sha256": "2739c873e45d85cba6fd21cb12b18cda609cbd2d5cf9c1c5817e55be5c37546a",
+    "quote_as_of": "2026-09-02T01:07:50Z",
+    "source_as_of": "2026-09-02"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -220,9 +242,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-02"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "005070.KS",
-  "updated_at": "2026-09-02T01:27:36Z"
+  "updated_at": "2026-09-08T01:28:08Z"
 }

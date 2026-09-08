@@ -103,31 +103,57 @@
       "run_id": "31544436443",
       "schedule": "7 22 * * 0-5",
       "shard": "35/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 575,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-08T01:20:41Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T23:31:55Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GDXD.json",
-    "payload_sha256": "60b73eec00714a67d5a831272b1bcb904dc93fe81a68020bdac5d0849567ab0d",
-    "quote_as_of": "2026-08-11T20:00:00Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-09-08T01:16:14Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/GDXD.json",
+    "payload_sha256": "eb6d39b6c04a3642bbafa3c58798ab1b8df257479fe350006834a7b8ef5c527f",
+    "quote_as_of": "2026-09-04T20:00:00Z",
+    "source_as_of": "2026-09-04"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 465,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-11T23:29:49Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:20:41Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31544436443",
-    "schedule": "7 22 * * 0-5",
-    "shard": "35/72"
+    "run_id": "34175958781",
+    "schedule": "20 23 * * 1-5",
+    "shard": "1/5"
   },
   "lkg": {
     "fetched_at": "2026-08-11T23:31:55Z",
@@ -140,17 +166,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-11T23:29:49Z",
-    "payload_sha256": "240df6ab781fc35b37d40e846e03ab11180208740e31b83a7ea4a207e529f18c",
-    "quote_as_of": "2026-08-11T20:00:00Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "09993924a89290200509d7f36c46f5df8411a15d417c5d3a0cc00d46f9195cc7",
+    "quote_as_of": "2026-09-04T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "31544436443",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -163,5 +189,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "GDXD",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-09-08T01:20:41Z"
 }

@@ -103,31 +103,44 @@
       "run_id": "31340064113",
       "schedule": "7 22 * * 0-5",
       "shard": "11/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 502,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-09T22:46:39Z",
-    "history_as_of": "2026-08-07",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/GRN.json",
-    "payload_sha256": "0f92d00599793bfe2ac9eec55d7f0a142ba6bfe514507d3f6cfcb2b27521850d",
-    "quote_as_of": "2026-08-07T13:30:56Z",
-    "source_as_of": "2026-08-07"
+    "fetched_at": "2026-09-08T01:16:04Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/GRN.json",
+    "payload_sha256": "2d14dfdbc8db01d28b5c98c64d381a2f407ec6904276ab9420e8c5e778b71afe",
+    "quote_as_of": "2026-09-04T13:30:47Z",
+    "source_as_of": "2026-09-04"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 882,
+    "latency_ms": 502,
     "natural": true,
-    "observed_at": "2026-08-09T22:44:05Z",
+    "observed_at": "2026-09-08T01:15:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31340064113",
-    "schedule": "7 22 * * 0-5",
-    "shard": "11/72"
+    "run_id": "34175958781",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "lkg": {
     "fetched_at": "2026-08-09T22:46:39Z",
@@ -140,17 +153,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-07",
-    "observed_at": "2026-08-09T22:44:05Z",
-    "payload_sha256": "62bb24ddb23c538d8598e3853ee9b9b30fc5ebd4a28c15f39e237206584d48e4",
-    "quote_as_of": "2026-08-07T13:30:56Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "24385fc8fb609dccc1841491b953fe0166e980f31f940d82eff36d504742b710",
+    "quote_as_of": "2026-09-04T13:30:47Z",
     "run_attempt": 1,
-    "run_id": "31340064113",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-07"
+    "source_as_of": "2026-09-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 8,
@@ -163,5 +176,5 @@
     "source_as_of": "2026-08-07"
   },
   "ticker": "GRN",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-08T01:15:39Z"
 }

@@ -90,31 +90,57 @@
       "run_id": "31639747711",
       "schedule": "7 20 * * 0-5",
       "shard": "46/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 512,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-08T01:20:41Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T20:56:32Z",
-    "history_as_of": "2026-08-12",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DZZ.json",
-    "payload_sha256": "3c42764eb1452410ef17dbb055aeaf7982e79e66b928725e218c5cbe4a07c6b3",
-    "quote_as_of": "2026-08-12T13:39:37Z",
-    "source_as_of": "2026-08-12"
+    "fetched_at": "2026-09-08T01:16:21Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/DZZ.json",
+    "payload_sha256": "38ad9be18fb68d9f22d339c6cc7db7bbad2e99856663d8cde53493f1b6c1ebd9",
+    "quote_as_of": "2026-09-04T19:08:13Z",
+    "source_as_of": "2026-09-04"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 744,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-08-12T20:54:05Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:20:41Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "31639747711",
-    "schedule": "7 20 * * 0-5",
-    "shard": "46/72"
+    "run_id": "34175958781",
+    "schedule": "20 23 * * 1-5",
+    "shard": "1/5"
   },
   "lkg": {
     "fetched_at": "2026-08-12T20:56:32Z",
@@ -127,17 +153,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-12",
-    "observed_at": "2026-08-12T20:54:05Z",
-    "payload_sha256": "011db1eee30c704b4224a5aca3bfa47325988ce5a56ed5878074b3b6b5b26e9c",
-    "quote_as_of": "2026-08-12T13:39:37Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "4f8ede50594d7710a67c606efef5167d8bbafbe4fddc5f03f7db502ce2c9f04c",
+    "quote_as_of": "2026-09-04T19:08:13Z",
     "run_attempt": 1,
-    "run_id": "31639747711",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-12"
+    "source_as_of": "2026-09-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -150,5 +176,5 @@
     "source_as_of": "2026-08-12"
   },
   "ticker": "DZZ",
-  "updated_at": "2026-08-21T23:43:33Z"
+  "updated_at": "2026-09-08T01:20:41Z"
 }

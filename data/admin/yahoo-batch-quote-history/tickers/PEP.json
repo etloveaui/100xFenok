@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 785,
-      "natural": true,
-      "observed_at": "2026-08-10T23:58:37Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31444023136",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 541,
       "natural": true,
       "observed_at": "2026-08-12T00:39:41Z",
@@ -181,12 +168,26 @@
       "run_id": "33824182428",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for PEP despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 799,
+      "natural": true,
+      "observed_at": "2026-09-08T01:28:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-04T01:09:54Z",
     "history_as_of": "2026-09-03",
-    "path": "data/yf/finance/PEP.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/PEP.json",
     "payload_sha256": "20a33d9d4c2a6c65a1e9295d328e7545bddac2b95d2cc7bfbf3cc5a80aa7ad13",
     "quote_as_of": "2026-09-03T20:00:00Z",
     "source_as_of": "2026-09-03"
@@ -197,24 +198,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for PEP despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 981,
+    "latency_ms": 799,
     "natural": true,
-    "observed_at": "2026-09-04T01:04:03Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33824182428",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for PEP despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "run_attempt": 1,
+    "run_id": "34175958781"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T02:50:04Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-09-04T01:09:54Z",
+    "history_as_of": "2026-09-03",
     "path": "data/admin/yahoo-batch-quote-history/lkg/PEP.json",
-    "payload_sha256": "d2039671af7e9f6d1272f09990af0966db6c6ca67a1bfbc5d477c513782bd211",
-    "quote_as_of": "2026-07-08T20:00:01Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "20a33d9d4c2a6c65a1e9295d328e7545bddac2b95d2cc7bfbf3cc5a80aa7ad13",
+    "quote_as_of": "2026-09-03T20:00:00Z",
+    "source_as_of": "2026-09-03"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -228,8 +242,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-03"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -242,5 +256,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "PEP",
-  "updated_at": "2026-09-04T01:04:03Z"
+  "updated_at": "2026-09-08T01:28:08Z"
 }

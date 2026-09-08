@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 482,
-      "natural": true,
-      "observed_at": "2026-08-12T00:32:27Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 375,
       "natural": true,
       "observed_at": "2026-08-14T00:14:35Z",
@@ -181,12 +168,26 @@
       "run_id": "33702512577",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for IR despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 717,
+      "natural": true,
+      "observed_at": "2026-09-08T01:28:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-03T01:18:41Z",
     "history_as_of": "2026-09-02",
-    "path": "data/yf/finance/IR.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IR.json",
     "payload_sha256": "c2bf9ce675874cccf4e3a3ca9a7508713abe4a4b333c406a63d43efcfa126ebf",
     "quote_as_of": "2026-09-02T20:00:03Z",
     "source_as_of": "2026-09-02"
@@ -197,16 +198,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for IR despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 578,
+    "latency_ms": 717,
     "natural": true,
-    "observed_at": "2026-09-03T01:16:16Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33702512577",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for IR despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "run_attempt": 1,
+    "run_id": "34175958781"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-03T01:18:41Z",
+    "history_as_of": "2026-09-02",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/IR.json",
+    "payload_sha256": "c2bf9ce675874cccf4e3a3ca9a7508713abe4a4b333c406a63d43efcfa126ebf",
+    "quote_as_of": "2026-09-02T20:00:03Z",
+    "source_as_of": "2026-09-02"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -220,9 +242,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-02"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "IR",
-  "updated_at": "2026-09-03T01:16:16Z"
+  "updated_at": "2026-09-08T01:28:08Z"
 }

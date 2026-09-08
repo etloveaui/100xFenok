@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-19T23:47:14Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
@@ -190,6 +177,20 @@
       "run_id": "33934936590",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 565,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -208,12 +209,12 @@
     "error": "ValueError: quote_as_of is unavailable for AVB despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 508,
+    "latency_ms": 565,
     "natural": true,
-    "observed_at": "2026-09-05T01:04:38Z",
+    "observed_at": "2026-09-08T01:15:39Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33934936590",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -225,9 +226,9 @@
     "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-05T01:04:38Z",
+    "observed_at": "2026-09-08T01:15:39Z",
     "run_attempt": 1,
-    "run_id": "33934936590"
+    "run_id": "34175958781"
   },
   "lkg": {
     "fetched_at": "2026-08-24T23:51:49Z",
@@ -263,5 +264,5 @@
     "source_as_of": "2026-08-14T20:00:03Z"
   },
   "ticker": "AVB",
-  "updated_at": "2026-09-05T01:04:38Z"
+  "updated_at": "2026-09-08T01:15:39Z"
 }

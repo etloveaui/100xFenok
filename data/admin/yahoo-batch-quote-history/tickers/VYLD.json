@@ -90,31 +90,44 @@
       "run_id": "31468517777",
       "schedule": "7 6 * * 0-5",
       "shard": "27/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 552,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-11T07:23:04Z",
-    "history_as_of": "2026-08-10",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VYLD.json",
-    "payload_sha256": "07a3df9cc6751fc4905147c384947542675533bdcf2a86b3e21f957283f68282",
-    "quote_as_of": "2026-08-06T19:23:13Z",
-    "source_as_of": "2026-08-06T19:23:13Z"
+    "fetched_at": "2026-09-08T01:16:11Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/VYLD.json",
+    "payload_sha256": "a417560176ddabf06fe28504133d705fe254481d06419cd5232f8968c3ad91b7",
+    "quote_as_of": "2026-09-04T16:54:11Z",
+    "source_as_of": "2026-09-04"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 537,
+    "latency_ms": 552,
     "natural": true,
-    "observed_at": "2026-08-11T07:21:44Z",
+    "observed_at": "2026-09-08T01:15:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31468517777",
-    "schedule": "7 6 * * 0-5",
-    "shard": "27/72"
+    "run_id": "34175958781",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "lkg": {
     "fetched_at": "2026-08-11T07:23:04Z",
@@ -127,17 +140,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-10",
-    "observed_at": "2026-08-11T07:21:44Z",
-    "payload_sha256": "8995cd22b15cba85e6093947cd06034b9bde79d91b3fd14f5d38a852b668a0ff",
-    "quote_as_of": "2026-08-06T19:23:13Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "9c006bf888c1b8104616db8a165c90a1a7bf297a8661ddde14038ac5da3aa97d",
+    "quote_as_of": "2026-09-04T16:54:11Z",
     "run_attempt": 1,
-    "run_id": "31468517777",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-06T19:23:13Z"
+    "source_as_of": "2026-09-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -150,5 +163,5 @@
     "source_as_of": "2026-08-06T19:23:13Z"
   },
   "ticker": "VYLD",
-  "updated_at": "2026-08-19T23:42:29Z"
+  "updated_at": "2026-09-08T01:15:39Z"
 }

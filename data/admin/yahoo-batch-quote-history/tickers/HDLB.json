@@ -90,31 +90,44 @@
       "run_id": "31567478446",
       "schedule": "7 4 * * 0-5",
       "shard": "38/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 526,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-12T05:47:42Z",
-    "history_as_of": "2026-08-11",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HDLB.json",
-    "payload_sha256": "a4103f37853196dd7724de89de6de44de555be12d7344d31f3463f78d4fe7064",
-    "quote_as_of": "2026-08-11T18:03:19Z",
-    "source_as_of": "2026-08-11"
+    "fetched_at": "2026-09-08T01:16:17Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/HDLB.json",
+    "payload_sha256": "7d8af890f0df5b2c1f3edb4f9f7e6f5c2e568b008f0fe94a12e8bac8032e6bf7",
+    "quote_as_of": "2026-09-04T19:04:22Z",
+    "source_as_of": "2026-09-04"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 549,
+    "latency_ms": 526,
     "natural": true,
-    "observed_at": "2026-08-12T05:45:23Z",
+    "observed_at": "2026-09-08T01:15:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31567478446",
-    "schedule": "7 4 * * 0-5",
-    "shard": "38/72"
+    "run_id": "34175958781",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "lkg": {
     "fetched_at": "2026-08-12T05:47:42Z",
@@ -127,17 +140,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-11",
-    "observed_at": "2026-08-12T05:45:23Z",
-    "payload_sha256": "8f922cf42755c1fcaeffaf5e6b57c0d4ca4af06e39d00957aa899faab22b7c8e",
-    "quote_as_of": "2026-08-11T18:03:19Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "b4fd68931453be51614ee58e838b4295f8dae2c8f3edaf270e2bafaff0d3711d",
+    "quote_as_of": "2026-09-04T19:04:22Z",
     "run_attempt": 1,
-    "run_id": "31567478446",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-11"
+    "source_as_of": "2026-09-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -150,5 +163,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "HDLB",
-  "updated_at": "2026-08-20T14:20:12Z"
+  "updated_at": "2026-09-08T01:15:39Z"
 }

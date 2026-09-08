@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 516,
-      "natural": true,
-      "observed_at": "2026-08-19T23:57:48Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 3453,
@@ -181,12 +168,26 @@
       "run_id": "33824182428",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for SLF despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 778,
+      "natural": true,
+      "observed_at": "2026-09-08T01:28:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-04T01:10:14Z",
     "history_as_of": "2026-09-03",
-    "path": "data/yf/finance/SLF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SLF.json",
     "payload_sha256": "d125d8e462db1e01063fb3a8a86f2eb8810a1685141b3fa2457265542f60437a",
     "quote_as_of": "2026-09-03T20:00:02Z",
     "source_as_of": "2026-09-03"
@@ -197,16 +198,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for SLF despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 954,
+    "latency_ms": 778,
     "natural": true,
-    "observed_at": "2026-09-04T01:04:03Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33824182428",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for SLF despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "run_attempt": 1,
+    "run_id": "34175958781"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-04T01:10:14Z",
+    "history_as_of": "2026-09-03",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SLF.json",
+    "payload_sha256": "d125d8e462db1e01063fb3a8a86f2eb8810a1685141b3fa2457265542f60437a",
+    "quote_as_of": "2026-09-03T20:00:02Z",
+    "source_as_of": "2026-09-03"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -220,9 +242,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-03"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "SLF",
-  "updated_at": "2026-09-04T01:04:03Z"
+  "updated_at": "2026-09-08T01:28:08Z"
 }

@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 612,
-      "natural": true,
-      "observed_at": "2026-08-14T23:52:56Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31851174388",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 604,
       "natural": true,
       "observed_at": "2026-08-19T23:42:29Z",
@@ -183,34 +170,46 @@
       "run_id": "33934936590",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 642,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:25:01Z",
-    "history_as_of": "2026-09-01",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CCEP.json",
-    "payload_sha256": "2692ce3bb4042b354ae7d4e82af96968c560aeb96ac8a40f812d512aef4751a1",
-    "quote_as_of": "2026-09-01T20:00:01Z",
-    "source_as_of": "2026-09-01"
+    "fetched_at": "2026-09-08T01:16:48Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/CCEP.json",
+    "payload_sha256": "a739b4b786afb410e85b2f4192f0edf3117427292ebf80ad80bcde5df95ac974",
+    "quote_as_of": "2026-09-04T20:00:01Z",
+    "source_as_of": "2026-09-04"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 627,
+    "latency_ms": 642,
     "natural": true,
-    "observed_at": "2026-09-05T01:04:38Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33934936590",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -233,18 +232,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:22:18Z",
-    "payload_sha256": "5eb4e4082ab83002e8143fef0e1b7b89052b50a1213a4f156dfc13b5096be33c",
-    "quote_as_of": "2026-09-01T20:00:01Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "f86746df1c2ac29d6500767d2cdfc1dc1d232b40929758f45d5c4afc90b94c51",
+    "quote_as_of": "2026-09-04T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-08T01:15:39Z",
+  "recovered_from_run_id": "33934936590",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "34175958781",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CCEP",
-  "updated_at": "2026-09-05T01:04:38Z"
+  "updated_at": "2026-09-08T01:15:39Z"
 }

@@ -64,31 +64,44 @@
       "run_id": "31094670683",
       "schedule": "7 8 * * 0-5",
       "shard": "52/72"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 587,
+      "natural": true,
+      "observed_at": "2026-09-08T01:15:39Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-08-06T10:51:23Z",
-    "history_as_of": "2026-08-05",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DGP.json",
-    "payload_sha256": "6550e78a4d359671471e95515cd591f7e2e6b4d1677cdcc5260e06ad15809cad",
-    "quote_as_of": "2026-08-05T20:00:00Z",
-    "source_as_of": "2026-08-05"
+    "fetched_at": "2026-09-08T01:15:57Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/yf/finance/DGP.json",
+    "payload_sha256": "a38b3d1cf4071405ef65090c0c0fe0dba385f1628b943fe49243aa449335c15d",
+    "quote_as_of": "2026-09-04T19:59:57Z",
+    "source_as_of": "2026-09-04"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1111,
+    "latency_ms": 587,
     "natural": true,
-    "observed_at": "2026-08-06T10:49:28Z",
+    "observed_at": "2026-09-08T01:15:39Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "31094670683",
-    "schedule": "7 8 * * 0-5",
-    "shard": "52/72"
+    "run_id": "34175958781",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "lkg": {
     "fetched_at": "2026-08-06T10:51:23Z",
@@ -101,17 +114,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-08-05",
-    "observed_at": "2026-08-06T10:49:28Z",
-    "payload_sha256": "6a13c796383f34819579b06e7c3a37f6fa83aa9d77f04ba33476eb772a83773d",
-    "quote_as_of": "2026-08-05T20:00:00Z",
+    "history_as_of": "2026-09-04",
+    "observed_at": "2026-09-08T01:15:39Z",
+    "payload_sha256": "10d39d2140fadd1944cf582c881ea8ccd0dc7a84539b759ee51df15fd64a62b3",
+    "quote_as_of": "2026-09-04T19:59:57Z",
     "run_attempt": 1,
-    "run_id": "31094670683",
+    "run_id": "34175958781",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-08-05"
+    "source_as_of": "2026-09-04"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -124,5 +137,5 @@
     "source_as_of": "2026-08-05"
   },
   "ticker": "DGP",
-  "updated_at": "2026-08-14T00:10:47Z"
+  "updated_at": "2026-09-08T01:15:39Z"
 }

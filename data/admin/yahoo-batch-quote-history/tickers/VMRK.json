@@ -103,12 +103,26 @@
       "run_id": "33702512577",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for VMRK despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 802,
+      "natural": true,
+      "observed_at": "2026-09-08T01:28:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-03T01:19:42Z",
     "history_as_of": "2026-09-02",
-    "path": "data/yf/finance/VMRK.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VMRK.json",
     "payload_sha256": "08ebbf852f67d1f8845ee457fb408fe5d0ad4f2f2f7aceb43bdaa2f4fe82b021",
     "quote_as_of": "2026-09-02T20:00:03Z",
     "source_as_of": "2026-09-02"
@@ -118,16 +132,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for VMRK despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 517,
+    "latency_ms": 802,
     "natural": true,
-    "observed_at": "2026-09-03T01:16:16Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33702512577",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for VMRK despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "run_attempt": 1,
+    "run_id": "34175958781"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-03T01:19:42Z",
+    "history_as_of": "2026-09-02",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VMRK.json",
+    "payload_sha256": "08ebbf852f67d1f8845ee457fb408fe5d0ad4f2f2f7aceb43bdaa2f4fe82b021",
+    "quote_as_of": "2026-09-02T20:00:03Z",
+    "source_as_of": "2026-09-02"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -141,9 +176,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-02"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "VMRK",
-  "updated_at": "2026-09-03T01:16:16Z"
+  "updated_at": "2026-09-08T01:28:08Z"
 }

@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 1523,
-      "natural": true,
-      "observed_at": "2026-08-09T10:51:07Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31309259913",
-      "schedule": "7 10 * * 0-5",
-      "shard": "5/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 570,
       "natural": true,
       "observed_at": "2026-08-11T00:02:00Z",
@@ -181,12 +168,26 @@
       "run_id": "33577879211",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for OKE despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 747,
+      "natural": true,
+      "observed_at": "2026-09-08T01:28:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-02T01:31:42Z",
     "history_as_of": "2026-09-01",
-    "path": "data/yf/finance/OKE.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/OKE.json",
     "payload_sha256": "88d595c528d3cd0648a592f54dd445dc4803824f5e54fd0ffb90aaa1300078fa",
     "quote_as_of": "2026-09-01T20:00:02Z",
     "source_as_of": "2026-09-01"
@@ -197,24 +198,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for OKE despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 827,
+    "latency_ms": 747,
     "natural": true,
-    "observed_at": "2026-09-02T01:27:36Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for OKE despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "run_attempt": 1,
+    "run_id": "34175958781"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T02:35:24Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-09-02T01:31:42Z",
+    "history_as_of": "2026-09-01",
     "path": "data/admin/yahoo-batch-quote-history/lkg/OKE.json",
-    "payload_sha256": "6253c57ebd12d73daa61e2c6908eaa26240ec2fbc58e6e763294b235780f2b98",
-    "quote_as_of": "2026-07-08T20:00:02Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "88d595c528d3cd0648a592f54dd445dc4803824f5e54fd0ffb90aaa1300078fa",
+    "quote_as_of": "2026-09-01T20:00:02Z",
+    "source_as_of": "2026-09-01"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -228,8 +242,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-01"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -242,5 +256,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "OKE",
-  "updated_at": "2026-09-02T01:27:36Z"
+  "updated_at": "2026-09-08T01:28:08Z"
 }

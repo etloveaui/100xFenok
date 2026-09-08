@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 344,
-      "natural": true,
-      "observed_at": "2026-08-14T00:10:47Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31755913658",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 519,
       "natural": true,
       "observed_at": "2026-08-14T23:48:33Z",
@@ -181,12 +168,26 @@
       "run_id": "33934936590",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for LOGI despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 719,
+      "natural": true,
+      "observed_at": "2026-09-08T01:28:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-05T01:08:42Z",
     "history_as_of": "2026-09-04",
-    "path": "data/yf/finance/LOGI.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/LOGI.json",
     "payload_sha256": "91613d5b634c4dcf5a6a553eda8a39f402e4ff574616c7ff4f3df609074f5781",
     "quote_as_of": "2026-09-04T20:00:00Z",
     "source_as_of": "2026-09-04"
@@ -197,16 +198,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for LOGI despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 475,
+    "latency_ms": 719,
     "natural": true,
-    "observed_at": "2026-09-05T01:04:38Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33934936590",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for LOGI despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "run_attempt": 1,
+    "run_id": "34175958781"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-05T01:08:42Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/LOGI.json",
+    "payload_sha256": "91613d5b634c4dcf5a6a553eda8a39f402e4ff574616c7ff4f3df609074f5781",
+    "quote_as_of": "2026-09-04T20:00:00Z",
+    "source_as_of": "2026-09-04"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -220,9 +242,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-04"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "LOGI",
-  "updated_at": "2026-09-05T01:04:38Z"
+  "updated_at": "2026-09-08T01:28:08Z"
 }

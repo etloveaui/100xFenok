@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 1613,
-      "natural": true,
-      "observed_at": "2026-08-10T23:54:50Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31444023136",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 707,
       "natural": true,
       "observed_at": "2026-08-12T00:32:27Z",
@@ -181,12 +168,26 @@
       "run_id": "33577879211",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for HUBB despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 844,
+      "natural": true,
+      "observed_at": "2026-09-08T01:28:08Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34175958781",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-02T01:20:40Z",
     "history_as_of": "2026-09-01",
-    "path": "data/yf/finance/HUBB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HUBB.json",
     "payload_sha256": "2d09cb05412d60434896c7d527c63d3d2601029eb61c2956b5ac3417d7a7e126",
     "quote_as_of": "2026-09-01T20:00:02Z",
     "source_as_of": "2026-09-01"
@@ -197,16 +198,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "ValueError: quote_as_of is unavailable for HUBB despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 923,
+    "latency_ms": 844,
     "natural": true,
-    "observed_at": "2026-09-02T01:17:07Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34175958781",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "3/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "ValueError: quote_as_of is unavailable for HUBB despite available history",
+    "failure_kind": "transient_provider_miss",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-08T01:28:08Z",
+    "run_attempt": 1,
+    "run_id": "34175958781"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-02T01:20:40Z",
+    "history_as_of": "2026-09-01",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/HUBB.json",
+    "payload_sha256": "2d09cb05412d60434896c7d527c63d3d2601029eb61c2956b5ac3417d7a7e126",
+    "quote_as_of": "2026-09-01T20:00:02Z",
+    "source_as_of": "2026-09-01"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -220,9 +242,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-01"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "HUBB",
-  "updated_at": "2026-09-02T01:17:07Z"
+  "updated_at": "2026-09-08T01:28:08Z"
 }
