@@ -1151,12 +1151,15 @@ async function readCsvDownload(page: Page, button: Locator): Promise<string> {
   return readDownload(download);
 }
 
-async function macroCsvVisibleCase(page: Page, _runtime: CaseRuntime, condition: BrowserCondition): Promise<void> {
+async function macroCsvVisibleCase(page: Page, runtime: CaseRuntime, condition: BrowserCondition): Promise<void> {
   await gotoPath(page, "/macro-chart?series=sp500,DGS10&transform=raw,raw&range=MAX&hidden=DGS10");
   await waitForCondition(async () => await page.locator('[data-macro-v2-table-drawer="true"]').getAttribute("data-macro-v2-table-state") === "ready", "macro table did not reach ready state", WAIT_DATA_MS);
   assert.equal(await page.locator('[data-macro-chart-series-range="sp500"]').count(), 1, "macro hero must retain the visible S&P 500 series");
   const tableDrawer = page.locator('[data-macro-v2-table-drawer="true"]');
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
   await tableDrawer.locator("summary").click();
+  runtime.searchMetrics.macro_drawer_open_after_click = await tableDrawer.getAttribute("open") !== null;
+  runtime.searchMetrics.macro_more_modal_open = await page.locator('[role="dialog"]').count() > 0;
   await waitForCondition(async () => await page.locator("[data-cp-data-table]").count() === 1, "macro data table did not open");
   await screenshot(page, `macro-tablet-${condition.name}`);
   const heroCsvButton = page.getByRole("group", { name: "공유 및 내보내기" }).getByRole("button", { name: "CSV", exact: true });
