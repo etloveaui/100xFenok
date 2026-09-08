@@ -1109,6 +1109,7 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
     const box = await full.boundingBox();
     assert(box && box.height >= 43.98, "stock preview primary touch target must be at least 44px high");
     assert.equal(new URL((await full.getAttribute("href"))!, QA_BASE_URL).searchParams.get("returnTo"), returnTo);
+    await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
     await full.tap();
   } else {
     // Ctrl+K is the global opener even while the source checkbox retains focus.
