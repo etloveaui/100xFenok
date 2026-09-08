@@ -93,6 +93,7 @@ type CaseRuntime = {
   optionalResponseCount: number;
   investorRequestCount: number;
   searchMetrics: Record<string, number | boolean>;
+  journeyTrace: string[];
   releaseStock(): void;
   releaseOptional(): void;
 };
@@ -109,6 +110,7 @@ type CaseReceipt = {
   status: "passed" | "failed";
   duration_ms: number;
   search_metrics?: Record<string, number | boolean>;
+  journey_trace?: string[];
   error?: string;
   blocked_foreign?: string[];
   unexpected_data_paths?: string[];
@@ -337,6 +339,7 @@ class FixtureRouter implements CaseRuntime {
   optionalResponseCount = 0;
   investorRequestCount = 0;
   searchMetrics: Record<string, number | boolean> = {};
+  journeyTrace: string[] = [];
   private optionalReleased = false;
   private optionalWaiters: Array<() => void> = [];
   private readonly controlledPrefetchRequests = new WeakSet<Request>();
@@ -800,6 +803,7 @@ async function etfDetailCompareCase(page: Page, _runtime: CaseRuntime, condition
   await waitForCondition(async () => await page.locator('[data-etf-detail-client="true"]').count() === 1, "QQQ ETF detail did not render");
   const compare = page.locator('[data-etf-detail-owner-action="compare"]');
   assert.equal(await compare.count(), 1, "QQQ detail must expose the compare action");
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
   await compare.click();
   await waitForCondition(() => pagePath(page) === "/etfs/compare", "detail compare navigation did not reach compare route");
   await waitForCondition(async () => await page.locator('[data-etf-compare-panel="true"]').count() === 1, "ETF compare panel did not render");
@@ -1051,6 +1055,23 @@ async function investorInvalidRetryCase(page: Page, runtime: CaseRuntime): Promi
 }
 
 async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition: BrowserCondition, preview = false): Promise<void> {
+  page.on("console", (message) => {
+    if (message.type() === "debug" && message.text().startsWith("QA_JOURNEY ")) runtime.journeyTrace.push(message.text().slice(11));
+  });
+  await page.addInitScript(() => {
+    const emit = (kind: string, detail: unknown) => console.debug("QA_JOURNEY " + JSON.stringify({ kind, path: location.pathname + location.search, y: scrollY, detail }));
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key.startsWith("100xfenok:journey:screener:")) emit("snapshot", { key, value: JSON.parse(value) });
+      return setItem.call(this, key, value);
+    };
+    const scrollTo = window.scrollTo.bind(window);
+    window.scrollTo = ((...args: unknown[]) => {
+      emit("scrollTo", args);
+      return Reflect.apply(scrollTo, window, args);
+    }) as typeof window.scrollTo;
+    window.addEventListener("pagehide", () => emit("pagehide", null));
+  });
   await gotoPath(page, "/screener?ticker=AAPL&mode=analyze");
   const ready = page.locator('[data-canvas-plus-screener-service][data-screener-mode="analyze"][data-journey-ready="true"]');
   const filter = page.locator('input[data-canvas-plus-screener-search="true"]');
@@ -1092,9 +1113,11 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
     runtime.searchMetrics = { source_scroll_y: sourceScroll };
     // Ctrl+K is the global opener even while the source checkbox retains focus.
     const dialog = await paletteOpen(page, false, "Control+k");
+    runtime.searchMetrics.palette_scroll_y = await page.evaluate(() => window.scrollY);
     const input = dialog.locator("input");
     await input.fill("AAPL");
     await waitForCondition(async () => await dialog.locator("button").filter({ has: page.locator("span.font-medium", { hasText: /^AAPL$/ }) }).count() === 1, "palette AAPL result did not appear");
+    runtime.searchMetrics.pre_navigation_scroll_y = await page.evaluate(() => window.scrollY);
     await input.press("Enter");
   }
   await waitForCondition(() => pagePath(page) === "/stock/AAPL", "search did not reach real stock detail", WAIT_DATA_MS);
@@ -1311,6 +1334,7 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
         status: "passed",
         duration_ms: Date.now() - started,
         search_metrics: router.searchMetrics,
+        journey_trace: router.journeyTrace,
         blocked_foreign: [...new Set(router.blockedForeign)],
         unexpected_data_paths: [...new Set(router.unexpectedDataPaths)],
         expected_cancellations: router.expectedCancellations,
@@ -1329,6 +1353,7 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
         status: "failed",
         duration_ms: Date.now() - started,
         search_metrics: router.searchMetrics,
+        journey_trace: router.journeyTrace,
         error: error instanceof Error ? error.stack ?? error.message : String(error),
         blocked_foreign: [...new Set(router.blockedForeign)],
         unexpected_data_paths: [...new Set(router.unexpectedDataPaths)],
