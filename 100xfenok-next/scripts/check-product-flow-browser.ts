@@ -75,6 +75,8 @@ type EtfMode = "valid" | "unavailable" | "failed" | "null" | "disjoint";
 type FixtureRuntimeOptions = {
   delayedInitialStock?: boolean;
   delayedOptionalSearch?: boolean;
+  searchInvestors?: boolean;
+  invalidInitialInvestor?: boolean;
   etfMode?: EtfMode;
 };
 
@@ -89,6 +91,7 @@ type CaseRuntime = {
   stockResponseCount: number;
   stockReleased: boolean;
   optionalResponseCount: number;
+  investorRequestCount: number;
   searchMetrics: Record<string, number | boolean>;
   releaseStock(): void;
   releaseOptional(): void;
@@ -332,6 +335,7 @@ class FixtureRouter implements CaseRuntime {
   stockResponseCount = 0;
   stockReleased = false;
   optionalResponseCount = 0;
+  investorRequestCount = 0;
   searchMetrics: Record<string, number | boolean> = {};
   private optionalReleased = false;
   private optionalWaiters: Array<() => void> = [];
@@ -391,6 +395,7 @@ class FixtureRouter implements CaseRuntime {
       await this.waitForStockRelease();
     }
 
+    if (requestUrl.pathname === "/data/sec-13f/analytics/portfolio_views.json") this.investorRequestCount += 1;
     const optionalSearch = requestUrl.pathname === "/data/computed/stock_action_summary.json"
       || requestUrl.pathname === "/data/sec-13f/analytics/portfolio_views.json";
     if (optionalSearch && this.options.delayedOptionalSearch && !this.optionalReleased) {
@@ -420,10 +425,16 @@ class FixtureRouter implements CaseRuntime {
     if (pathname === "/data/global-scouter/stocks/detail/AAPL.json") return { status: 200, body: { years: [], income_statement: {} } };
     if (pathname === "/api/data/stockanalysis/stocks/AAPL" || pathname === "/api/data/stockanalysis/financials/AAPL") return { status: 200, body: {} };
     if (pathname === "/data/damodaran/industry_benchmarks.json") return { status: 200, body: {} };
+    if (pathname === "/data/slickcharts/stocks/AAPL.json") return { status: 200, body: {} };
+    if (pathname === "/data/earnings-overview/AAPL.json") return { status: 503, body: { error: "SYNTHETIC_UNAVAILABLE" } };
     if (pathname === "/data/computed/entity_graph_stock_index.json") return { status: 200, body: graphIndex() };
     if (pathname === "/data/computed/entity_graph_stock_services.json") return { status: 200, body: serviceIndex() };
     if (pathname === "/data/benchmarks/summaries.json") return { status: 200, body: benchmarkSummary() };
-    if (pathname === "/data/sec-13f/analytics/portfolio_views.json") return { status: 200, body: { investors: this.options.delayedOptionalSearch ? { synthetic: { name: "Synthetic AAPL Investor" } } : {} } };
+    if (pathname === "/data/sec-13f/analytics/portfolio_views.json") {
+      if (this.options.invalidInitialInvestor && this.investorRequestCount === 1) return { status: 200, body: {} };
+      return { status: 200, body: { investors: this.options.delayedOptionalSearch || this.options.searchInvestors || this.options.invalidInitialInvestor
+        ? { synthetic: { name: "Synthetic AAPL Investor" } } : {} } };
+    }
     if (pathname.startsWith("/data/computed/market_facts/shards/")) return { status: 200, body: marketFacts() };
     if (pathname.startsWith("/data/yf/finance/")) return { status: 200, body: { data: { info: { currentPrice: 100 } } } };
     if (pathname === "/api/data/stockanalysis/etf-universe") return { status: 200, body: etfUniverse() };
@@ -973,8 +984,9 @@ async function searchOptionalReadinessCase(page: Page, runtime: CaseRuntime, con
   await waitForCondition(async () => await result.count() === 1, "stock result did not arrive after optional data release", WAIT_DATA_MS);
   runtime.searchMetrics.first_result_ms = firstResultMs ?? Date.now() - started;
   const resultBox = await result.boundingBox();
-  assert(resultBox && resultBox.height >= 44, "stock search touch target must be at least 44px high");
+  assert(resultBox, "stock search result must have a visible box");
   runtime.searchMetrics.result_height_px = resultBox.height;
+  assert(resultBox.height >= 43.98, `stock search touch target must be 44px high (subpixel tolerance), received ${resultBox.height}`);
   if (!palette) {
     await waitForCondition(async () => await page.locator('[role="option"]:visible').filter({ hasText: "Synthetic AAPL Investor" }).count() === 1, "late investor result must remain available");
     if (activeBefore) assert.equal(await input.getAttribute("aria-activedescendant"), activeBefore, "late investor results must preserve the selected stock");
@@ -1000,6 +1012,34 @@ async function typeaheadOptionalDismissCase(page: Page, runtime: CaseRuntime): P
   assert.equal(await page.locator('ul[role="listbox"]:visible').count(), 0);
 }
 
+async function investorFirstSelectionCase(page: Page, runtime: CaseRuntime): Promise<void> {
+  await gotoPath(page, "/portfolio/");
+  const input = await openMobileTypeahead(page);
+  await input.fill("AAPL");
+  const investor = page.locator('[role="option"]:visible').filter({ hasText: "Synthetic AAPL Investor" });
+  await waitForCondition(async () => await investor.count() === 1, "investor result must be usable while stock identities wait");
+  assert.equal(runtime.stockResponseCount, 0);
+  await input.press("ArrowDown");
+  assert.equal(await investor.getAttribute("aria-selected"), "true");
+  runtime.releaseStock();
+  await waitForCondition(async () => await page.locator('[role="option"]:visible').filter({ hasText: "Synthetic Apple" }).count() === 1, "late stock result did not appear");
+  assert.equal(await investor.getAttribute("aria-selected"), "true", "late stock insertion must preserve the selected investor");
+  const activeId = await input.getAttribute("aria-activedescendant");
+  assert(activeId);
+  assert.match(await page.locator(`[id="${activeId}"]`).innerText(), /Synthetic AAPL Investor/);
+}
+
+async function investorInvalidRetryCase(page: Page, runtime: CaseRuntime): Promise<void> {
+  await gotoPath(page, "/portfolio/");
+  const input = await openMobileTypeahead(page);
+  await input.fill("AAPL");
+  await waitForCondition(async () => runtime.investorRequestCount === 1 && await page.locator('[role="option"]:visible').filter({ hasText: "Synthetic Apple" }).count() === 1, "invalid investor response must not block stocks");
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
+  await input.fill("");
+  await input.fill("AAPL");
+  await waitForCondition(async () => runtime.investorRequestCount === 2 && await page.locator('[role="option"]:visible').filter({ hasText: "Synthetic AAPL Investor" }).count() === 1, "invalid 200 investor response must remain retryable");
+}
+
 async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition: BrowserCondition, preview = false): Promise<void> {
   await gotoPath(page, "/screener?ticker=AAPL&mode=analyze");
   const ready = page.locator('[data-canvas-plus-screener-service][data-screener-mode="analyze"][data-journey-ready="true"]');
@@ -1008,7 +1048,9 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   assert.equal(await filter.inputValue(), "AAPL");
   const card = page.locator('[data-canvas-plus-screener-card="mobile"]:visible').filter({ has: page.locator('button[aria-label="AAPL 상세 접기"]') });
   const selected = card.getByRole("checkbox", { name: "선택", exact: true });
-  await selected.check();
+  // The existing label's 44px pseudo-element owns the checkbox tap target.
+  await card.locator("label[data-screener-checkbox-target]").tap();
+  assert.equal(await selected.isChecked(), true, "tapping the selection label must check the stock");
   await waitForCondition(async () => (await page.locator('[data-canvas-plus-screener-selection-actions]').innerText()).includes("1개 선택"), "source selection did not settle");
   const source = new URL(page.url());
   const returnTo = `${source.pathname.replace(/\/+$/, "")}${source.search}${source.hash}`;
@@ -1023,7 +1065,7 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
     await waitForCondition(async () => await drawer.count() === 1, "stock preview did not open");
     const full = drawer.getByRole("link", { name: "전체 보기", exact: true });
     const box = await full.boundingBox();
-    assert(box && box.height >= 44, "stock preview primary touch target must be at least 44px high");
+    assert(box && box.height >= 43.98, "stock preview primary touch target must be at least 44px high");
     assert.equal(new URL((await full.getAttribute("href"))!, QA_BASE_URL).searchParams.get("returnTo"), returnTo);
     await full.tap();
   } else {
@@ -1107,6 +1149,8 @@ function makeCases(): BrowserCase[] {
     { name: "typeahead-optional-readiness", options: { delayedOptionalSearch: true }, run: searchOptionalReadinessCase },
     { name: "palette-optional-readiness", options: { delayedOptionalSearch: true }, run: (page, runtime, condition) => searchOptionalReadinessCase(page, runtime, condition, true) },
     { name: "typeahead-optional-dismiss", options: { delayedOptionalSearch: true }, run: typeaheadOptionalDismissCase },
+    { name: "typeahead-investor-first", options: { delayedInitialStock: true, searchInvestors: true }, run: investorFirstSelectionCase },
+    { name: "typeahead-investor-retry", options: { invalidInitialInvestor: true }, run: investorInvalidRetryCase },
     { name: "search-stock-browser-return", run: searchStockReturnCase },
     { name: "search-preview-app-return", run: (page, runtime, condition) => searchStockReturnCase(page, runtime, condition, true) },
     { name: "macro-csv-visible", run: macroCsvVisibleCase },

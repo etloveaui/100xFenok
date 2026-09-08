@@ -69,8 +69,18 @@ function loadGurus(): Promise<GuruRow[]> {
       return r.json();
     })
     .then((d: any) => {
+      if (
+        !d ||
+        typeof d !== "object" ||
+        Array.isArray(d) ||
+        !d.investors ||
+        typeof d.investors !== "object" ||
+        Array.isArray(d.investors)
+      ) {
+        throw new Error("Invalid guru search data");
+      }
       const rows: GuruRow[] = [];
-      const investors = d?.investors ?? {};
+      const investors = d.investors;
       for (const [id, inv] of Object.entries(investors) as Array<[string, any]>) {
         rows.push({ id, name: String(inv.name ?? id) });
       }
@@ -386,7 +396,7 @@ export default function TickerTypeahead({
                     activeSuggestionKeyRef.current = s.key;
                     setActiveIdx(selIdx);
                   }}
-                  className={`flex min-h-11 cursor-pointer items-center gap-2 px-4 py-2 text-sm ${isActive ? "bg-slate-100" : ""}`}
+                  className={`flex min-h-[44px] cursor-pointer items-center gap-2 px-4 py-2 text-sm ${isActive ? "bg-slate-100" : ""}`}
                 >
                   {s.type === "stock" && s.stock ? (
                     <>

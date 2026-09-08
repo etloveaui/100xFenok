@@ -404,7 +404,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
                 <button
                   key={`recent-${it.id}`}
                   onClick={() => select(it, it.kbd === "w" ? { keepOpen: true } : undefined)}
-                  className="w-full min-h-11 text-left px-2 py-1.5 rounded-[6px] text-[13px] text-[var(--fnk-neutral-700)] flex items-center justify-between hover:bg-[var(--fnk-neutral-50)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+                  className="w-full min-h-[44px] text-left px-2 py-1.5 rounded-[6px] text-[13px] text-[var(--fnk-neutral-700)] flex items-center justify-between hover:bg-[var(--fnk-neutral-50)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
                 >
                   <span>{it.label}</span><span className="text-[var(--fnk-neutral-500)] text-[11px]">{it.sub}</span>
                 </button>
@@ -424,7 +424,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
                       key={it.id}
                       onMouseEnter={() => setActive(idx)}
                       onClick={() => select(it, it.kbd === "w" ? { keepOpen: true } : undefined)}
-                      className={`w-full min-h-11 text-left px-2 py-1.5 rounded-[6px] flex items-center justify-between text-[13px] transition-colors duration-120 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive ${isActive ? "bg-[var(--fnk-neutral-50)] shadow-[inset_2px_0_0_#1B73D3] text-[var(--fnk-neutral-900)]" : "text-[var(--fnk-neutral-700)] hover:bg-[var(--fnk-neutral-50)]"}`}
+                      className={`w-full min-h-[44px] text-left px-2 py-1.5 rounded-[6px] flex items-center justify-between text-[13px] transition-colors duration-120 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive ${isActive ? "bg-[var(--fnk-neutral-50)] shadow-[inset_2px_0_0_#1B73D3] text-[var(--fnk-neutral-900)]" : "text-[var(--fnk-neutral-700)] hover:bg-[var(--fnk-neutral-50)]"}`}
                     >
                       <span className="font-medium">{starred ? "★ " : ""}{it.label}</span>
                       <span className="text-[11px] text-[var(--fnk-neutral-500)] flex items-center gap-2">
