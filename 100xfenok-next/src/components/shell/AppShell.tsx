@@ -21,6 +21,7 @@ import {
   EXPLORE_ROUTE,
 } from "@/lib/product-nav";
 import { ROUTES } from "@/lib/routes";
+import { currentJourneyReturnTo } from "@/lib/journey-context";
 import type { DataState } from "@/lib/data-state";
 import { useModal } from "@/hooks/useModal";
 
@@ -372,7 +373,7 @@ function TypeaheadPreviewDrawer({
       </div>
       <div className="typeahead-preview__actions">
         <button type="button" onClick={onClose} className="typeahead-preview__secondary">닫기</button>
-        <TransitionLink href={ROUTES.stock(ticker)} onClick={onClose} className="typeahead-preview__primary">
+        <TransitionLink href={ROUTES.stock(ticker, currentJourneyReturnTo())} onClick={onClose} className="typeahead-preview__primary">
           전체 보기
         </TransitionLink>
       </div>

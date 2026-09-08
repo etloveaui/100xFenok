@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import TransitionLink from "@/components/TransitionLink";
+import { bodyScrollY } from "@/lib/client/body-scroll-lock";
 import { EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
@@ -1400,7 +1401,7 @@ export default function ScreenerClient({
   }, []);
 
   const guruMap = guruIndex?.holders ?? null;
-  const holdingChanges = guruIndex?.holding_changes ?? {};
+  const holdingChanges = useMemo(() => guruIndex?.holding_changes ?? {}, [guruIndex]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1840,19 +1841,64 @@ export default function ScreenerClient({
       setPage(Math.floor(index / PAGE_SIZE));
       setScrollSignal({ index, nonce: 1 });
     }
-    if (source) clearScreenerJourneySnapshot(source);
-    pendingJourneySnapshotRef.current = null;
-    journeyRestoredRef.current = true;
-    setJourneyHydrated(true);
-    if (snapshot.scrollY !== undefined) {
-      const frame = window.requestAnimationFrame(() => {
-        if (!journeyUserInteractedRef.current) {
-          window.scrollTo({ top: snapshot.scrollY, behavior: "auto" });
-          saveScreenerJourneySnapshot(source, { ...snapshot, selectedTickers: selected });
-        }
-      });
-      return () => window.cancelAnimationFrame(frame);
+    if (snapshot.scrollY === undefined) {
+      if (source) clearScreenerJourneySnapshot(source);
+      pendingJourneySnapshotRef.current = null;
+      journeyRestoredRef.current = true;
+      setJourneyHydrated(true);
+      return;
     }
+    // Detail panels can extend the page after the core rows are ready.
+    // Wait for enough layout height; user input always cancels automatic movement.
+    const target = snapshot.scrollY;
+    let frame: number | null = null;
+    let finished = false;
+    let observer: ResizeObserver | null = null;
+    let timeout: number | undefined;
+    const inputEvents = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    const cleanup = () => {
+      finished = true;
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = null;
+      window.clearTimeout(timeout);
+      observer?.disconnect();
+      for (const event of inputEvents) window.removeEventListener(event, cancel);
+    };
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      if (source) clearScreenerJourneySnapshot(source);
+      pendingJourneySnapshotRef.current = null;
+      journeyRestoredRef.current = true;
+      if (!journeyUserInteractedRef.current) {
+        saveScreenerJourneySnapshot(source, { ...snapshot, selectedTickers: selected, scrollY: Math.round(window.scrollY) });
+      }
+      setJourneyHydrated(true);
+    };
+    const cancel = () => {
+      journeyUserInteractedRef.current = true;
+      finish();
+    };
+    const restore = (deadline = false) => {
+      if (finished) return;
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = null;
+      if (journeyUserInteractedRef.current) { finish(); return; }
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      if (maxScroll < target && !deadline) return;
+      window.scrollTo({ top: Math.min(target, maxScroll), behavior: "instant" });
+      finish();
+    };
+    const schedule = () => {
+      if (!finished && frame === null) frame = window.requestAnimationFrame(() => restore());
+    };
+    observer = new ResizeObserver(schedule);
+    observer.observe(document.body);
+    timeout = window.setTimeout(() => restore(true), 2_000);
+    for (const event of inputEvents) window.addEventListener(event, cancel, { passive: true });
+    schedule();
+    return cleanup;
   }, [dataReady, guruSettled, actionSettled, sorted.length, stocks]);
   const stateKey = `${search}|${selectedSectors.join(",")}|${selectedCountries.join(",")}|${perMin}|${perMax}|${forwardPerMax}|${revenueGrowthMin}|${epsGrowthMin}|${dividendYieldMin}|${dividendYieldMax}|${durabilityMin}|${roeFy1Min}|${ret3yMin}|${ret5yMin}|${marketCapMin}|${marketCapMax}|${pbrMin}|${pbrMax}|${pegMax}|${roeMin}|${opmMin}|${return12mMin}|${profitableOnly}|${bandFilter}|${actionFilter}|${shortEdgeMin}|${longEdgeMin}|${connectionFilter}|${sortKey}|${sortDir}|${preset}`;
   const [prevStateKey, setPrevStateKey] = useState(stateKey);
@@ -1979,13 +2025,32 @@ export default function ScreenerClient({
       visibleIndex: safeCursor,
       compareTickers,
       discoverCard: activeCardId,
-      scrollY: Math.round(Math.max(0, Math.min(window.scrollY, MAX_JOURNEY_SCROLL_Y))),
+      scrollY: Math.round(Math.max(0, Math.min(bodyScrollY(), MAX_JOURNEY_SCROLL_Y))),
     });
   }, [safeCursor, selectedTickers, compareTickers, activeCardId]);
   useEffect(() => {
-    // Keep the restored context current for another Back/Forward round trip.
-    // Hydration prevents the empty mount state from replacing the saved selection.
-    if (journeyHydrated) saveJourneyBeforeNavigate();
+    // Global search can navigate without a row's onBeforeNavigate callback.
+    // Persist scrolling as well as selection changes, after the restoration frame.
+    if (!journeyHydrated) return;
+    let frame: number | null = null;
+    const persist = () => {
+      if (currentJourneyReturnTo() === journeyReturnTo) saveJourneyBeforeNavigate();
+    };
+    const schedule = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        persist();
+      });
+    };
+    schedule();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("pagehide", persist);
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("pagehide", persist);
+    };
   }, [journeyHydrated, journeyReturnTo, saveJourneyBeforeNavigate]);
   const renderGuruHolderBadge = useCallback(
     (stock: ScreenerStock) => (

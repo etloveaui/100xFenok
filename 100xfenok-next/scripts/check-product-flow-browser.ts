@@ -74,6 +74,9 @@ type EtfMode = "valid" | "unavailable" | "failed" | "null" | "disjoint";
 
 type FixtureRuntimeOptions = {
   delayedInitialStock?: boolean;
+  delayedOptionalSearch?: boolean;
+  searchInvestors?: boolean;
+  invalidInitialInvestor?: boolean;
   etfMode?: EtfMode;
 };
 
@@ -87,7 +90,12 @@ type CaseRuntime = {
   stockRequestCount: number;
   stockResponseCount: number;
   stockReleased: boolean;
+  optionalResponseCount: number;
+  investorRequestCount: number;
+  searchMetrics: Record<string, number | boolean>;
+  journeyTrace: string[];
   releaseStock(): void;
+  releaseOptional(): void;
 };
 
 type BrowserCase = {
@@ -101,6 +109,8 @@ type CaseReceipt = {
   case: string;
   status: "passed" | "failed";
   duration_ms: number;
+  search_metrics?: Record<string, number | boolean>;
+  journey_trace?: string[];
   error?: string;
   blocked_foreign?: string[];
   unexpected_data_paths?: string[];
@@ -326,7 +336,13 @@ class FixtureRouter implements CaseRuntime {
   stockRequestCount = 0;
   stockResponseCount = 0;
   stockReleased = false;
-  private readonly harnessAbortedRequests = new WeakSet<Request>();
+  optionalResponseCount = 0;
+  investorRequestCount = 0;
+  searchMetrics: Record<string, number | boolean> = {};
+  journeyTrace: string[] = [];
+  private optionalReleased = false;
+  private optionalWaiters: Array<() => void> = [];
+  private readonly controlledPrefetchRequests = new WeakSet<Request>();
   private readonly options: FixtureRuntimeOptions;
   private stockWaiters: Array<() => void> = [];
 
@@ -341,17 +357,22 @@ class FixtureRouter implements CaseRuntime {
     for (const resolve of waiters) resolve();
   }
 
+  releaseOptional() {
+    this.optionalReleased = true;
+    for (const resolve of this.optionalWaiters.splice(0)) resolve();
+  }
+
   private waitForStockRelease(): Promise<void> {
     if (this.stockReleased) return Promise.resolve();
     return new Promise((resolve) => this.stockWaiters.push(resolve));
   }
 
-  markHarnessAborted(request: Request): void {
-    this.harnessAbortedRequests.add(request);
+  markControlledPrefetch(request: Request): void {
+    this.controlledPrefetchRequests.add(request);
   }
 
-  isHarnessAborted(request: Request): boolean {
-    return this.harnessAbortedRequests.has(request);
+  isControlledPrefetch(request: Request): boolean {
+    return this.controlledPrefetchRequests.has(request);
   }
 
   async handle(route: Route): Promise<void> {
@@ -363,8 +384,10 @@ class FixtureRouter implements CaseRuntime {
       return;
     }
     if (isHarnessRscRequest(request, requestUrl)) {
-      this.markHarnessAborted(request);
-      await route.abort("aborted");
+      this.markControlledPrefetch(request);
+      // Next treats a non-Flight/empty response as a full-document fallback.
+      // A fulfilled prefetch avoids manufacturing network/page errors by aborting it.
+      await route.fulfill({ status: 204, contentType: "text/html", body: "" });
       return;
     }
     if (!requestUrl.pathname.startsWith("/data/") && !requestUrl.pathname.startsWith("/api/")) {
@@ -377,6 +400,12 @@ class FixtureRouter implements CaseRuntime {
       await this.waitForStockRelease();
     }
 
+    if (requestUrl.pathname === "/data/sec-13f/analytics/portfolio_views.json") this.investorRequestCount += 1;
+    const optionalSearch = requestUrl.pathname === "/data/computed/stock_action_summary.json"
+      || requestUrl.pathname === "/data/sec-13f/analytics/portfolio_views.json";
+    if (optionalSearch && this.options.delayedOptionalSearch && !this.optionalReleased) {
+      await new Promise<void>((resolve) => this.optionalWaiters.push(resolve));
+    }
     const response = this.dataResponse(requestUrl.pathname);
     if (response === undefined) {
       this.unexpectedDataPaths.push(requestUrl.pathname);
@@ -386,6 +415,7 @@ class FixtureRouter implements CaseRuntime {
     if (response.status >= 400) this.expectedFailurePaths.add(requestUrl.pathname);
     await route.fulfill(jsonResponse(response.body, response.status));
     if (requestUrl.pathname === "/data/global-scouter/core/stocks_analyzer.json") this.stockResponseCount += 1;
+    if (optionalSearch) this.optionalResponseCount += 1;
   }
 
   private dataResponse(pathname: string): { status: number; body: unknown } | undefined {
@@ -393,10 +423,31 @@ class FixtureRouter implements CaseRuntime {
     if (macro !== undefined) return { status: 200, body: macro };
     if (pathname === "/data/global-scouter/core/stocks_analyzer.json") return { status: 200, body: stockDataset() };
     if (pathname === "/data/computed/stock_action_summary.json") return { status: 200, body: actionSummary() };
+    // Exact empty/unavailable contracts for the real AAPL stock/screener journey.
+    if (pathname === "/data/computed/fenok_signals_summary.json") return { status: 200, body: { fields: [], rows: [] } };
+    if (pathname === "/data/sec-13f/analytics/guru_holders_index.json") return { status: 200, body: {} };
+    if (pathname === "/data/sec-13f/by_ticker.json") return { status: 200, body: { AAPL: { holder_details: [] } } };
+    if (pathname === "/data/global-scouter/stocks/detail/AAPL.json") return { status: 200, body: { years: [], income_statement: {} } };
+    if (pathname === "/api/data/stockanalysis/stocks/AAPL" || pathname === "/api/data/stockanalysis/financials/AAPL") return { status: 200, body: {} };
+    if (pathname === "/data/damodaran/industry_benchmarks.json") return { status: 200, body: {} };
+    if (pathname === "/data/slickcharts/stocks/AAPL.json") return { status: 200, body: {} };
+    if (pathname === "/data/earnings-overview/AAPL.json") return { status: 200, body: {
+      schemaVersion: 1, ticker: "AAPL", companyName: "Synthetic Apple", currency: "USD",
+      updatedAt: "2026-09-06T00:00:00Z", status: "current", notice: null,
+      periods: [{
+        end: "2026-06-30", label: "Synthetic Q2", source: { name: "Synthetic filing", url: "https://www.sec.gov/Archives/synthetic-fixture", filedAt: "2026-07-30" },
+        income: { revenue: 100, costOfRevenue: 40, grossProfit: 60, operatingExpenses: 20, operatingIncome: 40, pretaxIncome: 45, incomeTax: 10, netIncome: 35, dilutedEps: 2 },
+        segments: [], segmentBasis: null, notes: [],
+      }],
+    } };
     if (pathname === "/data/computed/entity_graph_stock_index.json") return { status: 200, body: graphIndex() };
     if (pathname === "/data/computed/entity_graph_stock_services.json") return { status: 200, body: serviceIndex() };
     if (pathname === "/data/benchmarks/summaries.json") return { status: 200, body: benchmarkSummary() };
-    if (pathname === "/data/sec-13f/analytics/portfolio_views.json") return { status: 200, body: { investors: {} } };
+    if (pathname === "/data/sec-13f/analytics/portfolio_views.json") {
+      if (this.options.invalidInitialInvestor && this.investorRequestCount === 1) return { status: 200, body: {} };
+      return { status: 200, body: { investors: this.options.delayedOptionalSearch || this.options.searchInvestors || this.options.invalidInitialInvestor
+        ? { synthetic: { name: "Synthetic AAPL Investor" } } : {} } };
+    }
     if (pathname.startsWith("/data/computed/market_facts/shards/")) return { status: 200, body: marketFacts() };
     if (pathname.startsWith("/data/yf/finance/")) return { status: 200, body: { data: { info: { currentPrice: 100 } } } };
     if (pathname === "/api/data/stockanalysis/etf-universe") return { status: 200, body: etfUniverse() };
@@ -752,6 +803,7 @@ async function etfDetailCompareCase(page: Page, _runtime: CaseRuntime, condition
   await waitForCondition(async () => await page.locator('[data-etf-detail-client="true"]').count() === 1, "QQQ ETF detail did not render");
   const compare = page.locator('[data-etf-detail-owner-action="compare"]');
   assert.equal(await compare.count(), 1, "QQQ detail must expose the compare action");
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
   await compare.click();
   await waitForCondition(() => pagePath(page) === "/etfs/compare", "detail compare navigation did not reach compare route");
   await waitForCondition(async () => await page.locator('[data-etf-compare-panel="true"]').count() === 1, "ETF compare panel did not render");
@@ -794,11 +846,14 @@ function pagePath(page: Page): string {
   return new URL(page.url()).pathname.replace(/\/+$/, "") || "/";
 }
 
-async function paletteOpen(page: Page): Promise<Locator> {
-  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
-  await page.keyboard.press("/");
+async function paletteOpen(page: Page, waitForIdle = true, shortcut = "/"): Promise<Locator> {
+  if (waitForIdle) await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
   const dialog = page.locator('[role="dialog"][aria-label="명령 팔레트"]');
-  await waitForCondition(async () => await dialog.count() === 1 && await dialog.locator("input").count() === 1, "command palette did not hydrate");
+  await waitForCondition(async () => {
+    if (await dialog.count() === 1 && await dialog.locator("input").count() === 1) return true;
+    await page.keyboard.press(shortcut);
+    return false;
+  }, "command palette did not hydrate");
   return dialog;
 }
 
@@ -912,17 +967,199 @@ async function typeaheadStaleDismissCase(page: Page, runtime: CaseRuntime): Prom
   assert.equal(await page.locator('ul[role="listbox"]:visible').count(), 0, "dismissed nonempty typeahead must not reopen from stale data");
 }
 
+async function searchOptionalReadinessCase(page: Page, runtime: CaseRuntime, condition: BrowserCondition, palette = false): Promise<void> {
+  await gotoPath(page, "/portfolio/");
+  const dialog = palette ? await paletteOpen(page, false) : null;
+  const input = dialog ? dialog.locator("input") : await openMobileTypeahead(page);
+  const result = dialog
+    ? dialog.locator("button").filter({ has: page.locator("span.font-medium", { hasText: /^AAPL$/ }) })
+    : page.locator('[role="option"]:visible').filter({ hasText: "Synthetic Apple" });
+  const started = Date.now();
+  await input.fill("AAPL");
+  let firstResultMs: number | undefined;
+  const holdUntil = started + 1_500;
+  while (Date.now() < holdUntil) {
+    if (firstResultMs === undefined && await result.count() === 1) firstResultMs = Date.now() - started;
+    await new Promise((resolve) => setTimeout(resolve, 40));
+  }
+  runtime.searchMetrics = {
+    optional_hold_ms: Date.now() - started,
+    identity_responses_before_release: runtime.stockResponseCount,
+    optional_responses_before_release: runtime.optionalResponseCount,
+    result_before_optional_release: firstResultMs !== undefined,
+  };
+  let activeBefore: string | null = null;
+  if (!palette && firstResultMs !== undefined) {
+    await input.press("ArrowDown");
+    activeBefore = await input.getAttribute("aria-activedescendant");
+    assert(activeBefore, "stock result must be keyboard selectable before optional data");
+  }
+  runtime.releaseOptional();
+  await waitForCondition(async () => await result.count() === 1, "stock result did not arrive after optional data release", WAIT_DATA_MS);
+  runtime.searchMetrics.first_result_ms = firstResultMs ?? Date.now() - started;
+  const resultBox = await result.boundingBox();
+  assert(resultBox, "stock search result must have a visible box");
+  runtime.searchMetrics.result_height_px = resultBox.height;
+  assert(resultBox.height >= 43.98, `stock search touch target must be 44px high (subpixel tolerance), received ${resultBox.height}`);
+  if (!palette) {
+    await waitForCondition(async () => await page.locator('[role="option"]:visible').filter({ hasText: "Synthetic AAPL Investor" }).count() === 1, "late investor result must remain available");
+    if (activeBefore) assert.equal(await input.getAttribute("aria-activedescendant"), activeBefore, "late investor results must preserve the selected stock");
+  }
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  assert(overflow <= 1, `search causes ${overflow}px horizontal viewport overflow`);
+  await screenshot(page, `search-${palette ? "palette" : "typeahead"}-${condition.name}`);
+  assert.equal(runtime.searchMetrics.optional_responses_before_release, 0, "optional gate must be held during readiness measurement");
+  assert(runtime.stockResponseCount > 0, "core identity fixture must actually be requested");
+  assert(firstResultMs !== undefined, "stock suggestions waited for optional action/investor data despite ready identities");
+}
+
+async function typeaheadOptionalDismissCase(page: Page, runtime: CaseRuntime): Promise<void> {
+  await gotoPath(page, "/portfolio/");
+  const input = await openMobileTypeahead(page);
+  await input.fill("AAPL");
+  await waitForCondition(() => runtime.stockResponseCount > 0, "stock identity request did not resolve");
+  await page.locator("[data-portfolio-local-boundary]").click();
+  runtime.releaseOptional();
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
+  assert.equal(await input.inputValue(), "AAPL");
+  assert.equal(await input.getAttribute("aria-expanded"), "false", "late optional results reopened dismissed search");
+  assert.equal(await page.locator('ul[role="listbox"]:visible').count(), 0);
+}
+
+async function investorFirstSelectionCase(page: Page, runtime: CaseRuntime): Promise<void> {
+  await gotoPath(page, "/portfolio/");
+  const input = await openMobileTypeahead(page);
+  await input.fill("AAPL");
+  const investor = page.locator('[role="option"]:visible').filter({ hasText: "Synthetic AAPL Investor" });
+  await waitForCondition(async () => await investor.count() === 1, "investor result must be usable while stock identities wait");
+  assert.equal(runtime.stockResponseCount, 0);
+  await input.press("ArrowDown");
+  assert.equal(await investor.getAttribute("aria-selected"), "true");
+  runtime.releaseStock();
+  await waitForCondition(async () => await page.locator('[role="option"]:visible').filter({ hasText: "Synthetic Apple" }).count() === 1, "late stock result did not appear");
+  assert.equal(await investor.getAttribute("aria-selected"), "true", "late stock insertion must preserve the selected investor");
+  const activeId = await input.getAttribute("aria-activedescendant");
+  assert(activeId);
+  assert.match(await page.locator(`[id="${activeId}"]`).innerText(), /Synthetic AAPL Investor/);
+}
+
+async function investorInvalidRetryCase(page: Page, runtime: CaseRuntime): Promise<void> {
+  await gotoPath(page, "/portfolio/");
+  const input = await openMobileTypeahead(page);
+  await input.fill("AAPL");
+  await waitForCondition(async () => runtime.investorRequestCount === 1 && await page.locator('[role="option"]:visible').filter({ hasText: "Synthetic Apple" }).count() === 1, "invalid investor response must not block stocks");
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
+  await input.fill("");
+  await input.fill("AAPL");
+  await waitForCondition(async () => runtime.investorRequestCount === 2 && await page.locator('[role="option"]:visible').filter({ hasText: "Synthetic AAPL Investor" }).count() === 1, "invalid 200 investor response must remain retryable");
+}
+
+async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition: BrowserCondition, preview = false): Promise<void> {
+  page.on("console", (message) => {
+    if (message.type() === "debug" && message.text().startsWith("QA_JOURNEY ")) runtime.journeyTrace.push(message.text().slice(11));
+  });
+  // Raw browser source avoids tsx/esbuild function-name helpers in serialized callbacks.
+  await page.addInitScript({ content: `(() => {
+    const emit = (kind, detail) => console.debug("QA_JOURNEY " + JSON.stringify({ kind, path: location.pathname + location.search, y: scrollY, maxScroll: document.documentElement.scrollHeight - innerHeight, detail }));
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key.startsWith("100xfenok:journey:screener:")) emit("snapshot", { key, value: JSON.parse(value) });
+      return setItem.call(this, key, value);
+    };
+    const scrollTo = window.scrollTo.bind(window);
+    window.scrollTo = (...args) => {
+      emit("scrollTo", args);
+      return Reflect.apply(scrollTo, window, args);
+    };
+    window.addEventListener("pagehide", () => emit("pagehide", null));
+  })();` });
+  await gotoPath(page, "/screener?ticker=AAPL&mode=analyze");
+  const ready = page.locator('[data-canvas-plus-screener-service][data-screener-mode="analyze"][data-journey-ready="true"]');
+  const filter = page.locator('input[data-canvas-plus-screener-search="true"]');
+  await waitForCondition(async () => await ready.count() === 1, "source screener did not become ready", WAIT_DATA_MS);
+  assert.equal(await filter.inputValue(), "AAPL");
+  await waitForCondition(async () => {
+    return await page.locator('[data-earnings-overview="AAPL"]').count() > 0
+      && await page.locator('[data-testid="earnings-overview-state"]').count() === 0;
+  }, "source earnings fixtures did not settle before navigation", WAIT_DATA_MS);
+  const card = page.locator('[data-canvas-plus-screener-card="mobile"]:visible').filter({ has: page.locator('button[aria-label="AAPL 상세 접기"]') });
+  const selected = card.getByRole("checkbox", { name: "선택", exact: true });
+  // The existing label's 44px pseudo-element owns the checkbox tap target.
+  await card.locator("label[data-screener-checkbox-target]").tap();
+  assert.equal(await selected.isChecked(), true, "tapping the selection label must check the stock");
+  await waitForCondition(async () => (await page.locator('[data-canvas-plus-screener-selection-actions]').innerText()).includes("1개 선택"), "source selection did not settle");
+  const source = new URL(page.url());
+  const returnTo = `${source.pathname.replace(/\/+$/, "")}${source.search}${source.hash}`;
+  await page.evaluate(() => {
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, 600);
+  });
+  const sourceScroll = await page.evaluate(() => window.scrollY);
+  assert(sourceScroll > 100, "scroll restoration requires a meaningfully scrolled source page");
+  runtime.searchMetrics = { source_scroll_y: sourceScroll };
+  if (preview) {
+    const input = await openMobileTypeahead(page);
+    await input.fill("AAPL");
+    const result = page.locator('[role="option"]:visible').filter({ hasText: "Synthetic Apple" });
+    await waitForCondition(async () => await result.count() === 1, "search stock option did not appear");
+    await result.tap();
+    const drawer = page.locator('[data-testid="typeahead-preview"]');
+    await waitForCondition(async () => await drawer.count() === 1, "stock preview did not open");
+    const full = drawer.getByRole("link", { name: "전체 보기", exact: true });
+    const box = await full.boundingBox();
+    assert(box && box.height >= 43.98, "stock preview primary touch target must be at least 44px high");
+    assert.equal(new URL((await full.getAttribute("href"))!, QA_BASE_URL).searchParams.get("returnTo"), returnTo);
+    await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
+    await full.tap();
+  } else {
+    // Ctrl+K is the global opener even while the source checkbox retains focus.
+    const dialog = await paletteOpen(page, false, "Control+k");
+    runtime.searchMetrics.palette_scroll_y = await page.evaluate(() => window.scrollY);
+    const input = dialog.locator("input");
+    await input.fill("AAPL");
+    await waitForCondition(async () => await dialog.locator("button").filter({ has: page.locator("span.font-medium", { hasText: /^AAPL$/ }) }).count() === 1, "palette AAPL result did not appear");
+    runtime.searchMetrics.pre_navigation_scroll_y = await page.evaluate(() => window.scrollY);
+    await input.press("Enter");
+  }
+  await waitForCondition(() => pagePath(page) === "/stock/AAPL", "search did not reach real stock detail", WAIT_DATA_MS);
+  await waitForCondition(async () => await page.locator('[data-canvas-plus-stock-detail-preview] h1').count() === 1, "real stock hero did not render", WAIT_DATA_MS);
+  assert.equal(new URL(page.url()).searchParams.get("returnTo"), returnTo, "stock detail must retain the full originating filter context");
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  assert(overflow <= 1, `stock detail causes ${overflow}px horizontal viewport overflow`);
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
+  await screenshot(page, `search-stock-${preview ? "preview" : "palette"}-${condition.name}`);
+  if (preview) {
+    const back = page.locator('.appbar a[aria-label="스크리너로 돌아가기"]');
+    assert.equal(new URL((await back.getAttribute("href"))!, QA_BASE_URL).search, source.search);
+    await back.tap();
+  } else {
+    await page.goBack({ waitUntil: "domcontentloaded" });
+  }
+  await waitForCondition(async () => await ready.count() === 1, "returning screener did not restore ready state", WAIT_DATA_MS);
+  assert.equal(new URL(page.url()).search, source.search, "return navigation must preserve filters and analysis mode");
+  assert.equal(await filter.inputValue(), "AAPL");
+  assert.equal(await selected.isChecked(), true, "return navigation must preserve selected stock");
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
+  runtime.searchMetrics.restored_scroll_y = await page.evaluate(() => window.scrollY);
+  await waitForCondition(async () => Math.abs(await page.evaluate(() => window.scrollY) - sourceScroll) <= 80, `${preview ? "In-app return" : "Browser Back"} must restore the source scroll position`);
+  runtime.searchMetrics.restored_scroll_y = await page.evaluate(() => window.scrollY);
+  await screenshot(page, `search-return-${preview ? "preview" : "palette"}-${condition.name}`);
+}
+
 async function readCsvDownload(page: Page, button: Locator): Promise<string> {
   const [download] = await Promise.all([page.waitForEvent("download", { timeout: WAIT_SHORT_MS }), button.click()]);
   return readDownload(download);
 }
 
-async function macroCsvVisibleCase(page: Page, _runtime: CaseRuntime, condition: BrowserCondition): Promise<void> {
+async function macroCsvVisibleCase(page: Page, runtime: CaseRuntime, condition: BrowserCondition): Promise<void> {
   await gotoPath(page, "/macro-chart?series=sp500,DGS10&transform=raw,raw&range=MAX&hidden=DGS10");
   await waitForCondition(async () => await page.locator('[data-macro-v2-table-drawer="true"]').getAttribute("data-macro-v2-table-state") === "ready", "macro table did not reach ready state", WAIT_DATA_MS);
   assert.equal(await page.locator('[data-macro-chart-series-range="sp500"]').count(), 1, "macro hero must retain the visible S&P 500 series");
   const tableDrawer = page.locator('[data-macro-v2-table-drawer="true"]');
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
   await tableDrawer.locator("summary").click();
+  runtime.searchMetrics.macro_drawer_open_after_click = await tableDrawer.getAttribute("open") !== null;
+  runtime.searchMetrics.macro_more_modal_open = await page.locator('[role="dialog"]').count() > 0;
   await waitForCondition(async () => await page.locator("[data-cp-data-table]").count() === 1, "macro data table did not open");
   await screenshot(page, `macro-tablet-${condition.name}`);
   const heroCsvButton = page.getByRole("group", { name: "공유 및 내보내기" }).getByRole("button", { name: "CSV", exact: true });
@@ -957,6 +1194,13 @@ function makeCases(): BrowserCase[] {
     { name: "palette-input-selection", run: paletteInputSelectionCase },
     { name: "typeahead-stale-clear", options: { delayedInitialStock: true }, run: typeaheadStaleCase },
     { name: "typeahead-stale-dismiss", options: { delayedInitialStock: true }, run: typeaheadStaleDismissCase },
+    { name: "typeahead-optional-readiness", options: { delayedOptionalSearch: true }, run: searchOptionalReadinessCase },
+    { name: "palette-optional-readiness", options: { delayedOptionalSearch: true }, run: (page, runtime, condition) => searchOptionalReadinessCase(page, runtime, condition, true) },
+    { name: "typeahead-optional-dismiss", options: { delayedOptionalSearch: true }, run: typeaheadOptionalDismissCase },
+    { name: "typeahead-investor-first", options: { delayedInitialStock: true, searchInvestors: true }, run: investorFirstSelectionCase },
+    { name: "typeahead-investor-retry", options: { invalidInitialInvestor: true }, run: investorInvalidRetryCase },
+    { name: "search-stock-browser-return", run: searchStockReturnCase },
+    { name: "search-preview-app-return", run: (page, runtime, condition) => searchStockReturnCase(page, runtime, condition, true) },
     { name: "macro-csv-visible", run: macroCsvVisibleCase },
   ];
   for (const mode of ["unavailable", "failed", "null", "disjoint"] as const) {
@@ -971,12 +1215,13 @@ function makeCases(): BrowserCase[] {
 
 /*
  * These are the exact full-document destinations whose Next RSC prefetches
- * this synthetic harness aborts. Keeping the paths finite means an aborted
- * document, data request, or foreign request still remains a browser error.
+ * this synthetic harness fulfills without a Flight payload. Keeping paths
+ * finite means unknown prefetches, documents, data and foreign requests remain checked.
  */
 const INTENTIONAL_RSC_ABORT_PATHS = new Set([
   "/",
   "/screener",
+  "/superinvestors",
   "/stock/AAPL",
   "/stock/NVDA",
   "/stock/KORU",
@@ -1049,11 +1294,15 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
       });
       await context.route("**/*", (route) => router.handle(route));
       page = await context.newPage();
+      page.on("request", (request) => {
+        // Register before interception: a browser may cancel a prefetch before the route handler runs.
+        if (isHarnessRscRequest(request, new URL(request.url()))) router.markControlledPrefetch(request);
+      });
       page.on("requestfailed", (request) => {
         const url = new URL(request.url());
         const failure = request.failure()?.errorText ?? "unknown";
         if (url.origin !== QA_ORIGIN) return;
-        if (router.isHarnessAborted(request) && isIntentionalRscAbort(request, url, failure, condition.name)) {
+        if (router.isControlledPrefetch(request) && isIntentionalRscAbort(request, url, failure, condition.name)) {
           router.expectedCancellations.push(requestFailureDetail(request, url, failure));
           return;
         }
@@ -1086,6 +1335,8 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
         case: testCase.name,
         status: "passed",
         duration_ms: Date.now() - started,
+        search_metrics: router.searchMetrics,
+        journey_trace: router.journeyTrace,
         blocked_foreign: [...new Set(router.blockedForeign)],
         unexpected_data_paths: [...new Set(router.unexpectedDataPaths)],
         expected_cancellations: router.expectedCancellations,
@@ -1103,6 +1354,8 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
         case: testCase.name,
         status: "failed",
         duration_ms: Date.now() - started,
+        search_metrics: router.searchMetrics,
+        journey_trace: router.journeyTrace,
         error: error instanceof Error ? error.stack ?? error.message : String(error),
         blocked_foreign: [...new Set(router.blockedForeign)],
         unexpected_data_paths: [...new Set(router.unexpectedDataPaths)],
@@ -1111,6 +1364,7 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
       });
     } finally {
       router.releaseStock();
+      router.releaseOptional();
       if (context) await context.close().catch(() => undefined);
     }
   }

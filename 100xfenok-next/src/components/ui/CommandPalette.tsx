@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { ROUTES, SITEMAP_PRODUCT_ROUTES, withQuery } from "@/lib/routes";
+import { currentJourneyReturnTo } from "@/lib/journey-context";
 import { getWatchlist, toggleWatch, useWatchlist } from "@/lib/watchlist";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import { stooqSeriesIdFromInput } from "@/lib/macro-chart/stooq";
@@ -41,6 +42,7 @@ type Item = {
   sub?: string;
   section: "종목" | "화면" | "동작";
   href?: string;
+  stockTicker?: string;
   kbd?: string;
   action?: () => void;
 };
@@ -84,7 +86,7 @@ let stocksPromise: Promise<StockRow[]> | null = null;
 function loadStocks(): Promise<StockRow[]> {
   if (stocksCache) return Promise.resolve(stocksCache);
   if (stocksPromise) return stocksPromise;
-  stocksPromise = stocksProvider.load()
+  stocksPromise = stocksProvider.loadIdentity()
     .then((records) => records.map((record) => ({
       symbol: String(record.symbol ?? ""),
       companyName: String(record.companyName ?? ""),
@@ -115,14 +117,15 @@ function matchStocks(query: string, stocks: StockRow[]): StockRow[] {
   return [...exact, ...prefix, ...rest].slice(0, 8);
 }
 
-function stockRow(s: StockRow): Item {
+function stockRow(s: StockRow, returnTo: string | null): Item {
   const meta = [s.companyName, s.sector].filter(Boolean).join(" · ");
   return {
     id: `stock:${s.symbol}`,
     label: s.symbol,
     sub: meta || undefined,
     section: "종목",
-    href: ROUTES.stock(s.symbol),
+    stockTicker: s.symbol,
+    href: ROUTES.stock(s.symbol, returnTo),
   };
 }
 
@@ -141,8 +144,10 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
   const [active, setActive] = React.useState(0);
   const [showHelp, setShowHelp] = React.useState(false);
   const [recent, setRecent] = React.useState<string[]>([]);
-  const [stocks, setStocks] = React.useState<StockRow[]>([]);
+  const [stocks, setStocks] = React.useState<StockRow[]>(() => stocksCache ?? []);
+  const [stocksLoading, setStocksLoading] = React.useState(() => !stocksCache);
   const watchlist = useWatchlist();
+  const journeyReturnTo = currentJourneyReturnTo();
   const gArmedAt = React.useRef(0);
 
   React.useEffect(() => {
@@ -154,9 +159,21 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
 
   // Load the ticker universe lazily on first open; never blocks first paint.
   React.useEffect(() => {
-    if (!open || stocksCache) { if (stocksCache) setStocks(stocksCache); return; }
+    if (!open || stocksCache) {
+      if (stocksCache) {
+        setStocks(stocksCache);
+        setStocksLoading(false);
+      }
+      return;
+    }
     let cancelled = false;
-    loadStocks().then((rows) => { if (!cancelled) setStocks(rows); });
+    setStocksLoading(true);
+    loadStocks().then((rows) => {
+      if (!cancelled) {
+        setStocks(rows);
+        setStocksLoading(false);
+      }
+    });
     return () => { cancelled = true; };
   }, [open ]);
 
@@ -179,11 +196,11 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
         .map((t) => bySymbol.get(t.toUpperCase()))
         .filter((s): s is StockRow => Boolean(s))
         .slice(0, 5)
-        .map(stockRow);
-      const top = watched.length > 0 ? watched : stocks.slice(0, 3).map(stockRow);
+        .map((stock) => stockRow(stock, journeyReturnTo));
+      const top = watched.length > 0 ? watched : stocks.slice(0, 3).map((stock) => stockRow(stock, journeyReturnTo));
       return [...top, ...SCREEN_ITEMS];
     }
-    const hits = matchStocks(q, stocks).map(stockRow);
+    const hits = matchStocks(q, stocks).map((stock) => stockRow(stock, journeyReturnTo));
     const screens = SCREEN_ITEMS.filter(
       (it) => matchesChosung(q, it.label) || matchesChosung(q, it.sub ?? ""),
     );
@@ -215,7 +232,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
       }
     }
     return [...hits, ...screens, ...actions];
-  }, [query, stocks, bySymbol, watchlist]);
+  }, [open, query, stocks, bySymbol, watchlist, journeyReturnTo]);
 
   const allItems = items ?? dynamicItems;
 
@@ -238,7 +255,10 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
   const select = React.useCallback((it: Item, opts?: { keepOpen?: boolean }) => {
     pushRecent(it.id);
     onSelect?.(it.id);
-    if (it.href) window.location.href = it.href;
+    const href = it.stockTicker
+      ? ROUTES.stock(it.stockTicker, currentJourneyReturnTo())
+      : it.href;
+    if (href) window.location.href = href;
     it.action?.();
     if (!opts?.keepOpen) setOpen(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -340,8 +360,8 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
         const sym = id.slice("stock:".length);
         if (!sym) return undefined;
         const row = bySymbol.get(sym.toUpperCase());
-        if (row) return stockRow(row);
-        return { id, label: sym, section: "종목", href: ROUTES.stock(sym) } as Item;
+        if (row) return stockRow(row, journeyReturnTo);
+        return { id, label: sym, section: "종목", stockTicker: sym, href: ROUTES.stock(sym, journeyReturnTo) } as Item;
       }
       if (id.startsWith("screen:")) {
         return SCREEN_ITEMS.find((x) => x.id === id);
@@ -384,7 +404,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
                 <button
                   key={`recent-${it.id}`}
                   onClick={() => select(it, it.kbd === "w" ? { keepOpen: true } : undefined)}
-                  className="w-full text-left px-2 py-1.5 rounded-[6px] text-[13px] text-[var(--fnk-neutral-700)] flex justify-between hover:bg-[var(--fnk-neutral-50)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+                  className="w-full min-h-[44px] text-left px-2 py-1.5 rounded-[6px] text-[13px] text-[var(--fnk-neutral-700)] flex items-center justify-between hover:bg-[var(--fnk-neutral-50)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
                 >
                   <span>{it.label}</span><span className="text-[var(--fnk-neutral-500)] text-[11px]">{it.sub}</span>
                 </button>
@@ -404,7 +424,7 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
                       key={it.id}
                       onMouseEnter={() => setActive(idx)}
                       onClick={() => select(it, it.kbd === "w" ? { keepOpen: true } : undefined)}
-                      className={`w-full text-left px-2 py-1.5 rounded-[6px] flex items-center justify-between text-[13px] transition-colors duration-120 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive ${isActive ? "bg-[var(--fnk-neutral-50)] shadow-[inset_2px_0_0_#1B73D3] text-[var(--fnk-neutral-900)]" : "text-[var(--fnk-neutral-700)] hover:bg-[var(--fnk-neutral-50)]"}`}
+                      className={`w-full min-h-[44px] text-left px-2 py-1.5 rounded-[6px] flex items-center justify-between text-[13px] transition-colors duration-120 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive ${isActive ? "bg-[var(--fnk-neutral-50)] shadow-[inset_2px_0_0_#1B73D3] text-[var(--fnk-neutral-900)]" : "text-[var(--fnk-neutral-700)] hover:bg-[var(--fnk-neutral-50)]"}`}
                     >
                       <span className="font-medium">{starred ? "★ " : ""}{it.label}</span>
                       <span className="text-[11px] text-[var(--fnk-neutral-500)] flex items-center gap-2">
@@ -419,7 +439,11 @@ export function CommandPalette({ items, onSelect }: { items?: Item[]; onSelect?:
               </div>
             )
           ))}
-          {filtered.length === 0 && <div className="px-4 py-8 text-center text-[13px] text-[var(--fnk-neutral-500)]">검색 결과 없음</div>}
+          {filtered.length === 0 && query && stocksLoading ? (
+            <div className="px-4 py-8 text-center text-[13px] text-[var(--fnk-neutral-500)]">검색 중…</div>
+          ) : filtered.length === 0 ? (
+            <div className="px-4 py-8 text-center text-[13px] text-[var(--fnk-neutral-500)]">검색 결과 없음</div>
+          ) : null}
         </div>
         <div className="flex items-center gap-3 h-9 px-4 border-t border-[var(--fnk-neutral-200)] text-[11px] text-[var(--fnk-neutral-500)]">
           {recentTickers.length > 0 && (
