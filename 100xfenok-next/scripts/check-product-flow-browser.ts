@@ -339,7 +339,7 @@ class FixtureRouter implements CaseRuntime {
   searchMetrics: Record<string, number | boolean> = {};
   private optionalReleased = false;
   private optionalWaiters: Array<() => void> = [];
-  private readonly harnessAbortedRequests = new WeakSet<Request>();
+  private readonly controlledPrefetchRequests = new WeakSet<Request>();
   private readonly options: FixtureRuntimeOptions;
   private stockWaiters: Array<() => void> = [];
 
@@ -364,12 +364,12 @@ class FixtureRouter implements CaseRuntime {
     return new Promise((resolve) => this.stockWaiters.push(resolve));
   }
 
-  markHarnessAborted(request: Request): void {
-    this.harnessAbortedRequests.add(request);
+  markControlledPrefetch(request: Request): void {
+    this.controlledPrefetchRequests.add(request);
   }
 
-  isHarnessAborted(request: Request): boolean {
-    return this.harnessAbortedRequests.has(request);
+  isControlledPrefetch(request: Request): boolean {
+    return this.controlledPrefetchRequests.has(request);
   }
 
   async handle(route: Route): Promise<void> {
@@ -381,8 +381,10 @@ class FixtureRouter implements CaseRuntime {
       return;
     }
     if (isHarnessRscRequest(request, requestUrl)) {
-      this.markHarnessAborted(request);
-      await route.abort("aborted");
+      this.markControlledPrefetch(request);
+      // Next treats a non-Flight/empty response as a full-document fallback.
+      // A fulfilled prefetch avoids manufacturing network/page errors by aborting it.
+      await route.fulfill({ status: 204, contentType: "text/html", body: "" });
       return;
     }
     if (!requestUrl.pathname.startsWith("/data/") && !requestUrl.pathname.startsWith("/api/")) {
@@ -426,7 +428,15 @@ class FixtureRouter implements CaseRuntime {
     if (pathname === "/api/data/stockanalysis/stocks/AAPL" || pathname === "/api/data/stockanalysis/financials/AAPL") return { status: 200, body: {} };
     if (pathname === "/data/damodaran/industry_benchmarks.json") return { status: 200, body: {} };
     if (pathname === "/data/slickcharts/stocks/AAPL.json") return { status: 200, body: {} };
-    if (pathname === "/data/earnings-overview/AAPL.json") return { status: 503, body: { error: "SYNTHETIC_UNAVAILABLE" } };
+    if (pathname === "/data/earnings-overview/AAPL.json") return { status: 200, body: {
+      schemaVersion: 1, ticker: "AAPL", companyName: "Synthetic Apple", currency: "USD",
+      updatedAt: "2026-09-06T00:00:00Z", status: "current", notice: null,
+      periods: [{
+        end: "2026-06-30", label: "Synthetic Q2", source: { name: "Synthetic filing", url: "https://www.sec.gov/Archives/synthetic-fixture", filedAt: "2026-07-30" },
+        income: { revenue: 100, costOfRevenue: 40, grossProfit: 60, operatingExpenses: 20, operatingIncome: 40, pretaxIncome: 45, incomeTax: 10, netIncome: 35, dilutedEps: 2 },
+        segments: [], segmentBasis: null, notes: [],
+      }],
+    } };
     if (pathname === "/data/computed/entity_graph_stock_index.json") return { status: 200, body: graphIndex() };
     if (pathname === "/data/computed/entity_graph_stock_services.json") return { status: 200, body: serviceIndex() };
     if (pathname === "/data/benchmarks/summaries.json") return { status: 200, body: benchmarkSummary() };
@@ -1047,8 +1057,8 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   await waitForCondition(async () => await ready.count() === 1, "source screener did not become ready", WAIT_DATA_MS);
   assert.equal(await filter.inputValue(), "AAPL");
   await waitForCondition(async () => {
-    const states = await page.locator('[data-testid="earnings-overview-state"]').allTextContents();
-    return states.length > 0 && states.every((text) => text.includes("공식 분기 실적을 불러오지 못했습니다."));
+    return await page.locator('[data-earnings-overview="AAPL"]').count() > 0
+      && await page.locator('[data-testid="earnings-overview-state"]').count() === 0;
   }, "source earnings fixtures did not settle before navigation", WAIT_DATA_MS);
   const card = page.locator('[data-canvas-plus-screener-card="mobile"]:visible').filter({ has: page.locator('button[aria-label="AAPL 상세 접기"]') });
   const selected = card.getByRole("checkbox", { name: "선택", exact: true });
@@ -1073,8 +1083,12 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
     assert.equal(new URL((await full.getAttribute("href"))!, QA_BASE_URL).searchParams.get("returnTo"), returnTo);
     await full.tap();
   } else {
-    await page.evaluate(() => window.scrollTo(0, 600));
+    await page.evaluate(() => {
+      document.documentElement.style.scrollBehavior = "auto";
+      window.scrollTo(0, 600);
+    });
     sourceScroll = await page.evaluate(() => window.scrollY);
+    assert(sourceScroll > 100, "scroll restoration requires a meaningfully scrolled source page");
     // Ctrl+K is the global opener even while the source checkbox retains focus.
     const dialog = await paletteOpen(page, false, "Control+k");
     const input = dialog.locator("input");
@@ -1172,12 +1186,13 @@ function makeCases(): BrowserCase[] {
 
 /*
  * These are the exact full-document destinations whose Next RSC prefetches
- * this synthetic harness aborts. Keeping the paths finite means an aborted
- * document, data request, or foreign request still remains a browser error.
+ * this synthetic harness fulfills without a Flight payload. Keeping paths
+ * finite means unknown prefetches, documents, data and foreign requests remain checked.
  */
 const INTENTIONAL_RSC_ABORT_PATHS = new Set([
   "/",
   "/screener",
+  "/superinvestors",
   "/stock/AAPL",
   "/stock/NVDA",
   "/stock/KORU",
@@ -1250,11 +1265,15 @@ async function runCondition(browser: Browser, condition: BrowserCondition, recei
       });
       await context.route("**/*", (route) => router.handle(route));
       page = await context.newPage();
+      page.on("request", (request) => {
+        // Register before interception: a browser may cancel a prefetch before the route handler runs.
+        if (isHarnessRscRequest(request, new URL(request.url()))) router.markControlledPrefetch(request);
+      });
       page.on("requestfailed", (request) => {
         const url = new URL(request.url());
         const failure = request.failure()?.errorText ?? "unknown";
         if (url.origin !== QA_ORIGIN) return;
-        if (router.isHarnessAborted(request) && isIntentionalRscAbort(request, url, failure, condition.name)) {
+        if (router.isControlledPrefetch(request) && isIntentionalRscAbort(request, url, failure, condition.name)) {
           router.expectedCancellations.push(requestFailureDetail(request, url, failure));
           return;
         }
