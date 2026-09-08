@@ -1400,7 +1400,7 @@ export default function ScreenerClient({
   }, []);
 
   const guruMap = guruIndex?.holders ?? null;
-  const holdingChanges = guruIndex?.holding_changes ?? {};
+  const holdingChanges = useMemo(() => guruIndex?.holding_changes ?? {}, [guruIndex]);
 
   useEffect(() => {
     let cancelled = false;

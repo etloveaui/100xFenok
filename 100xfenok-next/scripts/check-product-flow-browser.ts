@@ -1058,20 +1058,21 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   page.on("console", (message) => {
     if (message.type() === "debug" && message.text().startsWith("QA_JOURNEY ")) runtime.journeyTrace.push(message.text().slice(11));
   });
-  await page.addInitScript(() => {
-    const emit = (kind: string, detail: unknown) => console.debug("QA_JOURNEY " + JSON.stringify({ kind, path: location.pathname + location.search, y: scrollY, detail }));
+  // Raw browser source avoids tsx/esbuild function-name helpers in serialized callbacks.
+  await page.addInitScript({ content: `(() => {
+    const emit = (kind, detail) => console.debug("QA_JOURNEY " + JSON.stringify({ kind, path: location.pathname + location.search, y: scrollY, detail }));
     const setItem = Storage.prototype.setItem;
     Storage.prototype.setItem = function (key, value) {
       if (key.startsWith("100xfenok:journey:screener:")) emit("snapshot", { key, value: JSON.parse(value) });
       return setItem.call(this, key, value);
     };
     const scrollTo = window.scrollTo.bind(window);
-    window.scrollTo = ((...args: unknown[]) => {
+    window.scrollTo = (...args) => {
       emit("scrollTo", args);
       return Reflect.apply(scrollTo, window, args);
-    }) as typeof window.scrollTo;
+    };
     window.addEventListener("pagehide", () => emit("pagehide", null));
-  });
+  })();` });
   await gotoPath(page, "/screener?ticker=AAPL&mode=analyze");
   const ready = page.locator('[data-canvas-plus-screener-service][data-screener-mode="analyze"][data-journey-ready="true"]');
   const filter = page.locator('input[data-canvas-plus-screener-search="true"]');
