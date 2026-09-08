@@ -1060,7 +1060,7 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   });
   // Raw browser source avoids tsx/esbuild function-name helpers in serialized callbacks.
   await page.addInitScript({ content: `(() => {
-    const emit = (kind, detail) => console.debug("QA_JOURNEY " + JSON.stringify({ kind, path: location.pathname + location.search, y: scrollY, detail }));
+    const emit = (kind, detail) => console.debug("QA_JOURNEY " + JSON.stringify({ kind, path: location.pathname + location.search, y: scrollY, maxScroll: document.documentElement.scrollHeight - innerHeight, detail }));
     const setItem = Storage.prototype.setItem;
     Storage.prototype.setItem = function (key, value) {
       if (key.startsWith("100xfenok:journey:screener:")) emit("snapshot", { key, value: JSON.parse(value) });
@@ -1090,7 +1090,13 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   await waitForCondition(async () => (await page.locator('[data-canvas-plus-screener-selection-actions]').innerText()).includes("1개 선택"), "source selection did not settle");
   const source = new URL(page.url());
   const returnTo = `${source.pathname.replace(/\/+$/, "")}${source.search}${source.hash}`;
-  let sourceScroll = 0;
+  await page.evaluate(() => {
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, 600);
+  });
+  const sourceScroll = await page.evaluate(() => window.scrollY);
+  assert(sourceScroll > 100, "scroll restoration requires a meaningfully scrolled source page");
+  runtime.searchMetrics = { source_scroll_y: sourceScroll };
   if (preview) {
     const input = await openMobileTypeahead(page);
     await input.fill("AAPL");
@@ -1105,13 +1111,6 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
     assert.equal(new URL((await full.getAttribute("href"))!, QA_BASE_URL).searchParams.get("returnTo"), returnTo);
     await full.tap();
   } else {
-    await page.evaluate(() => {
-      document.documentElement.style.scrollBehavior = "auto";
-      window.scrollTo(0, 600);
-    });
-    sourceScroll = await page.evaluate(() => window.scrollY);
-    assert(sourceScroll > 100, "scroll restoration requires a meaningfully scrolled source page");
-    runtime.searchMetrics = { source_scroll_y: sourceScroll };
     // Ctrl+K is the global opener even while the source checkbox retains focus.
     const dialog = await paletteOpen(page, false, "Control+k");
     runtime.searchMetrics.palette_scroll_y = await page.evaluate(() => window.scrollY);
@@ -1140,11 +1139,9 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   assert.equal(await filter.inputValue(), "AAPL");
   assert.equal(await selected.isChecked(), true, "return navigation must preserve selected stock");
   await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
-  if (!preview) {
-    runtime.searchMetrics.restored_scroll_y = await page.evaluate(() => window.scrollY);
-    await waitForCondition(async () => Math.abs(await page.evaluate(() => window.scrollY) - sourceScroll) <= 80, "browser Back must restore the source scroll position");
-    runtime.searchMetrics.restored_scroll_y = await page.evaluate(() => window.scrollY);
-  }
+  runtime.searchMetrics.restored_scroll_y = await page.evaluate(() => window.scrollY);
+  await waitForCondition(async () => Math.abs(await page.evaluate(() => window.scrollY) - sourceScroll) <= 80, `${preview ? "In-app return" : "Browser Back"} must restore the source scroll position`);
+  runtime.searchMetrics.restored_scroll_y = await page.evaluate(() => window.scrollY);
   await screenshot(page, `search-return-${preview ? "preview" : "palette"}-${condition.name}`);
 }
 
