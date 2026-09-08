@@ -1089,6 +1089,7 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
     });
     sourceScroll = await page.evaluate(() => window.scrollY);
     assert(sourceScroll > 100, "scroll restoration requires a meaningfully scrolled source page");
+    runtime.searchMetrics = { source_scroll_y: sourceScroll };
     // Ctrl+K is the global opener even while the source checkbox retains focus.
     const dialog = await paletteOpen(page, false, "Control+k");
     const input = dialog.locator("input");
@@ -1101,6 +1102,7 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   assert.equal(new URL(page.url()).searchParams.get("returnTo"), returnTo, "stock detail must retain the full originating filter context");
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   assert(overflow <= 1, `stock detail causes ${overflow}px horizontal viewport overflow`);
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
   await screenshot(page, `search-stock-${preview ? "preview" : "palette"}-${condition.name}`);
   if (preview) {
     const back = page.locator('.appbar a[aria-label="스크리너로 돌아가기"]');
@@ -1113,9 +1115,11 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   assert.equal(new URL(page.url()).search, source.search, "return navigation must preserve filters and analysis mode");
   assert.equal(await filter.inputValue(), "AAPL");
   assert.equal(await selected.isChecked(), true, "return navigation must preserve selected stock");
+  await page.waitForLoadState("networkidle", { timeout: WAIT_DATA_MS });
   if (!preview) {
+    runtime.searchMetrics.restored_scroll_y = await page.evaluate(() => window.scrollY);
     await waitForCondition(async () => Math.abs(await page.evaluate(() => window.scrollY) - sourceScroll) <= 80, "browser Back must restore the source scroll position");
-    runtime.searchMetrics = { source_scroll_y: sourceScroll, restored_scroll_y: await page.evaluate(() => window.scrollY) };
+    runtime.searchMetrics.restored_scroll_y = await page.evaluate(() => window.scrollY);
   }
   await screenshot(page, `search-return-${preview ? "preview" : "palette"}-${condition.name}`);
 }

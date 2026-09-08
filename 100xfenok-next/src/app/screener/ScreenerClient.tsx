@@ -1983,9 +1983,28 @@ export default function ScreenerClient({
     });
   }, [safeCursor, selectedTickers, compareTickers, activeCardId]);
   useEffect(() => {
-    // Keep the restored context current for another Back/Forward round trip.
-    // Hydration prevents the empty mount state from replacing the saved selection.
-    if (journeyHydrated) saveJourneyBeforeNavigate();
+    // Global search can navigate without a row's onBeforeNavigate callback.
+    // Persist scrolling as well as selection changes, after the restoration frame.
+    if (!journeyHydrated) return;
+    let frame: number | null = null;
+    const persist = () => {
+      if (currentJourneyReturnTo() === journeyReturnTo) saveJourneyBeforeNavigate();
+    };
+    const schedule = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        persist();
+      });
+    };
+    schedule();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("pagehide", persist);
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("pagehide", persist);
+    };
   }, [journeyHydrated, journeyReturnTo, saveJourneyBeforeNavigate]);
   const renderGuruHolderBadge = useCallback(
     (stock: ScreenerStock) => (
