@@ -1,46 +1,43 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "oecd_cli",
-  "updated_at": "2026-09-01T12:48:56.407Z",
-  "retry_set": [
-    "oecd_cli"
-  ],
+  "updated_at": "2026-09-08T12:18:57.984Z",
+  "retry_set": [],
   "items": {
     "oecd_cli": {
       "key": "oecd_cli",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/oecd_cli/lkg/oecd_cli.json",
-        "payload_sha256": "31aa16a2a4cf493377c9cd7a271d9ce053d3dbfa550761c7bf38d85edbbd5ffc",
-        "source_as_of": "2026-06-01"
+        "path": "data/admin/oecd_cli/shadow/oecd-cli.json",
+        "payload_sha256": "670951f16e437b336ea19de1849d075297354b7624fae9412fa53daf0737f44c",
+        "source_as_of": "2026-08-01"
       },
-      "updated_at": "2026-09-01T12:48:56.407Z",
+      "updated_at": "2026-09-08T12:18:57.984Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "31aa16a2a4cf493377c9cd7a271d9ce053d3dbfa550761c7bf38d85edbbd5ffc",
-        "source_as_of": "2026-06-01",
-        "run_id": "30260263485",
+        "payload_sha256": "670951f16e437b336ea19de1849d075297354b7624fae9412fa53daf0737f44c",
+        "source_as_of": "2026-08-01",
+        "run_id": "34225371848",
         "run_attempt": 1,
-        "observed_at": "2026-07-27T11:01:46.292Z"
+        "observed_at": "2026-09-08T12:18:57.984Z"
       },
       "lkg": {
         "path": "data/admin/oecd_cli/lkg/oecd_cli.json",
         "payload_sha256": "31aa16a2a4cf493377c9cd7a271d9ce053d3dbfa550761c7bf38d85edbbd5ffc",
         "source_as_of": "2026-06-01"
       },
-      "latest_failure": {
+      "recovered_from_run_id": "30783513579",
+      "recovered_at": "2026-09-08T12:18:57.984Z",
+      "recovery_run_id": "34225371848",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "30783513579",
         "run_attempt": 1,
         "observed_at": "2026-08-03T04:21:47.675Z",
         "reason": "controlled_failure"
-      },
-      "latest_promotion_deferral": {
-        "run_id": "33509735496",
-        "run_attempt": 1,
-        "observed_at": "2026-09-01T12:48:56.407Z",
-        "reason": "recovery_not_advanced_by_provider"
       }
     }
   }
