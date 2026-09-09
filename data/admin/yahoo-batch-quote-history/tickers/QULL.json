@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 412,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -188,6 +175,20 @@
       "run_id": "33934936590",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 469,
+      "natural": true,
+      "observed_at": "2026-09-09T01:18:24Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34298546032",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -206,23 +207,23 @@
     "error": "recovery_not_advanced_by_provider",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 480,
+    "latency_ms": 469,
     "natural": true,
-    "observed_at": "2026-09-05T01:04:38Z",
+    "observed_at": "2026-09-09T01:18:24Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33934936590",
+    "run_id": "34298546032",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "latest_promotion_deferral": {
     "event_name": "schedule",
-    "observed_at": "2026-09-05T01:04:38Z",
+    "observed_at": "2026-09-09T01:18:24Z",
     "provider_history_as_of": "2026-08-25",
     "provider_quote_as_of": "2026-08-17T19:30:16Z",
     "reason": "recovery_not_advanced_by_provider",
     "run_attempt": 1,
-    "run_id": "33934936590"
+    "run_id": "34298546032"
   },
   "lkg": {
     "fetched_at": "2026-08-27T04:34:57Z",
@@ -258,5 +259,5 @@
     "source_as_of": "2026-08-17T19:30:16Z"
   },
   "ticker": "QULL",
-  "updated_at": "2026-09-05T01:04:38Z"
+  "updated_at": "2026-09-09T01:18:24Z"
 }

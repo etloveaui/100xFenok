@@ -3,20 +3,6 @@
     {
       "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2444,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for 012510.KS despite available history",
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 497,
@@ -347,6 +333,39 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-09T01:18:24Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34298546032",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -386,10 +405,10 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-08T01:15:39Z",
+    "observed_at": "2026-09-09T01:18:24Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34298546032",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -433,9 +452,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-08T01:15:39Z",
+    "observed_at": "2026-09-09T01:18:24Z",
     "run_attempt": 1,
-    "run_id": "34175958781"
+    "run_id": "34298546032"
   },
   "lkg": {
     "fetched_at": "2026-07-15T00:10:47Z",
@@ -461,5 +480,5 @@
     "source_as_of": "2026-06-25T06:30:30Z"
   },
   "ticker": "012510.KS",
-  "updated_at": "2026-09-08T01:15:39Z"
+  "updated_at": "2026-09-09T01:18:24Z"
 }

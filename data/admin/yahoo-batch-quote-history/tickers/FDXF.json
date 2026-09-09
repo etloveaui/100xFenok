@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 407,
-      "natural": true,
-      "observed_at": "2026-08-11T00:05:28Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31444023136",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 404,
       "natural": true,
       "observed_at": "2026-08-12T00:43:18Z",
@@ -181,12 +168,26 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 535,
+      "natural": true,
+      "observed_at": "2026-09-09T01:18:24Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34298546032",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-08T01:30:43Z",
     "history_as_of": "2026-09-04",
-    "path": "data/yf/finance/FDXF.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FDXF.json",
     "payload_sha256": "3d1922991faa421a4a99f705b60596cd46149cd0a3bbd249c4993bd0abbc6791",
     "quote_as_of": "2026-09-04T20:00:02Z",
     "source_as_of": "2026-09-04"
@@ -196,16 +197,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 648,
+    "latency_ms": 535,
     "natural": true,
-    "observed_at": "2026-09-08T01:28:08Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-09T01:18:24Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34298546032",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "0/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-09T01:18:24Z",
+    "run_attempt": 1,
+    "run_id": "34298546032"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-08T01:30:43Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/FDXF.json",
+    "payload_sha256": "3d1922991faa421a4a99f705b60596cd46149cd0a3bbd249c4993bd0abbc6791",
+    "quote_as_of": "2026-09-04T20:00:02Z",
+    "source_as_of": "2026-09-04"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -219,9 +241,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-04"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "FDXF",
-  "updated_at": "2026-09-08T01:28:08Z"
+  "updated_at": "2026-09-09T01:18:24Z"
 }

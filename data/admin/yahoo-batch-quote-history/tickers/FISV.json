@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-12T15:08:24Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31610461024",
-      "schedule": "7 14 * * 0-5",
-      "shard": "43/72"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -182,6 +169,20 @@
       "run_id": "33934936590",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 481,
+      "natural": true,
+      "observed_at": "2026-09-09T01:18:24Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34298546032",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -200,12 +201,12 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 453,
+    "latency_ms": 481,
     "natural": true,
-    "observed_at": "2026-09-05T01:04:38Z",
+    "observed_at": "2026-09-09T01:18:24Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33934936590",
+    "run_id": "34298546032",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -217,9 +218,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-05T01:04:38Z",
+    "observed_at": "2026-09-09T01:18:24Z",
     "run_attempt": 1,
-    "run_id": "33934936590"
+    "run_id": "34298546032"
   },
   "lkg": {
     "fetched_at": "2026-09-02T01:20:25Z",
@@ -245,5 +246,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "FISV",
-  "updated_at": "2026-09-05T01:04:38Z"
+  "updated_at": "2026-09-09T01:18:24Z"
 }
