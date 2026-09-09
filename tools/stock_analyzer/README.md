@@ -9,13 +9,20 @@ Global_Scouter의 데이터를 활용한 웹 기반 주식 분석 및 스크리�
 - **직관적 UI**: 깔끔하고 사용하기 쉬운 웹 인터페이스
 - **반응형 디자인**: 데스크톱과 모바일에서 모두 사용 가능
 
+## 소스와 공개 사본
+
+정본은 중첩 `100xFenok` 저장소의 `tools/stock_analyzer/`입니다. `100xfenok-next/public/tools/stock_analyzer/`는 서비스용 정적 투영 사본이며 독립적인 소스가 아닙니다. 정본을 수정한 뒤 승인된 변경만 `npm --prefix 100xfenok-next run sync-static`으로 공개 사본에 반영합니다.
+
 ## 실행 방법
 
 ### 1. Python 사용 (권장)
 
 ```bash
-# stock_analyzer 디렉토리로 이동
-cd projects/100xFenok/tools/stock_analyzer
+# 100xFenok-platform 부모 루트에서 실행
+cd source/100xFenok/tools/stock_analyzer
+
+# 또는 중첩 100xFenok 루트에서 실행
+# cd tools/stock_analyzer
 
 # Python HTTP 서버 실행
 python -m http.server 8000
@@ -29,8 +36,11 @@ python3 -m http.server 8000
 ### 2. Node.js 사용
 
 ```bash
-# stock_analyzer 디렉토리로 이동
-cd projects/100xFenok/tools/stock_analyzer
+# 100xFenok-platform 부모 루트에서 실행
+cd source/100xFenok/tools/stock_analyzer
+
+# 또는 중첩 100xFenok 루트에서 실행
+# cd tools/stock_analyzer
 
 # http-server 설치 (전역)
 npm install -g http-server

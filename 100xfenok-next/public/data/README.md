@@ -1,12 +1,15 @@
 # Data Catalog
 
-> **Last Updated**: 2026-09-07
-> **Total Files**: 30,493 JSON files
-> **Update Rules**: `.claude/rules/data-documentation.md`
+> **Last Updated**: 2026-09-09
+> **Scope**: Next public serving projection (`100xfenok-next/public/data/`) — **11,007 tracked JSON payload files**
+> **Canonical source**: `data/` — **42,090 tracked JSON payload files**; this public tree is an intentionally curated subset
+> **Catalog contract**: This projection catalog is maintained separately from the source catalog. Payload files are projected by `sync-static`; top-level catalog README files stay owned by their respective tree.
 
 ---
 
 ## Sources Overview
+
+> Row counts below are catalog values for selected payload entries; they do not replace the tracked JSON scope stated above. A source-only row can have no public README or payload by design.
 
 | Folder | Files | Update Frequency | Source |
 |--------|-------|------------------|--------|
@@ -14,14 +17,14 @@
 | [benchmarks/](benchmarks/README.md) | 7 | Weekly | Bloomberg Terminal |
 | computed/ | 6,569 | Generated | Cross-source computed signals and RIM input payloads |
 | [calendar/](calendar/README.md) | 2 | Daily / on edit | BujaBot USD Google Calendar |
-| [damodaran/](damodaran/README.md) | 7 | Yearly + ERP interim | NYU Stern (Damodaran) |
+| `damodaran/` | source-only; no public payload | Yearly + ERP interim | NYU Stern (Damodaran) |
 | [global-scouter/](global-scouter/README.md) | 1,084 | On-demand | Global Scouter Tool |
-| [indices/](indices/README.md) | 2 | Manual | Various |
-| [macro/](macro/README.md) | 10 | Daily/Weekly/Monthly/Quarterly | FRED + FDIC + OECD + PMI |
-| [sec-13f/](sec-13f/README.md) | 82 | Quarterly | SEC EDGAR |
-| [sentiment/](sentiment/README.md) | 13 | Daily/Weekly | AAII, CNN, CFTC, CBOE, Alternative.me |
+| `indices/` | source-only; no public payload | Manual | Various |
+| `macro/` | public subset; source catalog owns metadata | Daily/Weekly/Monthly/Quarterly | FRED + FDIC + OECD + PMI |
+| `sec-13f/` | public subset; source catalog owns metadata | Quarterly | SEC EDGAR |
+| `sentiment/` | source-only; no public payload | Daily/Weekly | AAII, CNN, CFTC, CBOE, Alternative.me |
 | [slickcharts/](slickcharts/README.md) | 568 | Daily/Weekly/Monthly | SlickCharts.com |
-| [yardney/](yardney/README.md) | 1 | Weekly | Feno Yardeni: FRED WAAA/WBAA + Bloomberg-sourced benchmark price/EPS |
+| `yardney/` | public subset; source catalog owns metadata | Weekly | Feno Yardeni: FRED WAAA/WBAA + Bloomberg-sourced benchmark price/EPS |
 | [yf/](yf/README.md) | 1,100 | Weekly / on-demand | Yahoo Finance |
 
 ---
@@ -29,11 +32,11 @@
 ## Quick Reference
 
 ### Market Data Pipeline (slickcharts/)
-- **32 scrapers** via GitHub Actions
+- **36 scrapers** via GitHub Actions
 - **516 individual stock files** with returns + dividends
 - Daily movers, weekly indices, monthly historical
 
-### Valuation Data (benchmarks/, damodaran/)
+### Valuation Data (benchmarks/; damodaran is source-only)
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
 - Benchmarks latest: 32,285 records, 2010-01-01 ~ 2026-09-04, 38 sections (micro_sectors +과창판 STAR50), 871 S&P 500 data points (DEC-275 history-preservation merge)
 - Benchmarks v3.8: `summaries.json` includes 1W/1M/3M/6M/YTD and yearly source summaries for price, EPS, PER, PBR, and ROE (2,404 non-null values + 66 null placeholders)
@@ -48,7 +51,7 @@
 - Enrichment metadata: sector 71.9%, industry 65.6%, market-cap 65.8%, filing-return 18.1% coverage after local YF backfill
 - Quarterly updates
 
-### Macro Data (macro/)
+### Macro Data (macro/ public subset)
 - FRED banking series: daily, weekly, quarterly; the daily collector now also requests Korea 10Y government yield (`IRLTLT01KRM156N`) for RIM inputs
 - FDIC Tier1 capital ratio quarterly history
 - Activity surveys: 940 records; OECD CLI, major-country manufacturing/services PMI and ISM components through 2026-08
@@ -58,7 +61,7 @@
 - USD macro, FOMC, FOMC minutes, 13F filing deadline, and market calendar events
 - Google Calendar remains the operational alert source; JSON mirror is for feno-data and public reads
 
-### Sentiment Data (sentiment/)
+### Sentiment Data (source-only; no public payload)
 - AAII, CNN Fear & Greed, CFTC S&P 500 futures positioning, VIX/MOVE, crypto fear & greed
 - 13 indicators
 

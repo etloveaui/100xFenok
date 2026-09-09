@@ -1,12 +1,15 @@
 # Data Catalog
 
-> **Last Updated**: 2026-09-07
-> **Total Files**: 30,493 JSON files
-> **Update Rules**: `.claude/rules/data-documentation.md`
+> **Last Updated**: 2026-09-09
+> **Scope**: Canonical source tree (`data/`) — **42,090 tracked JSON payload files**
+> **Public projection**: `100xfenok-next/public/data/` — **11,007 tracked JSON payload files**, an intentionally curated subset
+> **Catalog contract**: This file owns the source catalog. Update the relevant folder README with payload changes and record material changes in `docs/CHANGELOG.md`.
 
 ---
 
 ## Sources Overview
+
+> Row counts below are catalog values for selected payload entries; they do not replace the tracked JSON scope stated above.
 
 | Folder | Files | Update Frequency | Source |
 |--------|-------|------------------|--------|
@@ -29,7 +32,7 @@
 ## Quick Reference
 
 ### Market Data Pipeline (slickcharts/)
-- **32 scrapers** via GitHub Actions
+- **36 scrapers** via GitHub Actions
 - **516 individual stock files** with returns + dividends
 - Daily movers, weekly indices, monthly historical
 

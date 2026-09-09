@@ -23,13 +23,26 @@
 
 ---
 
-## Absolute Work Path
+## Repository Roots and Ownership
+
+The canonical Stock Analyzer files live in the nested `100xFenok` checkout.
+Use the path that matches the repository root from which the command is run:
 
 ```text
-source/100xFenok/tools/stock_analyzer/ (relative to the project root)
+From the 100xFenok-platform parent root:
+source/100xFenok/tools/stock_analyzer/
+
+From the nested 100xFenok root:
+tools/stock_analyzer/
+
+Serving projection:
+100xfenok-next/public/tools/stock_analyzer/
 ```
 
-**CRITICAL**: Work only in this path. Never use any other path.
+**CRITICAL**: Edit the canonical nested path. The `100xfenok-next/public/`
+tree is a serving projection; after an accepted source change, propagate it
+with `npm --prefix 100xfenok-next run sync-static`. Do not treat the public
+copy as an independent source of truth.
 
 **Wrong paths (never use)**:
 - `fenomeno_projects/`

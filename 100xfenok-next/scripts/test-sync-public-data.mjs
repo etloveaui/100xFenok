@@ -409,6 +409,87 @@ function makeSyncCase(parentRoot, label) {
   return { root, sourceRoot, destinationRoot };
 }
 
+function assertCatalogReadmeProjection(parentRoot) {
+  const sourceCatalogBody = "canonical README\n";
+  const publicCatalogBody = "public README\n";
+  const nestedCatalogBody = "nested README\n";
+  const payloadBody = '{"payload":true}\n';
+
+  // The canonical and public trees own different top-level catalogs. The
+  // source catalog is therefore excluded from the generic walk, while a
+  // nested README remains an ordinary payload under the existing contract.
+  const fixture = makeSyncCase(parentRoot, "catalog-readme");
+  write(fixture.sourceRoot, "README.md", sourceCatalogBody);
+  write(fixture.destinationRoot, "README.md", publicCatalogBody);
+  write(fixture.sourceRoot, "payload.json", payloadBody);
+  write(fixture.sourceRoot, "nested/README.md", nestedCatalogBody);
+  write(fixture.destinationRoot, "nested/README.md", '{"stale":true}\n');
+
+  const sourceBeforeDryRun = snapshotNode(fixture.sourceRoot);
+  const destinationBeforeDryRun = snapshotNode(fixture.destinationRoot);
+  const rehearsal = syncPublicData({
+    sourceRoot: fixture.sourceRoot,
+    destinationRoot: fixture.destinationRoot,
+    dryRun: true,
+    logger: () => {},
+  });
+  assert.equal(rehearsal.filesCopied, 3, "ordinary payloads and nested README files must remain copyable");
+  assert.deepEqual(snapshotNode(fixture.sourceRoot), sourceBeforeDryRun, "README dry-run must not mutate canonical data");
+  assert.deepEqual(snapshotNode(fixture.destinationRoot), destinationBeforeDryRun, "README dry-run must not mutate public data");
+  assert.equal(fs.readFileSync(path.join(fixture.destinationRoot, "README.md"), "utf8"), publicCatalogBody);
+  assert.equal(fs.existsSync(path.join(fixture.destinationRoot, "payload.json")), false);
+  assert.equal(fs.readFileSync(path.join(fixture.destinationRoot, "nested/README.md"), "utf8"), '{"stale":true}\n');
+
+  const result = syncPublicData({
+    sourceRoot: fixture.sourceRoot,
+    destinationRoot: fixture.destinationRoot,
+    logger: () => {},
+  });
+  assert.equal(result.filesCopied, 3);
+  assert.equal(fs.readFileSync(path.join(fixture.sourceRoot, "README.md"), "utf8"), sourceCatalogBody);
+  assert.equal(fs.readFileSync(path.join(fixture.destinationRoot, "README.md"), "utf8"), publicCatalogBody);
+  assert.equal(fs.readFileSync(path.join(fixture.destinationRoot, "payload.json"), "utf8"), payloadBody);
+  assert.equal(fs.readFileSync(path.join(fixture.destinationRoot, "nested/README.md"), "utf8"), nestedCatalogBody);
+
+  // A top-level README directory is a malformed source catalog. Planning must
+  // reject it before any destination removal or copy takes place.
+  const directoryFixture = makeSyncCase(parentRoot, "catalog-readme-directory");
+  write(directoryFixture.sourceRoot, "payload.json", payloadBody);
+  fs.mkdirSync(path.join(directoryFixture.sourceRoot, "README.md"));
+  write(directoryFixture.sourceRoot, "README.md/child.json", "{}\n");
+  const directorySourceBefore = snapshotNode(directoryFixture.sourceRoot);
+  const directoryDestinationBefore = snapshotNode(directoryFixture.destinationRoot);
+  assert.throws(
+    () => syncPublicData({
+      sourceRoot: directoryFixture.sourceRoot,
+      destinationRoot: directoryFixture.destinationRoot,
+      logger: () => {},
+    }),
+    /source catalog must be a regular file/i,
+  );
+  assert.deepEqual(snapshotNode(directoryFixture.sourceRoot), directorySourceBefore, "README directory rejection must preserve source");
+  assert.deepEqual(snapshotNode(directoryFixture.destinationRoot), directoryDestinationBefore, "README directory rejection must precede writes");
+
+  // A top-level README symlink is rejected by the source walk before the
+  // catalog-kind check and before any destination mutation.
+  const symlinkFixture = makeSyncCase(parentRoot, "catalog-readme-symlink");
+  write(symlinkFixture.sourceRoot, "payload.json", payloadBody);
+  const outsideCatalog = write(symlinkFixture.root, "outside-readme.md", "outside\n");
+  fs.symlinkSync(outsideCatalog, path.join(symlinkFixture.sourceRoot, "README.md"));
+  const symlinkSourceBefore = snapshotNode(symlinkFixture.sourceRoot);
+  const symlinkDestinationBefore = snapshotNode(symlinkFixture.destinationRoot);
+  assert.throws(
+    () => syncPublicData({
+      sourceRoot: symlinkFixture.sourceRoot,
+      destinationRoot: symlinkFixture.destinationRoot,
+      logger: () => {},
+    }),
+    /source public-data path is a symlink/i,
+  );
+  assert.deepEqual(snapshotNode(symlinkFixture.sourceRoot), symlinkSourceBefore, "README symlink rejection must preserve source");
+  assert.deepEqual(snapshotNode(symlinkFixture.destinationRoot), symlinkDestinationBefore, "README symlink rejection must precede writes");
+}
+
 function assertFenokRimRestrictedProjection(parentRoot) {
   const root = fs.mkdtempSync(path.join(parentRoot, "fenok-rim-restricted-"));
   const sourceRoot = path.join(root, "data");
@@ -1288,6 +1369,7 @@ try {
   assertMissingCanonicalTickerSourceFailsClosed(fixtureRoot);
   assertOrphanedDestinationProjectionFailsClosed(fixtureRoot);
   assertMarketFactsSourceDriftFailsBeforeMutation(fixtureRoot);
+  assertCatalogReadmeProjection(fixtureRoot);
   assertFenokRimRestrictedProjection(fixtureRoot);
   await assertRimIndexRestrictedProjection(fixtureRoot);
   await assertMarketFactsShardProjection(fixtureRoot);

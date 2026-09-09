@@ -36,6 +36,9 @@ import { redactPrivateArtifactPathMirrors } from "../sync-static-overrides.mjs";
 
 const CANONICAL_DATA_PREFIX = "data/";
 const PUBLIC_DATA_PREFIX = "100xfenok-next/public/data/";
+// Source and public catalogs describe different scopes, so the generic
+// payload projection must leave each tree's top-level README in place.
+const SOURCE_CATALOG_FILE = "README.md";
 
 // Registry-derived #366 privacy boundary. A newly registered private admin
 // store or file-shaped private canonical is excluded immediately instead of
@@ -289,6 +292,12 @@ function collectSourceFiles(sourceRoot, sourceRootBinding) {
       }
       if (relativePath === STOCKANALYSIS_ETF_SHARD_ROOT) {
         throw new Error(`canonical source must not contain public-only StockAnalysis ETF shards: ${absolutePath}`);
+      }
+      if (relativePath === SOURCE_CATALOG_FILE) {
+        if (!stat.isFile()) {
+          throw new Error(`source catalog must be a regular file: ${absolutePath}`);
+        }
+        continue;
       }
       if (isExcludedFile(relativePath)) {
         if (!stat.isFile()) {
