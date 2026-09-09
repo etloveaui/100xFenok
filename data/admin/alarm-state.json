@@ -1,40 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-09T05:15:10.329Z",
+  "generated_at": "2026-09-09T07:52:55.494Z",
   "status": "open",
-  "open_incident_count": 15,
+  "open_incident_count": 13,
   "open_incidents": [
-    {
-      "workflow": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
-    {
-      "workflow": "fenok-edge-daily.yml",
-      "label": "Fenok Edge Daily Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "lane_outcome_overdue"
-      ],
-      "lane_outcome_lanes": [
-        "finra_short_volume",
-        "occ_options_volume"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
     {
       "workflow": "fenok-edge-krx-daily.yml",
       "label": "Fenok Edge KRX Daily Data",
@@ -146,6 +115,20 @@
       "cadence_status": "not_due"
     },
     {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
       "workflow": "slickcharts-daily.yml",
       "label": "SlickCharts Daily",
       "streak": 0,
@@ -224,20 +207,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
-      "streak": 4,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": 34263783949,
-      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34263783949",
-      "alarm_reasons": [
-        "failure_streak"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     }
   ],
   "lane_outcome_notified": {
@@ -493,7 +462,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 3
+      "data_freshness_age_hours_at_generation": 5
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -658,13 +627,11 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "34314010699",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34314010699",
-    "observed_at": "2026-09-09T05:15:10.329Z",
+    "run_id": "34325947685",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34325947685",
+    "observed_at": "2026-09-09T07:52:55.494Z",
     "event": "workflow_run",
     "workflows": [
-      "data-plane-serving-probe.yml",
-      "fenok-edge-daily.yml",
       "fenok-edge-krx-daily.yml",
       "fetch-fdic.yml",
       "fetch-fenok-news-tone.yml",
@@ -672,12 +639,12 @@
       "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
       "fetch-treasury-tga.yml",
+      "global-writer-queue-observer.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
       "slickcharts-symbols.yml",
-      "slickcharts-weekly.yml",
-      "worker-request-budget-alarm.yml"
+      "slickcharts-weekly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
