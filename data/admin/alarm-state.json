@@ -1,23 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-10T04:52:35.693Z",
+  "generated_at": "2026-09-10T05:28:58.530Z",
   "status": "open",
-  "open_incident_count": 16,
+  "open_incident_count": 14,
   "open_incidents": [
-    {
-      "workflow": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
     {
       "workflow": "fenok-edge-daily.yml",
       "label": "Fenok Edge Daily Data",
@@ -144,20 +130,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "fetch-yf-finance.yml",
-      "label": "Fetch YF Finance Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "unrecovered_overdue"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
     },
     {
       "workflow": "slickcharts-daily.yml",
@@ -551,10 +523,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "global-writer-queue-observer.yml",
@@ -658,8 +628,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 25,
-    "overdue": 1,
+    "not_due": 26,
+    "overdue": 0,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -675,12 +645,11 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "34438737445",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34438737445",
-    "observed_at": "2026-09-10T04:52:35.693Z",
-    "event": "schedule",
+    "run_id": "34441096691",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34441096691",
+    "observed_at": "2026-09-10T05:28:58.530Z",
+    "event": "workflow_run",
     "workflows": [
-      "data-plane-serving-probe.yml",
       "fenok-edge-daily.yml",
       "fenok-edge-krx-daily.yml",
       "fetch-fdic.yml",
@@ -689,7 +658,6 @@
       "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
       "fetch-treasury-tga.yml",
-      "fetch-yf-finance.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
