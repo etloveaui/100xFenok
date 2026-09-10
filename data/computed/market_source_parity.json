@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-09-10T04:44:03Z",
+  "generated_at": "2026-09-10T05:03:48Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6803,
@@ -11,13 +11,13 @@
     "diagnosis_counts": {
       "agreement": 10691,
       "scale_mismatch": 199,
-      "sign_divergence": 2986,
-      "stale": 36480,
-      "value_drift": 11163
+      "sign_divergence": 2989,
+      "stale": 36481,
+      "value_drift": 11159
     },
-    "stale_rows": 36480,
+    "stale_rows": 36481,
     "scale_mismatch_rows": 199,
-    "sign_divergence_rows": 2986
+    "sign_divergence_rows": 2989
   },
   "by_field": {
     "beta": {
@@ -4866,6 +4866,52 @@
       }
     },
     {
+      "ticker": "DFEN",
+      "asset_type": "etf",
+      "field": "return_ytd",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 4,
+      "relative_spread_pct": 136.031223,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -19.716233587589922
+        },
+        {
+          "source": "stockanalysis.detail.performance",
+          "value": 7.104
+        },
+        {
+          "source": "stockanalysis.etf_universe.performance",
+          "value": 7.104
+        },
+        {
+          "source": "yf",
+          "value": 0.00823
+        }
+      ],
+      "diagnosis": "scale_mismatch",
+      "spread_pct": 136.031223,
+      "fresh_spread_pct": 136.031223,
+      "stale_sources": [
+        "stockanalysis.detail.performance"
+      ],
+      "scale_mismatch": true,
+      "scale_factor": 2396,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.performance": 55.0,
+        "yf": 0.0
+      }
+    },
+    {
       "ticker": "LFAI",
       "asset_type": "etf",
       "field": "return_1y",
@@ -5046,52 +5092,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 53.0,
-        "yf": 0.0
-      }
-    },
-    {
-      "ticker": "ELIL",
-      "asset_type": "etf",
-      "field": "return_ytd",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 4,
-      "relative_spread_pct": 112.443031,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": -0.6445490261909216
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 5.18
-        },
-        {
-          "source": "stockanalysis.etf_universe.performance",
-          "value": 5.18
-        },
-        {
-          "source": "yf",
-          "value": 0.04171
-        }
-      ],
-      "diagnosis": "scale_mismatch",
-      "spread_pct": 112.443031,
-      "fresh_spread_pct": 112.443031,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": true,
-      "scale_factor": 124,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 0.0,
-        "stockanalysis.detail.performance": 48.0,
         "yf": 0.0
       }
     },
