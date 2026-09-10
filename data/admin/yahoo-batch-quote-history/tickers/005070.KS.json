@@ -4,32 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 417,
-      "natural": true,
-      "observed_at": "2026-08-13T00:15:42Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31652949582",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 344,
-      "natural": true,
-      "observed_at": "2026-08-14T00:21:34Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31755913658",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 522,
       "natural": true,
       "observed_at": "2026-08-15T00:00:59Z",
@@ -182,35 +156,60 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 517,
+      "natural": true,
+      "observed_at": "2026-09-10T01:10:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-10T01:24:13Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:28:06Z",
-    "history_as_of": "2026-09-02",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/005070.KS.json",
-    "payload_sha256": "2739c873e45d85cba6fd21cb12b18cda609cbd2d5cf9c1c5817e55be5c37546a",
-    "quote_as_of": "2026-09-02T01:07:50Z",
-    "source_as_of": "2026-09-02"
+    "fetched_at": "2026-09-10T01:11:09Z",
+    "history_as_of": "2026-09-10",
+    "path": "data/yf/finance/005070.KS.json",
+    "payload_sha256": "e348c821dc4089d32245181d43c939614753b4b7ceb7d03a2fac190691571a55",
+    "quote_as_of": "2026-09-10T00:51:05Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for 005070.KS despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 1025,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-08T01:28:08Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-10T01:24:13Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34424274071",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -233,18 +232,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-02",
-    "observed_at": "2026-09-02T01:27:36Z",
-    "payload_sha256": "c1754b30c9292463af46bcc031af96139d5d7e6b24df103d001ffc164d8ea848",
-    "quote_as_of": "2026-09-02T01:07:50Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-10T01:10:13Z",
+    "payload_sha256": "b49c6692956db039d78e9fb02014d4a5e93c0098afa7720c5ef634727c9a3ff6",
+    "quote_as_of": "2026-09-10T00:51:05Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34424274071",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-02"
+    "source_as_of": "2026-09-10"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-10T01:10:13Z",
+  "recovered_from_run_id": "34175958781",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "34424274071",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "005070.KS",
-  "updated_at": "2026-09-08T01:28:08Z"
+  "updated_at": "2026-09-10T01:24:13Z"
 }

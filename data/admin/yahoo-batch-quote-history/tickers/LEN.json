@@ -4,32 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 546,
-      "natural": true,
-      "observed_at": "2026-08-13T00:19:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31652949582",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 439,
-      "natural": true,
-      "observed_at": "2026-08-14T00:24:55Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31755913658",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 532,
       "natural": true,
       "observed_at": "2026-08-15T00:05:28Z",
@@ -182,35 +156,60 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 624,
+      "natural": true,
+      "observed_at": "2026-09-10T01:10:13Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-10T01:17:44Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-05T01:08:40Z",
-    "history_as_of": "2026-09-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/LEN.json",
-    "payload_sha256": "da1a5ed01b24d3f4185c1d13ae9960ce77e1d8b9dded34dc0a1a7e5d6e3ad132",
-    "quote_as_of": "2026-09-04T20:00:02Z",
-    "source_as_of": "2026-09-04"
+    "fetched_at": "2026-09-10T01:11:22Z",
+    "history_as_of": "2026-09-09",
+    "path": "data/yf/finance/LEN.json",
+    "payload_sha256": "8a4e014b71fec9a2e1948f3578bbda9724f256740547b14b2d0895873d034c85",
+    "quote_as_of": "2026-09-09T20:00:02Z",
+    "source_as_of": "2026-09-09"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for LEN despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 842,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-08T01:28:08Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-10T01:17:44Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34424274071",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "2/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -233,17 +232,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-04",
-    "observed_at": "2026-09-05T01:04:38Z",
-    "payload_sha256": "856d3155da37dadc4368f46e5f591a70b67c8f8893a21606489e925867cc1242",
-    "quote_as_of": "2026-09-04T20:00:02Z",
+    "history_as_of": "2026-09-09",
+    "observed_at": "2026-09-10T01:10:13Z",
+    "payload_sha256": "c7f23f1b11436332a823ac02a7c734ae482fdcdd56e3ac1177cbcbe85b3d7f9b",
+    "quote_as_of": "2026-09-09T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "33934936590",
+    "run_id": "34424274071",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-04"
+    "source_as_of": "2026-09-09"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-10T01:10:13Z",
+  "recovered_from_run_id": "34175958781",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "34424274071",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -256,5 +260,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "LEN",
-  "updated_at": "2026-09-08T01:28:08Z"
+  "updated_at": "2026-09-10T01:17:44Z"
 }

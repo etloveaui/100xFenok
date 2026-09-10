@@ -4,20 +4,6 @@
       "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for BLD despite available history",
       "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 376,
-      "natural": true,
-      "observed_at": "2026-08-12T00:39:41Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for BLD despite available history",
-      "event_name": "schedule",
       "failures": [
         {
           "attempt": 1,
@@ -262,6 +248,39 @@
       "run_id": "33702512577",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-10T01:15:09Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
@@ -301,12 +320,12 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-03T01:11:07Z",
+    "observed_at": "2026-09-10T01:15:09Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "33702512577",
+    "run_id": "34424274071",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "1/5"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -335,9 +354,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-03T01:11:07Z",
+    "observed_at": "2026-09-10T01:15:09Z",
     "run_attempt": 1,
-    "run_id": "33702512577"
+    "run_id": "34424274071"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:40:31Z",
@@ -351,10 +370,10 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "terminal": {
-    "artifact_generated_at": "2026-09-09T00:05:07.142Z",
+    "artifact_generated_at": "2026-09-10T00:05:57.215Z",
     "artifact_path": "admin/fenok-s1-stock-public-promotion-dry-run.json",
-    "classified_at": "2026-09-09T01:18:24Z",
-    "classified_run_id": "34298546032",
+    "classified_at": "2026-09-10T01:24:13Z",
+    "classified_run_id": "34424274071",
     "evidence": [
       {
         "alias_source": null,
@@ -377,8 +396,8 @@
         "type": "Delisted"
       }
     ],
-    "evidence_sha256": "136bd36321bb9257c8488b7d7b31945a1f4215af6bd14d355a40f5d63c5c9c2f"
+    "evidence_sha256": "1930f6cbc324cc65b4452cc3d5397a40748edd75e95a46aafe9176e58ceeace9"
   },
   "ticker": "BLD",
-  "updated_at": "2026-09-09T01:18:24Z"
+  "updated_at": "2026-09-10T01:24:13Z"
 }

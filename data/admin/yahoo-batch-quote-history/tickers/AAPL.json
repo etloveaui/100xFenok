@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-13T00:19:00Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31652949582",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,12 +168,26 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 625,
+      "natural": true,
+      "observed_at": "2026-09-10T01:17:44Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-08T01:26:08Z",
     "history_as_of": "2026-09-04",
-    "path": "data/yf/finance/AAPL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AAPL.json",
     "payload_sha256": "3c7636e6b508c6350a91976244985ee7c75b04c1e316e80fc59d62928426c851",
     "quote_as_of": "2026-09-04T20:00:01Z",
     "source_as_of": "2026-09-04"
@@ -198,14 +199,15 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 792,
+    "latency_ms": 625,
     "natural": true,
-    "observed_at": "2026-09-08T01:24:17Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-10T01:17:44Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34424274071",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
@@ -221,13 +223,25 @@
     "run_attempt": 1,
     "run_id": "31590557839"
   },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-10T01:17:44Z",
+    "run_attempt": 1,
+    "run_id": "34424274071"
+  },
   "lkg": {
-    "fetched_at": "2026-08-11T00:06:56Z",
-    "history_as_of": "2026-08-10",
+    "fetched_at": "2026-09-08T01:26:08Z",
+    "history_as_of": "2026-09-04",
     "path": "data/admin/yahoo-batch-quote-history/lkg/AAPL.json",
-    "payload_sha256": "d01ae0f8be7a8196b6fc5e84f113e9f8fda18c295bc9d57d1e8c13d8c8bd3a30",
-    "quote_as_of": "2026-08-10T20:00:02Z",
-    "source_as_of": "2026-08-10"
+    "payload_sha256": "3c7636e6b508c6350a91976244985ee7c75b04c1e316e80fc59d62928426c851",
+    "quote_as_of": "2026-09-04T20:00:01Z",
+    "source_as_of": "2026-09-04"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -246,9 +260,9 @@
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
   "recovery_run_id": "31602424796",
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AAPL",
-  "updated_at": "2026-09-08T01:24:17Z"
+  "updated_at": "2026-09-10T01:17:44Z"
 }

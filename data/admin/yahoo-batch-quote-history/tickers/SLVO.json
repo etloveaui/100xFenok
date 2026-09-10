@@ -90,31 +90,57 @@
       "run_id": "34298546032",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 500,
+      "natural": true,
+      "observed_at": "2026-09-10T01:15:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-10T01:24:13Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-09T01:22:56Z",
-    "history_as_of": "2026-09-08",
+    "fetched_at": "2026-09-10T01:17:18Z",
+    "history_as_of": "2026-09-09",
     "path": "data/yf/finance/SLVO.json",
-    "payload_sha256": "9f5e846228f38d536c09b7bd9b55b21ccd0f522c9a9db2f06cf3d3ea44faa150",
-    "quote_as_of": "2026-09-08T20:00:00Z",
-    "source_as_of": "2026-09-08"
+    "payload_sha256": "30738edf7a5451459421b5af4c0ddc4cd088dda65c11d846c625115da4bffa73",
+    "quote_as_of": "2026-09-09T20:00:00Z",
+    "source_as_of": "2026-09-09"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 577,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-09T01:18:24Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-10T01:24:13Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "34298546032",
+    "run_id": "34424274071",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-08-11T11:06:05Z",
@@ -127,14 +153,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-08",
-    "observed_at": "2026-09-09T01:18:24Z",
-    "payload_sha256": "287b2f52a42e6c8246098372b48f4efa0f008447d31b75084616d5b394cb6828",
-    "quote_as_of": "2026-09-08T20:00:00Z",
+    "history_as_of": "2026-09-09",
+    "observed_at": "2026-09-10T01:15:09Z",
+    "payload_sha256": "f25fd929b71ec8995a616fa35010db0bd212bf369f1a028b2836179042a8ec0e",
+    "quote_as_of": "2026-09-09T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "34298546032",
+    "run_id": "34424274071",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-08"
+    "source_as_of": "2026-09-09"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -150,5 +176,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "SLVO",
-  "updated_at": "2026-09-09T01:18:24Z"
+  "updated_at": "2026-09-10T01:24:13Z"
 }

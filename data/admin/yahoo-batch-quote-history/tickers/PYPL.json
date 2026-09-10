@@ -2,32 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2417,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:05Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 943,
@@ -181,32 +155,58 @@
       "run_id": "34298546032",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 543,
+      "natural": true,
+      "observed_at": "2026-09-10T01:15:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-10T01:24:13Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-09T01:22:48Z",
-    "history_as_of": "2026-09-08",
+    "fetched_at": "2026-09-10T01:17:10Z",
+    "history_as_of": "2026-09-09",
     "path": "data/yf/finance/PYPL.json",
-    "payload_sha256": "154615cbbf3bea73903e652a98aa75da252af8b11763f1a6f2da7edc12022f98",
-    "quote_as_of": "2026-09-08T20:00:01Z",
-    "source_as_of": "2026-09-08"
+    "payload_sha256": "6433558cf5b1776d8b5ca4d98d60773b505db487aac006b00875e67c6e2085bc",
+    "quote_as_of": "2026-09-09T20:00:01Z",
+    "source_as_of": "2026-09-09"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 479,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-09T01:18:24Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-10T01:24:13Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "34298546032",
+    "run_id": "34424274071",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-06-28T00:10:27Z",
@@ -219,14 +219,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-08",
-    "observed_at": "2026-09-09T01:18:24Z",
-    "payload_sha256": "c8db18805ed7405f46fd0e3ca75ff2039f73e51e518a10daff5ea68f958d2d1c",
-    "quote_as_of": "2026-09-08T20:00:01Z",
+    "history_as_of": "2026-09-09",
+    "observed_at": "2026-09-10T01:15:09Z",
+    "payload_sha256": "dfe9791fb068dfacf984392715c480d08412475ab6eea0dee3003fa51f3524ef",
+    "quote_as_of": "2026-09-09T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "34298546032",
+    "run_id": "34424274071",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-08"
+    "source_as_of": "2026-09-09"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -242,5 +242,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "PYPL",
-  "updated_at": "2026-09-09T01:18:24Z"
+  "updated_at": "2026-09-10T01:24:13Z"
 }

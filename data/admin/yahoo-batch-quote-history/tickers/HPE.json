@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 3112,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,32 +168,45 @@
       "run_id": "33702512577",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 516,
+      "natural": true,
+      "observed_at": "2026-09-10T01:21:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-03T01:14:55Z",
-    "history_as_of": "2026-09-02",
+    "fetched_at": "2026-09-10T01:23:43Z",
+    "history_as_of": "2026-09-09",
     "path": "data/yf/finance/HPE.json",
-    "payload_sha256": "3ebff55a957038dcb72dfded24aefba28531e79ff94feb21b1b17c725d1538ac",
-    "quote_as_of": "2026-09-02T20:03:49Z",
-    "source_as_of": "2026-09-02"
+    "payload_sha256": "c1fc15c1313683a334ee070f90e7e018b97adfd8a945c9e70d168c245f671b8e",
+    "quote_as_of": "2026-09-09T20:04:16Z",
+    "source_as_of": "2026-09-09"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 516,
     "natural": true,
-    "observed_at": "2026-09-03T01:16:16Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-10T01:21:11Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33702512577",
+    "run_id": "34424274071",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-06-27T23:57:35Z",
@@ -219,14 +219,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-02",
-    "observed_at": "2026-09-03T01:11:07Z",
-    "payload_sha256": "a7e3f6a2ec5c1fa76d956bcb155317bd9472a3a57e28ecb96a294f5a371fcd7f",
-    "quote_as_of": "2026-09-02T20:03:49Z",
+    "history_as_of": "2026-09-09",
+    "observed_at": "2026-09-10T01:21:11Z",
+    "payload_sha256": "665141038612c2c2e5ba63f87cd3060a963eebfd898230cabf652bd72a1352d7",
+    "quote_as_of": "2026-09-09T20:04:16Z",
     "run_attempt": 1,
-    "run_id": "33702512577",
+    "run_id": "34424274071",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-02"
+    "source_as_of": "2026-09-09"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -242,5 +242,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "HPE",
-  "updated_at": "2026-09-03T01:16:16Z"
+  "updated_at": "2026-09-10T01:21:11Z"
 }

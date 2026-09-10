@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 497,
-      "natural": true,
-      "observed_at": "2026-08-13T00:13:23Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31652949582",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 363,
       "natural": true,
       "observed_at": "2026-08-14T00:18:08Z",
@@ -181,12 +168,26 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 513,
+      "natural": true,
+      "observed_at": "2026-09-10T01:10:13Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34424274071",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-08T01:26:19Z",
     "history_as_of": "2026-09-04",
-    "path": "data/yf/finance/AVGO.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AVGO.json",
     "payload_sha256": "e6f581a94448984ad63e40ff9e1a47fcfa049e908597b63ac3d8b3bb936d84e6",
     "quote_as_of": "2026-09-04T20:00:01Z",
     "source_as_of": "2026-09-04"
@@ -198,16 +199,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 535,
+    "latency_ms": 513,
     "natural": true,
-    "observed_at": "2026-09-08T01:24:17Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-10T01:10:13Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34424274071",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "0/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-10T01:10:13Z",
+    "run_attempt": 1,
+    "run_id": "34424274071"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-08T01:26:19Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/AVGO.json",
+    "payload_sha256": "e6f581a94448984ad63e40ff9e1a47fcfa049e908597b63ac3d8b3bb936d84e6",
+    "quote_as_of": "2026-09-04T20:00:01Z",
+    "source_as_of": "2026-09-04"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -221,9 +243,9 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-04"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AVGO",
-  "updated_at": "2026-09-08T01:24:17Z"
+  "updated_at": "2026-09-10T01:10:13Z"
 }
