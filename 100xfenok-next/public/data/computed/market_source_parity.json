@@ -1,22 +1,22 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-09-11T03:25:50Z",
+  "generated_at": "2026-09-11T04:43:07Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6803,
     "fields": 19,
     "multi_candidate_fields": 61591,
     "divergence_rows": 61520,
-    "percent_scale_warnings": 196,
+    "percent_scale_warnings": 195,
     "diagnosis_counts": {
       "agreement": 10708,
-      "scale_mismatch": 196,
+      "scale_mismatch": 195,
       "sign_divergence": 3001,
-      "stale": 36302,
+      "stale": 36303,
       "value_drift": 11313
     },
-    "stale_rows": 36302,
-    "scale_mismatch_rows": 196,
+    "stale_rows": 36303,
+    "scale_mismatch_rows": 195,
     "sign_divergence_rows": 3001
   },
   "by_field": {
@@ -4170,52 +4170,6 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 53.0,
-        "yf": 0.0
-      }
-    },
-    {
-      "ticker": "IEF",
-      "asset_type": "etf",
-      "field": "return_1y",
-      "selected_source": "yf.history_1y",
-      "candidate_count": 4,
-      "relative_spread_pct": 187.798288,
-      "values": [
-        {
-          "source": "yf.history_1y",
-          "value": 0.03019397163737098
-        },
-        {
-          "source": "stockanalysis.detail.performance",
-          "value": 3.765
-        },
-        {
-          "source": "stockanalysis.etf_universe.performance",
-          "value": 3.765
-        },
-        {
-          "source": "yf",
-          "value": -4.2882385
-        }
-      ],
-      "diagnosis": "scale_mismatch",
-      "spread_pct": 187.798288,
-      "fresh_spread_pct": 187.798288,
-      "stale_sources": [
-        "stockanalysis.detail.performance"
-      ],
-      "scale_mismatch": true,
-      "scale_factor": 142,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "yf.history_1y",
-        "policy_rank": 0,
-        "policy_len": 5,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "yf.history_1y": 1.0,
-        "stockanalysis.detail.performance": 77.0,
         "yf": 0.0
       }
     },
@@ -8412,6 +8366,41 @@
       "freshness": {
         "yf.history_1y": 0.0,
         "stockanalysis.detail.performance": 50.0
+      }
+    },
+    {
+      "ticker": "086450.KQ",
+      "asset_type": "stock",
+      "field": "return_1y",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 100.30968,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": 16.350488882450932
+        },
+        {
+          "source": "yf",
+          "value": -0.050634146
+        }
+      ],
+      "diagnosis": "scale_mismatch",
+      "spread_pct": 100.30968,
+      "fresh_spread_pct": 100.30968,
+      "stale_sources": [],
+      "scale_mismatch": true,
+      "scale_factor": 323,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 5,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "yf": 0.0
       }
     }
   ],
