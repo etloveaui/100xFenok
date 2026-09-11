@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-13T00:10:45Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31652949582",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,12 +168,26 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 899,
+      "natural": true,
+      "observed_at": "2026-09-11T01:17:28Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
     "fetched_at": "2026-09-08T01:27:22Z",
     "history_as_of": "2026-09-04",
-    "path": "data/yf/finance/ORCL.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/ORCL.json",
     "payload_sha256": "96540bb42de12f9c2f10c2747767e298cf64a974625cb6844170e5b60a99c779",
     "quote_as_of": "2026-09-04T20:04:22Z",
     "source_as_of": "2026-09-04"
@@ -197,24 +198,37 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 589,
+    "latency_ms": 899,
     "natural": true,
-    "observed_at": "2026-09-08T01:24:17Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-11T01:17:28Z",
+    "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "1/5"
+  },
+  "latest_failure": {
+    "attempts_used": 1,
+    "data_loss": false,
+    "deferred_acquisition": false,
+    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "failure_kind": "unexpected",
+    "failures": [],
+    "lkg_status": "retained",
+    "observed_at": "2026-09-11T01:17:28Z",
+    "run_attempt": 1,
+    "run_id": "34549558760"
   },
   "lkg": {
-    "fetched_at": "2026-07-09T02:42:42Z",
-    "history_as_of": "2026-07-08",
+    "fetched_at": "2026-09-08T01:27:22Z",
+    "history_as_of": "2026-09-04",
     "path": "data/admin/yahoo-batch-quote-history/lkg/ORCL.json",
-    "payload_sha256": "c57fb59dcc06eaa5df7d227325d938d039f8b2a2f986124cdcabb0378c1dc262",
-    "quote_as_of": "2026-07-08T20:05:00Z",
-    "source_as_of": "2026-07-08"
+    "payload_sha256": "96540bb42de12f9c2f10c2747767e298cf64a974625cb6844170e5b60a99c779",
+    "quote_as_of": "2026-09-04T20:04:22Z",
+    "source_as_of": "2026-09-04"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -228,8 +242,8 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-04"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -242,5 +256,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "ORCL",
-  "updated_at": "2026-09-08T01:24:17Z"
+  "updated_at": "2026-09-11T01:17:28Z"
 }

@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2668,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "34424274071",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 797,
+      "natural": true,
+      "observed_at": "2026-09-11T01:22:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-10T01:13:02Z",
-    "history_as_of": "2026-09-09",
+    "fetched_at": "2026-09-11T01:24:28Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/AMGN.json",
-    "payload_sha256": "612c3f927f3cc90b95ee3e926a0fa6a49e403bebff041e21a0e34db8d96ba0b9",
-    "quote_as_of": "2026-09-09T20:00:01Z",
-    "source_as_of": "2026-09-09"
+    "payload_sha256": "ca55604bd267f8463d5b7b49a9680e1ded6333193c3603e696aeec11fe46ef37",
+    "quote_as_of": "2026-09-10T20:00:01Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 797,
     "natural": true,
-    "observed_at": "2026-09-10T01:21:11Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-11T01:22:09Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-09",
-    "observed_at": "2026-09-10T01:10:13Z",
-    "payload_sha256": "eecf6afdf7f0a8c7dc8326263090d1ab5094a93b2ef5dac39f1401d93579d150",
-    "quote_as_of": "2026-09-09T20:00:01Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:22:09Z",
+    "payload_sha256": "a483e5a0c718d3ce3789d4a2b8270b38e53783b11293705ffb771c28525156e1",
+    "quote_as_of": "2026-09-10T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-09"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AMGN",
-  "updated_at": "2026-09-10T01:21:11Z"
+  "updated_at": "2026-09-11T01:22:09Z"
 }

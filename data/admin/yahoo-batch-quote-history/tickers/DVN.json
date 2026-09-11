@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2850,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "34424274071",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 865,
+      "natural": true,
+      "observed_at": "2026-09-11T01:30:34Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-10T01:13:39Z",
-    "history_as_of": "2026-09-09",
+    "fetched_at": "2026-09-11T01:33:12Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/DVN.json",
-    "payload_sha256": "d05746d2cfb8abfb06b306c69d32be364d5d2c9f4b8f6f2fd68a86e73f92c5f5",
-    "quote_as_of": "2026-09-09T20:00:02Z",
-    "source_as_of": "2026-09-09"
+    "payload_sha256": "736d141c5b5c44fc53345f204a09c1c8acde057817e5b33de6c3ce01de9e93ab",
+    "quote_as_of": "2026-09-10T20:00:02Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 865,
     "natural": true,
-    "observed_at": "2026-09-10T01:15:09Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-11T01:30:34Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-09",
-    "observed_at": "2026-09-10T01:10:13Z",
-    "payload_sha256": "73749f9a80588e78e4b1dd443e9db6f9a05e0292ddb1fa903723bc4779752ef3",
-    "quote_as_of": "2026-09-09T20:00:02Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:30:34Z",
+    "payload_sha256": "94cc621111448c659a94bdfe83d2caff30a4a9aaa21a6b85d325b11b7d256035",
+    "quote_as_of": "2026-09-10T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-09"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "DVN",
-  "updated_at": "2026-09-10T01:15:09Z"
+  "updated_at": "2026-09-11T01:30:34Z"
 }

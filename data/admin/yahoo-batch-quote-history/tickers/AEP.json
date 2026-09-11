@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 3457,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "34424274071",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1044,
+      "natural": true,
+      "observed_at": "2026-09-11T01:26:52Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-10T01:12:58Z",
-    "history_as_of": "2026-09-09",
+    "fetched_at": "2026-09-11T01:29:08Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/AEP.json",
-    "payload_sha256": "b2b4fecc0414e4b8fe1c0cee78421beecbe7914d6c916a9f0990931ae9af160d",
-    "quote_as_of": "2026-09-09T20:00:01Z",
-    "source_as_of": "2026-09-09"
+    "payload_sha256": "cfeb67a54b07b4dc624ae2d0366a59d265340e3f5612f1fb796fbe567385cf3a",
+    "quote_as_of": "2026-09-10T20:00:01Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 1044,
     "natural": true,
-    "observed_at": "2026-09-10T01:24:13Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-11T01:26:52Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-09",
-    "observed_at": "2026-09-10T01:10:13Z",
-    "payload_sha256": "900bf6dceecee33e7549ab38bd41b27f2cf952e73d0909b410e4f54698a692a9",
-    "quote_as_of": "2026-09-09T20:00:01Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:26:52Z",
+    "payload_sha256": "6cdabfdc4b99ec5f8a4bbc7b589672f24120675b032dc2cce77b82516c266f7d",
+    "quote_as_of": "2026-09-10T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-09"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AEP",
-  "updated_at": "2026-09-10T01:24:13Z"
+  "updated_at": "2026-09-11T01:26:52Z"
 }

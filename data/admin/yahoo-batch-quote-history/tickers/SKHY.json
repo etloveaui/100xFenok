@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2518,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "34424274071",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 2337,
+      "natural": true,
+      "observed_at": "2026-09-11T01:22:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-10T01:20:44Z",
-    "history_as_of": "2026-09-09",
+    "fetched_at": "2026-09-11T01:26:20Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/SKHY.json",
-    "payload_sha256": "ac6f49c7e6db8cfae35f8699fb08e992c422bb033f3b20dbc3b79287491dfe10",
-    "quote_as_of": "2026-09-09T20:00:00Z",
-    "source_as_of": "2026-09-09"
+    "payload_sha256": "1c540f877f5af01e66df7b3569a6496bb71e20fbaefa9c8d5e83947b6c4d6bb6",
+    "quote_as_of": "2026-09-10T20:00:00Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 2337,
     "natural": true,
-    "observed_at": "2026-09-10T01:21:11Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-11T01:22:09Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-09",
-    "observed_at": "2026-09-10T01:17:44Z",
-    "payload_sha256": "5dbe805be574c0a3563135bade850c90c1891eeadb8de5ab2265ebeedf6caa56",
-    "quote_as_of": "2026-09-09T20:00:00Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:22:09Z",
+    "payload_sha256": "084507a9bc9900fdb4b2b803fb5808dc143f8e45d2b9e9b347ebe43f9c306ed6",
+    "quote_as_of": "2026-09-10T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-09"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "SKHY",
-  "updated_at": "2026-09-10T01:21:11Z"
+  "updated_at": "2026-09-11T01:22:09Z"
 }

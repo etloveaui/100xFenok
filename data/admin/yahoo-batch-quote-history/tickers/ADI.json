@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 3050,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "34424274071",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 855,
+      "natural": true,
+      "observed_at": "2026-09-11T01:26:52Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-10T01:12:57Z",
-    "history_as_of": "2026-09-09",
+    "fetched_at": "2026-09-11T01:29:07Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/ADI.json",
-    "payload_sha256": "be2011fbc7011bf262c552f489d8d475b1aec34209b6d15d059cfec406df1360",
-    "quote_as_of": "2026-09-09T20:00:01Z",
-    "source_as_of": "2026-09-09"
+    "payload_sha256": "663bd6a9c54f08ac1ea9423488dc7d1b062a14b9fc7f5bc04639996108af9dd9",
+    "quote_as_of": "2026-09-10T20:00:01Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,33 +197,33 @@
     "nasdaq_giw_sox"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 855,
     "natural": true,
-    "observed_at": "2026-09-10T01:24:13Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-11T01:26:52Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-09",
-    "observed_at": "2026-09-10T01:10:13Z",
-    "payload_sha256": "8e817eb68fde3f60b5c591f6a6ffb2707e431545097c6e07c241165b2ca8bcfe",
-    "quote_as_of": "2026-09-09T20:00:01Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:26:52Z",
+    "payload_sha256": "3938853821d1a6b2a369d51c665cc39705103e684b7baebe0ec0af2dcf78872f",
+    "quote_as_of": "2026-09-10T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-09"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ADI",
-  "updated_at": "2026-09-10T01:24:13Z"
+  "updated_at": "2026-09-11T01:26:52Z"
 }

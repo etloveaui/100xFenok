@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 3483,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,29 +168,42 @@
       "run_id": "34424274071",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 809,
+      "natural": true,
+      "observed_at": "2026-09-11T01:30:34Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-10T01:17:14Z",
-    "history_as_of": "2026-09-09",
+    "fetched_at": "2026-09-11T01:34:23Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/ROL.json",
-    "payload_sha256": "8a801825ab397e9a637e9e6aca22c471590a90d1debbf26922848599acaf7844",
-    "quote_as_of": "2026-09-09T20:00:02Z",
-    "source_as_of": "2026-09-09"
+    "payload_sha256": "60b079239559b813f5645a8dd10cac62a89845f62f2ad99d25e1cddd0b1cd529",
+    "quote_as_of": "2026-09-10T20:00:02Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 809,
     "natural": true,
-    "observed_at": "2026-09-10T01:24:13Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-11T01:30:34Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
     "shard": "4/5"
   },
@@ -218,14 +218,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-09",
-    "observed_at": "2026-09-10T01:15:09Z",
-    "payload_sha256": "eede8f89df27b2f2d52709c4b3fd7b34297bf186d289f933c8bcbdb584baf0f3",
-    "quote_as_of": "2026-09-09T20:00:02Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:30:34Z",
+    "payload_sha256": "4f3a6ec593d14a218a3dfde08a1443e77abb5ff06f289f748f25d58db7d8a3f2",
+    "quote_as_of": "2026-09-10T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-09"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -241,5 +241,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "ROL",
-  "updated_at": "2026-09-10T01:24:13Z"
+  "updated_at": "2026-09-11T01:30:34Z"
 }

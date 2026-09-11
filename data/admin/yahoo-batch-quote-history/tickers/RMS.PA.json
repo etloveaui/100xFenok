@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2846,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "34424274071",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1579,
+      "natural": true,
+      "observed_at": "2026-09-11T01:22:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-10T01:20:40Z",
-    "history_as_of": "2026-09-09",
+    "fetched_at": "2026-09-11T01:26:14Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/RMS.PA.json",
-    "payload_sha256": "a87044da558f865bdec17afee8e4876bf0cf59e4c5170757e3b4840ae4dc9cfb",
-    "quote_as_of": "2026-09-09T15:38:50Z",
-    "source_as_of": "2026-09-09"
+    "payload_sha256": "f47e5c36d3f9913ac2fcafe24c45ad5ec859865fc8a5441c969475231bab083b",
+    "quote_as_of": "2026-09-10T15:37:38Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 1579,
     "natural": true,
-    "observed_at": "2026-09-10T01:21:11Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-11T01:22:09Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-09",
-    "observed_at": "2026-09-10T01:17:44Z",
-    "payload_sha256": "e983670cde1d250c0b777c49bb2745d34256b22ee2824a7a03fa595fa139181e",
-    "quote_as_of": "2026-09-09T15:38:50Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:22:09Z",
+    "payload_sha256": "fc40795018099bbd6435ffa931c23084956a6d570f2ee581d8e4e0a5bf94d650",
+    "quote_as_of": "2026-09-10T15:37:38Z",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-09"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "RMS.PA",
-  "updated_at": "2026-09-10T01:21:11Z"
+  "updated_at": "2026-09-11T01:22:09Z"
 }

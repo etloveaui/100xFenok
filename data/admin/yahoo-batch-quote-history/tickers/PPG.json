@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 3396,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "34424274071",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 787,
+      "natural": true,
+      "observed_at": "2026-09-11T01:22:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-10T01:20:35Z",
-    "history_as_of": "2026-09-09",
+    "fetched_at": "2026-09-11T01:26:07Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/PPG.json",
-    "payload_sha256": "1554a5ca33d7fe844cd113af207bd65ed6e7fe189fceaded1092663538c24b58",
-    "quote_as_of": "2026-09-09T20:03:08Z",
-    "source_as_of": "2026-09-09"
+    "payload_sha256": "a4636007c4a7ad9f790a022f2ecb2b121c253fca000c9103a95dfbb9b4a9ed61",
+    "quote_as_of": "2026-09-10T20:00:02Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 787,
     "natural": true,
-    "observed_at": "2026-09-10T01:21:11Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-11T01:22:09Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-09",
-    "observed_at": "2026-09-10T01:17:44Z",
-    "payload_sha256": "ba7dea171d2d1f248ba6625bede3788d5727b6f63b5c25882a14cc39f16aaf93",
-    "quote_as_of": "2026-09-09T20:03:08Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:22:09Z",
+    "payload_sha256": "31a67f4876ccd1f06c1094fdbb724f6d578bc01e57a4927b6a35b3cbbeb4681a",
+    "quote_as_of": "2026-09-10T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-09"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "PPG",
-  "updated_at": "2026-09-10T01:21:11Z"
+  "updated_at": "2026-09-11T01:22:09Z"
 }

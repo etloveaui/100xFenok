@@ -2,32 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 510,
-      "natural": true,
-      "observed_at": "2026-08-14T23:56:58Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31851174388",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 584,
-      "natural": true,
-      "observed_at": "2026-08-19T23:47:14Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 3278,
@@ -181,32 +155,58 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 803,
+      "natural": true,
+      "observed_at": "2026-09-11T01:11:50Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-11T01:26:52Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-08T01:23:41Z",
-    "history_as_of": "2026-09-04",
+    "fetched_at": "2026-09-11T01:16:45Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/PNR.json",
-    "payload_sha256": "b87cac66166a1d49189d83772de6f10595079487a79e69485c2632a4c653c3a3",
-    "quote_as_of": "2026-09-04T20:00:02Z",
-    "source_as_of": "2026-09-04"
+    "payload_sha256": "24e3cd2f928109ff509f89f21c119140713ef67551265dd5932604d1fdbeb874",
+    "quote_as_of": "2026-09-10T20:00:02Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 615,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-08T01:20:41Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-11T01:26:52Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:45:50Z",
@@ -219,14 +219,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-04",
-    "observed_at": "2026-09-08T01:20:41Z",
-    "payload_sha256": "ecae0ab29806353a73b29d65ebf3b6d063287c422e59c234527b178d894b75aa",
-    "quote_as_of": "2026-09-04T20:00:02Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:11:50Z",
+    "payload_sha256": "079b1e203c127ad67db24f1934eed42baba750f4dd645cceff1b8bd1da901ab0",
+    "quote_as_of": "2026-09-10T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-04"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -242,5 +242,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "PNR",
-  "updated_at": "2026-09-08T01:20:41Z"
+  "updated_at": "2026-09-11T01:26:52Z"
 }

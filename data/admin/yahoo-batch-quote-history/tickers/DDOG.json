@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 394,
-      "natural": true,
-      "observed_at": "2026-08-12T00:36:03Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "33577879211",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1070,
+      "natural": true,
+      "observed_at": "2026-09-11T01:11:50Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:09:36Z",
-    "history_as_of": "2026-09-01",
+    "fetched_at": "2026-09-11T01:12:09Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/DDOG.json",
-    "payload_sha256": "2ee852818981c81a56f652df73fa9d68b9b0602d51638a917daaa5c80c24fdcf",
-    "quote_as_of": "2026-09-01T20:00:01Z",
-    "source_as_of": "2026-09-01"
+    "payload_sha256": "49c278a27f5ea8f9c5d28153f649ecf8d782d89c2005ffc587cd1b1418748035",
+    "quote_as_of": "2026-09-10T20:00:01Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -199,30 +199,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 778,
+    "latency_ms": 1070,
     "natural": true,
-    "observed_at": "2026-09-02T01:05:40Z",
+    "observed_at": "2026-09-11T01:11:50Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-02T01:09:36Z",
+    "history_as_of": "2026-09-01",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/DDOG.json",
+    "payload_sha256": "2ee852818981c81a56f652df73fa9d68b9b0602d51638a917daaa5c80c24fdcf",
+    "quote_as_of": "2026-09-01T20:00:01Z",
+    "source_as_of": "2026-09-01"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:05:40Z",
-    "payload_sha256": "b4ea4e23b4a6f8d67b88030adf3d149d68e500cec9a34fd3c8b32dda8c2ec4ec",
-    "quote_as_of": "2026-09-01T20:00:01Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:11:50Z",
+    "payload_sha256": "32606ebc0530f1cebe7915496f07869a9c16ff84b27efc5f78681cd8c831aa88",
+    "quote_as_of": "2026-09-10T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-09-11T01:11:50Z",
+    "classified_run_id": "34549558760",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "DDOG holds LKG because Yahoo source date 2026-09-01 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-01"
+  },
   "ticker": "DDOG",
-  "updated_at": "2026-09-02T01:05:40Z"
+  "updated_at": "2026-09-11T01:11:50Z"
 }

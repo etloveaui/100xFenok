@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 467,
-      "natural": true,
-      "observed_at": "2026-08-13T00:13:23Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31652949582",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 404,
       "natural": true,
       "observed_at": "2026-08-14T00:18:08Z",
@@ -181,15 +168,28 @@
       "run_id": "33577879211",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 1480,
+      "natural": true,
+      "observed_at": "2026-09-11T01:11:50Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:30:30Z",
-    "history_as_of": "2026-09-01",
+    "fetched_at": "2026-09-11T01:12:37Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/CTVA.json",
-    "payload_sha256": "db9721fc042e6f2fd32dca5cb6659ce1e669d7668794858a172653ecf53b0b26",
-    "quote_as_of": "2026-09-01T20:02:24Z",
-    "source_as_of": "2026-09-01"
+    "payload_sha256": "358b4693cb556ef5b4ec0bdd7ff83569942d344f8e0a2a40d326f4fe0ca6319e",
+    "quote_as_of": "2026-09-10T20:04:37Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -199,30 +199,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 733,
+    "latency_ms": 1480,
     "natural": true,
-    "observed_at": "2026-09-02T01:27:36Z",
+    "observed_at": "2026-09-11T01:11:50Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "0/5"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-02T01:30:30Z",
+    "history_as_of": "2026-09-01",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CTVA.json",
+    "payload_sha256": "db9721fc042e6f2fd32dca5cb6659ce1e669d7668794858a172653ecf53b0b26",
+    "quote_as_of": "2026-09-01T20:02:24Z",
+    "source_as_of": "2026-09-01"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:27:36Z",
-    "payload_sha256": "83e0c6d33d2c5e28b1c1a5e5485adda7df40613e25cb36e1fb8b01cb74d86ff2",
-    "quote_as_of": "2026-09-01T20:02:24Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:11:50Z",
+    "payload_sha256": "fece0d2f9ee5a9023e8790a7c660831a8711879831fb6a5c9cabb44a24523a7b",
+    "quote_as_of": "2026-09-10T20:04:37Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-09-11T01:11:50Z",
+    "classified_run_id": "34549558760",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "CTVA holds LKG because Yahoo source date 2026-09-01 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-01"
+  },
   "ticker": "CTVA",
-  "updated_at": "2026-09-02T01:27:36Z"
+  "updated_at": "2026-09-11T01:11:50Z"
 }

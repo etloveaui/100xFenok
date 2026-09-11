@@ -4,32 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 417,
-      "natural": true,
-      "observed_at": "2026-08-12T00:43:18Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31548744038",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 449,
-      "natural": true,
-      "observed_at": "2026-08-13T00:19:00Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31652949582",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 345,
       "natural": true,
       "observed_at": "2026-08-14T00:24:55Z",
@@ -181,48 +155,92 @@
       "run_id": "33577879211",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 739,
+      "natural": true,
+      "observed_at": "2026-09-11T01:11:50Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-11T01:26:52Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:11:13Z",
-    "history_as_of": "2026-09-01",
+    "fetched_at": "2026-09-11T01:12:11Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/SNDK.json",
-    "payload_sha256": "93a0442f68c8e6a2fd8260bc7163828d3be155e68715efb30315ac75d8befa4d",
-    "quote_as_of": "2026-09-01T20:00:00Z",
-    "source_as_of": "2026-09-01"
+    "payload_sha256": "52c0171fe515dc0eacff8164c87fbccf3a7b52a67ce77350d97accdce0bd1f44",
+    "quote_as_of": "2026-09-10T20:00:00Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 849,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-02T01:05:40Z",
-    "outcome": "fresh",
+    "observed_at": "2026-09-11T01:26:52Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "3/5"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-02T01:11:13Z",
+    "history_as_of": "2026-09-01",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SNDK.json",
+    "payload_sha256": "93a0442f68c8e6a2fd8260bc7163828d3be155e68715efb30315ac75d8befa4d",
+    "quote_as_of": "2026-09-01T20:00:00Z",
+    "source_as_of": "2026-09-01"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:05:40Z",
-    "payload_sha256": "76272dad539a39f278836dafa040e0c4f491d84ce65a780b43f31353a16fc760",
-    "quote_as_of": "2026-09-01T20:00:00Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:11:50Z",
+    "payload_sha256": "c0879fd9e795377c6a4e992025d66ff8453210e781a4de1371d082c812bcf06d",
+    "quote_as_of": "2026-09-10T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-09-11T01:11:50Z",
+    "classified_run_id": "34549558760",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "SNDK holds LKG because Yahoo source date 2026-09-01 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-01"
+  },
   "ticker": "SNDK",
-  "updated_at": "2026-09-02T01:05:40Z"
+  "updated_at": "2026-09-11T01:26:52Z"
 }

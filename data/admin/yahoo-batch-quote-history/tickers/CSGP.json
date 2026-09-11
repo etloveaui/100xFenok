@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 460,
-      "natural": true,
-      "observed_at": "2026-08-13T00:13:23Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31652949582",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 340,
       "natural": true,
       "observed_at": "2026-08-14T00:18:08Z",
@@ -181,15 +168,28 @@
       "run_id": "33577879211",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 733,
+      "natural": true,
+      "observed_at": "2026-09-11T01:11:50Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34549558760",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:30:29Z",
-    "history_as_of": "2026-09-01",
+    "fetched_at": "2026-09-11T01:12:36Z",
+    "history_as_of": "2026-09-10",
     "path": "data/yf/finance/CSGP.json",
-    "payload_sha256": "5d531d982b2c4f912470c733dc98e6654294aef124d31b9c9398d9884274888e",
-    "quote_as_of": "2026-09-01T20:00:01Z",
-    "source_as_of": "2026-09-01"
+    "payload_sha256": "4f604ab519fe91da32937714b5f2dea81038073cb7f2abe28bea561247a3270f",
+    "quote_as_of": "2026-09-10T20:00:01Z",
+    "source_as_of": "2026-09-10"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -199,30 +199,48 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 738,
+    "latency_ms": 733,
     "natural": true,
-    "observed_at": "2026-09-02T01:27:36Z",
+    "observed_at": "2026-09-11T01:11:50Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34549558760",
     "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "shard": "0/5"
+  },
+  "lkg": {
+    "fetched_at": "2026-09-02T01:30:29Z",
+    "history_as_of": "2026-09-01",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/CSGP.json",
+    "payload_sha256": "5d531d982b2c4f912470c733dc98e6654294aef124d31b9c9398d9884274888e",
+    "quote_as_of": "2026-09-01T20:00:01Z",
+    "source_as_of": "2026-09-01"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:27:36Z",
-    "payload_sha256": "61806f1f5f5c72a8ba330df722de3fb7132d946bda633b248c06ebb00c29b526",
-    "quote_as_of": "2026-09-01T20:00:01Z",
+    "history_as_of": "2026-09-10",
+    "observed_at": "2026-09-11T01:11:50Z",
+    "payload_sha256": "7ac0d06b6b5054e8c86889e3ee933a77cbcb716c84360e08df13e3bc79079bc2",
+    "quote_as_of": "2026-09-10T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34549558760",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-10"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-09-11T01:11:50Z",
+    "classified_run_id": "34549558760",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "CSGP holds LKG because Yahoo source date 2026-09-01 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-01"
+  },
   "ticker": "CSGP",
-  "updated_at": "2026-09-02T01:27:36Z"
+  "updated_at": "2026-09-11T01:11:50Z"
 }
