@@ -140,9 +140,9 @@ export async function verifyWindDownRecoveryCopyThroughCoordinator(value: unknow
 }
 
 export async function readMonaVnextLearningProfileThroughCoordinator(options: { initialize?: boolean } = {}) {
-  const body = await invokeMonaVnextProfileCoordinator({
-    operation: options.initialize === false ? "read-learning-profile-snapshot" : "read-learning-profile",
-  });
+  const body = await invokeMonaVnextProfileCoordinator(options.initialize === false
+    ? { operation: "read-learning-profile-snapshot" }
+    : { operation: "read-learning-profile" });
   const profile = body.profile;
   if (
     !profile ||
