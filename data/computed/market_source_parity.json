@@ -1,6 +1,6 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-09-12T22:25:42Z",
+  "generated_at": "2026-09-12T23:23:07Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6803,
@@ -2053,49 +2053,6 @@
       }
     },
     {
-      "ticker": "AAPL",
-      "asset_type": "stock",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 3,
-      "relative_spread_pct": 199.179964,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 2.49
-        },
-        {
-          "source": "yf",
-          "value": -2.5105848
-        },
-        {
-          "source": "yf.derived",
-          "value": -2.510587733463317
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 199.179964,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "yf",
-        "yf.derived"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 0.0,
-        "yf": 7.0,
-        "yf.derived": 7.0
-      }
-    },
-    {
       "ticker": "PFFA",
       "asset_type": "etf",
       "field": "return_1m",
@@ -2797,49 +2754,6 @@
         "stockanalysis.quote": 50.0,
         "yf": 0.0,
         "yf.derived": 0.0
-      }
-    },
-    {
-      "ticker": "AAPL",
-      "asset_type": "stock",
-      "field": "change",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 3,
-      "relative_spread_pct": 198.786408,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 8.14
-        },
-        {
-          "source": "yf",
-          "value": -8.23999
-        },
-        {
-          "source": "yf.derived",
-          "value": -8.239999999999952
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 198.786408,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "yf",
-        "yf.derived"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 0.0,
-        "yf": 7.0,
-        "yf.derived": 7.0
       }
     },
     {
@@ -4136,6 +4050,80 @@
       },
       "freshness": {
         "stockanalysis.quote": 54.0,
+        "yf": 0.0
+      }
+    },
+    {
+      "ticker": "FOPC",
+      "asset_type": "etf",
+      "field": "return_3m",
+      "selected_source": "yf.history_1y",
+      "candidate_count": 2,
+      "relative_spread_pct": 197.94098,
+      "values": [
+        {
+          "source": "yf.history_1y",
+          "value": -0.4689532609289077
+        },
+        {
+          "source": "stockanalysis.detail.history",
+          "value": 0.47881209793982543
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 197.94098,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.detail.history"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "yf.history_1y",
+        "policy_rank": 0,
+        "policy_len": 2,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.history": 49.0
+      }
+    },
+    {
+      "ticker": "HSCZ",
+      "asset_type": "etf",
+      "field": "change",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 197.928729,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": 0.14
+        },
+        {
+          "source": "yf",
+          "value": -0.13710022
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 197.928729,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.quote"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 53.0,
         "yf": 0.0
       }
     }
@@ -9713,49 +9701,6 @@
       }
     },
     {
-      "ticker": "AAPL",
-      "asset_type": "stock",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 3,
-      "relative_spread_pct": 199.179964,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 2.49
-        },
-        {
-          "source": "yf",
-          "value": -2.5105848
-        },
-        {
-          "source": "yf.derived",
-          "value": -2.510587733463317
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 199.179964,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "yf",
-        "yf.derived"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 0.0,
-        "yf": 7.0,
-        "yf.derived": 7.0
-      }
-    },
-    {
       "ticker": "CWB",
       "asset_type": "etf",
       "field": "change_pct",
@@ -10165,49 +10110,6 @@
         "stockanalysis.quote": 50.0,
         "yf": 0.0,
         "yf.derived": 0.0
-      }
-    },
-    {
-      "ticker": "AAPL",
-      "asset_type": "stock",
-      "field": "change",
-      "selected_source": "stockanalysis.quote",
-      "candidate_count": 3,
-      "relative_spread_pct": 198.786408,
-      "values": [
-        {
-          "source": "stockanalysis.quote",
-          "value": 8.14
-        },
-        {
-          "source": "yf",
-          "value": -8.23999
-        },
-        {
-          "source": "yf.derived",
-          "value": -8.239999999999952
-        }
-      ],
-      "diagnosis": "stale",
-      "spread_pct": 198.786408,
-      "fresh_spread_pct": null,
-      "stale_sources": [
-        "yf",
-        "yf.derived"
-      ],
-      "scale_mismatch": false,
-      "scale_factor": null,
-      "sign_divergence": true,
-      "selected_rationale": {
-        "selected": "stockanalysis.quote",
-        "policy_rank": 0,
-        "policy_len": 4,
-        "note": "policy-preferred; lower-ranked sources retained as candidates"
-      },
-      "freshness": {
-        "stockanalysis.quote": 0.0,
-        "yf": 7.0,
-        "yf.derived": 7.0
       }
     },
     {
@@ -12168,6 +12070,80 @@
       },
       "freshness": {
         "stockanalysis.quote": 48.0,
+        "yf": 0.0
+      }
+    },
+    {
+      "ticker": "KWH",
+      "asset_type": "etf",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 196.589577,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": -0.86
+        },
+        {
+          "source": "yf",
+          "value": 0.83067036
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 196.589577,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.quote"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 14.0,
+        "yf": 0.0
+      }
+    },
+    {
+      "ticker": "MUU",
+      "asset_type": "etf",
+      "field": "change_pct",
+      "selected_source": "stockanalysis.quote",
+      "candidate_count": 2,
+      "relative_spread_pct": 196.504725,
+      "values": [
+        {
+          "source": "stockanalysis.quote",
+          "value": -12.02
+        },
+        {
+          "source": "yf",
+          "value": 11.599868
+        }
+      ],
+      "diagnosis": "stale",
+      "spread_pct": 196.504725,
+      "fresh_spread_pct": null,
+      "stale_sources": [
+        "stockanalysis.quote"
+      ],
+      "scale_mismatch": false,
+      "scale_factor": null,
+      "sign_divergence": true,
+      "selected_rationale": {
+        "selected": "stockanalysis.quote",
+        "policy_rank": 0,
+        "policy_len": 4,
+        "note": "policy-preferred; lower-ranked sources retained as candidates"
+      },
+      "freshness": {
+        "stockanalysis.quote": 50.0,
         "yf": 0.0
       }
     }
