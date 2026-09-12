@@ -78,6 +78,33 @@ async function main() {
   assert.equal(tries, 1, "free quota failure must not trigger retries or another provider");
   await assert.rejects(requestGroqCoachDecision(parsed, { recentPractice: [] }, { apiKey: "", fetch: provider }), /COACH_UNAVAILABLE/);
 
+  await assert.rejects(requestGroqCoachDecision(parsed, { recentPractice: [] }, { apiKey: "synthetic-key", fetch: async () => new Response(JSON.stringify({ choices: [{ message: { content: "not-json" } }] })) }), /COACH_INVALID_RESPONSE/);
+  await assert.rejects(requestGroqCoachDecision(parsed, { recentPractice: [] }, { apiKey: "synthetic-key", fetch: async () => new Response(JSON.stringify({ choices: [{ finish_reason: "length", message: { content: JSON.stringify(decision) } }] })) }), /COACH_INVALID_RESPONSE/);
+  const aborted = new AbortController(); aborted.abort();
+  await assert.rejects(requestGroqCoachDecision(parsed, { recentPractice: [] }, { apiKey: "synthetic-key", signal: aborted.signal, fetch: async (_url, init) => { init?.signal?.throwIfAborted(); return provider(_url, init); } }), /COACH_TIMEOUT/);
+  assert.equal((await executeWindDownCoachRequest(request(), { ...deps, now: () => now - 60_000 })).status, 403);
+  assert.equal((await executeWindDownCoachRequest(request(), { ...deps, decide: async () => { throw new Error("COACH_RATE_LIMITED"); } })).status, 429);
+  assert.equal((await executeWindDownCoachRequest(request({ ...body, learnerText: "한".repeat(33_000) }), deps)).status, 413);
+
+  const { createWindDownVoiceSession } = await import("../src/features/winddown/server/voiceSession");
+  const session = await createWindDownVoiceSession({ schemaVersion: 1, productSessionId: sessionId, activity: "live-talk", topicId: "open-evening", policyVersion: 1 }, {
+    coachEnabled: true, getApiKey: () => "synthetic", fetch: async () => new Response(JSON.stringify({ name: "synthetic-token" })),
+  });
+  assert.equal(session.coach?.provider, "groq");
+  assert.ok("tools" in session.setup);
+  assert.ok(JSON.stringify(session.setup).includes("consult_teacher"));
+  assert.ok(!JSON.stringify(session).includes("GROQ_API_KEY"));
+  const { consultWindDownTeacher } = await import("../src/features/winddown/voice/coachClient");
+  let clientBody: Record<string, unknown> | undefined;
+  const clientResult = await consultWindDownTeacher({ session, signal: new AbortController().signal,
+    call: { id: "client-call", name: "consult_teacher", args: { learnerText: "wrong paraphrase" } },
+    learnerText: body.learnerText, history: body.history as typeof parsed.history,
+    fetch: async (_url, init) => { clientBody = JSON.parse(String(init?.body)); return Response.json({ decision }); },
+  });
+  assert.equal(clientResult.ok, true);
+  assert.equal(clientBody?.learnerText, body.learnerText, "actual transcription takes precedence over model tool arguments");
+  assert.equal(clientBody?.proof, session.reportProof);
+
   const sentTools: unknown[] = [];
   let executions = 0;
   let settle: (result: Record<string, unknown>) => void = () => undefined;
@@ -100,6 +127,8 @@ async function main() {
   settle({ ok: true, decision });
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(sentTools.length, 0, "late results may not cross a session boundary");
+  bridge.receive({ functionCalls: [{ ...call, id: "call-2" }] });
+  assert.equal(executions, 2, "an interrupted call replay must remain cancelled");
   bridge.receive({ functionCalls: [{ ...call, id: "call-3" }] });
   settle({ ok: true, decision });
   await new Promise(resolve => setTimeout(resolve, 0));

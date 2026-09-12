@@ -11,12 +11,11 @@ export function createLiveToolBridge(options: {
   let generation = 0;
   let disposed = false;
   function cancel(ids: readonly string[]) {
-    for (const id of ids) { pending.get(id)?.abort(); pending.delete(id); }
+    for (const id of ids) { seen.add(id); pending.get(id)?.abort(); pending.delete(id); }
   }
   function reset() {
     generation++;
     cancel([...pending.keys()]);
-    seen.clear();
   }
   function receive(value: unknown) {
     if (disposed || !value || typeof value !== "object") return;
@@ -42,7 +41,8 @@ export function createLiveToolBridge(options: {
       void work.catch(() => ({ ok: false, error: "COACH_UNAVAILABLE" })).then(response => {
         if (disposed || epoch !== generation || controller.signal.aborted || pending.get(call.id) !== controller) return;
         pending.delete(call.id);
-        options.send({ toolResponse: { functionResponses: [{ id: call.id, name: call.name, response }] } });
+        try { options.send({ toolResponse: { functionResponses: [{ id: call.id, name: call.name, response }] } }); }
+        catch { reset(); }
       });
     }
   }

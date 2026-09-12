@@ -17,8 +17,8 @@ if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "story" ]; then
   npm run test:winddown-story-gate
 fi
 npm run build:version
-if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "story" ]; then
-  # Story requests use committed art and intercepted synthetic APIs. Reuse the
+if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "story" ] || [ "${WINDDOWN_QA_SCOPE:-preservation}" = "coach" ]; then
+  # Story/coach requests use committed art and intercepted synthetic APIs. Reuse the
   # pushed public assets and generate only build imports; financial derivation
   # is unrelated to this isolated surface and remains in the production build.
   npm run build:lane-runid-map
@@ -28,7 +28,9 @@ if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "story" ]; then
 else
   npm run sync-static
 fi
-if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "continuity" ]; then
+if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "coach" ]; then
+  npm run test:winddown-coach-gate
+elif [ "${WINDDOWN_QA_SCOPE:-preservation}" = "continuity" ]; then
   npm run test:winddown-continuity-gate
 elif [ "${WINDDOWN_QA_SCOPE:-preservation}" != "story" ]; then
   npm run test:winddown-preservation-gate
@@ -68,4 +70,8 @@ if [ "$ready" != true ]; then
 fi
 
 bash scripts/load-guard.sh --assert-nested
-npm run qa:winddown-preservation-browser
+if [ "${WINDDOWN_QA_SCOPE:-preservation}" = "coach" ]; then
+  npx tsx scripts/check-winddown-coach-browser.ts
+else
+  npm run qa:winddown-preservation-browser
+fi

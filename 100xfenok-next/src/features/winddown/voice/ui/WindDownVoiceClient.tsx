@@ -307,7 +307,6 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
       transcriptRef.current = next;
       setTranscriptState(next);
     }
-    autoBeginConversationRef.current = null;
     if (startedAtRef.current && conversationIdsRef.current.length > 0) {
       const checkpoint: WindDownVoiceSessionCheckpoint = {
         schemaVersion: 1,
@@ -341,7 +340,6 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
       : createMonaVnextTranscriptState(session.conversationId);
     transcriptRef.current = next;
     setTranscriptState(next);
-    autoBeginConversationRef.current = null;
   }, []);
 
   const requestSession = useCallback((options: WindDownVoiceSessionRequestOptions) => {
@@ -448,7 +446,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
 
   useEffect(() => {
     if (liveStatus !== "listening" || !liveSession) return;
-    if (autoBeginConversationRef.current === liveSession.conversationId) return;
+    if (autoBeginConversationRef.current !== null) return;
     if (sendLiveText("Begin now.")) autoBeginConversationRef.current = liveSession.conversationId;
   }, [liveSession, liveStatus, sendLiveText]);
 
