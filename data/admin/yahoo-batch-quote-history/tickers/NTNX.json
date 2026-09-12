@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:05Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -182,32 +169,45 @@
       "run_id": "34549558760",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 460,
+      "natural": true,
+      "observed_at": "2026-09-12T01:22:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-11T01:12:52Z",
-    "history_as_of": "2026-09-10",
+    "fetched_at": "2026-09-12T01:25:15Z",
+    "history_as_of": "2026-09-11",
     "path": "data/yf/finance/NTNX.json",
-    "payload_sha256": "90f379c64491598b9b76a96a75b50e3d2fcf86ebdf7811c83467eb907662360d",
-    "quote_as_of": "2026-09-10T20:00:00Z",
-    "source_as_of": "2026-09-10"
+    "payload_sha256": "9855e2eac530de5ed22e9c2d4b4ae228b13e941e8bf40ca82d985ccf7a754a1f",
+    "quote_as_of": "2026-09-11T20:00:00Z",
+    "source_as_of": "2026-09-11"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 460,
     "natural": true,
-    "observed_at": "2026-09-11T01:26:52Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-12T01:22:05Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-10",
-    "observed_at": "2026-09-11T01:11:50Z",
-    "payload_sha256": "fbb1a5355bf9cb6531b90e29bb6990f3b36bf39de16c25a4c733629f99c5ca23",
-    "quote_as_of": "2026-09-10T20:00:00Z",
+    "history_as_of": "2026-09-11",
+    "observed_at": "2026-09-12T01:22:05Z",
+    "payload_sha256": "20c18ed14f61fb11514a8b1f78f242eb3b9123fd26386d028e62a3e2f721c5ed",
+    "quote_as_of": "2026-09-11T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-10"
+    "source_as_of": "2026-09-11"
   },
   "recovered_at": "2026-09-11T01:11:50Z",
   "recovered_from_run_id": "34175958781",
@@ -260,5 +260,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "NTNX",
-  "updated_at": "2026-09-11T01:26:52Z"
+  "updated_at": "2026-09-12T01:22:05Z"
 }

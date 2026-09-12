@@ -4,32 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 418,
-      "natural": true,
-      "observed_at": "2026-08-14T00:14:35Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31755913658",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 498,
-      "natural": true,
-      "observed_at": "2026-08-14T23:52:56Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31851174388",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 647,
       "natural": true,
       "observed_at": "2026-08-19T23:42:29Z",
@@ -182,35 +156,60 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 581,
+      "natural": true,
+      "observed_at": "2026-09-12T01:13:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-12T01:18:20Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:21:33Z",
-    "history_as_of": "2026-09-01",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/RCL.json",
-    "payload_sha256": "76e27566e4caf904813c06b881b3db19e9d339e41c18cc53cfd007cf2992eef9",
-    "quote_as_of": "2026-09-01T20:00:02Z",
-    "source_as_of": "2026-09-01"
+    "fetched_at": "2026-09-12T01:13:55Z",
+    "history_as_of": "2026-09-11",
+    "path": "data/yf/finance/RCL.json",
+    "payload_sha256": "0aa02fbba30f04551a8989a2ad33d6c5a660067d7643eeba10cdaeab761511f5",
+    "quote_as_of": "2026-09-11T20:00:03Z",
+    "source_as_of": "2026-09-11"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for RCL despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 790,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-08T01:28:08Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-12T01:18:20Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "1/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -233,18 +232,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:17:07Z",
-    "payload_sha256": "47056980204cfcdd547b64a563099192d78af0ee42fdf19bdbcc5dc062b4b13d",
-    "quote_as_of": "2026-09-01T20:00:02Z",
+    "history_as_of": "2026-09-11",
+    "observed_at": "2026-09-12T01:13:27Z",
+    "payload_sha256": "1e92c549242232dafd353cffc91593cef47ad127a8e2c950b6281ffe948ddf8c",
+    "quote_as_of": "2026-09-11T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34664080685",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-12T01:13:27Z",
+  "recovered_from_run_id": "34175958781",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "34664080685",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "RCL",
-  "updated_at": "2026-09-08T01:28:08Z"
+  "updated_at": "2026-09-12T01:18:20Z"
 }

@@ -117,34 +117,59 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 533,
+      "natural": true,
+      "observed_at": "2026-09-12T01:13:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-12T01:29:43Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-03T01:19:42Z",
-    "history_as_of": "2026-09-02",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VMRK.json",
-    "payload_sha256": "08ebbf852f67d1f8845ee457fb408fe5d0ad4f2f2f7aceb43bdaa2f4fe82b021",
-    "quote_as_of": "2026-09-02T20:00:03Z",
-    "source_as_of": "2026-09-02"
+    "fetched_at": "2026-09-12T01:14:10Z",
+    "history_as_of": "2026-09-11",
+    "path": "data/yf/finance/VMRK.json",
+    "payload_sha256": "3daccd0178326ec06336e7ed5d069ab9ba08f223677dc27eb4d491f1459b2075",
+    "quote_as_of": "2026-09-11T20:00:03Z",
+    "source_as_of": "2026-09-11"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for VMRK despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 802,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-08T01:28:08Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-12T01:29:43Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -167,18 +192,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-02",
-    "observed_at": "2026-09-03T01:16:16Z",
-    "payload_sha256": "b45cc9a53f478af5541c4a742e185fdf1f98a59a0a580c1f137a65e0ee9d4c02",
-    "quote_as_of": "2026-09-02T20:00:03Z",
+    "history_as_of": "2026-09-11",
+    "observed_at": "2026-09-12T01:13:27Z",
+    "payload_sha256": "e58013a3ddd8616a9e7adedd7a2f5cce043cec86fadf9c7e4fd33972b5d75ce8",
+    "quote_as_of": "2026-09-11T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "33702512577",
+    "run_id": "34664080685",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-02"
+    "source_as_of": "2026-09-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-12T01:13:27Z",
+  "recovered_from_run_id": "34175958781",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "34664080685",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "VMRK",
-  "updated_at": "2026-09-08T01:28:08Z"
+  "updated_at": "2026-09-12T01:29:43Z"
 }

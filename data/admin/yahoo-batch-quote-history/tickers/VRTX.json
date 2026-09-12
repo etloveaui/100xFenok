@@ -1,32 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-13T00:13:23Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "31652949582",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 346,
-      "natural": true,
-      "observed_at": "2026-08-14T00:18:08Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31755913658",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -182,35 +156,60 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 474,
+      "natural": true,
+      "observed_at": "2026-09-12T01:13:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-12T01:29:43Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-03T01:19:43Z",
-    "history_as_of": "2026-09-02",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VRTX.json",
-    "payload_sha256": "8c0d7031d5e1e66c7834ae96fc51de09c684ea7d3c9136cdade06415a36cf37b",
-    "quote_as_of": "2026-09-02T20:00:01Z",
-    "source_as_of": "2026-09-02"
+    "fetched_at": "2026-09-12T01:14:11Z",
+    "history_as_of": "2026-09-11",
+    "path": "data/yf/finance/VRTX.json",
+    "payload_sha256": "f92e4bd0604cf00b5a7c1a95d0719d2d1b2357c47288ad89c93ec05f608294fa",
+    "quote_as_of": "2026-09-11T20:00:00Z",
+    "source_as_of": "2026-09-11"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for VRTX despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 769,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-08T01:28:08Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-12T01:29:43Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -233,18 +232,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-02",
-    "observed_at": "2026-09-03T01:16:16Z",
-    "payload_sha256": "45f66b720872f2c8ab327e065df4607ba2a5b077f780247822059794acab2d76",
-    "quote_as_of": "2026-09-02T20:00:01Z",
+    "history_as_of": "2026-09-11",
+    "observed_at": "2026-09-12T01:13:27Z",
+    "payload_sha256": "d703c9812be979b356870011c0c3607ee99254e02d02f6b4c5d5b8c25be7aaac",
+    "quote_as_of": "2026-09-11T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "33702512577",
+    "run_id": "34664080685",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-02"
+    "source_as_of": "2026-09-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-12T01:13:27Z",
+  "recovered_from_run_id": "34175958781",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "34664080685",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "VRTX",
-  "updated_at": "2026-09-08T01:28:08Z"
+  "updated_at": "2026-09-12T01:29:43Z"
 }

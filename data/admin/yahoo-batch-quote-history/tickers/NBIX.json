@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 554,
-      "natural": true,
-      "observed_at": "2026-08-19T23:42:29Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 2959,
@@ -182,32 +169,45 @@
       "run_id": "34549558760",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 498,
+      "natural": true,
+      "observed_at": "2026-09-12T01:22:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-11T01:12:49Z",
-    "history_as_of": "2026-09-10",
+    "fetched_at": "2026-09-12T01:25:12Z",
+    "history_as_of": "2026-09-11",
     "path": "data/yf/finance/NBIX.json",
-    "payload_sha256": "aa15840ff24039cd0dc020f34250115ea6175c836274329b5634f730d824de12",
-    "quote_as_of": "2026-09-10T20:00:00Z",
-    "source_as_of": "2026-09-10"
+    "payload_sha256": "d7b65312bdb06b3c13c3909ae3f0ca98a8cd4852d97e55b3938822902c2ecef9",
+    "quote_as_of": "2026-09-11T20:00:00Z",
+    "source_as_of": "2026-09-11"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 498,
     "natural": true,
-    "observed_at": "2026-09-11T01:26:52Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-12T01:22:05Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-10",
-    "observed_at": "2026-09-11T01:11:50Z",
-    "payload_sha256": "507624a68fa25f6937faddf06bbd8c70d3eb77e8952752bdff93eb2dbad86b4b",
-    "quote_as_of": "2026-09-10T20:00:00Z",
+    "history_as_of": "2026-09-11",
+    "observed_at": "2026-09-12T01:22:05Z",
+    "payload_sha256": "f3394864da82de317639ecf857d267749fbc0c5f607618aecef4385df5e5fbd5",
+    "quote_as_of": "2026-09-11T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-10"
+    "source_as_of": "2026-09-11"
   },
   "recovered_at": "2026-09-11T01:11:50Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "NBIX",
-  "updated_at": "2026-09-11T01:26:52Z"
+  "updated_at": "2026-09-12T01:22:05Z"
 }

@@ -2,32 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 821,
-      "natural": true,
-      "observed_at": "2026-08-15T00:00:59Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31851174388",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 614,
-      "natural": true,
-      "observed_at": "2026-08-19T23:49:43Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 2769,
@@ -182,34 +156,59 @@
       "run_id": "34175958781",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 589,
+      "natural": true,
+      "observed_at": "2026-09-12T01:13:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-12T01:18:20Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:32:07Z",
-    "history_as_of": "2026-09-01",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/SNA.json",
-    "payload_sha256": "4b1cbeac18387a27629a1040558952f1cefc56fe6605677f34cc933e9395c5c3",
-    "quote_as_of": "2026-09-01T20:00:02Z",
-    "source_as_of": "2026-09-01"
+    "fetched_at": "2026-09-12T01:14:04Z",
+    "history_as_of": "2026-09-11",
+    "path": "data/yf/finance/SNA.json",
+    "payload_sha256": "41566185fc6a621b775321706766c66dfac6e99a89c8a544f0de18d3d5b48192",
+    "quote_as_of": "2026-09-11T20:00:02Z",
+    "source_as_of": "2026-09-11"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "ValueError: quote_as_of is unavailable for SNA despite available history",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 753,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-08T01:28:08Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-12T01:18:20Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "1/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -232,17 +231,22 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:27:36Z",
-    "payload_sha256": "a94cf3e38f104c890b338a42b90b153a7edb57f0c416b0b4e90d9cda5bbdf05f",
-    "quote_as_of": "2026-09-01T20:00:02Z",
+    "history_as_of": "2026-09-11",
+    "observed_at": "2026-09-12T01:13:27Z",
+    "payload_sha256": "3f54a644de4b6d8bae7b3d588b20a9b85f913c4d2d0c58174b17e792e3fc04d1",
+    "quote_as_of": "2026-09-11T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "34664080685",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-11"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-12T01:13:27Z",
+  "recovered_from_run_id": "34175958781",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "34664080685",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 9,
@@ -255,5 +259,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "SNA",
-  "updated_at": "2026-09-08T01:28:08Z"
+  "updated_at": "2026-09-12T01:18:20Z"
 }

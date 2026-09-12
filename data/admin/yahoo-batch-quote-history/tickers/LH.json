@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2751,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,47 +168,60 @@
       "run_id": "34549558760",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 564,
+      "natural": true,
+      "observed_at": "2026-09-12T01:22:05Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-11T01:16:19Z",
-    "history_as_of": "2026-09-10",
+    "fetched_at": "2026-09-12T01:25:01Z",
+    "history_as_of": "2026-09-11",
     "path": "data/yf/finance/LH.json",
-    "payload_sha256": "ff2d9521ddc8efd1b36c1a728b1900d7c0baf5c19a15cb42a96a5b65b490376b",
-    "quote_as_of": "2026-09-10T20:00:02Z",
-    "source_as_of": "2026-09-10"
+    "payload_sha256": "be4b5ed39039d240fe2aee4e6afff976e61c46fba21b1736f1753fecfaa638be",
+    "quote_as_of": "2026-09-11T20:00:02Z",
+    "source_as_of": "2026-09-11"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 564,
     "natural": true,
-    "observed_at": "2026-09-11T01:26:52Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-12T01:22:05Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-10",
-    "observed_at": "2026-09-11T01:11:50Z",
-    "payload_sha256": "c449bc9c78aa0cfd66cc0e936953cc556ca3c629b5325ff557d960a9853d7cc6",
-    "quote_as_of": "2026-09-10T20:00:02Z",
+    "history_as_of": "2026-09-11",
+    "observed_at": "2026-09-12T01:22:05Z",
+    "payload_sha256": "db871a42c032272b80d538d099660540896ddeb287848f7bff65135b2cc04c56",
+    "quote_as_of": "2026-09-11T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-10"
+    "source_as_of": "2026-09-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "LH",
-  "updated_at": "2026-09-11T01:26:52Z"
+  "updated_at": "2026-09-12T01:22:05Z"
 }

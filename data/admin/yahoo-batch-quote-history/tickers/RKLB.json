@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2573,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,47 +168,60 @@
       "run_id": "34549558760",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 444,
+      "natural": true,
+      "observed_at": "2026-09-12T01:29:43Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-11T01:16:51Z",
-    "history_as_of": "2026-09-10",
+    "fetched_at": "2026-09-12T01:33:13Z",
+    "history_as_of": "2026-09-11",
     "path": "data/yf/finance/RKLB.json",
-    "payload_sha256": "1eb1109cec84643481e7cc102881a6eb03447931c26f0ccbc048ebd75f4b1ebc",
-    "quote_as_of": "2026-09-10T20:00:00Z",
-    "source_as_of": "2026-09-10"
+    "payload_sha256": "8e92173d71006715f28ff6a14b08bf9350d25ab5f8e16d8623571f1746227d03",
+    "quote_as_of": "2026-09-11T20:00:00Z",
+    "source_as_of": "2026-09-11"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 444,
     "natural": true,
-    "observed_at": "2026-09-11T01:26:52Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-12T01:29:43Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-10",
-    "observed_at": "2026-09-11T01:11:50Z",
-    "payload_sha256": "91423a7e6809e828c48ab20905f565c773b978e45c4e353e090a4c861a51f623",
-    "quote_as_of": "2026-09-10T20:00:00Z",
+    "history_as_of": "2026-09-11",
+    "observed_at": "2026-09-12T01:29:43Z",
+    "payload_sha256": "ab2707aaab7a3575a02caf51bafd04f440274e67cb53cb382bd8baff585eaf63",
+    "quote_as_of": "2026-09-11T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-10"
+    "source_as_of": "2026-09-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "RKLB",
-  "updated_at": "2026-09-11T01:26:52Z"
+  "updated_at": "2026-09-12T01:29:43Z"
 }

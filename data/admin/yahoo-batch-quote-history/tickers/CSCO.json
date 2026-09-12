@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2725,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -184,6 +171,20 @@
       "run_id": "34298546032",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 548,
+      "natural": true,
+      "observed_at": "2026-09-12T01:13:27Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -203,12 +204,12 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 602,
+    "latency_ms": 548,
     "natural": true,
-    "observed_at": "2026-09-09T01:18:24Z",
+    "observed_at": "2026-09-12T01:13:27Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34298546032",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -232,9 +233,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-09T01:18:24Z",
+    "observed_at": "2026-09-12T01:13:27Z",
     "run_attempt": 1,
-    "run_id": "34298546032"
+    "run_id": "34664080685"
   },
   "lkg": {
     "fetched_at": "2026-09-08T01:16:49Z",
@@ -265,5 +266,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CSCO",
-  "updated_at": "2026-09-09T01:18:24Z"
+  "updated_at": "2026-09-12T01:13:27Z"
 }

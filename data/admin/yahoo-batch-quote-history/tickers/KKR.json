@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2853,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "34549558760",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 519,
+      "natural": true,
+      "observed_at": "2026-09-12T01:25:40Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-11T01:16:16Z",
-    "history_as_of": "2026-09-10",
+    "fetched_at": "2026-09-12T01:28:41Z",
+    "history_as_of": "2026-09-11",
     "path": "data/yf/finance/KKR.json",
-    "payload_sha256": "b135363cd8b76172170eb6f0f14a7c1db0006a478bf1a89a6afec5c8fd1b35e7",
-    "quote_as_of": "2026-09-10T20:00:02Z",
-    "source_as_of": "2026-09-10"
+    "payload_sha256": "73d655493bfd1d1e9f7fb1dbc3b4df40fe4438b588b8656fb3743d392056ac7c",
+    "quote_as_of": "2026-09-11T20:00:02Z",
+    "source_as_of": "2026-09-11"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 519,
     "natural": true,
-    "observed_at": "2026-09-11T01:26:52Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-12T01:25:40Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-10",
-    "observed_at": "2026-09-11T01:11:50Z",
-    "payload_sha256": "323a272374bafbae9623e70bf886d8c71af79e9d45a3229288b95eb5d7aa0da5",
-    "quote_as_of": "2026-09-10T20:00:02Z",
+    "history_as_of": "2026-09-11",
+    "observed_at": "2026-09-12T01:25:40Z",
+    "payload_sha256": "706bc0228d6d1bc1bc1868defdd32a04afb9af3b243c33bea5d94802030205d1",
+    "quote_as_of": "2026-09-11T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-10"
+    "source_as_of": "2026-09-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "KKR",
-  "updated_at": "2026-09-11T01:26:52Z"
+  "updated_at": "2026-09-12T01:25:40Z"
 }

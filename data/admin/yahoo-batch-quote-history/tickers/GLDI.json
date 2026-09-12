@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,29 +168,42 @@
       "run_id": "34549558760",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 598,
+      "natural": true,
+      "observed_at": "2026-09-12T01:25:40Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-11T01:15:59Z",
-    "history_as_of": "2026-09-10",
+    "fetched_at": "2026-09-12T01:28:28Z",
+    "history_as_of": "2026-09-11",
     "path": "data/yf/finance/GLDI.json",
-    "payload_sha256": "b929b0b88884e5f702ca630547576e8f36d1db2b180537bcdf6393d8361c1072",
-    "quote_as_of": "2026-09-10T20:00:01Z",
-    "source_as_of": "2026-09-10"
+    "payload_sha256": "8b8099c27134c83192c031124fd39ef489dac8f8f599c00552da1e08bb03a041",
+    "quote_as_of": "2026-09-11T20:00:01Z",
+    "source_as_of": "2026-09-11"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 598,
     "natural": true,
-    "observed_at": "2026-09-11T01:26:52Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-12T01:25:40Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
   },
@@ -218,14 +218,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-10",
-    "observed_at": "2026-09-11T01:11:50Z",
-    "payload_sha256": "4d60fd2f840f1e6924e729af2c063a471d67d30868e2d8fce7ba29d5bb3abaec",
-    "quote_as_of": "2026-09-10T20:00:01Z",
+    "history_as_of": "2026-09-11",
+    "observed_at": "2026-09-12T01:25:40Z",
+    "payload_sha256": "f4ac2f8beab90139f387bf2324f80194113c72ae31bd11a639c78eba60434f67",
+    "quote_as_of": "2026-09-11T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-10"
+    "source_as_of": "2026-09-11"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -241,5 +241,5 @@
     "source_as_of": "2026-08-10"
   },
   "ticker": "GLDI",
-  "updated_at": "2026-09-11T01:26:52Z"
+  "updated_at": "2026-09-12T01:25:40Z"
 }

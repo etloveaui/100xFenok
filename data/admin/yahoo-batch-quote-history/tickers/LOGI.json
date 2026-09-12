@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 3211,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -182,32 +169,45 @@
       "run_id": "34549558760",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 555,
+      "natural": true,
+      "observed_at": "2026-09-12T01:13:27Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "34664080685",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-11T01:12:40Z",
-    "history_as_of": "2026-09-10",
+    "fetched_at": "2026-09-12T01:17:23Z",
+    "history_as_of": "2026-09-11",
     "path": "data/yf/finance/LOGI.json",
-    "payload_sha256": "0a40148ff7e7bb18db3b834ae896c3e25ae7d5bfd1b92504d7bfa5df3a7ff6a6",
-    "quote_as_of": "2026-09-10T20:00:01Z",
-    "source_as_of": "2026-09-10"
+    "payload_sha256": "881a6fae000fd2fc5f196ced9cc2e3c6854b1b6d6bc350f3b4e275340e746c84",
+    "quote_as_of": "2026-09-11T20:00:01Z",
+    "source_as_of": "2026-09-11"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 555,
     "natural": true,
-    "observed_at": "2026-09-11T01:17:28Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-12T01:13:27Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-10",
-    "observed_at": "2026-09-11T01:11:50Z",
-    "payload_sha256": "53138795c835d9fcd3bb72ba2ca50cf2a8fbc05e082712657e71c2c136ec1cf7",
-    "quote_as_of": "2026-09-10T20:00:01Z",
+    "history_as_of": "2026-09-11",
+    "observed_at": "2026-09-12T01:13:27Z",
+    "payload_sha256": "5ec42d73ecf126575538d25085a7039d6ee25d8c2e39bc6ae2e6c33039543406",
+    "quote_as_of": "2026-09-11T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "34549558760",
+    "run_id": "34664080685",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-10"
+    "source_as_of": "2026-09-11"
   },
   "recovered_at": "2026-09-11T01:11:50Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "LOGI",
-  "updated_at": "2026-09-11T01:17:28Z"
+  "updated_at": "2026-09-12T01:13:27Z"
 }
