@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { consultWindDownTeacher } from "../coachClient";
+import type { WindDownCoachRequest } from "../coachContract";
 import { storyEpisodeById, storyEpisodeState } from "@/features/winddown/game/model/story";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGeminiLiveTransport } from "@/features/mona-vnext/live/useGeminiLiveTransport";
@@ -358,6 +360,8 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
     productSessionId: productSessionIdRef.current,
   }), []);
 
+  const [coachNotice, setCoachNotice] = useState<string | null>(null);
+
   const live = useGeminiLiveTransport<
     WindDownVoiceClientSettings,
     WindDownVoiceSessionResponse,
@@ -366,6 +370,16 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
     settings,
     requestSession,
     getSessionRequestContext,
+    onToolCall: (call, signal, session) => {
+      const history: WindDownCoachRequest["history"] = turnsRef.current.slice(-4).flatMap(turn => [
+        ...(turn.userText ? [{ role: "user" as const, text: turn.userText }] : []),
+        ...(turn.modelText ? [{ role: "assistant" as const, text: turn.modelText }] : []),
+      ]);
+      return consultWindDownTeacher({ call, signal, session, history,
+        learnerText: transcriptRef.current.current.userText,
+        onUnavailable: setCoachNotice,
+      });
+    },
     onServerContent,
     onSessionReady: registerTransportSession,
     onSessionResuming: discardPendingTranscript,
@@ -827,6 +841,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
           </aside> : null}
           {restoring ? <p role="status" className="mb-4 text-sm">중단 전 기록을 확인하고 있어…</p> : null}
           {hasRetained ? <button type="button" onClick={downloadRecoveryDraft} className="mb-4 min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4 text-sm font-semibold">보관한 원본 기록 내려받기</button> : null}
+          {coachNotice && <p role="status" className="text-sm text-[var(--wd-muted)]">{coachNotice}</p>}
           {storageWarning ? (
             <div role="alert" className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs font-semibold text-amber-200">
               <p>{storageWarning}</p>

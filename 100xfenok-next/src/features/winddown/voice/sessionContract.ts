@@ -94,6 +94,7 @@ type CommonResponse = {
   setup: Record<string, unknown>;
   /** Opaque server signature authorizing this conversation in one final report. */
   reportProof: string;
+  coach?: { provider: "groq" | "gemini" };
 };
 
 export type WindDownRoleplaySessionResponse = CommonResponse & {

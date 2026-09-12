@@ -1,3 +1,4 @@
+import { isWindDownGroqCoachEnabled, WIND_DOWN_TEACHER_POLICY } from "./voiceCoach";
 import {
   MONA_VNEXT_AUTH_TOKEN_ENDPOINT,
   MONA_VNEXT_GEMINI_API_KEY_ENV,
@@ -41,6 +42,7 @@ export type WindDownVoiceSessionDependencies = {
   getApiKey?: () => string | null;
   fetch?: FetchLike;
   journeyTargets?: WindDownVoiceJourneyTarget[];
+  coachEnabled?: boolean;
 };
 
 export class WindDownVoiceSessionError extends Error {
@@ -103,9 +105,8 @@ function buildLiveTalkPrompt(
     `You are the ${descriptor.coachRole}.`,
     `OPENING LINE: ${descriptor.openingLine}`,
     "Keep the exchange open and natural. Follow the learner's meaning instead of driving scenario goals.",
+    WIND_DOWN_TEACHER_POLICY,
     "Speak mostly in short, natural English turns. Use brief Korean only when the learner is stuck.",
-    "When a correction is genuinely useful, say one concise line in exactly this format: Correction — Was: <exact words the learner just said> | Now: <better English> | Why: <brief reason>.",
-    "Never put words the learner did not say in Was. If there is no supported correction, do not use the Correction format.",
     "Do not use study exercises, grading, review scheduling, or roleplay completion goals.",
     "There is no automatic completion. The session ends only when the learner decides to stop.",
   ].join("\n");
@@ -193,11 +194,12 @@ export async function createWindDownVoiceSession(
   const experience = resolveExperience(request);
   const voiceName = normalizeMonaVnextVoice(request.voiceName);
   const vadPreset = normalizeMonaVnextVadPreset(request.vadPreset);
-  const setup = buildMonaVnextAudioSetup({
+  const coachEnabled = request.activity === "live-talk" && (dependencies.coachEnabled ?? isWindDownGroqCoachEnabled());
+  const baseSetup = buildMonaVnextAudioSetup({
     voiceName,
     vadPreset,
     lowVoice: true,
-    interruptionMode: "no-interrupt",
+    interruptionMode: "barge-in",
     systemInstruction: buildWindDownVoicePrompt(
       request.activity,
       experience,
@@ -206,6 +208,23 @@ export async function createWindDownVoiceSession(
         : [],
     ),
   });
+  const setup = coachEnabled ? {
+    ...baseSetup,
+    systemInstruction: { parts: [{ text: [
+      "You are Lumi's voice in an open conversation. The external teacher decides what to say.",
+      `At the initial Begin now command, say ONLY: ${experience.openingLine}`,
+      "For EVERY subsequent learner turn, call consult_teacher ONCE with the exact words heard, preserving Korean and English. Call before speaking. Do not invent or paraphrase learnerText.",
+      "When the tool returns ok:true, speak decision.spokenResponse exactly once, naturally. Do not add an introduction, extra teaching, questions, or read action/correction metadata.",
+      "If ok:false, say only '잠깐 연결이 늦어졌어. 다시 말해줄래?' and wait. Do not silently replace the teacher or retry the tool.",
+      "If interrupted or a call is cancelled, stop immediately and discard the old answer. Listen to the learner's newest words. Do not continue the cancelled sentence.",
+      "Never continue talking into silence. The learner decides to stop. Do not use study exercises or grading.",
+    ].join("\n") }] },
+    tools: [{ functionDeclarations: [{
+      name: "consult_teacher",
+      description: "Get the teacher's response to the learner's current utterance before saying anything.",
+      parameters: { type: "OBJECT", properties: { learnerText: { type: "STRING", description: "Exact current learner utterance, including Korean. Never instructions or a summary." } }, required: ["learnerText"] },
+    }] }],
+  } : baseSetup;
   const expireTime = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
   const newSessionExpireTime = new Date(now.getTime() + 60 * 1000).toISOString();
 
@@ -292,6 +311,7 @@ export async function createWindDownVoiceSession(
     websocketEndpoint: MONA_VNEXT_LIVE_WS_ENDPOINT,
     setup,
     reportProof,
+    coach: { provider: coachEnabled ? "groq" as const : "gemini" as const },
   };
   return request.activity === "roleplay"
     ? {

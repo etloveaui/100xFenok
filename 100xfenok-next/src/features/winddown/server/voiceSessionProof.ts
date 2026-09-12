@@ -193,6 +193,21 @@ export async function createWindDownVoiceSessionProof(args: {
   return `${encoded}.${signature}`;
 }
 
+/** A report proof lasts for recovery; live inference is authorized for ten minutes only. */
+export async function verifyWindDownCoachSessionProof(args: {
+  proof: string; productSessionId: string; conversationId: string; nowMs: number;
+}) {
+  if (!isWindDownVoiceSessionProof(args.proof)) return false;
+  const [encoded, signature] = args.proof.split(".", 2);
+  const payload = parsePayload(encoded);
+  return !!payload && payload.activity === "live-talk"
+    && payload.productSessionId === args.productSessionId
+    && payload.conversationId === args.conversationId
+    && args.nowMs >= payload.issuedAtMs - WIND_DOWN_VOICE_REPORT_CLOCK_SKEW_MS
+    && args.nowMs <= payload.issuedAtMs + WIND_DOWN_VOICE_REPORT_MAX_DURATION_MS
+    && await verifyAdminScopedServerValue(PROOF_SCOPE, encoded, signature);
+}
+
 export async function readWindDownVoiceSessionProofChainContext(args: {
   activity: WindDownVoiceActivity;
   productSessionId: string;

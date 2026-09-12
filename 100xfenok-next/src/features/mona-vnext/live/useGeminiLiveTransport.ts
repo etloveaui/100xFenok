@@ -10,6 +10,7 @@ import {
   type MonaVnextServerContent,
   type MonaVnextServerMessage,
 } from "@/features/mona-vnext/live/liveProtocol";
+import { createLiveToolBridge, type LiveFunctionCall } from "./liveToolBridge";
 import { useLiveAudioInput } from "@/features/mona-vnext/live/useLiveAudioInput";
 import { useLiveAudioOutput } from "@/features/mona-vnext/live/useLiveAudioOutput";
 
@@ -71,6 +72,7 @@ export type GeminiLiveTransportOptions<
   onSessionReady?: (session: TSession) => void;
   onSessionResuming?: (session: TSession) => void;
   onSessionResumed?: (session: TSession) => void;
+  onToolCall?: (call: LiveFunctionCall, signal: AbortSignal, session: TSession) => Promise<Record<string, unknown>>;
   onServerContent?: (content: MonaVnextServerContent) => void;
   onEvent?: (event: { type: string; message: string; atIso: string; detail?: Record<string, unknown> }) => void;
   onRecoverFailed?: (reason: string) => void;
@@ -173,10 +175,14 @@ export function useGeminiLiveTransport<
   onSessionResuming,
   onSessionResumed,
   onServerContent,
+  onToolCall,
   onEvent,
   onRecoverFailed,
   onFatalError,
 }: GeminiLiveTransportOptions<TSettings, TSession, TRequestContext>) {
+  const onToolCallRef = useRef(onToolCall);
+  onToolCallRef.current = onToolCall;
+  const toolBridgeRef = useRef<ReturnType<typeof createLiveToolBridge> | null>(null);
   const audioInput = useLiveAudioInput();
   const audioOutput = useLiveAudioOutput();
   const [status, setStatus] = useState<MonaVnextLiveStatus>("idle");
@@ -312,6 +318,8 @@ export function useGeminiLiveTransport<
   }, [emitEvent, enableResumePrewarm, getSessionRequestContext, requestSession, settings]);
 
   const stop = useCallback((finalStatus: MonaVnextLiveStatus = "stopped") => {
+    toolBridgeRef.current?.dispose();
+    toolBridgeRef.current = null;
     setStatus("stopping");
     clearReconnectTimer();
     clearMicDeadTimer();
@@ -416,10 +424,12 @@ export function useGeminiLiveTransport<
     generation: number,
   ) => {
     if (generation !== socketGenerationRef.current || socket !== socketRef.current) return;
-    if (payload.toolCall || payload.toolCallCancellation) {
-      emitEvent("unexpected-tool-message", "vNext received an unexpected tool message and ignored it.");
-      return;
+    if (payload.toolCallCancellation && typeof payload.toolCallCancellation === "object") {
+      const ids = (payload.toolCallCancellation as { ids?: unknown }).ids;
+      if (Array.isArray(ids)) toolBridgeRef.current?.cancel(ids.filter((id): id is string => typeof id === "string"));
     }
+    // Process transcript/interruption first when the provider combines content and a call.
+    if (payload.toolCall && !payload.serverContent) toolBridgeRef.current?.receive(payload.toolCall);
 
     const resumptionUpdate = payload.sessionResumptionUpdate;
     if (resumptionUpdate?.resumable && resumptionUpdate.newHandle) {
@@ -497,6 +507,7 @@ export function useGeminiLiveTransport<
     }
 
     if (serverContent.interrupted) {
+      toolBridgeRef.current?.reset();
       dropAudioUntilTurnCompleteRef.current = true;
       audioOutput.flush();
       setMetrics((current) => ({
@@ -558,6 +569,7 @@ export function useGeminiLiveTransport<
     }
 
     onServerContent?.(serverContent);
+    if (payload.toolCall && !serverContent.interrupted) toolBridgeRef.current?.receive(payload.toolCall);
   }, [audioOutput, beginAudioInput, closeExpectedSocket, emitEvent, failFatal, failRecovery, onServerContent, scheduleReconnect]);
 
   const openSocket = useCallback((
@@ -570,6 +582,17 @@ export function useGeminiLiveTransport<
     const generation = socketGenerationRef.current + 1;
     socketGenerationRef.current = generation;
     socketRef.current = socket;
+    toolBridgeRef.current?.dispose();
+    toolBridgeRef.current = createLiveToolBridge({
+      execute: (call, signal) => onToolCallRef.current
+        ? onToolCallRef.current(call, signal, liveSession)
+        : Promise.resolve({ ok: false, error: "TOOL_UNSUPPORTED" }),
+      send: response => {
+        if (generation === socketGenerationRef.current && socket === socketRef.current && socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify(response));
+        }
+      },
+    });
     setStatus("setup-wait");
 
     socket.onopen = () => {
@@ -638,6 +661,7 @@ export function useGeminiLiveTransport<
       audioInput.stop((micPermission) => {
         setMetrics((current) => ({ ...current, micPermission }));
       });
+      toolBridgeRef.current?.dispose();
       audioOutput.flush();
       if (event.code !== 1000) {
         const handle = latestResumeHandleRef.current;
