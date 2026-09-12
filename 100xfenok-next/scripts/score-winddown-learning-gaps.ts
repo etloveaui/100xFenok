@@ -50,6 +50,25 @@ async function main() {
     assert.ok(isWindDownVoiceReport(longerReport));
     assert.ok(await verifyWindDownCoachFeedbacks(longerReport), "report normalization preserves signed speech bytes");
     assert.equal(extractWindDownVoicePracticeSeeds({ productSessionId: binding.productSessionId, activity: "live-talk", report: longerReport, journeyTargets: [] } as unknown as Parameters<typeof extractWindDownVoicePracticeSeeds>[0])[0]?.modelCorrection, "I went home", "signed explanation also reaches practice after normalization");
+    const recovery = await import("../src/features/winddown/voice/pendingStorage");
+    const bytes = new Map<string, string>();
+    const storage = { getItem: (key: string) => bytes.get(key) ?? null, setItem: (key: string, value: string) => { bytes.set(key, value); }, removeItem: (key: string) => { bytes.delete(key); } };
+    const checkpoint = { schemaVersion: 1 as const, productSessionId: binding.productSessionId, activity: "live-talk" as const, conversationIds: report.conversationIds, sessionProofs: report.sessionProofs, descriptor, startedAtIso: report.startedAtIso!, turns: [longerTurn], metrics: { turnCount: 1, interruptionCount: 0 }, checkpointAtIso: report.stoppedAtIso };
+    assert.deepEqual(recovery.saveWindDownVoiceCheckpoint(storage, checkpoint), { ok: true }, "long signed correction must survive a tab restart");
+    const restored = recovery.readWindDownVoiceCheckpoint(storage);
+    assert.equal(restored.status, "valid");
+    if (restored.status !== "valid") throw new Error("checkpoint lost");
+    const recoveredReport = recovery.buildWindDownVoiceReportFromCheckpoint(restored.checkpoint, "learner-stop", report.stoppedAtIso);
+    assert.ok(await verifyWindDownCoachFeedbacks(recoveredReport));
+    assert.deepEqual(recoveredReport.outcome.corrections, longerReport.outcome.corrections);
+    const digest = Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(recoveredReport)))).toString("hex");
+    assert.deepEqual(recovery.saveWindDownVoiceOutbox(storage, { schemaVersion: 1, productSessionId: binding.productSessionId, activity: "live-talk", finalDigest: digest, report: recoveredReport, stagedAtIso: report.stoppedAtIso, attempts: 0 }), { ok: true });
+    // Changed local feedback must remain recoverable, even if the spoken text did not change.
+    bytes.set(recovery.WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY, JSON.stringify({ ...checkpoint, turns: [{ ...longerTurn, coachFeedback: { ...longerTurn.coachFeedback!, why: "Different retained explanation" } }] }));
+    assert.equal(recovery.acknowledgeWindDownVoiceOutbox(storage, { productSessionId: binding.productSessionId, activity: "live-talk", finalDigest: digest }).ok, false, "ack cannot erase changed feedback metadata");
+    assert.ok(bytes.has(recovery.WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY));
+    bytes.set(recovery.WIND_DOWN_VOICE_CHECKPOINT_STORAGE_KEY, JSON.stringify(checkpoint));
+    assert.deepEqual(recovery.acknowledgeWindDownVoiceOutbox(storage, { productSessionId: binding.productSessionId, activity: "live-talk", finalDigest: digest }), { ok: true });
 
   });
   await check("roleplay vocabulary quotation is not an order; concise real orders count", async () => {
