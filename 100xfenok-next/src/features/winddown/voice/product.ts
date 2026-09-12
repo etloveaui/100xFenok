@@ -671,7 +671,7 @@ function correctionFromTurn(turn: WindDownVoiceFinalizedTurn): WindDownVoiceCorr
     conversationId: turn.conversationId.trim(),
     turnSeq: turn.turnSeq,
     learnerText,
-    correctionText,
+    correctionText: feedback?.spokenResponse ?? correctionText,
   };
   const claimsStructuredEvidence = /^correction\s*(?:—|-|:)/i.test(
     correctionText,

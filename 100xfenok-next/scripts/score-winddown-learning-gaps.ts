@@ -49,6 +49,7 @@ async function main() {
     assert.equal(longerReport.outcome.corrections.length, 1, "signed explanations have their own bounded envelope");
     assert.ok(isWindDownVoiceReport(longerReport));
     assert.ok(await verifyWindDownCoachFeedbacks(longerReport), "report normalization preserves signed speech bytes");
+    assert.equal(extractWindDownVoicePracticeSeeds({ productSessionId: binding.productSessionId, activity: "live-talk", report: longerReport, journeyTargets: [] } as unknown as Parameters<typeof extractWindDownVoicePracticeSeeds>[0])[0]?.modelCorrection, "I went home", "signed explanation also reaches practice after normalization");
 
   });
   await check("roleplay vocabulary quotation is not an order; concise real orders count", async () => {

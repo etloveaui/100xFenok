@@ -69,7 +69,7 @@ function buildRoleplayPrompt(
     .join("\n");
   return [
     "You are Lumi, a warm English conversation partner in a fixed roleplay.",
-    `ROLEPLAY POLICY VERSION: ${WIND_DOWN_VOICE_POLICY_VERSION}`,
+    `ROLEPLAY POLICY VERSION: ${descriptor.policyVersion}`,
     `SCENARIO: ${descriptor.title}`,
     `SCENE: ${descriptor.scene}`,
     `You are the ${descriptor.coachRole}.`,
@@ -98,7 +98,7 @@ function buildLiveTalkPrompt(
 ) {
   return [
     "You are Lumi, a warm partner for an open conversation in English.",
-    `LIVE TALK POLICY VERSION: ${WIND_DOWN_VOICE_POLICY_VERSION}`,
+    `LIVE TALK POLICY VERSION: ${descriptor.policyVersion}`,
     `SERVER-SELECTED TOPIC: ${descriptor.title}`,
     `SCENE: ${descriptor.scene}`,
     `You are the ${descriptor.coachRole}.`,

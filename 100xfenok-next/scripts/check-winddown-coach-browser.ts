@@ -1,6 +1,6 @@
 import { createWindDownCoachFeedback, verifyWindDownCoachFeedbacks } from "../src/features/winddown/server/coachFeedbackProof";
 import { buildWindDownVoiceReport } from "../src/features/winddown/voice/report";
-import { extractWindDownVoicePracticeSeeds } from "../src/features/winddown/voice/practiceSeed";
+import { extractWindDownVoicePracticeSeeds, type WindDownVoicePracticeSeed } from "../src/features/winddown/voice/practiceSeed";
 import type { WindDownVoiceReportReceipt } from "../src/features/mona-vnext/memory/learningProfileCoordinator";
 import assert from "node:assert/strict";
 import { mkdirSync } from "node:fs";
@@ -74,12 +74,19 @@ async function until(check: () => Promise<boolean>, message: string) {
   throw new Error(message);
 }
 
-async function verifyPracticeAndLearn(page: Page, name: string) {
+async function verifyPracticeAndLearn(page: Page, name: string, seed: WindDownVoicePracticeSeed) {
   const material = { id: "practice-synthetic", en: "I used to read books.", ko: "책을 읽곤 했어", acceptedVariants: [], practice: { pattern: "I used to + verb", theme: "daily", variationsEn: ["I used to walk to school."] } };
   await page.unroute("**/api/winddown/**");
   await page.route("**/api/winddown/**", async route => {
     const url = new URL(route.request().url());
     if (url.pathname.replace(/\/$/, "") === "/api/winddown/drill") {
+      if (url.searchParams.has("conversation")) {
+        assert.equal(url.searchParams.get("conversation"), seed.citation.conversation);
+        assert.equal(url.searchParams.get("source"), seed.citation.source);
+        assert.equal(url.searchParams.get("turn"), String(seed.citation.turn));
+        const citation = { productSessionId: seed.citation.conversation, sourceConversationId: seed.citation.source, turnSeq: seed.citation.turn };
+        return route.fulfill({ json: { ok: true, schemaVersion: 1, mode: "practice", modelOpened: false, material: { source: "published-lkg", publicationStatus: "active", contentDigest: "a".repeat(64) }, materials: [material], target: { kind: "voice-correction", citation }, voiceCorrection: { citation, learnerText: seed.learnerText, modelCorrection: seed.modelCorrection } } });
+      }
       return route.fulfill({ json: { ok: true, schemaVersion: 1, mode: "practice", modelOpened: false, material: { source: "published-lkg", publicationStatus: "active", contentDigest: "a".repeat(64) }, materials: [material], target: { kind: "generic" } } });
     }
     if (url.pathname.replace(/\/$/, "") === "/api/winddown/study") {
@@ -89,6 +96,12 @@ async function verifyPracticeAndLearn(page: Page, name: string) {
     }
     throw new Error(`unexpected learner request ${url.pathname}`);
   });
+  await page.getByRole("link", { name: /이어서 연습하기/ }).click();
+  await page.getByRole("textbox", { name: "연습 답변" }).fill("I went home");
+  await page.getByRole("button", { name: "확인", exact: true }).click();
+  await page.locator("[data-practice-reveal]").click();
+  assert.equal(await page.locator("[data-practice-reveal-text]").innerText(), "I went home");
+  await page.screenshot({ path: `${output}/${name}-correction-practice.png`, fullPage: true });
   await page.goto(`${base.origin}/winddown/drill?practice=1`);
   await page.locator('[data-practice-method]').selectOption("pattern-transform");
   await page.getByRole("textbox", { name: "연습 답변" }).fill("asdf qwer");
@@ -239,7 +252,7 @@ async function main() {
       assert.equal(seeds[0].modelCorrection, "I went home");
       await page.getByRole("link", { name: /이어서 연습하기/ }).waitFor();
       await page.screenshot({ path: `${output}/${name}-grounded-correction.png`, fullPage: true });
-      await verifyPracticeAndLearn(page, name);
+      await verifyPracticeAndLearn(page, name, seeds[0]);
       assert.deepEqual(errors, []);
       console.log(`PASS ${name}: actual transport audio flush, tool cancellation, duplicate, combined event, resume, quota, report preservation`);
     } finally { await browser.close(); }
