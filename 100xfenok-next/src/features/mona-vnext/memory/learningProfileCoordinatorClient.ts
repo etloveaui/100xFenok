@@ -139,9 +139,9 @@ export async function verifyWindDownRecoveryCopyThroughCoordinator(value: unknow
   };
 }
 
-export async function readMonaVnextLearningProfileThroughCoordinator() {
+export async function readMonaVnextLearningProfileThroughCoordinator(options: { initialize?: boolean } = {}) {
   const body = await invokeMonaVnextProfileCoordinator({
-    operation: "read-learning-profile",
+    operation: options.initialize === false ? "read-learning-profile-snapshot" : "read-learning-profile",
   });
   const profile = body.profile;
   if (

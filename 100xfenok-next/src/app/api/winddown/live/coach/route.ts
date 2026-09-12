@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       // Optional context must never prevent the learner from having a conversation.
       try {
         const [profile, material] = await Promise.all([
-          readMonaVnextLearningProfileThroughCoordinator(),
+          readMonaVnextLearningProfileThroughCoordinator({ initialize: false }),
           loadWindDownStudyMaterial({ dueExpressionIds: [], deferredExpressionIds: [] }),
         ]);
         return buildWindDownCoachContext(profile, material.entries);

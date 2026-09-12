@@ -120,7 +120,7 @@ export type WindDownReviewCoordinatorEnv = {
 export type MonaVnextProfileCoordinatorCommand =
   | ({ operation: "read-winddown-conversations" } & WindDownConversationQuery)
   | {
-      operation: "read-learning-profile";
+      operation: "read-learning-profile" | "read-learning-profile-snapshot";
     }
   | {
       operation: "commit-review-cycle";
@@ -622,12 +622,19 @@ export async function handleMonaVnextProfileCoordinatorRequest(
     }
   }
 
-  if (body.operation === "read-learning-profile") {
-    const initializedProfile = await initialProfile(state, env);
+  if (body.operation === "read-learning-profile" || body.operation === "read-learning-profile-snapshot") {
+    if (body.operation === "read-learning-profile-snapshot" && Object.keys(body).length !== 1) {
+      return noStoreJson({ error: "INVALID_PROFILE_COORDINATOR_COMMAND" }, 400);
+    }
+    // Optional coaching context may inspect existing state but must never seed,
+    // migrate or create learner records as a side effect of conversation.
+    const profile = body.operation === "read-learning-profile-snapshot"
+      ? await state.storage.transaction(transaction => readMonaVnextLearningProfile(transaction))
+      : await initialProfile(state, env);
     return noStoreJson({
       ok: true,
       operation: body.operation,
-      profile: initializedProfile,
+      profile,
     });
   }
 
