@@ -110,6 +110,12 @@ async function main() {
   assert.equal(clientResult.ok, true);
   assert.equal(clientBody?.learnerText, body.learnerText, "actual transcription takes precedence over model tool arguments");
   assert.equal(clientBody?.proof, session.reportProof);
+  await consultWindDownTeacher({ session, signal: new AbortController().signal,
+    call: { id: "partial-input", name: "consult_teacher", args: { learnerText: "What does wind down mean?" } },
+    learnerText: "What does", history: [],
+    fetch: async (_url, init) => { clientBody = JSON.parse(String(init?.body)); return Response.json({ decision }); },
+  });
+  assert.equal(clientBody?.learnerText, "What does wind down mean?", "late partial transcription must not truncate a complete heard question");
   let noticeCount = 0;
   const lateAbort = new AbortController();
   await consultWindDownTeacher({ session, signal: lateAbort.signal,

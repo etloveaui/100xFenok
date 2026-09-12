@@ -10,7 +10,12 @@ export async function consultWindDownTeacher(args: {
   if (args.call.name !== "consult_teacher" || args.session.activity !== "live-talk" || args.session.coach?.provider !== "groq") {
     return { ok: false, error: "TOOL_UNSUPPORTED" };
   }
-  const learnerText = args.learnerText.trim() || (typeof args.call.args.learnerText === "string" ? args.call.args.learnerText.trim() : "");
+  const transcript = args.learnerText.trim();
+  const heard = typeof args.call.args.learnerText === "string" ? args.call.args.learnerText.trim() : "";
+  // Input transcription can lag the synchronous tool call. Accept a complete
+  // utterance extending the current partial, but never replace it with a paraphrase.
+  const normalized = (value: string) => value.toLowerCase().replace(/\s+/g, " ");
+  const learnerText = !transcript || normalized(heard).startsWith(normalized(transcript)) ? heard || transcript : transcript;
   if (!learnerText || learnerText.length > 1500) return { ok: false, error: "LEARNER_TEXT_REQUIRED" };
   const controller = new AbortController();
   const cancel = () => controller.abort();

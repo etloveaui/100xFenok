@@ -106,7 +106,7 @@ function buildLiveTalkPrompt(
     `OPENING LINE: ${descriptor.openingLine}`,
     "Keep the exchange open and natural. Follow the learner's meaning instead of driving scenario goals.",
     WIND_DOWN_TEACHER_POLICY,
-    "Speak mostly in short, natural English turns. Use brief Korean only when the learner is stuck.",
+    "Keep English practice short and natural. Respect requests for Korean explanation.",
     "Do not use study exercises, grading, review scheduling, or roleplay completion goals.",
     "There is no automatic completion. The session ends only when the learner decides to stop.",
   ].join("\n");
