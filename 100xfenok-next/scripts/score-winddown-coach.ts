@@ -4,8 +4,12 @@ import { createWindDownLiveTalkDescriptor, createWindDownRoleplayDescriptor } fr
 
 async function main() {
   const { parseWindDownCoachDecision, parseWindDownCoachRequest, buildWindDownCoachContext } = await import("../src/features/winddown/voice/coachContract");
-  const { executeWindDownCoachRequest, requestGroqCoachDecision } = await import("../src/features/winddown/server/voiceCoach");
+  const { executeWindDownCoachRequest, requestGroqCoachDecision, classifyWindDownCoachNeed } = await import("../src/features/winddown/server/voiceCoach");
   const { createLiveToolBridge } = await import("../src/features/mona-vnext/live/liveToolBridge");
+  assert.equal(classifyWindDownCoachNeed("I don't know what to say. 한국어로 좀 도와줘."), "scaffold");
+  assert.equal(classifyWindDownCoachNeed("잠깐만, 내 말 좀 들어봐."), "pause");
+  assert.equal(classifyWindDownCoachNeed("잠깐만이 영어로 무슨 뜻이야?"), null);
+  assert.equal(classifyWindDownCoachNeed("What does please wait mean?"), null);
   const now = Date.parse("2026-09-12T05:00:00Z");
   const descriptor = createWindDownLiveTalkDescriptor("open-evening");
   const sessionId = "winddown-voice-synthetic-coach-session";

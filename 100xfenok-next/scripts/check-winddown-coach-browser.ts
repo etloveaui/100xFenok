@@ -8,23 +8,23 @@ const base = assertWindDownQaTarget(process.env.QA_BASE_URL, process.env.WINDDOW
 const output = process.env.QA_SCREENSHOT_DIR ?? "test-results/winddown-preservation";
 
 async function installMedia(page: Page) {
-  await page.addInitScript(() => {
-    const state = { sockets: [] as FakeSocket[], sent: [] as Record<string, unknown>[], starts: 0, stops: 0, micRequests: 0 };
+  await page.addInitScript({ content: String.raw`(() => {
+    const state = { sockets: [], sent: [], starts: 0, stops: 0, micRequests: 0 };
     class FakeSocket {
       static OPEN = 1; static CONNECTING = 0; static CLOSED = 3;
       readyState = 0; binaryType = "";
-      onopen: (() => void) | null = null;
-      onmessage: ((event: { data: string }) => void) | null = null;
-      onclose: ((event: { code: number; reason: string }) => void) | null = null;
+      onopen = null;
+      onmessage = null;
+      onclose = null;
       constructor() {
         state.sockets.push(this);
         setTimeout(() => { this.readyState = 1; this.onopen?.(); }, 0);
       }
-      send(raw: string) {
+      send(raw) {
         const value = JSON.parse(raw); state.sent.push(value);
         if (value.setup) setTimeout(() => this.emit({ setupComplete: {} }), 0);
       }
-      emit(value: unknown) { this.onmessage?.({ data: JSON.stringify(value) }); }
+      emit(value) { this.onmessage?.({ data: JSON.stringify(value) }); }
       close(code = 1000, reason = "") { this.readyState = 3; this.onclose?.({ code, reason }); }
     }
     const node = () => ({ connect() {}, disconnect() {}, gain: { value: 0 }, onaudioprocess: null });
@@ -33,11 +33,11 @@ async function installMedia(page: Page) {
       async resume() {} async close() { this.state = "closed"; }
       createGain() { return node(); } createMediaStreamSource() { return node(); }
       createScriptProcessor() { return node(); }
-      createBuffer(_channels: number, length: number, rate: number) {
+      createBuffer(_channels, length, rate) {
         return { length, duration: length / rate, getChannelData: () => new Float32Array(length) };
       }
       createBufferSource() {
-        return { ...node(), buffer: null as { length: number } | null, onended: null,
+        return { ...node(), buffer: null, onended: null,
           start() { if ((this.buffer?.length ?? 0) > 1) state.starts++; },
           stop() { state.stops++; },
         };
@@ -50,7 +50,7 @@ async function installMedia(page: Page) {
       state.micRequests++; return { getTracks: () => [track], getAudioTracks: () => [track] };
     } } });
     Object.assign(window, { __coachQA: state });
-  });
+  })();` });
 }
 
 async function emit(page: Page, value: unknown, socketIndex = -1) {

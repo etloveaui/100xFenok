@@ -279,6 +279,8 @@ export function isWindDownVoiceSessionResponse(
       && !safeId(record.resumedFromConversationId)
     )
     || !safeToken(record.token)
+    || (record.coach !== undefined && (!record.coach || typeof record.coach !== "object" || Array.isArray(record.coach)
+      || !["groq", "gemini"].includes(String((record.coach as { provider?: unknown }).provider))))
     || !safeReportProof(record.reportProof)
     || typeof record.websocketEndpoint !== "string"
     || !record.websocketEndpoint.startsWith("wss://")
