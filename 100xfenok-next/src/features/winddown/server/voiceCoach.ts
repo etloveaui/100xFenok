@@ -48,6 +48,7 @@ export async function requestGroqCoachDecision(request: WindDownCoachRequest, co
     ? AbortSignal.any([dependencies.signal, AbortSignal.timeout(7000)]) : AbortSignal.timeout(7000);
   const requiredAction = classifyWindDownCoachNeed(request.learnerText);
   const schema = requiredAction ? { ...DECISION_SCHEMA, properties: { ...DECISION_SCHEMA.properties, action: { type: "string", enum: [requiredAction] } } } : DECISION_SCHEMA;
+  const koreanHelp = /[가-힣]/.test(request.learnerText) && /(뜻|설명|맞게|맞아|고쳐|도와|어떻게|무슨|몇\s*점|뭐야|차이)/.test(request.learnerText);
   let response: Response;
   try {
     response = await (dependencies.fetch ?? fetch)("https://api.groq.com/openai/v1/chat/completions", {
@@ -57,7 +58,7 @@ export async function requestGroqCoachDecision(request: WindDownCoachRequest, co
         model: WIND_DOWN_COACH_MODEL, reasoning_effort: "low", max_completion_tokens: 1024,
         response_format: { type: "json_schema", json_schema: { name: "teacher_decision", strict: true, schema } },
         messages: [
-          { role: "system", content: WIND_DOWN_TEACHER_POLICY + "\nReturn only the specified JSON decision. action is answer, scaffold, clarify or pause. spokenResponse is the complete natural text to say aloud, at most 900 characters. correction is null unless useful and supported; correction.was must quote exact current learner words. Do not say JSON keys aloud." },
+          { role: "system", content: WIND_DOWN_TEACHER_POLICY + (koreanHelp ? "\nFor THIS turn, the learner asks for help in Korean. Explain in Korean and include the useful English phrase. Do not answer entirely in English." : "") + "\nReturn only the specified JSON decision. action is answer, scaffold, clarify or pause. spokenResponse is the complete natural text to say aloud, at most 900 characters. correction is null unless useful and supported; correction.was must quote exact current learner words. Do not say JSON keys aloud." },
           { role: "user", content: JSON.stringify({ requiredAction, recentPractice: context.recentPractice, history: request.history, learnerText: request.learnerText }) },
         ],
       }),

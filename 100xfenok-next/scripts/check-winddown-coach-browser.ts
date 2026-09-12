@@ -166,7 +166,14 @@ async function main() {
       await page.getByRole("status").filter({ hasText: "사용 한도" }).waitFor();
       assert.equal(requests.length, 4, "quota failure retried");
       await page.screenshot({ path: `${output}/${name}-coach-interruption.png`, fullPage: true });
+      held = true;
+      await emit(page, tool("stop-pending"));
+      await until(async () => requests.length === 5, "pending stop case not reached");
+      const beforeStop = (await state(page)).sent.filter(item => item.toolResponse).length;
       await page.getByRole("button", { name: "대화 마치고 정리하기", exact: true }).click();
+      release.current?.(); held = false;
+      await new Promise(resolve => setTimeout(resolve, 150));
+      assert.equal((await state(page)).sent.filter(item => item.toolResponse).length, beforeStop, "a response spoke after the learner ended the session");
       await until(async () => reports.length === 1, "finalized report was lost");
       assert.ok(JSON.stringify(reports[0]).includes("Let's talk about travel."), "actual confirmed speech must remain in the report");
       assert.deepEqual(errors, []);

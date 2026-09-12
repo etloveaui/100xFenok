@@ -77,6 +77,8 @@ async function main() {
   assert.equal(sent.response_format.type, "json_schema");
   assert.equal(sent.response_format.json_schema.strict, true);
   assert.ok(captured?.signal);
+  await requestGroqCoachDecision({ ...parsed, learnerText: "I am agree with you. 맞게 말했어?" }, { recentPractice: [] }, { apiKey: "synthetic-key", fetch: provider });
+  assert.match(JSON.parse(String(captured?.body)).messages[0].content, /For THIS turn.*Explain in Korean/);
   let tries = 0;
   await assert.rejects(requestGroqCoachDecision(parsed, { recentPractice: [] }, { apiKey: "synthetic-key", fetch: async () => { tries++; return new Response("rate limited", { status: 429 }); } }), /COACH_RATE_LIMITED/);
   assert.equal(tries, 1, "free quota failure must not trigger retries or another provider");
