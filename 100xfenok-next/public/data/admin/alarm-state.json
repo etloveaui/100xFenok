@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-12T00:23:39.486Z",
+  "generated_at": "2026-09-12T22:24:09.858Z",
   "status": "open",
   "open_incident_count": 11,
   "open_incidents": [
@@ -46,22 +46,6 @@
       ],
       "lane_outcome_lanes": [
         "finra_ats_weekly"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
-    {
-      "workflow": "fetch-fred-yardeni.yml",
-      "label": "Fetch FRED Yardeni Data",
-      "streak": 0,
-      "failure_streak_threshold": 1,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "lane_outcome_overdue"
-      ],
-      "lane_outcome_lanes": [
-        "fred_yardeni"
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
@@ -163,14 +147,28 @@
       "cadence_status": "not_due"
     },
     {
+      "workflow": "validate-workflows.yml",
+      "label": "Validate GitHub Workflows",
+      "streak": 4,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 34369898015,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34369898015",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
       "workflow": "worker-request-budget-alarm.yml",
       "label": "Worker Request Budget Alarm",
-      "streak": 0,
+      "streak": 2,
       "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
+      "first_failing_run_id": 34713537093,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34713537093",
       "alarm_reasons": [
-        "missed_schedule_window"
+        "failure_streak"
       ],
       "lane_outcome_lanes": [],
       "lost_schedule_slot_count": 0,
@@ -187,7 +185,7 @@
     "oecd_cli": "2026-09-08",
     "treasury_tga": "2026-09-11",
     "slickcharts": "2026-09-12",
-    "apewisdom_attention": "2026-09-11",
+    "apewisdom_attention": "2026-09-12",
     "sentiment": "2026-09-05",
     "us_indices_daily": "2026-09-05",
     "nasdaq_giw_sox": "2026-09-05",
@@ -430,7 +428,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 21
+      "data_freshness_age_hours_at_generation": 19
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -595,21 +593,21 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "34661348945",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34661348945",
-    "observed_at": "2026-09-12T00:23:39.486Z",
+    "run_id": "34722542989",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34722542989",
+    "observed_at": "2026-09-12T22:24:09.858Z",
     "event": "schedule",
     "workflows": [
       "fenok-edge-krx-daily.yml",
       "fetch-fdic.yml",
       "fetch-finra-ats-weekly.yml",
-      "fetch-fred-yardeni.yml",
       "fetch-stockanalysis.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
       "slickcharts-symbols.yml",
       "slickcharts-weekly.yml",
+      "validate-workflows.yml",
       "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
