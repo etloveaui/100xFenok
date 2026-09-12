@@ -23,6 +23,7 @@ import {
   createWindDownRoleplayDescriptor,
   deriveWindDownVoiceCorrectionPresentation,
   evaluateWindDownRoleplay,
+  getWindDownVoiceScenario,
   summarizeWindDownLiveTalk,
   type WindDownVoiceActivity,
   type WindDownVoiceScenarioId,
@@ -468,7 +469,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
 
   const roleplay = useMemo(() => {
     if (descriptor.activity !== "roleplay") return null;
-    const scenario = WINDDOWN_VOICE_SCENARIOS.find((item) => item.id === descriptor.scenarioId);
+    const scenario = getWindDownVoiceScenario(descriptor.scenarioId, descriptor.policyVersion);
     return scenario ? evaluateWindDownRoleplay(scenario, turns) : null;
   }, [descriptor, turns]);
   const journeyTargets = liveSession?.activity === "roleplay"

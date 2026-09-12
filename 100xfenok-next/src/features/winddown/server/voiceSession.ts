@@ -9,7 +9,6 @@ import {
   normalizeMonaVnextVoice,
 } from "@/features/mona-vnext/server/liveSetup";
 import {
-  WIND_DOWN_VOICE_POLICY_VERSION,
   getWindDownLiveTalkTopic,
   getWindDownVoiceScenario,
   type WindDownVoiceDescriptor,

@@ -608,7 +608,7 @@ function phraseMatches(text: string, phrase: string) {
 export function deriveWindDownVoiceCorrectionPresentation(
   correction: WindDownVoiceCorrection,
 ): WindDownVoiceCorrectionPresentation | null {
-  const learnerText = cleanText(correction.learnerText);
+  const learnerText = cleanText(correction.learnerText, correction.coachFeedback ? 640 : 280);
   const correctionText = cleanText(
     correction.correctionText,
     (correction.coachFeedback ? 520 : WIND_DOWN_VOICE_CORRECTION_MAX_CHARS) + 1,
@@ -654,7 +654,7 @@ export function deriveWindDownVoiceCorrectionPresentation(
 
 function correctionFromTurn(turn: WindDownVoiceFinalizedTurn): WindDownVoiceCorrection | null {
   if (!isCleanLearnerTurn(turn)) return null;
-  const learnerText = cleanText(turn.userText);
+  const learnerText = cleanText(turn.userText, turn.coachFeedback ? 640 : 280);
   const modelText = cleanText(turn.modelText, 560);
   const correctionText = cleanText(
     turn.correctionText,
@@ -662,7 +662,7 @@ function correctionFromTurn(turn: WindDownVoiceFinalizedTurn): WindDownVoiceCorr
   );
   if (!learnerText || !modelText || !correctionText) return null;
   if (correctionText.length > (turn.coachFeedback ? 520 : WIND_DOWN_VOICE_CORRECTION_MAX_CHARS)) return null;
-  if (!normalizeText(modelText).includes(normalizeText(correctionText))) return null;
+  if (!turn.coachFeedback && !normalizeText(modelText).includes(normalizeText(correctionText))) return null;
   const { coachFeedback: pendingFeedback, ...plainTurn } = turn;
   const feedback = pendingFeedback && attachWindDownCoachFeedback(plainTurn, pendingFeedback).coachFeedback;
   if (pendingFeedback && !feedback) return null;

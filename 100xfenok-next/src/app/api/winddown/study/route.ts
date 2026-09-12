@@ -1,3 +1,4 @@
+import { prepareWindDownLearningRecordResolver } from "@/features/winddown/server/reviewIdentity";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
@@ -118,13 +119,18 @@ export async function GET(request: Request) {
       completedCount: reviewCompletedCount,
       dueCount: learning.dueExpressionIds.length,
     });
+    const learningResolver = prepareWindDownLearningRecordResolver({ profile: learningProfile, aliases: material.aliases });
+    const canonicalLearningEvidence = { records: Object.fromEntries(material.entries.flatMap(entry => {
+      const resolved = learningResolver.resolve(entry.id);
+      return resolved ? [[entry.id, { ...resolved.record, expressionId: entry.id }]] : [];
+    })) };
     const bootstrap = buildWindDownStudyBootstrap({
       mode,
       seed: mode === "learn"
         ? `${habitKstDay}:learn`
         : normalizeWindDownStudySeed(url.searchParams.get("seed"), mode),
       entries: material.entries,
-      learningProfile,
+      learningProfile: canonicalLearningEvidence,
       practice: material.practiceForExpressionIds(material.entries.map(entry => entry.id)),
       dueExpressionIds: learning.dueExpressionIds,
       deferredExpressionIds: learning.deferredExpressionIds,

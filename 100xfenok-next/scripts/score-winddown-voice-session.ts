@@ -23,6 +23,10 @@ import {
   isWindDownVoiceDescriptor,
 } from "../src/features/winddown/voice/product";
 
+// These fixtures exercise already-issued policy-1 proof chains. Current-policy
+// minting is exercised by the learning-gap and actual browser suites.
+const legacyRoleplayDescriptor = () => ({ ...createWindDownRoleplayDescriptor("cafe-order"), policyVersion: 1 as const });
+const legacyLiveTalkDescriptor = () => ({ ...createWindDownLiveTalkDescriptor("open-evening"), policyVersion: 1 as const });
 async function main() {
 const roleplay = parseWindDownVoiceSessionRequest({
   schemaVersion: 1,
@@ -44,7 +48,7 @@ assert.equal(roleplay.activity, "roleplay");
 assert.equal(liveTalk.activity, "live-talk");
 for (const forbiddenDescriptorField of ["setup", "token", "systemInstruction"]) {
   assert.equal(isWindDownVoiceDescriptor({
-    ...createWindDownRoleplayDescriptor("cafe-order"),
+    ...legacyRoleplayDescriptor(),
     [forbiddenDescriptorField]: "client-controlled",
   }), false, `descriptor must reject ${forbiddenDescriptorField}`);
 }
@@ -206,7 +210,7 @@ assert.notEqual(tamperedProof, session.reportProof, "tamper fixture must change 
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "roleplay",
   productSessionId: roleplay.productSessionId,
-  descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+  descriptor: legacyRoleplayDescriptor(),
   conversationIds: [session.conversationId],
   sessionProofs: [session.reportProof],
   startedAtIso: session.startedAt,
@@ -217,7 +221,7 @@ assert.deepEqual(
   await readWindDownVoiceSessionProofChainContext({
     activity: "roleplay",
     productSessionId: roleplay.productSessionId,
-    descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+    descriptor: legacyRoleplayDescriptor(),
     conversationIds: [session.conversationId],
     sessionProofs: [session.reportProof],
     startedAtIso: session.startedAt,
@@ -229,7 +233,7 @@ assert.deepEqual(
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "roleplay",
   productSessionId: roleplay.productSessionId,
-  descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+  descriptor: legacyRoleplayDescriptor(),
   conversationIds: [session.conversationId],
   sessionProofs: [tamperedProof],
   startedAtIso: session.startedAt,
@@ -239,7 +243,7 @@ assert.equal(await verifyWindDownVoiceSessionProofChain({
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "roleplay",
   productSessionId: "winddown-voice-product-session-replay",
-  descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+  descriptor: legacyRoleplayDescriptor(),
   conversationIds: [session.conversationId],
   sessionProofs: [session.reportProof],
   startedAtIso: session.startedAt,
@@ -249,7 +253,7 @@ assert.equal(await verifyWindDownVoiceSessionProofChain({
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "roleplay",
   productSessionId: roleplay.productSessionId,
-  descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+  descriptor: legacyRoleplayDescriptor(),
   conversationIds: [session.conversationId],
   sessionProofs: [session.reportProof],
   startedAtIso: session.startedAt,
@@ -259,7 +263,7 @@ assert.equal(await verifyWindDownVoiceSessionProofChain({
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "roleplay",
   productSessionId: roleplay.productSessionId,
-  descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+  descriptor: legacyRoleplayDescriptor(),
   conversationIds: [session.conversationId],
   sessionProofs: [session.reportProof],
   startedAtIso: session.startedAt,
@@ -269,7 +273,7 @@ assert.equal(await verifyWindDownVoiceSessionProofChain({
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "live-talk",
   productSessionId: roleplay.productSessionId,
-  descriptor: createWindDownLiveTalkDescriptor("open-evening"),
+  descriptor: legacyLiveTalkDescriptor(),
   conversationIds: [session.conversationId],
   sessionProofs: [session.reportProof],
   startedAtIso: session.startedAt,
@@ -279,7 +283,7 @@ assert.equal(await verifyWindDownVoiceSessionProofChain({
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "roleplay",
   productSessionId: roleplay.productSessionId,
-  descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+  descriptor: legacyRoleplayDescriptor(),
   conversationIds: [session.conversationId],
   sessionProofs: [session.reportProof],
   startedAtIso: session.startedAt,
@@ -335,7 +339,7 @@ const resumedSession = await createWindDownVoiceSession({
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "roleplay",
   productSessionId: roleplay.productSessionId,
-  descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+  descriptor: legacyRoleplayDescriptor(),
   conversationIds: [session.conversationId, resumedSession.conversationId],
   sessionProofs: [session.reportProof, resumedSession.reportProof],
   startedAtIso: session.startedAt,
@@ -345,7 +349,7 @@ assert.equal(await verifyWindDownVoiceSessionProofChain({
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "roleplay",
   productSessionId: roleplay.productSessionId,
-  descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+  descriptor: legacyRoleplayDescriptor(),
   conversationIds: [resumedSession.conversationId, session.conversationId],
   sessionProofs: [resumedSession.reportProof, session.reportProof],
   startedAtIso: session.startedAt,
@@ -355,7 +359,7 @@ assert.equal(await verifyWindDownVoiceSessionProofChain({
 const nonMonotonicProof = await createWindDownVoiceSessionProof({
   activity: "roleplay",
   productSessionId: roleplay.productSessionId,
-  descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+  descriptor: legacyRoleplayDescriptor(),
   conversationId: "winddown-roleplay-cafe-order-backdated",
   resumedFromConversationId: session.conversationId,
   issuedAtMs: Date.parse("2026-07-30T23:59:59.999Z"),
@@ -363,7 +367,7 @@ const nonMonotonicProof = await createWindDownVoiceSessionProof({
 assert.equal(await verifyWindDownVoiceSessionProofChain({
   activity: "roleplay",
   productSessionId: roleplay.productSessionId,
-  descriptor: createWindDownRoleplayDescriptor("cafe-order"),
+  descriptor: legacyRoleplayDescriptor(),
   conversationIds: [
     session.conversationId,
     "winddown-roleplay-cafe-order-backdated",

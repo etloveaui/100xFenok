@@ -39,6 +39,16 @@ async function main() {
     const seeds = extractWindDownVoicePracticeSeeds({ productSessionId: binding.productSessionId, activity: "live-talk", report, journeyTargets: [] } as unknown as Parameters<typeof extractWindDownVoicePracticeSeeds>[0]);
     assert.equal(seeds.length, 1);
     assert.equal(seeds[0].modelCorrection, "I went home");
+    const punctuated = attachWindDownCoachFeedback({ ...turn, modelText: "You can say: I went home!" }, feedback);
+    assert.equal(summarizeWindDownLiveTalk({ turns: [punctuated] }).corrections.length, 1, "transcription punctuation alone must not lose feedback");
+    const explanation = { ...decision, spokenResponse: "You can say I went home. " + "This explains how we describe a finished event in the past. ".repeat(4) };
+    assert.ok(explanation.spokenResponse.length > 240 && explanation.spokenResponse.length < 520);
+    const longerFeedback = await createWindDownCoachFeedback({ ...binding, decision: explanation });
+    const longerTurn = attachWindDownCoachFeedback({ ...turn, modelText: explanation.spokenResponse }, longerFeedback);
+    const longerReport = buildWindDownVoiceReport({ ...report, turns: [longerTurn] });
+    assert.equal(longerReport.outcome.corrections.length, 1, "signed explanations have their own bounded envelope");
+    assert.ok(isWindDownVoiceReport(longerReport));
+
   });
   await check("roleplay vocabulary quotation is not an order; concise real orders count", async () => {
     const { getWindDownVoiceScenario, evaluateWindDownRoleplay } = await import("../src/features/winddown/voice/product");
