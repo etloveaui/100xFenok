@@ -10,6 +10,19 @@ async function main() {
   assert.equal(classifyWindDownCoachNeed("잠깐만, 내 말 좀 들어봐."), "pause");
   assert.equal(classifyWindDownCoachNeed("잠깐만이 영어로 무슨 뜻이야?"), null);
   assert.equal(classifyWindDownCoachNeed("What does please wait mean?"), null);
+  const { handleMonaVnextProfileCoordinatorRequest } = await import("../src/features/mona-vnext/memory/learningProfileCoordinator");
+  const storage = {
+    get: async <T>(_key: string): Promise<T | undefined> => undefined,
+    put: async () => { throw new Error("COACH_CONTEXT_MUST_NOT_WRITE"); },
+    transaction: async <T>(callback: (tx: typeof storage) => Promise<T>): Promise<T> => callback(storage),
+  };
+  const snapshot = await handleMonaVnextProfileCoordinatorRequest(
+    new Request("https://winddown.internal/profile-coordinator", { method: "POST", body: JSON.stringify({ operation: "read-learning-profile-snapshot" }) }),
+    { storage, blockConcurrencyWhile: async <T>(callback: () => Promise<T>) => callback() },
+    { MONA_VNEXT_KV: { get: async () => { throw new Error("COACH_CONTEXT_MUST_NOT_IMPORT_LEGACY"); }, put: async () => { throw new Error("COACH_CONTEXT_MUST_NOT_WRITE_KV"); } } },
+  );
+  assert.equal(snapshot.status, 200, "a missing profile must be read without legacy initialization");
+  assert.deepEqual((await snapshot.json()).profile.records, {});
   const now = Date.parse("2026-09-12T05:00:00Z");
   const descriptor = createWindDownLiveTalkDescriptor("open-evening");
   const sessionId = "winddown-voice-synthetic-coach-session";
