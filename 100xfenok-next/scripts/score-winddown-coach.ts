@@ -11,10 +11,11 @@ async function main() {
   assert.equal(classifyWindDownCoachNeed("잠깐만이 영어로 무슨 뜻이야?"), null);
   assert.equal(classifyWindDownCoachNeed("What does please wait mean?"), null);
   const { handleMonaVnextProfileCoordinatorRequest } = await import("../src/features/mona-vnext/memory/learningProfileCoordinator");
-  const storage = {
+  type SnapshotStorage = { get<T>(key: string): Promise<T | undefined>; put<T>(key: string, value: T): Promise<void>; transaction<T>(callback: (tx: SnapshotStorage) => Promise<T>): Promise<T> };
+  const storage: SnapshotStorage = {
     get: async <T>(_key: string): Promise<T | undefined> => undefined,
     put: async () => { throw new Error("COACH_CONTEXT_MUST_NOT_WRITE"); },
-    transaction: async <T>(callback: (tx: typeof storage) => Promise<T>): Promise<T> => callback(storage),
+    transaction: async <T>(callback: (tx: SnapshotStorage) => Promise<T>): Promise<T> => callback(storage),
   };
   const snapshot = await handleMonaVnextProfileCoordinatorRequest(
     new Request("https://winddown.internal/profile-coordinator", { method: "POST", body: JSON.stringify({ operation: "read-learning-profile-snapshot" }) }),
