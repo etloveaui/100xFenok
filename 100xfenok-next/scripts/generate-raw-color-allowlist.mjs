@@ -122,6 +122,13 @@ function categoryForPath(relPath) {
     };
   }
 
+  if (relPath === "src/features/winddown/voice/roleplayEvidence.ts") {
+    return {
+      category: "metadata-color",
+      note: "Roleplay language evidence is data, not styling; the single black token describes a coffee order.",
+    };
+  }
+
   if (relPath === "src/app/admin/page.tsx" || relPath === "src/app/admin/personal/page.tsx") {
     return {
       category: "admin-internal",
