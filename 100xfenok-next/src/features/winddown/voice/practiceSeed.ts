@@ -1,4 +1,5 @@
 import {
+  deriveWindDownVoiceCorrectionPresentation,
   type WindDownVoiceActivity,
   type WindDownVoiceFinalizedTurn,
 } from "@/features/winddown/voice/product";
@@ -152,7 +153,7 @@ export function extractWindDownVoicePracticeSeeds(
       citation,
       activity: receipt.activity,
       learnerText: correction.learnerText,
-      modelCorrection: correction.correctionText,
+      modelCorrection: deriveWindDownVoiceCorrectionPresentation(correction)?.now ?? correction.correctionText,
       practiceUrl: buildWindDownVoicePracticeUrl(citation),
       ...(materialId ? { materialId } : {}),
     });

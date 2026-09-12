@@ -1,3 +1,5 @@
+import { enforceWindDownSpeechBudget, windDownSpeechBudget } from "../voice/speechBudget";
+import { createWindDownCoachFeedback } from "./coachFeedbackProof";
 import {
   WIND_DOWN_COACH_MODEL, parseWindDownCoachDecision, parseWindDownCoachRequest,
   type WindDownCoachContext, type WindDownCoachDecision, type WindDownCoachRequest,
@@ -47,6 +49,7 @@ export async function requestGroqCoachDecision(request: WindDownCoachRequest, co
   const signal = dependencies.signal
     ? AbortSignal.any([dependencies.signal, AbortSignal.timeout(7000)]) : AbortSignal.timeout(7000);
   const requiredAction = classifyWindDownCoachNeed(request.learnerText);
+  const speechBudget = windDownSpeechBudget(requiredAction ?? "answer", request.learnerText);
   const schema = requiredAction ? { ...DECISION_SCHEMA, properties: { ...DECISION_SCHEMA.properties, action: { type: "string", enum: [requiredAction] } } } : DECISION_SCHEMA;
   const koreanHelp = /[가-힣]/.test(request.learnerText) && /(뜻|설명|맞게|맞아|고쳐|도와|어떻게|무슨|몇\s*점|뭐야|차이)/.test(request.learnerText);
   let response: Response;
@@ -58,7 +61,7 @@ export async function requestGroqCoachDecision(request: WindDownCoachRequest, co
         model: WIND_DOWN_COACH_MODEL, reasoning_effort: "low", max_completion_tokens: 1024,
         response_format: { type: "json_schema", json_schema: { name: "teacher_decision", strict: true, schema } },
         messages: [
-          { role: "system", content: WIND_DOWN_TEACHER_POLICY + (koreanHelp ? "\nFor THIS turn, the learner asks for help in Korean. Explain in Korean and include the useful English phrase. Do not answer entirely in English." : "") + "\nReturn only the specified JSON decision. action is answer, scaffold, clarify or pause. spokenResponse is the complete natural text to say aloud, at most 900 characters. correction is null unless useful and supported; correction.was must quote exact current learner words. Do not say JSON keys aloud." },
+          { role: "system", content: WIND_DOWN_TEACHER_POLICY + `\nFor this reply use at most ${speechBudget.sentences} complete sentences and ${speechBudget.characters} characters. Put the answer first.` + (koreanHelp ? "\nFor THIS turn, the learner asks for help in Korean. Explain in Korean and include the useful English phrase. Do not answer entirely in English." : "") + "\nReturn only the specified JSON decision. action is answer, scaffold, clarify or pause. spokenResponse is the complete natural text to say aloud, at most 900 characters. correction is null unless useful and supported; correction.was must quote exact current learner words. Do not say JSON keys aloud." },
           { role: "user", content: JSON.stringify({ requiredAction, recentPractice: context.recentPractice, history: request.history, learnerText: request.learnerText }) },
         ],
       }),
@@ -71,7 +74,9 @@ export async function requestGroqCoachDecision(request: WindDownCoachRequest, co
     if (payload.choices?.[0]?.finish_reason === "length") throw new Error("truncated");
     const decision = parseWindDownCoachDecision(JSON.parse(payload.choices?.[0]?.message?.content ?? ""), request.learnerText);
     if (!decision) throw new Error("invalid");
-    return decision;
+    const bounded = enforceWindDownSpeechBudget(decision, request.learnerText);
+    if (!bounded) throw new Error("invalid speech budget");
+    return bounded;
   } catch { throw new Error("COACH_INVALID_RESPONSE"); }
 }
 
@@ -106,9 +111,11 @@ export async function executeWindDownCoachRequest(request: Request, dependencies
   if (!await verifyWindDownCoachSessionProof({ ...body, nowMs: (dependencies.now ?? Date.now)() })) return json({ error: "SESSION_REJECTED" }, 403);
   try {
     const context = await dependencies.context();
-    const decision = await (dependencies.decide ?? ((input, memory, signal) => requestGroqCoachDecision(input, memory, { signal })))(body, context, request.signal);
-    if (!parseWindDownCoachDecision(decision, body.learnerText)) return json({ error: "COACH_INVALID_RESPONSE" }, 502);
-    return json({ decision }, 200);
+    const rawDecision = await (dependencies.decide ?? ((input, memory, signal) => requestGroqCoachDecision(input, memory, { signal })))(body, context, request.signal);
+    const decision = parseWindDownCoachDecision(rawDecision, body.learnerText) && enforceWindDownSpeechBudget(rawDecision, body.learnerText);
+    if (!decision) return json({ error: "COACH_INVALID_RESPONSE" }, 502);
+    const feedback = await createWindDownCoachFeedback({ ...body, decision });
+    return json({ decision, ...(feedback ? { feedback } : {}) }, 200);
   } catch (error) {
     const code = error instanceof Error && /^COACH_(RATE_LIMITED|TIMEOUT|INVALID_RESPONSE|UNAVAILABLE)$/.test(error.message) ? error.message : "COACH_UNAVAILABLE";
     return json({ error: code }, code === "COACH_RATE_LIMITED" ? 429 : 503);

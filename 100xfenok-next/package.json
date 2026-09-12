@@ -245,7 +245,7 @@
     "qa:winddown-coach-isolated": "WINDDOWN_QA_SCOPE=coach bash scripts/check-winddown-preservation-isolated.sh",
     "test:winddown-coach": "tsx scripts/score-winddown-coach.ts",
     "test:winddown-learning-gaps": "tsx scripts/score-winddown-learning-gaps.ts",
-    "test:winddown-coach-gate": "npm run test:winddown-learning-gaps && npm run test:winddown-coach && npm run test:winddown-review && npm run test:winddown-habit && npm run test:winddown-voice && npm run test:winddown-continuity && npm run test:winddown-preservation-stage1 && node scripts/check-route-key-contract.mjs"
+    "test:winddown-coach-gate": "npm run test:winddown-learning-gaps && npm run test:winddown-learn && npm run test:winddown-practice && npm run test:winddown-story && tsx scripts/score-winddown-artist-voice.ts && npm run test:winddown-coach && npm run test:winddown-review && npm run test:winddown-habit && npm run test:winddown-voice && npm run test:winddown-continuity && npm run test:winddown-preservation-stage1 && node scripts/check-route-key-contract.mjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",

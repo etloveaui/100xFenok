@@ -1,3 +1,5 @@
+import { enforceWindDownSpeechBudget } from "./speechBudget";
+import { parseWindDownCoachFeedback, type WindDownCoachFeedback } from "./coachFeedback";
 import { WIND_DOWN_COACH_ENDPOINT, parseWindDownCoachDecision, type WindDownCoachRequest } from "./coachContract";
 import type { LiveFunctionCall } from "@/features/mona-vnext/live/liveToolBridge";
 import type { WindDownVoiceSessionResponse } from "./sessionContract";
@@ -5,7 +7,7 @@ import type { WindDownVoiceSessionResponse } from "./sessionContract";
 export async function consultWindDownTeacher(args: {
   call: LiveFunctionCall; signal: AbortSignal; session: WindDownVoiceSessionResponse;
   learnerText: string; history: WindDownCoachRequest["history"];
-  fetch?: typeof fetch; onUnavailable?: (message: string | null) => void;
+  fetch?: typeof fetch; onFeedback?: (feedback: WindDownCoachFeedback) => void; onUnavailable?: (message: string | null) => void;
 }): Promise<Record<string, unknown>> {
   if (args.call.name !== "consult_teacher" || args.session.activity !== "live-talk" || args.session.coach?.provider !== "groq") {
     return { ok: false, error: "TOOL_UNSUPPORTED" };
@@ -32,14 +34,16 @@ export async function consultWindDownTeacher(args: {
         history: args.history.slice(-8).map(item => ({ role: item.role, text: item.text.slice(0, 600) })),
       } satisfies WindDownCoachRequest),
     });
-    const payload = await response.json().catch(() => null) as { decision?: unknown; error?: string } | null;
+    const payload = await response.json().catch(() => null) as { decision?: unknown; feedback?: unknown; error?: string } | null;
     if (args.signal.aborted) return { ok: false, error: "COACH_CANCELLED" };
     if (!response.ok) {
       args.onUnavailable?.(response.status === 429 ? "대화 도우미의 사용 한도에 잠시 걸렸어. 조금 뒤 다시 말해줘." : "대화 도우미 연결이 늦어지고 있어. 다시 말해줘.");
       return { ok: false, error: response.status === 429 ? "COACH_RATE_LIMITED" : "COACH_UNAVAILABLE" };
     }
     const decision = parseWindDownCoachDecision(payload?.decision, learnerText);
-    if (!decision) throw new Error("COACH_INVALID_RESPONSE");
+    if (!decision || JSON.stringify(enforceWindDownSpeechBudget(decision, learnerText)) !== JSON.stringify(decision)) throw new Error("COACH_INVALID_RESPONSE");
+    const feedback = parseWindDownCoachFeedback(payload?.feedback);
+    if (feedback && feedback.spokenResponse === decision.spokenResponse && decision.correction && feedback.was === decision.correction.was && feedback.now === decision.correction.now && feedback.why === decision.correction.why && !args.signal.aborted) args.onFeedback?.(feedback);
     if (!args.signal.aborted) args.onUnavailable?.(null);
     return { ok: true, decision };
   } catch {

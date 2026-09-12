@@ -1,3 +1,4 @@
+import { assessWindDownPatternAttempt, type WindDownPatternFeedback } from "./patternFeedback";
 export const WINDDOWN_PRACTICE_SCHEMA_VERSION = 1 as const;
 export const WINDDOWN_PRACTICE_MATERIAL_LIMIT = 500 as const;
 
@@ -272,6 +273,7 @@ export type WindDownPracticeStep = {
 
 export type WindDownPracticeAttempt = {
   text: string;
+  feedback?: WindDownPatternFeedback;
   verdict: "practice-only";
   reward: 0;
 };
@@ -297,6 +299,7 @@ export type WindDownPracticeState = {
 
 export type WindDownPracticeAction =
   | { type: "submit-response"; text: string }
+  | { type: "retry-response" }
   | { type: "reveal" }
   | { type: "complete" }
   | { type: "advance" };
@@ -374,13 +377,18 @@ export function applyWindDownPracticeAction(
   state: WindDownPracticeState,
   action: WindDownPracticeAction,
 ): WindDownPracticeState {
+  if (action.type === "retry-response" && state.attempt?.feedback && (state.phase === "awaiting-reveal" || state.phase === "revealed")) {
+    return { ...state, phase: "response", attempt: null, revealed: false, revealText: null };
+  }
   if ((state.phase === "recall" || state.phase === "response") && action.type === "submit-response") {
     const text = action.text.trim();
     if (!text) return state;
     return {
       ...state,
       phase: "awaiting-reveal",
-      attempt: { text, verdict: "practice-only", reward: 0 },
+      attempt: { text, verdict: "practice-only", reward: 0,
+        ...(state.method === "pattern-transform" && state.material ? { feedback: assessWindDownPatternAttempt(state.material, text) } : {}),
+      },
     };
   }
   if (state.phase === "awaiting-reveal" && action.type === "reveal") {

@@ -1,3 +1,4 @@
+import { attachWindDownCoachFeedback, parseWindDownCoachFeedback } from "./coachFeedback";
 import {
   containsWindDownVoiceSecretLeakage,
   containsWindDownVoiceUnsafeText,
@@ -332,7 +333,11 @@ function normalizeTurn(turn: WindDownVoiceFinalizedTurn): WindDownVoiceFinalized
     ? turn.correctionText.trim().replace(/\s+/g, " ")
     : null;
   if (correctionText && containsForbiddenReportText(correctionText)) return null;
+  const { coachFeedback: suppliedFeedback, ...plainTurn } = turn;
+  const coachFeedback = suppliedFeedback && attachWindDownCoachFeedback(plainTurn, suppliedFeedback).coachFeedback;
+  if (suppliedFeedback && !coachFeedback) return null;
   return {
+    ...(coachFeedback ? { coachFeedback } : {}),
     conversationId,
     turnSeq: turn.turnSeq,
     userText,
@@ -585,8 +590,13 @@ function isSafeTurn(value: unknown): value is WindDownVoiceFinalizedTurn {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const source = value as Record<string, unknown>;
   if (!Object.keys(source).every((key) =>
-    TURN_KEYS_WITH_CORRECTION.has(key))) return false;
+    TURN_KEYS_WITH_CORRECTION.has(key) || key === "coachFeedback")) return false;
   const turn = value as Partial<WindDownVoiceFinalizedTurn>;
+  if (turn.coachFeedback !== undefined) {
+    if (!parseWindDownCoachFeedback(turn.coachFeedback)) return false;
+    const { coachFeedback, ...plain } = turn;
+    if (!attachWindDownCoachFeedback(plain as WindDownVoiceFinalizedTurn, coachFeedback).coachFeedback || turn.correctionText !== coachFeedback.spokenResponse) return false;
+  }
   if (
     !isSafeConversationId(turn.conversationId)
     || !Number.isInteger(turn.turnSeq)
@@ -595,7 +605,7 @@ function isSafeTurn(value: unknown): value is WindDownVoiceFinalizedTurn {
     || typeof turn.sttDrift !== "boolean"
     || typeof turn.interrupted !== "boolean"
   ) return false;
-  for (const text of [turn.userText, turn.modelText, turn.correctionText]) {
+  for (const text of [turn.userText, turn.modelText, turn.correctionText, turn.coachFeedback?.was, turn.coachFeedback?.now, turn.coachFeedback?.why]) {
     if (text !== null && text !== undefined && typeof text !== "string") return false;
     if (typeof text === "string" && containsForbiddenReportText(text)) return false;
   }
@@ -616,7 +626,8 @@ function isCanonicalTurn(value: unknown): value is WindDownVoiceFinalizedTurn {
   const expected = source.correctionText === undefined
     ? TURN_KEYS
     : TURN_KEYS_WITH_CORRECTION;
-  return hasExactKeys(source, expected)
+  const keys = source.coachFeedback === undefined ? expected : new Set([...expected, "coachFeedback"]);
+  return hasExactKeys(source, keys)
     && source.userText !== undefined
     && source.modelText !== undefined;
 }
@@ -651,8 +662,9 @@ function sameCorrections(
         && !Array.isArray(candidate)
         && hasExactKeys(
           candidate as unknown as Record<string, unknown>,
-          CORRECTION_KEYS,
+          target.coachFeedback ? new Set([...CORRECTION_KEYS, "coachFeedback"]) : CORRECTION_KEYS,
         )
+        && JSON.stringify(candidate.coachFeedback) === JSON.stringify(target.coachFeedback)
         && candidate.conversationId === target.conversationId
         && candidate.turnSeq === target.turnSeq
         && candidate.learnerText === target.learnerText

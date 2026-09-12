@@ -1,3 +1,4 @@
+import { verifyWindDownCoachFeedbacks } from "@/features/winddown/server/coachFeedbackProof";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
@@ -81,6 +82,7 @@ export async function POST(request: Request) {
       error: "INVALID_WINDDOWN_VOICE_REPORT_SESSION_PROOF",
     }, 403);
   }
+  if (!await verifyWindDownCoachFeedbacks(report)) return noStoreJson({ error: "INVALID_WINDDOWN_COACH_FEEDBACK" }, 403);
   const canonical = JSON.stringify(report);
   const finalDigest = await sha256Hex(canonical);
   const receipt = {

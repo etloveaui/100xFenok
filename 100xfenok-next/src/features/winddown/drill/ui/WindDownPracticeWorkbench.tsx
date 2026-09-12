@@ -257,6 +257,14 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
           <p className="mt-4 text-xs font-bold text-[var(--wd-muted)]">이번 답변: “{session.attempt.text}” · 점수에 반영하지 않아</p>
         ) : null}
 
+        {session.attempt?.feedback ? (
+          <div data-pattern-feedback role="status" className="mt-4 rounded-xl border border-[var(--wd-border)] p-4">
+            <p className="text-sm font-bold">{session.attempt.feedback.message}</p>
+            <p className="mt-2 text-sm">예시: {session.attempt.feedback.example}</p>
+            <button type="button" data-pattern-retry onClick={() => { setAnswerText(session.attempt?.text ?? ""); setSession(current => current ? applyWindDownPracticeAction(current, { type: "retry-response" }) : current); }} className="mt-3 min-h-[48px] rounded-xl border border-[var(--wd-accent)] px-4 text-sm font-black">고쳐서 다시 말하기</button>
+          </div>
+        ) : null}
+
         {session.phase === "awaiting-reveal" ? (
           <button data-practice-reveal type="button" onClick={() => setSession((current) => current ? applyWindDownPracticeAction(current, { type: "reveal" }) : current)} className="mt-5 min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)]">{isVoiceCorrection ? "교정 내용 보기" : "정답 보기"}</button>
         ) : null}

@@ -1,3 +1,5 @@
+import { windDownRoleplayEvidenceText, supportedWindDownRoleplayTask } from "./roleplayEvidence";
+import { attachWindDownCoachFeedback, parseWindDownCoachFeedback, normalizeCoachEvidence, type WindDownCoachFeedback } from "./coachFeedback";
 import { containsMonaVnextControlLeakage } from "@/features/mona-vnext/logging/voiceLogSchema";
 
 export const WIND_DOWN_VOICE_POLICY_VERSION = 1 as const;
@@ -53,6 +55,7 @@ export type WindDownVoiceFinalizedTurn = {
    * literal excerpt of the finalized coach transcript for the same turn.
    */
   correctionText?: string | null;
+  coachFeedback?: WindDownCoachFeedback;
 };
 
 export type WindDownVoiceGoalEvidence = {
@@ -69,6 +72,7 @@ export type WindDownVoiceCorrection = {
   turnSeq: number;
   learnerText: string;
   correctionText: string;
+  coachFeedback?: WindDownCoachFeedback;
 };
 
 export type WindDownVoiceCorrectionPresentation = {
@@ -619,6 +623,13 @@ export function deriveWindDownVoiceCorrectionPresentation(
     containsWindDownVoiceUnsafeText(learnerText)
     || containsWindDownVoiceUnsafeText(correctionText)
   ) return null;
+  if (correction.coachFeedback) {
+    const feedback = parseWindDownCoachFeedback(correction.coachFeedback);
+    if (!feedback || normalizeCoachEvidence(learnerText) !== normalizeCoachEvidence(feedback.learnerText)
+      || normalizeCoachEvidence(correctionText) !== normalizeCoachEvidence(feedback.spokenResponse)) return null;
+    return { was: feedback.was, now: feedback.now, why: feedback.why,
+      citation: { conversationId: correction.conversationId, turnSeq: correction.turnSeq } };
+  }
   const structured = correctionText.match(
     /^correction\s*(?:—|-|:)\s*was\s*:\s*([^|]{1,120}?)\s*\|\s*now\s*:\s*([^|]{1,120}?)\s*\|\s*why\s*:\s*(.{1,160})$/i,
   );
@@ -650,7 +661,11 @@ function correctionFromTurn(turn: WindDownVoiceFinalizedTurn): WindDownVoiceCorr
   if (!learnerText || !modelText || !correctionText) return null;
   if (correctionText.length > WIND_DOWN_VOICE_CORRECTION_MAX_CHARS) return null;
   if (!normalizeText(modelText).includes(normalizeText(correctionText))) return null;
+  const { coachFeedback: pendingFeedback, ...plainTurn } = turn;
+  const feedback = pendingFeedback && attachWindDownCoachFeedback(plainTurn, pendingFeedback).coachFeedback;
+  if (pendingFeedback && !feedback) return null;
   const correction = {
+    ...(feedback ? { coachFeedback: feedback } : {}),
     conversationId: turn.conversationId.trim(),
     turnSeq: turn.turnSeq,
     learnerText,
@@ -785,10 +800,14 @@ export function evaluateWindDownRoleplay(
     if (!isCleanLearnerTurn(turn)) continue;
     const learnerText = cleanText(turn.userText);
     if (!learnerText) continue;
-    const normalizedLearnerText = normalizeText(learnerText);
+    const normalizedLearnerText = windDownRoleplayEvidenceText(learnerText);
+    if (!normalizedLearnerText) continue;
     for (const goal of scenario.goals) {
       if (completedGoalIds.has(goal.id)) continue;
-      const matchedPhrase = goal.matchAny.find((phrase) => phraseMatches(normalizedLearnerText, phrase));
+      const supportedTask = supportedWindDownRoleplayTask(scenario.id, goal.id, normalizedLearnerText);
+      const matchedPhrase = supportedTask === undefined
+        ? goal.matchAny.find((phrase) => phraseMatches(normalizedLearnerText, phrase))
+        : supportedTask;
       if (!matchedPhrase) continue;
       completedGoalIds.add(goal.id);
       evidence.push({

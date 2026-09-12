@@ -124,6 +124,8 @@ export async function GET(request: Request) {
         ? `${habitKstDay}:learn`
         : normalizeWindDownStudySeed(url.searchParams.get("seed"), mode),
       entries: material.entries,
+      learningProfile,
+      practice: material.practiceForExpressionIds(material.entries.map(entry => entry.id)),
       dueExpressionIds: learning.dueExpressionIds,
       deferredExpressionIds: learning.deferredExpressionIds,
       count: mode === "review"
@@ -131,6 +133,7 @@ export async function GET(request: Request) {
         : WINDDOWN_LEARN_CREDIT_TARGET,
     });
     let cards = bootstrap.cards;
+    let selectionBasis: string | undefined = "selectionBasis" in bootstrap ? bootstrap.selectionBasis : undefined;
     let inventory = bootstrap.inventory;
     let learnSession:
       | {
@@ -215,6 +218,7 @@ export async function GET(request: Request) {
               ).toISOString(),
             };
       if (resumed) {
+        selectionBasis = "saved-session";
         cards = resumed.cards;
         inventory = {
           ...inventory,
@@ -236,6 +240,7 @@ export async function GET(request: Request) {
         updatedAt: learning.updatedAt,
         recordCount: learning.recordCount,
       },
+      ...(mode === "learn" ? { selectionBasis } : {}),
       material: material.metadata,
       materialResolution: material.resolution,
       ...(learnSession ? { learnSession } : {}),

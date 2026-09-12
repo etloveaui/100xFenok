@@ -31,6 +31,7 @@ type StudyResponse = {
   mode: "learn";
   modelOpened: false;
   cards: WindDownLearnCard[];
+  selectionBasis?: string;
   inventory: {
     selectedCount: number;
     insufficientFreshCount: number;
@@ -222,6 +223,7 @@ class LearnAvailabilityError extends Error {
 
 export default function WindDownLearnClient() {
   const [session, setSession] = useState<WindDownLearnState | null>(null);
+  const [selectionBasis, setSelectionBasis] = useState<string | null>(null);
   const [sessionProof, setSessionProof] = useState<string | null>(null);
   const [manifestSessionId, setManifestSessionId] = useState<string | null>(null);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
@@ -236,6 +238,7 @@ export default function WindDownLearnClient() {
 
   const loadQuest = useCallback(async () => {
     setStatus("loading");
+    setSelectionBasis(null);
     setAvailability("loading");
     setFeedback(null);
     setSelectedTokenIds([]);
@@ -268,6 +271,7 @@ export default function WindDownLearnClient() {
       if (!nextState) {
         throw new LearnAvailabilityError("resume-unavailable");
       }
+      setSelectionBasis(body.selectionBasis ?? null);
       setSessionProof(body.learnSession.proof);
       setManifestSessionId(body.learnSession.manifest.sessionId);
       setSession(nextState);
@@ -493,6 +497,7 @@ export default function WindDownLearnClient() {
                 WIND DOWN · LEARN
               </p>
               <h1 className="mt-1 text-xl font-black">오늘의 다섯 문장</h1>
+              {selectionBasis ? <p data-learning-selection className="mt-2 max-w-[240px] text-xs leading-5 text-[var(--wd-muted)]">{selectionBasis === "review-patterns" ? "복습에서 어려웠던 문형·주제와 이어지는 새 표현을 골랐어." : selectionBasis === "review-pace" ? "복습 결과와 문장 길이를 참고해 새 표현을 골랐어." : selectionBasis === "saved-session" ? "저장해 둔 문장을 이어서 연습해." : "짧은 표현부터 시작해 보고, 복습 결과에 맞춰 조절할게."}</p> : null}
             </div>
             <Link
               href="/winddown"

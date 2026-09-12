@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { attachWindDownCoachFeedback, type WindDownCoachFeedback } from "../coachFeedback";
 import { consultWindDownTeacher } from "../coachClient";
 import type { WindDownCoachRequest } from "../coachContract";
 import { storyEpisodeById, storyEpisodeState } from "@/features/winddown/game/model/story";
@@ -211,6 +212,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
   const transcriptRef = useRef(transcriptState);
   const [turns, setTurns] = useState<WindDownVoiceFinalizedTurn[]>([]);
   const turnsRef = useRef<WindDownVoiceFinalizedTurn[]>([]);
+  const pendingFeedbackRef = useRef<{ conversationId: string; turnSeq: number; feedback: WindDownCoachFeedback } | null>(null);
   const conversationIdsRef = useRef<string[]>([]);
   const sessionProofsRef = useRef<string[]>([]);
   const startedAtRef = useRef<string | null>(null);
@@ -247,7 +249,10 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
   }, [defaultDescriptor]);
 
   const appendTurn = useCallback((turn: MonaVnextTurn) => {
-    const normalized = toFinalizedTurn(turn);
+    const pending = pendingFeedbackRef.current;
+    pendingFeedbackRef.current = null;
+    const normalized = pending && pending.conversationId === turn.conversationId && pending.turnSeq === turn.turnSeq
+      ? attachWindDownCoachFeedback(toFinalizedTurn(turn), pending.feedback) : toFinalizedTurn(turn);
     const next = mergeTurn(turnsRef.current, normalized);
     turnsRef.current = next;
     setTurns(next);
@@ -285,6 +290,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
       lastMeaningfulInputAtMsRef.current = Date.now();
       setMeaningfulInputEpoch((current) => current + 1);
     }
+    if (content.interrupted) pendingFeedbackRef.current = null;
     const result = applyMonaVnextServerContent(transcriptRef.current, content);
     transcriptRef.current = result.state;
     setTranscriptState(result.state);
@@ -303,6 +309,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
     if (current.conversationId !== conversationId) {
       // A replacement/resume must discard incomplete provider text. It has not
       // received Gemini's turnComplete and is therefore not report evidence.
+      pendingFeedbackRef.current = null;
       const next = createMonaVnextTranscriptState(conversationId);
       transcriptRef.current = next;
       setTranscriptState(next);
@@ -331,6 +338,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
   }, [activity, descriptor]);
 
   const discardPendingTranscript = useCallback((session: WindDownVoiceSessionResponse) => {
+    pendingFeedbackRef.current = null;
     // A resumed socket is a provider boundary even when Gemini reuses the
     // conversation id. Never let pre-reconnect partial STT cross that boundary
     // and become evidence after a later turnComplete.
@@ -369,12 +377,20 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
     requestSession,
     getSessionRequestContext,
     onToolCall: (call, signal, session) => {
+      const turnSeq = transcriptRef.current.nextTurnSeq;
+      const cancelFeedback = () => { if (pendingFeedbackRef.current?.turnSeq === turnSeq && pendingFeedbackRef.current.conversationId === session.conversationId) pendingFeedbackRef.current = null; };
+      signal.addEventListener("abort", cancelFeedback, { once: true });
       const history: WindDownCoachRequest["history"] = turnsRef.current.slice(-4).flatMap(turn => [
         ...(turn.userText ? [{ role: "user" as const, text: turn.userText }] : []),
         ...(turn.modelText ? [{ role: "assistant" as const, text: turn.modelText }] : []),
       ]);
       return consultWindDownTeacher({ call, signal, session, history,
         learnerText: transcriptRef.current.current.userText,
+        onFeedback: feedback => {
+          if (!signal.aborted && transcriptRef.current.conversationId === session.conversationId && transcriptRef.current.nextTurnSeq === turnSeq) {
+            pendingFeedbackRef.current = { conversationId: session.conversationId, turnSeq, feedback };
+          }
+        },
         onUnavailable: setCoachNotice,
       });
     },
@@ -651,6 +667,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
   ]);
 
   const start = useCallback(() => {
+    pendingFeedbackRef.current = null;
     if (selectedStoryAccess !== "open") return;
     if (live.status === "listening" || live.status === "connecting" || live.status === "setup-wait") return;
     if (reportState.phase === "pending") return;
@@ -1148,9 +1165,9 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                           className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-3 text-xs"
                         >
                           <dl className="space-y-2">
-                            <div><dt className="font-black text-[var(--wd-muted)]">was</dt><dd className="mt-0.5 font-semibold">{presentation.was}</dd></div>
-                            <div><dt className="font-black text-[var(--wd-muted)]">now</dt><dd className="mt-0.5 font-semibold">{presentation.now}</dd></div>
-                            <div><dt className="font-black text-[var(--wd-muted)]">why</dt><dd className="mt-0.5 font-semibold">{presentation.why}</dd></div>
+                            <div><dt className="font-black text-[var(--wd-muted)]">내가 말한 표현</dt><dd className="mt-0.5 font-semibold">{presentation.was}</dd></div>
+                            <div><dt className="font-black text-[var(--wd-muted)]">다시 연습할 표현</dt><dd className="mt-0.5 font-semibold">{presentation.now}</dd></div>
+                            <div><dt className="font-black text-[var(--wd-muted)]">이렇게 말하는 이유</dt><dd className="mt-0.5 font-semibold">{presentation.why}</dd></div>
                           </dl>
                           <p className="mt-3 font-black text-[var(--wd-accent)]">
                             근거 · turn-{presentation.citation.turnSeq}
