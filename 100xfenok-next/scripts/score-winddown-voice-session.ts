@@ -155,6 +155,7 @@ assert.match(
   /I would like a decaf coffee/,
 );
 assert.equal("expressionBank" in providerBody.bidiGenerateContentSetup, false);
+assert.equal((JSON.parse(String(capturedInit?.body)).bidiGenerateContentSetup.realtimeInputConfig).activityHandling, "START_OF_ACTIVITY_INTERRUPTS", "WIND DOWN must yield the speaking turn to the learner");
 assert.equal(session.activity, "roleplay");
 assert.equal(session.settings.activity, "roleplay");
 assert.equal(session.policyVersion, 1);
