@@ -1,10 +1,8 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "fred_banking",
-  "updated_at": "2026-09-11T11:58:43.501Z",
-  "retry_set": [
-    "quarterly"
-  ],
+  "updated_at": "2026-09-12T11:25:23.250Z",
+  "retry_set": [],
   "items": {
     "daily": {
       "key": "daily",
@@ -12,23 +10,23 @@
       "retry": false,
       "current": {
         "path": "data/macro/fred-banking-daily.json",
-        "payload_sha256": "f32f54e2afcd617bb90dcbd33ced382cdf389e495601a8701e20b029bd069e04",
-        "source_as_of": "2026-09-09"
+        "payload_sha256": "8deb61de39d5b50f6a2058084eb9139ef101965b2f32aa6093e4fa3d58043feb",
+        "source_as_of": "2026-09-10"
       },
       "lkg": {
         "path": "data/admin/fred_banking/lkg/daily.json",
         "payload_sha256": "70583c780245f63b51f838f9d767a0d11b0a3e229e726c5f6f1824718b9f4c06",
         "source_as_of": "2026-05-01"
       },
-      "updated_at": "2026-09-11T11:58:43.501Z",
+      "updated_at": "2026-09-12T11:25:23.250Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "f32f54e2afcd617bb90dcbd33ced382cdf389e495601a8701e20b029bd069e04",
-        "source_as_of": "2026-09-09",
-        "run_id": "34596591169",
+        "payload_sha256": "8deb61de39d5b50f6a2058084eb9139ef101965b2f32aa6093e4fa3d58043feb",
+        "source_as_of": "2026-09-10",
+        "run_id": "34691003249",
         "run_attempt": 1,
-        "observed_at": "2026-09-11T11:58:43.501Z"
+        "observed_at": "2026-09-12T11:25:23.250Z"
       },
       "recovered_from_run_id": "29406166955",
       "recovered_at": "2026-07-17T09:05:21.396Z",
@@ -48,23 +46,23 @@
       "retry": false,
       "current": {
         "path": "data/macro/fred-banking-weekly.json",
-        "payload_sha256": "7535f2de4d6b484201986084fe6d1d47a593b7a30bec2d7a881a2ab2fae48e15",
-        "source_as_of": "2026-08-26"
+        "payload_sha256": "45dea98f46893e95cc5d2675ac6a8fb80caa2c7787d198ca8e9fe940e816c0ac",
+        "source_as_of": "2026-09-02"
       },
       "lkg": {
         "path": "data/admin/fred_banking/lkg/weekly.json",
         "payload_sha256": "84e6ed0cb75a00f62d5702086fcc4f9bbbb5bcd11797a5cbaec8af0bca3b9f13",
         "source_as_of": "2026-07-01"
       },
-      "updated_at": "2026-09-11T11:58:43.501Z",
+      "updated_at": "2026-09-12T11:25:23.250Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "7535f2de4d6b484201986084fe6d1d47a593b7a30bec2d7a881a2ab2fae48e15",
-        "source_as_of": "2026-08-26",
-        "run_id": "34596591169",
+        "payload_sha256": "45dea98f46893e95cc5d2675ac6a8fb80caa2c7787d198ca8e9fe940e816c0ac",
+        "source_as_of": "2026-09-02",
+        "run_id": "34691003249",
         "run_attempt": 1,
-        "observed_at": "2026-09-11T11:58:43.501Z"
+        "observed_at": "2026-09-12T11:25:23.250Z"
       },
       "recovered_from_run_id": "29406166955",
       "recovered_at": "2026-07-18T08:45:50.573Z",
@@ -80,30 +78,38 @@
     },
     "quarterly": {
       "key": "quarterly",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/fred_banking/lkg/quarterly.json",
-        "payload_sha256": "3bbc913453bca9cb1b90940ccaab3d2ca647a11f89460926e4208bd1750ce358",
-        "source_as_of": "2025-10-01"
+        "path": "data/macro/fred-banking-quarterly.json",
+        "payload_sha256": "878a41da3a10f7fb464ef217b2dd0766471dd00bd807ff756d2090530c1aea04",
+        "source_as_of": "2026-01-01"
       },
       "lkg": {
         "path": "data/admin/fred_banking/lkg/quarterly.json",
         "payload_sha256": "3bbc913453bca9cb1b90940ccaab3d2ca647a11f89460926e4208bd1750ce358",
         "source_as_of": "2025-10-01"
       },
-      "latest_failure": {
+      "updated_at": "2026-09-12T11:25:23.250Z",
+      "promotion_contract": "provider_observation/v2",
+      "provider_observation": {
+        "schema_version": "provider_observation/v2",
+        "payload_sha256": "878a41da3a10f7fb464ef217b2dd0766471dd00bd807ff756d2090530c1aea04",
+        "source_as_of": "2026-01-01",
+        "run_id": "34691003249",
+        "run_attempt": 1,
+        "observed_at": "2026-09-12T11:25:23.250Z"
+      },
+      "recovered_from_run_id": "29406166955",
+      "recovered_at": "2026-09-12T11:25:23.250Z",
+      "recovery_run_id": "34691003249",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule",
+      "last_recovered_failure": {
         "run_id": "29406166955",
         "run_attempt": 1,
         "observed_at": "2026-07-15T09:58:31.570Z",
         "reason": "controlled_failure"
-      },
-      "updated_at": "2026-09-11T11:58:43.501Z",
-      "latest_promotion_deferral": {
-        "run_id": "34596591169",
-        "run_attempt": 1,
-        "observed_at": "2026-09-11T11:58:43.501Z",
-        "reason": "recovery_not_advanced_by_provider"
       }
     },
     "monthly": {
@@ -112,18 +118,18 @@
       "retry": false,
       "current": {
         "path": "data/macro/fred-banking-monthly.json",
-        "payload_sha256": "2c0ec04904d745145f404814fbad7c20139cd9e9cc049e19c19e2e17e8916481",
+        "payload_sha256": "91391965ec63bd19ffd1dde6a95e81a20f40528ac8f3f9c36cfbde1bc4657fd5",
         "source_as_of": "2026-06-01"
       },
-      "updated_at": "2026-09-11T11:58:43.501Z",
+      "updated_at": "2026-09-12T11:25:23.250Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "2c0ec04904d745145f404814fbad7c20139cd9e9cc049e19c19e2e17e8916481",
+        "payload_sha256": "91391965ec63bd19ffd1dde6a95e81a20f40528ac8f3f9c36cfbde1bc4657fd5",
         "source_as_of": "2026-06-01",
-        "run_id": "34596591169",
+        "run_id": "34691003249",
         "run_attempt": 1,
-        "observed_at": "2026-09-11T11:58:43.501Z"
+        "observed_at": "2026-09-12T11:25:23.250Z"
       }
     }
   }
