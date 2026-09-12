@@ -18,9 +18,9 @@ async function main() {
     transaction: async <T>(callback: (tx: SnapshotStorage) => Promise<T>): Promise<T> => callback(storage),
   };
   const snapshot = await handleMonaVnextProfileCoordinatorRequest(
-    new Request("https://winddown.internal/profile-coordinator", { method: "POST", body: JSON.stringify({ operation: "read-learning-profile-snapshot" }) }),
     { storage, blockConcurrencyWhile: async <T>(callback: () => Promise<T>) => callback() },
     { MONA_VNEXT_KV: { get: async () => { throw new Error("COACH_CONTEXT_MUST_NOT_IMPORT_LEGACY"); }, put: async () => { throw new Error("COACH_CONTEXT_MUST_NOT_WRITE_KV"); } } },
+    new Request("https://winddown.internal/profile-coordinator", { method: "POST", body: JSON.stringify({ operation: "read-learning-profile-snapshot" }) }),
   );
   assert.equal(snapshot.status, 200, "a missing profile must be read without legacy initialization");
   assert.deepEqual((await snapshot.json()).profile.records, {});
