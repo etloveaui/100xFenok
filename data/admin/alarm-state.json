@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-12T19:27:12.919Z",
+  "generated_at": "2026-09-12T22:24:09.858Z",
   "status": "open",
-  "open_incident_count": 10,
+  "open_incident_count": 11,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -153,6 +153,20 @@
       "failure_streak_threshold": 2,
       "first_failing_run_id": 34369898015,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34369898015",
+      "alarm_reasons": [
+        "failure_streak"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
+      "streak": 2,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": 34713537093,
+      "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34713537093",
       "alarm_reasons": [
         "failure_streak"
       ],
@@ -414,7 +428,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 16
+      "data_freshness_age_hours_at_generation": 19
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -579,9 +593,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "34714118368",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34714118368",
-    "observed_at": "2026-09-12T19:27:12.919Z",
+    "run_id": "34722542989",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34722542989",
+    "observed_at": "2026-09-12T22:24:09.858Z",
     "event": "schedule",
     "workflows": [
       "fenok-edge-krx-daily.yml",
@@ -593,7 +607,8 @@
       "slickcharts-monthly.yml",
       "slickcharts-symbols.yml",
       "slickcharts-weekly.yml",
-      "validate-workflows.yml"
+      "validate-workflows.yml",
+      "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
