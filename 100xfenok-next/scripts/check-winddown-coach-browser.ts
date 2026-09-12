@@ -163,7 +163,7 @@ async function main() {
 
       rateLimited = true;
       await emit(page, tool("quota"));
-      await page.getByRole("status").filter({ hasText: "사용량" }).waitFor();
+      await page.getByRole("status").filter({ hasText: "사용 한도" }).waitFor();
       assert.equal(requests.length, 4, "quota failure retried");
       await page.screenshot({ path: `${output}/${name}-coach-interruption.png`, fullPage: true });
       await page.getByRole("button", { name: "대화 마치고 정리하기", exact: true }).click();

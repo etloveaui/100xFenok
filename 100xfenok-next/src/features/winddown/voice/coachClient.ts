@@ -29,7 +29,7 @@ export async function consultWindDownTeacher(args: {
     });
     const payload = await response.json().catch(() => null) as { decision?: unknown; error?: string } | null;
     if (!response.ok) {
-      args.onUnavailable?.(response.status === 429 ? "오늘 대화 도우미 사용량이 찼어. 잠시 뒤 다시 시도해줘." : "대화 도우미 연결이 늦어지고 있어. 다시 말해줘.");
+      args.onUnavailable?.(response.status === 429 ? "대화 도우미의 사용 한도에 잠시 걸렸어. 조금 뒤 다시 말해줘." : "대화 도우미 연결이 늦어지고 있어. 다시 말해줘.");
       return { ok: false, error: response.status === 429 ? "COACH_RATE_LIMITED" : "COACH_UNAVAILABLE" };
     }
     const decision = parseWindDownCoachDecision(payload?.decision, learnerText);
