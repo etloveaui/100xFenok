@@ -50,6 +50,14 @@ async function main() {
     assert.equal(evaluateWindDownRoleplay(scenario, [turn("I would not like a coffee with oat milk. Don't say thanks.")]).completed, false);
     assert.equal(evaluateWindDownRoleplay(scenario, [turn("I'd like")]).completedGoalIds.includes("order"), false);
   });
+  await check("historical roleplay keeps its original policy and literal evidence", async () => {
+    const { getWindDownVoiceScenario, evaluateWindDownRoleplay } = await import("../src/features/winddown/voice/product");
+    const legacy = getWindDownVoiceScenario("cafe-order", 1);
+    assert.ok(legacy);
+    const old = evaluateWindDownRoleplay(legacy, [{ conversationId: "legacy-cafe", turnSeq: 1, userText: "I'd like a latte with oat milk. Thank you.", modelText: "Sure.", finalized: true, interrupted: false, sttDrift: false }]);
+    assert.equal(old.completed, true);
+    assert.equal(old.evidence.find(item => item.goalId === "order")?.matchedPhrase, "i'd like", "new semantics cannot invalidate a stored legacy report");
+  });
   await check("speech budgets keep complete answers and distinguish pause/explanation", async () => {
     const { enforceWindDownSpeechBudget } = await import("../src/features/winddown/voice/speechBudget");
     const decision = { action: "answer" as const, spokenResponse: "Tea sounds nice. I like green tea. What about coffee? Let me explain more.", correction: null };
