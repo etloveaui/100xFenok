@@ -130,14 +130,14 @@ export function buildWindDownVoicePrompt(
 
 function resolveExperience(request: WindDownVoiceSessionRequest) {
   if (request.activity === "roleplay") {
-    const scenario = getWindDownVoiceScenario(request.scenarioId);
+    const scenario = getWindDownVoiceScenario(request.scenarioId, request.policyVersion);
     if (!scenario || scenario.version !== request.policyVersion) {
       throw new WindDownVoiceSessionError("WINDDOWN_VOICE_EXPERIENCE_NOT_FOUND", 404);
     }
     const descriptor: WindDownRoleplayDescriptor = {
       kind: "scenario",
       scenarioId: request.scenarioId,
-      policyVersion: WIND_DOWN_VOICE_POLICY_VERSION,
+      policyVersion: request.policyVersion,
       title: scenario.title,
       scene: scenario.scene,
       coachRole: scenario.coachRole,
@@ -153,7 +153,7 @@ function resolveExperience(request: WindDownVoiceSessionRequest) {
   const descriptor: WindDownLiveTalkDescriptor = {
     kind: "topic",
     topicId: request.topicId,
-    policyVersion: WIND_DOWN_VOICE_POLICY_VERSION,
+    policyVersion: request.policyVersion,
     title: topic.title,
     scene: topic.scene,
     coachRole: topic.coachRole,
@@ -268,12 +268,12 @@ export async function createWindDownVoiceSession(
     ? {
       activity: "roleplay",
       scenarioId: request.scenarioId,
-      policyVersion: WIND_DOWN_VOICE_POLICY_VERSION,
+      policyVersion: request.policyVersion,
     }
     : {
       activity: "live-talk",
       topicId: request.topicId,
-      policyVersion: WIND_DOWN_VOICE_POLICY_VERSION,
+      policyVersion: request.policyVersion,
     };
   const reportProof = await createWindDownVoiceSessionProof({
     activity: request.activity,
@@ -291,7 +291,7 @@ export async function createWindDownVoiceSession(
 
   const common = {
     schemaVersion: WIND_DOWN_VOICE_SESSION_SCHEMA_VERSION,
-    policyVersion: WIND_DOWN_VOICE_POLICY_VERSION,
+    policyVersion: request.policyVersion,
     productSessionId: request.productSessionId,
     sessionId,
     conversationId,

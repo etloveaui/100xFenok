@@ -1,6 +1,8 @@
 import {
   WIND_DOWN_LIVE_TALK_TOPICS,
   WIND_DOWN_VOICE_POLICY_VERSION,
+  isWindDownVoicePolicyVersion,
+  type WindDownVoicePolicyVersion,
   getWindDownLiveTalkTopic,
   getWindDownVoiceScenario,
   isWindDownVoiceScenarioId,
@@ -43,13 +45,13 @@ type CommonRequest = {
 export type WindDownRoleplaySessionRequest = CommonRequest & {
   activity: "roleplay";
   scenarioId: WindDownVoiceScenarioId;
-  policyVersion: typeof WIND_DOWN_VOICE_POLICY_VERSION;
+  policyVersion: WindDownVoicePolicyVersion;
 };
 
 export type WindDownLiveTalkSessionRequest = CommonRequest & {
   activity: "live-talk";
   topicId: WindDownLiveTalkTopicId;
-  policyVersion: typeof WIND_DOWN_VOICE_POLICY_VERSION;
+  policyVersion: WindDownVoicePolicyVersion;
 };
 
 export type WindDownVoiceSessionRequest =
@@ -59,7 +61,7 @@ export type WindDownVoiceSessionRequest =
 export type WindDownRoleplayDescriptor = {
   kind: "scenario";
   scenarioId: WindDownVoiceScenarioId;
-  policyVersion: typeof WIND_DOWN_VOICE_POLICY_VERSION;
+  policyVersion: WindDownVoicePolicyVersion;
   title: string;
   scene: string;
   coachRole: string;
@@ -70,7 +72,7 @@ export type WindDownRoleplayDescriptor = {
 export type WindDownLiveTalkDescriptor = {
   kind: "topic";
   topicId: WindDownLiveTalkTopicId;
-  policyVersion: typeof WIND_DOWN_VOICE_POLICY_VERSION;
+  policyVersion: WindDownVoicePolicyVersion;
   title: string;
   scene: string;
   coachRole: string;
@@ -79,7 +81,7 @@ export type WindDownLiveTalkDescriptor = {
 
 type CommonResponse = {
   schemaVersion: typeof WIND_DOWN_VOICE_SESSION_SCHEMA_VERSION;
-  policyVersion: typeof WIND_DOWN_VOICE_POLICY_VERSION;
+  policyVersion: WindDownVoicePolicyVersion;
   productSessionId: string;
   sessionId: string;
   conversationId: string;
@@ -164,7 +166,7 @@ function parseCommon(
   if (record.schemaVersion !== WIND_DOWN_VOICE_SESSION_SCHEMA_VERSION) {
     fail("SCHEMA_VERSION");
   }
-  if (record.policyVersion !== WIND_DOWN_VOICE_POLICY_VERSION) {
+  if (!isWindDownVoicePolicyVersion(record.policyVersion)) {
     fail("POLICY_VERSION");
   }
   if (
@@ -213,7 +215,7 @@ export function parseWindDownVoiceSessionRequest(
       schemaVersion: 1,
       activity: "roleplay",
       scenarioId: record.scenarioId,
-      policyVersion: WIND_DOWN_VOICE_POLICY_VERSION,
+      policyVersion: record.policyVersion as WindDownVoicePolicyVersion,
       ...common,
     };
   }
@@ -226,7 +228,7 @@ export function parseWindDownVoiceSessionRequest(
       schemaVersion: 1,
       activity: "live-talk",
       topicId: record.topicId,
-      policyVersion: WIND_DOWN_VOICE_POLICY_VERSION,
+      policyVersion: record.policyVersion as WindDownVoicePolicyVersion,
       ...common,
     };
   }
@@ -268,7 +270,7 @@ export function isWindDownVoiceSessionResponse(
   );
   if (
     record.schemaVersion !== 1
-    || record.policyVersion !== 1
+    || !isWindDownVoicePolicyVersion(record.policyVersion)
     || record.status !== "LIVE_TOKEN_READY"
     || record.adapter !== "gemini-live-ephemeral-winddown"
     || !safeId(record.sessionId)
@@ -333,7 +335,7 @@ export function isWindDownVoiceSessionResponse(
     if (
       !journeyTargets
       || responseExperience.kind !== "scenario"
-      || responseExperience.policyVersion !== WIND_DOWN_VOICE_POLICY_VERSION
+      || responseExperience.policyVersion !== record.policyVersion
       || !isWindDownVoiceScenarioId(responseExperience.scenarioId)
       || !Array.isArray(responseExperience.goals)
       || responseSettings.activity !== "roleplay"
@@ -363,7 +365,7 @@ export function isWindDownVoiceSessionResponse(
     record.activity !== "live-talk"
     || record.journeyTargets !== undefined
     || responseExperience.kind !== "topic"
-    || responseExperience.policyVersion !== WIND_DOWN_VOICE_POLICY_VERSION
+    || responseExperience.policyVersion !== record.policyVersion
     || !isWindDownVoiceTopicId(responseExperience.topicId)
     || responseSettings.activity !== "live-talk"
   ) {

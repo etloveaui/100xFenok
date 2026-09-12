@@ -507,7 +507,7 @@ export function buildWindDownVoiceReport(
       if (descriptor.activity !== "roleplay") {
         throw new Error("winddown_voice_report_descriptor_activity_invalid");
       }
-      const scenario = getWindDownVoiceScenario(descriptor.scenarioId);
+      const scenario = getWindDownVoiceScenario(descriptor.scenarioId, descriptor.policyVersion);
       if (!scenario) throw new Error("winddown_voice_report_scenario_invalid");
       const progress = evaluateWindDownRoleplay(scenario, turns);
       return {
@@ -615,7 +615,7 @@ function isSafeTurn(value: unknown): value is WindDownVoiceFinalizedTurn {
     || (typeof turn.modelText === "string"
       && turn.modelText.length > WIND_DOWN_VOICE_REPORT_MAX_TURN_TEXT_CHARS)
     || (typeof turn.correctionText === "string"
-      && turn.correctionText.length > WIND_DOWN_VOICE_REPORT_MAX_CORRECTION_CHARS)
+      && turn.correctionText.length > (turn.coachFeedback ? 520 : WIND_DOWN_VOICE_REPORT_MAX_CORRECTION_CHARS))
   ) return false;
   return Boolean(turn.userText || turn.modelText);
 }
@@ -692,7 +692,7 @@ function isSafeRoleplayOutcome(
 ) {
   if (!value || typeof value !== "object" || Array.isArray(value) || descriptor.activity !== "roleplay") return false;
   if (!hasExactKeys(value as Record<string, unknown>, ROLEPLAY_OUTCOME_KEYS)) return false;
-  const scenario = getWindDownVoiceScenario(descriptor.scenarioId);
+  const scenario = getWindDownVoiceScenario(descriptor.scenarioId, descriptor.policyVersion);
   if (!scenario) return false;
   const outcome = value as Partial<WindDownVoiceRoleplayOutcome>;
   const progress = evaluateWindDownRoleplay(scenario, turns);

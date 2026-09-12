@@ -2,7 +2,9 @@ import { windDownRoleplayEvidenceText, supportedWindDownRoleplayTask } from "./r
 import { attachWindDownCoachFeedback, parseWindDownCoachFeedback, normalizeCoachEvidence, type WindDownCoachFeedback } from "./coachFeedback";
 import { containsMonaVnextControlLeakage } from "@/features/mona-vnext/logging/voiceLogSchema";
 
-export const WIND_DOWN_VOICE_POLICY_VERSION = 1 as const;
+export const WIND_DOWN_VOICE_POLICY_VERSION = 2 as const;
+export type WindDownVoicePolicyVersion = 1 | 2;
+export function isWindDownVoicePolicyVersion(value: unknown): value is WindDownVoicePolicyVersion { return value === 1 || value === 2; }
 export const WIND_DOWN_VOICE_CORRECTION_MAX_CHARS = 240;
 /** @deprecated Prefer WIND_DOWN_VOICE_POLICY_VERSION in new transport code. */
 export const WINDDOWN_VOICE_PRODUCT_VERSION = WIND_DOWN_VOICE_POLICY_VERSION;
@@ -22,7 +24,7 @@ export type WindDownVoiceScenarioGoal = {
 
 export type WindDownVoiceScenario = {
   id: string;
-  version: typeof WIND_DOWN_VOICE_POLICY_VERSION;
+  version: WindDownVoicePolicyVersion;
   title: string;
   eyebrow: string;
   scene: string;
@@ -38,7 +40,7 @@ export type WindDownVoiceScenario = {
  */
 export type WindDownVoiceScenarioRequest = {
   scenarioId: string;
-  policyVersion: typeof WIND_DOWN_VOICE_POLICY_VERSION;
+  policyVersion: WindDownVoicePolicyVersion;
 };
 
 export type WindDownVoiceFinalizedTurn = {
@@ -491,7 +493,7 @@ export type WindDownVoiceScenarioId = (typeof SCENARIOS)[number]["id"];
 
 export type WindDownVoiceTopic = {
   id: string;
-  version: typeof WIND_DOWN_VOICE_POLICY_VERSION;
+  version: WindDownVoicePolicyVersion;
   title: string;
   eyebrow: string;
   scene: string;
@@ -540,13 +542,13 @@ export type WindDownVoiceDescriptor =
       activity: "roleplay";
       scenarioId: WindDownVoiceScenarioId;
       topicId?: never;
-      policyVersion: typeof WIND_DOWN_VOICE_POLICY_VERSION;
+      policyVersion: WindDownVoicePolicyVersion;
     }
   | {
       activity: "live-talk";
       topicId: WindDownVoiceTopicId;
       scenarioId?: never;
-      policyVersion: typeof WIND_DOWN_VOICE_POLICY_VERSION;
+      policyVersion: WindDownVoicePolicyVersion;
     };
 
 function normalizeText(value: string | null | undefined) {
@@ -609,7 +611,7 @@ export function deriveWindDownVoiceCorrectionPresentation(
   const learnerText = cleanText(correction.learnerText);
   const correctionText = cleanText(
     correction.correctionText,
-    WIND_DOWN_VOICE_CORRECTION_MAX_CHARS + 1,
+    (correction.coachFeedback ? 520 : WIND_DOWN_VOICE_CORRECTION_MAX_CHARS) + 1,
   );
   if (!learnerText || !correctionText) return null;
   if (
@@ -617,7 +619,7 @@ export function deriveWindDownVoiceCorrectionPresentation(
     || !correction.conversationId.trim()
     || !Number.isInteger(correction.turnSeq)
     || correction.turnSeq < 1
-    || correctionText.length > WIND_DOWN_VOICE_CORRECTION_MAX_CHARS
+    || correctionText.length > (correction.coachFeedback ? 520 : WIND_DOWN_VOICE_CORRECTION_MAX_CHARS)
   ) return null;
   if (
     containsWindDownVoiceUnsafeText(learnerText)
@@ -656,10 +658,10 @@ function correctionFromTurn(turn: WindDownVoiceFinalizedTurn): WindDownVoiceCorr
   const modelText = cleanText(turn.modelText, 560);
   const correctionText = cleanText(
     turn.correctionText,
-    WIND_DOWN_VOICE_CORRECTION_MAX_CHARS + 1,
+    (turn.coachFeedback ? 520 : WIND_DOWN_VOICE_CORRECTION_MAX_CHARS) + 1,
   );
   if (!learnerText || !modelText || !correctionText) return null;
-  if (correctionText.length > WIND_DOWN_VOICE_CORRECTION_MAX_CHARS) return null;
+  if (correctionText.length > (turn.coachFeedback ? 520 : WIND_DOWN_VOICE_CORRECTION_MAX_CHARS)) return null;
   if (!normalizeText(modelText).includes(normalizeText(correctionText))) return null;
   const { coachFeedback: pendingFeedback, ...plainTurn } = turn;
   const feedback = pendingFeedback && attachWindDownCoachFeedback(plainTurn, pendingFeedback).coachFeedback;
@@ -693,8 +695,9 @@ function dedupeCorrections(turns: readonly WindDownVoiceFinalizedTurn[]) {
   });
 }
 
-export function getWindDownVoiceScenario(id: string | null | undefined) {
-  return WINDDOWN_VOICE_SCENARIOS.find((scenario) => scenario.id === id) ?? null;
+export function getWindDownVoiceScenario(id: string | null | undefined, version: WindDownVoicePolicyVersion = WIND_DOWN_VOICE_POLICY_VERSION): WindDownVoiceScenario | null {
+  const scenario = WINDDOWN_VOICE_SCENARIOS.find((scenario) => scenario.id === id);
+  return scenario ? { ...scenario, version } : null;
 }
 
 export function getWindDownLiveTalkTopic(id: string | null | undefined) {
@@ -751,7 +754,7 @@ function hasExactKeys(
 export function isWindDownVoiceDescriptor(value: unknown): value is WindDownVoiceDescriptor {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const descriptor = value as Record<string, unknown>;
-  if (descriptor.policyVersion !== WIND_DOWN_VOICE_POLICY_VERSION) return false;
+  if (!isWindDownVoicePolicyVersion(descriptor.policyVersion)) return false;
   if (descriptor.activity === "roleplay") {
     return hasExactKeys(descriptor, ROLEPLAY_DESCRIPTOR_KEYS)
       && isWindDownVoiceScenarioId(descriptor.scenarioId);
@@ -768,8 +771,8 @@ export function normalizeWindDownVoiceDescriptor(
 ): WindDownVoiceDescriptor | null {
   if (!isWindDownVoiceDescriptor(value)) return null;
   return value.activity === "roleplay"
-    ? createWindDownRoleplayDescriptor(value.scenarioId)
-    : createWindDownLiveTalkDescriptor(value.topicId);
+    ? { activity: "roleplay", scenarioId: value.scenarioId, policyVersion: value.policyVersion }
+    : { activity: "live-talk", topicId: value.topicId, policyVersion: value.policyVersion };
 }
 
 export function createWindDownVoiceScenarioRequest(
@@ -800,11 +803,11 @@ export function evaluateWindDownRoleplay(
     if (!isCleanLearnerTurn(turn)) continue;
     const learnerText = cleanText(turn.userText);
     if (!learnerText) continue;
-    const normalizedLearnerText = windDownRoleplayEvidenceText(learnerText);
+    const normalizedLearnerText = scenario.version === 1 ? normalizeText(learnerText) : windDownRoleplayEvidenceText(learnerText);
     if (!normalizedLearnerText) continue;
     for (const goal of scenario.goals) {
       if (completedGoalIds.has(goal.id)) continue;
-      const supportedTask = supportedWindDownRoleplayTask(scenario.id, goal.id, normalizedLearnerText);
+      const supportedTask = scenario.version === 1 ? undefined : supportedWindDownRoleplayTask(scenario.id, goal.id, normalizedLearnerText);
       const matchedPhrase = supportedTask === undefined
         ? goal.matchAny.find((phrase) => phraseMatches(normalizedLearnerText, phrase))
         : supportedTask;

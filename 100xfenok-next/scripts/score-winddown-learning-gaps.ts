@@ -43,6 +43,7 @@ async function main() {
   await check("roleplay vocabulary quotation is not an order; concise real orders count", async () => {
     const { getWindDownVoiceScenario, evaluateWindDownRoleplay } = await import("../src/features/winddown/voice/product");
     const scenario = getWindDownVoiceScenario("cafe-order");
+    assert.ok(scenario);
     const turn = (userText: string) => ({ conversationId: "cafe-synthetic", turnSeq: 1, userText, modelText: "Okay.", finalized: true, interrupted: false, sttDrift: false });
     assert.equal(evaluateWindDownRoleplay(scenario, [turn("I'd like to know what 'with oat milk' means. Thanks.")]).completed, false);
     assert.ok(evaluateWindDownRoleplay(scenario, [turn("A coffee, please.")]).completedGoalIds.includes("order"));
