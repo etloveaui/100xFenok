@@ -100,7 +100,7 @@ async function verifyPracticeAndLearn(page: Page, name: string, seed: WindDownVo
   await page.getByRole("textbox", { name: "연습 답변" }).fill("I went home");
   await page.getByRole("button", { name: "확인", exact: true }).click();
   await page.locator("[data-practice-reveal]").click();
-  assert.equal(await page.locator("[data-practice-reveal-text]").innerText(), "I went home");
+  await page.locator("[data-practice-reveal-text]").getByText("I went home", { exact: true }).waitFor();
   await page.screenshot({ path: `${output}/${name}-correction-practice.png`, fullPage: true });
   await page.goto(`${base.origin}/winddown/drill?practice=1`);
   await page.locator('[data-practice-method]').selectOption("pattern-transform");

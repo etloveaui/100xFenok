@@ -1,3 +1,4 @@
+import { attachWindDownCoachFeedback, parseWindDownCoachFeedback } from "./coachFeedback";
 import {
   WIND_DOWN_VOICE_REPORT_NORMAL_MAX_BYTES,
   buildWindDownVoiceReport,
@@ -207,7 +208,12 @@ function isValidCheckpointTurn(
     return false;
   }
 
-  if (source.correctionText !== undefined && source.correctionText !== null) {
+  if (source.coachFeedback !== undefined) {
+    const feedback = parseWindDownCoachFeedback(source.coachFeedback);
+    const { coachFeedback: _ignored, ...plain } = source;
+    if (!feedback || source.correctionText !== feedback.spokenResponse
+      || !attachWindDownCoachFeedback(plain as WindDownVoiceFinalizedTurn, feedback).coachFeedback) return false;
+  } else if (source.correctionText !== undefined && source.correctionText !== null) {
     if (
       typeof source.correctionText !== "string" ||
       source.correctionText.length > 240 ||
@@ -412,6 +418,7 @@ export function acknowledgeWindDownVoiceOutbox(
         modelText: turn.modelText?.trim().replace(/\s+/g, " ") ?? null,
         finalized: turn.finalized, sttDrift: turn.sttDrift === true, interrupted: turn.interrupted === true,
         correctionText: turn.correctionText?.trim().replace(/\s+/g, " ") || null,
+        coachFeedback: turn.coachFeedback ?? null,
       });
       const fits = checkpoint.checkpoint.turns.length <= entry.report.turns.length
         && checkpoint.checkpoint.turns.every((turn, index) => entry.report.turns[index]

@@ -695,7 +695,7 @@ function dedupeCorrections(turns: readonly WindDownVoiceFinalizedTurn[]) {
   });
 }
 
-export function getWindDownVoiceScenario(id: string | null | undefined, version: WindDownVoicePolicyVersion = WIND_DOWN_VOICE_POLICY_VERSION): WindDownVoiceScenario | null {
+export function getWindDownVoiceScenario(id: string | null | undefined, version: WindDownVoicePolicyVersion = WIND_DOWN_VOICE_POLICY_VERSION): (WindDownVoiceScenario & { id: WindDownVoiceScenarioId }) | null {
   const scenario = WINDDOWN_VOICE_SCENARIOS.find((scenario) => scenario.id === id);
   return scenario ? { ...scenario, version } : null;
 }
