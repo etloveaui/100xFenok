@@ -110,6 +110,14 @@ async function main() {
   assert.equal(clientResult.ok, true);
   assert.equal(clientBody?.learnerText, body.learnerText, "actual transcription takes precedence over model tool arguments");
   assert.equal(clientBody?.proof, session.reportProof);
+  let noticeCount = 0;
+  const lateAbort = new AbortController();
+  await consultWindDownTeacher({ session, signal: lateAbort.signal,
+    call: { id: "late-notice", name: "consult_teacher", args: { learnerText: "Please wait." } },
+    learnerText: "Please wait.", history: [], onUnavailable: () => { noticeCount++; },
+    fetch: async () => { lateAbort.abort(); return Response.json({ error: "COACH_RATE_LIMITED" }, { status: 429 }); },
+  });
+  assert.equal(noticeCount, 0, "a cancelled request must not change the next session's status");
 
   const sentTools: unknown[] = [];
   let executions = 0;

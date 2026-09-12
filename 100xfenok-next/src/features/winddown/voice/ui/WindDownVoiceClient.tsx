@@ -665,6 +665,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
     setRecoveredReportId(null);
     setCorruptNotice(null);
     setStorageWarning(null);
+    setCoachNotice(null);
     finalizingRef.current = false;
     frozenReportRef.current = null;
     turnsRef.current = [];

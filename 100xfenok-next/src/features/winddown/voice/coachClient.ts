@@ -28,6 +28,7 @@ export async function consultWindDownTeacher(args: {
       } satisfies WindDownCoachRequest),
     });
     const payload = await response.json().catch(() => null) as { decision?: unknown; error?: string } | null;
+    if (args.signal.aborted) return { ok: false, error: "COACH_CANCELLED" };
     if (!response.ok) {
       args.onUnavailable?.(response.status === 429 ? "대화 도우미의 사용 한도에 잠시 걸렸어. 조금 뒤 다시 말해줘." : "대화 도우미 연결이 늦어지고 있어. 다시 말해줘.");
       return { ok: false, error: response.status === 429 ? "COACH_RATE_LIMITED" : "COACH_UNAVAILABLE" };
