@@ -345,7 +345,7 @@ function normalizeTurn(turn: WindDownVoiceFinalizedTurn): WindDownVoiceFinalized
     finalized: true,
     sttDrift: turn.sttDrift === true,
     interrupted: turn.interrupted === true,
-    ...(correctionText ? { correctionText } : {}),
+    ...(correctionText ? { correctionText: coachFeedback?.spokenResponse ?? correctionText } : {}),
   };
 }
 

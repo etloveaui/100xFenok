@@ -12,8 +12,11 @@ export function supportedWindDownRoleplayTask(scenario: string, goal: string, te
   for (const clause of clauses) {
     if (/\b(?:do not|don't|would not|wouldn't|cannot|can't|not going to|never)\b/.test(clause)) continue;
     if (scenario === "cafe-order") {
-      const drink = /\b(?:coffee|latte|tea|espresso|cappuccino|americano|mocha|chai|juice|water|cocoa|chocolate|smoothie)\b/.exec(clause);
-      if (goal === "order" && drink && (/\b(?:i'd like|i would like|can i (?:get|have)|could i (?:get|have)|i'll have|i will have|may i have)\b/.test(clause) || /\bplease\b/.test(clause))) return clause;
+      const drink = "(?:coffee|latte|tea|espresso|cappuccino|americano|mocha|chai|juice|water|cocoa|chocolate|smoothie)";
+      const modifiers = "(?:(?:a|an|the|one|two|some|cup of|glass of|small|medium|large|hot|iced|black|green|decaf|oat|milk|vanilla)\\s+)*";
+      const request = new RegExp("\\b(?:i'd like|i would like|can i (?:get|have)|could i (?:get|have)|i'll have|i will have|may i have)\\s+" + modifiers + drink + "\\b");
+      const shortOrder = new RegExp("^(?:please[, ]+)?" + modifiers + drink + "(?:[, ]+please)?$");
+      if (goal === "order" && (request.test(clause) || (/\bplease\b/.test(clause) && shortOrder.test(clause)))) return clause;
       if (goal === "preference" && /\b(?:with (?:oat|soy|almond) milk|without ice|no ice|less sweet|decaf|not too sweet)\b/.test(clause)) return clause;
       if (goal === "close" && /^(?:(?:okay|ok|and|yes),?\s*)?(?:that's all|that will be all|thank you|thanks)\b/.test(clause)) return clause;
     } else {

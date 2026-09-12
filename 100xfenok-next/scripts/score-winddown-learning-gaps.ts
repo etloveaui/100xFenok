@@ -48,6 +48,7 @@ async function main() {
     const longerReport = buildWindDownVoiceReport({ ...report, turns: [longerTurn] });
     assert.equal(longerReport.outcome.corrections.length, 1, "signed explanations have their own bounded envelope");
     assert.ok(isWindDownVoiceReport(longerReport));
+    assert.ok(await verifyWindDownCoachFeedbacks(longerReport), "report normalization preserves signed speech bytes");
 
   });
   await check("roleplay vocabulary quotation is not an order; concise real orders count", async () => {
@@ -60,6 +61,9 @@ async function main() {
     assert.ok(evaluateWindDownRoleplay(scenario, [turn("I'd like a latte with oat milk. That's all, thank you.")]).completed);
     assert.equal(evaluateWindDownRoleplay(scenario, [turn("I would not like a coffee with oat milk. Don't say thanks.")]).completed, false);
     assert.equal(evaluateWindDownRoleplay(scenario, [turn("I'd like")]).completedGoalIds.includes("order"), false);
+    for (const text of ["I'd like to tell you about coffee.", "Please tell me about coffee.", "Can I have information about tea?"]) {
+      assert.equal(evaluateWindDownRoleplay(scenario, [turn(text)]).completedGoalIds.includes("order"), false, text);
+    }
   });
   await check("historical roleplay keeps its original policy and literal evidence", async () => {
     const { getWindDownVoiceScenario, evaluateWindDownRoleplay } = await import("../src/features/winddown/voice/product");
