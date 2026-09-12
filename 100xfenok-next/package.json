@@ -244,7 +244,7 @@
     "qa:product-flow-isolated": "bash scripts/check-product-flow-isolated.sh",
     "qa:winddown-coach-isolated": "WINDDOWN_QA_SCOPE=coach bash scripts/check-winddown-preservation-isolated.sh",
     "test:winddown-coach": "tsx scripts/score-winddown-coach.ts",
-    "test:winddown-coach-gate": "npm run test:winddown-coach && npm run test:winddown-voice && npm run test:winddown-continuity && npm run test:winddown-preservation-stage1 && node scripts/check-route-key-contract.mjs"
+    "test:winddown-coach-gate": "npm run test:winddown-coach && npm run test:winddown-review && npm run test:winddown-habit && npm run test:winddown-voice && npm run test:winddown-continuity && npm run test:winddown-preservation-stage1 && node scripts/check-route-key-contract.mjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",
