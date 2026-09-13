@@ -1,9 +1,23 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-13T11:20:45.546Z",
+  "generated_at": "2026-09-13T12:10:47.793Z",
   "status": "open",
-  "open_incident_count": 13,
+  "open_incident_count": 15,
   "open_incidents": [
+    {
+      "workflow": "data-plane-serving-probe.yml",
+      "label": "Data Plane Serving Probe",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
     {
       "workflow": "fenok-edge-krx-daily.yml",
       "label": "Fenok Edge KRX Daily Data",
@@ -21,6 +35,22 @@
       "cadence_status": "not_due"
     },
     {
+      "workflow": "fetch-edgar-filings.yml",
+      "label": "Fetch EDGAR Filing Timeline",
+      "streak": 5,
+      "failure_streak_threshold": 1,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lane_outcome_overdue"
+      ],
+      "lane_outcome_lanes": [
+        "edgar_filings"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
       "workflow": "fetch-fdic.yml",
       "label": "Fetch FDIC Tier1 Data",
       "streak": 0,
@@ -31,6 +61,22 @@
         "plane_freshness_unavailable"
       ],
       "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-fenok-apewisdom.yml",
+      "label": "Fetch Fenok ApeWisdom Attention Proxy",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lane_outcome_overdue"
+      ],
+      "lane_outcome_lanes": [
+        "apewisdom_attention"
+      ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
     },
@@ -67,6 +113,22 @@
       "cadence_status": "not_due"
     },
     {
+      "workflow": "fetch-fred-macro.yml",
+      "label": "Fetch FRED Macro Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lane_outcome_overdue"
+      ],
+      "lane_outcome_lanes": [
+        "fred_macro"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
       "workflow": "fetch-stockanalysis.yml",
       "label": "Fetch StockAnalysis Data",
       "streak": 0,
@@ -95,20 +157,6 @@
       "lane_outcome_lanes": [],
       "lost_schedule_slot_count": 0,
       "cadence_status": "overdue"
-    },
-    {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     },
     {
       "workflow": "slickcharts-daily.yml",
@@ -189,39 +237,25 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     }
   ],
   "lane_outcome_notified": {
     "finra_short_volume": "2026-09-11",
     "occ_options_volume": "2026-09-11",
     "krx": "2026-09-13",
-    "edgar_filings": "2026-09-07",
+    "edgar_filings": "2026-09-13",
     "gdelt_news_tone": "2026-09-13",
     "finra_ats_weekly": "2026-09-13",
     "oecd_cli": "2026-09-08",
     "treasury_tga": "2026-09-11",
     "slickcharts": "2026-09-13",
-    "apewisdom_attention": "2026-09-12",
+    "apewisdom_attention": "2026-09-13",
     "sentiment": "2026-09-05",
     "us_indices_daily": "2026-09-05",
     "nasdaq_giw_sox": "2026-09-05",
     "stockanalysis_etf_universe": "2026-09-13",
     "stockanalysis_etf_detail": "2026-09-07",
-    "fred_macro": "2026-09-07",
+    "fred_macro": "2026-09-13",
     "fred_yardeni": "2026-09-12"
   },
   "watched_workflows": [
@@ -458,7 +492,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 32
+      "data_freshness_age_hours_at_generation": 33
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -625,24 +659,26 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "34754107824",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34754107824",
-    "observed_at": "2026-09-13T11:20:45.546Z",
+    "run_id": "34756293607",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34756293607",
+    "observed_at": "2026-09-13T12:10:47.793Z",
     "event": "workflow_run",
     "workflows": [
+      "data-plane-serving-probe.yml",
       "fenok-edge-krx-daily.yml",
+      "fetch-edgar-filings.yml",
       "fetch-fdic.yml",
+      "fetch-fenok-apewisdom.yml",
       "fetch-fenok-news-tone.yml",
       "fetch-finra-ats-weekly.yml",
+      "fetch-fred-macro.yml",
       "fetch-stockanalysis.yml",
       "fetch-yf-finance.yml",
-      "global-writer-queue-observer.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
       "slickcharts-symbols.yml",
-      "slickcharts-weekly.yml",
-      "worker-request-budget-alarm.yml"
+      "slickcharts-weekly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
