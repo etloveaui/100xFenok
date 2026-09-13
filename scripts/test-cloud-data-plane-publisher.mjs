@@ -432,6 +432,7 @@ assert.equal(new Set(manifest.assets.map((asset) => asset.object_key)).size, 3);
 console.log("manifest build from fixture tree ok (4 assets, 3 unique objects, private, sorted)");
 
 assert.equal(FAMILIES["yahoo-finance"].reuse_active_generation, true);
+assert.equal(FAMILIES["stockanalysis-etf-detail"].reuse_active_generation, true);
 assert.notEqual(FAMILIES["oecd-cli"].reuse_active_generation, true);
 
 // --- putIfAbsent readback reduction contract --------------------------------

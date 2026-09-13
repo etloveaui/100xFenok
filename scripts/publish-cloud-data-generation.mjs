@@ -694,6 +694,7 @@ export const FAMILIES = {
     // the manifest and the family summary is the conservative MINIMUM. Missing
     // or malformed evidence fails before any write.
     source_as_of: { per_asset_resolver: "stockanalysis_detail_source_timestamp" },
+    reuse_active_generation: true,
     // Measured 2026-08-16 and re-measured at this base: 5,605 assets /
     // 1,028,334,686 bytes. Caps carry roughly 25% headroom over the measurement
     // so ordinary universe growth does not trip the gate, while a runaway set
