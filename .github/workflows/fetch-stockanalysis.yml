@@ -563,6 +563,7 @@ jobs:
               cd 100xfenok-next
               npm run build:data-supply-public
               node scripts/sync-public-data.mjs --write
+              node sync-static-overrides.mjs
               # The generic data->public copy adds and overwrites but never
               # deletes, so a ticker dropping to `unavailable` leaves its
               # public payload behind and every later directory-walking check
@@ -571,10 +572,15 @@ jobs:
               # carries the deletion instead of failing the next build.
               npm run reconcile:data-supply-public-mirror
             )
+            node scripts/refresh-cloud-data-plane-migration-demand.mjs \
+              --candidate=stockanalysis_etf_detail
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-stockanalysis.yml \
               --stage always_if_exists
-            git add -- data/computed/data-supply/etf-detail 100xfenok-next/public/data
+            git add -- \
+              data/computed/data-supply/etf-detail \
+              100xfenok-next/public/data \
+              scripts/fixtures/cloud-data-plane/etf-migration-demand.json
             if git diff --staged --quiet; then
               COMMIT_ARGS=(--allow-empty)
               COMMIT_SUBJECT="chore: record stockanalysis no-change run"

@@ -143,11 +143,18 @@ assert.match(cloudJob, /ref: \$\{\{ needs\.publish-yf-finance\.outputs\.pushed_s
 assert.match(cloudJob, /persist-credentials: false/);
 assert.match(cloudJob, /needs\.acquire-yf-finance\.result == 'success'/,
   "failed acquisition still records source evidence but cannot publish a cloud candidate");
-const failureDispatch = extractStepSpan(publishJob, "Publish failed Yahoo attempt evidence");
-assert.match(failureDispatch, /always\(\)/);
-assert.match(failureDispatch, /steps\.readback\.outputs\.confirmed == 'true'/);
-assert.doesNotMatch(failureDispatch, /needs\.publish-yf-cloud/,
+const sharedDispatch = extractStepSpan(publishJob, "Dispatch shared projection rebuild");
+assert.match(sharedDispatch, /always\(\)/);
+assert.match(sharedDispatch, /success\(\)/);
+assert.match(sharedDispatch, /needs\.acquire-yf-finance\.outputs\.fetch_outcome == 'failure'/);
+assert.match(sharedDispatch, /steps\.readback\.outputs\.confirmed == 'true'/);
+assert.doesNotMatch(sharedDispatch, /needs\.publish-yf-cloud/,
   "source failure evidence must not depend on the cloud job that the failure skips");
+assert.equal(
+  (publishJob.match(/gh workflow run update-manifest\.yml --ref main/g) ?? []).length,
+  1,
+  "the source job must dispatch one shared projection rebuild per run",
+);
 assert.match(outcomeJob, /fenok-data-writer-refs\/heads\/main/);
 assert.match(outcomeJob, /ref: \$\{\{ needs\.publish-yf-finance\.outputs\.pushed_sha \}\}/,
   "outcome merge starts at the same snapshot as publication before rebasing onto main");

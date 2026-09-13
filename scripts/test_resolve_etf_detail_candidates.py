@@ -1182,7 +1182,9 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         stage_call = "scripts/stage-lane-manifest.sh"
         build_call = "npm run build:data-supply-public"
         reconcile_call = "node scripts/sync-public-data.mjs --write"
+        overrides_call = "node sync-static-overrides.mjs"
         mirror_reconcile_call = "npm run reconcile:data-supply-public-mirror"
+        demand_refresh_call = "node scripts/refresh-cloud-data-plane-migration-demand.mjs"
         self.assertNotIn(resolve_call, workflow.split("  publish-stockanalysis:\n", 1)[0])
         self.assertIn("group: fenok-data-writer-refs/heads/main", publish)
         self.assertLess(publish.index("audit-stage"), publish.index(resolve_call))
@@ -1190,7 +1192,12 @@ class ResolveEtfDetailCandidatesTest(unittest.TestCase):
         self.assertLess(publish.index(resolve_call), post_resolver_stage)
         self.assertLess(post_resolver_stage, publish.index(build_call))
         self.assertLess(publish.index(build_call), publish.index(reconcile_call))
-        self.assertLess(publish.index(reconcile_call), publish.index(mirror_reconcile_call))
+        self.assertLess(publish.index(reconcile_call), publish.index(overrides_call))
+        self.assertLess(publish.index(overrides_call), publish.index(mirror_reconcile_call))
+        self.assertLess(publish.index(mirror_reconcile_call), publish.index(demand_refresh_call))
+        self.assertIn("--candidate=stockanalysis_etf_detail", publish)
+        self.assertIn("scripts/fixtures/cloud-data-plane/etf-migration-demand.json", publish)
+        self.assertLess(publish.index(demand_refresh_call), publish.index("git commit"))
         self.assertLess(publish.index(mirror_reconcile_call), publish.index("git commit"))
         self.assertNotIn("fetched_at", (SCRIPT_DIR / "resolve_etf_detail_candidates.py").read_text())
 
