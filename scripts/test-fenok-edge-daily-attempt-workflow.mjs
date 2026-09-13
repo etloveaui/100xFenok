@@ -116,6 +116,11 @@ assert.match(
   "computed artifacts must be manifest-staged only after a non-plan successful refresh",
 );
 assert.match(workflow, /- name: Commit and push owned source artifacts\n\s+if: \$\{\{ always\(\) \}\}/);
+assert.match(
+  workflow,
+  /- name: Publish FINRA short volume generation to the cloud data plane\n\s+id: publish_cloud_generation\n\s+if: \$\{\{ steps\.refresh_edge\.outcome == 'success' && env\.FENOK_EDGE_PLAN_ONLY != 'true' \}\}/,
+  "plan-only runs must not publish a cloud generation",
+);
 assert.doesNotMatch(workflow, /git add -A/);
 
 assert.equal(inputNames.length, 11, "workflow_dispatch must expose exactly 11 inputs");
