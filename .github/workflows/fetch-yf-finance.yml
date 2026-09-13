@@ -718,16 +718,11 @@ jobs:
           echo "confirmed=true" >> "$GITHUB_OUTPUT"
           echo "origin_readback=confirmed" >> "$GITHUB_OUTPUT"
 
-      # These dispatches stay after the source commit/readback, preserving the
-      # failed-acquisition recovery path even when cloud publication is skipped.
-      - name: Publish failed Yahoo attempt evidence
-        if: ${{ always() && env.YF_PLAN_ONLY != 'true' && (needs.acquire-yf-finance.outputs.fetch_outcome == 'failure' || needs.acquire-yf-finance.outputs.quarter_closes_outcome == 'failure') && steps.persist_yahoo_state.outcome == 'success' && steps.persist_yahoo_state.outputs.persisted == 'true' && steps.readback.outputs.confirmed == 'true' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run update-manifest.yml --ref main
-
+      # Keep the dispatch after source commit/readback. The explicit recovery
+      # branch preserves failed-attempt evidence when an earlier step failed,
+      # while the success branch covers ordinary and no-change runs.
       - name: Dispatch shared projection rebuild
-        if: ${{ env.YF_PLAN_ONLY != 'true' }}
+        if: ${{ always() && env.YF_PLAN_ONLY != 'true' && (success() || ((needs.acquire-yf-finance.outputs.fetch_outcome == 'failure' || needs.acquire-yf-finance.outputs.quarter_closes_outcome == 'failure') && steps.persist_yahoo_state.outcome == 'success' && steps.persist_yahoo_state.outputs.persisted == 'true' && steps.readback.outputs.confirmed == 'true')) }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run update-manifest.yml --ref main
