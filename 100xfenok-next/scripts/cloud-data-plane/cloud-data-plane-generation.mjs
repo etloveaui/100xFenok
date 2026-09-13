@@ -430,9 +430,116 @@ async function finalizeAdvancedPointer({
   return { pointer, receipt: promoted };
 }
 
+function validateReusableObjects(reusableObjects, manifest) {
+  if (reusableObjects === null) return new Map();
+  if (!(reusableObjects instanceof Map)) {
+    fail("PUBLISH_REUSE_INVALID", "reusableObjects must be a Map or null");
+  }
+  const manifestBytesByKey = new Map();
+  for (const asset of manifest.assets) {
+    const prior = manifestBytesByKey.get(asset.object_key);
+    if (prior !== undefined && prior !== asset.bytes) {
+      fail("PUBLISH_REUSE_INVALID", `${asset.object_key} has inconsistent manifest lengths`);
+    }
+    manifestBytesByKey.set(asset.object_key, asset.bytes);
+  }
+  const validated = new Map();
+  for (const [key, bytes] of reusableObjects) {
+    if (!manifestBytesByKey.has(key)) {
+      fail("PUBLISH_REUSE_INVALID", `${key} is not a payload object in the manifest`);
+    }
+    if (!Number.isInteger(bytes) || bytes < 0 || manifestBytesByKey.get(key) !== bytes) {
+      fail("PUBLISH_REUSE_INVALID", `${key} byte length does not match the manifest`);
+    }
+    validated.set(key, bytes);
+  }
+  return validated;
+}
+
+// Reuse is derived inside the shared contract so a caller cannot skip remote
+// objects by supplying an arbitrary key/length map. Every object outside this
+// proof is byte-compared or written and read back before pointer promotion, so
+// a promoted generation never depends on a later payload-parity step.
+export async function planActiveGenerationReuse({ pointer, manifest, objectStore }) {
+  validateGenerationManifest(manifest);
+  if (!pointer) return new Map();
+  validateActivePointer(pointer);
+  const basis = pointer.active;
+  const basisManifestBytes = await objectStore.get(basis.manifest_key);
+  if (
+    !(basisManifestBytes instanceof Uint8Array)
+    || sha256Bytes(basisManifestBytes) !== basis.manifest_sha256
+  ) {
+    fail("REUSE_BASIS_MANIFEST_INTEGRITY", basis.manifest_key);
+  }
+  let basisManifest;
+  try {
+    basisManifest = JSON.parse(new TextDecoder().decode(basisManifestBytes));
+  } catch {
+    fail("REUSE_BASIS_MANIFEST_INTEGRITY", basis.manifest_key);
+  }
+  const basisSummary = validateGenerationManifest(basisManifest);
+  if (
+    basisSummary.generation_id !== basis.generation_id
+    || basisSummary.manifest_sha256 !== basis.manifest_sha256
+    || (basis === pointer.active && basisManifest.source_sha !== pointer.source_sha)
+  ) {
+    fail("REUSE_BASIS_MANIFEST_CROSS_BIND", basis.manifest_key);
+  }
+  const basisBytesByKey = new Map(
+    basisManifest.assets.map((asset) => [asset.object_key, asset.bytes]),
+  );
+  const listedBytesByKey = new Map();
+  for (const entry of await objectStore.list()) {
+    listedBytesByKey.set(entry.key, entry.bytes);
+  }
+  const reusableObjects = new Map();
+  for (const asset of manifest.assets) {
+    if (
+      basisBytesByKey.get(asset.object_key) === asset.bytes
+      && listedBytesByKey.get(asset.object_key) === asset.bytes
+    ) {
+      reusableObjects.set(asset.object_key, asset.bytes);
+    }
+  }
+  return reusableObjects;
+}
+
+function publicationVerification(manifest, reusableObjects, resumed = false) {
+  if (resumed) {
+    const reusedAssets = manifest.assets
+      .filter((asset) => reusableObjects.has(asset.object_key)).length;
+    return {
+      verifiedObjects: new Map(reusableObjects),
+      body_verified_assets: 0,
+      body_verified_objects: 0,
+      reused_assets: reusedAssets,
+      reused_objects: reusableObjects.size,
+    };
+  }
+  const verifiedObjects = new Map(
+    manifest.assets.map((asset) => [asset.object_key, asset.bytes]),
+  );
+  const reusedAssets = manifest.assets
+    .filter((asset) => reusableObjects.has(asset.object_key)).length;
+  const bodyVerifiedObjects = new Set(
+    manifest.assets
+      .filter((asset) => !reusableObjects.has(asset.object_key))
+      .map((asset) => asset.object_key),
+  ).size;
+  return {
+    verifiedObjects,
+    body_verified_assets: manifest.assets.length - reusedAssets,
+    body_verified_objects: bodyVerifiedObjects,
+    reused_assets: reusedAssets,
+    reused_objects: reusableObjects.size,
+  };
+}
+
 export async function publishGeneration({
   manifest,
   payloads,
+  reuseActiveGeneration = false,
   expectedPointerSequence,
   objectStore,
   ledger,
@@ -450,6 +557,9 @@ export async function publishGeneration({
   validatePublicationPolicy(policy, summary);
   nonnegativeInteger(expectedPointerSequence, "expectedPointerSequence");
   if (!(payloads instanceof Map)) fail("PUBLISH_INPUT_INVALID", "payloads must be a Map");
+  if (typeof reuseActiveGeneration !== "boolean") {
+    fail("PUBLISH_REUSE_INVALID", "reuseActiveGeneration must be boolean");
+  }
   const id = safeId(
     receiptId ?? deterministicReceiptId("publish", summary.manifest_sha256, expectedPointerSequence),
     "publication receipt id",
@@ -462,7 +572,15 @@ export async function publishGeneration({
     ledger,
     pointerStore,
   });
-  if (recovered) return recovered;
+  if (recovered) {
+    const reusableObjects = reuseActiveGeneration
+      ? await planActiveGenerationReuse({ pointer: recovered.pointer, manifest, objectStore })
+      : null;
+    const verification = reuseActiveGeneration
+      ? publicationVerification(manifest, reusableObjects, true)
+      : null;
+    return { ...recovered, summary, reusableObjects, verification };
+  }
   const currentPointer = await pointerStore.get();
   if ((currentPointer?.sequence ?? 0) !== expectedPointerSequence) {
     fail("STALE_WRITER", `expected pointer sequence ${expectedPointerSequence}`);
@@ -486,13 +604,20 @@ export async function publishGeneration({
     }
   }
 
+  const reusableObjects = reuseActiveGeneration
+    ? await planActiveGenerationReuse({ pointer: currentPointer, manifest, objectStore })
+    : null;
+  const validatedReusableObjects = validateReusableObjects(reusableObjects, manifest);
+
   const manifestBytes = new TextEncoder().encode(canonicalJson(manifest));
   const immutableObjectsByKey = new Map([
-    ...manifest.assets.map((asset) => ({
-      key: asset.object_key,
-      bytes: payloads.get(asset.path),
-      sha256: asset.sha256,
-    })),
+    ...manifest.assets
+      .filter((asset) => !validatedReusableObjects.has(asset.object_key))
+      .map((asset) => ({
+        key: asset.object_key,
+        bytes: payloads.get(asset.path),
+        sha256: asset.sha256,
+      })),
     {
       key: `manifests/${manifest.generation_id}.json`,
       bytes: manifestBytes,
@@ -504,8 +629,9 @@ export async function publishGeneration({
   // content-addressed object already exists byte-identically, the existence
   // path itself proved immutability, so the caller's immediate readback would
   // be a redundant GET and is skipped. A newly written object (or an adapter
-  // that returns no result) still gets the immediate readback, and the final
-  // post-promotion parity GET below stays mandatory for every asset.
+  // that returns no result) still gets the immediate readback. Callers may
+  // omit only objects backed by a validated active-generation presence and
+  // length proof; final parity body-checks every object outside that proof.
   await runBoundedAsyncPool(immutableObjectsByKey.values(), async (object) => {
     const outcome = await objectStore.putIfAbsent(object.key, object.bytes);
     if (outcome?.alreadyPresent !== true) {
@@ -561,7 +687,10 @@ export async function publishGeneration({
   };
   validatePublicationReceipt(promoted);
   await ledger.markPromoted(promoted);
-  return { pointer: nextPointer, receipt: promoted, summary };
+  const verification = reuseActiveGeneration
+    ? publicationVerification(manifest, validatedReusableObjects)
+    : null;
+  return { pointer: nextPointer, receipt: promoted, summary, reusableObjects, verification };
 }
 
 export async function rollbackGeneration({

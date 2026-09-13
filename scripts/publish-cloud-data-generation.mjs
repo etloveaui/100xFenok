@@ -9,8 +9,10 @@
 //      at least 2x the real ones. Exit 2 from the gate stops everything.
 //   3. publishGeneration with expectedPointerSequence read from the live
 //      pointer (see resolveExpectedPointerSequence for the resume case).
-//   4. Byte-parity verification resolved through the pointer ourselves
-//      (resolvePublicAsset is unusable here: these assets are private).
+//   4. Active-generation parity resolved through the pointer ourselves: full
+//      byte parity by default, or body parity for objects outside an explicit
+//      active-manifest/listing proof (resolvePublicAsset is unusable here:
+//      these assets are private).
 //   5. One JSON summary line on stdout.
 //
 // Publish-outcome evidence (2026-08-10 contract): after every REAL per-family
@@ -122,6 +124,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   GENERATION_MANIFEST_SCHEMA,
+  planActiveGenerationReuse,
   publishGeneration,
   rollbackGeneration,
   runBoundedAsyncPool,
@@ -130,6 +133,7 @@ import {
   validateGenerationManifest,
   validatePublicationReceipt,
 } from "./lib/cloud-data-plane-generation.mjs";
+export { planActiveGenerationReuse };
 import { buildCandidateScope } from "./lib/cloud-data-plane-candidate-scope.mjs";
 import { PLANE_PUBLISH_OUTCOME_BINDINGS, PLANE_PUBLISHER_EXCEPTIONS } from "./lib/lane-registry.mjs";
 import { classifyPreparedReceipts } from "./lib/cloud-data-plane-prepared-receipt-lifecycle.mjs";
@@ -382,7 +386,7 @@ export const FAMILIES = {
     privacy_class: "private",
     // The lane's LKG state index records when the family data was acquired.
     source_as_of: { file: "index.json", key: "updated_at" },
-    // Gate declaration: >= 2x the measured 4 PutObject / 592,561 bytes.
+    // Gate declaration: >= 2x the measured 5 PutObject / 597,283 bytes.
     plan: { class_a: 40, bytes: 1_200_000 },
     policy: { max_assets: 64, max_total_bytes: 16_000_000 },
   },
@@ -726,6 +730,7 @@ export const FAMILIES = {
     reader_enrollment: false,
     privacy_class: "public",
     source_as_of: { per_asset_resolver: "yahoo_finance_source_timestamp" },
+    reuse_active_generation: true,
     // Measured 2026-08-24: 6,579 tracked payloads / about 326 MB. Plans retain
     // at least 2x write/byte headroom; policy leaves bounded universe growth.
     plan: { class_a: 14_000, class_b: 40_000, bytes: 700_000_000 },
@@ -2035,9 +2040,33 @@ export function classifyResultLine(line) {
   return { healthy: true, result, reason: "ok" };
 }
 
-// Exit evidence: resolve the active generation through the pointer and compare
-// every asset byte-for-byte against the files read from disk.
-export async function verifyGenerationParity({ pointerStore, objectStore, payloads, onProgress = null }) {
+function validateParityProof(verifiedObjects, manifest) {
+  if (verifiedObjects === null) return null;
+  if (!(verifiedObjects instanceof Map)) {
+    fail("PARITY_PROOF_INVALID", "verifiedObjects must be a Map or null");
+  }
+  const manifestBytesByKey = new Map(
+    manifest.assets.map((asset) => [asset.object_key, asset.bytes]),
+  );
+  for (const [key, bytes] of verifiedObjects) {
+    if (!manifestBytesByKey.has(key) || manifestBytesByKey.get(key) !== bytes) {
+      fail("PARITY_PROOF_INVALID", key);
+    }
+  }
+  return verifiedObjects;
+}
+
+// Exit evidence: resolve the active generation through the pointer. The
+// default path retains full byte parity. An explicit pre-promotion proof from
+// publishGeneration permits the post-CAS gate to verify pointer/manifest
+// activation without downloading payload bodies again.
+export async function verifyGenerationParity({
+  pointerStore,
+  objectStore,
+  payloads,
+  verifiedObjects = null,
+  onProgress = null,
+}) {
   const pointer = await pointerStore.get();
   if (!pointer) fail("PARITY_POINTER_MISSING", "no active pointer after publish");
   const manifestBytes = await objectStore.get(pointer.active.manifest_key);
@@ -2056,10 +2085,39 @@ export async function verifyGenerationParity({ pointerStore, objectStore, payloa
   ) {
     fail("PARITY_MANIFEST_CROSS_BIND", pointer.active.manifest_key);
   }
+  const validatedProof = validateParityProof(verifiedObjects, manifest);
   let bytes = 0;
   let checked = 0;
   const total = manifest.assets.length;
-  await runBoundedAsyncPool(manifest.assets, async (asset) => {
+  const assetsByObjectKey = new Map();
+  const remoteGroups = [];
+  let reusedAssets = 0;
+  for (const asset of manifest.assets) {
+    const local = payloads.get(asset.path);
+    if (
+      !(local instanceof Uint8Array)
+      || local.byteLength !== asset.bytes
+      || sha256Bytes(local) !== asset.sha256
+    ) {
+      fail("PARITY_ASSET_MISMATCH", asset.path);
+    }
+    bytes += asset.bytes;
+    if (validatedProof?.has(asset.object_key)) {
+      reusedAssets += 1;
+      continue;
+    }
+    if (validatedProof === null) {
+      remoteGroups.push([asset]);
+    } else {
+      const grouped = assetsByObjectKey.get(asset.object_key) ?? [];
+      grouped.push(asset);
+      assetsByObjectKey.set(asset.object_key, grouped);
+    }
+  }
+  if (validatedProof !== null) remoteGroups.push(...assetsByObjectKey.values());
+  checked = reusedAssets;
+  await runBoundedAsyncPool(remoteGroups, async (assets) => {
+    const asset = assets[0];
     const stored = await objectStore.get(asset.object_key);
     if (
       !(stored instanceof Uint8Array)
@@ -2068,22 +2126,30 @@ export async function verifyGenerationParity({ pointerStore, objectStore, payloa
     ) {
       fail("PARITY_ASSET_INTEGRITY", asset.path);
     }
-    const local = payloads.get(asset.path);
-    if (
-      !(local instanceof Uint8Array)
-      || local.byteLength !== stored.byteLength
-      || !stored.every((byte, index) => byte === local[index])
-    ) {
-      fail("PARITY_ASSET_MISMATCH", asset.path);
+    for (const groupedAsset of assets) {
+      const local = payloads.get(groupedAsset.path);
+      if (
+        local.byteLength !== stored.byteLength
+        || !stored.every((byte, index) => byte === local[index])
+      ) {
+        fail("PARITY_ASSET_MISMATCH", groupedAsset.path);
+      }
     }
-    bytes += stored.byteLength;
     if (onProgress) {
-      checked += 1;
+      checked += assets.length;
       if (checked % 500 === 0) onProgress({ done: checked, total });
     }
   });
   if (onProgress) onProgress({ done: checked, total });
-  return { assets: manifest.assets.length, bytes, pointer };
+  return {
+    assets: manifest.assets.length,
+    bytes,
+    pointer,
+    body_verified_assets: manifest.assets.length - reusedAssets,
+    body_verified_objects: remoteGroups.length,
+    reused_assets: reusedAssets,
+    reused_objects: validatedProof?.size ?? 0,
+  };
 }
 
 // planClassB is required rather than optional-with-a-guess. The gate script has
@@ -2904,11 +2970,14 @@ export async function runPublisherCli({
     let published;
     try {
       const publishStartedAt = Date.now();
-      const publishTotal = resolved.manifest.assets.length + 1;
-      evidenceLog(`publish start: family=${args.family} generation=${manifest.generation_id} objects=${publishTotal}`);
+      evidenceLog(
+        `publish start: family=${args.family} generation=${manifest.generation_id}`
+        + ` max_objects=${plan.unique_object_keys}`,
+      );
       published = await publishGeneration({
         manifest: resolved.manifest,
         payloads,
+        reuseActiveGeneration: family.reuse_active_generation === true,
         expectedPointerSequence: expectedForPublish,
         objectStore: plane.objectStore,
         ledger: plane.ledger,
@@ -2961,6 +3030,12 @@ export async function runPublisherCli({
       }
       throw error;
     }
+    const reusableObjects = published.reusableObjects;
+    if (reusableObjects !== null) {
+      evidenceLog(
+        `reuse plan: family=${args.family} reusable_objects=${reusableObjects.size}`,
+      );
+    }
     // Drift guard (only reached on a successful publish): the receipt id the
     // contract actually returned must equal our deterministic mirror of its
     // format. A mismatch means the contract's format changed and crash-retry
@@ -2983,12 +3058,31 @@ export async function runPublisherCli({
       pointerStore: plane.pointerStore,
       objectStore: plane.objectStore,
       payloads,
+      verifiedObjects: published.verification?.verifiedObjects ?? null,
       onProgress: ({ done, total }) => evidenceLog(
         `parity progress: family=${args.family} ${done}/${total} elapsed_ms=${Date.now() - parityStartedAt}`,
       ),
     });
-    evidenceLog(`parity done: family=${args.family} assets=${parity.assets} elapsed_ms=${Date.now() - parityStartedAt}`);
-    log(`byte parity ok: ${parity.assets}/${parity.assets} assets, ${parity.bytes} bytes`);
+    const verificationStats = published.verification
+      ? {
+        ...published.verification,
+        body_verified_assets: published.verification.body_verified_assets
+          + parity.body_verified_assets,
+        body_verified_objects: published.verification.body_verified_objects
+          + parity.body_verified_objects,
+      }
+      : parity;
+    evidenceLog(
+      `parity done: family=${args.family} assets=${parity.assets}`
+      + ` body_verified=${verificationStats.body_verified_assets}`
+      + ` reused=${verificationStats.reused_assets}`
+      + ` elapsed_ms=${Date.now() - parityStartedAt}`,
+    );
+    log(
+      `parity ok: ${parity.assets}/${parity.assets} assets, ${parity.bytes} bytes`
+      + ` (${verificationStats.body_verified_assets} body-verified,`
+      + ` ${verificationStats.reused_assets} reused)`,
+    );
 
     // 5. Gate again after the write batch, then the single JSON summary line.
     const gateAfter = await runCostGateImpl({ planClassA: 0, planClassB: 0, planBytes: 0, env });
@@ -3011,6 +3105,10 @@ export async function runPublisherCli({
       objects_written: publishPlane.objectsWritten(),
       objects_already_present: plan.unique_object_keys - publishPlane.objectsWritten(),
       parity: "ok",
+      parity_body_verified_assets: verificationStats.body_verified_assets,
+      parity_body_verified_objects: verificationStats.body_verified_objects,
+      parity_reused_assets: verificationStats.reused_assets,
+      parity_reused_objects: verificationStats.reused_objects,
       gate_before: gateVerdict(gateBefore),
       gate_after: gateVerdict(gateAfter),
       outcome_shard: shardSummary(outcomeShard),

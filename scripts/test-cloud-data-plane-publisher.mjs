@@ -26,6 +26,7 @@ import {
   createMemoryCloudDataPlane,
   publishGeneration,
   resolvePublicAsset,
+  sha256Bytes,
   sha256Canonical,
   validateGenerationManifest,
 } from "./lib/cloud-data-plane-generation.mjs";
@@ -49,6 +50,7 @@ import {
   FAMILIES,
   generationSemanticFingerprint,
   listR2ObjectsDetailed,
+  planActiveGenerationReuse,
   recordPublishOutcome,
   resolveExpectedPointerSequence,
   assertPublicationAuthorization,
@@ -429,6 +431,9 @@ assert.ok(manifest.assets.every((asset) => asset.privacy_class === "private"));
 assert.equal(new Set(manifest.assets.map((asset) => asset.object_key)).size, 3);
 console.log("manifest build from fixture tree ok (4 assets, 3 unique objects, private, sorted)");
 
+assert.equal(FAMILIES["yahoo-finance"].reuse_active_generation, true);
+assert.notEqual(FAMILIES["oecd-cli"].reuse_active_generation, true);
+
 // --- putIfAbsent readback reduction contract --------------------------------
 {
   const immutableObjectCount = new Set(manifest.assets.map((asset) => asset.object_key)).size + 1;
@@ -507,6 +512,201 @@ console.log("manifest build from fixture tree ok (4 assets, 3 unique objects, pr
   console.log(
     "putIfAbsent readback reduction ok (write readback kept + corruption detected; already-present skips only the immediate readback; pointer/asset parity kept)",
   );
+}
+
+// Active-generation reuse proves unchanged content through the validated live
+// manifest plus one listing. Changed content is read back before pointer CAS;
+// post-CAS parity checks activation without downloading payload bodies again.
+// A missing or wrong-length listing entry is never admitted as reusable.
+{
+  const deltaPlane = createMemoryCloudDataPlane();
+  await publishGeneration({
+    manifest,
+    payloads,
+    expectedPointerSequence: 0,
+    objectStore: deltaPlane.objectStore,
+    ledger: deltaPlane.ledger,
+    pointerStore: deltaPlane.pointerStore,
+    policy: POLICY,
+    now: () => NOW_1,
+  });
+  const deltaManifest = structuredClone(manifest);
+  deltaManifest.generation_id = "oecd-cli-delta";
+  deltaManifest.created_at = NOW_2;
+  const changedAsset = deltaManifest.assets.find((asset) => asset.path.endsWith("index.json"));
+  const changedBytes = encoder.encode("{\"fixture\":\"index-delta\"}\n");
+  changedAsset.bytes = changedBytes.byteLength;
+  changedAsset.sha256 = sha256Bytes(changedBytes);
+  changedAsset.object_key = `objects/sha256/${changedAsset.sha256}`;
+  deltaManifest.source_sha = sha256Canonical(
+    deltaManifest.assets.map((asset) => [asset.path, asset.sha256]),
+  );
+  const deltaPayloads = new Map(payloads);
+  deltaPayloads.set(changedAsset.path, changedBytes);
+  const livePointer = await deltaPlane.pointerStore.get();
+  const reusableObjects = await planActiveGenerationReuse({
+    pointer: livePointer,
+    manifest: deltaManifest,
+    objectStore: deltaPlane.objectStore,
+  });
+  const unchangedAssets = deltaManifest.assets.filter((asset) => asset.object_key !== changedAsset.object_key);
+  assert.ok(unchangedAssets.every((asset) => reusableObjects.get(asset.object_key) === asset.bytes));
+  assert.equal(reusableObjects.has(changedAsset.object_key), false);
+
+  const missingKey = unchangedAssets[0].object_key;
+  const missingPlan = await planActiveGenerationReuse({
+    pointer: livePointer,
+    manifest: deltaManifest,
+    objectStore: {
+      ...deltaPlane.objectStore,
+      async list() {
+        return (await deltaPlane.objectStore.list()).filter((entry) => entry.key !== missingKey);
+      },
+    },
+  });
+  assert.equal(missingPlan.has(missingKey), false);
+  const wrongLengthPlan = await planActiveGenerationReuse({
+    pointer: livePointer,
+    manifest: deltaManifest,
+    objectStore: {
+      ...deltaPlane.objectStore,
+      async list() {
+        return (await deltaPlane.objectStore.list())
+          .map((entry) => (entry.key === missingKey ? { ...entry, bytes: entry.bytes - 1 } : entry));
+      },
+    },
+  });
+  assert.equal(wrongLengthPlan.has(missingKey), false);
+
+  const corruptPublishPlane = createMemoryCloudDataPlane();
+  await publishGeneration({
+    manifest,
+    payloads,
+    expectedPointerSequence: 0,
+    objectStore: corruptPublishPlane.objectStore,
+    ledger: corruptPublishPlane.ledger,
+    pointerStore: corruptPublishPlane.pointerStore,
+    policy: POLICY,
+    now: () => NOW_1,
+  });
+  await assertRejectsCode(
+    publishGeneration({
+      manifest: deltaManifest,
+      payloads: deltaPayloads,
+      reuseActiveGeneration: true,
+      expectedPointerSequence: 1,
+      objectStore: {
+        ...corruptPublishPlane.objectStore,
+        async get(key) {
+          const stored = await corruptPublishPlane.objectStore.get(key);
+          if (key !== changedAsset.object_key || stored === null) return stored;
+          const corrupted = new Uint8Array(stored);
+          corrupted[0] ^= 0xff;
+          return corrupted;
+        },
+      },
+      ledger: corruptPublishPlane.ledger,
+      pointerStore: corruptPublishPlane.pointerStore,
+      policy: POLICY,
+      now: () => NOW_2,
+    }),
+    "OBJECT_READBACK_INVALID",
+  );
+  assert.equal((await corruptPublishPlane.pointerStore.get()).sequence, 1);
+
+  const deltaPublished = await publishGeneration({
+    manifest: deltaManifest,
+    payloads: deltaPayloads,
+    reuseActiveGeneration: true,
+    expectedPointerSequence: 1,
+    objectStore: deltaPlane.objectStore,
+    ledger: deltaPlane.ledger,
+    pointerStore: deltaPlane.pointerStore,
+    policy: POLICY,
+    now: () => NOW_2,
+  });
+  assert.deepEqual(deltaPublished.reusableObjects, reusableObjects);
+  assert.equal(deltaPublished.verification.body_verified_assets, 1);
+  assert.equal(deltaPublished.verification.reused_assets, deltaManifest.assets.length - 1);
+  const parityGets = [];
+  const parityStore = {
+    ...deltaPlane.objectStore,
+    async get(key) {
+      parityGets.push(key);
+      return deltaPlane.objectStore.get(key);
+    },
+  };
+  const parity = await verifyGenerationParity({
+    pointerStore: deltaPlane.pointerStore,
+    objectStore: parityStore,
+    payloads: deltaPayloads,
+    verifiedObjects: deltaPublished.verification.verifiedObjects,
+  });
+  assert.deepEqual(
+    new Set(parityGets),
+    new Set([`manifests/${deltaManifest.generation_id}.json`]),
+  );
+  assert.equal(parity.body_verified_assets, 0);
+  assert.equal(parity.reused_assets, deltaManifest.assets.length);
+
+  const resumeStore = (mode) => ({
+    ...deltaPlane.objectStore,
+    async get(key) {
+      if (mode === "missing" && key === changedAsset.object_key) return null;
+      return deltaPlane.objectStore.get(key);
+    },
+    async list() {
+      return (await deltaPlane.objectStore.list())
+        .filter((entry) => mode !== "missing" || entry.key !== changedAsset.object_key)
+        .map((entry) => (
+          mode === "wrong-length" && entry.key === changedAsset.object_key
+            ? { ...entry, bytes: entry.bytes - 1 }
+            : entry
+        ));
+    },
+  });
+
+  const missingResume = await publishGeneration({
+    manifest: deltaManifest,
+    payloads: deltaPayloads,
+    reuseActiveGeneration: true,
+    expectedPointerSequence: 1,
+    objectStore: resumeStore("missing"),
+    ledger: deltaPlane.ledger,
+    pointerStore: deltaPlane.pointerStore,
+    policy: POLICY,
+    now: () => NOW_2,
+  });
+  assert.equal(missingResume.verification.verifiedObjects.has(changedAsset.object_key), false);
+  await assertRejectsCode(
+    verifyGenerationParity({
+      pointerStore: deltaPlane.pointerStore,
+      objectStore: resumeStore("missing"),
+      payloads: deltaPayloads,
+      verifiedObjects: missingResume.verification.verifiedObjects,
+    }),
+    "PARITY_ASSET_INTEGRITY",
+  );
+
+  const wrongLengthResume = await publishGeneration({
+    manifest: deltaManifest,
+    payloads: deltaPayloads,
+    reuseActiveGeneration: true,
+    expectedPointerSequence: 1,
+    objectStore: resumeStore("wrong-length"),
+    ledger: deltaPlane.ledger,
+    pointerStore: deltaPlane.pointerStore,
+    policy: POLICY,
+    now: () => NOW_2,
+  });
+  assert.equal(wrongLengthResume.verification.verifiedObjects.has(changedAsset.object_key), false);
+  const wrongLengthParity = await verifyGenerationParity({
+    pointerStore: deltaPlane.pointerStore,
+    objectStore: resumeStore("wrong-length"),
+    payloads: deltaPayloads,
+    verifiedObjects: wrongLengthResume.verification.verifiedObjects,
+  });
+  assert.equal(wrongLengthParity.body_verified_assets, 1);
 }
 
 // Final parity asset reads use the same bounded pool. Deferred reads make the
@@ -2958,9 +3158,9 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.match(summary.generation_id, /^oecd-cli-[0-9a-f]{16}$/);
   // Spec-measured facts for the real oecd-cli family.
   assert.equal(summary.assets, 4);
-  assert.equal(summary.total_bytes, 592_561);
-  assert.equal(summary.unique_object_keys, 4); // 3 unique objects + 1 manifest
-  assert.equal(summary.objects_deduped, 1);
+  assert.equal(summary.total_bytes, 597_283);
+  assert.equal(summary.unique_object_keys, 5); // 4 unique objects + 1 manifest
+  assert.equal(summary.objects_deduped, 0);
 
   const refused = await runCli([]);
   assert.equal(refused.code, 3);

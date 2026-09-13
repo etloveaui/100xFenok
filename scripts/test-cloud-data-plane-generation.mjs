@@ -107,6 +107,79 @@ assert.equal(first.pointer.previous, null);
 assert.equal(first.receipt.state, "promoted");
 assert.equal(first.receipt.operation, "publish");
 
+// The shared contract derives reuse from its current pointer, active manifest,
+// and listing. A caller cannot inject object claims; the new payload and
+// manifest still use the normal put/readback path.
+{
+  const reuseValues = {
+    "public/data/reused.json": "{\"value\":1}\n",
+    "public/data/changed.json": "{\"value\":2}\n",
+  };
+  const reuseManifest = buildManifest("generation-reuse", [
+    { path: "public/data/reused.json", text: reuseValues["public/data/reused.json"] },
+    { path: "public/data/changed.json", text: reuseValues["public/data/changed.json"] },
+  ]);
+  const reusedAsset = reuseManifest.assets.find((asset) => asset.path.endsWith("reused.json"));
+  const changedAsset = reuseManifest.assets.find((asset) => asset.path.endsWith("changed.json"));
+  const reusePlane = createMemoryCloudDataPlane();
+  const basisManifest = buildManifest("generation-basis", [
+    { path: reusedAsset.path, text: reuseValues[reusedAsset.path] },
+  ]);
+  await publishGeneration({
+    manifest: basisManifest,
+    payloads: payloadMap(basisManifest, reuseValues),
+    expectedPointerSequence: 0,
+    objectStore: reusePlane.objectStore,
+    ledger: reusePlane.ledger,
+    pointerStore: reusePlane.pointerStore,
+    policy: PUBLICATION_POLICY,
+    now: () => NOW,
+  });
+  const putKeys = [];
+  const countingStore = {
+    ...reusePlane.objectStore,
+    async putIfAbsent(key, bytes) {
+      putKeys.push(key);
+      return reusePlane.objectStore.putIfAbsent(key, bytes);
+    },
+  };
+  const reused = await publishGeneration({
+    manifest: reuseManifest,
+    payloads: payloadMap(reuseManifest, reuseValues),
+    reuseActiveGeneration: true,
+    expectedPointerSequence: 1,
+    objectStore: countingStore,
+    ledger: reusePlane.ledger,
+    pointerStore: reusePlane.pointerStore,
+    policy: PUBLICATION_POLICY,
+    now: () => NOW,
+  });
+  assert.deepEqual(
+    new Set(putKeys),
+    new Set([changedAsset.object_key, `manifests/${reuseManifest.generation_id}.json`]),
+  );
+  assert.equal(reused.reusableObjects.get(reusedAsset.object_key), reusedAsset.bytes);
+  assert.equal(reused.verification.body_verified_assets, 1);
+  assert.equal(reused.verification.reused_assets, 1);
+
+  const invalidPlane = createMemoryCloudDataPlane();
+  await assert.rejects(
+    publishGeneration({
+      manifest: reuseManifest,
+      payloads: payloadMap(reuseManifest, reuseValues),
+      reuseActiveGeneration: "yes",
+      expectedPointerSequence: 0,
+      objectStore: invalidPlane.objectStore,
+      ledger: invalidPlane.ledger,
+      pointerStore: invalidPlane.pointerStore,
+      policy: PUBLICATION_POLICY,
+      now: () => NOW,
+    }),
+    /PUBLISH_REUSE_INVALID/,
+  );
+  assert.equal(await invalidPlane.pointerStore.get(), null);
+}
+
 // Remote immutable publication uses a deterministic bounded pool: eight
 // deferred puts start, then the remaining two start only after capacity is
 // released. This proves overlap without allowing an unbounded fan-out.
