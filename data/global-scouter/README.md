@@ -11,7 +11,7 @@
 
 Stock screening, ETF benchmarks, economic indicators, and source-sheet raw tables exported from Global Scouter tool.
 
-### Berkshire source correction (2026-09-04 snapshot)
+### Berkshire source correction (validated 2026-09-04 and 2026-09-11 snapshots)
 
 Structured Berkshire B history normalizes duplicated A-class EPS, BPS, CPS and SPS
 using the official 1:1,500 economic share ratio. Historical price multiples and
@@ -23,12 +23,12 @@ The 2021–2025 normalized EPS values agree with the rounded Class B figures in 
 [2023 annual report](https://www.berkshirehathaway.com/2023ar/2023ar.pdf) and
 [2025 annual report](https://www.berkshirehathaway.com/2025ar/2025ar.pdf).
 
-For both Berkshire classes, the September 4 consensus observation is aligned to
+For both Berkshire classes, each validated snapshot's latest consensus observation is aligned to
 the detail sheet's explicit 2026, 2027 and 2028 annual estimate columns. This
 replaces the summary sheet's misplaced actual/forecast values; it does not turn
 historical earnings into a forecast. Correction provenance accompanies the
-structured data. The override is bounded to this source snapshot and validated
-source evidence; it must not silently normalize a future supplier release.
+structured data. The override is bounded to the two exact source fingerprints and
+validated source evidence; it must not silently normalize a future supplier release.
 
 ## Structure
 
@@ -50,7 +50,7 @@ global-scouter/
 ├── etfs/                    # v2.1.0
 │   └── index.json           # ETF/Index data (22 items)
 ├── indicators/              # v2.1.0
-│   └── economic.json        # Economic indicators (1,076 records)
+│   └── economic.json        # Economic indicators (1,077 records)
 ├── raw/                     # v2.3.0
     ├── manifest.json        # Raw layer file catalog
     ├── companies_a_company.json
@@ -148,13 +148,13 @@ series exists, and never restores a rejected value from raw consensus.
 | File | Count | Description |
 |------|-------|-------------|
 | `raw/companies_a_company.json` | 1,066 | A_Company 52-column raw table |
-| `raw/company_master_m_company.json` | 5,763 | M_Company master universe table |
+| `raw/company_master_m_company.json` | 5,758 | M_Company master universe table |
 | `raw/eps_consensus_t_eps_c.json` | 1,066 | T_EPS C weekly consensus raw table |
 | `raw/growth_consensus_t_growth_c.json` | 1,066 | T_Growth C raw table |
 | `raw/valuation_s_valuation.json` | 46 | S_Valuation PER/PBR/growth raw rows |
 | `raw/etfs_m_etfs.json` | 22 | M_ETFs raw table |
 | `raw/etfs_a_etfs.json` | 303 | A_ETFs 160-column raw table |
-| `raw/workbook_inventory.json` | 1,348 sheets | Workbook sheet inventory and categories |
+| `raw/workbook_inventory.json` | 1,349 sheets | Workbook sheet inventory and categories |
 
 ### etfs/index.json (v2.1.0)
 
@@ -179,7 +179,7 @@ series exists, and never restores a rejected value from raw consensus.
 
 ```json
 {
-  "count": 1076,
+  "count": 1077,
   "records": [
     {
       "date": "2026-01-02",
@@ -219,6 +219,7 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 2.4.0 | 2026-09-13 | Weekly refresh (2026-09-11 source): 1,066 stocks with the same canonical ticker set, 1,077 economic observations, 22 ETFs and 1,047 PER-band profiles. The recurring Berkshire B historical unit anomaly is normalized only for the exact validated workbook fingerprint; raw source values remain preserved. Derived indexes follow the existing hosted refresh chain. |
 | 2.4.0 | 2026-09-06 | Weekly refresh (2026-09-04 source): 1,066 stocks, unchanged canonical identities; 1,076 economic observations including the formerly skipped latest row; 22 ETFs; PER bands 98.2% (1,047). Berkshire source names BRKA/BRKB retain canonical BRK.A/BRK.B and original raw spellings. Derived indexes follow the existing hosted refresh chain. |
 | 2.4.0 | 2026-08-30 | Weekly data refresh (2026-08-28 source): 1,066 stocks (0 net, same ticker set), 1,074 indicators (+1), 22 ETFs, per_bands 98.2% (1,047), 9 raw files; downstream analyzer and revision artifacts follow the existing hosted rebuild path. |
 | 2.4.0 | 2026-08-23 | Weekly data refresh (2026-08-21 source): 1,066 stocks (0 net, same ticker set), 1,073 indicators (+1), 22 ETFs, per_bands 98.2% (1,047), 9 raw files; rebuilt stocks_analyzer/per_bands_index/slick_index and revision_movers (up 12/down 12). |
@@ -257,4 +258,4 @@ const indicators = await fetch(`${BASE}/indicators/economic.json`).then(r => r.j
 
 ---
 
-*Last Updated: 2026-09-06*
+*Last Updated: 2026-09-13*

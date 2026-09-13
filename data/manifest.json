@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-09-12",
+  "last_updated": "2026-09-13",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -34,12 +34,12 @@
     },
     "global-scouter": {
       "version": "2.4.0",
-      "updated": "2026-09-04",
+      "updated": "2026-09-11",
       "update_frequency": "on-demand",
       "source": "Global Scouter Tool",
       "file_count": 1084,
       "schema": true,
-      "description": "Stock screening (1,066), ETFs (22), indicators (1,076 records) from the owner's weekly Global Scouter export"
+      "description": "Stock screening (1,066), ETFs (22), indicators (1,077 records) from the owner's weekly Global Scouter export"
     },
     "indices": {
       "version": "2.0.0",
@@ -216,6 +216,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-09-13",
+      "folder": "global-scouter",
+      "version": "2.4.0",
+      "change": "Weekly refresh from the 2026-09-11 export: 1,066 stocks with the same canonical ticker set, 1,077 economic observations, 22 ETFs and 1,047 PER-band profiles. The recurring Berkshire B historical unit anomaly is normalized only for the exact validated workbook fingerprint while raw source values remain preserved. Existing hosted derivation, cloud publication and deploy paths own live propagation.",
+      "breaking": false
+    },
     {
       "date": "2026-09-07",
       "folder": "macro",
@@ -975,9 +982,9 @@
       "path": "/data/global-scouter/",
       "schemaVersion": "2.3.0",
       "fileCount": 1084,
-      "lastUpdated": "2026-09-04",
+      "lastUpdated": "2026-09-11",
       "lastUpdatedReason": null,
-      "notes": "Stock screening (1,066), ETFs (22), indicators (1,076 records) from the owner's weekly Global Scouter export"
+      "notes": "Stock screening (1,066), ETFs (22), indicators (1,077 records) from the owner's weekly Global Scouter export"
     },
     {
       "name": "macro",
