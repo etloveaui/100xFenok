@@ -42,14 +42,14 @@ for (const route of EXPECTED_ROUTES) {
   );
 }
 // Projection materialization is owned by the shared runner; the workflow keeps
-// only the retry-hygiene invocation. The initial path reaches the SAME runner.
+// only the retry-hygiene invocation before its single final runner call.
 assert.equal((workflow.match(/node scripts\/materialize-update-manifest-routes\.mjs/g) ?? []).length, 1,
   "workflow must keep only the retry-hygiene materialize invocation");
 assert.equal((runner.match(/node scripts\/materialize-update-manifest-routes\.mjs/g) ?? []).length, 2,
   "runner must own one full and one bounded projection materialize invocation");
-assert.ok(workflow.indexOf("run: bash scripts/update-manifest-projections.sh") < workflow.indexOf("- name: Check if manifest changed"),
-  "initial path must run the shared runner before the change probe");
-// Mirror projection order, once, in the shared runner (initial and retry alike).
+assert.equal(workflow.includes("run: bash scripts/update-manifest-projections.sh"), false,
+  "the preliminary projection pass must stay removed");
+// Mirror projection order, once, in the shared runner.
 assert.match(runner, /materialize-update-manifest-routes\.mjs --all[\s\S]*?sync-public-data\.mjs --write --etf-shards-only[\s\S]*?validate-slickcharts-integrity\.py[\s\S]*?diff -qr data\/slickcharts/);
 const retry = workflow.slice(workflow.indexOf("for attempt in 1 2 3; do"));
 assert.match(retry, /git reset --hard origin\/main[\s\S]*?materialize-update-manifest-routes\.mjs --all --validate-only --assert-no-untracked/);

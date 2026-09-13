@@ -3085,9 +3085,12 @@ export async function runPublisherCli({
       + ` ${verificationStats.reused_assets} reused)`,
     );
 
-    // 5. Gate again after the write batch, then the single JSON summary line.
-    const gateAfter = await runCostGateImpl({ planClassA: 0, planClassB: 0, planBytes: 0, env });
-    outcomeState.gateAfter = gateVerdict(gateAfter);
+    // 5. The preflight measurement already scored the complete planned write
+    // as if it had happened. Rewalking the whole account immediately after the
+    // write repeated 30+ control-plane calls without changing the safety
+    // decision. Carry that projected post-write verdict forward; rollback and
+    // chaos paths retain their independent measurements above.
+    outcomeState.gateAfter = outcomeState.gateBefore;
     const outcomeShard = await recordOutcome(resolved.resume ? "resumed" : "published");
     emit({
       result: resolved.resume ? "resumed" : "published",
@@ -3111,7 +3114,8 @@ export async function runPublisherCli({
       parity_reused_assets: verificationStats.reused_assets,
       parity_reused_objects: verificationStats.reused_objects,
       gate_before: gateVerdict(gateBefore),
-      gate_after: gateVerdict(gateAfter),
+      gate_after: outcomeState.gateAfter,
+      gate_after_basis: "covered_by_preflight_plan",
       outcome_shard: shardSummary(outcomeShard),
     });
     return 0;

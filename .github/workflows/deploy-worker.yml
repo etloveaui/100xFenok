@@ -127,6 +127,13 @@ jobs:
         working-directory: 100xfenok-next
         run: npm ci
 
+      # Fail source-policy defects before data projection and the OpenNext
+      # bundle. cf:build deliberately checks again after sync-static because
+      # generated output can introduce a new violation.
+      - name: Verify source token policy
+        working-directory: 100xfenok-next
+        run: npm run qa:tokens
+
       - name: Build data supply detection floor
         run: |
           set -euo pipefail

@@ -870,7 +870,9 @@ assert.match(strictPresentMismatch.output, /provenance-mismatch/);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const deployWorkflowPath = path.join(repoRoot, ".github", "workflows", "deploy-worker.yml");
 const deployWorkflow = fs.readFileSync(deployWorkflowPath, "utf8");
-const deployJob = deployWorkflow.slice(deployWorkflow.indexOf("\n  deploy:"));
+const deployJobStart = deployWorkflow.indexOf("\n  build-deploy:");
+assert.ok(deployJobStart >= 0, "build-deploy job must exist");
+const deployJob = deployWorkflow.slice(deployJobStart);
 const dispatchInput = deployWorkflow.slice(
   deployWorkflow.indexOf("  workflow_dispatch:"),
   deployWorkflow.indexOf("  # Requeue path:"),

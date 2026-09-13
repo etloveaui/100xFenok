@@ -5,17 +5,16 @@
 // inventory: the full generation-order contract is owned by
 // test-update-manifest-workflow.mjs (ETF/KPI order) and
 // test-update-manifest-materializations.mjs (mirror projection order).
-//  1. both workflow call sites invoke exactly one shared runner;
+//  1. the workflow invokes the shared runner exactly once, inside its retry loop;
 //  2. the workflow embeds none of the runner's projection commands (the list
 //     is DERIVED from the runner itself, so no parallel inventory can drift);
 //  3. the runner is valid bash;
 //  4. one compact behavioral check with recording stubs (no repo writes):
-//     initial/retry flag differences plus update-manifest.py exit-1
+//     final publication flags plus update-manifest.py exit-1
 //     (tolerated) vs exit>1 (abort) semantics.
 //
-// The S15 "Check if manifest changed" probe is intentionally NOT in the
-// runner: its consumers differ (step outputs vs retry branching) and it is a
-// status probe, not a projection command.
+// The central change probe stays outside the runner because it controls retry
+// branching and is not a projection command.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -31,15 +30,13 @@ const runnerText = fs.readFileSync(runnerPath, "utf8");
 const workflowLines = workflowText.split("\n").map((line) => line.trim());
 const runnerLines = runnerText.split("\n").map((line) => line.trim());
 
-// --- 1) Exactly one runner per call site. -----------------------------------
-assert.equal(workflowLines.filter((line) => line === "run: bash scripts/update-manifest-projections.sh").length, 1,
-  "initial path must invoke the runner exactly once");
+// --- 1) Exactly one runner, inside the retry loop. --------------------------
+assert.equal(workflowLines.filter((line) => line === "run: bash scripts/update-manifest-projections.sh").length, 0,
+  "the preliminary projection pass must stay removed");
 assert.equal(workflowLines.filter((line) => line === "bash scripts/update-manifest-projections.sh").length, 1,
   "retry loop must invoke the runner exactly once");
-const initialCall = workflowLines.indexOf("run: bash scripts/update-manifest-projections.sh");
 const retryCall = workflowLines.indexOf("bash scripts/update-manifest-projections.sh");
 const retryStart = workflowLines.indexOf("for attempt in 1 2 3; do");
-assert.ok(initialCall < retryStart, "initial call site must precede the retry loop");
 assert.ok(retryCall > retryStart, "retry call site must live inside the push-retry loop");
 
 // --- 2) One concise S1-S14 anchor table pins order and extraction. ----------
@@ -85,19 +82,19 @@ assert.ok(basketProducerIndex < basketRouteIndex,
 assert.ok(basketRouteIndex < runnerLines.indexOf("# --- S8: Build Fenok edge projections ---------------------------------------"),
   "bounded basket materialization must finish before S8");
 
-// Both call sites explicitly provide the complete fail-closed environment.
+// The sole final projection call explicitly provides the fail-closed environment.
 for (const line of [
-  "VALIDATE_SLICKCHARTS_SKIP_PUBLIC: 'true'",
   "VALIDATE_SLICKCHARTS_SKIP_PUBLIC: 'false'",
   "RESET_ETF_SNAPSHOTS: 'true'",
-  "RESET_ETF_SNAPSHOTS: 'false'",
 ]) {
   assert.equal(workflowLines.filter((candidate) => candidate === line).length, 1, `workflow must set ${line} exactly once`);
 }
-assert.equal(workflowLines.filter((line) => line.startsWith("REBUILD_SLICKCHARTS:")).length, 2,
-  "both call sites must set REBUILD_SLICKCHARTS");
-assert.equal(workflowLines.filter((line) => line.startsWith("BEFORE_SHA:")).length, 2,
-  "both call sites must set BEFORE_SHA");
+assert.equal(workflowLines.filter((line) => line.startsWith("REBUILD_SLICKCHARTS:")).length, 1,
+  "the sole call site must set REBUILD_SLICKCHARTS");
+assert.equal(workflowLines.filter((line) => line.startsWith("BEFORE_SHA:")).length, 1,
+  "the sole call site must set BEFORE_SHA");
+assert.equal(workflowText.includes("steps.check.outputs.changed"), false,
+  "no preliminary change probe may gate the retry loop or no-change report");
 assert.equal(runnerLines.includes("set -eo pipefail"), true, "runner must match GitHub bash -e -o pipefail semantics");
 assert.equal(runnerLines.includes("set -euo pipefail"), true, "S13 must retain its additional -u behavior");
 
@@ -180,21 +177,7 @@ const invalidSha = runRunner({ BEFORE_SHA: "0123abcd" });
 assert.equal(invalidSha.result.status, 2, "BEFORE_SHA must reject malformed values");
 assert.deepEqual(invalidSha.records, [], "BEFORE_SHA validation must fail before S1");
 
-// Initial-path env: --skip-public validation, no snapshot reset.
-{
-  const { result, records } = runRunner({
-    REBUILD_SLICKCHARTS: "true",
-    VALIDATE_SLICKCHARTS_SKIP_PUBLIC: "true",
-    RESET_ETF_SNAPSHOTS: "false",
-    BEFORE_SHA: PUSH_SHA,
-  });
-  assert.equal(result.status, 0, `initial-path run failed: ${result.stderr}`);
-  assert.ok(records.includes(SKIP_PUBLIC), "initial path must validate with --skip-public");
-  assert.equal(records.includes(SNAPSHOT_RESET), false, "initial path must not reset snapshots");
-  assert.ok(records.includes(`before_sha ${PUSH_SHA}`), "initial path must propagate BEFORE_SHA to update-manifest.py");
-}
-
-// Retry-loop env: snapshot reset, no --skip-public validation.
+// Final retry-loop env: snapshot reset, no --skip-public validation.
 {
   const { result, records } = runRunner({
     REBUILD_SLICKCHARTS: "true",
@@ -202,12 +185,12 @@ assert.deepEqual(invalidSha.records, [], "BEFORE_SHA validation must fail before
     RESET_ETF_SNAPSHOTS: "true",
     BEFORE_SHA: "AUTO",
   });
-  assert.equal(result.status, 0, `retry-path run failed: ${result.stderr}`);
-  assert.equal(records.includes(SKIP_PUBLIC), false, "retry path must not validate with --skip-public");
-  assert.ok(records.includes(SNAPSHOT_RESET), "retry path must reset snapshots before re-materializing");
+  assert.equal(result.status, 0, `final-path run failed: ${result.stderr}`);
+  assert.equal(records.includes(SKIP_PUBLIC), false, "final path must not validate with --skip-public");
+  assert.ok(records.includes(SNAPSHOT_RESET), "final path must reset snapshots before re-materializing");
   assert.ok(records.indexOf(SNAPSHOT_RESET) < records.indexOf(SYNC_PUBLIC),
-    "retry snapshot reset must execute before public sync");
-  assert.ok(records.includes("before_sha AUTO"), "retry path must propagate BEFORE_SHA to update-manifest.py");
+    "final snapshot reset must execute before public sync");
+  assert.ok(records.includes("before_sha AUTO"), "final path must propagate BEFORE_SHA to update-manifest.py");
 }
 
 // update-manifest.py exit 1 (warnings only) is tolerated; exit >1 aborts.

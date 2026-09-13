@@ -3,6 +3,7 @@ import {
   DEFAULT_ABORT_CLEANUP_GRACE_MS,
   DEFAULT_MAX_PUBLISHED_AGE_DAYS,
   DEFAULT_MAX_SOURCE_AGE_DAYS,
+  DEFAULT_PROBE_CONCURRENCY,
   DEFAULT_REQUEST_TIMEOUT_MS,
   DEFAULT_TOTAL_PROBE_DEADLINE_MS,
   FALLBACK_ALLOWED_FAMILIES,
@@ -13,6 +14,7 @@ import {
   buildReport,
   evaluateProbeResponse,
   parseLegacySourceAgeCap,
+  parseProbeConcurrency,
   parseRequestTimeoutMs,
   parseTotalProbeDeadlineMs,
   probeAll,
@@ -127,22 +129,57 @@ const sourceDateForPolicy = ({ path, family }) => {
   }
 }
 
+// Healthy paths run through a bounded pool and retain enrollment order even
+// when responses complete out of order.
+{
+  const concurrency = 4;
+  let inFlight = 0;
+  let maxInFlight = 0;
+  const results = await probeAll({
+    baseUrl: "https://example.test",
+    nowIso: NOW,
+    concurrency,
+    fetchFn: async (url) => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      const path = new URL(url).pathname;
+      const family = ENROLLED_PATHS.get(path);
+      await new Promise((resolve) => setTimeout(resolve, path.length % 3));
+      inFlight -= 1;
+      return new Response(null, {
+        status: 200,
+        headers: {
+          "x-data-plane-generation": `${family}-abc123`,
+          "x-data-plane-source-as-of": sourceDateForPolicy({ path, family }),
+          "x-data-plane-published-at": hoursAgo(1),
+        },
+      });
+    },
+  });
+  assert.equal(maxInFlight, concurrency);
+  assert.deepEqual(results.map((result) => result.path), [...ENROLLED_PATHS.keys()]);
+  assert.equal(results.every((result) => result.ok), true);
+}
+
 // An abort-aware fetch releases asynchronously about 10 ms after seeing the
-// signal. REQUEST_TIMEOUT still wins over its later AbortError, and probeAll
-// waits for release before starting the next sequential request.
+// signal. REQUEST_TIMEOUT still wins over its later AbortError, and that pool
+// worker waits for release before taking another request.
 {
   const timeoutMs = 25;
   const asked = [];
   let inFlight = 0;
+  let maxInFlight = 0;
   let hangingSignal;
   let hangingRequestReleased = false;
   const results = await probeAll({
     baseUrl: "https://example.test",
     nowIso: NOW,
     requestTimeoutMs: timeoutMs,
+    concurrency: 2,
     fetchFn: async (url, init) => {
-      assert.equal(inFlight, 0, "probe must issue requests sequentially, never in parallel");
       inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      assert.ok(inFlight <= 2, "probe must honor the configured concurrency bound");
       asked.push(url);
       const path = new URL(url).pathname;
       if (path === "/data/macro/fred-macro.json") {
@@ -180,6 +217,7 @@ const sourceDateForPolicy = ({ path, family }) => {
   assert.deepEqual(otherFailing.map((r) => ({ path: r.path, failures: r.failures })), []);
   assert.equal(hangingSignal.aborted, true, "the hanging request must be aborted on timeout");
   assert.equal(hangingRequestReleased, true, "abort-aware fetch must release resources before probing continues");
+  assert.equal(maxInFlight, 2);
 }
 
 // A timeout on an intentionally unpublished family is a strict FAIL, never a
@@ -274,15 +312,15 @@ const sourceDateForPolicy = ({ path, family }) => {
   });
   assert.equal(asked.length, ENROLLED_PATHS.size);
   assert.equal(results.length, ENROLLED_PATHS.size);
-  const timedOut = results[0];
+  const timedOut = results.find((result) => result.path === "/data/macro/fred-macro.json");
   assert.equal(timedOut.mode, "strict");
   assert.deepEqual(timedOut.failures, [`fetch timed out after ${timeoutMs} ms (no response within bound)`]);
-  assert.equal(results.slice(1).every((r) => r.ok), true);
+  assert.equal(results.filter((result) => result !== timedOut).every((r) => r.ok), true);
 }
 
 // Cleanup waiting is also capped by the remaining total deadline. A first
 // request that ignores abort consumes that deadline; no second fetch starts,
-// while all 604 unvisited entries are appended as strict deadline failures.
+// while all unvisited entries are appended as strict deadline failures.
 {
   const asked = [];
   const requestTimeoutMs = 5;
@@ -292,13 +330,14 @@ const sourceDateForPolicy = ({ path, family }) => {
     nowIso: NOW,
     requestTimeoutMs,
     totalDeadlineMs,
+    concurrency: 1,
     fetchFn: async (url) => {
       asked.push(url);
       return new Promise(() => {});
     },
   });
   assert.equal(asked.length, 1, "cleanup reaching the total deadline must prevent another request");
-  assert.equal(results.length, 610);
+  assert.equal(results.length, ENROLLED_PATHS.size);
   assert.deepEqual(results[0].failures, [`fetch timed out after ${requestTimeoutMs} ms (no response within bound)`]);
   assert.equal(results[0].mode, "strict");
   for (const result of results.slice(1)) {
@@ -333,11 +372,20 @@ const sourceDateForPolicy = ({ path, family }) => {
   for (const value of [0, -1, NaN, Infinity, "0", "-5", "not-a-number", ""]) {
     assert.equal(parseTotalProbeDeadlineMs(value), DEFAULT_TOTAL_PROBE_DEADLINE_MS, `invalid total deadline ${String(value)} must use the default`);
   }
+
+  assert.equal(Number.isInteger(DEFAULT_PROBE_CONCURRENCY) && DEFAULT_PROBE_CONCURRENCY > 1, true);
+  assert.equal(parseProbeConcurrency(undefined), DEFAULT_PROBE_CONCURRENCY);
+  assert.equal(parseProbeConcurrency(1), 1);
+  assert.equal(parseProbeConcurrency("2"), 2);
+  assert.equal(parseProbeConcurrency(DEFAULT_PROBE_CONCURRENCY + 1), DEFAULT_PROBE_CONCURRENCY);
+  for (const value of [0, -1, 1.5, NaN, Infinity, "", "nope"]) {
+    assert.equal(parseProbeConcurrency(value), DEFAULT_PROBE_CONCURRENCY, `invalid concurrency ${String(value)} must use the default`);
+  }
 }
 
 // Deterministic total-outage proof: every started request hangs until aborted.
 // The injected monotonic clock advances only when an abort releases a request,
-// so exactly three sequential requests start before the 25 ms total deadline;
+// With a one-worker override, exactly three requests start before the 25 ms total deadline;
 // all remaining enrolled paths become strict deadline failures without fetch.
 {
   let monotonicMs = 0;
@@ -349,9 +397,10 @@ const sourceDateForPolicy = ({ path, family }) => {
     nowIso: NOW,
     requestTimeoutMs: 1,
     totalDeadlineMs,
+    concurrency: 1,
     monotonicNowFn: () => monotonicMs,
     fetchFn: async (url, init) => {
-      assert.equal(inFlight, 0, "total-outage requests must remain sequential");
+      assert.equal(inFlight, 0, "the one-worker override must remain sequential");
       assert.equal(monotonicMs < totalDeadlineMs, true, "no request may start at or after the total deadline");
       inFlight += 1;
       requestStarts.push({ path: new URL(url).pathname, startedAtMs: monotonicMs });
@@ -368,7 +417,7 @@ const sourceDateForPolicy = ({ path, family }) => {
   assert.deepEqual(requestStarts.map(({ startedAtMs }) => startedAtMs), [0, 10, 20]);
   assert.equal(inFlight, 0);
   assert.equal(results.length, ENROLLED_PATHS.size);
-  assert.equal(results.length, 610);
+  assert.equal(results.length, ENROLLED_PATHS.size);
   assert.equal(results.every((r) => !r.ok && r.mode === "strict"), true);
   for (const result of results.slice(requestStarts.length)) {
     assert.deepEqual(result.failures, [`total probe deadline reached after ${totalDeadlineMs} ms; request not attempted`]);

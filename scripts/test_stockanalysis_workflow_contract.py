@@ -453,6 +453,61 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
         self.assertIn('git rev-parse "$PUBLISHED_COMMIT"', publish)
         self.assertIn('git rev-parse origin/main', publish)
         self.assertIn('git merge-base --is-ancestor "$PUBLISHED_COMMIT" origin/main', publish)
+
+    def test_publish_reuses_validation_only_for_identical_covered_inputs(self) -> None:
+        publish = self.text.split("  publish-stockanalysis:\n", 1)[1]
+        reachability = "for backoff in 15 30 60; do"
+        verify_start = publish.index("python3 scripts/stockanalysis_artifact.py verify-attempt")
+        self.assertIn('VALIDATED_INPUT_FINGERPRINT=""', publish)
+        self.assertIn('VALIDATION_INPUT_FINGERPRINT="$(' , publish)
+        for covered in (
+            ".github/workflows",
+            "scripts",
+            "100xfenok-next/scripts",
+            "100xfenok-next/package.json",
+            "data/admin/lane-commit-manifest.json",
+            "data/stockanalysis",
+            "data/yf/finance",
+            "data/yf/etf-details",
+            "data/admin/data-supply-state",
+            "data/admin/stockanalysis-recovery",
+            "data/admin/yahoo_etf_fallback",
+        ):
+            self.assertIn(covered, publish)
+        self.assertIn('printf \'artifact-digest %s\\n\' "$ARTIFACT_DIGEST"', publish)
+        self.assertIn('if [ "$VALIDATION_INPUT_FINGERPRINT" != "$VALIDATED_INPUT_FINGERPRINT" ]; then', publish)
+        self.assertIn('VALIDATED_INPUT_FINGERPRINT="$VALIDATION_INPUT_FINGERPRINT"', publish)
+        self.assertIn("Reusing validation from the identical source and acquisition artifact", publish)
+
+        validation_gate = publish.index('if [ "$VALIDATION_INPUT_FINGERPRINT" != "$VALIDATED_INPUT_FINGERPRINT" ]; then')
+        validation_end = publish.index("\n            fi", validation_gate)
+        validation_body = publish[validation_gate:validation_end]
+        for command in (
+            "python3 scripts/test_stockanalysis_recovery_state.py",
+            "node scripts/test-yahoo-etf-fallback-recovery.mjs",
+            "node scripts/test-stockanalysis-lane-parity.mjs",
+            "node scripts/test-stockanalysis-attempt-emitter.mjs",
+            "python3 -m unittest scripts/test_stockanalysis_surface_contract.py",
+            "python3 -m unittest scripts/test_stockanalysis_workflow_contract.py",
+            "python3 -m unittest scripts/test_resolve_etf_detail_candidates.py",
+            "python3 -m unittest scripts/test_stockanalysis_artifact.py",
+            "python3 scripts/test-stockanalysis-financials-fixtures.py",
+            "python3 -m unittest scripts/test_audit_market_data.py",
+            "node scripts/test-select-stockanalysis-daily1y-offset.mjs",
+            "node scripts/test-write-fenok-etf-daily1y-readiness.mjs",
+            "node scripts/test-build-fenok-etf-core-daily-basket.mjs",
+        ):
+            self.assertIn(command, validation_body)
+
+        # Latest-main reconciliation remains per attempt even when validation is reused.
+        for command in (
+            "python3 scripts/stockanalysis_artifact.py apply",
+            "python3 scripts/resolve_etf_detail_candidates.py",
+            "npm run build:data-supply-public",
+            "node scripts/sync-public-data.mjs --write",
+            "npm run reconcile:data-supply-public-mirror",
+        ):
+            self.assertNotIn(command, validation_body)
         self.assertIn('git merge-base --is-ancestor origin/main "$PUBLISHED_COMMIT"', publish)
         self.assertIn('git cat-file -e "$PUBLISHED_COMMIT"', publish)
         self.assertIn('COMPARE_STATUS="identical"; COMMIT_REACHABLE="yes"; break', publish)

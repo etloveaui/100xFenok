@@ -2374,11 +2374,11 @@ function runWorkflowBridgeChecks() {
   const runnerKpiStart = runner.indexOf("npm --prefix 100xfenok-next run build:fenok-data-health-kpi");
   assert.ok(runnerBridgeStart >= 0, "shared runner rebuilds the detection floor");
   assert.ok(runnerKpiStart > runnerBridgeStart, "shared runner installs the floor before KPI build");
-  const initialRunnerCall = updateWorkflow.indexOf("run: bash scripts/update-manifest-projections.sh");
   const retryReset = updateWorkflow.indexOf("git reset --hard origin/main");
   const retryRunnerCall = updateWorkflow.indexOf("bash scripts/update-manifest-projections.sh", retryReset);
   const laneCommitManifest = readJson(path.join(REPO_ROOT, "data", "admin", "lane-commit-manifest.json"));
-  assert.ok(initialRunnerCall >= 0, "update-manifest initial path runs the shared runner");
+  assert.equal(updateWorkflow.includes("run: bash scripts/update-manifest-projections.sh"), false,
+    "update-manifest must not repeat the projection before the retry loop");
   assert.ok(retryReset >= 0 && retryRunnerCall > retryReset, "update-manifest retry rebuilds the floor via the shared runner after resetting to latest main");
   assert.ok(
     laneCommitManifest.update_manifest.central_commit_paths.includes("data/admin/data-supply-detection-floor.json"),

@@ -485,6 +485,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           ARTIFACT_ROOT="$RUNNER_TEMP/stockanalysis-artifact"
+          VALIDATED_INPUT_FINGERPRINT=""
           for attempt in $(seq 1 5); do
             git fetch origin main
             git checkout -f -B main origin/main
@@ -533,21 +534,48 @@ jobs:
             rm -rf "$PROJECTION_ORACLE_ROOT"
             mkdir -p "$PROJECTION_ORACLE"
             rsync -a --checksum --delete data/stockanalysis/surfaces/ "$PROJECTION_ORACLE/"
-            python3 scripts/test_stockanalysis_recovery_state.py
-            node scripts/test-yahoo-etf-fallback-recovery.mjs
-            node scripts/test-stockanalysis-lane-parity.mjs
-            node scripts/test-stockanalysis-attempt-emitter.mjs
-            STOCKANALYSIS_SOURCE_SURFACE_DIR="data/stockanalysis/surfaces" \
-              STOCKANALYSIS_PROJECTION_ORACLE_DIR="$PROJECTION_ORACLE" \
-              python3 -m unittest scripts/test_stockanalysis_surface_contract.py
-            python3 -m unittest scripts/test_stockanalysis_workflow_contract.py
-            python3 -m unittest scripts/test_resolve_etf_detail_candidates.py
-            python3 -m unittest scripts/test_stockanalysis_artifact.py
-            python3 scripts/test-stockanalysis-financials-fixtures.py
-            python3 -m unittest scripts/test_audit_market_data.py
-            node scripts/test-select-stockanalysis-daily1y-offset.mjs
-            node scripts/test-write-fenok-etf-daily1y-readiness.mjs
-            node scripts/test-build-fenok-etf-core-daily-basket.mjs
+            # A push race normally advances an unrelated data lane. Re-running
+            # this full contract suite cannot add evidence when every source it
+            # reads and the immutable acquisition artifact are identical. Bind
+            # the proof to those inputs; any relevant source/data drift reruns
+            # the suite before the candidate can be committed.
+            VALIDATION_INPUT_FINGERPRINT="$(
+              {
+                git ls-tree -r HEAD -- \
+                  .github/workflows \
+                  scripts \
+                  100xfenok-next/scripts \
+                  100xfenok-next/package.json \
+                  data/admin/lane-commit-manifest.json \
+                  data/stockanalysis \
+                  data/yf/finance \
+                  data/yf/etf-details \
+                  data/admin/data-supply-state \
+                  data/admin/stockanalysis-recovery \
+                  data/admin/yahoo_etf_fallback
+                printf 'artifact-digest %s\n' "$ARTIFACT_DIGEST"
+              } | sha256sum | awk '{print $1}'
+            )"
+            if [ "$VALIDATION_INPUT_FINGERPRINT" != "$VALIDATED_INPUT_FINGERPRINT" ]; then
+              python3 scripts/test_stockanalysis_recovery_state.py
+              node scripts/test-yahoo-etf-fallback-recovery.mjs
+              node scripts/test-stockanalysis-lane-parity.mjs
+              node scripts/test-stockanalysis-attempt-emitter.mjs
+              STOCKANALYSIS_SOURCE_SURFACE_DIR="data/stockanalysis/surfaces" \
+                STOCKANALYSIS_PROJECTION_ORACLE_DIR="$PROJECTION_ORACLE" \
+                python3 -m unittest scripts/test_stockanalysis_surface_contract.py
+              python3 -m unittest scripts/test_stockanalysis_workflow_contract.py
+              python3 -m unittest scripts/test_resolve_etf_detail_candidates.py
+              python3 -m unittest scripts/test_stockanalysis_artifact.py
+              python3 scripts/test-stockanalysis-financials-fixtures.py
+              python3 -m unittest scripts/test_audit_market_data.py
+              node scripts/test-select-stockanalysis-daily1y-offset.mjs
+              node scripts/test-write-fenok-etf-daily1y-readiness.mjs
+              node scripts/test-build-fenok-etf-core-daily-basket.mjs
+              VALIDATED_INPUT_FINGERPRINT="$VALIDATION_INPUT_FINGERPRINT"
+            else
+              echo "Reusing validation from the identical source and acquisition artifact"
+            fi
 
             scripts/stage-lane-manifest.sh \
               --workflow .github/workflows/fetch-stockanalysis.yml \

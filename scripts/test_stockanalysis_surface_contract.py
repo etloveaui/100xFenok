@@ -119,14 +119,11 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
 
         materialize = "node scripts/materialize-update-manifest-routes.mjs --all"
         validate_only = f"{materialize} --validate-only --assert-no-untracked"
-        initial_block = projection_workflow.split("      - name: Check if manifest changed", 1)[0]
         retry_block = projection_workflow.split("          for attempt in 1 2 3; do", 1)[1]
-        initial_lines = [line.strip() for line in initial_block.splitlines()]
         retry_lines = [line.strip() for line in retry_block.splitlines()]
         runner_call = "bash scripts/update-manifest-projections.sh"
-        initial_runner_call = f"run: {runner_call}"
         runner_lines = [line.strip() for line in projection_runner.splitlines()]
-        self.assertEqual(initial_lines.count(initial_runner_call), 1)
+        self.assertNotIn(f"run: {runner_call}", projection_workflow)
         self.assertEqual(retry_lines.count(runner_call), 1)
         self.assertEqual(runner_lines.count(materialize), 1)
         self.assertEqual(retry_lines.count(validate_only), 1)
@@ -205,12 +202,11 @@ class StockanalysisSurfaceContractTest(unittest.TestCase):
         self.assertIn("--family stockanalysis-etf-detail", projection_workflow)
         self.assertIn("--manifest-prefix data/stockanalysis/etfs/", projection_workflow)
 
-        initial_block = projection_workflow.split("      - name: Check if manifest changed", 1)[0]
-        runner_call = "run: bash scripts/update-manifest-projections.sh"
+        runner_call = "bash scripts/update-manifest-projections.sh"
         self.assertLess(
-            initial_block.index("materialize-cloud-data-plane-family.mjs"),
-            initial_block.index(runner_call),
-            "materialization must precede the first projection pass",
+            projection_workflow.index("materialize-cloud-data-plane-family.mjs"),
+            projection_workflow.index(runner_call),
+            "materialization must precede the single projection pass",
         )
         retry_block = projection_workflow.split("          for attempt in 1 2 3; do", 1)[1]
         self.assertNotIn(

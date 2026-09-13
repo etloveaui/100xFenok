@@ -3603,16 +3603,40 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   const successRoot = await mkdtemp(path.join(os.tmpdir(), "publish-cli-success-"));
   const memoryPlane = createMemoryCloudDataPlane();
   const memoryFactory = () => ({ plane: memoryPlane, objectsWritten: () => 0 });
-  const published = await invoke({ outcomesRoot: successRoot, createPublishPlaneImpl: memoryFactory });
+  let normalGateCalls = 0;
+  const countedGate = async () => {
+    normalGateCalls += 1;
+    return { code: 0, stdout: "", stderr: "" };
+  };
+  const published = await invoke({
+    outcomesRoot: successRoot,
+    createPublishPlaneImpl: memoryFactory,
+    gate: countedGate,
+  });
   assert.equal(published.exitCode, 0);
   assert.equal(published.stdout.length, 1);
-  assert.equal(JSON.parse(published.stdout[0]).result, "published");
-  const resumed = await invoke({ outcomesRoot: successRoot, createPublishPlaneImpl: memoryFactory });
+  const publishedSummary = JSON.parse(published.stdout[0]);
+  assert.equal(publishedSummary.result, "published");
+  assert.equal(publishedSummary.gate_after_basis, "covered_by_preflight_plan");
+  assert.equal(normalGateCalls, 1, "normal publication must perform one full cost measurement");
+  normalGateCalls = 0;
+  const resumed = await invoke({
+    outcomesRoot: successRoot,
+    createPublishPlaneImpl: memoryFactory,
+    gate: countedGate,
+  });
   assert.equal(resumed.exitCode, 0);
   assert.equal(resumed.stdout.length, 1);
-  assert.equal(JSON.parse(resumed.stdout[0]).result, "resumed");
+  const resumedSummary = JSON.parse(resumed.stdout[0]);
+  assert.equal(resumedSummary.result, "resumed");
+  assert.equal(resumedSummary.gate_after_basis, "covered_by_preflight_plan");
+  assert.equal(normalGateCalls, 1, "resumed publication must perform one full cost measurement");
   const successShard = JSON.parse(await readFile(publishOutcomeShardPath(successRoot, "oecd-cli"), "utf8"));
   assert.deepEqual(successShard.records.map((record) => record.result), ["published", "resumed"]);
+  assert.deepEqual(successShard.records.map((record) => [record.gate_before, record.gate_after]), [
+    ["ok", "ok"],
+    ["ok", "ok"],
+  ]);
 
   // --- binding legs come from the INJECTED env, never the ambient process ---
   // An in-process caller passes its own env precisely so the run is reproducible.

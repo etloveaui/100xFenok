@@ -39,6 +39,10 @@ export const RETENTION_REGISTRY = Object.freeze({
       reason: "StockAnalysis recovery journal used to resume interrupted acquisition; not a served artifact.",
     },
     {
+      path: "data/admin/earnings_overview",
+      reason: "SEC earnings overview refresh summary and producer evidence; the served quarterly documents live under the lane's canonical output.",
+    },
+    {
       path: "data/admin/slickcharts-daily-delivery",
       reason: "SlickCharts daily delivery state and receipts for the composite recovery contract.",
     },

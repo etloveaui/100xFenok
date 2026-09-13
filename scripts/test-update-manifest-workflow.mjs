@@ -4,10 +4,9 @@
 // control-plane artifacts; every one must be covered by a registry lane
 // declaration or a declared exception.
 //
-// The S1-S14 projection stack now lives in ONE shared runner invoked by both
-// the initial path and the push-retry loop, so the ETF/KPI generation-order
-// contract is asserted against scripts/update-manifest-projections.sh instead
-// of duplicated workflow blocks.
+// The S1-S14 projection stack lives in one shared runner invoked only by the
+// push-retry loop, so the ETF/KPI generation-order contract is asserted against
+// scripts/update-manifest-projections.sh instead of a preliminary duplicate.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
@@ -44,9 +43,9 @@ for (const source of [workflowLines, runnerLines]) {
   }
 }
 
-// Both paths must reach the SAME runner (one source of truth).
-assert.equal(exactLineIndices(workflowLines, "run: bash scripts/update-manifest-projections.sh").length, 1,
-  "initial path must invoke the shared runner exactly once");
+// One final path reaches the runner from inside the retry loop.
+assert.equal(exactLineIndices(workflowLines, "run: bash scripts/update-manifest-projections.sh").length, 0,
+  "the preliminary projection path must stay removed");
 assert.equal(exactLineIndices(workflowLines, "bash scripts/update-manifest-projections.sh").length, 1,
   "retry path must invoke the shared runner exactly once");
 
@@ -100,16 +99,13 @@ assert.equal(
       `workflow must pass the required materializer argument: ${argument}`);
   }
   const materializeIndex = materializeCalls[0];
-  const initialRunnerIndex = exactLineIndices(workflowLines, "run: bash scripts/update-manifest-projections.sh")[0];
   const retryRunnerIndex = exactLineIndices(workflowLines, "bash scripts/update-manifest-projections.sh")[0];
-  assert.ok(materializeIndex < initialRunnerIndex,
-    "materialization must precede the first projection pass");
   assert.ok(materializeIndex < retryRunnerIndex,
-    "materialization must precede the retry projection pass (reused snapshot)");
+    "materialization must precede the final projection pass (reused snapshot)");
   assert.equal(workflowLines.filter((line) => line.includes("ETF_DETAIL_OVERLAY_ROOT")).length, 1,
-    "the overlay root must be exported exactly once for both runner call sites");
+    "the overlay root must be exported exactly once for the runner");
   assert.equal(workflowLines.filter((line) => line.includes("ETF_DETAIL_OVERLAY_RECEIPT")).length, 1,
-    "the verified receipt path must be exported exactly once for both runner call sites");
+    "the verified receipt path must be exported exactly once for the runner");
 
   for (const marker of [
     'ETF_LKG_TREE="data/stockanalysis/etfs"',

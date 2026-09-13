@@ -16,8 +16,9 @@
 // The enrolled-path list is imported from the Worker read module so the probe
 // can never drift from what production actually serves.
 //
-// Every request is individually bounded (DEFAULT_REQUEST_TIMEOUT_MS), and the
-// full sequential sweep has its own bound (DEFAULT_TOTAL_PROBE_DEADLINE_MS).
+// Every request is individually bounded (DEFAULT_REQUEST_TIMEOUT_MS), the
+// bounded worker pool has an immutable ceiling, and the full sweep has its own
+// bound (DEFAULT_TOTAL_PROBE_DEADLINE_MS).
 // A URL that never answers becomes a strict FAIL for exactly that path — never
 // a fallback pass. Once the total deadline is reached, every unvisited path is
 // also recorded as strict FAIL without starting another network request.
@@ -34,6 +35,10 @@ export const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 // and recorded as FAIL. Immutable default; the env override (and the probeAll
 // argument) can only tighten behavior, never remove the bound.
 export const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
+// Eight parallel reads keep the 600+ path sweep short without turning a probe
+// into a burst large enough to resemble publication traffic. Overrides may
+// tighten this bound for deterministic tests or incident mitigation.
+export const DEFAULT_PROBE_CONCURRENCY = 8;
 // After abort, give a signal-aware fetch a short bounded window to settle and
 // release resources before the next sequential request starts. A fetch that
 // ignores the signal can never hold the report beyond this grace or the
@@ -147,6 +152,14 @@ export function parseTotalProbeDeadlineMs(value) {
   return Number.isFinite(parsed) && parsed > 0
     ? Math.min(parsed, DEFAULT_TOTAL_PROBE_DEADLINE_MS)
     : DEFAULT_TOTAL_PROBE_DEADLINE_MS;
+}
+
+export function parseProbeConcurrency(value) {
+  if (value === undefined) return DEFAULT_PROBE_CONCURRENCY;
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0
+    ? Math.min(parsed, DEFAULT_PROBE_CONCURRENCY)
+    : DEFAULT_PROBE_CONCURRENCY;
 }
 
 // Families that are enrolled but intentionally not yet published to the data
@@ -328,69 +341,73 @@ export async function probeAll({
   maxAgeDays,
   requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   totalDeadlineMs = DEFAULT_TOTAL_PROBE_DEADLINE_MS,
+  concurrency = DEFAULT_PROBE_CONCURRENCY,
   monotonicNowFn = () => performance.now(),
 }) {
-  const results = [];
   const effectiveTimeoutMs = parseRequestTimeoutMs(requestTimeoutMs);
   const effectiveTotalDeadlineMs = parseTotalProbeDeadlineMs(totalDeadlineMs);
+  const effectiveConcurrency = parseProbeConcurrency(concurrency);
   const probeStartedAtMs = monotonicNowFn();
   const remainingTotalMs = () => effectiveTotalDeadlineMs - (monotonicNowFn() - probeStartedAtMs);
   const enrolledEntries = [...ENROLLED_PATHS];
+  const results = new Array(enrolledEntries.length);
+  let nextIndex = 0;
   // This enumerates exact ENROLLED_PATHS only. Prefix-enrolled EDGAR policy is
   // defined above but has no live probe coverage here; adding representative
   // prefix paths requires a separate contract and is intentionally out of scope.
-  for (let index = 0; index < enrolledEntries.length; index += 1) {
-    const [path, family] = enrolledEntries[index];
-    const remainingBeforeRequestMs = remainingTotalMs();
-    if (remainingBeforeRequestMs <= 0) {
-      const failure = totalDeadlineFailure(effectiveTotalDeadlineMs);
-      for (const [unvisitedPath, unvisitedFamily] of enrolledEntries.slice(index)) {
-        results.push({ path: unvisitedPath, family: unvisitedFamily, ok: false, mode: "strict", failures: [failure] });
+  async function worker() {
+    for (;;) {
+      // No await between admission and increment: each index is owned by one
+      // worker, and no request starts once the total deadline is exhausted.
+      if (nextIndex >= enrolledEntries.length || remainingTotalMs() <= 0) return;
+      const index = nextIndex;
+      nextIndex += 1;
+      const [path, family] = enrolledEntries[index];
+      const remainingBeforeRequestMs = remainingTotalMs();
+      if (remainingBeforeRequestMs <= 0) return;
+      let response;
+      try {
+        response = await fetchWithTimeout(
+          fetchFn,
+          `${baseUrl}${path}`,
+          Math.min(effectiveTimeoutMs, remainingBeforeRequestMs),
+          remainingTotalMs,
+        );
+      } catch (error) {
+        results[index] = {
+          path,
+          family,
+          ok: false,
+          mode: "strict",
+          failures: [error?.code === "REQUEST_TIMEOUT" ? error.message : `fetch failed: ${error?.message ?? error}`],
+        };
+        continue;
       }
-      break;
-    }
-    let response;
-    try {
-      response = await fetchWithTimeout(
-        fetchFn,
-        `${baseUrl}${path}`,
-        Math.min(effectiveTimeoutMs, remainingBeforeRequestMs),
-        remainingTotalMs,
-      );
-    } catch (error) {
-      results.push({
+      // Judge against the instant the response actually arrived: a generation
+      // promoted while this request was in flight (issue #90) must not look like
+      // a future publication against the run-start time. An explicit nowIso
+      // still pins every evaluation for deterministic callers.
+      const evaluationNowIso = nowIso === undefined ? wallClockNowFn() : nowIso;
+      results[index] = evaluateProbeResponse({
         path,
         family,
-        ok: false,
-        mode: "strict",
-        failures: [error?.code === "REQUEST_TIMEOUT" ? error.message : `fetch failed: ${error?.message ?? error}`],
+        status: response.status,
+        generationHeader: response.headers.get("x-data-plane-generation"),
+        sourceAsOfHeader: response.headers.get("x-data-plane-source-as-of"),
+        publishedAtHeader: response.headers.get("x-data-plane-published-at"),
+        nowIso: evaluationNowIso,
+        maxAgeDays,
       });
-      if (error?.totalProbeDeadlineReached) {
-        const failure = totalDeadlineFailure(effectiveTotalDeadlineMs);
-        for (const [unvisitedPath, unvisitedFamily] of enrolledEntries.slice(index + 1)) {
-          results.push({ path: unvisitedPath, family: unvisitedFamily, ok: false, mode: "strict", failures: [failure] });
-        }
-        break;
-      }
-      continue;
     }
-    // Judge against the instant the response actually arrived: a generation
-    // promoted while this request was in flight (issue #90) must not look like
-    // a future publication against the run-start time. An explicit nowIso
-    // still pins every evaluation for deterministic callers; only its absence
-    // reads the wall clock fresh here, and an explicit invalid value stays
-    // invalid instead of silently falling back.
-    const evaluationNowIso = nowIso === undefined ? wallClockNowFn() : nowIso;
-    results.push(evaluateProbeResponse({
-      path,
-      family,
-      status: response.status,
-      generationHeader: response.headers.get("x-data-plane-generation"),
-      sourceAsOfHeader: response.headers.get("x-data-plane-source-as-of"),
-      publishedAtHeader: response.headers.get("x-data-plane-published-at"),
-      nowIso: evaluationNowIso,
-      maxAgeDays,
-    }));
+  }
+  const workerCount = Math.min(effectiveConcurrency, enrolledEntries.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+
+  const deadlineFailure = totalDeadlineFailure(effectiveTotalDeadlineMs);
+  for (let index = 0; index < enrolledEntries.length; index += 1) {
+    if (results[index]) continue;
+    const [path, family] = enrolledEntries[index];
+    results[index] = { path, family, ok: false, mode: "strict", failures: [deadlineFailure] };
   }
   return results;
 }
@@ -418,12 +435,14 @@ async function main() {
   const maxAgeDays = parseLegacySourceAgeCap(process.env.PROBE_MAX_SOURCE_AGE_DAYS);
   const requestTimeoutMs = parseRequestTimeoutMs(process.env.PROBE_REQUEST_TIMEOUT_MS);
   const totalDeadlineMs = parseTotalProbeDeadlineMs(process.env.PROBE_TOTAL_DEADLINE_MS);
+  const concurrency = parseProbeConcurrency(process.env.PROBE_CONCURRENCY);
   const results = await probeAll({
     baseUrl,
     fetchFn: fetch,
     maxAgeDays,
     requestTimeoutMs,
     totalDeadlineMs,
+    concurrency,
   });
   const report = buildReport(results);
   const outPath = process.env.PROBE_REPORT_PATH;
