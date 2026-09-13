@@ -55,12 +55,13 @@ assert.equal(centralSpecs.every((spec) => spec.required === false), true);
 assert.equal(fs.existsSync(helperPath), true);
 assert.match(helperSource, /[\"']-fdX[\"']/);
 assert.doesNotMatch(helperSource, /[\"']-fdx[\"']/);
-assert.equal((workflow.match(/node scripts\/stage-update-manifest-central\.mjs/g) ?? []).length, 5);
+assert.equal((workflow.match(/node scripts\/stage-update-manifest-central\.mjs/g) ?? []).length, 4);
 assert.equal((workflow.match(/node scripts\/test-update-manifest-central-staging\.mjs/g) ?? []).length, 0);
-assert.match(workflow, /- name: Check if manifest changed[\s\S]*?stage-update-manifest-central\.mjs --check[\s\S]*?3\) echo "changed=false"/);
+assert.doesNotMatch(workflow, /- name: Check if manifest changed/);
 const retry = workflow.slice(workflow.indexOf("for attempt in 1 2 3; do"));
 assert.match(retry, /git reset --hard origin\/main[\s\S]*?stage-update-manifest-central\.mjs --clean-untracked-after-reset[\s\S]*?stage-update-manifest-central\.mjs --assert-clean-after-reset/);
 assert.match(retry, /stage-update-manifest-central\.mjs --check[\s\S]*?central_status[\s\S]*?stage-update-manifest-central\.mjs --stage[\s\S]*?git commit/);
+assert.match(retry, /central_status" -eq 3[\s\S]*?echo "pushed=false" >> "\$GITHUB_OUTPUT"[\s\S]*?exit 0/);
 assert.doesNotMatch(workflow, /git diff --quiet \\/);
 assert.doesNotMatch(workflow, /git add -- \\/);
 for (const pathValue of centralPaths) {
