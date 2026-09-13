@@ -70,6 +70,23 @@ function runControlledFailureValidation(overrides = {}) {
 const dispatchInputs = extractIndentedBlock(workflow, /^\s{4}inputs:\s*$/);
 const inputNames = [...dispatchInputs.matchAll(/^\s{6}([a-z0-9_]+):\s*$/gm)].map((match) => match[1]);
 const runBlocks = [...workflow.matchAll(/^(\s+)run:\s*\|\n((?:(?:\1  ).*\n?)*)/gm)].map((match) => match[2]);
+const refreshRun = extractStepRun(workflow, "Refresh FINRA and OCC derived proxies");
+
+assert.equal(
+  refreshRun.split("\n").filter((line) => line.trim() === "npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies").length,
+  1,
+  "the base proxy verification must appear exactly once",
+);
+assert.equal(
+  refreshRun.split("\n").filter((line) => line.trim() === "npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies:artifacts").length,
+  1,
+  "the artifact proxy verification must appear exactly once",
+);
+assert.match(
+  refreshRun,
+  /if \[ "\$\{FENOK_EDGE_PLAN_ONLY:-false\}" = "true" \]; then\s+npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies\s+else\s+npm --prefix 100xfenok-next run qa:fenok-signal-lens-proxies:artifacts\s+fi/,
+  "plan and artifact verification must be mutually exclusive",
+);
 
 assert.match(workflow, /node scripts\/test-data-supply-attempt-producer\.mjs/);
 assert.match(workflow, /node scripts\/test-fetch-fenok-finra-daily-private\.mjs/);
