@@ -9,7 +9,8 @@
 // a stale universe/membership projection and failed 20 consecutive runs.
 //
 // Pinned policy:
-//   - primary and retry steps share ONE identical REBUILD_SLICKCHARTS expression
+//   - the single projection step inside the retry loop owns ONE
+//     REBUILD_SLICKCHARTS expression
 //   - the expression derives rebuild from the trigger event only
 //     (push | schedule | workflow_dispatch), never from an input value
 //   - rebuild_slickcharts survives as a legacy compatibility input with
@@ -29,19 +30,18 @@ assert.ok(inputBlock !== null,
 assert.match(inputBlock[1], /default: true/, "compatibility input default must stay true");
 assert.match(inputBlock[1], /type: boolean/, "compatibility input must stay boolean-typed");
 
-// --- Both rebuild steps must share the same derived policy. ---
+// --- The retry-loop projection step owns the derived policy once. ---
 const assignments = [...workflow.matchAll(/REBUILD_SLICKCHARTS:\s*(\$\{\{[^}]*\}\})/g)];
-assert.equal(assignments.length, 2,
-  `expected exactly two REBUILD_SLICKCHARTS assignments (primary + retry), got ${assignments.length}`);
-const [primaryExpr, retryExpr] = assignments.map((match) => match[1]);
-assert.equal(primaryExpr, retryExpr, "primary and retry steps must use the identical rebuild policy");
-assert.doesNotMatch(primaryExpr, /inputs|rebuild_slickcharts/,
+assert.equal(assignments.length, 1,
+  `expected exactly one REBUILD_SLICKCHARTS assignment in the retry loop, got ${assignments.length}`);
+const policyExpr = assignments[0][1];
+assert.doesNotMatch(policyExpr, /inputs|rebuild_slickcharts/,
   "rebuild policy must never consult an input value: the compatibility flag is ignored");
 
 // --- Evaluate the policy against GitHub expression semantics. ---
 const CLAUSE = /^github\.event_name == '([a-z_]+)'$/;
 function rebuildPolicy(eventName) {
-  const expr = primaryExpr.replace(/^\$\{\{\s*|\s*\}\}$/g, "");
+  const expr = policyExpr.replace(/^\$\{\{\s*|\s*\}\}$/g, "");
   const clauses = expr.split(" || ");
   assert.ok(clauses.length >= 1, `policy must be a disjunction of event comparisons: ${expr}`);
   const names = clauses.map((clause) => {
