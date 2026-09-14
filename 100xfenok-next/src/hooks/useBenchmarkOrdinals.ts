@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   BENCHMARK_ORDINAL_GROUPS,
   readBenchmarkOrdinals,
@@ -29,6 +29,8 @@ export type BenchmarkOrdinalsHookState = "pending" | "ready" | "refused" | "fail
 export interface UseBenchmarkOrdinalsResult {
   state: BenchmarkOrdinalsHookState;
   view: BenchmarkOrdinalsView | null;
+  /** Re-runs the six-payload load for this hook instance only. */
+  refetch: () => void;
 }
 
 /**
@@ -36,10 +38,17 @@ export interface UseBenchmarkOrdinalsResult {
  * rule. Per-group refusals live INSIDE the view (one broken source must not
  * blank the others); the hook state only distinguishes loading, success,
  * gate refusal, and total transport loss (every fetch came back null).
+ *
+ * `refetch` bumps an attempt token inside the effect deps: the previous run's
+ * cancellation flag runs first (its cleanup), so a slow response from an
+ * earlier attempt can never overwrite the newer one, and the existing load and
+ * state semantics are untouched.
  */
 export function useBenchmarkOrdinals(): UseBenchmarkOrdinalsResult {
   const [state, setState] = useState<BenchmarkOrdinalsHookState>("pending");
   const [view, setView] = useState<BenchmarkOrdinalsView | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,7 +76,7 @@ export function useBenchmarkOrdinals(): UseBenchmarkOrdinalsResult {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
-  return { state, view };
+  return { state, view, refetch };
 }

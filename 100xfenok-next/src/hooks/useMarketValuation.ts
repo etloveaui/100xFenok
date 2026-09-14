@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   loadMarketStructureModel,
   marketStructurePulsesFromModel,
@@ -913,9 +913,15 @@ function buildIndexTrends(sp500: RawIndexPoint[] | null, nasdaq: RawIndexPoint[]
   ].filter((trend): trend is MarketIndexTrend => trend !== null);
 }
 
-export function useMarketValuation(): MarketValuationResult {
+export function useMarketValuation(): MarketValuationResult & { refetch: () => void } {
   const [result, setResult] = useState<MarketValuationResult>(EMPTY);
+  const [attempt, setAttempt] = useState(0);
   const isMountedRef = useRef(true);
+  // Attempt token in the effect deps: a refetch re-runs this instance's loader
+  // while the mounted guard (reset per run) keeps a superseded response from
+  // writing over a newer one. The last result stays visible until the new one
+  // lands, so panels keep their LKG content through the retry.
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -1057,7 +1063,7 @@ export function useMarketValuation(): MarketValuationResult {
     return () => {
       isMountedRef.current = false;
     };
-  }, []);
+  }, [attempt]);
 
-  return result;
+  return { ...result, refetch };
 }

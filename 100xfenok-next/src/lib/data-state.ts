@@ -83,6 +83,19 @@ export function latestAsOf(values: Array<string | null | undefined>): string | n
     .at(-1)?.raw ?? null;
 }
 
+/**
+ * Mirror of latestAsOf for conservative clocks: the OLDEST dated value, raw
+ * (not normalized) like its sibling, so a caller can print what the source
+ * actually carried. Undated values take no part in either selection.
+ */
+export function oldestAsOf(values: Array<string | null | undefined>): string | null {
+  return values
+    .map((value) => ({ raw: value ?? null, key: dateOnly(value) }))
+    .filter((item): item is { raw: string; key: string } => Boolean(item.raw && item.key))
+    .sort((a, b) => a.key.localeCompare(b.key))
+    .at(0)?.raw ?? null;
+}
+
 export function makeDataState(params: {
   status: DataReadinessStatus;
   label?: string;
