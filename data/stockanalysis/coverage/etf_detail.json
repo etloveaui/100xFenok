@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-09-13T23:13:32Z",
+  "generated_at": "2026-09-14T01:24:51Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,37 +17,37 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5581,
+    "candidate_total": 5597,
     "source_breakdown": {
-      "etf_universe": 5570,
+      "etf_universe": 5597,
       "etf_screener": 20,
       "new_etfs": 100
     },
     "detail_files": 5605,
     "covered_detail_files": 5444,
-    "missing_detail_files": 137,
+    "missing_detail_files": 153,
     "extra_detail_files": 161,
     "stockanalysis_detail_files": 5605,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 97.55,
-    "primary_stockanalysis_pct": 97.55,
+    "coverage_pct": 97.27,
+    "primary_stockanalysis_pct": 97.27,
     "missing_by_source": {
-      "etf_universe": 126,
+      "etf_universe": 153,
       "etf_screener": 0,
       "new_etfs": 100
     },
     "missing_status_breakdown": {
       "provider_gap_reprobe_due": 1,
-      "untracked": 136
+      "untracked": 152
     },
     "missing_failure_breakdown": {
       "provider_coverage_gap": 1,
-      "untracked": 136
+      "untracked": 152
     },
     "missing_availability_breakdown": {
       "provider_absent": 1,
-      "unprobed": 136
+      "unprobed": 152
     },
     "pending_tracked": 484,
     "pending_cooldown": 0,
@@ -56,15 +56,15 @@
   },
   "missing_reason_summary": {
     "provider_coverage_gap": 1,
-    "untracked": 136
+    "untracked": 152
   },
   "missing_status_summary": {
     "provider_gap_reprobe_due": 1,
-    "untracked": 136
+    "untracked": 152
   },
   "missing_availability_summary": {
     "provider_absent": 1,
-    "unprobed": 136
+    "unprobed": 152
   },
   "missing_reason_samples": {
     "provider_coverage_gap": [
@@ -73,6 +73,7 @@
     "untracked": [
       "ACBE",
       "ACBH",
+      "ACOM",
       "ACQQ",
       "ACRT",
       "ACSP",
@@ -81,8 +82,7 @@
       "AEMG",
       "AEMV",
       "AESB",
-      "AESG",
-      "AESL"
+      "AESG"
     ]
   },
   "missing_status_samples": {
@@ -92,6 +92,7 @@
     "untracked": [
       "ACBE",
       "ACBH",
+      "ACOM",
       "ACQQ",
       "ACRT",
       "ACSP",
@@ -100,8 +101,7 @@
       "AEMG",
       "AEMV",
       "AESB",
-      "AESG",
-      "AESL"
+      "AESG"
     ]
   },
   "missing_availability_samples": {
@@ -111,6 +111,7 @@
     "unprobed": [
       "ACBE",
       "ACBH",
+      "ACOM",
       "ACQQ",
       "ACRT",
       "ACSP",
@@ -119,13 +120,13 @@
       "AEMG",
       "AEMV",
       "AESB",
-      "AESG",
-      "AESL"
+      "AESG"
     ]
   },
   "missing_tickers": [
     "ACBE",
     "ACBH",
+    "ACOM",
     "ACQQ",
     "ACRT",
     "ACSP",
@@ -139,6 +140,7 @@
     "AGGM",
     "AHBM",
     "AIFR",
+    "AIHY",
     "AIMG",
     "AINF",
     "ANTW",
@@ -146,6 +148,7 @@
     "AXTQ",
     "BBLS",
     "BEMD",
+    "BNAV",
     "CCML",
     "CGPT",
     "COHQ",
@@ -164,6 +167,8 @@
     "GAIQ",
     "GCLO",
     "GEEQ",
+    "GEMQ",
+    "GOIB",
     "HAWG",
     "HBIL",
     "HBIT",
@@ -185,13 +190,16 @@
     "LBOX",
     "LITG",
     "LOFD",
+    "LSCP",
     "LWLX",
     "LYTE",
     "MATR",
     "MEGX",
+    "MEIB",
     "METQ",
     "MFSD",
     "MFSX",
+    "MLCC",
     "MPDB",
     "MPDY",
     "MPIA",
@@ -199,12 +207,16 @@
     "MRAX",
     "MTAW",
     "MUG",
+    "MUIB",
     "MUNF",
     "MUNG",
     "MUNH",
     "MUNJ",
     "MXLL",
     "NCLD",
+    "NQLT",
+    "NRAM",
+    "NVIB",
     "OAIW",
     "OCNL",
     "OPPG",
@@ -214,6 +226,7 @@
     "PHOX",
     "PJIN",
     "PJSM",
+    "PLIB",
     "PRAM",
     "PSOX",
     "QAU",
@@ -233,6 +246,7 @@
     "STLL",
     "STMX",
     "TGRZ",
+    "THOR",
     "TIH",
     "TIPF",
     "TIPG",
@@ -246,6 +260,8 @@
     "USLX",
     "USMX",
     "USSX",
+    "VEEM",
+    "VEGX",
     "VOOY",
     "WSMD",
     "XAIW",
@@ -434,6 +450,7 @@
     "missing": [
       "ACBE",
       "ACBH",
+      "ACOM",
       "ACQQ",
       "ACRT",
       "ACSP",
@@ -447,6 +464,7 @@
       "AGGM",
       "AHBM",
       "AIFR",
+      "AIHY",
       "AIMG",
       "AINF",
       "ANTW",
@@ -454,6 +472,7 @@
       "AXTQ",
       "BBLS",
       "BEMD",
+      "BNAV",
       "CCML",
       "CGPT",
       "COHQ",
@@ -472,16 +491,13 @@
       "GAIQ",
       "GCLO",
       "GEEQ",
+      "GEMQ",
+      "GOIB",
       "HAWG",
       "HBIL",
       "HBIT",
       "HIAI",
-      "HQDG",
-      "HWGV",
-      "HXA",
-      "HXC",
-      "HXE",
-      "HXF"
+      "HQDG"
     ],
     "missing_provider_gap_reprobe_due": [
       "DACL"
@@ -489,6 +505,7 @@
     "missing_untracked": [
       "ACBE",
       "ACBH",
+      "ACOM",
       "ACQQ",
       "ACRT",
       "ACSP",
@@ -497,8 +514,7 @@
       "AEMG",
       "AEMV",
       "AESB",
-      "AESG",
-      "AESL"
+      "AESG"
     ],
     "missing_provider_coverage_gap": [
       "DACL"
