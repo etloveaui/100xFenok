@@ -245,7 +245,7 @@ function MacroBentoPreview({ isPhone }: PreviewContext) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/80">
-              Regime Hero
+              Si-hwang Hero
             </p>
             <h3 className="mt-3 text-3xl font-black tracking-tight">위험 선호</h3>
             <p className="mt-1 text-sm text-white/70">핵심 판정 + 3축 분해를 가장 큰 타일로 고정합니다.</p>
@@ -353,7 +353,7 @@ function SignalCommandPreview({ isPhone }: PreviewContext) {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="inline-flex rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/80">
-                Regime Command
+                Si-hwang Command
               </p>
               <h3 className="mt-3 text-4xl font-black tracking-tight">위험 선호 72%</h3>
               <p className="mt-2 max-w-lg text-sm text-white/70">상단 Hero가 결론을 먼저 말하고, 아래 패널이 심리·확산·유동성·건전성을 진단합니다.</p>
@@ -561,7 +561,7 @@ function ChangeFeedPreview({ isPhone }: PreviewContext) {
       <section className="sticky top-0 rounded-[1.5rem] bg-[linear-gradient(180deg,#09111f_0%,#131f35_100%)] px-4 py-3 text-white shadow-[0_24px_42px_-32px_rgba(2,6,23,0.9)]">
         <div className={`flex gap-3 ${isPhone ? "flex-col" : "items-center justify-between"}`}>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-white/65">Regime Status Bar</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.14em] text-white/65">Si-hwang Status Bar</p>
             <h3 className="mt-1 text-2xl font-black">위험 선호 72% <span className="text-base text-emerald-300">▲2 vs 어제</span></h3>
           </div>
           <div className="flex flex-wrap gap-2 text-xs font-bold text-white/75">

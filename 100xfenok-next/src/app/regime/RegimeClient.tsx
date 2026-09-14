@@ -55,7 +55,7 @@ const REGIME_ACTIONS: RegimeAction[] = [
   {
     key: "sectors",
     label: "섹터 강도 확인",
-    detail: "국면과 맞는 업종 강도",
+    detail: "시황과 맞는 업종 강도",
     href: ROUTES.sectors,
   },
   {
@@ -363,13 +363,13 @@ function headerSentence(
   failed: boolean,
 ): string {
   if (loading) return "시장 신호를 불러오는 중입니다.";
-  if (failed) return "시장 국면 데이터를 불러오지 못했습니다. 다시 시도해 주세요.";
+  if (failed) return "시황 데이터를 불러오지 못했습니다.";
   if (gauge === null) return "표시할 신호가 아직 없습니다. 다음 마감 후 다시 확인해 주세요.";
   const hot = axes.filter((axis) => axis.pulses.length > 0 && (axis.tone === "rose" || axis.tone === "amber"));
   if (hot.length === 0) {
-    return `긍정 신호 ${gauge.friendly}개 · ${gauge.position} 국면 — 전 축에서 과열 징후가 없습니다.`;
+    return `긍정 신호 ${gauge.friendly}개 · ${gauge.position} — 과열 신호가 없습니다.`;
   }
-  return `긍정 ${gauge.friendly} · 주의 ${gauge.caution} · 경계 ${gauge.alert} — ${gauge.position} 국면, ${hot.map((axis) => axis.title).join("·")} 축을 함께 확인하세요.`;
+  return `긍정 ${gauge.friendly} · 주의 ${gauge.caution} · 경계 ${gauge.alert} — 살펴볼 축: ${hot.map((axis) => axis.title).join("·")}.`;
 }
 
 function CompositePanel({
@@ -399,7 +399,7 @@ function CompositePanel({
     <Panel
       loading={loading}
       empty={emptyActive}
-      emptyReason={failed ? "시장 국면 데이터를 불러오지 못했습니다" : "표시할 신호가 아직 없습니다"}
+      emptyReason={failed ? "시황 데이터를 불러오지 못했습니다" : "표시할 신호가 아직 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
       emptyActionLabel="다시 시도"
       onEmptyAction={reload}
@@ -407,8 +407,8 @@ function CompositePanel({
       {ready && gauge !== null && score !== null && (
         <div data-regime-headline>
           <PanelHeader
-            eyebrow="Market Regime"
-            title="종합 판독"
+            eyebrow="Si-hwang"
+            title="종합 신호"
             right={
               <Pill tone={asOf ? "neutral" : "warn"} data-regime-composite-asof>
                 {asOf ? `기준 ${formatAsOf(asOf)}` : "기준일 확인 필요"}
@@ -456,7 +456,7 @@ function CompositePanel({
       <div data-regime-composite-rail>
         <EvidenceRail
           freshness={loading ? "pending" : failed || !ready ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
-          source="국면 판독 엔진"
+          source="시황 엔진"
           asOf={asOf ? (formatAsOf(asOf) ?? asOf) : "—"}
           coverage={
             gauge === null
@@ -556,7 +556,7 @@ function AxisTablePanel({
       )}
       <EvidenceRail
         freshness={loading ? "pending" : failed || !ready ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
-        source="국면 판독 엔진"
+        source="시황 엔진"
         asOf={floor ? (formatAsOf(floor) ?? floor) : "—"}
         coverage={`${readyAxes}/4 축`}
         onRetry={failed || stale || partial ? reload : undefined}
@@ -572,12 +572,12 @@ function HistoryPanel() {
   return (
     <Panel>
       <div data-regime-history>
-        <PanelHeader eyebrow="Regime History" title="국면 히스토리 — 최근 12주" right={<Pill>주간</Pill>} />
+        <PanelHeader eyebrow="Si-hwang History" title="시황 기록 — 최근 12주" right={<Pill>주간</Pill>} />
         <EmptyState
-          reason="날짜별 국면 피드가 아직 없어 히스토리를 표시할 수 없습니다"
+          reason="날짜별 시황 데이터가 아직 없어 표시할 수 없습니다"
           nextRefresh="피드 연결 후 주간 갱신"
         />
-        <EvidenceRail freshness="pending" source="국면 판독 엔진 아카이브" asOf="—" coverage="0/12주" />
+        <EvidenceRail freshness="pending" source="시황 엔진 기록" asOf="—" coverage="0/12주" />
       </div>
     </Panel>
   );
@@ -615,7 +615,7 @@ function ActionsPanel({
       </div>
       <EvidenceRail
         freshness={loading ? "pending" : failed ? "error" : !floor || partial ? "partial" : "fresh"}
-        source="국면 엔진"
+        source="시황 엔진"
         asOf={floor ? (formatAsOf(floor) ?? floor) : "—"}
         coverage="4/4"
         onRetry={failed || partial ? reload : undefined}
@@ -719,7 +719,7 @@ export default function RegimeClient() {
     <div className="rgm" data-regime-surface>
       <div className="rgm-head">
         <div className="rgm-title-block">
-          <h1 className="rgm-title">시장 국면</h1>
+          <h1 className="rgm-title">시황</h1>
           <span className="rgm-verdict">{headerSentence(axes, gauge, isLoading, failed)}</span>
         </div>
         <div className="rgm-tabs">

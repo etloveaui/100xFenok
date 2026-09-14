@@ -431,8 +431,8 @@ export default function ChangesClient() {
         out.push({
           id: "snapshot:regime",
           ticker: null,
-          title: "시장 판독",
-          kind: "국면",
+          title: "종합 신호",
+          kind: "시황",
           before: snapshot.regime,
           after: regime.label,
           delta: "변경",

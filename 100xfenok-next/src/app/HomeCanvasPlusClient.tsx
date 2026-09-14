@@ -1,27 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import AppShell from "@/components/shell/AppShell";
 import TransitionLink from "@/components/TransitionLink";
 import { Bar } from "@/components/ui/Bar";
 import { EdgeMark } from "@/components/ui/EdgeMark";
-import { EvidenceRail } from "@/components/ui/EvidenceRail";
 import { Panel } from "@/components/ui/Panel";
 import { PanelHeader } from "@/components/ui/PanelHeader";
 import { Pill } from "@/components/ui/Pill";
 import { Tile } from "@/components/ui/Tile";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import {
-  buildProvenanceStages,
-  earliestNextSlotForLanes,
-  formatSlotShort,
-  nextSlotForLane,
-  summarizeAllServing,
-} from "@/lib/evidence/provenance";
-import { useEvidenceProvenance } from "@/lib/evidence/useEvidenceProvenance";
 import { clamp, getRegimeLabel } from "@/lib/dashboard/formatters";
-import { DATA_STATE_LABELS } from "@/lib/data-state";
+import { DATA_STATE_LABELS, oldestAsOf } from "@/lib/data-state";
 import type { DashboardSnapshot, DashboardSourceId, SectorSnapshot } from "@/lib/dashboard/types";
 import { projectMaterialChanges } from "@/lib/home/material-change";
 import { readPersonalFlags, type Flag } from "@/lib/personal/personal-state";
@@ -125,6 +115,53 @@ const INDEX_CARDS = [
 function formatDatePart(value: string | null | undefined): string {
   if (!value) return "대기";
   return value.slice(0, 10);
+}
+
+// Home provenance vocabulary. Labels and dot colors follow the EvidenceRail
+// words the removed rails used, so the page reads the same as before.
+type HomeFreshness = "pending" | "delayed" | "partial" | "stale" | "fixed" | "fresh";
+
+type HomeProvenance = { freshness: HomeFreshness; asOf: string | null };
+
+// Worst first: a pending fetch outranks the warning states, a delayed lane
+// outranks a partially available one, and a fixed (non-live) feed sits below
+// both. The date is always the oldest among the panels.
+const HOME_PROVENANCE_WORST_FIRST: ReadonlyArray<HomeFreshness> = [
+  "pending",
+  "delayed",
+  "partial",
+  "stale",
+  "fixed",
+  "fresh",
+];
+
+const HOME_PROVENANCE_LABEL: Record<HomeFreshness, string> = {
+  pending: "확인 중",
+  delayed: "지연",
+  partial: "부분",
+  stale: "대기",
+  fixed: "고정",
+  fresh: "신선",
+};
+
+const HOME_PROVENANCE_DOT: Record<HomeFreshness, string> = {
+  pending: "var(--fnk-color-warn)",
+  delayed: "var(--fnk-color-warn)",
+  partial: "var(--fnk-color-warn)",
+  stale: "var(--fnk-color-warn)",
+  fixed: "var(--fnk-neutral-500)",
+  fresh: "var(--fnk-color-gain)",
+};
+
+const HOME_PROVENANCE_SOURCES = "Fenok Edge · Sector Flow · 개인 플래그 · 리비전 · 13F";
+
+function aggregateHomeProvenance(panels: ReadonlyArray<HomeProvenance>): HomeProvenance {
+  return {
+    freshness: HOME_PROVENANCE_WORST_FIRST.find(
+      (state) => panels.some((panel) => panel.freshness === state),
+    ) ?? "fresh",
+    asOf: oldestAsOf(panels.map((panel) => panel.asOf)),
+  };
 }
 
 const REVISION_REFRESH_WEEKDAY_KST = 5; // Friday: weekly US-Thursday batch lands Friday 08:00 KST
@@ -483,7 +520,6 @@ function edgeStrengthLabel(score: number): string {
 
 export default function HomeCanvasPlusClient() {
   const { dashboard, dataReady, failedSources } = useDashboardData();
-  const { kpi: provenanceKpi, laneProjection } = useEvidenceProvenance();
   const indexCards = useIndexCards(dashboard);
   const { tile: kospi, loading: kospiLoading } = useKospiTile();
   const [reloadKey, setReloadKey] = useState(0);
@@ -502,7 +538,6 @@ export default function HomeCanvasPlusClient() {
 
   const indexUpdatedAt = useMemo(() => formatDatePart(maxTimestamp(indexCards.map((card) => card.fetchedAt))), [indexCards]);
   const dashboardSettled = dataReady || failedSources.length > 0;
-  const router = useRouter();
   const sectorTickerFailed = (etf: string): boolean =>
     failedSources.includes(`ticker:${etf}` as DashboardSourceId);
   const heatDelayed = dashboard.sectorRows.some((sector) => sectorTickerFailed(sector.etf));
@@ -594,30 +629,36 @@ export default function HomeCanvasPlusClient() {
   const laneDelayed = revisionOverdue;
   const laneAwaiting = !laneFresh && !lanePartial && !laneDelayed;
   const laneNext = laneAwaiting ? formatNextRefreshLabel(Date.now()) : undefined;
-  // Hosted provenance (slice-5 E3): lane-registry slots replace client-side guesses
-  // on the Edge/Sector rails; the Edge drawer stages are built from the public
-  // KPI + lane projection + this session's fetch-boundary stamps.
-  const slickNextSlot = nextSlotForLane(laneProjection, "slickcharts");
-  // P1: the Fenok Edge drawer/next slot attribute only the lanes and files the
-  // Edge panel actually reads — never global pipeline stamps.
-  const EDGE_PROVENANCE_LANES = ["sentiment", "benchmarks", "fred_banking"] as const;
-  const EDGE_SERVING_PREFIXES = [
-    "/data/sentiment/",
-    "/data/benchmarks/",
-    "/data/macro/fred-banking",
-    "/api/ticker/",
-  ] as const;
-  const edgeNextSlot = earliestNextSlotForLanes(laneProjection, EDGE_PROVENANCE_LANES);
-  const edgeStages = useMemo(
-    () => buildProvenanceStages({
-      kpi: provenanceKpi,
-      laneProjection,
-      serving: summarizeAllServing(),
-      scope: { laneIds: EDGE_PROVENANCE_LANES, servingUrlPrefixes: EDGE_SERVING_PREFIXES },
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [provenanceKpi, laneProjection, dataReady],
-  );
+  // One page-level provenance line replaces the four per-panel rails and the
+  // Edge header chip: the worst panel state against the OLDEST panel date,
+  // because the page is only as fresh as its oldest feed.
+  const lanePanelFreshness: HomeFreshness = anySourceLoading
+    ? "pending"
+    : laneFresh
+      ? "fresh"
+      : laneDelayed
+        ? "delayed"
+        : lanePartial
+          ? "partial"
+          : "stale";
+  const homeProvenance = aggregateHomeProvenance([
+    {
+      freshness: !dashboardSettled ? "pending" : edgeDelayed ? "delayed" : "fresh",
+      asOf: dashboard.tickerFetchedAt ?? null,
+    },
+    {
+      freshness: !dashboardSettled ? "pending" : heatDelayed ? "delayed" : dashboard.sectorMode === "LIVE_1D" ? "fresh" : "fixed",
+      asOf: dashboard.sectorMode === "LIVE_1D" ? dashboard.tickerFetchedAt ?? null : null,
+    },
+    {
+      freshness: lanePanelFreshness,
+      asOf: revisionEvidence.asOf ?? revisionEvidence.generatedAt ?? null,
+    },
+    {
+      freshness: lanePanelFreshness,
+      asOf: revisionEvidence.asOf ?? revisionEvidence.generatedAt ?? null,
+    },
+  ]);
   const changedEmptyMessage = bothSourcesLoading
     ? DATA_STATE_LABELS.pending
     : oneSourceLoading
@@ -648,26 +689,49 @@ export default function HomeCanvasPlusClient() {
 
   return (
     <div className="flex flex-col gap-3 md:gap-4">
-        <div className="flex items-baseline justify-between gap-3">
-          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="m-0 text-[18px] font-semibold text-[#0f172a] md:text-[20px]">오늘 시장의 기준점</h1>
-            <span className="text-[13px] text-[#64748b]">
-              시장 판독 <b className="font-semibold text-[#334155]">{regime.label}</b>
-              {" · "}데이터 <b className="font-semibold text-[#334155]">{dataReady ? "준비됨" : "대기 중"}</b>
-              {" · "}확인 필요 <b className="font-semibold text-[#b9791a]">{headerAttentionLabel}</b>
-              {failedSources.length > 0 && !anySourceLoading
-                ? " · 일부 소스 미수신"
-                : null}
-            </span>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h1 className="m-0 text-[18px] font-semibold text-[#0f172a] md:text-[20px]">오늘 시장</h1>
+              <span className="text-[13px] text-[#64748b]">
+                시황 <b className="font-semibold text-[#334155]">{regime.label}</b>
+                {" · "}확인 필요 <b className="font-semibold text-[#b9791a]">{headerAttentionLabel}</b>
+                {failedSources.length > 0 && !anySourceLoading
+                  ? " · 일부 소스 미수신"
+                  : null}
+              </span>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 max-md:hidden">
+              <Pill>시세 수집 {indexUpdatedAt}</Pill>
+              <TransitionLink
+                href={ROUTES.screener}
+                className="inline-flex h-8 items-center rounded-[6px] bg-[#1B73D3] px-3 text-[13px] font-semibold text-white transition-colors duration-150 hover:bg-[#155fae]"
+              >
+                종목 열기
+              </TransitionLink>
+            </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2 max-md:hidden">
-            <Pill>시세 수집 {indexUpdatedAt}</Pill>
-            <TransitionLink
-              href={ROUTES.screener}
-              className="inline-flex h-8 items-center rounded-[6px] bg-[#1B73D3] px-3 text-[13px] font-semibold text-white transition-colors duration-150 hover:bg-[#155fae]"
-            >
-              종목 열기
-            </TransitionLink>
+          <div
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--fnk-neutral-500)]"
+            data-home-provenance
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <span
+                aria-hidden="true"
+                className="inline-block h-1.5 w-1.5 rounded-full"
+                style={{ background: HOME_PROVENANCE_DOT[homeProvenance.freshness] }}
+              />
+              <b className="font-semibold text-[var(--fnk-neutral-700)]">{HOME_PROVENANCE_LABEL[homeProvenance.freshness]}</b>
+            </span>
+            <span>
+              기준{" "}
+              <b className="font-semibold tabular-nums text-[var(--fnk-neutral-700)]">
+                {formatDatePart(homeProvenance.asOf)}
+              </b>
+            </span>
+            <span>
+              출처 <b className="font-semibold text-[var(--fnk-neutral-700)]">{HOME_PROVENANCE_SOURCES}</b>
+            </span>
           </div>
         </div>
 
@@ -716,7 +780,7 @@ export default function HomeCanvasPlusClient() {
             <PanelHeader
               eyebrow="Fenok Edge"
               title="시장 체력 점수"
-              right={<><Pill tone={regime.confidence >= 62 ? "up" : regime.confidence >= 45 ? "neutral" : "down"}>{edgeStrengthLabel(regime.confidence)}</Pill><EvidenceRail variant="chip" freshness={edgeDelayed ? "delayed" : "fresh"} source="Fenok Edge" asOf={formatDatePart(dashboard.tickerFetchedAt)} coverage="" onEvidence={() => router.push(ROUTES.regime)} /></>}
+              right={<Pill tone={regime.confidence >= 62 ? "up" : regime.confidence >= 45 ? "neutral" : "down"}>{edgeStrengthLabel(regime.confidence)}</Pill>}
             />
             <div className="flex gap-4 p-[14px] md:gap-6 md:p-4">
               <div className="flex min-w-[72px] flex-col justify-center md:min-w-24">
@@ -743,15 +807,6 @@ export default function HomeCanvasPlusClient() {
                 </div>
               </div>
             </div>
-            <EvidenceRail
-              freshness={edgeDelayed ? "delayed" : "fresh"}
-              source="Fenok Edge"
-              asOf={formatDatePart(dashboard.tickerFetchedAt)}
-              coverage={`섹터 ${dashboard.sectorRows.length}개 · 실시간 ${dashboard.sectorLiveCount}개`}
-              next={edgeNextSlot ? formatSlotShort(edgeNextSlot.slot) ?? undefined : undefined}
-              stages={edgeStages.length > 0 ? edgeStages : undefined}
-              onEvidence={edgeStages.length > 0 ? undefined : () => router.push(ROUTES.regime)}
-            />
           </Panel>
 
           <Panel loading={!dashboardSettled} stale={heatDelayed} asOf={formatDatePart(dashboard.tickerFetchedAt)} onRetry={retrySources}>
@@ -772,14 +827,6 @@ export default function HomeCanvasPlusClient() {
                 />
               ))}
             </div>
-            <EvidenceRail
-              freshness={heatDelayed ? "delayed" : dashboard.sectorMode === "LIVE_1D" ? "fresh" : "fixed"}
-              source="Sector Flow"
-              asOf={dashboard.sectorMode === "LIVE_1D" ? formatDatePart(dashboard.tickerFetchedAt) : "1개월 기준"}
-              coverage={`${heatSectors.length}/${dashboard.sectorRows.length} 섹터`}
-              next={slickNextSlot ? formatSlotShort(slickNextSlot) ?? undefined : undefined}
-              onEvidence={() => router.push(ROUTES.sectors)}
-            />
           </Panel>
         </div>
 
@@ -847,18 +894,9 @@ export default function HomeCanvasPlusClient() {
                 );
               })}
             </div>
-            <EvidenceRail
-              freshness={laneFresh ? "fresh" : laneDelayed ? "delayed" : lanePartial ? "partial" : "stale"}
-              source="리비전 무버 · 13F"
-              asOf={revisionClock}
-              coverage={`후보 ${revisionEvidence.validCandidateCount + superinvestorEvidence.validCandidateCount}개`}
-              next={laneNext}
-              onEvidence={() => router.push(ROUTES.screener)}
-            />
           </Panel>
 
           <Panel
-            className="max-md:hidden"
             loading={bothSourcesLoading}
             empty={!anySourceLoading && projection.attention.length === 0}
             emptyReason={attentionEmptyMessage}
@@ -890,14 +928,6 @@ export default function HomeCanvasPlusClient() {
                 </TransitionLink>
               ))}
             </div>
-            <EvidenceRail
-              freshness={laneFresh ? "fresh" : laneDelayed ? "delayed" : lanePartial ? "partial" : "stale"}
-              source="개인 플래그 · 리비전 · 13F"
-              asOf={revisionClock}
-              coverage={`확인 대상 ${projection.attention.length}건`}
-              next={laneNext}
-              onEvidence={() => router.push(ROUTES.portfolio)}
-            />
           </Panel>
         </div>
     </div>
