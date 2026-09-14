@@ -348,8 +348,22 @@ function PeerComparePanel({
               <span className="tabular-nums" role="cell">
                 {index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}
               </span>
-              <span role="cell">
+              <span className="mv-range" role="cell">
                 <Pill tone={meta.pill}>{meta.label}</Pill>
+                {index.pe.percentile === null ? (
+                  <span className="mv-band mv-band-mini" aria-hidden="true" />
+                ) : (
+                  <span
+                    className="mv-band mv-band-mini"
+                    role="progressbar"
+                    aria-valuenow={index.pe.percentile}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${INDEX_KO[index.id] ?? index.name} 역사 백분위`}
+                  >
+                    <i style={{ left: `${index.pe.percentile}%` }} />
+                  </span>
+                )}
               </span>
             </div>
           );
