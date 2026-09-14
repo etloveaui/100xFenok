@@ -858,7 +858,6 @@ export default function HomeCanvasPlusClient() {
           </Panel>
 
           <Panel
-            className="max-md:hidden"
             loading={bothSourcesLoading}
             empty={!anySourceLoading && projection.attention.length === 0}
             emptyReason={attentionEmptyMessage}
