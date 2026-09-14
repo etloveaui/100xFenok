@@ -42,6 +42,7 @@ import {
   evaluateWorkflow,
   isQueueEvictedRun,
   mergeWorkflowRunBatches,
+  needsMissedWindowReverification,
   parseWorkflowRunsPayload,
   runtimeSlotKey,
 } from "./check-pipeline-job-health.mjs";
@@ -1623,5 +1624,27 @@ const ranJobs = jobsOf({ name: "fetch", conclusion: "failure", steps: [{ name: "
   assert.equal(unboundAttached[0].lane_outcome[0].owner_run_url, null);
   assert.equal(unboundAttached[1].status, "ok");
 }
+
+// fh-258 adjudication boundary: only a row that actually carries a
+// missed-window verdict triggers the widened re-read, and the runs URL keeps
+// its default page size while exposing the override the re-read uses.
+assert.equal(needsMissedWindowReverification({ missed_schedule_window_hours: 624.78 }), true);
+assert.equal(needsMissedWindowReverification({ missed_schedule_window_hours: null }), false);
+assert.equal(
+  needsMissedWindowReverification({
+    alarming: true,
+    alarm_reasons: ["failure_streak"],
+    missed_schedule_window_hours: null,
+  }),
+  false,
+  "failure-streak rows must not trigger the re-read",
+);
+assert.equal(needsMissedWindowReverification({}), false);
+assert.equal(needsMissedWindowReverification(null), false);
+assert.match(buildWorkflowRunsUrl({ owner: "o", repo: "r", file: "x.yml" }), /per_page=15/);
+assert.match(
+  buildWorkflowRunsUrl({ owner: "o", repo: "r", file: "x.yml", event: "schedule", perPage: 100 }),
+  /per_page=100/,
+);
 
 console.log("check-pipeline-job-health tests passed");
