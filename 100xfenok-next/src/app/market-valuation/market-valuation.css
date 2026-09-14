@@ -34,6 +34,52 @@
   color: var(--fnk-neutral-500);
 }
 
+/* One provenance line for the whole page: worst state of the four panels with
+ * the oldest date among them. Full-width inside .mv-head so it owns its row. */
+.mv-prov {
+  flex: 1 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+.mv-prov-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mv-prov b {
+  font-weight: 600;
+  color: var(--fnk-neutral-700);
+}
+
+.mv-prov-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fnk-neutral-500);
+}
+
+.mv-prov-dot[data-state="fresh"] {
+  background: var(--fnk-color-gain);
+}
+
+.mv-prov-dot[data-state="stale"],
+.mv-prov-dot[data-state="pending"],
+.mv-prov-dot[data-state="partial"] {
+  background: var(--fnk-color-warn);
+}
+
+.mv-prov-dot[data-state="error"] {
+  background: var(--fnk-color-loss);
+}
+
 .mv-tabs {
   display: flex;
   gap: 4px;
