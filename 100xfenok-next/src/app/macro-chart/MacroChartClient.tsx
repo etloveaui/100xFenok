@@ -491,7 +491,7 @@ const MACRO_CONNECTION_LINKS: readonly MacroConnectionLink[] = [
   {
     id: "etfs",
     label: "ETF 센터",
-    detail: "국면을 ETF 자산군, 레버리지, 단일종목 ETF로 연결한다.",
+    detail: "ETF 자산군·레버리지·단일종목 ETF로 이어서 본다.",
     href: (context) => context.etfHref,
     groups: ["equity", "rates", "credit", "liquidity", "activity", "sentiment"],
   },
@@ -2984,7 +2984,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             </TransitionLink>
             <TransitionLink href={activeMacroContext.etfHref} data-macro-chart-context-link="etf">
               <strong>ETF 센터</strong>
-              <span>{activeMacroContext.shortLabel} 국면을 ETF 자산군으로 봅니다.</span>
+              <span>{activeMacroContext.shortLabel}에 맞는 ETF 자산군입니다.</span>
             </TransitionLink>
             <TransitionLink href={activeMacroContext.stockHref} data-macro-chart-context-link="stock">
               <strong>{activeMacroContext.stockSymbol}</strong>

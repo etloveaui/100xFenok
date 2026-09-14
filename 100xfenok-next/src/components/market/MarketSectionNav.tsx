@@ -11,7 +11,7 @@ const MARKET_SECTION_ITEMS: Array<{
   label: string;
 }> = [
   { key: "valuation", href: ROUTES.market, label: "밸류에이션" },
-  { key: "regime", href: ROUTES.regime, label: "국면" },
+  { key: "regime", href: ROUTES.regime, label: "시황" },
   { key: "events", href: ROUTES.marketEvents, label: "이벤트" },
   { key: "sectors", href: ROUTES.sectors, label: "섹터" },
 ];

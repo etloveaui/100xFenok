@@ -84,7 +84,7 @@ const NAV: NavItem[] = [
   {
     id: "regime",
     group: "분석",
-    label: "국면",
+    label: "시황",
     href: ROUTES.regime,
     icon: (
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">

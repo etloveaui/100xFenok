@@ -553,7 +553,7 @@ function percentile(series: number[], current: number | null): number | null {
 }
 
 function erpRegime(percentileRank: number | null): { label: string; tone: MarketTone } {
-  if (percentileRank === null) return { label: "레짐 미정", tone: "slate" };
+  if (percentileRank === null) return { label: "판단 보류", tone: "slate" };
   if (percentileRank >= 80) return { label: "요구수익률 높음", tone: "emerald" };
   if (percentileRank >= 60) return { label: "보상 정상권 상단", tone: "slate" };
   if (percentileRank >= 40) return { label: "역사 중립", tone: "slate" };
