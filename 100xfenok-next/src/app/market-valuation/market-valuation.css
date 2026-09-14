@@ -364,17 +364,70 @@
   color: var(--fnk-neutral-500);
 }
 
-.mv-histref {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+/* Chart tabs: both charts stay mounted, so the idle one is hidden by CSS only
+ * and switching a tab never resizes, remounts or refetches a chart. */
+.mv-chart-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 16px 0;
+}
+
+.mv-chart-tabs button {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fnk-neutral-600);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.mv-chart-tabs button[aria-selected="true"] {
+  background: var(--fnk-neutral-100);
+  color: var(--fnk-brand-interactive);
+  font-weight: 600;
+}
+
+.mv-chart-cursor {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+.mv-chart-cursor b {
+  font-weight: 600;
+  color: var(--fnk-neutral-700);
+}
+
+.mv-chart-panes {
+  position: relative;
   padding: 14px 16px;
 }
 
-@media (max-width: 900px) {
-  .mv-histref {
-    grid-template-columns: minmax(0, 1fr);
-  }
+/* The idle pane keeps its layout box (visibility, not display) so the chart
+ * inside keeps a real canvas size and needs no resize when it comes back. It is
+ * clipped to the container while hidden so it can never add page scroll, and
+ * visibility:hidden keeps its controls out of the tab order. */
+.mv-chart-pane {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mv-chart-pane[data-active] {
+  position: static;
+  overflow: visible;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .mv-chart-cap {
@@ -449,7 +502,8 @@
   }
   .mv-horizons button,
   .mv-chips button,
-  .mv-sorts button {
+  .mv-sorts button,
+  .mv-chart-tabs button {
     height: 44px;
     padding: 0 14px;
   }

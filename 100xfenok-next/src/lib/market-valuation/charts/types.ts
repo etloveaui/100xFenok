@@ -95,4 +95,11 @@ export interface MarketChartEngineProps {
   xScaleMode?: "category" | "time";
   /** Optional ISO-date bands drawn behind time-series datasets. */
   dateBands?: readonly MarketChartDateBand[];
+  /**
+   * Shared cursor date from a sibling chart (linked cursor). When this chart has
+   * no local hover, the crosshair is drawn at the label that best matches it —
+   * exact label, same year for coarser axes, otherwise the nearest date — so
+   * two charts with different cadences still land on the same observation.
+   */
+  cursorLabel?: string | null;
 }

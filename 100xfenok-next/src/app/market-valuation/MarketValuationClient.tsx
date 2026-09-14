@@ -40,6 +40,13 @@ const INDEX_KO: Record<string, string> = {
   russell2000: "러셀 2000",
 };
 
+type ChartTabId = "erp" | "yardeni";
+
+const CHART_TABS: ReadonlyArray<{ id: ChartTabId; label: string }> = [
+  { id: "erp", label: "Damodaran ERP" },
+  { id: "yardeni", label: "Yardeni 채권 대비 PER" },
+];
+
 const PEER_ORDER = ["sp500", "nasdaq100", "nasdaq_composite", "russell2000"];
 
 const ALL_GROUPS = "all" as const;
@@ -510,6 +517,10 @@ function HistoricalReferencePanel({
 }) {
   const [erp, setErp] = useState<LedgerChartLoadStatus>({ state: "pending", asOf: null });
   const [yardeni, setYardeni] = useState<LedgerChartLoadStatus>({ state: "pending", asOf: null });
+  const [chartTab, setChartTab] = useState<ChartTabId>("erp");
+  // One cursor date shared by both tabs: hovering the active chart sets it, the
+  // idle chart draws it, and switching tabs carries it across.
+  const [cursorDate, setCursorDate] = useState<string | null>(null);
   // Refetch is local to this panel: bumping the attempt token remounts the two
   // chart loaders (they own their fetches), and the statuses drop back to
   // pending so the panel reads as loading again while they re-run.
@@ -517,6 +528,7 @@ function HistoricalReferencePanel({
   const refetch = () => {
     setErp({ state: "pending", asOf: null });
     setYardeni({ state: "pending", asOf: null });
+    setCursorDate(null);
     setAttempt((value) => value + 1);
   };
   const pending = erp.state === "pending" || yardeni.state === "pending";
@@ -559,14 +571,75 @@ function HistoricalReferencePanel({
       onRetry={stale ? refetch : undefined}
     >
       <PanelHeader eyebrow="Historical Reference" title="ERP · 채권 대비 PER 추이" right={<Pill>20Y</Pill>} />
-      <div className="mv-histref" data-market-valuation-chart-grid aria-busy={pending}>
-        <div>
+      {/* Both charts stay mounted: the idle tab is hidden by CSS only, so
+          switching never remounts (and never refetches) a chart. */}
+      <div className="mv-chart-tabs" role="tablist" aria-label="역사 참조 차트">
+        {CHART_TABS.map((item) => {
+          const active = chartTab === item.id;
+          return (
+            <button
+              key={item.id}
+              id={`mv-chart-tab-${item.id}`}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              aria-controls={`mv-chart-pane-${item.id}`}
+              tabIndex={active ? 0 : -1}
+              onClick={() => setChartTab(item.id)}
+              onKeyDown={(event) => {
+                const delta = event.key === "ArrowRight" || event.key === "ArrowDown"
+                  ? 1
+                  : event.key === "ArrowLeft" || event.key === "ArrowUp"
+                    ? -1
+                    : 0;
+                if (delta === 0) return;
+                event.preventDefault();
+                const index = CHART_TABS.findIndex((entry) => entry.id === chartTab);
+                const next = CHART_TABS[(index + delta + CHART_TABS.length) % CHART_TABS.length];
+                setChartTab(next.id);
+                window.requestAnimationFrame(() => document.getElementById(`mv-chart-tab-${next.id}`)?.focus());
+              }}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+        <span className="mv-chart-cursor">
+          커서 <b className="tabular-nums">{cursorDate ?? "—"}</b>
+        </span>
+      </div>
+      <div className="mv-chart-panes" data-market-valuation-chart-grid aria-busy={pending}>
+        <div
+          id="mv-chart-pane-erp"
+          role="tabpanel"
+          aria-labelledby="mv-chart-tab-erp"
+          className="mv-chart-pane"
+          data-active={chartTab === "erp" || undefined}
+        >
           <p className="mv-chart-cap">Damodaran ERP vs 10년물</p>
-          <ErpHistoryPanel key={`erp-${attempt}`} bare onStatus={setErp} />
+          <ErpHistoryPanel
+            key={`erp-${attempt}`}
+            bare
+            onStatus={setErp}
+            onCursor={setCursorDate}
+            cursorLabel={chartTab === "erp" ? null : cursorDate}
+          />
         </div>
-        <div>
+        <div
+          id="mv-chart-pane-yardeni"
+          role="tabpanel"
+          aria-labelledby="mv-chart-tab-yardeni"
+          className="mv-chart-pane"
+          data-active={chartTab === "yardeni" || undefined}
+        >
           <p className="mv-chart-cap">Yardeni 채권 대비 PER</p>
-          <YardeniOverlayChartPanel key={`yardeni-${attempt}`} bare onStatus={setYardeni} />
+          <YardeniOverlayChartPanel
+            key={`yardeni-${attempt}`}
+            bare
+            onStatus={setYardeni}
+            onCursor={setCursorDate}
+            cursorLabel={chartTab === "yardeni" ? null : cursorDate}
+          />
         </div>
       </div>
     </Panel>

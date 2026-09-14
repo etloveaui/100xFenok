@@ -64,6 +64,47 @@ function buildLabels(series: readonly MarketChartSeries[], sortLabels: boolean):
   return sortLabels ? labels.sort(compareLabels) : labels;
 }
 
+/**
+ * Nearest-observation index for a shared cursor date. Charts on this route mix
+ * year labels (Damodaran ERP) with daily labels (Yardeni), so an exact match is
+ * tried first, then the same-year counterpart, then the smallest date distance.
+ * A shared cursor must land on an observation the sibling actually has; when
+ * nothing matches, -1 means "draw nothing" rather than a plausible guess.
+ */
+function resolveCursorIndex(labels: readonly string[], cursorLabel: string): number {
+  const exact = labels.indexOf(cursorLabel);
+  if (exact >= 0) return exact;
+
+  const isYear = /^\d{4}$/.test(cursorLabel);
+  const isDay = /^\d{4}-\d{2}-\d{2}/.test(cursorLabel);
+  if (isDay) {
+    const yearIndex = labels.findIndex((label) => label === cursorLabel.slice(0, 4));
+    if (yearIndex >= 0) return yearIndex;
+  }
+  if (isYear) {
+    let lastInYear = -1;
+    labels.forEach((label, index) => {
+      if (label.slice(0, 4) === cursorLabel) lastInYear = index;
+    });
+    if (lastInYear >= 0) return lastInYear;
+  }
+
+  const cursorMs = Date.parse(cursorLabel);
+  if (!Number.isFinite(cursorMs)) return -1;
+  let best = -1;
+  let bestDelta = Number.POSITIVE_INFINITY;
+  labels.forEach((label, index) => {
+    const labelMs = Date.parse(label);
+    if (!Number.isFinite(labelMs)) return;
+    const delta = Math.abs(labelMs - cursorMs);
+    if (delta < bestDelta) {
+      bestDelta = delta;
+      best = index;
+    }
+  });
+  return best;
+}
+
 function backgroundColors(
   values: Array<number | null>,
   color: string,
@@ -301,6 +342,7 @@ export function MarketChartEngineClient({
   logScale = false,
   xScaleMode = "category",
   dateBands = [],
+  cursorLabel = null,
 }: MarketChartEngineProps) {
   const theme = useMarketChartTheme();
   const [keyboardIndex, setKeyboardIndex] = useState<number | null>(null);
@@ -311,6 +353,12 @@ export function MarketChartEngineClient({
   const labels = useMemo(
     () => buildLabels(visibleSeries, sortLabels),
     [visibleSeries, sortLabels],
+  );
+  // Time-scale charts carry no category labels, so the shared cursor resolves
+  // against the union of the visible series' own dates.
+  const cursorLabels = useMemo(
+    () => (xScaleMode === "time" ? buildLabels(visibleSeries, true) : labels),
+    [labels, visibleSeries, xScaleMode],
   );
   const data = useMemo(
     () => buildData(type, visibleSeries, labels, theme, spanGaps, xScaleMode),
@@ -395,24 +443,45 @@ export function MarketChartEngineClient({
     () => ({
       id: "market-chart-crosshair",
       afterDraw(chart) {
+        const { bottom, top, left, right } = chart.chartArea;
         const active = chart.tooltip?.getActiveElements?.() ?? [];
         const first = active[0];
-        if (!first) return;
-        const { bottom, top } = chart.chartArea;
-        const x = first.element.x;
         const ctx = chart.ctx;
+        if (first) {
+          const x = first.element.x;
+          ctx.save();
+          ctx.beginPath();
+          ctx.setLineDash([4, 4]);
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = theme.token("ink4");
+          ctx.moveTo(x, top);
+          ctx.lineTo(x, bottom);
+          ctx.stroke();
+          ctx.restore();
+          return;
+        }
+        // Linked cursor: no local hover, so stand on the shared date the
+        // sibling chart broadcast (brand dash keeps it distinct from hover).
+        if (!cursorLabel) return;
+        const index = resolveCursorIndex(cursorLabels, cursorLabel);
+        const label = index >= 0 ? cursorLabels[index] : undefined;
+        if (label === undefined) return;
+        const xScale = chart.scales.x;
+        if (!xScale) return;
+        const pixel = xScale.getPixelForValue(xScaleMode === "time" ? Date.parse(label) : index);
+        if (!Number.isFinite(pixel) || pixel < left || pixel > right) return;
         ctx.save();
         ctx.beginPath();
-        ctx.setLineDash([4, 4]);
+        ctx.setLineDash([2, 3]);
         ctx.lineWidth = 1;
-        ctx.strokeStyle = theme.token("ink4");
-        ctx.moveTo(x, top);
-        ctx.lineTo(x, bottom);
+        ctx.strokeStyle = theme.token("brand");
+        ctx.moveTo(pixel, top);
+        ctx.lineTo(pixel, bottom);
         ctx.stroke();
         ctx.restore();
       },
     }),
-    [theme],
+    [cursorLabel, cursorLabels, theme, xScaleMode],
   );
 
   useEffect(() => {

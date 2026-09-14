@@ -139,9 +139,15 @@ function latestDate(dates: Array<string | undefined>): string | null {
 export function ErpHistoryPanel({
   bare = false,
   onStatus,
+  cursorLabel = null,
+  onCursor,
 }: {
   bare?: boolean;
   onStatus?: (status: LedgerChartLoadStatus) => void;
+  /** Shared cursor date broadcast by the sibling chart (tab link). */
+  cursorLabel?: string | null;
+  /** Reports this chart's hovered label up to the shared cursor. */
+  onCursor?: (label: string | null) => void;
 }) {
   const [model, setModel] = useState<ErpHistoryModel | null>(null);
   const onStatusRef = useRef(onStatus);
@@ -203,6 +209,8 @@ export function ErpHistoryPanel({
       ]}
       defaultRangeId="20Y"
       footnote="Damodaran 내재 ERP · 좌축 %, S&P는 우축 · 토글로 비교"
+      cursorLabel={cursorLabel}
+      onHoverLabel={onCursor}
     />
   );
 }
@@ -253,9 +261,15 @@ export function AnnualReturnsChartPanel() {
 export function YardeniOverlayChartPanel({
   bare = false,
   onStatus,
+  cursorLabel = null,
+  onCursor,
 }: {
   bare?: boolean;
   onStatus?: (status: LedgerChartLoadStatus) => void;
+  /** Shared cursor date broadcast by the sibling chart (tab link). */
+  cursorLabel?: string | null;
+  /** Reports this chart's hovered label up to the shared cursor. */
+  onCursor?: (label: string | null) => void;
 }) {
   const [model, setModel] = useState<YardeniOverlayModel | null>(null);
   const onStatusRef = useRef(onStatus);
@@ -322,6 +336,8 @@ export function YardeniOverlayChartPanel({
           ]}
           defaultRangeId="20Y"
           footnote={`야데니 공개 파생 데이터 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}주 · 전체 기간은 1990년 이후`}
+          cursorLabel={cursorLabel}
+          onHoverLabel={onCursor}
         />
         <dl className="mt-2 grid min-w-0 grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-5">
           {stats.map(([label, value]) => (
@@ -371,6 +387,8 @@ export function YardeniOverlayChartPanel({
         ]}
         defaultRangeId="20Y"
         footnote={`야데니 공개 파생 데이터 ${model?.meta.reachable_count.toLocaleString("ko-KR") ?? "—"}주 · 전체 기간은 1990년 이후`}
+        cursorLabel={cursorLabel}
+        onHoverLabel={onCursor}
       />
 
       <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-5">
