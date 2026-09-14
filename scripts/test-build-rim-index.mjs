@@ -1,4 +1,30 @@
 #!/usr/bin/env node
+// RETIRED FROM THE qa:rim-index CHAIN 2026-09-14 (fh-360).
+//
+// This integration test builds the RIM index against a fixture era pinned at
+// 2026-08-07 while symlinking live data (benchmarks, macro, ...) that keeps
+// advancing: the benchmark refreshes weekly and the FRED macro file keeps a
+// rolling ~1-year window. As live data moved past the fixture era, era-pinned
+// assertions began failing — first the CCMP measured payout, whose 365-day
+// lookback anchor rolled out of the window, then the direct CCMP snapshot,
+// whose live benchmark row date passed the fixture spot date. The RIM producer
+// is dormant (no hosted writer; B-413), so the era data cannot be re-derived
+// and re-pinning it is out of scope; the owner-approved disposition (fh-360) is
+// to skip the dead chain instead of reviving data.
+//
+// The chain's `build-rim-index --check` leg is skipped for the same reason: it
+// rebuilds with the committed artifact's frozen generated_at against live
+// sources that have advanced past it, so it is structurally red until the
+// artifacts are regenerated (a revival, out of scope here).
+//
+// qa:rim-band is skipped from the chain for a separate reason discovered by the
+// same dispatch: the market-valuation panel was rewritten by the light system
+// (2026-09-04) and no longer carries the "목표가가 아니며" disclosure the render
+// contract requires, so that leg is red on main independently of this lane.
+//
+// The file is kept for historical/audit use. Restoring it to the chain needs
+// either an era-hermetic fixture overhaul (every live source pinned to the
+// fixture clock) or a full re-pin of the fixture era to live data.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
