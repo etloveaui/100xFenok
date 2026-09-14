@@ -519,4 +519,24 @@
   .mv-sorts-label {
     font-weight: 600;
   }
+  /* Touch-target audit: every control inside the route surface reaches 44px on
+   * phones — the local filters, the chart tabs, the sort control, the chart's
+   * own range/toggle buttons (already min-h-11), and the shared retry
+   * affordances (Panel's stale strip and the empty-state action) that are sized
+   * for desktop elsewhere. The stale strip grows with its button. */
+  .mv button {
+    min-height: 44px;
+  }
+  .mv .stale-state {
+    height: auto;
+    min-height: 44px;
+  }
+  /* Adequate spacing between adjacent controls. */
+  .mv-board-controls,
+  .mv-horizons,
+  .mv-chips,
+  .mv-sorts,
+  .mv-chart-tabs {
+    gap: 8px;
+  }
 }
