@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.1.0",
   "created": "2026-01-20",
-  "last_updated": "2026-09-13",
+  "last_updated": "2026-09-14",
   "purpose": "Central registry for data folder schemas and versions. Agents should read this first.",
   "folders": {
     "admin": {
@@ -16,12 +16,12 @@
     },
     "benchmarks": {
       "version": "3.8.0",
-      "updated": "2026-09-04",
+      "updated": "2026-09-11",
       "update_frequency": "weekly",
       "source": "Bloomberg Terminal",
       "file_count": 7,
       "schema": true,
-      "description": "Market indices P/E, P/B, ROE - 32,285 records, 2010-01-01 ~ 2026-09-04, 38 sections, 871 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
+      "description": "Market indices P/E, P/B, ROE - 32,323 records, 2010-01-01 ~ 2026-09-13, 38 sections, 872 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     "damodaran": {
       "version": "2.3.0",
@@ -216,6 +216,13 @@
     }
   },
   "recent_changes": [
+    {
+      "date": "2026-09-14",
+      "folder": "benchmarks",
+      "version": "3.8.0",
+      "change": "Weekly refresh from the 2026-09-11 Bloomberg workbook: 32,323 records (+38), 2010-01-01 ~ 2026-09-13, 38 sections, 872 data points per index (kosdaq_150 871, hang_seng_tech 611, star50 321); source summaries hold 2,404 values and 66 nulls. History preservation follows DEC-275 source-wins with floor-only retention.",
+      "breaking": false
+    },
     {
       "date": "2026-09-13",
       "folder": "global-scouter",
@@ -955,9 +962,9 @@
       "path": "/data/benchmarks/",
       "schemaVersion": "3.8.0",
       "fileCount": 7,
-      "lastUpdated": "2026-09-04",
+      "lastUpdated": "2026-09-11",
       "lastUpdatedReason": null,
-      "notes": "Market indices P/E, P/B, ROE - 32,285 records, 2010-01-01 ~ 2026-09-04, 38 sections, 871 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
+      "notes": "Market indices P/E, P/B, ROE - 32,323 records, 2010-01-01 ~ 2026-09-13, 38 sections, 872 S&P 500 data points + source_summaries for price/EPS/PER/PBR/ROE"
     },
     {
       "name": "damodaran",
