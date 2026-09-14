@@ -26,7 +26,9 @@ import {
   MISSED_WINDOW_WORKFLOWS,
   cronIntervalHours,
   evaluateWorkflow,
+  mergeWorkflowRunBatches,
   missedSlotCount,
+  needsMissedWindowReverification,
 } from "./check-pipeline-job-health.mjs";
 
 const HOUR = 3_600_000;
@@ -117,5 +119,61 @@ assert.equal(missedSlotCount("not a cron", 0, NOW), null);
 }
 
 assert.equal(MISSED_WINDOW_MULTIPLIER, 2, "the tolerated missed-slot count is part of the contract");
+
+// fh-258 stale-page fixture. Measured 2026-09-14T08:11:53Z: the serving-probe
+// row anchored at 2026-08-19T07:24:30Z with 105 passed slots while run
+// 34809685448 had already succeeded on 2026-09-14T05:27:04Z. The detector had
+// accepted a stale single page; nothing else reproduces that row.
+const STALE_PROBE_NOW = Date.parse("2026-09-14T08:11:53Z");
+const STALE_ANCHOR = run(32227682844, "2026-08-19T07:24:30Z", { conclusion: "failure" });
+
+{
+  const result = evaluateWorkflow(
+    detector("data-plane-serving-probe.yml", "41 */6 * * *"),
+    [STALE_ANCHOR],
+    { now: STALE_PROBE_NOW },
+  );
+  assert.equal(result.latest_run_started_at, "2026-08-19T07:24:30Z");
+  assert.equal(result.missed_schedule_slot_count, 105, "the measured stale row is 105 passed slots");
+  assert.equal(result.alarm_reasons.includes("missed_schedule_window"), true);
+  assert.equal(
+    needsMissedWindowReverification(result),
+    true,
+    "a missed-window verdict must be re-read before it pages",
+  );
+}
+
+{
+  // Disagreeing second read: the widened page carries the fresh success, so the
+  // merged evaluation clears the false positive (one slot, not 105).
+  const merged = mergeWorkflowRunBatches([
+    [STALE_ANCHOR],
+    [run(34809685448, "2026-09-14T05:27:04Z")],
+  ]);
+  const result = evaluateWorkflow(
+    detector("data-plane-serving-probe.yml", "41 */6 * * *"),
+    merged,
+    { now: STALE_PROBE_NOW },
+  );
+  assert.equal(result.latest_run_started_at, "2026-09-14T05:27:04Z");
+  assert.equal(result.missed_schedule_slot_count, 1);
+  assert.equal(result.alarm_reasons.includes("missed_schedule_window"), false);
+}
+
+{
+  // Agreeing second read: a page repeating the same silent anchor is not
+  // evidence the workflow resumed, so the alarm stands.
+  const agreeing = mergeWorkflowRunBatches([
+    [STALE_ANCHOR],
+    [run(32227682845, "2026-08-19T07:24:30Z", { conclusion: "failure" })],
+  ]);
+  const result = evaluateWorkflow(
+    detector("data-plane-serving-probe.yml", "41 */6 * * *"),
+    agreeing,
+    { now: STALE_PROBE_NOW },
+  );
+  assert.equal(result.missed_schedule_slot_count, 105);
+  assert.equal(result.alarm_reasons.includes("missed_schedule_window"), true);
+}
 
 console.log(`missed schedule window: ok (${MISSED_WINDOW_WORKFLOWS.size} detectors in scope, x${MISSED_WINDOW_MULTIPLIER} tolerance)`);
