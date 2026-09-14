@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-14T15:26:14.862Z",
+  "generated_at": "2026-09-14T16:08:48.676Z",
   "status": "open",
-  "open_incident_count": 16,
+  "open_incident_count": 14,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -19,20 +19,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "fetch-defillama.yml",
-      "label": "Fetch DefiLlama Stablecoins Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "unrecovered_overdue"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
     },
     {
       "workflow": "fetch-edgar-filings.yml",
@@ -92,22 +78,6 @@
       ],
       "lane_outcome_lanes": [
         "finra_ats_weekly"
-      ],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "not_due"
-    },
-    {
-      "workflow": "fetch-fred-macro.yml",
-      "label": "Fetch FRED Macro Data",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "lane_outcome_overdue"
-      ],
-      "lane_outcome_lanes": [
-        "fred_macro"
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
@@ -360,10 +330,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "fetch-edgar-filings.yml",
@@ -508,7 +476,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 14
+      "data_freshness_age_hours_at_generation": 15
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -656,8 +624,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 25,
-    "overdue": 1,
+    "not_due": 26,
+    "overdue": 0,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -673,18 +641,16 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "34861874369",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34861874369",
-    "observed_at": "2026-09-14T15:26:14.862Z",
+    "run_id": "34866498728",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34866498728",
+    "observed_at": "2026-09-14T16:08:48.676Z",
     "event": "workflow_run",
     "workflows": [
       "fenok-edge-krx-daily.yml",
-      "fetch-defillama.yml",
       "fetch-edgar-filings.yml",
       "fetch-fdic.yml",
       "fetch-fenok-apewisdom.yml",
       "fetch-finra-ats-weekly.yml",
-      "fetch-fred-macro.yml",
       "fetch-fred-yardeni.yml",
       "fetch-treasury-tga.yml",
       "global-writer-queue-observer.yml",
