@@ -5,7 +5,9 @@ import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import { useBenchmarkOrdinals } from "@/hooks/useBenchmarkOrdinals";
 import {
+  BENCHMARK_ORDINAL_GROUPS,
   benchmarkHorizonReading,
+  type BenchmarkGroupId,
   type BenchmarkOrdinalHorizon,
   type BenchmarkOrdinalRow,
 } from "@/lib/market-valuation/benchmarkOrdinals";
@@ -40,7 +42,9 @@ const INDEX_KO: Record<string, string> = {
 
 const PEER_ORDER = ["sp500", "nasdaq100", "nasdaq_composite", "russell2000"];
 
-const HIGHLIGHT_IDS = ["sp500", "nasdaq100", "nasdaq_composite", "russell2000", "kospi"];
+const ALL_GROUPS = "all" as const;
+
+type GroupFilter = BenchmarkGroupId | typeof ALL_GROUPS;
 
 const HORIZONS: ReadonlyArray<{ id: BenchmarkOrdinalHorizon; label: string }> = [
   { id: "all", label: "전체" },
@@ -275,31 +279,33 @@ function PeerComparePanel({
 function HistoricalPositionPanel({ onProvenance }: { onProvenance: (value: PanelProvenance) => void }) {
   const { state, view, refetch } = useBenchmarkOrdinals();
   const [horizon, setHorizon] = useState<BenchmarkOrdinalHorizon>("w10");
+  const [group, setGroup] = useState<GroupFilter>(ALL_GROUPS);
   const loading = state === "pending";
   const transportFailed = state === "refused" || state === "failed";
   const ready = state === "ready" && view?.status === "ready";
 
   const allRows: BenchmarkOrdinalRow[] = view && view.status === "ready"
-    ? view.groups.flatMap((group) => group.rows)
+    ? view.groups.flatMap((entry) => entry.rows)
     : [];
-  const ordered = [
-    ...HIGHLIGHT_IDS.map((id) => allRows.find((row) => row.id === id)).filter(
-      (row): row is BenchmarkOrdinalRow => row !== undefined,
-    ),
-    ...allRows.filter((row) => !HIGHLIGHT_IDS.includes(row.id)),
-  ];
-  const shown = ordered
-    .map((row) => ({ row, reading: benchmarkHorizonReading(row, horizon) }))
-    .filter((item) => item.reading.percentile !== null)
-    .slice(0, 8);
+  const readable = allRows
+    .map((row, index) => ({ row, index, reading: benchmarkHorizonReading(row, horizon) }))
+    .filter((item) => item.reading.percentile !== null);
+  // The board is the working surface: every rankable row stays, highest
+  // percentile first, and equal percentiles keep the source order.
+  const ranked = readable
+    .filter((item) => group === ALL_GROUPS || item.row.groupId === group)
+    .sort((a, b) => (b.reading.percentile ?? 0) - (a.reading.percentile ?? 0) || a.index - b.index)
+    .map((item, index) => ({ ...item, rank: index + 1 }));
   const groupRefusals = view && view.status === "ready"
-    ? view.groups.filter((group) => group.refusal)
+    ? view.groups.filter((entry) => entry.refusal)
     : [];
   const horizonLabel = HORIZONS.find((item) => item.id === horizon)?.label ?? "10년";
   const asOf = view && view.status === "ready" ? view.asOf : null;
-  // Loaded groups stay visible when siblings refuse (LKG): only a fully
-  // empty board becomes the empty state.
-  const empty = !loading && shown.length === 0;
+  // Loaded groups stay visible when siblings refuse (LKG): only a fully empty
+  // board becomes the empty state. A filter that matches nothing is a filtered
+  // view of live data, not an empty panel — it gets a note instead.
+  const empty = !loading && readable.length === 0;
+  const filteredEmpty = !loading && !empty && ranked.length === 0;
   const partial = !loading && !empty && (!ready || groupRefusals.length > 0);
   const stale = !loading && !empty && !transportFailed && isStaleAsOf(asOf);
   const freshness: ProvenanceFreshness = loading
@@ -333,37 +339,56 @@ function HistoricalPositionPanel({ onProvenance }: { onProvenance: (value: Panel
         title={`${allRows.length > 0 ? allRows.length : 38}종 자산 — 역사 대비 위치`}
         right={<Pill>{horizonLabel} 기준</Pill>}
       />
-      <div className="mv-horizons" role="group" aria-label="역사 구간">
-        {HORIZONS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            aria-pressed={horizon === item.id}
-            onClick={() => setHorizon(item.id)}
-          >
-            {item.label}
+      <div className="mv-board-controls">
+        <div className="mv-horizons" role="group" aria-label="역사 구간">
+          {HORIZONS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-pressed={horizon === item.id}
+              onClick={() => setHorizon(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <div className="mv-chips" role="group" aria-label="자산군 필터">
+          <button type="button" aria-pressed={group === ALL_GROUPS} onClick={() => setGroup(ALL_GROUPS)}>
+            전체
           </button>
-        ))}
+          {BENCHMARK_ORDINAL_GROUPS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-pressed={group === item.id}
+              onClick={() => setGroup(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
-      <div>
-        {shown.map(({ row, reading }) => {
+      <div className="mv-board-list">
+        {ranked.map(({ row, reading, rank }) => {
           const pct = reading.percentile ?? 0;
           const meta = valuationMeta(reading.percentile);
           return (
             <div className="mv-brow" tabIndex={0} key={row.id}>
+              <span className="mv-brank tabular-nums">{rank}</span>
               <span className="mv-bname">{row.name}</span>
               <div className="mv-band" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${row.name} 역사 백분위`}>
                 <i style={{ left: `${pct}%` }} />
               </div>
               <span className="mv-bpct tabular-nums">{pct}%</span>
-              <span className={meta.num}>{meta.label}</span>
+              <span className={`mv-blabel ${meta.num}`}>{meta.label}</span>
             </div>
           );
         })}
       </div>
+      {filteredEmpty ? <p className="mv-note">이 자산군에는 표시할 역사 위치 데이터가 없습니다</p> : null}
       {groupRefusals.length > 0 ? (
         <p className="mv-note">
-          {groupRefusals.map((group) => group.label).join(" · ")}: 표시할 수 없습니다
+          {groupRefusals.map((item) => item.label).join(" · ")}: 표시할 수 없습니다
         </p>
       ) : null}
     </Panel>

@@ -170,7 +170,7 @@
 
 .mv-brow {
   display: grid;
-  grid-template-columns: 150px 1fr 52px 72px;
+  grid-template-columns: 26px 140px minmax(0, 1fr) 52px 72px;
   align-items: center;
   gap: 12px;
   height: 34px;
@@ -187,6 +187,13 @@
   background: var(--fnk-neutral-50);
 }
 
+.mv-brank {
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
 .mv-bname {
   color: var(--fnk-neutral-700);
   min-width: 0;
@@ -199,6 +206,57 @@
   text-align: right;
   font-weight: 600;
   color: var(--fnk-neutral-900);
+}
+
+.mv-blabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Board controls: horizon segmented control + asset-group filter chips. */
+.mv-board-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 0;
+}
+
+.mv-horizons,
+.mv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mv-horizons button,
+.mv-chips button {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fnk-neutral-600);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.mv-horizons button[aria-pressed="true"],
+.mv-chips button[aria-pressed="true"] {
+  background: var(--fnk-neutral-100);
+  color: var(--fnk-brand-interactive);
+  font-weight: 600;
+}
+
+/* The board keeps every rankable row; the list scrolls instead of the page. */
+.mv-board-list {
+  margin-top: 10px;
+  max-height: 460px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* SPEC exception: the only gradient on the route (valuation-band stops). */
@@ -217,30 +275,6 @@
   background: #0f172a;
   border-radius: 1px;
   transform: translateX(-1px);
-}
-
-.mv-horizons {
-  display: flex;
-  gap: 4px;
-  padding: 10px 16px 0;
-}
-
-.mv-horizons button {
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--fnk-neutral-600);
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
-.mv-horizons button[aria-pressed="true"] {
-  background: var(--fnk-neutral-100);
-  color: var(--fnk-brand-interactive);
-  font-weight: 600;
 }
 
 .mv-note {
@@ -292,18 +326,36 @@
     grid-column: 1 / -1;
   }
   .mv-brow {
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto;
     height: auto;
     min-height: 44px;
     row-gap: 4px;
     padding-top: 6px;
     padding-bottom: 6px;
   }
-  .mv-band {
-    grid-column: 1 / -1;
-    order: 4;
+  .mv-brank {
+    grid-column: 1;
+    grid-row: 1;
   }
-  .mv-horizons button {
+  .mv-bname {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .mv-bpct {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .mv-blabel {
+    grid-column: 4;
+    grid-row: 1;
+  }
+  .mv-brow .mv-band {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .mv-horizons button,
+  .mv-chips button {
     height: 44px;
     padding: 0 14px;
   }
