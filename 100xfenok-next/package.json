@@ -201,6 +201,7 @@
     "qa:cross-asset-identifier-contract": "tsx scripts/test-cross-asset-identifier-contract.ts",
     "qa:lane-runid": "node scripts/test-generate-lane-runid-map.mjs && npm run qa:lane-board",
     "qa:pipeline-job-health": "node ../scripts/ops/test-check-pipeline-job-health.mjs",
+    "qa:serving-probe-liveness": "node ../scripts/ops/test-check-pipeline-job-health.mjs && node ../scripts/ops/test-missed-schedule-window.mjs && node ../scripts/ops/test-emit-alarm-state.mjs && node ../scripts/ops/test-workflow-credential-wiring.mjs",
     "qa:alarm-state": "npm run qa:pipeline-job-health && node ../scripts/ops/test-emit-alarm-state.mjs && node ../scripts/test-pipeline-failure-alarm-manifest.mjs && node ../scripts/check-lane-commit-manifest-inventory.mjs && node ../scripts/ops/test-check-global-writer-queue.mjs && node ../scripts/test-global-writer-queue-manifest.mjs",
     "qa:route-not-found-guards": "tsx scripts/test-route-not-found-guards.ts",
     "qa:public-route-retirement": "node scripts/check-route-key-contract.mjs --retirement-only && node scripts/check-seo-surface.mjs && tsx scripts/test-route-not-found-guards.ts && node scripts/test-generate-admin-redirects.mjs",
