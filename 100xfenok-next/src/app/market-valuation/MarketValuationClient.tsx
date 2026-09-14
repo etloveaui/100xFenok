@@ -193,6 +193,49 @@ function ValuationReadPanel({
   );
 }
 
+type PeerSortKey = "name" | "pe" | "pb" | "roe" | "percentile";
+
+type PeerSortDirection = "asc" | "desc";
+
+const PEER_COLUMNS: ReadonlyArray<{ key: PeerSortKey; label: string }> = [
+  { key: "name", label: "지수" },
+  { key: "pe", label: "Fwd P/E" },
+  { key: "pb", label: "P/B" },
+  { key: "roe", label: "ROE" },
+  { key: "percentile", label: "구간" },
+];
+
+function peerSortValue(row: MarketIndexValuation, key: PeerSortKey): string | number | null {
+  if (key === "name") return INDEX_KO[row.id] ?? row.name;
+  if (key === "pe") return row.pe.current;
+  if (key === "pb") return row.pb.current;
+  if (key === "roe") return row.roe;
+  return row.pe.percentile;
+}
+
+/**
+ * Numeric columns sort by value, the name column by Korean collation, and a
+ * missing value is always last (a blank cell must not win an ascending sort).
+ * Ties keep the incoming PEER_ORDER: Array.sort is stable.
+ */
+function comparePeerRows(
+  a: MarketIndexValuation,
+  b: MarketIndexValuation,
+  key: PeerSortKey,
+  direction: PeerSortDirection,
+): number {
+  const left = peerSortValue(a, key);
+  const right = peerSortValue(b, key);
+  const sign = direction === "asc" ? 1 : -1;
+  if (typeof left === "string" || typeof right === "string") {
+    return String(left ?? "").localeCompare(String(right ?? ""), "ko") * sign;
+  }
+  if (left === null && right === null) return 0;
+  if (left === null) return 1;
+  if (right === null) return -1;
+  return (left - right) * sign;
+}
+
 function PeerComparePanel({
   indices,
   loading,
@@ -208,9 +251,14 @@ function PeerComparePanel({
   onRefetch: () => void;
   onProvenance: (value: PanelProvenance) => void;
 }) {
+  const [sort, setSort] = useState<{ key: PeerSortKey; direction: PeerSortDirection } | null>(null);
   const rows = PEER_ORDER.map((id) => indices.find((index) => index.id === id)).filter(
     (row): row is MarketIndexValuation => row !== undefined,
   );
+  // Default (no sort chosen) keeps the existing PEER_ORDER.
+  const sortedRows = sort === null
+    ? rows
+    : [...rows].sort((a, b) => comparePeerRows(a, b, sort.key, sort.direction));
   const empty = !loading && rows.length === 0;
   const stale = !loading && !failed && rows.length > 0 && isStaleAsOf(sourceDate);
   const freshness: ProvenanceFreshness = loading ? "pending" : failed ? "error" : stale ? "stale" : "fresh";
@@ -218,6 +266,17 @@ function PeerComparePanel({
   useEffect(() => {
     onProvenance({ freshness, asOf: sourceDate });
   }, [freshness, sourceDate, onProvenance]);
+
+  // First press on a column picks its most useful direction (numbers high to
+  // low, names A to Z); pressing the active column flips it.
+  const toggleSort = (key: PeerSortKey) => {
+    setSort((current) => {
+      if (!current || current.key !== key) {
+        return { key, direction: key === "name" ? "asc" : "desc" };
+      }
+      return { key, direction: current.direction === "asc" ? "desc" : "asc" };
+    });
+  };
 
   return (
     <Panel
@@ -236,15 +295,46 @@ function PeerComparePanel({
         title="지수별 비교"
         right={<Pill>{rows.length}개 표시</Pill>}
       />
+      {/* The stacked phone layout hides .mv-thead, so sorting gets a real
+          control there instead of a dead header. */}
+      <div className="mv-sorts" role="group" aria-label="정렬">
+        <span className="mv-sorts-label">정렬</span>
+        {PEER_COLUMNS.map((column) => {
+          const active = sort?.key === column.key;
+          return (
+            <button
+              key={column.key}
+              type="button"
+              aria-pressed={active}
+              onClick={() => toggleSort(column.key)}
+            >
+              {column.label}
+              {active ? <i className="mv-sort-hint" aria-hidden="true">{sort?.direction === "asc" ? "↑" : "↓"}</i> : null}
+            </button>
+          );
+        })}
+      </div>
       <div role="table" aria-label="지수별 밸류에이션 비교">
         <div className="mv-thead" role="row">
-          <span role="columnheader">지수</span>
-          <span role="columnheader">Fwd P/E</span>
-          <span role="columnheader">P/B</span>
-          <span role="columnheader">ROE</span>
-          <span role="columnheader">구간</span>
+          {PEER_COLUMNS.map((column) => {
+            const active = sort?.key === column.key;
+            return (
+              <span
+                key={column.key}
+                role="columnheader"
+                aria-sort={active ? (sort?.direction === "asc" ? "ascending" : "descending") : "none"}
+              >
+                <button type="button" className="mv-sort" onClick={() => toggleSort(column.key)}>
+                  {column.label}
+                  <i className="mv-sort-hint" data-active={active || undefined} aria-hidden="true">
+                    {active ? (sort?.direction === "asc" ? "↑" : "↓") : "↕"}
+                  </i>
+                </button>
+              </span>
+            );
+          })}
         </div>
-        {rows.map((index) => {
+        {sortedRows.map((index) => {
           const meta = valuationMeta(index.pe.percentile);
           return (
             <div className="mv-trow" role="row" tabIndex={0} key={index.id}>
