@@ -34,6 +34,52 @@
   color: var(--fnk-neutral-500);
 }
 
+/* One provenance line for the whole page: worst state of the four panels with
+ * the oldest date among them. Full-width inside .mv-head so it owns its row. */
+.mv-prov {
+  flex: 1 0 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+.mv-prov-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mv-prov b {
+  font-weight: 600;
+  color: var(--fnk-neutral-700);
+}
+
+.mv-prov-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fnk-neutral-500);
+}
+
+.mv-prov-dot[data-state="fresh"] {
+  background: var(--fnk-color-gain);
+}
+
+.mv-prov-dot[data-state="stale"],
+.mv-prov-dot[data-state="pending"],
+.mv-prov-dot[data-state="partial"] {
+  background: var(--fnk-color-warn);
+}
+
+.mv-prov-dot[data-state="error"] {
+  background: var(--fnk-color-loss);
+}
+
 .mv-tabs {
   display: flex;
   gap: 4px;
@@ -122,9 +168,19 @@
   white-space: nowrap;
 }
 
+/* Peer reading cell: the pill keeps the verdict, the mini band under it shows
+ * where the index sits in its own history on the same zone scale. */
+.mv-range {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+
 .mv-brow {
   display: grid;
-  grid-template-columns: 150px 1fr 52px 72px;
+  grid-template-columns: 26px 140px minmax(0, 1fr) 52px 72px;
   align-items: center;
   gap: 12px;
   height: 34px;
@@ -141,6 +197,13 @@
   background: var(--fnk-neutral-50);
 }
 
+.mv-brank {
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
 .mv-bname {
   color: var(--fnk-neutral-700);
   min-width: 0;
@@ -155,12 +218,121 @@
   color: var(--fnk-neutral-900);
 }
 
+.mv-blabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Board controls: horizon segmented control + asset-group filter chips. */
+.mv-board-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 0;
+}
+
+.mv-horizons,
+.mv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mv-horizons button,
+.mv-chips button,
+.mv-sorts button {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fnk-neutral-600);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.mv-horizons button[aria-pressed="true"],
+.mv-chips button[aria-pressed="true"],
+.mv-sorts button[aria-pressed="true"] {
+  background: var(--fnk-neutral-100);
+  color: var(--fnk-brand-interactive);
+  font-weight: 600;
+}
+
+/* Sortable peer headers: the header cell keeps role=columnheader and the
+ * button inside owns the click and the keyboard activation. */
+.mv-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.mv-sort-hint {
+  font-style: normal;
+  font-weight: 600;
+  opacity: 0.45;
+}
+
+.mv-sort-hint[data-active] {
+  opacity: 1;
+  color: var(--fnk-brand-interactive);
+}
+
+/* Phone-only sort control: the stacked layout hides .mv-thead. */
+.mv-sorts {
+  display: none;
+}
+
+/* The board keeps every rankable row; the list scrolls instead of the page. */
+.mv-board-list {
+  margin-top: 10px;
+  max-height: 460px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 /* SPEC exception: the only gradient on the route (valuation-band stops). */
 .mv-band {
   position: relative;
   height: 8px;
   border-radius: 4px;
   background: linear-gradient(90deg, #dcfce7 0%, #f1f5f9 50%, #fdebed 100%);
+}
+
+/* Distribution/zone shading over the same scale, hard-edged at the SAME
+ * thresholds valuationMeta labels (20/40/60/80), so the picture and the word
+ * cannot disagree. The benchmark ordinal rows expose percentile/average/z only
+ * — no quartiles — so these are fixed zones, not a measured distribution.
+ * Tints are token mixes (no new raw color), and the marker still paints on top. */
+.mv-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--fnk-color-gain) 22%, transparent) 0%,
+    color-mix(in srgb, var(--fnk-color-gain) 22%, transparent) 20%,
+    color-mix(in srgb, var(--fnk-color-gain) 8%, transparent) 20%,
+    color-mix(in srgb, var(--fnk-color-gain) 8%, transparent) 40%,
+    transparent 40%,
+    transparent 60%,
+    color-mix(in srgb, var(--fnk-color-warn) 14%, transparent) 60%,
+    color-mix(in srgb, var(--fnk-color-warn) 14%, transparent) 80%,
+    color-mix(in srgb, var(--fnk-color-loss) 18%, transparent) 80%,
+    color-mix(in srgb, var(--fnk-color-loss) 18%, transparent) 100%
+  );
 }
 
 .mv-band i {
@@ -173,13 +345,36 @@
   transform: translateX(-1px);
 }
 
-.mv-horizons {
+/* Compact in-row band (Peer Compare): same scale, zones and marker, shorter. */
+.mv-band-mini {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.mv-band-mini i {
+  top: -2px;
+  height: 10px;
+}
+
+.mv-note {
+  padding: 8px 16px 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fnk-neutral-500);
+}
+
+/* Chart tabs: both charts stay mounted, so the idle one is hidden by CSS only
+ * and switching a tab never resizes, remounts or refetches a chart. */
+.mv-chart-tabs {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 4px;
   padding: 10px 16px 0;
 }
 
-.mv-horizons button {
+.mv-chart-tabs button {
   height: 28px;
   padding: 0 10px;
   border-radius: 6px;
@@ -191,30 +386,48 @@
   cursor: pointer;
 }
 
-.mv-horizons button[aria-pressed="true"] {
+.mv-chart-tabs button[aria-selected="true"] {
   background: var(--fnk-neutral-100);
   color: var(--fnk-brand-interactive);
   font-weight: 600;
 }
 
-.mv-note {
-  padding: 8px 16px 0;
+.mv-chart-cursor {
+  margin-left: auto;
   font-size: 11px;
-  font-weight: 600;
   color: var(--fnk-neutral-500);
 }
 
-.mv-histref {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+.mv-chart-cursor b {
+  font-weight: 600;
+  color: var(--fnk-neutral-700);
+}
+
+.mv-chart-panes {
+  position: relative;
   padding: 14px 16px;
 }
 
-@media (max-width: 900px) {
-  .mv-histref {
-    grid-template-columns: minmax(0, 1fr);
-  }
+/* The idle pane keeps its layout box (visibility, not display) so the chart
+ * inside keeps a real canvas size and needs no resize when it comes back. It is
+ * clipped to the container while hidden so it can never add page scroll, and
+ * visibility:hidden keeps its controls out of the tab order. */
+.mv-chart-pane {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mv-chart-pane[data-active] {
+  position: static;
+  overflow: visible;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .mv-chart-cap {
@@ -246,19 +459,84 @@
     grid-column: 1 / -1;
   }
   .mv-brow {
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto;
     height: auto;
     min-height: 44px;
     row-gap: 4px;
     padding-top: 6px;
     padding-bottom: 6px;
   }
-  .mv-band {
-    grid-column: 1 / -1;
-    order: 4;
+  .mv-brank {
+    grid-column: 1;
+    grid-row: 1;
   }
-  .mv-horizons button {
+  .mv-bname {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .mv-bpct {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .mv-blabel {
+    grid-column: 4;
+    grid-row: 1;
+  }
+  .mv-brow .mv-band {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  /* The reading pill is wider than a quarter column at phone widths, so the
+   * whole reading cell takes its own line with the pill and band side by side. */
+  .mv-range {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  .mv-range .mv-band {
+    width: auto;
+    min-width: 48px;
+    flex: 1 1 0;
+  }
+  .mv-horizons button,
+  .mv-chips button,
+  .mv-sorts button,
+  .mv-chart-tabs button {
     height: 44px;
     padding: 0 14px;
+  }
+  .mv-sorts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 16px 0;
+    font-size: 12px;
+    color: var(--fnk-neutral-500);
+  }
+  .mv-sorts-label {
+    font-weight: 600;
+  }
+  /* Touch-target audit: every control inside the route surface reaches 44px on
+   * phones — the local filters, the chart tabs, the sort control, the chart's
+   * own range/toggle buttons (already min-h-11), and the shared retry
+   * affordances (Panel's stale strip and the empty-state action) that are sized
+   * for desktop elsewhere. The stale strip grows with its button. */
+  .mv button {
+    min-height: 44px;
+  }
+  .mv .stale-state {
+    height: auto;
+    min-height: 44px;
+  }
+  /* Adequate spacing between adjacent controls. */
+  .mv-board-controls,
+  .mv-horizons,
+  .mv-chips,
+  .mv-sorts,
+  .mv-chart-tabs {
+    gap: 8px;
   }
 }

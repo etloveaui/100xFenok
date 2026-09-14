@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   loadMarketStructureModel,
   marketStructurePulsesFromModel,
@@ -913,12 +913,18 @@ function buildIndexTrends(sp500: RawIndexPoint[] | null, nasdaq: RawIndexPoint[]
   ].filter((trend): trend is MarketIndexTrend => trend !== null);
 }
 
-export function useMarketValuation(): MarketValuationResult {
+export function useMarketValuation(): MarketValuationResult & { refetch: () => void } {
   const [result, setResult] = useState<MarketValuationResult>(EMPTY);
-  const isMountedRef = useRef(true);
+  const [attempt, setAttempt] = useState(0);
+  // Attempt token in the effect deps: a refetch re-runs this instance's loader
+  // while the per-run cancellation flag (the previous run's cleanup fires
+  // first) keeps both an unmount and a superseded retry from writing over
+  // newer state. The last result stays visible until the new one lands, so
+  // panels keep their LKG content through the retry.
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
-    isMountedRef.current = true;
+    let cancelled = false;
 
     void (async () => {
       const [
@@ -970,7 +976,7 @@ export function useMarketValuation(): MarketValuationResult {
         fetchJson<RawEconomicIndicators>("/data/global-scouter/indicators/economic.json"),
         loadMarketStructureModel(),
       ]);
-      if (!isMountedRef.current) return;
+      if (cancelled) return;
 
       if (!raw?.sections) {
         setResult({ ...EMPTY, failed: true });
@@ -1055,9 +1061,9 @@ export function useMarketValuation(): MarketValuationResult {
     })();
 
     return () => {
-      isMountedRef.current = false;
+      cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
-  return result;
+  return { ...result, refetch };
 }

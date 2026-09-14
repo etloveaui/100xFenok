@@ -82,6 +82,10 @@ export interface MarketChartFrameProps {
   seriesAreRangeFiltered?: boolean;
   /** Optional ISO-date bands drawn behind time-series datasets. */
   dateBands?: readonly MarketChartDateBand[];
+  /** Reports the hovered x label (null when it leaves) for a linked cursor. */
+  onHoverLabel?: (label: string | null) => void;
+  /** Shared cursor date from a sibling chart, drawn while this one is idle. */
+  cursorLabel?: string | null;
 }
 
 const DEFAULT_RANGES: readonly MarketChartRange[] = [
@@ -188,6 +192,8 @@ export function MarketChartFrame({
   xScaleMode = "category",
   seriesAreRangeFiltered = false,
   dateBands,
+  onHoverLabel,
+  cursorLabel = null,
 }: MarketChartFrameProps) {
   const [internalRangeId, setInternalRangeId] = useState<string>(
     defaultRangeId ?? ranges[ranges.length - 1]?.id ?? "MAX",
@@ -247,6 +253,43 @@ export function MarketChartFrame({
     () => formatValue ?? ((value) => (value === null ? "—" : String(value))),
     [formatValue],
   );
+
+  // Broadcast the hovered label as the shared cursor date for sibling charts.
+  useEffect(() => {
+    onHoverLabel?.(hover?.label ?? null);
+  }, [hover, onHoverLabel]);
+
+  // Values at the shared cursor date while this chart is idle: the sibling's
+  // date is only useful if the reader can see what sat there.
+  const linkedReadout = useMemo(() => {
+    if (!cursorLabel || hover) return null;
+    const cursorMs = Date.parse(cursorLabel);
+    const points = renderedSeries
+      .filter((item) => !item.hidden)
+      .map((item) => {
+        let bestValue: number | null = null;
+        let bestDelta = Number.POSITIVE_INFINITY;
+        for (const point of item.points) {
+          const pointMs = Date.parse(point.label);
+          const delta = Number.isFinite(cursorMs) && Number.isFinite(pointMs)
+            ? Math.abs(pointMs - cursorMs)
+            : point.label === cursorLabel
+              ? 0
+              : Number.POSITIVE_INFINITY;
+          if (delta < bestDelta) {
+            bestDelta = delta;
+            bestValue = point.value;
+          }
+        }
+        return { seriesLabel: item.label, value: bestValue };
+      })
+      .filter((point) => point.value !== null);
+    return { label: cursorLabel, points, linked: true };
+  }, [cursorLabel, hover, renderedSeries]);
+
+  const readout = announcedHover
+    ? { label: announcedHover.label, points: announcedHover.points, linked: false }
+    : linkedReadout;
 
   const showRanges = showRangeControls && ranges.length > 1;
   const showToggles = togglableSeries && series.length > 1;
@@ -347,6 +390,7 @@ export function MarketChartFrame({
         logScale={logScale}
         formatValue={fmt}
         onHoverPoint={setHover}
+        cursorLabel={cursorLabel}
       />
 
       <div
@@ -354,11 +398,14 @@ export function MarketChartFrame({
         aria-atomic="true"
         role="status"
       >
-        {announcedHover ? (
+        {readout ? (
           <span>
-            <span className="font-bold text-[var(--c-ink)]">{announcedHover.label}</span>
+            {readout.linked && (
+              <span className="mr-1 font-bold text-[var(--c-brand)]">연결 커서</span>
+            )}
+            <span className="font-bold text-[var(--c-ink)]">{readout.label}</span>
             {"  "}
-            {announcedHover.points
+            {readout.points
               .filter((point) => point.value !== null)
               .map((point) => `${point.seriesLabel} ${fmt(point.value)}`)
               .join("   ")}

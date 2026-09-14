@@ -7,10 +7,11 @@ import { useBenchmarkOrdinals } from "@/hooks/useBenchmarkOrdinals";
 import {
   BENCHMARK_ORDINAL_GROUPS,
   benchmarkHorizonReading,
+  type BenchmarkGroupId,
   type BenchmarkOrdinalHorizon,
   type BenchmarkOrdinalRow,
 } from "@/lib/market-valuation/benchmarkOrdinals";
-import { EvidenceRail, Panel, PanelHeader, Pill, Stat } from "@/components/ui";
+import { Panel, PanelHeader, Pill, Stat } from "@/components/ui";
 import {
   ErpHistoryPanel,
   YardeniOverlayChartPanel,
@@ -23,6 +24,7 @@ import {
   isStaleAsOf,
   latestAsOf,
   makeDataState,
+  oldestAsOf,
   DATA_STATE_LABELS,
   type DataState,
 } from "@/lib/data-state";
@@ -38,9 +40,18 @@ const INDEX_KO: Record<string, string> = {
   russell2000: "러셀 2000",
 };
 
+type ChartTabId = "erp" | "yardeni";
+
+const CHART_TABS: ReadonlyArray<{ id: ChartTabId; label: string }> = [
+  { id: "erp", label: "Damodaran ERP" },
+  { id: "yardeni", label: "Yardeni 채권 대비 PER" },
+];
+
 const PEER_ORDER = ["sp500", "nasdaq100", "nasdaq_composite", "russell2000"];
 
-const HIGHLIGHT_IDS = ["sp500", "nasdaq100", "nasdaq_composite", "russell2000", "kospi"];
+const ALL_GROUPS = "all" as const;
+
+type GroupFilter = BenchmarkGroupId | typeof ALL_GROUPS;
 
 const HORIZONS: ReadonlyArray<{ id: BenchmarkOrdinalHorizon; label: string }> = [
   { id: "all", label: "전체" },
@@ -80,32 +91,68 @@ function verdictSentence(sp500: MarketIndexValuation | undefined): string {
   return `${sp500.name} 선행 PER는 ${pe}배로 ${where} — ${meta.label} 구간입니다.`;
 }
 
-function reload() {
-  window.location.reload();
-}
+// One provenance line replaces the four per-panel evidence rails. Each panel
+// reports its own state derivation and date; the header shows the worst state
+// against the OLDEST date, because a page is only as fresh as its oldest feed.
+type ProvenanceFreshness = "fresh" | "stale" | "pending" | "error" | "partial";
 
-function openEvidence(path: string) {
-  window.open(path, "_blank", "noopener");
+type PanelProvenance = { freshness: ProvenanceFreshness; asOf: string | null };
+
+// Worst first: an error outranks any pending fetch, which outranks the two
+// warning states; stale outranks partial because this line's date is the age
+// claim. Labels and dot vocabulary follow the retired EvidenceRail row.
+const PROVENANCE_WORST_FIRST: ReadonlyArray<ProvenanceFreshness> = [
+  "error",
+  "pending",
+  "stale",
+  "partial",
+  "fresh",
+];
+
+const PROVENANCE_LABEL: Record<ProvenanceFreshness, string> = {
+  fresh: "신선",
+  stale: "대기",
+  pending: "확인 중",
+  error: "오류",
+  partial: "부분",
+};
+
+const PROVENANCE_SOURCES = "Bloomberg · Damodaran · Yardeni";
+
+function aggregateProvenance(panels: ReadonlyArray<PanelProvenance>): PanelProvenance {
+  return {
+    freshness: PROVENANCE_WORST_FIRST.find(
+      (state) => panels.some((panel) => panel.freshness === state),
+    ) ?? "fresh",
+    asOf: oldestAsOf(panels.map((panel) => panel.asOf)),
+  };
 }
 
 function ValuationReadPanel({
   sp500,
-  count,
   loading,
   failed,
   sourceDate,
+  onRefetch,
+  onProvenance,
 }: {
   sp500: MarketIndexValuation | undefined;
-  count: number;
   loading: boolean;
   failed: boolean;
   sourceDate: string | null;
+  onRefetch: () => void;
+  onProvenance: (value: PanelProvenance) => void;
 }) {
   const pct = sp500?.pe.percentile ?? null;
   const meta = valuationMeta(pct);
   const premium = sp500 ? averagePremiumPct(sp500.pe) : null;
   const empty = !loading && !sp500;
   const stale = !loading && !failed && isStaleAsOf(sourceDate);
+  const freshness: ProvenanceFreshness = loading ? "pending" : failed ? "error" : stale ? "stale" : "fresh";
+
+  useEffect(() => {
+    onProvenance({ freshness, asOf: sourceDate });
+  }, [freshness, sourceDate, onProvenance]);
 
   return (
     <Panel
@@ -114,10 +161,10 @@ function ValuationReadPanel({
       emptyReason={failed ? "지수 밸류에이션을 불러오지 못했습니다" : "표시할 밸류에이션 데이터가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
       emptyActionLabel={failed ? "다시 시도" : undefined}
-      onEmptyAction={failed ? reload : undefined}
+      onEmptyAction={failed ? onRefetch : undefined}
       stale={stale}
       asOf={sourceDate ?? undefined}
-      onRetry={stale ? reload : undefined}
+      onRetry={stale ? onRefetch : undefined}
     >
       <PanelHeader
         eyebrow="Valuation Read"
@@ -149,17 +196,51 @@ function ValuationReadPanel({
           }
         />
       </div>
-      <EvidenceRail
-        freshness={loading ? "pending" : failed ? "error" : stale ? "stale" : "fresh"}
-        source="Bloomberg"
-        asOf={sourceDate ?? "—"}
-        coverage={`${count}/4`}
-        lkgAsOf={!loading && (failed || stale) && sourceDate ? sourceDate : undefined}
-        onRetry={failed || stale ? reload : undefined}
-        onEvidence={failed ? undefined : () => openEvidence("/data/benchmarks/us.json")}
-      />
     </Panel>
   );
+}
+
+type PeerSortKey = "name" | "pe" | "pb" | "roe" | "percentile";
+
+type PeerSortDirection = "asc" | "desc";
+
+const PEER_COLUMNS: ReadonlyArray<{ key: PeerSortKey; label: string }> = [
+  { key: "name", label: "지수" },
+  { key: "pe", label: "Fwd P/E" },
+  { key: "pb", label: "P/B" },
+  { key: "roe", label: "ROE" },
+  { key: "percentile", label: "구간" },
+];
+
+function peerSortValue(row: MarketIndexValuation, key: PeerSortKey): string | number | null {
+  if (key === "name") return INDEX_KO[row.id] ?? row.name;
+  if (key === "pe") return row.pe.current;
+  if (key === "pb") return row.pb.current;
+  if (key === "roe") return row.roe;
+  return row.pe.percentile;
+}
+
+/**
+ * Numeric columns sort by value, the name column by Korean collation, and a
+ * missing value is always last (a blank cell must not win an ascending sort).
+ * Ties keep the incoming PEER_ORDER: Array.sort is stable.
+ */
+function comparePeerRows(
+  a: MarketIndexValuation,
+  b: MarketIndexValuation,
+  key: PeerSortKey,
+  direction: PeerSortDirection,
+): number {
+  const left = peerSortValue(a, key);
+  const right = peerSortValue(b, key);
+  const sign = direction === "asc" ? 1 : -1;
+  if (typeof left === "string" || typeof right === "string") {
+    return String(left ?? "").localeCompare(String(right ?? ""), "ko") * sign;
+  }
+  if (left === null && right === null) return 0;
+  if (left === null) return 1;
+  if (right === null) return -1;
+  return (left - right) * sign;
 }
 
 function PeerComparePanel({
@@ -167,17 +248,42 @@ function PeerComparePanel({
   loading,
   failed,
   sourceDate,
+  onRefetch,
+  onProvenance,
 }: {
   indices: MarketIndexValuation[];
   loading: boolean;
   failed: boolean;
   sourceDate: string | null;
+  onRefetch: () => void;
+  onProvenance: (value: PanelProvenance) => void;
 }) {
+  const [sort, setSort] = useState<{ key: PeerSortKey; direction: PeerSortDirection } | null>(null);
   const rows = PEER_ORDER.map((id) => indices.find((index) => index.id === id)).filter(
     (row): row is MarketIndexValuation => row !== undefined,
   );
+  // Default (no sort chosen) keeps the existing PEER_ORDER.
+  const sortedRows = sort === null
+    ? rows
+    : [...rows].sort((a, b) => comparePeerRows(a, b, sort.key, sort.direction));
   const empty = !loading && rows.length === 0;
   const stale = !loading && !failed && rows.length > 0 && isStaleAsOf(sourceDate);
+  const freshness: ProvenanceFreshness = loading ? "pending" : failed ? "error" : stale ? "stale" : "fresh";
+
+  useEffect(() => {
+    onProvenance({ freshness, asOf: sourceDate });
+  }, [freshness, sourceDate, onProvenance]);
+
+  // First press on a column picks its most useful direction (numbers high to
+  // low, names A to Z); pressing the active column flips it.
+  const toggleSort = (key: PeerSortKey) => {
+    setSort((current) => {
+      if (!current || current.key !== key) {
+        return { key, direction: key === "name" ? "asc" : "desc" };
+      }
+      return { key, direction: current.direction === "asc" ? "desc" : "asc" };
+    });
+  };
 
   return (
     <Panel
@@ -186,25 +292,56 @@ function PeerComparePanel({
       emptyReason={failed ? "지수 비교 데이터를 불러오지 못했습니다" : "비교할 지수 데이터가 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
       emptyActionLabel={failed ? "다시 시도" : undefined}
-      onEmptyAction={failed ? reload : undefined}
+      onEmptyAction={failed ? onRefetch : undefined}
       stale={stale}
       asOf={sourceDate ?? undefined}
-      onRetry={stale ? reload : undefined}
+      onRetry={stale ? onRefetch : undefined}
     >
       <PanelHeader
         eyebrow="Peer Compare"
         title="지수별 비교"
         right={<Pill>{rows.length}개 표시</Pill>}
       />
+      {/* The stacked phone layout hides .mv-thead, so sorting gets a real
+          control there instead of a dead header. */}
+      <div className="mv-sorts" role="group" aria-label="정렬">
+        <span className="mv-sorts-label">정렬</span>
+        {PEER_COLUMNS.map((column) => {
+          const active = sort?.key === column.key;
+          return (
+            <button
+              key={column.key}
+              type="button"
+              aria-pressed={active}
+              onClick={() => toggleSort(column.key)}
+            >
+              {column.label}
+              {active ? <i className="mv-sort-hint" aria-hidden="true">{sort?.direction === "asc" ? "↑" : "↓"}</i> : null}
+            </button>
+          );
+        })}
+      </div>
       <div role="table" aria-label="지수별 밸류에이션 비교">
         <div className="mv-thead" role="row">
-          <span role="columnheader">지수</span>
-          <span role="columnheader">Fwd P/E</span>
-          <span role="columnheader">P/B</span>
-          <span role="columnheader">ROE</span>
-          <span role="columnheader">구간</span>
+          {PEER_COLUMNS.map((column) => {
+            const active = sort?.key === column.key;
+            return (
+              <span
+                key={column.key}
+                role="columnheader"
+                aria-sort={active ? (sort?.direction === "asc" ? "ascending" : "descending") : "none"}
+              >
+                <button type="button" className="mv-sort" onClick={() => toggleSort(column.key)}>
+                  {column.label}
+                  <i className="mv-sort-hint" data-active={active || undefined} aria-hidden="true">
+                    {active ? (sort?.direction === "asc" ? "↑" : "↓") : "↕"}
+                  </i>
+                </button>
+              </span>
+            );
+          })}
         </div>
-        {rows.map((index) => {
+        {sortedRows.map((index) => {
           const meta = valuationMeta(index.pe.percentile);
           return (
             <div className="mv-trow" role="row" tabIndex={0} key={index.id}>
@@ -218,62 +355,83 @@ function PeerComparePanel({
               <span className="tabular-nums" role="cell">
                 {index.roe === null ? "—" : formatPercent(index.roe * 100, 1)}
               </span>
-              <span role="cell">
+              <span className="mv-range" role="cell">
                 <Pill tone={meta.pill}>{meta.label}</Pill>
+                {index.pe.percentile === null ? (
+                  <span className="mv-band mv-band-mini" aria-hidden="true" />
+                ) : (
+                  <span
+                    className="mv-band mv-band-mini"
+                    role="progressbar"
+                    aria-valuenow={index.pe.percentile}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${INDEX_KO[index.id] ?? index.name} 역사 백분위`}
+                  >
+                    <i style={{ left: `${index.pe.percentile}%` }} />
+                  </span>
+                )}
               </span>
             </div>
           );
         })}
       </div>
-      <EvidenceRail
-        freshness={loading ? "pending" : failed ? "error" : stale ? "stale" : "fresh"}
-        source="Bloomberg"
-        asOf={sourceDate ?? "—"}
-        coverage={`${rows.length}/4`}
-        lkgAsOf={!loading && (failed || stale) && sourceDate ? sourceDate : undefined}
-        onRetry={failed || stale ? reload : undefined}
-        onEvidence={failed ? undefined : () => openEvidence("/data/benchmarks/us.json")}
-      />
     </Panel>
   );
 }
 
 // Historical Position reads the six Bloomberg benchmark ordinals
 // (us/us_sectors/developed/emerging/msci/micro_sectors — every file carries
-// metadata.source "Bloomberg Terminal"), so the rail names Bloomberg, not the
-// Reference-panel feeds. Wiring the RIM sustainable ranges + Yardeni model in
-// here instead would replace the 38-asset trailing-window reading with a
-// different model; the truthful rail keeps this panel honest (fh-669 P1b).
-function HistoricalPositionPanel() {
-  const { state, view } = useBenchmarkOrdinals();
+// metadata.source "Bloomberg Terminal"), which is why the page provenance line
+// names Bloomberg alongside the Reference-panel feeds. Wiring the RIM
+// sustainable ranges + Yardeni model in here instead would replace the 38-asset
+// trailing-window reading with a different model; the panel reports its own
+// state and date upward instead (fh-669 P1b).
+function HistoricalPositionPanel({ onProvenance }: { onProvenance: (value: PanelProvenance) => void }) {
+  const { state, view, refetch } = useBenchmarkOrdinals();
   const [horizon, setHorizon] = useState<BenchmarkOrdinalHorizon>("w10");
+  const [group, setGroup] = useState<GroupFilter>(ALL_GROUPS);
   const loading = state === "pending";
   const transportFailed = state === "refused" || state === "failed";
   const ready = state === "ready" && view?.status === "ready";
 
   const allRows: BenchmarkOrdinalRow[] = view && view.status === "ready"
-    ? view.groups.flatMap((group) => group.rows)
+    ? view.groups.flatMap((entry) => entry.rows)
     : [];
-  const ordered = [
-    ...HIGHLIGHT_IDS.map((id) => allRows.find((row) => row.id === id)).filter(
-      (row): row is BenchmarkOrdinalRow => row !== undefined,
-    ),
-    ...allRows.filter((row) => !HIGHLIGHT_IDS.includes(row.id)),
-  ];
-  const shown = ordered
-    .map((row) => ({ row, reading: benchmarkHorizonReading(row, horizon) }))
-    .filter((item) => item.reading.percentile !== null)
-    .slice(0, 8);
+  const readable = allRows
+    .map((row, index) => ({ row, index, reading: benchmarkHorizonReading(row, horizon) }))
+    .filter((item) => item.reading.percentile !== null);
+  // The board is the working surface: every rankable row stays, highest
+  // percentile first, and equal percentiles keep the source order.
+  const ranked = readable
+    .filter((item) => group === ALL_GROUPS || item.row.groupId === group)
+    .sort((a, b) => (b.reading.percentile ?? 0) - (a.reading.percentile ?? 0) || a.index - b.index)
+    .map((item, index) => ({ ...item, rank: index + 1 }));
   const groupRefusals = view && view.status === "ready"
-    ? view.groups.filter((group) => group.refusal)
+    ? view.groups.filter((entry) => entry.refusal)
     : [];
   const horizonLabel = HORIZONS.find((item) => item.id === horizon)?.label ?? "10년";
   const asOf = view && view.status === "ready" ? view.asOf : null;
-  // Loaded groups stay visible when siblings refuse (LKG): only a fully
-  // empty board becomes the empty state.
-  const empty = !loading && shown.length === 0;
+  // Loaded groups stay visible when siblings refuse (LKG): only a fully empty
+  // board becomes the empty state. A filter that matches nothing is a filtered
+  // view of live data, not an empty panel — it gets a note instead.
+  const empty = !loading && readable.length === 0;
+  const filteredEmpty = !loading && !empty && ranked.length === 0;
   const partial = !loading && !empty && (!ready || groupRefusals.length > 0);
   const stale = !loading && !empty && !transportFailed && isStaleAsOf(asOf);
+  const freshness: ProvenanceFreshness = loading
+    ? "pending"
+    : transportFailed && empty
+      ? "error"
+      : partial
+        ? "partial"
+        : stale
+          ? "stale"
+          : "fresh";
+
+  useEffect(() => {
+    onProvenance({ freshness, asOf });
+  }, [freshness, asOf, onProvenance]);
 
   return (
     <Panel
@@ -282,67 +440,97 @@ function HistoricalPositionPanel() {
       emptyReason={transportFailed ? "역사 위치 데이터를 읽지 못했습니다" : "표시할 역사 위치 데이터가 없습니다"}
       emptyNextRefresh="주간 갱신"
       emptyActionLabel={transportFailed ? "다시 시도" : undefined}
-      onEmptyAction={transportFailed ? reload : undefined}
+      onEmptyAction={transportFailed ? refetch : undefined}
       stale={stale}
       asOf={asOf ?? undefined}
-      onRetry={stale ? reload : undefined}
+      onRetry={stale ? refetch : undefined}
     >
       <PanelHeader
         eyebrow="Historical Position"
         title={`${allRows.length > 0 ? allRows.length : 38}종 자산 — 역사 대비 위치`}
         right={<Pill>{horizonLabel} 기준</Pill>}
       />
-      <div className="mv-horizons" role="group" aria-label="역사 구간">
-        {HORIZONS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            aria-pressed={horizon === item.id}
-            onClick={() => setHorizon(item.id)}
-          >
-            {item.label}
+      <div className="mv-board-controls">
+        <div className="mv-horizons" role="group" aria-label="역사 구간">
+          {HORIZONS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-pressed={horizon === item.id}
+              onClick={() => setHorizon(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <div className="mv-chips" role="group" aria-label="자산군 필터">
+          <button type="button" aria-pressed={group === ALL_GROUPS} onClick={() => setGroup(ALL_GROUPS)}>
+            전체
           </button>
-        ))}
+          {BENCHMARK_ORDINAL_GROUPS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-pressed={group === item.id}
+              onClick={() => setGroup(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
-      <div>
-        {shown.map(({ row, reading }) => {
+      <div className="mv-board-list">
+        {ranked.map(({ row, reading, rank }) => {
           const pct = reading.percentile ?? 0;
           const meta = valuationMeta(reading.percentile);
           return (
             <div className="mv-brow" tabIndex={0} key={row.id}>
+              <span className="mv-brank tabular-nums">{rank}</span>
               <span className="mv-bname">{row.name}</span>
               <div className="mv-band" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${row.name} 역사 백분위`}>
                 <i style={{ left: `${pct}%` }} />
               </div>
               <span className="mv-bpct tabular-nums">{pct}%</span>
-              <span className={meta.num}>{meta.label}</span>
+              <span className={`mv-blabel ${meta.num}`}>{meta.label}</span>
             </div>
           );
         })}
       </div>
+      {filteredEmpty ? <p className="mv-note">이 자산군에는 표시할 역사 위치 데이터가 없습니다</p> : null}
       {groupRefusals.length > 0 ? (
         <p className="mv-note">
-          {groupRefusals.map((group) => group.label).join(" · ")}: 표시할 수 없습니다
+          {groupRefusals.map((item) => item.label).join(" · ")}: 표시할 수 없습니다
         </p>
       ) : null}
-      <EvidenceRail
-        freshness={loading ? "pending" : transportFailed && empty ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
-        source="Bloomberg"
-        asOf={asOf ?? "—"}
-        coverage={allRows.length > 0 ? `${allRows.length}/38` : "—"}
-        lkgAsOf={!loading && !empty && (partial || stale) && asOf ? asOf : undefined}
-        onRetry={transportFailed && empty ? reload : stale || partial ? reload : undefined}
-        onEvidence={transportFailed && empty ? undefined : () => openEvidence(BENCHMARK_ORDINAL_GROUPS[0].file)}
-      />
     </Panel>
   );
 }
 
-// The Reference rail waits for both embedded chart loaders: coverage and
-// freshness derive from the ERP + Yardeni outcomes, never from a fixed 2/2.
-function HistoricalReferencePanel({ erpSourceDate }: { erpSourceDate: string | null }) {
+// The Reference panel waits for both embedded chart loaders: freshness derives
+// from the ERP + Yardeni outcomes, never from a fixed 2/2.
+function HistoricalReferencePanel({
+  erpSourceDate,
+  onProvenance,
+}: {
+  erpSourceDate: string | null;
+  onProvenance: (value: PanelProvenance) => void;
+}) {
   const [erp, setErp] = useState<LedgerChartLoadStatus>({ state: "pending", asOf: null });
   const [yardeni, setYardeni] = useState<LedgerChartLoadStatus>({ state: "pending", asOf: null });
+  const [chartTab, setChartTab] = useState<ChartTabId>("erp");
+  // One cursor date shared by both tabs: hovering the active chart sets it, the
+  // idle chart draws it, and switching tabs carries it across.
+  const [cursorDate, setCursorDate] = useState<string | null>(null);
+  // Refetch is local to this panel: bumping the attempt token remounts the two
+  // chart loaders (they own their fetches), and the statuses drop back to
+  // pending so the panel reads as loading again while they re-run.
+  const [attempt, setAttempt] = useState(0);
+  const refetch = () => {
+    setErp({ state: "pending", asOf: null });
+    setYardeni({ state: "pending", asOf: null });
+    setCursorDate(null);
+    setAttempt((value) => value + 1);
+  };
   const pending = erp.state === "pending" || yardeni.state === "pending";
   const readyCount = (erp.state === "ready" ? 1 : 0) + (yardeni.state === "ready" ? 1 : 0);
   const bothFailed = erp.state === "failed" && yardeni.state === "failed";
@@ -350,43 +538,110 @@ function HistoricalReferencePanel({ erpSourceDate }: { erpSourceDate: string | n
   const partial = !pending && !bothFailed && readyCount < 2;
   const asOf = latestAsOf([erp.asOf, yardeni.asOf, erpSourceDate]);
   const stale = !pending && !bothFailed && (isStaleAsOf(erp.asOf) || isStaleAsOf(yardeni.asOf));
+  const freshness: ProvenanceFreshness = pending
+    ? "pending"
+    : bothFailed
+      ? "error"
+      : partial
+        ? "partial"
+        : stale
+          ? "stale"
+          : "fresh";
+
+  useEffect(() => {
+    // The page clock takes this panel's OLDEST internal date: two charts with
+    // different publication dates must not be summarized by the newer one.
+    onProvenance({ freshness, asOf: oldestAsOf([erp.asOf, yardeni.asOf, erpSourceDate]) });
+  }, [freshness, erp.asOf, yardeni.asOf, erpSourceDate, onProvenance]);
 
   return (
     // Route-level five-state: the ERP/Yardeni charts load their own feeds, so
     // the panel never delegates loading to Panel — Panel's delayed skeleton
     // replaces children after 120ms, which would drop the live chart frames
-    // for a slow fetch. Children stay mounted; pending/partial surface on the
-    // rail with coverage. (Panel itself is correct for data-less panels.)
+    // for a slow fetch. Children stay mounted; pending/partial surface in the
+    // page provenance line and the empty/error states on the Panel itself.
     <Panel
       loading={false}
       empty={empty}
       emptyReason="ERP · 채권 대비 PER 차트를 불러오지 못했습니다"
       emptyActionLabel="다시 시도"
-      onEmptyAction={reload}
+      onEmptyAction={refetch}
       stale={stale}
       asOf={asOf ?? undefined}
-      onRetry={stale ? reload : undefined}
+      onRetry={stale ? refetch : undefined}
     >
       <PanelHeader eyebrow="Historical Reference" title="ERP · 채권 대비 PER 추이" right={<Pill>20Y</Pill>} />
-      <div className="mv-histref" data-market-valuation-chart-grid aria-busy={pending}>
-        <div>
+      {/* Both charts stay mounted: the idle tab is hidden by CSS only, so
+          switching never remounts (and never refetches) a chart. */}
+      <div className="mv-chart-tabs" role="tablist" aria-label="역사 참조 차트">
+        {CHART_TABS.map((item) => {
+          const active = chartTab === item.id;
+          return (
+            <button
+              key={item.id}
+              id={`mv-chart-tab-${item.id}`}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              aria-controls={`mv-chart-pane-${item.id}`}
+              tabIndex={active ? 0 : -1}
+              onClick={() => setChartTab(item.id)}
+              onKeyDown={(event) => {
+                const delta = event.key === "ArrowRight" || event.key === "ArrowDown"
+                  ? 1
+                  : event.key === "ArrowLeft" || event.key === "ArrowUp"
+                    ? -1
+                    : 0;
+                if (delta === 0) return;
+                event.preventDefault();
+                const index = CHART_TABS.findIndex((entry) => entry.id === chartTab);
+                const next = CHART_TABS[(index + delta + CHART_TABS.length) % CHART_TABS.length];
+                setChartTab(next.id);
+                window.requestAnimationFrame(() => document.getElementById(`mv-chart-tab-${next.id}`)?.focus());
+              }}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+        <span className="mv-chart-cursor">
+          커서 <b className="tabular-nums">{cursorDate ?? "—"}</b>
+        </span>
+      </div>
+      <div className="mv-chart-panes" data-market-valuation-chart-grid aria-busy={pending}>
+        <div
+          id="mv-chart-pane-erp"
+          role="tabpanel"
+          aria-labelledby="mv-chart-tab-erp"
+          className="mv-chart-pane"
+          data-active={chartTab === "erp" || undefined}
+        >
           <p className="mv-chart-cap">Damodaran ERP vs 10년물</p>
-          <ErpHistoryPanel bare onStatus={setErp} />
+          <ErpHistoryPanel
+            key={`erp-${attempt}`}
+            bare
+            onStatus={setErp}
+            onCursor={setCursorDate}
+            cursorLabel={chartTab === "erp" ? null : cursorDate}
+          />
         </div>
-        <div>
+        <div
+          id="mv-chart-pane-yardeni"
+          role="tabpanel"
+          aria-labelledby="mv-chart-tab-yardeni"
+          className="mv-chart-pane"
+          data-active={chartTab === "yardeni" || undefined}
+        >
           <p className="mv-chart-cap">Yardeni 채권 대비 PER</p>
-          <YardeniOverlayChartPanel bare onStatus={setYardeni} />
+          <YardeniOverlayChartPanel
+            key={`yardeni-${attempt}`}
+            bare
+            onStatus={setYardeni}
+            onCursor={setCursorDate}
+            cursorLabel={chartTab === "yardeni" ? null : cursorDate}
+          />
         </div>
       </div>
-      <EvidenceRail
-        freshness={pending ? "pending" : bothFailed ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
-        source="Damodaran · Yardeni"
-        asOf={pending ? "—" : asOf ?? "—"}
-        coverage={pending ? "—" : `${readyCount}/2`}
-        lkgAsOf={!pending && !bothFailed && (stale || partial) && asOf ? asOf : undefined}
-        onRetry={bothFailed || stale || partial ? reload : undefined}
-        onEvidence={bothFailed ? undefined : () => openEvidence("/data/damodaran/historical_erp.json")}
-      />
     </Panel>
   );
 }
@@ -402,7 +657,15 @@ export default function MarketValuationClient({
     dataReady,
     failed,
     sourceDate,
+    refetch,
   } = useMarketValuation();
+  // Per-panel provenance: the four states are reported by the panels' own
+  // derivations (never recomputed here), so the header line cannot drift from
+  // what each panel renders.
+  const [readProvenance, setReadProvenance] = useState<PanelProvenance>({ freshness: "pending", asOf: null });
+  const [peerProvenance, setPeerProvenance] = useState<PanelProvenance>({ freshness: "pending", asOf: null });
+  const [boardProvenance, setBoardProvenance] = useState<PanelProvenance>({ freshness: "pending", asOf: null });
+  const [referenceProvenance, setReferenceProvenance] = useState<PanelProvenance>({ freshness: "pending", asOf: null });
 
   useEffect(() => {
     if (!onFreshnessChange) return;
@@ -429,6 +692,12 @@ export default function MarketValuationClient({
 
   const loading = !dataReady && !failed;
   const sp500 = indices.find((index) => index.id === "sp500") ?? indices[0];
+  const provenance = aggregateProvenance([
+    readProvenance,
+    peerProvenance,
+    boardProvenance,
+    referenceProvenance,
+  ]);
 
   return (
     <div className="mv" data-market-valuation-surface>
@@ -440,18 +709,37 @@ export default function MarketValuationClient({
         <div className="mv-tabs">
           <MarketSectionNav active="valuation" />
         </div>
+        <p className="mv-prov" data-market-valuation-provenance>
+          <span className="mv-prov-state">
+            <i className="mv-prov-dot" data-state={provenance.freshness} aria-hidden="true" />
+            <b>{PROVENANCE_LABEL[provenance.freshness]}</b>
+          </span>
+          <span>기준 <b className="tabular-nums">{provenance.asOf ?? "—"}</b></span>
+          <span>출처 <b>{PROVENANCE_SOURCES}</b></span>
+        </p>
       </div>
 
       <ValuationReadPanel
         sp500={sp500}
-        count={indices.length}
         loading={loading}
         failed={failed}
         sourceDate={sourceDate}
+        onRefetch={refetch}
+        onProvenance={setReadProvenance}
       />
-      <PeerComparePanel indices={indices} loading={loading} failed={failed} sourceDate={sourceDate} />
-      <HistoricalPositionPanel />
-      <HistoricalReferencePanel erpSourceDate={erpInsight?.sourceDate ?? null} />
+      <PeerComparePanel
+        indices={indices}
+        loading={loading}
+        failed={failed}
+        sourceDate={sourceDate}
+        onRefetch={refetch}
+        onProvenance={setPeerProvenance}
+      />
+      <HistoricalPositionPanel onProvenance={setBoardProvenance} />
+      <HistoricalReferencePanel
+        erpSourceDate={erpInsight?.sourceDate ?? null}
+        onProvenance={setReferenceProvenance}
+      />
 
       <p className="mv-foot">
         백분위는 현재값의 역사적 위치이며, 높을수록 고평가 구간에 가깝습니다.
