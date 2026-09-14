@@ -1472,6 +1472,16 @@ export function isLostScheduledSlot(run) {
  * Evaluate a single watched workflow from its completed-run list.
  * Returns a per-workflow status object; never throws.
  */
+// A missed_schedule_window verdict hinges entirely on the run page's newest
+// entry, and a stale or truncated page fabricates it. Measured twice
+// (2026-09-13T12:10:47Z, 2026-09-14T08:11:53Z): the serving-probe row anchored
+// at 2026-08-19T07:24:30Z with 105 passed slots while run 34809685448 had
+// succeeded on 2026-09-14T05:27:04Z. The verdict is therefore re-read once
+// with a wide page and the second read adjudicates; genuine silence reproduces.
+export function needsMissedWindowReverification(row) {
+  return row?.missed_schedule_window_hours != null;
+}
+
 export function evaluateWorkflow(workflow, runs, { now = Date.now() } = {}) {
   const countedRuns = runs.filter((run) => {
     if (run?.event === "workflow_dispatch") return false;
@@ -1666,11 +1676,11 @@ export function buildIssueBody(alarms) {
   return lines.join("\n");
 }
 
-export function buildWorkflowRunsUrl({ owner, repo, file, branch = "main", event = null }) {
+export function buildWorkflowRunsUrl({ owner, repo, file, branch = "main", event = null, perPage = RUNS_PER_PAGE }) {
   const query = new URLSearchParams({
     status: "completed",
     branch,
-    per_page: String(RUNS_PER_PAGE),
+    per_page: String(perPage),
   });
   if (event) query.set("event", event);
   const segments = [owner, repo, file].map((segment) => encodeURIComponent(segment));
@@ -1698,21 +1708,30 @@ export function mergeWorkflowRunBatches(batches) {
   });
 }
 
-async function fetchCompletedRuns({ token, owner, repo, file, branch, event }) {
-  const url = buildWorkflowRunsUrl({ owner, repo, file, branch, event });
-  const response = await fetch(url, { headers: authHeaders(token) });
-  if (!response.ok) {
-    let detail = `HTTP ${response.status}`;
+async function fetchCompletedRuns({ token, owner, repo, file, branch, event, perPage = RUNS_PER_PAGE }) {
+  const url = buildWorkflowRunsUrl({ owner, repo, file, branch, event, perPage });
+  let lastError = null;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
+      const response = await fetch(url, { headers: authHeaders(token) });
+      if (!response.ok) {
+        let detail = `HTTP ${response.status}`;
+        try {
+          const payload = await response.json();
+          if (payload?.message) detail = `${payload.message} (HTTP ${response.status})`;
+        } catch {
+          // keep the HTTP-status detail
+        }
+        throw new Error(detail);
+      }
       const payload = await response.json();
-      if (payload?.message) detail = `${payload.message} (HTTP ${response.status})`;
-    } catch {
-      // keep the HTTP-status detail
+      return parseWorkflowRunsPayload(payload);
+    } catch (error) {
+      lastError = error;
+      if (attempt === 1) await new Promise((resolve) => setTimeout(resolve, 2000));
     }
-    throw new Error(detail);
   }
-  const payload = await response.json();
-  return parseWorkflowRunsPayload(payload);
+  throw lastError;
 }
 
 async function fetchRunJobs({ token, owner, repo, runId }) {
@@ -1843,7 +1862,26 @@ export async function main() {
         runs: mergeWorkflowRunBatches(batches),
         fetchJobsFn: (runId) => fetchRunJobs({ token, owner, repo, runId }),
       });
-      workflows.push(evaluateWorkflow(workflow, runs));
+      let evaluated = evaluateWorkflow(workflow, runs);
+      if (needsMissedWindowReverification(evaluated)) {
+        const verifyBatches = [];
+        for (const event of fetchEvents) {
+          verifyBatches.push(await fetchCompletedRuns({
+            token,
+            owner,
+            repo,
+            file: workflow.file,
+            branch,
+            event,
+            perPage: 100,
+          }));
+        }
+        evaluated = evaluateWorkflow(workflow, await annotateQueueEvictions({
+          runs: mergeWorkflowRunBatches([...batches, ...verifyBatches]),
+          fetchJobsFn: (runId) => fetchRunJobs({ token, owner, repo, runId }),
+        }));
+      }
+      workflows.push(evaluated);
     } catch (error) {
       // A transient API failure must never itself alarm — report unknown, keep exit 0.
       workflows.push({
