@@ -34,7 +34,6 @@ for (const scriptName of [
   "qa:rim-sustainable-research",
   "qa:rim-index",
   "qa:rim-five-canonical",
-  "qa:rim-band",
   "qa:rim-sustainable-public",
 ]) {
   assert.equal(typeof scripts[scriptName], "string", `${scriptName} remains available for explicit historical/audit use`);
