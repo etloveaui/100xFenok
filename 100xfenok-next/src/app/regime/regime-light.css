@@ -224,6 +224,100 @@
   color: var(--fnk-neutral-500);
 }
 
+/* 시황 기록 — 피드가 없는 동안은 한 줄, archive가 차면 12주 스트립.
+ * 접힌 줄은 공용 EmptyState 카드 대신 페이지 흐름에 한 줄로만 남는다. */
+
+.rgm-history-note {
+  padding: 0 4px;
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+.rgm-history {
+  padding: 14px 16px 0;
+}
+
+.rgm-history-strip {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.rgm-hweek {
+  height: 20px;
+  border-radius: 4px;
+  background: var(--fnk-neutral-100);
+  border: 1px solid var(--fnk-neutral-200);
+}
+
+.rgm-hweek.rgm-bar-up {
+  background: var(--fnk-color-gain-soft);
+  border-color: var(--fnk-color-gain);
+}
+
+.rgm-hweek.rgm-bar-warn {
+  background: var(--fnk-color-warn-soft);
+  border-color: var(--fnk-color-warn);
+}
+
+.rgm-hweek.rgm-bar-down {
+  background: var(--fnk-color-loss-soft);
+  border-color: var(--fnk-color-loss);
+}
+
+.rgm-hweek[data-current] {
+  background: var(--fnk-color-gain);
+  border-color: var(--fnk-neutral-900);
+  box-shadow: 0 0 0 1px var(--fnk-neutral-900);
+}
+
+.rgm-history-axis {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 8px;
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+.rgm-history-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 10px 0 14px;
+  font-size: 11px;
+  color: var(--fnk-neutral-500);
+}
+
+.rgm-history-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rgm-hkey {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--fnk-neutral-100);
+  border: 1px solid var(--fnk-neutral-200);
+}
+
+.rgm-hkey.rgm-bar-up {
+  background: var(--fnk-color-gain-soft);
+  border-color: var(--fnk-color-gain);
+}
+
+.rgm-hkey.rgm-bar-warn {
+  background: var(--fnk-color-warn-soft);
+  border-color: var(--fnk-color-warn);
+}
+
+.rgm-hkey-current {
+  background: var(--fnk-color-gain);
+  border-color: var(--fnk-neutral-900);
+}
+
 /* Action panel rows: link rows with a secondary-button-styled opener.
  * The opener is a span (not a nested <button>) because the row is a link.
  * Left accent uses a 2px border; hover and keyboard focus share it. */

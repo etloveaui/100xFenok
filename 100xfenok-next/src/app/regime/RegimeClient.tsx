@@ -2,7 +2,7 @@
 
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
-import { Bar, EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
+import { Bar, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import { DATA_STATE_LABELS, dateOnly, formatAsOf, isStaleAsOf } from "@/lib/data-state";
 import type {
@@ -348,10 +348,6 @@ function gaugeReading(pulses: Pulse[]) {
   return { percent, position, alert, caution, friendly, total };
 }
 
-function reload() {
-  window.location.reload();
-}
-
 function openEvidence(path: string) {
   window.open(path, "_blank", "noopener");
 }
@@ -382,6 +378,7 @@ function CompositePanel({
   stale,
   asOf,
   oldestInputAsOf,
+  onRefetch,
 }: {
   axes: Axis[];
   gauge: ReturnType<typeof gaugeReading>;
@@ -392,6 +389,7 @@ function CompositePanel({
   stale: boolean;
   asOf: string | null;
   oldestInputAsOf: string | null;
+  onRefetch: () => void;
 }) {
   const score = gauge === null ? null : Math.round(gauge.percent);
   const emptyActive = failed || (!loading && !ready);
@@ -402,7 +400,7 @@ function CompositePanel({
       emptyReason={failed ? "시황 데이터를 불러오지 못했습니다" : "표시할 신호가 아직 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
       emptyActionLabel="다시 시도"
-      onEmptyAction={reload}
+      onEmptyAction={onRefetch}
     >
       {ready && gauge !== null && score !== null && (
         <div data-regime-headline>
@@ -463,7 +461,7 @@ function CompositePanel({
               ? "0개 신호"
               : `${gauge.total}개 신호${oldestInputAsOf ? ` · 가장 오래된 입력 ${formatAsOf(oldestInputAsOf) ?? oldestInputAsOf}` : ""}`
           }
-          onRetry={failed || stale || partial ? reload : undefined}
+          onRetry={failed || stale || partial ? onRefetch : undefined}
           onEvidence={ready && !failed ? () => openEvidence("/data/computed/signals.json") : undefined}
         />
       </div>
@@ -480,6 +478,7 @@ function AxisTablePanel({
   stale,
   floor,
   undatedStructure,
+  onRefetch,
 }: {
   axes: Axis[];
   loading: boolean;
@@ -489,6 +488,7 @@ function AxisTablePanel({
   stale: boolean;
   floor: string | null;
   undatedStructure: boolean;
+  onRefetch: () => void;
 }) {
   const readyAxes = axes.filter((axis) => axis.ready).length;
   return (
@@ -498,7 +498,7 @@ function AxisTablePanel({
       emptyReason={failed ? "축별 신호 요약을 불러오지 못했습니다" : "표시할 신호가 아직 없습니다"}
       emptyNextRefresh="다음 마감 후 갱신"
       emptyActionLabel="다시 시도"
-      onEmptyAction={reload}
+      onEmptyAction={onRefetch}
     >
       {ready && (
         <>
@@ -559,25 +559,80 @@ function AxisTablePanel({
         source="시황 엔진"
         asOf={floor ? (formatAsOf(floor) ?? floor) : "—"}
         coverage={`${readyAxes}/4 축`}
-        onRetry={failed || stale || partial ? reload : undefined}
+        onRetry={failed || stale || partial ? onRefetch : undefined}
         onEvidence={ready && !failed ? () => openEvidence("/data/computed/signals.json") : undefined}
       />
     </Panel>
   );
 }
 
-function HistoryPanel() {
-  // BLOCKED: no dated regime feed or archive type exists, so the 12-week strip
-  // can never render. Shared EmptyState with reason + next refresh, never null.
+/** 주간 시황 기록 한 칸: 그 주의 기준일과 판정 톤(양호·주의·경계·중립). */
+type RegimeHistoryWeek = {
+  week: string;
+  tone: MarketTone;
+};
+
+/**
+ * 시황 기록 — 최근 12주.
+ *
+ * 이 패널은 지금 늘 빈 상태였다: 날짜별 시황 피드가 없고(생산자·산출물·스키마
+ * 없음) 그래서 채울 데이터 자체가 없다. archive가 빈 동안에는 카드와 빈 상태를
+ * 그리지 않고 한 줄로 접어 두고, 소스가 생겨 archive가 차면 같은
+ * data-regime-history 자리에서 12주 스트립으로 자동으로 펼쳐진다.
+ */
+function HistoryPanel({
+  archive,
+  onRefetch,
+}: {
+  archive: RegimeHistoryWeek[];
+  onRefetch: () => void;
+}) {
+  if (archive.length === 0) {
+    return (
+      <p className="rgm-history-note" data-regime-history>
+        시황 기록 — 최근 12주: 날짜별 데이터가 아직 없습니다.
+      </p>
+    );
+  }
+
+  const weeks = archive.slice(-12);
+  const latest = weeks[weeks.length - 1];
+  const latestStale = isStaleAsOf(latest.week);
   return (
     <Panel>
       <div data-regime-history>
         <PanelHeader eyebrow="Si-hwang History" title="시황 기록 — 최근 12주" right={<Pill>주간</Pill>} />
-        <EmptyState
-          reason="날짜별 시황 데이터가 아직 없어 표시할 수 없습니다"
-          nextRefresh="피드 연결 후 주간 갱신"
+        <div className="rgm-history">
+          <div
+            className="rgm-history-strip"
+            role="img"
+            aria-label={`최근 ${weeks.length}주: ${weeks.map((item) => `${dateOnly(item.week) ?? item.week} ${toneLabel(item.tone)}`).join(", ")}`}
+          >
+            {weeks.map((item) => (
+              <span
+                key={item.week}
+                className={`rgm-hweek ${axisBarClass(item.tone)}`}
+                data-current={item.week === latest.week ? "true" : undefined}
+              />
+            ))}
+          </div>
+          <div className="rgm-history-axis">
+            <span className="tabular-nums">{dateOnly(weeks[0].week) ?? weeks[0].week}</span>
+            <span>현재</span>
+          </div>
+          <div className="rgm-history-legend">
+            <span><i className="rgm-hkey rgm-bar-up" aria-hidden="true" />양호</span>
+            <span><i className="rgm-hkey rgm-bar-warn" aria-hidden="true" />주의</span>
+            <span><i className="rgm-hkey rgm-hkey-current" aria-hidden="true" />현재 주</span>
+          </div>
+        </div>
+        <EvidenceRail
+          freshness={latestStale ? "stale" : "fresh"}
+          source="시황 엔진 기록"
+          asOf={formatAsOf(latest.week) ?? latest.week}
+          coverage={`${weeks.length}/12주`}
+          onRetry={latestStale ? onRefetch : undefined}
         />
-        <EvidenceRail freshness="pending" source="시황 엔진 기록" asOf="—" coverage="0/12주" />
       </div>
     </Panel>
   );
@@ -588,11 +643,13 @@ function ActionsPanel({
   failed,
   partial,
   floor,
+  onRefetch,
 }: {
   loading: boolean;
   failed: boolean;
   partial: boolean;
   floor: string | null;
+  onRefetch: () => void;
 }) {
   return (
     <Panel>
@@ -618,7 +675,7 @@ function ActionsPanel({
         source="시황 엔진"
         asOf={floor ? (formatAsOf(floor) ?? floor) : "—"}
         coverage="4/4"
-        onRetry={failed || partial ? reload : undefined}
+        onRetry={failed || partial ? onRefetch : undefined}
         onEvidence={failed ? undefined : () => openEvidence("/data/computed/signals.json")}
       />
     </Panel>
@@ -626,6 +683,8 @@ function ActionsPanel({
 }
 
 export default function RegimeClient() {
+  // 이 화면의 모든 섹션은 같은 피드 하나를 읽는다(useMarketValuation). 재시도는
+  // 그 피드만 다시 읽고 페이지를 새로 고치지 않는다 — 다른 화면·스크롤 상태 유지.
   const {
     indices,
     macroPulses,
@@ -638,6 +697,7 @@ export default function RegimeClient() {
     dataReady,
     failed,
     feedReady,
+    refetch,
   } = useMarketValuation();
 
   const sp500 = indices.find((index) => index.id === "sp500");
@@ -714,6 +774,9 @@ export default function RegimeClient() {
   const partial = ready && (axes.some((axis) => !axis.ready) || compositeAsOf === null);
   const stale = ready && !partial && isStaleAsOf(compositeAsOf);
   const undatedStructure = axes[0].pulses.length > 0;
+  // 주간 시황 기록 소스가 아직 없다(생산자·산출물·스키마 없음). 소스가 생겨 이
+  // 배열이 채워지면 기록 패널이 자동으로 펼쳐진다.
+  const historyArchive: RegimeHistoryWeek[] = [];
 
   return (
     <div className="rgm" data-regime-surface>
@@ -727,10 +790,10 @@ export default function RegimeClient() {
         </div>
       </div>
 
-      <CompositePanel axes={axes} gauge={gauge} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} asOf={compositeAsOf} oldestInputAsOf={oldestInputAsOf} />
-      <AxisTablePanel axes={axes} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} floor={compositeAsOf} undatedStructure={undatedStructure} />
-      <HistoryPanel />
-      <ActionsPanel loading={isLoading} failed={failed} partial={partial} floor={compositeAsOf} />
+      <CompositePanel axes={axes} gauge={gauge} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} asOf={compositeAsOf} oldestInputAsOf={oldestInputAsOf} onRefetch={refetch} />
+      <AxisTablePanel axes={axes} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} floor={compositeAsOf} undatedStructure={undatedStructure} onRefetch={refetch} />
+      <HistoryPanel archive={historyArchive} onRefetch={refetch} />
+      <ActionsPanel loading={isLoading} failed={failed} partial={partial} floor={compositeAsOf} onRefetch={refetch} />
     </div>
   );
 }
