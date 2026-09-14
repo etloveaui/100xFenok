@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-14T03:34:02.955Z",
+  "generated_at": "2026-09-14T06:25:22.570Z",
   "status": "open",
   "open_incident_count": 7,
   "open_incidents": [
@@ -23,7 +23,7 @@
     {
       "workflow": "fetch-edgar-filings.yml",
       "label": "Fetch EDGAR Filing Timeline",
-      "streak": 5,
+      "streak": 0,
       "failure_streak_threshold": 1,
       "first_failing_run_id": null,
       "first_failing_run_url": null,
@@ -67,18 +67,20 @@
       "cadence_status": "not_due"
     },
     {
-      "workflow": "fetch-yf-finance.yml",
-      "label": "Fetch YF Finance Data",
-      "streak": 1,
+      "workflow": "fetch-treasury-tga.yml",
+      "label": "Fetch Treasury TGA Data",
+      "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
       "first_failing_run_url": null,
       "alarm_reasons": [
-        "unrecovered_overdue"
+        "lane_outcome_overdue"
       ],
-      "lane_outcome_lanes": [],
+      "lane_outcome_lanes": [
+        "treasury_tga"
+      ],
       "lost_schedule_slot_count": 0,
-      "cadence_status": "overdue"
+      "cadence_status": "not_due"
     },
     {
       "workflow": "global-writer-queue-observer.yml",
@@ -97,12 +99,12 @@
     {
       "workflow": "worker-request-budget-alarm.yml",
       "label": "Worker Request Budget Alarm",
-      "streak": 1,
+      "streak": 2,
       "failure_streak_threshold": 2,
       "first_failing_run_id": 34794362423,
       "first_failing_run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34794362423",
       "alarm_reasons": [
-        "missed_schedule_window"
+        "failure_streak"
       ],
       "lane_outcome_lanes": [],
       "lost_schedule_slot_count": 0,
@@ -117,7 +119,7 @@
     "gdelt_news_tone": "2026-09-13",
     "finra_ats_weekly": "2026-09-14",
     "oecd_cli": "2026-09-08",
-    "treasury_tga": "2026-09-11",
+    "treasury_tga": "2026-09-14",
     "slickcharts": "2026-09-13",
     "apewisdom_attention": "2026-09-13",
     "sentiment": "2026-09-05",
@@ -362,7 +364,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 2
+      "data_freshness_age_hours_at_generation": 5
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -405,10 +407,8 @@
       ],
       "event": "schedule",
       "failure_streak_threshold": 2,
-      "cadence_status": "overdue",
-      "cadence_evidence": [
-        "suspected_skip"
-      ]
+      "cadence_status": "not_due",
+      "cadence_evidence": []
     },
     {
       "file": "global-writer-queue-observer.yml",
@@ -512,8 +512,8 @@
     }
   ],
   "cadence_state_counts": {
-    "not_due": 25,
-    "overdue": 1,
+    "not_due": 26,
+    "overdue": 0,
     "recovered": 0,
     "no_declaration": 8,
     "unknown": 0
@@ -529,16 +529,16 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "34802919960",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34802919960",
-    "observed_at": "2026-09-14T03:34:02.955Z",
-    "event": "workflow_run",
+    "run_id": "34813265248",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34813265248",
+    "observed_at": "2026-09-14T06:25:22.570Z",
+    "event": "schedule",
     "workflows": [
       "fenok-edge-krx-daily.yml",
       "fetch-edgar-filings.yml",
       "fetch-fdic.yml",
       "fetch-finra-ats-weekly.yml",
-      "fetch-yf-finance.yml",
+      "fetch-treasury-tga.yml",
       "global-writer-queue-observer.yml",
       "worker-request-budget-alarm.yml"
     ],
