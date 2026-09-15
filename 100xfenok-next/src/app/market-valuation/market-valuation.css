@@ -103,10 +103,51 @@
   font-weight: 600;
 }
 
-.mv-lede {
-  padding: 14px 16px 0;
-  font-size: 13px;
+/* Summary strip: the compact preview that leads the route — the distribution
+ * band spans the panel and the index rank bars sit in a right column beside
+ * their reading (stacked beneath it on phones). */
+.mv-sum {
+  display: grid;
+  gap: 12px;
+  padding: 12px 16px 14px;
+}
+
+.mv-sum-band {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.mv-sum-peers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+  align-items: center;
+  gap: 6px 16px;
+}
+
+.mv-sum-peer-read,
+.mv-sum-bars {
+  min-width: 0;
+}
+
+.mv-sum-cap {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fnk-neutral-600);
+}
+
+.mv-sum-read {
+  margin: 0;
+  font-size: 12px;
   color: var(--fnk-neutral-700);
+}
+
+.mv-sum-note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--fnk-neutral-600);
 }
 
 .mv-stats {
@@ -538,5 +579,10 @@
   .mv-sorts,
   .mv-chart-tabs {
     gap: 8px;
+  }
+  /* The strip stacks: the band keeps the full width and the index bars drop
+   * under their reading instead of holding a column beside it. */
+  .mv-sum-peers {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
