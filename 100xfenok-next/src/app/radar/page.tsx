@@ -10,18 +10,19 @@ import {
   legacyPublicFileExists,
   sanitizeLegacyPath,
 } from '@/lib/server/legacy-bridge';
+import RadarNativeClient, { type RadarCategory } from './RadarNativeClient';
 
 export const metadata: Metadata = {
   title: 'Market Radar',
-  description: '거시경제 지표 통합 대시보드',
+  description: '유동성과 시장 심리 지표를 한 화면에서 확인하는 대시보드',
 };
 
-const VALID_RADAR_CATEGORIES = new Set(['all', 'liquidity', 'rates', 'sentiment']);
+const VALID_RADAR_CATEGORIES: ReadonlySet<string> = new Set(['all', 'liquidity', 'sentiment']);
 
 const RADAR_BOUNDARY_CHIPS = [
-  { key: 'legacy-monitor', label: '레거시 모니터' },
-  { key: 'native-macro', label: '네이티브 매크로' },
-  { key: 'detail-bridge', label: '상세 브리지' },
+  { key: 'liquidity-trio', label: '유동성 3종' },
+  { key: 'sentiment-single', label: '심리 1종' },
+  { key: 'detail-pages', label: '상세 연결' },
 ] as const;
 
 const RADAR_OWNER_LINKS = [
@@ -33,13 +34,17 @@ const RADAR_OWNER_LINKS = [
 const RADAR_CATEGORY_LINKS = [
   { key: 'all', label: '전체', href: ROUTES.radar },
   { key: 'liquidity', label: '유동성', href: `${ROUTES.radar}?category=liquidity` },
-  { key: 'rates', label: '금리', href: `${ROUTES.radar}?category=rates` },
   { key: 'sentiment', label: '심리', href: `${ROUTES.radar}?category=sentiment` },
 ] as const;
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
+
+function resolveCategory(rawCategory: string | null): RadarCategory {
+  if (rawCategory === 'liquidity' || rawCategory === 'sentiment') return rawCategory;
+  return 'all';
+}
 
 export default async function RadarPage({ searchParams }: PageProps) {
   const params = searchParams ? await searchParams : {};
@@ -51,35 +56,48 @@ export default async function RadarPage({ searchParams }: PageProps) {
   const rawPath = getSingleSearchParam(params.path);
   const rawCategory = getSingleSearchParam(params.category);
   const safePath = sanitizeLegacyPath(rawPath, { prefixes: ['tools/macro-monitor/'] });
-  const isValidCategory = typeof rawCategory === 'string' && VALID_RADAR_CATEGORIES.has(rawCategory);
   const hasSafePath = safePath ? await legacyPublicFileExists(safePath) : false;
-  const baseIframeSrc = safePath && hasSafePath
-    ? `/${safePath}`
-    : '/tools/macro-monitor/index.html';
-  const shouldApplyCategory = isValidCategory
-    && rawCategory !== 'all'
-    && (safePath === null || safePath === 'tools/macro-monitor/index.html');
-  const iframeSrc = shouldApplyCategory
-    ? `${baseIframeSrc}?category=${encodeURIComponent(rawCategory)}`
-    : baseIframeSrc;
+  const category = resolveCategory(typeof rawCategory === 'string' ? rawCategory : null);
 
-  const frame = (
-    <RouteEmbedFrame
-      src={iframeSrc}
-      title="100x Market Radar"
-      loading="eager"
-      shellClassName={version === "v1" ? undefined : "route-embed-shell-app"}
-    />
-  );
+  // 상세 자료는 기존 macro-monitor 상세 페이지를 그대로 연결한다.
+  if (safePath && hasSafePath) {
+    const frame = (
+      <RouteEmbedFrame
+        src={`/${safePath}`}
+        title="100x Market Radar"
+        loading="eager"
+        shellClassName={version === "v1" ? undefined : "route-embed-shell-app"}
+      />
+    );
+    if (version === "v1") return frame;
+    return (
+      <div className="fnk-shell">
+        <AppShell active="explore" title="Market Radar" backHref={ROUTES.home}>
+          <div
+            data-radar-surface
+            data-radar-route-owner="native-radar"
+            className="min-h-screen px-3 py-4 sm:px-4 md:px-6"
+            style={{ backgroundColor: "var(--c-surface-2)" }}
+          >
+            <div data-radar-legacy-frame>
+              {frame}
+            </div>
+          </div>
+        </AppShell>
+      </div>
+    );
+  }
 
-  if (version === "v1") return frame;
+  const native = <RadarNativeClient initialCategory={category} />;
+
+  if (version === "v1") return native;
 
   return (
     <div className="fnk-shell">
       <AppShell active="explore" title="Market Radar" backHref={ROUTES.home}>
         <div
           data-radar-surface
-          data-radar-route-owner="legacy-macro-monitor"
+          data-radar-route-owner="native-radar"
           className="min-h-screen px-3 py-4 sm:px-4 md:px-6"
           style={{ backgroundColor: "var(--c-surface-2)" }}
         >
@@ -89,11 +107,9 @@ export default async function RadarPage({ searchParams }: PageProps) {
           >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Route owner</p>
-                <h1 className="mt-2 text-xl font-black text-slate-900">Market Radar (레거시)</h1>
+                <h1 className="mt-2 text-xl font-black text-slate-900">Market Radar</h1>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  기존 macro-monitor HTML을 보존하는 브리지 화면입니다. 네이티브 차트·워크벤치 이동과
-                  레거시 상세 경로를 분리해 route ownership을 명확히 둡니다.
+                  유동성과 시장 심리 지표를 한 화면에서 봅니다. 카드를 누르면 상세 자료로 이동합니다.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -135,9 +151,7 @@ export default async function RadarPage({ searchParams }: PageProps) {
               ))}
             </div>
           </section>
-          <div data-radar-legacy-frame>
-            {frame}
-          </div>
+          {native}
         </div>
       </AppShell>
     </div>

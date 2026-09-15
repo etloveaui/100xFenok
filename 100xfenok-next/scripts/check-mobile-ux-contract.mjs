@@ -1592,17 +1592,17 @@ async function collectRouteChecks(page, route) {
         if (!surface || surface.getBoundingClientRect().height <= 0) {
           failures.push({ check: "radar-surface-visible", detail: "missing radar surface" });
         }
-        if (!owner || owner.getAttribute("data-radar-route-owner") !== "legacy-macro-monitor") {
+        if (!owner || owner.getAttribute("data-radar-route-owner") !== "native-radar") {
           failures.push({
             check: "radar-route-owner",
             detail: `owner=${owner?.getAttribute("data-radar-route-owner") || "missing"}`,
           });
         }
-        if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("Market Radar (레거시)")) {
+        if (!boundary || boundary.getBoundingClientRect().height <= 0 || !(boundary.textContent || "").includes("Market Radar")) {
           failures.push({ check: "radar-boundary-visible", detail: "missing visible radar boundary" });
         }
 
-        const expectedChips = ["legacy-monitor", "native-macro", "detail-bridge"];
+        const expectedChips = ["liquidity-trio", "sentiment-single", "detail-pages"];
         const actualChips = chips.map((node) => node.getAttribute("data-radar-boundary-chip"));
         if (
           chips.length !== expectedChips.length ||
@@ -1641,7 +1641,6 @@ async function collectRouteChecks(page, route) {
         const expectedCategoryLinks = [
           "/radar",
           "/radar?category=liquidity",
-          "/radar?category=rates",
           "/radar?category=sentiment",
         ];
         const actualCategoryLinks = categoryLinks.map((node) => {
@@ -1664,22 +1663,34 @@ async function collectRouteChecks(page, route) {
           }
         });
 
+        const hasDetailPath = Boolean(radarUrl.searchParams.get("path"));
         const frameSrc = legacyFrame instanceof HTMLIFrameElement
           ? new URL(legacyFrame.src, window.location.origin)
           : null;
-        const expectedFramePath = radarUrl.searchParams.get("path")
-          ? "/tools/macro-monitor/details/liquidity-flow.html"
-          : "/tools/macro-monitor/index.html";
-        if (!frameSrc || frameSrc.pathname !== expectedFramePath) {
-          failures.push({
-            check: "radar-legacy-frame-src",
-            detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"} expected=${expectedFramePath}`,
+        if (hasDetailPath) {
+          const expectedFramePath = "/tools/macro-monitor/details/liquidity-flow.html";
+          if (!frameSrc || frameSrc.pathname !== expectedFramePath) {
+            failures.push({
+              check: "radar-legacy-frame-src",
+              detail: `src=${legacyFrame instanceof HTMLIFrameElement ? legacyFrame.src : "missing"} expected=${expectedFramePath}`,
+            });
+          }
+        } else {
+          if (legacyFrame) {
+            failures.push({ check: "radar-native-no-iframe", detail: "native radar must not mount a legacy iframe" });
+          }
+          const nativeCards = Array.from(document.querySelectorAll("[data-radar-card]")).filter((node) => {
+            const rect = node.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0;
           });
-        }
-        if (!radarUrl.searchParams.get("path") && radarUrl.searchParams.get("category") && frameSrc?.searchParams.get("category") !== radarUrl.searchParams.get("category")) {
-          failures.push({
-            check: "radar-category-forwarding",
-            detail: `frameCategory=${frameSrc?.searchParams.get("category") || ""} expected=${radarUrl.searchParams.get("category")}`,
+          if (nativeCards.length !== 4) {
+            failures.push({ check: "radar-native-card-count", detail: `visible=${nativeCards.length} expected=4` });
+          }
+          nativeCards.forEach((node, index) => {
+            const rect = node.getBoundingClientRect();
+            if (rect.height < 44) {
+              failures.push({ check: "radar-native-card-target", detail: `card ${index} height=${Math.round(rect.height)}` });
+            }
           });
         }
 
