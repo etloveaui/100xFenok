@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  COMBO_SIGNALS,
   computeBankingHealthSnapshot,
   computeLiquidityFlowSnapshot,
   computeLiquidityStressSnapshot,
@@ -107,7 +106,7 @@ export function useRadarData(): RadarData {
             tga: tgaSeries,
             rrp,
             stablecoin: stableSeries.length || Number.isFinite(stableCurrent) ? { current: stableCurrent || 0, series: stableSeries } : null,
-          });
+          }) as unknown as FlowSnapshot;
           setFlow({ state: "ready", snapshot });
         } catch {
           setFlow({ state: "failed", snapshot: null });
@@ -122,7 +121,7 @@ export function useRadarData(): RadarData {
         setStress({ state: reached ? "missing" : "failed", snapshot: null });
       } else {
         try {
-          setStress({ state: "ready", snapshot: computeLiquidityStressSnapshot({ sofr, iorb, reserves, gdp }) });
+          setStress({ state: "ready", snapshot: computeLiquidityStressSnapshot({ sofr, iorb, reserves, gdp }) as unknown as StressSnapshot });
         } catch {
           setStress({ state: "failed", snapshot: null });
         }
@@ -141,7 +140,7 @@ export function useRadarData(): RadarData {
         try {
           setBanking({
             state: "ready",
-            snapshot: computeBankingHealthSnapshot({ delinquency, loans, deposits, fedTier1, fdicTier1 }),
+            snapshot: computeBankingHealthSnapshot({ delinquency, loans, deposits, fedTier1, fdicTier1 }) as unknown as BankingSnapshot,
           });
         } catch {
           setBanking({ state: "failed", snapshot: null });
@@ -177,7 +176,7 @@ export function useRadarData(): RadarData {
           putcall_ratio: latestValue(putcall ?? [], "value"),
         };
         try {
-          setSentiment({ state: "ready", snapshot: computeSentimentSignalSnapshot(values, COMBO_SIGNALS) });
+          setSentiment({ state: "ready", snapshot: computeSentimentSignalSnapshot(values) as unknown as SentimentSnapshot });
         } catch {
           setSentiment({ state: "failed", snapshot: null });
         }
