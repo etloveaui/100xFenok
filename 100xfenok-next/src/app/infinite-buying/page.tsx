@@ -27,7 +27,7 @@ export default async function InfiniteBuyingPage({ searchParams }: PageProps) {
       src="/ib/ib-total-guide-calculator.html"
       title="Infinite Buying Guide"
       loading="eager"
-      shellClassName={version === "v1" ? undefined : "route-embed-shell-app"}
+      shellClassName={version === "v1" ? undefined : "route-embed-shell-fill-parent"}
     />
   );
 
@@ -37,12 +37,12 @@ export default async function InfiniteBuyingPage({ searchParams }: PageProps) {
     <div className="fnk-shell">
       <AppShell active="ib" title="Infinite Buying" backHref={ROUTES.home}>
         <div
-          className="flex min-h-0 flex-col gap-3"
+          className="route-embed-page-fit flex min-h-0 flex-col gap-3"
           data-infinite-buying-surface="true"
           data-infinite-buying-route-owner="legacy-guide-calculator"
         >
           <section
-            className="rounded-[var(--panel-r)] border border-slate-200 bg-white px-3 py-3 shadow-sm"
+            className="shrink-0 rounded-[var(--panel-r)] border border-slate-200 bg-white px-3 py-3 shadow-sm"
             data-infinite-buying-boundary="true"
           >
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -52,26 +52,26 @@ export default async function InfiniteBuyingPage({ searchParams }: PageProps) {
                 </p>
                 <h1 className="text-base font-black text-slate-950 sm:text-lg">Guide 계산기</h1>
                 <p className="mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600 sm:text-sm">
-                  이 경로는 완성된 레거시 가이드 계산기를 보존합니다. 운용 Helper와 native preview는 IB Helper에서 분리해 확인합니다.
+                  TQQQ·SOXL 무한매수법의 분할매수 규칙과 시세를 확인하고, 오늘 실행할 주문을 계산하는 화면입니다.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.08em]">
                   <span
                     className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600"
                     data-infinite-buying-boundary-chip="legacy-guide"
                   >
-                    legacy guide
+                    분할매수 규칙
                   </span>
                   <span
                     className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-amber-700"
                     data-infinite-buying-boundary-chip="ib-helper-owner"
                   >
-                    ib helper owner
+                    시세 확인
                   </span>
                   <span
                     className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-blue-700"
                     data-infinite-buying-boundary-chip="native-preview"
                   >
-                    native preview
+                    주문 생성기
                   </span>
                 </div>
               </div>
@@ -103,7 +103,7 @@ export default async function InfiniteBuyingPage({ searchParams }: PageProps) {
               </nav>
             </div>
           </section>
-          <div className="min-h-0" data-infinite-buying-legacy-frame="true">
+          <div className="flex-1 min-h-0" data-infinite-buying-legacy-frame="true">
             {frame}
           </div>
         </div>
