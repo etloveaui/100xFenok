@@ -52,7 +52,7 @@ type LedTone = "green" | "slate" | "amber" | "orange" | "red" | "blue" | "hollow
 
 const LED_DOT: Record<LedTone, string> = {
   green: "bg-green-500",
-  slate: "bg-slate-400",
+  slate: "bg-slate-500",
   amber: "bg-amber-500",
   orange: "bg-orange-500",
   red: "bg-red-500",
