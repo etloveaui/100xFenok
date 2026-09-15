@@ -2,7 +2,7 @@
 
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
-import { Bar, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
+import { DistributionBand, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
 import { DATA_STATE_LABELS, dateOnly, formatAsOf, isStaleAsOf } from "@/lib/data-state";
 import type {
@@ -352,6 +352,69 @@ function openEvidence(path: string) {
   window.open(path, "_blank", "noopener");
 }
 
+/* Composite gauge zones — the same 20/40/60/80 cuts `gaugeReading` labels and the
+ * CSS track below paints. */
+const GAUGE_TICKS = [20, 40, 60, 80];
+
+/**
+ * One axis's pulse tones as distribution segments. The live counts already exist
+ * client-side, so nothing new is fetched; 중립 is the remainder of the axis's own
+ * signals, and every tone is emitted (zeros included) so the band always accounts
+ * for the axis's whole signal count.
+ */
+function toneDistribution(pulses: Pulse[]) {
+  const { alert, caution, friendly } = toneCounts(pulses);
+  const neutral = pulses.length - alert - caution - friendly;
+  return [
+    { key: "양호", count: friendly, tone: "gain" as const },
+    { key: "주의", count: caution, tone: "warn" as const },
+    { key: "경계", count: alert, tone: "loss" as const },
+    { key: "중립", count: neutral, tone: "neutral" as const },
+  ];
+}
+
+/** The word one axis's composition reads as, for the calm half of the sentence. */
+function dominantWord(pulses: Pulse[]): string {
+  return toneLabel(strongestTone(pulses));
+}
+
+/**
+ * One-line read of the axis composition band, generated from the live counts.
+ * Axes that carry a 주의/경계 signal are named with their counts; calm axes are
+ * named without counts; an axis with no signals is stated as such instead of
+ * disappearing from the sentence.
+ */
+function compositionSentence(axes: Axis[]): string {
+  const tense = axes
+    .filter((axis) => axis.pulses.length > 0 && (axis.tone === "rose" || axis.tone === "amber"))
+    .sort((left, right) => toneRank(right.tone) - toneRank(left.tone));
+  const calm = axes.filter(
+    (axis) => axis.pulses.length > 0 && axis.tone !== "rose" && axis.tone !== "amber",
+  );
+  const silentCount = axes.filter((axis) => axis.pulses.length === 0).length;
+
+  const tenseText = tense
+    .map((axis) => {
+      const { alert, caution } = toneCounts(axis.pulses);
+      const parts = [alert > 0 ? `경계 ${alert}개` : null, caution > 0 ? `주의 ${caution}개` : null];
+      return `${axis.title} 축에 ${parts.filter((part): part is string => part !== null).join(" · ")}`;
+    })
+    .join(", ");
+
+  const calmText =
+    calm.length === 0
+      ? ""
+      : `${tense.length > 0 ? "나머지 " : ""}${calm.map((axis) => axis.title).join("·")} 축은 ${[...new Set(calm.map(dominantWord))].join("·")}입니다`;
+
+  const silentText = silentCount === 0 ? "" : `신호가 없는 ${silentCount}개 축은 그대로 신호 없음입니다`;
+
+  if (tense.length === 0) {
+    const calmOnly = [calmText, silentText].filter((part) => part.length > 0).join(", ");
+    return calmOnly.length === 0 ? "" : `지금은 ${calmOnly}.`;
+  }
+  return `지금은 ${[tenseText, calmText, silentText].filter((part) => part.length > 0).join(", ")}.`;
+}
+
 function headerSentence(
   axes: Axis[],
   gauge: ReturnType<typeof gaugeReading>,
@@ -421,33 +484,49 @@ function CompositePanel({
                 긍정 {gauge.friendly} · 주의 {gauge.caution} · 경계 {gauge.alert}
               </span>
             </div>
+            {/* Composite gauge: the score's own 0-100 position over the zone cuts
+                gaugeReading labels (20/40/60/80). The track shows the zones, the
+                marker shows where this reading sits; both are tokens, no new scale. */}
+            <div
+              className="rgm-gauge"
+              role="img"
+              aria-label={`종합 ${score}/100 · ${gauge.position} · 구간 눈금 ${GAUGE_TICKS.join(" · ")}점`}
+            >
+              <div className="rgm-gauge-track">
+                <span
+                  className="rgm-gauge-marker"
+                  style={{ left: `clamp(0.5%, ${gauge.percent}%, 99.5%)` }}
+                />
+              </div>
+            </div>
             <div className="rgm-meters">
               {axes.map((axis) => {
-                const axisScore = gaugeReading(axis.pulses);
-                const axisPercent = axisScore === null ? null : Math.round(axisScore.percent);
+                const reading = gaugeReading(axis.pulses);
+                const counts = reading === null ? null : toneCounts(axis.pulses);
                 return (
-                  <div className="rgm-meter" key={axis.id}>
-                    <div className="rgm-meter-top">
-                      <span className="rgm-meter-label">{axis.title}</span>
-                      {axisPercent !== null ? (
-                        <span className="tabular-nums rgm-meter-value">
-                          {axisPercent} <span className={axisLabelClass(axis.tone)}>{toneLabel(axis.tone)}</span>
-                        </span>
-                      ) : (
-                        <span className="rgm-meter-nodata">신호 없음</span>
-                      )}
+                  <div className="rgm-band-row" key={axis.id} data-regime-axis-band={axis.id}>
+                    <div className="rgm-band-top">
+                      <span className="rgm-band-label">{axis.title}</span>
+                      <span className={`rgm-band-word ${axisLabelClass(axis.tone)}`}>{toneLabel(axis.tone)}</span>
+                      <span className="rgm-band-count tabular-nums">
+                        {axis.pulses.length > 0 ? `${axis.pulses.length}개 신호` : "신호 없음"}
+                      </span>
                     </div>
-                    {axisPercent !== null && (
-                      <Bar
-                        value={axisPercent}
-                        className={axisBarClass(axis.tone)}
-                        aria-label={`${axis.title} 점수`}
+                    {counts !== null && (
+                      <DistributionBand
+                        segments={toneDistribution(axis.pulses)}
+                        ariaLabel={`${axis.title} 신호 구성`}
                       />
                     )}
                   </div>
                 );
               })}
             </div>
+            {axes.some((axis) => axis.pulses.length > 0) && (
+              <p className="rgm-score-read" data-regime-composition-read>
+                {compositionSentence(axes)}
+              </p>
+            )}
           </div>
         </div>
       )}
