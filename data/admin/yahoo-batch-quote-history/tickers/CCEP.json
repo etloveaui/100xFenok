@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-19T23:47:14Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
@@ -184,6 +171,20 @@
       "run_id": "34424274071",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 596,
+      "natural": true,
+      "observed_at": "2026-09-15T01:34:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34917681226",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -202,12 +203,12 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 720,
+    "latency_ms": 596,
     "natural": true,
-    "observed_at": "2026-09-10T01:10:13Z",
+    "observed_at": "2026-09-15T01:34:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "34917681226",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -231,9 +232,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-10T01:10:13Z",
+    "observed_at": "2026-09-15T01:34:15Z",
     "run_attempt": 1,
-    "run_id": "34424274071"
+    "run_id": "34917681226"
   },
   "lkg": {
     "fetched_at": "2026-09-08T01:16:48Z",
@@ -264,5 +265,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CCEP",
-  "updated_at": "2026-09-10T01:10:13Z"
+  "updated_at": "2026-09-15T01:34:15Z"
 }

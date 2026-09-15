@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 439,
-      "natural": true,
-      "observed_at": "2026-08-14T00:18:08Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31755913658",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 467,
       "natural": true,
       "observed_at": "2026-08-14T23:56:58Z",
@@ -185,6 +172,20 @@
       "run_id": "34298546032",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 578,
+      "natural": true,
+      "observed_at": "2026-09-15T01:34:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34917681226",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -205,12 +206,12 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 567,
+    "latency_ms": 578,
     "natural": true,
-    "observed_at": "2026-09-09T01:18:24Z",
+    "observed_at": "2026-09-15T01:34:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34298546032",
+    "run_id": "34917681226",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -222,9 +223,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-09T01:18:24Z",
+    "observed_at": "2026-09-15T01:34:15Z",
     "run_attempt": 1,
-    "run_id": "34298546032"
+    "run_id": "34917681226"
   },
   "lkg": {
     "fetched_at": "2026-09-02T01:27:16Z",
@@ -250,5 +251,5 @@
   "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "TSM",
-  "updated_at": "2026-09-09T01:18:24Z"
+  "updated_at": "2026-09-15T01:34:15Z"
 }

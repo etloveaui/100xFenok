@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:05Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -185,6 +172,20 @@
       "run_id": "34298546032",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 470,
+      "natural": true,
+      "observed_at": "2026-09-15T01:34:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "34917681226",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -206,12 +207,12 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 571,
+    "latency_ms": 470,
     "natural": true,
-    "observed_at": "2026-09-09T01:18:24Z",
+    "observed_at": "2026-09-15T01:34:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34298546032",
+    "run_id": "34917681226",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -223,9 +224,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-09T01:18:24Z",
+    "observed_at": "2026-09-15T01:34:15Z",
     "run_attempt": 1,
-    "run_id": "34298546032"
+    "run_id": "34917681226"
   },
   "lkg": {
     "fetched_at": "2026-09-02T01:26:32Z",
@@ -261,5 +262,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "NVDA",
-  "updated_at": "2026-09-09T01:18:24Z"
+  "updated_at": "2026-09-15T01:34:15Z"
 }
