@@ -417,6 +417,17 @@ export default function NewEtfsList({
   }, [dateFilter, dateFilterAnchor, debouncedQuery, issuerFilter, rows, sort, typeFilter]);
   const dateFilterMissingAnchor = dateFilter !== "전체" && !dateFilterAnchor;
 
+  // Empty-search dead end fix (fh-380 item 2): toolbar survives above, and this
+  // reset restores the full list in one tap.
+  const resetFilters = useCallback(() => {
+    setQuery("");
+    setTypeFilter("전체");
+    setDateFilter("전체");
+    setIssuerFilter("전체");
+    setSort("date");
+    syncParams({ query: "", typeFilter: "전체", dateFilter: "전체", issuerFilter: "전체", sort: "date" });
+  }, [syncParams]);
+
   const typeOptions: Array<{ value: EtfTypeFilter; label: string; count: number }> = [
     { value: "전체", label: "전체", count: rows.length },
     { value: "레버리지", label: "레버리지", count: typeCounts.leveraged },
@@ -577,7 +588,16 @@ export default function NewEtfsList({
                   <div className="n">조건에 맞는 신규 ETF 없음</div>
                   <div className="tk">검색어와 필터를 조정해보세요</div>
                 </span>
-                <span className="pc num neutral">-</span>
+                <span className="flex min-w-[92px] flex-col items-end gap-1">
+                  <button
+                    type="button"
+                    data-etf-new-control="reset"
+                    onClick={resetFilters}
+                    className="min-h-11 rounded-full border border-[var(--c-line)] bg-white px-3 text-[11px] font-black text-[var(--c-brand)] transition hover:border-[var(--c-brand)]"
+                  >
+                    필터 초기화
+                  </button>
+                </span>
               </div>
             )}
           </div>

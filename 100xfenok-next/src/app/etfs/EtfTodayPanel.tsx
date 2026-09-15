@@ -59,6 +59,13 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
     .at(0) ?? null;
 
   const newPreview = snapshot?.newEtfs?.records?.slice(0, 3) ?? [];
+  // Same trailing-window truth as the hero (fh-380 item 2): show the real span
+  // next to the block date. The "신규 상장 ETF" label text stays (mobile-ux contract).
+  const newSpanSorted = (snapshot?.newEtfs?.records ?? [])
+    .map((row) => (typeof row.inceptionDate === "string" && row.inceptionDate.length >= 10 ? row.inceptionDate.slice(0, 10) : null))
+    .filter((value): value is string => value !== null)
+    .sort();
+  const newSpanLabel = newSpanSorted.length > 0 ? `상장일 ${newSpanSorted[0]}~${newSpanSorted[newSpanSorted.length - 1]}` : null;
   const volumeLeaders = insights?.volumeLeadersTop3 ?? [];
   const changeLeaders = insights?.changeLeadersTop3 ?? [];
   const asOfLabel = etfRailClockDate(floor, publishedFloor);
@@ -98,7 +105,7 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
               {formatInteger(insights.newCount)}
               <span className="etf-today-unit">개</span>
             </span>
-            <span className="etf-today-asof">{etfInlineClockLabel(newClock, newPublished)}</span>
+            <span className="etf-today-asof">{[etfInlineClockLabel(newClock, newPublished), newSpanLabel].filter(Boolean).join(" · ")}</span>
             <div className="etf-today-list">
               {newPreview.length > 0 ? (
                 newPreview.map((row) => (

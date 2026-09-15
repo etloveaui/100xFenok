@@ -57,6 +57,18 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
   }
 
   const { dominantBucket, leverageInversePct, newCount, topMoversCount, topMoversLeverageInverseCount, totalCount, asOf } = insights;
+  // New-listings feed is a trailing watchlist window (fh-380 item 2): label the
+  // real inception span + collection date, never "today".
+  const newRecords = snapshot?.newEtfs?.records ?? [];
+  const inceptionSpan = newRecords
+    .map((row) => (typeof row.inceptionDate === "string" && row.inceptionDate.length >= 10 ? row.inceptionDate.slice(0, 10) : null))
+    .filter((value): value is string => value !== null)
+    .sort();
+  const newSpanLabel = inceptionSpan.length > 0 ? `${inceptionSpan[0]}~${inceptionSpan[inceptionSpan.length - 1]}` : null;
+  const newCollectedLabel = formatAsOf(snapshot?.newEtfs?.fetched_at);
+  const newWindowLabel = [newSpanLabel ? `상장일 ${newSpanLabel}` : null, newCollectedLabel ? `${newCollectedLabel} 수집분` : null]
+    .filter((value): value is string => value !== null)
+    .join(" · ");
   const observedLabel = formatAsOf(asOf);
   const publishedLabel = formatAsOf(published);
   const pillLabel = observedLabel
@@ -75,7 +87,7 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
             <Pill>전체 {formatInteger(totalCount)}개</Pill>
           </div>
           <h1 className="etf-title">
-            오늘 신규 상장 <b className="tabular-nums">{formatInteger(newCount)}</b>개 · {dominantBucket?.label ?? "주식형"} 비중{" "}
+            신규 상장 <b className="tabular-nums">{formatInteger(newCount)}</b>개{newWindowLabel ? ` (${newWindowLabel})` : null} · {dominantBucket?.label ?? "주식형"} 비중{" "}
             <b className="tabular-nums">{dominantBucket?.pct ?? 0}%</b> 중심 · 레버리지·인버스 비중{" "}
             <b className="tabular-nums">{leverageInversePct}%</b>
           </h1>
