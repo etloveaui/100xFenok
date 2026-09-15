@@ -1255,6 +1255,18 @@ function seriesDelta(series: MarketChartSeries) {
   };
 }
 
+/* Latest value's percentile within the plotted window. The denominator is the
+ * same transformed points the loader plotted, so the strip cannot disagree
+ * with the chart below it. Neutral "백분위 N" wording only — no judgment. */
+function windowPercentile(series: MarketChartSeries): number | null {
+  const values = series.points
+    .map((point) => point.value)
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  const latest = latestFinitePoint(series)?.value;
+  if (values.length === 0 || typeof latest !== "number") return null;
+  return Math.round((values.filter((value) => value <= latest).length / values.length) * 100);
+}
+
 type WindowChangeReading = {
   /** signed window change, expressed in the display suffix's unit */
   change: number;
@@ -2102,6 +2114,38 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     }));
     return { readLine, rankRows, barMax, barlessCount };
   }, [legendItems, rangeId, visibleChartSeries]);
+  /* "지금 N줄" strip: latest value + window percentile for the first four
+   * visible series, in selection order. Same label formula as windowSummary,
+   * same plotted values, RankBars on the shared 0–100 percentile scale. */
+  const nowSummary = useMemo(() => {
+    const legendById = new Map(legendItems.map((item) => [item.selection.id, item]));
+    const rows: WindowSummaryRow[] = visibleChartSeries.map((series) => {
+      const legend = legendById.get(series.id);
+      const definition = legend?.definition ?? seriesById(series.id);
+      const label = definition?.shortLabel ?? series.formulaLabel ?? (series.label.split("·")[0]?.trim() || series.id);
+      const latest = latestFinitePoint(series)?.value;
+      const percentile = windowPercentile(series);
+      const delta = seriesDelta(series)?.delta ?? null;
+      return {
+        key: series.id,
+        label,
+        value: percentile,
+        display: typeof latest === "number" && percentile !== null
+          ? `${verdictValue(series, latest)} · 백분위 ${percentile}`
+          : undefined,
+        tone: percentile === null || delta === null || Math.abs(delta) < 0.01
+          ? "muted"
+          : delta > 0 ? "gain" : "loss",
+      };
+    });
+    const shown = rows.slice(0, 4);
+    const extraCount = rows.length - shown.length;
+    const windowText = rangeWindowLabel(rangeId);
+    const readLine = rows.length === 0
+      ? `같은 ${windowText} 창에서 지금 값을 읽을 수 없습니다 — 표시 시리즈가 없습니다.`
+      : `지금 ${shown.map((row) => row.display ? `${row.label} ${row.display}` : `${row.label} —`).join(" · ")} · ${windowText} 창 백분위입니다.`;
+    return { readLine, rankRows: shown, extraCount, empty: rows.length === 0 };
+  }, [legendItems, rangeId, visibleChartSeries]);
   const formulaLegendItems = useMemo(() => formulas.map((formula) => {
     const series = chartSeriesById.get(formula.id);
     return {
@@ -2205,6 +2249,28 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             {windowSummary.barlessCount > 0 ? (
               <p className="cpw5-macro-window-summary__note">
                 막대는 막대가 있는 계열의 최대 변화 폭 기준 · %·스프레드 계열 {windowSummary.barlessCount}개는 값만 표시합니다.
+              </p>
+            ) : null}
+          </section>
+        ) : null}
+
+        {activeLoadState.status === "ready" && nowSummary.readLine ? (
+          <section
+            className="cpw5-macro-window-summary"
+            aria-label={`${rangeWindowLabel(rangeId)} 창 지금 값 백분위`}
+            data-macro-chart-now="true"
+          >
+            <p className="cpw5-macro-window-summary__read" data-macro-chart-now-read="true">{nowSummary.readLine}</p>
+            {nowSummary.empty ? null : (
+              <RankBars
+                rows={nowSummary.rankRows}
+                max={100}
+                ariaLabel={`${rangeWindowLabel(rangeId)} 창 지금 값 백분위 순위`}
+              />
+            )}
+            {nowSummary.extraCount > 0 ? (
+              <p className="cpw5-macro-window-summary__note">
+                외 {nowSummary.extraCount}개 시리즈는 차트에서 확인하세요.
               </p>
             ) : null}
           </section>
