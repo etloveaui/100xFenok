@@ -384,7 +384,8 @@ export default function SignalPanel({
             <PanelHeader eyebrow="Increases" title="증가 상위" right={<Pill>증가</Pill>} />
             {followMode === "roster" ? (
               <p className="sup-unfiltered sup-mute">팔로우 필터 비적용 · 전체 범위에서 확인</p>
-            ) : increases.length > 0 ? (
+            ) : null}
+            {increases.length > 0 ? (
                 increases.map((rank) => (
                   <PressureRow
                     key={rank.ticker}
@@ -424,7 +425,8 @@ export default function SignalPanel({
             <PanelHeader eyebrow="Decreases" title="감소 상위" right={<Pill>감소</Pill>} />
             {followMode === "roster" ? (
               <p className="sup-unfiltered sup-mute">팔로우 필터 비적용 · 전체 범위에서 확인</p>
-            ) : decreases.length > 0 ? (
+            ) : null}
+            {decreases.length > 0 ? (
                 decreases.map((rank) => (
                   <PressureRow
                     key={rank.ticker}

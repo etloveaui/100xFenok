@@ -158,10 +158,6 @@ const HOLDER_SORTS: Array<{ key: HolderSort; label: string }> = [
   { key: "change", label: "변화율 순" },
 ];
 
-function reload() {
-  window.location.reload();
-}
-
 function openEvidence(path: string) {
   window.open(path, "_blank", "noopener");
 }
@@ -1201,9 +1197,10 @@ export default function SuperinvestorsClient({
     : null;
   const coverage = dataReady ? `${formatInteger(investorCount)}/${formatInteger(totalTracked)} 투자자` : "—";
   const submittedTotal = summary?.metadata?.investor_count ?? null;
-  // No average-filing-lag field exists in the loaded 13F payloads: the chip
-  // binds submitted/total/stale to the payload and shows "—" for the lag.
-  const freshnessChip = `${formatInteger(dataReady ? investorCount : null)}/${formatInteger(dataReady ? submittedTotal : null)} 제출 · 정체 ${formatInteger(dataReady && summary ? excludedStale.length : null)}명 제외 · 지연 평균 —`;
+  // No average-filing-lag field exists in the loaded 13F payloads, so the chip
+  // carries submitted/total/stale only — a never-produced field stays off the
+  // screen (fh-386 policy b).
+  const freshnessChip = `${formatInteger(dataReady ? investorCount : null)}/${formatInteger(dataReady ? submittedTotal : null)} 제출 · 정체 ${formatInteger(dataReady && summary ? excludedStale.length : null)}명 제외`;
   const turnoverCovered = turnover ? Object.keys(turnover).length : 0;
   const holdersCoverage =
     turnoverError
@@ -1298,7 +1295,7 @@ export default function SuperinvestorsClient({
             {excludedStale.length > 0 ? <Pill tone="warn">최신 분기 제외 {excludedStale.length}명</Pill> : null}
             {!failed && partialFeeds ? <Pill tone="warn">일부 피드 {failedRequests.length}개 미반영</Pill> : null}
             {!failed && !partialFeeds && turnoverError ? <Pill tone="warn">회전율 확인 불가</Pill> : null}
-            {failed ? <Button variant="secondary" onClick={reload}>다시 시도</Button> : null}
+            {failed ? <Button variant="secondary" onClick={retry}>다시 시도</Button> : null}
           </div>
         </div>
       </div>
@@ -1509,7 +1506,7 @@ export default function SuperinvestorsClient({
             asOf={asOfLabel}
             coverage={holdersCoverage}
             next="분기 종료 후 최대 45일"
-            onRetry={failed ? reload : partialFeeds ? retry : turnoverError ? retryTurnover : undefined}
+            onRetry={failed ? retry : partialFeeds ? retry : turnoverError ? retryTurnover : undefined}
             onEvidence={dataReady && !failed ? () => openEvidence("/data/sec-13f/summary.json") : undefined}
           />
         </Panel>
@@ -1563,7 +1560,7 @@ export default function SuperinvestorsClient({
               asOf={asOfLabel}
               coverage={coverage}
               next="분기 종료 후 최대 45일"
-              onRetry={failed ? reload : partialFeeds ? retry : undefined}
+              onRetry={failed ? retry : partialFeeds ? retry : undefined}
               onEvidence={dataReady && !failed ? () => openEvidence("/data/sec-13f/analytics/consensus.json") : undefined}
             />
           </Panel>
@@ -1745,7 +1742,7 @@ export default function SuperinvestorsClient({
               source: "SEC EDGAR 13F",
               asOf: asOfLabel,
               coverage: graphCoverage,
-              onRetry: failed ? reload : partialFeeds ? retry : undefined,
+              onRetry: failed ? retry : partialFeeds ? retry : undefined,
               onEvidence: dataReady && !failed ? openGraphEvidence : undefined,
             }}
           />

@@ -692,9 +692,12 @@ export default function InsightsTab() {
   const [fx, setFx] = useState<FactorExposuresSummaryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setFailed(false);
     Promise.all([loadBuyingPressure(), loadTradesRanking(), loadNewPositions(), loadHhi(), loadConviction(), loadConvictionEntries(), loadPortfolioViews(), loadFactorExposuresSummary()]).then(([bpR, trR, npR, hhiR, cvR, ceR, pvR, fxR]) => {
       if (cancelled) return;
       const anyData = bpR || trR || npR || hhiR || cvR || ceR || pvR || fxR;
@@ -703,7 +706,7 @@ export default function InsightsTab() {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [retryNonce]);
 
   const quarterLabel = bp?.metadata.quarter ?? np?.metadata.quarter ?? hhi?.metadata.quarter ?? ce?.metadata.quarter ?? "";
   const samePeriodWindow = pv ? getCommonSamePeriodWindow(pv) : null;
@@ -715,7 +718,7 @@ export default function InsightsTab() {
             reason="기관 공시 인사이트 데이터를 불러오지 못했습니다"
             nextRefresh="다음 갱신 시 자동 복구됩니다"
             actionLabel="다시 시도"
-            onAction={() => window.location.reload()}
+            onAction={() => setRetryNonce((n) => n + 1)}
           />
         </div>
     );
