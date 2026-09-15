@@ -1082,7 +1082,9 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
     return await page.locator('[data-earnings-overview="AAPL"]').count() > 0
       && await page.locator('[data-testid="earnings-overview-state"]').count() === 0;
   }, "source earnings fixtures did not settle before navigation", WAIT_DATA_MS);
-  const card = page.locator('[data-canvas-plus-screener-card="mobile"]:visible').filter({ has: page.locator('button[aria-label="AAPL 상세 접기"]') });
+  // The row detail is master-detail now: the deep link no longer pre-expands
+  // the row, so match the row by either expansion state of its own control.
+  const card = page.locator('[data-canvas-plus-screener-card="mobile"]:visible').filter({ has: page.locator('button[aria-label^="AAPL 상세"]') });
   const selected = card.getByRole("checkbox", { name: "선택", exact: true });
   // The existing label's 44px pseudo-element owns the checkbox tap target.
   await card.locator("label[data-screener-checkbox-target]").tap();

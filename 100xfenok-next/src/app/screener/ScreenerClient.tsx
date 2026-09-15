@@ -1483,12 +1483,10 @@ export default function ScreenerClient({
   const [sortKey, setSortKey] = useState<ScreenerSortKey>(() => initialFilterValues.sortKey ?? "marketCap");
   const [sortDir, setSortDir] = useState<SortDir>(() => initialFilterValues.sortDir ?? "desc");
   const [page, setPage] = useState(0);
-  const [expandedTicker, setExpandedTicker] = useState<string | null>(() => initialSearch || null);
+  const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
   // The detail sheet carries the id of the surface that opened it, so the
   // pressed row keeps a valid aria-controls on mobile, card and table alike.
-  const [expandedDetailId, setExpandedDetailId] = useState<string | null>(
-    () => (initialSearch ? `screener-detail-${initialSearch}` : null),
-  );
+  const [expandedDetailId, setExpandedDetailId] = useState<string | null>(null);
   const [selectedTickers, setSelectedTickers] = useState<ReadonlySet<string>>(() => new Set());
   const [journeyReturnTo, setJourneyReturnTo] = useState<string | null>(null);
   const journeySourceRef = useRef<string | null | undefined>(undefined);
@@ -1508,7 +1506,6 @@ export default function ScreenerClient({
   if (prevInitialSearch !== initialSearch) {
     setPrevInitialSearch(initialSearch);
     setSearch(initialSearch);
-    setExpandedTicker(initialSearch || null);
   }
   if (prevInitialSector !== initialSector) {
     setPrevInitialSector(initialSector);

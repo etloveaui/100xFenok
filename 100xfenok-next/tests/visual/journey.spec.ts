@@ -193,7 +193,10 @@ test("journey: late enrichment respects a changed selection", async ({ page }) =
     const expand = card.getByRole("button", { name: /NVDA 상세/ });
     if (await expand.getAttribute("aria-expanded") !== "true") await expand.click();
   }
-  await card.getByRole("link", { name: mobile ? "종목 상세" : "상세", exact: true }).first().click();
+  const cardDetailLink = mobile
+    ? page.locator('[id$="detail-NVDA"]').getByRole("link", { name: "종목 상세", exact: true }).first()
+    : card.getByRole("link", { name: "상세", exact: true }).first();
+  await cardDetailLink.click();
   await expect(page).toHaveURL(/\/stock\/NVDA\?.*returnTo=/);
   let release: (() => void) | undefined;
   let intercepted = false;
