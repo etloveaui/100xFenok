@@ -12,3 +12,6 @@ export { EmptyState } from "./EmptyState";
 export { StaleState } from "./StaleState";
 export { EdgeMark } from "./EdgeMark";
 export { CommandPalette } from "./CommandPalette";
+export { DistributionBand } from "./DistributionBand";
+export { RankBars } from "./RankBars";
+export { Sparkline } from "./Sparkline";
