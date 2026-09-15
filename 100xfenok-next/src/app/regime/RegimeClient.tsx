@@ -514,6 +514,7 @@ function CompositePanel({
                     </div>
                     {counts !== null && (
                       <DistributionBand
+                        className="rgm-band"
                         segments={toneDistribution(axis.pulses)}
                         ariaLabel={`${axis.title} 신호 구성`}
                       />
