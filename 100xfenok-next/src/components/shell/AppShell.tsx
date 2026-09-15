@@ -43,6 +43,7 @@ export type ShellPage =
   | "superinvestors"
   | "portfolio"
   | "chart"
+  | "research"
   | "dailyWrap"
   | "posts"
   | "alphaScout"
@@ -174,6 +175,19 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    id: "research",
+    group: "분석",
+    label: "리서치",
+    href: ROUTES.research,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 3.5h7.5L15.5 6.5v10h-10.5z" />
+        <path d="M12 3.5v3.5h3.5" />
+        <path d="M7.5 10.5h5M7.5 13.5h5" />
+      </svg>
+    ),
+  },
+  {
     id: "ib",
     group: "도구",
     label: "무한매수",
@@ -215,6 +229,7 @@ const MORE_TAB: Omit<NavItem, "id" | "group"> & { id: "more" } = {
 const PRIMARY_TAB_IDS: MobileTabId[] = ["explore", "market", "screener", "portfolio", "more"];
 const MORE_TAB_IDS: ShellPage[] = [
   "chart",
+  "research",
   "ib",
   "vr",
   "regime",

@@ -28,6 +28,7 @@ const REQUIRED_ROUTE_KEYS = [
   "stockAnalyzerNative",
   "multichart",
   "radar",
+  "research",
 ];
 
 const RETIRED_PUBLIC_NAV_IDS = [
@@ -45,8 +46,8 @@ const ROUTE_SCOPE_CLASSIFICATION_ACK = {
     lines: "1-105",
     note: "Lane C corrected route-scope classification source; the 2026-08-30 owner decision moves three retired public roots and the new archive hub into admin-internal scope; 2026-09-06 adds the authenticated WIND DOWN records and conversations pages to the existing Mona out-of-scope family",
   },
-  page_route_count: 62,
-  core_covered_count: 17,
+  page_route_count: 63,
+  core_covered_count: 18,
   needs_route_owner_probe_count: 0,
   legacy_bridge_closed_count: 9,
   admin_internal_count: 15,
@@ -71,6 +72,7 @@ const ROUTE_SCOPE_CLASSIFICATION_ACK = {
     "/sectors",
     "/stock/NVDA",
     "/superinvestors?guru=blackrock",
+    "/research",
   ],
 };
 
