@@ -75,26 +75,26 @@ export default async function IBPage({
             <p className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-700">IB Helper</p>
             <h1 className="text-base font-black text-slate-950 sm:text-lg">IB Helper (레거시)</h1>
             <p className="mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600 sm:text-sm">
-              기본 경로는 완성된 V1 앱입니다. 네이티브 V2는 기능 동등성이 끝날 때까지 명시 preview로만 유지합니다.
+              무한매수 도우미입니다. 기본은 V1 화면이고, V2는 미리보기로 확인할 수 있습니다.
             </p>
             <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.08em]">
               <span
                 className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600"
                 data-ib-boundary-chip="legacy-v1"
               >
-                legacy v1
+                V1 기본
               </span>
               <span
                 className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-blue-700"
                 data-ib-boundary-chip="native-v2-preview"
               >
-                native v2 preview
+                V2 미리보기
               </span>
               <span
                 className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700"
                 data-ib-boundary-chip="v1-backdoor"
               >
-                v1 backdoor
+                V1 전용 주소
               </span>
             </div>
           </div>
