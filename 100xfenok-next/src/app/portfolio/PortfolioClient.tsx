@@ -35,16 +35,27 @@ import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey, normalizeForFilePath } from "@/lib/ticker";
 
 interface PriceDoc {
-  data?: { info?: { currentPrice?: number | null } };
+  data?: { info?: { currentPrice?: number | null; regularMarketPrice?: number | null } };
+  quote_as_of?: string | null;
+  source_as_of?: string | null;
+  fetched_at?: string | null;
 }
 
 const priceCache = new Map<string, number>();
+const priceAsOf = new Map<string, string>();
 const pricePending = new Map<string, Promise<number | null>>();
 const priceFailed = new Set<string>();
 const analyzerProvider = new StaticStockAnalyzerDataProvider();
 
 function normalizeTicker(value: string | null | undefined): string {
   return normalizeForFilePath(value);
+}
+
+function pickFinitePrice(...values: Array<number | null | undefined>): number | null {
+  for (const v of values) {
+    if (typeof v === "number" && Number.isFinite(v)) return v;
+  }
+  return null;
 }
 
 async function fetchPrice(ticker: string): Promise<number | null> {
@@ -68,9 +79,12 @@ async function fetchPrice(ticker: string): Promise<number | null> {
       const r2 = await fetch(`/data/yf/finance/${encodeURIComponent(symbol)}.json`);
       if (r2.ok) {
         const doc: PriceDoc = await r2.json();
-        const price = doc.data?.info?.currentPrice;
-        if (typeof price === "number" && Number.isFinite(price)) {
+        const price = pickFinitePrice(doc.data?.info?.regularMarketPrice, doc.data?.info?.currentPrice);
+        if (price !== null) {
           priceCache.set(symbol, price);
+          const asOf = doc.quote_as_of ?? doc.source_as_of ?? doc.fetched_at ?? null;
+          if (typeof asOf === "string" && asOf) priceAsOf.set(symbol, asOf);
+          else priceAsOf.delete(symbol);
           priceFailed.delete(symbol);
           return price;
         }
@@ -93,6 +107,7 @@ async function fetchPrice(ticker: string): Promise<number | null> {
 function retryPrice(symbol: string) {
   priceFailed.delete(symbol);
   pricePending.delete(symbol);
+  priceAsOf.delete(symbol);
 }
 
 function csvCell(value: unknown): string {
@@ -250,6 +265,17 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
   }, [active, prices]);
 
   const grandTotal = totalValue + (active?.cash ?? 0);
+  const priceBasis = useMemo(() => {
+    if (!active) return null;
+    let oldest: string | null = null;
+    for (const h of active.holdings) {
+      const raw = priceAsOf.get(normalizeForEntityKey(h.ticker));
+      const day = typeof raw === "string" ? raw.slice(0, 10) : "";
+      if (!day) continue;
+      if (oldest === null || day < oldest) oldest = day;
+    }
+    return oldest;
+  }, [active, prices]);
   const priceState = useMemo(() => {
     if (!active) {
       return makeDataState({
@@ -276,17 +302,17 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
       return makeDataState({
         status: "ready",
         label: "가격 확인 완료",
-        detail: `${active.holdings.length}개 보유 종목이 모두 평가액에 반영됐습니다.`,
+        detail: `${active.holdings.length}개 보유 종목이 모두 평가액에 반영됐습니다.${priceBasis ? ` 시세 기준일 ${priceBasis}.` : ""}`,
       });
     }
     const priced = Math.max(active.holdings.length - missingCount, 0);
     return makeDataState({
       status: priced > 0 ? "partial" : "unavailable",
       label: priced > 0 ? "일부 가격 확인" : "가격 확인 불가",
-      detail: `${priced}/${active.holdings.length}개 보유 종목만 평가액에 반영됐습니다. 확인 불가 종목은 합계에서 제외합니다.`,
+      detail: `${priced}/${active.holdings.length}개 보유 종목만 평가액에 반영됐습니다. 확인 불가 종목은 합계에서 제외합니다.${priceBasis ? ` 시세 기준일 ${priceBasis}.` : ""}`,
       reason: "로컬 데이터 캐시에 현재가가 없거나 읽지 못했습니다.",
     });
-  }, [active, missingCount, pricesLoading]);
+  }, [active, missingCount, pricesLoading, priceBasis]);
   const priceRetryable = !!active && active.holdings.length > 0 && !pricesLoading && missingCount > 0;
 
   function handleCreateEmpty() {
