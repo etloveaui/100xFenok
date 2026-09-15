@@ -26,6 +26,10 @@
     --sh-pop:0 12px 32px -8px rgba(15,23,42,0.18);
     --sh-focus:0 0 0 3px rgba(27,115,211,0.18);
     --rail-w:210px; --topbar-h:48px; --ticker-h:30px; --tabbar-h:56px; --appbar-h:46px;
+    /* Height the shell charges for the ticker band. AppShell sets
+       body.fnk-shell-ticker-off when the tape has no rows, so the band and
+       every offset it owns leave together instead of leaving a dead strip. */
+    --shell-ticker-h:var(--ticker-h);
     --panel-pad:12px; --panel-r:6px;
     --font:var(--font-body),system-ui,-apple-system,sans-serif;
     --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
@@ -111,16 +115,20 @@
 .fnk-shell .tk-item .s{font-weight:700; color:var(--c-ink-2)}
 .fnk-shell .tk-item .p{color:var(--c-ink-2); font-weight:600}
   @keyframes tk{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  /* Tape settled with no rows (fetch failed, or no momentum figures): AppShell
+     renders neither strip and drops the height they reserved in .content, the
+     typeahead drawer, .stock-side and the route-embed frames. */
+body.fnk-shell-ticker-off .fnk-shell{--shell-ticker-h:0px}
 
   /* ───────────── MOBILE APP HEADER + TABBAR (hidden desktop) ───────────── */
 .fnk-shell .appbar{display:none}
 .fnk-shell .tabbar{display:none}
 
   /* ───────────── CONTENT ───────────── */
-.fnk-shell .content{margin-left:var(--rail-w); padding:calc(var(--topbar-h) + var(--ticker-h) + var(--s5)) var(--s6) var(--s10); max-width:1320px; overflow-x:hidden}
+.fnk-shell .content{margin-left:var(--rail-w); padding:calc(var(--topbar-h) + var(--shell-ticker-h) + var(--s5)) var(--s6) var(--s10); max-width:1320px; overflow-x:hidden}
 
   /* ───────────── TYPEAHEAD PREVIEW DRAWER ───────────── */
-.fnk-shell .typeahead-preview{position:fixed; top:calc(var(--topbar-h) + var(--ticker-h) + var(--s4)); right:var(--s6); z-index:45; width:min(380px,calc(100vw - var(--rail-w) - 48px)); max-height:calc(100dvh - var(--topbar-h) - var(--ticker-h) - 40px); overflow:auto; border:1px solid var(--c-line); border-radius:var(--cp-radius-md); background:color-mix(in srgb,var(--c-panel) 96%,transparent); box-shadow:var(--sh-pop); backdrop-filter:blur(16px) saturate(1.2)}
+.fnk-shell .typeahead-preview{position:fixed; top:calc(var(--topbar-h) + var(--shell-ticker-h) + var(--s4)); right:var(--s6); z-index:45; width:min(380px,calc(100vw - var(--rail-w) - 48px)); max-height:calc(100dvh - var(--topbar-h) - var(--shell-ticker-h) - 40px); overflow:auto; border:1px solid var(--c-line); border-radius:var(--cp-radius-md); background:color-mix(in srgb,var(--c-panel) 96%,transparent); box-shadow:var(--sh-pop); backdrop-filter:blur(16px) saturate(1.2)}
 .fnk-shell .typeahead-preview__head{position:sticky; top:0; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:var(--s3); padding:12px var(--s4); border-bottom:1px solid var(--c-line-2); background:inherit}
 .fnk-shell .typeahead-preview__title{min-width:0; display:grid; gap:1px}
 .fnk-shell .typeahead-preview-layer{position:fixed; inset:0; z-index:45; pointer-events:none}
@@ -342,7 +350,7 @@
   .fnk-shell .mv-split .mv-col + .mv-col{border-left:1px solid var(--c-line-2)}
   .fnk-shell .f13-grid{grid-template-columns:repeat(3,1fr)}
   .fnk-shell .stock-overview-grid{grid-template-columns:minmax(240px, 280px) minmax(0, 1fr)}
-  .fnk-shell .stock-side{position:sticky; top:calc(var(--topbar-h) + var(--ticker-h) + var(--s5)); align-self:start}
+  .fnk-shell .stock-side{position:sticky; top:calc(var(--topbar-h) + var(--shell-ticker-h) + var(--s5)); align-self:start}
   }
 @media(min-width:1320px){
   .fnk-shell .ti-bars{grid-template-columns:1fr 1fr}
@@ -354,9 +362,9 @@
   /* ───────────── RESPONSIVE: mobile (PWA standalone) ───────────── */
   @media(max-width:1023px){
   .fnk-shell .rail, .fnk-shell .topbar, .fnk-shell .ticker{display:none}
-  .fnk-shell .content{margin-left:0; padding:calc(var(--appbar-h) + var(--safe-t) + var(--ticker-h) + var(--s4)) var(--s4) calc(var(--tabbar-h) + var(--safe-b) + var(--s5)); max-width:none}
-  .fnk-shell .appbar.searching ~ .content{padding-top:calc(var(--appbar-h) + var(--safe-t) + var(--ticker-h) + var(--s4) + 48px)}
-  .fnk-shell .typeahead-preview{top:calc(var(--safe-t) + var(--appbar-h) + var(--ticker-h) + var(--s3)); left:var(--s3); right:var(--s3); width:auto; max-height:calc(100dvh - var(--safe-t) - var(--appbar-h) - var(--ticker-h) - var(--tabbar-h) - var(--s6))}
+  .fnk-shell .content{margin-left:0; padding:calc(var(--appbar-h) + var(--safe-t) + var(--shell-ticker-h) + var(--s4)) var(--s4) calc(var(--tabbar-h) + var(--safe-b) + var(--s5)); max-width:none}
+  .fnk-shell .appbar.searching ~ .content{padding-top:calc(var(--appbar-h) + var(--safe-t) + var(--shell-ticker-h) + var(--s4) + 48px)}
+  .fnk-shell .typeahead-preview{top:calc(var(--safe-t) + var(--appbar-h) + var(--shell-ticker-h) + var(--s3)); left:var(--s3); right:var(--s3); width:auto; max-height:calc(100dvh - var(--safe-t) - var(--appbar-h) - var(--shell-ticker-h) - var(--tabbar-h) - var(--s6))}
 
   .fnk-shell .appbar{display:flex; position:fixed; top:0; left:0; right:0; z-index:40; flex-direction:column; background:rgba(242,244,246,.9); backdrop-filter:blur(16px) saturate(1.4); border-bottom:1px solid var(--c-line); padding-top:var(--safe-t)}
   .fnk-shell .appbar-main{height:var(--appbar-h); min-width:0; display:flex; align-items:center; gap:var(--s3); padding:0 var(--s4)}

@@ -1078,11 +1078,19 @@ async function searchStockReturnCase(page: Page, runtime: CaseRuntime, condition
   const filter = page.locator('input[data-canvas-plus-screener-search="true"]');
   await waitForCondition(async () => await ready.count() === 1, "source screener did not become ready", WAIT_DATA_MS);
   assert.equal(await filter.inputValue(), "AAPL");
+  // The row detail is master-detail now: the earnings panel only mounts inside
+  // the sheet, so open the row's own control before waiting for the fixture.
+  const card = page.locator('[data-canvas-plus-screener-card="mobile"]:visible').filter({ has: page.locator('button[aria-label^="AAPL 상세"]') });
+  const expand = card.getByRole("button", { name: /AAPL 상세/ });
+  if (await expand.getAttribute("aria-expanded") !== "true") await expand.tap();
   await waitForCondition(async () => {
     return await page.locator('[data-earnings-overview="AAPL"]').count() > 0
       && await page.locator('[data-testid="earnings-overview-state"]').count() === 0;
   }, "source earnings fixtures did not settle before navigation", WAIT_DATA_MS);
-  const card = page.locator('[data-canvas-plus-screener-card="mobile"]:visible').filter({ has: page.locator('button[aria-label="AAPL 상세 접기"]') });
+  // Close the sheet again: this case drives the list, the checkbox and the page
+  // scroll next, and an open sheet owns the viewport.
+  await page.keyboard.press("Escape");
+  await waitForCondition(async () => await page.locator("[data-screener-detail-sheet]").count() === 0, "screener detail sheet did not close");
   const selected = card.getByRole("checkbox", { name: "선택", exact: true });
   // The existing label's 44px pseudo-element owns the checkbox tap target.
   await card.locator("label[data-screener-checkbox-target]").tap();

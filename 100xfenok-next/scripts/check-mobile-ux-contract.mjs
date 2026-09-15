@@ -22,7 +22,7 @@ if (browserName === "webkit" && (browserChannel || browserExecutablePath)) {
 const outputDir = process.env.QA_MOBILE_UX_OUTPUT_DIR?.trim()
   ? resolve(process.env.QA_MOBILE_UX_OUTPUT_DIR.trim())
   : "";
-const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-console,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/changes,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/screener?mode=analyze,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock")
+const routes = (process.env.QA_MOBILE_UX_ROUTES || "/,/?v5=1,/macro-chart,/multichart,/ib,/infinite-buying,/vr,/admin/data-console,/admin/data-lab,/radar,/radar?path=tools%2Fmacro-monitor%2Fdetails%2Fliquidity-flow.html,/market-valuation,/market-valuation/structure,/regime,/market/events,/changes,/etfs,/etfs/SPY,/etfs/new,/etfs/compare,/screener,/screener?mode=analyze,/screener?mode=discover,/sectors,/portfolio,/stock/NVDA,/stock/NVDA?tab=financials,/stock/NVDA?tab=ownership,/stock/NVDA?tab=estimates,/stock/NVDA?tab=filings,/superinvestors,/superinvestors?tab=investors,/superinvestors?guru=blackrock")
   .split(",")
   .map((route) => route.trim())
   .filter(Boolean);
@@ -52,7 +52,8 @@ function routeUrl(route) {
 }
 
 function isAnalyzeScreenerRoute(route) {
-  return new URL(route, baseUrl).searchParams.get("mode") === "analyze";
+  // Table-first landing: only ?mode=discover leaves the analyze surface.
+  return new URL(route, baseUrl).searchParams.get("mode") !== "discover";
 }
 
 async function installQaPortfolio(context) {
@@ -2816,7 +2817,7 @@ async function collectRouteChecks(page, route) {
 
       // The service mode keeps the desktop table/card controls hidden through
       // 920px. The Canvas+ density control is hidden through 920px too and
-      // visible in the desktop results toolbar (restored control).
+      // visible in the desktop page toolbar (restored control).
       if (isAnalyzeMode && viewportWidth >= 921) {
         const viewModeControl = document.querySelector("[data-screener-view-mode-control]");
         const viewModeButtons = viewModeControl
@@ -2876,10 +2877,10 @@ async function collectRouteChecks(page, route) {
           failures.push({ check: "screener-no-page-scroll", detail: `scrollWidth=${document.documentElement.scrollWidth} innerWidth=${window.innerWidth}` });
         }
       }
-      // Discover mode (default /screener): five question cards + mode toggle.
-      // Runs on every viewport (mobile/narrow included) so the <768 card
-      // touch check below is reachable. Existing analyze assertions above
-      // stay untouched.
+      // Discover mode (?mode=discover, secondary tab): five question cards +
+      // mode toggle. Runs on every viewport (mobile/narrow included) so the
+      // <768 card touch check below is reachable. Existing analyze assertions
+      // above stay untouched.
       const discoverRoot = document.querySelector('[data-discover="true"]');
       if (discoverRoot) {
         const discoverCards = Array.from(document.querySelectorAll("[data-discover-card]"))

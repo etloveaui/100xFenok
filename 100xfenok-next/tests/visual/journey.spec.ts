@@ -55,10 +55,10 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
   if (mobile) {
     const expand = card.getByRole("button", { name: /NVDA 상세/ });
     if (await expand.getAttribute("aria-expanded") !== "true") await expand.click();
-    await expect(card.locator('[id^="screener-mobile-detail-NVDA"]')).toBeVisible();
+    await expect(page.locator('[id$="detail-NVDA"]')).toBeVisible();
   }
   const detailLink = mobile
-    ? card.getByRole("link", { name: "종목 상세", exact: true }).first()
+    ? page.locator('[id$="detail-NVDA"]').getByRole("link", { name: "종목 상세", exact: true }).first()
     : card.getByRole("link", { name: "상세" }).first();
   const expectedSource = new URL(page.url());
   await expect(detailLink).toHaveAttribute("href", /returnTo=/);
@@ -86,10 +86,10 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
   if (mobile) {
     const expand = restoredCard.getByRole("button", { name: /NVDA 상세/ });
     if (await expand.getAttribute("aria-expanded") !== "true") await expand.click();
-    await expect(restoredCard.locator('[id^="screener-mobile-detail-NVDA"]')).toBeVisible();
+    await expect(page.locator('[id$="detail-NVDA"]')).toBeVisible();
   }
   const restoredDetailLink = mobile
-    ? restoredCard.getByRole("link", { name: "종목 상세", exact: true }).first()
+    ? page.locator('[id$="detail-NVDA"]').getByRole("link", { name: "종목 상세", exact: true }).first()
     : restoredCard.getByRole("link", { name: "상세" }).first();
   await restoredDetailLink.click();
   await expect(page).toHaveURL(/\/stock\/NVDA\?.*returnTo=/);
@@ -113,7 +113,10 @@ test("journey: screener stock return keeps the exact filter URL and selected tic
     const expand = backCard.getByRole("button", { name: /NVDA 상세/ });
     if (await expand.getAttribute("aria-expanded") !== "true") await expand.click();
   }
-  await backCard.getByRole("link", { name: mobile ? "종목 상세" : "상세", exact: true }).first().click();
+  const returnDetailLink = mobile
+    ? page.locator('[id$="detail-NVDA"]').getByRole("link", { name: "종목 상세", exact: true }).first()
+    : backCard.getByRole("link", { name: "상세", exact: true }).first();
+  await returnDetailLink.click();
   await expect(page).toHaveURL(/\/stock\/NVDA\?.*returnTo=/);
   await page.getByRole("link", { name: "스크리너로 돌아가기", exact: true }).filter({ visible: true }).click();
   await expect(page.locator('[data-screener-mode="analyze"]')).toHaveAttribute("data-journey-ready", "true");
@@ -158,8 +161,8 @@ test("journey: guru stock detail returns to the guru context", async ({ page }, 
 });
 
 
-test("journey: default discovery retains its comparison selection", async ({ page }, testInfo) => {
-  await page.goto("/screener", { waitUntil: "domcontentloaded" });
+test("journey: discovery tab retains its comparison selection", async ({ page }, testInfo) => {
+  await page.goto("/screener?mode=discover", { waitUntil: "domcontentloaded" });
   await expect(page.locator('[data-screener-mode="discover"]')).toBeVisible();
   const result = page.locator('[data-discover-results] > li').first();
   await expect(result).toBeVisible();
@@ -190,7 +193,10 @@ test("journey: late enrichment respects a changed selection", async ({ page }) =
     const expand = card.getByRole("button", { name: /NVDA 상세/ });
     if (await expand.getAttribute("aria-expanded") !== "true") await expand.click();
   }
-  await card.getByRole("link", { name: mobile ? "종목 상세" : "상세", exact: true }).first().click();
+  const cardDetailLink = mobile
+    ? page.locator('[id$="detail-NVDA"]').getByRole("link", { name: "종목 상세", exact: true }).first()
+    : card.getByRole("link", { name: "상세", exact: true }).first();
+  await cardDetailLink.click();
   await expect(page).toHaveURL(/\/stock\/NVDA\?.*returnTo=/);
   let release: (() => void) | undefined;
   let intercepted = false;

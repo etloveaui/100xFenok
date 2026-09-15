@@ -1,12 +1,11 @@
 "use client";
 
-import { Component, Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ErrorInfo, type ReactNode } from "react";
+import { Component, Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type ErrorInfo, type ReactNode } from "react";
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import MetricHelp from "@/components/MetricHelp";
 import { screenerSortValue } from "@/lib/screener/common-basis-short-term";
 import type { ScreenerSortKey, ScreenerStock } from "@/lib/screener/types";
-import StockDetailPanel from "./StockDetailPanel";
 import type { ScreenerColumn, ScreenerDesktopTableProps } from "./ScreenerDesktopTable";
 
 export type ScreenerResultsScrollTarget = {
@@ -62,7 +61,6 @@ const CANVAS_PLUS_ROW_HEIGHT: Record<"compact" | "default" | "comfy", number> = 
   default: 44,
   comfy: 52,
 };
-const EXPANDED_DETAIL_ESTIMATE = 360;
 const DESKTOP_TABLE_OVERSCAN = 10;
 
 // Band values drive the cell tint in canvas-plus.css / cp-w4-screener.css. The
@@ -237,8 +235,6 @@ function ScreenerTanstackTableInner({
   sortKey,
   deselectPageRows,
   onResetFilters,
-  returnTo,
-  onBeforeNavigate,
   onToggleExpandedTicker,
   renderCell,
   renderGuruHolderBadge,
@@ -249,64 +245,19 @@ function ScreenerTanstackTableInner({
   const densityMode = canvasPlusDensityMode(density);
   const rowHeight = CANVAS_PLUS_ROW_HEIGHT[densityMode];
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
-  const rowsRef = useRef(rows);
-  rowsRef.current = rows;
-  const expandedTickerRef = useRef(expandedTicker);
-  expandedTickerRef.current = expandedTicker;
-  const detailHeights = useRef(new Map<string, number>());
+  // Rows carry no inline detail any more: the sheet lives outside the table,
+  // so every row keeps exactly the density rail's height.
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => tableScrollRef.current,
-    estimateSize: (index) => {
-      const stock = rowsRef.current[index];
-      if (!stock) return rowHeight;
-      if (expandedTickerRef.current !== stock.ticker) return rowHeight;
-      const cached = detailHeights.current.get(stock.ticker);
-      if (cached !== undefined) return rowHeight + cached;
-      return rowHeight + EXPANDED_DETAIL_ESTIMATE;
-    },
+    estimateSize: () => rowHeight,
     overscan: DESKTOP_TABLE_OVERSCAN,
   });
-  const virtualizerRef = useRef(virtualizer);
-  virtualizerRef.current = virtualizer;
-  const detailObserverRef = useRef<ResizeObserver | null>(null);
-  const measureDetailRef = useCallback((node: HTMLDivElement | null) => {
-    detailObserverRef.current?.disconnect();
-    detailObserverRef.current = null;
-    const ticker = node?.dataset.detailTicker;
-    if (!node || !ticker) return;
-    const record = () => {
-      const current = virtualizerRef.current;
-      if (!current) return;
-      const height = node.offsetHeight;
-      if (detailHeights.current.get(ticker) !== height) {
-        detailHeights.current.set(ticker, height);
-        current.measure();
-      }
-    };
-    record();
-    if (typeof ResizeObserver !== "undefined") {
-      const observer = new ResizeObserver(record);
-      observer.observe(node);
-      detailObserverRef.current = observer;
-    }
-  }, []);
-  useEffect(() => () => {
-    detailObserverRef.current?.disconnect();
-    detailObserverRef.current = null;
-  }, []);
+  // Density switches move the row rail, so cached measurements are dropped with
+  // the estimate that produced them.
   useEffect(() => {
-    const live = new Set(rows.map((stock) => stock.ticker));
-    let pruned = false;
-    for (const key of detailHeights.current.keys()) {
-      if (!live.has(key) || key !== expandedTicker) {
-        detailHeights.current.delete(key);
-        pruned = true;
-      }
-    }
     virtualizer.measure();
-    void pruned;
-  }, [virtualizer, rows, expandedTicker, rowHeight]);
+  }, [virtualizer, rowHeight, rows.length]);
   useEffect(() => {
     if (!scrollTarget || rows.length === 0) return;
     virtualizer.scrollToIndex(Math.min(scrollTarget.index, rows.length - 1), { align: "start" });
@@ -572,7 +523,6 @@ function ScreenerTanstackTableInner({
           {bodyRows.map((row) => {
             const stock = row.original;
             const expanded = expandedTicker === stock.ticker;
-            const detailId = `screener-detail-${stock.ticker}`;
             return (
               <Fragment key={stock.ticker}>
                 <tr
@@ -610,24 +560,6 @@ function ScreenerTanstackTableInner({
                     );
                   })}
                 </tr>
-                {expanded ? (
-                  <tr
-                    id={detailId}
-                    data-testid="screener-desktop-detail-row"
-                    data-ticker={stock.ticker}
-                    data-canvas-plus-detail-row={canvasPlusPreview ? "true" : undefined}
-                  >
-	                    <td colSpan={visibleColumns.length + 1} className="p-0">
-	                      <div
-	                        ref={canvasPlusPreview ? measureDetailRef : undefined}
-	                        data-detail-ticker={canvasPlusPreview ? stock.ticker : undefined}
-	                        className={canvasPlusPreview ? "cp-screener-detail-shell" : undefined}
-	                      >
-	                        <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
-	                      </div>
-	                    </td>
-                  </tr>
-                ) : null}
               </Fragment>
             );
           })}
