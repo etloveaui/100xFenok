@@ -8,6 +8,7 @@ import { EdgeMark } from "@/components/ui/EdgeMark";
 import { Panel } from "@/components/ui/Panel";
 import { PanelHeader } from "@/components/ui/PanelHeader";
 import { Pill } from "@/components/ui/Pill";
+import { Sparkline } from "@/components/ui/Sparkline";
 import { Tile } from "@/components/ui/Tile";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { clamp, getRegimeLabel } from "@/lib/dashboard/formatters";
@@ -490,25 +491,20 @@ function materialFlagLabel(flag: Flag): string {
   return "확인";
 }
 
-function Sparkline({ values, positive, label }: { values: number[]; positive: boolean; label: string }) {
-  if (values.length < 2) {
-    return (
-      <div className="flex h-[26px] items-center text-[11px] text-[#94a3b8] md:h-9" role="img" aria-label={`${label} 차트 데이터 대기`}>
-        차트 데이터 대기
-      </div>
-    );
+// Band edges mirror the sector heat Tiles (components/ui/Tile.tsx), expressed in
+// --ls-heatmap-* tokens so the breadth strip tracks the shell palette.
+function heatStripTint(changePercent: number): string {
+  if (changePercent === 0) return "var(--ls-heatmap-neutral)";
+  if (changePercent > 0) {
+    if (changePercent <= 0.25) return "var(--ls-heatmap-green2)";
+    if (changePercent <= 0.75) return "var(--ls-heatmap-green3)";
+    if (changePercent <= 1.5) return "var(--ls-heatmap-green4)";
+    return "var(--ls-heatmap-green5)";
   }
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = max - min || 1;
-  const points = values
-    .map((v, i) => `${((i / (values.length - 1)) * 276 + 2).toFixed(1)},${(32 - ((v - min) / span) * 28).toFixed(1)}`)
-    .join(" ");
-  return (
-    <svg viewBox="0 0 280 36" preserveAspectRatio="none" className="h-[26px] w-full md:h-9" role="img" aria-label={`${label} 가격 흐름`}>
-      <polyline fill="none" stroke={positive ? "#1aa86f" : "#e84a5a"} strokeWidth="1.5" points={points} />
-    </svg>
-  );
+  if (changePercent >= -0.25) return "var(--ls-heatmap-red2)";
+  if (changePercent >= -0.75) return "var(--ls-heatmap-red3)";
+  if (changePercent >= -1.5) return "var(--ls-heatmap-red4)";
+  return "var(--ls-heatmap-red5)";
 }
 
 function edgeStrengthLabel(score: number): string {
@@ -610,6 +606,20 @@ export default function HomeCanvasPlusClient() {
     .slice()
     .sort((a, b) => Math.abs(b.displayChange) - Math.abs(a.displayChange))
     .slice(0, 11), [dashboard.sectorRows]);
+
+  const breadthSectors = dashboard.sectorRows.slice(0, 11);
+  const breadthReady = dashboardSettled && breadthSectors.length > 0;
+  const breadthPeriod = dashboard.sectorMode === "LIVE_1D" ? "1일" : "1개월 기준";
+  const breadthRead = regime.breadth >= 60
+    ? "시장 폭이 넓은 편입니다."
+    : regime.breadth >= 40
+      ? "시장 폭은 중립 수준입니다."
+      : "시장 폭이 좁은 편입니다.";
+  const breadthSummary = breadthReady
+    ? `${breadthSectors.length}개 섹터 중 ${dashboard.sectorUp}개 상승 - ${breadthRead}`
+    : dashboardSettled
+      ? "섹터 데이터가 아직 없습니다."
+      : `시장 폭 ${DATA_STATE_LABELS.pending}`;
 
   const revisionEvidence = projection.sources.revision.evidence;
   const superinvestorEvidence = projection.sources.superinvestor.evidence;
@@ -735,6 +745,33 @@ export default function HomeCanvasPlusClient() {
           </div>
         </div>
 
+        <section aria-label="시장 폭" data-home-breadth className="flex flex-col gap-1.5">
+          <p className="m-0 text-[12px] text-[var(--fnk-neutral-700)]">{breadthSummary}</p>
+          {breadthReady ? (
+            <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-3">
+              <div
+                className="flex min-w-0 gap-1 md:flex-none"
+                role="img"
+                aria-label={`섹터 ${breadthSectors.length}개 등락 요약 · 상승 ${dashboard.sectorUp} · 하락 ${dashboard.sectorDown}`}
+              >
+                {breadthSectors.map((sector) => (
+                  <span
+                    key={sector.key}
+                    className="flex h-5 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-[4px] font-mono text-[10px] leading-none text-[var(--ls-heatmap-text)] md:w-8 md:flex-none"
+                    style={{ background: heatStripTint(sector.displayChange * 100) }}
+                  >
+                    <span className="min-w-0 truncate">{sector.etf}</span>
+                  </span>
+                ))}
+              </div>
+              <div className="flex items-baseline gap-2 text-[11px]">
+                <span className="tabular-nums font-semibold text-[var(--fnk-neutral-700)]">상승 {dashboard.sectorUp} · 하락 {dashboard.sectorDown}</span>
+                <span className="text-[var(--fnk-neutral-500)]">{breadthPeriod}</span>
+              </div>
+            </div>
+          ) : null}
+        </section>
+
         <section aria-label="주요 지수">
           <div className="grid grid-cols-2 gap-[10px] md:grid-cols-4 md:gap-3">
             {indexCards.map((card) => {
@@ -752,7 +789,7 @@ export default function HomeCanvasPlusClient() {
                         {formatSignedPercentUnit(card.changePercent)}
                       </span>
                     </div>
-                    <Sparkline values={card.chartData.map((d) => d.value)} positive={positive} label={card.label} />
+                    <Sparkline values={card.chartData.map((d) => d.value)} tone={positive ? "gain" : "loss"} height={36} ariaLabel={`${card.label} 가격 흐름`} className="h-[26px] md:h-9" />
                   </div>
                 </Panel>
               );
@@ -769,7 +806,7 @@ export default function HomeCanvasPlusClient() {
                     {formatSignedPercentUnit(kospi.changePercent)}
                   </span>
                 </div>
-                <Sparkline values={kospi.series} positive={(kospi.changePercent ?? 0) >= 0} label="KOSPI" />
+                <Sparkline values={kospi.series} tone={(kospi.changePercent ?? 0) >= 0 ? "gain" : "loss"} height={36} ariaLabel="KOSPI 가격 흐름" className="h-[26px] md:h-9" />
               </div>
             </Panel>
           </div>
