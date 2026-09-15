@@ -35,7 +35,10 @@ export default function ScreenerDetailSheet({
 
   useEffect(() => { setMounted(true); }, []);
 
+  // Gated on `mounted`: the portal (and therefore panelRef/closeRef) only exists
+  // after that first commit, so this effect must re-run once it flips.
   useEffect(() => {
+    if (!mounted) return undefined;
     restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     lockBodyScroll(detailId);
     closeRef.current?.focus();
@@ -70,7 +73,7 @@ export default function ScreenerDetailSheet({
       unlockBodyScroll(detailId);
       restoreFocusRef.current?.focus();
     };
-  }, [detailId, onClose]);
+  }, [mounted, detailId, onClose]);
 
   if (!mounted) return null;
 
