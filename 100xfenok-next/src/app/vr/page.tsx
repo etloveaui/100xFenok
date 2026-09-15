@@ -232,23 +232,15 @@ export default async function VRPage({ searchParams }: PageProps) {
 
         <div className="vr-card p-6 sm:p-8 text-center max-w-2xl mx-auto border-2 border-green-200">
           <div className="text-5xl mb-4">📈</div>
-          <h3 className="text-2xl font-bold text-slate-800 mb-4">VR 전략 성과 지표</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-3xl font-black text-green-600">49.5%</div>
-              <div className="text-sm text-slate-600">예상 연평균 수익률</div>
-            </div>
-            <div>
-              <div className="text-3xl font-black text-red-600">-58.4%</div>
-              <div className="text-sm text-slate-600">예상 최대 하락폭</div>
-            </div>
+          <h3 className="text-2xl font-bold text-slate-800 mb-4">VR 전략 운용 기준</h3>
+          <div className="grid grid-cols-1 gap-4 text-center">
             <div>
               <div className="text-3xl font-black text-blue-600">2주</div>
               <div className="text-sm text-slate-600">리밸런싱 주기</div>
             </div>
           </div>
           <p className="text-slate-500 text-xs mt-4">
-            * 기본 설정(G=10) 기준, 실제 수익률은 시장 상황에 따라 달라질 수 있습니다.
+            * 수익률·하락폭 수치는 시장 상황에 따라 달라지므로 확정 지표를 표기하지 않습니다.
           </p>
         </div>
       </div>
