@@ -101,7 +101,7 @@ export function SharedEdgePanel({
   source?: string;
   asOf?: string;
   coverage?: string;
-  /** 88px panel EdgeMark hero per Signature (Stock); omitted surfaces keep 22/16 only */
+  /** 88px EdgeMark hero per Signature (Stock); its ring is the only score, so surfaces without a hero keep the 22px compact row instead */
   hero?: Array<{ label: string; score: number | null }>;
 }) {
   const hasRows = [...shortRows, ...longRows].some((row) => row.score !== null);
@@ -127,28 +127,26 @@ export function SharedEdgePanel({
           {hero.map((head) => head.score !== null ? (
             <span key={head.label} className="flex flex-col items-center gap-1">
               <EdgeMark score={head.score} size={88} />
-              <strong className="tabular-nums text-[22px] font-semibold leading-none text-[var(--c-ink)]">
-                {Math.round(head.score)}
-              </strong>
               <span className="text-[11px] text-[var(--c-ink-3)]">{head.label}</span>
             </span>
           ) : null)}
         </div>
-      ) : null}
-      <div className="flex items-center gap-4 px-4 py-3">
-        {[
-          { label: shortLabel, score: shortScore },
-          { label: longLabel, score: longScore },
-        ].map((head) => (
-          <span key={head.label} className="flex items-center gap-2">
-            {head.score !== null ? <EdgeMark score={head.score} size={22} showValue={false} /> : null}
-            <span className="text-[11px] text-[var(--c-ink-3)]">{head.label}</span>
-            <strong className="tabular-nums text-[22px] font-semibold leading-none text-[var(--c-ink)]">
-              {head.score !== null ? Math.round(head.score) : "—"}
-            </strong>
-          </span>
-        ))}
-      </div>
+      ) : (
+        <div className="flex items-center gap-4 px-4 py-3">
+          {[
+            { label: shortLabel, score: shortScore },
+            { label: longLabel, score: longScore },
+          ].map((head) => (
+            <span key={head.label} className="flex items-center gap-2">
+              {head.score !== null ? <EdgeMark score={head.score} size={22} showValue={false} /> : null}
+              <span className="text-[11px] text-[var(--c-ink-3)]">{head.label}</span>
+              <strong className="tabular-nums text-[22px] font-semibold leading-none text-[var(--c-ink)]">
+                {head.score !== null ? Math.round(head.score) : "—"}
+              </strong>
+            </span>
+          ))}
+        </div>
+      )}
       {summary ? <p className="px-4 pb-2 text-[12px] text-[var(--c-ink-2)]">{summary}</p> : null}
       {shortRows.length > 0 ? (
         <div>
