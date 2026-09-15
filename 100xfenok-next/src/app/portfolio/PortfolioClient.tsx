@@ -38,8 +38,9 @@ interface PriceDoc {
   data?: { info?: { currentPrice?: number | null } };
 }
 
-const priceCache = new Map<string, number | null>();
+const priceCache = new Map<string, number>();
 const pricePending = new Map<string, Promise<number | null>>();
+const priceFailed = new Set<string>();
 const analyzerProvider = new StaticStockAnalyzerDataProvider();
 
 function normalizeTicker(value: string | null | undefined): string {
@@ -57,6 +58,7 @@ async function fetchPrice(ticker: string): Promise<number | null> {
       const row = await analyzerProvider.getBySymbol(symbol);
       if (typeof row?.price === "number" && Number.isFinite(row.price)) {
         priceCache.set(symbol, row.price);
+        priceFailed.delete(symbol);
         return row.price;
       }
     } catch {
@@ -69,18 +71,28 @@ async function fetchPrice(ticker: string): Promise<number | null> {
         const price = doc.data?.info?.currentPrice;
         if (typeof price === "number" && Number.isFinite(price)) {
           priceCache.set(symbol, price);
+          priceFailed.delete(symbol);
           return price;
         }
       }
     } catch {
       // fall through
     }
-    priceCache.set(symbol, null);
+    // Never cache a failure: a null stays retryable instead of final.
+    priceFailed.add(symbol);
     return null;
   })();
 
   pricePending.set(symbol, p);
+  void p.finally(() => {
+    if (pricePending.get(symbol) === p) pricePending.delete(symbol);
+  });
   return p;
+}
+
+function retryPrice(symbol: string) {
+  priceFailed.delete(symbol);
+  pricePending.delete(symbol);
 }
 
 function csvCell(value: unknown): string {
@@ -120,6 +132,10 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
   const portfolios = usePortfolios();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [prices, setPrices] = useState<Map<string, number | null>>(new Map());
+  // Loading vs failed are distinct: while a fetch is in flight the totals must
+  // read "확인 중", never $0.00 as if final (fh-380 item 3).
+  const [pricesLoading, setPricesLoading] = useState(false);
+  const [priceRetryNonce, setPriceRetryNonce] = useState(0);
   const [connectionIndex, setConnectionIndex] = useState<StockConnectionIndex | null | undefined>(undefined);
   const [servicesIndex, setServicesIndex] = useState<StockServicesIndex | null | undefined>(undefined);
   const [exportText, setExportText] = useState("");
@@ -186,6 +202,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      setPricesLoading(true);
       const entries = await Promise.all(
         tickers.map(async (t) => {
           const price = await fetchPrice(t);
@@ -198,13 +215,20 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           for (const [t, p] of entries) next.set(t, p);
           return next;
         });
+        setPricesLoading(false);
       }
     }
     if (tickers.length > 0) load();
+    else setPricesLoading(false);
     return () => {
       cancelled = true;
     };
-  }, [tickers]);
+  }, [tickers, priceRetryNonce]);
+
+  function handleRetryPrices() {
+    for (const t of tickers) retryPrice(t);
+    setPriceRetryNonce((n) => n + 1);
+  }
 
   const { totalValue, totalGain, totalGainPct, missingCount } = useMemo(() => {
     if (!active) return { totalValue: 0, totalGain: 0, totalGainPct: 0, missingCount: 0 };
@@ -241,6 +265,13 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
         detail: "보유 종목을 추가하면 가격 확인을 시작합니다.",
       });
     }
+    if (pricesLoading && missingCount > 0) {
+      return makeDataState({
+        status: "pending",
+        label: "시세 확인 중",
+        detail: "현재가를 읽고 있습니다. 합계는 확인이 끝난 뒤 표시됩니다.",
+      });
+    }
     if (missingCount === 0) {
       return makeDataState({
         status: "ready",
@@ -255,7 +286,8 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
       detail: `${priced}/${active.holdings.length}개 보유 종목만 평가액에 반영됐습니다. 확인 불가 종목은 합계에서 제외합니다.`,
       reason: "로컬 데이터 캐시에 현재가가 없거나 읽지 못했습니다.",
     });
-  }, [active, missingCount]);
+  }, [active, missingCount, pricesLoading]);
+  const priceRetryable = !!active && active.holdings.length > 0 && !pricesLoading && missingCount > 0;
 
   function handleCreateEmpty() {
     setStorageError(null);
@@ -273,6 +305,39 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
       return;
     }
     setActiveId(doc.id);
+  }
+
+  function handleRenamePortfolio() {
+    if (!active || isSample) return;
+    const nextName = typeof window === "undefined" ? null : window.prompt("포트폴리오 이름", active.name);
+    if (nextName === null) return;
+    const trimmed = nextName.trim();
+    if (!trimmed) {
+      setStorageError("포트폴리오 이름을 입력해 주세요.");
+      return;
+    }
+    setStorageError(null);
+    const next = portfolios.map((p) => (p.id === active.id ? { ...p, name: trimmed } : p));
+    const res = savePortfolios(next);
+    if (!res.ok) {
+      setStorageError(res.message);
+      return;
+    }
+    setStorageError(null);
+  }
+
+  function handleDeletePortfolio() {
+    if (!active || isSample) return;
+    if (typeof window !== "undefined" && !window.confirm(`"${active.name}" 포트폴리오를 삭제할까요? 보유 종목과 현금이 함께 지워집니다.`)) return;
+    setStorageError(null);
+    const next = portfolios.filter((p) => p.id !== active.id);
+    const res = savePortfolios(next);
+    if (!res.ok) {
+      setStorageError(res.message);
+      return;
+    }
+    setStorageError(null);
+    if (activeId === active.id) setActiveId(next[0]?.id ?? null);
   }
 
   function handleDeleteHolding(row: HoldingRow) {
@@ -644,6 +709,26 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           >
             + 새 포트폴리오
           </button>
+          {active && !isSample ? (
+            <>
+              <button
+                type="button"
+                onClick={handleRenamePortfolio}
+                aria-label="포트폴리오 이름 변경"
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
+              >
+                이름 변경
+              </button>
+              <button
+                type="button"
+                onClick={handleDeletePortfolio}
+                aria-label="포트폴리오 삭제"
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-600 transition hover:border-rose-400 hover:text-rose-600 sm:min-h-8"
+              >
+                삭제
+              </button>
+            </>
+          ) : null}
           <button
             type="button"
             onClick={handleConnectionExport}
@@ -678,12 +763,20 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
         </div>
       )}
 
-      <DataStateNotice state={priceState} />
+      <DataStateNotice
+        state={priceState}
+        actionLabel={priceRetryable ? "다시 시도" : undefined}
+        onAction={priceRetryable ? handleRetryPrices : undefined}
+      />
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Kpi label="총 평가액" value={formatCurrency(grandTotal, "USD")} />
-        <Kpi label="총 손익" value={`${formatCurrency(totalGain, "USD")} (${formatSignedPercent(totalGainPct, { digits: 2 })})`} valueClass={gainColor(totalGain)} />
+        <Kpi label="총 평가액" value={pricesLoading && missingCount > 0 ? "확인 중" : formatCurrency(grandTotal, "USD")} />
+        <Kpi
+          label="총 손익"
+          value={pricesLoading && missingCount > 0 ? "확인 중" : `${formatCurrency(totalGain, "USD")} (${formatSignedPercent(totalGainPct, { digits: 2 })})`}
+          valueClass={pricesLoading && missingCount > 0 ? undefined : gainColor(totalGain)}
+        />
         <Kpi label="현금" value={formatCurrency(active?.cash ?? 0, "USD")} />
         <Kpi label="보유 종목" value={`${active?.holdings.length ?? 0}종목`} />
       </div>
@@ -704,8 +797,17 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           <HoldingsTable rows={holdingRows} onEdit={handleEditHolding} onDelete={handleDeleteHolding} />
         </div>
         {missingCount > 0 && (
-          <p className="mt-2 text-[10px] font-semibold text-slate-500">
-            시세 없는 {missingCount}종목은 합계에서 제외
+          <p className="mt-2 flex flex-wrap items-center gap-2 text-[10px] font-semibold text-slate-500">
+            <span>시세 없는 {missingCount}종목은 합계에서 제외{pricesLoading ? " · 확인 중" : null}</span>
+            {!pricesLoading ? (
+              <button
+                type="button"
+                onClick={handleRetryPrices}
+                className="inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-3 text-[10px] font-black text-brand-interactive transition hover:border-brand-interactive"
+              >
+                다시 시도
+              </button>
+            ) : null}
           </p>
         )}
       </div>
