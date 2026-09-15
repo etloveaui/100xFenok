@@ -596,6 +596,14 @@ function ownerFamilyForHighRisk(row) {
       first_action: "preserve VR tools behind VR route until route-backed smoke and owner approval",
     });
   }
+  if (pathName.startsWith("/research/")) {
+    return family({
+      id: "research_artifacts",
+      owner_route: "/research",
+      owner_area: "research_tab",
+      first_action: "preserve synced research artifacts behind the /research owner route; viewer equivalence proven per artifact at sync time",
+    });
+  }
   if (pathName === "/404.html") {
     return family({
       id: "system_fallback_page",
