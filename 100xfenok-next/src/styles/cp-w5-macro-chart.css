@@ -1176,8 +1176,8 @@
 }
 
 .cpw5-macro-v2-lenses button[data-unavailable="true"],
+.cpw5-macro-v2-lenses button:disabled,
 .cpw5-macro-v2-global button:disabled { opacity: 0.52; }
-.cpw5-macro-v2-global > span { color: var(--c-ink-3); font-size: 11px; font-weight: 700; }
 .cpw5-macro-v2-export { overflow: hidden; border: 1px solid var(--c-line); border-radius: var(--r-pill); }
 .cpw5-macro-v2-export button { border: 0; border-radius: 0; }
 .cpw5-macro-v2-export button + button { border-left: 1px solid var(--c-line); }
@@ -1194,18 +1194,14 @@
 .cpw5-macro-v2-plot {
   min-height: 720px;
   height: 720px;
-  padding-top: 82px;
 }
 
 .cpw5-macro-v2-legend {
-  position: absolute;
-  z-index: 12;
-  top: 12px;
-  left: 12px;
   display: flex;
   max-width: calc(100% - 24px);
   flex-wrap: wrap;
   gap: 6px;
+  padding: 12px 0 12px 12px;
 }
 
 .cpw5-macro-v2-legend__item { position: relative; }
@@ -1319,6 +1315,9 @@
   .cpw5-macro-chart-rows { order: 1; }
   .cpw5-macro-v2-legend__item { width: 100%; }
   .cpw5-macro-v2-legend__chip { width: 100%; max-width: none; }
+  .cpw5-macro-v2-editor__head button { width: 44px; height: 44px; }
+  .cpw5-macro-v2-colors button { width: 44px; height: 44px; }
+  .cpw5-macro-v2-remove { min-height: 44px; }
   .cpw5-macro-v2-editor {
     position: fixed;
     z-index: 90;
