@@ -31,10 +31,37 @@ import {
 type EtfSegment = "전체" | "신규" | "디지털자산" | "레버리지" | "단일종목 레버리지" | "인버스";
 type AumFilter = "전체" | "$100B 이상" | "$10B 이상" | "$1B 이상" | "$1B 미만" | "운용자산 미표시";
 type ExpenseFilter = "전체" | "0.05% 이하" | "0.10% 이하" | "0.50% 이하" | "1.00% 이상" | "보수 미표시";
+type EtfSortKey = "ticker" | "aum" | "expense" | "tr1y";
+type EtfSortDirection = "asc" | "desc";
 
 const AUM_FILTERS: readonly AumFilter[] = ["전체", "$100B 이상", "$10B 이상", "$1B 이상", "$1B 미만", "운용자산 미표시"];
 const EXPENSE_FILTERS: readonly ExpenseFilter[] = ["전체", "0.05% 이하", "0.10% 이하", "0.50% 이하", "1.00% 이상", "보수 미표시"];
-const PAGE_SIZE = 30;
+const DEFAULT_PAGE_SIZE = 30;
+const PAGE_SIZE_OPTIONS = [30, 50, 100, 200] as const;
+const PAGER_WINDOW = 1;
+const DEFAULT_SORT: { key: EtfSortKey; direction: EtfSortDirection } = { key: "aum", direction: "desc" };
+const SORT_DEFAULT_DIRECTION: Record<EtfSortKey, EtfSortDirection> = {
+  ticker: "asc",
+  aum: "desc",
+  expense: "asc",
+  tr1y: "desc",
+};
+const SORT_COLUMN_LABELS: Record<EtfSortKey, string> = {
+  ticker: "티커 · 이름",
+  aum: "운용자산",
+  expense: "보수",
+  tr1y: "1년 수익률",
+};
+const SORT_CHOICES: readonly { key: EtfSortKey; direction: EtfSortDirection; label: string }[] = [
+  { key: "aum", direction: "desc", label: "운용자산 많은 순" },
+  { key: "aum", direction: "asc", label: "운용자산 적은 순" },
+  { key: "expense", direction: "asc", label: "보수 낮은 순" },
+  { key: "expense", direction: "desc", label: "보수 높은 순" },
+  { key: "tr1y", direction: "desc", label: "1년 수익률 높은 순" },
+  { key: "tr1y", direction: "asc", label: "1년 수익률 낮은 순" },
+  { key: "ticker", direction: "asc", label: "티커 · 이름 오름차순" },
+  { key: "ticker", direction: "desc", label: "티커 · 이름 내림차순" },
+];
 
 function matchesAum(value: number | null | undefined, filter: AumFilter): boolean {
   const aum = typeof value === "number" && Number.isFinite(value) ? value : null;
@@ -81,6 +108,50 @@ function normalizedExpenseRatioValue(row: EtfUniverseRecord): number | null {
   if (value > 5 && alternate !== null && alternate <= 5) return alternate;
   if (isMainstreamExpenseScaleCandidate(row, value)) return value / 100;
   return value;
+}
+
+function sortValueFor(row: EtfUniverseRecord, key: EtfSortKey): number | string | null {
+  if (key === "ticker") {
+    const ticker = (row.ticker ?? "").trim();
+    if (ticker) return ticker.toUpperCase();
+    const name = (row.name ?? "").trim();
+    return name ? name.toUpperCase() : null;
+  }
+  if (key === "aum") return typeof row.aum === "number" && Number.isFinite(row.aum) ? row.aum : null;
+  if (key === "expense") return normalizedExpenseRatioValue(row);
+  const value = row.performance?.tr1y;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+// Missing values sink below present ones in both directions.
+function compareSortValues(
+  left: number | string | null,
+  right: number | string | null,
+  direction: EtfSortDirection,
+): number {
+  if (left === null && right === null) return 0;
+  if (left === null) return 1;
+  if (right === null) return -1;
+  const delta =
+    typeof left === "string" || typeof right === "string"
+      ? `${left}`.localeCompare(`${right}`, "en", { numeric: true })
+      : left - right;
+  return direction === "asc" ? delta : -delta;
+}
+
+function paginationItems(current: number, total: number): Array<{ key: string; page: number | null }> {
+  const pages = new Set<number>([1, total]);
+  for (let value = current - PAGER_WINDOW; value <= current + PAGER_WINDOW; value += 1) {
+    if (value >= 1 && value <= total) pages.add(value);
+  }
+  const items: Array<{ key: string; page: number | null }> = [];
+  let previous = 0;
+  for (const page of [...pages].sort((left, right) => left - right)) {
+    if (previous > 0 && page - previous > 1) items.push({ key: `gap-${previous}`, page: null });
+    items.push({ key: `page-${page}`, page });
+    previous = page;
+  }
+  return items;
 }
 
 function etfTypeLabels(row: EtfUniverseRecord, digitalTickers: ReadonlySet<string>): string[] {
@@ -160,7 +231,10 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
   const [issuer, setIssuer] = useState("전체");
   const [aum, setAum] = useState<AumFilter>("전체");
   const [expense, setExpense] = useState<ExpenseFilter>("전체");
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [sortKey, setSortKey] = useState<EtfSortKey>(DEFAULT_SORT.key);
+  const [sortDirection, setSortDirection] = useState<EtfSortDirection>(DEFAULT_SORT.direction);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedQuery(query), 180);
@@ -169,7 +243,15 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
 
   const retryLoad = reload;
 
-  const resetVisibleCount = () => setVisibleCount(PAGE_SIZE);
+  const resetPaging = () => setPage(1);
+
+  const changeSort = (key: EtfSortKey, direction?: EtfSortDirection) => {
+    const nextDirection =
+      direction ?? (key === sortKey ? (sortDirection === "asc" ? "desc" : "asc") : SORT_DEFAULT_DIRECTION[key]);
+    setSortKey(key);
+    setSortDirection(nextDirection);
+    setPage(1);
+  };
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
@@ -232,17 +314,47 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
         if (segment === "단일종목 레버리지") return isSingleStockLeveragedEtf(row);
         return isInverseEtf(row);
       })
-      .filter((row) => !q || (row.ticker ?? "").includes(q) || (row.name ?? "").toUpperCase().includes(q) || (row.issuer ?? "").toUpperCase().includes(q))
-      .sort((a, b) => (b.aum ?? -1) - (a.aum ?? -1));
+      .filter((row) => !q || (row.ticker ?? "").includes(q) || (row.name ?? "").toUpperCase().includes(q) || (row.issuer ?? "").toUpperCase().includes(q));
   }, [advancedFilteredRows, segment, debouncedQuery, digitalTickers]);
 
-  const visibleRows = filteredRows.slice(0, visibleCount);
-  const hasMore = filteredRows.length > visibleRows.length;
+  // Ties keep the filter order, so sorting stays stable on every engine.
+  const sortedRows = useMemo(() => {
+    const baseOrder = new Map<EtfUniverseRecord, number>();
+    filteredRows.forEach((row, index) => baseOrder.set(row, index));
+    return [...filteredRows].sort((left, right) => {
+      const delta = compareSortValues(sortValueFor(left, sortKey), sortValueFor(right, sortKey), sortDirection);
+      return delta !== 0 ? delta : (baseOrder.get(left) ?? 0) - (baseOrder.get(right) ?? 0);
+    });
+  }, [filteredRows, sortKey, sortDirection]);
+
+  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pageRows = sortedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const renderSortHeader = (key: EtfSortKey) => {
+    const label = SORT_COLUMN_LABELS[key];
+    const active = sortKey === key;
+    const directionLabel = sortDirection === "asc" ? "오름차순" : "내림차순";
+    return (
+      <button
+        type="button"
+        className="etf-sort-btn"
+        data-active={active ? "true" : undefined}
+        onClick={() => changeSort(key)}
+        aria-label={active ? `${label} 정렬 · 현재 ${directionLabel}` : `${label} 기준으로 정렬`}
+      >
+        <span>{label}</span>
+        <span className="etf-sort-arrow" aria-hidden="true">
+          {active ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
+        </span>
+      </button>
+    );
+  };
 
   const columns: readonly CpDataTableColumn<EtfUniverseRecord>[] = [
     {
       key: "ticker",
-      header: "티커 · 이름",
+      header: renderSortHeader("ticker"),
       align: "left",
       render: (row) => (
         <TransitionLink href={ROUTES.etf(row.ticker ?? "")} className="etf-table-ticker">
@@ -272,17 +384,17 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
     },
     {
       key: "aum",
-      header: "운용자산",
+      header: renderSortHeader("aum"),
       render: (row) => formatAum(row),
     },
     {
       key: "expense",
-      header: "보수",
+      header: renderSortHeader("expense"),
       render: (row) => formatPlainPercent(normalizedExpenseRatioValue(row), { digits: 2, fraction: false }),
     },
     {
       key: "tr1y",
-      header: "1년 수익률",
+      header: renderSortHeader("tr1y"),
       render: (row) => {
         const value = row.performance?.tr1y ?? null;
         const label = fmtSignedPct(value);
@@ -319,7 +431,7 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
                 type="button"
                 onClick={() => {
                   setSegment(option.value);
-                  resetVisibleCount();
+                  resetPaging();
                 }}
                 aria-pressed={segment === option.value}
                 className="etf-seg-pill"
@@ -340,11 +452,27 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
               value={query}
               onChange={(event) => {
                 setQuery(event.target.value);
-                resetVisibleCount();
+                resetPaging();
               }}
               placeholder="티커 또는 이름 검색"
               className="etf-search"
             />
+            <label className="etf-sort-field">
+              <span>정렬</span>
+              <select
+                value={`${sortKey}:${sortDirection}`}
+                onChange={(event) => {
+                  const next = SORT_CHOICES.find((choice) => `${choice.key}:${choice.direction}` === event.target.value);
+                  if (next) changeSort(next.key, next.direction);
+                }}
+              >
+                {SORT_CHOICES.map((choice) => (
+                  <option key={`${choice.key}:${choice.direction}`} value={`${choice.key}:${choice.direction}`}>
+                    {choice.label}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           <CpAccordion title="필터 더보기" meta="자산군 · 운용사 · 운용자산 · 보수">
@@ -355,7 +483,7 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
                   value={category}
                   onChange={(event) => {
                     setCategory(event.target.value);
-                    resetVisibleCount();
+                    resetPaging();
                   }}
                 >
                   <option value="전체">전체</option>
@@ -370,7 +498,7 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
                   value={issuer}
                   onChange={(event) => {
                     setIssuer(event.target.value);
-                    resetVisibleCount();
+                    resetPaging();
                   }}
                 >
                   <option value="전체">전체</option>
@@ -385,7 +513,7 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
                   value={aum}
                   onChange={(event) => {
                     setAum(event.target.value as AumFilter);
-                    resetVisibleCount();
+                    resetPaging();
                   }}
                 >
                   {AUM_FILTERS.map((item) => (
@@ -399,7 +527,7 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
                   value={expense}
                   onChange={(event) => {
                     setExpense(event.target.value as ExpenseFilter);
-                    resetVisibleCount();
+                    resetPaging();
                   }}
                 >
                   {EXPENSE_FILTERS.map((item) => (
@@ -413,18 +541,70 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
           {filteredRows.length > 0 ? (
             <>
               <div className="etf-table-desktop">
-                <CpDataTable columns={columns} rows={visibleRows} getRowKey={(row) => row.ticker ?? ""} />
+                <CpDataTable columns={columns} rows={pageRows} getRowKey={(row) => row.ticker ?? ""} />
               </div>
-              <EtfMobileList rows={visibleRows} digitalTickers={digitalTickers} />
-              {hasMore ? (
-                <button
-                  type="button"
-                  className="etf-load-more"
-                  onClick={() => setVisibleCount((value) => Math.min(filteredRows.length, value + PAGE_SIZE))}
-                >
-                  더보기 · {visibleRows.length.toLocaleString("ko-KR")} / {filteredRows.length.toLocaleString("ko-KR")}
-                </button>
-              ) : null}
+              <EtfMobileList rows={pageRows} digitalTickers={digitalTickers} />
+              <div className="etf-load-more">
+                <p className="etf-pager-status">
+                  전체 {formatInteger(sortedRows.length)}개 · {formatInteger(currentPage)} / {formatInteger(pageCount)} 페이지
+                </p>
+                {pageCount > 1 ? (
+                  <nav className="etf-pager" aria-label="ETF 목록 페이지">
+                    <button
+                      type="button"
+                      className="etf-pager-btn"
+                      onClick={() => setPage(currentPage - 1)}
+                      disabled={currentPage <= 1}
+                    >
+                      이전
+                    </button>
+                    {paginationItems(currentPage, pageCount).map((item) => {
+                      if (item.page === null) {
+                        return (
+                          <span key={item.key} className="etf-pager-gap" aria-hidden="true">
+                            …
+                          </span>
+                        );
+                      }
+                      const targetPage = item.page;
+                      return (
+                        <button
+                          key={item.key}
+                          type="button"
+                          className="etf-pager-btn"
+                          data-active={targetPage === currentPage ? "true" : undefined}
+                          aria-current={targetPage === currentPage ? "page" : undefined}
+                          onClick={() => setPage(targetPage)}
+                        >
+                          {formatInteger(targetPage)}
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      className="etf-pager-btn"
+                      onClick={() => setPage(currentPage + 1)}
+                      disabled={currentPage >= pageCount}
+                    >
+                      다음
+                    </button>
+                  </nav>
+                ) : null}
+                <label className="etf-page-size">
+                  <span>페이지당</span>
+                  <select
+                    value={pageSize}
+                    onChange={(event) => {
+                      setPageSize(Number(event.target.value));
+                      setPage(1);
+                    }}
+                  >
+                    {PAGE_SIZE_OPTIONS.map((size) => (
+                      <option key={size} value={size}>{size}개</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
             </>
           ) : null}
         </>

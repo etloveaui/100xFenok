@@ -267,11 +267,18 @@
 .etf-today-row:focus-visible,
 .etf-tool-row:focus-visible,
 .etf-table-ticker:focus-visible,
-.etf-mobile-title:focus-visible,
-.etf-load-more:focus-visible {
+.etf-mobile-title:focus-visible {
   background: var(--fnk-neutral-50);
   box-shadow: inset 2px 0 0 var(--fnk-brand-interactive);
   outline: none;
+}
+
+.etf-sort-btn:focus-visible,
+.etf-pager-btn:focus-visible,
+.etf-sort-field select:focus-visible,
+.etf-page-size select:focus-visible {
+  outline: 2px solid var(--fnk-brand-interactive);
+  outline-offset: 2px;
 }
 
 .etf-ticker {
@@ -324,6 +331,42 @@
   font-size: 13px;
   color: var(--fnk-neutral-900);
   background: var(--fnk-color-card);
+}
+
+/* Sort select mirrors the desktop column headers on the mobile card list. */
+.etf-sort-field {
+  display: none;
+}
+
+.etf-sort-field select,
+.etf-page-size select {
+  height: 28px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--fnk-neutral-900);
+  background: var(--fnk-color-card);
+}
+
+.etf-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.etf-sort-btn[data-active="true"] {
+  color: var(--fnk-brand-interactive);
+}
+
+.etf-sort-arrow {
+  font-size: 10px;
 }
 
 .etf-filter-grid {
@@ -485,24 +528,72 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Pager strip: min-height keeps the shared 44px tap-target floor on mobile. */
 .etf-load-more {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
+  gap: 8px 12px;
   width: 100%;
-  height: 34px;
-  background: none;
-  border: 0;
+  min-height: 34px;
+  padding: 8px 16px;
   border-top: 1px solid var(--fnk-neutral-100);
   font-size: 12px;
   font-weight: 600;
-  color: var(--fnk-brand-interactive);
-  cursor: pointer;
-  transition: background-color 150ms ease;
 }
 
-.etf-load-more:hover {
-  background: var(--fnk-neutral-50);
+.etf-pager-status {
+  margin: 0;
+  font-weight: 500;
+  color: var(--fnk-neutral-500);
+}
+
+.etf-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.etf-pager-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--fnk-neutral-200);
+  border-radius: 6px;
+  background: var(--fnk-color-card);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-600);
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.etf-pager-btn[data-active="true"] {
+  border-color: var(--fnk-brand-interactive);
+  color: var(--fnk-brand-interactive);
+}
+
+.etf-pager-btn:disabled {
+  color: var(--fnk-neutral-300);
+  cursor: default;
+}
+
+.etf-pager-gap {
+  color: var(--fnk-neutral-500);
+}
+
+.etf-page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--fnk-neutral-600);
 }
 
 /* Tools panel */
@@ -574,7 +665,30 @@
     height: 44px;
   }
 
+  .etf-sort-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--fnk-neutral-600);
+  }
+
+  .etf-sort-field select {
+    height: 44px;
+  }
+
   .etf-load-more {
+    min-height: 44px;
+  }
+
+  .etf-pager-btn {
+    min-width: 44px;
+    height: 44px;
+  }
+
+  .etf-page-size select {
     height: 44px;
   }
 
@@ -620,6 +734,15 @@
   }
 
   .etf-load-more {
+    min-height: 44px;
+  }
+
+  .etf-pager-btn {
+    min-width: 44px;
+    height: 44px;
+  }
+
+  .etf-page-size select {
     height: 44px;
   }
 
