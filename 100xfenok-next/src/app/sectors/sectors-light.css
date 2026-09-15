@@ -447,6 +447,174 @@
   }
 }
 
+/* Summary strip (study P1+P2): a 0-centered 1D distribution of the sectors on
+ * the same %p-vs-S&P relative momentum the rotation map plots, with the four
+ * counts beside it on desktop and restacked under it on phones. Dot fill
+ * follows the map's convention (relative >= 0 is the route's gain side). Only
+ * a sector without a measured value leaves the domain, so this strip stays the
+ * mobile summary where the map and the rank panel are hidden. */
+
+.sec-spread {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+  gap: 16px;
+  padding: 12px 16px 14px;
+}
+
+.sec-spread-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sec-spread-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sec-spread-side {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fnk-neutral-600);
+}
+
+.sec-spread-measure {
+  font-size: 11px;
+  color: var(--fnk-neutral-600);
+  text-align: center;
+}
+
+/* The %p axis: one hairline for the scale, one for the 0 = S&P 500 split that
+ * every dot's fill is read against. */
+.sec-spread-track {
+  position: relative;
+  height: 34px;
+}
+
+.sec-spread-axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--fnk-neutral-200);
+}
+
+.sec-spread-zero {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 1px;
+  background: var(--fnk-neutral-300);
+}
+
+/* One dot per sector, centred on the axis row: x is the only encoding, so
+ * overlapping sectors stay overlapped rather than nudged to invented values. */
+.sec-spread-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.sec-spread-dot-up {
+  background: var(--fnk-color-gain);
+}
+
+.sec-spread-dot-down {
+  background: var(--fnk-color-loss);
+}
+
+.sec-spread-scale {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--fnk-neutral-600);
+}
+
+.sec-spread-zero-label {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+.sec-spread-count {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fnk-neutral-900);
+}
+
+.sec-spread-read {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fnk-neutral-700);
+}
+
+/* The loading/empty line replaces both columns instead of leaving the stats
+ * column blank. */
+.sec-spread-pending {
+  grid-column: 1 / -1;
+}
+
+.sec-spread-note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--fnk-neutral-600);
+}
+
+.sec-spread-stats {
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/* The kit StatStrip rows share the right column evenly; its own last-child
+ * border rule stays untouched on desktop. */
+.sec-stat-strip {
+  width: 100%;
+}
+
+.sec-stat-strip > .sec-stat {
+  flex: 1 1 0;
+}
+
+@media (max-width: 760px) {
+  /* Phone: the strip keeps the full width as the route's summary and the four
+   * counts restack two-by-two under it, so the strip stays legible at 390px
+   * without horizontal overflow. */
+  .sec-spread {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sec-stat-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Replace the kit's single-row dividers with the 2x2 ones: inline ends only
+   * on the left cell of each row, a rule above the second row. */
+  .sec-stat-strip > .sec-stat {
+    border-inline-start: 0;
+    border-inline-end: 0;
+  }
+
+  .sec-stat-strip > .sec-stat:nth-child(odd) {
+    border-inline-end: 1px solid var(--fnk-neutral-200);
+  }
+
+  .sec-stat-strip > .sec-stat:nth-child(n + 3) {
+    border-top: 1px solid var(--fnk-neutral-200);
+  }
+}
+
 /* Rotation map hero (slice S2): segmented window, SVG 2x2 map on desktop,
  * ranked list on narrow screens, bandless row outside the map. */
 
