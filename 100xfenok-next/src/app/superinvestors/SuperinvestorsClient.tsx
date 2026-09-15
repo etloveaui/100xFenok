@@ -39,6 +39,7 @@ import GraphNetworkPanel, { GraphNetworkTeaser } from "./GraphNetworkPanel";
 import GuruTrendBlock from "./GuruTrendBlock";
 import InsightsTab from "./InsightsTab";
 import SignalPanel from "./SignalPanel";
+import SuperinvestorsSummaryStrip from "./SuperinvestorsSummaryStrip";
 import WhoHoldsPanel from "./WhoHoldsPanel";
 import {
   ResponsiveHoldingsTable,
@@ -1299,6 +1300,15 @@ export default function SuperinvestorsClient({
           </div>
         </div>
       </div>
+
+      <SuperinvestorsSummaryStrip
+        investors={investors}
+        overlapRows={overlapRows}
+        dataReady={dataReady}
+        failed={failed}
+        loading={loading}
+        onRetry={retry}
+      />
 
       {sourceReturnTo ? (
         <div className="mt-2">
