@@ -1,23 +1,23 @@
 {
   "schema_version": "market-source-parity/v1",
-  "generated_at": "2026-09-15T04:52:01Z",
+  "generated_at": "2026-09-15T05:04:21Z",
   "source": "computed/market_facts candidate comparison",
   "summary": {
     "inspected_ticker_files": 6803,
     "fields": 19,
     "multi_candidate_fields": 61592,
     "divergence_rows": 61521,
-    "percent_scale_warnings": 193,
+    "percent_scale_warnings": 194,
     "diagnosis_counts": {
       "agreement": 9245,
-      "scale_mismatch": 193,
-      "sign_divergence": 3004,
+      "scale_mismatch": 194,
+      "sign_divergence": 3000,
       "stale": 38259,
-      "value_drift": 10820
+      "value_drift": 10823
     },
     "stale_rows": 38259,
-    "scale_mismatch_rows": 193,
-    "sign_divergence_rows": 3004
+    "scale_mismatch_rows": 194,
+    "sign_divergence_rows": 3000
   },
   "by_field": {
     "beta": {
@@ -273,11 +273,11 @@
       }
     },
     "trailing_pe": {
-      "ticker_count": 3764,
+      "ticker_count": 3763,
       "multi_candidate_count": 486,
       "selected_sources": {
         "slickcharts": 3,
-        "yf": 3761
+        "yf": 3760
       },
       "candidate_sources": {
         "slickcharts": 486,
@@ -12104,40 +12104,40 @@
       }
     },
     {
-      "ticker": "MUU",
+      "ticker": "TPLS",
       "asset_type": "etf",
-      "field": "change_pct",
-      "selected_source": "stockanalysis.quote",
+      "field": "return_3m",
+      "selected_source": "yf.history_1y",
       "candidate_count": 2,
-      "relative_spread_pct": 196.504725,
+      "relative_spread_pct": 196.305516,
       "values": [
         {
-          "source": "stockanalysis.quote",
-          "value": -12.02
+          "source": "yf.history_1y",
+          "value": -0.5610391110236077
         },
         {
-          "source": "yf",
-          "value": 11.599868
+          "source": "stockanalysis.detail.history",
+          "value": 0.5825617619179068
         }
       ],
       "diagnosis": "stale",
-      "spread_pct": 196.504725,
+      "spread_pct": 196.305516,
       "fresh_spread_pct": null,
       "stale_sources": [
-        "stockanalysis.quote"
+        "stockanalysis.detail.history"
       ],
       "scale_mismatch": false,
       "scale_factor": null,
       "sign_divergence": true,
       "selected_rationale": {
-        "selected": "stockanalysis.quote",
+        "selected": "yf.history_1y",
         "policy_rank": 0,
-        "policy_len": 4,
+        "policy_len": 2,
         "note": "policy-preferred; lower-ranked sources retained as candidates"
       },
       "freshness": {
-        "stockanalysis.quote": 50.0,
-        "yf": 0.0
+        "yf.history_1y": 0.0,
+        "stockanalysis.detail.history": 54.0
       }
     }
   ],
