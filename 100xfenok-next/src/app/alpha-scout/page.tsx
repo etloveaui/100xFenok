@@ -94,19 +94,19 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
                 className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600"
                 data-alpha-scout-boundary-chip="legacy-html"
               >
-                레거시 HTML
+                이전 형식
               </span>
               <span
                 className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600"
                 data-alpha-scout-boundary-chip="report-deeplink"
               >
-                리포트 딥링크
+                리포트 연결
               </span>
               <span
                 className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600"
                 data-alpha-scout-boundary-chip="v2-owner"
               >
-                V2 아카이브
+                아카이브
               </span>
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
@@ -115,7 +115,7 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
                 className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
                 data-alpha-scout-owner-link="v2-archive"
               >
-                V2 아카이브
+                스카우트 아카이브
               </Link>
               <Link
                 href={ROUTES.posts}

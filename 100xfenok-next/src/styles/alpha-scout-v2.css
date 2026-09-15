@@ -402,7 +402,7 @@
 }
 .as-month__label {
   position: sticky;
-  top: 8px;
+  top: calc(var(--appbar-h, 46px) + var(--safe-t, 0px) + 8px);
   margin: 0;
   font-size: 18px;
   font-weight: 700;
@@ -424,6 +424,19 @@
   border-radius: var(--cp-radius-lg);
   color: var(--ink-3);
   text-align: center;
+}
+.as-empty p { margin: 0 0 12px; }
+.as-reset {
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+  background: transparent;
+  color: var(--brand-interactive);
+  border: 1px solid var(--brand-interactive);
+  cursor: pointer;
 }
 
 /* ===== Article view ===== */
@@ -448,6 +461,10 @@
   font-family: var(--font-body);
   font-weight: 700;
   font-size: 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 8px;
 }
 .as-back:hover { text-decoration: underline; }
 .as-breadcrumb__sep { color: var(--ink-3); }
@@ -531,6 +548,7 @@
   font-size: 13px;
   line-height: 1.4;
   padding: 6px 8px;
+  min-height: 44px;
   border-radius: 6px;
   text-decoration: none;
 }
@@ -584,6 +602,8 @@
   cursor: pointer;
   vertical-align: super;
   margin-left: 2px;
+  padding: 13px 10px;
+  margin: -13px -8px;
 }
 .as-sup:hover { background: var(--brand-navy); }
 .as-chapter em {

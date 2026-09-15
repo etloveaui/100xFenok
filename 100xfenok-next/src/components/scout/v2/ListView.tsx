@@ -34,7 +34,7 @@ export default function ListView({
     });
   }, [query, activeTag]);
 
-  const [featured, ...rest] = filtered.length > 0 ? filtered : ISSUES;
+  const [featured, ...rest] = filtered;
 
   const byMonth = useMemo(() => {
     const map = new Map<string, Issue[]>();
@@ -58,7 +58,7 @@ export default function ListView({
         </div>
         <div className="as-route-owner" data-alpha-scout-route-owner="v2-report-archive">
           <span>아카이브 기준</span>
-          <strong>V2 리포트 아카이브</strong>
+          <strong>리포트 아카이브</strong>
         </div>
         <nav className="as-route-actions" aria-label="Alpha Scout 연결" data-alpha-scout-action-rail>
           <Link href={ROUTES.posts} data-alpha-scout-owner-link="posts">
@@ -71,7 +71,7 @@ export default function ListView({
             href={withQuery(ROUTES.alphaScout, { report: "2025-08-24_100x-alpha-scout.html" })}
             data-alpha-scout-owner-link="legacy-report"
           >
-            레거시 리포트
+            이전 리포트
           </Link>
         </nav>
       </header>
@@ -122,7 +122,19 @@ export default function ListView({
         </section>
       ))}
       {filtered.length === 0 ? (
-        <div className="as-empty">검색 조건에 맞는 리포트가 없습니다.</div>
+        <div className="as-empty">
+          <p>검색 조건에 맞는 리포트가 없습니다.</p>
+          <button
+            type="button"
+            className="as-reset"
+            onClick={() => {
+              setQuery("");
+              setActiveTag(null);
+            }}
+          >
+            검색 초기화
+          </button>
+        </div>
       ) : null}
     </div>
   );
