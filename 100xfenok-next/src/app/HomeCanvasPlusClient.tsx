@@ -784,9 +784,7 @@ export default function HomeCanvasPlusClient() {
             />
             <div className="flex gap-4 p-[14px] md:gap-6 md:p-4">
               <div className="flex min-w-[72px] flex-col justify-center md:min-w-24">
-                <EdgeMark score={regime.confidence} size={88} showValue={false} />
-                <span className="tabular-nums text-[36px] font-semibold leading-none text-[#0f172a] md:text-[44px]">{regime.confidence}</span>
-                <span className="mt-1.5 text-[12px] text-[#64748b]">/ 100 · 기여 {forces.total.toFixed(1)}</span>
+                <EdgeMark score={regime.confidence} size={112} showValue />
               </div>
               <div className="flex flex-1 flex-col gap-[10px] pt-1 md:gap-[14px]">
                 {forces.items.map((force) => (
@@ -795,9 +793,7 @@ export default function HomeCanvasPlusClient() {
                       <span className="text-[#334155]">
                         {force.label} <span className="text-[#94a3b8] max-md:hidden">· {force.weightLabel}</span>
                       </span>
-                      <span className="tabular-nums font-semibold text-[#0f172a]">
-                        {force.value} <span className="font-medium text-[#94a3b8] max-md:hidden">{force.contributionLabel}</span>
-                      </span>
+                      <span className="tabular-nums font-semibold text-[#0f172a]">{force.value}</span>
                     </div>
                     <Bar value={force.score} aria-label={`${force.label} ${force.value}점`} />
                   </div>
