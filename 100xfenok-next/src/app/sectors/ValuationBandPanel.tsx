@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar, EvidenceRail, Panel, PanelHeader } from "@/components/ui";
+import { Bar, Button, EvidenceRail, Panel, PanelHeader } from "@/components/ui";
 import { formatAsOf, isStaleAsOf } from "@/lib/data-state";
 import type { SectorRow } from "@/lib/sectors/types";
 
@@ -19,6 +19,7 @@ export default function ValuationBandPanel({
   coverage,
   lkgClock,
   onRetry,
+  onCollapse,
 }: {
   rows: SectorRow[];
   loading: boolean;
@@ -30,6 +31,7 @@ export default function ValuationBandPanel({
   coverage: string;
   lkgClock: string | null;
   onRetry: () => void;
+  onCollapse: () => void;
 }) {
   const bandCount = ready ? rows.filter((row) => finiteNumber(row.valuation?.peBand?.percentile)).length : 0;
   const empty = !loading && (!ready || rows.length === 0);
@@ -56,7 +58,12 @@ export default function ValuationBandPanel({
           <PanelHeader
             eyebrow="Valuation"
             title="밸류에이션 밴드"
-            right={<span className="sec-head-note">Fwd P/E 5년 밴드</span>}
+            right={(
+              <>
+                <span className="sec-head-note">Fwd P/E 5년 밴드</span>
+                <Button type="button" data-sectors-collapse="valuation" onClick={onCollapse}>접기</Button>
+              </>
+            )}
           />
           <div className="sec-band-head" aria-hidden="true">
             <span>섹터</span>

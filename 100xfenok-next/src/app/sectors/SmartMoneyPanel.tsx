@@ -1,7 +1,7 @@
 "use client";
 
 import TransitionLink from "@/components/TransitionLink";
-import { EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
+import { Button, EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
 import { ROUTES } from "@/lib/routes";
 import { formatAsOf } from "@/lib/data-state";
 import type { SectorRow, SectorSourceMeta } from "@/lib/sectors/types";
@@ -31,6 +31,7 @@ export default function SmartMoneyPanel({
   lkgClock,
   coverage,
   onRetry,
+  onCollapse,
   className,
 }: {
   rows: SectorRow[];
@@ -43,6 +44,7 @@ export default function SmartMoneyPanel({
   lkgClock: string | null;
   coverage: string;
   onRetry: () => void;
+  onCollapse: () => void;
   className?: string;
 }) {
   const smartRows = (ready ? rows : [])
@@ -73,7 +75,12 @@ export default function SmartMoneyPanel({
           <PanelHeader
             eyebrow="13F · 기관 보유"
             title="스마트머니 섹터 동향"
-            right={<span className="sec-head-note">{quarter}{cohort}</span>}
+            right={(
+              <>
+                <span className="sec-head-note">{quarter}{cohort}</span>
+                <Button type="button" data-sectors-collapse="smart" onClick={onCollapse}>접기</Button>
+              </>
+            )}
           />
           <div className="sec-smart-grid">
             {smartRows.map(({ row, smart }) => {

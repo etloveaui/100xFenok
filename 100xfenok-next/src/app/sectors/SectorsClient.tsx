@@ -196,6 +196,7 @@ function SectorFlowPanel({
   lkgClock,
   coverage,
   onRetry,
+  onCollapse,
 }: {
   rows: SectorRow[];
   benchmarkValue: number | null;
@@ -209,6 +210,7 @@ function SectorFlowPanel({
   lkgClock: string | null;
   coverage: string;
   onRetry: () => void;
+  onCollapse: () => void;
 }) {
   const items = ready ? flowItems(rows, windowKey, benchmarkValue) : [];
   const empty = !loading && (!ready || items.length === 0);
@@ -237,22 +239,25 @@ function SectorFlowPanel({
             eyebrow="Sector Flow"
             title="S&P 500 대비 초과 성과"
             right={(
-              <div className="sec-period-toggle" data-sectors-period-toggle role="group" aria-label="기간 선택">
-                {MOMENTUM_WINDOWS.map((window) => (
-                  <Button
-                    key={window.key}
-                    type="button"
-                    variant="tab"
-                    active={window.key === windowKey}
-                    aria-pressed={window.key === windowKey}
-                    data-sectors-period={window.key}
-                    className="sec-period-btn"
-                    onClick={() => onWindowChange(window.key)}
-                  >
-                    {window.label}
-                  </Button>
-                ))}
-              </div>
+              <>
+                <div className="sec-period-toggle" data-sectors-period-toggle role="group" aria-label="기간 선택">
+                  {MOMENTUM_WINDOWS.map((window) => (
+                    <Button
+                      key={window.key}
+                      type="button"
+                      variant="tab"
+                      active={window.key === windowKey}
+                      aria-pressed={window.key === windowKey}
+                      data-sectors-period={window.key}
+                      className="sec-period-btn"
+                      onClick={() => onWindowChange(window.key)}
+                    >
+                      {window.label}
+                    </Button>
+                  ))}
+                </div>
+                <Button type="button" data-sectors-collapse="bars" onClick={onCollapse}>접기</Button>
+              </>
             )}
           />
           <div className="sec-flow-head" aria-hidden="true">
@@ -313,6 +318,7 @@ function EtfComparePanel({
   coverage,
   missingNote,
   onRetry,
+  onCollapse,
 }: {
   rows: SectorRow[];
   loading: boolean;
@@ -324,6 +330,7 @@ function EtfComparePanel({
   coverage: string;
   missingNote: string | null;
   onRetry: () => void;
+  onCollapse: () => void;
 }) {
   const etfRows = rows.filter((row) => row.etfInfo);
   const empty = !loading && (!ready || etfRows.length === 0);
@@ -349,7 +356,12 @@ function EtfComparePanel({
           <PanelHeader
             eyebrow="ETF"
             title="섹터 ETF 비교"
-            right={<span className="sec-head-note">{coverage} 섹터 ETF 상세{missingNote ? ` · ${missingNote} 없음` : ""}</span>}
+            right={(
+              <>
+                <span className="sec-head-note">{coverage} 섹터 ETF 상세{missingNote ? ` · ${missingNote} 없음` : ""}</span>
+                <Button type="button" data-sectors-collapse="etf" onClick={onCollapse}>접기</Button>
+              </>
+            )}
           />
           <div className="sec-etf-scroll">
             <table className="sec-etf-table">
@@ -388,6 +400,50 @@ function EtfComparePanel({
               </tbody>
             </table>
           </div>
+          <div className="sec-etf-mobile-list" data-sectors-etf-cards aria-label="섹터 ETF 비교 목록">
+            {etfRows.map((row) => {
+              const oneMonth = row.etfInfo?.returns["1m"];
+              const oneMonthTone = toneOf(oneMonth);
+              return (
+                <article key={row.key} className="sec-etf-card" data-sectors-etf-card={row.etf}>
+                  <div className="sec-etf-card__head">
+                    <span className="sec-ticker sec-ticker-strong">{row.etf}</span>
+                    <span className="sec-etf-sector">{row.name}</span>
+                  </div>
+                  <dl className="sec-etf-card__stats">
+                    <div>
+                      <dt>1M</dt>
+                      <dd className={oneMonthTone === "positive" ? "sec-up tabular-nums" : oneMonthTone === "negative" ? "sec-down tabular-nums" : "tabular-nums"}>{pct(oneMonth, 1)}</dd>
+                    </div>
+                    <div>
+                      <dt>YTD</dt>
+                      <dd className="tabular-nums">{pct(row.etfInfo?.returns.ytd, 1)}</dd>
+                    </div>
+                    <div>
+                      <dt>1Y</dt>
+                      <dd className="tabular-nums">{pct(row.etfInfo?.returns["1y"], 1)}</dd>
+                    </div>
+                    <div>
+                      <dt>3Y CAGR</dt>
+                      <dd className="tabular-nums">{pct(row.etfInfo?.cagr["3y"], 1)}</dd>
+                    </div>
+                    <div>
+                      <dt>5Y CAGR</dt>
+                      <dd className="tabular-nums">{pct(row.etfInfo?.cagr["5y"], 1)}</dd>
+                    </div>
+                    <div>
+                      <dt>Beta</dt>
+                      <dd className="tabular-nums">{formatDecimal(row.etfInfo?.beta, { digits: 2 })}</dd>
+                    </div>
+                    <div>
+                      <dt>보수율</dt>
+                      <dd className="tabular-nums">{typeof row.etfInfo?.expenseRatio === "number" ? formatPercent(row.etfInfo.expenseRatio * 100, 2) : "—"}</dd>
+                    </div>
+                  </dl>
+                </article>
+              );
+            })}
+          </div>
         </div>
       )}
       <EvidenceRail
@@ -422,7 +478,20 @@ export default function SectorsClient() {
   } = useSectorData();
   const [sortWindow, setSortWindow] = useState<MomentumWindow>("1m");
   const [rotationWindow, setRotationWindow] = useState<RotationWindow>("1m");
-  const [openSection, setOpenSection] = useState<"bars" | "etf" | "valuation" | "smart">("bars");
+  const [openSections, setOpenSections] = useState<ReadonlySet<AccordionSection>>(
+    () => new Set<AccordionSection>(["bars", "etf"]),
+  );
+
+  // Multi-open accordion: each toggle copies the set so React sees a new
+  // reference and the previously open layers stay open.
+  const toggleSection = (section: AccordionSection) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(section)) next.delete(section);
+      else next.add(section);
+      return next;
+    });
+  };
 
   const loading = !loaded;
   const failed = loaded && !dataReady;
@@ -565,7 +634,7 @@ export default function SectorsClient() {
       />
 
       <div data-sectors-accordion="bars">
-        {openSection === "bars" ? (
+        {openSections.has("bars") ? (
           <SectorFlowPanel
             rows={rows}
             benchmarkValue={activeBenchmark}
@@ -579,6 +648,7 @@ export default function SectorsClient() {
             lkgClock={sourceMeta.benchmarksSourceDate}
             coverage={flowCoverage}
             onRetry={refresh}
+            onCollapse={() => toggleSection("bars")}
           />
         ) : (
           <CollapsedSection
@@ -586,7 +656,7 @@ export default function SectorsClient() {
             eyebrow="Sector Flow"
             title="상대성과 바"
             meta={`${rows.length}개 업종 전체`}
-            onOpen={() => setOpenSection("bars")}
+            onOpen={() => toggleSection("bars")}
             freshness={loading ? "pending" : flowFailed ? "error" : flowIncomplete ? "partial" : flowStale ? "stale" : sourceMeta.benchmarksSourceDate ? "fresh" : "fixed"}
             source="SlickCharts · Yahoo"
             asOf={formatAsOf(sourceMeta.benchmarksSourceDate) ?? "—"}
@@ -597,7 +667,7 @@ export default function SectorsClient() {
       </div>
 
       <div data-sectors-accordion="etf">
-        {openSection === "etf" ? (
+        {openSections.has("etf") ? (
           <EtfComparePanel
             rows={rows}
             loading={loading}
@@ -609,6 +679,7 @@ export default function SectorsClient() {
             coverage={etfCoverage}
             missingNote={etfMissingNote}
             onRetry={refresh}
+            onCollapse={() => toggleSection("etf")}
           />
         ) : (
           <CollapsedSection
@@ -616,7 +687,7 @@ export default function SectorsClient() {
             eyebrow="ETF"
             title="섹터 ETF 비교"
             meta={`${etfCoverage} 섹터 ETF 상세`}
-            onOpen={() => setOpenSection("etf")}
+            onOpen={() => toggleSection("etf")}
             freshness={loading ? "pending" : etfFailed ? "error" : etfsReady && etfRows.length < rows.length ? "partial" : etfStale ? "stale" : sourceMeta.etfSourceDate ? "fresh" : "fixed"}
             source="ETF 운용사 공시"
             asOf={formatAsOf(sourceMeta.etfSourceDate) ?? "—"}
@@ -627,7 +698,7 @@ export default function SectorsClient() {
       </div>
 
       <div data-sectors-accordion="valuation">
-        {openSection === "valuation" ? (
+        {openSections.has("valuation") ? (
           <ValuationBandPanel
             rows={rows}
             loading={loading}
@@ -639,6 +710,7 @@ export default function SectorsClient() {
             coverage={valuationCoverage}
             lkgClock={sourceMeta.valuationLatestDate}
             onRetry={refresh}
+            onCollapse={() => toggleSection("valuation")}
           />
         ) : (
           <CollapsedSection
@@ -646,7 +718,7 @@ export default function SectorsClient() {
             eyebrow="Valuation"
             title="밸류에이션 밴드"
             meta={valuationReady ? `밴드 확보 ${bandCount}/${rows.length} · 고평가권 ${bandHighCount}개` : "확인 중"}
-            onOpen={() => setOpenSection("valuation")}
+            onOpen={() => toggleSection("valuation")}
             freshness={loading ? "pending" : valuationFailed ? "error" : valuationStale ? "stale" : valuationReady && bandCount < rows.length ? "partial" : "fixed"}
             source={sourceMeta.valuationSource ?? "밸류에이션 자료"}
             asOf={formatAsOf(sourceMeta.valuationLatestDate) ?? "—"}
@@ -657,7 +729,7 @@ export default function SectorsClient() {
       </div>
 
       <div data-sectors-accordion="smart">
-        {openSection === "smart" ? (
+        {openSections.has("smart") ? (
           <SmartMoneyPanel
             rows={rows}
             sourceMeta={sourceMeta}
@@ -669,6 +741,7 @@ export default function SectorsClient() {
             lkgClock={sourceMeta.smartMoneySourceDate}
             coverage={smartCoverage}
             onRetry={refresh}
+            onCollapse={() => toggleSection("smart")}
           />
         ) : (
           <CollapsedSection
@@ -680,7 +753,7 @@ export default function SectorsClient() {
             ) : (
               "확인 중"
             )}
-            onOpen={() => setOpenSection("smart")}
+            onOpen={() => toggleSection("smart")}
             freshness={loading ? "pending" : smartFailed ? "error" : "stale"}
             source="SEC EDGAR 13F"
             asOf={formatAsOf(smartAsOf) ?? "—"}
