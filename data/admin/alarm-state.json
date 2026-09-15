@@ -1,23 +1,9 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-15T11:46:02.958Z",
+  "generated_at": "2026-09-15T13:30:53.740Z",
   "status": "open",
-  "open_incident_count": 16,
+  "open_incident_count": 14,
   "open_incidents": [
-    {
-      "workflow": "data-plane-serving-probe.yml",
-      "label": "Data Plane Serving Probe",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
-    },
     {
       "workflow": "fenok-edge-krx-daily.yml",
       "label": "Fenok Edge KRX Daily Data",
@@ -237,20 +223,6 @@
       ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
-    },
-    {
-      "workflow": "worker-request-budget-alarm.yml",
-      "label": "Worker Request Budget Alarm",
-      "streak": 0,
-      "failure_streak_threshold": 2,
-      "first_failing_run_id": null,
-      "first_failing_run_url": null,
-      "alarm_reasons": [
-        "missed_schedule_window"
-      ],
-      "lane_outcome_lanes": [],
-      "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
     }
   ],
   "lane_outcome_notified": {
@@ -507,7 +479,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 10
+      "data_freshness_age_hours_at_generation": 11
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -672,12 +644,11 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "34964862805",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34964862805",
-    "observed_at": "2026-09-15T11:46:02.958Z",
+    "run_id": "34975244530",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/34975244530",
+    "observed_at": "2026-09-15T13:30:53.740Z",
     "event": "workflow_run",
     "workflows": [
-      "data-plane-serving-probe.yml",
       "fenok-edge-krx-daily.yml",
       "fetch-edgar-filings.yml",
       "fetch-fdic.yml",
@@ -691,8 +662,7 @@
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
       "slickcharts-symbols.yml",
-      "slickcharts-weekly.yml",
-      "worker-request-budget-alarm.yml"
+      "slickcharts-weekly.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
