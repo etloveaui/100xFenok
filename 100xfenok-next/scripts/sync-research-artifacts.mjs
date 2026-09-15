@@ -39,8 +39,6 @@ const PRODUCTS = [
   { id: "product-weekly-recap", title: "위클리 리캡", detail: "한 주 마감 정리" },
   { id: "product-weekly-brief", title: "위클리 브리프", detail: "다음 주를 여는 주간 브리프" },
   { id: "product-monthly-review", title: "월간 리뷰", detail: "한 달 복기와 다음 달 관전점" },
-  { id: "product-analyst-opinion", title: "애널리스트 오피니언", detail: "종목·업종 애널리스트 시각" },
-  { id: "product-topic-spotlight", title: "토픽 스포트라이트", detail: "이슈 토픽 집중 조명" },
 ];
 
 function fail(message) {
