@@ -89,7 +89,7 @@ export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
 
   return (
     <div className="fnk-shell">
-      <AppShell active="posts" title={post.title} backHref={ROUTES.home}>
+      <AppShell active="posts" title={post.title} backHref={ROUTES.posts}>
         <div
           data-posts-detail-surface
           data-posts-detail-route-owner="legacy-post-html"

@@ -388,7 +388,7 @@ function assertRouteIaContracts(errors) {
   assertSourceTokens(nextConfigSource, [
     'source: "/briefing"',
     'destination: "/"',
-    "permanent: false",
+    "permanent: true",
   ], "briefing HTTP redirect alias", errors);
 
   assert(
