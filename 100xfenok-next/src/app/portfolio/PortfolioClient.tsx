@@ -33,6 +33,7 @@ import {
 import { formatCurrency, formatPercent, formatSignedPercent } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import { normalizeForEntityKey, normalizeForFilePath } from "@/lib/ticker";
+import PortfolioSummaryStrip from "./PortfolioSummaryStrip";
 
 interface PriceDoc {
   data?: { info?: { currentPrice?: number | null; regularMarketPrice?: number | null } };
@@ -806,6 +807,15 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
         <Kpi label="현금" value={formatCurrency(active?.cash ?? 0, "USD")} />
         <Kpi label="보유 종목" value={`${active?.holdings.length ?? 0}종목`} />
       </div>
+
+      {/* Visual summary layer: coverage + concentration over the hero KPIs */}
+      <PortfolioSummaryStrip
+        rows={holdingRows}
+        totalHoldings={active?.holdings.length ?? 0}
+        missingCount={missingCount}
+        pricesLoading={pricesLoading}
+        onRetry={handleRetryPrices}
+      />
 
       {/* Holdings table */}
       <div data-portfolio-section="holdings" className="rounded-[1.5rem] border border-slate-200 bg-white p-4">

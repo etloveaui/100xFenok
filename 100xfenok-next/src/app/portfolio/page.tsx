@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import AppShell from "@/components/shell/AppShell";
 import { normalizeForEntityKey } from "@/lib/ticker";
 import PortfolioClient from "./PortfolioClient";
+import "./portfolio-light.css";
 
 interface Props {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
