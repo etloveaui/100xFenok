@@ -1380,6 +1380,7 @@ export default function ScreenerClient({
     connectionIndexReady,
     sectors,
     countries,
+    refetch: refetchScreenerData,
   } = useScreenerData();
   const screenerSourceDate = connectionIndexReady
     ? completeSourceFloor([sourceDate, connectionIndexDate])
@@ -2427,8 +2428,8 @@ export default function ScreenerClient({
     : screenerDataState.status === "partial" ? "partial"
     : "fixed";
   const retryScreenerData = useCallback(() => {
-    window.location.reload();
-  }, []);
+    refetchScreenerData();
+  }, [refetchScreenerData]);
   const screenerNoticeRetryable = screenerDataState.status === "pending" || screenerDataState.status === "error";
   const priceCoverageRatio = sorted.length > 0 ? Math.round((pricedCount / sorted.length) * 100) : 0;
   const sourceDateLabel = formatScreenerSourceDateLabel(sourceDate, marketFactsDate, {
@@ -2494,6 +2495,7 @@ export default function ScreenerClient({
             onSelectCard={setActiveCardId}
             onShowConditions={handleShowCardConditions}
             onOpenAnalyze={() => handleScreenerModeChange("analyze")}
+            onRetry={retryScreenerData}
             compareTickers={compareTickers}
             onToggleCompare={handleToggleCompare}
             onClearCompare={() => setCompareTickers([])}

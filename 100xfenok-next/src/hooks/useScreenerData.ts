@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { StaticStockAnalyzerDataProvider } from "@/features/stock-analyzer/data/static-data-provider";
 import {
   loadFenokSignalsSummaryMap,
@@ -158,12 +158,17 @@ const EMPTY: ScreenerDataResult = {
   countries: [],
 };
 
-export function useScreenerData(): ScreenerDataResult {
+export function useScreenerData(): ScreenerDataResult & { refetch: () => void } {
   const [result, setResult] = useState<ScreenerDataResult>(EMPTY);
-  const isMountedRef = useRef(true);
+  const [attempt, setAttempt] = useState(0);
+  // Attempt token in the effect deps: a retry re-runs the loaders in place
+  // while the per-run flag (the previous run's cleanup fires first) keeps a
+  // superseded attempt or an unmount from writing over newer state. The last
+  // result stays on screen until the new one lands.
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
-    isMountedRef.current = true;
+    let cancelled = false;
 
     void (async () => {
       const [records, connectionIndex, servicesIndex, fenokSignals] = await Promise.all([
@@ -172,7 +177,7 @@ export function useScreenerData(): ScreenerDataResult {
         loadServicesIndex(),
         loadFenokSignalsMap(),
       ]);
-      if (!isMountedRef.current) return;
+      if (cancelled) return;
 
       if (!records) {
         // Fetch error keeps last-known-good rows (five-state rule): the rail
@@ -344,9 +349,9 @@ export function useScreenerData(): ScreenerDataResult {
     })();
 
     return () => {
-      isMountedRef.current = false;
+      cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
-  return result;
+  return { ...result, refetch };
 }

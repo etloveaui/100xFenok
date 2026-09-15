@@ -38,6 +38,7 @@ export interface ScreenerDiscoverProps {
   onSelectCard: (id: QuestionCardId) => void;
   onShowConditions: (card: QuestionCardDef) => void;
   onOpenAnalyze: () => void;
+  onRetry: () => void;
   compareTickers: string[];
   onToggleCompare: (ticker: string) => void;
   onClearCompare: () => void;
@@ -198,6 +199,7 @@ export default function ScreenerDiscover({
   onSelectCard,
   onShowConditions,
   onOpenAnalyze,
+  onRetry,
   compareTickers,
   onToggleCompare,
   onClearCompare,
@@ -255,11 +257,11 @@ export default function ScreenerDiscover({
         <div className="flex flex-col items-start gap-2 px-4 py-6" data-discover-error="true">
           <p className="text-[13px] font-semibold text-[var(--c-ink)]">스크리너 데이터를 불러오지 못했습니다</p>
           <p className="text-[12px] text-[var(--c-ink-3)]">잠시 후 다시 시도하거나 분석 모드에서 확인해 주세요.</p>
-          <Button variant="primary" onClick={() => window.location.reload()}>
+          <Button variant="primary" onClick={onRetry}>
             다시 시도
           </Button>
         </div>
-        <EvidenceRail freshness="error" source={DISCOVER_SOURCE} asOf={asOfLabel} coverage="불러오기 실패" onRetry={() => window.location.reload()} onEvidence={openStocksAnalyzerEvidence} />
+        <EvidenceRail freshness="error" source={DISCOVER_SOURCE} asOf={asOfLabel} coverage="불러오기 실패" onRetry={onRetry} onEvidence={openStocksAnalyzerEvidence} />
       </Panel>
     );
   }
@@ -430,7 +432,7 @@ export default function ScreenerDiscover({
               coverage={dataReady ? `${coverageText(shown)} · 상위 ${shown.length}/${results.length} 표시` : "불러오는 중"}
               stages={discoverStages}
               onEvidence={openStocksAnalyzerEvidence}
-              onRetry={failed ? () => window.location.reload() : undefined}
+              onRetry={failed ? onRetry : undefined}
               lkgAsOf={failed ? asOfLabel : undefined}
             />
           </Panel>
@@ -495,7 +497,7 @@ export default function ScreenerDiscover({
                 coverage={`${selected.ticker} 단일 종목`}
                 stages={discoverStages}
                 onEvidence={openStocksAnalyzerEvidence}
-                onRetry={failed ? () => window.location.reload() : undefined}
+                onRetry={failed ? onRetry : undefined}
                 lkgAsOf={failed ? asOfLabel : undefined}
               />
             </Panel>

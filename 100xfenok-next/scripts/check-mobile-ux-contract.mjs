@@ -3832,6 +3832,32 @@ async function collectStockEstimatesToggleChecks(page, route) {
     };
   }
 
+  // The quarterly view is honestly unavailable until its consensus feed exists:
+  // the toggle ships disabled with the reason in its label/title, so the probe
+  // asserts that state instead of clicking.
+  if (await button.isDisabled()) {
+    return page.evaluate((currentRoute) => {
+      const failures = [];
+      const viewportWidth = window.innerWidth;
+      const scrollWidth = Math.max(
+        document.documentElement.scrollWidth,
+        document.body?.scrollWidth ?? 0,
+      );
+      const quarterlyButton = document.querySelector('[data-stock-estimates-granularity="quarterly"]');
+      const reason = `${quarterlyButton?.textContent ?? ""} ${quarterlyButton?.getAttribute("title") ?? ""}`;
+      if (!reason.includes("미연결")) {
+        failures.push({ check: "stock-estimates-quarterly-disabled-reason", detail: "disabled quarterly toggle does not state its reason" });
+      }
+      if (scrollWidth > viewportWidth + 1) {
+        failures.push({
+          check: "stock-estimates-quarterly-no-horizontal-overflow",
+          detail: `scrollWidth=${scrollWidth} viewport=${viewportWidth}`,
+        });
+      }
+      return { route: currentRoute, viewportWidth, scrollWidth, failures };
+    }, route);
+  }
+
   await button.click({ timeout: 10000 });
   await page.waitForTimeout(250);
 

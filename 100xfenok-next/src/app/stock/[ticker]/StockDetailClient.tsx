@@ -1201,7 +1201,10 @@ function StockEstimatesPanel({
       <div data-stock-estimates-granularity-control className="mt-4 inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
         {[
           { key: "annual" as const, label: "연간" },
-          { key: "quarterly" as const, label: "분기" },
+          // Quarterly consensus is not wired yet: keep the axis visible but
+          // inert with its state in the label, instead of a live toggle whose
+          // only outcome is a placeholder panel.
+          { key: "quarterly" as const, label: "분기 (미연결)" },
         ].map((item) => (
           <CpButton
             key={item.key}
@@ -1209,6 +1212,8 @@ function StockEstimatesPanel({
             variant={granularity === item.key ? "primary" : "ghost"}
             data-stock-estimates-granularity={item.key}
             aria-pressed={granularity === item.key}
+            disabled={item.key === "quarterly"}
+            title={item.key === "quarterly" ? "분기 컨센서스 미연결" : undefined}
             onClick={() => setGranularity(item.key)}
             className="!min-h-[44px] px-3 !text-[11px]"
           >
@@ -1403,7 +1408,7 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
                       href={ROUTES.superinvestorsGuru(h.investor)}
                       data-smart-money-investor-profile-link
                       aria-label={`${h.investor} 투자자 포트폴리오 보기`}
-                      className="inline-flex flex-col text-left text-[10px] font-black text-brand-interactive hover:underline"
+                      className="inline-flex min-h-11 flex-col justify-center text-left text-[10px] font-black text-brand-interactive hover:underline"
                     >
                       <span>{h.investor}</span>
                       <span className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">포트폴리오</span>
@@ -2428,8 +2433,8 @@ function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
             </div>
           ) : null}
           <div className="flex flex-wrap gap-2 px-4 py-2">
-            <a href={heroFiling.sourceUrl} target="_blank" rel="noreferrer" className="text-[12px] font-semibold text-[#1B73D3]">원문 보기</a>
-            {heroFiling.translationPath ? <a href={heroFiling.translationPath} className="text-[12px] font-semibold text-[#1B73D3]">번역 보기</a> : null}
+            <a href={heroFiling.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center text-[12px] font-semibold text-[#1B73D3]">원문 보기</a>
+            {heroFiling.translationPath ? <a href={heroFiling.translationPath} className="inline-flex min-h-11 items-center text-[12px] font-semibold text-[#1B73D3]">번역 보기</a> : null}
           </div>
           <EvidenceRail freshness={heroArtifact === undefined ? "pending" : heroArtifact ? "fresh" : "stale"} source="EDGAR" asOf={heroFiling.filingDate} coverage="최신 공시 요약" skeletonDelayMs={120} />
         </Panel>
@@ -3024,7 +3029,7 @@ export default function StockDetailClient({
               })}
             />
             <ExternalSourceLinks ticker={symbol} kind="etf" statusLine="ETF 상세 준비 전" className="mt-4" />
-            <TransitionLink href={ROUTES.etfs} className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
+            <TransitionLink href={ROUTES.etfs} className="mt-4 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← ETF 목록에서 보기</TransitionLink>
           </div>
         </div>
       );
@@ -3040,7 +3045,7 @@ export default function StockDetailClient({
             })}
           />
           <ExternalSourceLinks ticker={symbol} kind="stock" statusLine="종목 데이터 준비 전" className="mt-4" />
-          <TransitionLink href={ROUTES.screener} className="mt-4 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
+          <TransitionLink href={ROUTES.screener} className="mt-4 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-4 text-[11px] font-black uppercase tracking-[0.1em] text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive">← 스크리너에서 보기</TransitionLink>
         </div>
       </div>
     );
@@ -4023,10 +4028,10 @@ function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHo
   }
   return (
     <div className="-mx-1 max-h-[560px] overflow-auto px-1">
-      <table className="w-full min-w-[620px] text-xs">
+      <table className="w-full min-w-[560px] text-xs">
         <thead className="sticky top-0 z-10 bg-white">
           <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-            <th className="px-2 py-2 text-right">#</th>
+            <th className="sticky left-0 z-20 bg-white px-2 py-2 text-right shadow-[2px_0_0_var(--c-line-2)]">#</th>
             <th className="px-2 py-2 text-left">종목/계약</th>
             <th className="px-2 py-2 text-left">티커</th>
             <th className="px-2 py-2 text-right">비중</th>
@@ -4039,7 +4044,7 @@ function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHo
             const weightClass = weight !== null && weight < 0 ? "text-rose-600" : "text-slate-900";
             return (
               <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-slate-100 last:border-b-0">
-                <td className="px-2 py-2 text-right tabular-nums text-[11px] font-bold text-slate-500">{item.rank ?? index + 1}</td>
+                <td className="sticky left-0 bg-white px-2 py-2 text-right tabular-nums text-[11px] font-bold text-slate-500 shadow-[2px_0_0_var(--c-line-2)]">{item.rank ?? index + 1}</td>
                 <td className="px-2 py-2 font-bold text-slate-800">{item.name ?? "—"}</td>
                 <td className="px-2 py-2 tabular-nums text-[11px] font-black text-slate-500">{item.symbol ?? "—"}</td>
                 <td className={`px-2 py-2 text-right  tabular-nums text-xs font-black ${weightClass}`}>{fmtEtfPct(weight)}</td>
