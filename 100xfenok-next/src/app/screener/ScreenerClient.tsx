@@ -87,10 +87,13 @@ function completeSourceFloor(values: Array<string | null | undefined>): string |
   return (dates as string[]).sort().at(0) ?? null;
 }
 
+// Density tiers around the 44px body-row rail: the CSS body-row height
+// (--cp-active-row-height) and the TanStack virtualizer estimate both read
+// these, so the row the user sees is the row the virtualizer measured.
 const DENSITY_ROW_HEIGHT: Record<ScreenerDensity, number> = {
-  compact: 32,
-  standard: 40,
-  comfortable: 48,
+  compact: 36,
+  standard: 44,
+  comfortable: 52,
 };
 
 const DENSITY_TABLE_CLASS: Record<ScreenerDensity, {
@@ -640,6 +643,10 @@ function renderCell(
         </span>
       );
     }
+    // One headline number per cell: the six 9px per-axis mini-chips (수익·내구·
+    // 성장·기술·상방·하방) are gone from the row. That data is not lost — the
+    // expanded detail panel on the same row renders every axis with its band,
+    // direction and coverage, one click away.
     case "fenokConvictionScore": {
       const shortTerm = commonBasisShortTermView(stock);
       // The common-basis figure is a composition disclosure per the data
@@ -652,7 +659,6 @@ function renderCell(
         sourceInputCount: shortTerm.sourceInputCount,
         basisCode: shortTerm.basisCode,
       });
-      const isPicks = preset === "fenokPicks";
       const isMobile = surface === "mobile";
       return (
         <span
@@ -678,33 +684,6 @@ function renderCell(
               title={shortTermBasis.comparisonNote}
             >
               {shortTermBasis.label}
-            </span>
-          ) : null}
-          {isPicks ? (
-            <span className="inline-flex flex-wrap justify-end gap-1">
-              {[
-                { label: "수익", score: stock.profitabilityScore, direction: stock.profitabilityDirection, tone: "signal" as const },
-                { label: "내구", score: stock.durabilityProfitabilityScore, direction: null, tone: "signal" as const },
-                { label: "성장", score: stock.growthScore, direction: stock.growthDirection, tone: "signal" as const },
-                { label: "기술", score: stock.technicalFlowScore, direction: stock.technicalFlowDirection, tone: "signal" as const },
-                { label: "상방", score: stock.upsidePotentialScore, direction: null, tone: "signal" as const },
-                { label: "하방", score: stock.downsidePressureScore, direction: null, tone: "risk" as const },
-              ].map((item) => {
-                const itemScore = typeof item.score === "number" && Number.isFinite(item.score) ? Math.round(item.score) : null;
-                const itemDir = item.direction ? signalDirectionLabel(item.direction) : null;
-                const itemDirPrefix = itemDir === "·" ? null : itemDir;
-                return (
-                  <span
-                    key={item.label}
-                    className={cx("inline-flex items-center gap-0.5 rounded border px-1 py-[1px] text-[9px] font-black tabular-nums", item.tone === "risk" ? downsideRiskTone(itemScore) : signalScoreTone(itemScore))}
-                    title={[item.label, itemDirPrefix, "Fenok 파생 신호"].filter(Boolean).join(" · ")}
-                    aria-label={`${item.label} ${itemScore ?? "정보 없음"}`}
-                  >
-                    <span aria-hidden="true">{item.label}</span>
-                    {itemScore ?? "—"}
-                  </span>
-                );
-              })}
             </span>
           ) : null}
         </span>
@@ -3797,30 +3776,6 @@ export default function ScreenerClient({
               </button>
             ))}
           </div>
-          <div data-screener-density-control className={canvasPlusPreview ? "hidden" : "flex flex-wrap items-center gap-2"}>
-            <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>밀도</span>
-            {DENSITY_BUTTONS.map((item) => (
-              <button
-                key={item}
-                type="button"
-                data-screener-density-option={item}
-                data-canvas-plus-row-height={canvasPlusPreview ? DENSITY_ROW_HEIGHT[item] : undefined}
-                onClick={() => handleDensityChange(item)}
-                aria-pressed={density === item}
-                data-canvas-plus-active={canvasPlusPreview ? String(density === item) : undefined}
-                className={canvasPlusPreview
-                  ? "cp-screener-segment"
-                  : cx(
-                    "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black uppercase tracking-[0.1em] transition sm:min-h-7",
-                    density === item
-                      ? "border border-[var(--c-ink)] bg-[var(--c-ink)] text-white"
-                      : "border border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-3)] hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]",
-                  )}
-              >
-                {DENSITY_LABEL[item]}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
       ) : null}
@@ -3893,7 +3848,7 @@ export default function ScreenerClient({
                 ))}
               </div>
 
-              <div data-screener-density-control className="hidden" aria-label="행 밀도">
+              <div data-screener-density-control role="group" className="inline-flex items-center gap-1.5" aria-label="행 밀도">
                 {DENSITY_BUTTONS.map((item) => (
                   <button
                     key={item}
@@ -3904,7 +3859,7 @@ export default function ScreenerClient({
                     aria-label={DENSITY_LABEL[item]}
                     aria-pressed={density === item}
                     data-canvas-plus-active={String(density === item)}
-                    className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+                    className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] transition hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]"
                   >
                     {DENSITY_LABEL[item]}
                   </button>

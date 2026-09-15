@@ -1498,7 +1498,7 @@
   height: 36px;
   border-bottom-color: var(--cp-border-strong);
   color: var(--cp-text-strong);
-  background: var(--ls-panel-bg);
+  background: var(--fnk-neutral-50);
   font-size: 11px;
   line-height: 12px;
   font-weight: 850;
@@ -1506,44 +1506,68 @@
   text-transform: uppercase;
 }
 
-[data-canvas-plus-screener-preview] .cp-screener-table th button {
-  gap: 12px;
+/* The info glyph is optional reading; the label is not. It stays quiet until
+   the header cell is hovered or keyboard-focused. The sort glyph keeps the
+   base 4px gap from .cp-screener-table th button (the old 12px override here
+   spread label and arrow apart inside the 36px header). */
+[data-canvas-plus-screener-preview] .cp-screener-table thead .group\/metric-help > button {
+  opacity: 0.35;
+  transition: opacity 140ms ease;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table thead .group\/metric-help:hover > button,
+[data-canvas-plus-screener-preview] .cp-screener-table thead .group\/metric-help:focus-within > button {
+  opacity: 1;
+}
+
+/* The base header sort-button rail is --cp-active-row-height - 4px, which is a
+   body-row rail; the header keeps its own 36px box. */
+[data-canvas-plus-screener-preview] .cp-screener-table thead th button {
+  min-height: 0;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table th,
 [data-canvas-plus-screener-preview] .cp-screener-table td {
   overflow: hidden;
   padding: 12px 16px;
-  border-bottom-color: var(--cp-divider);
+  border-bottom-color: var(--c-line-2);
   text-overflow: ellipsis;
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* Koyfin-density: body rows size from cell padding + content line-height, not
-   from a fixed height. Neutralize the base fixed-height rails (td height and
-   the header sort-button min-height resolve to 44px/40px via
-   --cp-active-row-height) so the 44px body row / 36px header contract proves
-   content-driven sizing. */
-[data-canvas-plus-screener-preview] .cp-screener-table tbody td {
-  height: auto;
-  min-height: 0;
+/* Row rail: the body row is locked to --cp-active-row-height, which the
+   virtualizer sets from the same per-density constant it estimates with. The
+   previous rule neutralized the rail and let padding + content line-height size
+   the row, so a "44px" estimate sat on ~48px rows and every scroll offset past
+   the first screen drifted. data-row-density carries the second half of the
+   control: the horizontal number gutter per tier, below. */
+[data-canvas-plus-screener-preview] .cp-screener-table tbody tr[data-testid="screener-desktop-row"] td {
+  height: var(--cp-active-row-height);
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
-[data-canvas-plus-screener-preview] .cp-screener-table thead th button {
-  min-height: 0;
+[data-canvas-plus-screener-preview][data-row-density="compact"] .cp-screener-table th[data-align="right"],
+[data-canvas-plus-screener-preview][data-row-density="compact"] .cp-screener-table td[data-align="right"] {
+  padding-right: 8px;
 }
 
-/* The ticker cell stacks the 13px ticker line over the company-name line
-   (flex-direction: column inherited from the base .cp-screener-name-cell), so
-   it alone takes 8px vertical padding while every other column stays 12/16 —
-   keeping the natural row inside the 44px contract. */
-[data-canvas-plus-screener-preview] .cp-screener-table tbody td[data-column-id="ticker"] {
-  padding-top: 8px;
-  padding-bottom: 8px;
+[data-canvas-plus-screener-preview][data-row-density="default"] .cp-screener-table th[data-align="right"],
+[data-canvas-plus-screener-preview][data-row-density="default"] .cp-screener-table td[data-align="right"] {
+  padding-right: 12px;
+}
+
+[data-canvas-plus-screener-preview][data-row-density="comfy"] .cp-screener-table th[data-align="right"],
+[data-canvas-plus-screener-preview][data-row-density="comfy"] .cp-screener-table td[data-align="right"] {
+  padding-right: 18px;
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-ticker {
+  line-height: 1.25;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-company-name {
-  line-height: 12px;
+  line-height: 1.25;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table th[data-align="right"],
@@ -1568,53 +1592,6 @@
 [data-canvas-plus-screener-preview] .cp-screener-table [data-column-id="__select"] [data-screener-checkbox-target]::before {
   left: 50%;
   transform: translate(-50%, -50%);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="fenokEdgeScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="fenokEdgeScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="profitabilityScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="profitabilityScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="growthScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="growthScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="technicalFlowScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="technicalFlowScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="durabilityProfitabilityScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="durabilityProfitabilityScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="upsidePotentialScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="upsidePotentialScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="downsidePressureScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="downsidePressureScore"] {
-  padding-right: 10px;
-  padding-left: 10px;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table th[data-column-id="downsidePressureScore"],
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="downsidePressureScore"] {
-  padding-right: 14px;
-}
-
-[data-canvas-plus-screener-preview] [data-canvas-plus-cell-kind="score"],
-[data-canvas-plus-screener-preview] [data-canvas-plus-cell-kind="numeric"] {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  width: 100%;
-  min-width: 0;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tbody td[data-column-id="fenokConvictionScore"] [data-canvas-plus-cell-frame] > span {
-  max-width: 100%;
-  min-width: 0;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tbody td[data-column-id="fenokConvictionScore"] [data-canvas-plus-cell-frame] > span > span:first-child {
-  max-width: 100%;
-  overflow: hidden;
-  flex-wrap: nowrap;
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table tbody td[data-column-id="fenokConvictionScore"] [data-canvas-plus-cell-frame] > span > span:nth-child(n+2) {
-  display: none;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table tr[data-canvas-plus-detail-row] td {
@@ -1751,7 +1728,7 @@
 
 [data-canvas-plus-screener-preview] .cp-screener-table thead [data-canvas-plus-sticky-cell] {
   z-index: 6;
-  background: var(--ls-panel-bg);
+  background: var(--fnk-neutral-50);
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table [data-canvas-plus-sticky-cell="select"] {
@@ -1763,12 +1740,11 @@
   box-shadow: 1px 0 0 var(--ls-panel-border);
 }
 
-[data-canvas-plus-screener-preview] .cp-screener-table tbody tr[data-testid="screener-desktop-row"]:hover td {
-  background: color-mix(in srgb, var(--cp-accent) 8%, var(--cp-surface));
-}
-
+/* Sticky columns paint an opaque background so they can slide over the
+   scrolling cells, which means the row hover has to restate itself here. Same
+   token as the React row hover (--fnk-neutral-50): one hover, not two tints. */
 [data-canvas-plus-screener-preview] .cp-screener-table tbody tr[data-testid="screener-desktop-row"]:hover [data-canvas-plus-sticky-cell] {
-  background: color-mix(in srgb, var(--cp-accent) 8%, var(--cp-surface));
+  background: var(--fnk-neutral-50);
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-name-cell {
@@ -1786,23 +1762,22 @@
   gap: 4px;
 }
 
+/* In-cell hierarchy: the ticker carries the weight, the company name is
+   supporting text — it reads at body weight in the muted ink instead of
+   competing with the ticker at bold. */
 [data-canvas-plus-screener-preview] .cp-screener-company-name {
   display: block;
   overflow: hidden;
   max-width: 100%;
-  color: var(--cp-text-soft);
-  font-weight: 700;
+  color: var(--c-ink-3);
+  font-size: 12px;
+  font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table td [class*="rounded-full"][class*="border"] {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cp-surface) 44%, transparent);
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-column-id="downsidePressureScore"] [class*="rounded-full"][class*="border"]::before {
-  margin-right: 4px;
-  content: "·";
 }
 
 .cp-screener-card-grid {
@@ -2886,6 +2861,17 @@
 }
 
 .cp-screener-segment[data-canvas-plus-active="true"] {
+  border-color: color-mix(in srgb, var(--cp-accent) 36%, var(--cp-border));
+  color: var(--cp-accent-strong);
+  background: var(--cp-accent-soft);
+}
+
+/* Restored density control in the results toolbar. The selected tier must be
+   visible: the row-height change is the only in-place feedback, and the tier
+   labels alone cannot show which one is on. Same selected treatment as
+   .cp-screener-segment, applied to the toolbar button idiom actually rendered
+   there. */
+[data-canvas-plus-screener-preview] [data-screener-density-option][data-canvas-plus-active="true"] {
   border-color: color-mix(in srgb, var(--cp-accent) 36%, var(--cp-border));
   color: var(--cp-accent-strong);
   background: var(--cp-accent-soft);
