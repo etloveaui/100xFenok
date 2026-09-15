@@ -570,9 +570,12 @@
 /* The table/card toggle only does anything in the desktop results branch, which
    starts at 921px (ScreenerClient.tsx `hidden min-[921px]:block`). Below that the
    mobile card list renders and ignores viewMode, so the control was visible,
-   focusable and inert. This bound MUST stay paired with that 921 boundary. */
+   focusable and inert. This bound MUST stay paired with that 921 boundary. The
+   density control has the same reach: the row-height tiers only apply to the
+   desktop table, so below 921 it would be a visible, inert control. */
 @media (max-width: 920px) {
-  [data-screener-view-mode-control] {
+  [data-screener-view-mode-control],
+  [data-screener-density-control] {
     display: none;
   }
 
@@ -688,4 +691,39 @@
   background: transparent;
   text-align: right;
   font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Score cells (단기/장기/컨빅션/수익성/성장/기술·자금/내구/상방/하방): the 9-10px
+   pill chip is retired for a 13px tabular number. The chip chrome (border,
+   background, radius, padding) is emitted by the shared tone helpers in
+   ScreenerClient.renderCell, so it is neutralized here instead of forked in the
+   renderer — mobile cards keep the chip. Right-alignment comes from the cell's
+   data-align rule in canvas-plus.css; the numbers do not carry a second,
+   flex-based alignment of their own. The [class*="border"] qualifier is what
+   lets box-shadow: none outrank the shared pill-ring rule in canvas-plus.css. */
+[data-canvas-plus-screener-preview] .cp-screener-table tbody [data-canvas-plus-cell-kind="score"] [class*="rounded-full"][class*="border"] {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Score-band tint: the band attribute comes from the renderer and reads the
+   same rounded figure the cell prints (>=70 high, >=60 mid, otherwise base).
+   Intensity is the only signal — a second hue would fight the tone color the
+   number already carries. */
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-canvas-plus-score-band="high"] {
+  background: color-mix(in srgb, var(--cp-accent) 8%, var(--cp-surface));
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-table td[data-canvas-plus-score-band="mid"] {
+  background: color-mix(in srgb, var(--cp-accent) 6%, var(--cp-surface));
 }

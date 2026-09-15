@@ -53,9 +53,30 @@ function canvasPlusDensityMode(density: string): "compact" | "default" | "comfy"
   return "default";
 }
 
-const VIRTUAL_ROW_HEIGHT = 44;
+// One rail for both sides of the contract: the CSS body-row height
+// (--cp-active-row-height / data-row-density) and the virtualizer estimate read
+// the same number. Two separate numbers was the desync bug — rows rendered at
+// their content height while the estimate stayed fixed.
+const CANVAS_PLUS_ROW_HEIGHT: Record<"compact" | "default" | "comfy", number> = {
+  compact: 36,
+  default: 44,
+  comfy: 52,
+};
 const EXPANDED_DETAIL_ESTIMATE = 360;
 const DESKTOP_TABLE_OVERSCAN = 10;
+
+// Band values drive the cell tint in canvas-plus.css / cp-w4-screener.css. The
+// band reads the same rounded figure the cell prints, so a row is never tinted
+// for a score it does not display.
+function canvasPlusScoreBand(columnId: string, stock: ScreenerStock): "high" | "mid" | "base" | undefined {
+  if (!canvasPlusScoreColumn(columnId)) return undefined;
+  const raw = screenerSortValue(stock, columnId as ScreenerSortKey);
+  if (typeof raw !== "number" || !Number.isFinite(raw)) return "base";
+  const score = Math.round(raw);
+  if (score >= 70) return "high";
+  if (score >= 60) return "mid";
+  return "base";
+}
 
 function canvasPlusColumnWidth(column?: ScreenerColumn): number {
   if (!column) return 42;
@@ -87,18 +108,20 @@ function canvasPlusStickyCell(columnId: string): "select" | "ticker" | undefined
   return undefined;
 }
 
+function canvasPlusScoreColumn(columnId: string): boolean {
+  return columnId === "fenokShortTermScore"
+    || columnId === "fenokLongTermScore"
+    || columnId === "fenokConvictionScore"
+    || columnId === "profitabilityScore"
+    || columnId === "growthScore"
+    || columnId === "technicalFlowScore"
+    || columnId === "durabilityProfitabilityScore"
+    || columnId === "upsidePotentialScore"
+    || columnId === "downsidePressureScore";
+}
+
 function canvasPlusCellKind(columnId: string): "score" | "numeric" | undefined {
-  if (
-    columnId === "fenokShortTermScore" ||
-    columnId === "fenokLongTermScore" ||
-    columnId === "fenokConvictionScore" ||
-    columnId === "profitabilityScore" ||
-    columnId === "growthScore" ||
-    columnId === "technicalFlowScore" ||
-    columnId === "durabilityProfitabilityScore" ||
-    columnId === "upsidePotentialScore" ||
-    columnId === "downsidePressureScore"
-  ) return "score";
+  if (canvasPlusScoreColumn(columnId)) return "score";
   if (
     columnId === "marketCap" ||
     columnId === "per" ||
@@ -223,8 +246,8 @@ function ScreenerTanstackTableInner({
   toggleSelectedTicker,
   toggleSort,
 }: ScreenerTanstackTableInnerProps) {
-  const rowHeight = VIRTUAL_ROW_HEIGHT;
   const densityMode = canvasPlusDensityMode(density);
+  const rowHeight = CANVAS_PLUS_ROW_HEIGHT[densityMode];
   const tableScrollRef = useRef<HTMLDivElement | null>(null);
   const rowsRef = useRef(rows);
   rowsRef.current = rows;
@@ -236,11 +259,11 @@ function ScreenerTanstackTableInner({
     getScrollElement: () => tableScrollRef.current,
     estimateSize: (index) => {
       const stock = rowsRef.current[index];
-      if (!stock) return VIRTUAL_ROW_HEIGHT;
-      if (expandedTickerRef.current !== stock.ticker) return VIRTUAL_ROW_HEIGHT;
+      if (!stock) return rowHeight;
+      if (expandedTickerRef.current !== stock.ticker) return rowHeight;
       const cached = detailHeights.current.get(stock.ticker);
-      if (cached !== undefined) return VIRTUAL_ROW_HEIGHT + cached;
-      return VIRTUAL_ROW_HEIGHT + EXPANDED_DETAIL_ESTIMATE;
+      if (cached !== undefined) return rowHeight + cached;
+      return rowHeight + EXPANDED_DETAIL_ESTIMATE;
     },
     overscan: DESKTOP_TABLE_OVERSCAN,
   });
@@ -283,7 +306,7 @@ function ScreenerTanstackTableInner({
     }
     virtualizer.measure();
     void pruned;
-  }, [virtualizer, rows, expandedTicker]);
+  }, [virtualizer, rows, expandedTicker, rowHeight]);
   useEffect(() => {
     if (!scrollTarget || rows.length === 0) return;
     virtualizer.scrollToIndex(Math.min(scrollTarget.index, rows.length - 1), { align: "start" });
@@ -367,7 +390,7 @@ function ScreenerTanstackTableInner({
                 )}
             >
               {column.label}
-              <span className={active ? "text-[9px] text-[var(--c-ink)]" : "text-[9px] text-[var(--c-ink-2)]"}>{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
+              <span className={active ? "text-[10px] text-[var(--c-ink)]" : "text-[10px] text-[var(--c-ink-2)]"}>{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
             </button>
             <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} glyph="ⓘ" buttonSize="sm" />
           </div>
@@ -558,7 +581,7 @@ function ScreenerTanstackTableInner({
                   data-row-parity={canvasPlusPreview ? (row.index % 2 === 0 ? "even" : "odd") : undefined}
                   onClick={() => onToggleExpandedTicker(stock.ticker)}
                   className={canvasPlusPreview
-                    ? cx("cursor-pointer transition-colors duration-150 hover:bg-[var(--c-bg)] hover:shadow-[inset_2px_0_0_var(--c-brand)]", cursorTicker === stock.ticker && "bg-[var(--c-bg)] shadow-[inset_2px_0_0_var(--c-brand)]")
+                    ? cx("cursor-pointer transition-colors duration-150 hover:bg-[var(--fnk-neutral-50)] hover:shadow-[inset_2px_0_0_var(--c-brand)]", cursorTicker === stock.ticker && "bg-[var(--fnk-neutral-50)] shadow-[inset_2px_0_0_var(--c-brand)]")
                     : cx("cursor-pointer border-b border-[var(--c-line-2)] transition last:border-0 hover:bg-[var(--c-surface-2)]", cursorTicker === stock.ticker && "bg-[var(--c-surface-2)] shadow-[inset_2px_0_0_var(--c-brand)]")}
                 >
                   {row.getVisibleCells().map((cell) => {
@@ -578,14 +601,11 @@ function ScreenerTanstackTableInner({
                         key={cell.id}
                         data-align={canvasPlusPreview ? column?.align ?? "left" : undefined}
                         data-column-id={canvasPlusPreview ? cell.column.id : undefined}
+                        data-canvas-plus-score-band={canvasPlusPreview ? canvasPlusScoreBand(cell.column.id, stock) : undefined}
                         data-canvas-plus-sticky-cell={canvasPlusPreview ? canvasPlusStickyCell(cell.column.id) : undefined}
                         className={canvasPlusPreview ? undefined : column ? cx(densityClass.bodyCell, column.align === "right" ? "text-right" : "text-left") : densityClass.bodyCell}
                       >
-                        {column ? (
-                          <span className="group/screener-cell inline-flex w-full min-w-0 items-center gap-1">
-                            <span className="min-w-0 flex-1">{content}</span>
-                          </span>
-                        ) : content}
+                        {content}
                       </td>
                     );
                   })}
@@ -618,7 +638,7 @@ function ScreenerTanstackTableInner({
           ) : null}
           {!dataReady && showLoadingSkeleton && canvasPlusPreview ? (
             Array.from({ length: 12 }, (_, skeletonIndex) => (
-              <tr key={`screener-loading-skeleton-${skeletonIndex}`} aria-hidden="true" style={{ height: `${VIRTUAL_ROW_HEIGHT}px` }}>
+              <tr key={`screener-loading-skeleton-${skeletonIndex}`} aria-hidden="true" style={{ height: `${rowHeight}px` }}>
                 <td colSpan={visibleColumns.length + 1} style={{ padding: 0, border: 0 }}>
                   <div className="flex h-full items-center gap-3 px-4 animate-pulse">
                     <span className="h-3 w-16 rounded bg-[var(--c-surface-2)]" />

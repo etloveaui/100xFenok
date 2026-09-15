@@ -2815,7 +2815,8 @@ async function collectRouteChecks(page, route) {
       }
 
       // The service mode keeps the desktop table/card controls hidden through
-      // 920px, and the Canvas+ density control is intentionally hidden.
+      // 920px. The Canvas+ density control is hidden through 920px too and
+      // visible in the desktop results toolbar (restored control).
       if (isAnalyzeMode && viewportWidth >= 921) {
         const viewModeControl = document.querySelector("[data-screener-view-mode-control]");
         const viewModeButtons = viewModeControl
