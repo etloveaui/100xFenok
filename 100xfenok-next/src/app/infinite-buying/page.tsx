@@ -5,6 +5,7 @@ import RouteEmbedFrame from '@/components/RouteEmbedFrame';
 import TransitionLink from '@/components/TransitionLink';
 import { getDesignVersionFromSearchParams } from '@/lib/design/version';
 import { ROUTES } from '@/lib/routes';
+import IbQuoteStrip from './IbQuoteStrip';
 
 export const metadata: Metadata = {
   title: 'Infinite Buying',
@@ -45,7 +46,8 @@ export default async function InfiniteBuyingPage({ searchParams }: PageProps) {
             className="shrink-0 rounded-[var(--panel-r)] border border-slate-200 bg-white px-3 py-3 shadow-sm"
             data-infinite-buying-boundary="true"
           >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <IbQuoteStrip />
+            <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <p className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-700">
                   Infinite Buying
