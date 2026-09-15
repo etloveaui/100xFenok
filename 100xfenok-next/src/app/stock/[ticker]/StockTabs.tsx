@@ -390,10 +390,10 @@ function OwnershipTab({ data }: { data: YfData }) {
         <div>
           <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">기관 보유 TOP 10</h3>
           <div className="-mx-1 overflow-x-auto px-1">
-            <table className="w-full min-w-[640px] text-xs">
+            <table className="w-full min-w-[560px] text-xs">
               <thead>
                 <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-                  <th className="px-2 py-1.5 text-left">기관명</th>
+                  <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]">기관명</th>
                   <th className="px-2 py-1.5 text-right">지분율</th>
                   <th className="px-2 py-1.5 text-right">주식수</th>
                   <th className="px-2 py-1.5 text-right">평가액</th>
@@ -411,7 +411,7 @@ function OwnershipTab({ data }: { data: YfData }) {
                   const pctChange = pctChangeRaw !== null ? pctChangeRaw * 100 : null;
                   return (
                     <tr key={i} className="border-b border-slate-100 last:border-b-0">
-                      <td className="px-2 py-1.5 max-w-[180px] truncate text-[10px] font-bold text-slate-700">{h.Holder}</td>
+                      <td className="sticky left-0 z-10 max-w-[180px] truncate bg-white px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{h.Holder}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{pctHeld !== null ? `${(pctHeld * 100).toFixed(2)}%` : "—"}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-600">{shares !== null ? shares.toLocaleString() : "—"}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-600">{value !== null ? formatCompactMoney(value, currency) : "—"}</td>
@@ -491,7 +491,7 @@ function EstimatesTab({ data }: { data: YfData }) {
               <table className="w-full min-w-[560px] text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-                    <th className="px-2 py-1.5 text-left" />
+                    <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
                     <th className="px-2 py-1.5 text-right">평균</th>
                     <th className="px-2 py-1.5 text-right">최저</th>
                     <th className="px-2 py-1.5 text-right">최고</th>
@@ -506,7 +506,7 @@ function EstimatesTab({ data }: { data: YfData }) {
                     const rowCurrency = normalizeCurrency(e.currency ?? infoCurrency);
                     return (
                       <tr key={e._index} className="border-b border-slate-100 last:border-b-0">
-                        <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[e._index] ?? e._index}</td>
+                        <td className="sticky left-0 z-10 bg-white px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{indexLabels[e._index] ?? e._index}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{formatMoney(e.avg, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatMoney(e.low, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatMoney(e.high, rowCurrency)}</td>
@@ -531,7 +531,7 @@ function EstimatesTab({ data }: { data: YfData }) {
               <table className="w-full min-w-[580px] text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
-                    <th className="px-2 py-1.5 text-left" />
+                    <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
                     <th className="px-2 py-1.5 text-right">평균</th>
                     <th className="px-2 py-1.5 text-right">최저</th>
                     <th className="px-2 py-1.5 text-right">최고</th>
@@ -546,7 +546,7 @@ function EstimatesTab({ data }: { data: YfData }) {
                     const rowCurrency = normalizeCurrency(r.currency ?? infoCurrency);
                     return (
                       <tr key={r._index} className="border-b border-slate-100 last:border-b-0">
-                        <td className="px-2 py-1.5 text-[10px] font-bold text-slate-700">{indexLabels[r._index] ?? r._index}</td>
+                        <td className="sticky left-0 z-10 bg-white px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{indexLabels[r._index] ?? r._index}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{formatCompactMoney(r.avg, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatCompactMoney(r.low, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatCompactMoney(r.high, rowCurrency)}</td>
