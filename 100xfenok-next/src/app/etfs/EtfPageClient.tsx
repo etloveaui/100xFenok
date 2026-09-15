@@ -2,6 +2,7 @@
 
 import MacroContextCard from "@/components/macro/MacroContextCard";
 import EtfHeroPanel from "./EtfHeroPanel";
+import EtfSummaryStrip from "./EtfSummaryStrip";
 import EtfTodayPanel from "./EtfTodayPanel";
 import EtfToolsPanel from "./EtfToolsPanel";
 import EtfUnifiedTable from "./EtfUnifiedTable";
@@ -19,6 +20,8 @@ export default function EtfPageClient({ initialMacroContextId }: { initialMacroC
       {initialMacroContextId ? <MacroContextCard contextId={initialMacroContextId} surface="etfs" /> : null}
 
       <EtfHeroPanel surface={surface} />
+
+      <EtfSummaryStrip surface={surface} />
 
       <EtfUniversePanel surface={surface} />
 
