@@ -30,6 +30,7 @@ async function inspectStaticContracts() {
     screenerPageSource,
     screenerClientSource,
     etfsPageSource,
+    etfsClientSource,
     stockPageSource,
     multichartPageSource,
     multichartHtmlSource,
@@ -40,6 +41,7 @@ async function inspectStaticContracts() {
     loaderSource,
     engineSource,
     chartRegistrySource,
+    marketChartThemeSource,
     chartThemeSource,
     macroStyleSource,
   ] = await Promise.all([
@@ -52,6 +54,7 @@ async function inspectStaticContracts() {
     readFile(new URL("../src/app/screener/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/screener/ScreenerClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/etfs/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/etfs/EtfPageClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/stock/[ticker]/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/app/multichart/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../public/tools/asset/multichart.html", import.meta.url), "utf8"),
@@ -62,6 +65,7 @@ async function inspectStaticContracts() {
     readFile(new URL("../src/lib/macro-chart/loader.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/market-valuation/charts/MarketChartEngineClient.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/market-valuation/charts/chartJsRegistry.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/lib/market-valuation/charts/chartTheme.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/lib/chart-theme.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/styles/cp-w5-macro-chart.css", import.meta.url), "utf8"),
   ]);
@@ -104,8 +108,6 @@ async function inspectStaticContracts() {
     'data-macro-v2-global-controls="true"',
     'data-macro-v2-legend-overlay="true"',
     'data-macro-v2-series-editor="true"',
-    'data-macro-v2-event-state="unavailable"',
-    '이벤트 피드 없음',
     '침체 음영',
     '축 그룹 자동',
     '링크',
@@ -140,7 +142,7 @@ async function inspectStaticContracts() {
     addFailure(failures, "macro-v2-recession-band-token", "dedicated neutral band token missing");
   }
   for (const token of ['band: "--c-band"', 'band: "lightgray"']) {
-    if (!chartThemeSource.includes(token)) addFailure(failures, "macro-v2-recession-band-token", `${token} missing`);
+    if (!marketChartThemeSource.includes(token)) addFailure(failures, "macro-v2-recession-band-token", `${token} missing`);
   }
   for (const token of ['theme.token("band")', 'ctx.globalAlpha = 0.55']) {
     if (!engineSource.includes(token)) addFailure(failures, "macro-v2-recession-band-hero", `${token} missing`);
@@ -169,8 +171,6 @@ async function inspectStaticContracts() {
     'formulaLabel: displayFormula',
     'unitLabel: metadata.unitLabel',
     'data-macro-v2-derived-legend={formula.operator}',
-    'data-macro-v2-formula-presets="guarded"',
-    'seriesById(preset.leftId) && seriesById(preset.rightId)',
     'data-macro-v2-tile-evidence="analysis"',
     'data-macro-v2-tile-evidence="lens"',
     'buildMarketSeries(loaded, { alignDates: false, preserveCadenceGaps: true })',
@@ -271,7 +271,7 @@ async function inspectStaticContracts() {
   ) {
     addFailure(failures, "screener-macro-deeplink", "Screener must accept macro/preset/connection deep-link context");
   }
-  if (!etfsPageSource.includes("MacroContextCard") || !etfsPageSource.includes("macroContextFromParam")) {
+  if (!etfsClientSource.includes("MacroContextCard") || !etfsPageSource.includes("macroContextFromParam")) {
     addFailure(failures, "etf-macro-deeplink", "ETF page must accept macro context");
   }
   if (!stockPageSource.includes("MacroContextCard") || !stockPageSource.includes("macroContextFromParam")) {
@@ -297,7 +297,7 @@ async function inspectStaticContracts() {
   }
   for (const item of [
     ['id: "explore"', 'href: EXPLORE_ROUTE', 'label: EXPLORE_NAV_LABEL'],
-    ['id: "workbench"', 'href: ROUTES.workbench', 'label: WORKBENCH_NAV_LABEL', 'group: "더보기"'],
+    // workbench surface is retired (src/lib/routes.ts) and intentionally absent from the public rail
     ['id: "market"', 'href: ROUTES.market', 'label: "시장"'],
     ['id: "sectors"', 'href: ROUTES.sectors', 'label: "섹터"'],
     ['id: "etfs"', 'href: ROUTES.etfs', 'label: "ETF"'],

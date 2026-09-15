@@ -7,8 +7,8 @@ import MacroChartClient from '../macro-chart/MacroChartClient';
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: '멀티차트 | 100xFenok',
-  description: '여러 자산을 비교하는 멀티차트 도구',
+  title: '시장 비교 | 100xFenok',
+  description: '여러 자산을 같은 시간축에서 비교하는 차트',
 };
 
 export default function MultichartPage() {

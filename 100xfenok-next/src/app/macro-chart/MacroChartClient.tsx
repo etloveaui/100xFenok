@@ -233,23 +233,6 @@ function formulaId(leftId: string, operator: MacroFormulaOperator, operand: stri
   return `formula-${operator}-${leftId}-${operand}`;
 }
 
-type MacroFormulaPreset = {
-  id: string;
-  label: string;
-  leftId: string;
-  rightId: string;
-  operator: "subtract";
-};
-
-const MACRO_FORMULA_PRESET_CANDIDATES: readonly MacroFormulaPreset[] = [
-  { id: "yield-curve-10y-2y", label: "10Y − 2Y", leftId: "DGS10", rightId: "DGS2", operator: "subtract" },
-  { id: "credit-spread-hy-ig", label: "HY − IG", leftId: "HY_spread", rightId: "IG_spread", operator: "subtract" },
-];
-
-const AVAILABLE_MACRO_FORMULA_PRESETS = MACRO_FORMULA_PRESET_CANDIDATES.filter(
-  (preset) => Boolean(seriesById(preset.leftId) && seriesById(preset.rightId)),
-);
-
 const MACRO_ANALYSIS_LENSES: readonly MacroAnalysisLens[] = [
   {
     id: "risk-liquidity",
@@ -377,7 +360,7 @@ const MACRO_TOP_LENSES = [
       macroContextId: "activity" as const,
     },
   },
-  { id: "inflation", label: "인플레이션", unavailable: "인플레이션 시리즈가 카탈로그에 없습니다" },
+  { id: "inflation", label: "인플레이션", unavailable: "인플레이션 시리즈는 아직 없습니다" },
   {
     id: "rates-credit",
     label: "금리·신용",
@@ -1214,8 +1197,22 @@ function finiteRange(series: MarketChartSeries) {
   return values.length ? { min: Math.min(...values), max: Math.max(...values) } : null;
 }
 
+const MACRO_RANGE_WINDOW_LABELS: Record<string, string> = {
+  "3M": "3개월",
+  "6M": "6개월",
+  "1Y": "1년",
+  "3Y": "3년",
+  "5Y": "5년",
+  "10Y": "10년",
+  MAX: "전체",
+};
+
 function rangeLabel(rangeId: string) {
   return MACRO_RANGES.find((range) => range.id === rangeId)?.label ?? rangeId;
+}
+
+function rangeWindowLabel(rangeId: string) {
+  return MACRO_RANGE_WINDOW_LABELS[rangeId] ?? rangeLabel(rangeId);
 }
 
 function latestFiniteLabel(series: readonly MarketChartSeries[], hiddenIds: readonly string[]) {
@@ -1368,7 +1365,7 @@ function macroVerdictText(params: {
   return {
     tone,
     lead: `${primaryName}는 ${verdictLeadValue(primary, primaryDelta, primaryTransform, Boolean(secondary && secondaryDelta))}${secondaryClause} — ${relationship}`,
-    detail: `${latestLabel} · ${rangeLabel(params.rangeId)} 구간의 실제 로드 시리즈에서 계산했습니다.`,
+    detail: `${latestLabel} · ${rangeLabel(params.rangeId)} 구간 · 표시 중인 데이터 기준.`,
     primaryValue: `${primaryName} ${primaryValue}`,
     secondaryValue: secondary && secondaryDelta ? `${verdictSeriesName(secondary)} ${verdictValue(secondary, secondaryDelta.latestValue)}` : "보조 시리즈 없음",
   };
@@ -1424,7 +1421,7 @@ function DelayedMacroChartSkeleton() {
 
 export default function MacroChartClient({ initialMode = "macro" }: { initialMode?: MacroChartInitialMode }) {
   const stockCompareMode = initialMode === "stock-compare";
-  const headerEyebrow = stockCompareMode ? "Multi Chart" : "Macro Chart";
+  const headerEyebrow = stockCompareMode ? "시장 비교" : "Macro Chart";
   const headerTitle = stockCompareMode ? "시장 비교" : "매크로 차트";
   const headerDescription = stockCompareMode
     ? "주식, ETF, 지수, 매크로 시리즈를 같은 시간축으로 맞춰 수익률·가격·상대강도를 비교합니다."
@@ -1774,33 +1771,6 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     setSeriesEditorOpen(true);
   }, [applyChartState]);
 
-  const applyFormulaPreset = useCallback((preset: MacroFormulaPreset) => {
-    const presetFormulaId = formulaId(preset.leftId, preset.operator, preset.rightId);
-    if (formulas.length >= MAX_FORMULA_SERIES && !formulas.some((formula) => formula.id === presetFormulaId)) {
-      setFormulaNotice(`합성 시리즈는 최대 ${MAX_FORMULA_SERIES}개까지 추가할 수 있습니다.`);
-      return;
-    }
-    const missingIds = [preset.leftId, preset.rightId].filter((id) => !selected.some((item) => item.id === id));
-    if (selected.length + missingIds.length > MAX_SELECTED_SERIES) {
-      setFormulaNotice(`프리셋 적용에는 ${missingIds.length}개 시리즈 자리가 더 필요합니다.`);
-      return;
-    }
-    const nextFormula: MacroFormulaSeries = {
-      id: presetFormulaId,
-      leftId: preset.leftId,
-      rightId: preset.rightId,
-      operator: preset.operator,
-    };
-    setSelected((previous) => [
-      ...previous,
-      ...missingIds.map((id) => withSeriesDefaults({ id, transform: seriesById(id)?.defaultTransform ?? "raw" })),
-    ]);
-    setFormulas((previous) => previous.some((formula) => formula.id === nextFormula.id)
-      ? previous
-      : [...previous, nextFormula].slice(0, MAX_FORMULA_SERIES));
-    setFormulaNotice(`${preset.label} 합성식 추가됨`);
-  }, [formulas, selected]);
-
   const addFormula = useCallback(() => {
     const nextFormulaScalar = Number(formulaScalar);
     if (!currentFormulaLeftId) {
@@ -2011,7 +1981,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         detail: `${selectedSourceCount}개 파일 · ${selectedGroupLabels || "그룹 없음"}`,
       },
       {
-        label: "워크벤치",
+        label: "차트 설정",
         value: `합성 ${formulas.length}개`,
         detail: visibleHiddenIds.length
           ? `숨김 ${visibleHiddenIds.length}개 · 축 고정 ${visibleAxisOverrides}개`
@@ -2168,6 +2138,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   type="button"
                   onClick={() => applyTopLens(lens)}
                   aria-pressed={activeTopLensId === lens.id}
+                  disabled={"unavailable" in lens}
+                  title={"unavailable" in lens ? lens.unavailable : undefined}
                   data-unavailable={"unavailable" in lens ? "true" : undefined}
                 >
                   {lens.label}
@@ -2182,10 +2154,8 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 onClick={() => setShowRecessionShading((value) => !value)}
                 title={`${NBER_US_RECESSION_TABLE.source} · ${NBER_US_RECESSION_TABLE.asOf} 기준`}
               >침체 음영</button>
-              <button type="button" disabled aria-pressed="false" title="이벤트 피드 없음">이벤트</button>
               <button type="button" disabled={!canUseLogScale} aria-pressed={logScale} onClick={() => setLogScale((value) => !value)} title={canUseLogScale ? undefined : "0 이하 값이 있어 로그 축을 사용할 수 없습니다"}>로그</button>
               <button type="button" aria-pressed={autoGroupAxes} onClick={() => setAutoGroupAxes((value) => !value)}>축 그룹 자동</button>
-              <span data-macro-v2-event-state="unavailable">이벤트 피드 없음</span>
             </div>
 
             <div className="cpw5-macro-v2-actions">
@@ -2216,14 +2186,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           ) : null}
           {limitNotice ? <p className="cpw5-macro-export-note" role="status">{limitNotice}</p> : null}
 
-          {activeTopLensId === "inflation" ? (
-            <div data-macro-v2-lens-empty="inflation">
-              <EmptyState
-                reason="인플레이션 시리즈가 카탈로그에 없습니다"
-                nextRefresh="카탈로그에 CPI 계열이 연결되면 이 렌즈를 사용할 수 있습니다"
-              />
-            </div>
-          ) : activeLoadState.status === "error" ? (
+          {activeLoadState.status === "error" ? (
             <div className="cpw5-macro-error" role="alert">
               <p>차트 데이터를 불러오지 못했습니다.</p>
               <span>{activeLoadState.message}</span>
@@ -2231,7 +2194,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 다시 시도
               </button>
             </div>
-          ) : activeLoadState.status === "loading" ? (
+          ) : activeLoadState.status === "loading" || activeLoadState.status === "idle" ? (
             <DelayedMacroChartSkeleton />
           ) : activeLoadState.status === "ready" && chartSeries.length ? (
             <div className="cpw5-macro-v2-stage">
@@ -2425,7 +2388,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         <div className="cpw5-macro-section-head">
           <div>
             <h2>같이 보기</h2>
-            <p>저장된 차트 조합을 미리 보고 영웅 차트로 불러옵니다.</p>
+            <p>저장된 차트 조합을 미리 보고 위 차트로 불러옵니다.</p>
           </div>
           <button type="button" className="cpw5-macro-section-action" onClick={saveUserPreset} data-macro-v2-collection-save="hero">
             + 현재 차트 저장
@@ -2502,7 +2465,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             ) : (
               <>
                 <div className="cpw5-macro-table-panel__tools">
-                  <span>{rangeLabel(rangeId)} 창구 · 차트와 동일한 변환 후 값</span>
+                  <span>{rangeWindowLabel(rangeId)} · 차트와 동일한 변환 후 값</span>
                   <button
                     type="button"
                     onClick={() => {
@@ -2520,7 +2483,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   rows={tableRows}
                   getRowKey={(row) => row.date}
                   density="compact"
-                  caption={`플롯된 변환 후 값 · ${rangeLabel(rangeId)} 창구`}
+                  caption={`플롯된 변환 후 값 · ${rangeWindowLabel(rangeId)}`}
                 />
               </>
             )}
@@ -2703,21 +2666,6 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
               </div>
               <span>{formulas.length}/{MAX_FORMULA_SERIES}</span>
             </div>
-            {AVAILABLE_MACRO_FORMULA_PRESETS.length ? (
-              <div className="cpw5-macro-chip-grid" data-macro-v2-formula-presets="guarded">
-                {AVAILABLE_MACRO_FORMULA_PRESETS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    className="cpw5-macro-chip-button"
-                    onClick={() => applyFormulaPreset(preset)}
-                  >
-                    <strong>{preset.label}</strong>
-                    <span>필요 시 두 시리즈를 함께 추가합니다.</span>
-                  </button>
-                ))}
-              </div>
-            ) : null}
             <div className="cpw5-macro-form-grid">
               <select
                 value={currentFormulaLeftId}
