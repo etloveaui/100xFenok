@@ -404,7 +404,7 @@ function compositionSentence(axes: Axis[]): string {
   const calmText =
     calm.length === 0
       ? ""
-      : `${tense.length > 0 ? "나머지 " : ""}${calm.map((axis) => axis.title).join("·")} 축은 ${[...new Set(calm.map(dominantWord))].join("·")}입니다`;
+      : `${tense.length > 0 ? "나머지 " : ""}${calm.map((axis) => axis.title).join("·")} 축은 ${[...new Set(calm.map((axis) => dominantWord(axis.pulses)))].join("·")}입니다`;
 
   const silentText = silentCount === 0 ? "" : `신호가 없는 ${silentCount}개 축은 그대로 신호 없음입니다`;
 
