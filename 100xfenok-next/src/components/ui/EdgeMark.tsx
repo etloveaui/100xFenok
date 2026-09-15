@@ -2,7 +2,7 @@ import * as React from "react";
 
 type EdgeMarkProps = {
   score: number; // 0-100
-  size?: 22 | 16 | 88;
+  size?: number;
   className?: string;
   showValue?: boolean;
 };
@@ -34,7 +34,9 @@ export function EdgeMark({ score, size = 22, className = "", showValue = true }:
   const filled = Math.round((clamped / 100) * 12);
   const color = bandColor(clamped);
   const dim = size;
-  const strokeW = size === 88 ? 3 : size === 22 ? 2 : 2;
+  const strokeW = size >= 88 ? 3 : 2;
+  const valueFont = Math.round(size / 4);
+  const valueY = Math.round(44 + valueFont * (6 / 22));
   // For 22/16 we show fewer ticks visually? Keep 12 but scale stroke
   return (
     <span className={`inline-flex items-center justify-center ${className}`} aria-label={`Edge ${score}`}>
@@ -49,8 +51,8 @@ export function EdgeMark({ score, size = 22, className = "", showValue = true }:
             <line key={`f-${i}`} x1={x1} y1={y1} x2={x2} y2={y2} />
           ))}
         </g>
-        {showValue && size === 88 && (
-          <text x="44" y="50" textAnchor="middle" fontSize="22" fontWeight={600} fill="#0f172a" fontFamily="var(--font-pretendard), system-ui, sans-serif">
+        {showValue && size >= 88 && (
+          <text x="44" y={valueY} textAnchor="middle" fontSize={valueFont} fontWeight={600} fill="#0f172a" fontFamily="var(--font-pretendard), system-ui, sans-serif">
             {Math.round(clamped)}
           </text>
         )}
