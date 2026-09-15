@@ -3,15 +3,20 @@
 import { useEffect, useState } from "react";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import { useMarketValuation } from "@/hooks/useMarketValuation";
-import { useBenchmarkOrdinals } from "@/hooks/useBenchmarkOrdinals";
+import {
+  useBenchmarkOrdinals,
+  type UseBenchmarkOrdinalsResult,
+} from "@/hooks/useBenchmarkOrdinals";
 import {
   BENCHMARK_ORDINAL_GROUPS,
   benchmarkHorizonReading,
   type BenchmarkGroupId,
+  type BenchmarkHorizonReading,
   type BenchmarkOrdinalHorizon,
   type BenchmarkOrdinalRow,
+  type BenchmarkOrdinalsView,
 } from "@/lib/market-valuation/benchmarkOrdinals";
-import { Panel, PanelHeader, Pill, Stat } from "@/components/ui";
+import { DistributionBand, Panel, PanelHeader, Pill, RankBars, Stat } from "@/components/ui";
 import {
   ErpHistoryPanel,
   YardeniOverlayChartPanel,
@@ -91,6 +96,84 @@ function verdictSentence(sp500: MarketIndexValuation | undefined): string {
   return `${sp500.name} 선행 PER는 ${pe}배로 ${where} — ${meta.label} 구간입니다.`;
 }
 
+type ZoneTone = "gain" | "muted" | "neutral" | "warn" | "loss";
+
+type RankTone = "brand" | "gain" | "loss" | "muted";
+
+/* The five valuation zones in ascending percentile order. `minPct` is the same
+ * 20/40/60/80 edge valuationMeta labels and the .mv-band shading draws, and
+ * VALUATION_ZONE_TICKS prints those edges under the strip, so a segment's
+ * width, its tick mark and the word beside a board row cannot disagree. Each
+ * `label` is valuationMeta's word for that zone — it names the segment in the
+ * band's accessible summary. */
+const VALUATION_ZONES: ReadonlyArray<{
+  label: string;
+  minPct: number;
+  tone: ZoneTone;
+  phrase: string;
+  read: string;
+}> = [
+  { label: "저평가", minPct: 0, tone: "gain", phrase: "자기 역사 하위 20%", read: "지수 전반이 싼 쪽에 몰려 있습니다." },
+  { label: "다소 낮음", minPct: 20, tone: "muted", phrase: "자기 역사 하위 20~40%", read: "지수 전반이 다소 싼 쪽에 있습니다." },
+  { label: "역사적 중립", minPct: 40, tone: "neutral", phrase: "자기 역사 중간 구간", read: "지수 전반이 역사적 중립 범위에 있습니다." },
+  { label: "다소 높음", minPct: 60, tone: "warn", phrase: "자기 역사 상위 20~40%", read: "지수 전반이 다소 비싼 쪽에 있습니다." },
+  { label: "고평가", minPct: 80, tone: "loss", phrase: "자기 역사 상위 20%", read: "지수 전반이 비싼 쪽에 몰려 있습니다." },
+];
+
+const VALUATION_ZONE_TICKS = VALUATION_ZONES.slice(1).map((zone) => zone.minPct);
+
+function valuationZoneIndex(pct: number): number {
+  return VALUATION_ZONES.filter((zone) => pct >= zone.minPct).length - 1;
+}
+
+/* RankBars carries no warn tone: the two middle zones keep the brand bar and
+ * the extremes keep the page's own gain/loss reading. */
+const RANK_BAR_TONE: Record<PillTone, RankTone> = {
+  up: "gain",
+  down: "loss",
+  warn: "brand",
+  neutral: "brand",
+};
+
+type OrdinalReading = { row: BenchmarkOrdinalRow; index: number; reading: BenchmarkHorizonReading };
+
+type OrdinalBoard = {
+  allRows: BenchmarkOrdinalRow[];
+  readable: OrdinalReading[];
+  ranked: Array<OrdinalReading & { rank: number }>;
+};
+
+/* One reading of the ordinal board for the current horizon and group filter.
+ * The summary strip and the board panel both render this, so the compact claim
+ * that leads the page can never disagree with the rows below it. */
+function readOrdinalBoard(
+  view: BenchmarkOrdinalsView | null,
+  horizon: BenchmarkOrdinalHorizon,
+  group: GroupFilter,
+): OrdinalBoard {
+  const allRows = view && view.status === "ready" ? view.groups.flatMap((entry) => entry.rows) : [];
+  const readable = allRows
+    .map((row, index) => ({ row, index, reading: benchmarkHorizonReading(row, horizon) }))
+    .filter((item) => item.reading.percentile !== null);
+  const ranked = readable
+    .filter((item) => group === ALL_GROUPS || item.row.groupId === group)
+    .sort((a, b) => (b.reading.percentile ?? 0) - (a.reading.percentile ?? 0) || a.index - b.index)
+    .map((item, index) => ({ ...item, rank: index + 1 }));
+  return { allRows, readable, ranked };
+}
+
+/* A row without a percentile in the current window is excluded from every
+ * count — the strip reports what it can read and says so. */
+function countValuationZones(readings: ReadonlyArray<OrdinalReading>): number[] {
+  const counts = VALUATION_ZONES.map(() => 0);
+  for (const item of readings) {
+    const pct = item.reading.percentile;
+    if (pct === null) continue;
+    counts[valuationZoneIndex(pct)] += 1;
+  }
+  return counts;
+}
+
 // One provenance line replaces the four per-panel evidence rails. Each panel
 // reports its own state derivation and date; the header shows the worst state
 // against the OLDEST date, because a page is only as fresh as its oldest feed.
@@ -126,6 +209,136 @@ function aggregateProvenance(panels: ReadonlyArray<PanelProvenance>): PanelProve
     ) ?? "fresh",
     asOf: oldestAsOf(panels.map((panel) => panel.asOf)),
   };
+}
+
+/* The compact summary that leads the route: where the benchmark rows sit on the
+ * 0-100 valuation axis right now, and how the four indices rank inside it. Both
+ * halves read the state the panels below render (the shared board reading and
+ * useMarketValuation's indices), and the strip registers no provenance of its
+ * own — the four panels' states and dates already own the header line. */
+function ValuationSummaryPanel({
+  board,
+  horizon,
+  group,
+  indices,
+  loading,
+  failed,
+  onRefetch,
+}: {
+  board: UseBenchmarkOrdinalsResult;
+  horizon: BenchmarkOrdinalHorizon;
+  group: GroupFilter;
+  indices: MarketIndexValuation[];
+  loading: boolean;
+  failed: boolean;
+  onRefetch: () => void;
+}) {
+  const { state, view, refetch } = board;
+  const boardLoading = state === "pending";
+  const boardFailed = state === "refused" || state === "failed";
+  const { allRows, ranked } = readOrdinalBoard(view, horizon, group);
+  const scopeRows = allRows.filter((row) => group === ALL_GROUPS || row.groupId === group);
+  const counts = countValuationZones(ranked);
+  const counted = counts.reduce((sum, count) => sum + count, 0);
+  const largest = Math.max(...counts);
+  const dominant = VALUATION_ZONES[counts.indexOf(largest)];
+  const horizonLabel = HORIZONS.find((item) => item.id === horizon)?.label ?? "10년";
+  const refusedGroups = view && view.status === "ready"
+    ? view.groups.filter((entry) => entry.refusal).length
+    : 0;
+  // The sentence counts the board's universe and the line under it states how
+  // much of that universe carries a reading — the two claims stay separable.
+  const bandLine = counted > 0
+    ? `${scopeRows.length}종 중 ${largest}종이 ${dominant.phrase} 구간 — ${dominant.read}`
+    : null;
+  const coverage = `표시 ${counted}/전체 ${scopeRows.length}${refusedGroups > 0 ? ` · ${refusedGroups}개 그룹 제외` : ""}`;
+  const bandNote = boardLoading
+    ? "역사 위치 분포를 불러오는 중입니다"
+    : boardFailed && scopeRows.length === 0
+      ? "역사 위치 데이터를 읽지 못했습니다"
+      : counted === 0
+        ? "이 자산군에는 표시할 역사 위치 데이터가 없습니다"
+        : null;
+
+  // Percentile is the only measure comparable across indices, so the bars run
+  // on the full 0-100 scale: scaling to the largest row would draw the top
+  // index as a full bar however cheap it is in its own history.
+  const peerRows = PEER_ORDER
+    .map((id) => indices.find((index) => index.id === id))
+    .filter((row): row is MarketIndexValuation => row !== undefined);
+  const peerRanked = [...peerRows].sort((a, b) => (b.pe.percentile ?? -1) - (a.pe.percentile ?? -1));
+  const rankRows = peerRanked.map((row) => ({
+    key: row.id,
+    label: INDEX_KO[row.id] ?? row.name,
+    value: row.pe.percentile,
+    display: row.pe.percentile === null ? undefined : `${row.pe.percentile}%ile`,
+    tone: RANK_BAR_TONE[valuationMeta(row.pe.percentile).pill],
+  }));
+  const rankablePeers = peerRanked.filter((row) => row.pe.percentile !== null);
+  const peerTop = rankablePeers[0];
+  const peerPe = peerTop === undefined || peerTop.pe.current === null
+    ? null
+    : `, 선행 P/E ${formatDecimal(peerTop.pe.current, { digits: 1 })}배`;
+  const peerLine = peerTop === undefined
+    ? null
+    : `${INDEX_KO[peerTop.id] ?? peerTop.name}이 ${rankablePeers.length}개 지수 중 가장 비쌉니다 — 역사 백분위 ${peerTop.pe.percentile}%${peerPe ?? ""}.`;
+  const peerNote = loading
+    ? "지수 밸류에이션을 불러오는 중입니다"
+    : failed
+      ? "지수 밸류에이션을 불러오지 못했습니다"
+      : peerRows.length === 0
+        ? "표시할 밸류에이션 데이터가 없습니다"
+        : rankablePeers.length === 0
+          ? "지수 역사 백분위를 확인할 수 없습니다"
+          : null;
+  const empty = !loading && !boardLoading && scopeRows.length === 0 && peerRows.length === 0;
+  const retry = () => {
+    if (boardFailed) refetch();
+    if (failed) onRefetch();
+  };
+
+  return (
+    <Panel
+      loading={loading && boardLoading}
+      empty={empty}
+      emptyReason={failed || boardFailed ? "밸류에이션 요약을 불러오지 못했습니다" : "요약할 밸류에이션 데이터가 없습니다"}
+      emptyNextRefresh="다음 마감 후 갱신"
+      emptyActionLabel={failed || boardFailed ? "다시 시도" : undefined}
+      onEmptyAction={failed || boardFailed ? retry : undefined}
+    >
+      <PanelHeader
+        eyebrow="Valuation Summary"
+        title="한눈에 보는 밸류에이션"
+        right={<Pill>{horizonLabel} 기준</Pill>}
+      />
+      <div className="mv-sum" data-market-valuation-summary>
+        <div className="mv-sum-band">
+          {bandLine ? <p className="mv-sum-read">{bandLine}</p> : null}
+          {counted > 0 ? (
+            <DistributionBand
+              segments={VALUATION_ZONES.map((zone, index) => ({ key: zone.label, count: counts[index], tone: zone.tone }))}
+              ticks={VALUATION_ZONE_TICKS}
+              ariaLabel={`${horizonLabel} 기준 자산 역사 백분위 분포`}
+            />
+          ) : null}
+          {bandNote ? <p className="mv-sum-note">{bandNote}</p> : null}
+          {counted > 0 ? <p className="mv-sum-note">{coverage}</p> : null}
+        </div>
+        <div className="mv-sum-peers">
+          <div className="mv-sum-peer-read">
+            <p className="mv-sum-cap">지수 선행 P/E · 지수별 전체 역사 백분위</p>
+            {peerLine ? <p className="mv-sum-read">{peerLine}</p> : null}
+            {peerNote ? <p className="mv-sum-note">{peerNote}</p> : null}
+          </div>
+          <div className="mv-sum-bars">
+            {rankRows.length > 0 ? (
+              <RankBars rows={rankRows} max={100} ariaLabel="지수 선행 P/E 역사 백분위 순위" />
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
 }
 
 function ValuationReadPanel({
@@ -175,7 +388,6 @@ function ValuationReadPanel({
           </Pill>
         }
       />
-      <p className="mv-lede">{verdictSentence(sp500)}</p>
       <div className="mv-stats">
         <Stat label="Fwd P/E" value={`${formatDecimal(sp500?.pe.current ?? null, { digits: 1 })}x`} />
         <Stat label="P/B" value={`${formatDecimal(sp500?.pb.current ?? null, { digits: 2 })}x`} />
@@ -387,26 +599,32 @@ function PeerComparePanel({
 // sustainable ranges + Yardeni model in here instead would replace the 38-asset
 // trailing-window reading with a different model; the panel reports its own
 // state and date upward instead (fh-669 P1b).
-function HistoricalPositionPanel({ onProvenance }: { onProvenance: (value: PanelProvenance) => void }) {
-  const { state, view, refetch } = useBenchmarkOrdinals();
-  const [horizon, setHorizon] = useState<BenchmarkOrdinalHorizon>("w10");
-  const [group, setGroup] = useState<GroupFilter>(ALL_GROUPS);
+//
+// The board's data and its horizon/group selection are owned by the page now:
+// the summary strip renders the same rows, so the two surfaces share one state.
+function HistoricalPositionPanel({
+  board,
+  horizon,
+  setHorizon,
+  group,
+  setGroup,
+  onProvenance,
+}: {
+  board: UseBenchmarkOrdinalsResult;
+  horizon: BenchmarkOrdinalHorizon;
+  setHorizon: (value: BenchmarkOrdinalHorizon) => void;
+  group: GroupFilter;
+  setGroup: (value: GroupFilter) => void;
+  onProvenance: (value: PanelProvenance) => void;
+}) {
+  const { state, view, refetch } = board;
   const loading = state === "pending";
   const transportFailed = state === "refused" || state === "failed";
   const ready = state === "ready" && view?.status === "ready";
 
-  const allRows: BenchmarkOrdinalRow[] = view && view.status === "ready"
-    ? view.groups.flatMap((entry) => entry.rows)
-    : [];
-  const readable = allRows
-    .map((row, index) => ({ row, index, reading: benchmarkHorizonReading(row, horizon) }))
-    .filter((item) => item.reading.percentile !== null);
   // The board is the working surface: every rankable row stays, highest
   // percentile first, and equal percentiles keep the source order.
-  const ranked = readable
-    .filter((item) => group === ALL_GROUPS || item.row.groupId === group)
-    .sort((a, b) => (b.reading.percentile ?? 0) - (a.reading.percentile ?? 0) || a.index - b.index)
-    .map((item, index) => ({ ...item, rank: index + 1 }));
+  const { allRows, readable, ranked } = readOrdinalBoard(view, horizon, group);
   const groupRefusals = view && view.status === "ready"
     ? view.groups.filter((entry) => entry.refusal)
     : [];
@@ -659,6 +877,12 @@ export default function MarketValuationClient({
     sourceDate,
     refetch,
   } = useMarketValuation();
+  // The ordinal board is loaded and filtered here, not inside its panel: the
+  // summary strip leads the page from the same rows the board draws, so the two
+  // surfaces cannot disagree about the horizon or the asset-group filter.
+  const board = useBenchmarkOrdinals();
+  const [horizon, setHorizon] = useState<BenchmarkOrdinalHorizon>("w10");
+  const [group, setGroup] = useState<GroupFilter>(ALL_GROUPS);
   // Per-panel provenance: the four states are reported by the panels' own
   // derivations (never recomputed here), so the header line cannot drift from
   // what each panel renders.
@@ -719,6 +943,15 @@ export default function MarketValuationClient({
         </p>
       </div>
 
+      <ValuationSummaryPanel
+        board={board}
+        horizon={horizon}
+        group={group}
+        indices={indices}
+        loading={loading}
+        failed={failed}
+        onRefetch={refetch}
+      />
       <ValuationReadPanel
         sp500={sp500}
         loading={loading}
@@ -735,7 +968,14 @@ export default function MarketValuationClient({
         onRefetch={refetch}
         onProvenance={setPeerProvenance}
       />
-      <HistoricalPositionPanel onProvenance={setBoardProvenance} />
+      <HistoricalPositionPanel
+        board={board}
+        horizon={horizon}
+        setHorizon={setHorizon}
+        group={group}
+        setGroup={setGroup}
+        onProvenance={setBoardProvenance}
+      />
       <HistoricalReferencePanel
         erpSourceDate={erpInsight?.sourceDate ?? null}
         onProvenance={setReferenceProvenance}
