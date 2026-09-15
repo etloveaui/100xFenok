@@ -48,6 +48,11 @@ const nextConfig: NextConfig = {
       {
         source: "/briefing",
         destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/filings",
+        destination: "/stock/NVDA?tab=filings",
         permanent: false,
       },
       {

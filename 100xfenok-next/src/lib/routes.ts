@@ -132,7 +132,7 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
 export const SITEMAP_EXCLUSIONS: Partial<Record<RouteKey, string>> = {
   sectorMomentumJson: "Static JSON evidence asset behind the sectors rotation rails; not a product route, never indexed or linked from public surfaces.",
   dataConsole: "admin-only — behind AdminAccessGate; never indexed or linked from public surfaces.",
-  briefing: "Legacy alias. Redirects to home (307 verified live 2026-08-23) and must not appear as a separate product.",
+  briefing: "Legacy alias. Redirects to home (declared permanent 308 since 2026-09-15; last live measurement 307 on 2026-08-23) and must not appear as a separate product.",
   marketLegacy: "Legacy bookmark target. Redirects to ROUTES.market — verified live 2026-08-23, though as a 200 with a meta refresh rather than the 308 the source requests; see BACKLOG B-404.",
   infiniteBuying: "undecided — serves 200 live and is reachable, but nobody has chosen whether it should be indexed. See BACKLOG B-403.",
   explore: "retired — compatibility alias preserved for the authenticated archive; the public root is Home.",
