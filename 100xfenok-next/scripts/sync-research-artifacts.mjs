@@ -160,7 +160,7 @@ for (const id of args.only) {
   staged.push({
     ...parsed,
     status: "live",
-    href: `/research/companies/${id}/`,
+    href: `/research/companies/${id}/index.html`,
     source: `${SOURCE_PREFIX}/${id}`,
     size_bytes: stat.size,
     srcFile,
