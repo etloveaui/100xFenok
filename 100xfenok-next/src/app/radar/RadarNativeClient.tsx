@@ -43,6 +43,75 @@ function signedBillions(value: number): string {
   return `${value >= 0 ? "+" : ""}${value.toFixed(1)}B $`;
 }
 
+/* Signal summary bar: one LED per card verdict plus a sentiment-activity
+ * gauge. LED colors encode the source's own grade only — flow colors are
+ * direction (rising/stable/falling), stress/banking reuse their 4-grade
+ * severity, sentiment reuses opportunity/neutral/warning. Non-ready cards get
+ * a hollow dot and an honest label; the per-card StateNote keeps its retry. */
+type LedTone = "green" | "slate" | "amber" | "orange" | "red" | "blue" | "hollow";
+
+const LED_DOT: Record<LedTone, string> = {
+  green: "bg-green-500",
+  slate: "bg-slate-400",
+  amber: "bg-amber-500",
+  orange: "bg-orange-500",
+  red: "bg-red-500",
+  blue: "bg-blue-500",
+  hollow: "border border-slate-300 bg-white",
+};
+
+type LedItem = { id: string; label: string; text: string; tone: LedTone };
+
+function flowLed(status: string | null, state: CardState): LedItem {
+  if (state !== "ready" || !status) {
+    return { id: "flow", label: "유동성 흐름", text: state === "loading" ? "확인 중" : "자료 없음", tone: "hollow" };
+  }
+  const tone: LedTone = status === "rising" ? "green" : status === "falling" ? "amber" : "slate";
+  return { id: "flow", label: "유동성 흐름", text: toneKo(status), tone };
+}
+
+function gradeLed(id: string, label: string, status: string | null, state: CardState): LedItem {
+  if (state !== "ready" || !status) {
+    return { id, label, text: state === "loading" ? "확인 중" : "자료 없음", tone: "hollow" };
+  }
+  const tone: LedTone =
+    status === "normal" ? "green" : status === "caution" ? "amber" : status === "warning" ? "orange" : status === "danger" ? "red"
+    : status === "opportunity" ? "green" : status === "neutral" ? "slate" : "amber";
+  return { id, label, text: toneKo(status), tone };
+}
+
+function SummaryBar({ leds, activeCombos, totalCombos }: { leds: LedItem[]; activeCombos: number; totalCombos: number }) {
+  const share = totalCombos > 0 ? Math.round((activeCombos / totalCombos) * 100) : null;
+  const readLine = leds.every((led) => led.tone === "hollow")
+    ? "신호 4판정을 읽을 수 없습니다 — 아래 카드에서 다시 시도하세요."
+    : `신호 4판정 — ${leds.map((led) => `${led.label} ${led.text}`).join(" · ")} · 심리 활성 ${activeCombos}/${totalCombos}.`;
+  return (
+    <section aria-label="Radar 신호 요약" data-radar-summary="true" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <p data-radar-summary-read="true" className="text-sm font-bold text-slate-900">{readLine}</p>
+      <ul className="mt-3 flex flex-wrap gap-2" aria-label="4판정 신호">
+        {leds.map((led) => (
+          <li
+            key={led.id}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700"
+          >
+            <span aria-hidden="true" className={`inline-block h-2.5 w-2.5 rounded-full ${LED_DOT[led.tone]}`} />
+            {led.label} {led.text}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3">
+        <div className="flex items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
+          <span>심리온도</span>
+          <span>{share === null ? "자료 없음" : `활성 ${activeCombos}/${totalCombos}`}</span>
+        </div>
+        <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100" role="img" aria-label={share === null ? "심리 활성 자료 없음" : `심리 활성 ${activeCombos}/${totalCombos}`}>
+          <div className="h-full rounded-full bg-blue-500" style={{ width: `${share ?? 0}%` }} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function StateNote({ state, onRetry }: { state: CardState; onRetry: () => void }) {
   if (state === "loading") {
     return <p className="mt-3 text-sm text-slate-500">불러오는 중입니다.</p>;
@@ -129,7 +198,17 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-2" aria-label="Radar 요약">
+      <SummaryBar
+        leds={[
+          flowLed(flowSnap?.status ?? null, flow.state),
+          gradeLed("stress", "스트레스", stressSnap?.overallStatus ?? null, stress.state),
+          gradeLed("banking", "은행", bankingSnap?.overallStatus ?? null, banking.state),
+          gradeLed("sentiment", "심리", sentimentSnap?.overallStatus ?? null, sentiment.state),
+        ]}
+        activeCombos={activeCombos}
+        totalCombos={totalCombos}
+      />
+      <div className="mt-3 flex flex-wrap items-center gap-2" aria-label="Radar 요약">
         <span className="inline-flex min-h-11 items-center rounded-full border border-green-200 bg-green-50 px-3 text-xs font-bold text-green-800">
           표시 중 {readyCount}
         </span>
