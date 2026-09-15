@@ -3,32 +3,32 @@
   "counts": {
     "active": 146,
     "failed": 1,
-    "fresh": 145,
-    "lkg": 1,
+    "fresh": 144,
+    "lkg": 2,
     "pending_acquisition": 0,
     "pending_history": 0,
-    "retry": 1,
-    "stale": 1,
+    "retry": 2,
+    "stale": 2,
     "terminal": 0,
     "unavailable": 0,
     "untracked": 0
   },
   "current_attempt": {
-    "attempted": 19,
+    "attempted": 27,
     "errors": [],
     "event_name": "schedule",
     "failed": 0,
-    "fetch_attempts": 19,
+    "fetch_attempts": 27,
     "natural": true,
     "promotion_deferral_symbols": [],
     "promotion_deferrals": 0,
     "run_attempt": 1,
-    "run_id": "34807303543",
+    "run_id": "34930069264",
     "schedule": "7 0 * * 0-5",
     "skipped": 0,
-    "successes": 19
+    "successes": 27
   },
-  "generated_at": "2026-09-14T04:48:46Z",
+  "generated_at": "2026-09-15T04:47:22Z",
   "lane_id": "yahoo_batch_quote_history",
   "latest_failure": {
     "attempts_used": 1,
@@ -46,6 +46,17 @@
   "lkg_details": [
     {
       "expected_resolution": "next_natural_yahoo_run",
+      "failure_observed_at": null,
+      "failure_run_id": null,
+      "max_source_age_business_days": 6,
+      "payload_sha256": "c7805816596737386de17bbecb5a0c61292bdc989eefe03273798ef6c2ddc387",
+      "source_age_business_days": 7,
+      "source_as_of": "2026-09-04",
+      "state_reason": "source_age_exceeds_lane_bound",
+      "symbol": "379800.KS"
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
       "failure_observed_at": "2026-09-10T01:17:44Z",
       "failure_run_id": "34424274071",
       "max_source_age_business_days": 6,
@@ -57,9 +68,10 @@
     }
   ],
   "lkg_symbols": [
+    "379800.KS",
     "STRC"
   ],
-  "message": "Yahoo quote/history: fresh=145, lkg=1, pending_history=0, unavailable=0, pending_acquisition=0, terminal=0, retry=1, failed=1, source_stale=1. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
+  "message": "Yahoo quote/history: fresh=144, lkg=2, pending_history=0, unavailable=0, pending_acquisition=0, terminal=0, retry=2, failed=1, source_stale=2. Pending history is a normal new-listing state and self-resolves on a natural Yahoo run.",
   "oldest_source_as_of": "2026-09-04",
   "oldest_source_ticker": "379800.KS",
   "pending_acquisition_details": [],
@@ -68,6 +80,7 @@
   "pending_symbols": [],
   "promotion_deferral_details": [],
   "retry_symbols": [
+    "379800.KS",
     "STRC"
   ],
   "schema_version": "yahoo-batch-quote-history-index/v1",
@@ -79,6 +92,15 @@
       "source_as_of": "2026-06-29",
       "symbols": [
         "STRC"
+      ]
+    },
+    {
+      "expected_resolution": "next_natural_yahoo_run",
+      "max_source_age_business_days": 6,
+      "source_age_business_days": 7,
+      "source_as_of": "2026-09-04",
+      "symbols": [
+        "379800.KS"
       ]
     }
   ],
