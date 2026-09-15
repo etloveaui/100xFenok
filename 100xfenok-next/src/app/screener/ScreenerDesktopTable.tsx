@@ -4,7 +4,6 @@ import { Fragment, type ReactNode } from "react";
 import MetricHelp from "@/components/MetricHelp";
 import type { ScreenerSortKey, SortDir, ScreenerStock } from "@/lib/screener/types";
 import type { ColumnPreset } from "@/lib/screener/filter-url";
-import StockDetailPanel from "./StockDetailPanel";
 
 export type ScreenerColumn = {
   key: ScreenerSortKey;
@@ -66,8 +65,6 @@ export default function ScreenerDesktopTable({
   sortKey,
   deselectPageRows,
   onResetFilters,
-  returnTo,
-  onBeforeNavigate,
   onToggleExpandedTicker,
   renderCell,
   renderGuruHolderBadge,
@@ -177,20 +174,6 @@ export default function ScreenerDesktopTable({
                     </td>
                   ))}
                 </tr>
-                {expanded ? (
-                  <tr
-                    id={detailId}
-                    data-testid="screener-desktop-detail-row"
-                    data-ticker={stock.ticker}
-                    data-canvas-plus-detail-row={canvasPlusPreview ? "true" : undefined}
-                  >
-	                    <td colSpan={activeColumns.length + 1} className="p-0">
-	                      <div className={canvasPlusPreview ? "cp-screener-detail-shell" : undefined}>
-	                        <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
-	                      </div>
-	                    </td>
-                  </tr>
-                ) : null}
               </Fragment>
             );
           })}

@@ -381,18 +381,24 @@ function TypeaheadPreviewDrawer({
   );
 }
 
-function Tape() {
-  const [items, setItems] = useState<TapeItem[]>([]);
+// The tape is one shared load: both strips read the same rows, and AppShell
+// renders no strip at all once the load settles empty, so the reserved band
+// height never outlives its content. Until the first result the space stays
+// reserved, which keeps the common case free of layout shift.
+function useTape(): { items: TapeItem[]; settled: boolean } {
+  const [tape, setTape] = useState<{ items: TapeItem[]; settled: boolean }>({ items: [], settled: false });
   useEffect(() => {
     let cancelled = false;
-    loadTape().then((t) => {
-      if (!cancelled) setItems(t);
-    });
+    const settle = (items: TapeItem[]) => { if (!cancelled) setTape({ items, settled: true }); };
+    loadTape().then(settle).catch(() => settle([]));
     return () => {
       cancelled = true;
     };
   }, []);
-  if (items.length === 0) return null;
+  return tape;
+}
+
+function Tape({ items }: { items: TapeItem[] }) {
   const fmt = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`;
   const seq = [...items, ...items];
   return (
@@ -433,6 +439,10 @@ export default function AppShell({
   const moreOpen = moreModal.isOpen;
   const moreCloseRef = useRef<HTMLButtonElement>(null);
   const navActive: ShellPage | null = active && NAV.some((item) => item.id === active) ? active : null;
+  const tape = useTape();
+  const tickerVisible = tape.items.length > 0;
+  // Only a settled empty tape releases the reserved band height.
+  const tickerOff = tape.settled && !tickerVisible;
 
   const handleTypeaheadStockPreview = (ticker: string) => {
     moreModal.close();
@@ -449,6 +459,13 @@ export default function AppShell({
       clearInterval(t);
     };
   }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle("fnk-shell-ticker-off", tickerOff);
+    return () => {
+      document.body.classList.remove("fnk-shell-ticker-off");
+    };
+  }, [tickerOff]);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -538,10 +555,12 @@ export default function AppShell({
         </div>
       </header>
 
-      {/* ticker strip */}
-      <div className="ticker" aria-hidden="true">
-        <Tape />
-      </div>
+      {/* ticker strip — no rows, no band, no reserved height */}
+      {tickerVisible ? (
+        <div className="ticker" aria-hidden="true">
+          <Tape items={tape.items} />
+        </div>
+      ) : null}
 
       {/* mobile app header */}
       <header className={`appbar ${searching ? "searching" : ""}`}>
@@ -587,9 +606,11 @@ export default function AppShell({
             />
           </div>
         </div>
-        <div className="mticker" aria-hidden="true">
-          <Tape />
-        </div>
+        {tickerVisible ? (
+          <div className="mticker" aria-hidden="true">
+            <Tape items={tape.items} />
+          </div>
+        ) : null}
       </header>
 
       <div className="content">{children}</div>

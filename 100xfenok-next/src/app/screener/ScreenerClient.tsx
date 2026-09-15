@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import TransitionLink from "@/components/TransitionLink";
 import { bodyScrollY } from "@/lib/client/body-scroll-lock";
-import { EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
+import { EvidenceRail, Panel, Pill } from "@/components/ui";
 import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import DataStateNotice, { DataStateBadge } from "@/components/DataStateNotice";
 import MacroContextCard from "@/components/macro/MacroContextCard";
@@ -31,9 +31,9 @@ import { shortTermCommonBasisCopy } from "@/lib/fenok-signals/conviction-basis-c
 import { commonBasisShortTermView, screenerSortValue } from "@/lib/screener/common-basis-short-term";
 import { formatScreenerSourceDateLabel } from "@/lib/screener/source-dates";
 import ScreenerDesktopTable from "./ScreenerDesktopTable";
+import ScreenerDetailSheet from "./ScreenerDetailSheet";
 import ScreenerDiscover from "./ScreenerDiscover";
 import ScreenerTanstackTable from "./ScreenerTanstackTable";
-import StockDetailPanel from "./StockDetailPanel";
 import { SCREENER_QUESTION_CARDS, type QuestionCardDef, type QuestionCardId } from "@/lib/screener/question-cards";
 import { loadActionSummaryMap, type ActionSummaryRecord } from "@/features/stock-analyzer/data/action-summary-provider";
 import { holdingChangeFor, loadGuruHoldersIndex } from "@/lib/superinvestors/ticker-evidence";
@@ -1182,27 +1182,6 @@ function MobileStockCard({
         </div>
       ) : null}
       {preset === "estimate" ? <MobileEstimateTrendSections stock={stock} compact /> : null}
-      {expanded ? (
-        <div id={detailId} className={canvasPlusPreview ? "cp-screener-detail-shell" : "border-t border-[var(--c-line-2)]"}>
-          {canvasPlusPreview ? (
-            <div className="cpw5-expanded-meta">
-              <TransitionLink
-                href={ROUTES.stock(stock.ticker, returnTo)}
-                onClick={onBeforeNavigate}
-                className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] px-2 text-[10px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
-              >
-                종목 상세
-              </TransitionLink>
-              <GuruHolderBadge stock={stock} compact returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-700">
-                {COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}
-              </span>
-              {stock.connection ? <ConnectionPills stock={stock} compact /> : null}
-            </div>
-          ) : null}
-          <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
-        </div>
-      ) : null}
     </article>
   );
 }
@@ -1308,22 +1287,6 @@ function DesktopStockCard({
           <MobileMetric key={metricKey} stock={stock} metricKey={metricKey} preset={preset} />
         ))}
       </div>
-      {expanded ? (
-        <div id={detailId} className={canvasPlusPreview ? "cp-screener-detail-shell" : "border-t border-[var(--c-line-2)]"}>
-          {canvasPlusPreview ? (
-            <div className="cpw5-expanded-meta">
-              <TransitionLink
-                href={ROUTES.stock(stock.ticker, returnTo)}
-                onClick={onBeforeNavigate}
-                className="inline-flex min-h-11 items-center rounded-full border border-[var(--c-line)] px-2 text-[10px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
-              >
-                종목 상세
-              </TransitionLink>
-            </div>
-          ) : null}
-          <StockDetailPanel ticker={stock.ticker} stock={stock} canvasPlusPreview={canvasPlusPreview} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
-        </div>
-      ) : null}
     </article>
   );
 }
@@ -1480,8 +1443,8 @@ export default function ScreenerClient({
   const [profitableOnly, setProfitableOnly] = useState(() => initialFilterValues.profitableOnly ?? false);
   const [bandFilter, setBandFilter] = useState<"" | "cheap" | "fair" | "rich">(() => initialFilterValues.bandFilter ?? "");
   const [actionFilter, setActionFilter] = useState<ActionFilter>(() => coerceActionFilter(initialActionFilter || initialFilterValues.actionFilter));
-  // Screener V3 discover/analyze modes (?mode=discover|analyze, default discover).
-  const [screenerMode, setScreenerMode] = useState<"discover" | "analyze">(() => (initialMode === "analyze" ? "analyze" : "discover"));
+  // Screener V3 discover/analyze modes (?mode=discover|analyze, default analyze).
+  const [screenerMode, setScreenerMode] = useState<"discover" | "analyze">(() => (initialMode === "discover" ? "discover" : "analyze"));
   const [activeCardId, setActiveCardId] = useState<QuestionCardId>("smart-value");
   const [compareTickers, setCompareTickers] = useState<string[]>([]);
 
@@ -1521,6 +1484,11 @@ export default function ScreenerClient({
   const [sortDir, setSortDir] = useState<SortDir>(() => initialFilterValues.sortDir ?? "desc");
   const [page, setPage] = useState(0);
   const [expandedTicker, setExpandedTicker] = useState<string | null>(() => initialSearch || null);
+  // The detail sheet carries the id of the surface that opened it, so the
+  // pressed row keeps a valid aria-controls on mobile, card and table alike.
+  const [expandedDetailId, setExpandedDetailId] = useState<string | null>(
+    () => (initialSearch ? `screener-detail-${initialSearch}` : null),
+  );
   const [selectedTickers, setSelectedTickers] = useState<ReadonlySet<string>>(() => new Set());
   const [journeyReturnTo, setJourneyReturnTo] = useState<string | null>(null);
   const journeySourceRef = useRef<string | null | undefined>(undefined);
@@ -1892,6 +1860,9 @@ export default function ScreenerClient({
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
   const pageRows = sorted.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+  const expandedStock = expandedTicker
+    ? sorted.find((stock) => stock.ticker === expandedTicker) ?? null
+    : null;
   const singleStockEtfCompareHref = useMemo(() => buildSingleStockEtfCompareHref(sorted), [sorted]);
   const selectedRows = useMemo(
     () => sorted.filter((stock) => selectedTickers.has(stock.ticker)),
@@ -1993,8 +1964,22 @@ export default function ScreenerClient({
     });
   }, [pageRows]);
 
-  const onToggleExpandedTicker = useCallback((ticker: string) => {
+  // One owner for the selected row: the sheet opens for the ticker the user
+  // pressed, and remembers which surface id that row advertises.
+  const toggleExpandedDetail = useCallback((ticker: string, detailId: string) => {
+    setExpandedDetailId(detailId);
     setExpandedTicker((prev) => (prev === ticker ? null : ticker));
+  }, []);
+
+  const onToggleExpandedTicker = useCallback((ticker: string) => {
+    toggleExpandedDetail(ticker, `screener-detail-${ticker}`);
+  }, [toggleExpandedDetail]);
+
+  // Stable identity: the sheet re-focuses and re-locks on effect re-runs only
+  // when the selected row or the opening surface actually changes.
+  const closeExpandedDetail = useCallback(() => {
+    setExpandedTicker(null);
+    setExpandedDetailId(null);
   }, []);
 
   const router = useRouter();
@@ -2433,8 +2418,8 @@ export default function ScreenerClient({
     <div className="flex flex-wrap items-center gap-3" data-screener-mode-toggle="true" role="group" aria-label="스크리너 모드">
       <div className="inline-flex gap-0.5 rounded-lg bg-[var(--c-surface-2)] p-0.5">
         {([
-          { id: "discover", label: "발견" },
           { id: "analyze", label: "분석" },
+          { id: "discover", label: "발견" },
         ] as const).map((mode) => (
           <button
             key={mode.id}
@@ -2449,7 +2434,7 @@ export default function ScreenerClient({
           </button>
         ))}
       </div>
-      <p className="text-[12px] text-[var(--c-ink-3)]">발견: 다섯 질문으로 시작 · 분석: 기존 워크벤치</p>
+      <p className="text-[12px] text-[var(--c-ink-3)]">분석: 표로 거르고 줄세우기 · 발견: 다섯 질문으로 시작</p>
     </div>
   );
 
@@ -2606,6 +2591,114 @@ export default function ScreenerClient({
                 <span aria-hidden="true" className="inline-flex min-h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--c-line)] text-[11px] font-black text-[var(--c-ink-3)]">/</span>
               )}
             </form>
+          </div>
+
+          {/* One compact toolbar row: filter toggle, result count, page status,
+              column/view/density controls and provenance on a single line. */}
+          <div
+            className="cp-screener-toolbar-row mt-3"
+            data-canvas-plus-screener-toolbar="true"
+          >
+            <button
+              type="button"
+              aria-expanded={filterDeckOpen}
+              onClick={() => setFilterDeckOpen((v) => !v)}
+              className="cp-screener-segment"
+              data-canvas-plus-active={String(filterDeckOpen)}
+              data-screener-filter-toggle="true"
+            >
+              필터
+              {activeFilterCount > 0 ? (
+                <span className="cp-screener-filter-count" data-active="true">{activeFilterCount}</span>
+              ) : null}
+              <span aria-hidden="true">{filterDeckOpen ? "▲" : "▼"}</span>
+            </button>
+
+            <span className="cp-screener-toolbar-stat" title={`결과 ${sorted.length.toLocaleString("ko-KR")}개`}>
+              결과 <b>{sorted.length.toLocaleString("ko-KR")}</b>개
+            </span>
+            <span className="cp-screener-toolbar-stat" data-screener-page-status="true">
+              {safePage + 1} / {pageCount} 페이지
+            </span>
+
+            <div className="relative">
+              <button
+                type="button"
+                aria-expanded={columnMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setColumnMenuOpen((v) => !v)}
+                className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+              >
+                컬럼 {PRESET_LABEL[preset]} <span aria-hidden="true">⌄</span>
+              </button>
+              {columnMenuOpen ? (
+                <div className="absolute right-0 top-full z-15 mt-2 grid min-w-44 gap-1 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-1.5 shadow-lg" role="menu" aria-label="컬럼 preset">
+                  {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={preset === p}
+                      onClick={() => {
+                        handlePresetChange(p);
+                        setColumnMenuOpen(false);
+                      }}
+                      data-canvas-plus-active={String(preset === p)}
+                      className="min-h-9 rounded-md px-2.5 text-left text-xs font-black text-[var(--c-ink-2)] transition hover:bg-[var(--c-surface-2)] hover:text-[var(--c-ink)]"
+                    >
+                      {PRESET_LABEL[p]}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div data-screener-view-mode-control className="inline-flex items-center gap-1.5" aria-label="결과 표시 방식">
+              {VIEW_MODE_BUTTONS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  data-screener-view-mode-option={item}
+                  onClick={() => handleViewModeChange(item)}
+                  aria-label={VIEW_MODE_LABEL[item]}
+                  aria-pressed={viewMode === item}
+                  data-canvas-plus-active={String(viewMode === item)}
+                  className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
+                >
+                  {VIEW_MODE_LABEL[item]}
+                </button>
+              ))}
+            </div>
+
+            <div data-screener-density-control role="group" className="inline-flex items-center gap-1.5" aria-label="행 밀도">
+              {DENSITY_BUTTONS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  data-screener-density-option={item}
+                  data-canvas-plus-row-height={DENSITY_ROW_HEIGHT[item]}
+                  onClick={() => handleDensityChange(item)}
+                  aria-label={DENSITY_LABEL[item]}
+                  aria-pressed={density === item}
+                  data-canvas-plus-active={String(density === item)}
+                  className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] transition hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]"
+                >
+                  {DENSITY_LABEL[item]}
+                </button>
+              ))}
+            </div>
+
+            <EvidenceRail
+              className="cp-screener-toolbar-provenance"
+              freshness={railFreshness}
+              source="스크리너"
+              asOf={screenerSourceDate ?? "미제공"}
+              coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}
+              onRetry={railFreshness === "fresh" ? undefined : retryScreenerData}
+              lkgAsOf={screenerSourceDate ?? undefined}
+              skeletonDelayMs={120}
+              onEvidence={() => window.open("/data/global-scouter/core/stocks_analyzer.json", "_blank", "noopener")}
+            />
           </div>
         </section>
       ) : (
@@ -2794,30 +2887,9 @@ export default function ScreenerClient({
         </div>
       </section>
 
-      {/* Filter bar */}
-      {canvasPlusPreview ? (
+      {/* Filter bar — the toggle lives in the toolbar row; the deck opens under it. */}
+      {canvasPlusPreview && (filterDeckOpen || activeFilterChips.length > 0) ? (
         <section data-canvas-plus-screener-filter-deck="true">
-          <Panel>
-            <PanelHeader
-              eyebrow="Filter"
-              title="필터"
-              right={
-                <span className="inline-flex items-center gap-2 text-[12px] font-bold text-[var(--c-ink-2)]">
-                  <span className="tabular-nums">{sorted.length.toLocaleString("ko-KR")}개 종목</span>
-                  {activeFilterCount > 0 ? <Pill tone="warn">{activeFilterCount}</Pill> : null}
-                  <button
-                    type="button"
-                    aria-expanded={filterDeckOpen}
-                    onClick={() => setFilterDeckOpen((v) => !v)}
-                    className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
-                  >
-                    {filterDeckOpen ? "접기 ▲" : "펼치기 ▼"}
-                  </button>
-                </span>
-              }
-            />
-          </Panel>
-
           {filterDeckOpen ? (
             <div className="cp-card cp-screener-filter-deck cpw4-filter-drawer">
               <div className="cp-screener-filter-groups">
@@ -3791,95 +3863,6 @@ export default function ScreenerClient({
         aria-label="스크리너 결과 (j/k 이동, w 선택, Enter 열기)"
         onKeyDown={handleResultsKeyDown}
       >
-        {canvasPlusPreview ? (
-          <Panel>
-            <PanelHeader
-              eyebrow="Results"
-              title={`결과 ${sorted.length.toLocaleString("ko-KR")}개`}
-              right={<span className="whitespace-nowrap text-[12px] font-bold text-[var(--c-ink-2)]">{safePage + 1} / {pageCount} 페이지</span>}
-            />
-            <div className="flex flex-wrap items-center gap-2 px-4 pb-3" data-canvas-plus-screener-toolbar="true">
-              <div className="relative">
-                <button
-                  type="button"
-                  aria-expanded={columnMenuOpen}
-                  aria-haspopup="menu"
-                  onClick={() => setColumnMenuOpen((v) => !v)}
-                  className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
-                >
-                  컬럼 {PRESET_LABEL[preset]} <span aria-hidden="true">⌄</span>
-                </button>
-                {columnMenuOpen ? (
-                  <div className="absolute right-0 top-full z-15 mt-2 grid min-w-44 gap-1 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] p-1.5 shadow-lg" role="menu" aria-label="컬럼 preset">
-                    {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        role="menuitemradio"
-                        aria-checked={preset === p}
-                        onClick={() => {
-                          handlePresetChange(p);
-                          setColumnMenuOpen(false);
-                        }}
-                        data-canvas-plus-active={String(preset === p)}
-                        className="min-h-9 rounded-md px-2.5 text-left text-xs font-black text-[var(--c-ink-2)] transition hover:bg-[var(--c-surface-2)] hover:text-[var(--c-ink)]"
-                      >
-                        {PRESET_LABEL[p]}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              <div data-screener-view-mode-control className="inline-flex items-center gap-1.5" aria-label="결과 표시 방식">
-                {VIEW_MODE_BUTTONS.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    data-screener-view-mode-option={item}
-                    onClick={() => handleViewModeChange(item)}
-                    aria-label={VIEW_MODE_LABEL[item]}
-                    aria-pressed={viewMode === item}
-                    data-canvas-plus-active={String(viewMode === item)}
-                    className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)]"
-                  >
-                    {VIEW_MODE_LABEL[item]}
-                  </button>
-                ))}
-              </div>
-
-              <div data-screener-density-control role="group" className="inline-flex items-center gap-1.5" aria-label="행 밀도">
-                {DENSITY_BUTTONS.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    data-screener-density-option={item}
-                    data-canvas-plus-row-height={DENSITY_ROW_HEIGHT[item]}
-                    onClick={() => handleDensityChange(item)}
-                    aria-label={DENSITY_LABEL[item]}
-                    aria-pressed={density === item}
-                    data-canvas-plus-active={String(density === item)}
-                    className="inline-flex min-h-9 items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)] transition hover:border-[var(--c-ink-4)] hover:text-[var(--c-ink)]"
-                  >
-                    {DENSITY_LABEL[item]}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </Panel>
-        ) : null}
-
-        <EvidenceRail
-          freshness={railFreshness}
-          source="스크리너"
-          asOf={screenerSourceDate ?? "미제공"}
-          coverage={`가격 확인 ${pricedCount.toLocaleString("ko-KR")} / ${sorted.length.toLocaleString("ko-KR")}`}
-          onRetry={railFreshness === "fresh" ? undefined : retryScreenerData}
-          lkgAsOf={screenerSourceDate ?? undefined}
-          skeletonDelayMs={120}
-          onEvidence={() => window.open("/data/global-scouter/core/stocks_analyzer.json", "_blank", "noopener")}
-        />
-
         <div className={canvasPlusPreview ? "cp-screener-results-mobile min-[921px]:hidden" : "min-[921px]:hidden"}>
           {!dataReady && showMobileSkeleton ? (
             <div aria-hidden="true" className="space-y-2 p-3">
@@ -3929,7 +3912,7 @@ export default function ScreenerClient({
                         canvasPlusPreview={canvasPlusPreview}
                         returnTo={journeyReturnTo}
                         onBeforeNavigate={saveJourneyBeforeNavigate}
-                        onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
+                        onToggle={() => toggleExpandedDetail(stock.ticker, detailId)}
                         onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
                       />
                     </div>
@@ -3965,7 +3948,7 @@ export default function ScreenerClient({
                     canvasPlusPreview={canvasPlusPreview}
                     returnTo={journeyReturnTo}
                     onBeforeNavigate={saveJourneyBeforeNavigate}
-                    onToggle={() => setExpandedTicker((prev) => (prev === stock.ticker ? null : stock.ticker))}
+                    onToggle={() => toggleExpandedDetail(stock.ticker, detailId)}
                     onSelectedChange={() => toggleSelectedTicker(stock.ticker)}
                   />
                 );
@@ -4073,6 +4056,17 @@ export default function ScreenerClient({
       <p className="px-1 text-[11px] text-[var(--c-ink-2)]">
         데이터: 기업 실적 · 밸류에이션 · 가격/배당 히스토리 · 기관 공시 · Short/Long Edge 점수. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
       </p>
+
+      {expandedStock && expandedDetailId ? (
+        <ScreenerDetailSheet
+          stock={expandedStock}
+          detailId={expandedDetailId}
+          canvasPlusPreview={canvasPlusPreview}
+          returnTo={journeyReturnTo}
+          onBeforeNavigate={saveJourneyBeforeNavigate}
+          onClose={closeExpandedDetail}
+        />
+      ) : null}
     </div>
   );
 }
