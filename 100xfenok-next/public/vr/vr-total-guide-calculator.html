@@ -353,11 +353,21 @@
                 if (!poolLimitInput.value) poolLimitInput.value = config.poolLimit;
             }
 
-            fetchPriceBtn.addEventListener('click', () => {
-                const fetchedPrice = 72.45; // Fetched from search
-                tqqqPriceInput.value = fetchedPrice;
-                const date = new Date('2025-06-20T16:00:00-04:00');
-                fetchedPriceInfo.textContent = `조회가: $${fetchedPrice} (미국시간 기준 ${date.toLocaleDateString()})`;
+            fetchPriceBtn.addEventListener('click', async () => {
+                fetchedPriceInfo.textContent = '시세 조회 중…';
+                try {
+                    const res = await fetch('/api/ticker/TQQQ', { headers: { 'Accept': 'application/json' } });
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const data = await res.json();
+                    const livePrice = Number(data && data.price);
+                    if (!Number.isFinite(livePrice) || livePrice <= 0) throw new Error('invalid price');
+                    tqqqPriceInput.value = livePrice.toFixed(2);
+                    const asOf = (data && data.state && data.state.asOf) || data.fetchedAt;
+                    const asOfLabel = asOf ? ` (기준 ${new Date(asOf).toLocaleString()})` : '';
+                    fetchedPriceInfo.textContent = `조회가: $${livePrice.toFixed(2)}${asOfLabel}`;
+                } catch (err) {
+                    fetchedPriceInfo.textContent = '시세 조회 실패 — 현재가를 직접 입력해주세요.';
+                }
             });
             
             calcEvalBtn.addEventListener('click', () => {
