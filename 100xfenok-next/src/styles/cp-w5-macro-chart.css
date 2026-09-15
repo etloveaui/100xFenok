@@ -1,5 +1,8 @@
-/* W5 macro-chart redesign — route-local import from src/app/macro-chart/page.tsx.
-   Token-pure: use the CANVAS+ --cp-* tokens only; do not add raw color literals. */
+/* W5 macro-chart redesign — route-local import from src/app/macro-chart/page.tsx
+   (the same file serves /multichart through MacroChartClient's stock-compare mode).
+   Token-pure: no raw color literals. Canvas chrome keeps the --cp-* tokens; the
+   legend, editor, window-summary strip, legend sparkline and lens note rules use
+   the light-system --c-* / --fnk-* tokens. */
 
 .cpw5-macro-shell {
   display: grid;
@@ -63,6 +66,36 @@
   font-size: 14px;
   font-weight: 700;
   line-height: 1.5;
+}
+
+/* Window-performance summary: the compact rank strip that leads the hero on both
+ * /macro-chart and /multichart, between the verdict copy and the chart card. Bars
+ * scale to the largest visible window change; percent/spread-valued series and
+ * mixed-unit derived series print their value with no bar. Light-system tokens. */
+.cpw5-macro-window-summary {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--c-panel);
+  box-shadow: var(--sh-sm);
+}
+
+.cpw5-macro-window-summary__read {
+  margin: 0;
+  color: var(--c-ink);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.cpw5-macro-window-summary__note {
+  margin: 0;
+  color: var(--c-ink-3);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .cpw5-macro-chart-card {
@@ -354,6 +387,15 @@
   color: inherit;
   background: transparent;
   text-align: left;
+}
+
+/* One honest line replaces the repeated empty preview boxes when no lens has a
+ * loaded series to preview; every card keeps its own load button. */
+.cpw5-macro-lens-note {
+  margin: 10px 0 0;
+  color: var(--c-ink-3);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .cpw5-macro-lens-card:focus-within,
@@ -1236,6 +1278,18 @@
 .cpw5-macro-v2-legend__chip small { color: var(--c-ink-3); font-size: 9px; font-weight: 700; }
 .cpw5-macro-v2-legend__chip small.positive { color: var(--c-up); }
 .cpw5-macro-v2-legend__chip small.negative { color: var(--c-down); }
+
+/* A legend chip draws the same series the plot draws, so it carries that series'
+ * own sparkline; the row spans the chip and keeps the phone chip compact. */
+.cpw5-macro-v2-legend__spark {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.cpw5-macro-v2-legend__spark .cpw5-macro-lens-sparkline {
+  height: 24px;
+  margin-top: 4px;
+}
 .cpw5-macro-v2-legend__formula {
   display: inline-flex;
   min-width: 76px;
@@ -1315,6 +1369,8 @@
   .cpw5-macro-chart-rows { order: 1; }
   .cpw5-macro-v2-legend__item { width: 100%; }
   .cpw5-macro-v2-legend__chip { width: 100%; max-width: none; }
+  /* The window-performance rows keep a 44px touch row on phones. */
+  .cpw5-macro-window-summary [role="listitem"] { min-height: 44px; }
   .cpw5-macro-v2-editor__head button { width: 44px; height: 44px; }
   .cpw5-macro-v2-colors button { width: 44px; height: 44px; }
   .cpw5-macro-v2-remove { min-height: 44px; }

@@ -6,7 +6,7 @@ import DataProvenanceNote from "@/components/DataProvenanceNote";
 import { DataStateBadge } from "@/components/DataStateNotice";
 import TransitionLink from "@/components/TransitionLink";
 import { CpDataTable, type CpDataTableColumn } from "@/components/canvas-plus/kit";
-import { EmptyState, EvidenceRail, Panel, useDelayedLoading } from "@/components/ui";
+import { EmptyState, EvidenceRail, Panel, RankBars, useDelayedLoading } from "@/components/ui";
 import { okabeItoPalette } from "@/lib/chart-theme";
 import { formatAsOf, freshnessDataState } from "@/lib/data-state";
 import { MarketChartFrame, type MarketChartRange } from "@/lib/market-valuation/charts/MarketChartFrame";
@@ -1255,6 +1255,50 @@ function seriesDelta(series: MarketChartSeries) {
   };
 }
 
+type WindowChangeReading = {
+  /** signed window change, expressed in the display suffix's unit */
+  change: number;
+  /** "%", "%p", or the series' own unit for delta-valued series */
+  suffix: string;
+  /** whether the change may be drawn as a bar next to the other visible series */
+  barEligible: boolean;
+};
+
+type WindowSummaryRow = {
+  key: string;
+  label: string;
+  value: number | null;
+  display?: string;
+  tone: "gain" | "loss" | "muted";
+};
+
+/* Window change for the compact summary strip. A bar only compares plotted
+ * levels, so a rebased series measures from the 100 base the loader set and a
+ * raw price/level series from its first observation. Percent-valued series
+ * (percent, spread, YoY, period deltas) print their percentage-point difference
+ * with no bar — their size is not a window performance — and a mixed-unit derived
+ * series prints its delta with no bar because no shared scale exists. The
+ * transform comes from the same selection the loader plotted, so the strip cannot
+ * disagree with the chart above it. */
+function windowChangeReading(series: MarketChartSeries, transform: MacroValueTransform | null): WindowChangeReading | null {
+  const delta = seriesDelta(series);
+  if (!delta) return null;
+  const unitGroup = series.unitGroup ?? "level";
+  if (transform === "rebase100") return { change: delta.latestValue - 100, suffix: "%", barEligible: true };
+  if (transform === "yoy" || transform === "pctChange" || unitGroup === "percent" || unitGroup === "%") {
+    return { change: delta.delta, suffix: "%p", barEligible: false };
+  }
+  if (transform === "change") return { change: delta.delta, suffix: unitGroup, barEligible: false };
+  if (unitGroup === "derived") return { change: delta.delta, suffix: "합성값", barEligible: false };
+  if (delta.firstValue === 0) return null;
+  return { change: (delta.delta / Math.abs(delta.firstValue)) * 100, suffix: "%", barEligible: true };
+}
+
+function signedChangeText(change: number, suffix: string) {
+  const formatted = `${change > 0 ? "+" : ""}${formatValue(change)}`;
+  return suffix === "%" || suffix === "%p" ? `${formatted}${suffix}` : `${formatted} ${suffix}`;
+}
+
 function deltaTone(delta: number | null | undefined): "positive" | "negative" | "warning" | "neutral" {
   if (delta == null || Math.abs(delta) < 0.01) return "neutral";
   return delta > 0 ? "positive" : "negative";
@@ -2014,6 +2058,50 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       change: series ? latestStepChange(series) : null,
     };
   }), [chartSeriesById, selected]);
+  /* One reading of the visible series for the hero's window-performance strip.
+   * The rows are the series the plot draws (formulas included) and each change
+   * comes from the same transform the loader applied, so the compact claim above
+   * the chart cannot disagree with it. */
+  const windowSummary = useMemo(() => {
+    type ReadingRow = { key: string; label: string; reading: WindowChangeReading | null };
+    const legendById = new Map(legendItems.map((item) => [item.selection.id, item]));
+    const rows: ReadingRow[] = visibleChartSeries.map((series) => {
+      const legend = legendById.get(series.id);
+      const definition = legend?.definition ?? seriesById(series.id);
+      return {
+        key: series.id,
+        label: definition?.shortLabel ?? series.formulaLabel ?? (series.label.split("·")[0]?.trim() || series.id),
+        reading: windowChangeReading(series, legend?.selection.transform ?? definition?.defaultTransform ?? null),
+      };
+    });
+    rows.sort((left, right) =>
+      (right.reading?.change ?? Number.NEGATIVE_INFINITY) - (left.reading?.change ?? Number.NEGATIVE_INFINITY));
+    const ranked = rows.filter((row): row is ReadingRow & { reading: WindowChangeReading } => row.reading !== null);
+    const barMax = ranked.reduce(
+      (max, row) => (row.reading.barEligible ? Math.max(max, Math.abs(row.reading.change)) : max),
+      0,
+    );
+    const barlessCount = ranked.filter((row) => !row.reading.barEligible).length;
+    const top = ranked.slice(0, 3);
+    const windowText = rangeWindowLabel(rangeId);
+    const readLine = rows.length === 0
+      ? null
+      : top.length === 0
+        ? `같은 ${windowText} 창에서 구간 성과를 읽을 수 없습니다 — 표시 시리즈의 값이 없습니다.`
+        : top.length === 1
+          ? `같은 ${windowText} 창에서 ${top[0].label} ${signedChangeText(top[0].reading.change, top[0].reading.suffix)}입니다.`
+          : `같은 ${windowText} 창에서 ${top.map((row) => `${row.label} ${signedChangeText(row.reading.change, row.reading.suffix)}`).join(", ")} 순입니다.`;
+    const rankRows: WindowSummaryRow[] = rows.map((row) => ({
+      key: row.key,
+      label: row.label,
+      value: row.reading ? (row.reading.barEligible ? Math.abs(row.reading.change) : 0) : null,
+      display: row.reading ? signedChangeText(row.reading.change, row.reading.suffix) : undefined,
+      tone: row.reading?.barEligible
+        ? Math.abs(row.reading.change) < 0.01 ? "muted" : row.reading.change > 0 ? "gain" : "loss"
+        : "muted",
+    }));
+    return { readLine, rankRows, barMax, barlessCount };
+  }, [legendItems, rangeId, visibleChartSeries]);
   const formulaLegendItems = useMemo(() => formulas.map((formula) => {
     const series = chartSeriesById.get(formula.id);
     return {
@@ -2037,6 +2125,12 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           : "empty";
     return [lens.id, { series: previewSeries, state }] as const;
   })), [activeLoadState.status, chartSeriesById, evidenceFreshness]);
+  /* Each analysis lens restores its own series, so a combination that loads none
+   * of them has nothing to preview: the strip shows one honest note instead of
+   * repeating an empty placeholder box in every card. */
+  const lensPreviewGap = MACRO_ANALYSIS_LENSES.every(
+    (lens) => (lensPreviewById.get(lens.id)?.state ?? "empty") === "empty",
+  );
   const collectionState: MacroSurfaceState = !clientStateReady
     ? "loading"
     : collectionStorageMode === "session"
@@ -2095,6 +2189,26 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           <p className="cpw5-hero__sub">{macroVerdict.detail}</p>
           <p className="cpw5-macro-description">{headerDescription}</p>
         </div>
+
+        {windowSummary.readLine ? (
+          <section
+            className="cpw5-macro-window-summary"
+            aria-label={`${rangeWindowLabel(rangeId)} 구간 표시 시리즈 성과`}
+            data-macro-chart-window-summary="true"
+          >
+            <p className="cpw5-macro-window-summary__read" data-macro-chart-window-read="true">{windowSummary.readLine}</p>
+            <RankBars
+              rows={windowSummary.rankRows}
+              max={windowSummary.barMax}
+              ariaLabel={`${rangeWindowLabel(rangeId)} 창 구간 성과 순위`}
+            />
+            {windowSummary.barlessCount > 0 ? (
+              <p className="cpw5-macro-window-summary__note">
+                막대는 막대가 있는 계열의 최대 변화 폭 기준 · %·스프레드 계열 {windowSummary.barlessCount}개는 값만 표시합니다.
+              </p>
+            ) : null}
+          </section>
+        ) : null}
 
         <Panel className="cpw5-macro-chart-card">
           <div className="cpw5-macro-v2-topbar" data-macro-v2-topbar="true">
@@ -2210,6 +2324,11 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                       <i aria-hidden style={{ backgroundColor: color }} />
                       <span><b>{definition.shortLabel}</b><small>{unit}</small></span>
                       <span><strong>{formatValue(latest)}</strong><small className={change === null ? undefined : change >= 0 ? "positive" : "negative"}>{change === null ? "—" : `${change >= 0 ? "+" : ""}${formatValue(change)}`}</small></span>
+                      {series ? (
+                        <span className="cpw5-macro-v2-legend__spark" data-macro-v2-legend-sparkline="ready">
+                          <LensSparkline series={series} state="ready" showRecessionShading={showRecessionShading} />
+                        </span>
+                      ) : null}
                     </button>
                     {editingSeriesId === selection.id ? (
                       <div className="cpw5-macro-v2-editor" data-macro-v2-series-editor="true" role="dialog" aria-label={`${definition.shortLabel} 편집`}>
@@ -2394,6 +2513,11 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             + 현재 차트 저장
           </button>
         </div>
+        {lensPreviewGap ? (
+          <p className="cpw5-macro-lens-note" data-macro-v2-lens-preview-note="empty">
+            지금 조합에서는 미리보기가 없습니다 — 렌즈를 불러오면 표시됩니다.
+          </p>
+        ) : null}
         <div className="cpw5-macro-lens-row">
           {MACRO_ANALYSIS_LENSES.map((lens) => {
             const preview = lensPreviewById.get(lens.id);
@@ -2411,11 +2535,13 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   data-macro-chart-lens={lens.id}
                 >
                   <strong>{lens.label}</strong>
-                  <LensSparkline
-                    series={preview?.series}
-                    state={preview?.state ?? "empty"}
-                    showRecessionShading={showRecessionShading}
-                  />
+                  {preview?.series || preview?.state === "loading" ? (
+                    <LensSparkline
+                      series={preview?.series}
+                      state={preview?.state ?? "empty"}
+                      showRecessionShading={showRecessionShading}
+                    />
+                  ) : null}
                   <span>{lens.detail}</span>
                 </button>
                 <EvidenceRail
