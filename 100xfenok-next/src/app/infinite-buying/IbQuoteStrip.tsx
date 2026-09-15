@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { EvidenceRail, Pill, StatStrip } from "@/components/ui";
 import { formatAsOf } from "@/lib/data-state";
 import { formatMoney, formatSignedPercent } from "@/lib/format";
-import type { QuotePayload } from "@/lib/quote-contract";
+import type { QuotePayload, QuoteProviderSource } from "@/lib/quote-contract";
 
 const STRIP_SYMBOLS = ["TQQQ", "SOXL"] as const;
 const REFRESH_INTERVAL_MS = 300_000;
@@ -100,7 +100,7 @@ function stripFreshness(cells: QuoteCell[]): StripFreshness {
 
 function sourceLabel(cells: QuoteCell[]): string {
   const sources = Array.from(
-    new Set(cells.map((cell) => cell.quote?.source).filter((value): value is string => typeof value === "string")),
+    new Set(cells.map((cell) => cell.quote?.source).filter((value): value is QuoteProviderSource => typeof value === "string")),
   );
   if (sources.length === 1) {
     if (sources[0] === "yahoo") return "Yahoo 시세";
