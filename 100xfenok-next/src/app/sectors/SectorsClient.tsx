@@ -6,7 +6,7 @@ import SmartMoneyPanel from "./SmartMoneyPanel";
 import RotationMapPanel from "./RotationMapPanel";
 import RotationStripPanel from "./RotationStripPanel";
 import ValuationBandPanel from "./ValuationBandPanel";
-import { Bar, Button, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
+import { Bar, Button, EvidenceRail, Panel, PanelHeader, Pill, Stat, StatStrip } from "@/components/ui";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
 import { ROUTES, withQuery } from "@/lib/routes";
@@ -21,6 +21,7 @@ import {
   bandPosition,
   rotationPoints,
   rotationRead,
+  type RotationPoint,
   type RotationWindow,
 } from "@/lib/sectors/rotation";
 import { formatPercent, formatSignedPercentDecimal } from "@/lib/dashboard/formatters";
@@ -34,6 +35,11 @@ function pct(value: number | null | undefined, digits = 1): string {
 function pp(value: number | null | undefined, digits = 1): string {
   const formatted = pct(value, digits);
   return formatted === "—" ? formatted : formatted.replace("%", "%p");
+}
+
+/** Spread magnitude between the two ends of the strip: 1 decimal, no sign. */
+function gapPp(value: number): string {
+  return `${formatDecimal(value, { digits: 1 })}%p`;
 }
 
 function toneOf(value: number | null | undefined): "positive" | "negative" | "neutral" {
@@ -459,6 +465,169 @@ function EtfComparePanel({
   );
 }
 
+/* Above/below-benchmark spread (study P1+P2): the same relative momentum the
+ * rotation map plots, read as a 0-centered 1D strip plus the four counts. Dot
+ * fill follows the map (relative >= 0 is this route's gain side); the above
+ * count follows rotationRead's beat rule (relative > 0). A sector leaves the
+ * domain only when it has no measured value — a bandless sector keeps its
+ * position and is named in the note instead. */
+const SPREAD_PAD_RATIO = 0.08;
+
+function spreadPlot(points: RotationPoint[]) {
+  const relatives = points.map((point) => point.relative);
+  const lo = Math.min(0, ...relatives);
+  const hi = Math.max(0, ...relatives);
+  const span = Math.max(0.5, hi - lo);
+  const pad = span * SPREAD_PAD_RATIO;
+  const dLo = lo - pad;
+  const dHi = hi + pad;
+  const caps = points
+    .map((point) => point.row.etfInfo?.marketCap)
+    .filter((cap): cap is number => typeof cap === "number" && cap > 0);
+  const maxCap = Math.max(...caps, 1);
+  return {
+    /** axis ends, printed under the track */
+    dLo,
+    dHi,
+    /** dot centre as a share of the track width */
+    leftPct: (value: number) => ((value - dLo) / (dHi - dLo)) * 100,
+    /** the rotation map's bubble diameter (16–56px) halved for the strip */
+    diameterPx: (point: RotationPoint) => {
+      const cap = point.row.etfInfo?.marketCap;
+      if (typeof cap !== "number" || cap <= 0) return 12;
+      return 8 + 20 * Math.sqrt(cap / maxCap);
+    },
+  };
+}
+
+function SectorsSpreadStrip({
+  rows,
+  points,
+  bandless,
+  bandHighCount,
+  bandReady,
+  windowLabel,
+  loading,
+  failed,
+  onRetry,
+}: {
+  rows: SectorRow[];
+  points: RotationPoint[];
+  bandless: RotationPoint[];
+  bandHighCount: number;
+  bandReady: boolean;
+  windowLabel: string;
+  loading: boolean;
+  failed: boolean;
+  onRetry: () => void;
+}) {
+  const ready = points.length > 0;
+  const plot = spreadPlot(points);
+  const strongest = points[0] ?? null;
+  const weakest = points.length > 1 ? points[points.length - 1] : null;
+  const aboveCount = points.filter((point) => point.relative > 0).length;
+  const missingCount = rows.length - points.length;
+  const zeroPct = plot.leftPct(0);
+  // The 0 tick needs room beside the end labels; the hairline always prints.
+  const showZeroLabel = zeroPct >= 12 && zeroPct <= 88;
+  const ariaLabel = ready
+    ? `${windowLabel} S&P 500 대비 상대 모멘텀 분포 · ${points.map((point) => `${point.row.name} ${pp(point.relative)}`).join(" · ")}`
+    : "S&P 500 대비 상대 모멘텀 분포";
+  const readLine = strongest === null
+    ? null
+    : weakest === null
+      ? `${windowLabel} 기준 ${strongest.row.name} ${pp(strongest.relative)} 한 곳만 값이 확보됐습니다.`
+      : `${windowLabel} 기준 최강 ${strongest.row.name} ${pp(strongest.relative)} · 최약 ${weakest.row.name} ${pp(weakest.relative)} · 격차 ${gapPp(strongest.relative - weakest.relative)}입니다.`;
+  const noteParts = ["점 크기 = 시가총액"];
+  if (missingCount > 0) noteParts.push(`값 미확보 ${missingCount}개 업종 제외`);
+  if (bandless.length > 0) noteParts.push(`밴드 미확보 ${bandless.length}개는 지도 밖`);
+
+  return (
+    <Panel
+      loading={loading}
+      empty={!loading && !ready}
+      emptyReason={failed ? "S&P 500 대비 섹터 분포를 불러오지 못했습니다" : "표시할 상대 모멘텀 자료가 없습니다"}
+      emptyNextRefresh="다음 마감 후 갱신"
+      emptyActionLabel={failed ? "다시 시도" : undefined}
+      onEmptyAction={failed ? onRetry : undefined}
+    >
+      <PanelHeader eyebrow="Spread" title="S&P 500 대비 상회·하회 분포" />
+      {ready ? (
+        <div className="sec-spread" data-sectors-spread="true">
+          <div className="sec-spread-main">
+            <div className="sec-spread-head">
+              <span className="sec-spread-side">하회</span>
+              <span className="sec-spread-measure">S&amp;P 500 대비 상대 모멘텀 (%p)</span>
+              <span className="sec-spread-side">상회</span>
+            </div>
+            <div className="sec-spread-track" data-sectors-spread-track="true" role="img" aria-label={ariaLabel}>
+              <span className="sec-spread-axis" aria-hidden="true" />
+              <span className="sec-spread-zero" aria-hidden="true" style={{ left: `${zeroPct}%` }} />
+              {points.map((point) => {
+                const size = plot.diameterPx(point);
+                const up = point.relative >= 0;
+                return (
+                  <span
+                    key={point.row.key}
+                    className={up ? "sec-spread-dot sec-spread-dot-up" : "sec-spread-dot sec-spread-dot-down"}
+                    data-sectors-spread-dot={point.row.etf}
+                    style={{ left: `${plot.leftPct(point.relative)}%`, width: `${size}px`, height: `${size}px` }}
+                    title={`${point.row.name} ${pp(point.relative)} · S&P 500 ${up ? "상회" : "하회"}`}
+                  />
+                );
+              })}
+            </div>
+            <div className="sec-spread-scale">
+              <span className="sec-spread-end tabular-nums">{pp(plot.dLo)}</span>
+              {showZeroLabel && (
+                <span className="sec-spread-zero-label tabular-nums" style={{ left: `${zeroPct}%` }}>0</span>
+              )}
+              <span className="sec-spread-end tabular-nums">{pp(plot.dHi)}</span>
+            </div>
+            <p className="sec-spread-count">{`${points.length}개 업종 중 ${aboveCount}개가 S&P 500 상회`}</p>
+            {readLine && <p className="sec-spread-read">{readLine}</p>}
+            <p className="sec-spread-note">{noteParts.join(" · ")}</p>
+          </div>
+          <div className="sec-spread-stats" data-sectors-spread-stats="true">
+            <StatStrip className="sec-stat-strip">
+              <Stat
+                className="sec-stat"
+                label="S&P 상회"
+                value={`${aboveCount}/${points.length}`}
+                sub={`${windowLabel} 기준`}
+              />
+              <Stat
+                className="sec-stat"
+                label="최강"
+                value={strongest ? <span className={strongest.relative >= 0 ? "sec-up" : "sec-down"}>{pp(strongest.relative)}</span> : "—"}
+                sub={strongest ? `${strongest.row.name} ${strongest.row.etf}` : undefined}
+              />
+              <Stat
+                className="sec-stat"
+                label="최약"
+                value={weakest ? <span className={weakest.relative >= 0 ? "sec-up" : "sec-down"}>{pp(weakest.relative)}</span> : "—"}
+                sub={weakest ? `${weakest.row.name} ${weakest.row.etf}` : undefined}
+              />
+              <Stat
+                className="sec-stat"
+                label="밴드 상단"
+                value={bandReady ? `${bandHighCount}개` : "—"}
+                sub="Fwd P/E 5년 밴드 상위 절반"
+              />
+            </StatStrip>
+          </div>
+        </div>
+      ) : (
+        <div className="sec-spread" data-sectors-spread="true">
+          <p className="sec-spread-read sec-spread-pending">
+            {loading ? "상대 모멘텀 분포를 불러오는 중입니다" : "표시할 상대 모멘텀 자료가 없습니다"}
+          </p>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
 export default function SectorsClient() {
   const router = useRouter();
   const {
@@ -582,6 +751,18 @@ export default function SectorsClient() {
           <MarketSectionNav active="sectors" />
         </div>
       </div>
+
+      <SectorsSpreadStrip
+        rows={rows}
+        points={rotationPts}
+        bandless={rotationBandless}
+        bandHighCount={bandHighCount}
+        bandReady={valuationReady}
+        windowLabel={rotationLabel}
+        loading={loading}
+        failed={heroFailed}
+        onRetry={refresh}
+      />
 
       <Panel
         loading={loading}
