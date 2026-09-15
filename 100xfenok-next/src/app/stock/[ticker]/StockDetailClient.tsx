@@ -51,6 +51,7 @@ import {
 import {
   SharedEdgePanel,
   SharedValuationBandPanel,
+  sharedValuationBandTone,
   type SharedValuationBand,
 } from "@/app/screener/StockDetailPanel";
 import { Panel, PanelHeader, Row, Stat, StatStrip, Bar, EvidenceRail, Pill, EmptyState, Skeleton, useDelayedLoading } from "@/components/ui";
@@ -3112,6 +3113,25 @@ export default function StockDetailClient({
       marketCapText !== "—" ? `${marketCapLabel} ${marketCapText}` : null,
     ].filter(Boolean).join(" · ");
 
+    const stripBandWeak = [fenokSignalLens?.profitabilityScore, fenokSignalLens?.growthScore, fenokSignalLens?.longTermScore].some((score) => isFiniteNumber(score) && score < 45);
+    const stripBandTone = valuationBandSummary ? sharedValuationBandTone(valuationBandSummary, stripBandWeak) : null;
+    const stripBandPct = valuationBandSummary && valuationBandSummary.max > valuationBandSummary.min
+      ? Math.max(0, Math.min(100, ((valuationBandSummary.current - valuationBandSummary.min) / (valuationBandSummary.max - valuationBandSummary.min)) * 100))
+      : null;
+    const stripTargets = yfData?.analyst_price_targets ?? {};
+    const stripTargetCurrent = isFiniteNumber(stripTargets.current) ? stripTargets.current : null;
+    const stripTargetMean = isFiniteNumber(stripTargets.mean) ? stripTargets.mean : null;
+    const stripUpsidePct = stripTargetCurrent && stripTargetMean && stripTargetCurrent !== 0 ? (stripTargetMean - stripTargetCurrent) / stripTargetCurrent : null;
+    const stripLongScore = fenokSignalLens
+      ? (isFiniteNumber(fenokSignalLens.longTermConvictionScore)
+        ? fenokSignalLens.longTermConvictionScore
+        : isFiniteNumber(fenokSignalLens.longTermScore) ? fenokSignalLens.longTermScore : null)
+      : null;
+    const stripHolders = Array.isArray(f13Entries)
+      ? [...new Set(f13Entries.map((entry) => entry?.investor).filter((id): id is string => typeof id === "string" && id !== ""))].sort()
+      : null;
+    const stripInstitutionsCount = isFiniteNumber(yfData?.major_holders?.institutionsCount) ? yfData.major_holders.institutionsCount : null;
+
     return (
       <div className="stock-shell canvas-plus cp-stock-detail-preview" data-canvas-plus data-canvas-plus-stock-detail-preview>
         <Panel>
@@ -3139,6 +3159,43 @@ export default function StockDetailClient({
             note={isEtfAsset && etfData === undefined ? `ETF 상세 ${DATA_STATE_LABELS.pending}...` : !yfLoaded ? `추가 지표 ${DATA_STATE_LABELS.pending}...` : !yfAvailable ? `추가 지표 ${DATA_STATE_LABELS.pending}` : null}
           />
           <EvidenceRail freshness={headerFreshness} source="통합 시세" asOf={typeof marketFactsSourceAsOf === "string" ? marketFactsSourceAsOf : "—"} coverage="가격·시가총액" next={marketFactsLoading || (displayPrice !== null && marketFacts) ? undefined : displayPrice !== null ? "통합 지표 연결 시" : "가격 연결 시"} onRetry={headerRetry} lkgAsOf={headerLkgAsOf} skeletonDelayMs={120} />
+          <section aria-label={`${symbol} 핵심 요약`} data-stock-summary-strip="true" className="border-t border-[var(--c-line)] px-4 py-3">
+            {valuationBandSummary && stripBandTone && stripBandPct !== null ? (
+              <div className="mb-2">
+                <p data-stock-summary-verdict className="text-[13px] font-bold leading-6 text-[var(--c-ink)]">
+                  {stripBandTone.label}{" "}
+                  <span className="font-semibold text-[var(--c-ink-2)]">
+                    · 현재 PER {valuationBandSummary.current.toFixed(1)}x · 밴드 {Math.round(stripBandPct)}%
+                  </span>
+                </p>
+                <div data-stock-summary-band-track className="relative mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--c-surface-2)]" role="img" aria-label={`PER 밴드 ${Math.round(stripBandPct)}%, ${stripBandTone.label}`}>
+                  <span data-stock-summary-band-marker className="absolute inset-y-[-2px] w-[3px] rounded-full bg-[var(--c-ink)]" style={{ left: `${stripBandPct}%`, transform: "translateX(-1.5px)" }} />
+                </div>
+                <p className="mt-1 text-[11px] tabular-nums text-[var(--c-ink-3)]">
+                  {valuationBandSummary.min.toFixed(1)}x · 평균 {isFiniteNumber(valuationBandSummary.avg) ? `${valuationBandSummary.avg.toFixed(1)}x` : valuationBandSummary.source} · {valuationBandSummary.max.toFixed(1)}x
+                </p>
+              </div>
+            ) : (
+              <p className="mb-2 text-[12px] text-[var(--c-ink-3)]">{rowLoading || detailLoading ? "밴드 확인 중" : "밴드를 확인하지 못했습니다"}</p>
+            )}
+            <StatStrip data-stock-summary-cells="true">
+              <Stat
+                label="신호"
+                value={fenokSignalLens === undefined ? "확인 중" : stripLongScore !== null ? `${Math.round(stripLongScore)}점` : "—"}
+                sub={fenokSignalLens ? (stripLongScore !== null ? (fmtKstMinute(fenokSignalLens.asOf) ? `기준 ${fmtKstMinute(fenokSignalLens.asOf)}` : "장기 확신 점수") : "점수를 확인하지 못했습니다") : fenokSignalLens === undefined ? undefined : "신호를 확인하지 못했습니다"}
+              />
+              <Stat
+                label="목표가"
+                value={!yfLoaded ? "확인 중" : stripUpsidePct !== null ? `${stripUpsidePct >= 0 ? "+" : ""}${(stripUpsidePct * 100).toFixed(0)}%` : "—"}
+                sub={!yfLoaded ? undefined : stripUpsidePct !== null && stripTargetMean !== null && stripTargetCurrent !== null ? `평균 목표 ${formatMoney(stripTargetMean, displayCurrency)} · 현재가 ${formatMoney(stripTargetCurrent, displayCurrency)}` : "목표가를 확인하지 못했습니다"}
+              />
+              <Stat
+                label="기관"
+                value={stripHolders === null ? (f13Error ? "—" : "확인 중") : stripHolders.length > 0 ? `${stripHolders.length}명` : stripInstitutionsCount !== null ? `${stripInstitutionsCount}개` : "—"}
+                sub={stripHolders === null ? (f13Error ? "보유 정보를 확인하지 못했습니다" : undefined) : stripHolders.length > 0 ? "슈퍼투자자 보유" : stripInstitutionsCount !== null ? "기관 수" : "보유 정보를 확인하지 못했습니다"}
+              />
+            </StatStrip>
+          </section>
         </Panel>
 
         {activeStockTab === "overview" ? (
