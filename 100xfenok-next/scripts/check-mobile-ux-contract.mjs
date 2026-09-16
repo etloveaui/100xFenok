@@ -3581,7 +3581,7 @@ async function collectScreenerExpandedChecks(page, route) {
     return root.querySelector('[data-testid="data-state-notice"][data-data-state="pending"]') === null;
   }, detailSelector, { timeout: 15000 }).catch(() => null);
 
-  return page.evaluate((currentRoute) => {
+  const expandedResult = await page.evaluate((currentRoute) => {
     const failures = [];
     const viewportWidth = window.innerWidth;
     const scrollWidth = Math.max(
@@ -3627,6 +3627,13 @@ async function collectScreenerExpandedChecks(page, route) {
       failures,
     };
   }, route);
+  // The sheet is modal with a fixed backdrop: close it so the following checks
+  // probe the list, not the backdrop (elementFromPoint would hit the sheet).
+  await page.keyboard.press("Escape");
+  await page.waitForSelector(detailSelector, { state: "detached", timeout: 5000 }).catch(async () => {
+    await page.locator(`${detailSelector} .cp-screener-detail-sheet__close`).first().click({ timeout: 3000 }).catch(() => null);
+  });
+  return expandedResult;
 }
 
 async function collectScreenerCheckboxTargetChecks(page, route) {
