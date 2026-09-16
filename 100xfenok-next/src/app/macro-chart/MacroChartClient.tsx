@@ -2230,51 +2230,12 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           <p className="cpw5-hero__verdict cpw5-macro-verdict" data-macro-chart-verdict="true">
             <span className="cpw5-macro-verdict__text" data-movement-tone={macroVerdict.tone}>{macroVerdict.lead}</span>
           </p>
-          <p className="cpw5-hero__sub">{macroVerdict.detail}</p>
-          <p className="cpw5-macro-description">{headerDescription}</p>
+          <details className="cpw5-macro-hero-more">
+            <summary>설명 보기</summary>
+            <p className="cpw5-hero__sub">{macroVerdict.detail}</p>
+            <p className="cpw5-macro-description">{headerDescription}</p>
+          </details>
         </div>
-
-        {windowSummary.readLine ? (
-          <section
-            className="cpw5-macro-window-summary"
-            aria-label={`${rangeWindowLabel(rangeId)} 구간 표시 시리즈 성과`}
-            data-macro-chart-window-summary="true"
-          >
-            <p className="cpw5-macro-window-summary__read" data-macro-chart-window-read="true">{windowSummary.readLine}</p>
-            <RankBars
-              rows={windowSummary.rankRows}
-              max={windowSummary.barMax}
-              ariaLabel={`${rangeWindowLabel(rangeId)} 창 구간 성과 순위`}
-            />
-            {windowSummary.barlessCount > 0 ? (
-              <p className="cpw5-macro-window-summary__note">
-                막대는 막대가 있는 계열의 최대 변화 폭 기준 · %·스프레드 계열 {windowSummary.barlessCount}개는 값만 표시합니다.
-              </p>
-            ) : null}
-          </section>
-        ) : null}
-
-        {activeLoadState.status === "ready" && nowSummary.readLine ? (
-          <section
-            className="cpw5-macro-window-summary"
-            aria-label={`${rangeWindowLabel(rangeId)} 창 지금 값 백분위`}
-            data-macro-chart-now="true"
-          >
-            <p className="cpw5-macro-window-summary__read" data-macro-chart-now-read="true">{nowSummary.readLine}</p>
-            {nowSummary.empty ? null : (
-              <RankBars
-                rows={nowSummary.rankRows}
-                max={100}
-                ariaLabel={`${rangeWindowLabel(rangeId)} 창 지금 값 백분위 순위`}
-              />
-            )}
-            {nowSummary.extraCount > 0 ? (
-              <p className="cpw5-macro-window-summary__note">
-                외 {nowSummary.extraCount}개 시리즈는 차트에서 확인하세요.
-              </p>
-            ) : null}
-          </section>
-        ) : null}
 
         <Panel className="cpw5-macro-chart-card">
           <div className="cpw5-macro-v2-topbar" data-macro-v2-topbar="true">
@@ -2550,6 +2511,48 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           />
         </Panel>
 
+        {windowSummary.readLine ? (
+          <section
+            className="cpw5-macro-window-summary"
+            aria-label={`${rangeWindowLabel(rangeId)} 구간 표시 시리즈 성과`}
+            data-macro-chart-window-summary="true"
+          >
+            <p className="cpw5-macro-window-summary__read" data-macro-chart-window-read="true">{windowSummary.readLine}</p>
+            <RankBars
+              rows={windowSummary.rankRows}
+              max={windowSummary.barMax}
+              ariaLabel={`${rangeWindowLabel(rangeId)} 창 구간 성과 순위`}
+            />
+            {windowSummary.barlessCount > 0 ? (
+              <p className="cpw5-macro-window-summary__note">
+                막대는 막대가 있는 계열의 최대 변화 폭 기준 · %·스프레드 계열 {windowSummary.barlessCount}개는 값만 표시합니다.
+              </p>
+            ) : null}
+          </section>
+        ) : null}
+
+        {activeLoadState.status === "ready" && nowSummary.readLine ? (
+          <section
+            className="cpw5-macro-window-summary"
+            aria-label={`${rangeWindowLabel(rangeId)} 창 지금 값 백분위`}
+            data-macro-chart-now="true"
+          >
+            <p className="cpw5-macro-window-summary__read" data-macro-chart-now-read="true">{nowSummary.readLine}</p>
+            {nowSummary.empty ? null : (
+              <RankBars
+                rows={nowSummary.rankRows}
+                max={100}
+                ariaLabel={`${rangeWindowLabel(rangeId)} 창 지금 값 백분위 순위`}
+              />
+            )}
+            {nowSummary.extraCount > 0 ? (
+              <p className="cpw5-macro-window-summary__note">
+                외 {nowSummary.extraCount}개 시리즈는 차트에서 확인하세요.
+              </p>
+            ) : null}
+          </section>
+        ) : null}
+
         <div className="cpw5-tile-row cpw5-macro-metrics" aria-label="매크로 분석 요약">
           {analysisCards.map((card) => (
             <article key={card.label} className="cpw5-tile cpw5-macro-evidence-tile" data-macro-v2-tile-evidence="analysis">
@@ -2696,12 +2699,12 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
           <span>{activeMacroContext.label}</span>
           <h2>{activeMacroContext.detail}</h2>
         </article>
-        {activeMacroContext.insightBullets.slice(0, 2).map((bullet) => (
-          <article key={bullet} className="cpw5-macro-insight-card">
-            <span>읽는 법</span>
-            <p>{bullet}</p>
-          </article>
-        ))}
+        <article className="cpw5-macro-insight-card">
+          <span>읽는 법</span>
+          {activeMacroContext.insightBullets.slice(0, 2).map((bullet) => (
+            <p key={bullet}>{bullet}</p>
+          ))}
+        </article>
       </section>
 
       <details
