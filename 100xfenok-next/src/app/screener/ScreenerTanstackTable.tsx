@@ -63,19 +63,6 @@ const CANVAS_PLUS_ROW_HEIGHT: Record<"compact" | "default" | "comfy", number> = 
 };
 const DESKTOP_TABLE_OVERSCAN = 10;
 
-// Band values drive the cell tint in canvas-plus.css / cp-w4-screener.css. The
-// band reads the same rounded figure the cell prints, so a row is never tinted
-// for a score it does not display.
-function canvasPlusScoreBand(columnId: string, stock: ScreenerStock): "high" | "mid" | "base" | undefined {
-  if (!canvasPlusScoreColumn(columnId)) return undefined;
-  const raw = screenerSortValue(stock, columnId as ScreenerSortKey);
-  if (typeof raw !== "number" || !Number.isFinite(raw)) return "base";
-  const score = Math.round(raw);
-  if (score >= 70) return "high";
-  if (score >= 60) return "mid";
-  return "base";
-}
-
 function canvasPlusColumnWidth(column?: ScreenerColumn): number {
   if (!column) return 42;
   if (column.key === "ticker") return 160;
@@ -551,7 +538,6 @@ function ScreenerTanstackTableInner({
                         key={cell.id}
                         data-align={canvasPlusPreview ? column?.align ?? "left" : undefined}
                         data-column-id={canvasPlusPreview ? cell.column.id : undefined}
-                        data-canvas-plus-score-band={canvasPlusPreview ? canvasPlusScoreBand(cell.column.id, stock) : undefined}
                         data-canvas-plus-sticky-cell={canvasPlusPreview ? canvasPlusStickyCell(cell.column.id) : undefined}
                         className={canvasPlusPreview ? undefined : column ? cx(densityClass.bodyCell, column.align === "right" ? "text-right" : "text-left") : densityClass.bodyCell}
                       >

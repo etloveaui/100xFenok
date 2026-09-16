@@ -1338,7 +1338,10 @@
 
 .cp-screener-table-wrap {
   overflow: auto;
-  max-height: 720px;
+  /* Whole-row fit: content box = 36px header + N x row pitch (border-box, so
+     max-height adds the 2px wrap border). 720px showed 15.5 rows and clipped
+     the last row in half; 698px lands exactly on 15 default rows. */
+  max-height: 698px;
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-radius-lg);
   background: var(--cp-surface);
@@ -1466,6 +1469,20 @@
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--cp-surface) 70%, transparent);
   scrollbar-color: color-mix(in srgb, var(--cp-text-muted) 36%, transparent) transparent;
   scrollbar-width: thin;
+}
+
+/* Per-density whole-row fit: header 36px + N x row pitch (compact 36x18,
+   default 44x15, comfy 52x12), plus the 2px wrap border. */
+[data-canvas-plus-screener-preview][data-row-density="compact"] .cp-screener-table-wrap {
+  max-height: 686px;
+}
+
+[data-canvas-plus-screener-preview][data-row-density="default"] .cp-screener-table-wrap {
+  max-height: 698px;
+}
+
+[data-canvas-plus-screener-preview][data-row-density="comfy"] .cp-screener-table-wrap {
+  max-height: 662px;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table-wrap::-webkit-scrollbar {
@@ -2461,6 +2478,19 @@
   color: var(--c-ink-2);
   font-size: 14px;
   font-weight: 900;
+}
+
+/* Guru badge: the visible pill stays small, but the tap target keeps its
+   44px rail through an invisible ::after extension. Putting min-height on
+   the pill itself drew a 44px empty ring next to the ticker. */
+[data-testid="screener-guru-badge"] {
+  position: relative;
+}
+
+[data-testid="screener-guru-badge"]::after {
+  content: "";
+  position: absolute;
+  inset: -12px -10px;
 }
 
 .cp-screener-inline-chip-row {

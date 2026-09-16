@@ -704,14 +704,6 @@
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* Score-band tint: the band attribute comes from the renderer and reads the
-   same rounded figure the cell prints (>=70 high, >=60 mid, otherwise base).
-   Intensity is the only signal — a second hue would fight the tone color the
-   number already carries. */
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-canvas-plus-score-band="high"] {
-  background: color-mix(in srgb, var(--cp-accent) 8%, var(--cp-surface));
-}
-
-[data-canvas-plus-screener-preview] .cp-screener-table td[data-canvas-plus-score-band="mid"] {
-  background: color-mix(in srgb, var(--cp-accent) 6%, var(--cp-surface));
-}
+/* Score cells carry no td tint: bar length is the only strength signal, so
+   adjacent score columns never read as a patchwork. The number keeps the
+   tone color it already carries. */

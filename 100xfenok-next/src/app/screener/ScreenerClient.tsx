@@ -411,7 +411,7 @@ function GuruHolderBadge({
       data-testid="screener-guru-badge"
       data-ticker={stock.ticker}
       data-superinvestors-href={ROUTES.superinvestorsByTicker(stock.ticker)}
-      className="touch-target inline-flex shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-2 py-px text-[9px] font-black text-slate-700"
+      className="inline-flex shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-2 py-px text-[9px] font-black text-slate-700"
       title={`${stock.ticker} 13F 보유 투자자 ${holders.toLocaleString("ko-KR")}명 · 투자자 화면에서 상세 보기`}
       onClick={(event) => {
         onBeforeNavigate?.();
@@ -587,7 +587,7 @@ function ScoreCell({
   return (
     <span className="inline-flex min-w-0 justify-end">
       <span
-        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-[2px] text-[10px] font-black tabular-nums leading-[14px] text-slate-700"
+        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-[2px] text-xs font-black tabular-nums leading-[14px] text-slate-700"
         title={title}
         aria-label={ariaLabel}
       >
