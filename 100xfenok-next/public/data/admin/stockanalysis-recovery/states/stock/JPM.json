@@ -4,16 +4,6 @@
   "entity": "JPM",
   "attempts": [
     {
-      "run_id": "33591076140",
-      "run_attempt": 1,
-      "event_name": "workflow_dispatch",
-      "schedule": "",
-      "natural": false,
-      "observed_at": "2026-09-02T04:32:53Z",
-      "outcome": "fresh",
-      "controlled": false
-    },
-    {
       "run_id": "33817024605",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -142,24 +132,34 @@
       "observed_at": "2026-09-15T23:34:19Z",
       "outcome": "fresh",
       "controlled": false
+    },
+    {
+      "run_id": "35163270010",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "20 21 * * *",
+      "natural": true,
+      "observed_at": "2026-09-16T23:41:21Z",
+      "outcome": "fresh",
+      "controlled": false
     }
   ],
   "resolution_state": "fresh_primary",
   "retry": false,
   "current": {
     "path": "data/stockanalysis/stocks/JPM.json",
-    "payload_sha256": "2a5759ebe42b984d0a0e57a35c460e8a3b1e882ac3a67bc2f832d9579038355e",
-    "source_as_of": "2026-09-15T20:00:00Z",
-    "fetched_at": "2026-09-15T23:34:35Z"
+    "payload_sha256": "cec1ccef4deb3076b93f027ee04299bd4aac18f6f9bb25db41e9a1b5367c13c7",
+    "source_as_of": "2026-09-16T20:00:00Z",
+    "fetched_at": "2026-09-16T23:41:38Z"
   },
-  "updated_at": "2026-09-15T23:34:19Z",
+  "updated_at": "2026-09-16T23:41:21Z",
   "last_attempt": {
-    "run_id": "35036097568",
+    "run_id": "35163270010",
     "run_attempt": 1,
     "event_name": "schedule",
     "schedule": "20 21 * * *",
     "natural": true,
-    "observed_at": "2026-09-15T23:34:19Z",
+    "observed_at": "2026-09-16T23:41:21Z",
     "outcome": "fresh",
     "controlled": false
   },
