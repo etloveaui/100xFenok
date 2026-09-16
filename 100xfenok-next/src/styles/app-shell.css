@@ -359,8 +359,8 @@ body.fnk-shell-ticker-off .fnk-shell{--shell-ticker-h:0px}
   .fnk-shell .ti-bars{grid-template-columns:1fr}
   }
 
-  /* ───────────── RESPONSIVE: mobile (PWA standalone) ───────────── */
-  @media(max-width:1023px){
+  /* ───────────── RESPONSIVE: mobile (PWA standalone, §12 ≤920px) ───────────── */
+  @media(max-width:920px){
   .fnk-shell .rail, .fnk-shell .topbar, .fnk-shell .ticker{display:none}
   .fnk-shell .content{margin-left:0; padding:calc(var(--appbar-h) + var(--safe-t) + var(--shell-ticker-h) + var(--s4)) var(--s4) calc(var(--tabbar-h) + var(--safe-b) + var(--s5)); max-width:none}
   .fnk-shell .appbar.searching ~ .content{padding-top:calc(var(--appbar-h) + var(--safe-t) + var(--shell-ticker-h) + var(--s4) + 48px)}
