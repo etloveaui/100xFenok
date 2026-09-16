@@ -628,6 +628,8 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
   }, [active, prices, grandTotal, connectionIndex, servicesIndex]);
 
   const connectionSummary = useMemo(() => buildPortfolioConnectionSummary(holdingRows, connectionIndex), [holdingRows, connectionIndex]);
+  const allBarePrices = holdingRows.length > 0 && holdingRows.every((row) => row.price == null);
+  const allBareConnections = holdingRows.length > 0 && holdingRows.every((row) => row.connection == null);
 
   if (portfolios.length === 0) {
     return (
@@ -656,7 +658,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           </div>
         )}
 
-        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-700">
               예시 데이터
@@ -665,13 +667,16 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           <p className="mt-2 text-xs font-semibold text-slate-500">
             아래는 샘플 포트폴리오입니다. 실제 데이터를 입력하려면 포트폴리오를 만드세요.
           </p>
+          <p className="mt-1 text-[12px] font-semibold text-slate-500">
+            예시는 보유 구조만 보여주며, 현재가·연결 열은 숨겼습니다.
+          </p>
           <div className="mt-3 grid gap-3 lg:hidden">
             {buildSampleRows().map((row) => (
-              <MobileHoldingCard key={`${row.sourceIndex}-${row.ticker}`} row={row} />
+              <MobileHoldingCard key={`${row.sourceIndex}-${row.ticker}`} row={row} hidePriceCols hideConnectionCol />
             ))}
           </div>
           <div className="scroll-hint-x mt-3 -mx-1 hidden px-1 lg:block" role="region" tabIndex={0} aria-label="샘플 보유 종목 표 가로 스크롤">
-            <HoldingsTable rows={buildSampleRows()} />
+            <HoldingsTable rows={buildSampleRows()} hidePriceCols hideConnectionCol />
           </div>
           <div className="mt-3">
             <DataStateNotice
@@ -685,7 +690,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           <button
             type="button"
             onClick={handleCreateEmpty}
-            className="mt-4 inline-flex min-h-9 items-center rounded-full border border-brand-interactive bg-brand-interactive px-4 text-[11px] font-black text-white transition hover:bg-brand-interactive/90"
+            className="mt-4 inline-flex min-h-9 items-center rounded-full border border-brand-interactive bg-brand-interactive px-4 text-[12px] font-black text-white transition hover:bg-brand-interactive/90"
           >
             내 포트폴리오 만들기
           </button>
@@ -720,7 +725,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
               key={p.id}
               type="button"
               onClick={() => setActiveId(p.id)}
-              className={`inline-flex min-h-11 items-center rounded-full border px-3 text-[11px] font-black transition sm:min-h-8 ${
+              className={`inline-flex min-h-11 items-center rounded-full border px-3 text-[12px] font-black transition sm:min-h-8 ${
                 active?.id === p.id
                   ? "border-brand-interactive bg-brand-interactive/5 text-brand-interactive"
                   : "border-slate-200 bg-white text-slate-500 hover:text-slate-800"
@@ -732,7 +737,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           <button
             type="button"
             onClick={handleCreateEmpty}
-            className="inline-flex min-h-11 items-center rounded-full border border-dashed border-slate-300 px-3 text-[11px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
+            className="inline-flex min-h-11 items-center rounded-full border border-dashed border-slate-300 px-3 text-[12px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
           >
             + 새 포트폴리오
           </button>
@@ -742,7 +747,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
                 type="button"
                 onClick={handleRenamePortfolio}
                 aria-label="포트폴리오 이름 변경"
-                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
               >
                 이름 변경
               </button>
@@ -750,7 +755,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
                 type="button"
                 onClick={handleDeletePortfolio}
                 aria-label="포트폴리오 삭제"
-                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-600 transition hover:border-rose-400 hover:text-rose-600 sm:min-h-8"
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-600 transition hover:border-rose-400 hover:text-rose-600 sm:min-h-8"
               >
                 삭제
               </button>
@@ -761,7 +766,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             onClick={handleConnectionExport}
             disabled={holdingRows.length === 0}
             data-portfolio-connection-csv-action
-            className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 sm:min-h-8"
+            className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 sm:min-h-8"
           >
             연결 CSV
           </button>
@@ -818,19 +823,33 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
       />
 
       {/* Holdings table */}
-      <div data-portfolio-section="holdings" className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+      <div data-portfolio-section="holdings" className="rounded-2xl border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-black tracking-tight text-slate-900">보유 종목</h2>
+        {allBarePrices && (
+          <p className="mt-2 text-[12px] font-semibold text-slate-500">
+            현재가{allBareConnections ? "·연결 정보" : ""}를 확인하기 전이라 해당 열을 숨겼습니다.
+            {priceRetryable && (
+              <button
+                type="button"
+                onClick={handleRetryPrices}
+                className="ml-2 inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-black text-brand-interactive transition hover:border-brand-interactive"
+              >
+                다시 시도
+              </button>
+            )}
+          </p>
+        )}
         <div className="mt-3 grid gap-3 lg:hidden">
           {holdingRows.length === 0 ? (
             <HoldingsEmptyState />
           ) : (
             holdingRows.map((row) => (
-              <MobileHoldingCard key={`${row.sourceIndex}-${row.ticker}`} row={row} onEdit={handleEditHolding} onDelete={handleDeleteHolding} />
+              <MobileHoldingCard key={`${row.sourceIndex}-${row.ticker}`} row={row} onEdit={handleEditHolding} onDelete={handleDeleteHolding} hidePriceCols={allBarePrices} hideConnectionCol={allBareConnections} />
             ))
           )}
         </div>
         <div className="scroll-hint-x mt-3 -mx-1 hidden px-1 lg:block" role="region" tabIndex={0} aria-label="보유 종목 표 가로 스크롤">
-          <HoldingsTable rows={holdingRows} onEdit={handleEditHolding} onDelete={handleDeleteHolding} />
+          <HoldingsTable rows={holdingRows} onEdit={handleEditHolding} onDelete={handleDeleteHolding} hidePriceCols={allBarePrices} hideConnectionCol={allBareConnections} />
         </div>
         {missingCount > 0 && (
           <p className="mt-2 flex flex-wrap items-center gap-2 text-[10px] font-semibold text-slate-500">
@@ -849,7 +868,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
       </div>
 
       {/* Add ticker form */}
-      <div data-portfolio-section="add-holding" className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+      <div data-portfolio-section="add-holding" className="rounded-2xl border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-black tracking-tight text-slate-900">종목 추가</h2>
         <div className="mt-2 flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-end">
           <label className="flex w-full flex-col gap-1 sm:w-auto">
@@ -888,7 +907,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           <button
             type="button"
             onClick={handleAddHolding}
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/10 sm:min-h-9"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[12px] font-black text-brand-interactive transition hover:bg-brand-interactive/10 sm:min-h-9"
           >
             {editingTarget ? "저장" : "추가"}
           </button>
@@ -902,7 +921,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
                 setNewCost("");
                 setStorageError(null);
               }}
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 px-3 text-[11px] font-black text-slate-500 transition hover:border-slate-300 hover:text-slate-700 sm:min-h-9"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-200 px-3 text-[12px] font-black text-slate-500 transition hover:border-slate-300 hover:text-slate-700 sm:min-h-9"
             >
               취소
             </button>
@@ -911,7 +930,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
       </div>
 
       {/* Cash edit */}
-      <div data-portfolio-section="cash" className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+      <div data-portfolio-section="cash" className="rounded-2xl border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-black tracking-tight text-slate-900">현금</h2>
         {editingCash ? (
           <div className="mt-2 flex items-center gap-2">
@@ -927,14 +946,14 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             <button
               type="button"
               onClick={handleCashSave}
-              className="inline-flex min-h-11 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive sm:min-h-8"
+              className="inline-flex min-h-11 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[12px] font-black text-brand-interactive sm:min-h-8"
             >
               저장
             </button>
             <button
               type="button"
               onClick={() => setEditingCash(false)}
-              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 px-3 text-[11px] font-black text-slate-500 sm:min-h-8"
+              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 px-3 text-[12px] font-black text-slate-500 sm:min-h-8"
             >
               취소
             </button>
@@ -961,7 +980,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
 
       {/* Import / Export */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <div data-portfolio-export-section className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+        <div data-portfolio-export-section className="rounded-2xl border border-slate-200 bg-white p-4">
           <h2 className="text-sm font-black tracking-tight text-slate-900">백업 내보내기</h2>
           <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">
             현재 선택한 포트폴리오만 JSON 파일로 저장합니다.
@@ -970,7 +989,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             type="button"
             onClick={handleExport}
             data-portfolio-export-json-action
-            className="mt-2 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
+            className="mt-2 inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-700 transition hover:border-brand-interactive hover:text-brand-interactive sm:min-h-8"
           >
             내보내기
           </button>
@@ -1022,13 +1041,13 @@ function PortfolioLocalBoundaryStrip() {
   return (
     <section
       data-portfolio-local-boundary
-      className="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/70 p-4"
+      className="rounded-lg border border-slate-200 bg-slate-50 p-4"
       aria-label="포트폴리오 저장 경계"
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">개인 데이터 경계</p>
-          <p className="mt-1 text-xs font-semibold leading-5 text-emerald-900">
+          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">개인 데이터 경계</p>
+          <p className="mt-1 text-xs font-semibold leading-5 text-slate-700">
             입력한 포트폴리오는 이 브라우저에만 남고, 백업은 사용자가 직접 내보낸 파일로만 이동합니다.
           </p>
         </div>
@@ -1037,10 +1056,10 @@ function PortfolioLocalBoundaryStrip() {
             <div
               key={item.key}
               data-portfolio-boundary-item={item.key}
-              className="rounded-xl border border-emerald-200 bg-white px-3 py-2"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2"
             >
-              <p className="text-[9px] font-black uppercase tracking-[0.08em] text-emerald-600">{item.label}</p>
-              <p className="mt-0.5 text-[11px] font-black text-emerald-950">{item.value}</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+              <p className="mt-0.5 text-[12px] font-black text-slate-900">{item.value}</p>
             </div>
           ))}
         </div>
@@ -1277,7 +1296,7 @@ function PortfolioConnectionPanel({
   ];
 
   return (
-    <section data-portfolio-section="connections" className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+    <section data-portfolio-section="connections" className="rounded-2xl border border-slate-200 bg-white p-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <h2 className="text-sm font-black tracking-tight text-slate-900">데이터 연결 서비스</h2>
@@ -1375,10 +1394,14 @@ function MobileHoldingCard({
   row,
   onEdit,
   onDelete,
+  hidePriceCols,
+  hideConnectionCol,
 }: {
   row: HoldingRow;
   onEdit?: (row: HoldingRow) => void;
   onDelete?: (row: HoldingRow) => void;
+  hidePriceCols?: boolean;
+  hideConnectionCol?: boolean;
 }) {
   const subtitle = row.connection === undefined
     ? "연결 확인 중"
@@ -1415,9 +1438,11 @@ function MobileHoldingCard({
           </div>
         ) : null}
       </div>
-      <div className="mt-3">
-        <HoldingConnectionMini row={row} />
-      </div>
+      {hideConnectionCol ? null : (
+        <div className="mt-3">
+          <HoldingConnectionMini row={row} />
+        </div>
+      )}
       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-slate-50 p-2">
           <p className="text-[10px] font-black uppercase text-slate-500">수량</p>
@@ -1427,16 +1452,21 @@ function MobileHoldingCard({
           <p className="text-[10px] font-black uppercase text-slate-500">평단</p>
           <p className="mt-1 font-black tabular-nums text-slate-900">{formatCurrency(row.avg_cost, "USD")}</p>
         </div>
-        <div className="rounded-xl bg-slate-50 p-2">
-          <p className="text-[10px] font-black uppercase text-slate-500">현재가</p>
-          <p className="mt-1 font-black tabular-nums text-slate-900">{row.price != null ? formatCurrency(row.price, "USD") : "—"}</p>
-        </div>
-        <div className="rounded-xl bg-slate-50 p-2">
-          <p className="text-[10px] font-black uppercase text-slate-500">평가액</p>
-          <p className="mt-1 font-black tabular-nums text-slate-900">{row.marketValue != null ? formatCurrency(row.marketValue, "USD") : "—"}</p>
-        </div>
+        {hidePriceCols ? null : (
+          <>
+            <div className="rounded-xl bg-slate-50 p-2">
+              <p className="text-[10px] font-black uppercase text-slate-500">현재가</p>
+              <p className="mt-1 font-black tabular-nums text-slate-900">{row.price != null ? formatCurrency(row.price, "USD") : "—"}</p>
+            </div>
+            <div className="rounded-xl bg-slate-50 p-2">
+              <p className="text-[10px] font-black uppercase text-slate-500">평가액</p>
+              <p className="mt-1 font-black tabular-nums text-slate-900">{row.marketValue != null ? formatCurrency(row.marketValue, "USD") : "—"}</p>
+            </div>
+          </>
+        )}
       </div>
-      <div className="mt-3 flex items-center justify-between gap-2 text-sm">
+      {hidePriceCols ? null : (
+        <div className="mt-3 flex items-center justify-between gap-2 text-sm">
         <span className={` font-black tabular-nums ${row.gain != null ? gainColor(row.gain) : "text-slate-500"}`}>
           {row.gain != null ? formatCurrency(row.gain, "USD") : "—"}
         </span>
@@ -1446,7 +1476,8 @@ function MobileHoldingCard({
         <span className="tabular-nums text-xs font-bold text-slate-500">
           {row.weight != null ? formatPercent(row.weight, { digits: 1 }) : "—"}
         </span>
-      </div>
+        </div>
+      )}
     </article>
   );
 }
@@ -1455,10 +1486,14 @@ function HoldingsTable({
   rows,
   onEdit,
   onDelete,
+  hidePriceCols,
+  hideConnectionCol,
 }: {
   rows: HoldingRow[];
   onEdit?: (row: HoldingRow) => void;
   onDelete?: (row: HoldingRow) => void;
+  hidePriceCols?: boolean;
+  hideConnectionCol?: boolean;
 }) {
   if (rows.length === 0) {
     return <HoldingsEmptyState />;
@@ -1469,14 +1504,18 @@ function HoldingsTable({
       <thead>
         <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
           <th className="px-2 py-2 text-left">티커</th>
-          <th className="px-2 py-2 text-left">연결</th>
+          {hideConnectionCol ? null : <th className="px-2 py-2 text-left">연결</th>}
           <th className="px-2 py-2 text-right">수량</th>
           <th className="px-2 py-2 text-right">평단</th>
-          <th className="px-2 py-2 text-right">현재가</th>
-          <th className="px-2 py-2 text-right">평가액</th>
-          <th className="px-2 py-2 text-right">손익</th>
-          <th className="px-2 py-2 text-right">손익률</th>
-          <th className="px-2 py-2 text-right">비중</th>
+          {hidePriceCols ? null : (
+            <>
+              <th className="px-2 py-2 text-right">현재가</th>
+              <th className="px-2 py-2 text-right">평가액</th>
+              <th className="px-2 py-2 text-right">손익</th>
+              <th className="px-2 py-2 text-right">손익률</th>
+              <th className="px-2 py-2 text-right">비중</th>
+            </>
+          )}
           {onEdit || onDelete ? <th className="px-2 py-2" /> : null}
         </tr>
       </thead>
@@ -1486,30 +1525,36 @@ function HoldingsTable({
             <td className="px-2 py-2">
               <TickerChip ticker={r.ticker} variant="inline" />
             </td>
-            <td className="px-2 py-2">
-              <HoldingConnectionMini row={r} />
-            </td>
+            {hideConnectionCol ? null : (
+              <td className="px-2 py-2">
+                <HoldingConnectionMini row={r} />
+              </td>
+            )}
             <td className="px-2 py-2 text-right tabular-nums font-bold text-slate-700">
               {r.shares}
             </td>
             <td className="px-2 py-2 text-right tabular-nums text-slate-700">
               {formatCurrency(r.avg_cost, "USD")}
             </td>
-            <td className="px-2 py-2 text-right tabular-nums font-bold text-slate-900">
-              {r.price != null ? formatCurrency(r.price, "USD") : "—"}
-            </td>
-            <td className="px-2 py-2 text-right tabular-nums font-bold text-slate-900">
-              {r.marketValue != null ? formatCurrency(r.marketValue, "USD") : "—"}
-            </td>
-            <td className={`px-2 py-2 text-right  tabular-nums font-bold ${r.gain != null ? gainColor(r.gain) : "text-slate-500"}`}>
-              {r.gain != null ? formatCurrency(r.gain, "USD") : "—"}
-            </td>
-            <td className={`px-2 py-2 text-right  tabular-nums font-bold ${r.gainPct != null ? gainColor(r.gainPct) : "text-slate-500"}`}>
-              {r.gainPct != null ? formatSignedPercent(r.gainPct, { digits: 2 }) : "—"}
-            </td>
-            <td className="px-2 py-2 text-right tabular-nums text-slate-500">
-              {r.weight != null ? formatPercent(r.weight, { digits: 1 }) : "—"}
-            </td>
+            {hidePriceCols ? null : (
+              <>
+                <td className="px-2 py-2 text-right tabular-nums font-bold text-slate-900">
+                  {r.price != null ? formatCurrency(r.price, "USD") : "—"}
+                </td>
+                <td className="px-2 py-2 text-right tabular-nums font-bold text-slate-900">
+                  {r.marketValue != null ? formatCurrency(r.marketValue, "USD") : "—"}
+                </td>
+                <td className={`px-2 py-2 text-right  tabular-nums font-bold ${r.gain != null ? gainColor(r.gain) : "text-slate-500"}`}>
+                  {r.gain != null ? formatCurrency(r.gain, "USD") : "—"}
+                </td>
+                <td className={`px-2 py-2 text-right  tabular-nums font-bold ${r.gainPct != null ? gainColor(r.gainPct) : "text-slate-500"}`}>
+                  {r.gainPct != null ? formatSignedPercent(r.gainPct, { digits: 2 }) : "—"}
+                </td>
+                <td className="px-2 py-2 text-right tabular-nums text-slate-500">
+                  {r.weight != null ? formatPercent(r.weight, { digits: 1 }) : "—"}
+                </td>
+              </>
+            )}
             {onEdit || onDelete ? (
               <td className="px-2 py-2 text-right">
                 <div className="inline-flex items-center gap-1">
@@ -1566,7 +1611,7 @@ function PortfolioImportSection({
   useEffect(() => setReady(true), []);
 
   return (
-    <div data-portfolio-import-section className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
+    <div data-portfolio-import-section className="rounded-2xl border border-slate-200 bg-white p-4">
       <h2 className="text-sm font-black tracking-tight text-slate-900">{title}</h2>
       <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">{description}</p>
       <textarea
@@ -1580,7 +1625,7 @@ function PortfolioImportSection({
         placeholder="백업 내용을 붙여넣으세요"
         aria-label="백업 JSON 붙여넣기"
         data-portfolio-import-json-input
-        className="mt-2 h-32 w-full rounded-xl border border-slate-200 bg-white p-2 font-mono text-[10px] text-slate-700 outline-none focus:border-brand-interactive"
+        className="mt-2 h-20 w-full rounded-xl border border-slate-200 bg-white p-2 font-mono text-[10px] text-slate-700 outline-none focus:border-brand-interactive"
       />
       {importError && (
         <p role="alert" className="mt-1 text-[10px] font-bold text-rose-600">
@@ -1592,7 +1637,7 @@ function PortfolioImportSection({
         onClick={onImport}
         disabled={!ready || !importText.trim()}
         data-portfolio-import-json-action
-        className="mt-2 inline-flex min-h-11 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[11px] font-black text-brand-interactive transition hover:bg-brand-interactive/10 disabled:opacity-40 sm:min-h-8"
+        className="mt-2 inline-flex min-h-11 items-center rounded-full border border-brand-interactive bg-brand-interactive/5 px-3 text-[12px] font-black text-brand-interactive transition hover:bg-brand-interactive/10 disabled:opacity-40 sm:min-h-8"
       >
         가져오기
       </button>
