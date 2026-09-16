@@ -1,15 +1,12 @@
 "use client";
 
-import { EvidenceRail, Pill, Skeleton, StaleState } from "@/components/ui";
+import { Pill, Skeleton, StaleState } from "@/components/ui";
 import { formatAsOf } from "@/lib/data-state";
 import { formatInteger } from "@/lib/format";
 import {
   computeEtfInsights,
-  etfClockKind,
-  etfRailClockDate,
   etfSurfacePublishedFloor,
   isEtfClockStale,
-  openEtfEvidence,
   type EtfSurfaceData,
 } from "./etfSurfaceData";
 
@@ -23,8 +20,6 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
   const empty = loaded && !insights;
   const published = etfSurfacePublishedFloor(surface.universe, snapshot);
   const stale = loaded && !!insights && isEtfClockStale(insights.asOf ?? published);
-  const asOfLabel = etfRailClockDate(insights?.asOf ?? null, published);
-  const asOfKind = etfClockKind(insights?.asOf ?? null, published);
 
   if (loading) {
     return (
@@ -45,13 +40,6 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
             다시 시도
           </button>
         </p>
-        <EvidenceRail
-          freshness="error"
-          source="ETF 발행사 목록 · 거래소"
-          asOf="—"
-          coverage="—"
-          onRetry={reload}
-        />
       </div>
     );
   }
@@ -86,29 +74,23 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
             <span className="etf-eyebrow">ETF · 시장 스냅샷</span>
             <Pill>전체 {formatInteger(totalCount)}개</Pill>
           </div>
+          {/* B2 (B5 §6): H1 is one line — the listing-window detail lives in
+              the sub line, not the headline. */}
           <h1 className="etf-title">
-            신규 상장 <b className="tabular-nums">{formatInteger(newCount)}</b>개{newWindowLabel ? ` (${newWindowLabel})` : null} · {dominantBucket?.label ?? "주식형"} 비중{" "}
+            신규 상장 <b className="tabular-nums">{formatInteger(newCount)}</b>개 · {dominantBucket?.label ?? "주식형"} 비중{" "}
             <b className="tabular-nums">{dominantBucket?.pct ?? 0}%</b> 중심 · 레버리지·인버스 비중{" "}
             <b className="tabular-nums">{leverageInversePct}%</b>
           </h1>
           <span className="etf-sub">
-            오늘 상위 거래량·변동률 종목 {formatInteger(topMoversCount)}개 중{" "}
+            {newWindowLabel ? `${newWindowLabel} · ` : null}오늘 상위 거래량·변동률 종목 {formatInteger(topMoversCount)}개 중{" "}
             <b className="tabular-nums">{formatInteger(topMoversLeverageInverseCount)}개</b>가 레버리지·인버스입니다. 관심·거래 쏠림
             기준이며 자금 유입·유출액은 포함하지 않습니다.
           </span>
         </div>
         <Pill>{pillLabel}</Pill>
       </div>
-      <EvidenceRail
-        freshness={stale ? "stale" : (insights.asOf ?? published) ? "fresh" : "fixed"}
-        source="ETF 발행사 목록 · 거래소"
-        asOf={asOfLabel}
-        asOfKind={asOfKind === "published" ? "published" : undefined}
-        coverage={`${formatInteger(totalCount)}개 전량`}
-        lkgAsOf={stale && asOf ? asOf : undefined}
-        onRetry={stale ? reload : undefined}
-        onEvidence={() => openEtfEvidence("/api/data/stockanalysis/etf-universe")}
-      />
+      {/* B2 (B4): single source strip lives with the list — the hero keeps its
+          stale banner + inline retry, no per-panel rail. */}
     </div>
   );
 }

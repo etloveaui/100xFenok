@@ -1,15 +1,12 @@
 "use client";
 
-import { Bar, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
+import { Bar, Panel, PanelHeader, Pill } from "@/components/ui";
 import { formatInteger } from "@/lib/format";
 import {
   computeEtfInsights,
-  etfClockKind,
-  etfRailClockDate,
   etfUniverseAsOf,
   etfUniversePublishedAt,
   isEtfClockStale,
-  openEtfEvidence,
   type EtfSurfaceData,
 } from "./etfSurfaceData";
 
@@ -29,8 +26,6 @@ export default function EtfUniversePanel({ surface }: { surface: EtfSurfaceData 
     .filter((bucket) => bucket.count > 0)
     .map((bucket) => `${bucket.label} ${bucket.pct}%`)
     .join(" · ");
-  const asOfLabel = etfRailClockDate(clock, published);
-  const asOfKind = etfClockKind(clock, published);
 
   return (
     <Panel
@@ -58,7 +53,13 @@ export default function EtfUniversePanel({ surface }: { surface: EtfSurfaceData 
                 {insights.dominantBucket?.label ?? "—"} {insights.dominantBucket?.pct ?? 0}%
               </Pill>
             </div>
-            <Bar value={insights.dominantBucket?.pct ?? 0} aria-label={`자산군 최대 비중 ${insights.dominantBucket?.label ?? ""} ${insights.dominantBucket?.pct ?? 0}%`} />
+            {/* B2 (B6 §4): share bars are neutral ink — only the leverage bar
+                keeps the dc-specified warn exception. */}
+            <Bar
+              className="etf-bar-ink"
+              value={insights.dominantBucket?.pct ?? 0}
+              aria-label={`자산군 최대 비중 ${insights.dominantBucket?.label ?? ""} ${insights.dominantBucket?.pct ?? 0}%`}
+            />
             <span className="etf-uni-summary">{compositionSummary || "—"}</span>
           </div>
           <div className="etf-uni-cell">
@@ -78,16 +79,8 @@ export default function EtfUniversePanel({ surface }: { surface: EtfSurfaceData 
           </div>
         </div>
       ) : null}
-      <EvidenceRail
-        freshness={loading ? "pending" : feedFailed ? "error" : stale ? "stale" : (clock ?? published) ? "fresh" : "fixed"}
-        source="ETF 발행사 목록"
-        asOf={asOfLabel}
-        asOfKind={asOfKind === "published" ? "published" : undefined}
-        coverage={insights ? `${formatInteger(insights.totalCount)}개 전량` : "—"}
-        lkgAsOf={stale && clock ? clock : undefined}
-        onRetry={feedFailed || stale ? reload : undefined}
-        onEvidence={feedFailed ? undefined : () => openEtfEvidence("/api/data/stockanalysis/etf-universe")}
-      />
+      {/* B2 (B4): single source strip lives with the list — panels keep
+          stale/empty states + retry actions, no per-panel rail. */}
     </Panel>
   );
 }

@@ -1,20 +1,16 @@
 "use client";
 
 import TransitionLink from "@/components/TransitionLink";
-import { EvidenceRail, Panel, PanelHeader } from "@/components/ui";
+import { Panel, PanelHeader } from "@/components/ui";
 import { formatInteger } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
 import {
   computeEtfInsights,
-  etfClockKind,
   etfInlineClockLabel,
-  etfRailClockDate,
-  etfSnapshotPublishedClocks,
   etfSnapshotSubfeedClocks,
   fmtSignedPct,
   fmtVolumeCompact,
   isEtfClockStale,
-  openEtfEvidence,
   type EtfSurfaceData,
 } from "./etfSurfaceData";
 
@@ -53,10 +49,6 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
     .filter((value): value is string => value !== null)
     .sort()
     .at(0) ?? null;
-  const publishedFloor = [newPublished, screenerPublished]
-    .filter((value): value is string => value !== null)
-    .sort()
-    .at(0) ?? null;
 
   const newPreview = snapshot?.newEtfs?.records?.slice(0, 3) ?? [];
   // Same trailing-window truth as the hero (fh-380 item 2): show the real span
@@ -68,8 +60,6 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
   const newSpanLabel = newSpanSorted.length > 0 ? `상장일 ${newSpanSorted[0]}~${newSpanSorted[newSpanSorted.length - 1]}` : null;
   const volumeLeaders = insights?.volumeLeadersTop3 ?? [];
   const changeLeaders = insights?.changeLeadersTop3 ?? [];
-  const asOfLabel = etfRailClockDate(floor, publishedFloor);
-  const asOfKind = etfClockKind(floor, publishedFloor);
 
   return (
     <Panel
@@ -149,16 +139,8 @@ export default function EtfTodayPanel({ surface }: { surface: EtfSurfaceData }) 
           </div>
         </div>
       ) : null}
-      <EvidenceRail
-        freshness={loading ? "pending" : feedFailed ? "error" : stale ? "stale" : (floor ?? publishedFloor) ? "fresh" : "fixed"}
-        source="거래소 · 발행사 공시"
-        asOf={asOfLabel}
-        asOfKind={asOfKind === "published" ? "published" : undefined}
-        coverage={insights ? `${formatInteger(insights.totalCount)}개 전량` : "—"}
-        lkgAsOf={stale && floor ? floor : undefined}
-        onRetry={feedFailed || stale ? reload : undefined}
-        onEvidence={feedFailed ? undefined : () => openEtfEvidence("/api/data/stockanalysis/etf-snapshot")}
-      />
+      {/* B2 (B4): single source strip lives with the list — panels keep
+          stale/empty states + retry actions, no per-panel rail. */}
     </Panel>
   );
 }

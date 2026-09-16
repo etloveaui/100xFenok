@@ -366,11 +366,13 @@ export default function EtfUnifiedTable({ surface }: { surface: EtfSurfaceData }
     {
       key: "category",
       header: "자산군",
+      align: "left",
       render: (row) => row.category ?? "미분류",
     },
     {
       key: "classification",
       header: "구분",
+      align: "left",
       render: (row) => {
         const labels = etfTypeLabels(row, digitalTickers);
         return (

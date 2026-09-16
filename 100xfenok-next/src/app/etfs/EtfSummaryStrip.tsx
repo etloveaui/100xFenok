@@ -8,15 +8,17 @@ import {
   type EtfSurfaceData,
 } from "./etfSurfaceData";
 
-/* Categorical tones for the asset-class band: buckets are kinds, not grades —
- * the legend and aria label carry the exact counts, so no tone implies a
- * judgment. Tones are keyed by bucket (not rank), so colors stay stable. */
-const BUCKET_TONES: Record<EtfCompositionBucketKey, "gain" | "muted" | "neutral" | "warn"> = {
+/* B2 (B6 §4): composition buckets are kinds, not grades — the band is
+ * achromatic ink (alternating neutral/muted so adjacent nonzero buckets keep
+ * a hairline split), the legend and aria label carry exact counts, and no
+ * tone implies a judgment. The only chromatic emphasis on this screen is the
+ * dc-specified leverage warn bar; up/down meaning colors stay on numbers. */
+const BUCKET_TONES: Record<EtfCompositionBucketKey, "muted" | "neutral"> = {
   equity: "neutral",
   fixedIncome: "muted",
-  commodity: "warn",
-  digital: "gain",
-  other: "muted",
+  commodity: "neutral",
+  digital: "muted",
+  other: "neutral",
 };
 
 export default function EtfSummaryStrip({ surface }: { surface: EtfSurfaceData }) {
