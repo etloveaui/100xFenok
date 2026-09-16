@@ -44,6 +44,19 @@
   gap: 12px;
 }
 
+/* B3-5: the clock pill never wraps or shrinks — at 375px the H1 squeezed it
+   into 4 lines. It keeps one line; the row wraps it below the title instead. */
+.etf-hero-clock {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .etf-hero-top {
+    flex-wrap: wrap;
+  }
+}
+
 .etf-hero-title-block {
   display: flex;
   flex-direction: column;

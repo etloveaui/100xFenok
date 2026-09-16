@@ -87,7 +87,7 @@ export default function EtfHeroPanel({ surface }: { surface: EtfSurfaceData }) {
             기준이며 자금 유입·유출액은 포함하지 않습니다.
           </span>
         </div>
-        <Pill>{pillLabel}</Pill>
+        <Pill className="etf-hero-clock">{pillLabel}</Pill>
       </div>
       {/* B2 (B4): single source strip lives with the list — the hero keeps its
           stale banner + inline retry, no per-panel rail. */}
