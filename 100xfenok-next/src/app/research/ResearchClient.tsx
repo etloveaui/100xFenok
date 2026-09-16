@@ -101,7 +101,7 @@ export default function ResearchClient() {
             className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-bold transition ${
               filter === tab.key
                 ? "border-slate-900 bg-slate-900 text-white"
-                : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
+                : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
             }`}
           >
             {tab.label}
@@ -118,7 +118,7 @@ export default function ResearchClient() {
             <button
               type="button"
               onClick={() => setOpenId(null)}
-              className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-400"
+              className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-300"
             >
               ← 목록으로
             </button>
@@ -147,7 +147,7 @@ export default function ResearchClient() {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-2 inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-400"
+              className="mt-2 inline-flex min-h-11 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-300"
             >
               다시 시도
             </button>
@@ -173,7 +173,7 @@ export default function ResearchClient() {
                           openItem(item.id);
                         }
                       }}
-                      className="flex min-h-44 cursor-pointer flex-col rounded-[10px] border border-slate-200 bg-white p-4 transition hover:-translate-y-px hover:border-slate-400 focus-visible:outline-2 focus-visible:outline-slate-900"
+                      className="flex min-h-44 cursor-pointer flex-col rounded-[10px] border border-slate-200 bg-white p-4 transition hover:-translate-y-px hover:border-slate-300 focus-visible:outline-2 focus-visible:outline-slate-900"
                     >
                       <span className="font-mono text-[11px] font-bold tracking-wide text-slate-500">
                         {kindLabel(item.kind)}
