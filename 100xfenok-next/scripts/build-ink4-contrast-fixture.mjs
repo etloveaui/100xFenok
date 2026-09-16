@@ -89,6 +89,13 @@ const CURATED_BACKGROUND_EVIDENCE = {
     path: "src/app/stock/[ticker]/StockDetailClient.tsx",
     target_hash: "8cca1aa4954114cac7a7af086cf35a017827eb4d3f5298733b3413a87a90d925",
   },
+  "src/app/portfolio/PortfolioClient.tsx#0bb13dad02ad#1": {
+    // B3-8 12px floor kept the export-section panel but normalized its radius
+    // (rounded-[1.5rem] -> rounded-2xl); re-pin to the same panel line.
+    background: "panel",
+    path: "src/app/portfolio/PortfolioClient.tsx",
+    target_hash: "5ba5f9b2bdd93d0c6f5794646f1e9ad722d93d3cbf1a7a8f13a6a4f7debe4508",
+  },
 };
 
 const BACKGROUND_PATTERNS = {

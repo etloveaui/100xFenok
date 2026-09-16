@@ -766,7 +766,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             onClick={handleConnectionExport}
             disabled={holdingRows.length === 0}
             data-portfolio-connection-csv-action
-            className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 sm:min-h-8"
+            className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[11px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 sm:min-h-8"
           >
             연결 CSV
           </button>
