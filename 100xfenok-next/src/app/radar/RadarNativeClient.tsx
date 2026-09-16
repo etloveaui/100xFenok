@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { ROUTES } from "@/lib/routes";
 import { useRadarData, type CardState } from "./useRadarData";
 
@@ -37,6 +36,23 @@ const TONE_KO: Record<string, string> = {
 
 function toneKo(tone: string): string {
   return TONE_KO[tone] ?? tone;
+}
+
+const COMBO_KO: Record<string, string> = {
+  "VIX Panic Buy": "VIX 패닉 매수",
+  "AAII Extreme Bear": "AAII 극단적 약세",
+  "CNN Extreme Fear": "CNN 극단적 공포",
+  "Triple Fear": "트리플 공포",
+  "Fear Consensus": "공포 컨센서스",
+  "AAII Spread Panic": "AAII 스프레드 패닉",
+  "Put/Call Extreme": "풋콜 익스트림",
+  "Triple Greed": "트리플 탐욕",
+  "Greed Consensus": "탐욕 컨센서스",
+  "Put/Call Low": "풋콜 저점",
+};
+
+function comboKo(name: string): string {
+  return COMBO_KO[name] ?? name;
 }
 
 function signedBillions(value: number): string {
@@ -82,13 +98,9 @@ function gradeLed(id: string, label: string, status: string | null, state: CardS
 
 function SummaryBar({ leds, activeCombos, totalCombos }: { leds: LedItem[]; activeCombos: number; totalCombos: number }) {
   const share = totalCombos > 0 ? Math.round((activeCombos / totalCombos) * 100) : null;
-  const readLine = leds.every((led) => led.tone === "hollow")
-    ? "신호 4판정을 읽을 수 없습니다 — 아래 카드에서 다시 시도하세요."
-    : `신호 4판정 — ${leds.map((led) => `${led.label} ${led.text}`).join(" · ")} · 심리 활성 ${activeCombos}/${totalCombos}.`;
   return (
     <section aria-label="Radar 신호 요약" data-radar-summary="true" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p data-radar-summary-read="true" className="text-sm font-bold text-slate-900">{readLine}</p>
-      <ul className="mt-3 flex flex-wrap gap-2" aria-label="4판정 신호">
+      <ul className="flex flex-wrap gap-2" aria-label="4판정 신호">
         {leds.map((led) => (
           <li
             key={led.id}
@@ -172,7 +184,7 @@ function CardShell({
 }
 
 export default function RadarNativeClient({ initialCategory }: { initialCategory: RadarCategory }) {
-  const [category, setCategory] = useState<RadarCategory>(initialCategory);
+  const category = initialCategory;
   const { flow, stress, banking, sentiment, retry } = useRadarData();
 
   const cards = [
@@ -220,31 +232,7 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
         </span>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Radar 분류">
-        {(
-          [
-            { key: "all", label: "전체" },
-            { key: "liquidity", label: "유동성" },
-            { key: "sentiment", label: "심리" },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            aria-pressed={category === tab.key}
-            onClick={() => setCategory(tab.key)}
-            className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-bold transition ${
-              category === tab.key
-                ? "border-blue-600 bg-blue-600 text-white"
-                : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
+      <div className="mt-4 grid items-start gap-3 md:grid-cols-2">
         {visible.some((c) => c.id === "flow") && (
           <CardShell
             id="liquidity-flow"
@@ -290,7 +278,6 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
             {stressSnap ? (
               <div>
                 <p className="text-2xl font-black text-slate-900">{toneKo(stressSnap.overallStatus)}</p>
-                <p className="mt-1 text-sm font-bold text-slate-600">{stressSnap.overallLabel}</p>
                 <dl className="mt-3 grid grid-cols-2 gap-2 text-center">
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
                     <dt className="text-[11px] font-bold text-slate-500">금리 스프레드</dt>
@@ -319,7 +306,6 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
             {bankingSnap ? (
               <div>
                 <p className="text-2xl font-black text-slate-900">{toneKo(bankingSnap.overallStatus)}</p>
-                <p className="mt-1 text-sm font-bold text-slate-600">{bankingSnap.overallLabel}</p>
                 <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
                     <dt className="text-[11px] font-bold text-slate-500">자본비율</dt>
@@ -362,7 +348,7 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
                       key={combo.id}
                       className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-2 py-1"
                     >
-                      <span className="text-xs font-bold text-slate-700">{combo.name}</span>
+                      <span className="text-xs font-bold text-slate-700">{comboKo(combo.name)}</span>
                       <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-slate-500">
                         <span className="rounded-full border border-slate-200 bg-white px-1.5">{toneKo(combo.category)}</span>
                         <span>{toneKo(combo.status)}</span>

@@ -26,9 +26,9 @@ const RADAR_BOUNDARY_CHIPS = [
 ] as const;
 
 const RADAR_OWNER_LINKS = [
-  { key: 'macro-chart', label: 'Macro Chart', href: ROUTES.macroChart },
-  { key: 'market-events', label: 'Market Events', href: ROUTES.marketEvents },
-  { key: 'market-valuation', label: 'Market Valuation', href: ROUTES.market },
+  { key: 'macro-chart', label: '매크로 차트 Macro Chart ›', href: ROUTES.macroChart },
+  { key: 'market-events', label: '시장 이벤트 Market Events ›', href: ROUTES.marketEvents },
+  { key: 'market-valuation', label: '시장 밸류에이션 Market Valuation ›', href: ROUTES.market },
 ] as const;
 
 const RADAR_CATEGORY_LINKS = [
@@ -103,13 +103,13 @@ export default async function RadarPage({ searchParams }: PageProps) {
         >
           <section
             data-radar-boundary
-            className="mb-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+            className="mb-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
           >
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
-                <h1 className="mt-2 text-xl font-black text-slate-900">Market Radar</h1>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  유동성과 시장 심리 지표를 한 화면에서 봅니다. 카드를 누르면 상세 자료로 이동합니다.
+                <h1 className="text-lg font-black text-slate-900">Market Radar</h1>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                  카드를 누르면 상세 자료로 이동합니다.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -125,7 +125,7 @@ export default async function RadarPage({ searchParams }: PageProps) {
               </div>
             </div>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <div className="mt-2 grid gap-2 sm:grid-cols-3">
               {RADAR_OWNER_LINKS.map((link) => (
                 <Link
                   key={link.key}
@@ -138,7 +138,7 @@ export default async function RadarPage({ searchParams }: PageProps) {
               ))}
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-2">
               {RADAR_CATEGORY_LINKS.map((link) => (
                 <Link
                   key={link.key}
