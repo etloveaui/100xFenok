@@ -715,7 +715,7 @@ export default function HomeCanvasPlusClient() {
               <Pill>시세 수집 {indexUpdatedAt}</Pill>
               <TransitionLink
                 href={ROUTES.screener}
-                className="inline-flex h-8 items-center rounded-[6px] bg-[var(--c-brand)] px-3 text-[13px] font-semibold text-white transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--c-brand)_88%,black)]"
+                className="inline-flex h-8 items-center rounded-[6px] bg-[var(--c-brand)] px-3 text-[13px] font-semibold text-white"
               >
                 종목 열기
               </TransitionLink>
