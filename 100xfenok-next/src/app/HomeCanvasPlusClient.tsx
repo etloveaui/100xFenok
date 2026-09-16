@@ -702,10 +702,10 @@ export default function HomeCanvasPlusClient() {
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between gap-3">
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h1 className="m-0 text-[18px] font-semibold text-[#0f172a] md:text-[20px]">오늘 시장</h1>
-              <span className="text-[13px] text-[#64748b]">
-                시황 <b className="font-semibold text-[#334155]">{regime.label}</b>
-                {" · "}확인 필요 <b className="font-semibold text-[#b9791a]">{headerAttentionLabel}</b>
+              <h1 className="m-0 text-[18px] font-semibold text-[var(--c-ink)] md:text-[20px]">오늘 시장</h1>
+              <span className="text-[13px] text-[var(--c-ink-3)]">
+                시황 <b className="font-semibold text-[var(--c-ink-2)]">{regime.label}</b>
+                {" · "}확인 필요 <b className="font-semibold text-[var(--c-warn-ink)]">{headerAttentionLabel}</b>
                 {failedSources.length > 0 && !anySourceLoading
                   ? " · 일부 소스 미수신"
                   : null}
@@ -715,7 +715,7 @@ export default function HomeCanvasPlusClient() {
               <Pill>시세 수집 {indexUpdatedAt}</Pill>
               <TransitionLink
                 href={ROUTES.screener}
-                className="inline-flex h-8 items-center rounded-[6px] bg-[#1B73D3] px-3 text-[13px] font-semibold text-white transition-colors duration-150 hover:bg-[#155fae]"
+                className="inline-flex h-8 items-center rounded-[6px] bg-[var(--c-brand)] px-3 text-[13px] font-semibold text-white transition-colors duration-150 hover:bg-[color:color-mix(in_srgb,var(--c-brand)_88%,black)]"
               >
                 종목 열기
               </TransitionLink>
@@ -780,12 +780,12 @@ export default function HomeCanvasPlusClient() {
                 <Panel key={card.symbol} loading={!dashboardSettled}>
                   <div className="flex flex-col gap-[6px] p-3 md:gap-[10px] md:p-[14px_16px]">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono text-[12px] text-[#0f172a] md:text-[13px]">{card.label}</span>
-                      <span className="truncate text-[10px] text-[#64748b] md:text-[11px]">{card.detail} · {card.isLive ? formatMarketState(card.marketState) : "추정치"}</span>
+                      <span className="font-mono text-[12px] text-[var(--c-ink)] md:text-[13px]">{card.label}</span>
+                      <span className="truncate text-[10px] text-[var(--c-ink-3)] md:text-[11px]">{card.detail} · {card.isLive ? formatMarketState(card.marketState) : "추정치"}</span>
                     </div>
                     <div className="flex flex-wrap items-baseline gap-x-2">
-                      <span className="tabular-nums text-[18px] font-semibold text-[#0f172a] md:text-[22px]">{formatPriceValue(card.price)}</span>
-                      <span className={`tabular-nums text-[12px] font-semibold md:text-[13px] ${positive ? "text-[#1aa86f]" : "text-[#e84a5a]"}`}>
+                      <span className="tabular-nums text-[18px] font-semibold text-[var(--c-ink)] md:text-[22px]">{formatPriceValue(card.price)}</span>
+                      <span className={`tabular-nums text-[12px] font-semibold md:text-[13px] ${positive ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
                         {formatSignedPercentUnit(card.changePercent)}
                       </span>
                     </div>
@@ -797,12 +797,12 @@ export default function HomeCanvasPlusClient() {
             <Panel loading={kospiLoading}>
               <div className="flex flex-col gap-[6px] p-3 md:gap-[10px] md:p-[14px_16px]">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-[12px] text-[#0f172a] md:text-[13px]">KOSPI</span>
-                  <span className="truncate text-[10px] text-[#64748b] md:text-[11px]">코스피 · {kospi.asOf ? "마감" : "대기"}</span>
+                  <span className="font-mono text-[12px] text-[var(--c-ink)] md:text-[13px]">KOSPI</span>
+                  <span className="truncate text-[10px] text-[var(--c-ink-3)] md:text-[11px]">코스피 · {kospi.asOf ? "마감" : "대기"}</span>
                 </div>
                 <div className="flex flex-wrap items-baseline gap-x-2">
-                  <span className="tabular-nums text-[18px] font-semibold text-[#0f172a] md:text-[22px]">{formatIndexPoints(kospi.price)}</span>
-                  <span className={`tabular-nums text-[12px] font-semibold md:text-[13px] ${(kospi.changePercent ?? 0) >= 0 ? "text-[#1aa86f]" : "text-[#e84a5a]"}`}>
+                  <span className="tabular-nums text-[18px] font-semibold text-[var(--c-ink)] md:text-[22px]">{formatIndexPoints(kospi.price)}</span>
+                  <span className={`tabular-nums text-[12px] font-semibold md:text-[13px] ${(kospi.changePercent ?? 0) >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
                     {formatSignedPercentUnit(kospi.changePercent)}
                   </span>
                 </div>
@@ -827,15 +827,15 @@ export default function HomeCanvasPlusClient() {
                 {forces.items.map((force) => (
                   <div key={force.key} className="flex flex-col gap-1.5">
                     <div className="flex items-baseline justify-between text-[12px]">
-                      <span className="text-[#334155]">
-                        {force.label} <span className="text-[#94a3b8] max-md:hidden">· {force.weightLabel}</span>
+                      <span className="text-[var(--c-ink-2)]">
+                        {force.label} <span className="text-[var(--c-ink-4)] max-md:hidden">· {force.weightLabel}</span>
                       </span>
-                      <span className="tabular-nums font-semibold text-[#0f172a]">{force.value}</span>
+                      <span className="tabular-nums font-semibold text-[var(--c-ink)]">{force.value}</span>
                     </div>
                     <Bar value={force.score} aria-label={`${force.label} ${force.value}점`} />
                   </div>
                 ))}
-                <div className="pt-0.5 text-[12px] text-[#64748b]">
+                <div className="pt-0.5 text-[12px] text-[var(--c-ink-3)]">
                   현재 스트레스 {forces.rawStressScore}점 · 낮을수록 유리
                 </div>
               </div>
@@ -846,7 +846,7 @@ export default function HomeCanvasPlusClient() {
             <PanelHeader
               eyebrow="Sector Flow"
               title="섹터 히트맵"
-              right={<span className="text-[12px] text-[#64748b]">1일 · {dashboard.sectorMode === "LIVE_1D" ? "실시간" : dashboard.sectorMode === "MIXED" ? "혼합" : "1개월 기준"}</span>}
+              right={<span className="text-[12px] text-[var(--c-ink-3)]">1일 · {dashboard.sectorMode === "LIVE_1D" ? "실시간" : dashboard.sectorMode === "MIXED" ? "혼합" : "1개월 기준"}</span>}
             />
             <div className="grid grid-cols-3 gap-1.5 p-2.5 md:grid-cols-4 md:p-3">
               {heatSectors.map((sector: SectorSnapshot, i: number) => (
@@ -878,9 +878,9 @@ export default function HomeCanvasPlusClient() {
             <PanelHeader
               eyebrow="What Changed"
               title="무엇이 바뀌었나"
-              right={<span className="whitespace-nowrap text-[12px] text-[#64748b]">리비전 {revisionClock} · 13F {superinvestorClock}</span>}
+              right={<span className="whitespace-nowrap text-[12px] text-[var(--c-ink-3)]">리비전 {revisionClock} · 13F {superinvestorClock}</span>}
             />
-            <div className="hidden grid-cols-[140px_1fr_140px_110px] items-center gap-2 border-b border-[#e2e8f0] px-4 text-[11px] font-semibold text-[#64748b] md:grid md:h-8">
+            <div className="hidden grid-cols-[140px_1fr_140px_110px] items-center gap-2 border-b border-[var(--c-line)] px-4 text-[11px] font-semibold text-[var(--c-ink-3)] md:grid md:h-8">
               <span>종목</span><span>변경</span><span className="text-right">FY+1 EPS 추정</span><span className="text-right">변화</span>
             </div>
             <div className="hidden md:block">
@@ -891,15 +891,15 @@ export default function HomeCanvasPlusClient() {
                   <TransitionLink
                     key={item.id}
                     href={ROUTES.stock(item.ticker)}
-                    className="grid grid-cols-[140px_1fr_140px_110px] items-center gap-2 border-t border-[#f1f5f9] px-4 text-[13px] transition-colors duration-150 first:border-t-0 hover:bg-[#f8fafc] hover:shadow-[inset_2px_0_0_#1B73D3] focus-visible:bg-[#f8fafc] focus-visible:outline-none h-9"
+                    className="grid grid-cols-[140px_1fr_140px_110px] items-center gap-2 border-t border-[var(--c-line)] px-4 text-[13px] transition-colors duration-150 first:border-t-0 hover:bg-[var(--c-surface-2)] focus-visible:bg-[var(--c-surface-2)] focus-visible:outline-none h-9"
                   >
                     <span className="flex min-w-0 items-baseline gap-2">
-                      <span className="shrink-0 font-mono text-[#0f172a]">{item.ticker}</span>
-                      {item.title !== item.ticker && <span className="truncate text-[#64748b]">{item.title}</span>}
+                      <span className="shrink-0 font-mono text-[var(--c-ink)]">{item.ticker}</span>
+                      {item.title !== item.ticker && <span className="truncate text-[var(--c-ink-3)]">{item.title}</span>}
                     </span>
-                    <span className="truncate text-[#334155]">{item.label}</span>
-                    <span className="text-right tabular-nums text-[#334155]">{isRevision ? (revisionUp ? "상향" : "하향") : "—"}</span>
-                    <span className={`text-right tabular-nums font-semibold ${isRevision ? (revisionUp ? "text-[#1aa86f]" : "text-[#e84a5a]") : "font-medium text-[#334155]"}`}>
+                    <span className="truncate text-[var(--c-ink-2)]">{item.label}</span>
+                    <span className="text-right tabular-nums text-[var(--c-ink-2)]">{isRevision ? (revisionUp ? "상향" : "하향") : "—"}</span>
+                    <span className={`text-right tabular-nums font-semibold ${isRevision ? (revisionUp ? "text-[var(--c-up)]" : "text-[var(--c-down)]") : "font-medium text-[var(--c-ink-2)]"}`}>
                       {isRevision && typeof item.value === "number" ? formatSignedPercentUnit(item.value * 100, 1) : item.detail}
                     </span>
                   </TransitionLink>
@@ -914,13 +914,13 @@ export default function HomeCanvasPlusClient() {
                   <TransitionLink
                     key={item.id}
                     href={ROUTES.stock(item.ticker)}
-                    className="flex min-h-11 items-center justify-between gap-3 border-t border-[#f1f5f9] px-[14px] transition-colors duration-150 first:border-t-0 hover:bg-[#f8fafc] focus-visible:bg-[#f8fafc] focus-visible:outline-none"
+                    className="flex min-h-11 items-center justify-between gap-3 border-t border-[var(--c-line)] px-[14px] transition-colors duration-150 first:border-t-0 hover:bg-[var(--c-surface-2)] focus-visible:bg-[var(--c-surface-2)] focus-visible:outline-none"
                   >
                     <span className="flex min-w-0 items-baseline gap-2">
-                      <span className="shrink-0 font-mono text-[#0f172a]">{item.ticker}</span>
-                      {item.title !== item.ticker && <span className="truncate text-[12px] text-[#64748b]">{item.title}</span>}
+                      <span className="shrink-0 font-mono text-[var(--c-ink)]">{item.ticker}</span>
+                      {item.title !== item.ticker && <span className="truncate text-[12px] text-[var(--c-ink-3)]">{item.title}</span>}
                     </span>
-                    <span className={`shrink-0 tabular-nums text-[13px] font-semibold ${isRevision ? (revisionUp ? "text-[#1aa86f]" : "text-[#e84a5a]") : "font-medium text-[#334155]"}`}>
+                    <span className={`shrink-0 tabular-nums text-[13px] font-semibold ${isRevision ? (revisionUp ? "text-[var(--c-up)]" : "text-[var(--c-down)]") : "font-medium text-[var(--c-ink-2)]"}`}>
                       {isRevision && typeof item.value === "number" ? formatSignedPercentUnit(item.value * 100, 1) : item.detail}
                     </span>
                   </TransitionLink>
@@ -950,14 +950,14 @@ export default function HomeCanvasPlusClient() {
                 <TransitionLink
                   key={item.id}
                   href={ROUTES.stock(item.ticker)}
-                  className="flex min-h-10 items-center justify-between gap-3 border-t border-[#f1f5f9] px-4 transition-colors duration-150 first:border-t-0 hover:bg-[#f8fafc] hover:shadow-[inset_2px_0_0_#1B73D3] focus-visible:bg-[#f8fafc] focus-visible:outline-none max-md:min-h-11 max-md:px-[14px]"
+                  className="flex min-h-10 items-center justify-between gap-3 border-t border-[var(--c-line)] px-4 transition-colors duration-150 first:border-t-0 hover:bg-[var(--c-surface-2)] focus-visible:bg-[var(--c-surface-2)] focus-visible:outline-none max-md:min-h-11 max-md:px-[14px]"
                 >
                   <span className="flex min-w-0 items-baseline gap-2 text-[13px]">
-                    <span className="shrink-0 font-semibold text-[#b9791a]">{materialFlagLabel(item.flag)}</span>
-                    <span className="shrink-0 font-mono text-[#0f172a]">{item.ticker}</span>
-                    <span className="truncate text-[#334155]">{item.title}</span>
+                    <span className="shrink-0 font-semibold text-[var(--c-warn-ink)]">{materialFlagLabel(item.flag)}</span>
+                    <span className="shrink-0 font-mono text-[var(--c-ink)]">{item.ticker}</span>
+                    <span className="truncate text-[var(--c-ink-2)]">{item.title}</span>
                   </span>
-                  <span className="shrink-0 text-[12px] text-[#94a3b8]">확인</span>
+                  <span className="shrink-0 text-[12px] text-[var(--c-ink-4)]">확인</span>
                 </TransitionLink>
               ))}
             </div>
