@@ -35,14 +35,6 @@ const CENTER_Y = 264;
 const RING_RX = 178;
 const RING_RY = 148;
 
-const HUB_SPOKES = [
-  { x: 30, y: 18 },
-  { x: 30, y: 78 },
-  { x: 190, y: 18 },
-  { x: 190, y: 78 },
-  { x: 110, y: 10 },
-];
-
 function edgeWidth(weight: number): number {
   return Math.round((1 + Math.min(Math.max(weight, 0), 0.25) * 20) * 2) / 2;
 }
@@ -379,6 +371,11 @@ export function GraphNetworkTeaser({ network, href, status, freshness, source, a
     [network, top],
   );
   const retained = network.feeds.byTicker === false;
+  const labels = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const node of network.nodes) if (node.kind === "investor") map.set(node.investorId, node.label);
+    return map;
+  }, [network]);
   return (
     <Panel>
       <div data-superinvestors-graph-teaser>
@@ -398,36 +395,14 @@ export function GraphNetworkTeaser({ network, href, status, freshness, source, a
           </p>
         ) : (
           <>
-            <div className="grn-teaser-svg">
-              <svg viewBox="0 0 220 96" aria-hidden="true" focusable="false">
-                {hubHolders.map((edge, index) => {
-                  const pos = HUB_SPOKES[index % HUB_SPOKES.length];
-                  const midX = (110 + pos.x) / 2;
-                  const midY = (50 + pos.y) / 2;
-                  return (
-                    <g key={edge.investorId}>
-                      <line
-                        x1={110}
-                        y1={50}
-                        x2={pos.x}
-                        y2={pos.y}
-                        stroke="var(--fnk-neutral-300)"
-                        strokeWidth={edgeWidth(edge.weight)}
-                        strokeLinecap="round"
-                      />
-                      <circle cx={pos.x} cy={pos.y} r={5} className="grn-tick-circle" />
-                      <text x={midX} y={midY - 3} textAnchor="middle" className="grn-teaser-edge-label">
-                        {formatPercent(edge.weight, { digits: 1 })}
-                      </text>
-                    </g>
-                  );
-                })}
-                <circle cx={110} cy={50} r={16} className="grn-tick-circle grn-tick-selected" />
-                <text x={110} y={54} textAnchor="middle" className="grn-tick-label grn-tick-label-selected">
-                  {top.ticker.length > 5 ? `${top.ticker.slice(0, 5)}…` : top.ticker}
-                </text>
-              </svg>
-            </div>
+            <ul className="grn-kv-list grn-teaser-pairs">
+              {hubHolders.map((edge) => (
+                <li key={edge.investorId} className="grn-kv">
+                  <span className="grn-kv-name">{shortLabel(labels.get(edge.investorId) ?? edge.investorId)}</span>
+                  <span className="tabular-nums grn-kv-num">{formatPercent(edge.weight, { digits: 1 })}</span>
+                </li>
+              ))}
+            </ul>
             <p className="grn-teaser-top">
               <span className="grn-ticker">{top.ticker}</span>
               <span className="grn-kv-sub">
@@ -436,7 +411,7 @@ export function GraphNetworkTeaser({ network, href, status, freshness, source, a
             </p>
           </>
         )}
-        <p className="grn-teaser-cap">선 굵기 = 포트폴리오 비중 · 클릭 시 종목·투자자 상세로 이동</p>
+        <p className="grn-teaser-cap">보유 비중 상위 5명 · 클릭 시 종목·투자자 상세로 이동</p>
         <EvidenceRail
           freshness={freshness}
           source={source}
