@@ -68,8 +68,33 @@
   line-height: 1.5;
 }
 
-/* Window-performance summary: the compact rank strip that leads the hero on both
- * /macro-chart and /multichart, between the verdict copy and the chart card. Bars
+/* Hero detail fold: verdict detail + route description collapse behind one
+ * summary line so the H1 + verdict strip stay a single screenful and the
+ * chart card starts within the first viewport on both routes. */
+.cpw5-macro-hero-more {
+  min-width: 0;
+}
+
+.cpw5-macro-hero-more > summary {
+  display: inline-block;
+  cursor: pointer;
+  color: var(--cp-accent-strong);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.cpw5-macro-hero-more > summary:focus-visible {
+  outline: 2px solid var(--cp-accent);
+  outline-offset: 2px;
+}
+
+.cpw5-macro-hero-more .cpw5-hero__sub,
+.cpw5-macro-hero-more .cpw5-macro-description {
+  margin-top: 8px;
+}
+
+/* Window-performance summary: the compact rank strip below the chart card on both
+ * /macro-chart and /multichart, so the plot enters the first screen. Bars
  * scale to the largest visible window change; percent/spread-valued series and
  * mixed-unit derived series print their value with no bar. Light-system tokens. */
 .cpw5-macro-window-summary {
@@ -96,6 +121,20 @@
   color: var(--c-ink-3);
   font-size: 11px;
   font-weight: 700;
+}
+
+/* /multichart header-stack calming: the compare workbench piles the shell rail,
+ * hero trust row, summary cards and accordion covers in one column, so every
+ * stacked separator stays a single 1px hairline and the summary card drops the
+ * shadow that reads as a doubled rule. Route scope only; shared kit untouched. */
+[data-multichart-surface="true"] .cpw5-macro-window-summary {
+  box-shadow: none;
+}
+
+[data-multichart-surface="true"] .cpw5-macro-accordion__body,
+[data-multichart-surface="true"] .cpw5-macro-series-evidence,
+[data-multichart-surface="true"] .cpw5-macro-table-panel__body {
+  border-top-width: 1px;
 }
 
 .cpw5-macro-chart-card {
@@ -977,9 +1016,12 @@
 
 .cpw5-macro-cta-row span {
   margin-left: auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--cp-text-soft);
   font-size: 11px;
   font-weight: 700;
+  line-height: 1.5;
 }
 
 @media (max-width: 900px) {
