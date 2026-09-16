@@ -3572,7 +3572,7 @@ function CoachConfigControls({
 function MetricCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <dt className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{label}</dt>
+      <dt className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">{label}</dt>
       <dd className="mt-1 break-words text-base font-black text-slate-950">{value}</dd>
     </div>
   );
@@ -3649,7 +3649,7 @@ function ToolBoard({
                         }`} />
                         <span className="text-sm font-black text-slate-950">{tool.label}</span>
                       </span>
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-black ${
+                      <span className={`rounded px-1.5 py-0.5 text-[12px] font-black ${
                         enabled
                           ? "bg-emerald-100 text-emerald-800"
                           : tool.status === "available"

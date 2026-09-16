@@ -74,7 +74,7 @@ export default function PerBandBar({ current, min, avg, max }: PerBandBarProps) 
           )}
         </div>
 
-        <span className="shrink-0 tabular-nums text-[9px] font-black text-[var(--c-ink-2)]">
+        <span className="shrink-0 tabular-nums text-[12px] font-black text-[var(--c-ink-2)]">
           현재 {safeCurrent.toFixed(1)}x
         </span>
 

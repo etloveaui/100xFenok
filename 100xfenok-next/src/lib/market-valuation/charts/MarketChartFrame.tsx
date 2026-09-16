@@ -331,8 +331,8 @@ export function MarketChartFrame({
                     aria-pressed={active}
                     className={
                       active
-                        ? "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md bg-[var(--c-brand)] px-3 py-1 text-[11px] font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)]"
-                        : "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md bg-[var(--c-surface-2)] px-3 py-1 text-[11px] font-bold text-[var(--c-ink-2)] hover:bg-[var(--c-line-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)]"
+                        ? "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md bg-[var(--c-brand)] px-3 py-1 text-[12px] font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)]"
+                        : "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md bg-[var(--c-surface-2)] px-3 py-1 text-[12px] font-bold text-[var(--c-ink-2)] hover:bg-[var(--c-line-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--c-brand)]"
                     }
                   >
                     {range.label}
@@ -394,7 +394,7 @@ export function MarketChartFrame({
       />
 
       <div
-        className="mt-2 min-h-[1.25rem] text-[11px] font-semibold text-[var(--c-ink-2)]"
+        className="mt-2 min-h-[1.25rem] text-[12px] font-semibold text-[var(--c-ink-2)]"
         aria-atomic="true"
         role="status"
       >

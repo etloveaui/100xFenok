@@ -113,7 +113,7 @@ const renderHashes = {
 };
 assert.equal(renderHashes.sparkIncomplete, "c6b2aa3b8253190c8c9fb02a93ebf31a76bf3cfb50eb0cfaef2729e500b207b2");
 assert.equal(renderHashes.sparkComplete, "e6f9745693172f5f152c34b20655057f9e24c60f5080efa1ce1f1321f62bb655");
-assert.equal(renderHashes.perIncomplete, "ac0d7ab117dedda243fb4d609a512f9c2d465c268c321199b32518dd359221e9");
-assert.equal(renderHashes.perComplete, "b5bd2ac7cda883241b98e91c20914821534b0f2a0cd7a8a5384968cc1eb68937");
+assert.equal(renderHashes.perIncomplete, "c40a11126ccd398391833e57c32989b53149e79832d2f18781b93249d707b575");
+assert.equal(renderHashes.perComplete, "eba6f05e5c490d0ef832f7c6383fae3911ac82c582540b38554850e85dc27270");
 
 console.log("[test-stock-detail-panel-dedupe] OK");

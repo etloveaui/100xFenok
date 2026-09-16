@@ -153,7 +153,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
     <section data-winddown-practice aria-label="문장 연습" className="min-w-0 break-words [overflow-wrap:anywhere] rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-5 shadow-2xl">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-black tracking-[.16em] text-[var(--wd-accent)]">문장 연습 · 연습 전용</p>
+          <p className="text-[12px] font-black tracking-[.16em] text-[var(--wd-accent)]">문장 연습 · 연습 전용</p>
           <h2 className="mt-1 text-xl font-black">한 문장을 여러 번 만나기</h2>
         </div>
         <button type="button" onClick={onBack} className="min-h-[48px] shrink-0 rounded-full border border-[var(--wd-border)] px-4 text-xs font-black text-[var(--wd-muted)]">보드</button>
@@ -218,7 +218,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
 
         {method === "pattern-transform" && material?.practice?.pattern ? (
           <div data-practice-pattern className="mt-4 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface)] px-3 py-3">
-            <p className="text-[10px] font-black tracking-[.12em] text-[var(--wd-accent)]">문형</p>
+            <p className="text-[12px] font-black tracking-[.12em] text-[var(--wd-accent)]">문형</p>
             <p className="mt-1 text-sm font-black">{material.practice.pattern}</p>
             {material.practice.variationsEn.length > 0 ? <p className="mt-2 text-xs font-bold leading-5 text-[var(--wd-muted)]">예시: {material.practice.variationsEn.join(" · ")}</p> : null}
           </div>
@@ -271,7 +271,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
 
         {session.revealed ? (
           <div data-practice-reveal-text aria-live="polite" className="mt-5 rounded-2xl border border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] px-4 py-4">
-            <p className="text-[10px] font-black tracking-[.14em] text-[var(--wd-accent)]">참고 문장</p>
+            <p className="text-[12px] font-black tracking-[.14em] text-[var(--wd-accent)]">참고 문장</p>
             <p className="mt-2 break-words text-lg font-black">{session.revealText}</p>
             {material && listeningTexts.length > 1 ? <p className="mt-3 break-words text-xs font-bold leading-5 text-[var(--wd-muted)]">다른 표현: {listeningTexts.slice(1).join(" · ")}</p> : null}
           </div>

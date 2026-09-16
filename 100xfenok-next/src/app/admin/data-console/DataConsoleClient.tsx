@@ -351,7 +351,7 @@ export default function DataConsoleClient() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Panel loading={loading}>
           <div className="flex flex-col gap-1 px-4 py-3.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--fnk-neutral-500)]">레인 상태</span>
+            <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--fnk-neutral-500)]">레인 상태</span>
             <span className="text-[22px] font-semibold tabular-nums text-[var(--fnk-neutral-900)]">
               {num(totals.ready) ?? "—"} / {num(totals.lanes) ?? "—"}{" "}
               <span className="text-[12px] font-medium text-[var(--fnk-neutral-500)]">신선</span>
@@ -363,7 +363,7 @@ export default function DataConsoleClient() {
         </Panel>
         <Panel loading={loading}>
           <div className="flex flex-col gap-1 px-4 py-3.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--fnk-neutral-500)]">배포</span>
+            <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--fnk-neutral-500)]">배포</span>
             <span className="text-[22px] font-semibold tabular-nums text-[var(--fnk-neutral-900)]">
               {str(kpi?.deployment_integrity?.status_label) ?? "—"}
             </span>
@@ -374,7 +374,7 @@ export default function DataConsoleClient() {
         </Panel>
         <Panel loading={loading}>
           <div className="flex flex-col gap-1 px-4 py-3.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--fnk-neutral-500)]">발행 결과</span>
+            <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--fnk-neutral-500)]">발행 결과</span>
             <span className="text-[22px] font-semibold tabular-nums text-[var(--fnk-neutral-900)]">
               {families.length > 0 ? published : "—"}{" "}
               <span className="text-[12px] font-medium text-[var(--fnk-neutral-500)]">성공</span>
@@ -386,7 +386,7 @@ export default function DataConsoleClient() {
         </Panel>
         <Panel loading={loading} empty={!loading && !nextSlot} emptyReason="다음 슬롯 정보 없음" emptyNextRefresh="레지스트리 다음 발행 시" emptyActionLabel="다시 읽기" onEmptyAction={reload}>
           <div className="flex flex-col gap-1 px-4 py-3.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--fnk-neutral-500)]">다음 예정</span>
+            <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--fnk-neutral-500)]">다음 예정</span>
             <span className="truncate text-[22px] font-semibold tabular-nums text-[var(--fnk-neutral-900)]">
               {nextSlot ? (shortDateTime(nextSlot.slot) ?? "—") : "—"}
             </span>
@@ -416,7 +416,7 @@ export default function DataConsoleClient() {
         <div className="overflow-x-auto">
           <div className="min-w-[960px]">
             <div
-              className="grid grid-cols-[24px_minmax(0,1.1fr)_130px_100px_100px_120px_130px] items-center gap-2.5 px-4 text-[11px] font-semibold text-[var(--fnk-neutral-500)]"
+              className="grid grid-cols-[24px_minmax(0,1.1fr)_130px_100px_100px_120px_130px] items-center gap-2.5 px-4 text-[12px] font-semibold text-[var(--fnk-neutral-500)]"
               aria-hidden="true"
             >
               <span />
@@ -471,7 +471,7 @@ export default function DataConsoleClient() {
                       <span className="block truncate font-semibold text-[var(--fnk-neutral-900)]">
                         {str(lane.label) ?? laneId}
                       </span>
-                      <span className="block truncate font-mono text-[11px] text-[var(--fnk-neutral-500)]">
+                      <span className="block truncate font-mono text-[12px] text-[var(--fnk-neutral-500)]">
                         {laneId} · {statusLabelOf(lane)}
                       </span>
                     </span>
@@ -508,7 +508,7 @@ export default function DataConsoleClient() {
             })}
           </div>
         </div>
-        <div className="flex flex-wrap gap-x-3.5 gap-y-1 px-4 py-2.5 text-[11px] text-[var(--fnk-neutral-500)]">
+        <div className="flex flex-wrap gap-x-3.5 gap-y-1 px-4 py-2.5 text-[12px] text-[var(--fnk-neutral-500)]">
           <span>
             <span aria-hidden="true" className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full" style={{ background: "var(--fnk-color-gain)" }} />
             신선

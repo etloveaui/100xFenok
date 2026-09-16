@@ -71,7 +71,7 @@ export default function WorkbenchView({ surface = "workbench" }: { surface?: Wor
             <span
               data-workbench-route-count
               data-explore-route-count={isExplore ? "true" : undefined}
-              className="rounded-md bg-[var(--c-surface-2)] px-2 py-1 text-[11px] font-bold text-[var(--c-ink-2)]"
+              className="rounded-md bg-[var(--c-surface-2)] px-2 py-1 text-[12px] font-bold text-[var(--c-ink-2)]"
             >
               {WORKBENCH_GATEWAY_LINKS.length}개 주요 화면
             </span>
@@ -88,10 +88,10 @@ export default function WorkbenchView({ surface = "workbench" }: { surface?: Wor
                 className="min-h-16 rounded-lg border border-[var(--c-line-2)] bg-[var(--c-surface)] px-3 py-2 transition hover:border-brand-interactive hover:bg-[var(--c-surface-2)]"
               >
                 <span className="flex items-center gap-2 text-xs font-black text-[var(--c-ink)]">
-                  <span className="font-mono text-[11px] text-brand-primary">{step.index}</span>
+                  <span className="font-mono text-[12px] text-brand-primary">{step.index}</span>
                   {step.label}
                 </span>
-                <span className="mt-1 block text-[11px] font-semibold text-[var(--c-ink-3)]">{step.summary}</span>
+                <span className="mt-1 block text-[12px] font-semibold text-[var(--c-ink-3)]">{step.summary}</span>
               </TransitionLink>
             ))}
           </div>
@@ -112,7 +112,7 @@ export default function WorkbenchView({ surface = "workbench" }: { surface?: Wor
               className="min-h-14 rounded-lg border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-2 transition hover:border-brand-interactive hover:bg-[var(--c-surface-2)]"
             >
               <span className="block text-sm font-black text-[var(--c-ink)]">{link.label}</span>
-              <span className="mt-0.5 block text-[10px] font-semibold text-[var(--c-ink-3)]">{link.meta}</span>
+              <span className="mt-0.5 block text-[12px] font-semibold text-[var(--c-ink-3)]">{link.meta}</span>
             </TransitionLink>
           ))}
         </nav>

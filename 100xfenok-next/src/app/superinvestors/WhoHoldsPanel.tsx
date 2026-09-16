@@ -241,12 +241,12 @@ export default function WhoHoldsPanel({
                 data-source-date={perBands?.sourceDate ?? ""}
                 title={perBands?.sourceDate ? `PER 원천 ${perBands.sourceDate.slice(0, 10)}` : "PER 원천일 미제공"}
               >
-                <div className="mb-1 text-[10px] font-bold text-[var(--c-ink-3)]">PER 밴드 · 원천 {perBands?.sourceDate?.slice(0, 10) ?? "—"}</div>
+                <div className="mb-1 text-[12px] font-bold text-[var(--c-ink-3)]">PER 밴드 · 원천 {perBands?.sourceDate?.slice(0, 10) ?? "—"}</div>
                 <PerBandBar current={result.band.current} min={result.band.min} avg={result.band.avg} max={result.band.max} />
               </div>
             ) : null}
             {result.change ? (
-              <p className="mt-2 text-[10px] leading-snug text-[var(--c-ink-3)]">
+              <p className="mt-2 text-[12px] leading-snug text-[var(--c-ink-3)]">
                 {result.change.current_quarter} ↔ {result.change.previous_quarter} 공개 보유 목록 비교 · 신규·청산은 직전 분기 공개 보유 목록과 비교한 결과입니다. 공시 반영은 분기말 이후 최대 45일 지연될 수 있습니다.
               </p>
             ) : null}

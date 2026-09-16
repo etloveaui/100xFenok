@@ -228,7 +228,7 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
       {/* Section 1: AUM trajectory */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+          <p className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">
             운용 추이
             {isStale ? (
               <span className="ml-1 font-semibold normal-case text-amber-600">(이전 분기 기준)</span>
@@ -236,9 +236,9 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
           </p>
           <div className="mt-1 flex items-baseline gap-2">
             <span className="text-sm font-black text-slate-900">{formatCurrencyCompact(latestSnap.aum, "USD")}</span>
-            <span className="text-[10px] font-bold text-slate-500">{latestSnap.quarter}</span>
+            <span className="text-[12px] font-bold text-slate-500">{latestSnap.quarter}</span>
           </div>
-          <div className="mt-0.5 flex gap-3 text-[10px] font-bold text-slate-500">
+          <div className="mt-0.5 flex gap-3 text-[12px] font-bold text-slate-500">
             <span>{latestSnap.holdings_count}종목</span>
             <span>TOP10 {(latestSnap.top_10_weight * 100).toFixed(1)}%</span>
           </div>
@@ -297,7 +297,7 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
           >
             {hedgeLabel.text}
           </span>
-          <p className="mt-0.5 text-[9px] font-semibold text-[var(--c-ink-3)]">{hedgeLabel.sub}</p>
+          <p className="mt-0.5 text-[12px] font-semibold text-[var(--c-ink-3)]">{hedgeLabel.sub}</p>
         </div>
       ) : null}
     </div>

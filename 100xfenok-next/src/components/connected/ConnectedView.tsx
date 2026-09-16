@@ -219,7 +219,7 @@ export function ConnectedView({
           ))}
         </div>
         {asOfRows.length > 0 ? (
-          <div className={compact ? "grid gap-1.5 text-[10px]" : "grid gap-1.5 text-xs"}>
+          <div className={compact ? "grid gap-1.5 text-[12px]" : "grid gap-1.5 text-xs"}>
             {asOfRows.map((row) => (
               <div key={row.label} className="flex flex-wrap items-center justify-between gap-2 font-semibold text-slate-500">
                 <span>{row.label}</span>
@@ -278,7 +278,7 @@ export function ConnectedView({
           </div>
         ) : null}
         {entry.confidence?.label ? (
-          <p className="text-[10px] font-semibold text-slate-500">
+          <p className="text-[12px] font-semibold text-slate-500">
             신호 신뢰도 {entry.confidence.label}
             {isFiniteNumber(entry.confidence.coverage_ratio) ? ` · 커버리지 ${(entry.confidence.coverage_ratio * 100).toFixed(0)}%` : ""}
           </p>

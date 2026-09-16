@@ -341,7 +341,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
         <div className="min-w-[860px]">
           <div className="relative">
             <div
-              className="grid items-center border-b border-slate-200 text-[11px] font-semibold text-slate-500"
+              className="grid items-center border-b border-slate-200 text-[12px] font-semibold text-slate-500"
               style={{ gridTemplateColumns: `${LABEL_COL_PX}px repeat(4, minmax(0, 1fr))`, height: 32 }}
             >
               <span className="pl-4">레인</span>
@@ -354,7 +354,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
                 <div className="grid items-stretch" style={{ gridTemplateColumns: `${LABEL_COL_PX}px minmax(0, 1fr)` }}>
                   <div className="flex flex-col justify-center gap-0.5 border-r border-slate-100 px-4 py-2">
                     <span className="text-[12px] font-semibold text-slate-700">{lane.label}</span>
-                    <span className="num text-[11px] text-slate-500">{lane.noFeed ? "피드 없음" : `${events.length}건`}</span>
+                    <span className="num text-[12px] text-slate-500">{lane.noFeed ? "피드 없음" : `${events.length}건`}</span>
                   </div>
                   <div className="relative" style={{ minHeight: Math.max(46, maxSlots * 30 + 16) }}>
                     {events.length ? (
@@ -364,7 +364,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
                         const chip = (
                           <span
                             title={`${event.title} · ${event.date}`}
-                            className={`inline-flex h-[26px] items-center gap-1.5 whitespace-nowrap rounded-md border px-2 text-[11px] font-semibold ${
+                            className={`inline-flex h-[26px] items-center gap-1.5 whitespace-nowrap rounded-md border px-2 text-[12px] font-semibold ${
                               lane.dark
                                 ? "border-slate-900 bg-slate-900 text-white"
                                 : "border-slate-200 bg-white text-slate-700"
@@ -445,7 +445,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
             />
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute top-1 text-[10px] font-semibold text-brand-interactive"
+              className="pointer-events-none absolute top-1 text-[12px] font-semibold text-brand-interactive"
               style={{ left: `calc(${LABEL_COL_PX}px + (100% - ${LABEL_COL_PX}px) * ${windowDef.todayFraction} + 4px)` }}
             >
               오늘
@@ -453,7 +453,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap gap-x-3.5 gap-y-1 border-t border-slate-100 px-4 py-2.5 text-[11px] text-slate-500">
+      <div className="flex flex-wrap gap-x-3.5 gap-y-1 border-t border-slate-100 px-4 py-2.5 text-[12px] text-slate-500">
         <span>
           <span aria-hidden="true" className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-slate-900" />
           검정 = 실적

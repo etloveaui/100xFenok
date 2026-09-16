@@ -722,7 +722,7 @@ export default function HomeCanvasPlusClient() {
             </div>
           </div>
           <div
-            className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--fnk-neutral-500)]"
+            className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[var(--fnk-neutral-500)]"
             data-home-provenance
           >
             <span className="inline-flex items-center gap-1.5">
@@ -757,14 +757,14 @@ export default function HomeCanvasPlusClient() {
                 {breadthSectors.map((sector) => (
                   <span
                     key={sector.key}
-                    className="flex h-5 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-[4px] font-mono text-[10px] leading-none text-[var(--ls-heatmap-text)] md:w-8 md:flex-none"
+                    className="flex h-5 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-[4px] font-mono text-[12px] leading-none text-[var(--ls-heatmap-text)] md:w-8 md:flex-none"
                     style={{ background: heatStripTint(sector.displayChange * 100) }}
                   >
                     <span className="min-w-0 truncate">{sector.etf}</span>
                   </span>
                 ))}
               </div>
-              <div className="flex items-baseline gap-2 text-[11px]">
+              <div className="flex items-baseline gap-2 text-[12px]">
                 <span className="tabular-nums font-semibold text-[var(--fnk-neutral-700)]">상승 {dashboard.sectorUp} · 하락 {dashboard.sectorDown}</span>
                 <span className="text-[var(--fnk-neutral-500)]">{breadthPeriod}</span>
               </div>
@@ -781,7 +781,7 @@ export default function HomeCanvasPlusClient() {
                   <div className="flex flex-col gap-[6px] p-3 md:gap-[10px] md:p-[14px_16px]">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-mono text-[12px] text-[var(--c-ink)] md:text-[13px]">{card.label}</span>
-                      <span className="truncate text-[10px] text-[var(--c-ink-3)] md:text-[11px]">{card.detail} · {card.isLive ? formatMarketState(card.marketState) : "추정치"}</span>
+                      <span className="truncate text-[12px] text-[var(--c-ink-3)] md:text-[12px]">{card.detail} · {card.isLive ? formatMarketState(card.marketState) : "추정치"}</span>
                     </div>
                     <div className="flex flex-wrap items-baseline gap-x-2">
                       <span className="tabular-nums text-[18px] font-semibold text-[var(--c-ink)] md:text-[22px]">{formatPriceValue(card.price)}</span>
@@ -798,7 +798,7 @@ export default function HomeCanvasPlusClient() {
               <div className="flex flex-col gap-[6px] p-3 md:gap-[10px] md:p-[14px_16px]">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono text-[12px] text-[var(--c-ink)] md:text-[13px]">KOSPI</span>
-                  <span className="truncate text-[10px] text-[var(--c-ink-3)] md:text-[11px]">코스피 · {kospi.asOf ? "마감" : "대기"}</span>
+                  <span className="truncate text-[12px] text-[var(--c-ink-3)] md:text-[12px]">코스피 · {kospi.asOf ? "마감" : "대기"}</span>
                 </div>
                 <div className="flex flex-wrap items-baseline gap-x-2">
                   <span className="tabular-nums text-[18px] font-semibold text-[var(--c-ink)] md:text-[22px]">{formatIndexPoints(kospi.price)}</span>
@@ -810,7 +810,7 @@ export default function HomeCanvasPlusClient() {
                   <Sparkline values={kospi.series} tone={(kospi.changePercent ?? 0) >= 0 ? "gain" : "loss"} height={36} ariaLabel="KOSPI 가격 흐름" className="h-[26px] md:h-9" />
                 ) : (
                   <div className="flex h-[26px] items-center md:h-9" role="img" aria-label="KOSPI 가격 흐름 · 차트 데이터 대기">
-                    <span className="text-[11px] text-[var(--c-ink-4)]">차트 데이터 대기</span>
+                    <span className="text-[12px] text-[var(--c-ink-4)]">차트 데이터 대기</span>
                   </div>
                 )}
               </div>
@@ -886,7 +886,7 @@ export default function HomeCanvasPlusClient() {
               title="무엇이 바뀌었나"
               right={<span className="whitespace-nowrap text-[12px] text-[var(--c-ink-3)]">리비전 {revisionClock} · 13F {superinvestorClock}</span>}
             />
-            <div className="hidden grid-cols-[140px_1fr_140px_110px] items-center gap-2 border-b border-[var(--c-line)] px-4 text-[11px] font-semibold text-[var(--c-ink-3)] md:grid md:h-8">
+            <div className="hidden grid-cols-[140px_1fr_140px_110px] items-center gap-2 border-b border-[var(--c-line)] px-4 text-[12px] font-semibold text-[var(--c-ink-3)] md:grid md:h-8">
               <span>종목</span><span>변경</span><span className="text-right">FY+1 EPS 추정</span><span className="text-right">변화</span>
             </div>
             <div className="hidden md:block">

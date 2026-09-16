@@ -112,7 +112,7 @@ function SummaryBar({ leds, activeCombos, totalCombos }: { leds: LedItem[]; acti
         ))}
       </ul>
       <div className="mt-3">
-        <div className="flex items-center justify-between gap-2 text-[11px] font-bold text-slate-500">
+        <div className="flex items-center justify-between gap-2 text-[12px] font-bold text-slate-500">
           <span>심리온도</span>
           <span>{share === null ? "자료 없음" : `활성 ${activeCombos}/${totalCombos}`}</span>
         </div>
@@ -247,19 +247,19 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
                 <p className="mt-1 text-sm font-bold text-slate-600">주간 순유동성 변화 · {toneKo(flowSnap.status)}</p>
                 <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-                    <dt className="text-[11px] font-bold text-slate-500">M2 증가율</dt>
+                    <dt className="text-[12px] font-bold text-slate-500">M2 증가율</dt>
                     <dd className="mt-1 text-sm font-black text-slate-900">{flowSnap.m2YoY.toFixed(2)}%</dd>
-                    <dd className="text-[11px] text-slate-500">${(flowSnap.m2Total / 1000).toFixed(2)}T</dd>
+                    <dd className="text-[12px] text-slate-500">${(flowSnap.m2Total / 1000).toFixed(2)}T</dd>
                   </div>
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-                    <dt className="text-[11px] font-bold text-slate-500">순유동성</dt>
+                    <dt className="text-[12px] font-bold text-slate-500">순유동성</dt>
                     <dd className="mt-1 text-sm font-black text-slate-900">${flowSnap.netLiquidity.toFixed(1)}B</dd>
-                    <dd className="text-[11px] text-slate-500">연준 − TGA − RRP</dd>
+                    <dd className="text-[12px] text-slate-500">연준 − TGA − RRP</dd>
                   </div>
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-                    <dt className="text-[11px] font-bold text-slate-500">스테이블코인</dt>
+                    <dt className="text-[12px] font-bold text-slate-500">스테이블코인</dt>
                     <dd className="mt-1 text-sm font-black text-slate-900">{flowSnap.scM2Ratio.toFixed(2)}%</dd>
-                    <dd className="text-[11px] text-slate-500">M2 대비</dd>
+                    <dd className="text-[12px] text-slate-500">M2 대비</dd>
                   </div>
                 </dl>
               </div>
@@ -280,14 +280,14 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
                 <p className="text-2xl font-black text-slate-900">{toneKo(stressSnap.overallStatus)}</p>
                 <dl className="mt-3 grid grid-cols-2 gap-2 text-center">
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-                    <dt className="text-[11px] font-bold text-slate-500">금리 스프레드</dt>
+                    <dt className="text-[12px] font-bold text-slate-500">금리 스프레드</dt>
                     <dd className="mt-1 text-sm font-black text-slate-900">{stressSnap.tier1.value}bp</dd>
-                    <dd className="text-[11px] text-slate-500">{toneKo(stressSnap.tier1.status)}</dd>
+                    <dd className="text-[12px] text-slate-500">{toneKo(stressSnap.tier1.status)}</dd>
                   </div>
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-                    <dt className="text-[11px] font-bold text-slate-500">지급준비금/GDP</dt>
+                    <dt className="text-[12px] font-bold text-slate-500">지급준비금/GDP</dt>
                     <dd className="mt-1 text-sm font-black text-slate-900">{stressSnap.tier2.value}%</dd>
-                    <dd className="text-[11px] text-slate-500">{toneKo(stressSnap.tier2.status)}</dd>
+                    <dd className="text-[12px] text-slate-500">{toneKo(stressSnap.tier2.status)}</dd>
                   </div>
                 </dl>
               </div>
@@ -308,19 +308,19 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
                 <p className="text-2xl font-black text-slate-900">{toneKo(bankingSnap.overallStatus)}</p>
                 <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-                    <dt className="text-[11px] font-bold text-slate-500">자본비율</dt>
+                    <dt className="text-[12px] font-bold text-slate-500">자본비율</dt>
                     <dd className="mt-1 text-sm font-black text-slate-900">{bankingSnap.tier1.value}%</dd>
-                    <dd className="text-[11px] text-slate-500">{toneKo(bankingSnap.tier1.status)}</dd>
+                    <dd className="text-[12px] text-slate-500">{toneKo(bankingSnap.tier1.status)}</dd>
                   </div>
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-                    <dt className="text-[11px] font-bold text-slate-500">예대율</dt>
+                    <dt className="text-[12px] font-bold text-slate-500">예대율</dt>
                     <dd className="mt-1 text-sm font-black text-slate-900">{bankingSnap.loanDeposit.value}%</dd>
-                    <dd className="text-[11px] text-slate-500">{toneKo(bankingSnap.loanDeposit.status)}</dd>
+                    <dd className="text-[12px] text-slate-500">{toneKo(bankingSnap.loanDeposit.status)}</dd>
                   </div>
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-                    <dt className="text-[11px] font-bold text-slate-500">연체율</dt>
+                    <dt className="text-[12px] font-bold text-slate-500">연체율</dt>
                     <dd className="mt-1 text-sm font-black text-slate-900">{bankingSnap.delinquency.value}%</dd>
-                    <dd className="text-[11px] text-slate-500">{toneKo(bankingSnap.delinquency.status)}</dd>
+                    <dd className="text-[12px] text-slate-500">{toneKo(bankingSnap.delinquency.status)}</dd>
                   </div>
                 </dl>
               </div>
@@ -349,7 +349,7 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
                       className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-2 py-1"
                     >
                       <span className="text-xs font-bold text-slate-700">{comboKo(combo.name)}</span>
-                      <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-bold text-slate-500">
+                      <span className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-slate-500">
                         <span className="rounded-full border border-slate-200 bg-white px-1.5">{toneKo(combo.category)}</span>
                         <span>{toneKo(combo.status)}</span>
                       </span>

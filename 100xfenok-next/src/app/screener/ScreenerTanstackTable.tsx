@@ -364,7 +364,7 @@ function ScreenerTanstackTableInner({
                 )}
             >
               {column.label}
-              <span className={active ? "text-[10px] text-[var(--c-ink)]" : "text-[10px] text-[var(--c-ink-2)]"}>{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
+              <span className={active ? "text-[12px] text-[var(--c-ink)]" : "text-[12px] text-[var(--c-ink-2)]"}>{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
             </button>
             <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} glyph="ⓘ" buttonSize="sm" />
           </div>
@@ -509,7 +509,7 @@ function ScreenerTanstackTableInner({
         ) : null}
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className={canvasPlusPreview ? undefined : "sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]"}>
+            <tr key={headerGroup.id} className={canvasPlusPreview ? undefined : "sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]"}>
               {headerGroup.headers.map((header) => {
                 const column = columnById.get(header.column.id as ScreenerSortKey);
                 const active = column?.key === sortKey;

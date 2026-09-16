@@ -192,7 +192,7 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
 
   return (
     <div className="flex min-w-0 max-w-full flex-col items-center gap-2 antialiased">
-      <span className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+      <span className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
         {title}
       </span>
       {hasAnyScore ? (
@@ -228,7 +228,7 @@ export function FenokSignalRadarHexagon({ title, axes, size = "lg", emptyLabel }
         <div
           role="img"
           aria-label={`${title} 신호 없음`}
-          className={`grid ${SIZE_CLASS[effectiveSize]} place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-center text-[10px] font-bold text-[var(--c-ink-3)]`}
+          className={`grid ${SIZE_CLASS[effectiveSize]} place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-center text-[12px] font-bold text-[var(--c-ink-3)]`}
           title="신호 데이터 없음"
         >
           {emptyLabel ?? (

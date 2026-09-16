@@ -25,10 +25,10 @@ export function FenokSignalRadarHexagonPairSample() {
   return (
     <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
+        <h3 className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink)]">
           Fenok 신호 한눈에 보기 · 매수권유 아님
         </h3>
-        <span className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+        <span className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
           6축 hexagon pair 샘플
         </span>
       </div>
@@ -39,7 +39,7 @@ export function FenokSignalRadarHexagonPairSample() {
         rightAxes={SAMPLE_LONG_TERM_AXES}
         size="lg"
       />
-      <p className="mt-3 text-[10px] font-bold text-[var(--c-ink-3)]">
+      <p className="mt-3 text-[12px] font-bold text-[var(--c-ink-3)]">
         Fenok 파생 신호 · 데이터는 mock/sample · 실제 배선은 cc가 12축 스펙 전달 후 진행
       </p>
     </div>

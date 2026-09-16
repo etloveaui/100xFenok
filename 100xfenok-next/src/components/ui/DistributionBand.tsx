@@ -57,7 +57,7 @@ export function DistributionBand({
           />
         ))}
       </div>
-      <div className="relative mt-1 h-[13px] w-full text-[11px] tabular-nums text-[var(--c-ink-3)]">
+      <div className="relative mt-1 h-[13px] w-full text-[12px] tabular-nums text-[var(--c-ink-3)]">
         {marks.map((mark) => (
           <span
             key={`tick-${mark}`}

@@ -76,7 +76,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareClientRow }) {
       >
         <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="text-sm text-red-900" />
         <p className="mt-2 text-xs font-black text-red-900">ETF 상세 저장소를 확인할 수 없습니다.</p>
-        <p className="mt-1 text-[10px] font-semibold text-red-800">이 종목을 누락이나 빈 데이터로 바꾸지 않고 일시 장애로 표시합니다.</p>
+        <p className="mt-1 text-[12px] font-semibold text-red-800">이 종목을 누락이나 빈 데이터로 바꾸지 않고 일시 장애로 표시합니다.</p>
       </div>
     );
   }
@@ -98,21 +98,21 @@ function CompareSummaryCard({ row }: { row: EtfCompareClientRow }) {
         <div className="min-w-0">
           <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="text-sm text-[var(--c-ink)]" />
           <p className="mt-1 min-w-0 truncate text-xs font-bold leading-snug text-[var(--c-ink-3)]" title={name}>{name}</p>
-          <p className="mt-1 text-[10px] font-bold text-[var(--c-ink-3)]">{holdingsDate === "—" ? "기준일 미확인" : `기준 ${holdingsDate}`}</p>
+          <p className="mt-1 text-[12px] font-bold text-[var(--c-ink-3)]">{holdingsDate === "—" ? "기준일 미확인" : `기준 ${holdingsDate}`}</p>
         </div>
         <span className="tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
           {fmtSigned(performance.tr1y)}
         </span>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] font-bold text-[var(--c-ink-3)]">
+      <div className="mt-3 grid grid-cols-2 gap-2 text-[12px] font-bold text-[var(--c-ink-3)]">
         <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">AUM <b className="tabular-nums text-[var(--c-ink)]">{aum}</b></span>
         <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">보수 <b className="tabular-nums text-[var(--c-ink)]">{fmtPercent(expenseRatio)}</b></span>
         <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">배당 <b className="tabular-nums text-[var(--c-ink)]">{fmtPercent(dividendYield)}</b></span>
         <span className="rounded-lg bg-[var(--c-surface-2)] px-2 py-2">보유 <b className="tabular-nums text-[var(--c-ink)]">{holdingCount.toLocaleString("ko-KR")}</b></span>
       </div>
-      {row.failed ? <p className="mt-2 text-[10px] font-bold text-red-700">상세 데이터를 불러오지 못했습니다.</p> : null}
+      {row.failed ? <p className="mt-2 text-[12px] font-bold text-red-700">상세 데이터를 불러오지 못했습니다.</p> : null}
       {supplyPresentation.label ? (
-        <p className="mt-2 text-[10px] font-bold text-amber-800" data-etf-data-supply-state={dataSupply?.resolution_state}>
+        <p className="mt-2 text-[12px] font-bold text-amber-800" data-etf-data-supply-state={dataSupply?.resolution_state}>
           {supplyPresentation.label}{supplyPresentation.sourceDate ? ` · ${formatDateOnly(supplyPresentation.sourceDate)}` : ""}{supplyPresentation.ageDays !== null ? ` · ${supplyPresentation.ageDays}일 경과` : ""}
         </p>
       ) : null}
@@ -136,18 +136,18 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
             {" / "}
             <TickerChip ticker={pair.right.ticker} href={`/etfs/${encodeURIComponent(pair.right.ticker)}`} variant="inline" className="text-[var(--c-ink)]" />
           </p>
-          <p className="mt-1 text-[10px] font-semibold text-[var(--c-ink-3)]">상위 25개 보유 항목 기준</p>
+          <p className="mt-1 text-[12px] font-semibold text-[var(--c-ink-3)]">상위 25개 보유 항목 기준</p>
         </div>
         <div className="text-right">
           {unavailable ? (
             <>
               <p className="text-sm font-black text-amber-800">확인 불가</p>
-              <p className="text-[10px] font-bold text-[var(--c-ink-3)]">보유 데이터 부족</p>
+              <p className="text-[12px] font-bold text-[var(--c-ink-3)]">보유 데이터 부족</p>
             </>
           ) : (
             <>
               <p className="tabular-nums text-lg font-black text-[var(--c-ink)]">{fmtPercent(pair.overlapWeight)}</p>
-              <p className="text-[10px] font-bold text-[var(--c-ink-3)]">최소 비중 합계</p>
+              <p className="text-[12px] font-bold text-[var(--c-ink-3)]">최소 비중 합계</p>
             </>
           )}
         </div>
@@ -160,7 +160,7 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
         ) : topCommon.length ? (
           <table className="w-full min-w-[440px] text-xs">
             <thead>
-              <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
+              <tr className="border-b border-[var(--c-line)] text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                 <th scope="col" className="px-2 py-2 text-left">공통 항목</th>
                 <th scope="col" className="px-2 py-2 text-right">{pair.left.ticker}</th>
                 <th scope="col" className="px-2 py-2 text-right">{pair.right.ticker}</th>

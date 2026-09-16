@@ -120,7 +120,7 @@ export function EvidenceRail({
   return (
     <div className={className}>
       <div
-        className="evidence-rail-row flex items-center gap-[14px] h-[30px] px-4 border-t border-[var(--fnk-neutral-100)] bg-[#fafbfc] text-[11px] text-[var(--fnk-neutral-500)] overflow-hidden whitespace-nowrap max-md:h-auto max-md:min-h-[30px] max-md:flex-wrap max-md:gap-x-[14px] max-md:gap-y-1 max-md:whitespace-normal max-md:py-1"
+        className="evidence-rail-row flex items-center gap-[14px] h-[30px] px-4 border-t border-[var(--fnk-neutral-100)] bg-[#fafbfc] text-[12px] text-[var(--fnk-neutral-500)] overflow-hidden whitespace-nowrap max-md:h-auto max-md:min-h-[30px] max-md:flex-wrap max-md:gap-x-[14px] max-md:gap-y-1 max-md:whitespace-normal max-md:py-1"
       >
         <span className="inline-flex items-center gap-1 shrink-0">
           <span className="inline-block w-[6px] h-[6px] rounded-full" style={{ background: dotColor[freshness] }} />
@@ -160,7 +160,7 @@ export function EvidenceRail({
       {hasDrawer && drawerOpen && (
         <div id={drawerId} role="region" aria-label={`증거: ${source} ${asOf}`} className="border-t border-[var(--fnk-neutral-100)] bg-white px-4 py-2">
           {stages!.map((stage) => (
-            <div key={stage.stage} className="flex items-baseline gap-3 border-b border-[var(--fnk-neutral-100)] py-1.5 text-[11px] last:border-b-0">
+            <div key={stage.stage} className="flex items-baseline gap-3 border-b border-[var(--fnk-neutral-100)] py-1.5 text-[12px] last:border-b-0">
               <span className="inline-flex w-[52px] shrink-0 items-center gap-1.5 font-semibold text-[var(--fnk-neutral-500)]">
                 <span
                   className="inline-block w-[6px] h-[6px] rounded-full"

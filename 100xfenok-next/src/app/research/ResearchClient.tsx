@@ -175,7 +175,7 @@ export default function ResearchClient() {
                       }}
                       className="flex min-h-44 cursor-pointer flex-col rounded-[10px] border border-slate-200 bg-white p-4 transition hover:-translate-y-px hover:border-slate-300 focus-visible:outline-2 focus-visible:outline-slate-900"
                     >
-                      <span className="font-mono text-[11px] font-bold tracking-wide text-slate-500">
+                      <span className="font-mono text-[12px] font-bold tracking-wide text-slate-500">
                         {kindLabel(item.kind)}
                       </span>
                       <h3 className="mt-1 text-base font-extrabold leading-snug text-slate-900">{item.title}</h3>
@@ -193,7 +193,7 @@ export default function ResearchClient() {
                   data-research-card={item.id}
                   className="flex min-h-44 flex-col rounded-[10px] border border-slate-200 bg-slate-50 p-4"
                 >
-                  <span className="font-mono text-[11px] font-bold tracking-wide text-slate-500">
+                  <span className="font-mono text-[12px] font-bold tracking-wide text-slate-500">
                     {kindLabel(item.kind)}
                   </span>
                   <h3 className="mt-1 text-base font-extrabold leading-snug text-slate-700">{item.title}</h3>

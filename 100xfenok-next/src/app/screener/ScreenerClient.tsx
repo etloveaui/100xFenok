@@ -619,7 +619,7 @@ function renderCell(
       return (
         <span className="block min-w-0 max-w-[180px]">
           <span className="font-mono text-sm font-black text-[var(--c-ink)]">{stock.ticker}</span>
-          <span className="block truncate text-[11px] font-semibold text-[var(--c-ink-3)]" title={stock.name ?? undefined}>
+          <span className="block truncate text-[12px] font-semibold text-[var(--c-ink-3)]" title={stock.name ?? undefined}>
             {stock.name ?? "—"}
           </span>
         </span>
@@ -692,7 +692,7 @@ function renderCell(
           />
           {isMobile ? (
             <span
-              className="max-w-full whitespace-normal break-words text-[9px] font-bold text-[var(--c-ink-3)]"
+              className="max-w-full whitespace-normal break-words text-[12px] font-bold text-[var(--c-ink-3)]"
               title={shortTermBasis.comparisonNote}
             >
               {shortTermBasis.label}
@@ -845,7 +845,7 @@ function renderMobileCell(stock: ScreenerStock, key: ScreenerSortKey, preset?: C
       const pct = bandPct(safeCurrent, safeMin, safeMax);
       const label = bandLabel(pct);
       return (
-        <span className="font-black tabular-nums text-slate-800 text-[10px] truncate">
+        <span className="font-black tabular-nums text-slate-800 text-[12px] truncate">
           {safeCurrent.toFixed(1)}x ({label} {Math.round(pct * 100)}%)
         </span>
       );
@@ -943,8 +943,8 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
       {sections.map((section) => (
         <div key={section.title} className={compact ? "rounded-xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2" : "border-t border-[var(--c-line-2)] pt-3"}>
           <div className="mb-2 flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{section.title}</span>
-            <span className="grid w-full grid-cols-3 gap-1 text-center text-[9px] font-black text-[var(--c-ink-2)] sm:w-auto sm:min-w-[132px] sm:grid-cols-3">
+            <span className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">{section.title}</span>
+            <span className="grid w-full grid-cols-3 gap-1 text-center text-[12px] font-black text-[var(--c-ink-2)] sm:w-auto sm:min-w-[132px] sm:grid-cols-3">
               {ESTIMATE_PERIOD_LABELS.map((label) => <span key={`${section.title}-${label}`}>{label}</span>)}
             </span>
           </div>
@@ -954,7 +954,7 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
               const showGap = hasEstimateGap(completeness);
               return (
                 <div key={`${section.title}-${row.label}`} className="grid grid-cols-1 gap-1.5 sm:grid-cols-[62px_minmax(0,1fr)] sm:items-center sm:gap-2">
-                  <span className="min-w-0 truncate text-[10px] font-black text-slate-500">
+                  <span className="min-w-0 truncate text-[12px] font-black text-slate-500">
                     {row.label}
                     {showGap ? (
                       <span className={cx("ml-1 rounded-full px-1 py-[1px] text-[8px]", estimateCompletenessTone(completeness))}>
@@ -968,7 +968,7 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
                       return (
                         <span
                           key={`${section.title}-${row.label}-${ESTIMATE_PERIOD_LABELS[index]}`}
-                          className={cx(" min-w-0 truncate text-right text-[11px] font-black tabular-nums", trendValueClass(value, row.tone))}
+                          className={cx(" min-w-0 truncate text-right text-[12px] font-black tabular-nums", trendValueClass(value, row.tone))}
                           title={`${row.label} ${ESTIMATE_PERIOD_LABELS[index]} ${row.formatValue(value)}`}
                         >
                           {row.formatValue(value)}
@@ -989,7 +989,7 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
 function MobileMetric({ stock, metricKey, preset }: { stock: ScreenerStock; metricKey: ScreenerSortKey; preset?: ColumnPreset }) {
   return (
     <div className="min-w-0 rounded-xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
-      <span className="block truncate text-[11px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
+      <span className="block truncate text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
         {columnLabel(metricKey)}
       </span>
       <span className="mt-1 block min-w-0 truncate text-right text-sm font-black text-[var(--c-ink)]">
@@ -1094,7 +1094,7 @@ function MobileStockCard({
       className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--mobile focus-within:bg-[var(--c-surface-2)] focus-within:shadow-[inset_2px_0_0_var(--c-brand)]" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] focus-within:bg-[var(--c-surface-2)] focus-within:shadow-[inset_2px_0_0_var(--c-brand)]"}
     >
       <div className="flex items-center justify-between gap-2 border-b border-[var(--c-line-2)] px-3 py-2">
-        <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
+        <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[12px] font-black text-[var(--c-ink-2)]">
           <input
             type="checkbox"
             checked={selected}
@@ -1103,7 +1103,7 @@ function MobileStockCard({
           />
           선택
         </label>
-        <span className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)]">
+        <span className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-2)]">
           {stock.connection?.singleStockEtfs?.length ? "ETF 연결" : "단일 종목"}
         </span>
       </div>
@@ -1141,22 +1141,22 @@ function MobileStockCard({
             ) : null}
           </span>
           <span className="mt-1 block min-w-0 truncate text-sm font-bold text-slate-700" title={stock.name ?? undefined}>{stock.name}</span>
-          <span className="mt-0.5 block min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-2)]">
+          <span className="mt-0.5 block min-w-0 truncate text-[12px] font-bold text-[var(--c-ink-2)]">
             {stock.sector || "섹터 미정"}
             {stock.actionReasons?.[0] ? ` · ${stock.actionReasons[0]}` : ""}
           </span>
           {estimateSummary ? (
-            <span className="mt-1 block min-w-0 truncate text-[11px] font-black text-[var(--c-brand)]">{estimateSummary}</span>
+            <span className="mt-1 block min-w-0 truncate text-[12px] font-black text-[var(--c-brand)]">{estimateSummary}</span>
           ) : null}
         </div>
         <div onClick={onToggle} className="shrink-0 cursor-pointer text-right">
           <span className="block text-sm font-black tabular-nums text-slate-950">
             {stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}
           </span>
-          <span className="mt-1 block text-[11px] font-black tabular-nums text-slate-500">
+          <span className="mt-1 block text-[12px] font-black tabular-nums text-slate-500">
             {fmtMarketCap(stock.marketCap)}
           </span>
-          <span className={cx(" mt-1 block text-[11px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
+          <span className={cx(" mt-1 block text-[12px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
             {fmtSignedPct(stock.return12m)}
           </span>
         </div>
@@ -1226,7 +1226,7 @@ function DesktopStockCard({
       className={canvasPlusPreview ? "cp-screener-stock-card cp-screener-stock-card--desktop" : "overflow-hidden rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)]"}
     >
       <div className="flex items-center justify-between gap-3 border-b border-[var(--c-line-2)] px-4 py-3">
-        <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[11px] font-black text-[var(--c-ink-2)]">
+        <label data-screener-checkbox-target className="inline-flex min-h-11 items-center gap-2 rounded-md px-1 text-[12px] font-black text-[var(--c-ink-2)]">
           <input
             type="checkbox"
             checked={selected}
@@ -1269,7 +1269,7 @@ function DesktopStockCard({
             </span>
           </span>
           <span className="mt-1 block min-w-0 truncate text-sm font-bold text-slate-700" title={stock.name ?? undefined}>{stock.name}</span>
-          <span className="mt-0.5 block min-w-0 truncate text-[11px] font-bold text-[var(--c-ink-2)]">
+          <span className="mt-0.5 block min-w-0 truncate text-[12px] font-bold text-[var(--c-ink-2)]">
             {stock.sector || "섹터 미정"}
             {stock.connection ? " · 연결 데이터 있음" : ""}
           </span>
@@ -1278,10 +1278,10 @@ function DesktopStockCard({
           <span className="block text-base font-black tabular-nums text-slate-950">
             {stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}
           </span>
-          <span className="mt-1 block text-[11px] font-black tabular-nums text-slate-500">
+          <span className="mt-1 block text-[12px] font-black tabular-nums text-slate-500">
             {fmtMarketCap(stock.marketCap)}
           </span>
-          <span className={cx(" mt-1 block text-[11px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
+          <span className={cx(" mt-1 block text-[12px] font-black tabular-nums", getMomentumClass(stock.return12m))}>
             {fmtSignedPct(stock.return12m)}
           </span>
         </button>
@@ -2830,7 +2830,7 @@ export default function ScreenerClient({
               </p>
             ) : (
               <>
-                <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">선택 작업</p>
+                <p className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500">선택 작업</p>
                 <p className="mt-1 text-sm font-bold text-slate-700">
                   현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
                   {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
@@ -3215,7 +3215,7 @@ export default function ScreenerClient({
                       <option value="60">60 이상</option>
                       <option value="50">50 이상</option>
                     </select>
-                    <small className="text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_SHORT_EDGE_METHODOLOGY}</small>
+                    <small className="text-[12px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_SHORT_EDGE_METHODOLOGY}</small>
                   </label>
                   <label className="cp-screener-field">
                     <span className="cp-screener-field__label">Long Edge</span>
@@ -3230,7 +3230,7 @@ export default function ScreenerClient({
                       <option value="60">60 이상</option>
                       <option value="50">50 이상</option>
                     </select>
-                    <small className="text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_LONG_EDGE_METHODOLOGY}</small>
+                    <small className="text-[12px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_LONG_EDGE_METHODOLOGY}</small>
                   </label>
                   <label className="cp-screener-field">
                     <span className="cp-screener-field__label">연결 범위</span>
@@ -3304,7 +3304,7 @@ export default function ScreenerClient({
               <div className={cx("mt-3 grid gap-3 sm:grid-cols-2", canvasPlusPreview ? "lg:grid-cols-4" : "lg:grid-cols-5")}>
                 {!canvasPlusPreview ? (
                   <label className="flex flex-col gap-1">
-                    <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">검색</span>
+                    <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">검색</span>
                     <input
                       type="search"
                       value={search}
@@ -3315,7 +3315,7 @@ export default function ScreenerClient({
                   </label>
                 ) : null}
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">섹터</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">섹터</span>
                   <select
                     value=""
                     onChange={(event) => {
@@ -3357,7 +3357,7 @@ export default function ScreenerClient({
                   )}
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">국가</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">국가</span>
                   <select
                     value=""
                     onChange={(event) => {
@@ -3399,7 +3399,7 @@ export default function ScreenerClient({
                   )}
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최소($B)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최소($B)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3410,7 +3410,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최대($B)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">시총 최대($B)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3444,7 +3444,7 @@ export default function ScreenerClient({
             {valueOpen && (
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최소</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최소</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3455,7 +3455,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최대</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 최대</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3466,7 +3466,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">예상 PER 상한</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">예상 PER 상한</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3477,7 +3477,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최소</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최소</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3488,7 +3488,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최대</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PBR 최대</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3499,7 +3499,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PEG 최대</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PEG 최대</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3510,7 +3510,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 밴드</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">PER 밴드</span>
                   <select
                     value={bandFilter}
                     onChange={(event) => setBandFilter(event.target.value as "" | "cheap" | "fair" | "rich")}
@@ -3555,7 +3555,7 @@ export default function ScreenerClient({
             {growthOpen && (
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">매출+1 최소</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">매출+1 최소</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3566,7 +3566,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">EPS+1 최소</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">EPS+1 최소</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3577,7 +3577,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3588,7 +3588,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최대 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">배당률 최대 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3599,7 +3599,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">12M 수익률 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">12M 수익률 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3610,7 +3610,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">3Y 수익률 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">3Y 수익률 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3621,7 +3621,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">5Y 수익률 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">5Y 수익률 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3655,7 +3655,7 @@ export default function ScreenerClient({
             {qualityOpen && (
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">ROE 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">ROE 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3666,7 +3666,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">내년(FY+1) ROE 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">내년(FY+1) ROE 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3677,7 +3677,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">OPM 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">OPM 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3688,7 +3688,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">내구 수익성 최소</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">내구 수익성 최소</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3699,7 +3699,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">투자 신호</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">투자 신호</span>
                   <select
                     data-screener-action-filter
                     value={actionFilter}
@@ -3719,7 +3719,7 @@ export default function ScreenerClient({
                   </select>
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Short Edge</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Short Edge</span>
                   <select
                     value={shortEdgeMin}
                     onChange={(event) => setShortEdgeMin(event.target.value as FenokEdgeFilter)}
@@ -3731,10 +3731,10 @@ export default function ScreenerClient({
                     <option value="60">60 이상</option>
                     <option value="50">50 이상</option>
                   </select>
-                  <small className="text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_SHORT_EDGE_METHODOLOGY}</small>
+                  <small className="text-[12px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_SHORT_EDGE_METHODOLOGY}</small>
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Long Edge</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">Long Edge</span>
                   <select
                     value={longEdgeMin}
                     onChange={(event) => setLongEdgeMin(event.target.value as ConvictionFilter)}
@@ -3746,10 +3746,10 @@ export default function ScreenerClient({
                     <option value="60">60 이상</option>
                     <option value="50">50 이상</option>
                   </select>
-                  <small className="text-[10px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_LONG_EDGE_METHODOLOGY}</small>
+                  <small className="text-[12px] font-semibold leading-tight text-[var(--c-ink-3)]">{FENOK_LONG_EDGE_METHODOLOGY}</small>
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">연결 범위</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">연결 범위</span>
                   <select
                     value={connectionFilter}
                     onChange={(event) => setConnectionFilter(event.target.value as ConnectionFilter)}
@@ -3814,7 +3814,7 @@ export default function ScreenerClient({
         data-canvas-plus-screener-toolbar={canvasPlusPreview ? "true" : undefined}
       >
         <div className={canvasPlusPreview ? "cp-screener-toolbar-section cp-screener-preset-toolbar" : "flex flex-wrap items-center gap-2"}>
-          <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>컬럼</span>
+          <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>컬럼</span>
           {(Object.keys(PRESET_KEYS) as ColumnPreset[]).map((p) => (
             <button
               key={p}
@@ -3837,7 +3837,7 @@ export default function ScreenerClient({
         </div>
         <div className={canvasPlusPreview ? "cp-screener-toolbar-controls" : "flex flex-wrap items-center gap-3"}>
           <div data-screener-view-mode-control className={canvasPlusPreview ? "cp-screener-toolbar-section cp-screener-view-toolbar" : "hidden flex-wrap items-center gap-2 md:flex"}>
-            <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>표시</span>
+            <span className={canvasPlusPreview ? "cp-screener-section-label" : "text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]"}>표시</span>
             {VIEW_MODE_BUTTONS.map((item) => (
               <button
                 key={item}
@@ -4064,7 +4064,7 @@ export default function ScreenerClient({
         ) : null}
       </section>
 
-      <p className="px-1 text-[11px] text-[var(--c-ink-2)]">
+      <p className="px-1 text-[12px] text-[var(--c-ink-2)]">
         데이터: 기업 실적 · 밸류에이션 · 가격/배당 히스토리 · 기관 공시 · Short/Long Edge 점수. 정렬 시 결측치는 항상 뒤로 정렬됩니다.
       </p>
 

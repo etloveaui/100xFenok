@@ -168,21 +168,21 @@ export default function TickerSurfaceEventsCard({
       <div className="panel-b space-y-3">
         {sections.map(({ section, rows }) => (
           <div key={section}>
-            <p className="mb-1 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+            <p className="mb-1 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">
               {SECTION_LABELS[section]}
             </p>
             <div className="space-y-1.5">
               {rows.map(({ surface, row }, index) => (
                 <div key={`${surface.surface}-${index}`} className="rounded-lg border border-slate-200 bg-white/70 px-2.5 py-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="min-w-0 truncate text-[11px] font-black text-slate-800">
+                    <span className="min-w-0 truncate text-[12px] font-black text-slate-800">
                       {pickName(row)}
                     </span>
                     <span className="shrink-0 rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.06em] text-slate-700">
                       {surface.label}
                     </span>
                   </div>
-                  <p className="mt-1 min-w-0 truncate text-[10px] font-semibold text-slate-500">
+                  <p className="mt-1 min-w-0 truncate text-[12px] font-semibold text-slate-500">
                     {pickTicker(row)} · {rowLine(section, row)}
                   </p>
                 </div>
@@ -190,7 +190,7 @@ export default function TickerSurfaceEventsCard({
             </div>
           </div>
         ))}
-        <p className="text-[9px] font-semibold text-slate-500">
+        <p className="text-[12px] font-semibold text-slate-500">
           관련 이벤트는 서버에서 티커별로 정리해 표시합니다.
         </p>
       </div>

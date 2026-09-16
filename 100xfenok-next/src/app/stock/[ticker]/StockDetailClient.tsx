@@ -835,7 +835,7 @@ function FinancialSnapshotRail({
       <PanelHeader
         eyebrow="Financials"
         title="TTM 재무 스냅샷"
-        right={<span className="text-[11px] text-slate-500">{data?.fetched_at ? `수집 ${fetchedAsOf}` : "수집일 미확인"}</span>}
+        right={<span className="text-[12px] text-slate-500">{data?.fetched_at ? `수집 ${fetchedAsOf}` : "수집일 미확인"}</span>}
       />
       <div className="flex divide-x divide-slate-200">
         {metrics.map((metric) => (
@@ -941,7 +941,7 @@ function MiniBarChart({
                 />
               ) : null}
               <span
-                className="pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-1.5 py-0.5 text-[10px] font-black tabular-nums text-[var(--c-ink-2)] opacity-0 shadow-sm transition-opacity group-focus:opacity-100 group-hover:opacity-100"
+                className="pointer-events-none absolute left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-1.5 py-0.5 text-[12px] font-black tabular-nums text-[var(--c-ink-2)] opacity-0 shadow-sm transition-opacity group-focus:opacity-100 group-hover:opacity-100"
                 style={{ top: `${tooltipTop}%` }}
               >
                 {label}
@@ -964,7 +964,7 @@ function MiniBarChart({
           </span>
         ))}
       </div>
-      <div className="flex min-w-0 justify-between gap-2 text-[9px] font-black tabular-nums text-slate-500">
+      <div className="flex min-w-0 justify-between gap-2 text-[12px] font-black tabular-nums text-slate-500">
         <span className="min-w-0 truncate">
           최신 {latestActual ? `${latestActual.label} ${formatValue(latestActual.value as number)}` : "—"}
         </span>
@@ -1000,7 +1000,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
     <div className="-mx-1 mt-3 overflow-x-auto px-1">
       <table data-stock-financial-table="compact" className="w-full min-w-[500px] text-xs">
         <thead>
-          <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+          <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
             <th className="sticky left-0 z-20 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
             {years.map((y) => <th key={y} className="px-2 py-1.5 text-right">{y}</th>)}
             {estKeys.map((k) => (
@@ -1023,7 +1023,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
             return (
               <Fragment key={row.label}>
                 <tr className="border-b border-slate-100 last:border-b-0">
-                  <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">
+                  <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">
                     <span className="block">{row.label}</span>
                     <button
                       type="button"
@@ -1031,7 +1031,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
                       aria-expanded={isExpanded}
                       aria-label={`${row.label} 추이 차트 ${isExpanded ? "접기" : "펼치기"}`}
                       onClick={() => setExpandedRow(isExpanded ? null : row.label)}
-                      className="mt-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-slate-200 bg-white px-2 text-[9px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
+                      className="mt-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-slate-200 bg-white px-2 text-[12px] font-black text-slate-600 transition hover:border-brand-interactive hover:text-brand-interactive"
                     >
                       추이
                     </button>
@@ -1057,7 +1057,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
                 </tr>
                 {isExpanded ? (
                   <tr data-stock-financial-row-chart-panel={row.label} className="border-b border-slate-100 bg-slate-50/70">
-                    <td className="sticky left-0 z-10 bg-slate-50 px-2 py-2 text-[10px] font-black text-slate-500 shadow-[2px_0_0_var(--c-line-2)]">
+                    <td className="sticky left-0 z-10 bg-slate-50 px-2 py-2 text-[12px] font-black text-slate-500 shadow-[2px_0_0_var(--c-line-2)]">
                       차트
                     </td>
                     <td colSpan={years.length + estKeys.length} className="px-2 py-2">
@@ -1070,7 +1070,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
           })}
         </tbody>
       </table>
-      <p data-stock-financial-estimate-legend className="mt-1 text-[9px] font-semibold text-slate-500">
+      <p data-stock-financial-estimate-legend className="mt-1 text-[12px] font-semibold text-slate-500">
         (E) = 시장 예상치 · 점선 배경은 실제 실적과 분리된 추정 구간
       </p>
     </div>
@@ -1144,8 +1144,8 @@ function DividendPanel({
       {dpsValues.length > 0 ? (
         <div data-stock-dividend-history-chart className="border-t border-slate-100 px-4 py-3">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold text-slate-500">DPS 추이</p>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[12px] font-semibold text-slate-500">DPS 추이</p>
+            <p className="text-[12px] text-slate-500">
               최근 {latestDps !== null ? formatMoney(latestDps, currency) : "—"} · 추정 {isFiniteNumber(nextDps) ? formatMoney(nextDps, currency) : "—"}
             </p>
           </div>
@@ -1216,7 +1216,7 @@ function StockEstimatesPanel({
             disabled={item.key === "quarterly"}
             title={item.key === "quarterly" ? "분기 컨센서스 미연결" : undefined}
             onClick={() => setGranularity(item.key)}
-            className="!min-h-[44px] px-3 !text-[11px]"
+            className="!min-h-[44px] px-3 !text-[12px]"
           >
             {item.label}
           </CpButton>
@@ -1229,13 +1229,13 @@ function StockEstimatesPanel({
         </div>
       ) : (
         <div data-stock-estimates-quarterly-panel className="mx-4 my-2 rounded-[8px] border border-dashed border-slate-200 bg-white p-3">
-          <p className="text-[11px] font-semibold text-slate-900">분기 추정치 연결 대기</p>
-          <p className="mt-1 text-[11px] leading-4 text-slate-500">
+          <p className="text-[12px] font-semibold text-slate-900">분기 추정치 연결 대기</p>
+          <p className="mt-1 text-[12px] leading-4 text-slate-500">
             현재 공개 추정치 정규화는 FY+1~3 연간 축을 우선 표시합니다. 분기 컨센서스가 들어오면 같은 순서로 요약 → 변화 → 상세 표를 채웁니다.
           </p>
         </div>
       )}
-      <p data-stock-estimate-disclosure="true" className="px-4 py-2 text-[11px] leading-4 text-slate-500">
+      <p data-stock-estimate-disclosure="true" className="px-4 py-2 text-[12px] leading-4 text-slate-500">
         출처: StockAnalysis/Yahoo 계열 추정치 정규화 데이터. EPS 기준(희석/조정 여부)은 제공자 원문 확인이 필요합니다.
       </p>
     </>
@@ -1342,7 +1342,7 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
       <div data-smart-money-section="diff" className="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500">분기 매매 변화</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500">분기 매매 변화</p>
             <p className="mt-1 text-sm font-black text-slate-900">
               {holderCount > 0 ? `${holderCount}개 투자자 보유` : "보유자 집계 중"}
               {tradeRows.length > 0 ? ` · ${tradeRows.length}개 최근 변화 포착` : ""}
@@ -1366,7 +1366,7 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
                   className="rounded-lg border border-slate-200 bg-white px-3 py-2"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+                    <span className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">
                       {isBuy ? "순매수 변화" : "순매도 변화"}
                     </span>
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black tabular-nums text-slate-500">
@@ -1374,19 +1374,19 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
                     </span>
                   </div>
                   <p className={`mt-1 text-base font-black tabular-nums ${isBuy ? "text-emerald-700" : "text-rose-700"}`}>{tradeAmount(trade.amount)}</p>
-                  <p className="mt-1 text-[10px] font-bold text-slate-600">
+                  <p className="mt-1 text-[12px] font-bold text-slate-600">
                     {countLabel} {isFiniteNumber(trade.investors_count) ? `${trade.investors_count}명` : "—"}
                     {isFiniteNumber(eventCount) && eventCount > 0 ? ` · ${eventLabel} ${eventCount}명` : ""}
                   </p>
-                  {investorName ? <p className="mt-1 truncate text-[10px] font-semibold text-slate-500">대표 {investorName}</p> : null}
+                  {investorName ? <p className="mt-1 truncate text-[12px] font-semibold text-slate-500">대표 {investorName}</p> : null}
                 </div>
               );
             })}
           </div>
         ) : (
-          <p className="mt-3 text-[11px] font-semibold text-slate-500">최근 분기 순매수·순매도 랭킹에는 포함되지 않았습니다.</p>
+          <p className="mt-3 text-[12px] font-semibold text-slate-500">최근 분기 순매수·순매도 랭킹에는 포함되지 않았습니다.</p>
         )}
-        <p data-smart-money-lag-disclosure className="mt-2 text-[9px] font-semibold text-slate-500">
+        <p data-smart-money-lag-disclosure className="mt-2 text-[12px] font-semibold text-slate-500">
           13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다. 보유자별 표는 같은 기준분기/생성일로 읽어야 합니다.
         </p>
       </div>
@@ -1394,7 +1394,7 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
         <div data-smart-money-section="holdings" className="-mx-1 overflow-x-auto px-1">
           <table className="w-full min-w-[410px] text-xs">
             <thead>
-              <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+              <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
                 <th className="px-2 py-1.5 text-left">투자자</th>
                 <th className="px-2 py-1.5 text-right">주식수</th>
                 <th className="px-2 py-1.5 text-right">비중</th>
@@ -1409,7 +1409,7 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
                       href={ROUTES.superinvestorsGuru(h.investor)}
                       data-smart-money-investor-profile-link
                       aria-label={`${h.investor} 투자자 포트폴리오 보기`}
-                      className="inline-flex min-h-11 flex-col justify-center text-left text-[10px] font-black text-brand-interactive hover:underline"
+                      className="inline-flex min-h-11 flex-col justify-center text-left text-[12px] font-black text-brand-interactive hover:underline"
                     >
                       <span>{h.investor}</span>
                       <span className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">포트폴리오</span>
@@ -1421,7 +1421,7 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
                   <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-700">
                     {h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—"}
                   </td>
-                  <td data-smart-money-report-date-cell className="px-2 py-1.5 text-right text-[10px] font-black text-slate-500">
+                  <td data-smart-money-report-date-cell className="px-2 py-1.5 text-right text-[12px] font-black text-slate-500">
                     {reportBasisLabel}
                   </td>
                 </tr>
@@ -1457,12 +1457,12 @@ function MetricWithSpark({ label, value, data, estimates, color, years, benchmar
   return (
     <div className="rounded-xl border border-slate-200 p-3">
       <div className="flex items-center justify-between">
-        <MetricHelp label={label} className="text-[10px] font-bold text-slate-500" />
+        <MetricHelp label={label} className="text-[12px] font-bold text-slate-500" />
         <span className="tabular-nums text-sm font-black text-slate-900">{value}</span>
       </div>
       {finiteValues(data).length >= 2 ? <div className="mt-1"><Sparkline data={data} color={color} years={years} estimates={estimates ?? undefined} formatValue={formatValue} /></div> : null}
       {(showEstimateCompleteness || isFiniteNumber(nextEstimate) || benchValue !== null) ? (
-        <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[9px] font-black tabular-nums text-slate-500">
+        <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[12px] font-black tabular-nums text-slate-500">
           {showEstimateCompleteness ? (
             <span className={`rounded-full px-1.5 py-[1px] ${estimateCompletenessTone(estimateCompleteness)}`}>
               {estimateCompleteness.label}
@@ -1587,7 +1587,7 @@ function FinancialsHeroCp({
         eyebrow="재무 · FINANCIALS"
         title="매출 추이"
         right={yoyGrowth !== null ? (
-          <span className="tabular-nums text-[11px] font-semibold text-slate-600">
+          <span className="tabular-nums text-[12px] font-semibold text-slate-600">
             {yoyGrowth >= 0 ? "▲" : "▼"} {fmtPct(yoyGrowth)} YoY
           </span>
         ) : null}
@@ -1641,7 +1641,7 @@ function FinancialsHeroCp({
             <circle key={i} cx={p.x} cy={p.y} r={i < actualMarginPoints.length ? 3.5 : 3} fill="var(--cp-chart-line-2)" opacity={i < actualMarginPoints.length ? 1 : 0.75} />
           ))}
         </svg>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-1 text-[11px] text-slate-500">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-1 text-[12px] text-slate-500">
           <span>매출 · 실적</span>
           <span>매출 · 컨센서스 추정</span>
           <span>영업이익률(선)</span>
@@ -1713,7 +1713,7 @@ function ValuationHeroCp({ detailPerBands, years, quality }: { detailPerBands: {
       <PanelHeader
         eyebrow="VALUATION · PER 밴드 위치 (8년)"
         title={`지금 가격은 ${zoneLabel}입니다`}
-        right={<span className="tabular-nums text-[11px] font-semibold text-slate-600">현재 PER {current.toFixed(1)}x</span>}
+        right={<span className="tabular-nums text-[12px] font-semibold text-slate-600">현재 PER {current.toFixed(1)}x</span>}
       />
       <div className="px-4 py-3">
         <p className="pb-2 text-[12px] text-slate-600">{verdictDetail}</p>
@@ -1722,7 +1722,7 @@ function ValuationHeroCp({ detailPerBands, years, quality }: { detailPerBands: {
           <Bar value={clampedPct} aria-label={`PER 밸류에이션 밴드: 최저 ${min_8y.toFixed(1)}배, 평균 ${avg_8y.toFixed(1)}배, 현재 ${current.toFixed(1)}배, 최고 ${max_8y.toFixed(1)}배`} />
           <span className="tabular-nums text-right text-[12px] font-semibold text-slate-900">{Math.round(clampedPct)}%</span>
         </Row>
-        <div className="grid grid-cols-3 px-4 py-2 text-[11px] tabular-nums text-slate-500">
+        <div className="grid grid-cols-3 px-4 py-2 text-[12px] tabular-nums text-slate-500">
           <span>{min_8y.toFixed(1)}x · 8년 최저</span>
           <span className="text-center">{avg_8y.toFixed(1)}x · 평균</span>
           <span className="text-right">{max_8y.toFixed(1)}x · 8년 최고</span>
@@ -1915,7 +1915,7 @@ function EstimatesHeroCp({ yfData, detail, currency, quality }: { yfData: any; d
       <PanelHeader
         eyebrow="ESTIMATES · 시장 전망"
         title={upsidePct !== null ? `시장은 여전히 ${upsidePct >= 0 ? "위쪽" : "아래쪽"}을 본다` : "시장 전망"}
-        right={upsidePct !== null ? <span className="tabular-nums text-[11px] font-semibold text-slate-600">목표가 여력 {fmtPct(upsidePct)}</span> : null}
+        right={upsidePct !== null ? <span className="tabular-nums text-[12px] font-semibold text-slate-600">목표가 여력 {fmtPct(upsidePct)}</span> : null}
       />
       {upsidePct !== null ? (
         <div>
@@ -1934,7 +1934,7 @@ function EstimatesHeroCp({ yfData, detail, currency, quality }: { yfData: any; d
       )}
       {epsPoints.length > 0 ? (
         <div>
-          <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">
+          <p className="px-4 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">
             EPS 실적 → 컨센서스 (FY0 → FY+3){epsCumGrowth !== null ? ` · 누적 ${fmtPct(epsCumGrowth)}` : ""}
           </p>
           {epsPoints.map((p) => (
@@ -1970,7 +1970,7 @@ function EstimatesBandCp({ yfData, currency, quality }: { yfData: any; currency:
       <PanelHeader
         eyebrow="Target Range"
         title="애널리스트 목표가 범위"
-        right={upsidePct !== null ? <span className="tabular-nums text-[11px] font-semibold text-slate-600">{fmtPct(upsidePct)}</span> : null}
+        right={upsidePct !== null ? <span className="tabular-nums text-[12px] font-semibold text-slate-600">{fmtPct(upsidePct)}</span> : null}
       />
       <div>
         <Row>
@@ -1984,7 +1984,7 @@ function EstimatesBandCp({ yfData, currency, quality }: { yfData: any; currency:
           <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{formatMoney(mean, currency)}</span>
         </Row>
       </div>
-      <div className="grid grid-cols-2 px-4 py-2 text-[11px] tabular-nums text-slate-500">
+      <div className="grid grid-cols-2 px-4 py-2 text-[12px] tabular-nums text-slate-500">
         <span>최저 {formatMoney(low, currency)}</span>
         <span className="text-right">최고 {formatMoney(high, currency)}</span>
       </div>
@@ -2050,7 +2050,7 @@ function EstimatesRecoCp({ yfData, quality }: { yfData: any; quality?: { loading
       <PanelHeader
         eyebrow="Analyst Recommendations"
         title="애널리스트 추천 분포"
-        right={<span className="text-[11px] font-semibold text-slate-600">종합: {overall}</span>}
+        right={<span className="text-[12px] font-semibold text-slate-600">종합: {overall}</span>}
       />
       <div className="px-4 py-3">
         <div className="flex h-9 overflow-hidden rounded-md border border-slate-200">
@@ -2065,7 +2065,7 @@ function EstimatesRecoCp({ yfData, quality }: { yfData: any; quality?: { loading
             );
           })}
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-[11px] text-slate-500">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-[12px] text-slate-500">
           {segs.filter(([key]) => (Number(lastRec[key]) || 0) > 0).map(([key, label]) => (
             <span key={key}>{label} {Number(lastRec[key])}명</span>
           ))}
@@ -2167,9 +2167,9 @@ function OwnershipHeroCp({
         <PanelHeader
           eyebrow="13F 기관 자금 흐름"
           title={hasFlow ? `이번 분기, 대형 기관은 ${isNetSell ? "팔고 있습니다" : "사고 있습니다"}` : "이번 분기 랭킹 데이터에서 이 종목의 매매 흐름을 특정하지 못했습니다"}
-          right={hasFlow ? <span className="tabular-nums text-[11px] font-semibold text-slate-600">{isNetSell ? "순매도" : "순매수"} {isNetSell ? "-" : "+"}{formatCompactMoney(Math.abs(netFlow ?? 0), "USD")}</span> : null}
+          right={hasFlow ? <span className="tabular-nums text-[12px] font-semibold text-slate-600">{isNetSell ? "순매도" : "순매수"} {isNetSell ? "-" : "+"}{formatCompactMoney(Math.abs(netFlow ?? 0), "USD")}</span> : null}
         />
-        <p className="px-4 pt-2 text-[11px] text-slate-500" data-smart-money-asof>
+        <p className="px-4 pt-2 text-[12px] text-slate-500" data-smart-money-asof>
           {reportBasisLabel ? `${reportBasisLabel}` : "기준 분기 미확인"} · 매도 {formatCompactMoney(soldAmount ?? 0, "USD")} − 매수 {formatCompactMoney(boughtAmount ?? 0, "USD")}
         </p>
         {hasFlow && flowRatio !== null ? (
@@ -2195,7 +2195,7 @@ function OwnershipHeroCp({
             ) : null}
           </div>
         ) : null}
-        <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 py-2 text-[11px] text-slate-500">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 py-2 text-[12px] text-slate-500">
           {holderCount > 0 ? <span>보유 Guru 기관 수 <b className="tabular-nums text-slate-900">{holderCount}</b></span> : null}
           {isFiniteNumber(tradesChip?.sold?.investors_count) ? <span>이번 분기 매도 참여 <b className="tabular-nums text-slate-900">{tradesChip.sold.investors_count}</b></span> : null}
           {isFiniteNumber(tradesChip?.bought?.investors_count) ? <span>이번 분기 매수 참여 <b className="tabular-nums text-slate-900">{tradesChip.bought.investors_count}</b></span> : null}
@@ -2212,7 +2212,7 @@ function OwnershipHeroCp({
           <PanelHeader
             eyebrow="13F Guru"
             title="Top Guru 보유 비중"
-            right={<span className="text-[11px] text-slate-500">포트폴리오 내 {ticker} 비중 기준{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}</span>}
+            right={<span className="text-[12px] text-slate-500">포트폴리오 내 {ticker} 비중 기준{reportBasisLabel ? ` · ${reportBasisLabel}` : ""}</span>}
           />
           <div>
             {top10.length > 0 ? (
@@ -2232,7 +2232,7 @@ function OwnershipHeroCp({
                         <span className="min-w-0 flex-1" data-smart-money-report-date-column>
                           <Bar value={barPct} aria-label={`${displayName} 포트폴리오 비중 ${weightLabel}`} />
                         </span>
-                        <span data-guru-holder-metrics className="shrink-0 text-[11px] tabular-nums text-slate-500">{h.shares > 0 ? `${h.shares.toLocaleString()}주` : "—"} · {quarter ?? "—"}</span>
+                        <span data-guru-holder-metrics className="shrink-0 text-[12px] tabular-nums text-slate-500">{h.shares > 0 ? `${h.shares.toLocaleString()}주` : "—"} · {quarter ?? "—"}</span>
                       </div>
                     </div>
                   );
@@ -2298,7 +2298,7 @@ function OwnershipHeroCp({
         </div>
       </div>
 
-      <p className="px-1 py-2 text-[11px] leading-4 text-slate-500" data-smart-money-lag-disclosure>13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다{reportBasisLabel ? ` · ${reportBasisLabel} 데이터` : ""}. Guru 합산 보유 평가액은 현재가 × 보유주식수 근사치입니다.</p>
+      <p className="px-1 py-2 text-[12px] leading-4 text-slate-500" data-smart-money-lag-disclosure>13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다{reportBasisLabel ? ` · ${reportBasisLabel} 데이터` : ""}. Guru 합산 보유 평가액은 현재가 × 보유주식수 근사치입니다.</p>
     </>
   );
 }
@@ -2412,7 +2412,7 @@ function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
           <Bar value={filings.length > 0 ? (readyRatio * 100) : 0} aria-label={`한글 요약 완료율 ${Math.round(readyRatio * 100)}%`} />
           <span className="text-right text-[12px] font-semibold text-slate-900">{Math.round(readyRatio * 100)}%</span>
         </Row>
-        <p className="px-4 py-2 text-[11px] text-slate-500">AI가 SEC 원문 공시를 분석해 한국어로 번역·요약합니다 · 투자 판단의 단독 근거로 쓰지 마세요</p>
+        <p className="px-4 py-2 text-[12px] text-slate-500">AI가 SEC 원문 공시를 분석해 한국어로 번역·요약합니다 · 투자 판단의 단독 근거로 쓰지 마세요</p>
         <EvidenceRail freshness={readyCount > 0 ? "fresh" : "pending"} source="EDGAR" asOf={filings.length > 0 ? filings[0].filingDate : "—"} coverage={`공시 ${filings.length}건`} skeletonDelayMs={120} />
       </Panel>
 
@@ -2477,7 +2477,7 @@ function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
           <PanelHeader eyebrow="More Filings" title={`그 외 공시 (${otherFilings.length}건)`} />
           {otherReady.length > 0 ? (
             <div className="border-t border-slate-100 px-4 py-2">
-              <p className="py-1 text-[11px] font-semibold text-slate-500">요약 완료 · 원문 참고 ({otherReady.length}건)</p>
+              <p className="py-1 text-[12px] font-semibold text-slate-500">요약 완료 · 원문 참고 ({otherReady.length}건)</p>
               {otherReady.map((f) => (
                 <Row key={f.accession}>
                   <span className="truncate text-[12px] text-slate-700" id={`other-${f.accession}`}><Pill tone={filingFormPillTone(f.form)}>{f.form}</Pill> {f.filingDate}</span>
@@ -2489,7 +2489,7 @@ function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
           ) : null}
           {otherPending.length > 0 ? (
             <div className="border-t border-slate-100 px-4 py-2">
-              <p className="py-1 text-[11px] font-semibold text-slate-500">요약 대기 ({otherPending.length}건)</p>
+              <p className="py-1 text-[12px] font-semibold text-slate-500">요약 대기 ({otherPending.length}건)</p>
               {otherPending.map((f) => (
                 <Row key={f.accession}>
                   <span className="truncate text-[12px] text-slate-700"><Pill tone="neutral">{f.form}</Pill> {f.filingDate}</span>
@@ -2504,7 +2504,7 @@ function FilingsHeroFeedCp({ ticker }: { ticker: string }) {
         </section>
       ) : null}
 
-      <p className="px-1 py-2 text-[11px] leading-4 text-slate-500">EDGAR 공시 원문 · Fenok LLM 한글 요약(자동 생성) · 투자 판단의 참고 자료이며 매수·매도 권유가 아닙니다.</p>
+      <p className="px-1 py-2 text-[12px] leading-4 text-slate-500">EDGAR 공시 원문 · Fenok LLM 한글 요약(자동 생성) · 투자 판단의 참고 자료이며 매수·매도 권유가 아닙니다.</p>
     </>
   );
 }
@@ -2554,7 +2554,7 @@ function FilingsTimelineCp({ filings, heroFiling }: { filings: EdgarKoreanSummar
         })}
       </svg>
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-2 text-[11px] text-slate-500">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-2 text-[12px] text-slate-500">
         <span>정기공시 요약 완료</span>
         <span>8-K 등 요약 완료</span>
         <span>요약 대기</span>
@@ -3017,8 +3017,8 @@ export default function StockDetailClient({
                 <MarketFactsDepth ticker={symbol} />
               )}
               <footer className="stock-footer">
-                <TransitionLink href={isEtfAsset ? ROUTES.etfs : ROUTES.screener} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← {isEtfAsset ? "ETF 목록으로 이동" : "스크리너로 이동"}</TransitionLink>
-                <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
+                <TransitionLink href={isEtfAsset ? ROUTES.etfs : ROUTES.screener} className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">← {isEtfAsset ? "ETF 목록으로 이동" : "스크리너로 이동"}</TransitionLink>
+                <TransitionLink href={ROUTES.portfolioTicker(symbol)} className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500 hover:text-brand-interactive">포트폴리오에서 보기</TransitionLink>
               </footer>
             </div>
           </div>
@@ -3168,7 +3168,7 @@ export default function StockDetailClient({
                 <div data-stock-summary-band-track className="relative mt-1.5 h-1.5 overflow-hidden rounded-full bg-[var(--c-surface-2)]" role="img" aria-label={`PER 밴드 ${Math.round(stripBandPct)}%, ${stripBandTone.label}`}>
                   <span data-stock-summary-band-marker className="absolute inset-y-[-2px] w-[3px] rounded-full bg-[var(--c-ink)]" style={{ left: `${stripBandPct}%`, transform: "translateX(-1.5px)" }} />
                 </div>
-                <p className="mt-1 text-[11px] tabular-nums text-[var(--c-ink-3)]">
+                <p className="mt-1 text-[12px] tabular-nums text-[var(--c-ink-3)]">
                   {valuationBandSummary.min.toFixed(1)}x · 평균 {isFiniteNumber(valuationBandSummary.avg) ? `${valuationBandSummary.avg.toFixed(1)}x` : valuationBandSummary.source} · {valuationBandSummary.max.toFixed(1)}x
                 </p>
               </div>
@@ -3377,13 +3377,13 @@ export default function StockDetailClient({
                     ["FCF", numberSeries(detail.cash_flow?.fcf), detail.cash_flow_estimates?.fcf, "var(--c-warn)"],
                   ] as Array<[string, NumberSeries | undefined, Record<string, MaybeNumber> | undefined, string]>).map(([label, actuals, estimates, color]) => (
                     <div key={label}>
-                      <p className="mb-1 text-[10px] font-bold text-slate-500">{label}</p>
+                      <p className="mb-1 text-[12px] font-bold text-slate-500">{label}</p>
                       <MiniBarChart actuals={actuals ?? []} estimates={estimates ?? null} years={years} color={color} />
                     </div>
                   ))}
                 </div>
 	                <div className="mt-5 border-t border-slate-100 pt-4">
-	                  <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">실적 추이 · 추정</h4>
+	                  <h4 className="mb-2 text-[12px] font-black tracking-[0.08em] text-slate-500">실적 추이 · 추정</h4>
 	                  <CompactFinancialTable detail={detail} years={years} />
 	                </div>
 	                <DividendPanel detail={detail} yfData={yfData} years={years} currency={displayCurrency} highlight={highlightDividend} quality={{ loading: detailLoading || !yfLoaded, error: detailError ?? yfError, onRetry: detailError ? retryDetail : yfError ? retryYfFinance : undefined }} />
@@ -3397,14 +3397,14 @@ export default function StockDetailClient({
                 <SectionCard title="밸류에이션">
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div>
-                      <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">PER 밴드 (8Y)</h4>
+                      <h4 className="mb-2 text-[12px] font-black tracking-[0.08em] text-slate-500">PER 밴드 (8Y)</h4>
                       {finiteValues(detail.valuation?.per).length >= 2 ? (
                         <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
                       ) : <span className="text-xs text-slate-300">—</span>}
                     </div>
                     {detailPerBands ? (
                       <div>
-                        <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">PER 밴드 위치</h4>
+                        <h4 className="mb-2 text-[12px] font-black tracking-[0.08em] text-slate-500">PER 밴드 위치</h4>
                         <div className="space-y-2">
                           {[{ label: "최고", v: detailPerBands.max_8y }, { label: "평균", v: detailPerBands.avg_8y }, { label: "현재", v: detailPerBands.current, highlight: true }, { label: "최저", v: detailPerBands.min_8y }].map(({ label, v, highlight }) => {
                             const range = detailPerBands.max_8y - detailPerBands.min_8y || 1;
@@ -3413,7 +3413,7 @@ export default function StockDetailClient({
                             const textColor = highlight ? "text-slate-900" : "text-slate-500";
                             return (
                               <div key={label} className="flex items-center gap-2">
-                                <span className={`w-10 text-right text-[10px] font-semibold ${highlight ? "font-black text-brand-interactive" : "text-slate-500"}`}>{label}</span>
+                                <span className={`w-10 text-right text-[12px] font-semibold ${highlight ? "font-black text-brand-interactive" : "text-slate-500"}`}>{label}</span>
                                 <div className="relative h-3 flex-1 rounded-full bg-slate-100">
                                   <div className={`absolute top-0 h-3 rounded-full ${barColor}`} style={{ left: `${pct}%`, width: "3px", transform: "translateX(-1.5px)" }} />
                                 </div>
@@ -3429,7 +3429,7 @@ export default function StockDetailClient({
                 <SectionCard title="수익성·성장">
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div>
-                      <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">수익성</h4>
+                      <h4 className="mb-2 text-[12px] font-black tracking-[0.08em] text-slate-500">수익성</h4>
                       <div className="space-y-3">
                         <MetricWithSpark label="매출총이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.gross_margin))} data={(detail.profitability as any)?.gross_margin ?? []} estimates={profitabilityEstimates?.gross_margin} color="var(--c-up)" years={years} formatValue={fmtWholePct} />
                         <MetricWithSpark label="영업이익률" value={fmtWholePct(lastFinite((detail.profitability as any)?.operating_margin))} data={(detail.profitability as any)?.operating_margin ?? []} estimates={profitabilityEstimates?.operating_margin} color="var(--c-info)" years={years} benchmark={industryBench ? { label: "산업", value: benchPct(industryBench.operating_margin) } : null} formatValue={fmtWholePct} />
@@ -3438,13 +3438,13 @@ export default function StockDetailClient({
                         <MetricWithSpark label="ROA" value={fmtWholePct(lastFinite((detail.profitability as any)?.roa))} data={(detail.profitability as any)?.roa ?? []} estimates={profitabilityEstimates?.roa} color="var(--c-info)" years={years} formatValue={fmtWholePct} />
                       </div>
                       {industryBench && isFiniteNumber(industryBench.cost_of_capital) ? (
-                        <p className="mt-2 text-[10px] font-semibold text-slate-500">
+                        <p className="mt-2 text-[12px] font-semibold text-slate-500">
                           다모다란 산업 자본비용 {fmtWholePct(industryBench.cost_of_capital * 100)}
                         </p>
                       ) : null}
                     </div>
                     <div>
-                      <h4 className="mb-2 text-[11px] font-black tracking-[0.08em] text-slate-500">성장률 (YoY)</h4>
+                      <h4 className="mb-2 text-[12px] font-black tracking-[0.08em] text-slate-500">성장률 (YoY)</h4>
                       <div className="space-y-3">
                         <MetricWithSpark label="매출 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.revenue_growth))} data={toFractionSeries((detail.growth as any)?.revenue_growth)} estimates={estimateSeries(detail.growth_estimates?.revenue_growth, 100)} color="var(--c-up)" years={years} formatValue={fmtPct} />
                         <MetricWithSpark label="EPS 성장률" value={fmtWholeSignedPct(lastFinite((detail.growth as any)?.eps_growth))} data={toFractionSeries((detail.growth as any)?.eps_growth)} estimates={estimateSeries(detail.growth_estimates?.eps_growth, 100)} color="var(--c-warn)" years={years} formatValue={fmtPct} />
@@ -3867,7 +3867,7 @@ function FinancialCandidatePanel({
       <PanelHeader
         eyebrow="Financials · 교차검증용"
         title="재무 보강 데이터"
-        right={<span className="text-[11px] text-slate-500">{data.fetched_at ? `수집 ${fmtKstMinute(data.fetched_at) ?? "—"}` : "—"}</span>}
+        right={<span className="text-[12px] text-slate-500">{data.fetched_at ? `수집 ${fmtKstMinute(data.fetched_at) ?? "—"}` : "—"}</span>}
       />
       <p className="px-4 pt-2 text-[12px] text-slate-600">교차검증용 · 가치평가 입력 아님</p>
       <StatStrip className="mx-4 my-2 flex-wrap">
@@ -3878,15 +3878,15 @@ function FinancialCandidatePanel({
       <div className="grid gap-3 px-4 py-2 lg:grid-cols-2">
         {summaryGroups.map((group) => (
           <div key={group.label} className="rounded-[8px] border border-slate-200 bg-white p-3">
-            <p className="mb-2 text-[11px] font-semibold text-slate-500">{group.label} 데이터 범위</p>
+            <p className="mb-2 text-[12px] font-semibold text-slate-500">{group.label} 데이터 범위</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {Object.entries(group.data).map(([key, info]) => (
                 <div key={`${group.label}-${key}`} className="rounded-md bg-slate-50 px-2 py-2">
-                  <p className="text-[10px] font-semibold text-slate-500">{financialStatementLabel(key)}</p>
+                  <p className="text-[12px] font-semibold text-slate-500">{financialStatementLabel(key)}</p>
                   <p className="mt-0.5 text-xs font-semibold tabular-nums text-slate-900">
                     {fmtCandidateCount(info?.field_count)}개 항목
                   </p>
-                  <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
+                  <p className="mt-0.5 text-[12px] font-semibold text-slate-500">
                     {fmtCandidateCount(info?.period_count)}기간
                   </p>
                 </div>
@@ -4037,7 +4037,7 @@ function EtfDataPanel({
       </Panel>
 
       <Panel>
-        <PanelHeader eyebrow={`${ticker} · ${holdings.length.toLocaleString()}개 표시`} title="보유·스왑 구성" right={<span className="text-[11px] text-slate-500">{formatDateish(holdingsUpdated) !== "—" ? `기준 ${formatDateish(holdingsUpdated)}` : "기준일 미표시"}</span>} />
+        <PanelHeader eyebrow={`${ticker} · ${holdings.length.toLocaleString()}개 표시`} title="보유·스왑 구성" right={<span className="text-[12px] text-slate-500">{formatDateish(holdingsUpdated) !== "—" ? `기준 ${formatDateish(holdingsUpdated)}` : "기준일 미표시"}</span>} />
         <div className="px-4 py-2">
           <EtfHoldingsTable holdings={holdings} currency={currency} />
         </div>
@@ -4084,7 +4084,7 @@ function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHo
     <div className="-mx-1 max-h-[560px] overflow-auto px-1">
       <table className="w-full min-w-[560px] text-xs">
         <thead className="sticky top-0 z-10 bg-white">
-          <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+          <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
             <th className="sticky left-0 z-20 bg-white px-2 py-2 text-right shadow-[2px_0_0_var(--c-line-2)]">#</th>
             <th className="px-2 py-2 text-left">종목/계약</th>
             <th className="px-2 py-2 text-left">티커</th>
@@ -4098,17 +4098,17 @@ function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHo
             const weightClass = weight !== null && weight < 0 ? "text-rose-600" : "text-slate-900";
             return (
               <tr key={`${item.rank ?? index}-${item.symbol ?? ""}-${item.name ?? ""}`} className="border-b border-slate-100 last:border-b-0">
-                <td className="sticky left-0 bg-white px-2 py-2 text-right tabular-nums text-[11px] font-bold text-slate-500 shadow-[2px_0_0_var(--c-line-2)]">{item.rank ?? index + 1}</td>
+                <td className="sticky left-0 bg-white px-2 py-2 text-right tabular-nums text-[12px] font-bold text-slate-500 shadow-[2px_0_0_var(--c-line-2)]">{item.rank ?? index + 1}</td>
                 <td className="px-2 py-2 font-bold text-slate-800">{item.name ?? "—"}</td>
-                <td className="px-2 py-2 tabular-nums text-[11px] font-black text-slate-500">{item.symbol ?? "—"}</td>
+                <td className="px-2 py-2 tabular-nums text-[12px] font-black text-slate-500">{item.symbol ?? "—"}</td>
                 <td className={`px-2 py-2 text-right  tabular-nums text-xs font-black ${weightClass}`}>{fmtEtfPct(weight)}</td>
-                <td className="px-2 py-2 text-right tabular-nums text-[11px] font-semibold text-slate-600">{fmtShares(item.shares)}</td>
+                <td className="px-2 py-2 text-right tabular-nums text-[12px] font-semibold text-slate-600">{fmtShares(item.shares)}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      {currency ? <p className="mt-2 text-[10px] font-semibold text-slate-500">표시 통화: {currency}</p> : null}
+      {currency ? <p className="mt-2 text-[12px] font-semibold text-slate-500">표시 통화: {currency}</p> : null}
     </div>
   );
 }
@@ -4186,7 +4186,7 @@ function EtfHistoryView({ history, currency }: { history: StockanalysisHistoryPo
           return (
             <div key={`${point.t ?? "month"}-${index}`} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${point.t}: ${formatMoney(close, currency)}`}>
               <div className={`w-full rounded-t ${up ? "bg-emerald-400" : "bg-rose-400"}`} style={{ height: `${height}%` }} />
-              <span className="hidden max-w-full truncate text-[9px] font-bold text-slate-500 sm:block">{(point.t ?? "").slice(5, 7)}</span>
+              <span className="hidden max-w-full truncate text-[12px] font-bold text-slate-500 sm:block">{(point.t ?? "").slice(5, 7)}</span>
             </div>
           );
         })}
@@ -4194,7 +4194,7 @@ function EtfHistoryView({ history, currency }: { history: StockanalysisHistoryPo
       <div className="-mx-1 overflow-x-auto px-1">
         <table className="w-full min-w-[360px] text-xs">
           <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+            <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-2 text-left">월</th>
               <th className="px-2 py-2 text-right">종가</th>
               <th className="px-2 py-2 text-right">변화</th>

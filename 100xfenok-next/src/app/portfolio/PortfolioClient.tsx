@@ -852,7 +852,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           <HoldingsTable rows={holdingRows} onEdit={handleEditHolding} onDelete={handleDeleteHolding} hidePriceCols={allBarePrices} hideConnectionCol={allBareConnections} />
         </div>
         {missingCount > 0 && (
-          <p className="mt-2 flex flex-wrap items-center gap-2 text-[10px] font-semibold text-slate-500">
+          <p className="mt-2 flex flex-wrap items-center gap-2 text-[12px] font-semibold text-slate-500">
             <span>시세 없는 {missingCount}종목은 합계에서 제외{pricesLoading ? " · 확인 중" : null}</span>
             {!pricesLoading ? (
               <button
@@ -872,7 +872,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
         <h2 className="text-sm font-black tracking-tight text-slate-900">종목 추가</h2>
         <div className="mt-2 flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-end">
           <label className="flex w-full flex-col gap-1 sm:w-auto">
-            <span className="text-[10px] font-bold text-slate-500">티커</span>
+            <span className="text-[12px] font-bold text-slate-500">티커</span>
             <input
               value={newTicker}
               onChange={(e) => setNewTicker(e.target.value)}
@@ -881,7 +881,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             />
           </label>
           <label className="flex w-full flex-col gap-1 sm:w-auto">
-            <span className="text-[10px] font-bold text-slate-500">수량</span>
+            <span className="text-[12px] font-bold text-slate-500">수량</span>
             <input
               value={newShares}
               onChange={(e) => setNewShares(e.target.value)}
@@ -893,7 +893,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             />
           </label>
           <label className="flex w-full flex-col gap-1 sm:w-auto">
-            <span className="text-[10px] font-bold text-slate-500">평단 ($)</span>
+            <span className="text-[12px] font-bold text-slate-500">평단 ($)</span>
             <input
               value={newCost}
               onChange={(e) => setNewCost(e.target.value)}
@@ -982,7 +982,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
       <div className="grid gap-4 sm:grid-cols-2">
         <div data-portfolio-export-section className="rounded-2xl border border-slate-200 bg-white p-4">
           <h2 className="text-sm font-black tracking-tight text-slate-900">백업 내보내기</h2>
-          <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">
+          <p className="mt-1 text-[12px] font-semibold leading-4 text-slate-500">
             현재 선택한 포트폴리오만 JSON 파일로 저장합니다.
           </p>
           <button
@@ -997,7 +997,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             <textarea
               readOnly
               value={exportText}
-              className="mt-2 h-32 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 font-mono text-[10px] text-slate-700"
+              className="mt-2 h-32 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 font-mono text-[12px] text-slate-700"
             />
           )}
         </div>
@@ -1046,7 +1046,7 @@ function PortfolioLocalBoundaryStrip() {
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">개인 데이터 경계</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">개인 데이터 경계</p>
           <p className="mt-1 text-xs font-semibold leading-5 text-slate-700">
             입력한 포트폴리오는 이 브라우저에만 남고, 백업은 사용자가 직접 내보낸 파일로만 이동합니다.
           </p>
@@ -1058,7 +1058,7 @@ function PortfolioLocalBoundaryStrip() {
               data-portfolio-boundary-item={item.key}
               className="rounded-xl border border-slate-200 bg-white px-3 py-2"
             >
-              <p className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
+              <p className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
               <p className="mt-0.5 text-[12px] font-black text-slate-900">{item.value}</p>
             </div>
           ))}
@@ -1189,10 +1189,10 @@ function HoldingConnectionActions({ row }: { row: HoldingRow }) {
   const etfHref = buildSingleStockEtfHref(etfLinks);
 
   if (row.connection === undefined) {
-    return <span className="text-[10px] font-bold text-slate-600">연결 확인 중</span>;
+    return <span className="text-[12px] font-bold text-slate-600">연결 확인 중</span>;
   }
   if (!row.connection) {
-    return <span className="text-[10px] font-bold text-slate-600">연결 데이터 없음</span>;
+    return <span className="text-[12px] font-bold text-slate-600">연결 데이터 없음</span>;
   }
 
   return (
@@ -1248,8 +1248,8 @@ function HoldingConnectionFreshness({ row }: { row: HoldingRow }) {
 
 function HoldingConnectionMini({ row }: { row: HoldingRow }) {
   const entry = row.connection;
-  if (entry === undefined) return <span className="text-[10px] font-bold text-slate-600">확인 중</span>;
-  if (!entry) return <span className="text-[10px] font-bold text-slate-600">없음</span>;
+  if (entry === undefined) return <span className="text-[12px] font-bold text-slate-600">확인 중</span>;
+  if (!entry) return <span className="text-[12px] font-bold text-slate-600">없음</span>;
   const flags = entry.flags ?? {};
   const items = [
     flags.market_facts ? "시세" : null,
@@ -1349,7 +1349,7 @@ function PortfolioConnectionPanel({
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">
+                  <p className="mt-1 text-[12px] font-semibold leading-4 text-slate-500">
                     {missing ? "연결된 종목 정보가 없어 시세 데이터만 표시합니다." : row.connection?.label ?? "보유 종목 연결 확인"}
                   </p>
                 </div>
@@ -1383,7 +1383,7 @@ function PortfolioConnectionPanel({
         })}
       </div>
 
-      <p className="mt-3 text-[10px] font-semibold leading-4 text-slate-500">
+      <p className="mt-3 text-[12px] font-semibold leading-4 text-slate-500">
         연결은 관련 데이터 화면으로 이동하는 서비스 링크이며 매수·매도 추천이 아닙니다. 포트폴리오 입력값은 이 브라우저에만 저장됩니다.
       </p>
     </section>
@@ -1419,7 +1419,7 @@ function MobileHoldingCard({
               <button
                 type="button"
                 onClick={() => onEdit(row)}
-                className="inline-flex h-[44px] w-[44px] items-center justify-center rounded-lg text-[10px] font-black text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                className="inline-flex h-[44px] w-[44px] items-center justify-center rounded-lg text-[12px] font-black text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
                 aria-label={`${row.ticker} 수정 입력`}
               >
                 수정
@@ -1445,21 +1445,21 @@ function MobileHoldingCard({
       )}
       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-slate-50 p-2">
-          <p className="text-[10px] font-black uppercase text-slate-500">수량</p>
+          <p className="text-[12px] font-black uppercase text-slate-500">수량</p>
           <p className="mt-1 font-black tabular-nums text-slate-900">{row.shares}</p>
         </div>
         <div className="rounded-xl bg-slate-50 p-2">
-          <p className="text-[10px] font-black uppercase text-slate-500">평단</p>
+          <p className="text-[12px] font-black uppercase text-slate-500">평단</p>
           <p className="mt-1 font-black tabular-nums text-slate-900">{formatCurrency(row.avg_cost, "USD")}</p>
         </div>
         {hidePriceCols ? null : (
           <>
             <div className="rounded-xl bg-slate-50 p-2">
-              <p className="text-[10px] font-black uppercase text-slate-500">현재가</p>
+              <p className="text-[12px] font-black uppercase text-slate-500">현재가</p>
               <p className="mt-1 font-black tabular-nums text-slate-900">{row.price != null ? formatCurrency(row.price, "USD") : "—"}</p>
             </div>
             <div className="rounded-xl bg-slate-50 p-2">
-              <p className="text-[10px] font-black uppercase text-slate-500">평가액</p>
+              <p className="text-[12px] font-black uppercase text-slate-500">평가액</p>
               <p className="mt-1 font-black tabular-nums text-slate-900">{row.marketValue != null ? formatCurrency(row.marketValue, "USD") : "—"}</p>
             </div>
           </>
@@ -1502,7 +1502,7 @@ function HoldingsTable({
   return (
     <table className="w-full min-w-[760px] text-xs">
       <thead>
-        <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+        <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">
           <th className="px-2 py-2 text-left">티커</th>
           {hideConnectionCol ? null : <th className="px-2 py-2 text-left">연결</th>}
           <th className="px-2 py-2 text-right">수량</th>
@@ -1562,7 +1562,7 @@ function HoldingsTable({
                   <button
                     type="button"
                     onClick={() => onEdit(r)}
-                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg px-2 text-[10px] font-black transition hover:bg-slate-100"
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg px-2 text-[12px] font-black transition hover:bg-slate-100"
                     style={{ minHeight: 44, minWidth: 44 }}
                     aria-label={`${r.ticker} 수정 입력`}
                   >
@@ -1613,7 +1613,7 @@ function PortfolioImportSection({
   return (
     <div data-portfolio-import-section className="rounded-2xl border border-slate-200 bg-white p-4">
       <h2 className="text-sm font-black tracking-tight text-slate-900">{title}</h2>
-      <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">{description}</p>
+      <p className="mt-1 text-[12px] font-semibold leading-4 text-slate-500">{description}</p>
       <textarea
         value={importText}
         disabled={!ready}
@@ -1625,10 +1625,10 @@ function PortfolioImportSection({
         placeholder="백업 내용을 붙여넣으세요"
         aria-label="백업 JSON 붙여넣기"
         data-portfolio-import-json-input
-        className="mt-2 h-20 w-full rounded-xl border border-slate-200 bg-white p-2 font-mono text-[10px] text-slate-700 outline-none focus:border-brand-interactive"
+        className="mt-2 h-20 w-full rounded-xl border border-slate-200 bg-white p-2 font-mono text-[12px] text-slate-700 outline-none focus:border-brand-interactive"
       />
       {importError && (
-        <p role="alert" className="mt-1 text-[10px] font-bold text-rose-600">
+        <p role="alert" className="mt-1 text-[12px] font-bold text-rose-600">
           {importError}
         </p>
       )}
@@ -1647,7 +1647,7 @@ function PortfolioImportSection({
 
 function Disclaimer() {
   return (
-    <p data-portfolio-local-disclaimer className="text-[10px] font-semibold text-slate-600">
+    <p data-portfolio-local-disclaimer className="text-[12px] font-semibold text-slate-600">
       이 브라우저에만 저장 · 서버 전송 없음 · 시세를 확인하지 못한 종목은 평가액에서 제외
     </p>
   );

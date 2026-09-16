@@ -91,13 +91,13 @@ export default function ExternalSourceLinks({
     >
       <div className={compact ? "flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between" : ""}>
         <div>
-          <p className="text-[11px] font-black text-slate-800">{kind === "filing" ? "원문·종목 바로가기" : "외부에서 보기"}</p>
-          <p className="mt-1 text-[11px] font-semibold leading-relaxed text-slate-500">
+          <p className="text-[12px] font-black text-slate-800">{kind === "filing" ? "원문·종목 바로가기" : "외부에서 보기"}</p>
+          <p className="mt-1 text-[12px] font-semibold leading-relaxed text-slate-500">
             {sourceDescription(kind, hasSecUrl)}
             {kind === "filing" ? "" : " 아래 링크는 100xFenok 내부 데이터가 아닌 외부 사이트로 이동합니다."}
           </p>
           {status || date ? (
-            <p className="mt-1 text-[10px] font-black leading-relaxed text-slate-500">
+            <p className="mt-1 text-[12px] font-black leading-relaxed text-slate-500">
               {[status, date ? `기준 ${date}` : null].filter(Boolean).join(" · ")}
             </p>
           ) : null}
@@ -110,7 +110,7 @@ export default function ExternalSourceLinks({
                 href={link.href}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex min-h-10 flex-col items-start justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-black leading-tight text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                className="inline-flex min-h-10 flex-col items-start justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-black leading-tight text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
               >
                 <span>
                   {link.label} <span aria-hidden className="font-semibold text-slate-400">↗</span>
@@ -121,7 +121,7 @@ export default function ExternalSourceLinks({
               <Link
                 key={`${link.label}-${link.href}`}
                 href={link.href}
-                className="inline-flex min-h-10 flex-col items-start justify-center rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-[11px] font-black leading-tight text-blue-700 transition hover:border-blue-400 hover:bg-blue-100"
+                className="inline-flex min-h-10 flex-col items-start justify-center rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-[12px] font-black leading-tight text-blue-700 transition hover:border-blue-400 hover:bg-blue-100"
               >
                 <span>
                   {link.label} <span aria-hidden>→</span>

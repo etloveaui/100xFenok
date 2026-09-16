@@ -81,7 +81,7 @@ export default async function DailyWrapPage({ searchParams }: DailyWrapPageProps
                   기본 경로는 레거시 Daily Wrap 뷰어입니다. 네이티브 랩은 별도 미리보기로 분리하고, 날짜별
                   아카이브는 기존 viewer의 date 파라미터로 유지합니다.
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.08em]">
+                <div className="mt-3 flex flex-wrap gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
                   {DAILY_WRAP_BOUNDARY_CHIPS.map((chip) => (
                     <span
                       key={chip.key}

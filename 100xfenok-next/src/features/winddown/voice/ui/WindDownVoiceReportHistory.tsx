@@ -352,7 +352,7 @@ export default function WindDownVoiceReportHistory() {
                         key={`${turn.conversationId}:${turn.turnSeq}`}
                         className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-4 text-xs space-y-2"
                       >
-                        <div className="flex items-center justify-between text-[11px] font-bold text-[var(--wd-muted)]">
+                        <div className="flex items-center justify-between text-[12px] font-bold text-[var(--wd-muted)]">
                           <span>대화 #{turn.turnSeq}</span>
                           {turn.interrupted ? (
                             <span className="text-amber-500 font-semibold">끼어들기 있음</span>
@@ -371,15 +371,15 @@ export default function WindDownVoiceReportHistory() {
 
                         {correctionPresentation ? (
                           <div className="mt-2 rounded-xl bg-[var(--wd-surface)] p-3 border border-[var(--wd-border)]">
-                            <p className="text-[11px] font-bold text-[var(--wd-accent)]">
+                            <p className="text-[12px] font-bold text-[var(--wd-accent)]">
                               교정 요약 · was: {correctionPresentation.was} → now: {correctionPresentation.now}
                             </p>
-                            <p className="mt-1 text-[11px] text-[var(--wd-muted)]">
+                            <p className="mt-1 text-[12px] text-[var(--wd-muted)]">
                               {correctionPresentation.why}
                             </p>
                           </div>
                         ) : turn.correctionText ? (
-                          <div className="mt-2 rounded-xl bg-[var(--wd-surface)] p-3 border border-[var(--wd-border)] text-[11px] font-bold text-[var(--wd-accent)]">
+                          <div className="mt-2 rounded-xl bg-[var(--wd-surface)] p-3 border border-[var(--wd-border)] text-[12px] font-bold text-[var(--wd-accent)]">
                             {turn.correctionText}
                           </div>
                         ) : null}

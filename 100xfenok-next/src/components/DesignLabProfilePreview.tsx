@@ -46,7 +46,7 @@ export default function DesignLabProfilePreview() {
       <div className="mx-auto w-full max-w-[375px] overflow-hidden rounded-[30px] border border-slate-300 bg-[#f2f2f2] shadow-[0_24px_55px_-38px_rgba(15,23,42,0.65)]">
         <header className="flex items-center justify-between px-5 pb-5 pt-4 text-[15px] font-semibold text-black">
           <span>9:27</span>
-          <span className="inline-flex items-center gap-1 text-[11px] text-slate-900">
+          <span className="inline-flex items-center gap-1 text-[12px] text-slate-900">
             <DotIcon className="size-[6px]" />
             <DotIcon className="size-[6px]" />
             <span className="inline-flex h-[10px] w-[18px] rounded-sm border border-current" aria-hidden="true">

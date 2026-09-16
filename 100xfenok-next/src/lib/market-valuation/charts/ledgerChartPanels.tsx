@@ -342,13 +342,13 @@ export function YardeniOverlayChartPanel({
         <dl className="mt-2 grid min-w-0 grid-cols-2 gap-x-4 gap-y-1 sm:grid-cols-5">
           {stats.map(([label, value]) => (
             <div key={label} className="flex min-w-0 items-baseline justify-between gap-2 border-t border-[var(--fnk-neutral-100)] py-1">
-              <dt className="truncate text-[11px] font-semibold text-[var(--fnk-neutral-500)]">{label}</dt>
+              <dt className="truncate text-[12px] font-semibold text-[var(--fnk-neutral-500)]">{label}</dt>
               <dd className="shrink-0 text-[12px] font-semibold tabular-nums text-[var(--fnk-neutral-900)]">{value}</dd>
             </div>
           ))}
         </dl>
         {typeof model?.latest.premiumPercentile === "number" ? (
-          <p className="mt-1 text-[11px] font-semibold text-[var(--fnk-neutral-500)]">
+          <p className="mt-1 text-[12px] font-semibold text-[var(--fnk-neutral-500)]">
             1990년 이후 프리미엄 상위 {model.latest.premiumPercentile}% 수준
           </p>
         ) : null}
@@ -363,7 +363,7 @@ export function YardeniOverlayChartPanel({
           <h2 className="text-sm font-black tracking-tight text-[var(--c-ink)]">
             Yardeni Bond PER
           </h2>
-          <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+          <p className="mt-1 min-w-0 break-words text-[12px] font-semibold leading-5 text-[var(--c-ink-3)]">
             S&P 500과 Yardeni Bond PER 기반 적정가를 같은 축에서 비교합니다.
           </p>
         </div>
@@ -394,7 +394,7 @@ export function YardeniOverlayChartPanel({
       <div className="mt-3 grid min-w-0 gap-2 sm:grid-cols-5">
         {stats.map(([label, value]) => (
           <div key={label} className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
-            <p className="truncate text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
+            <p className="truncate text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
               {label}
             </p>
             <p className="mt-1 truncate text-xs font-black tabular-nums text-[var(--c-ink)]">
@@ -404,7 +404,7 @@ export function YardeniOverlayChartPanel({
         ))}
       </div>
       {typeof model?.latest.premiumPercentile === "number" ? (
-        <p className="mt-3 text-[11px] font-bold text-[var(--c-ink-3)]">
+        <p className="mt-3 text-[12px] font-bold text-[var(--c-ink-3)]">
           1990년 이후 프리미엄 상위 {model.latest.premiumPercentile}% 수준
         </p>
       ) : null}
@@ -446,7 +446,7 @@ export function PmiActivityChartPanel() {
           <h2 className="text-sm font-black tracking-tight text-[var(--c-ink)]">
             PMI · ISM 활동 시계열
           </h2>
-          <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5 text-[var(--c-ink-3)]">
+          <p className="mt-1 min-w-0 break-words text-[12px] font-semibold leading-5 text-[var(--c-ink-3)]">
             PMI/ISM은 좌축, OECD CLI 미국은 우축으로 비교합니다.
           </p>
         </div>
@@ -481,10 +481,10 @@ export function PmiActivityChartPanel() {
           <div key={group.id} className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] p-3">
             <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
+                <p className="truncate text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">
                   {group.label}
                 </p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
+                <p className="mt-1 text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
                   {group.period ?? group.releaseDate ?? "—"}
                 </p>
               </div>
@@ -496,7 +496,7 @@ export function PmiActivityChartPanel() {
               {group.components.map((component) => (
                 <div key={component.id} className="min-w-0 rounded-lg bg-[var(--c-panel)] px-2.5 py-2">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <span className="truncate text-[10px] font-black text-[var(--c-ink-3)]">
+                    <span className="truncate text-[12px] font-black text-[var(--c-ink-3)]">
                       {component.label}
                     </span>
                     <span className={cx("h-1.5 w-1.5 shrink-0 rounded-full", toneDot(component.tone))} />
@@ -507,7 +507,7 @@ export function PmiActivityChartPanel() {
                     </span>
                     <span
                       className={cx(
-                        "text-[10px] font-black tabular-nums",
+                        "text-[12px] font-black tabular-nums",
                         component.delta1m === null
                           ? "text-[var(--c-ink-3)]"
                           : component.delta1m >= 0

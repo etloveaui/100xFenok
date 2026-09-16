@@ -127,7 +127,7 @@ export default function WindDownDrillClient() {
         <header>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">WIND DOWN · {view === "board" ? "QUICK DRILL" : "PRACTICE"}</p>
+              <p className="text-[12px] font-black tracking-[0.18em] text-[var(--wd-accent)]">WIND DOWN · {view === "board" ? "QUICK DRILL" : "PRACTICE"}</p>
               <h1 className="mt-1 text-xl font-black">{view === "board" ? "다섯 번, 한 번에 하나" : "오늘의 문장 연습"}</h1>
             </div>
             <Link href="/winddown" className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-[var(--wd-border)] px-4 text-xs font-black text-[var(--wd-muted)]">
@@ -213,7 +213,7 @@ export default function WindDownDrillClient() {
 
           {status === "ready" && session?.phase === "feedback" && session.feedback ? (
             <section aria-live="polite" className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-7 text-center shadow-2xl">
-              <p className="text-[11px] font-black tracking-[.16em] text-[var(--wd-accent)]">{session.feedback.correct ? "HIT" : "MISS"}</p>
+              <p className="text-[12px] font-black tracking-[.16em] text-[var(--wd-accent)]">{session.feedback.correct ? "HIT" : "MISS"}</p>
               <h2 className="mt-3 text-2xl font-black">{session.feedback.correct ? "정확해!" : "이번 답은 이거야"}</h2>
               <p className="mt-5 rounded-2xl bg-[var(--wd-surface-raised)] px-4 py-4 text-lg font-black">{session.feedback.answer}</p>
               <p className="mt-4 text-sm font-bold text-[var(--wd-muted)]">{resultLine}</p>
@@ -225,7 +225,7 @@ export default function WindDownDrillClient() {
 
           {status === "ready" && session?.phase === "complete" ? (
             <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-7 text-center shadow-2xl">
-              <p className="text-[11px] font-black tracking-[.16em] text-[var(--wd-accent)]">DRILL COMPLETE</p>
+              <p className="text-[12px] font-black tracking-[.16em] text-[var(--wd-accent)]">DRILL COMPLETE</p>
               <h2 className="mt-3 text-3xl font-black tabular-nums">{session.score}점</h2>
               <p className="mt-3 text-sm font-bold text-[var(--wd-muted)]">정답 {session.correctCount}/{WINDDOWN_DRILL_ROUND_TARGET} · 최고 콤보 {session.maxCombo}</p>
               <button type="button" onClick={replay} className="mt-7 min-h-[44px] w-full rounded-2xl bg-[var(--wd-accent)] px-5 text-sm font-black text-[var(--wd-bg)] transition active:scale-[.98] motion-reduce:transition-none">
@@ -240,7 +240,7 @@ export default function WindDownDrillClient() {
           ) : null}
         </main>
 
-        <p className="pb-1 text-center text-[11px] font-bold leading-5 text-[var(--wd-muted)]">
+        <p className="pb-1 text-center text-[12px] font-bold leading-5 text-[var(--wd-muted)]">
           연습 전용 · 점수와 콤보는 이 화면에만 남고, 학습 기록·복습 간격·퀘스트는 바꾸지 않아.
         </p>
       </div>

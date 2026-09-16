@@ -279,7 +279,7 @@ export default function WindDownHabitHomeClient() {
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col px-5 pb-[max(env(safe-area-inset-bottom),24px)] pt-[max(env(safe-area-inset-top),22px)]">
         <header className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">WIND DOWN</p>
+            <p className="text-[12px] font-black tracking-[0.18em] text-[var(--wd-accent)]">WIND DOWN</p>
             <h1 className="mt-1 text-[30px] font-semibold tracking-tight [font-family:var(--font-wd-serif),ui-serif,Georgia,serif]">
               오늘 밤의 영어
             </h1>
@@ -315,7 +315,7 @@ export default function WindDownHabitHomeClient() {
           <>
             <section className="mt-7 rounded-[30px] border border-[var(--wd-line)] bg-[var(--wd-card)] p-6 shadow-[var(--wd-shadow)]">
               <div className="flex items-start justify-between gap-4">
-                <p className="text-[11px] font-black tracking-[0.16em] text-[var(--wd-accent)]">TONIGHT JOURNEY</p>
+                <p className="text-[12px] font-black tracking-[0.16em] text-[var(--wd-accent)]">TONIGHT JOURNEY</p>
                 <span className="shrink-0 text-xs font-semibold text-[var(--wd-muted)]">약 {tonight.estimatedMinutes}분</span>
               </div>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight [font-family:var(--font-wd-serif),ui-serif,Georgia,serif]">
@@ -332,17 +332,17 @@ export default function WindDownHabitHomeClient() {
               </Link>
               <div className="mt-5 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-1.5" aria-label="오늘 여정 진행 상태">
                 <div className="min-w-0 rounded-2xl bg-[var(--wd-bg)] px-2 py-3 text-center">
-                  <span className="block text-[10px] font-black tracking-[0.08em] text-[var(--wd-muted)]">복습</span>
+                  <span className="block text-[12px] font-black tracking-[0.08em] text-[var(--wd-muted)]">복습</span>
                   <span className="mt-1 block text-sm font-black tabular-nums">{tonight.reviewCompletedCount}/{tonight.reviewTarget}</span>
                 </div>
                 <span aria-hidden className="text-[var(--wd-muted)]">→</span>
                 <div className="min-w-0 rounded-2xl bg-[var(--wd-bg)] px-2 py-3 text-center">
-                  <span className="block text-[10px] font-black tracking-[0.08em] text-[var(--wd-muted)]">LEARN</span>
+                  <span className="block text-[12px] font-black tracking-[0.08em] text-[var(--wd-muted)]">LEARN</span>
                   <span className="mt-1 block text-sm font-black tabular-nums">{tonight.learnCreditedCount}/{tonight.learnTarget}</span>
                 </div>
                 <span aria-hidden className="text-[var(--wd-muted)]">→</span>
                 <div className="min-w-0 rounded-2xl bg-[var(--wd-bg)] px-2 py-3 text-center">
-                  <span className="block text-[10px] font-black tracking-[0.08em] text-[var(--wd-muted)]">말하기</span>
+                  <span className="block text-[12px] font-black tracking-[0.08em] text-[var(--wd-muted)]">말하기</span>
                   <span className="mt-1 block text-sm font-black tabular-nums">{tonight.voiceCompleted ? "1/1" : "0/1"}</span>
                 </div>
               </div>
@@ -353,7 +353,7 @@ export default function WindDownHabitHomeClient() {
               <div className="p-5">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[11px] font-black tracking-[0.16em] text-[var(--wd-accent)]">WORLD TOUR</p>
+                  <p className="text-[12px] font-black tracking-[0.16em] text-[var(--wd-accent)]">WORLD TOUR</p>
                   <h2 className="mt-1 text-lg font-bold">{currentStory?.title ?? "공부한 만큼 열린 무대"}</h2>
                 </div>
                 <Link href={currentStory ? `/winddown/game?story=${encodeURIComponent(currentStory.id)}` : "/winddown/game"} className="inline-flex min-h-[48px] shrink-0 items-center rounded-full border border-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-accent)] transition active:scale-[.98] motion-reduce:transition-none">
@@ -370,7 +370,7 @@ export default function WindDownHabitHomeClient() {
             <section className="mt-5 rounded-[28px] border border-[var(--wd-line)] bg-[var(--wd-card-solid)] p-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-black tracking-[0.16em] text-[var(--wd-accent)]">OPTIONAL</p>
+                  <p className="text-[12px] font-black tracking-[0.16em] text-[var(--wd-accent)]">OPTIONAL</p>
                   <h2 className="mt-1 text-lg font-bold">Live Talk</h2>
                 </div>
                 <Link href="/winddown/live-talk" className="inline-flex min-h-[48px] shrink-0 items-center rounded-full border border-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-accent)] transition active:scale-[.98] motion-reduce:transition-none">
@@ -405,7 +405,7 @@ export default function WindDownHabitHomeClient() {
             <section className="mt-6 rounded-[28px] border border-[var(--wd-line)] bg-[var(--wd-card-solid)] p-5">
               <div className="flex items-end justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-black tracking-[0.16em] text-[var(--wd-accent)]">7 NIGHTS</p>
+                  <p className="text-[12px] font-black tracking-[0.16em] text-[var(--wd-accent)]">7 NIGHTS</p>
                   <h2 className="mt-1 text-lg font-bold">{projection.streak.nights}일 연속</h2>
                 </div>
                 <p className="text-xs font-semibold text-[var(--wd-muted)]">완료한 밤만 채워져</p>
@@ -416,7 +416,7 @@ export default function WindDownHabitHomeClient() {
                   const label = `${monthDay(day.kstDay)} ${weekday(day.kstDay)}${isToday ? ", 오늘" : ""}: ${day.completed ? `${day.activities.map((activity) => activityLabel[activity]).join(", ")} 완료` : "미완료"}`;
                   return (
                     <li key={day.kstDay} className="min-w-0 text-center">
-                      <span className="block text-[10px] font-bold text-[var(--wd-muted)]">{weekday(day.kstDay)}</span>
+                      <span className="block text-[12px] font-bold text-[var(--wd-muted)]">{weekday(day.kstDay)}</span>
                       <span
                         aria-label={label}
                         className={`mx-auto mt-2 flex h-9 w-9 items-center justify-center rounded-full border text-xs font-black ${day.completed ? "border-[var(--wd-accent)] bg-[var(--wd-accent)] text-[var(--wd-bg)]" : "border-[var(--wd-line)] bg-[var(--wd-card)] text-[var(--wd-muted)]"} ${isToday ? "ring-2 ring-[var(--wd-accent-2)] ring-offset-2 ring-offset-[var(--wd-card-solid)]" : ""}`}

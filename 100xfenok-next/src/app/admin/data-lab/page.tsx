@@ -179,13 +179,13 @@ export default async function AdminDataLabPage() {
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" data-admin-data-lab-boundary="true">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Admin Data Lab</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Admin Data Lab</p>
             <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Data Lab (레거시)</h1>
             <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-600">
               관리자 데이터 진단은 기존 HTML Data Lab을 기본 소유 화면으로 유지하고, 공개 제품 화면과 원시 진단
               경계를 분리합니다.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.08em]">
+            <div className="mt-3 flex flex-wrap gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
               <span
                 className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600"
                 data-admin-data-lab-boundary-chip="admin-only"
@@ -235,11 +235,11 @@ export default async function AdminDataLabPage() {
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" data-admin-data-health-kpi="true">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Fenok Data Health</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Fenok Data Health</p>
             <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">데이터 헬스 KPI</h2>
             <p className="mt-1 text-xs font-semibold text-slate-500">KPI 생성 {dateLabel(dataHealthKpi?.generated_at)}</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-center text-[11px] font-black sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 text-center text-[12px] font-black sm:grid-cols-5">
             {[
               ["전체 상태", statusText(dataHealthKpi?.status, dataHealthKpi?.status_label)],
               ["게이트", `${Number(dataHealthKpi?.totals?.ready || 0).toLocaleString("ko-KR")}/${Number(dataHealthKpi?.totals?.lanes || 0).toLocaleString("ko-KR")}`],
@@ -258,7 +258,7 @@ export default async function AdminDataLabPage() {
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-xs">
             <thead>
-              <tr className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+              <tr className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">
                 <th className="border-b border-slate-200 px-3 py-2">KPI</th>
                 <th className="border-b border-slate-200 px-3 py-2">상태</th>
                 <th className="border-b border-slate-200 px-3 py-2">핵심 수치</th>
@@ -316,11 +316,11 @@ export default async function AdminDataLabPage() {
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" data-admin-data-lab-coverage="true">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Product Freshness Gate</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Product Freshness Gate</p>
             <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">제품 화면 데이터 상태</h2>
             <p className="mt-1 text-xs font-semibold text-slate-500">스냅샷 생성 {dateLabel(coverage?.generated_at)}</p>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center text-[11px] font-black sm:grid-cols-6">
+          <div className="grid grid-cols-3 gap-2 text-center text-[12px] font-black sm:grid-cols-6">
             {[
               ["전체", totals.surfaces],
               ["정상", totals.ready],
@@ -340,7 +340,7 @@ export default async function AdminDataLabPage() {
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-xs">
             <thead>
-              <tr className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+              <tr className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">
                 <th className="border-b border-slate-200 px-3 py-2">화면</th>
                 <th className="border-b border-slate-200 px-3 py-2">상태</th>
                 <th className="border-b border-slate-200 px-3 py-2">커버리지</th>

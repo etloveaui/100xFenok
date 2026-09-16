@@ -79,7 +79,7 @@ export default function ScreenerDesktopTable({
     >
       <table className={cx("w-full min-w-[760px]", densityClass.table)}>
         <thead>
-          <tr className="sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
+          <tr className="sticky top-0 z-10 border-b border-[var(--c-line)] bg-[var(--c-panel)] text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
             <th className={cx("w-12 text-left", densityClass.headerCell)}>
               <label data-screener-checkbox-target onClick={(event) => event.stopPropagation()}>
                 <input
@@ -110,7 +110,7 @@ export default function ScreenerDesktopTable({
                       )}
                     >
                       {column.label}
-                      <span className={active ? "text-[9px] text-[var(--c-ink)]" : "text-[9px] text-[var(--c-ink-2)]"}>{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
+                      <span className={active ? "text-[12px] text-[var(--c-ink)]" : "text-[12px] text-[var(--c-ink-2)]"}>{active ? (sortDir === "asc" ? "▲" : "▼") : "↕"}</span>
                     </button>
                     <MetricHelp label={column.label} metricKey={column.key} showLabel={false} align={column.align === "right" ? "right" : "left"} glyph="ⓘ" buttonSize="sm" />
                   </div>

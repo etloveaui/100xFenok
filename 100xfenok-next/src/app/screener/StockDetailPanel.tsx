@@ -115,19 +115,19 @@ export function SharedEdgePanel({
           <strong className="tabular-nums text-[12px] font-semibold text-[var(--c-ink)]">
             {row.score !== null ? Math.round(row.score) : "—"}
           </strong>
-          <span className="w-8 text-right text-[11px] text-[var(--c-ink-3)]">{sharedEdgeTone(row.score)}</span>
+          <span className="w-8 text-right text-[12px] text-[var(--c-ink-3)]">{sharedEdgeTone(row.score)}</span>
         </span>
       </Row>
     ));
   return (
     <Panel loading={pending}>
-      <PanelHeader eyebrow={eyebrow} title={title} right={<span className="text-[11px] text-[var(--c-ink-3)]">{coverage}</span>} />
+      <PanelHeader eyebrow={eyebrow} title={title} right={<span className="text-[12px] text-[var(--c-ink-3)]">{coverage}</span>} />
       {hero && hero.some((head) => head.score !== null) ? (
         <div className="flex items-center gap-6 px-4 pt-3">
           {hero.map((head) => head.score !== null ? (
             <span key={head.label} className="flex flex-col items-center gap-1">
               <EdgeMark score={head.score} size={88} />
-              <span className="text-[11px] text-[var(--c-ink-3)]">{head.label}</span>
+              <span className="text-[12px] text-[var(--c-ink-3)]">{head.label}</span>
             </span>
           ) : null)}
         </div>
@@ -139,7 +139,7 @@ export function SharedEdgePanel({
           ].map((head) => (
             <span key={head.label} className="flex items-center gap-2">
               {head.score !== null ? <EdgeMark score={head.score} size={22} showValue={false} /> : null}
-              <span className="text-[11px] text-[var(--c-ink-3)]">{head.label}</span>
+              <span className="text-[12px] text-[var(--c-ink-3)]">{head.label}</span>
               <strong className="tabular-nums text-[22px] font-semibold leading-none text-[var(--c-ink)]">
                 {head.score !== null ? Math.round(head.score) : "—"}
               </strong>
@@ -150,13 +150,13 @@ export function SharedEdgePanel({
       {summary ? <div className="px-4 pb-2 text-[12px] text-[var(--c-ink-2)]">{summary}</div> : null}
       {shortRows.length > 0 ? (
         <div>
-          <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--c-ink-3)]">{shortTitle}</p>
+          <p className="px-4 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--c-ink-3)]">{shortTitle}</p>
           {renderRows(shortRows)}
         </div>
       ) : null}
       {longRows.length > 0 ? (
         <div>
-          <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--c-ink-3)]">{longTitle}</p>
+          <p className="px-4 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--c-ink-3)]">{longTitle}</p>
           {renderRows(longRows)}
         </div>
       ) : null}
@@ -252,7 +252,7 @@ export function SharedValuationBandPanel({
       <PanelHeader
         eyebrow="Valuation Band"
         title="밸류에이션 밴드"
-        right={<span className="tabular-nums text-[11px] font-semibold text-[var(--c-ink-2)]">{Math.round(clampedPct)}%</span>}
+        right={<span className="tabular-nums text-[12px] font-semibold text-[var(--c-ink-2)]">{Math.round(clampedPct)}%</span>}
       />
       <div className="px-4 py-3">
         <div
@@ -268,7 +268,7 @@ export function SharedValuationBandPanel({
           <span data-stock-valuation-zone="overheated" className="absolute inset-y-0 bg-[var(--c-down)] opacity-45" style={{ left: `${highMidPct}%`, width: `${Math.max(0, 100 - highMidPct)}%` }} />
           <span className="absolute inset-y-[-3px] w-[3px] rounded-full bg-[var(--c-ink)] shadow-sm" style={{ left: `${clampedPct}%`, transform: "translateX(-1.5px)" }} />
         </div>
-        <div className="mt-1 grid grid-cols-3 text-[11px] tabular-nums text-[var(--c-ink-3)]">
+        <div className="mt-1 grid grid-cols-3 text-[12px] tabular-nums text-[var(--c-ink-3)]">
           <span>{band.min.toFixed(1)}x</span>
           <span className="text-center">{isFiniteNumber(band.avg) ? `${band.avg.toFixed(1)}x ±10%` : band.source}</span>
           <span className="text-right">{band.max.toFixed(1)}x</span>
@@ -1445,7 +1445,7 @@ function MarketFactCard({ label, field, fact, currency }: { label: string; field
   return (
     <div className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-3 py-2.5">
       <div className="flex min-w-0 items-start justify-between gap-2">
-        <p className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
+        <p className="min-w-0 truncate text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
         <span className="shrink-0 rounded-full bg-[var(--c-surface-2)] px-1.5 py-0.5 text-[9px] font-black text-[var(--c-ink-3)]">
           기준 {candidateCount}곳 확인
         </span>
@@ -1584,13 +1584,13 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
       {topHoldings.length > 0 ? (
         <div className="mt-3 min-w-0">
           <div className="mb-1.5 flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">ETF 상위 보유 종목</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">ETF 상위 보유 종목</p>
             <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
               {data.etf?.holdings_updated ?? "—"} · {data.etf?.holdings_count ?? topHoldings.length}개
             </span>
           </div>
           <div className="-mx-1 overflow-x-auto px-1">
-            <table className="w-full min-w-[360px] text-[11px]">
+            <table className="w-full min-w-[360px] text-[12px]">
               <thead>
                 <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                   <th className="px-2 py-1.5 text-left">보유 항목</th>
@@ -1974,7 +1974,7 @@ export function PerBandChart({
               x={placement.x}
               y={placement.y}
               textAnchor={placement.anchor}
-              className="text-[9px] font-black fill-[var(--c-ink-2)]"
+              className="text-[12px] font-black fill-[var(--c-ink-2)]"
               paintOrder="stroke"
               stroke="var(--c-panel)"
               strokeWidth={3}
@@ -2056,7 +2056,7 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
   return (
     <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3">
       <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">추정치 변화·시장 예상</h4>
+        <h4 className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">추정치 변화·시장 예상</h4>
         <span className="text-[10px] font-bold text-[var(--c-ink-3)]">EPS 주간 예상</span>
       </div>
       {epsRows.length > 0 ? (
@@ -2067,8 +2067,8 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
             return (
               <div key={row.key} className="min-w-0 rounded-lg border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
                 <div className="flex min-w-0 items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-[10px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.label}</span>
-                  <span className={`shrink-0 text-[10px] font-black tabular-nums ${toneText(row.change)}`}>
+                  <span className="min-w-0 truncate text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{row.label}</span>
+                  <span className={`shrink-0 text-[12px] font-black tabular-nums ${toneText(row.change)}`}>
                     {fmtSignedFractionPercent(row.change)}
                   </span>
                 </div>
@@ -2083,7 +2083,7 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
       ) : null}
       {historyRows.length > 0 ? (
         <div className="-mx-1 mt-3 overflow-x-auto px-1">
-          <table className="w-full min-w-[520px] text-[10px]">
+          <table className="w-full min-w-[520px] text-[12px]">
             <thead>
               <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                 <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1 text-left">일자</th>
@@ -2138,11 +2138,11 @@ export function RawFinancialDepth({ detail, compact = false }: { detail: DetailD
   return (
     <div className="mt-4 rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)]/95 p-3">
       <div className="mb-2 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-        <h4 className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">실적·예상치 상세</h4>
+        <h4 className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">실적·예상치 상세</h4>
         <span className="text-[10px] font-bold text-[var(--c-ink-3)]">과거 4년~3년차(FY+3) 표준화 데이터</span>
       </div>
       <div className="-mx-1 overflow-x-auto px-1">
-        <table className="w-full min-w-[720px] text-[10px]">
+        <table className="w-full min-w-[720px] text-[12px]">
           <thead>
             <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
               <th className="sticky left-0 z-10 bg-[var(--c-panel)] px-2 py-1.5 text-left">항목</th>
@@ -2225,7 +2225,7 @@ function fmtRelativeDelta(current: MaybeNumber, previous: MaybeNumber) {
 function SlickMetricCard({ label, value, delta }: { label: string; value: string; delta?: string | null }) {
   return (
     <div className="min-w-0 rounded-lg border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-3 py-2">
-      <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
+      <p className="min-w-0 truncate text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
       <p className="mt-1 min-w-0 break-words text-base font-black tabular-nums text-[var(--c-ink)]">{value}</p>
       <p className="mt-1 min-h-[16px] text-[11px] font-bold tabular-nums text-[var(--c-ink-3)]">{delta ? `직전 ${delta}` : ""}</p>
     </div>
@@ -2333,9 +2333,9 @@ export function PriceDividendHistoryDepth({
       <div className="mt-3 grid min-w-0 gap-3 lg:grid-cols-2">
         {returnRows.length > 0 ? (
           <div className="min-w-0">
-            <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">연도별 수익률</p>
+            <p className="mb-1.5 text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">연도별 수익률</p>
             <div className="-mx-1 overflow-x-auto px-1">
-              <table className="w-full min-w-[240px] text-[11px]">
+              <table className="w-full min-w-[240px] text-[12px]">
                 <thead>
                   <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                     <th className="px-2 py-1.5 text-left">연도</th>
@@ -2359,9 +2359,9 @@ export function PriceDividendHistoryDepth({
 
         {dividendRows.length > 0 ? (
           <div className="min-w-0">
-            <p className="mb-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">배당 이력</p>
+            <p className="mb-1.5 text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">배당 이력</p>
             <div className="-mx-1 overflow-x-auto px-1">
-              <table className="w-full min-w-[320px] text-[11px]">
+              <table className="w-full min-w-[320px] text-[12px]">
                 <thead>
                   <tr className="border-b border-[var(--c-line)] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                     <th className="px-2 py-1.5 text-left">락일</th>
@@ -2394,7 +2394,7 @@ function ScreenerThreeSecondVerdictCard({ verdict }: { verdict: ScreenerThreeSec
     <div className="mb-4 rounded-2xl border border-[color:color-mix(in_srgb,var(--brand-interactive)_20%,transparent)] bg-[color:color-mix(in_srgb,var(--brand-interactive)_3.5%,transparent)] p-3.5 shadow-[var(--sh-sm)]">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--brand-interactive)]">3초 판정</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.15em] text-[var(--brand-interactive)]">3초 판정</p>
           <p className="mt-0.5 text-[10px] font-bold text-[var(--c-ink-3)]">스크리너 상세 데이터를 핵심 신호로 압축</p>
         </div>
         <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-black leading-none ${verdict.badgeClass}`}>
@@ -2466,7 +2466,7 @@ export function StockDetailBody({
           {interpretationReads.length > 0 ? (
             <ul className="mt-3 space-y-1.5 border-t border-[var(--c-line-2)] pt-2">
               {interpretationReads.map((read) => (
-                <li key={read.id} className="flex min-w-0 flex-wrap items-start gap-2 text-[11px] leading-relaxed">
+                <li key={read.id} className="flex min-w-0 flex-wrap items-start gap-2 text-[12px] leading-relaxed">
                   <span className={`shrink-0 rounded-full border px-2 py-0.5 font-black ${readToneClass(read.tone)}`}>
                     {read.label}
                   </span>
@@ -2481,7 +2481,7 @@ export function StockDetailBody({
       <div className="grid gap-5 sm:grid-cols-3">
         {/* PER Band Chart */}
         <div>
-          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+          <h4 className="mb-2 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             PER 밴드
           </h4>
           {hasPer ? (
@@ -2498,7 +2498,7 @@ export function StockDetailBody({
 
         {/* Revenue Sparkline */}
         <div>
-          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+          <h4 className="mb-2 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             매출 추이
           </h4>
           {hasRevenue ? (
@@ -2522,7 +2522,7 @@ export function StockDetailBody({
 
         {/* EPS Sparkline */}
         <div>
-          <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+          <h4 className="mb-2 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             EPS 추이
           </h4>
           {hasEps ? (
@@ -2551,7 +2551,7 @@ export function StockDetailBody({
       {/* 13F Badges */}
       {f13Entries && f13Entries.length > 0 ? (
         <div className="mt-4">
-          <h4 className="mb-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+          <h4 className="mb-1.5 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             기관 공시 보유
           </h4>
           <div className="flex flex-wrap gap-1.5">
@@ -2567,7 +2567,7 @@ export function StockDetailBody({
         </div>
       ) : f13Error ? (
         <div className="mt-4">
-          <h4 className="mb-1.5 text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+          <h4 className="mb-1.5 text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
             기관 공시 보유
           </h4>
           <DataStateNotice
@@ -2722,7 +2722,7 @@ export default function StockDetailPanel({
         </div>
       ) : null}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <span className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
+        <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">
           종목 상세
         </span>
         <div className="flex flex-wrap items-center gap-2">

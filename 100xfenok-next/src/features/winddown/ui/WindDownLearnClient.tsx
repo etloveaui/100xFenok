@@ -493,7 +493,7 @@ export default function WindDownLearnClient() {
         <header>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-[11px] font-black tracking-[0.2em] text-[var(--wd-accent)]">
+              <p className="text-[12px] font-black tracking-[0.2em] text-[var(--wd-accent)]">
                 WIND DOWN · LEARN
               </p>
               <h1 className="mt-1 text-xl font-black">오늘의 다섯 문장</h1>
@@ -584,7 +584,7 @@ export default function WindDownLearnClient() {
 
           {status === "ready" && session?.isComplete ? (
             <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-7 text-center">
-              <p className="mt-4 text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">
+              <p className="mt-4 text-[12px] font-black tracking-[0.18em] text-[var(--wd-accent)]">
                 QUEST COMPLETE
               </p>
               <h2 className="mt-2 text-2xl font-black">다섯 문장 완료!</h2>
@@ -822,7 +822,7 @@ export default function WindDownLearnClient() {
           ) : null}
         </main>
 
-        <p className="pb-1 text-center text-[11px] font-bold text-[var(--wd-text-muted)]">
+        <p className="pb-1 text-center text-[12px] font-bold text-[var(--wd-text-muted)]">
           기기 음성 연습은 선택 사항이며, 정답·보상·진행 기록을 바꾸지 않아.
         </p>
       </div>

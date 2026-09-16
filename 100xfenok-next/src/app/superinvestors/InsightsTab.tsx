@@ -248,7 +248,7 @@ function SuperinvestorInsightsStatus({ metadata }: { metadata: Array<InsightMeta
           stale 제외 {excluded.size}명
         </span>
       </div>
-      <p className="mt-2 text-[10px] font-semibold leading-relaxed text-[var(--c-ink-3)]">
+      <p className="mt-2 text-[12px] font-semibold leading-relaxed text-[var(--c-ink-3)]">
         {generatedAt ? `생성 ${generatedAt}` : "생성 시각 미표기"} · {disclaimer ?? "13F 분기 스냅샷 기반으로 장중 매매, 숏 포지션, 비13F 자산은 제외됩니다."}
       </p>
     </div>
@@ -337,7 +337,7 @@ function BuyingPressureCard({ data, trades }: { data: BuyingPressureData | null;
           <PressurePanel title="매도 압력 TOP" rows={sellRows} color="rose" signLabel={(r) => `${r.net_sellers} vs ${r.net_buyers}`} />
         ) : null}
       </div>
-      <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
+      <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
         {quarter} 기준 · {note}
       </p>
     </div>
@@ -388,18 +388,18 @@ function AccumulationHeatmap({ trades }: { trades: TradesRankingData | null }) {
                 #{row.rank}
               </span>
             </div>
-            <p className="mt-1 truncate text-[10px] font-semibold text-slate-700" title={row.name}>{row.name}</p>
+            <p className="mt-1 truncate text-[12px] font-semibold text-slate-700" title={row.name}>{row.name}</p>
             <div className="mt-2 flex items-end justify-between gap-2">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.08em] text-emerald-800">매수 참여</p>
+                <p className="text-[12px] font-black uppercase tracking-[0.08em] text-emerald-800">매수 참여</p>
                 <p className="text-lg font-black tabular-nums text-slate-950">{row.investors_count}명</p>
               </div>
-              <p className="text-[11px] font-black tabular-nums text-emerald-800">{formatCurrencyCompact(row.amount, "USD")}</p>
+              <p className="text-[12px] font-black tabular-nums text-emerald-800">{formatCurrencyCompact(row.amount, "USD")}</p>
             </div>
             <div className="mt-2 h-1.5 rounded-full bg-white/70">
               <div className="h-1.5 rounded-full bg-emerald-700" style={{ width: `${Math.max(8, amountIntensity * 100)}%` }} />
             </div>
-            <p className="mt-1 truncate text-[9px] font-semibold text-slate-600">
+            <p className="mt-1 truncate text-[12px] font-semibold text-slate-600">
               대표 {row.top_investor?.name ?? row.top_investor?.id ?? "—"}
             </p>
           </div>
@@ -418,11 +418,11 @@ function PressurePanel({ title, rows, color, signLabel }: {
   if (rows.length === 0) return <EmptyState reason={`${title} 데이터가 없습니다`} nextRefresh="다음 분기 공시에서 다시 확인해 주세요." />;
   return (
     <div>
-      <h4 className="mb-2 text-[11px] font-black uppercase tracking-[0.08em] text-slate-500">{title}</h4>
+      <h4 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">{title}</h4>
       <InsightTableScroll label={title}>
         <table className="w-full min-w-[380px] text-xs">
           <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+            <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-1.5 text-left">티커</th>
               <th className="px-2 py-1.5 text-center">매수/매도</th>
               <th className="px-2 py-1.5 text-left">압력</th>
@@ -436,18 +436,18 @@ function PressurePanel({ title, rows, color, signLabel }: {
                   <TickerChip ticker={r.ticker} variant="inline" />
                 </td>
                 <td className="px-2 py-1.5 text-center">
-                  <span className={`text-[10px] font-bold ${textColor}`}>{signLabel(r)}</span>
+                  <span className={`text-[12px] font-bold ${textColor}`}>{signLabel(r)}</span>
                 </td>
                 <td className="px-2 py-1.5">
                   <div className="flex items-center gap-2">
                     <div className="h-2 flex-1 rounded-full bg-slate-100">
                       <div className="h-2 rounded-full" style={{ width: `${Math.abs(r.pressure) * 100}%`, backgroundColor: barColor }} />
                     </div>
-                    <span className="tabular-nums text-[10px] font-bold text-slate-600">{formatPlainPercent(Math.abs(r.pressure), { fraction: true, digits: 0 })}</span>
+                    <span className="tabular-nums text-[12px] font-bold text-slate-600">{formatPlainPercent(Math.abs(r.pressure), { fraction: true, digits: 0 })}</span>
                   </div>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className={` tabular-nums text-[10px] font-bold ${r.total_value_change >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
+                  <span className={` tabular-nums text-[12px] font-bold ${r.total_value_change >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
                     {formatCurrencyCompact(r.total_value_change, "USD")}
                   </span>
                 </td>
@@ -478,7 +478,7 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
       <InsightTableScroll label="신규 편입 빅베팅">
         <table className="w-full min-w-[400px] text-xs">
           <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+            <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-1.5 text-left">종목</th>
               <th className="px-2 py-1.5 text-left">투자자</th>
               <th className="px-2 py-1.5 text-right">금액</th>
@@ -496,13 +496,13 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
                   )}
                 </td>
                 <td className="px-2 py-1.5">
-                  <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
+                  <span className="text-[12px] font-bold text-slate-600">{r.investor}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="tabular-nums text-[10px] font-bold text-slate-900">{formatCurrencyCompact(r.position_value, "USD")}</span>
+                  <span className="tabular-nums text-[12px] font-bold text-slate-900">{formatCurrencyCompact(r.position_value, "USD")}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="tabular-nums text-[10px] font-semibold text-slate-600">{formatPlainPercent(r.position_weight, { fraction: true, digits: 2 })}</span>
+                  <span className="tabular-nums text-[12px] font-semibold text-slate-600">{formatPlainPercent(r.position_weight, { fraction: true, digits: 2 })}</span>
                 </td>
               </tr>
             ))}
@@ -510,7 +510,7 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
         </table>
       </InsightTableScroll>
       {rows.length === 0 ? <EmptyState reason="현재 분기 신규 편입 데이터가 없습니다" nextRefresh="다음 분기 공시에서 다시 확인해 주세요." /> : null}
-      <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
+      <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} 신규 편입 · 총 {data.metadata.new_positions_count}건 ({data.metadata.unique_tickers}종목)
       </p>
     </div>
@@ -537,7 +537,7 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
       <InsightTableScroll label="확신 베팅">
         <table className="w-full min-w-[400px] text-xs">
           <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+            <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-1.5 text-left">투자자</th>
               <th className="px-2 py-1.5 text-left">티커</th>
               <th className="px-2 py-1.5 text-right">포트 비중</th>
@@ -548,7 +548,7 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
             {rows.map((r) => (
               <tr key={`${r.investor}-${r.ticker}`} className="border-b border-slate-100 last:border-b-0">
                 <td className="px-2 py-1.5">
-                  <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
+                  <span className="text-[12px] font-bold text-slate-600">{r.investor}</span>
                 </td>
                 <td className="px-2 py-1.5">
                   <TickerChip ticker={r.ticker} variant="inline" />
@@ -557,14 +557,14 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
                   <span className="tabular-nums font-bold text-slate-900">{formatPlainPercent(r.weight, { fraction: true, digits: 1 })}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="tabular-nums text-[10px] font-semibold text-slate-600">{formatCurrencyCompact(r.market_value, "USD")}</span>
+                  <span className="tabular-nums text-[12px] font-semibold text-slate-600">{formatCurrencyCompact(r.market_value, "USD")}</span>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </InsightTableScroll>
-      <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
+      <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} · 각 투자자 포트폴리오 TOP5 포지션 (비중 기준 정렬, 상위 12개)
       </p>
     </div>
@@ -583,7 +583,7 @@ function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
       <InsightTableScroll label="신규 고확신 편입">
         <table className="w-full min-w-[420px] text-xs">
           <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+            <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-1.5 text-left">투자자</th>
               <th className="px-2 py-1.5 text-left">종목</th>
               <th className="px-2 py-1.5 text-right">포트 비중</th>
@@ -594,7 +594,7 @@ function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
             {rows.map((r: ConvictionEntry) => (
               <tr key={`${r.investor}-${r.ticker}`} className="border-b border-slate-100 last:border-b-0">
                 <td className="px-2 py-1.5">
-                  <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
+                  <span className="text-[12px] font-bold text-slate-600">{r.investor}</span>
                 </td>
                 <td className="px-2 py-1.5">
                   {isTicker(r.ticker) ? (
@@ -607,14 +607,14 @@ function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
                   <span className="tabular-nums font-bold text-slate-900">{formatPlainPercent(r.weight, { fraction: true, digits: 1 })}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="tabular-nums text-[10px] font-semibold text-slate-600">{formatCurrencyCompact(r.value, "USD")}</span>
+                  <span className="tabular-nums text-[12px] font-semibold text-slate-600">{formatCurrencyCompact(r.value, "USD")}</span>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </InsightTableScroll>
-      <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
+      <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} · 새로 편입되면서 바로 큰 비중이 된 포지션 {data.metadata.high_conviction_new_count}건 중 상위 12개
       </p>
     </div>
@@ -637,7 +637,7 @@ function HhiCard({ data }: { data: HhiData }) {
       <InsightTableScroll label="집중도">
         <table className="w-full min-w-[400px] text-xs">
           <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+            <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-1.5 text-left">투자자</th>
               <th className="px-2 py-1.5 text-right">HHI</th>
               <th className="px-2 py-1.5 text-right">TOP1 비중</th>
@@ -649,16 +649,16 @@ function HhiCard({ data }: { data: HhiData }) {
             {rows.map((r) => (
               <tr key={r.investor} className="border-b border-slate-100 last:border-b-0">
                 <td className="px-2 py-1.5">
-                  <span className="text-[10px] font-bold text-slate-600">{r.investor}</span>
+                  <span className="text-[12px] font-bold text-slate-600">{r.investor}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
                   <span className="tabular-nums font-bold text-slate-900">{r.hhi.toFixed(2)}</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="tabular-nums text-[10px] font-semibold text-slate-600">{(r.top_weight * 100).toFixed(1)}%</span>
+                  <span className="tabular-nums text-[12px] font-semibold text-slate-600">{(r.top_weight * 100).toFixed(1)}%</span>
                 </td>
                 <td className="px-2 py-1.5 text-right">
-                  <span className="tabular-nums text-[10px] font-semibold text-slate-600">{r.holdings_count}</span>
+                  <span className="tabular-nums text-[12px] font-semibold text-slate-600">{r.holdings_count}</span>
                 </td>
                 <td className="px-2 py-1.5 text-center">
                   <span className={`inline-flex rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${classificationColor(r.classification)}`}>
@@ -670,7 +670,7 @@ function HhiCard({ data }: { data: HhiData }) {
           </tbody>
         </table>
       </InsightTableScroll>
-      <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
+      <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
         {data.metadata.quarter} · HHI: 0~1, 높을수록 집중 · 집중≥0.25, 보통≥0.15, 분산&lt;0.15
       </p>
     </div>
@@ -735,7 +735,7 @@ export default function InsightsTab() {
               {quarterLabel} 기준
             </span>
           ) : null}
-          <span className="text-[10px] font-bold text-[var(--c-ink-3)]">기관 공시는 분기 종료 후 최대 45일 지연됩니다</span>
+          <span className="text-[12px] font-bold text-[var(--c-ink-3)]">기관 공시는 분기 종료 후 최대 45일 지연됩니다</span>
         </div>
       </div>
 
@@ -752,7 +752,7 @@ export default function InsightsTab() {
           <SuperinvestorInsightsStatus metadata={[tr?.metadata, pv?.metadata, bp?.metadata, np?.metadata, hhi?.metadata, ce?.metadata]} />
 
           {samePeriodWindow ? (
-            <div className="text-[10px] font-semibold text-[var(--c-ink-3)]">
+            <div className="text-[12px] font-semibold text-[var(--c-ink-3)]">
               공통 성과 구간: {formatQuarterDate(samePeriodWindow.startDate)}~{formatQuarterDate(samePeriodWindow.endDate)} · {samePeriodWindow.investorCount}명 · {samePeriodWindow.dates.length}개 분기
             </div>
           ) : null}
@@ -760,36 +760,36 @@ export default function InsightsTab() {
           {/* 0. 리스크-수익 분포 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">리스크-수익 분포</h3>
-            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">거장 포트폴리오의 연수익률 대비 연변동성 — SPY와 비교</p>
+            <p className="mb-3 text-[12px] font-semibold text-[var(--c-ink-3)]">거장 포트폴리오의 연수익률 대비 연변동성 — SPY와 비교</p>
             {pv ? <RiskReturnScatter data={pv} /> : <UnavailablePanel label="리스크-수익 분포" />}
           </div>
 
           {/* 0b. 동일기간 누적 수익 오버레이 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">동일기간 누적 수익</h3>
-            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">공통으로 존재하는 분기 구간만 사용해 첫 분기 100으로 누적 성과를 비교합니다.</p>
+            <p className="mb-3 text-[12px] font-semibold text-[var(--c-ink-3)]">공통으로 존재하는 분기 구간만 사용해 첫 분기 100으로 누적 성과를 비교합니다.</p>
             {pv ? <CumulativeReturnOverlay data={pv} /> : <UnavailablePanel label="동일기간 누적 수익" />}
           </div>
 
           {/* 0c. Fama-French 파생 팩터 틸트 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">팩터 틸트 레이더</h3>
-            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">FF 파생 팩터 틸트 · 확신도 · 커버리지 · 기준일 — 파생 추정치로 해석합니다</p>
+            <p className="mb-3 text-[12px] font-semibold text-[var(--c-ink-3)]">FF 파생 팩터 틸트 · 확신도 · 커버리지 · 기준일 — 파생 추정치로 해석합니다</p>
             {fx ? <FactorExposureRadar data={fx} /> : <UnavailablePanel label="팩터 틸트" />}
           </div>
 
           {/* 1. 매수 압력 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">매수 압력</h3>
-            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">투자자 간 순매수·순매도 방향성 — 압력 게이지로 강도 측정</p>
+            <p className="mb-3 text-[12px] font-semibold text-[var(--c-ink-3)]">투자자 간 순매수·순매도 방향성 — 압력 게이지로 강도 측정</p>
             {bp || tr ? <BuyingPressureCard data={bp} trades={tr} /> : <UnavailablePanel label="매수 압력" />}
           </div>
 
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">거장 누적 매수 heat-map</h3>
-            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">매수 참여 투자자 수로 정렬한 종목 heat-map — 진할수록 더 많은 투자자가 같은 분기에 매수</p>
+            <p className="mb-3 text-[12px] font-semibold text-[var(--c-ink-3)]">매수 참여 투자자 수로 정렬한 종목 heat-map — 진할수록 더 많은 투자자가 같은 분기에 매수</p>
             {tr ? <AccumulationHeatmap trades={tr} /> : <UnavailablePanel label="거장 누적 매수 heat-map" />}
-            <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
+            <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
               {tr?.metadata.quarter ?? quarterLabel} 기준 · 순매수 금액은 막대 길이, 참여 투자자 수는 타일 진하기로 표시합니다.
             </p>
           </div>
@@ -798,20 +798,20 @@ export default function InsightsTab() {
             {/* 2. 신규 편입 빅베팅 */}
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">신규 편입 빅베팅</h3>
-              <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">이번 분기 처음 포트폴리오에 편입된 종목 (금액순)</p>
+              <p className="mb-3 text-[12px] font-semibold text-[var(--c-ink-3)]">이번 분기 처음 포트폴리오에 편입된 종목 (금액순)</p>
               {np ? <NewPositionsCard data={np} /> : <UnavailablePanel label="신규 편입 빅베팅" />}
             </div>
 
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">고확신 신규 편입</h3>
-              <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">새 종목인데 곧바로 큰 포트폴리오 비중을 차지한 포지션</p>
+              <p className="mb-3 text-[12px] font-semibold text-[var(--c-ink-3)]">새 종목인데 곧바로 큰 포트폴리오 비중을 차지한 포지션</p>
               {ce ? <HighConvictionNewCard data={ce} /> : <UnavailablePanel label="고확신 신규 편입" />}
             </div>
 
             {/* 3. 확신 베팅 */}
             <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
               <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">확신 베팅 (TOP5)</h3>
-              <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">각 투자자 포트폴리오에서 비중이 가장 높은 TOP5 포지션</p>
+              <p className="mb-3 text-[12px] font-semibold text-[var(--c-ink-3)]">각 투자자 포트폴리오에서 비중이 가장 높은 TOP5 포지션</p>
               {cv ? <ConvictionCard data={cv} /> : <UnavailablePanel label="확신 베팅" />}
             </div>
           </div>
@@ -819,7 +819,7 @@ export default function InsightsTab() {
           {/* 4. 집중도 */}
           <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)] sm:p-5">
             <h3 className="mb-1 text-sm font-black tracking-tight text-slate-900">집중도 (HHI)</h3>
-            <p className="mb-3 text-[10px] font-semibold text-[var(--c-ink-3)]">포트폴리오 집중도 — HHI가 높을수록 소수 종목에 집중 투자</p>
+            <p className="mb-3 text-[12px] font-semibold text-[var(--c-ink-3)]">포트폴리오 집중도 — HHI가 높을수록 소수 종목에 집중 투자</p>
             {hhi ? <HhiCard data={hhi} /> : <UnavailablePanel label="집중도" />}
           </div>
         </div>

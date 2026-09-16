@@ -160,7 +160,7 @@ function FinancialsTab({ data }: { data: YfData }) {
       <div className="-mx-1 overflow-x-auto px-1">
         <table data-stock-financial-table="yf" className="w-full min-w-[500px] text-xs">
           <thead>
-            <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+            <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="sticky left-0 z-20 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
               {revDates.map((d) => (
                 <th key={d} className="px-2 py-1.5 text-right">{d.slice(0, 7)}</th>
@@ -174,7 +174,7 @@ function FinancialsTab({ data }: { data: YfData }) {
               if (!hasData) return null;
               return (
                 <tr key={eng} className="border-b border-slate-100 last:border-b-0">
-                  <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{ko}</td>
+                  <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{ko}</td>
                   {vals.map((v, i) => (
                     <td key={i} className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-900">
                       {formatFn(v, eng)}
@@ -255,8 +255,8 @@ function IndustryCompareBlock({ info, industry }: { info: Record<string, any>; i
           const better = r.lowerBetter ? (r.stock as number) < (r.ind as number) : (r.stock as number) > (r.ind as number);
           return (
             <div key={r.label} className="flex items-center justify-between rounded-[8px] border border-slate-200 bg-white px-3 py-2">
-              <MetricHelp label={r.label} className="text-[10px] font-medium text-slate-500" />
-              <span className="tabular-nums text-[11px] font-black">
+              <MetricHelp label={r.label} className="text-[12px] font-medium text-slate-500" />
+              <span className="tabular-nums text-[12px] font-black">
                 <span className={better ? "text-emerald-700" : "text-slate-900"}>{fmt(r.stock as number, r.isFraction)}</span>
                 <span className="mx-1 font-semibold text-slate-300">/</span>
                 <span className="font-bold text-slate-500">산업 {fmt(r.ind as number, r.isFraction)}</span>
@@ -392,7 +392,7 @@ function OwnershipTab({ data }: { data: YfData }) {
           <div className="-mx-1 overflow-x-auto px-1">
             <table className="w-full min-w-[560px] text-xs">
               <thead>
-                <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+                <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
                   <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]">기관명</th>
                   <th className="px-2 py-1.5 text-right">지분율</th>
                   <th className="px-2 py-1.5 text-right">주식수</th>
@@ -411,14 +411,14 @@ function OwnershipTab({ data }: { data: YfData }) {
                   const pctChange = pctChangeRaw !== null ? pctChangeRaw * 100 : null;
                   return (
                     <tr key={i} className="border-b border-slate-100 last:border-b-0">
-                      <td className="sticky left-0 z-10 max-w-[180px] truncate bg-white px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{h.Holder}</td>
+                      <td className="sticky left-0 z-10 max-w-[180px] truncate bg-white px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{h.Holder}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{pctHeld !== null ? `${(pctHeld * 100).toFixed(2)}%` : "—"}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-600">{shares !== null ? shares.toLocaleString() : "—"}</td>
                       <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-600">{value !== null ? formatCompactMoney(value, currency) : "—"}</td>
                       <td className={`px-2 py-1.5 text-right  tabular-nums text-xs font-bold ${pctChange != null ? (pctChange >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-500"}`}>
                         {pctChange != null ? `${pctChange > 0 ? "+" : ""}${pctChange.toFixed(1)}%` : "—"}
                       </td>
-                      <td className="px-2 py-1.5 text-right tabular-nums text-[10px] font-semibold text-slate-500">{h["Date Reported"] ?? "—"}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold text-slate-500">{h["Date Reported"] ?? "—"}</td>
                     </tr>
                   );
                 })}
@@ -459,7 +459,7 @@ function EstimatesTab({ data }: { data: YfData }) {
         <Panel>
           <PanelHeader eyebrow="Analyst Price Targets" title="애널리스트 목표가" />
           <div className="px-4 py-3">
-            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[12px] font-bold text-slate-500">
               <span>최저 {formatMoney(targetLow, infoCurrency)}</span>
               <span>평균 {formatMoney(targetMean, infoCurrency)}</span>
               <span>최고 {formatMoney(targetHigh, infoCurrency)}</span>
@@ -475,7 +475,7 @@ function EstimatesTab({ data }: { data: YfData }) {
                 </>
               ) : null}
             </div>
-            <p className="mt-1 text-center text-[10px] font-bold text-slate-500">
+            <p className="mt-1 text-center text-[12px] font-bold text-slate-500">
               현재가 {formatMoney(targetCurrent, infoCurrency)} · 중간값 {formatMoney(targetMedian, infoCurrency)}
             </p>
           </div>
@@ -490,7 +490,7 @@ function EstimatesTab({ data }: { data: YfData }) {
             <div className="-mx-1 overflow-x-auto px-1">
               <table className="w-full min-w-[560px] text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+                  <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
                     <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
                     <th className="px-2 py-1.5 text-right">평균</th>
                     <th className="px-2 py-1.5 text-right">최저</th>
@@ -506,7 +506,7 @@ function EstimatesTab({ data }: { data: YfData }) {
                     const rowCurrency = normalizeCurrency(e.currency ?? infoCurrency);
                     return (
                       <tr key={e._index} className="border-b border-slate-100 last:border-b-0">
-                        <td className="sticky left-0 z-10 bg-white px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{indexLabels[e._index] ?? e._index}</td>
+                        <td className="sticky left-0 z-10 bg-white px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{indexLabels[e._index] ?? e._index}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{formatMoney(e.avg, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatMoney(e.low, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatMoney(e.high, rowCurrency)}</td>
@@ -530,7 +530,7 @@ function EstimatesTab({ data }: { data: YfData }) {
             <div className="-mx-1 overflow-x-auto px-1">
               <table className="w-full min-w-[580px] text-xs">
                 <thead>
-                  <tr className="border-b border-slate-200 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">
+                  <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
                     <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
                     <th className="px-2 py-1.5 text-right">평균</th>
                     <th className="px-2 py-1.5 text-right">최저</th>
@@ -546,7 +546,7 @@ function EstimatesTab({ data }: { data: YfData }) {
                     const rowCurrency = normalizeCurrency(r.currency ?? infoCurrency);
                     return (
                       <tr key={r._index} className="border-b border-slate-100 last:border-b-0">
-                        <td className="sticky left-0 z-10 bg-white px-2 py-1.5 text-[10px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{indexLabels[r._index] ?? r._index}</td>
+                        <td className="sticky left-0 z-10 bg-white px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{indexLabels[r._index] ?? r._index}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{formatCompactMoney(r.avg, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatCompactMoney(r.low, rowCurrency)}</td>
                         <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatCompactMoney(r.high, rowCurrency)}</td>
@@ -583,13 +583,13 @@ function EstimatesTab({ data }: { data: YfData }) {
                 const pct = total > 0 ? (count / total) * 100 : 0;
                 if (pct === 0) return null;
                 return (
-                  <div key={key} className={`${cls} flex items-center justify-center text-[10px] font-bold text-white`} style={{ width: `${pct}%` }}>
+                  <div key={key} className={`${cls} flex items-center justify-center text-[12px] font-bold text-white`} style={{ width: `${pct}%` }}>
                     {pct > 10 ? count : ""}
                   </div>
                 );
               })}
             </div>
-            <div className="mt-2 flex justify-between text-[9px] font-bold text-slate-500">
+            <div className="mt-2 flex justify-between text-[12px] font-bold text-slate-500">
               <span>적극매수</span>
               <span>매수</span>
               <span>보유</span>
@@ -623,16 +623,16 @@ export function FiftyTwoWeekBar({ info }: { info: Record<string, any> }) {
       <PanelHeader eyebrow="Range" title="52주 범위" />
       <div className="px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="max-w-[5.5rem] truncate text-[10px] font-semibold text-slate-500">{fmtBound(low)}</span>
+          <span className="max-w-[5.5rem] truncate text-[12px] font-semibold text-slate-500">{fmtBound(low)}</span>
           <div className="relative h-2 flex-1 rounded-full bg-slate-100">
             <div
               className="absolute top-0 h-2 w-2 rounded-full bg-brand-interactive"
               style={{ left: `${pct}%`, transform: "translateX(-50%)" }}
             />
           </div>
-          <span className="max-w-[5.5rem] truncate text-[10px] font-semibold text-slate-500">{fmtBound(high)}</span>
+          <span className="max-w-[5.5rem] truncate text-[12px] font-semibold text-slate-500">{fmtBound(high)}</span>
         </div>
-        <p className="mt-1 text-center text-[10px] font-bold text-slate-600">
+        <p className="mt-1 text-center text-[12px] font-bold text-slate-600">
           52주 범위 {pct >= 50 ? "상단" : "하단"} {Math.round(pct >= 50 ? pct : 100 - pct)}% 구간
         </p>
       </div>
@@ -779,12 +779,12 @@ export function SummaryScoreCard({ data, perBand, industry, onAreaSelect }: {
           aria-expanded={open}
         >
           <div>
-            <p className="text-[10px] font-bold text-slate-500">투자 체크 요약</p>
+            <p className="text-[12px] font-bold text-slate-500">투자 체크 요약</p>
             <p className="text-sm font-black text-slate-900">
               {score}/{total} 통과 · <span style={{ color: scoreColor(ratio) }}>{verdict}</span>
             </p>
           </div>
-          <span className="text-[10px] font-bold text-slate-500">{open ? "접기 ▲" : "상세 ▼"}</span>
+          <span className="text-[12px] font-bold text-slate-500">{open ? "접기 ▲" : "상세 ▼"}</span>
         </button>
 
         <div className="mt-2 grid gap-1.5 sm:grid-cols-5">
@@ -804,13 +804,13 @@ export function SummaryScoreCard({ data, perBand, industry, onAreaSelect }: {
                 aria-label={`${a.area} 체크 ${a.score}/${a.total}, ${target ? `${target.label} 섹션으로 이동` : "상세 확인"}`}
               >
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[10px] font-bold text-slate-600">{a.area}</span>
-                  <span className="tabular-nums text-[10px] font-black text-slate-700">{a.score}/{a.total}</span>
+                  <span className="text-[12px] font-bold text-slate-600">{a.area}</span>
+                  <span className="tabular-nums text-[12px] font-black text-slate-700">{a.score}/{a.total}</span>
                 </div>
                 <div className="mt-0.5 h-1.5 rounded-full bg-slate-100">
                   <div className="h-1.5 rounded-full" style={{ width: `${r * 100}%`, backgroundColor: scoreColor(r) }} />
                 </div>
-                {target ? <span className="mt-1 block text-[9px] font-bold text-slate-500">{target.label} · {target.description}</span> : null}
+                {target ? <span className="mt-1 block text-[12px] font-bold text-slate-500">{target.label} · {target.description}</span> : null}
               </button>
             );
           })}
@@ -820,10 +820,10 @@ export function SummaryScoreCard({ data, perBand, industry, onAreaSelect }: {
           <div className="mt-3 grid gap-3 border-t border-slate-100 pt-3 sm:grid-cols-2 lg:grid-cols-5">
             {areas.map((a) => (
               <div key={a.area}>
-                <p className="mb-1 text-[10px] font-black uppercase tracking-[0.06em] text-slate-500">{a.area}</p>
+                <p className="mb-1 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">{a.area}</p>
                 <ul className="space-y-1">
                   {a.checks.map((c) => (
-                    <li key={c.label} className="flex items-start gap-1.5 text-[10px] font-semibold">
+                    <li key={c.label} className="flex items-start gap-1.5 text-[12px] font-semibold">
                       <span className={c.pass ? "text-emerald-600" : "text-rose-500"}>{c.pass ? "✓" : "✗"}</span>
                       <span className={c.pass ? "text-slate-700" : "text-slate-500"}>{c.label}</span>
                     </li>
@@ -833,7 +833,7 @@ export function SummaryScoreCard({ data, perBand, industry, onAreaSelect }: {
             ))}
           </div>
         ) : null}
-        <p className="mt-2 text-[9px] font-semibold text-slate-500">데이터 없는 항목은 채점에서 제외 · 투자 참고용 단순 체크리스트</p>
+        <p className="mt-2 text-[12px] font-semibold text-slate-500">데이터 없는 항목은 채점에서 제외 · 투자 참고용 단순 체크리스트</p>
       </div>
     </Panel>
   );
@@ -936,7 +936,7 @@ export function renderYfTab(tab: string, data: YfData, industry?: IndustryBench 
 function KV({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
-      <MetricHelp label={label} className="text-[10px] font-medium text-slate-500" />
+      <MetricHelp label={label} className="text-[12px] font-medium text-slate-500" />
       <span className="tabular-nums text-xs font-black text-slate-900">{value}</span>
     </div>
   );

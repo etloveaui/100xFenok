@@ -334,13 +334,13 @@ function GuruDetailPanel({
     >
       <div data-superinvestor-guru-identity className="sup-guru-identity">
         <div className="min-w-0">
-          <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-600">
+          <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[12px] font-black uppercase tracking-wide text-slate-600">
             {summary.group}
           </span>
           {summary.is_stale ? <span className="sup-stale-badge ml-1">지연</span> : null}
           <h2 className="mt-1 truncate text-lg font-black tracking-tight text-slate-950">{summary.name}</h2>
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-slate-700">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] font-bold text-slate-700">
           <span>운용 자산 <b className="tabular-nums text-slate-900">{formatCurrencyCompact(latest?.aum_total ?? summary.aum, "USD")}</b></span>
           <span>보유 종목 <b className="tabular-nums text-slate-900">{formatInteger(latest?.holdings_count ?? summary.holdings_count)}개</b></span>
           <span>기준 분기 <b className="tabular-nums text-slate-900">{latestQuarter}</b></span>
@@ -369,13 +369,13 @@ function GuruDetailPanel({
               href={secBrowseUrl}
               target="_blank"
               rel="noreferrer"
-              className="sup-guru-sec-link mt-2 inline-flex text-[10px] font-black underline underline-offset-2"
+              className="sup-guru-sec-link mt-2 inline-flex text-[12px] font-black underline underline-offset-2"
             >
               SEC 원문 탐색 ↗
             </a>
           ) : null}
           {latest?.accession_number ? (
-            <p className="sup-guru-accession mt-1 break-all text-[9px] font-semibold">
+            <p className="sup-guru-accession mt-1 break-all text-[12px] font-semibold">
               접수번호 {latest.accession_number}
             </p>
           ) : null}
@@ -436,25 +436,25 @@ function GuruDetailPanel({
       {latest?.changes_summary ? (
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-emerald-700">신규매수 ↑</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-emerald-700">신규매수 ↑</p>
             <p className="mt-1 text-sm font-black text-emerald-800">
               {latest.changes_summary.new?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-rose-700">청산매도 ↓</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-rose-700">청산매도 ↓</p>
             <p className="mt-1 text-sm font-black text-rose-800">
               {latest.changes_summary.sold?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-sky-700">비중확대 ↑</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-sky-700">비중확대 ↑</p>
             <p className="mt-1 text-sm font-black text-sky-800">
               {latest.changes_summary.increased?.length ?? 0}
             </p>
           </div>
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">비중축소 ↓</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.08em] text-amber-700">비중축소 ↓</p>
             <p className="mt-1 text-sm font-black text-amber-800">
               {latest.changes_summary.decreased?.length ?? 0}
             </p>
@@ -464,11 +464,11 @@ function GuruDetailPanel({
 
       {/* Quarter label */}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
+        <p className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">
           {latestQuarter}
         </p>
         {prev ? (
-          <p className="text-[10px] font-semibold text-slate-500">
+          <p className="text-[12px] font-semibold text-slate-500">
             이전 분기: {prev.quarter}
           </p>
         ) : null}
@@ -482,7 +482,7 @@ function GuruDetailPanel({
           data-superinvestor-guru-portfolio-state={pvLoading ? "loading" : pvFailed ? "error" : investorView ? "ready" : "empty"}
           className="mt-4 border-t border-slate-200 pt-4"
         >
-          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 포트폴리오</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500">보유 포트폴리오</p>
           <div className="mt-2 space-y-4">
             <Panel
               loading={pvLoading}
@@ -684,7 +684,7 @@ function GuruDetailPanel({
         </div>
       ) : latest ? (
         <div className="mt-4">
-          <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">보유 · 청산 종목</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500">보유 · 청산 종목</p>
           <ResponsiveHoldingsTable holdings={latest.holdings ?? []} changes={latest.changes_summary} returnTo={returnTo} onBeforeNavigate={onBeforeNavigate} />
         </div>
       ) : status === "private" ? (
@@ -744,7 +744,7 @@ function CohortTreemapPanel({
           />
           <PortfolioTreemap rows={treemap} quarterLabel={quarter} onSelectTicker={onSelectTicker} />
           {pvData?.metadata?.disclaimer ? (
-            <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">{pvData.metadata.disclaimer}</p>
+            <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-3)]">{pvData.metadata.disclaimer}</p>
           ) : null}
         </div>
       ) : null}
@@ -903,7 +903,7 @@ function SectorRotationPanel({
                       {row.deltaPp >= 0 ? "▲" : "▼"}{Math.abs(row.deltaPp).toFixed(1)}%p
                     </span>
                   </div>
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] font-bold text-slate-700">
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] font-bold text-slate-700">
                     <span>보유 <b className="tabular-nums text-slate-900">{formatPercent(row.current, { digits: 1 })}</b></span>
                     <span>매수 참여 <b className="tabular-nums text-slate-900">{tradesPartFailed || bought == null ? "—" : `${formatInteger(bought)}건`}</b></span>
                     <span>매도 참여 <b className="tabular-nums text-slate-900">{tradesPartFailed || sold == null ? "—" : `${formatInteger(sold)}건`}</b></span>
@@ -912,14 +912,14 @@ function SectorRotationPanel({
                     {chips.length > 0 ? (
                       chips.map((ticker) => <TickerChip key={ticker} ticker={ticker} variant="inline" href={ROUTES.stock(ticker, returnTo)} onClick={onBeforeNavigate} className="inline-flex min-h-11 items-center" />)
                     ) : (
-                      <span className="text-[10px] font-bold text-slate-700">—</span>
+                      <span className="text-[12px] font-bold text-slate-700">—</span>
                     )}
                   </div>
                 </div>
               );
             })}
           </div>
-          <p className="mt-2 text-[10px] font-semibold text-[var(--c-ink-3)]">
+          <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
             가중치는 거장 코호트 합산 보유 시가총액 기준, 델타는 직전 분기 대비 %p입니다. 매수·매도 참여는 매매 상위권 종목의 공시 참여 투자자 수를 섹터별로 합산한 값(투자자×종목 건수)이며, 집계가 없는 섹터는 —로 표시합니다.
           </p>
         </div>
@@ -1646,13 +1646,13 @@ export default function SuperinvestorsClient({
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   {tradesData.metadata.quarter} 기준
                 </span>
-                <span className="text-[10px] font-bold text-[var(--c-ink-3)]">{delayLabel}</span>
+                <span className="text-[12px] font-bold text-[var(--c-ink-3)]">{delayLabel}</span>
               </div>
               {tradesData.metadata.disclaimer ? (
-                <p className="text-[10px] font-semibold text-[var(--c-ink-3)]">{tradesData.metadata.disclaimer}</p>
+                <p className="text-[12px] font-semibold text-[var(--c-ink-3)]">{tradesData.metadata.disclaimer}</p>
               ) : null}
               {tradesData.metadata.generated_at && fmtDateTimeKo(tradesData.metadata.generated_at) ? (
-                <p className="text-[10px] font-semibold text-[var(--c-ink-3)]">
+                <p className="text-[12px] font-semibold text-[var(--c-ink-3)]">
                   생성 {fmtDateTimeKo(tradesData.metadata.generated_at)}
                 </p>
               ) : null}

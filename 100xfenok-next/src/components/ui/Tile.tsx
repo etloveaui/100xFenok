@@ -32,7 +32,7 @@ export function Tile({ symbol, name, value, change, className = "", onClick }: T
       onClick={onClick}
       className={`rounded-[6px] p-[8px_10px] min-h-[52px] flex flex-col justify-between border transition-colors duration-150 ${heatmapClass(change)} ${onClick ? "cursor-pointer hover:brightness-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1B73D3]" : ""} ${className}`}
     >
-      <span className="font-mono text-[11px] text-[#334155] leading-none">{symbol}{name ? ` · ${name}` : ""}</span>
+      <span className="font-mono text-[12px] text-[#334155] leading-none">{symbol}{name ? ` · ${name}` : ""}</span>
       <span className="tabular-nums text-[16px] font-semibold text-[#0f172a] leading-none">{value}</span>
     </div>
   );

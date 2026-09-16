@@ -47,7 +47,7 @@ export default async function StockAnalyzerPage({ searchParams }: PageProps) {
                   현재 기본 경로는 레거시 HTML iframe입니다. 네이티브 대시보드는 별도 미리보기 경로로 유지해 전환
                   범위를 분리합니다.
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.08em]">
+                <div className="mt-3 flex flex-wrap gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
                   <span
                     className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600"
                     data-stock-analyzer-boundary-chip="legacy-iframe"

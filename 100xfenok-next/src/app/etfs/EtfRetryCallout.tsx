@@ -24,7 +24,7 @@ export default function EtfRetryCallout({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-black text-[var(--c-down)]">{title}</p>
-          <p className="mt-1 text-[11px] font-semibold leading-relaxed text-[var(--c-ink)]">{desc}</p>
+          <p className="mt-1 text-[12px] font-semibold leading-relaxed text-[var(--c-ink)]">{desc}</p>
         </div>
         <button
           type="button"

@@ -975,7 +975,7 @@ export default function WindDownReviewClient() {
           <header>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-black tracking-[0.2em] text-[var(--wd-accent)]">
+                <p className="text-[12px] font-black tracking-[0.2em] text-[var(--wd-accent)]">
                   WIND DOWN · REVIEW
                 </p>
                 <h1 className="mt-1 text-xl font-black tracking-[-0.02em]">
@@ -1040,7 +1040,7 @@ export default function WindDownReviewClient() {
               {status === "ready" && session?.phase === "summary" ? (
                 <div className="flex min-h-[408px] flex-col justify-center text-center">
                   <p className="text-5xl" aria-hidden>{initialCount === 0 ? "🌙" : "✦"}</p>
-                  <p className="mt-4 text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">
+                  <p className="mt-4 text-[12px] font-black tracking-[0.18em] text-[var(--wd-accent)]">
                     {initialCount === 0 ? "NO DUE CARDS" : "QUEUE COMPLETE"}
                   </p>
                   <h2 className="mt-2 text-2xl font-black">
@@ -1066,7 +1066,7 @@ export default function WindDownReviewClient() {
                     <span className="rounded-full border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[var(--wd-accent)]">RECALL</span>
                     <span className="text-xs font-black tabular-nums text-white/50">남은 문장 {session.queue.length}개</span>
                   </div>
-                  <p className="mt-9 text-[11px] font-black tracking-[0.15em] text-[var(--wd-listening)]">한국어를 보고 영어를 떠올려 봐</p>
+                  <p className="mt-9 text-[12px] font-black tracking-[0.15em] text-[var(--wd-listening)]">한국어를 보고 영어를 떠올려 봐</p>
                   <h2 className="mt-3 text-[27px] font-black leading-[1.35] tracking-[-0.035em]">{current.ko}</h2>
                   <WindDownDeviceSpeechPractice
                     key={`recall:${current.id}`}
@@ -1238,7 +1238,7 @@ export default function WindDownReviewClient() {
                             wrong ? "border-[var(--wd-danger)] bg-[var(--wd-surface-raised)]" : "",
                           ].join(" ")}
                         >
-                          <span className="block text-[10px] font-black tracking-[0.1em] text-white/40">{tile.side === "left" ? "CUE" : "PAIR"}</span>
+                          <span className="block text-[12px] font-black tracking-[0.1em] text-white/40">{tile.side === "left" ? "CUE" : "PAIR"}</span>
                           <span className="mt-1 block">{tile.label}</span>
                         </button>
                       );
@@ -1254,7 +1254,7 @@ export default function WindDownReviewClient() {
               {status === "ready" && current && session?.phase === "retry" ? (
                 <div className="flex min-h-[408px] flex-col">
                   <span className="w-fit rounded-full border border-[var(--wd-listening)] bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[var(--wd-listening)]">ONE RETRY</span>
-                  <p className="mt-8 text-[11px] font-black tracking-[0.15em] text-[var(--wd-listening)]">연결한 감각으로 한 번만 다시 입력</p>
+                  <p className="mt-8 text-[12px] font-black tracking-[0.15em] text-[var(--wd-listening)]">연결한 감각으로 한 번만 다시 입력</p>
                   <h2 className="mt-3 text-[27px] font-black leading-[1.35] tracking-[-0.035em]">{current.ko}</h2>
                   <WindDownDeviceSpeechPractice
                     key={`retry:${current.id}`}
@@ -1398,7 +1398,7 @@ export default function WindDownReviewClient() {
             {notice ? <p aria-live="polite" className="mt-4 text-center text-sm font-bold text-white/65">{notice}</p> : null}
           </main>
 
-          <p className="pb-1 text-center text-[11px] font-bold text-white/40">기기 받아쓰기는 선택 사항이며, 제출 전까지 복습 기록을 바꾸지 않아.</p>
+          <p className="pb-1 text-center text-[12px] font-bold text-white/40">기기 받아쓰기는 선택 사항이며, 제출 전까지 복습 기록을 바꾸지 않아.</p>
         </div>
       </div>
     </div>

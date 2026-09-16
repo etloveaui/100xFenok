@@ -167,7 +167,7 @@ export function FenokSignalRadar({ data, axes, size = "sm", ariaLabel }: FenokSi
   if (!hasAnyScore || visibleAxes.length === 0) {
     return (
       <div
-        className={`grid ${SIZE_CLASS[size]} place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[9px] font-bold text-[var(--c-ink-3)]`}
+        className={`grid ${SIZE_CLASS[size]} place-items-center rounded-lg border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[12px] font-bold text-[var(--c-ink-3)]`}
         title="Fenok 신호 데이터 없음"
       >
         신호

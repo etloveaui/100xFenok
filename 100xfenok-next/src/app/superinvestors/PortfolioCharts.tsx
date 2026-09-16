@@ -211,7 +211,7 @@ export function PortfolioTreemap({ rows, quarterLabel, onSelectTicker }: Treemap
       </div>
       {/* Legend strip */}
       <div className="mt-2">
-        <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-500">
+        <div className="flex items-center justify-center gap-2 text-[12px] font-bold text-slate-500">
           <span>손실</span>
           <span
             className="inline-block h-3 w-32 rounded"
@@ -221,7 +221,7 @@ export function PortfolioTreemap({ rows, quarterLabel, onSelectTicker }: Treemap
           />
           <span>수익</span>
         </div>
-        <p className="mt-1 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
+        <p className="mt-1 text-center text-[12px] font-semibold text-[var(--c-ink-3)]">
           수익률 = 분기말 종가 → 현재 (배당 조정) · {quarterLabel} 기준
         </p>
       </div>
@@ -328,9 +328,9 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
   return (
     <div>
       <div className="flex items-baseline justify-between">
-        <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">성과 vs SPY</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.1em] text-slate-500">성과 vs SPY</p>
         {alpha != null ? (
-          <p className={`text-[11px] font-bold ${alpha >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
+          <p className={`text-[12px] font-bold ${alpha >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]"}`}>
             {alpha >= 0 ? "SPY 대비 앞섬" : "SPY 대비 뒤처짐"} {Math.abs(alpha).toFixed(1)}p
           </p>
         ) : null}
@@ -343,7 +343,7 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
           aria-label={`${investorName} 포트폴리오 성과와 SPY 비교 차트`}
         />
       </div>
-      <p className="mt-1 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
+      <p className="mt-1 text-center text-[12px] font-semibold text-[var(--c-ink-3)]">
         분기 공시 롱 포지션을 분기말 매수·리밸런싱 없이 보유로 가정한 추정 (지수 100 = 첫 분기말, 배당 조정)
       </p>
     </div>
@@ -698,7 +698,7 @@ export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
           aria-label="투자자별 연수익률 대비 연변동성 산점도"
         />
       </div>
-      <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
+      <p className="mt-2 text-center text-[12px] font-semibold text-[var(--c-ink-3)]">
         좌상단(고수익·저변동성)에 가까울수록 리스크 조정 수익 우수 · 13F 롱 포트폴리오 기준
         {samePeriodWindow ? ` · ${formatQuarterDate(samePeriodWindow.startDate)}~${formatQuarterDate(samePeriodWindow.endDate)} · ${samePeriodWindow.investorCount}명` : ""}
       </p>
@@ -881,7 +881,7 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
         >
           상위 10
         </button>
-        <span className="text-[10px] font-semibold text-[var(--c-ink-3)]">
+        <span className="text-[12px] font-semibold text-[var(--c-ink-3)]">
           {selected.size}/{MAX_OVERLAY_LINES}명 · {samePeriodWindow ? `${formatQuarterDate(samePeriodWindow.startDate)} 기준 100 · ${formatQuarterDate(samePeriodWindow.endDate)}까지` : "동일기간 확인 중"}
         </span>
       </div>
@@ -923,7 +923,7 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
           aria-label="동일기간 기준 거장 누적 수익 오버레이"
         />
       </div>
-      <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
+      <p className="mt-2 text-center text-[12px] font-semibold text-[var(--c-ink-3)]">
         {samePeriodWindow ? `${formatQuarterDate(samePeriodWindow.startDate)} 동일 기준 · ${formatQuarterDate(samePeriodWindow.endDate)}까지` : "동일기간 확인 중"} · {fullSeries.length}명 중 선택 {selected.size}명 · SPY는 두꺼운 회색 선
       </p>
     </div>
@@ -1052,7 +1052,7 @@ export function FactorExposureRadar({ data, investorId }: FactorExposureRadarPro
         >
           FF 파생 팩터 틸트
         </span>
-        <span className="text-[10px] font-semibold text-[var(--c-ink-3)]">
+        <span className="text-[12px] font-semibold text-[var(--c-ink-3)]">
           {confidenceKo(selected.confidence)} · 커버리지 {formatPercent(selected.coverageRatio, { digits: 0 })} · 기준일 {formatAsOf(selected.asOf ?? data.coverage?.factor_aligned_as_of) ?? "미정"}
         </span>
       </div>
@@ -1097,10 +1097,10 @@ export function FactorExposureRadar({ data, investorId }: FactorExposureRadarPro
             const beta = selected[axis.betaKey];
             return (
               <div key={axis.scoreKey} className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
-                <span className="text-[11px] font-black uppercase tracking-[0.08em] text-slate-600">{axis.label}</span>
-                <span className="text-[11px] font-black tabular-nums text-slate-900">
+                <span className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-600">{axis.label}</span>
+                <span className="text-[12px] font-black tabular-nums text-slate-900">
                   {formatInteger(score)}
-                  <span className="ml-1 text-[10px] font-semibold text-[var(--c-ink-3)]">
+                  <span className="ml-1 text-[12px] font-semibold text-[var(--c-ink-3)]">
                     β {formatDecimal(beta, { digits: 2 })}
                   </span>
                 </span>
@@ -1110,7 +1110,7 @@ export function FactorExposureRadar({ data, investorId }: FactorExposureRadarPro
         </div>
       </div>
 
-      <p className="mt-2 text-center text-[10px] font-semibold text-[var(--c-ink-3)]">
+      <p className="mt-2 text-center text-[12px] font-semibold text-[var(--c-ink-3)]">
         Fama-French 5-factor + momentum 월간 수익률 기반 파생 틸트 · raw FF 데이터 비공개 · 공개 JSON은 derived score만 포함
       </p>
     </div>

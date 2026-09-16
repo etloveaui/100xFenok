@@ -610,7 +610,7 @@ export default function ChangesClient() {
           right={<span className="text-[12px] text-slate-500">초록 = 상향·신규 · 빨강 = 하향·이탈 · 굵게 = 지금 값</span>}
         />
         <div
-          className="hidden grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)_100px] items-center gap-2 border-b border-slate-200 px-4 text-[11px] font-semibold text-slate-500 md:grid md:h-8"
+          className="hidden grid-cols-[180px_minmax(0,1fr)_minmax(0,1fr)_100px] items-center gap-2 border-b border-slate-200 px-4 text-[12px] font-semibold text-slate-500 md:grid md:h-8"
           aria-hidden="true"
         >
           <span>항목</span><span>이전</span><span>지금</span><span className="text-right">변화</span>
@@ -677,7 +677,7 @@ export default function ChangesClient() {
           keepContentOnStale
         >
           <div className="flex flex-col gap-1 px-4 py-3.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">변화 {rows.length}건</span>
+            <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">변화 {rows.length}건</span>
             <span className="text-[13px] text-slate-700">
               상향·신규 {upCount} · 하향·이탈 {downCount} · 중립 {flatCount}
             </span>
@@ -709,7 +709,7 @@ export default function ChangesClient() {
           keepContentOnStale
         >
           <div className="flex flex-col gap-1 px-4 py-3.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">먼저 볼 것</span>
+            <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">먼저 볼 것</span>
             <span className="truncate text-[13px] text-slate-700">
               {first ? `${first.title} ${first.kind} — ${first.after} (${first.delta})` : "—"}
             </span>
@@ -727,7 +727,7 @@ export default function ChangesClient() {
         </Panel>
         <Panel loading={!settled}>
           <div className="flex flex-col gap-1 px-4 py-3.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-500">다음 diff</span>
+            <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">다음 diff</span>
             <span className="text-[13px] text-slate-700">{nextDiffLabel}</span>
           </div>
           <EvidenceRail

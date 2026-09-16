@@ -337,7 +337,7 @@ function EvidenceList({
           className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600"
         >
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-[11px] font-semibold text-slate-500">{evidence.id}</span>
+            <span className="font-mono text-[12px] font-semibold text-slate-500">{evidence.id}</span>
             <span className="rounded-full bg-white px-2 py-0.5 font-semibold text-slate-500">{sectionLabel(form, evidence.section)}</span>
             <a
               href={evidenceUrl(evidence)}

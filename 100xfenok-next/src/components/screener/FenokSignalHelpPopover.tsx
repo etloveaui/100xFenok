@@ -114,12 +114,12 @@ export default function FenokSignalHelpPopover({
         >
           {titleLabel}
         </strong>
-        <span className="text-[10px] font-bold text-[var(--c-ink-3)]">
+        <span className="text-[12px] font-bold text-[var(--c-ink-3)]">
           {scoreValue ?? "—"}
           {headerDirection ? ` · ${headerDirection}` : null}
         </span>
       </div>
-      <p className="mb-2 text-[11px] font-semibold leading-snug text-[var(--c-ink-2)]">
+      <p className="mb-2 text-[12px] font-semibold leading-snug text-[var(--c-ink-2)]">
         {interpretation}
       </p>
       <div className="mb-2 space-y-1">
@@ -132,7 +132,7 @@ export default function FenokSignalHelpPopover({
             <div
               key={band.label}
               className={cx(
-                "flex items-center justify-between rounded px-1.5 py-1 text-[10px] font-bold",
+                "flex items-center justify-between rounded px-1.5 py-1 text-[12px] font-bold",
                 toneClass(band.tone),
                 active && "ring-1 ring-[var(--c-line)]",
               )}

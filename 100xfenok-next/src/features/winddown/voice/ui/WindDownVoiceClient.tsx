@@ -821,7 +821,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-lg flex-col px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-[max(env(safe-area-inset-top),18px)]">
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-black tracking-[0.18em] text-[var(--wd-accent)]">
+            <p className="text-[12px] font-black tracking-[0.18em] text-[var(--wd-accent)]">
               WIND DOWN · {activity === "roleplay" ? "ROLEPLAY" : "LIVE TALK"}
             </p>
             <h1 className="mt-1 text-[24px] font-black tracking-tight">{heading}</h1>
@@ -911,7 +911,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
           ) : null}
           {activity === "roleplay" ? (
             <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-5 shadow-2xl">
-              <p className="text-[11px] font-black tracking-[.15em] text-[var(--wd-accent)]">SCENE</p>
+              <p className="text-[12px] font-black tracking-[.15em] text-[var(--wd-accent)]">SCENE</p>
               <h2 className="mt-2 text-xl font-black">{activeTitle}</h2>
               <p className="mt-2 text-sm font-semibold leading-6 text-[var(--wd-muted)]">
                 {roleplay?.scenario.scene}
@@ -976,7 +976,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                     <div key={goal.id} className={`flex min-h-[44px] items-center gap-3 rounded-2xl border px-4 text-sm font-bold ${evidence ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-text)]" : "border-[var(--wd-border)] bg-[var(--wd-bg)] text-[var(--wd-muted)]"}`}>
                       <span aria-hidden>{evidence ? "✓" : "○"}</span>
                       <span className="min-w-0 flex-1">{goal.label}</span>
-                      {evidence ? <span className="text-[11px] tabular-nums text-[var(--wd-muted)]">turn {evidence.turnSeq}</span> : null}
+                      {evidence ? <span className="text-[12px] tabular-nums text-[var(--wd-muted)]">turn {evidence.turnSeq}</span> : null}
                     </div>
                   );
                 })}
@@ -984,7 +984,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
             </section>
           ) : (
             <section className="rounded-[32px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6 shadow-2xl">
-              <p className="text-[11px] font-black tracking-[.16em] text-[var(--wd-accent)]">OPEN CONVERSATION</p>
+              <p className="text-[12px] font-black tracking-[.16em] text-[var(--wd-accent)]">OPEN CONVERSATION</p>
               <h2 className="mt-3 text-[28px] font-black leading-tight">{activeTitle}</h2>
               <p className="mt-3 max-w-sm text-sm font-semibold leading-6 text-[var(--wd-muted)]">
                 {descriptor.activity === "live-talk" && WIND_DOWN_LIVE_TALK_TOPICS.find((topic) => topic.id === descriptor.topicId)?.scene}
@@ -1007,21 +1007,21 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
               ) : null}
               <div className="mt-7 grid grid-cols-2 gap-2 text-center">
                 <div className="min-w-0 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-2 py-3">
-                  <p className="text-[10px] font-black tracking-[.1em] text-[var(--wd-accent)]">대화</p>
+                  <p className="text-[12px] font-black tracking-[.1em] text-[var(--wd-accent)]">대화</p>
                   <p className="mt-1 text-lg font-black tabular-nums">{formatDuration(liveTalkSummary.durationSeconds)}</p>
                 </div>
                 <div className="min-w-0 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-2 py-3">
-                  <p className="text-[10px] font-black tracking-[.1em] text-[var(--wd-accent)]">내 말</p>
+                  <p className="text-[12px] font-black tracking-[.1em] text-[var(--wd-accent)]">내 말</p>
                   <p className="mt-1 text-lg font-black tabular-nums">{liveTalkSummary.cleanLearnerTurns}</p>
                 </div>
                 <div className="min-w-0 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-2 py-3">
-                  <p className="text-[10px] font-black tracking-[.1em] text-[var(--wd-accent)]">끊김</p>
+                  <p className="text-[12px] font-black tracking-[.1em] text-[var(--wd-accent)]">끊김</p>
                   <p className="mt-1 text-lg font-black tabular-nums">{liveTalkSummary.interruptedTurnCount}</p>
                 </div>
                 <div className="min-w-0 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-2 py-3">
-                  <p className="text-[10px] font-black tracking-[.1em] text-[var(--wd-accent)]">응답</p>
+                  <p className="text-[12px] font-black tracking-[.1em] text-[var(--wd-accent)]">응답</p>
                   <p className="mt-1 text-lg font-black tabular-nums">{formatLatency(live.metrics.lastResponseLatencyMs)}</p>
-                  <p className="mt-0.5 text-[10px] font-semibold text-[var(--wd-muted)]">전사→첫 오디오 · {live.metrics.responseLatencySamplesMs.length}회</p>
+                  <p className="mt-0.5 text-[12px] font-semibold text-[var(--wd-muted)]">전사→첫 오디오 · {live.metrics.responseLatencySamplesMs.length}회</p>
                 </div>
               </div>
             </section>
@@ -1074,14 +1074,14 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                     <div key={goal.goalId} className="rounded-xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 py-2 text-xs font-semibold text-[var(--wd-muted)]">
                       <p>{goal.completed ? "✓" : "○"} {goal.label}</p>
                       {goal.evidence ? (
-                        <p className="mt-1 text-[11px] text-[var(--wd-accent)]">
+                        <p className="mt-1 text-[12px] text-[var(--wd-accent)]">
                           “{goal.evidence.matchedPhrase}” · turn-{goal.evidence.turnSeq}
                           {reportState.frozen.conversationIds.length > 1
                             ? ` · 이어진 대화 ${reportState.frozen.conversationIds.indexOf(goal.evidence.conversationId) + 1}`
                             : ""}
                         </p>
                       ) : (
-                        <p className="mt-1 text-[11px]">확인된 내 말 없음</p>
+                        <p className="mt-1 text-[12px]">확인된 내 말 없음</p>
                       )}
                     </div>
                   ))}
@@ -1105,7 +1105,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                       data-turn-citation={`${turn.conversationId}:${turn.turnSeq}`}
                       className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-3"
                     >
-                      <p className="text-[10px] font-black tracking-[.12em] text-[var(--wd-accent)]">
+                      <p className="text-[12px] font-black tracking-[.12em] text-[var(--wd-accent)]">
                         turn-{turn.turnSeq}
                         {reportState.frozen.conversationIds.length > 1
                           ? ` · 이어진 대화 ${reportState.frozen.conversationIds.indexOf(turn.conversationId) + 1}`

@@ -43,7 +43,7 @@ export default function MetricHelp({
     )
     : cx(
       "inline-flex items-center justify-center rounded-full border border-[var(--c-line)] bg-white font-black leading-none text-[var(--c-ink-2)] shadow-sm transition hover:border-brand-interactive hover:text-brand-interactive focus:outline-none focus:ring-2 focus:ring-brand-interactive/40",
-      buttonSize === "sm" ? "size-3 text-[9px]" : "size-4 text-[10px]",
+      buttonSize === "sm" ? "size-3 text-[12px]" : "size-4 text-[12px]",
     );
 
   return (
@@ -63,7 +63,7 @@ export default function MetricHelp({
           id={tooltipId}
           role="tooltip"
           className={cx(
-            "pointer-events-none absolute top-5 z-30 w-56 rounded-md border border-slate-200 bg-white px-2.5 py-2 text-left text-[11px] font-semibold whitespace-normal leading-4 text-slate-600 opacity-0 shadow-lg transition group-hover/metric-help:opacity-100 group-focus-within/metric-help:opacity-100",
+            "pointer-events-none absolute top-5 z-30 w-56 rounded-md border border-slate-200 bg-white px-2.5 py-2 text-left text-[12px] font-semibold whitespace-normal leading-4 text-slate-600 opacity-0 shadow-lg transition group-hover/metric-help:opacity-100 group-focus-within/metric-help:opacity-100",
             align === "right" ? "right-0" : "left-0",
           )}
         >

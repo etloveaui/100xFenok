@@ -72,12 +72,12 @@ export default async function IBPage({
       <section className="border-b border-slate-200 bg-white px-3 py-3 shadow-sm" data-ib-boundary="true">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-700">IB Helper</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.12em] text-amber-700">IB Helper</p>
             <h1 className="text-base font-black text-slate-950 sm:text-lg">IB Helper (레거시)</h1>
             <p className="mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600 sm:text-sm">
               무한매수 도우미입니다. 기본은 V1 화면이고, V2는 미리보기로 확인할 수 있습니다.
             </p>
-            <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-black uppercase tracking-[0.08em]">
+            <div className="mt-2 flex flex-wrap gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
               <span
                 className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600"
                 data-ib-boundary-chip="legacy-v1"

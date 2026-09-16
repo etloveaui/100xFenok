@@ -104,7 +104,7 @@ export function WindDownLumi({
         ) : null}
       </div>
       <figcaption className={compact ? "min-w-0" : ""}>
-        <span className="block text-[10px] font-black tracking-[0.16em] text-[var(--wd-accent)]">
+        <span className="block text-[12px] font-black tracking-[0.16em] text-[var(--wd-accent)]">
           LUMI
         </span>
         <span className="mt-1 block text-sm font-black text-[var(--wd-text)]">

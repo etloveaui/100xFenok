@@ -257,8 +257,8 @@ function BenchmarkMatrixPanel({ model }: MarketStructureSlotProps) {
             aria-pressed={p.id === period}
             className={
               p.id === period
-                ? "rounded-md bg-[var(--c-ink)] px-2 py-1 text-[11px] font-bold text-[var(--c-panel)]"
-                : "rounded-md bg-[var(--c-surface-2)] px-2 py-1 text-[11px] font-bold text-[var(--c-ink-3)] hover:bg-[var(--c-line-2)]"
+                ? "rounded-md bg-[var(--c-ink)] px-2 py-1 text-[12px] font-bold text-[var(--c-panel)]"
+                : "rounded-md bg-[var(--c-surface-2)] px-2 py-1 text-[12px] font-bold text-[var(--c-ink-3)] hover:bg-[var(--c-line-2)]"
             }
           >
             {p.label}
@@ -268,7 +268,7 @@ function BenchmarkMatrixPanel({ model }: MarketStructureSlotProps) {
       <div className="min-w-0 overflow-x-auto">
         <table className="w-full min-w-[390px] border-collapse text-[12px]">
           <thead>
-            <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
+            <tr className="border-b border-[var(--c-line)] text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
               <th scope="col" className="py-2 pr-2 text-left">지수</th>
               {BENCH_METRICS.map((m) => (
                 <th key={m.key} scope="col" className="px-2 py-2 text-right">{m.label}</th>
@@ -292,7 +292,7 @@ function BenchmarkMatrixPanel({ model }: MarketStructureSlotProps) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-[11px] font-semibold text-[var(--c-ink-2)]">
+      <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-2)]">
         기간별 변화율 · 가격 = EPS × 멀티플 분해 (멀티플 확장/축소 vs 이익)
       </p>
     </div>
@@ -305,7 +305,7 @@ function CreditRatingsPanel({ model }: MarketStructureSlotProps) {
     <div className="scroll-hint-x -mx-1 px-1" role="region" tabIndex={0} aria-label="신용등급 스프레드 표 가로 스크롤">
       <table className="w-full min-w-[520px] border-collapse text-[12px]">
         <thead>
-          <tr className="border-b border-[var(--c-line)] text-[10px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
+          <tr className="border-b border-[var(--c-line)] text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-2)]">
             <th scope="col" className="w-[128px] py-2 pr-2 text-left">구간</th>
             <th scope="col" className="w-[72px] px-2 py-2 text-right">종목</th>
             <th scope="col" className="w-[86px] px-2 py-2 text-right">최고</th>
@@ -327,7 +327,7 @@ function CreditRatingsPanel({ model }: MarketStructureSlotProps) {
           ))}
         </tbody>
       </table>
-      <p className="mt-2 text-[11px] font-semibold text-[var(--c-ink-2)]">
+      <p className="mt-2 text-[12px] font-semibold text-[var(--c-ink-2)]">
         {model.creditRatings.sourceDate ? `Damodaran 신용 스프레드 · ${model.creditRatings.sourceDate}` : "Damodaran 신용 스프레드"}
       </p>
     </div>
@@ -348,7 +348,7 @@ function Mag7Panel({ model }: MarketStructureSlotProps) {
   );
   return (
     <div className="min-w-0">
-      <div className="mb-2 flex flex-wrap gap-3 text-[11px] font-semibold text-[var(--c-ink-3)]">
+      <div className="mb-2 flex flex-wrap gap-3 text-[12px] font-semibold text-[var(--c-ink-3)]">
         <span>총 비중 <b className="text-[var(--c-ink)]">{mag7.totalWeight === null ? "—" : `${mag7.totalWeight.toFixed(1)}%`}</b></span>
         {mag7.totalMarketCap !== null ? (
           <span>총 시총 <b className="text-[var(--c-ink)]">{new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(mag7.totalMarketCap)}</b></span>
@@ -398,13 +398,13 @@ function MembershipPanel({ model }: MarketStructureSlotProps) {
       {recent.slice(0, 6).map((ev, index) => (
         <div key={`${ev.date}-${ev.index}-${index}`} className="min-w-0 rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{(ev.index ?? "—").toUpperCase()}</span>
-            <span className="text-[10px] font-bold text-[var(--c-ink-2)]">{ev.date ?? "—"} · {ev.previousCount ?? "—"}→{ev.currentCount ?? "—"}</span>
+            <span className="text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{(ev.index ?? "—").toUpperCase()}</span>
+            <span className="text-[12px] font-bold text-[var(--c-ink-2)]">{ev.date ?? "—"} · {ev.previousCount ?? "—"}→{ev.currentCount ?? "—"}</span>
           </div>
-          <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5">
+          <p className="mt-1 min-w-0 break-words text-[12px] font-semibold leading-5">
             <span className="text-[var(--c-up)]">＋{ev.added.length}</span> {ev.added.slice(0, 8).join(" · ")}{ev.added.length > 8 ? " …" : ""}
           </p>
-          <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-5">
+          <p className="mt-1 min-w-0 break-words text-[12px] font-semibold leading-5">
             <span className="text-[var(--c-down)]">－{ev.removed.length}</span> {ev.removed.slice(0, 8).join(" · ")}{ev.removed.length > 8 ? " …" : ""}
           </p>
         </div>

@@ -281,7 +281,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
 
       <Panel>
         <PanelHeader eyebrow="Price Action · 가격 · 거래량" title="가격 · 거래량" />
-        <p className="px-4 pt-2 text-[11px] text-slate-500" aria-label="차트 범례">상승 마감 · 하락 마감 · 거래량 — 거래량은 강도만, 방향은 캔들이 말합니다</p>
+        <p className="px-4 pt-2 text-[12px] text-slate-500" aria-label="차트 범례">상승 마감 · 하락 마감 · 거래량 — 거래량은 강도만, 방향은 캔들이 말합니다</p>
         <div className="px-4 py-2">
           <CpPriceChartCore
             {...props}
@@ -305,11 +305,11 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel>
-          <PanelHeader eyebrow={formatDateLabel(latest?.time)} title="최근 거래일 상세" right={<span className="text-[11px] text-slate-500">정규장</span>} />
+          <PanelHeader eyebrow={formatDateLabel(latest?.time)} title="최근 거래일 상세" right={<span className="text-[12px] text-slate-500">정규장</span>} />
           <div className="overflow-x-auto px-4 py-2">
             <table className="w-full min-w-[560px] text-xs">
               <thead>
-                <tr className="border-b border-slate-200 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-500">
+                <tr className="border-b border-slate-200 text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">
                   <th className="px-2 py-2 text-left">구분</th>
                   <th className="px-2 py-2 text-right">시가</th>
                   <th className="px-2 py-2 text-right">고가</th>
@@ -338,7 +338,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
           <div className="overflow-x-auto px-4 py-2">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-slate-200 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-500">
+                <tr className="border-b border-slate-200 text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">
                   <th className="px-2 py-2 text-left">월</th>
                   <th className="px-2 py-2 text-right">종가</th>
                   <th className="px-2 py-2 text-right">전월비</th>
@@ -398,12 +398,12 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
           ) : null}
 
           {skippedBlocks.length > 0 ? (
-            <p className="px-1 py-1 text-[11px] text-slate-500">소스 미전달로 생략: {skippedBlocks.join(", ")}</p>
+            <p className="px-1 py-1 text-[12px] text-slate-500">소스 미전달로 생략: {skippedBlocks.join(", ")}</p>
           ) : null}
         </div>
       ) : null}
 
-      <p className="px-1 py-2 text-[11px] leading-4 text-slate-500">
+      <p className="px-1 py-2 text-[12px] leading-4 text-slate-500">
         {footnote ?? `표시가 ${formatDateLabel(latest?.time)} 기준 · ${symbol ?? title} ${range} 가격 데이터`}
       </p>
     </section>

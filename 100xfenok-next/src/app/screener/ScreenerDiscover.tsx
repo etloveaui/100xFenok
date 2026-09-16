@@ -161,7 +161,7 @@ function ActionButtons({
         aria-pressed={selected}
         title={selected ? "비교에서 제외" : full ? `비교는 최대 ${COMPARE_LIMIT}개` : "비교에 추가"}
         className={cx(
-          "inline-flex h-9 items-center rounded-md border px-2 text-[11px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11",
+          "inline-flex h-9 items-center rounded-md border px-2 text-[12px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11",
           selected
             ? "border-[var(--c-brand)] bg-[var(--c-brand)] text-white"
             : "border-[var(--c-line)] bg-[var(--c-panel)] text-[var(--c-ink-2)] hover:border-[var(--c-brand)] hover:text-[var(--c-brand)]",
@@ -173,7 +173,7 @@ function ActionButtons({
       <TransitionLink
         href={ROUTES.portfolioTicker(stock.ticker)}
         title="관심 종목에 추가"
-        className="inline-flex h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-2 text-[11px] font-semibold text-[var(--c-ink-2)] transition hover:border-[var(--c-brand)] hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11"
+        className="inline-flex h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-2 text-[12px] font-semibold text-[var(--c-ink-2)] transition hover:border-[var(--c-brand)] hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11"
       >
         관심
       </TransitionLink>
@@ -181,7 +181,7 @@ function ActionButtons({
         href={ROUTES.stock(stock.ticker, returnTo)}
         onClick={onBeforeNavigate}
         title="종목 상세로 열기"
-        className="inline-flex h-9 items-center rounded-md bg-[var(--c-brand)] px-2 text-[11px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11"
+        className="inline-flex h-9 items-center rounded-md bg-[var(--c-brand)] px-2 text-[12px] font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive max-md:min-h-11"
       >
         열기
       </TransitionLink>
@@ -301,7 +301,7 @@ export default function ScreenerDiscover({
                     >
                       {item.index}
                     </span>
-                    <span className={cx("ml-auto text-[11px] font-bold tabular-nums", active ? "text-[var(--c-brand)]" : "text-[var(--c-ink-3)]")}>
+                    <span className={cx("ml-auto text-[12px] font-bold tabular-nums", active ? "text-[var(--c-brand)]" : "text-[var(--c-ink-3)]")}>
                       {stats ? fmtCount(stats.count) : "—"}
                     </span>
                   </span>
@@ -318,8 +318,8 @@ export default function ScreenerDiscover({
                       ))}
                     </span>
                   ) : null}
-                  <span className="text-[10.5px] text-[var(--c-ink-3)]">마지막 갱신 {asOfLabel}{failed ? " · 이전 값" : ""}</span>
-                  <span className="text-[10.5px] leading-snug text-[var(--c-ink-3)]">{item.basis}</span>
+                  <span className="text-[12px] text-[var(--c-ink-3)]">마지막 갱신 {asOfLabel}{failed ? " · 이전 값" : ""}</span>
+                  <span className="text-[12px] leading-snug text-[var(--c-ink-3)]">{item.basis}</span>
                 </button>
               );
             })}
@@ -337,7 +337,7 @@ export default function ScreenerDiscover({
                 <button
                   type="button"
                   onClick={() => onShowConditions(card)}
-                  className="inline-flex min-h-11 items-center gap-1 text-[11px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+                  className="inline-flex min-h-11 items-center gap-1 text-[12px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
                   data-discover-show-conditions="true"
                 >
                   조건 보기
@@ -350,7 +350,7 @@ export default function ScreenerDiscover({
             <div className="flex flex-wrap items-center gap-1.5 border-b border-[var(--c-line-2)] px-4 py-2.5" aria-label="적용된 조건">
               {card.chips.map((chip, index) => (
                 <span key={chip} className="flex items-center gap-1.5">
-                  {index > 0 ? <span className="text-[10px] font-semibold text-[var(--c-brand)]">AND</span> : null}
+                  {index > 0 ? <span className="text-[12px] font-semibold text-[var(--c-brand)]">AND</span> : null}
                   <span className="inline-flex h-[26px] items-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-2.5 text-[12px] text-[var(--c-ink-2)]">
                     {chip}
                   </span>
@@ -387,12 +387,12 @@ export default function ScreenerDiscover({
                     )}
                   >
                     <span className="flex min-w-0 items-center gap-2.5">
-                      <span className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md bg-[var(--c-surface-2)] text-[11px] font-bold text-[var(--c-ink-2)]">
+                      <span className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md bg-[var(--c-surface-2)] text-[12px] font-bold text-[var(--c-ink-2)]">
                         {index + 1}
                       </span>
                       <span className="min-w-[116px]">
                         <span className="block font-mono text-[13px] font-bold text-[var(--c-ink)]">{stock.ticker}</span>
-                        <span className="block truncate text-[11px] text-[var(--c-ink-3)]">{stock.name}</span>
+                        <span className="block truncate text-[12px] text-[var(--c-ink-3)]">{stock.name}</span>
                       </span>
                       <span className="hidden min-w-11 flex-col items-end gap-px sm:flex">
                         <span className="text-[12px] font-semibold tabular-nums text-[var(--c-ink)]">{fmtPrice(stock.price)}</span>
@@ -440,33 +440,33 @@ export default function ScreenerDiscover({
             <Panel>
               <PanelHeader
                 title={selected.ticker}
-                right={<span className="text-[11px] text-[var(--c-ink-3)]">선택된 카드</span>}
+                right={<span className="text-[12px] text-[var(--c-ink-3)]">선택된 카드</span>}
               />
               <div className="px-4 pt-3">
                 <span className="text-[22px] font-bold tabular-nums text-[var(--c-ink)]">{fmtPrice(selected.price)}</span>
                 <MomentumSpark stock={selected} />
               </div>
               <div className="mt-3 border-t border-[var(--c-line-2)] px-4 py-3">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.04em] text-[var(--c-ink-3)]">Fenok Edge 드라이버</p>
+                <p className="mb-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[var(--c-ink-3)]">Fenok Edge 드라이버</p>
                 <div className="mb-2 flex items-end gap-4">
                   <span>
                     <span className="block text-[18px] font-bold tabular-nums text-[var(--c-ink)]">{fmtScore(selected.fenokShortTermScore)}</span>
-                    <span className="block text-[10.5px] text-[var(--c-ink-3)]">단기</span>
+                    <span className="block text-[12px] text-[var(--c-ink-3)]">단기</span>
                   </span>
                   <span>
                     <span className="block text-[18px] font-bold tabular-nums text-[var(--c-ink)]">{fmtScore(selected.fenokLongTermScore)}</span>
-                    <span className="block text-[10.5px] text-[var(--c-ink-3)]">장기</span>
+                    <span className="block text-[12px] text-[var(--c-ink-3)]">장기</span>
                   </span>
                 </div>
                 <p className="text-[11.5px] leading-snug text-[var(--c-ink-2)]">{card.why(selected)}</p>
               </div>
               <div className="border-t border-[var(--c-line-2)] px-4 py-3">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.04em] text-[var(--c-ink-3)]">13F 보유 최신</p>
+                <p className="mb-2 text-[12px] font-bold uppercase tracking-[0.04em] text-[var(--c-ink-3)]">13F 보유 최신</p>
                 <p className="text-[12px] font-semibold tabular-nums text-[var(--c-ink)]">
                   {finiteNumber(selectedHeldCount) && selectedHeldCount > 0 ? "보유" : "13F 근거 연결"} {finiteNumber(selectedHeldCount) ? selectedHeldCount.toLocaleString("ko-KR") : "—"}곳
                 </p>
                 {selectedChange ? (
-                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[10.5px] leading-snug text-[var(--c-ink-3)]">
+                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[12px] leading-snug text-[var(--c-ink-3)]">
                     <span>신규 {selectedChange.new_count.toLocaleString("ko-KR")}곳</span>
                     <span>비중확대 {selectedChange.increased_count.toLocaleString("ko-KR")}곳</span>
                     <span>비중축소 {selectedChange.decreased_count.toLocaleString("ko-KR")}곳</span>
@@ -475,10 +475,10 @@ export default function ScreenerDiscover({
                     <span>비교 가능 {selectedChange.comparable_count.toLocaleString("ko-KR")}명</span>
                   </div>
                 ) : (
-                  <p className="mt-1 text-[10.5px] leading-snug text-[var(--c-ink-3)]">분기 변화 집계 미제공 — 보유 수는 공개 13F 집계 기준</p>
+                  <p className="mt-1 text-[12px] leading-snug text-[var(--c-ink-3)]">분기 변화 집계 미제공 — 보유 수는 공개 13F 집계 기준</p>
                 )}
                 {selectedChange ? (
-                  <p className="mt-2 text-[10.5px] leading-snug text-[var(--c-ink-3)]">
+                  <p className="mt-2 text-[12px] leading-snug text-[var(--c-ink-3)]">
                     {selectedChange.current_quarter} ↔ {selectedChange.previous_quarter} 공개 보유 목록 비교 · 신규·청산은 직전 분기 공개 보유 목록과 비교한 결과입니다. 공시 반영은 분기말 이후 최대 45일 지연될 수 있습니다.
                   </p>
                 ) : null}
@@ -510,7 +510,7 @@ export default function ScreenerDiscover({
               <button
                 type="button"
                 onClick={onClearCompare}
-                className="inline-flex min-h-11 items-center text-[11px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
+                className="inline-flex min-h-11 items-center text-[12px] font-semibold text-[var(--c-ink-3)] transition hover:text-[var(--c-brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-interactive"
               >
                 선택 해제
               </button>

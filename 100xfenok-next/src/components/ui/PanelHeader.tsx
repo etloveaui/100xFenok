@@ -14,7 +14,7 @@ export function PanelHeader({ eyebrow, title, right, className = "" }: PanelHead
     >
       <div className="flex flex-col gap-[1px] min-w-0">
         {eyebrow && (
-          <span className="text-[11px] font-semibold tracking-[0.06em] uppercase text-[#64748b] leading-none">
+          <span className="text-[12px] font-semibold tracking-[0.06em] uppercase text-[#64748b] leading-none">
             {eyebrow}
           </span>
         )}

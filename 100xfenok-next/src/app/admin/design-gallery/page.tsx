@@ -1481,12 +1481,12 @@ export default function DesignGalleryPage() {
                     </div>
                     <p className="mt-2 text-xs leading-relaxed text-slate-600">{item.description}</p>
                     <div className="mt-3 rounded-lg bg-indigo-50 p-2.5">
-                      <p className="text-[11px] font-semibold text-indigo-900">🎯 우리 시스템 적용</p>
-                      <p className="mt-0.5 text-[11px] leading-relaxed text-indigo-700">{item.applicability}</p>
+                      <p className="text-[12px] font-semibold text-indigo-900">🎯 우리 시스템 적용</p>
+                      <p className="mt-0.5 text-[12px] leading-relaxed text-indigo-700">{item.applicability}</p>
                     </div>
                     <div className="mt-3 flex flex-wrap gap-1">
                       {item.tags.map((tag) => (
-                        <span key={tag} className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">
+                        <span key={tag} className="rounded bg-slate-100 px-1.5 py-0.5 text-[12px] text-slate-500">
                           {tag}
                         </span>
                       ))}
@@ -1496,7 +1496,7 @@ export default function DesignGalleryPage() {
                         href={item.reference}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-2 inline-block text-[10px] text-indigo-500 hover:underline"
+                        className="mt-2 inline-block text-[12px] text-indigo-500 hover:underline"
                       >
                         Reference →
                       </a>

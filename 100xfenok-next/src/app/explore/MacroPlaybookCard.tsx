@@ -51,7 +51,7 @@ export default function MacroPlaybookCard() {
               className="block rounded-lg border border-slate-200 bg-white px-3 py-2 transition hover:border-brand-interactive hover:bg-slate-50"
             >
               <span className="block truncate text-sm font-black text-slate-900">{playbook.title}</span>
-              <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{playbook.detail}</span>
+              <span className="mt-0.5 block truncate text-[12px] font-semibold text-slate-500">{playbook.detail}</span>
             </TransitionLink>
           ))}
         </div>

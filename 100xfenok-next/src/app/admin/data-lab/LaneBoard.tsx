@@ -202,7 +202,7 @@ export default function LaneBoard({
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" data-admin-lane-board="true">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
-          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Lane Registry × Data Health</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Lane Registry × Data Health</p>
           <h2 className="text-lg font-black tracking-tight text-slate-950">레인 보드</h2>
           <p className="text-xs font-semibold text-slate-500">
             관리 레인의 메타데이터·신선도·복구 상태를 한 화면에서 확인합니다.
@@ -219,7 +219,7 @@ export default function LaneBoard({
       <div className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left text-xs">
           <thead>
-            <tr className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
+            <tr className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">
               <th className="border-b border-slate-200 px-3 py-2">레인</th>
               <th className="border-b border-slate-200 px-3 py-2">메타데이터</th>
               <th className="border-b border-slate-200 px-3 py-2">기준일</th>
@@ -251,7 +251,7 @@ export default function LaneBoard({
                     <p className="mt-1 font-semibold text-slate-500">{lane.owner_workflow || "워크플로 없음"}</p>
                   </td>
                   <td className="border-b border-slate-100 px-3 py-3">
-                    <div className="flex flex-wrap gap-1 text-[10px] font-bold">
+                    <div className="flex flex-wrap gap-1 text-[12px] font-bold">
                       <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-slate-600">{lane.store_kind || "-"}</span>
                       <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-slate-600">{CADENCE_KO[lane.cadence?.kind || ""] || lane.cadence?.kind || "-"}</span>
                       <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-slate-600">{ENFORCEMENT_KO[lane.enforcement || ""] || lane.enforcement || "-"}</span>
@@ -303,7 +303,7 @@ export default function LaneBoard({
 
       <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-3" data-admin-control-room-state="true">
         <div className="flex flex-col gap-1">
-          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Control Room State</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Control Room State</p>
           <p className="text-xs font-semibold text-slate-500">외부·런타임 운영 증거를 제품 freshness 상태와 분리해 표시합니다.</p>
         </div>
         <div className="mt-3 grid gap-2 lg:grid-cols-2">
@@ -326,7 +326,7 @@ export default function LaneBoard({
                     스케줄 {CONTROL_SCHEDULE_KO[schedule.status || ""] || "미확인"}
                   </span>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-1 text-[10px] font-bold text-slate-600 sm:grid-cols-3">
+                <div className="mt-2 grid grid-cols-2 gap-1 text-[12px] font-bold text-slate-600 sm:grid-cols-3">
                   <span className="rounded border border-slate-100 bg-slate-50 px-2 py-1">
                     최근 시도: <b data-control-room-attempt={attempt.outcome || "unobserved"}>{CONTROL_ATTEMPT_KO[attempt.outcome || ""] || "미확인"}</b>
                   </span>
@@ -359,7 +359,7 @@ export default function LaneBoard({
       </section>
 
       <div className="mt-4" data-admin-platform-gates="true">
-        <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Platform Gates</p>
+        <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Platform Gates</p>
         <p className="mt-1 text-xs font-semibold text-slate-500">레지스트리 레인에 속하지 않는 KPI 집계 게이트입니다.</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {platformGates.length > 0 ? platformGates.map((gate) => (

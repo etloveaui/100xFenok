@@ -20,7 +20,7 @@ export default function DataProvenanceNote({
     <div
       data-testid="data-provenance-note"
       className={cx(
-        "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-semibold leading-4 text-slate-600",
+        "rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] font-semibold leading-4 text-slate-600",
         className,
       )}
     >

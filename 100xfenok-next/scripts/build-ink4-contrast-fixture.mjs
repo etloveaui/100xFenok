@@ -122,6 +122,18 @@ const CURATED_BACKGROUND_EVIDENCE = {
     path: "src/app/market-valuation/structure/MarketStructureDetailClient.tsx",
     target_hash: "7818ee27513ea2845c4f6722bb66761c160b10e2f47099ef7f227d9dce63f078",
   },
+  "src/app/screener/ScreenerDesktopTable.tsx#f27f8cf65a14#1": {
+    // ⑩a 12px floor: font-size-only change on the same panel-surface line; re-pin.
+    background: "panel",
+    path: "src/app/screener/ScreenerDesktopTable.tsx",
+    target_hash: "bf8cf785592fcc91b71e56f0f4a875440c6b53084ba4582a22661dbfde7a43fd",
+  },
+  "src/app/screener/ScreenerTanstackTable.tsx#f27f8cf65a14#1": {
+    // ⑩a 12px floor: font-size-only change on the same panel-surface line; re-pin.
+    background: "panel",
+    path: "src/app/screener/ScreenerTanstackTable.tsx",
+    target_hash: "7dcf418af07f4413a6ba23ea27066551fd4a3f8f9661613d321b23def62cc67d",
+  },
 };
 
 const BACKGROUND_PATTERNS = {

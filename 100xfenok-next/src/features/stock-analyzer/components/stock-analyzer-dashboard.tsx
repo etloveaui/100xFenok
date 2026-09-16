@@ -403,19 +403,19 @@ export function StockAnalyzerDashboard() {
 
       <section className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm" data-stock-analyzer-native-summary-card="universe">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Universe</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-600">Universe</p>
           <p className="mt-1 text-2xl font-black text-slate-800">{formatNumber(dashboard.records.length, 0)}</p>
         </article>
         <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm" data-stock-analyzer-native-summary-card="filtered">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Filtered</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-600">Filtered</p>
           <p className="mt-1 text-2xl font-black text-slate-800">{formatNumber(dashboard.filteredRecords.length, 0)}</p>
         </article>
         <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm" data-stock-analyzer-native-summary-card="growth">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Avg 3M Growth</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-600">Avg 3M Growth</p>
           <p className="mt-1 text-2xl font-black text-emerald-600">{formatPercent(averageGrowth)}</p>
         </article>
         <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm" data-stock-analyzer-native-summary-card="per">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Avg PER</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-600">Avg PER</p>
           <p className="mt-1 text-2xl font-black text-blue-700">{formatNumber(averagePer, 2)}</p>
         </article>
       </section>
@@ -503,7 +503,7 @@ export function StockAnalyzerDashboard() {
                       </span>
                     </div>
 
-                    <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="mt-2 grid grid-cols-2 gap-2 text-[12px]">
                       <div className="rounded-md bg-slate-50 px-2 py-1.5">
                         <p className="text-slate-600">Sector</p>
                         <p className="font-semibold text-slate-700">{record.sector ?? "-"}</p>
