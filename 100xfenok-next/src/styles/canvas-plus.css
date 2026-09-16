@@ -1338,9 +1338,8 @@
 
 .cp-screener-table-wrap {
   overflow: auto;
-  /* Whole-row fit: content box = 36px header + N x row pitch (border-box, so
-     max-height adds the 2px wrap border). 720px showed 15.5 rows and clipped
-     the last row in half; 698px lands exactly on 15 default rows. */
+  /* Whole-row fit lives in the per-density preview overrides below (content
+     box = 46px live header + N x row pitch, plus the 2px wrap border). */
   max-height: 698px;
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-radius-lg);
@@ -1471,18 +1470,21 @@
   scrollbar-width: thin;
 }
 
-/* Per-density whole-row fit: header 36px + N x row pitch (compact 36x18,
-   default 44x15, comfy 52x12), plus the 2px wrap border. */
+/* Per-density whole-row fit: header 46px + N x row pitch (compact 36x18,
+   default 44x15, comfy 52x12), plus the 2px wrap border. The header height
+   is a live measurement (compact): th cell content exceeds the 36px th box,
+   so 686px fitted 17.72 rows and clipped the last row by 9px. Default/comfy
+   extrapolate the same 46px header; confirm by capture. */
 [data-canvas-plus-screener-preview][data-row-density="compact"] .cp-screener-table-wrap {
-  max-height: 686px;
+  max-height: 696px;
 }
 
 [data-canvas-plus-screener-preview][data-row-density="default"] .cp-screener-table-wrap {
-  max-height: 698px;
+  max-height: 708px;
 }
 
 [data-canvas-plus-screener-preview][data-row-density="comfy"] .cp-screener-table-wrap {
-  max-height: 662px;
+  max-height: 672px;
 }
 
 [data-canvas-plus-screener-preview] .cp-screener-table-wrap::-webkit-scrollbar {
@@ -3027,6 +3029,19 @@
   color: var(--cp-text-strong);
   font-weight: 850;
   font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* One control rail for the toolbar row: the count pill (20px), the filter
+   segment and preset buttons (32px) and the action buttons (36px) each kept
+   their own height and read as a ragged strip beside the provenance links. */
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row > span,
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row .cp-screener-segment,
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row .cpw4-preset-wrap button {
+  min-height: 36px;
+}
+
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row > span {
+  height: auto;
 }
 
 /* The provenance rail keeps its content (freshness, coverage, retry, evidence)
