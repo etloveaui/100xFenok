@@ -79,7 +79,10 @@ export default function ResearchClient() {
     return true;
   });
   const liveCount = items.filter((item) => item.status === "live").length;
+  const soonCount = items.filter((item) => item.status === "coming-soon").length;
   const opened = openId ? items.find((item) => item.id === openId && item.status === "live" && item.href) ?? null : null;
+
+  const openItem = (id: string) => setOpenId(id);
 
   return (
     <div data-research-root="true">
@@ -97,32 +100,40 @@ export default function ResearchClient() {
             }}
             className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-bold transition ${
               filter === tab.key
-                ? "border-blue-600 bg-blue-600 text-white"
-                : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700"
+                ? "border-slate-900 bg-slate-900 text-white"
+                : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"
             }`}
           >
             {tab.label}
           </button>
         ))}
-        <span className="ml-auto inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-600">
-          실물 {liveCount} · 전체 {items.length}
+        <span className="ml-auto font-mono text-xs text-slate-500">
+          실물 {liveCount} · 준비 중 {soonCount}
         </span>
       </div>
 
-      {opened ? (
+      {opened && opened.href ? (
         <section aria-label={`${opened.title} 뷰어`} data-research-viewer="true" className="mt-4">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setOpenId(null)}
-              className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+              className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-400"
             >
               ← 목록으로
             </button>
-            <h2 className="text-base font-black text-slate-900">{opened.title}</h2>
+            <h2 className="min-w-0 flex-1 truncate text-sm font-extrabold text-slate-900">{opened.title}</h2>
+            <a
+              href={opened.href}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 font-mono text-xs text-slate-500 underline decoration-slate-300 underline-offset-2 hover:text-slate-800"
+            >
+              원본 열기 ↗
+            </a>
           </div>
           <div className="mt-3">
-            <RouteEmbedFrame src={opened.href ?? ""} title={opened.title} />
+            <RouteEmbedFrame src={opened.href} title={opened.title} />
           </div>
         </section>
       ) : null}
@@ -136,7 +147,7 @@ export default function ResearchClient() {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-2 inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+              className="mt-2 inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-slate-400"
             >
               다시 시도
             </button>
@@ -147,43 +158,49 @@ export default function ResearchClient() {
           <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3" aria-label="리서치 목록">
             {visible.map((item) => {
               const live = item.status === "live" && item.href;
+              if (live) {
+                const meta = [item.ticker, item.date].filter(Boolean).join(" · ");
+                return (
+                  <li key={item.id} data-research-card={item.id}>
+                    <article
+                      role="link"
+                      tabIndex={0}
+                      aria-label={`${item.title} 열기`}
+                      onClick={() => openItem(item.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openItem(item.id);
+                        }
+                      }}
+                      className="flex min-h-44 cursor-pointer flex-col rounded-[10px] border border-slate-200 bg-white p-4 transition hover:-translate-y-px hover:border-slate-400 focus-visible:outline-2 focus-visible:outline-slate-900"
+                    >
+                      <span className="font-mono text-[11px] font-bold tracking-wide text-slate-500">
+                        {kindLabel(item.kind)}
+                      </span>
+                      <h3 className="mt-1 text-base font-extrabold leading-snug text-slate-900">{item.title}</h3>
+                      {meta ? <span className="mt-1 font-mono text-xs text-slate-500">{meta}</span> : null}
+                      <span className="mt-auto pt-3 text-sm font-bold text-blue-700" data-research-open={item.id}>
+                        열기 →
+                      </span>
+                    </article>
+                  </li>
+                );
+              }
               return (
                 <li
                   key={item.id}
                   data-research-card={item.id}
-                  className={`flex min-h-44 flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ${live ? "" : "opacity-70"}`}
+                  className="flex min-h-44 flex-col rounded-[10px] border border-slate-200 bg-slate-50 p-4"
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex min-h-6 items-center rounded-full border border-slate-200 bg-slate-50 px-2 text-[11px] font-bold text-slate-600">
-                      {kindLabel(item.kind)}
-                    </span>
-                    {live ? null : (
-                      <span className="inline-flex min-h-6 items-center rounded-full border border-amber-200 bg-amber-50 px-2 text-[11px] font-bold text-amber-800">
-                        커밍순
-                      </span>
-                    )}
-                    {item.ticker ? (
-                      <span className="inline-flex min-h-6 items-center rounded-full border border-blue-200 bg-blue-50 px-2 text-[11px] font-bold text-blue-900">
-                        {item.ticker}
-                      </span>
-                    ) : null}
-                    {item.date ? <span className="ml-auto text-[11px] font-bold text-slate-500">{item.date}</span> : null}
-                  </div>
-                  <h3 className="mt-2 text-base font-black text-slate-900">{item.title}</h3>
-                  <div className="mt-auto pt-3">
-                    {live ? (
-                      <button
-                        type="button"
-                        onClick={() => setOpenId(item.id)}
-                        data-research-open={item.id}
-                        className="inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700"
-                      >
-                        열기
-                      </button>
-                    ) : (
-                      <span className="inline-flex min-h-11 items-center text-sm font-bold text-slate-500">준비 중입니다</span>
-                    )}
-                  </div>
+                  <span className="font-mono text-[11px] font-bold tracking-wide text-slate-500">
+                    {kindLabel(item.kind)}
+                  </span>
+                  <h3 className="mt-1 text-base font-extrabold leading-snug text-slate-700">{item.title}</h3>
+                  <span className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-extrabold text-amber-800">
+                    <span aria-hidden="true" className="inline-block h-1.5 w-1.5 rounded-full bg-amber-600" />
+                    준비 중
+                  </span>
                 </li>
               );
             })}
