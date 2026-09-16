@@ -1515,7 +1515,7 @@ export default function ScreenerClient({
   const initialColumnPreset = coerceColumnPreset(initialPreset);
   const [preset, setPreset] = useState<ColumnPreset>(() => initialColumnPreset ?? initialFilterValues.preset ?? "basic");
   const [viewMode, setViewMode] = useState<ScreenerViewMode>("table");
-  const [density, setDensity] = useState<ScreenerDensity>("standard");
+  const [density, setDensity] = useState<ScreenerDensity>("compact");
   const [columnMenuOpen, setColumnMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -2401,7 +2401,6 @@ export default function ScreenerClient({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const frame = window.requestAnimationFrame(() => {
-      if (window.innerWidth >= 768) setScaleOpen(true);
       if (!canvasPlusPreview) return;
       if (scaleCount > 0) setScaleOpen(true);
       if (valueCount > 0) setValueOpen(true);
@@ -2481,7 +2480,7 @@ export default function ScreenerClient({
         <section data-canvas-plus-screener-title="true">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-[20px] font-semibold text-[var(--c-ink)]">종목 스크리너</h1>
+              <h1 className="text-[18px] font-semibold text-[var(--c-ink)]">종목 스크리너</h1>
               <p className="mt-1 text-[13px] font-semibold text-[var(--c-ink-2)]">
                 글로벌 {stocks.length.toLocaleString("ko-KR")}개 종목 · 현재 {sorted.length.toLocaleString("ko-KR")}개 중 가격 확인 {pricedCount.toLocaleString("ko-KR")}개({priceCoverageRatio}%)
                 {missingPriceCount > 0 ? ` · 가격 미확인 ${missingPriceCount.toLocaleString("ko-KR")}개는 뒤로 정렬됩니다` : null}
@@ -2492,7 +2491,7 @@ export default function ScreenerClient({
             </Pill>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2" aria-label="스크리너 범위">
+          <div className="mt-2 flex flex-wrap items-center gap-2" aria-label="스크리너 범위">
             <Pill tone="neutral">
               주식 {stocks.length.toLocaleString("ko-KR")}
             </Pill>
@@ -2593,7 +2592,7 @@ export default function ScreenerClient({
           {/* One compact toolbar row: filter toggle, result count, page status,
               column/view/density controls and provenance on a single line. */}
           <div
-            className="cp-screener-toolbar-row mt-3"
+            className="cp-screener-toolbar-row mt-2"
             data-canvas-plus-screener-toolbar="true"
           >
             <button
