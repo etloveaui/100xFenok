@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2875,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -182,15 +169,28 @@
       "run_id": "34917681226",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 500,
+      "natural": true,
+      "observed_at": "2026-09-16T01:29:38Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35044200539",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-15T01:38:38Z",
-    "history_as_of": "2026-09-14",
+    "fetched_at": "2026-09-16T01:34:14Z",
+    "history_as_of": "2026-09-15",
     "path": "data/yf/finance/RPRX.json",
-    "payload_sha256": "37758ded8342bc378f51e3987bb44e67b06f2edf934fe9f461c26c911157a1eb",
-    "quote_as_of": "2026-09-14T20:00:00Z",
-    "source_as_of": "2026-09-14"
+    "payload_sha256": "06fb27080ff6c26ad6d2e8a846224d1502588e3dbf6038de7f4fef47a6d0051c",
+    "quote_as_of": "2026-09-15T20:00:00Z",
+    "source_as_of": "2026-09-15"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -200,12 +200,12 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 438,
+    "latency_ms": 500,
     "natural": true,
-    "observed_at": "2026-09-15T01:34:15Z",
+    "observed_at": "2026-09-16T01:29:38Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34917681226",
+    "run_id": "35044200539",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-14",
-    "observed_at": "2026-09-15T01:34:15Z",
-    "payload_sha256": "0d83c21af5a502ed2fc901d0c420e2060be8f575532bf46f5164fa4530232210",
-    "quote_as_of": "2026-09-14T20:00:00Z",
+    "history_as_of": "2026-09-15",
+    "observed_at": "2026-09-16T01:29:38Z",
+    "payload_sha256": "abc778c89a743bcefefb6337b13db0377ab1e41fb7e79a0785607e730ee57931",
+    "quote_as_of": "2026-09-15T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "34917681226",
+    "run_id": "35044200539",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-14"
+    "source_as_of": "2026-09-15"
   },
   "recovered_at": "2026-09-12T01:13:27Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "RPRX",
-  "updated_at": "2026-09-15T01:34:15Z"
+  "updated_at": "2026-09-16T01:29:38Z"
 }

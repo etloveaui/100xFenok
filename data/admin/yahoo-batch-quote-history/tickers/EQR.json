@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 617,
-      "natural": true,
-      "observed_at": "2026-08-19T23:53:46Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 2926,
@@ -191,6 +178,20 @@
       "run_id": "34664080685",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for EQR despite available history",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 499,
+      "natural": true,
+      "observed_at": "2026-09-16T01:29:38Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35044200539",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -209,12 +210,12 @@
     "error": "ValueError: quote_as_of is unavailable for EQR despite available history",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 537,
+    "latency_ms": 499,
     "natural": true,
-    "observed_at": "2026-09-12T01:13:27Z",
+    "observed_at": "2026-09-16T01:29:38Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34664080685",
+    "run_id": "35044200539",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -226,9 +227,9 @@
     "failure_kind": "transient_provider_miss",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-12T01:13:27Z",
+    "observed_at": "2026-09-16T01:29:38Z",
     "run_attempt": 1,
-    "run_id": "34664080685"
+    "run_id": "35044200539"
   },
   "lkg": {
     "fetched_at": "2026-08-24T23:44:47Z",
@@ -264,5 +265,5 @@
     "source_as_of": "2026-08-17T20:00:03Z"
   },
   "ticker": "EQR",
-  "updated_at": "2026-09-12T01:13:27Z"
+  "updated_at": "2026-09-16T01:29:38Z"
 }

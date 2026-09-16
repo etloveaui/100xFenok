@@ -82,13 +82,13 @@
   "current": {
     "fetched_at": "2026-09-06T04:29:35Z",
     "history_as_of": "2026-09-04",
-    "path": "data/yf/finance/VTEB.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VTEB.json",
     "payload_sha256": "a4bba4c9f22f039602693face6c3b7556fa0d52676be429ab52462f463c667de",
     "quote_as_of": "2026-09-04T20:00:00Z",
     "source_as_of": "2026-09-04"
   },
   "discovered_from": [
-    "core_daily_basket"
+    "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
@@ -103,6 +103,14 @@
     "schedule": "7 0 * * 0-5",
     "shard": "0/6"
   },
+  "lkg": {
+    "fetched_at": "2026-09-06T04:29:35Z",
+    "history_as_of": "2026-09-04",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VTEB.json",
+    "payload_sha256": "a4bba4c9f22f039602693face6c3b7556fa0d52676be429ab52462f463c667de",
+    "quote_as_of": "2026-09-04T20:00:00Z",
+    "source_as_of": "2026-09-04"
+  },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
@@ -115,9 +123,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-04"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
+  "stale": {
+    "age_business_days": 7,
+    "classified_at": "2026-09-16T01:29:38Z",
+    "classified_run_id": "35044200539",
+    "expected_resolution": "next_natural_yahoo_run",
+    "max_business_days": 6,
+    "message": "VTEB holds LKG because Yahoo source date 2026-09-04 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "reason": "source_age_exceeds_lane_bound",
+    "source_as_of": "2026-09-04"
+  },
   "ticker": "VTEB",
-  "updated_at": "2026-09-06T04:28:56Z"
+  "updated_at": "2026-09-16T01:29:38Z"
 }

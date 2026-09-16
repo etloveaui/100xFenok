@@ -6,19 +6,6 @@
       "failures": [],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-08-20T23:46:53Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-08-21T01:54:26Z",
       "outcome": "skipped_fresh",
       "run_attempt": 1,
@@ -183,6 +170,20 @@
       "run_id": "34424274071",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 557,
+      "natural": true,
+      "observed_at": "2026-09-16T01:29:38Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35044200539",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -202,14 +203,14 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 588,
+    "latency_ms": 557,
     "natural": true,
-    "observed_at": "2026-09-10T01:17:44Z",
+    "observed_at": "2026-09-16T01:29:38Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34424274071",
+    "run_id": "35044200539",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -231,9 +232,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-10T01:17:44Z",
+    "observed_at": "2026-09-16T01:29:38Z",
     "run_attempt": 1,
-    "run_id": "34424274071"
+    "run_id": "35044200539"
   },
   "lkg": {
     "fetched_at": "2026-09-08T01:23:57Z",
@@ -274,5 +275,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "STRC",
-  "updated_at": "2026-09-10T01:17:44Z"
+  "updated_at": "2026-09-16T01:29:38Z"
 }

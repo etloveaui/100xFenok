@@ -135,14 +135,14 @@
   "current": {
     "fetched_at": "2026-09-06T04:29:32Z",
     "history_as_of": "2026-09-04",
-    "path": "data/yf/finance/VOO.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/VOO.json",
     "payload_sha256": "a6ea6c4d126a904d17425533d8e87f5544c7f49f6cfaff16db68c4e074ccd63c",
     "quote_as_of": "2026-09-04T20:00:00Z",
     "source_as_of": "2026-09-04"
   },
   "discovered_from": [
-    "core_daily_basket",
-    "major_etf_configuration"
+    "major_etf_configuration",
+    "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
@@ -158,12 +158,12 @@
     "shard": "0/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-28T00:19:46Z",
-    "history_as_of": "2026-06-26",
+    "fetched_at": "2026-09-06T04:29:32Z",
+    "history_as_of": "2026-09-04",
     "path": "data/admin/yahoo-batch-quote-history/lkg/VOO.json",
-    "payload_sha256": "38a1b2cfc433fb5df9e686286d9a5788d414dd6f3df9d74096371a8024e9865c",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-26"
+    "payload_sha256": "a6ea6c4d126a904d17425533d8e87f5544c7f49f6cfaff16db68c4e074ccd63c",
+    "quote_as_of": "2026-09-04T20:00:00Z",
+    "source_as_of": "2026-09-04"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -177,19 +177,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-04"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 10,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-09-16T01:29:38Z",
+    "classified_run_id": "35044200539",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "VOO holds LKG because Yahoo source date 2026-06-26 is 10 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "VOO holds LKG because Yahoo source date 2026-09-04 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-26"
+    "source_as_of": "2026-09-04"
   },
   "ticker": "VOO",
-  "updated_at": "2026-09-06T04:28:56Z"
+  "updated_at": "2026-09-16T01:29:38Z"
 }

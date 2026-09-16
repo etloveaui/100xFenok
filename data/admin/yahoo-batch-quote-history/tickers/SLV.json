@@ -135,13 +135,14 @@
   "current": {
     "fetched_at": "2026-09-06T04:29:16Z",
     "history_as_of": "2026-09-04",
-    "path": "data/yf/finance/SLV.json",
+    "path": "data/admin/yahoo-batch-quote-history/lkg/SLV.json",
     "payload_sha256": "7e0b6539f8f916a1a8bcdf11361769c52e0228e543dd9257ab4bebb4f429ba48",
     "quote_as_of": "2026-09-04T20:00:00Z",
     "source_as_of": "2026-09-04"
   },
   "discovered_from": [
-    "major_etf_configuration"
+    "major_etf_configuration",
+    "stockanalysis_etf"
   ],
   "last_attempt": {
     "attempts_used": 1,
@@ -157,12 +158,12 @@
     "shard": "0/6"
   },
   "lkg": {
-    "fetched_at": "2026-06-30T00:34:53Z",
-    "history_as_of": "2026-06-29",
+    "fetched_at": "2026-09-06T04:29:16Z",
+    "history_as_of": "2026-09-04",
     "path": "data/admin/yahoo-batch-quote-history/lkg/SLV.json",
-    "payload_sha256": "056a19dca7559fcfd81df3f926909a0539db3985ec2c4223b31779768a8baefb",
-    "quote_as_of": null,
-    "source_as_of": "2026-06-29"
+    "payload_sha256": "7e0b6539f8f916a1a8bcdf11361769c52e0228e543dd9257ab4bebb4f429ba48",
+    "quote_as_of": "2026-09-04T20:00:00Z",
+    "source_as_of": "2026-09-04"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
@@ -176,19 +177,19 @@
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-04"
   },
-  "resolution_state": "fresh_primary",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
-    "age_business_days": 9,
-    "classified_at": "2026-07-13T04:33:56Z",
-    "classified_run_id": "29224221077",
+    "age_business_days": 7,
+    "classified_at": "2026-09-16T01:29:38Z",
+    "classified_run_id": "35044200539",
     "expected_resolution": "next_natural_yahoo_run",
     "max_business_days": 6,
-    "message": "SLV holds LKG because Yahoo source date 2026-06-29 is 9 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
+    "message": "SLV holds LKG because Yahoo source date 2026-09-04 is 7 business days old, beyond the 6-day bound; it will retry on the next natural Yahoo run.",
     "reason": "source_age_exceeds_lane_bound",
-    "source_as_of": "2026-06-29"
+    "source_as_of": "2026-09-04"
   },
   "ticker": "SLV",
-  "updated_at": "2026-09-06T04:28:56Z"
+  "updated_at": "2026-09-16T01:29:38Z"
 }
