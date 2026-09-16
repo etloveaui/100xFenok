@@ -80,9 +80,14 @@ function canvasPlusColumnWidth(column?: ScreenerColumn): number {
     column.key === "upsidePotentialScore" ||
     column.key === "downsidePressureScore"
   ) return 72;
-  if (column.key === "actionScore") return 140;
+  if (column.key === "actionScore") return 164;
   if (column.key === "connectionCount") return 112;
-  if (column.key === "perBandCurrent") return 116;
+  if (column.key === "perBandCurrent") return 104;
+  if (
+    column.key === "return12m" ||
+    column.key === "ret1y" ||
+    column.key === "dividendYield"
+  ) return 84;
   if (column.align === "right") return 88;
   return 88;
 }
@@ -116,6 +121,18 @@ function canvasPlusCellKind(columnId: string): "score" | "numeric" | undefined {
   ) return "numeric";
   return undefined;
 }
+
+// B3-4 narrow-viewport tier culling (preview only): lowest-priority column
+// first. The core signal set (ticker/action/short/long/sector/cap) never
+// culls, so the culled table always keeps its reading spine.
+const CANVAS_PLUS_CULL_ORDER: ScreenerSortKey[] = [
+  "ret1y",
+  "dividendYield",
+  "durabilityProfitabilityScore",
+  "guruHolders",
+  "return12m",
+  "perBandCurrent",
+];
 
 class ScreenerTanstackBoundary extends Component<ScreenerTanstackBoundaryProps, ScreenerTanstackBoundaryState> {
   constructor(props: ScreenerTanstackBoundaryProps) {
@@ -268,16 +285,35 @@ function ScreenerTanstackTableInner({
     atEnd: true,
     atStart: true,
     overflow: false,
+    wrapWidth: 0,
   });
+  const [canvasPlusFitAll, setCanvasPlusFitAll] = useState(false);
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(false);
   useEffect(() => {
     if (dataReady) { setShowLoadingSkeleton(false); return undefined; }
     const timer = window.setTimeout(() => setShowLoadingSkeleton(true), 120);
     return () => window.clearTimeout(timer);
   }, [dataReady]);
+  // B3-4: hide lowest-priority tiers until the fixed-width table fits the
+  // measured wrap (preview only). Unmeasured first paint and "show all" mode
+  // keep every column with the scroll shell + fade affordance.
+  const canvasPlusCulledKeys = useMemo(() => {
+    const hidden = new Set<ScreenerSortKey>();
+    if (!canvasPlusPreview || canvasPlusFitAll || canvasPlusScrollState.wrapWidth <= 0) return hidden;
+    const base = activeColumns.filter((column) => column.key !== "name");
+    let width = 42 + base.reduce((sum, column) => sum + canvasPlusColumnWidth(column), 0);
+    for (const key of CANVAS_PLUS_CULL_ORDER) {
+      if (width <= canvasPlusScrollState.wrapWidth) break;
+      const target = base.find((column) => column.key === key);
+      if (!target) continue;
+      hidden.add(key);
+      width -= canvasPlusColumnWidth(target);
+    }
+    return hidden;
+  }, [activeColumns, canvasPlusFitAll, canvasPlusPreview, canvasPlusScrollState.wrapWidth]);
   const visibleColumns = useMemo(
-    () => (canvasPlusPreview ? activeColumns.filter((column) => column.key !== "name") : activeColumns),
-    [activeColumns, canvasPlusPreview],
+    () => (canvasPlusPreview ? activeColumns.filter((column) => column.key !== "name" && !canvasPlusCulledKeys.has(column.key)) : activeColumns),
+    [activeColumns, canvasPlusPreview, canvasPlusCulledKeys],
   );
   const columnById = useMemo(() => new Map<ScreenerSortKey, ScreenerColumn>(visibleColumns.map((column) => [column.key, column])), [visibleColumns]);
   const columns = useMemo<Array<ColumnDef<ScreenerStock>>>(() => [
@@ -406,9 +442,10 @@ function ScreenerTanstackTableInner({
         const overflow = node.scrollWidth > node.clientWidth + 2;
         const atStart = node.scrollLeft <= 1;
         const atEnd = node.scrollLeft + node.clientWidth >= node.scrollWidth - 2;
+        const wrapWidth = node.clientWidth;
         setCanvasPlusScrollState((prev) => {
-          if (prev.overflow === overflow && prev.atStart === atStart && prev.atEnd === atEnd) return prev;
-          return { atEnd, atStart, overflow };
+          if (prev.overflow === overflow && prev.atStart === atStart && prev.atEnd === atEnd && prev.wrapWidth === wrapWidth) return prev;
+          return { atEnd, atStart, overflow, wrapWidth };
         });
       });
     };
@@ -636,6 +673,22 @@ function ScreenerTanstackTableInner({
       } as CSSProperties}
     >
       {tableMarkup}
+      {canvasPlusCulledKeys.size > 0 || canvasPlusFitAll ? (
+        <div
+          className="cp-screener-fit-notice"
+          data-canvas-plus-culled-count={canvasPlusCulledKeys.size}
+          data-canvas-plus-fit-all={canvasPlusFitAll ? "true" : "false"}
+        >
+          <span>
+            {canvasPlusFitAll
+              ? "전체 열 표시 중"
+              : `좁은 화면에 맞춰 ${canvasPlusCulledKeys.size}열 숨김`}
+          </span>
+          <button type="button" onClick={() => setCanvasPlusFitAll((value) => !value)}>
+            {canvasPlusFitAll ? "맞춤 보기" : "모두 보기"}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
