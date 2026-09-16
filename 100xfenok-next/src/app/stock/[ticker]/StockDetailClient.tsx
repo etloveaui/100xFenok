@@ -2639,17 +2639,19 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
   const asOfLabel = fmtKstMinute(record.asOf);
   const coverage = record.lensCoverageRatio ?? record.coverageRatio;
 
-  const edgeSummary = [
-    bestShort ? `단기 최강 ${bestShort.label} ${Math.round(bestShort.score ?? 0)}` : null,
-    worstShort ? `단기 최약 ${worstShort.label} ${Math.round(worstShort.score ?? 0)}` : null,
-    bestLong ? `장기 최강 ${bestLong.label} ${Math.round(bestLong.score ?? 0)}` : null,
-    worstLong ? `장기 최약 ${worstLong.label} ${Math.round(worstLong.score ?? 0)}` : null,
-    `${shortTermBasis.label} · ${shortTermBasis.windowLabel} · ${shortTermBasis.sourceInputCount ?? "—"}/3–5 입력`,
-    shortTermBasis.comparisonNote,
-    shortTermBasis.exclusionNote,
-    isFiniteNumber(shortTerm.score) ? `공통 3축 ${Math.round(shortTerm.score)}` : null,
+  // B2: one " · "-joined paragraph renders as a full-width text wall — keep every
+  // fragment but break it into short lines (strong/weak per horizon, basis,
+  // notes, disclaimer).
+  const edgeSummaryLines = [
+    [bestShort ? `단기 최강 ${bestShort.label} ${Math.round(bestShort.score ?? 0)}` : null,
+      worstShort ? `단기 최약 ${worstShort.label} ${Math.round(worstShort.score ?? 0)}` : null].filter(Boolean).join(" · ") || null,
+    [bestLong ? `장기 최강 ${bestLong.label} ${Math.round(bestLong.score ?? 0)}` : null,
+      worstLong ? `장기 최약 ${worstLong.label} ${Math.round(worstLong.score ?? 0)}` : null].filter(Boolean).join(" · ") || null,
+    [`${shortTermBasis.label} · ${shortTermBasis.windowLabel} · ${shortTermBasis.sourceInputCount ?? "—"}/3–5 입력`,
+      isFiniteNumber(shortTerm.score) ? `공통 3축 ${Math.round(shortTerm.score)}` : null].filter(Boolean).join(" · "),
+    [shortTermBasis.comparisonNote, shortTermBasis.exclusionNote].filter(Boolean).join(" "),
     "점수는 서로 합산하지 않음 · FENOK 파생 신호 · 투자 조언이 아닙니다",
-  ].filter(Boolean).join(" · ");
+  ];
 
   return (
     <section data-stock-tab-card="fenok-edge-overview">
@@ -2665,7 +2667,11 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
         longRows={longAxes.map((a) => ({ key: a.key, label: a.label, score: a.score, referenceOnly: a.referenceOnly }))}
         shortTitle="단기 축 · 6축 · 장외거래 참고축"
         longTitle={`장기 축 · 5개 방향성 축 ${longDirectionalCount}/5 · 동종군 유사도 참고축`}
-        summary={edgeSummary}
+        summary={edgeSummaryLines.some(Boolean) ? (
+          <ul className="grid gap-0.5">
+            {edgeSummaryLines.map((line, index) => line ? <li key={index}>{line}</li> : null)}
+          </ul>
+        ) : null}
         source="FENOK 신호"
         asOf={asOfLabel ?? "—"}
         coverage={isFiniteNumber(coverage) ? formatCoverageRatio(coverage) : "커버리지 미확인"}
@@ -3065,7 +3071,6 @@ export default function StockDetailClient({
     : isFiniteNumber(row?.marketCap)
       ? fmtMcap(row.marketCap)
       : "—";
-  const marketCapLabel = yfMarketCap !== null ? "시가총액" : "시가총액(USD)";
   const returnText = isFiniteNumber(row?.return12m) ? fmtPct(row.return12m) : null;
   const returnUp = (row?.return12m ?? 0) >= 0;
   const marketFactsSourceAsOf = (marketFacts as { source_as_of?: unknown } | null)?.source_as_of;
@@ -3100,19 +3105,12 @@ export default function StockDetailClient({
   const heroChangeText = marketChangePct !== null ? fmtEtfSignedPct(marketChangePct) : returnText ? `12M ${returnText}` : "변화율 대기";
   const heroChangeUp = marketChangePct !== null ? marketChangePct >= 0 : returnUp;
   const previewMetricCards = [
-    { label: "시가총액", value: marketCapText, note: marketCapLabel },
+    { label: "시가총액", value: marketCapText, note: yfMarketCap !== null ? "Yahoo" : "분석 USD" },
     { label: "PER", value: isFiniteNumber(row?.per) ? `${row.per.toFixed(1)}x` : "—", note: "현재" },
     { label: "PBR", value: isFiniteNumber(row?.pbr) ? `${row.pbr.toFixed(2)}x` : "—", note: "장부가" },
     { label: "12M 수익률", value: returnText ?? "—", note: "후행 성과" },
   ];
   if (!isEtfOnlyAsset) {
-    const contextLine = [
-      displayName,
-      canonical ? sectorLabelKo(canonical) : null,
-      row?.sector ?? null,
-      marketCapText !== "—" ? `${marketCapLabel} ${marketCapText}` : null,
-    ].filter(Boolean).join(" · ");
-
     const stripBandWeak = [fenokSignalLens?.profitabilityScore, fenokSignalLens?.growthScore, fenokSignalLens?.longTermScore].some((score) => isFiniteNumber(score) && score < 45);
     const stripBandTone = valuationBandSummary ? sharedValuationBandTone(valuationBandSummary, stripBandWeak) : null;
     const stripBandPct = valuationBandSummary && valuationBandSummary.max > valuationBandSummary.min
@@ -3146,7 +3144,6 @@ export default function StockDetailClient({
               <span className="cp-number tabular-nums text-[12px] font-semibold" data-tone={heroChangeUp ? "positive" : "negative"}>{heroChangeText}</span>
             </span>
           </div>
-          <p className="px-4 pb-1 text-[12px] text-slate-500">{contextLine || `종목 컨텍스트 ${DATA_STATE_LABELS.pending}`}</p>
           <div className="flex flex-wrap items-center gap-2 px-4 pb-2">
             <DataStateBadge state={priceDataState} />
             <MarketQuickLinks className="stock-market-links" />

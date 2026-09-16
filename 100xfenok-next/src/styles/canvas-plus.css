@@ -3044,6 +3044,15 @@
   height: auto;
 }
 
+/* B2: chips wrap at inner spaces ("주식 1,066", "내 프리셋", "컬럼 표준") into
+   two lines with mismatched heights — keep every chip on one line. The row
+   itself still wraps as a whole via flex-wrap above. */
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row > span,
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row button,
+.canvas-plus.cp-screener-service .cp-screener-toolbar-row a {
+  white-space: nowrap;
+}
+
 /* The provenance rail keeps its content (freshness, coverage, retry, evidence)
    but loses the standalone strip chrome while it lives in this row. */
 .canvas-plus.cp-screener-service .cp-screener-toolbar-provenance {

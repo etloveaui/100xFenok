@@ -96,7 +96,7 @@ export function SharedEdgePanel({
   longRows: SharedEdgeAxisRow[];
   shortTitle?: string;
   longTitle?: string;
-  summary?: string | null;
+  summary?: ReactNode;
   pending?: boolean;
   source?: string;
   asOf?: string;
@@ -147,7 +147,7 @@ export function SharedEdgePanel({
           ))}
         </div>
       )}
-      {summary ? <p className="px-4 pb-2 text-[12px] text-[var(--c-ink-2)]">{summary}</p> : null}
+      {summary ? <div className="px-4 pb-2 text-[12px] text-[var(--c-ink-2)]">{summary}</div> : null}
       {shortRows.length > 0 ? (
         <div>
           <p className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--c-ink-3)]">{shortTitle}</p>
