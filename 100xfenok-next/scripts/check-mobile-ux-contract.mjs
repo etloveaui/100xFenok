@@ -3569,7 +3569,17 @@ async function collectScreenerExpandedChecks(page, route) {
   }
 
   await button.click({ timeout: 10000 });
-  await page.waitForTimeout(500);
+  const detailSelector = '[id^="screener-mobile-detail"]';
+  await page.waitForSelector(detailSelector, { state: "visible", timeout: 10000 });
+  // The sheet fetches per-ticker detail after opening and the primary CTA only
+  // exists in the loaded body, so a fixed sleep flakes on slow fetches. Wait
+  // for settle (CTA present or the pending notice gone) before asserting.
+  await page.waitForFunction((selector) => {
+    const root = document.querySelector(selector);
+    if (!root) return false;
+    if (root.querySelector(".cpw4-primary-cta")) return true;
+    return root.querySelector('[data-testid="data-state-notice"][data-data-state="pending"]') === null;
+  }, detailSelector, { timeout: 15000 }).catch(() => null);
 
   return page.evaluate((currentRoute) => {
     const failures = [];
@@ -3591,7 +3601,9 @@ async function collectScreenerExpandedChecks(page, route) {
       });
     }
     if (!primaryCta) {
-      failures.push({ check: "screener-expanded-primary-cta", detail: "expanded detail primary CTA missing" });
+      const pendingNotice = detail?.querySelector('[data-testid="data-state-notice"]');
+      const dataState = pendingNotice?.getAttribute("data-data-state") ?? "no-notice";
+      failures.push({ check: "screener-expanded-primary-cta", detail: `expanded detail primary CTA missing (data-state=${dataState})` });
     } else {
       const style = window.getComputedStyle(primaryCta);
       if (style.color === style.backgroundColor) {
