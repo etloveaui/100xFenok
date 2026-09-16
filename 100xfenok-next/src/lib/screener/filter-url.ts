@@ -35,8 +35,10 @@ export type ColumnPreset =
   | "fenokPicks";
 
 export const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
-  // Koyfin-density default: 8 visible columns; the rest via the column menu.
-  basic: ["ticker", "fenokShortTermScore", "fenokLongTermScore", "sector", "marketCap", "per", "fenokConvictionScore", "upsidePotentialScore"],
+  // Koyfin-density default: 7 visible columns; the rest via the column menu.
+  // The conviction column id stays valid for saved sorts and shared URLs —
+  // it is only hidden from every default preset (표 A, owner mandate 2026-09-16).
+  basic: ["ticker", "fenokShortTermScore", "fenokLongTermScore", "sector", "marketCap", "per", "upsidePotentialScore"],
   action: ["ticker", "actionScore", "fenokShortTermScore", "fenokLongTermScore", "name", "sector", "guruHolders", "perBandCurrent", "return12m", "ret1y", "dividendYield", "marketCap", "durabilityProfitabilityScore"],
   connected: ["ticker", "connectionCount", "actionScore", "name", "sector", "guruHolders", "marketCap", "perBandCurrent", "forwardPeFy1", "return12m"],
   value: ["ticker", "name", "sector", "per", "peForward", "forwardPeFy1", "pbr", "peg", "roe", "opm", "perBandCurrent", "rank"],
@@ -76,7 +78,6 @@ export const PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
     "ticker",
     "name",
     "sector",
-    "fenokConvictionScore",
     "profitabilityScore",
     "durabilityProfitabilityScore",
     "growthScore",
@@ -133,7 +134,7 @@ export const MOBILE_PRESET_KEYS: Record<ColumnPreset, ScreenerSortKey[]> = {
   momentum: ["growthRate", "momentum1m", "momentum3m", "momentum6m", "momentum12m", "return12m", "ret1y", "rank"],
   dividend: ["dividendYield", "dividendTtm", "ret1y", "ret3y", "ret5y", "per", "pbr", "marketCap"],
   guru: ["guruHolders", "per", "peForward", "perBandCurrent", "roe", "marketCap", "return12m", "connectionCount"],
-  fenokPicks: ["fenokConvictionScore", "profitabilityScore", "durabilityProfitabilityScore", "growthScore", "technicalFlowScore", "fenokShortTermScore", "fenokLongTermScore", "upsidePotentialScore", "downsidePressureScore", "marketCap", "per"],
+  fenokPicks: ["profitabilityScore", "durabilityProfitabilityScore", "growthScore", "technicalFlowScore", "fenokShortTermScore", "fenokLongTermScore", "upsidePotentialScore", "downsidePressureScore", "marketCap", "per"],
 };
 
 export function coerceColumnPreset(value: string | null | undefined): ColumnPreset | null {
