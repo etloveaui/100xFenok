@@ -488,8 +488,10 @@
   .mv-thead {
     display: none;
   }
+  /* Phone stack: name + reading take full rows, so the three numeric cells
+   * fill exactly three tracks (no phantom fourth column). */
   .mv-trow {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     height: auto;
     min-height: 44px;
     row-gap: 2px;
@@ -548,14 +550,20 @@
     height: 44px;
     padding: 0 14px;
   }
+  /* Phone sort control: single scrollable row so the control never splits
+   * into a ragged two-line header. */
   .mv-sorts {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 4px;
     padding: 10px 16px 0;
+    overflow-x: auto;
     font-size: 12px;
     color: var(--fnk-neutral-500);
+  }
+  .mv-sorts > * {
+    flex-shrink: 0;
   }
   .mv-sorts-label {
     font-weight: 600;

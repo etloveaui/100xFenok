@@ -806,7 +806,13 @@ export default function HomeCanvasPlusClient() {
                     {formatSignedPercentUnit(kospi.changePercent)}
                   </span>
                 </div>
-                <Sparkline values={kospi.series} tone={(kospi.changePercent ?? 0) >= 0 ? "gain" : "loss"} height={36} ariaLabel="KOSPI 가격 흐름" className="h-[26px] md:h-9" />
+                {kospi.series.length >= 2 ? (
+                  <Sparkline values={kospi.series} tone={(kospi.changePercent ?? 0) >= 0 ? "gain" : "loss"} height={36} ariaLabel="KOSPI 가격 흐름" className="h-[26px] md:h-9" />
+                ) : (
+                  <div className="flex h-[26px] items-center md:h-9" role="img" aria-label="KOSPI 가격 흐름 · 차트 데이터 대기">
+                    <span className="text-[11px] text-[var(--c-ink-4)]">차트 데이터 대기</span>
+                  </div>
+                )}
               </div>
             </Panel>
           </div>

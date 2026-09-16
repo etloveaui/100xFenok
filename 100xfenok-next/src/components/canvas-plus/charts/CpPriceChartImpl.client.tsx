@@ -268,13 +268,13 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
         <PanelHeader eyebrow={`Price · ${stats.rangeLabel}`} title={`${symbol ?? title} 가격 위치`} />
         <p className="px-4 py-2 text-[13px] font-semibold text-slate-900">{verdict}</p>
         <StatStrip className="mx-4 my-2 flex-wrap">
-          <div className="min-w-[30%] flex-1"><Stat label={`${stats.rangeLabel} 고가`} value={formatCurrency(stats.high, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.highGap)}`} /></div>
-          <div className="min-w-[30%] flex-1"><Stat label={`${stats.rangeLabel} 저가`} value={formatCurrency(stats.low, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.lowGain)}`} /></div>
-          <div className="min-w-[30%] flex-1"><Stat label={`${stats.rangeLabel} 수익률`} value={formatSignedPercent(stats.periodReturn)} sub={`${range} 보유 기준`} /></div>
-          <div className="min-w-[30%] flex-1"><Stat label="최근 거래일 시가" value={formatCurrency(isFiniteNumber(latest?.open) ? latest.open : null, currency)} /></div>
-          <div className="min-w-[30%] flex-1"><Stat label="최근 거래일 고가" value={formatCurrency(isFiniteNumber(latest?.high) ? latest.high : null, currency)} /></div>
-          <div className="min-w-[30%] flex-1"><Stat label="최근 거래일 저가" value={formatCurrency(isFiniteNumber(latest?.low) ? latest.low : null, currency)} /></div>
-          <div className="min-w-[30%] flex-1"><Stat label="최근 거래일 거래량" value={formatVolume(isFiniteNumber(latest?.volume) ? latest.volume : null)} sub={`10일 평균 ${formatVolume(stats.averageVolume)}`} /></div>
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 고가`} value={formatCurrency(stats.high, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.highGap)}`} /></div>
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 저가`} value={formatCurrency(stats.low, currency)} sub={`현재가 대비 ${formatSignedPercent(stats.lowGain)}`} /></div>
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label={`${stats.rangeLabel} 수익률`} value={formatSignedPercent(stats.periodReturn)} sub={`${range} 보유 기준`} /></div>
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label="최근 거래일 시가" value={formatCurrency(isFiniteNumber(latest?.open) ? latest.open : null, currency)} /></div>
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label="최근 거래일 고가" value={formatCurrency(isFiniteNumber(latest?.high) ? latest.high : null, currency)} /></div>
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label="최근 거래일 저가" value={formatCurrency(isFiniteNumber(latest?.low) ? latest.low : null, currency)} /></div>
+          <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label="최근 거래일 거래량" value={formatVolume(isFiniteNumber(latest?.volume) ? latest.volume : null)} sub={`10일 평균 ${formatVolume(stats.averageVolume)}`} /></div>
         </StatStrip>
         <EvidenceRail freshness={loadError && stats.sortedCount < 2 ? "error" : pending && stats.sortedCount < 2 ? "pending" : stats.sortedCount >= 2 ? "fresh" : "stale"} source="가격 데이터" asOf={formatDateLabel(latest?.time)} coverage={`${range} 위치 요약`} next={stats.sortedCount >= 2 ? undefined : "차트 데이터 확보 시"} onRetry={onRetry} skeletonDelayMs={120} />
       </Panel>
@@ -307,7 +307,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
         <Panel>
           <PanelHeader eyebrow={formatDateLabel(latest?.time)} title="최근 거래일 상세" right={<span className="text-[11px] text-slate-500">정규장</span>} />
           <div className="overflow-x-auto px-4 py-2">
-            <table className="w-full text-xs">
+            <table className="w-full min-w-[560px] text-xs">
               <thead>
                 <tr className="border-b border-slate-200 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-500">
                   <th className="px-2 py-2 text-left">구분</th>
