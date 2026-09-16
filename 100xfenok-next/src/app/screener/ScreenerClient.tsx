@@ -345,13 +345,9 @@ function actionTone(bucket: string | null | undefined, confidenceLabel?: string 
   return "border-slate-200 bg-white text-slate-700";
 }
 
-function fenokEdgeTone(score: number | null): string {
-  if (score === null) return "border-slate-200 bg-white text-slate-500";
-  if (score >= 70) return "border-emerald-200 bg-white text-emerald-700";
-  if (score >= 60) return "border-cyan-200 bg-white text-cyan-700";
-  if (score >= 50) return "border-amber-200 bg-white text-amber-700";
-  return "border-slate-200 bg-white text-slate-700";
-}
+// Score cells are neutral by design (표 B, owner mandate 2026-09-16): every
+// 0-100 score renders through ScoreCell (ink number + ink mini bar). Meaning
+// color lives only in gain/loss cells, so the score tone helpers are gone.
 
 // The integrated "Fenok Edge" single score is retired (owner mandate
 // 2026-08-03): it picked the first available of four candidates with no stated
@@ -386,22 +382,6 @@ function signalDirectionLabel(direction: string | null | undefined): string {
   return "·";
 }
 
-function signalScoreTone(score: number | null): string {
-  if (score === null || score === undefined) return "border-slate-200 bg-white text-slate-500";
-  if (score >= 70) return "border-emerald-200 bg-white text-emerald-700";
-  if (score >= 60) return "border-cyan-200 bg-white text-cyan-700";
-  if (score >= 50) return "border-amber-200 bg-white text-amber-700";
-  return "border-slate-200 bg-white text-slate-500";
-}
-
-function downsideRiskTone(score: number | null): string {
-  if (score === null || score === undefined) return "border-slate-200 bg-white text-slate-500";
-  if (score >= 70) return "border-rose-200 bg-white text-rose-700";
-  if (score >= 60) return "border-amber-200 bg-white text-amber-700";
-  if (score >= 50) return "border-slate-200 bg-white text-slate-500";
-  return "border-emerald-200 bg-white text-emerald-700";
-}
-
 function guruHoldersCount(stock: ScreenerStock): number | null {
   return typeof stock.guruHolders === "number" && Number.isFinite(stock.guruHolders) && stock.guruHolders > 0
     ? stock.guruHolders
@@ -431,7 +411,7 @@ function GuruHolderBadge({
       data-testid="screener-guru-badge"
       data-ticker={stock.ticker}
       data-superinvestors-href={ROUTES.superinvestorsByTicker(stock.ticker)}
-      className="touch-target inline-flex shrink-0 items-center justify-center rounded-full border border-violet-200 bg-white px-2 py-px text-[9px] font-black text-violet-700 transition hover:border-violet-400"
+      className="touch-target inline-flex shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white px-2 py-px text-[9px] font-black text-slate-700 transition hover:border-slate-400"
       title={`${stock.ticker} 13F 보유 투자자 ${holders.toLocaleString("ko-KR")}명 · 투자자 화면에서 상세 보기`}
       onClick={(event) => {
         onBeforeNavigate?.();
@@ -581,6 +561,44 @@ function getMomentumClass(value: number | null): string {
   return value >= 0 ? "text-[var(--c-up)]" : "text-[var(--c-down)]";
 }
 
+function ScoreMiniBar({ score }: { score: number | null }) {
+  const pct = score === null ? 0 : Math.max(0, Math.min(100, score));
+  return (
+    <span aria-hidden="true" className="h-[4px] w-10 overflow-hidden rounded-full bg-[var(--c-surface-2)]">
+      <i className="block h-full rounded-full bg-[var(--c-ink)]" style={{ width: `${pct}%` }} />
+    </span>
+  );
+}
+
+// One cell language for every 0-100 score column (표 A+B): number + mini bar,
+// single ink bar on a light neutral track (kit RankBars language, cell scale).
+// Meaning color lives only in gain/loss cells — score pills stay neutral.
+function ScoreCell({
+  score,
+  title,
+  ariaLabel,
+  prefix,
+}: {
+  score: number | null;
+  title: string;
+  ariaLabel: string;
+  prefix?: React.ReactNode;
+}) {
+  return (
+    <span className="inline-flex min-w-0 justify-end">
+      <span
+        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-[2px] text-[10px] font-black tabular-nums leading-[14px] text-slate-700"
+        title={title}
+        aria-label={ariaLabel}
+      >
+        {prefix}
+        {score ?? "—"}
+        <ScoreMiniBar score={score} />
+      </span>
+    </span>
+  );
+}
+
 function renderCell(
   stock: ScreenerStock,
   key: ScreenerSortKey,
@@ -631,22 +649,21 @@ function renderCell(
       const raw = isShortTerm ? stock.fenokShortTermScore : stock.fenokLongTermScore;
       const score = typeof raw === "number" && Number.isFinite(raw) ? Math.round(raw) : null;
       return (
-        <span className="inline-flex min-w-0 justify-end">
-          <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums leading-[14px]", fenokEdgeTone(score))}
-            title={fenokEdgeTitle(stock)}
-            aria-label={`${isShortTerm ? "단기" : "장기"} 스코어 ${score ?? "정보 없음"}`}
-          >
-            <span aria-hidden="true">{isShortTerm ? "단" : "장"}</span>
-            {score ?? "—"}
-          </span>
-        </span>
+        <ScoreCell
+          score={score}
+          title={fenokEdgeTitle(stock)}
+          ariaLabel={`${isShortTerm ? "단기" : "장기"} 스코어 ${score ?? "정보 없음"}`}
+        />
       );
     }
     // One headline number per cell: the six 9px per-axis mini-chips (수익·내구·
     // 성장·기술·상방·하방) are gone from the row. That data is not lost — the
     // expanded detail panel on the same row renders every axis with its band,
     // direction and coverage, one click away.
+    // The conviction column is hidden from every default preset (표 A, owner
+    // mandate 2026-09-16): saved sorts and shared URLs still resolve through
+    // the sort mapping, and this case keeps rendering the unified cell language
+    // if the column is ever shown again.
     case "fenokConvictionScore": {
       const shortTerm = commonBasisShortTermView(stock);
       // The common-basis figure is a composition disclosure per the data
@@ -668,16 +685,11 @@ function renderCell(
           )}
           title={`${shortTermBasis.label} · ${shortTermBasis.comparisonNote}`}
         >
-          <span className="inline-flex flex-wrap justify-end gap-1">
-            <span
-              className={cx("inline-flex items-center gap-0.5 rounded-full border px-1.5 py-[2px] text-[10px] font-black tabular-nums leading-[14px]", signalScoreTone(shortScore))}
-              title={`${shortTermBasis.detail} ${shortTermBasis.comparisonNote} 투자 조언이 아닙니다.`}
-              aria-label={`단기 컨빅션 ${shortScore ?? "정보 없음"} · ${shortTermBasis.label}`}
-            >
-              <span aria-hidden="true">단기</span>
-              {shortScore ?? "—"}
-            </span>
-          </span>
+          <ScoreCell
+            score={shortScore}
+            title={`${shortTermBasis.detail} ${shortTermBasis.comparisonNote} 투자 조언이 아닙니다.`}
+            ariaLabel={`단기 컨빅션 ${shortScore ?? "정보 없음"} · ${shortTermBasis.label}`}
+          />
           {isMobile ? (
             <span
               className="max-w-full whitespace-normal break-words text-[9px] font-bold text-[var(--c-ink-3)]"
@@ -710,16 +722,12 @@ function renderCell(
       const dirLabel = signalDirectionLabel(direction);
       const dirPrefix = dirLabel === "·" ? null : dirLabel;
       return (
-        <span className="inline-flex min-w-0 justify-end">
-          <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums leading-[14px]", signalScoreTone(score))}
-            title={[columnLabel(key), dirPrefix, titleSuffix].filter(Boolean).join(" · ")}
-            aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
-          >
-            {dirPrefix === null ? null : <span aria-hidden="true">{dirPrefix}</span>}
-            {score ?? "—"}
-          </span>
-        </span>
+        <ScoreCell
+          score={score}
+          title={[columnLabel(key), dirPrefix, titleSuffix].filter(Boolean).join(" · ")}
+          ariaLabel={`${columnLabel(key)} ${score ?? "정보 없음"}`}
+          prefix={dirPrefix === null ? undefined : <span aria-hidden="true">{dirPrefix}</span>}
+        />
       );
     }
     case "downsidePressureScore": {
@@ -727,15 +735,11 @@ function renderCell(
         ? Math.round(stock.downsidePressureScore)
         : null;
       return (
-        <span className="inline-flex min-w-0 justify-end">
-          <span
-            className={cx("inline-flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-black tabular-nums leading-[14px]", downsideRiskTone(score))}
-            title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · ${FENOK_SIGNAL_DISCLOSURE}`}
-            aria-label={`${columnLabel(key)} ${score ?? "정보 없음"}`}
-          >
-            {score ?? "—"}
-          </span>
-        </span>
+        <ScoreCell
+          score={score}
+          title={`${columnLabel(key)} · 하방 위험 축: 높을수록 위험 · ${FENOK_SIGNAL_DISCLOSURE}`}
+          ariaLabel={`${columnLabel(key)} ${score ?? "정보 없음"}`}
+        />
       );
     }
     case "sector":
@@ -786,7 +790,7 @@ function renderCell(
       return renderEstimateCell(stock, key, (value) => (value === null ? "—" : `${value.toFixed(1)}%`), "text-slate-700");
     case "guruHolders":
       return guruHoldersCount(stock) !== null ? (
-        <span className="tabular-nums font-bold text-violet-700">{guruHoldersCount(stock)}</span>
+        <span className="tabular-nums font-bold text-slate-700">{guruHoldersCount(stock)}</span>
       ) : (
         <span className="text-slate-300">—</span>
       );
