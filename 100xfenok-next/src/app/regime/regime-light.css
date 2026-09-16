@@ -24,6 +24,7 @@
 
 .rgm-title-block {
   display: flex;
+  flex: 1 1 auto;
   align-items: baseline;
   gap: 12px;
   min-width: 0;
@@ -38,6 +39,10 @@
 }
 
 .rgm-verdict {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 13px;
   color: var(--fnk-neutral-500);
 }
@@ -96,7 +101,7 @@
 .rgm-gauge-track {
   position: relative;
   height: 10px;
-  border-radius: 3px;
+  border-radius: 4px;
   background: linear-gradient(
     90deg,
     var(--fnk-color-loss-soft) 0%,
@@ -350,7 +355,7 @@
   display: inline-block;
   width: 8px;
   height: 8px;
-  border-radius: 2px;
+  border-radius: 4px;
   background: var(--fnk-neutral-100);
   border: 1px solid var(--fnk-neutral-200);
 }
@@ -431,7 +436,7 @@
   justify-content: center;
   height: 32px;
   padding: 0 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
   color: var(--fnk-neutral-700);
@@ -459,6 +464,13 @@
 
   .rgm-meters {
     padding-top: 0;
+  }
+
+  /* The 10px observation-date line wraps on phones instead of clipping to
+   * "기준 2026-09-11 · 기..." (it inherits nowrap from .rgm-axis otherwise). */
+  .rgm-axis-asof {
+    white-space: normal;
+    overflow: visible;
   }
 
   /* slice 9 mobile-390: 44px tap targets. */

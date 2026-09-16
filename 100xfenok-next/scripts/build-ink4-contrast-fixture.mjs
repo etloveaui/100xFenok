@@ -96,6 +96,32 @@ const CURATED_BACKGROUND_EVIDENCE = {
     path: "src/app/portfolio/PortfolioClient.tsx",
     target_hash: "5ba5f9b2bdd93d0c6f5794646f1e9ad722d93d3cbf1a7a8f13a6a4f7debe4508",
   },
+  "src/app/market-valuation/YardeniCard.tsx#59e72af2b94d#1": {
+    // B3-9 radius sweep normalized the card shell (rounded-[1.5rem] ->
+    // rounded-2xl); re-pin to the same panel line.
+    background: "panel",
+    path: "src/app/market-valuation/YardeniCard.tsx",
+    target_hash: "110fbd2d9dd382ebbc4199f7aea0898127b26d8935411a8c6ed702f67408c202",
+  },
+  "src/app/market-valuation/YardeniCard.tsx#027f0ed6a64d#1": {
+    // Same B3-9 card-shell re-pin as #59e72af2b94d (shared evidence line).
+    background: "panel",
+    path: "src/app/market-valuation/YardeniCard.tsx",
+    target_hash: "110fbd2d9dd382ebbc4199f7aea0898127b26d8935411a8c6ed702f67408c202",
+  },
+  "src/app/market-valuation/YardeniCard.tsx#4ce2f3ec025e#1": {
+    // Same B3-9 card-shell re-pin as #59e72af2b94d (shared evidence line).
+    background: "panel",
+    path: "src/app/market-valuation/YardeniCard.tsx",
+    target_hash: "110fbd2d9dd382ebbc4199f7aea0898127b26d8935411a8c6ed702f67408c202",
+  },
+  "src/app/market-valuation/structure/MarketStructureDetailClient.tsx#7842b5ca5da5#1": {
+    // B3-9 radius sweep normalized the slot shell (rounded-[1.2rem] ->
+    // rounded-2xl); re-pin to the same panel line.
+    background: "panel",
+    path: "src/app/market-valuation/structure/MarketStructureDetailClient.tsx",
+    target_hash: "7818ee27513ea2845c4f6722bb66761c160b10e2f47099ef7f227d9dce63f078",
+  },
 };
 
 const BACKGROUND_PATTERNS = {

@@ -43,7 +43,7 @@
   align-items: center;
   gap: 4px 12px;
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--fnk-neutral-500);
 }
 
@@ -90,7 +90,7 @@
   padding: 0 12px;
   display: inline-flex;
   align-items: center;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
   color: var(--fnk-neutral-600);
@@ -133,7 +133,7 @@
 
 .mv-sum-cap {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--fnk-neutral-600);
 }
@@ -146,7 +146,7 @@
 
 .mv-sum-note {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--fnk-neutral-600);
 }
 
@@ -172,10 +172,17 @@
 
 .mv-thead {
   height: 30px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--fnk-neutral-500);
   border-bottom: 1px solid var(--fnk-neutral-100);
+}
+
+/* Single hairline under the peer header: the header owns border-bottom and the
+ * first body row drops its border-top (:first-of-type never matches a body
+ * row — the header div is the first div among the siblings). */
+.mv-thead + .mv-trow {
+  border-top: 0;
 }
 
 .mv-trow {
@@ -219,9 +226,12 @@
   min-width: 0;
 }
 
+/* Board name column: 180px floor fits the longest asset name at 12px
+ * ("코스닥 150 (KOSDQ150 Index)" ≈ 180px), growing to 240px when the panel
+ * allows it — 1100px viewports no longer clip names to ellipsis. */
 .mv-brow {
   display: grid;
-  grid-template-columns: 26px 140px minmax(0, 1fr) 52px 72px;
+  grid-template-columns: 26px minmax(180px, 240px) minmax(0, 1fr) 52px 72px;
   align-items: center;
   gap: 12px;
   height: 34px;
@@ -240,7 +250,7 @@
 
 .mv-brank {
   text-align: right;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--fnk-neutral-500);
 }
@@ -287,7 +297,7 @@
 .mv-sorts button {
   height: 28px;
   padding: 0 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
   color: var(--fnk-neutral-600);
@@ -390,7 +400,7 @@
 .mv-band-mini {
   width: 100%;
   height: 6px;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .mv-band-mini i {
@@ -400,7 +410,7 @@
 
 .mv-note {
   padding: 8px 16px 0;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--fnk-neutral-500);
 }
@@ -418,7 +428,7 @@
 .mv-chart-tabs button {
   height: 28px;
   padding: 0 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 12px;
   font-weight: 500;
   color: var(--fnk-neutral-600);
@@ -435,7 +445,7 @@
 
 .mv-chart-cursor {
   margin-left: auto;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--fnk-neutral-500);
 }
 
@@ -479,7 +489,7 @@
 
 .mv-foot {
   padding: 0 4px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--fnk-neutral-500);
 }
 

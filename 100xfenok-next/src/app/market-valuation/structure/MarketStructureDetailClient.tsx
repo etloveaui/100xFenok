@@ -78,7 +78,7 @@ function MetricCard({
       <p className="mt-1 text-2xl font-black tabular-nums text-[var(--c-ink)]">
         {value}
       </p>
-      <p className="mt-1 min-w-0 break-words text-[11px] font-semibold leading-4 text-[var(--c-ink-3)]">
+      <p className="mt-1 min-w-0 break-words text-[12px] font-semibold leading-4 text-[var(--c-ink-3)]">
         {detail}
       </p>
     </div>
@@ -100,7 +100,7 @@ function SlotShell({
     <section
       data-slot={`market-structure-${id}`}
       data-market-structure-slot={id}
-      className="min-w-0 rounded-[1.2rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]"
+      className="min-w-0 rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]"
     >
       <header className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
         <h2 className="min-w-0 text-sm font-black tracking-tight text-[var(--c-ink)]">{title}</h2>
@@ -225,7 +225,7 @@ export default function MarketStructureDetailClient({
       ) : null}
 
       {state === "failed" ? (
-        <div className="rounded-[1.2rem] border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-4 py-3 text-sm font-semibold text-[var(--c-ink-2)]">
+        <div className="rounded-2xl border border-[var(--c-line-2)] bg-[var(--c-surface-2)] px-4 py-3 text-sm font-semibold text-[var(--c-ink-2)]">
           시장 구조 데이터를 불러오지 못했습니다.
         </div>
       ) : null}

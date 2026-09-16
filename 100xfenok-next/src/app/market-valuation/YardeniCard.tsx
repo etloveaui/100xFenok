@@ -75,7 +75,7 @@ function AsOfPill({ value }: { value: string | null | undefined }) {
   const stale = isStaleAsOf(value);
   return (
     <span
-      className={`rounded-full border px-2 py-1 text-[10px] font-black tabular-nums ${
+      className={`rounded-full border px-2 py-1 text-[12px] font-black tabular-nums ${
         stale
           ? "border-[var(--c-warn)] bg-[var(--c-warn-soft)] text-[var(--c-warn)]"
           : "border-[var(--c-line)] bg-[var(--c-surface-2)] text-[var(--c-ink-3)]"
@@ -150,12 +150,12 @@ export default function YardeniCard() {
   const v = verdict(active.premium_pct);
 
   return (
-    <div className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-5">
+    <div className="rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] p-5">
       <div>
         <h2 className="text-sm font-black tracking-tight text-[var(--c-ink)]">
           야데니 모델 (채권 PER)
         </h2>
-        <p className="mt-1 text-[11px] leading-5 text-[var(--c-ink-3)]">
+        <p className="mt-1 text-[12px] leading-5 text-[var(--c-ink-3)]">
           채권 PER × EPS = 주식 적정가. 국채·회사채 대비
           주식이 비싼지 보는 잣대.
         </p>
@@ -163,7 +163,7 @@ export default function YardeniCard() {
 
       <p className={`mt-3 text-xs font-black ${v.tone}`}>{v.text}</p>
 
-      <div className="mt-2 flex flex-wrap items-baseline gap-3 text-[11px] font-bold text-[var(--c-ink-3)]">
+      <div className="mt-2 flex flex-wrap items-baseline gap-3 text-[12px] font-bold text-[var(--c-ink-3)]">
         <span>
           S&P 500{" "}
           <span className="font-black text-[var(--c-ink)]">
@@ -257,7 +257,7 @@ export default function YardeniCard() {
       ) : null}
 
       {pctRank !== null ? (
-        <p className="mt-3 text-[11px] font-bold text-[var(--c-ink-3)]">
+        <p className="mt-3 text-[12px] font-bold text-[var(--c-ink-3)]">
           1990년 이후 프리미엄 상위 {pctRank}% 수준
         </p>
       ) : null}

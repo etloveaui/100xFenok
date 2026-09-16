@@ -857,13 +857,15 @@ export default function RegimeClient() {
   // 주간 시황 기록 소스가 아직 없다(생산자·산출물·스키마 없음). 소스가 생겨 이
   // 배열이 채워지면 기록 패널이 자동으로 펼쳐진다.
   const historyArchive: RegimeHistoryWeek[] = [];
+  // The head verdict truncates to one line (§6): the full sentence stays on title.
+  const verdict = headerSentence(axes, gauge, isLoading, failed);
 
   return (
     <div className="rgm" data-regime-surface>
       <div className="rgm-head">
         <div className="rgm-title-block">
           <h1 className="rgm-title">시황</h1>
-          <span className="rgm-verdict">{headerSentence(axes, gauge, isLoading, failed)}</span>
+          <span className="rgm-verdict" title={verdict}>{verdict}</span>
         </div>
         <div className="rgm-tabs">
           <MarketSectionNav active="regime" />

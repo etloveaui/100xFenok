@@ -639,6 +639,11 @@
 .sec-rotation-map {
   display: block;
   padding: 8px 16px 0;
+  /* Kill SVG letterboxing: the 1200x400 viewBox rendered at ~1062px content
+   * width with fixed height=400 left ~23px empty bands top AND bottom
+   * (preserveAspectRatio meet). height:auto keeps the 3:1 aspect exactly and
+   * both audit gaps (609..655 h=47, 984..1027 h=44) collapse to ~24px rhythm. */
+  height: auto;
 }
 
 .sec-rotation-list {
