@@ -67,10 +67,6 @@ export const METRIC_GLOSSARY = {
     label: "가이던스",
     description: "회사가 직접 제시하는 향후 실적 전망입니다. 애널리스트 추정치와 비교하는 기준이 됩니다.",
   },
-  conviction: {
-    label: "컨빅션",
-    description: "여러 신호를 종합했을 때 판단의 확신이 얼마나 강한지를 나타내는 정도입니다. 높을수록 근거가 서로 일치한다는 뜻입니다. 이 컬럼의 정렬은 단기(Short) 점수 기준이며, 장기(Long) 점수는 별도로 표시됩니다.",
-  },
   ticker: {
     label: "티커",
     description: "종목을 식별하는 거래소 코드입니다. 같은 칸 아래 줄에는 종목명이 함께 표시됩니다.",
@@ -221,7 +217,6 @@ const KEY_HINTS: Array<[RegExp, MetricGlossaryKey]> = [
   [/consensus|컨센서스|시장\s*예상치/i, "consensus"],
   [/revision|리비전|추정치\s*조정|추정\s*변경/i, "revision"],
   [/guidance|가이던스|실적\s*가이드/i, "guidance"],
-  [/conviction|컨빅션|확신도/i, "conviction"],
   [/coverage|커버리지|분석\s*범위/i, "coverage"],
   [/durability|내구\s*수익성|수익\s*지속/i, "durability"],
   [/upsidepotential|상승\s*잠재력|상방\s*잠재/i, "upsidePotential"],
