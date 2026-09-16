@@ -173,7 +173,7 @@ function SignedBar({ change }: { change: number | null }) {
   );
 }
 
-export default function IbQuoteStrip() {
+export default function IbQuoteStrip({ children }: { children?: React.ReactNode }) {
   const [cells, setCells] = useState<QuoteCell[]>(() =>
     STRIP_SYMBOLS.map((symbol): QuoteCell => ({ symbol, quote: null, asOf: null, status: "loading" })),
   );
@@ -226,7 +226,7 @@ export default function IbQuoteStrip() {
               data-infinite-buying-quote-symbol={cell.symbol}
             >
               <div className="flex min-w-0 items-center justify-between gap-2">
-                <span className="truncate font-mono text-[11px] font-black tracking-[0.08em] text-[var(--c-ink-2)]">
+                <span className="truncate font-mono text-[12px] font-black tracking-[0.08em] text-[var(--c-ink-2)]">
                   {cell.symbol}
                 </span>
                 <Pill tone="neutral" className="shrink-0">
@@ -237,12 +237,12 @@ export default function IbQuoteStrip() {
                 {cell.quote ? formatMoney(cell.quote.price, "USD", 2) : "—"}
               </span>
               <div className="flex min-w-0 items-center gap-2">
-                <span className="tabular-nums text-[11px] font-black" style={{ color: changeTone(change) }}>
+                <span className="tabular-nums text-[12px] font-black" style={{ color: changeTone(change) }}>
                   {changeText(cell.quote)}
                 </span>
                 <SignedBar change={change} />
               </div>
-              <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-[var(--c-ink-3)]">
+              <div className="flex min-w-0 items-center gap-1.5 text-[12px] text-[var(--c-ink-3)]">
                 <span
                   aria-hidden="true"
                   className="inline-block h-1.5 w-1.5 shrink-0 rounded-full"
@@ -254,7 +254,8 @@ export default function IbQuoteStrip() {
           );
         })}
       </StatStrip>
-      <p className="text-[11px] font-semibold leading-5 text-[var(--c-ink-2)]" data-infinite-buying-quote-reading="true">
+      {children}
+      <p className="text-[12px] font-semibold leading-5 text-[var(--c-ink-2)]" data-infinite-buying-quote-reading="true">
         {readingLine(cells)}
       </p>
       <EvidenceRail

@@ -46,10 +46,9 @@ export default async function InfiniteBuyingPage({ searchParams }: PageProps) {
             className="shrink-0 rounded-[var(--panel-r)] border border-slate-200 bg-white px-3 py-3 shadow-sm"
             data-infinite-buying-boundary="true"
           >
-            <IbQuoteStrip />
-            <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <IbQuoteStrip>
               <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-700">
+                <p className="text-[12px] font-black uppercase tracking-[0.12em] text-amber-700">
                   Infinite Buying
                 </p>
                 <h1 className="text-base font-black text-slate-950 sm:text-lg">Guide 계산기</h1>
@@ -77,33 +76,33 @@ export default async function InfiniteBuyingPage({ searchParams }: PageProps) {
                   </span>
                 </div>
               </div>
-              <nav
-                className="grid min-w-[min(100%,24rem)] grid-cols-1 gap-2 sm:grid-cols-3"
-                aria-label="Infinite Buying 관련 경로"
-              >
+            </IbQuoteStrip>
+            <nav
+              className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3"
+              aria-label="Infinite Buying 관련 경로"
+            >
                 <TransitionLink
                   href={ROUTES.ib}
-                  className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100"
+                  className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-[12px] font-black text-slate-700 transition hover:bg-slate-100"
                   data-infinite-buying-owner-link="ib-helper"
                 >
                   IB Helper
                 </TransitionLink>
                 <TransitionLink
                   href={`${ROUTES.ib}?v2=1`}
-                  className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100"
+                  className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-[12px] font-black text-slate-700 transition hover:bg-slate-100"
                   data-infinite-buying-owner-link="native-preview"
                 >
                   V2 미리보기
                 </TransitionLink>
                 <TransitionLink
                   href={ROUTES.vr}
-                  className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100"
+                  className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-[12px] font-black text-slate-700 transition hover:bg-slate-100"
                   data-infinite-buying-owner-link="vr-calculator"
                 >
                   VR 계산기
                 </TransitionLink>
               </nav>
-            </div>
           </section>
           <div className="flex-1 min-h-0" data-infinite-buying-legacy-frame="true">
             {frame}
