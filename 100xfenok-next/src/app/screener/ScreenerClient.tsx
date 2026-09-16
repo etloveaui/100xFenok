@@ -2894,7 +2894,7 @@ export default function ScreenerClient({
       </section>
 
       {/* Filter bar — the toggle lives in the toolbar row; the deck opens under it. */}
-      {canvasPlusPreview && (filterDeckOpen || activeFilterChips.length > 0) ? (
+      {canvasPlusPreview ? (filterDeckOpen || activeFilterChips.length > 0 ? (
         <section data-canvas-plus-screener-filter-deck="true">
           {filterDeckOpen ? (
             <div className="cp-card cp-screener-filter-deck cpw4-filter-drawer">
@@ -3275,6 +3275,7 @@ export default function ScreenerClient({
             </div>
           ) : null}
         </section>
+        ) : null
       ) : (
       <section className="rounded-[1.5rem] border border-[var(--c-line)] bg-[var(--c-panel)] p-4 shadow-[var(--sh-sm)]">
         <div className="flex flex-col gap-3">
