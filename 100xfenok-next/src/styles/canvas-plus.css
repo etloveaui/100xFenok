@@ -2027,7 +2027,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
-  gap: 12px;
+  gap: 8px; /* v3.1: table header must start within ~320px of the viewport top. */
   width: 100%;
   max-width: 1440px;
   min-height: 100%;
@@ -2612,10 +2612,16 @@
   text-transform: uppercase;
 }
 
-.cp-screener-selection-card,
-.cp-screener-toolbar-card,
-.cp-screener-results-shell {
+.cp-screener-selection-card {
+  padding: 8px 12px;
+}
+
+.cp-screener-toolbar-card {
   padding: 12px;
+}
+
+.cp-screener-results-shell {
+  padding: 8px;
 }
 
 .cp-screener-selection-layout {
@@ -2753,7 +2759,7 @@
 
 .cp-screener-results-shell {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
   overflow: hidden;
 }
@@ -2967,7 +2973,7 @@
   align-items: center;
   gap: 6px 10px;
   min-width: 0;
-  padding: 6px 10px;
+  padding: 4px 10px; /* v3.1: vertical trim; buttons keep their own height. */
   border: 1px solid var(--cp-border);
   border-radius: var(--cp-radius-md);
   background: var(--cp-surface);
@@ -3006,6 +3012,26 @@
   padding: 0;
   border-top: 0;
   background: transparent;
+}
+
+/* v3.1: the merged toolbar row stays on one line at desktop widths. The rail
+   keeps freshness/as-of/evidence and sheds the source + coverage spans that
+   the title stat already carries. A closed filter deck takes no space. */
+@media (min-width: 921px) {
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-row {
+    flex-wrap: nowrap;
+  }
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-provenance .evidence-rail-row {
+    gap: 8px;
+  }
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-provenance .evidence-rail-row > span.shrink-0.max-md\:hidden,
+  .canvas-plus.cp-screener-service .cp-screener-toolbar-provenance .evidence-rail-row > span.max-md\:hidden:not(.shrink-0) {
+    display: none;
+  }
+}
+
+[data-canvas-plus-screener-filter-deck]:empty {
+  display: none;
 }
 
 @media (max-width: 767px) {

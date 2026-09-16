@@ -2430,7 +2430,7 @@ export default function ScreenerClient({
           </button>
         ))}
       </div>
-      <p className="text-[12px] text-[var(--c-ink-3)]">분석: 표로 거르고 줄세우기 · 발견: 다섯 질문으로 시작</p>
+      <p className="whitespace-nowrap text-[12px] text-[var(--c-ink-3)]">분석: 표로 거르고 줄세우기 · 발견: 다섯 질문으로 시작</p>
     </div>
   );
 
@@ -2478,20 +2478,28 @@ export default function ScreenerClient({
       {modeToggle}
       {canvasPlusPreview ? (
         <section data-canvas-plus-screener-title="true">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="text-[18px] font-semibold text-[var(--c-ink)]">종목 스크리너</h1>
-              <p className="mt-1 text-[13px] font-semibold text-[var(--c-ink-2)]">
-                글로벌 {stocks.length.toLocaleString("ko-KR")}개 종목 · 현재 {sorted.length.toLocaleString("ko-KR")}개 중 가격 확인 {pricedCount.toLocaleString("ko-KR")}개({priceCoverageRatio}%)
-                {missingPriceCount > 0 ? ` · 가격 미확인 ${missingPriceCount.toLocaleString("ko-KR")}개는 뒤로 정렬됩니다` : null}
-              </p>
-            </div>
+          {/* v3.1: title + coverage stat on one line; the full sentence stays a tooltip. */}
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="shrink-0 text-[18px] font-semibold text-[var(--c-ink)]">종목 스크리너</h1>
+            <p
+              className="min-w-0 flex-1 truncate text-[12px] font-semibold text-[var(--c-ink-2)]"
+              title={`글로벌 ${stocks.length.toLocaleString("ko-KR")}개 종목 · 현재 ${sorted.length.toLocaleString("ko-KR")}개 중 가격 확인 ${pricedCount.toLocaleString("ko-KR")}개(${priceCoverageRatio}%)${missingPriceCount > 0 ? ` · 가격 미확인 ${missingPriceCount.toLocaleString("ko-KR")}개는 뒤로 정렬됩니다` : ""}`}
+            >
+              글로벌 {stocks.length.toLocaleString("ko-KR")}개 종목 · 현재 {sorted.length.toLocaleString("ko-KR")}개 중 가격 확인 {pricedCount.toLocaleString("ko-KR")}개({priceCoverageRatio}%)
+              {missingPriceCount > 0 ? ` · 가격 미확인 ${missingPriceCount.toLocaleString("ko-KR")}개는 뒤로 정렬됩니다` : null}
+            </p>
             <Pill tone="neutral" aria-label={`데이터 원천 ${sourceDateLabel}`}>
               {sourceDateLabel}
             </Pill>
           </div>
 
-          <div className="mt-2 flex flex-wrap items-center gap-2" aria-label="스크리너 범위">
+          {/* v3.1: one compact toolbar row — scope, search, filter toggle, result
+              count, page status, column/view/density controls and provenance. */}
+          <div
+            className="cp-screener-toolbar-row mt-2"
+            data-canvas-plus-screener-toolbar="true"
+            aria-label="스크리너 범위"
+          >
             <Pill tone="neutral">
               주식 {stocks.length.toLocaleString("ko-KR")}
             </Pill>
@@ -2562,7 +2570,7 @@ export default function ScreenerClient({
               )}
             </div>
 
-            <form className="flex min-h-9 min-w-0 flex-1 items-center gap-2 max-[600px]:order-last max-[600px]:basis-full max-[600px]:w-full" onSubmit={(event) => event.preventDefault()}>
+            <form className="flex min-h-9 min-w-24 flex-1 items-center gap-2 md:max-w-72 max-[600px]:order-last max-[600px]:basis-full max-[600px]:w-full" onSubmit={(event) => event.preventDefault()}>
               <label className="sr-only" htmlFor="cp-screener-search-input">
                 티커 또는 종목명 검색
               </label>
@@ -2587,14 +2595,6 @@ export default function ScreenerClient({
                 <span aria-hidden="true" className="inline-flex min-h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--c-line)] text-[11px] font-black text-[var(--c-ink-3)]">/</span>
               )}
             </form>
-          </div>
-
-          {/* One compact toolbar row: filter toggle, result count, page status,
-              column/view/density controls and provenance on a single line. */}
-          <div
-            className="cp-screener-toolbar-row mt-2"
-            data-canvas-plus-screener-toolbar="true"
-          >
             <button
               type="button"
               aria-expanded={filterDeckOpen}
@@ -2818,11 +2818,21 @@ export default function ScreenerClient({
       >
         <div className={canvasPlusPreview ? "cp-screener-selection-layout" : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"}>
           <div className={canvasPlusPreview ? "cp-screener-selection-copy" : "min-w-0"}>
-            <p className={canvasPlusPreview ? "cp-screener-section-label" : "text-[11px] font-black uppercase tracking-[0.1em] text-slate-500"}>선택 작업</p>
-            <p className={canvasPlusPreview ? "cp-screener-selection-summary" : "mt-1 text-sm font-bold text-slate-700"}>
-              현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
-              {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
-            </p>
+            {canvasPlusPreview ? (
+              <p className="cp-screener-selection-summary">
+                <span className="cp-screener-section-label">선택 작업</span>
+                {" · "}현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
+                {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
+              </p>
+            ) : (
+              <>
+                <p className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">선택 작업</p>
+                <p className="mt-1 text-sm font-bold text-slate-700">
+                  현재 필터에서 {selectedRows.length.toLocaleString("ko-KR")}개 선택
+                  {selectedRows.length > 0 ? ` · 연결 ETF ${selectedSingleStockEtfCount.toLocaleString("ko-KR")}개` : ""}
+                </p>
+              </>
+            )}
           </div>
           <div className={canvasPlusPreview ? "cp-screener-selection-actions" : "flex flex-wrap gap-2"}>
             <button
