@@ -95,7 +95,7 @@ function resultsFreshness(results: ScreenerStock[], dataReady: boolean, failed: 
   if (failed) return "error";
   if (!dataReady) return "pending";
   const partial = results.some(
-    (stock) => !hasBand(stock) || !finiteNumber(stock.fenokConvictionScore) || !finiteNumber(stock.guruHolders),
+    (stock) => !hasBand(stock) || !finiteNumber(stock.fenokShortTermScore) || !finiteNumber(stock.guruHolders),
   );
   return partial ? "partial" : "fresh";
 }
@@ -103,10 +103,10 @@ function resultsFreshness(results: ScreenerStock[], dataReady: boolean, failed: 
 function coverageText(results: ScreenerStock[]): string {
   const total = results.length;
   const band = results.filter(hasBand).length;
-  const conviction = results.filter((stock) => finiteNumber(stock.fenokConvictionScore)).length;
+  const short = results.filter((stock) => finiteNumber(stock.fenokShortTermScore)).length;
   const holders = results.filter((stock) => finiteNumber(stock.guruHolders) && stock.guruHolders > 0).length;
   const evidenceOnly = results.filter((stock) => stock.guruHolders === 0).length;
-  return `밴드 ${band}/${total} · 컨빅션 ${conviction}/${total} · 보유 ${holders}/${total}${evidenceOnly > 0 ? ` · 13F 근거 연결 ${evidenceOnly}` : ""}`;
+  return `밴드 ${band}/${total} · 단기 ${short}/${total} · 보유 ${holders}/${total}${evidenceOnly > 0 ? ` · 13F 근거 연결 ${evidenceOnly}` : ""}`;
 }
 
 function MomentumSpark({ stock }: { stock: ScreenerStock }) {
@@ -406,9 +406,6 @@ export default function ScreenerDiscover({
                         <span className="text-[12px] font-semibold tabular-nums text-[var(--c-ink-2)]">{fmtScore(stock.fenokLongTermScore)}</span>
                         <span className="text-[9.5px] text-[var(--c-ink-3)]">장기</span>
                       </span>
-                      <span className="inline-flex h-5 min-w-[34px] items-center justify-center rounded-full border border-[var(--c-line)] bg-[var(--c-panel)] px-1.5 text-[11px] font-bold tabular-nums text-[var(--c-ink)]" title={`컨빅션 ${fmtScore(stock.fenokConvictionScore)}`}>
-                        {fmtScore(stock.fenokConvictionScore)}
-                      </span>
                       <span className="hidden w-24 shrink-0 md:block" title="PER 밴드 위치">
                         <PerBandBar current={stock.perBandCurrent} min={stock.perBandMin} avg={stock.perBandAvg} max={stock.perBandMax} />
                       </span>
@@ -459,10 +456,6 @@ export default function ScreenerDiscover({
                   <span>
                     <span className="block text-[18px] font-bold tabular-nums text-[var(--c-ink)]">{fmtScore(selected.fenokLongTermScore)}</span>
                     <span className="block text-[10.5px] text-[var(--c-ink-3)]">장기</span>
-                  </span>
-                  <span>
-                    <span className="block text-[18px] font-bold tabular-nums text-[var(--c-brand)]">{fmtScore(selected.fenokConvictionScore)}</span>
-                    <span className="block text-[10.5px] text-[var(--c-ink-3)]">컨빅션</span>
                   </span>
                 </div>
                 <p className="text-[11.5px] leading-snug text-[var(--c-ink-2)]">{card.why(selected)}</p>
@@ -555,7 +548,6 @@ export default function ScreenerDiscover({
               </thead>
               <tbody className="tabular-nums">
                 {[
-                  { label: "컨빅션", get: (stock: ScreenerStock) => fmtScore(stock.fenokConvictionScore) },
                   { label: "단기", get: (stock: ScreenerStock) => fmtScore(stock.fenokShortTermScore) },
                   { label: "장기", get: (stock: ScreenerStock) => fmtScore(stock.fenokLongTermScore) },
                   { label: "현재가", get: (stock: ScreenerStock) => fmtPrice(stock.price) },
