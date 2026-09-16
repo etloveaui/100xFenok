@@ -1462,6 +1462,56 @@
   opacity: 1;
 }
 
+/* B3-4: chevron hint riding the same gating as the fade — visible only while
+   the shell overflows and the end is not reached (e.g. "show all" mode on a
+   narrow viewport). Pointer-transparent so it never blocks cell taps. */
+[data-canvas-plus-screener-preview] .cp-screener-scroll-shell[data-canvas-plus-scroll-affordance="true"][data-canvas-plus-scroll-at-end="false"]::before {
+  content: "›";
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--cp-border-strong);
+  border-radius: 999px;
+  color: var(--cp-text-strong);
+  background: color-mix(in srgb, var(--cp-surface) 88%, transparent);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* B3-4: tier-culling notice under the shell — hidden-column count plus the
+   fit-all restore toggle. Below the table so the table top never shifts. */
+[data-canvas-plus-screener-preview] .cp-screener-fit-notice {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 6px 2px 0;
+  font-size: 12px;
+  color: var(--cp-text-muted);
+}
+
+[data-canvas-plus-screener-preview] .cp-screener-fit-notice button {
+  border: 0;
+  background: transparent;
+  padding: 2px 4px;
+  color: var(--cp-text-strong);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 [data-canvas-plus-screener-preview] .cp-screener-table-wrap {
   border-color: var(--cp-border-strong);
   border-radius: 8px;
@@ -3068,13 +3118,13 @@
   background: transparent;
 }
 
-/* v3.1: the merged toolbar row stays on one line at desktop widths. The rail
-   keeps freshness/as-of/evidence and sheds the source + coverage spans that
-   the title stat already carries. A closed filter deck takes no space. */
+/* v3.1 revised B3-4: the merged toolbar row wraps to two lines wherever one
+   line does not fit (at 1100px the density segment clipped out of view).
+   Wide viewports still read one line because flex-wrap only breaks on
+   overflow. The rail keeps freshness/as-of/evidence and sheds the source +
+   coverage spans that the title stat already carries. A closed filter deck
+   takes no space. */
 @media (min-width: 921px) {
-  .canvas-plus.cp-screener-service .cp-screener-toolbar-row {
-    flex-wrap: nowrap;
-  }
   .canvas-plus.cp-screener-service .cp-screener-toolbar-provenance .evidence-rail-row {
     gap: 8px;
   }
