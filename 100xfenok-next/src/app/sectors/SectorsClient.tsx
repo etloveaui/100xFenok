@@ -563,7 +563,7 @@ function SectorsSpreadStrip({
             <div className="sec-spread-track" data-sectors-spread-track="true" role="img" aria-label={ariaLabel}>
               <span className="sec-spread-axis" aria-hidden="true" />
               <span className="sec-spread-zero" aria-hidden="true" style={{ left: `${zeroPct}%` }} />
-              {points.map((point) => {
+              {points.map((point, index) => {
                 const size = plot.diameterPx(point);
                 const up = point.relative >= 0;
                 return (
@@ -571,7 +571,8 @@ function SectorsSpreadStrip({
                     key={point.row.key}
                     className={up ? "sec-spread-dot sec-spread-dot-up" : "sec-spread-dot sec-spread-dot-down"}
                     data-sectors-spread-dot={point.row.etf}
-                    style={{ left: `${plot.leftPct(point.relative)}%`, width: `${size}px`, height: `${size}px` }}
+                    data-spread-row={index % 3}
+                    style={{ left: `${plot.leftPct(point.relative)}%`, width: `min(${size}px, 5.5%)`, aspectRatio: "1" }}
                     title={`${point.row.name} ${pp(point.relative)} · S&P 500 ${up ? "상회" : "하회"}`}
                   />
                 );

@@ -964,3 +964,39 @@
     gap: 8px;
   }
 }
+
+/* Narrow tracks pack the same x-encoded spread dots into ~300px: cap the dot
+ * diameter by track share and stagger three rows so every sector stays
+ * visible (x remains the only value encoding; the row offset carries no
+ * meaning). */
+@media (max-width: 767px) {
+  .sec-spread-track {
+    height: 48px;
+  }
+
+  .sec-spread-dot[data-spread-row="0"] {
+    top: calc(50% - 9px);
+  }
+
+  .sec-spread-dot[data-spread-row="2"] {
+    top: calc(50% + 9px);
+  }
+}
+
+/* Phone-width compare header: keep the panel title on its own line (rather
+ * than truncating "섹터 ETF 비교" against the 접기 control) and drop the
+ * secondary coverage note. */
+@media (max-width: 640px) {
+  [data-sectors-etf-compare] > div:first-child {
+    height: auto;
+    min-height: 44px;
+    flex-wrap: wrap;
+    row-gap: 2px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  [data-sectors-etf-compare] .sec-head-note {
+    display: none;
+  }
+}
