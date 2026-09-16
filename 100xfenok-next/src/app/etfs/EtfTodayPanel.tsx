@@ -7,6 +7,7 @@ import { ROUTES } from "@/lib/routes";
 import {
   computeEtfInsights,
   etfInlineClockLabel,
+  etfSnapshotPublishedClocks,
   etfSnapshotSubfeedClocks,
   fmtSignedPct,
   fmtVolumeCompact,
