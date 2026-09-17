@@ -185,6 +185,8 @@ export const CADENCE_DECLARATION_EXEMPTIONS = Object.freeze({
     "deployment rather than acquisition; it has no source clock to be overdue against",
   "build-stocks-analyzer.yml":
     "derived-index builder rather than a source lane; its inputs carry the acquisition cadences and it follows them",
+  "pins-autosync.yml":
+    "maintenance autosync for the generated projection pins, not a data-supply lane; it owns no acquisition clock and its absence is bounded by the next qa:pins failure on a CI push",
 });
 
 // A publish-capable family whose cloud-plane outcome has never been recorded is
