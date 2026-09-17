@@ -166,7 +166,7 @@ function SkeletonCard() {
 function UnavailablePanel({ label }: { label: string }) {
   return (
     <div data-superinvestor-insights-empty-state>
-      <EmptyState reason={`${label} 데이터를 불러오지 못했습니다`} nextRefresh="다른 인사이트는 계속 확인할 수 있습니다." />
+      <EmptyState reason={`${label} 데이터를 불러오지 못했습니다`} nextRefresh="다른 인사이트는 정상 표시됩니다" />
     </div>
   );
 }

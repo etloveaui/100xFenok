@@ -1145,7 +1145,7 @@ function DividendPanel({
         </div>
       ) : (
         <p data-stock-dividend-empty className="mx-4 my-2 rounded-md border border-dashed border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-500">
-          이 티커에서는 DPS 시계열을 찾지 못했습니다. 수익률/성향 값이 없으면 배당 분석은 빈 상태로 유지됩니다.
+          이 티커에서는 DPS 시계열을 찾지 못했습니다. 수익률·성향 값이 없으면 배당 분석은 빈 상태로 유지됩니다.
         </p>
       )}
       <EvidenceRail freshness={quality?.error && !hasDividendData ? "error" : quality?.loading && !hasDividendData ? "pending" : hasDividendData && dividendRailAsOf !== "—" ? "fresh" : "stale"} source="Yahoo Finance" asOf={dividendRailAsOf} coverage="배당 지표" next={hasDividendData ? undefined : "배당 데이터 확보 시"} onRetry={quality?.onRetry} skeletonDelayMs={120} />
@@ -1379,7 +1379,7 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
           <p className="mt-3 text-[12px] font-semibold text-slate-500">최근 분기 순매수·순매도 랭킹에는 포함되지 않았습니다.</p>
         )}
         <p data-smart-money-lag-disclosure className="mt-2 text-[12px] font-semibold text-slate-500">
-          13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다. 보유자별 표는 같은 기준분기/생성일로 읽어야 합니다.
+          13F는 분기말 스냅샷 기반이며 최대 45일 지연될 수 있습니다. 보유자별 표는 같은 기준분기·생성일 기준입니다.
         </p>
       </div>
       {holders.length > 0 ? (
@@ -2251,7 +2251,7 @@ function OwnershipHeroCp({
           {isFiniteNumber(tradesChip?.sold?.exit_count) && tradesChip.sold.exit_count > 0 ? (
             <Panel>
               <PanelHeader eyebrow={reportBasisLabel ? `최근 주요 변화 · ${reportBasisLabel}` : "최근 주요 변화"} title={`완전 청산 ${tradesChip.sold.exit_count}건`} />
-              <p className="px-4 py-2 text-[12px] text-slate-600">매도 참여 {isFiniteNumber(tradesChip?.sold?.investors_count) ? tradesChip.sold.investors_count : "—"}곳 중 {tradesChip.sold.exit_count}곳은 포지션을 아예 제로로 정리했습니다</p>
+              <p className="px-4 py-2 text-[12px] text-slate-600">매도 참여 {isFiniteNumber(tradesChip?.sold?.investors_count) ? tradesChip.sold.investors_count : "—"}곳 중 {tradesChip.sold.exit_count}곳은 포지션을 완전 청산했습니다.</p>
               {tradeInvestorNameOf(tradesChip?.sold?.top_investor) ? (
                 <Row>
                   <span className="truncate text-[12px] text-slate-700">{tradeInvestorNameOf(tradesChip.sold.top_investor)} · 이번 분기 최대 매도 참여자 · 전량 청산 여부는 개별 확인 필요</span>
@@ -3081,7 +3081,7 @@ export default function StockDetailClient({
         ? "가격 표시됨"
         : "가격 없음",
     detail: displayPrice !== null
-      ? "가격은 지연 가능 시세입니다."
+      ? "가격은 지연될 수 있는 시세입니다."
       : "표시할 가격 데이터를 찾지 못했습니다.",
     asOf: typeof marketFactsSourceAsOf === "string" ? marketFactsSourceAsOf : null,
   });
@@ -3993,7 +3993,7 @@ function EtfDataPanel({
             state={makeDataState({
               status: "unavailable",
               label: "ETF 상세 데이터 미수집",
-              detail: "신규 ETF는 상세 데이터가 열리기 전에도 목록과 가격 정보를 먼저 확인할 수 있습니다.",
+              detail: "신규 ETF는 상세 데이터가 열리기 전에도 목록과 가격 정보가 먼저 표시됩니다.",
             })}
           />
           <ExternalSourceLinks ticker={ticker} kind="etf" statusLine="ETF 상세 데이터 미수집" className="mx-auto mt-4 max-w-xl" />
