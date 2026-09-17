@@ -1,6 +1,9 @@
 // Client-side authentication helpers for Google GIS and session management.
 // Ported from Winddown (CONTRACT_winddown-auth) for 100xFenok.
 
+import { useEffect } from "react";
+import { ROUTES } from "@/lib/routes";
+
 const TOKEN_KEY = "100xfenok.authToken";
 const GIS_SRC = "https://accounts.google.com/gsi/client";
 export const DEFAULT_CLIENT_ID =
@@ -287,7 +290,7 @@ export function notifyAuthInvalid(): void {
 export function useUserHeartbeat(): void {
   useEffect(() => {
     if (typeof window === "undefined" || typeof document === "undefined") return;
-    if (window.location.pathname.startsWith("/intro")) return;
+    if (window.location.pathname.startsWith(ROUTES.intro)) return;
 
     let timer: ReturnType<typeof setInterval> | null = null;
 
