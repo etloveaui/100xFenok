@@ -39,8 +39,7 @@ const BRIDGE_INDEX_DEFAULT = "data/admin/fenok-edge-korea-krx-daily-index.json";
 // carries private raw paths, issuer rows, codes, or names.
 const PUBLIC_BRIDGE_HISTORY_DEFAULT = "data/computed/fenok-edge-korea-krx-bridge-history.json";
 // Slice 1 public-safe surface: aggregate index-level daily closes only (no
-// per-issuer rows). Public serving authorized by the owner's 2026-07-19 KRX
-// permission grant. data/computed/ is served by the public sync/mirror pipeline.
+// per-issuer rows). data/computed/ is served by the public sync/mirror pipeline.
 const PUBLIC_INDEX_CLOSES_DEFAULT = "data/computed/fenok-edge-korea-krx-index-daily.json";
 // Slice 2 public-safe surface: one KOSDAQ market-level concentration aggregate.
 // It intentionally contains no issuer rows, codes, names, or private paths.
@@ -72,8 +71,6 @@ export const KRX_BRIDGE_HISTORY_PERSISTENCE_POLICY = Object.freeze({
   max_distinct_source_dates: MAX_KRX_BRIDGE_HISTORY_SOURCE_DATES,
   eviction: "oldest_source_date_first",
 });
-const LICENSE_OR_TERMS_NOTE =
-  "KRX usage permission granted by owner 2026-07-19; public serving of derived/aggregate surfaces authorized; raw per-issuer row redistribution still governed per-slice.";
 const SNAPSHOT_ENDPOINTS = new Set(["sri_bond_info", "esg_index_info", "esg_etp_info"]);
 const REQUIRED_DAILY_ISSUER_ENDPOINTS = new Set(["stk_bydd_trd", "ksq_bydd_trd"]);
 const CURRENT_ISSUER_MASTER_MARKETS = Object.freeze({
@@ -525,7 +522,6 @@ export function validKrxBridgeHistory(document) {
     "aggregate_only",
     "per_issuer_rows",
     "raw_public",
-    "license_or_terms_note",
     "generated_at",
     "latest_source_date",
     "persistence_policy",
@@ -540,7 +536,6 @@ export function validKrxBridgeHistory(document) {
     || document?.aggregate_only !== true
     || document?.per_issuer_rows !== false
     || document?.raw_public !== false
-    || document?.license_or_terms_note !== LICENSE_OR_TERMS_NOTE
     || !validUtc(document?.generated_at)
     || !isDeepStrictEqual(document?.persistence_policy, KRX_BRIDGE_HISTORY_PERSISTENCE_POLICY)
     || !Array.isArray(rows)
@@ -650,7 +645,6 @@ export function mergeKrxBridgeHistory({
     aggregate_only: true,
     per_issuer_rows: false,
     raw_public: false,
-    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
     generated_at: bridgeDocument.generated_at,
     latest_source_date: rows.at(-1)?.source_date ?? null,
     persistence_policy: KRX_BRIDGE_HISTORY_PERSISTENCE_POLICY,
@@ -978,7 +972,6 @@ function buildKrxKospiDerivedWeights(manifest, config) {
     source_field: "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
     as_of: asOf,
     raw_public: false,
-    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
     row_count: kospiRows.length,
     total_market_cap: totalMarketCap,
     denominator: {
@@ -1054,7 +1047,6 @@ function buildKrxPublicIndexCloses(manifest, config) {
     aggregate_only: true,
     per_issuer_rows: false,
     raw_public: false,
-    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
     generated_at: manifest?.completed_at ?? new Date().toISOString(),
     as_of: asOf,
     status: indices.length > 0 ? "ready" : "unavailable",
@@ -1062,7 +1054,7 @@ function buildKrxPublicIndexCloses(manifest, config) {
     raw_input_row_count: rawInputRowCount,
     excluded_issuer_rows: excludedIssuerRows,
     notes: [
-      "Aggregate KRX index-level daily closes (all-market / KOSPI / KOSDAQ index series). Public serving authorized by owner 2026-07-19.",
+      "Aggregate KRX index-level daily closes (all-market / KOSPI / KOSDAQ index series).",
       "No per-issuer rows: any issue-coded row in the raw idx payload is excluded. Raw KRX capture stays private/admin.",
     ],
     indices,
@@ -1103,7 +1095,6 @@ function buildKrxPublicKosdaqMarketCapAggregate(manifest, config) {
     aggregate_only: true,
     per_issuer_rows: false,
     raw_public: false,
-    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
     generated_at: manifest?.completed_at ?? new Date().toISOString(),
     as_of: asOf,
     status: ready ? "ready" : "unavailable",
@@ -1119,7 +1110,7 @@ function buildKrxPublicKosdaqMarketCapAggregate(manifest, config) {
     top_n_weight: ready ? round(topNWeight, 12) : null,
     top_n_weight_pct: ready ? round(topNWeight * 100, 10) : null,
     notes: [
-      "Derived KOSDAQ top-10 market-cap concentration aggregate. Public serving authorized by owner 2026-07-19.",
+      "Derived KOSDAQ top-10 market-cap concentration aggregate.",
       "No issuer rows, codes, names, individual weights, raw fields, or private paths are included.",
     ],
   };
@@ -1152,7 +1143,6 @@ function buildKrxKorea10yDerivedYield(manifest, config) {
     source_field: `OutBlock_1[ISU_NM=${selected.name},BND_EXP_TP_NM=10,GOVBND_ISU_TP_NM=지표].CLSPRC_YD / 100`,
     label: "KRX KTS 10Y benchmark government bond yield",
     raw_public: false,
-    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
   };
 }
 
@@ -1168,7 +1158,6 @@ function buildDerivedRimInputs(manifest, config) {
     generated_at: manifest?.completed_at ?? new Date().toISOString(),
     as_of: krxProviderSourceDateRange(manifest).as_of ?? null,
     raw_public: false,
-    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
     status: missing.length === 0 ? "ready" : "partial_or_unavailable",
     missing,
     kospi_weights: kospiWeights,
@@ -1331,7 +1320,6 @@ function buildBridgeIndex(manifest, groupManifests, config, options = {}) {
     market: MARKET,
     source: SOURCE,
     raw_public: false,
-    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
     bridge_scope: derivedRimInputs.status === "ready"
       ? "stats_and_public_safe_rim_inputs_private_path_refs_no_raw_rows"
       : "stats_only_private_path_refs_no_raw_rows",
@@ -1414,7 +1402,6 @@ function buildPlan(config) {
     market: MARKET,
     source: SOURCE,
     raw_public: false,
-    license_or_terms_note: LICENSE_OR_TERMS_NOTE,
     dates: config.dates,
     run_id: config.runId,
     output_root: repoRel(config.outputRoot),
@@ -1843,7 +1830,6 @@ async function run(argv = process.argv.slice(2), dependencies = {}) {
       fetched_at: startedAt,
       group: task.endpoint.group,
       api_id: task.endpoint.api_id,
-      license_or_terms_note: LICENSE_OR_TERMS_NOTE,
       market_date: isoDate(task.basDd),
       raw_public: false,
       source_date: null,

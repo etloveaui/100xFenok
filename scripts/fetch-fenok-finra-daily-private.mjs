@@ -323,7 +323,6 @@ function buildPayload({ yyyymmdd, sourceUrl, fetchedAt, rows }) {
     caveats: [
       "FINRA daily short-volume is an off-exchange/short-volume proxy, not true dark-pool intent.",
       "ShortVolume/TotalVolume is not buyer/seller direction.",
-      "Rows must remain admin-private until owner/legal redistribution review clears a derived public surface.",
     ],
     fields: [
       "date",
