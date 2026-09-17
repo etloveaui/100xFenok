@@ -129,7 +129,7 @@ function StateNote({ state, onRetry }: { state: CardState; onRetry: () => void }
     return <p className="mt-3 text-sm text-slate-500">불러오는 중입니다.</p>;
   }
   if (state === "missing") {
-    return <p className="mt-3 text-sm text-slate-500">받은 자료가 없어 표시할 수 없습니다.</p>;
+    return <p className="mt-3 text-sm text-slate-500">받은 자료가 없어 표시할 내용이 없습니다.</p>;
   }
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2">

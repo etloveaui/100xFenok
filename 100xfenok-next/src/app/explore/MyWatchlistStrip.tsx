@@ -66,7 +66,7 @@ export default function MyWatchlistStrip() {
           <span className="desc num">(0)</span>
           <TransitionLink href={ROUTES.portfolio} className="act">포트폴리오 →</TransitionLink>
         </div>
-        <div className="panel-b text-sm font-semibold text-[var(--c-ink-3)]">관심 종목을 추가하면 여기에서 바로 확인할 수 있습니다.</div>
+        <div className="panel-b text-sm font-semibold text-[var(--c-ink-3)]">관심 종목을 추가하면 여기에 표시됩니다.</div>
       </section>
     );
   }
@@ -80,7 +80,7 @@ export default function MyWatchlistStrip() {
       : rows
         ? missingCount > 0
           ? `${formatInteger(missingCount)}개 관심 종목은 기본 정보만 표시됩니다.`
-          : "관심 종목의 이름과 수익률을 표시할 수 있습니다."
+          : "관심 종목의 이름과 수익률이 표시됩니다."
         : "관심 종목 정보를 불러오지 못했습니다.",
   });
 
