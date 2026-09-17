@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
 
   allowedDevOrigins: ["127.0.0.1"],
 
+  env: {
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID: "435404551214-fv2t9dtg0h1rbcndc225329no5ibrrcu.apps.googleusercontent.com",
+  },
+
   // Trailing slash for consistent URLs
   trailingSlash: true,
   ...(isCloudflareProfile ? { skipTrailingSlashRedirect: true } : {}),

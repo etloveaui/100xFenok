@@ -6,6 +6,7 @@ import ConnectedView from "@/components/connected/ConnectedView";
 import TransitionLink from "@/components/TransitionLink";
 import TickerTypeahead from "@/components/TickerTypeahead";
 import AppShellFreshnessPill from "@/components/shell/AppShellFreshnessPill";
+import UserAuthPill from "@/components/shell/UserAuthPill";
 import {
   getStockConnection,
   getStockServices,
@@ -567,6 +568,7 @@ export default function AppShell({
             </span>
           ) : null}
           <AppShellFreshnessPill state={freshness} />
+          <UserAuthPill />
         </div>
       </header>
 
@@ -598,6 +600,7 @@ export default function AppShell({
             </span>
           ) : null}
           <AppShellFreshnessPill state={freshness} />
+          <UserAuthPill />
           <span className="grow" />
           <button
             className="ic-btn"

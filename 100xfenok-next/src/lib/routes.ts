@@ -32,6 +32,7 @@ export const ROUTES = {
   vr: "/vr",
   radar: "/radar",
   research: "/research",
+  intro: "/intro",
   dailyWrap: "/100x/daily-wrap",
   macroChart: "/macro-chart",
   multichart: "/multichart",
@@ -81,6 +82,7 @@ export const APP_ROUTE_PATTERNS = [
   "/vr",
   "/radar",
   "/research",
+  "/intro",
   "/100x/daily-wrap",
   "/macro-chart",
   "/multichart",
@@ -112,6 +114,7 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
   ROUTES.vr,
   ROUTES.radar,
   ROUTES.research,
+  ROUTES.intro,
   ROUTES.dailyWrap,
   ROUTES.macroChart,
   ROUTES.multichart,
@@ -133,6 +136,7 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
  * archive while the public root is no longer promoted or indexed.
  */
 export const SITEMAP_EXCLUSIONS: Partial<Record<RouteKey, string>> = {
+  intro: "Intro face and Google login gateway; excluded from content sitemap.",
   sectorMomentumJson: "Static JSON evidence asset behind the sectors rotation rails; not a product route, never indexed or linked from public surfaces.",
   dataConsole: "admin-only — behind AdminAccessGate; never indexed or linked from public surfaces.",
   briefing: "Legacy alias. Redirects to home (declared permanent 308 since 2026-09-15; last live measurement 307 on 2026-08-23) and must not appear as a separate product.",

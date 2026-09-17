@@ -11,6 +11,11 @@ import {
   type WindDownReviewCoordinatorEnv,
   type WindDownReviewCoordinatorState,
 } from "./src/features/mona-vnext/memory/learningProfileCoordinator";
+import {
+  UserStoreCore,
+  type UserProfile,
+  type UserSettings,
+} from "./src/lib/server/userStore";
 
 const worker = {
   async fetch(request: Request, env: unknown, ctx: unknown) {
@@ -105,3 +110,85 @@ export class WindDownReviewCoordinator extends DurableObject {
     );
   }
 }
+
+export class UserStore extends DurableObject {
+  private readonly core: UserStoreCore;
+
+  constructor(ctx: DurableObjectState, env: unknown) {
+    super(ctx, env);
+    this.core = new UserStoreCore(ctx, env);
+  }
+
+  async getProfile(): Promise<UserProfile | null> {
+    return this.core.getProfile();
+  }
+
+  async saveProfile(profile: Omit<UserProfile, "createdAt" | "updatedAt">): Promise<UserProfile> {
+    return this.core.saveProfile(profile);
+  }
+
+  async mintToken(deviceHint?: string, now?: number): Promise<{ token: string; expiresAt: number }> {
+    return this.core.mintToken(deviceHint, now);
+  }
+
+  async verifyToken(secret: string, now?: number): Promise<boolean> {
+    return this.core.verifyToken(secret, now);
+  }
+
+  async revokeToken(secret: string): Promise<boolean> {
+    return this.core.revokeToken(secret);
+  }
+
+  async listTokens() {
+    return this.core.listTokens();
+  }
+
+  async getSettings(): Promise<UserSettings> {
+    return this.core.getSettings();
+  }
+
+  async updateSettings(settings: Partial<UserSettings>): Promise<UserSettings> {
+    return this.core.updateSettings(settings);
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    const action = url.pathname.replace(/^\//, "");
+    if (request.method === "GET" && action === "profile") {
+      const profile = await this.getProfile();
+      return Response.json({ ok: true, profile });
+    }
+    if (request.method === "POST" && action === "saveProfile") {
+      const body = (await request.json()) as Omit<UserProfile, "createdAt" | "updatedAt">;
+      const profile = await this.saveProfile(body);
+      return Response.json({ ok: true, profile });
+    }
+    if (request.method === "POST" && action === "mintToken") {
+      const body = (await request.json()) as { deviceHint?: string; now?: number };
+      const result = await this.mintToken(body.deviceHint, body.now);
+      return Response.json({ ok: true, ...result });
+    }
+    if (request.method === "POST" && action === "verifyToken") {
+      const body = (await request.json()) as { secret: string; now?: number };
+      const valid = await this.verifyToken(body.secret, body.now);
+      return Response.json({ ok: true, valid });
+    }
+    if (request.method === "POST" && action === "revokeToken") {
+      const body = (await request.json()) as { secret: string };
+      const ok = await this.revokeToken(body.secret);
+      return Response.json({ ok });
+    }
+    if (request.method === "GET" && action === "settings") {
+      const settings = await this.getSettings();
+      return Response.json({ ok: true, settings });
+    }
+    if (request.method === "POST" && action === "updateSettings") {
+      const body = (await request.json()) as Partial<UserSettings>;
+      const settings = await this.updateSettings(body);
+      return Response.json({ ok: true, settings });
+    }
+    return new Response("Not found", { status: 404 });
+  }
+}
+
+
