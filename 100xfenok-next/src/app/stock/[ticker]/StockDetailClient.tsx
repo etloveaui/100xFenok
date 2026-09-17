@@ -1792,7 +1792,7 @@ function ValuationBodyCp({
       {rrTiles.length > 0 ? (
         <section data-stock-tab-card="valuation-rerating">
         <Panel>
-          <PanelHeader eyebrow="Yahoo Finance 밸류 지표" title="리레이팅 — 이익 성장이 배수를 어떻게 눌렀나" />
+          <PanelHeader eyebrow="Yahoo Finance 밸류 지표" title="리레이팅 — 이익 성장에 따른 배수 변화" />
           <div className="flex divide-x divide-slate-200">
             {rrTiles.map((t) => (
               <Stat key={t.label} label={t.label} value={t.body} sub={t.cap} />
