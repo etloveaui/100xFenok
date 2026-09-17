@@ -1035,6 +1035,10 @@ body:has([data-immersive-route]) #main-content {
   background: var(--intro-bg);
   font-family: var(--font-sans);
 }
+/* The intro is full-bleed: no shared nav padding, no light body behind overscroll. */
+main:has(> .intro-root),
+main:has(.intro-root) { padding-top: 0 !important; }
+body:has(.intro-root) { background: #08090a; }
 .intro-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 @keyframes intro-drift {
   from { transform: translate3d(-6%, 0, 0) rotate(-28deg); }

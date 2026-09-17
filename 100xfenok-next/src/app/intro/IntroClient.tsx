@@ -250,12 +250,38 @@ export default function IntroClient() {
     })
     .filter((d): d is RotationDot & { band: number } => d !== null);
   const asOf = sp?.asOf ?? feed?.asOf ?? null;
+  const summary = useMemo(() => {
+    if (!sectors.length) return null;
+    const ups = sectors.filter((s) => s.changePercent > 0).length;
+    const strongest = [...sectors].sort((a, b) => b.changePercent - a.changePercent)[0];
+    return `${sectors.length}개 섹터 중 ${ups}개 상승, ${strongest.name} ${fmtPct(strongest.changePercent)}로 가장 강했습니다.`;
+  }, [sectors]);
 
   const W = 720;
   const H = 220;
   const spPaths = useMemo(() => (sp ? linePaths(sp.sparkline, W, H) : null), [sp]);
   const nqPaths = useMemo(() => (nq ? linePaths(nq.sparkline, W, H) : null), [nq]);
   const maxAbsRel = dots.length ? Math.max(5, ...dots.map((d) => Math.abs(d.relative))) : 5;
+  const placedDots = useMemo(() => {
+    const placed = dots.map((d) => ({
+      d,
+      x: 50 + (d.relative / maxAbsRel) * 44,
+      y: Math.min(92, Math.max(8, 100 - d.band)),
+      labelLeft: d.relative > 0,
+    }));
+    // Nudge labels that would sit on top of each other (same side, close x and y).
+    placed.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < placed.length; i += 1) {
+      for (let j = 0; j < i; j += 1) {
+        const a = placed[j];
+        const b = placed[i];
+        if (a.labelLeft === b.labelLeft && Math.abs(a.x - b.x) < 24 && Math.abs(a.y - b.y) < 8) {
+          b.y = Math.min(94, a.y + 8);
+        }
+      }
+    }
+    return placed;
+  }, [dots, maxAbsRel]);
   const maxAbsBar = sectors.length ? Math.max(1, ...sectors.map((s) => Math.abs(s.changePercent))) : 1;
 
   return (
@@ -301,6 +327,11 @@ export default function IntroClient() {
             <p className="max-w-[34ch] text-[16px] leading-[1.6]" style={{ color: "var(--intro-ink-2)" }}>
               S&amp;P 500과 나스닥, 11개 섹터의 등락과 회전을 매일 갱신합니다.
             </p>
+            {summary ? (
+              <p className="max-w-[36ch] text-[14px] leading-[1.6]" style={{ color: "var(--intro-ink-2)" }}>
+                {summary}
+              </p>
+            ) : null}
             {asOf ? (
               <p className="intro-num text-[12px]" style={{ color: "var(--intro-ink-3)" }}>
                 기준 {asOf}
@@ -359,10 +390,10 @@ export default function IntroClient() {
         </section>
 
         {/* Layer 2 — market field (the art). No card box: the data is the background. */}
-        <section className="flex flex-col gap-8 lg:col-span-7" aria-label="오늘의 미국 시장">
+        <section className="flex min-w-0 flex-col gap-8 overflow-hidden lg:col-span-7" aria-label="오늘의 미국 시장">
           {/* Index lines */}
           <div className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+            <div className={`flex min-w-0 gap-x-6 gap-y-1 ${narrow ? "flex-col" : "flex-wrap items-baseline"}`}>
               {sp ? (
                 <IndexLabel name="S&P 500" series={sp} accent="var(--intro-brand)" />
               ) : null}
@@ -454,7 +485,7 @@ export default function IntroClient() {
                   const up = s.changePercent >= 0;
                   const h = Math.max(4, Math.round((Math.abs(s.changePercent) / maxAbsBar) * 44));
                   return (
-                    <div key={s.symbol} className="flex flex-col items-center gap-1.5" title={`${s.name} ${fmtPct(s.changePercent)}`}>
+                    <div key={s.symbol} className="flex min-w-0 flex-col items-center gap-1.5" title={`${s.name} ${fmtPct(s.changePercent)}`}>
                       <div className="relative h-[92px] w-full">
                         <div className="absolute left-0 right-0 top-1/2 h-px" style={{ background: "var(--intro-line)" }} />
                         <div
@@ -472,9 +503,11 @@ export default function IntroClient() {
                       <span className="max-w-full truncate text-[12px] leading-none" style={{ color: "var(--intro-ink-2)" }}>
                         {narrow ? s.symbol.replace(/^XL/, "") : s.name}
                       </span>
-                      <span className="intro-num text-[12px] leading-none" style={{ color: up ? "var(--intro-up)" : "var(--intro-down)" }}>
-                        {fmtPct(s.changePercent)}
-                      </span>
+                      {!narrow ? (
+                        <span className="intro-num text-[12px] leading-none" style={{ color: up ? "var(--intro-up)" : "var(--intro-down)" }}>
+                          {fmtPct(s.changePercent)}
+                        </span>
+                      ) : null}
                     </div>
                   );
                 })}
@@ -506,24 +539,22 @@ export default function IntroClient() {
                     {QUADRANT_KO[id]}
                   </span>
                 ))}
-                {dots.map((d, i) => {
-                  const x = 50 + (d.relative / maxAbsRel) * 44;
-                  const y = 100 - d.band;
+                {placedDots.map(({ d, x, y, labelLeft }, i) => {
                   const up = d.relative >= 0;
                   return (
                     <div
                       key={d.symbol}
-                      className="absolute flex items-center gap-1.5"
+                      className={`absolute flex items-center gap-1.5 ${labelLeft ? "flex-row-reverse" : ""}`}
                       title={`${d.name} ${fmtPp(d.relative)} · 밴드 ${Math.round(d.band)}%`}
                       style={{
                         left: drawing ? `${x}%` : "50%",
-                        top: drawing ? `${Math.min(92, Math.max(8, y))}%` : "50%",
+                        top: drawing ? `${y}%` : "50%",
                         opacity: drawing ? 1 : 0,
-                        transform: "translate(-4px, -50%)",
+                        transform: labelLeft ? "translate(calc(-100% + 4px), -50%)" : "translate(-4px, -50%)",
                         transition: reducedMotion ? "none" : `left 900ms ${EASE} ${2200 + i * 60}ms, top 900ms ${EASE} ${2200 + i * 60}ms, opacity 400ms ${EASE} ${2200 + i * 60}ms`,
                       }}
                     >
-                      <span className={`h-2 w-2 rounded-full ${up ? "intro-dot-up" : "intro-dot-down"}`} style={{ background: up ? "var(--intro-up)" : "var(--intro-down)" }} />
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${up ? "intro-dot-up" : "intro-dot-down"}`} style={{ background: up ? "var(--intro-up)" : "var(--intro-down)" }} />
                       <span className="whitespace-nowrap text-[12px]" style={{ color: "var(--intro-ink-2)" }}>
                         {narrow ? d.symbol.replace(/^XL/, "") : d.name}
                       </span>
