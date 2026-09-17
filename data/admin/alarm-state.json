@@ -1,6 +1,6 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-17T07:47:52.937Z",
+  "generated_at": "2026-09-17T08:42:56.943Z",
   "status": "open",
   "open_incident_count": 14,
   "open_incidents": [
@@ -483,7 +483,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "delayed",
-      "data_freshness_age_hours_at_generation": 30
+      "data_freshness_age_hours_at_generation": 31
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -532,6 +532,17 @@
     {
       "file": "global-writer-queue-observer.yml",
       "label": "Global Writer Queue Observability",
+      "events": [
+        "schedule"
+      ],
+      "event": "schedule",
+      "failure_streak_threshold": 2,
+      "cadence_status": "no_declaration",
+      "cadence_evidence": []
+    },
+    {
+      "file": "pins-autosync.yml",
+      "label": "Pins Autosync",
       "events": [
         "schedule"
       ],
@@ -634,7 +645,7 @@
     "not_due": 26,
     "overdue": 0,
     "recovered": 0,
-    "no_declaration": 8,
+    "no_declaration": 9,
     "unknown": 0
   },
   "excluded_workflows": [
@@ -644,14 +655,19 @@
       "reason": "self-monitoring would create a recursive alarm loop"
     }
   ],
-  "unknown_workflows": [],
+  "unknown_workflows": [
+    {
+      "workflow": "pins-autosync.yml",
+      "status": "unknown"
+    }
+  ],
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "35196155374",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/35196155374",
-    "observed_at": "2026-09-17T07:47:52.937Z",
-    "event": "schedule",
+    "run_id": "35200980826",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/35200980826",
+    "observed_at": "2026-09-17T08:42:56.943Z",
+    "event": "workflow_run",
     "workflows": [
       "fenok-edge-krx-daily.yml",
       "fetch-edgar-filings.yml",
