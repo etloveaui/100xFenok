@@ -13,8 +13,9 @@ import {
 } from "@/lib/auth/clientAuth";
 
 // ---------------------------------------------------------------------------
-// Feed contract (intro-feed v1/v2 tolerant). Nothing here is ever defaulted to
-// a number: a missing series simply does not render.
+// One full-screen scene. The day's US market is the set; the reading of the
+// day is the title. No slogan, no cards, no panel grid. Nothing is defaulted
+// to a number: a missing series simply does not render.
 // ---------------------------------------------------------------------------
 
 interface IndexSeries {
@@ -45,21 +46,14 @@ interface RotationDot {
 interface IntroFeed {
   schema_version?: string;
   asOf?: string;
-  indices?: {
-    sp500?: IndexSeries;
-    nasdaq?: IndexSeries;
-    kospi?: IndexSeries;
-  };
-  breadth?: {
-    total?: number;
-    upCount?: number;
-    downCount?: number;
-    sectors?: BreadthSector[];
-  };
+  indices?: { sp500?: IndexSeries; nasdaq?: IndexSeries; kospi?: IndexSeries };
+  breadth?: { total?: number; upCount?: number; downCount?: number; sectors?: BreadthSector[] };
   rotation?: RotationDot[] | { window?: string; windowLabel?: string; missing?: number; sectors?: RotationDot[] } | null;
 }
 
-type Phase = "hold" | "draw" | "card" | "focus";
+type Phase = "hold" | "draw" | "bars" | "dots" | "card" | "focus";
+const PHASE_ORDER: Phase[] = ["hold", "draw", "bars", "dots", "card", "focus"];
+const EASE = "cubic-bezier(0.2, 0, 0, 1)";
 
 const QUADRANT_KO: Record<string, string> = {
   "run-expensive": "강세·고평가",
@@ -68,51 +62,57 @@ const QUADRANT_KO: Record<string, string> = {
   "rich-fade": "둔화·고평가",
 };
 
-const EASE = "cubic-bezier(0.2, 0, 0, 1)";
-
-function isFinite(v: unknown): v is number {
+function isNum(v: unknown): v is number {
   return typeof v === "number" && Number.isFinite(v);
 }
 
 function isSeries(v: unknown): v is IndexSeries {
   if (!v || typeof v !== "object") return false;
   const s = v as IndexSeries;
-  return (
-    Array.isArray(s.sparkline) &&
-    s.sparkline.length >= 2 &&
-    s.sparkline.every(isFinite) &&
-    isFinite(s.price) &&
-    isFinite(s.changePercent)
-  );
+  return Array.isArray(s.sparkline) && s.sparkline.length >= 2 && s.sparkline.every(isNum) && isNum(s.price) && isNum(s.changePercent);
 }
 
-/** Line + area paths in a 0..w × 0..h box (top padding keeps the peak inside). */
-function linePaths(values: number[], w: number, h: number): { line: string; area: string } {
+/** Pixel-space line + area for a series inside the box x0..x1 × y0..y1. */
+function pixelPaths(values: number[], x0: number, x1: number, y0: number, y1: number): { line: string; area: string; last: [number, number] } {
   const min = Math.min(...values);
   const max = Math.max(...values);
   const span = max - min || 1;
-  const pad = h * 0.08;
-  const step = w / (values.length - 1);
-  const pts = values.map((v, i) => {
-    const x = i * step;
-    const y = pad + (1 - (v - min) / span) * (h - pad * 2);
-    return [x, y] as const;
-  });
+  const step = (x1 - x0) / (values.length - 1);
+  const pts = values.map((v, i) => [x0 + i * step, y0 + (1 - (v - min) / span) * (y1 - y0)] as [number, number]);
   const line = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
-  const area = `${line} L${w} ${h} L0 ${h} Z`;
-  return { line, area };
+  const area = `${line} L${x1.toFixed(1)} ${(y1 + 60).toFixed(1)} L${x0.toFixed(1)} ${(y1 + 60).toFixed(1)} Z`;
+  return { line, area, last: pts[pts.length - 1] };
 }
 
-function fmtPrice(v: number): string {
-  return v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+const fmtPrice = (v: number) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtPct = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(2)}%`;
+const fmtPp = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(1)}%p`;
+const fmtDateKo = (iso: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return m ? `${Number(m[2])}월 ${Number(m[3])}일` : iso;
+};
 
-function fmtPct(v: number): string {
-  return `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(2)}%`;
-}
-
-function fmtPp(v: number): string {
-  return `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(1)}%p`;
+/** Counts a number up from 0 to target while `run` is true; snaps when not. */
+function useCountUp(target: number | null, run: boolean, durationMs = 1400): number | null {
+  const [value, setValue] = useState<number | null>(target === null ? null : run ? 0 : target);
+  useEffect(() => {
+    if (target === null) return;
+    if (!run) {
+      setValue(target);
+      return;
+    }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setValue(target * eased);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, run, durationMs]);
+  return value;
 }
 
 // ---------------------------------------------------------------------------
@@ -131,12 +131,14 @@ export default function IntroClient() {
   const [feedFailed, setFeedFailed] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [narrow, setNarrow] = useState(false);
+  const [size, setSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const [phase, setPhase] = useState<Phase>("hold");
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loggingIn, setLoggingIn] = useState(false);
   const [gisReady, setGisReady] = useState(false);
   const [gisFailed, setGisFailed] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   // Existing session → straight in.
   useEffect(() => {
@@ -151,32 +153,44 @@ export default function IntroClient() {
     };
   }, [router, targetHref]);
 
-  // Motion preference, viewport, timeline.
+  // Viewport, motion preference, timeline.
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const width = window.matchMedia("(max-width: 1023px)");
     setNarrow(width.matches);
     const onWidth = (e: MediaQueryListEvent) => setNarrow(e.matches);
     width.addEventListener("change", onWidth);
+    const measure = () => {
+      const el = rootRef.current;
+      if (el) setSize({ w: el.clientWidth, h: el.clientHeight });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (rootRef.current) ro.observe(rootRef.current);
     if (media.matches) {
       setReducedMotion(true);
       setPhase("focus");
-      return () => width.removeEventListener("change", onWidth);
+      return () => {
+        width.removeEventListener("change", onWidth);
+        ro.disconnect();
+      };
     }
-    // Phone: the card must not wait 3.5 s behind the art.
-    const cardAt = width.matches ? 1400 : 3500;
-    const t1 = setTimeout(() => setPhase("draw"), 800);
-    const t2 = setTimeout(() => setPhase("card"), cardAt);
-    const t3 = setTimeout(() => setPhase("focus"), 6000);
+    const phone = width.matches;
+    const timers = [
+      setTimeout(() => setPhase("draw"), 500),
+      setTimeout(() => setPhase("bars"), 2400),
+      setTimeout(() => setPhase("dots"), 3300),
+      setTimeout(() => setPhase("card"), phone ? 1300 : 3900),
+      setTimeout(() => setPhase("focus"), 5600),
+    ];
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
+      timers.forEach(clearTimeout);
       width.removeEventListener("change", onWidth);
+      ro.disconnect();
     };
   }, []);
 
-  // Live feed. Failure = static composition without numbers; never sample data.
+  // Live feed. Failure = the still composition without numbers; never sample data.
   useEffect(() => {
     let active = true;
     fetch("/data/computed/intro-feed.json", { cache: "no-store" })
@@ -225,42 +239,50 @@ export default function IntroClient() {
     };
   }, [router, targetHref]);
 
-  const drawing = reducedMotion || phase !== "hold";
-  const cardVisible = reducedMotion || phase === "card" || phase === "focus";
+  const at = (p: Phase) => reducedMotion || PHASE_ORDER.indexOf(phase) >= PHASE_ORDER.indexOf(p);
+  // The card phase is scheduled independently on phones, so test it directly.
+  const cardVisible = reducedMotion || phase === "card" || phase === "focus" || (narrow && at("bars"));
   const focused = reducedMotion || phase === "focus";
 
   const sp = feed?.indices?.sp500 && isSeries(feed.indices.sp500) ? feed.indices.sp500 : null;
   const nq = feed?.indices?.nasdaq && isSeries(feed.indices.nasdaq) ? feed.indices.nasdaq : null;
-  const ks = feed?.indices?.kospi && isSeries(feed.indices.kospi) ? feed.indices.kospi : null;
-  const sectors = (feed?.breadth?.sectors ?? []).filter(
-    (s) => s && isFinite(s.changePercent) && typeof s.symbol === "string",
-  );
+  const sectors = (feed?.breadth?.sectors ?? []).filter((s) => s && isNum(s.changePercent) && typeof s.symbol === "string");
   const rotationRaw = feed?.rotation;
-  const rotationList: RotationDot[] = Array.isArray(rotationRaw)
-    ? rotationRaw
-    : rotationRaw && Array.isArray(rotationRaw.sectors)
-      ? rotationRaw.sectors
-      : [];
-  const rotationWindowLabel =
-    rotationRaw && !Array.isArray(rotationRaw) && typeof rotationRaw.windowLabel === "string" ? rotationRaw.windowLabel : null;
+  const rotationList: RotationDot[] = Array.isArray(rotationRaw) ? rotationRaw : rotationRaw && Array.isArray(rotationRaw.sectors) ? rotationRaw.sectors : [];
+  const rotationWindowLabel = rotationRaw && !Array.isArray(rotationRaw) && typeof rotationRaw.windowLabel === "string" ? rotationRaw.windowLabel : null;
   const dots = rotationList
     .map((d) => {
-      const band = isFinite(d.band) ? d.band : isFinite(d.bandPct) ? d.bandPct : null;
-      return isFinite(d.relative) && band !== null ? { ...d, band } : null;
+      const band = isNum(d.band) ? d.band : isNum(d.bandPct) ? d.bandPct : null;
+      return isNum(d.relative) && band !== null ? { ...d, band } : null;
     })
     .filter((d): d is RotationDot & { band: number } => d !== null);
   const asOf = sp?.asOf ?? feed?.asOf ?? null;
-  const summary = useMemo(() => {
+
+  // The reading of the day — this is the title.
+  const reading = useMemo(() => {
     if (!sectors.length) return null;
+    const sorted = [...sectors].sort((a, b) => b.changePercent - a.changePercent);
     const ups = sectors.filter((s) => s.changePercent > 0).length;
-    const strongest = [...sectors].sort((a, b) => b.changePercent - a.changePercent)[0];
-    return `${sectors.length}개 섹터 중 ${ups}개 상승, ${strongest.name} ${fmtPct(strongest.changePercent)}로 가장 강했습니다.`;
+    return { ups, total: sectors.length, strongest: sorted[0], weakest: sorted[sorted.length - 1] };
   }, [sectors]);
 
-  const W = 720;
-  const H = 220;
-  const spPaths = useMemo(() => (sp ? linePaths(sp.sparkline, W, H) : null), [sp]);
-  const nqPaths = useMemo(() => (nq ? linePaths(nq.sparkline, W, H) : null), [nq]);
+  // Geometry in pixels (client only).
+  const { w, h } = size;
+  const art = useMemo(() => {
+    if (!w || !h) return null;
+    const x0 = -0.02 * w;
+    const x1 = 1.02 * w;
+    const y0 = narrow ? 0.08 * h : 0.16 * h;
+    const y1 = narrow ? 0.4 * h : 0.6 * h;
+    return {
+      sp: sp ? pixelPaths(sp.sparkline, x0, x1, y0, y1) : null,
+      nq: nq ? pixelPaths(nq.sparkline, x0, x1, y0 + 0.02 * h, y1 + 0.04 * h) : null,
+    };
+  }, [w, h, narrow, sp, nq]);
+
+  const spCount = useCountUp(sp ? sp.price : null, !reducedMotion && at("draw") && !at("bars"));
+  const nqCount = useCountUp(nq ? nq.price : null, !reducedMotion && at("draw") && !at("bars"));
+  const maxAbsBar = sectors.length ? Math.max(1, ...sectors.map((s) => Math.abs(s.changePercent))) : 1;
   const maxAbsRel = dots.length ? Math.max(5, ...dots.map((d) => Math.abs(d.relative))) : 5;
   const placedDots = useMemo(() => {
     const placed = dots.map((d) => ({
@@ -269,45 +291,189 @@ export default function IntroClient() {
       y: Math.min(92, Math.max(8, 100 - d.band)),
       labelLeft: d.relative > 0,
     }));
-    // Nudge labels that would sit on top of each other (same side, close x and y).
     placed.sort((a, b) => a.y - b.y);
     for (let i = 1; i < placed.length; i += 1) {
       for (let j = 0; j < i; j += 1) {
         const a = placed[j];
         const b = placed[i];
-        if (a.labelLeft === b.labelLeft && Math.abs(a.x - b.x) < 24 && Math.abs(a.y - b.y) < 8) {
-          b.y = Math.min(94, a.y + 8);
-        }
+        if (a.labelLeft === b.labelLeft && Math.abs(a.x - b.x) < 24 && Math.abs(a.y - b.y) < 8) b.y = Math.min(94, a.y + 8);
       }
     }
     return placed;
   }, [dots, maxAbsRel]);
-  const maxAbsBar = sectors.length ? Math.max(1, ...sectors.map((s) => Math.abs(s.changePercent))) : 1;
+
+  const drawing = at("draw");
+  const barsUp = at("bars");
+  const dotsIn = at("dots");
 
   return (
-    <div
-      className="intro-root relative min-h-[100svh] w-full overflow-hidden text-slate-100"
-    >
-      {/* Layer 1 — light streaks */}
+    <div ref={rootRef} className="intro-root relative min-h-[100svh] w-full overflow-hidden text-slate-100">
+      {/* Layer A — set: dot grid, drifting streaks, vignette */}
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+        <div className="intro-grid absolute inset-0" />
         <div className="intro-streak s1" />
         <div className="intro-streak s2" />
         <div className="intro-streak s3" />
+        <div className="intro-vignette absolute inset-0" />
       </div>
 
+      {/* Layer B — the market as the set: S&P line edge to edge, Nasdaq behind it */}
+      {art && (art.sp || art.nq) ? (
+        <svg className="pointer-events-none absolute inset-0 z-[1]" width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
+          <defs>
+            <linearGradient id="intro-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--intro-brand)" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="var(--intro-brand)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {art.nq ? (
+            <path
+              d={art.nq.line}
+              fill="none"
+              stroke="var(--intro-ink-3)"
+              strokeWidth="1"
+              pathLength={1}
+              strokeDasharray="1"
+              style={{ strokeDashoffset: drawing ? 0 : 1, opacity: 0.7, transition: reducedMotion ? "none" : `stroke-dashoffset 2400ms ${EASE} 300ms` }}
+            />
+          ) : null}
+          {art.sp ? (
+            <>
+              <path d={art.sp.area} fill="url(#intro-area)" style={{ opacity: drawing ? 1 : 0, transition: reducedMotion ? "none" : `opacity 1600ms ${EASE} 1400ms` }} />
+              <path
+                d={art.sp.line}
+                fill="none"
+                stroke="var(--intro-brand)"
+                strokeWidth="14"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                pathLength={1}
+                strokeDasharray="1"
+                style={{ strokeDashoffset: drawing ? 0 : 1, opacity: 0.14, transition: reducedMotion ? "none" : `stroke-dashoffset 2200ms ${EASE}` }}
+              />
+              <path
+                d={art.sp.line}
+                fill="none"
+                stroke="var(--intro-brand)"
+                strokeWidth="2.25"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                pathLength={1}
+                strokeDasharray="1"
+                style={{ strokeDashoffset: drawing ? 0 : 1, transition: reducedMotion ? "none" : `stroke-dashoffset 2200ms ${EASE}` }}
+              />
+              <g style={{ opacity: barsUp ? 1 : 0, transition: reducedMotion ? "none" : `opacity 300ms ${EASE}` }}>
+                <circle cx={art.sp.last[0]} cy={art.sp.last[1]} r="4" fill="var(--intro-brand)" />
+                <circle className="intro-pulse" cx={art.sp.last[0]} cy={art.sp.last[1]} r="4" fill="none" stroke="var(--intro-brand)" strokeWidth="1.5" />
+              </g>
+            </>
+          ) : null}
+        </svg>
+      ) : null}
+
+      {/* Index readouts riding the line's head (count up while it draws) */}
+      {sp || nq ? (
+        <div
+          className={`pointer-events-none absolute z-[2] flex gap-x-6 gap-y-1 ${narrow ? "left-5 top-[44%] flex-col" : "right-8 top-[9%] flex-row items-baseline"}`}
+          style={{ opacity: drawing ? 1 : 0, transition: reducedMotion ? "none" : `opacity 500ms ${EASE} 200ms` }}
+        >
+          {sp ? <Readout name="S&P 500" value={spCount} pct={sp.changePercent} accent="var(--intro-brand)" /> : null}
+          {nq ? <Readout name="나스닥" value={nqCount} pct={nq.changePercent} accent="var(--intro-ink-2)" /> : null}
+        </div>
+      ) : null}
+
+      {/* Layer C — 11 sectors rise along the bottom edge */}
+      {sectors.length ? (
+        <div className={`pointer-events-none absolute inset-x-0 bottom-0 z-[1] ${narrow ? "h-[18svh]" : "h-[26svh]"}`} aria-hidden="true">
+          <div className="absolute inset-x-[4%] bottom-[7svh] top-0 flex items-end gap-[1.2%]">
+            {sectors.map((s, i) => {
+              const up = s.changePercent >= 0;
+              const hPct = Math.max(8, (Math.abs(s.changePercent) / maxAbsBar) * 100);
+              return (
+                <div key={s.symbol} className="relative flex h-full min-w-0 flex-1 flex-col items-center justify-end">
+                  <div
+                    className={`w-full rounded-t-[3px] ${up ? "intro-bar-up" : "intro-bar-down"}`}
+                    style={{
+                      height: `${hPct}%`,
+                      transformOrigin: "bottom",
+                      transform: barsUp ? "scaleY(1)" : "scaleY(0)",
+                      transition: reducedMotion ? "none" : `transform 700ms ${EASE} ${i * 60}ms`,
+                    }}
+                  />
+                  <div
+                    className="absolute top-full mt-2 flex w-full flex-col items-center gap-0.5"
+                    style={{ opacity: barsUp ? 1 : 0, transition: reducedMotion ? "none" : `opacity 400ms ${EASE} ${300 + i * 60}ms` }}
+                  >
+                    <span className="max-w-full truncate text-[12px] leading-none" style={{ color: "var(--intro-ink-2)" }}>
+                      {narrow ? s.symbol.replace(/^XL/, "") : s.name}
+                    </span>
+                    {!narrow ? (
+                      <span className="intro-num text-[12px] leading-none" style={{ color: up ? "var(--intro-up)" : "var(--intro-down)" }}>
+                        {fmtPct(s.changePercent)}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Layer C' — rotation field on the right third (desktop only) */}
+      {!narrow && dots.length ? (
+        <div className="pointer-events-none absolute z-[2]" style={{ left: "58%", right: "5%", top: "22%", height: "34%" }} aria-hidden="true">
+          <div className="absolute inset-y-0 left-1/2 w-px" style={{ background: "var(--intro-line)" }} />
+          <div className="absolute inset-x-0 top-1/2 h-px" style={{ background: "var(--intro-line)" }} />
+          {(
+            [
+              ["run-expensive", "right-0 top-0 text-right"],
+              ["cheap-recover", "right-0 bottom-0 text-right"],
+              ["rich-fade", "left-0 top-0"],
+              ["cheap-weak", "left-0 bottom-0"],
+            ] as const
+          ).map(([id, cls]) => (
+            <span key={id} className={`absolute text-[12px] ${cls}`} style={{ color: "var(--intro-ink-3)", opacity: dotsIn ? 1 : 0, transition: `opacity 400ms ${EASE}` }}>
+              {QUADRANT_KO[id]}
+            </span>
+          ))}
+          <span className="absolute -top-6 right-0 text-[12px]" style={{ color: "var(--intro-ink-3)", opacity: dotsIn ? 1 : 0, transition: `opacity 400ms ${EASE}` }}>
+            섹터 회전{rotationWindowLabel ? ` · ${rotationWindowLabel}` : ""} · 가로 S&amp;P 대비 모멘텀 · 세로 밸류 밴드
+          </span>
+          {placedDots.map(({ d, x, y, labelLeft }, i) => {
+            const up = d.relative >= 0;
+            return (
+              <div
+                key={d.symbol}
+                className={`absolute flex items-center gap-1.5 ${labelLeft ? "flex-row-reverse" : ""}`}
+                title={`${d.name} ${fmtPp(d.relative)} · 밴드 ${Math.round(d.band)}%`}
+                style={{
+                  left: dotsIn ? `${x}%` : x > 50 ? "110%" : "-10%",
+                  top: dotsIn ? `${y}%` : "50%",
+                  opacity: dotsIn ? 1 : 0,
+                  transform: labelLeft ? "translate(calc(-100% + 4px), -50%)" : "translate(-4px, -50%)",
+                  transition: reducedMotion ? "none" : `left 900ms ${EASE} ${i * 55}ms, top 900ms ${EASE} ${i * 55}ms, opacity 400ms ${EASE} ${i * 55}ms`,
+                }}
+              >
+                <span className={`h-2 w-2 shrink-0 rounded-full ${up ? "intro-dot-up" : "intro-dot-down"}`} style={{ background: up ? "var(--intro-up)" : "var(--intro-down)" }} />
+                <span className="whitespace-nowrap text-[12px]" style={{ color: "var(--intro-ink-2)" }}>
+                  {d.name}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
       {/* Top bar */}
-      <header className="relative z-20 mx-auto flex w-full max-w-[1280px] items-center justify-between px-5 pt-5 sm:px-8">
+      <header className="relative z-[3] flex items-center justify-between px-5 pt-5 sm:px-8">
         <div className="flex items-baseline gap-2">
           <span className="text-[20px] font-bold tracking-tight text-white">100x</span>
           <span className="text-[12px] font-medium tracking-wide" style={{ color: "var(--intro-ink-3)" }}>
             Market Radar
           </span>
         </div>
-        <Link
-          href={targetHref}
-          className="inline-flex min-h-[44px] items-center gap-1 rounded-full px-3 text-[13px] font-medium transition-colors hover:text-white"
-          style={{ color: "var(--intro-ink-2)" }}
-        >
+        <Link href={targetHref} className="inline-flex min-h-[44px] items-center gap-1 rounded-full px-3 text-[13px] font-medium transition-colors hover:text-white" style={{ color: "var(--intro-ink-2)" }}>
           둘러보기
           <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
             <path d="M6 3l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
@@ -315,270 +481,106 @@ export default function IntroClient() {
         </Link>
       </header>
 
-      <main className="relative z-10 mx-auto grid w-full max-w-[1280px] grid-cols-1 gap-10 px-5 pb-12 pt-8 sm:px-8 lg:min-h-[calc(100svh-84px)] lg:grid-cols-12 lg:items-center lg:gap-12 lg:pt-0">
-        {/* Layer 3 + 4 — headline and login */}
-        <section className="flex flex-col gap-8 lg:col-span-5">
-          <div className="flex flex-col gap-4">
-            <h1 className="text-[34px] font-bold leading-[1.15] tracking-[-0.02em] text-white sm:text-[44px]">
-              미국 시장을
-              <br />
-              숫자로 먼저 봅니다
-            </h1>
-            <p className="max-w-[34ch] text-[16px] leading-[1.6]" style={{ color: "var(--intro-ink-2)" }}>
-              S&amp;P 500과 나스닥, 11개 섹터의 등락과 회전을 매일 갱신합니다.
-            </p>
-            {summary ? (
-              <p className="max-w-[36ch] text-[14px] leading-[1.6]" style={{ color: "var(--intro-ink-2)" }}>
-                {summary}
+      {/* Layer D — the reading of the day is the title; login sits under it */}
+      <section
+        className={`absolute z-[3] flex flex-col gap-6 px-5 sm:px-8 ${narrow ? "inset-x-0 top-[50%]" : "left-0 top-[36%] w-[46%] max-w-[640px]"}`}
+        aria-label="오늘의 읽기"
+      >
+        <div className="intro-scrim pointer-events-none absolute -inset-x-6 -inset-y-10 -z-[1]" aria-hidden="true" />
+        <div
+          className="flex flex-col gap-3"
+          style={{
+            opacity: at("draw") ? 1 : 0,
+            transform: at("draw") ? "translateY(0)" : "translateY(10px)",
+            filter: at("draw") ? "blur(0)" : "blur(6px)",
+            transition: reducedMotion ? "none" : `opacity 700ms ${EASE} 900ms, transform 700ms ${EASE} 900ms, filter 700ms ${EASE} 900ms`,
+          }}
+        >
+          <p className="intro-num text-[12px] tracking-wide" style={{ color: "var(--intro-ink-3)" }}>
+            {asOf ? `${asOf} · 미국 장 마감` : "100x Market Radar"}
+          </p>
+          {reading ? (
+            <>
+              <h1 className="text-[40px] font-extrabold leading-[1.08] tracking-[-0.03em] text-white sm:text-[56px] lg:text-[64px]">
+                {reading.total}개 섹터 중
+                <br />
+                {reading.ups}개 상승
+              </h1>
+              <p className="text-[16px] leading-[1.5] sm:text-[18px]" style={{ color: "var(--intro-ink-2)" }}>
+                <span style={{ color: "var(--intro-up)" }}>{reading.strongest.name} {fmtPct(reading.strongest.changePercent)}</span> 최강
+                {" · "}
+                <span style={{ color: "var(--intro-down)" }}>{reading.weakest.name} {fmtPct(reading.weakest.changePercent)}</span> 최약
               </p>
-            ) : null}
-            {asOf ? (
-              <p className="intro-num text-[12px]" style={{ color: "var(--intro-ink-3)" }}>
-                기준 {asOf}
-              </p>
-            ) : null}
-          </div>
-
-          <div
-            className="flex flex-col gap-3"
-            style={{
-              opacity: cardVisible ? 1 : 0,
-              transform: cardVisible ? "translateY(0)" : "translateY(12px)",
-              transition: reducedMotion ? "none" : `opacity 600ms ${EASE}, transform 600ms ${EASE}`,
-              pointerEvents: cardVisible ? "auto" : "none",
-            }}
-          >
-            <span className="text-[14px] font-medium text-white">Google 계정으로 시작</span>
-            {/* GIS owns the first div's children; React never renders inside it, so the
-                placeholder lives in a sibling and toggling it cannot collide with GIS. */}
-            <div
-              className={`relative flex min-h-[44px] w-fit items-center rounded-full ${focused ? "intro-focus-ring" : ""}`}
-              style={{ transition: reducedMotion ? "none" : `box-shadow 700ms ${EASE}` }}
-            >
-              <div ref={googleBtnRef} className="min-h-[44px]" />
-              {!gisReady ? (
-                <button
-                  type="button"
-                  disabled
-                  aria-busy={!gisFailed}
-                  className="inline-flex h-[44px] items-center gap-2.5 rounded-full border px-5 text-[14px] font-medium text-white opacity-70"
-                  style={{ borderColor: "var(--intro-line-strong)", background: "var(--intro-fill-faint)" }}
-                >
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="var(--intro-google-blue)" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
-                    <path fill="var(--intro-google-green)" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.34 24 12 24z" />
-                    <path fill="var(--intro-google-yellow)" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.16 0 9.94 0 12s.45 3.84 1.24 5.42l4.04-3.15z" />
-                    <path fill="var(--intro-google-red)" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
-                  </svg>
-                  {loggingIn ? "로그인 중" : gisFailed ? "Google 로그인을 불러오지 못했습니다" : "Google 계정으로 계속"}
-                </button>
-              ) : null}
-            </div>
-            {loginError ? (
-              <p className="text-[13px]" style={{ color: "var(--intro-down)" }} role="alert">
-                {loginError}
-              </p>
-            ) : null}
-            <Link
-              href={targetHref}
-              className="inline-flex min-h-[44px] w-fit items-center text-[13px] underline underline-offset-4 transition-colors hover:text-white"
-              style={{ color: "var(--intro-ink-3)" }}
-            >
-              로그인 없이 둘러보기
-            </Link>
-          </div>
-        </section>
-
-        {/* Layer 2 — market field (the art). No card box: the data is the background. */}
-        <section className="flex min-w-0 flex-col gap-8 overflow-hidden lg:col-span-7" aria-label="오늘의 미국 시장">
-          {/* Index lines */}
-          <div className="flex flex-col gap-3">
-            <div className={`flex min-w-0 gap-x-6 gap-y-1 ${narrow ? "flex-col" : "flex-wrap items-baseline"}`}>
-              {sp ? (
-                <IndexLabel name="S&P 500" series={sp} accent="var(--intro-brand)" />
-              ) : null}
-              {nq ? (
-                <IndexLabel name="나스닥" series={nq} accent="var(--intro-ink-2)" />
-              ) : null}
-              {ks ? (
-                <IndexLabel name="KOSPI" series={ks} accent="var(--intro-ink-3)" small />
-              ) : null}
-              {feedFailed && !sp ? (
-                <span className="text-[13px]" style={{ color: "var(--intro-ink-3)" }}>
+            </>
+          ) : (
+            <>
+              <h1 className="text-[40px] font-extrabold leading-[1.08] tracking-[-0.03em] text-white sm:text-[56px]">
+                100x
+                <br />
+                Market Radar
+              </h1>
+              {feedFailed ? (
+                <p className="text-[14px]" style={{ color: "var(--intro-ink-3)" }}>
                   시장 데이터를 불러오지 못했습니다.
-                </span>
+                </p>
               ) : null}
-            </div>
-            <div className="relative w-full" style={{ aspectRatio: `${W} / ${H}`, maxHeight: narrow ? 180 : 260 }}>
-              {spPaths || nqPaths ? (
-                <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="intro-area" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--intro-brand)" stopOpacity="0.28" />
-                      <stop offset="100%" stopColor="var(--intro-brand)" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  {[0.25, 0.5, 0.75].map((f) => (
-                    <line key={f} x1="0" x2={W} y1={H * f} y2={H * f} stroke="var(--intro-line)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-                  ))}
-                  {spPaths ? (
-                    <path
-                      d={spPaths.area}
-                      fill="url(#intro-area)"
-                      style={{
-                        opacity: drawing ? 1 : 0,
-                        transition: reducedMotion ? "none" : `opacity 1400ms ${EASE} 1900ms`,
-                      }}
-                    />
-                  ) : null}
-                  {nqPaths ? (
-                    <path
-                      d={nqPaths.line}
-                      fill="none"
-                      stroke="var(--intro-ink-3)"
-                      strokeWidth="1.25"
-                      vectorEffect="non-scaling-stroke"
-                      pathLength={1}
-                      strokeDasharray="1"
-                      style={{
-                        strokeDashoffset: drawing ? 0 : 1,
-                        transition: reducedMotion ? "none" : `stroke-dashoffset 2400ms ${EASE} 1100ms`,
-                      }}
-                    />
-                  ) : null}
-                  {spPaths ? (
-                    <path
-                      d={spPaths.line}
-                      fill="none"
-                      stroke="var(--intro-brand)"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                      vectorEffect="non-scaling-stroke"
-                      pathLength={1}
-                      strokeDasharray="1"
-                      style={{
-                        strokeDashoffset: drawing ? 0 : 1,
-                        transition: reducedMotion ? "none" : `stroke-dashoffset 2200ms ${EASE} 800ms`,
-                      }}
-                    />
-                  ) : null}
+            </>
+          )}
+        </div>
+
+        <div
+          className="flex flex-col gap-3"
+          style={{
+            opacity: cardVisible ? 1 : 0,
+            transform: cardVisible ? "translateY(0)" : "translateY(12px)",
+            transition: reducedMotion ? "none" : `opacity 600ms ${EASE}, transform 600ms ${EASE}`,
+            pointerEvents: cardVisible ? "auto" : "none",
+          }}
+        >
+          {/* GIS owns the first div's children; the placeholder is a sibling so React never fights the iframe. */}
+          <div className={`relative flex min-h-[44px] w-fit items-center rounded-full ${focused ? "intro-focus-ring" : ""}`} style={{ transition: reducedMotion ? "none" : `box-shadow 700ms ${EASE}` }}>
+            <div ref={googleBtnRef} className="min-h-[44px]" />
+            {!gisReady ? (
+              <button
+                type="button"
+                disabled
+                aria-busy={!gisFailed}
+                className="inline-flex h-[44px] items-center gap-2.5 rounded-full border px-5 text-[14px] font-medium text-white opacity-70"
+                style={{ borderColor: "var(--intro-line-strong)", background: "var(--intro-fill-faint)" }}
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="var(--intro-google-blue)" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
+                  <path fill="var(--intro-google-green)" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.34 24 12 24z" />
+                  <path fill="var(--intro-google-yellow)" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.16 0 9.94 0 12s.45 3.84 1.24 5.42l4.04-3.15z" />
+                  <path fill="var(--intro-google-red)" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
                 </svg>
-              ) : (
-                <div className="absolute inset-0 rounded-md" style={{ background: "linear-gradient(180deg, var(--intro-fill-faintest), transparent)" }} />
-              )}
-            </div>
+                {loggingIn ? "로그인 중" : gisFailed ? "Google 로그인을 불러오지 못했습니다" : "Google 계정으로 계속"}
+              </button>
+            ) : null}
           </div>
-
-          {/* Breadth: 11 US sectors, bars from a zero line */}
-          {sectors.length ? (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-baseline justify-between">
-                <span className="text-[13px] font-medium text-white">11개 섹터 등락</span>
-                <span className="intro-num text-[12px]" style={{ color: "var(--intro-ink-3)" }}>
-                  <span style={{ color: "var(--intro-up)" }}>상승 {sectors.filter((s) => s.changePercent > 0).length}</span>
-                  {"  ·  "}
-                  <span style={{ color: "var(--intro-down)" }}>하락 {sectors.filter((s) => s.changePercent < 0).length}</span>
-                </span>
-              </div>
-              <div className="grid gap-x-1.5 sm:gap-x-2" style={{ gridTemplateColumns: `repeat(${sectors.length}, minmax(0, 1fr))` }}>
-                {sectors.map((s, i) => {
-                  const up = s.changePercent >= 0;
-                  const h = Math.max(4, Math.round((Math.abs(s.changePercent) / maxAbsBar) * 44));
-                  return (
-                    <div key={s.symbol} className="flex min-w-0 flex-col items-center gap-1.5" title={`${s.name} ${fmtPct(s.changePercent)}`}>
-                      <div className="relative h-[92px] w-full">
-                        <div className="absolute left-0 right-0 top-1/2 h-px" style={{ background: "var(--intro-line)" }} />
-                        <div
-                          className="absolute left-[15%] right-[15%] rounded-[2px]"
-                          style={{
-                            [up ? "bottom" : "top"]: "50%",
-                            height: h,
-                            background: up ? "var(--intro-up)" : "var(--intro-down)",
-                            transformOrigin: up ? "bottom" : "top",
-                            transform: drawing ? "scaleY(1)" : "scaleY(0)",
-                            transition: reducedMotion ? "none" : `transform 600ms ${EASE} ${1200 + i * 70}ms`,
-                          }}
-                        />
-                      </div>
-                      <span className="max-w-full truncate text-[12px] leading-none" style={{ color: "var(--intro-ink-2)" }}>
-                        {narrow ? s.symbol.replace(/^XL/, "") : s.name}
-                      </span>
-                      {!narrow ? (
-                        <span className="intro-num text-[12px] leading-none" style={{ color: up ? "var(--intro-up)" : "var(--intro-down)" }}>
-                          {fmtPct(s.changePercent)}
-                        </span>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+          {loginError ? (
+            <p className="text-[13px]" style={{ color: "var(--intro-down)" }} role="alert">
+              {loginError}
+            </p>
           ) : null}
-
-          {/* Rotation: real coordinates — x = relative momentum vs S&P, y = valuation band */}
-          {dots.length ? (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-baseline justify-between">
-                <span className="text-[13px] font-medium text-white">섹터 회전</span>
-                <span className="text-[12px]" style={{ color: "var(--intro-ink-3)" }}>
-                  {rotationWindowLabel ? `${rotationWindowLabel} · ` : ""}가로 S&amp;P 대비 모멘텀 · 세로 밸류에이션 밴드
-                </span>
-              </div>
-              <div className="relative w-full overflow-hidden rounded-md" style={{ height: narrow ? 170 : 210, border: "1px solid var(--intro-line)" }}>
-                <div className="absolute inset-y-0 left-1/2 w-px" style={{ background: "var(--intro-line)" }} />
-                <div className="absolute inset-x-0 top-1/2 h-px" style={{ background: "var(--intro-line)" }} />
-                {(
-                  [
-                    ["run-expensive", "right-2 top-2 text-right"],
-                    ["cheap-recover", "right-2 bottom-2 text-right"],
-                    ["rich-fade", "left-2 top-2"],
-                    ["cheap-weak", "left-2 bottom-2"],
-                  ] as const
-                ).map(([id, cls]) => (
-                  <span key={id} className={`absolute text-[12px] ${cls}`} style={{ color: "var(--intro-ink-3)" }}>
-                    {QUADRANT_KO[id]}
-                  </span>
-                ))}
-                {placedDots.map(({ d, x, y, labelLeft }, i) => {
-                  const up = d.relative >= 0;
-                  return (
-                    <div
-                      key={d.symbol}
-                      className={`absolute flex items-center gap-1.5 ${labelLeft ? "flex-row-reverse" : ""}`}
-                      title={`${d.name} ${fmtPp(d.relative)} · 밴드 ${Math.round(d.band)}%`}
-                      style={{
-                        left: drawing ? `${x}%` : "50%",
-                        top: drawing ? `${y}%` : "50%",
-                        opacity: drawing ? 1 : 0,
-                        transform: labelLeft ? "translate(calc(-100% + 4px), -50%)" : "translate(-4px, -50%)",
-                        transition: reducedMotion ? "none" : `left 900ms ${EASE} ${2200 + i * 60}ms, top 900ms ${EASE} ${2200 + i * 60}ms, opacity 400ms ${EASE} ${2200 + i * 60}ms`,
-                      }}
-                    >
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${up ? "intro-dot-up" : "intro-dot-down"}`} style={{ background: up ? "var(--intro-up)" : "var(--intro-down)" }} />
-                      <span className="whitespace-nowrap text-[12px]" style={{ color: "var(--intro-ink-2)" }}>
-                        {narrow ? d.symbol.replace(/^XL/, "") : d.name}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-        </section>
-      </main>
+          <Link href={targetHref} className="inline-flex min-h-[44px] w-fit items-center text-[13px] underline underline-offset-4 transition-colors hover:text-white" style={{ color: "var(--intro-ink-3)" }}>
+            로그인 없이 둘러보기
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
 
-function IndexLabel({ name, series, accent, small }: { name: string; series: IndexSeries; accent: string; small?: boolean }) {
-  const up = series.changePercent >= 0;
+function Readout({ name, value, pct, accent }: { name: string; value: number | null; pct: number; accent: string }) {
+  const up = pct >= 0;
   return (
-    <div className={`flex items-baseline gap-2 ${small ? "opacity-80" : ""}`}>
+    <div className="flex items-baseline gap-2">
       <span className="inline-block h-2 w-2 translate-y-[-1px] rounded-full" style={{ background: accent }} aria-hidden="true" />
-      <span className={`${small ? "text-[12px]" : "text-[13px]"} font-medium text-white`}>{name}</span>
-      <span className={`intro-num ${small ? "text-[14px]" : "text-[18px]"} font-medium text-white`}>{fmtPrice(series.price)}</span>
+      <span className="text-[13px] font-medium text-white">{name}</span>
+      <span className="intro-num text-[20px] font-medium text-white">{value === null ? "" : fmtPrice(value)}</span>
       <span className="intro-num text-[12px]" style={{ color: up ? "var(--intro-up)" : "var(--intro-down)" }}>
-        {fmtPct(series.changePercent)}
+        {fmtPct(pct)}
       </span>
     </div>
   );

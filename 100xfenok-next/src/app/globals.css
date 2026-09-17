@@ -1053,6 +1053,14 @@ body:has(.intro-root) { background: #08090a; }
 .intro-streak.s2 { top: 34%; opacity: .35; animation-duration: 34s; animation-delay: -9s; background: linear-gradient(90deg, transparent 12%, rgb(var(--intro-accent-2-rgb) / .35) 48%, transparent 88%); }
 .intro-streak.s3 { top: 74%; opacity: .28; animation-duration: 30s; animation-delay: -17s; background: linear-gradient(90deg, transparent 5%, rgb(var(--intro-brand-rgb) / .4) 55%, transparent 90%); }
 @media (prefers-reduced-motion: reduce) { .intro-streak { animation: none; } }
+.intro-grid { background-image: radial-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px); background-size: 28px 28px; opacity: .5; }
+.intro-vignette { background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgb(0 0 0 / 0.55) 100%); }
+.intro-scrim { background: radial-gradient(60% 70% at 30% 50%, rgb(8 9 10 / 0.82) 30%, rgb(8 9 10 / 0.35) 70%, transparent 100%); filter: blur(8px); }
+.intro-bar-up { background: linear-gradient(180deg, var(--intro-up), rgb(var(--intro-up-rgb) / .35)); box-shadow: 0 0 18px rgb(var(--intro-up-rgb) / .25); }
+.intro-bar-down { background: linear-gradient(180deg, var(--intro-down), rgb(var(--intro-down-rgb) / .35)); box-shadow: 0 0 18px rgb(var(--intro-down-rgb) / .25); }
+@keyframes intro-pulse { from { r: 4; opacity: .9; } to { r: 22; opacity: 0; } }
+.intro-pulse { animation: intro-pulse 1.8s cubic-bezier(0.2, 0, 0, 1) infinite; }
+@media (prefers-reduced-motion: reduce) { .intro-pulse { animation: none; opacity: 0; } }
 .intro-focus-ring { box-shadow: 0 0 0 1px rgb(var(--intro-brand-rgb) / .45), 0 0 32px rgb(var(--intro-brand-rgb) / .25); }
 .intro-dot-up { box-shadow: 0 0 10px rgb(var(--intro-up-rgb) / .6); }
 .intro-dot-down { box-shadow: 0 0 10px rgb(var(--intro-down-rgb) / .6); }
