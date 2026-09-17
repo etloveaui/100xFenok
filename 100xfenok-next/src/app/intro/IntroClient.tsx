@@ -272,8 +272,8 @@ export default function IntroClient() {
     if (!w || !h) return null;
     const x0 = -0.02 * w;
     const x1 = 1.02 * w;
-    const y0 = narrow ? 0.08 * h : 0.16 * h;
-    const y1 = narrow ? 0.4 * h : 0.6 * h;
+    const y0 = narrow ? 0.07 * h : 0.12 * h;
+    const y1 = narrow ? 0.36 * h : 0.46 * h;
     return {
       sp: sp ? pixelPaths(sp.sparkline, x0, x1, y0, y1) : null,
       nq: nq ? pixelPaths(nq.sparkline, x0, x1, y0 + 0.02 * h, y1 + 0.04 * h) : null,
@@ -296,7 +296,8 @@ export default function IntroClient() {
       for (let j = 0; j < i; j += 1) {
         const a = placed[j];
         const b = placed[i];
-        if (a.labelLeft === b.labelLeft && Math.abs(a.x - b.x) < 24 && Math.abs(a.y - b.y) < 8) b.y = Math.min(94, a.y + 8);
+        const sameSide = a.labelLeft === b.labelLeft;
+        if (Math.abs(a.x - b.x) < (sameSide ? 24 : 14) && Math.abs(a.y - b.y) < 8) b.y = Math.min(94, a.y + 8);
       }
     }
     return placed;
@@ -372,9 +373,9 @@ export default function IntroClient() {
       ) : null}
 
       {/* Index readouts riding the line's head (count up while it draws) */}
-      {sp || nq ? (
+      {!narrow && (sp || nq) ? (
         <div
-          className={`pointer-events-none absolute z-[2] flex gap-x-6 gap-y-1 ${narrow ? "left-5 top-[44%] flex-col" : "right-8 top-[9%] flex-row items-baseline"}`}
+          className="pointer-events-none absolute right-8 top-[9%] z-[2] flex flex-row items-baseline gap-x-6 gap-y-1"
           style={{ opacity: drawing ? 1 : 0, transition: reducedMotion ? "none" : `opacity 500ms ${EASE} 200ms` }}
         >
           {sp ? <Readout name="S&P 500" value={spCount} pct={sp.changePercent} accent="var(--intro-brand)" /> : null}
@@ -384,11 +385,11 @@ export default function IntroClient() {
 
       {/* Layer C — 11 sectors rise along the bottom edge */}
       {sectors.length ? (
-        <div className={`pointer-events-none absolute inset-x-0 bottom-0 z-[1] ${narrow ? "h-[18svh]" : "h-[26svh]"}`} aria-hidden="true">
+        <div className={`pointer-events-none absolute inset-x-0 bottom-0 z-[1] ${narrow ? "h-[15svh]" : "h-[22svh]"}`} aria-hidden="true">
           <div className="absolute inset-x-[4%] bottom-[7svh] top-0 flex items-end gap-[1.2%]">
             {sectors.map((s, i) => {
               const up = s.changePercent >= 0;
-              const hPct = Math.max(8, (Math.abs(s.changePercent) / maxAbsBar) * 100);
+              const hPct = Math.max(8, (Math.abs(s.changePercent) / maxAbsBar) * 78);
               return (
                 <div key={s.symbol} className="relative flex h-full min-w-0 flex-1 flex-col items-center justify-end">
                   <div
@@ -422,7 +423,7 @@ export default function IntroClient() {
 
       {/* Layer C' — rotation field on the right third (desktop only) */}
       {!narrow && dots.length ? (
-        <div className="pointer-events-none absolute z-[2]" style={{ left: "58%", right: "5%", top: "22%", height: "34%" }} aria-hidden="true">
+        <div className="pointer-events-none absolute z-[2]" style={{ left: "58%", right: "5%", top: "50%", height: "26%" }} aria-hidden="true">
           <div className="absolute inset-y-0 left-1/2 w-px" style={{ background: "var(--intro-line)" }} />
           <div className="absolute inset-x-0 top-1/2 h-px" style={{ background: "var(--intro-line)" }} />
           {(
@@ -483,7 +484,7 @@ export default function IntroClient() {
 
       {/* Layer D — the reading of the day is the title; login sits under it */}
       <section
-        className={`absolute z-[3] flex flex-col gap-6 px-5 sm:px-8 ${narrow ? "inset-x-0 top-[50%]" : "left-0 top-[36%] w-[46%] max-w-[640px]"}`}
+        className={`absolute z-[3] flex flex-col gap-5 px-5 sm:px-8 ${narrow ? "inset-x-0 top-[40%]" : "left-0 top-[34%] w-[46%] max-w-[640px]"}`}
         aria-label="오늘의 읽기"
       >
         <div className="intro-scrim pointer-events-none absolute -inset-x-6 -inset-y-10 -z-[1]" aria-hidden="true" />
@@ -496,6 +497,12 @@ export default function IntroClient() {
             transition: reducedMotion ? "none" : `opacity 700ms ${EASE} 900ms, transform 700ms ${EASE} 900ms, filter 700ms ${EASE} 900ms`,
           }}
         >
+          {narrow && (sp || nq) ? (
+            <div className="flex flex-col gap-1">
+              {sp ? <Readout name="S&P 500" value={spCount} pct={sp.changePercent} accent="var(--intro-brand)" /> : null}
+              {nq ? <Readout name="나스닥" value={nqCount} pct={nq.changePercent} accent="var(--intro-ink-2)" /> : null}
+            </div>
+          ) : null}
           <p className="intro-num text-[12px] tracking-wide" style={{ color: "var(--intro-ink-3)" }}>
             {asOf ? `${asOf} · 미국 장 마감` : "100x Market Radar"}
           </p>
