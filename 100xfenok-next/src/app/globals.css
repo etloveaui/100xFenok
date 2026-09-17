@@ -1008,3 +1008,47 @@ body:has([data-immersive-route]) #main-content {
 [data-superinvestor-page][data-superinvestor-selected-context="true"] > [role="tabpanel"] {
   order: 3;
 }
+
+/* ---------------------------------------------------------------------------
+ * /intro — the one sanctioned dark surface. Tokens live here (token
+ * foundation); the component references only var(--intro-*).
+ * ------------------------------------------------------------------------- */
+.intro-root {
+  --intro-bg: #08090a;
+  --intro-brand: #3B8DE8;
+  --intro-brand-rgb: 59 141 232;
+  --intro-accent-2-rgb: 99 102 241;
+  --intro-up: #34C48B;
+  --intro-up-rgb: 52 196 139;
+  --intro-down: #F0566E;
+  --intro-down-rgb: 240 86 110;
+  --intro-ink-2: #B6BDC9;
+  --intro-ink-3: #7C8594;
+  --intro-line: rgba(255, 255, 255, 0.08);
+  --intro-line-strong: rgba(255, 255, 255, 0.18);
+  --intro-fill-faint: rgba(255, 255, 255, 0.04);
+  --intro-fill-faintest: rgba(255, 255, 255, 0.03);
+  --intro-google-blue: #4285F4;
+  --intro-google-green: #34A853;
+  --intro-google-yellow: #FBBC05;
+  --intro-google-red: #EA4335;
+  background: var(--intro-bg);
+  font-family: var(--font-sans);
+}
+.intro-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+@keyframes intro-drift {
+  from { transform: translate3d(-6%, 0, 0) rotate(-28deg); }
+  to { transform: translate3d(6%, 0, 0) rotate(-28deg); }
+}
+.intro-streak {
+  position: absolute; left: -20%; width: 140%; height: 18vh; min-height: 120px;
+  filter: blur(56px); opacity: .55; transform: rotate(-28deg);
+  animation: intro-drift 26s cubic-bezier(0.2, 0, 0, 1) infinite alternate;
+}
+.intro-streak.s1 { top: -8%; background: linear-gradient(90deg, transparent 8%, rgb(var(--intro-brand-rgb) / .55) 42%, rgb(var(--intro-brand-rgb) / .15) 70%, transparent 92%); }
+.intro-streak.s2 { top: 34%; opacity: .35; animation-duration: 34s; animation-delay: -9s; background: linear-gradient(90deg, transparent 12%, rgb(var(--intro-accent-2-rgb) / .35) 48%, transparent 88%); }
+.intro-streak.s3 { top: 74%; opacity: .28; animation-duration: 30s; animation-delay: -17s; background: linear-gradient(90deg, transparent 5%, rgb(var(--intro-brand-rgb) / .4) 55%, transparent 90%); }
+@media (prefers-reduced-motion: reduce) { .intro-streak { animation: none; } }
+.intro-focus-ring { box-shadow: 0 0 0 1px rgb(var(--intro-brand-rgb) / .45), 0 0 32px rgb(var(--intro-brand-rgb) / .25); }
+.intro-dot-up { box-shadow: 0 0 10px rgb(var(--intro-up-rgb) / .6); }
+.intro-dot-down { box-shadow: 0 0 10px rgb(var(--intro-down-rgb) / .6); }

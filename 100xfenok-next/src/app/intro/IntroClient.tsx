@@ -254,29 +254,8 @@ export default function IntroClient() {
 
   return (
     <div
-      className="intro-root relative min-h-[100svh] w-full overflow-hidden bg-[#08090a] text-slate-100"
-      style={
-        {
-          "--intro-brand": "#3B8DE8",
-          "--intro-up": "#34C48B",
-          "--intro-down": "#F0566E",
-          "--intro-ink-2": "#B6BDC9",
-          "--intro-ink-3": "#7C8594",
-          "--intro-line": "rgba(255,255,255,0.08)",
-          fontFamily: "var(--font-sans)",
-        } as React.CSSProperties
-      }
+      className="intro-root relative min-h-[100svh] w-full overflow-hidden text-slate-100"
     >
-      <style>{`
-        @keyframes intro-drift { from { transform: translate3d(-6%, 0, 0) rotate(-28deg); } to { transform: translate3d(6%, 0, 0) rotate(-28deg); } }
-        .intro-streak { position:absolute; left:-20%; width:140%; height:18vh; min-height:120px; filter: blur(56px); opacity:.55; transform: rotate(-28deg); animation: intro-drift 26s ${EASE} infinite alternate; }
-        .intro-streak.s1 { top:-8%; background: linear-gradient(90deg, transparent 8%, rgba(59,141,232,.55) 42%, rgba(59,141,232,.15) 70%, transparent 92%); }
-        .intro-streak.s2 { top:34%; opacity:.35; animation-duration: 34s; animation-delay:-9s; background: linear-gradient(90deg, transparent 12%, rgba(99,102,241,.35) 48%, transparent 88%); }
-        .intro-streak.s3 { top:74%; opacity:.28; animation-duration: 30s; animation-delay:-17s; background: linear-gradient(90deg, transparent 5%, rgba(59,141,232,.4) 55%, transparent 90%); }
-        @media (prefers-reduced-motion: reduce) { .intro-streak { animation: none; } }
-        .intro-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-      `}</style>
-
       {/* Layer 1 — light streaks */}
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
         <div className="intro-streak s1" />
@@ -335,12 +314,8 @@ export default function IntroClient() {
             <span className="text-[14px] font-medium text-white">Google 계정으로 시작</span>
             <div
               ref={googleBtnRef}
-              className="flex min-h-[44px] items-center rounded-full"
-              style={{
-                boxShadow: focused ? "0 0 0 1px rgba(59,141,232,.45), 0 0 32px rgba(59,141,232,.25)" : "none",
-                transition: reducedMotion ? "none" : `box-shadow 700ms ${EASE}`,
-                width: "fit-content",
-              }}
+              className={`flex min-h-[44px] w-fit items-center rounded-full ${focused ? "intro-focus-ring" : ""}`}
+              style={{ transition: reducedMotion ? "none" : `box-shadow 700ms ${EASE}` }}
             >
               {!gisReady ? (
                 <button
@@ -348,13 +323,13 @@ export default function IntroClient() {
                   disabled={loggingIn}
                   onClick={() => window.google?.accounts?.id?.prompt?.()}
                   className="inline-flex h-[44px] items-center gap-2.5 rounded-full border px-5 text-[14px] font-medium text-white disabled:opacity-50"
-                  style={{ borderColor: "rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.04)" }}
+                  style={{ borderColor: "var(--intro-line-strong)", background: "var(--intro-fill-faint)" }}
                 >
                   <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
-                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.34 24 12 24z" />
-                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.16 0 9.94 0 12s.45 3.84 1.24 5.42l4.04-3.15z" />
-                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
+                    <path fill="var(--intro-google-blue)" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
+                    <path fill="var(--intro-google-green)" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.34 24 12 24z" />
+                    <path fill="var(--intro-google-yellow)" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.16 0 9.94 0 12s.45 3.84 1.24 5.42l4.04-3.15z" />
+                    <path fill="var(--intro-google-red)" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
                   </svg>
                   {loggingIn ? "로그인 중" : "Google 계정으로 계속"}
                 </button>
@@ -400,8 +375,8 @@ export default function IntroClient() {
                 <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
                   <defs>
                     <linearGradient id="intro-area" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3B8DE8" stopOpacity="0.28" />
-                      <stop offset="100%" stopColor="#3B8DE8" stopOpacity="0" />
+                      <stop offset="0%" stopColor="var(--intro-brand)" stopOpacity="0.28" />
+                      <stop offset="100%" stopColor="var(--intro-brand)" stopOpacity="0" />
                     </linearGradient>
                   </defs>
                   {[0.25, 0.5, 0.75].map((f) => (
@@ -450,7 +425,7 @@ export default function IntroClient() {
                   ) : null}
                 </svg>
               ) : (
-                <div className="absolute inset-0 rounded-md" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.03), transparent)" }} />
+                <div className="absolute inset-0 rounded-md" style={{ background: "linear-gradient(180deg, var(--intro-fill-faintest), transparent)" }} />
               )}
             </div>
           </div>
@@ -540,7 +515,7 @@ export default function IntroClient() {
                         transition: reducedMotion ? "none" : `left 900ms ${EASE} ${2200 + i * 60}ms, top 900ms ${EASE} ${2200 + i * 60}ms, opacity 400ms ${EASE} ${2200 + i * 60}ms`,
                       }}
                     >
-                      <span className="h-2 w-2 rounded-full" style={{ background: up ? "var(--intro-up)" : "var(--intro-down)", boxShadow: `0 0 10px ${up ? "rgba(52,196,139,.6)" : "rgba(240,86,110,.6)"}` }} />
+                      <span className={`h-2 w-2 rounded-full ${up ? "intro-dot-up" : "intro-dot-down"}`} style={{ background: up ? "var(--intro-up)" : "var(--intro-down)" }} />
                       <span className="whitespace-nowrap text-[12px]" style={{ color: "var(--intro-ink-2)" }}>
                         {narrow ? d.symbol.replace(/^XL/, "") : d.name}
                       </span>

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function IntroPage() {
   return (
-    <Suspense fallback={<div className="min-h-[100svh] w-full bg-[#08090a]" aria-hidden="true" />}>
+    <Suspense fallback={<div className="intro-root min-h-[100svh] w-full" aria-hidden="true" />}>
       <IntroClient />
     </Suspense>
   );

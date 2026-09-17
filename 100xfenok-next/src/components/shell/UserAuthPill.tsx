@@ -101,9 +101,7 @@ export default function UserAuthPill() {
           role="dialog"
           aria-label="계정 메뉴"
           className="absolute right-0 top-full mt-2 z-50 min-w-[180px] rounded-xl border border-[var(--fnk-color-border)] bg-[var(--fnk-color-card)] p-3 shadow-lg flex flex-col gap-2.5 text-left"
-          style={{
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-          }}
+          style={{ boxShadow: "var(--shadow-card-light)" }}
         >
           <div className="flex flex-col gap-0.5">
             {user.name && (
