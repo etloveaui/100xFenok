@@ -8,6 +8,7 @@ import {
   isAlwaysOpenPath,
   generateVerifySignature,
   verifyRequestToken,
+  handleWorkerClosedSiteGate,
   CLOSED_SITE_ENV_VAR,
   FENOK_VERIFY_TOKEN_ENV_VAR,
   FX_PREVIEW_COOKIE_NAME,
@@ -23,7 +24,7 @@ import {
   FX_SESSION_COOKIE_NAME,
 } from "../src/lib/server/authSession";
 import { middleware } from "../middleware";
-import worker from "../worker";
+
 
 function createMemoryStorage(): DurableObjectStorageLike {
   const map = new Map<string, unknown>();
@@ -350,31 +351,26 @@ test("middleware: CLOSED_SITE=preview gates only requests with fx_preview=1 cook
 // 9. Worker gate tests: /data/* and /api/data/* protection
 // ---------------------------------------------------------------------------
 
-test("worker: /data/* and /api/data/* are gated when CLOSED_SITE=on", async () => {
+test("worker gate: /data/* and /api/data/* are gated when CLOSED_SITE=on", async () => {
   const verifyToken = "test-worker-verify-token";
   const envOff = {
     CLOSED_SITE: "off",
     FENOK_VERIFY_TOKEN: verifyToken,
-    ASSETS: {
-      fetch: async () => new Response("bundled-data-content", { status: 200 }),
-    },
   };
   const envOn = {
     CLOSED_SITE: "on",
     FENOK_VERIFY_TOKEN: verifyToken,
-    ASSETS: {
-      fetch: async () => new Response("bundled-data-content", { status: 200 }),
-    },
   };
 
-  // When OFF: /data/test.json passes
+  // When OFF: /data/test.json passes gate (handleWorkerClosedSiteGate returns null)
   const reqOff = standardRequestFor("/data/test.json");
-  const resOff = await worker.fetch(reqOff, envOff, {});
-  assert.equal(resOff.status, 200);
+  const resOff = await handleWorkerClosedSiteGate(reqOff, envOff);
+  assert.equal(resOff, null);
 
   // When ON: /data/test.json without auth returns 401 JSON with no-store
   const reqOn = standardRequestFor("/data/test.json");
-  const resOn = await worker.fetch(reqOn, envOn, {});
+  const resOn = await handleWorkerClosedSiteGate(reqOn, envOn);
+  assert.ok(resOn);
   assert.equal(resOn.status, 401);
   assert.equal(resOn.headers.get("cache-control"), "no-store");
   const bodyOn = await resOn.json();
@@ -382,17 +378,18 @@ test("worker: /data/* and /api/data/* are gated when CLOSED_SITE=on", async () =
 
   // When ON: /api/data/intro-feed without auth returns 401 JSON with no-store
   const reqApiOn = standardRequestFor("/api/data/intro-feed");
-  const resApiOn = await worker.fetch(reqApiOn, envOn, {});
+  const resApiOn = await handleWorkerClosedSiteGate(reqApiOn, envOn);
+  assert.ok(resApiOn);
   assert.equal(resApiOn.status, 401);
   assert.equal(resApiOn.headers.get("cache-control"), "no-store");
   const bodyApiOn = await resApiOn.json();
   assert.deepEqual(bodyApiOn, { ok: false, error: "login required" });
 
-  // When ON: valid x-fenok-verify header passes gate
+  // When ON: valid x-fenok-verify header passes gate (returns null)
   const todaySig = await generateVerifySignature(verifyToken, new Date().toISOString().slice(0, 10));
   const reqVerified = standardRequestFor("/data/test.json", {
     headers: { [VERIFY_HEADER_NAME]: todaySig },
   });
-  const resVerified = await worker.fetch(reqVerified, envOn, {});
-  assert.equal(resVerified.status, 200);
+  const resVerified = await handleWorkerClosedSiteGate(reqVerified, envOn);
+  assert.equal(resVerified, null);
 });

@@ -1,6 +1,8 @@
 // Closed-site gate helpers: mode, canary preview, and verification token.
 // Spec: docs/planning/20260917_closed-site-intro-login-spec.md §2, §5.
 
+import { resolveCurrentSession } from "./authSession";
+
 export type GateMode = "off" | "preview" | "on";
 
 export const CLOSED_SITE_ENV_VAR = "CLOSED_SITE";
@@ -172,4 +174,49 @@ export async function verifyRequestToken(
   }
 
   return false;
+}
+
+/**
+ * Evaluates the closed-site gate for the worker layer (specifically /data/* and /api/data/*).
+ * Returns a 401 Response when denied, or null when the request is allowed to proceed.
+ */
+export async function handleWorkerClosedSiteGate(
+  request: Request,
+  env?: unknown,
+): Promise<Response | null> {
+  const mode = gateMode(env);
+  if (!isGated(request, mode)) {
+    return null;
+  }
+
+  const url = new URL(request.url);
+  if (url.pathname.startsWith("/data/") || url.pathname.startsWith("/api/data/")) {
+    const verifyToken = (env as Record<string, unknown> | undefined)?.[
+      FENOK_VERIFY_TOKEN_ENV_VAR
+    ] as string | undefined;
+    const hasVerify = await verifyRequestToken(request, verifyToken);
+    if (hasVerify) {
+      return null;
+    }
+
+    let session = null;
+    try {
+      session = await resolveCurrentSession(request, env);
+    } catch {
+      session = null;
+    }
+    if (session) {
+      return null;
+    }
+
+    return new Response(JSON.stringify({ ok: false, error: "login required" }), {
+      status: 401,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+    });
+  }
+
+  return null;
 }
