@@ -4,6 +4,10 @@ import {
   getGoogleVerifier,
   resolveUserStore,
 } from "@/lib/server/authSession";
+import {
+  resolveUserRegistry,
+  sendFirstLoginNotice,
+} from "@/lib/server/userRegistry";
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
@@ -29,6 +33,31 @@ export async function POST(request: Request) {
     );
   }
 
+  const registry = await resolveUserRegistry();
+  const isBlocked = await registry.isBlocked(payload.sub);
+  if (isBlocked) {
+    return NextResponse.json(
+      { ok: false, error: "Forbidden: Account is blocked" },
+      { status: 403, headers: NO_STORE_HEADERS },
+    );
+  }
+
+  const deviceHint = typeof body?.deviceHint === "string" ? body.deviceHint : undefined;
+  const { isNew } = await registry.upsert({
+    sub: payload.sub,
+    email: payload.email,
+    name: payload.name || "",
+    picture: payload.picture,
+    device: deviceHint,
+  });
+
+  if (isNew) {
+    await sendFirstLoginNotice({
+      name: payload.name || "사용자",
+      email: payload.email,
+    });
+  }
+
   const store = await resolveUserStore(payload.sub);
   const profile = await store.saveProfile({
     sub: payload.sub,
@@ -37,7 +66,6 @@ export async function POST(request: Request) {
     picture: payload.picture,
   });
 
-  const deviceHint = typeof body?.deviceHint === "string" ? body.deviceHint : undefined;
   const { token, expiresAt } = await store.mintToken(deviceHint);
 
   const cookieHeader = createSessionCookieHeader(token);

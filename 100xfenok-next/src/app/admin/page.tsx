@@ -11,6 +11,13 @@ export const metadata: Metadata = {
 
 const adminLinks = [
   {
+    href: ROUTES.adminUsers,
+    title: "사용자 관리 (User Registry)",
+    description: "실시간 접속자, 로그인 통계, 계정 차단 및 원격 기기 세션 초기화",
+    icon: "fa-users",
+    badge: "USERS",
+  },
+  {
     href: ROUTES.dataConsole,
     title: "데이터 건강 콘솔",
     description: "레인별 신선도와 증거 서랍을 모은 Light System 운영 콘솔입니다.",

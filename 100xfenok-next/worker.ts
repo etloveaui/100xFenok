@@ -16,6 +16,13 @@ import {
   type UserProfile,
   type UserSettings,
 } from "./src/lib/server/userStore";
+import {
+  UserRegistryCore,
+  UserRegistrySqlStorage,
+  UserRegistryMemoryStorage,
+  type UserRegistryEntry,
+  type UserRegistryStats,
+} from "./src/lib/server/userRegistry";
 
 const worker = {
   async fetch(request: Request, env: unknown, ctx: unknown) {
@@ -139,6 +146,10 @@ export class UserStore extends DurableObject {
     return this.core.revokeToken(secret);
   }
 
+  async revokeAll(): Promise<void> {
+    return this.core.revokeAll();
+  }
+
   async listTokens() {
     return this.core.listTokens();
   }
@@ -178,6 +189,10 @@ export class UserStore extends DurableObject {
       const ok = await this.revokeToken(body.secret);
       return Response.json({ ok });
     }
+    if (request.method === "POST" && action === "revokeAll") {
+      await this.revokeAll();
+      return Response.json({ ok: true });
+    }
     if (request.method === "GET" && action === "settings") {
       const settings = await this.getSettings();
       return Response.json({ ok: true, settings });
@@ -186,6 +201,99 @@ export class UserStore extends DurableObject {
       const body = (await request.json()) as Partial<UserSettings>;
       const settings = await this.updateSettings(body);
       return Response.json({ ok: true, settings });
+    }
+    return new Response("Not found", { status: 404 });
+  }
+}
+
+export class UserRegistry extends DurableObject {
+  private readonly core: UserRegistryCore;
+
+  constructor(ctx: DurableObjectState, env: unknown) {
+    super(ctx, env);
+    const storage = (ctx.storage as unknown as { sql?: unknown })?.sql
+      ? new UserRegistrySqlStorage((ctx.storage as unknown as { sql: any }).sql)
+      : new UserRegistryMemoryStorage();
+    this.core = new UserRegistryCore(storage, env);
+  }
+
+  async upsert(params: {
+    sub: string;
+    email: string;
+    name: string;
+    picture?: string;
+    device?: string;
+    now?: number;
+  }): Promise<{ user: UserRegistryEntry; isNew: boolean }> {
+    return this.core.upsert(params);
+  }
+
+  async ping(sub: string, now?: number): Promise<boolean> {
+    return this.core.ping(sub, now);
+  }
+
+  async isBlocked(sub: string): Promise<boolean> {
+    return this.core.isBlocked(sub);
+  }
+
+  async setBlocked(sub: string, blocked: boolean): Promise<boolean> {
+    return this.core.setBlocked(sub, blocked);
+  }
+
+  async listUsers(): Promise<UserRegistryEntry[]> {
+    return this.core.listUsers();
+  }
+
+  async getStats(now?: number): Promise<UserRegistryStats> {
+    return this.core.getStats(now);
+  }
+
+  async revokeAll(sub: string): Promise<boolean> {
+    return this.core.revokeAll(sub);
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    const action = url.pathname.replace(/^\//, "");
+    if (request.method === "POST" && action === "upsert") {
+      const body = (await request.json()) as {
+        sub: string;
+        email: string;
+        name: string;
+        picture?: string;
+        device?: string;
+        now?: number;
+      };
+      const result = await this.upsert(body);
+      return Response.json({ ok: true, ...result });
+    }
+    if (request.method === "POST" && action === "ping") {
+      const body = (await request.json()) as { sub: string; now?: number };
+      const ok = await this.ping(body.sub, body.now);
+      return Response.json({ ok });
+    }
+    if (request.method === "POST" && action === "isBlocked") {
+      const body = (await request.json()) as { sub: string };
+      const blocked = await this.isBlocked(body.sub);
+      return Response.json({ ok: true, blocked });
+    }
+    if (request.method === "POST" && action === "setBlocked") {
+      const body = (await request.json()) as { sub: string; blocked: boolean };
+      const ok = await this.setBlocked(body.sub, body.blocked);
+      return Response.json({ ok });
+    }
+    if (request.method === "GET" && action === "listUsers") {
+      const users = await this.listUsers();
+      return Response.json({ ok: true, users });
+    }
+    if (request.method === "GET" && action === "getStats") {
+      const stats = await this.getStats();
+      return Response.json({ ok: true, stats });
+    }
+    if (request.method === "POST" && action === "revokeAll") {
+      const body = (await request.json()) as { sub: string };
+      const ok = await this.revokeAll(body.sub);
+      return Response.json({ ok });
     }
     return new Response("Not found", { status: 404 });
   }

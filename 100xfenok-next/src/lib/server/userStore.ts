@@ -28,6 +28,7 @@ export interface UserStoreApi {
   mintToken(deviceHint?: string, now?: number): Promise<{ token: string; expiresAt: number }>;
   verifyToken(secret: string, now?: number): Promise<boolean>;
   revokeToken(secret: string): Promise<boolean>;
+  revokeAll(): Promise<void>;
   listTokens(): Promise<StoredToken[]>;
   getSettings(): Promise<UserSettings>;
   updateSettings(settings: Partial<UserSettings>): Promise<UserSettings>;
@@ -129,6 +130,10 @@ export class UserStoreCore implements UserStoreApi {
       await this.storage.put(TOKENS_KEY, remaining);
     }
     return removed;
+  }
+
+  async revokeAll(): Promise<void> {
+    await this.storage.put(TOKENS_KEY, []);
   }
 
   async listTokens(): Promise<StoredToken[]> {

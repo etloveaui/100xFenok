@@ -195,7 +195,51 @@ export async function postAuthLogout(): Promise<{ ok: boolean }> {
   }
   clearAuthToken();
   notifyAuthInvalid();
+  notifyUserChange(null);
   return { ok: true };
+}
+
+let cachedUser: UserProfileClient | null = null;
+type AuthUserListener = (user: UserProfileClient | null) => void;
+const userListeners = new Set<AuthUserListener>();
+
+export function onAuthUserChange(listener: AuthUserListener): () => void {
+  userListeners.add(listener);
+  return () => {
+    userListeners.delete(listener);
+  };
+}
+
+export function notifyUserChange(user: UserProfileClient | null): void {
+  cachedUser = user;
+  userListeners.forEach((l) => l(user));
+}
+
+export function getCachedUser(): UserProfileClient | null {
+  return cachedUser;
+}
+
+export async function postUserPing(): Promise<boolean> {
+  const token = loadAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  try {
+    const res = await fetch("/api/user/ping", {
+      method: "POST",
+      headers,
+    });
+    if (res.status === 401 || res.status === 403) {
+      clearAuthToken();
+      notifyAuthInvalid();
+      notifyUserChange(null);
+      return false;
+    }
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 export async function fetchMe(): Promise<UserMeResponse> {
@@ -208,12 +252,16 @@ export async function fetchMe(): Promise<UserMeResponse> {
     method: "GET",
     headers,
   });
-  if (res.status === 401) {
+  if (res.status === 401 || res.status === 403) {
     clearAuthToken();
     notifyAuthInvalid();
-    return { ok: false, error: "Unauthorized" };
+    notifyUserChange(null);
+    return { ok: false, error: res.status === 403 ? "Forbidden" : "Unauthorized" };
   }
   const data = (await res.json().catch(() => null)) as UserMeResponse | null;
+  if (data?.ok && data.user) {
+    notifyUserChange(data.user);
+  }
   return data ?? { ok: false, error: "Network error" };
 }
 
@@ -229,4 +277,43 @@ export function onAuthInvalid(listener: AuthInvalidListener): () => void {
 
 export function notifyAuthInvalid(): void {
   invalidListeners.forEach((listener) => listener());
+}
+
+/**
+ * Client heartbeat: sends POST /api/user/ping every 60 s only while
+ * document.visibilityState === "visible", from the AppShell when logged in.
+ * No ping on /intro.
+ */
+export function useUserHeartbeat(): void {
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+    if (window.location.pathname.startsWith("/intro")) return;
+
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const ping = () => {
+      if (document.visibilityState !== "visible") return;
+      if (!loadAuthToken() && !cachedUser) return;
+      postUserPing().catch(() => {});
+    };
+
+    ping();
+
+    timer = setInterval(() => {
+      ping();
+    }, 60_000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        ping();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      if (timer) clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 }

@@ -7,6 +7,7 @@ import TransitionLink from "@/components/TransitionLink";
 import TickerTypeahead from "@/components/TickerTypeahead";
 import AppShellFreshnessPill from "@/components/shell/AppShellFreshnessPill";
 import UserAuthPill from "@/components/shell/UserAuthPill";
+import { useUserHeartbeat } from "@/lib/auth/clientAuth";
 import {
   getStockConnection,
   getStockServices,
@@ -446,6 +447,7 @@ export default function AppShell({
   freshness?: DataState | null;
   children: ReactNode;
 }) {
+  useUserHeartbeat();
   const [searching, setSearching] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [typeaheadPreviewTicker, setTypeaheadPreviewTicker] = useState<string | null>(null);
