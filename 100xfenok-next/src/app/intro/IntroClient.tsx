@@ -250,7 +250,7 @@ export default function IntroClient() {
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]" />
             100x <span className="text-cyan-400 font-semibold">Fenok</span>
           </span>
-          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 border border-slate-700/60 rounded px-1.5 py-0.5 bg-slate-800/40">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-300 border border-slate-700/60 rounded px-1.5 py-0.5 bg-slate-800/40">
             Radar
           </span>
         </div>
@@ -258,7 +258,7 @@ export default function IntroClient() {
         {/* Ghost 둘러보기 button (visible from 0s) */}
         <Link
           href={targetHref}
-          className="group flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-cyan-300 transition-colors px-3 py-1.5 rounded-lg border border-slate-800 hover:border-cyan-500/40 bg-slate-900/40 backdrop-blur-sm"
+          className="group flex items-center gap-1.5 text-xs font-medium text-slate-300 hover:text-cyan-300 transition-colors px-3 py-1.5 rounded-lg border border-slate-800 hover:border-cyan-500/40 bg-slate-900/40 backdrop-blur-sm"
           aria-label="로그인 건너뛰고 둘러보기"
         >
           <span>둘러보기</span>
@@ -284,7 +284,7 @@ export default function IntroClient() {
               <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold tracking-tight text-white leading-[1.25]">
                 미국 시장을 숫자로 먼저 봅니다
               </h1>
-              <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-lg">
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-lg">
                 S&P 500과 나스닥, 11개 섹터의 등락과 회전을 매일 갱신합니다.
               </p>
             </div>
@@ -309,7 +309,7 @@ export default function IntroClient() {
                     <span className="text-sm font-semibold text-white">
                       Google 계정으로 시작하기
                     </span>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-300">
                       개인화된 포트폴리오와 맞춤형 시장 지표를 이용할 수 있습니다.
                     </span>
                   </div>
@@ -363,12 +363,12 @@ export default function IntroClient() {
                     <div className="flex items-center justify-between w-full pt-1">
                       <Link
                         href={targetHref}
-                        className="text-xs text-slate-400 hover:text-slate-200 transition-colors underline underline-offset-4"
+                        className="text-xs text-slate-300 hover:text-slate-200 transition-colors underline underline-offset-4"
                       >
                         로그인 없이 둘러보기
                       </Link>
                       {feed?.asOf && (
-                        <span className="text-[11px] text-slate-400 font-mono">
+                        <span className="text-[11px] text-slate-300 font-mono">
                           {feed.asOf} 기준 데이터
                         </span>
                       )}
@@ -392,7 +392,7 @@ export default function IntroClient() {
                   </span>
                 </div>
                 {feed?.asOf && (
-                  <span className="text-[11px] text-slate-400 font-mono">
+                  <span className="text-[11px] text-slate-300 font-mono">
                     as of {feed.asOf}
                   </span>
                 )}
@@ -507,7 +507,7 @@ export default function IntroClient() {
 
               {/* 2. 11 US Sector Breadth Bars Rising in Sequence */}
               <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between text-xs text-slate-400">
+                <div className="flex items-center justify-between text-xs text-slate-300">
                   <span className="font-semibold text-slate-300">
                     11 US Sector Breadth
                   </span>
@@ -543,7 +543,7 @@ export default function IntroClient() {
                                 transitionDelay: reducedMotion ? "0ms" : `${1200 + idx * 80}ms`,
                               }}
                             />
-                            <span className="text-[9px] font-mono text-slate-400 group-hover:text-white">
+                            <span className="text-[9px] font-mono text-slate-300 group-hover:text-white">
                               {sec.symbol.slice(1)}
                             </span>
                           </div>
@@ -562,15 +562,15 @@ export default function IntroClient() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-stretch">
                 {/* Sector Rotation Quadrant (2 cols) */}
                 <div className="sm:col-span-2 rounded-xl border border-slate-800/70 bg-slate-950/50 p-3 flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
+                  <div className="flex items-center justify-between text-[11px] text-slate-300 mb-1.5">
                     <span className="font-semibold text-slate-300">Sector Rotation</span>
-                    <span className="text-[10px] text-slate-400">1개월 모멘텀 × 밸류 밴드</span>
+                    <span className="text-[10px] text-slate-300">1개월 모멘텀 × 밸류 밴드</span>
                   </div>
 
                   {/* 2x2 Quadrant with approved labels from Sectors page */}
                   <div className="grid grid-cols-2 gap-1 h-20 relative bg-slate-900/60 rounded-lg p-1 border border-slate-800/50 overflow-hidden">
                     {/* Top-Left: 둔화·고평가 */}
-                    <div className="border-r border-b border-slate-800/70 flex items-start justify-start p-1 text-[9px] text-slate-400 font-medium">
+                    <div className="border-r border-b border-slate-800/70 flex items-start justify-start p-1 text-[9px] text-slate-300 font-medium">
                       둔화·고평가
                     </div>
                     {/* Top-Right: 강세·고평가 */}
@@ -635,7 +635,7 @@ export default function IntroClient() {
                 {/* KOSPI Small Secondary Tile (Spec §2: secondary tile only) */}
                 <div className="rounded-xl border border-slate-800/70 bg-slate-950/40 p-3 flex flex-col justify-between">
                   <div className="flex items-baseline justify-between text-[11px]">
-                    <span className="font-semibold text-slate-400">KOSPI</span>
+                    <span className="font-semibold text-slate-300">KOSPI</span>
                     {kospi ? (
                       <span
                         className={`font-mono text-[10px] font-bold ${
@@ -682,9 +682,9 @@ export default function IntroClient() {
       </main>
 
       {/* Subtle Footer */}
-      <footer className="relative z-10 py-4 text-center text-xs text-slate-400 border-t border-slate-900/60 max-w-7xl mx-auto w-full px-6 flex items-center justify-between">
+      <footer className="relative z-10 py-4 text-center text-xs text-slate-300 border-t border-slate-900/60 max-w-7xl mx-auto w-full px-6 flex items-center justify-between">
         <span>© 2026 100x Fenok Platform. All rights reserved.</span>
-        <span className="font-mono text-[11px] text-slate-400">v0.1 S1</span>
+        <span className="font-mono text-[11px] text-slate-300">v0.1 S1</span>
       </footer>
     </div>
   );
