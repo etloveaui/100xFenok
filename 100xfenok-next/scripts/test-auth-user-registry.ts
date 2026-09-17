@@ -268,12 +268,22 @@ test("API routes enforce blocked status and handle admin actions", async () => {
     // 7. Admin API /api/admin/users
     // Unauthenticated -> 401
     const unauthReq = new Request("http://localhost/api/admin/users");
-    const unauthRes = await adminUsersGetHandler();
+    const unauthRes = await adminUsersGetHandler(unauthReq);
     assert.equal(unauthRes.status, 401);
 
     // Admin authenticated GET
     const adminToken = await createAdminSessionToken("admin-sub");
-    const origCookie = process.env.QA_ADMIN_SESSION_BYPASS;
+    const adminGetReq = new Request("http://localhost/api/admin/users", {
+      headers: {
+        Cookie: `${ADMIN_SESSION_COOKIE}=${adminToken}`,
+      },
+    });
+    const adminGetRes = await adminUsersGetHandler(adminGetReq);
+    assert.equal(adminGetRes.status, 200);
+    const adminGetData = (await adminGetRes.json()) as { ok: boolean; stats: { total: number }; users: unknown[] };
+    assert.equal(adminGetData.ok, true);
+    assert.equal(adminGetData.stats.total, 1);
+
     // Test unblock via admin POST
     const unblockReq = new Request("http://localhost/api/admin/users", {
       method: "POST",

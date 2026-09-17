@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
@@ -11,11 +10,29 @@ export const revalidate = false;
 
 const NO_STORE_HEADERS = { "Cache-Control": "no-store" };
 
-export async function GET() {
-  const cookieStore = await cookies();
-  const authenticated = await verifyAdminSessionToken(
-    cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null,
-  );
+async function getAdminToken(request: Request): Promise<string | null> {
+  const cookieHeader = request.headers.get("Cookie") || request.headers.get("cookie") || "";
+  if (cookieHeader) {
+    const cookiesList = cookieHeader.split(";").map((c) => c.trim());
+    for (const c of cookiesList) {
+      if (c.startsWith(`${ADMIN_SESSION_COOKIE}=`)) {
+        return c.slice(`${ADMIN_SESSION_COOKIE}=`.length).trim();
+      }
+    }
+  }
+
+  try {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    return cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(request: Request) {
+  const adminToken = await getAdminToken(request);
+  const authenticated = await verifyAdminSessionToken(adminToken);
   if (!authenticated) {
     return NextResponse.json(
       { ok: false, error: "Unauthorized" },
@@ -36,10 +53,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const cookieStore = await cookies();
-  const authenticated = await verifyAdminSessionToken(
-    cookieStore.get(ADMIN_SESSION_COOKIE)?.value ?? null,
-  );
+  const adminToken = await getAdminToken(request);
+  const authenticated = await verifyAdminSessionToken(adminToken);
   if (!authenticated) {
     return NextResponse.json(
       { ok: false, error: "Unauthorized" },
