@@ -150,8 +150,8 @@ export default function OrdinalStrip({ groups, highlightIds = [], horizon, onHor
       name: displayName(row),
       reason: row.pe.current === null
         ? row.pe.currentStaleDays !== null && row.pe.currentStaleDays > 45
-          ? `선행 이익 추정치로 배수를 계산할 수 없습니다 (마지막 계산 가능일 ${formatElapsedKo(row.pe.currentStaleDays)} 전)`
-          : "현재 선행 PER을 계산할 수 없습니다"
+          ? `선행 이익 추정치가 오래되어 배수가 없습니다 (마지막 계산일 ${formatElapsedKo(row.pe.currentStaleDays)} 전)`
+          : "현재 선행 PER이 없습니다"
         : reading.truncated && reading.spanYears !== null
           ? `${horizonLabel(horizon)} 데이터는 실제 ${reading.spanYears}년, ${reading.points}개 주간 관측만 있어 순위를 계산하지 않습니다 (전체 역사로 대신 계산하지 않습니다)`
           : `${horizonLabel(horizon)} 데이터가 ${reading.points}개 관측으로 부족해 순위를 계산하지 않습니다`,
@@ -243,7 +243,7 @@ export default function OrdinalStrip({ groups, highlightIds = [], horizon, onHor
                 const pct = reading.percentile as number;
                 const marked = highlight.has(row.id);
                 const delta = deltaFromAverage(row.pe.current, reading.average);
-                const titleText = `${displayName(row)} · ${horizonLabel(horizon)} 선행 PER ${row.pe.current === null ? "없음" : PE.format(row.pe.current)} · ${pct}번째 백분위 · ${formatAverage(reading.average)} · ${formatSignedPercent(delta)}`;
+                const titleText = `${displayName(row)} · ${horizonLabel(horizon)} 선행 PER ${row.pe.current === null ? "없음" : PE.format(row.pe.current)} · 백분위 ${pct} · ${formatAverage(reading.average)} · ${formatSignedPercent(delta)}`;
                 return (
                   <g key={row.id}>
                     <title>{titleText}</title>
@@ -285,7 +285,7 @@ export default function OrdinalStrip({ groups, highlightIds = [], horizon, onHor
           const delta = deltaFromAverage(row.pe.current, reading.average);
           return (
             <li key={row.id}>
-              {displayName(row)} · {horizonLabel(horizon)} · 현재 선행 PER {row.pe.current === null ? "없음" : `${PE.format(row.pe.current)}배`} · {pct}번째 백분위 · {formatAverage(reading.average)} · {formatSignedPercent(delta)}
+              {displayName(row)} · {horizonLabel(horizon)} · 현재 선행 PER {row.pe.current === null ? "없음" : `${PE.format(row.pe.current)}배`} · 백분위 {pct} · {formatAverage(reading.average)} · {formatSignedPercent(delta)}
             </li>
           );
         })}
