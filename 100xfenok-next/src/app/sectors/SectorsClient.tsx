@@ -714,7 +714,7 @@ export default function SectorsClient() {
   const smartFresh: EvidenceRailFreshness = loading ? "pending"
     : smartFailed ? "error" : "stale";
   const SOURCES_WORST_RANK: Record<EvidenceRailFreshness, number> = {
-    error: 0, stale: 1, partial: 2, pending: 3, fresh: 4, fixed: 5,
+    error: 0, stale: 1, delayed: 1, partial: 2, pending: 3, fresh: 4, fixed: 5,
   };
   const sourcesFresh = [benchFresh, etfFresh, valFresh, smartFresh].reduce((worst, cur) =>
     SOURCES_WORST_RANK[cur] < SOURCES_WORST_RANK[worst] ? cur : worst,
