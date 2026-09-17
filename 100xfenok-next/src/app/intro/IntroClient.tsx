@@ -18,6 +18,7 @@ interface SparklineStats {
   price: number;
   changePercent: number;
   sparkline: number[];
+  asOf: string;
 }
 
 interface SectorBreadth {
@@ -28,90 +29,41 @@ interface SectorBreadth {
 }
 
 interface SectorRotation {
+  key: string;
   symbol: string;
   name: string;
   relative: number;
-  band: number;
-  quadrant: string;
+  band: number | null;
+  quadrant: string | null;
+  quadrantLabel: string | null;
+  marketCap: number | null;
 }
 
 interface IntroFeedData {
-  asOf: string;
+  schema_version: string;
+  asOf: string | null;
   indices: {
-    sp500: SparklineStats;
-    nasdaq: SparklineStats;
-    kospi?: SparklineStats;
+    sp500: SparklineStats | null;
+    nasdaq: SparklineStats | null;
+    kospi: SparklineStats | null;
   };
   breadth: {
     total: number;
+    missing: number;
     upCount: number;
     downCount: number;
     ratio: number;
     sectors: SectorBreadth[];
   };
-  rotation: SectorRotation[];
+  rotation: {
+    window: string;
+    windowLabel: string;
+    missing: number;
+    sectors: SectorRotation[];
+  };
 }
 
-const DEFAULT_FEED: IntroFeedData = {
-  asOf: "2026-09-17",
-  indices: {
-    sp500: {
-      symbol: "S&P 500",
-      ticker: "SPY",
-      price: 754.05,
-      changePercent: -0.44,
-      sparkline: [767, 769, 762, 765, 763, 765, 766, 771, 769, 767, 761, 765, 773, 770, 765, 762, 757, 764, 760, 757, 754.05],
-    },
-    nasdaq: {
-      symbol: "NASDAQ",
-      ticker: "QQQ",
-      price: 708.69,
-      changePercent: -1.06,
-      sparkline: [723, 732, 731, 729, 717, 716, 710, 713, 706, 710, 711, 721, 716, 716, 707, 709, 717, 718, 718, 716, 708.69],
-    },
-    kospi: {
-      symbol: "KOSPI",
-      ticker: "KOSPI",
-      price: 2750.5,
-      changePercent: 0.25,
-      sparkline: [2700, 2715, 2725, 2740, 2750.5],
-    },
-  },
-  breadth: {
-    total: 11,
-    upCount: 4,
-    downCount: 7,
-    ratio: 0.36,
-    sectors: [
-      { symbol: "XLK", name: "정보기술", changePercent: -0.22, isUp: false },
-      { symbol: "XLF", name: "금융", changePercent: -0.17, isUp: false },
-      { symbol: "XLV", name: "헬스케어", changePercent: -0.33, isUp: false },
-      { symbol: "XLE", name: "에너지", changePercent: 1.32, isUp: true },
-      { symbol: "XLI", name: "산업재", changePercent: -0.42, isUp: false },
-      { symbol: "XLC", name: "커뮤니케이션", changePercent: -0.85, isUp: false },
-      { symbol: "XLY", name: "자유소비재", changePercent: -1.59, isUp: false },
-      { symbol: "XLP", name: "필수소비재", changePercent: -0.99, isUp: false },
-      { symbol: "XLRE", name: "부동산", changePercent: 0.53, isUp: true },
-      { symbol: "XLB", name: "소재", changePercent: 0.65, isUp: true },
-      { symbol: "XLU", name: "유틸리티", changePercent: 0.26, isUp: true },
-    ],
-  },
-  rotation: [
-    { symbol: "XLK", name: "정보기술", relative: 4.4, band: 77, quadrant: "run-expensive" },
-    { symbol: "XLF", name: "금융", relative: 4.5, band: 37, quadrant: "cheap-recover" },
-    { symbol: "XLV", name: "헬스케어", relative: 10.2, band: 69, quadrant: "run-expensive" },
-    { symbol: "XLE", name: "에너지", relative: 10.2, band: 48, quadrant: "cheap-recover" },
-    { symbol: "XLI", name: "산업재", relative: 1.3, band: 66, quadrant: "run-expensive" },
-    { symbol: "XLC", name: "커뮤니케이션", relative: 6.5, band: 35, quadrant: "cheap-recover" },
-    { symbol: "XLY", name: "자유소비재", relative: 9.1, band: 58, quadrant: "run-expensive" },
-    { symbol: "XLP", name: "필수소비재", relative: 4.7, band: 58, quadrant: "run-expensive" },
-    { symbol: "XLRE", name: "부동산", relative: 2.2, band: 72, quadrant: "run-expensive" },
-    { symbol: "XLB", name: "소재", relative: 6.9, band: 57, quadrant: "run-expensive" },
-    { symbol: "XLU", name: "유틸리티", relative: -2.7, band: 44, quadrant: "cheap-weak" },
-  ],
-};
-
-function buildSvgPath(values: number[], width = 240, height = 48): string {
+function buildSvgPath(values: number[] | undefined, width = 220, height = 44): string {
   if (!values || values.length < 2) return "";
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -138,14 +90,17 @@ export default function IntroClient() {
     return ROUTES.home;
   }, [nextParam]);
 
-  const [feed, setFeed] = useState<IntroFeedData>(DEFAULT_FEED);
+  // Initial state is strictly null (no fabricated numbers).
+  // Skeletons render during loading and remain static if the fetch fails.
+  const [feed, setFeed] = useState<IntroFeedData | null>(null);
+  const [feedFailed, setFeedFailed] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [timelineStep, setTimelineStep] = useState<"init" | "drawing" | "cardReady" | "focused">("init");
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loggingIn, setLoggingIn] = useState(false);
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
 
-  // 1. Session check on mount: If user is already authenticated, forward immediately
+  // 1. Session check: forward authenticated users immediately to destination
   useEffect(() => {
     let active = true;
     fetchMe()
@@ -182,20 +137,24 @@ export default function IntroClient() {
     };
   }, []);
 
-  // 3. Load live market feed
+  // 3. Load live market feed (real data only, fallback to clean skeleton on failure)
   useEffect(() => {
     let active = true;
     fetch("/data/computed/intro-feed.json")
       .then((res) => {
-        if (!res.ok) return null;
+        if (!res.ok) throw new Error("Feed fetch error");
         return res.json();
       })
       .then((data) => {
         if (active && data && data.indices) {
           setFeed(data);
+        } else if (active) {
+          setFeedFailed(true);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (active) setFeedFailed(true);
+      });
     return () => {
       active = false;
     };
@@ -231,17 +190,21 @@ export default function IntroClient() {
     };
   }, [router, targetHref]);
 
+  const sp500 = feed?.indices?.sp500 ?? null;
+  const nasdaq = feed?.indices?.nasdaq ?? null;
+  const kospi = feed?.indices?.kospi ?? null;
+
   const sp500Path = useMemo(
-    () => buildSvgPath(feed.indices.sp500.sparkline, 220, 44),
-    [feed.indices.sp500.sparkline],
+    () => (sp500 ? buildSvgPath(sp500.sparkline, 220, 44) : ""),
+    [sp500],
   );
   const nasdaqPath = useMemo(
-    () => buildSvgPath(feed.indices.nasdaq.sparkline, 220, 44),
-    [feed.indices.nasdaq.sparkline],
+    () => (nasdaq ? buildSvgPath(nasdaq.sparkline, 220, 44) : ""),
+    [nasdaq],
   );
   const kospiPath = useMemo(
-    () => (feed.indices.kospi ? buildSvgPath(feed.indices.kospi.sparkline, 100, 24) : ""),
-    [feed.indices.kospi],
+    () => (kospi ? buildSvgPath(kospi.sparkline, 100, 24) : ""),
+    [kospi],
   );
 
   const isCardVisible = reducedMotion || timelineStep === "cardReady" || timelineStep === "focused";
@@ -316,25 +279,17 @@ export default function IntroClient() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* LEFT COLUMN (Desktop: 6 cols): Headline + Login Card */}
           <div className="lg:col-span-6 flex flex-col gap-6 max-w-xl">
-            {/* LAYER 3: Headline & Clean Korean copy (Criteria v0.2: no hype) */}
+            {/* Headline & Clean Korean copy (Criteria v0.2: factual, no hype, 합니다체) */}
             <div className="flex flex-col gap-3">
-              <div className="inline-flex items-center gap-2 self-start rounded-full border border-cyan-500/30 bg-cyan-950/30 px-3 py-1 text-[11px] font-medium text-cyan-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                Live Market Radar
-              </div>
               <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold tracking-tight text-white leading-[1.25]">
-                매일 아침, 데이터가 말하는{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-indigo-300">
-                  시장의 체온
-                </span>
+                미국 시장을 숫자로 먼저 봅니다
               </h1>
               <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-lg">
-                미국 11개 섹터 브레드와 주도 섹터 로테이션, 글로벌 지수를
-                하나의 화면에서 실시간으로 확인하세요.
+                S&P 500과 나스닥, 11개 섹터의 등락과 회전을 매일 갱신합니다.
               </p>
             </div>
 
-            {/* LAYER 4: Login Card (Rises at 3.5s, focus at 6s, static if reduced motion) */}
+            {/* Login Card (Rises at 3.5s, focus at 6s, static if reduced motion) */}
             <div
               className={`transition-all duration-700 ${
                 isCardVisible
@@ -355,7 +310,7 @@ export default function IntroClient() {
                       Google 계정으로 시작하기
                     </span>
                     <span className="text-xs text-slate-400">
-                      개인화된 포트폴리오와 맞춤형 시장 레이더를 바로 이용할 수 있습니다.
+                      개인화된 포트폴리오와 맞춤형 시장 지표를 이용할 수 있습니다.
                     </span>
                   </div>
 
@@ -371,7 +326,7 @@ export default function IntroClient() {
                       ref={googleBtnContainerRef}
                       className="min-h-[44px] flex items-center justify-center"
                     >
-                      {/* Fallback while GIS loads */}
+                      {/* Fallback button while GIS loads */}
                       <button
                         type="button"
                         disabled={loggingIn}
@@ -401,7 +356,7 @@ export default function IntroClient() {
                             d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
                           />
                         </svg>
-                        {loggingIn ? "로그인 중..." : "Google 계정으로 계속하기"}
+                        {loggingIn ? "로그인 처리 중입니다..." : "Google 계정으로 계속하기"}
                       </button>
                     </div>
 
@@ -412,9 +367,11 @@ export default function IntroClient() {
                       >
                         로그인 없이 둘러보기
                       </Link>
-                      <span className="text-[11px] text-slate-400">
-                        {feed.asOf} 기준 데이터
-                      </span>
+                      {feed?.asOf && (
+                        <span className="text-[11px] text-slate-400 font-mono">
+                          {feed.asOf} 기준 데이터
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -422,7 +379,7 @@ export default function IntroClient() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN (Desktop: 6 cols): Live Market Field (US-First) */}
+          {/* RIGHT COLUMN (Desktop: 6 cols): Market Field (US-First) */}
           <div className="lg:col-span-6 flex flex-col gap-4">
             <div className="rounded-2xl border border-slate-800/80 bg-slate-900/50 p-5 sm:p-6 backdrop-blur-md flex flex-col gap-5 shadow-2xl">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -434,9 +391,11 @@ export default function IntroClient() {
                     US-FIRST
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-400 font-mono">
-                  as of {feed.asOf}
-                </span>
+                {feed?.asOf && (
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    as of {feed.asOf}
+                  </span>
+                )}
               </div>
 
               {/* 1. Sparklines: S&P 500 (SPY) + NASDAQ (QQQ) drawing procedurally */}
@@ -445,38 +404,51 @@ export default function IntroClient() {
                 <div className="rounded-xl border border-slate-800/70 bg-slate-950/60 p-3.5 flex flex-col gap-2 relative overflow-hidden">
                   <div className="flex items-baseline justify-between z-10">
                     <span className="text-xs font-semibold text-slate-300">
-                      {feed.indices.sp500.symbol}
+                      S&P 500
                     </span>
-                    <span
-                      className={`text-xs font-mono font-bold ${
-                        feed.indices.sp500.changePercent >= 0 ? "text-emerald-400" : "text-rose-400"
-                      }`}
-                    >
-                      {feed.indices.sp500.changePercent >= 0 ? "+" : ""}
-                      {feed.indices.sp500.changePercent.toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className="text-lg font-bold font-mono text-white tracking-tight z-10">
-                    ${feed.indices.sp500.price.toFixed(2)}
+                    {sp500 ? (
+                      <span
+                        className={`text-xs font-mono font-bold ${
+                          sp500.changePercent >= 0 ? "text-emerald-400" : "text-rose-400"
+                        }`}
+                      >
+                        {sp500.changePercent >= 0 ? "+" : ""}
+                        {sp500.changePercent.toFixed(2)}%
+                      </span>
+                    ) : (
+                      <span className="w-12 h-3.5 bg-slate-800/60 rounded animate-pulse" />
+                    )}
                   </div>
 
-                  {/* Procedural drawing SVG */}
+                  {sp500 ? (
+                    <div className="text-lg font-bold font-mono text-white tracking-tight z-10">
+                      ${sp500.price.toFixed(2)}
+                    </div>
+                  ) : (
+                    <div className="w-24 h-6 bg-slate-800/60 rounded animate-pulse" />
+                  )}
+
+                  {/* Procedural drawing SVG or Skeleton Hairline */}
                   <div className="h-11 w-full pt-1">
-                    <svg viewBox="0 0 220 44" className="w-full h-full overflow-visible">
-                      <path
-                        d={sp500Path}
-                        fill="none"
-                        stroke={feed.indices.sp500.changePercent >= 0 ? "#10b981" : "#f43f5e"}
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{
-                          strokeDasharray: 300,
-                          strokeDashoffset: isDataDrawing ? 0 : 300,
-                          transition: reducedMotion ? "none" : "stroke-dashoffset 2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s",
-                        }}
-                      />
-                    </svg>
+                    {sp500 && sp500Path ? (
+                      <svg viewBox="0 0 220 44" className="w-full h-full overflow-visible">
+                        <path
+                          d={sp500Path}
+                          fill="none"
+                          stroke={sp500.changePercent >= 0 ? "#10b981" : "#f43f5e"}
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{
+                            strokeDasharray: 300,
+                            strokeDashoffset: isDataDrawing ? 0 : 300,
+                            transition: reducedMotion ? "none" : "stroke-dashoffset 2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s",
+                          }}
+                        />
+                      </svg>
+                    ) : (
+                      <div className="w-full h-[1px] bg-slate-800/40 my-auto" />
+                    )}
                   </div>
                 </div>
 
@@ -484,38 +456,51 @@ export default function IntroClient() {
                 <div className="rounded-xl border border-slate-800/70 bg-slate-950/60 p-3.5 flex flex-col gap-2 relative overflow-hidden">
                   <div className="flex items-baseline justify-between z-10">
                     <span className="text-xs font-semibold text-slate-300">
-                      {feed.indices.nasdaq.symbol}
+                      NASDAQ
                     </span>
-                    <span
-                      className={`text-xs font-mono font-bold ${
-                        feed.indices.nasdaq.changePercent >= 0 ? "text-emerald-400" : "text-rose-400"
-                      }`}
-                    >
-                      {feed.indices.nasdaq.changePercent >= 0 ? "+" : ""}
-                      {feed.indices.nasdaq.changePercent.toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className="text-lg font-bold font-mono text-white tracking-tight z-10">
-                    ${feed.indices.nasdaq.price.toFixed(2)}
+                    {nasdaq ? (
+                      <span
+                        className={`text-xs font-mono font-bold ${
+                          nasdaq.changePercent >= 0 ? "text-emerald-400" : "text-rose-400"
+                        }`}
+                      >
+                        {nasdaq.changePercent >= 0 ? "+" : ""}
+                        {nasdaq.changePercent.toFixed(2)}%
+                      </span>
+                    ) : (
+                      <span className="w-12 h-3.5 bg-slate-800/60 rounded animate-pulse" />
+                    )}
                   </div>
 
-                  {/* Procedural drawing SVG */}
+                  {nasdaq ? (
+                    <div className="text-lg font-bold font-mono text-white tracking-tight z-10">
+                      ${nasdaq.price.toFixed(2)}
+                    </div>
+                  ) : (
+                    <div className="w-24 h-6 bg-slate-800/60 rounded animate-pulse" />
+                  )}
+
+                  {/* Procedural drawing SVG or Skeleton Hairline */}
                   <div className="h-11 w-full pt-1">
-                    <svg viewBox="0 0 220 44" className="w-full h-full overflow-visible">
-                      <path
-                        d={nasdaqPath}
-                        fill="none"
-                        stroke={feed.indices.nasdaq.changePercent >= 0 ? "#10b981" : "#f43f5e"}
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{
-                          strokeDasharray: 300,
-                          strokeDashoffset: isDataDrawing ? 0 : 300,
-                          transition: reducedMotion ? "none" : "stroke-dashoffset 2s cubic-bezier(0.16, 1, 0.3, 1) 1.0s",
-                        }}
-                      />
-                    </svg>
+                    {nasdaq && nasdaqPath ? (
+                      <svg viewBox="0 0 220 44" className="w-full h-full overflow-visible">
+                        <path
+                          d={nasdaqPath}
+                          fill="none"
+                          stroke={nasdaq.changePercent >= 0 ? "#10b981" : "#f43f5e"}
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{
+                            strokeDasharray: 300,
+                            strokeDashoffset: isDataDrawing ? 0 : 300,
+                            transition: reducedMotion ? "none" : "stroke-dashoffset 2s cubic-bezier(0.16, 1, 0.3, 1) 1.0s",
+                          }}
+                        />
+                      </svg>
+                    ) : (
+                      <div className="w-full h-[1px] bg-slate-800/40 my-auto" />
+                    )}
                   </div>
                 </div>
               </div>
@@ -526,81 +511,124 @@ export default function IntroClient() {
                   <span className="font-semibold text-slate-300">
                     11 US Sector Breadth
                   </span>
-                  <span className="font-mono text-[11px]">
-                    <span className="text-emerald-400 font-bold">{feed.breadth.upCount} 상승</span> /{" "}
-                    <span className="text-rose-400 font-bold">{feed.breadth.downCount} 하락</span>
-                  </span>
+                  {feed?.breadth ? (
+                    <span className="font-mono text-[11px]">
+                      <span className="text-emerald-400 font-bold">{feed.breadth.upCount} 상승</span> /{" "}
+                      <span className="text-rose-400 font-bold">{feed.breadth.downCount} 하락</span>
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-slate-500 font-mono">
+                      {feedFailed ? "자료 미확보" : "—"}
+                    </span>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-11 gap-1.5 h-16 items-end bg-slate-950/40 p-2 rounded-xl border border-slate-800/60">
-                  {feed.breadth.sectors.map((sec, idx) => {
-                    const abs = Math.min(Math.max(Math.abs(sec.changePercent), 0.2), 3);
-                    const heightPercent = Math.round((abs / 3) * 100);
-                    return (
-                      <div
-                        key={sec.symbol}
-                        className="flex flex-col items-center justify-end h-full gap-1 group relative"
-                        title={`${sec.name} (${sec.symbol}): ${sec.changePercent > 0 ? "+" : ""}${sec.changePercent}%`}
-                      >
-                        <div
-                          className={`w-full rounded-t transition-all duration-700 ${
-                            sec.isUp ? "bg-emerald-500/80 group-hover:bg-emerald-400" : "bg-rose-500/80 group-hover:bg-rose-400"
-                          }`}
-                          style={{
-                            height: isDataDrawing ? `${heightPercent}%` : "0%",
-                            transitionDelay: reducedMotion ? "0ms" : `${1200 + idx * 80}ms`,
-                          }}
-                        />
-                        <span className="text-[9px] font-mono text-slate-400 group-hover:text-white">
-                          {sec.symbol.slice(1)}
-                        </span>
-                      </div>
-                    );
-                  })}
+                  {feed?.breadth?.sectors
+                    ? feed.breadth.sectors.map((sec, idx) => {
+                        const abs = Math.min(Math.max(Math.abs(sec.changePercent), 0.2), 3);
+                        const heightPercent = Math.round((abs / 3) * 100);
+                        return (
+                          <div
+                            key={sec.symbol}
+                            className="flex flex-col items-center justify-end h-full gap-1 group relative"
+                            title={`${sec.name} (${sec.symbol}): ${sec.changePercent > 0 ? "+" : ""}${sec.changePercent}%`}
+                          >
+                            <div
+                              className={`w-full rounded-t transition-all duration-700 ${
+                                sec.isUp ? "bg-emerald-500/80 group-hover:bg-emerald-400" : "bg-rose-500/80 group-hover:bg-rose-400"
+                              }`}
+                              style={{
+                                height: isDataDrawing ? `${heightPercent}%` : "0%",
+                                transitionDelay: reducedMotion ? "0ms" : `${1200 + idx * 80}ms`,
+                              }}
+                            />
+                            <span className="text-[9px] font-mono text-slate-400 group-hover:text-white">
+                              {sec.symbol.slice(1)}
+                            </span>
+                          </div>
+                        );
+                      })
+                    : Array.from({ length: 11 }).map((_, idx) => (
+                        <div key={idx} className="flex flex-col items-center justify-end h-full gap-1">
+                          <div className="w-full rounded-t bg-slate-800/40 h-5" />
+                          <span className="w-3 h-2 bg-slate-800/50 rounded" />
+                        </div>
+                      ))}
                 </div>
               </div>
 
-              {/* 3. Sector Rotation Dots & KOSPI Secondary Tile */}
+              {/* 3. Sector Rotation Quadrant & KOSPI Secondary Tile */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-stretch">
                 {/* Sector Rotation Quadrant (2 cols) */}
                 <div className="sm:col-span-2 rounded-xl border border-slate-800/70 bg-slate-950/50 p-3 flex flex-col justify-between">
                   <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
                     <span className="font-semibold text-slate-300">Sector Rotation</span>
-                    <span className="text-[10px] text-slate-400">모멘텀 / 밸류 밴드</span>
+                    <span className="text-[10px] text-slate-400">1개월 모멘텀 × 밸류 밴드</span>
                   </div>
-                  {/* 2x2 Quadrant preview */}
-                  <div className="grid grid-cols-2 gap-1 h-14 relative bg-slate-900/60 rounded-lg p-1 border border-slate-800/50">
-                    <div className="border-r border-b border-slate-800 flex items-start justify-start p-1 text-[9px] text-slate-400">
-                      회복
+
+                  {/* 2x2 Quadrant with approved labels from Sectors page */}
+                  <div className="grid grid-cols-2 gap-1 h-20 relative bg-slate-900/60 rounded-lg p-1 border border-slate-800/50 overflow-hidden">
+                    {/* Top-Left: 둔화·고평가 */}
+                    <div className="border-r border-b border-slate-800/70 flex items-start justify-start p-1 text-[9px] text-slate-400 font-medium">
+                      둔화·고평가
                     </div>
-                    <div className="border-b border-slate-800 flex items-start justify-end p-1 text-[9px] text-cyan-400/80">
-                      주도
+                    {/* Top-Right: 강세·고평가 */}
+                    <div className="border-b border-slate-800/70 flex items-start justify-end p-1 text-[9px] text-emerald-400/90 font-medium">
+                      강세·고평가
                     </div>
-                    <div className="border-r border-slate-800 flex items-end justify-start p-1 text-[9px] text-slate-400">
-                      소외
+                    {/* Bottom-Left: 약세·저평가 */}
+                    <div className="border-r border-slate-800/70 flex items-end justify-start p-1 text-[9px] text-slate-500 font-medium">
+                      약세·저평가
                     </div>
-                    <div className="flex items-end justify-end p-1 text-[9px] text-slate-400">
-                      고평가
+                    {/* Bottom-Right: 회복·저평가 */}
+                    <div className="flex items-end justify-end p-1 text-[9px] text-cyan-400/90 font-medium">
+                      회복·저평가
                     </div>
 
-                    {/* Settling rotation dots */}
-                    <div className="absolute inset-0 pointer-events-none p-2 flex items-center justify-around">
-                      {feed.rotation.slice(0, 7).map((dot, idx) => (
-                        <span
-                          key={dot.symbol}
-                          className="w-2 h-2 rounded-full transition-all duration-700 shadow-sm"
-                          style={{
-                            backgroundColor: dot.relative > 5 ? "#38bdf8" : dot.relative > 0 ? "#10b981" : "#f43f5e",
-                            opacity: isDataDrawing ? 0.9 : 0,
-                            transform: isDataDrawing
-                              ? `translate(${(idx % 3 - 1) * 6}px, ${(idx % 2 - 0.5) * 6}px)`
-                              : "scale(0)",
-                            transitionDelay: reducedMotion ? "0ms" : `${2000 + idx * 100}ms`,
-                          }}
-                          title={`${dot.name} (${dot.symbol}): 상대모멘텀 ${dot.relative}%`}
-                        />
-                      ))}
-                    </div>
+                    {/* Settling rotation dots placed at real quadrant positions */}
+                    {feed?.rotation?.sectors && (
+                      <div className="absolute inset-0 pointer-events-none">
+                        {feed.rotation.sectors.map((dot, idx) => {
+                          // Compute coordinate within 2x2 container
+                          // relative momentum range approx -7 to +7 (%p) -> x 8% to 92%
+                          const xPct = Math.max(10, Math.min(90, 50 + (dot.relative / 7) * 40));
+                          // band percentile 0 to 100% -> y: 90% (bottom, 저평가) to 10% (top, 고평가)
+                          const yPct = dot.band !== null
+                            ? Math.max(10, Math.min(90, 100 - dot.band * 0.8 - 10))
+                            : dot.quadrant === "run-expensive" || dot.quadrant === "rich-fade"
+                              ? 25
+                              : 75;
+
+                          const dotColor =
+                            dot.quadrant === "run-expensive"
+                              ? "#10b981"
+                              : dot.quadrant === "cheap-recover"
+                                ? "#38bdf8"
+                                : dot.quadrant === "rich-fade"
+                                  ? "#f43f5e"
+                                  : "#94a3b8";
+
+                          return (
+                            <span
+                              key={dot.symbol}
+                              className="absolute w-2 h-2 rounded-full transition-all duration-700 shadow-sm pointer-events-auto cursor-pointer -translate-x-1/2 -translate-y-1/2"
+                              style={{
+                                left: `${xPct}%`,
+                                top: `${yPct}%`,
+                                backgroundColor: dotColor,
+                                opacity: isDataDrawing ? 0.95 : 0,
+                                transform: isDataDrawing
+                                  ? "translate(-50%, -50%) scale(1)"
+                                  : "translate(-50%, -50%) scale(0)",
+                                transitionDelay: reducedMotion ? "0ms" : `${2000 + idx * 90}ms`,
+                              }}
+                              title={`${dot.name} (${dot.symbol}): 상대 모멘텀 ${dot.relative > 0 ? "+" : ""}${dot.relative}%p · ${dot.quadrantLabel ?? ""}`}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -608,30 +636,42 @@ export default function IntroClient() {
                 <div className="rounded-xl border border-slate-800/70 bg-slate-950/40 p-3 flex flex-col justify-between">
                   <div className="flex items-baseline justify-between text-[11px]">
                     <span className="font-semibold text-slate-400">KOSPI</span>
-                    <span
-                      className={`font-mono text-[10px] font-bold ${
-                        (feed.indices.kospi?.changePercent ?? 0) >= 0 ? "text-emerald-400" : "text-rose-400"
-                      }`}
-                    >
-                      {(feed.indices.kospi?.changePercent ?? 0) >= 0 ? "+" : ""}
-                      {feed.indices.kospi?.changePercent?.toFixed(2) ?? "0.00"}%
-                    </span>
+                    {kospi ? (
+                      <span
+                        className={`font-mono text-[10px] font-bold ${
+                          kospi.changePercent >= 0 ? "text-emerald-400" : "text-rose-400"
+                        }`}
+                      >
+                        {kospi.changePercent >= 0 ? "+" : ""}
+                        {kospi.changePercent.toFixed(2)}%
+                      </span>
+                    ) : (
+                      <span className="w-8 h-3 bg-slate-800/50 rounded animate-pulse" />
+                    )}
                   </div>
-                  <div className="text-sm font-bold font-mono text-slate-200">
-                    {feed.indices.kospi?.price.toLocaleString() ?? "2,750"}
-                  </div>
+
+                  {kospi ? (
+                    <div className="text-sm font-bold font-mono text-slate-200">
+                      {kospi.price.toLocaleString()}
+                    </div>
+                  ) : (
+                    <div className="w-16 h-4 bg-slate-800/50 rounded animate-pulse" />
+                  )}
+
                   {/* Mini sparkline */}
                   <div className="h-6 w-full">
-                    {kospiPath && (
+                    {kospi && kospiPath ? (
                       <svg viewBox="0 0 100 24" className="w-full h-full overflow-visible">
                         <path
                           d={kospiPath}
                           fill="none"
-                          stroke={(feed.indices.kospi?.changePercent ?? 0) >= 0 ? "#10b981" : "#f43f5e"}
+                          stroke={kospi.changePercent >= 0 ? "#10b981" : "#f43f5e"}
                           strokeWidth="1.5"
                           strokeLinecap="round"
                         />
                       </svg>
+                    ) : (
+                      <div className="w-full h-[1px] bg-slate-800/40 my-auto" />
                     )}
                   </div>
                 </div>
