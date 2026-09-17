@@ -999,7 +999,72 @@ function buildKrxKospiDerivedWeights(manifest, config) {
 // / FLUC_RT / ACC_TRDVOL / ACC_TRDVAL, class IDX_CLSS); web-corroborated but
 // NOT yet verified against a live idx payload (KRX secret is owner-held) — the
 // row_count / raw_input_row_count fields make any field-name mismatch loud.
-function buildKrxPublicIndexCloses(manifest, config) {
+//
+// Daily accumulation: the artifact retains prior provider dates (bounded, same
+// 100-date depth as the bridge-history sibling) so single-series consumers
+// (home KOSPI sparkline) keep ≥2 points. Merge key is
+// market/index_class/index_name/date; the fresh KRX observation always wins a
+// date conflict, so a Yahoo backfill can only fill dates KRX never reported.
+export const KRX_PUBLIC_INDEX_CLOSES_MAX_DATES = MAX_KRX_BRIDGE_HISTORY_SOURCE_DATES;
+
+export function krxPublicIndexRowKey(row) {
+  return `${row?.market}‖${row?.index_class}‖${row?.index_name}‖${row?.date}`;
+}
+
+function validAccumulatedIndexRow(row) {
+  return row != null
+    && typeof row === "object"
+    && !Array.isArray(row)
+    && typeof row.market === "string"
+    && row.market.length > 0
+    && (typeof row.index_class === "string" || row.index_class === null)
+    && (row.index_class === null || row.index_class.length > 0)
+    && typeof row.index_name === "string"
+    && row.index_name.length > 0
+    && validIsoDate(row.date)
+    && finite(row.close);
+}
+
+export function mergeKrxPublicIndexCloses({ freshRows = [], previousDocument = null, ceilingDate = null } = {}) {
+  const merged = new Map();
+  const previousRows = Array.isArray(previousDocument?.indices) ? previousDocument.indices : [];
+  for (const row of previousRows) {
+    if (!validAccumulatedIndexRow(row)) continue;
+    if (ceilingDate !== null && row.date > ceilingDate) continue;
+    merged.set(krxPublicIndexRowKey(row), { ...row });
+  }
+  for (const row of freshRows) {
+    if (!validAccumulatedIndexRow(row)) continue;
+    merged.set(krxPublicIndexRowKey(row), row);
+  }
+  const distinctDates = [...new Set([...merged.values()].map((row) => row.date))].sort();
+  const retainedDates = new Set(distinctDates.slice(-KRX_PUBLIC_INDEX_CLOSES_MAX_DATES));
+  const indices = [...merged.values()]
+    .filter((row) => retainedDates.has(row.date))
+    .sort((a, b) => a.date.localeCompare(b.date)
+      || String(a.market).localeCompare(String(b.market))
+      || String(a.index_name).localeCompare(String(b.index_name)));
+  return {
+    indices,
+    distinct_dates: distinctDates.filter((date) => retainedDates.has(date)).length,
+    date_min: [...retainedDates].sort()[0] ?? null,
+    date_max: [...retainedDates].sort().at(-1) ?? null,
+  };
+}
+
+function loadKrxPublicIndexCloses(indexClosesPath) {
+  try {
+    const document = readOptionalJson(indexClosesPath);
+    if (!document || typeof document !== "object" || Array.isArray(document)) return null;
+    return document;
+  } catch {
+    // A partially written or otherwise corrupt prior artifact is healed by
+    // rebuilding from the fresh verified observation below.
+    return null;
+  }
+}
+
+function buildKrxPublicIndexCloses(manifest, config, options = {}) {
   const asOf = krxProviderSourceDateRange(manifest).as_of ?? null;
   const dateKey = compactDate(asOf);
   const indices = [];
@@ -1038,6 +1103,14 @@ function buildKrxPublicIndexCloses(manifest, config) {
     }
   }
   indices.sort((a, b) => a.market.localeCompare(b.market) || a.index_name.localeCompare(b.index_name));
+  const accumulated = mergeKrxPublicIndexCloses({
+    freshRows: indices,
+    previousDocument: options.previousDocument ?? loadKrxPublicIndexCloses(config.publicIndexClosesPath),
+    // Never let a retained row advance as_of past the verified provider date:
+    // as_of stays the KRX observation date the LKG/RIM contracts check.
+    ceilingDate: asOf,
+  });
+  const accumulatedIndices = accumulated.indices;
   return {
     schema_version: "fenok_krx_public_index_daily.v1",
     market: MARKET,
@@ -1048,16 +1121,20 @@ function buildKrxPublicIndexCloses(manifest, config) {
     per_issuer_rows: false,
     raw_public: false,
     generated_at: manifest?.completed_at ?? new Date().toISOString(),
-    as_of: asOf,
-    status: indices.length > 0 ? "ready" : "unavailable",
-    row_count: indices.length,
+    as_of: accumulated.date_max,
+    status: accumulatedIndices.length > 0 ? "ready" : "unavailable",
+    row_count: accumulatedIndices.length,
+    distinct_dates: accumulated.distinct_dates,
+    date_min: accumulated.date_min,
+    date_max: accumulated.date_max,
     raw_input_row_count: rawInputRowCount,
     excluded_issuer_rows: excludedIssuerRows,
     notes: [
       "Aggregate KRX index-level daily closes (all-market / KOSPI / KOSDAQ index series).",
       "No per-issuer rows: any issue-coded row in the raw idx payload is excluded. Raw KRX capture stays private/admin.",
+      `Daily accumulation: up to ${KRX_PUBLIC_INDEX_CLOSES_MAX_DATES} distinct provider dates retained; fresh KRX rows win date conflicts.`,
     ],
-    indices,
+    indices: accumulatedIndices,
   };
 }
 

@@ -7,6 +7,7 @@ import path from "node:path";
 import {
   KRX_LKG_KEY,
   KRX_LANE_ID,
+  KRX_PUBLIC_INDEX_CLOSES_MAX_DATES,
   MAX_KRX_BRIDGE_HISTORY_SOURCE_DATES,
   applyKrxLkgContract,
   buildBridgeIndex,
@@ -18,6 +19,7 @@ import {
   getRowCount,
   inspectKrxProviderSourceDate,
   mergeKrxBridgeHistory,
+  mergeKrxPublicIndexCloses,
   parseArgs,
   run,
   validKrxBridge,
@@ -304,13 +306,26 @@ assert.deepEqual(
     ],
   }, null, 2)}\n`);
 
-  const config = buildConfig(parseArgs(["--end-date", "20260629", "--output-root", tmpDir]));
+  const config = buildConfig(parseArgs([
+    "--end-date",
+    "20260629",
+    "--output-root",
+    tmpDir,
+    // Isolate from the real tracked artifact: the builder accumulates prior
+    // dates from this path, so hermetic tests must not read the repo file.
+    "--public-index-closes",
+    path.join(tmpDir, "prev-index-closes.json"),
+  ]));
   const manifest = { completed_at: "2026-06-29T10:00:00.000Z", date_range: { end_date: "2026-06-29" } };
   const artifact = buildKrxPublicIndexCloses(manifest, config);
 
   // Index rows flow through to the public artifact.
   assert.equal(artifact.status, "ready");
   assert.equal(artifact.row_count, 4, "2 all-market + 1 KOSPI + 1 KOSDAQ index rows");
+  assert.equal(artifact.distinct_dates, 1, "single fresh provider date without a previous artifact");
+  assert.equal(artifact.date_min, "2026-06-29");
+  assert.equal(artifact.date_max, "2026-06-29");
+  assert.equal(artifact.as_of, "2026-06-29");
   assert.equal(artifact.raw_input_row_count, 5, "5 raw rows observed (incl. the issuer row)");
   const kospi = artifact.indices.find((row) => row.index_name === "코스피");
   assert.ok(kospi, "KOSPI index row present");
@@ -333,6 +348,70 @@ assert.deepEqual(
   assert.equal(artifact.raw_public, false);
 
   fs.rmSync(tmpDir, { recursive: true, force: true });
+}
+
+// Slice 1 accumulation: prior dates are retained (bounded), the fresh KRX
+// observation wins a date conflict, and nothing retained may advance as_of.
+{
+  const kospiRow = (date, close, extra = {}) => ({
+    market: "KOSPI",
+    index_class: "KOSPI",
+    index_name: "코스피",
+    date,
+    close,
+    change: null,
+    change_pct: null,
+    open: null,
+    high: null,
+    low: null,
+    acc_trade_volume: null,
+    acc_trade_value: null,
+    ...extra,
+  });
+  const previousDocument = {
+    indices: [
+      kospiRow("2026-06-25", 2400.0, { origin: "yahoo_chart_backfill", origin_symbol: "^KS11" }),
+      kospiRow("2026-06-26", 2410.0, { origin: "yahoo_chart_backfill", origin_symbol: "^KS11" }),
+      // Same date the fresh run reports: the KRX row must replace this one.
+      kospiRow("2026-06-29", 2499.0, { origin: "yahoo_chart_backfill", origin_symbol: "^KS11" }),
+      // Newer than the fresh observation: must not advance as_of.
+      kospiRow("2026-06-30", 2510.0, { origin: "yahoo_chart_backfill", origin_symbol: "^KS11" }),
+      // Invalid rows never survive accumulation.
+      { market: "KOSPI", index_class: "KOSPI", index_name: "코스피", date: "not-a-date", close: 1 },
+      { market: "KOSPI", index_class: "KOSPI", index_name: "코스피", date: "2026-06-24", close: Number.NaN },
+    ],
+  };
+  const freshRows = [kospiRow("2026-06-29", 2500.5)];
+
+  const merged = mergeKrxPublicIndexCloses({ freshRows, previousDocument, ceilingDate: "2026-06-29" });
+  assert.equal(merged.distinct_dates, 3);
+  assert.equal(merged.date_min, "2026-06-25");
+  assert.equal(merged.date_max, "2026-06-29");
+  assert.deepEqual(merged.indices.map((row) => row.date), ["2026-06-25", "2026-06-26", "2026-06-29"]);
+  const replaced = merged.indices.find((row) => row.date === "2026-06-29");
+  assert.equal(replaced.close, 2500.5, "fresh KRX row wins the date conflict");
+  assert.equal("origin" in replaced, false, "backfill origin marker is gone with the replaced row");
+  assert.equal(merged.indices.some((row) => row.date === "2026-06-30"), false, "ceiling holds as_of");
+  assert.equal(merged.indices.some((row) => row.date === "2026-06-24"), false, "invalid rows are dropped");
+
+  // Bound: oldest dates evict first once the depth exceeds the sibling cap.
+  const manyDates = Array.from({ length: KRX_PUBLIC_INDEX_CLOSES_MAX_DATES + 5 }, (_, index) => (
+    new Date(Date.UTC(2026, 0, index + 1)).toISOString().slice(0, 10)
+  ));
+  const bounded = mergeKrxPublicIndexCloses({
+    freshRows: [],
+    previousDocument: { indices: manyDates.map((date) => kospiRow(date, 1000)) },
+    ceilingDate: null,
+  });
+  assert.equal(bounded.distinct_dates, KRX_PUBLIC_INDEX_CLOSES_MAX_DATES);
+  assert.equal(bounded.date_min, manyDates[5]);
+  assert.equal(bounded.date_max, manyDates.at(-1));
+
+  // A corrupt previous artifact heals by rebuilding from the fresh observation.
+  const healed = mergeKrxPublicIndexCloses({ freshRows, previousDocument: { indices: "garbage" }, ceilingDate: "2026-06-29" });
+  assert.deepEqual(healed.indices.map((row) => row.date), ["2026-06-29"]);
+  const emptyPrevious = mergeKrxPublicIndexCloses({ freshRows, previousDocument: null, ceilingDate: "2026-06-29" });
+  assert.deepEqual(emptyPrevious.indices.map((row) => row.date), ["2026-06-29"]);
 }
 
 // Slice 2: KOSDAQ top-N market-cap concentration — derived aggregate only.

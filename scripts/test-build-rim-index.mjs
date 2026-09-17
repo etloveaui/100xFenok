@@ -508,8 +508,20 @@ const officialKospiSpotRows = (officialKospiSpotPayload.indices ?? []).filter((r
   && row?.index_class === "KOSPI"
   && row?.index_name === "코스피"
 ));
-assert.equal(officialKospiSpotRows.length, 1, "real-root official KOSPI row identity remains unique");
-const officialKospiSpotRow = officialKospiSpotRows[0];
+assert.ok(officialKospiSpotRows.length >= 1, "real-root official KOSPI identity rows exist (daily accumulation)");
+const officialKospiSpotRow = [...officialKospiSpotRows]
+  .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+  .at(-1);
+assert.equal(
+  officialKospiSpotRow.date,
+  officialKospiSpotPayload.as_of,
+  "latest official KOSPI row matches payload as_of (reader contract)",
+);
+assert.equal(
+  officialKospiSpotRows.filter((row) => row.date === officialKospiSpotRow.date).length,
+  1,
+  "latest-date official KOSPI row stays unique (reader contract)",
+);
 const expectedExactSpots = {
   SPX: {
     source: "indices/sp500.json",
