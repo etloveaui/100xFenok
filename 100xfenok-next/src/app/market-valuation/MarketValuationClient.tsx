@@ -92,8 +92,8 @@ function verdictSentence(sp500: MarketIndexValuation | undefined): string {
   const pct = sp500.pe.percentile;
   const meta = valuationMeta(pct);
   const pe = formatDecimal(sp500.pe.current, { digits: 1 });
-  const where = pct === null ? "역사 위치 확인 중" : `역사 ${pct}%ile`;
-  return `${sp500.name} 선행 PER는 ${pe}배로 ${where} — ${meta.label} 구간입니다.`;
+  const where = pct === null ? "역사 위치 확인 중" : `역사 백분위 ${pct}`;
+  return `${sp500.name} 선행 PER은 ${pe}배로 ${where} — ${meta.label} 구간입니다.`;
 }
 
 type ZoneTone = "gain" | "muted" | "neutral" | "warn" | "loss";
@@ -271,7 +271,7 @@ function ValuationSummaryPanel({
     key: row.id,
     label: INDEX_KO[row.id] ?? row.name,
     value: row.pe.percentile,
-    display: row.pe.percentile === null ? undefined : `${row.pe.percentile}%ile`,
+    display: row.pe.percentile === null ? undefined : `백분위 ${row.pe.percentile}`,
     tone: RANK_BAR_TONE[valuationMeta(row.pe.percentile).pill],
   }));
   const rankablePeers = peerRanked.filter((row) => row.pe.percentile !== null);
@@ -289,7 +289,7 @@ function ValuationSummaryPanel({
       : peerRows.length === 0
         ? "표시할 밸류에이션 데이터가 없습니다"
         : rankablePeers.length === 0
-          ? "지수 역사 백분위를 확인할 수 없습니다"
+          ? "지수 역사 백분위 데이터가 없습니다"
           : null;
   const empty = !loading && !boardLoading && scopeRows.length === 0 && peerRows.length === 0;
   const retry = () => {
@@ -717,7 +717,7 @@ function HistoricalPositionPanel({
       {filteredEmpty ? <p className="mv-note">이 자산군에는 표시할 역사 위치 데이터가 없습니다</p> : null}
       {groupRefusals.length > 0 ? (
         <p className="mv-note">
-          {groupRefusals.map((item) => item.label).join(" · ")}: 표시할 수 없습니다
+          {groupRefusals.map((item) => item.label).join(" · ")}: 표시할 데이터가 없습니다
         </p>
       ) : null}
     </Panel>

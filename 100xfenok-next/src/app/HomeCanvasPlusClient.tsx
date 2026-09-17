@@ -674,14 +674,14 @@ export default function HomeCanvasPlusClient() {
     : oneSourceLoading
       ? "남은 데이터 소스를 불러오는 중입니다."
       : sourceUnavailable
-        ? "일부 데이터 소스를 사용할 수 없어 확인이 필요합니다."
+        ? "일부 데이터 소스를 불러오지 못해 확인이 필요합니다."
         : "표시할 변경 사항이 없습니다.";
   const attentionEmptyMessage = bothSourcesLoading
     ? DATA_STATE_LABELS.pending
     : oneSourceLoading
       ? "남은 데이터 소스를 불러오는 중입니다."
       : sourceUnavailable
-        ? "일부 데이터 소스를 사용할 수 없어 확인이 필요합니다."
+        ? "일부 데이터 소스를 불러오지 못해 확인이 필요합니다."
         : "플래그가 있는 변경 사항이 없습니다.";
   const attentionCountLabel = projection.attention.length > 0
     ? `${projection.attention.length}`
