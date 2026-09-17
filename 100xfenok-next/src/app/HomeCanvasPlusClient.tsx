@@ -748,7 +748,7 @@ export default function HomeCanvasPlusClient() {
         <section aria-label="시장 폭" data-home-breadth className="flex flex-col gap-1.5">
           <p className="m-0 text-[12px] text-[var(--fnk-neutral-700)]">{breadthSummary}</p>
           {breadthReady ? (
-            <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-3">
+            <div className="flex flex-col flex-wrap gap-1.5 md:flex-row md:items-center md:gap-3">
               <div
                 className="flex min-w-0 gap-1 md:flex-none"
                 role="img"
@@ -764,7 +764,7 @@ export default function HomeCanvasPlusClient() {
                   </span>
                 ))}
               </div>
-              <div className="flex items-baseline gap-2 text-[12px]">
+              <div className="flex shrink-0 items-baseline gap-2 whitespace-nowrap text-[12px]">
                 <span className="tabular-nums font-semibold text-[var(--fnk-neutral-700)]">상승 {dashboard.sectorUp} · 하락 {dashboard.sectorDown}</span>
                 <span className="text-[var(--fnk-neutral-500)]">{breadthPeriod}</span>
               </div>
