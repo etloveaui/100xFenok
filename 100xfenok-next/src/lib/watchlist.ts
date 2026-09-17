@@ -7,6 +7,7 @@
  */
 
 import { useSyncExternalStore } from "react";
+import * as personalStore from "@/lib/personal/personalStore";
 
 const KEY = "fenok.watchlist.v1";
 const MAX_TICKERS = 100;
@@ -21,15 +22,8 @@ type Listener = (tickers: string[]) => void;
 const listeners = new Set<Listener>();
 
 function read(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return [];
-    const doc = JSON.parse(raw) as WatchlistDoc;
-    return Array.isArray(doc.tickers) ? doc.tickers.slice(0, MAX_TICKERS) : [];
-  } catch {
-    return [];
-  }
+  const doc = personalStore.read<WatchlistDoc>("watchlist");
+  return doc && Array.isArray(doc.tickers) ? doc.tickers.slice(0, MAX_TICKERS) : [];
 }
 
 function write(tickers: string[]) {
@@ -38,11 +32,7 @@ function write(tickers: string[]) {
     tickers: tickers.slice(0, MAX_TICKERS),
     updated_at: new Date().toISOString(),
   };
-  try {
-    window.localStorage.setItem(KEY, JSON.stringify(doc));
-  } catch {
-    // storage full/blocked — keep in-memory state only
-  }
+  personalStore.write("watchlist", doc);
   for (const cb of listeners) cb(doc.tickers);
 }
 
@@ -82,13 +72,13 @@ function invalidate() {
 function subscribe(onChange: () => void): () => void {
   const local: Listener = () => { invalidate(); onChange(); };
   listeners.add(local);
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === KEY) { invalidate(); onChange(); }
-  };
-  window.addEventListener("storage", onStorage);
+  const unsubStore = personalStore.subscribe("watchlist", () => {
+    invalidate();
+    onChange();
+  });
   return () => {
     listeners.delete(local);
-    window.removeEventListener("storage", onStorage);
+    unsubStore();
   };
 }
 

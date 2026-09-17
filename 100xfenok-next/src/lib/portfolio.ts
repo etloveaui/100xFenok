@@ -7,6 +7,7 @@
  */
 
 import { useSyncExternalStore } from "react";
+import * as personalStore from "@/lib/personal/personalStore";
 
 const KEY = "fenok.portfolio.v1";
 
@@ -54,15 +55,8 @@ type Listener = () => void;
 const listeners = new Set<Listener>();
 
 function read(): Portfolio[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return [];
-    const doc = JSON.parse(raw) as PortfolioDoc;
-    return Array.isArray(doc.portfolios) ? doc.portfolios : [];
-  } catch {
-    return [];
-  }
+  const doc = personalStore.read<PortfolioDoc>("portfolio");
+  return doc && Array.isArray(doc.portfolios) ? doc.portfolios : [];
 }
 
 function write(portfolios: Portfolio[]): SavePortfoliosResult {
@@ -75,7 +69,7 @@ function write(portfolios: Portfolio[]): SavePortfoliosResult {
     updated_at: new Date().toISOString(),
   };
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(doc));
+    personalStore.write("portfolio", doc);
   } catch (error) {
     const detail = error instanceof Error ? error.message : "저장 공간 부족 또는 브라우저 권한 제한";
     return {
@@ -114,16 +108,13 @@ function subscribe(onChange: () => void): () => void {
     onChange();
   };
   listeners.add(local);
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === KEY) {
-      invalidate();
-      onChange();
-    }
-  };
-  window.addEventListener("storage", onStorage);
+  const unsubStore = personalStore.subscribe("portfolio", () => {
+    invalidate();
+    onChange();
+  });
   return () => {
     listeners.delete(local);
-    window.removeEventListener("storage", onStorage);
+    unsubStore();
   };
 }
 

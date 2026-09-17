@@ -7,6 +7,7 @@ import TransitionLink from "@/components/TransitionLink";
 import TickerTypeahead from "@/components/TickerTypeahead";
 import AppShellFreshnessPill from "@/components/shell/AppShellFreshnessPill";
 import UserAuthPill from "@/components/shell/UserAuthPill";
+import AdoptStorePrompt from "@/components/personal/AdoptStorePrompt";
 import { useUserHeartbeat } from "@/lib/auth/clientAuth";
 import {
   getStockConnection,
@@ -730,6 +731,7 @@ export default function AppShell({
           </div>
         </div>
       ) : null}
+      <AdoptStorePrompt />
     </>
   );
 }
