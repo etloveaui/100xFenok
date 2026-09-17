@@ -577,13 +577,28 @@
 }
 
 /* The kit StatStrip rows share the right column evenly; its own last-child
- * border rule stays untouched on desktop. */
+ * border rule stays untouched on desktop. The %p readings ('+650.0%p' class)
+ * overrun an even split, so the 최강/최약 cells take a wider share and the
+ * value scales with the strip itself instead of the viewport. */
 .sec-stat-strip {
   width: 100%;
+  container-type: inline-size;
 }
 
 .sec-stat-strip > .sec-stat {
   flex: 1 1 0;
+  min-width: 0;
+  padding-inline: 12px;
+}
+
+.sec-stat-strip > .sec-stat:nth-child(2),
+.sec-stat-strip > .sec-stat:nth-child(3) {
+  flex: 1.5 1 0;
+}
+
+.sec-stat-strip > .sec-stat > span.tabular-nums {
+  font-size: clamp(14px, 4.2cqw, 19px);
+  white-space: nowrap;
 }
 
 @media (max-width: 760px) {
