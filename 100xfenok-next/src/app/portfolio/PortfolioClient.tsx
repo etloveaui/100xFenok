@@ -459,7 +459,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
         (h, idx) => idx !== targetIndex && (h.ticker === finalTicker || h.ticker.toUpperCase() === finalTicker.toUpperCase()),
       );
       if (finalTicker !== editingTarget.initialTicker && collisionIndex !== -1) {
-        setStorageError(`"${finalTicker}" 종목은 이미 포트폴리오의 다른 위치에 존재합니다. 중복 등록할 수 없습니다.`);
+        setStorageError(`"${finalTicker}" 종목은 이미 포트폴리오의 다른 위치에 존재합니다. 중복 등록하지 않습니다.`);
         return;
       }
 

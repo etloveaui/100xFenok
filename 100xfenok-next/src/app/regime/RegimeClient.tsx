@@ -468,7 +468,7 @@ function CompositePanel({
       {ready && gauge !== null && score !== null && (
         <div data-regime-headline>
           <PanelHeader
-            eyebrow="Si-hwang"
+            eyebrow="Overview"
             title="종합 신호"
             right={
               <Pill tone={asOf ? "neutral" : "warn"} data-regime-composite-asof>
@@ -666,7 +666,7 @@ function HistoryPanel({
   return (
     <Panel>
       <div data-regime-history>
-        <PanelHeader eyebrow="Si-hwang History" title="시황 기록 — 최근 12주" right={<Pill>주간</Pill>} />
+        <PanelHeader eyebrow="History" title="시황 기록 — 최근 12주" right={<Pill>주간</Pill>} />
         <div className="rgm-history">
           <div
             className="rgm-history-strip"

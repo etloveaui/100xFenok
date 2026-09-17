@@ -1696,7 +1696,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     const definition = seriesById(id);
     if (!definition) return;
     if (selected.length >= MAX_SELECTED_SERIES) {
-      setLimitNotice(`비교 시리즈는 최대 ${MAX_SELECTED_SERIES}개까지 선택할 수 있습니다.`);
+      setLimitNotice(`비교 시리즈는 최대 ${MAX_SELECTED_SERIES}개까지입니다.`);
       return;
     }
     setSelected((prev) => [...prev, withSeriesDefaults({ id, transform: definition.defaultTransform ?? "raw" })]);
@@ -1720,7 +1720,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       return;
     }
     if (selected.length >= MAX_SELECTED_SERIES) {
-      setLimitNotice(`비교 시리즈는 최대 ${MAX_SELECTED_SERIES}개까지 선택할 수 있습니다.`);
+      setLimitNotice(`비교 시리즈는 최대 ${MAX_SELECTED_SERIES}개까지입니다.`);
       setStooqTickerNotice(null);
       return;
     }
@@ -1842,7 +1842,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
       return;
     }
     if (formulas.length >= MAX_FORMULA_SERIES) {
-      setFormulaNotice(`합성 시리즈는 최대 ${MAX_FORMULA_SERIES}개까지 추가할 수 있습니다.`);
+      setFormulaNotice(`합성 시리즈는 최대 ${MAX_FORMULA_SERIES}개까지입니다.`);
       return;
     }
     const nextFormula: MacroFormulaSeries = {
@@ -2099,7 +2099,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     const readLine = rows.length === 0
       ? null
       : top.length === 0
-        ? `같은 ${windowText} 창에서 구간 성과를 읽을 수 없습니다 — 표시 시리즈의 값이 없습니다.`
+        ? `같은 ${windowText} 창에서 구간 성과가 없습니다 — 표시 시리즈의 값이 없습니다.`
         : top.length === 1
           ? `같은 ${windowText} 창에서 ${top[0].label} ${signedChangeText(top[0].reading.change, top[0].reading.suffix)}입니다.`
           : `같은 ${windowText} 창에서 ${top.map((row) => `${row.label} ${signedChangeText(row.reading.change, row.reading.suffix)}`).join(", ")} 순입니다.`;
@@ -2142,7 +2142,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     const extraCount = rows.length - shown.length;
     const windowText = rangeWindowLabel(rangeId);
     const readLine = rows.length === 0
-      ? `같은 ${windowText} 창에서 지금 값을 읽을 수 없습니다 — 표시 시리즈가 없습니다.`
+      ? `같은 ${windowText} 창에서 지금 값이 없습니다 — 표시 시리즈가 없습니다.`
       : `지금 ${shown.map((row) => row.display ? `${row.label} ${row.display}` : `${row.label} —`).join(" · ")} · ${windowText} 창 백분위입니다.`;
     return { readLine, rankRows: shown, extraCount, empty: rows.length === 0 };
   }, [legendItems, rangeId, visibleChartSeries]);
@@ -2295,7 +2295,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 onClick={() => setShowRecessionShading((value) => !value)}
                 title={`${NBER_US_RECESSION_TABLE.source} · ${NBER_US_RECESSION_TABLE.asOf} 기준`}
               >침체 음영</button>
-              <button type="button" disabled={!canUseLogScale} aria-pressed={logScale} onClick={() => setLogScale((value) => !value)} title={canUseLogScale ? undefined : "0 이하 값이 있어 로그 축을 사용할 수 없습니다"}>로그</button>
+              <button type="button" disabled={!canUseLogScale} aria-pressed={logScale} onClick={() => setLogScale((value) => !value)} title={canUseLogScale ? undefined : "0 이하 값이 있어 로그 축을 표시하지 않습니다"}>로그</button>
               <button type="button" aria-pressed={autoGroupAxes} onClick={() => setAutoGroupAxes((value) => !value)}>축 그룹 자동</button>
             </div>
 
@@ -2812,7 +2812,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 {limitNotice ??
                   (activeLoadState.status === "loading"
                     ? "선택한 시리즈 데이터를 불러오는 중입니다."
-                    : `최대 ${MAX_SELECTED_SERIES}개까지 비교할 수 있습니다.`)}
+                    : `최대 ${MAX_SELECTED_SERIES}개까지 비교합니다.`)}
               </div>
               <div className="cpw5-macro-picker-list">
                 {filteredCatalog.map((item) => (
@@ -2969,7 +2969,7 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
             </div>
             <div className="cpw5-macro-status" role="status">
               {presetNotice ?? (collectionStorageMode === "session"
-                ? "브라우저 저장소를 사용할 수 없어 이 세션에서만 유지합니다."
+                ? "브라우저 저장소가 없어 이 세션에서만 유지합니다."
                 : "저장한 차트는 이 브라우저에서 다시 불러올 수 있습니다.")}
             </div>
             <div className="cpw5-macro-formula-list">
