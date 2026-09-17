@@ -1,0 +1,83 @@
+# Pins Autosync — bounded self-healing for the generated projection pins.
+#
+# scripts/regen-pins.mjs regenerates the lane-registry digests, lane-commit
+# manifest, materialization oracle, lane-registry projection, detection-floor
+# fixtures, migration-demand fixtures, KPI projections and the ink4 contrast
+# fixture. Producers that mutate their inputs commit with [skip ci], so a
+# stale projection stays invisible until an unrelated CI push runs qa:pins
+# and fails main. This lane re-runs the regeneration on a fixed cadence and
+# publishes at most one conflict-free [skip ci] commit, bounding the stale
+# window to a single slot.
+#
+# It is a maintenance writer, not a data-supply lane (recorded in
+# CADENCE_DECLARATION_EXEMPTIONS), and it shares the global writer queue so
+# an autosync commit cannot advance main underneath an acquisition commit.
+
+name: Pins Autosync
+
+on:
+  schedule:
+    # Every 30 minutes, off the herd marks (UTC).
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fenok-data-writer-refs/heads/main
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  pins-autosync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Start from latest main
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout -B main origin/main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Regenerate pins
+        run: npm --prefix 100xfenok-next run regen:pins
+
+      - name: Commit refreshed pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          if git diff --quiet; then
+            echo 'pins autosync: nothing to refresh'
+            exit 0
+          fi
+          git add -A
+          git commit -m "chore(pins): autosync generated projections [skip ci]"
+          for attempt in $(seq 1 5); do
+            git fetch origin main
+            if git rebase origin/main; then
+              if git push origin HEAD:main; then
+                echo "pins autosync pushed $(git rev-parse HEAD)"
+                exit 0
+              fi
+              git rebase --abort >/dev/null 2>&1 || true
+            else
+              git rebase --abort >/dev/null 2>&1 || true
+            fi
+            echo "pins autosync Git push race on attempt ${attempt}; retrying" >&2
+            sleep 3
+          done
+          echo 'pins autosync Git push failed after bounded retries' >&2
+          exit 1
