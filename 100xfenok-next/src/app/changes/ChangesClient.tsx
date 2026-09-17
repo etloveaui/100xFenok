@@ -499,7 +499,7 @@ export default function ChangesClient() {
     const stages: EvidenceStage[] = [];
     if (isRecord(revisionDoc)) {
       const at = isoDay(revisionDoc.generated_at);
-      stages.push({ stage: "수집", detail: "컨센서스 리비전 무버", at, tone: at ? "ok" : "muted" });
+      stages.push({ stage: "수집", detail: "컨센서스 리비전 변동 종목", at, tone: at ? "ok" : "muted" });
     }
     if (isRecord(tradesDoc) && isRecord(byTickerDoc)) {
       const meta = isRecord(tradesDoc.metadata) ? tradesDoc.metadata : null;
@@ -684,7 +684,7 @@ export default function ChangesClient() {
           </div>
           <EvidenceRail
             freshness={mainFreshness}
-            source="리비전 무버 · 13F 집계"
+            source="리비전 변동 종목 · 13F 집계"
             asOf={mainAsOf}
             coverage={`행 ${rows.length}건`}
             onRetry={settled ? retryFeeds : undefined}
@@ -742,7 +742,7 @@ export default function ChangesClient() {
       </div>
 
       <div className="flex items-center gap-2 text-[12px] text-slate-500">
-        <span>ETF 순유입 행은 홈·스크리너·종목 표면에 피드가 없어 제외했습니다. 값이 생기면 이 페이지에 추가됩니다.</span>
+        <span>ETF 순유입 행은 홈·스크리너·종목 화면에 피드가 없어 제외했습니다. 값이 생기면 이 페이지에 추가됩니다.</span>
         <TransitionLink href={ROUTES.screener} className="font-semibold text-brand-interactive hover:underline">
           스크리너로 이동
         </TransitionLink>

@@ -104,7 +104,7 @@ function sourceLabel(cells: QuoteCell[]): string {
   );
   if (sources.length === 1) {
     if (sources[0] === "yahoo") return "Yahoo 시세";
-    if (sources[0] === "worker") return "보조 시세 경로";
+    if (sources[0] === "worker") return "보조 시세 소스";
   }
   return "100xFenok 시세 API";
 }

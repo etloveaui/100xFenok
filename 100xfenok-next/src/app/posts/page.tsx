@@ -79,8 +79,7 @@ export default async function PostsPage({ searchParams }: PageProps) {
               <p className="text-[12px] font-bold uppercase tracking-wide text-slate-500">Route owner</p>
               <h1 className="mt-2 text-xl font-black text-slate-900">레거시 리포트</h1>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                기존 HTML 리포트를 분석 아카이브 안에서 읽는 상세 화면입니다. 네이티브 화면 전환 전까지
-                출처와 이동 경계를 분리합니다.
+                기존 HTML 리포트를 분석 아카이브 안에서 읽는 상세 화면입니다. 출처와 이동 경로를 구분해 안내합니다.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {POSTS_BOUNDARY_CHIPS.map((chip) => (

@@ -100,7 +100,7 @@ export default async function VRPage({ searchParams }: PageProps) {
             <Stat className="flex-1" label="리밸런싱 주기" value="2주" />
           </StatStrip>
           <p className="mt-2 text-[12px] leading-relaxed text-[var(--c-ink-3)] sm:text-sm">
-            밸류 리밸런싱(Value Rebalancing) 관련 문서와 계산기 모음 — 수학적 원칙에 기반한 체계적 투자 시스템
+            밸류 리밸런싱(Value Rebalancing) 관련 문서와 계산기 모음 — 원칙이 정해진 규칙형 투자 시스템
           </p>
         </section>
 

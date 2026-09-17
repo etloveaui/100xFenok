@@ -86,7 +86,7 @@ export default function ResearchClient() {
 
   return (
     <div data-research-root="true">
-      <p className="text-sm text-slate-600">기업 리서치 아티팩트와 제품 브리프를 모은 목록입니다.</p>
+      <p className="text-sm text-slate-600">기업 리서치 자료와 제품 브리프를 모은 목록입니다.</p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="리서치 분류">
         {FILTERS.map((tab) => (
@@ -108,7 +108,7 @@ export default function ResearchClient() {
           </button>
         ))}
         <span className="ml-auto font-mono text-[12px] text-slate-500">
-          실물 {liveCount} · 준비 중 {soonCount}
+          제공 중 {liveCount} · 준비 중 {soonCount}
         </span>
       </div>
 
@@ -209,8 +209,8 @@ export default function ResearchClient() {
       </div>
 
       <aside className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4" aria-label="동기화 안내">
-        <p className="text-sm font-bold text-slate-700">추가 리서치 아티팩트 동기화 준비 중</p>
-        <p className="mt-1 text-sm text-slate-500">검증된 아티팩트부터 순차적으로 목록에 추가됩니다.</p>
+        <p className="text-sm font-bold text-slate-700">추가 리서치 자료 동기화 준비 중</p>
+        <p className="mt-1 text-sm text-slate-500">검증된 자료부터 순차적으로 목록에 추가됩니다.</p>
       </aside>
     </div>
   );
