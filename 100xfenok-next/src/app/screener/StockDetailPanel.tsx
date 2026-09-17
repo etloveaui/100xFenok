@@ -472,7 +472,7 @@ class StockDetailBoundary extends Component<StockDetailBoundaryProps, StockDetai
     if (this.state.hasError) {
       return (
         <div role="alert" className="rounded-xl border border-[var(--c-line)] bg-[var(--c-panel)] px-4 py-3 text-sm font-semibold text-[var(--c-ink-3)]">
-          이 종목 상세를 표시하는 중 일시적 오류가 발생했습니다. 다른 종목과 스크리너 목록은 계속 사용할 수 있습니다.
+          이 종목 상세를 표시하는 중 일시적 오류가 발생했습니다. 다른 종목과 스크리너 목록은 정상 표시됩니다.
         </div>
       );
     }

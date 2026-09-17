@@ -362,7 +362,7 @@ export default function ScreenerDiscover({
             ) : shown.length === 0 ? (
               <EmptyState
                 reason="조건에 맞는 종목이 없습니다"
-                nextRefresh="다음 갱신에 다시 확인해 보세요"
+                nextRefresh="다음 갱신 후 재확인"
                 actionLabel="조건 보기"
                 onAction={() => onShowConditions(card)}
               />
@@ -590,7 +590,7 @@ export default function ScreenerDiscover({
         />
         <div className="px-4 py-3">
           <p className="text-[12px] leading-snug text-[var(--c-ink-2)]">
-            발견 카드는 저장된 스크린입니다 — 조건 보기로 분석 모드에서 이어서 편집할 수 있습니다.
+            발견 카드는 저장된 스크린입니다 — 조건 보기로 분석 모드에서 이어서 편집합니다.
           </p>
         </div>
         <EvidenceRail

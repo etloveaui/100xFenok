@@ -586,7 +586,7 @@ export default function NewEtfsList({
               <div className="mv-row">
                 <span className="co">
                   <div className="n">조건에 맞는 신규 ETF 없음</div>
-                  <div className="tk">검색어와 필터를 조정해보세요</div>
+                  <div className="tk">검색어와 필터를 조정해 주세요</div>
                 </span>
                 <span className="flex min-w-[92px] flex-col items-end gap-1">
                   <button

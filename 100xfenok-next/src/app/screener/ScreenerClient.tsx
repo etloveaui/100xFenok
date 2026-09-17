@@ -1924,8 +1924,8 @@ export default function ScreenerClient({
       status: "ready",
       label: "종목 데이터 준비됨",
       detail: connectionIndexReady
-        ? `${stocks.length.toLocaleString("ko-KR")}개 종목과 연결 인덱스를 표시할 수 있습니다.`
-        : `${stocks.length.toLocaleString("ko-KR")}개 종목을 표시할 수 있습니다. 연결 인덱스는 준비 전입니다.`,
+        ? `${stocks.length.toLocaleString("ko-KR")}개 종목과 연결 인덱스를 표시합니다.`
+        : `${stocks.length.toLocaleString("ko-KR")}개 종목을 표시합니다. 연결 인덱스는 준비 전입니다.`,
       asOf: screenerSourceDate,
     });
   }, [connectionIndexReady, dataReady, failed, screenerSourceDate, sourceDate, stocks]);

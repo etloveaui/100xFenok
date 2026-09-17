@@ -301,7 +301,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
             {tickers.length === 1 ? (
               <div className="rounded-xl border border-brand-200 bg-brand-50 px-3 py-3" data-etf-compare-single-selection="true" role="status">
                 <p className="text-sm font-black text-[var(--c-ink)]">비교할 ETF를 하나 더 추가하세요.</p>
-                <p className="mt-1 text-[12px] font-semibold text-[var(--c-ink-3)]">위 입력란에 티커를 하나 더 입력한 뒤 비교를 누르면 겹침을 확인할 수 있습니다.</p>
+                <p className="mt-1 text-[12px] font-semibold text-[var(--c-ink-3)]">위 입력란에 티커를 하나 더 입력한 뒤 비교를 누르면 겹침이 표시됩니다.</p>
               </div>
             ) : null}
 

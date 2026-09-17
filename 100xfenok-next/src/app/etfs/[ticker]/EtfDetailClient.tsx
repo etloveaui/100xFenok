@@ -1637,7 +1637,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
               <div className="mb-3">
                 <EtfRetryCallout
                   title="일부 ETF 데이터를 불러오지 못했습니다"
-                  desc="현재 보이는 값은 연결된 데이터만 사용합니다. 누락된 가격·상세 정보는 다시 시도해 확인할 수 있습니다."
+                  desc="현재 보이는 값은 연결된 데이터만 사용합니다. 누락된 가격·상세 정보는 다시 시도하면 표시됩니다."
                   onRetry={retryLoads}
                   compact
                 />
