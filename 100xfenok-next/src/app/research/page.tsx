@@ -5,7 +5,7 @@ import ResearchClient from "./ResearchClient";
 
 export const metadata: Metadata = {
   title: "리서치",
-  description: "기업 리서치 아티팩트와 제품 브리프를 모은 목록",
+  description: "기업 리서치 자료와 제품 브리프를 모은 목록",
 };
 
 export default function ResearchPage() {

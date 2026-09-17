@@ -60,7 +60,7 @@ const WEEK_DAYS = 7;
 const LANE_CAP = 20;
 const LABEL_COL_PX = 140;
 
-const NO_FEED_REASON = "no new feeds — 연결된 피드가 없습니다";
+const NO_FEED_REASON = "연결된 피드가 없습니다";
 const NO_FEED_SOURCE = "연결된 피드 없음";
 const FOCUS_RING = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-interactive";
 
@@ -317,7 +317,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
   if (!earnings && !actions && !splits && !ipoCalendar) {
     return (
       <div data-market-events-timeline="true" aria-label="이벤트 타임라인">
-        <Panel error errorDetail="이벤트 표면을 읽지 못했습니다." onRetry={onRetry} retryLabel="다시 읽기">
+        <Panel error errorDetail="이벤트 데이터를 읽지 못했습니다." onRetry={onRetry} retryLabel="다시 읽기">
           <PanelHeader eyebrow="Timeline Gantt" title="앞으로 4주" />
           <EmptyState reason="이벤트 타임라인을 표시할 수 없습니다" nextRefresh="다음 수집 시 자동 복구됩니다" />
         </Panel>
@@ -344,7 +344,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
               className="grid items-center border-b border-slate-200 text-[12px] font-semibold text-slate-500"
               style={{ gridTemplateColumns: `${LABEL_COL_PX}px repeat(4, minmax(0, 1fr))`, height: 32 }}
             >
-              <span className="pl-4">레인</span>
+              <span className="pl-4">구분</span>
               {windowDef.weeks.map((week) => (
                 <span key={week} className="num truncate pr-2">{week}</span>
               ))}
@@ -396,7 +396,7 @@ export default function MarketEventsTimeline({ loaded, earnings, actions, splits
                       <div className="px-4 py-2">
                         {failed ? (
                           <EmptyState
-                            reason={`${lane.label} 표면을 불러오지 못했습니다`}
+                            reason={`${lane.label} 피드를 불러오지 못했습니다`}
                             nextRefresh="다음 수집 시 자동 복구됩니다"
                             actionLabel="다시 시도"
                             onAction={onRetry}
