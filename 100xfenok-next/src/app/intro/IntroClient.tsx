@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 import {
   fetchMe,
@@ -41,6 +40,7 @@ export default function IntroClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextParam = searchParams?.get("next");
+  const replay = !!searchParams?.get("replay");
   const targetHref = useMemo(
     // Same-origin paths only: one leading slash, never "//host" or backslash tricks.
     () => (nextParam && /^\/(?![\/\\])[^\\]*$/.test(nextParam) ? nextParam : ROUTES.home),
@@ -62,8 +62,13 @@ export default function IntroClient() {
   const [gisFailed, setGisFailed] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
-  // Existing session → straight in.
+  // Browsing without login goes through the browse door, which sets the
+  // session-long cookie so the intro does not come back on every page.
+  const browseHref = (path: string) => `/api/intro/browse?next=${encodeURIComponent(path)}`;
+
+  // Existing session → straight in (unless the owner asked to replay the intro).
   useEffect(() => {
+    if (replay) return;
     let active = true;
     fetchMe()
       .then((res) => {
@@ -73,7 +78,7 @@ export default function IntroClient() {
     return () => {
       active = false;
     };
-  }, [router, targetHref]);
+  }, [router, targetHref, replay]);
 
   // Viewport, motion preference, WebGL, card timing.
   useEffect(() => {
@@ -164,12 +169,12 @@ export default function IntroClient() {
       {/* Stage */}
       {tourOn && screens ? (
         <>
-          <IntroTour screens={screens} narrow={narrow} onReady={() => setSceneReady(true)} onHover={setHovered} onSelect={(s) => router.push(s.href)} />
+          <IntroTour screens={screens} narrow={narrow} onReady={() => setSceneReady(true)} onHover={setHovered} onSelect={(s) => window.location.assign(browseHref(s.href))} />
           <div className="intro-vignette pointer-events-none absolute inset-0 z-[1]" aria-hidden="true" />
           <div className="pointer-events-none absolute inset-0 z-[2]" aria-hidden="true" style={{ background: "var(--intro-bg)", opacity: sceneReady ? 0 : 1, transition: `opacity 900ms ${EASE}` }} />
         </>
       ) : (
-        <IntroFlat screens={screens} failed={screensFailed} onSelect={(s) => router.push(s.href)} onHover={setHovered} />
+        <IntroFlat screens={screens} failed={screensFailed} onSelect={(s) => window.location.assign(browseHref(s.href))} onHover={setHovered} />
       )}
 
       {/* Top bar */}
@@ -180,12 +185,12 @@ export default function IntroClient() {
             Market Radar
           </span>
         </div>
-        <Link href={targetHref} className="pointer-events-auto inline-flex min-h-[44px] items-center gap-1 rounded-full px-3 text-[13px] font-medium transition-colors hover:text-white" style={{ color: "var(--intro-ink-2)" }}>
+        <a href={browseHref(targetHref)} className="pointer-events-auto inline-flex min-h-[44px] items-center gap-1 rounded-full px-3 text-[13px] font-medium transition-colors hover:text-white" style={{ color: "var(--intro-ink-2)" }}>
           둘러보기
           <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
             <path d="M6 3l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-        </Link>
+        </a>
       </header>
 
       {/* Product line + hover readout + login (bottom-left; bottom sheet on phones) */}
@@ -236,9 +241,9 @@ export default function IntroClient() {
             </p>
           ) : null}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <Link href={targetHref} className="inline-flex min-h-[44px] items-center text-[13px] underline underline-offset-4 transition-colors hover:text-white" style={{ color: "var(--intro-ink-3)" }}>
+            <a href={browseHref(targetHref)} className="inline-flex min-h-[44px] items-center text-[13px] underline underline-offset-4 transition-colors hover:text-white" style={{ color: "var(--intro-ink-3)" }}>
               로그인 없이 둘러보기
-            </Link>
+            </a>
           </div>
         </div>
       </section>
