@@ -1,5 +1,5 @@
 {
-  "registry_digest": "77738e5149bcc236274811fd31bde47a6781ae27fceb752b30c1ca51b2ed22db",
+  "registry_digest": "2513529a570db5ae3ee8014811303d408b1ec58a8dcbd1aa2e26b0ddf2e45cfd",
   "registry_schema": "lane-registry/v3",
   "schema_version": "lane-commit-manifest/v1",
   "update_manifest": {
@@ -1776,6 +1776,92 @@
         ],
         "required_on_success": [],
         "success_if_exists": [],
+        "success_verify_not_plan_if_exists": []
+      }
+    },
+    ".github/workflows/pins-autosync.yml": {
+      "exclude": [],
+      "lanes": [],
+      "stages": {
+        "always_if_exists": [],
+        "required_on_success": [],
+        "success_if_exists": [
+          {
+            "kind": "file",
+            "path": "scripts/fixtures/lane-registry/registry.expected.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "scripts/fixtures/derived-asset-registry/registry.expected.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "scripts/fixtures/data_supply/policy_registry/registry.expected.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/lane-commit-manifest.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "scripts/fixtures/update-manifest/materializations.expected.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/lane-registry-projection.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/admin/lane-registry-projection.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "scripts/fixtures/cloud-data-plane/etf-migration-demand.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "scripts/fixtures/cloud-data-plane/global-scouter-migration-demand.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "scripts/fixtures/data_supply/detection_floor/cases.expected.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/data-supply-detection-floor.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "data/admin/fenok-data-health-kpi.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/public/data/admin/fenok-data-health-kpi.json",
+            "required": false
+          },
+          {
+            "kind": "file",
+            "path": "100xfenok-next/scripts/fixtures/ink4-contrast-sites.json",
+            "required": false
+          }
+        ],
         "success_verify_not_plan_if_exists": []
       }
     },
