@@ -330,9 +330,6 @@ assert.deepEqual(
   assert.equal(serialized.includes("MKTCAP"), false, "per-issuer market cap must not appear");
   assert.equal(serialized.includes("_private/"), false, "no private path may leak into the public surface");
 
-  // Owner-grant license wording rides this artifact.
-  assert.match(artifact.license_or_terms_note, /2026-07-19/);
-  assert.match(artifact.license_or_terms_note, /public serving/i);
   assert.equal(artifact.raw_public, false);
 
   fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -402,7 +399,6 @@ assert.deepEqual(
       "excluded_non_kosdaq_rows",
       "generated_at",
       "issuer_count",
-      "license_or_terms_note",
       "market",
       "notes",
       "per_issuer_rows",

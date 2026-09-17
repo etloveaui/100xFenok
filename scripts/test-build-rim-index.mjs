@@ -251,7 +251,6 @@ function makeKrxBridgeFixture(asOf) {
     market: "Korea",
     source: "KRX_OPEN_API",
     raw_public: false,
-    license_or_terms_note: "fixture raw stays private",
     bridge_scope: "stats_and_public_safe_rim_inputs_private_path_refs_no_raw_rows",
     as_of: asOf,
     private_artifacts: {
@@ -262,7 +261,6 @@ function makeKrxBridgeFixture(asOf) {
       generated_at: `${asOf}T15:00:00.000Z`,
       as_of: asOf,
       raw_public: false,
-      license_or_terms_note: "fixture raw stays private",
       status: "ready",
       missing: [],
       kospi_weights: {
@@ -270,7 +268,6 @@ function makeKrxBridgeFixture(asOf) {
         source_field: "derived_rim_inputs.kospi_weights.rows[].weight",
         as_of: asOf,
         raw_public: false,
-        license_or_terms_note: "fixture raw stays private",
         row_count: rows.length,
         total_market_cap: totalMarketCap,
         denominator: {
@@ -297,7 +294,6 @@ function makeKrxBridgeFixture(asOf) {
         source_field: "derived_rim_inputs.korea_10y.value",
         label: "KRX KTS 10Y benchmark government bond yield",
         raw_public: false,
-        license_or_terms_note: "fixture raw stays private",
       },
     },
   });

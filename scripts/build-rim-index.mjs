@@ -868,7 +868,6 @@ function loadKrxBridge(dataRootForReads) {
     as_of: bridge.as_of,
     date_key: dateKey,
     raw_public: bridge.raw_public === true,
-    license_or_terms_note: bridge.license_or_terms_note ?? null,
   };
 }
 
@@ -902,7 +901,6 @@ function loadKrxKospiBridgeWeights(bridgeInfo, generatedAt) {
     source_field: input?.source_field ?? "derived_rim_inputs.kospi_weights.rows[].weight",
     as_of: input?.as_of ?? bridgeInfo.as_of,
     raw_public: input?.raw_public === true,
-    license_or_terms_note: input?.license_or_terms_note ?? bridgeInfo.license_or_terms_note,
     row_count: numberOrNull(input?.row_count) ?? rows.length,
     total_market_cap: numberOrNull(input?.total_market_cap),
     denominator: input?.denominator ?? {
@@ -947,7 +945,6 @@ function loadKrxKospiMarketCapWeights(dataRootForReads, generatedAt) {
     source_field: "OutBlock_1[MKT_NM=KOSPI].MKTCAP / sum(OutBlock_1[MKT_NM=KOSPI].MKTCAP)",
     as_of: bridgeInfo.as_of,
     raw_public: bridgeInfo.raw_public,
-    license_or_terms_note: bridgeInfo.license_or_terms_note,
     row_count: kospiRows.length,
     total_market_cap: totalMktCap,
     denominator: {
@@ -977,7 +974,6 @@ function loadKrxKorea10yBridge(bridgeInfo) {
     source_field: input?.source_field ?? "derived_rim_inputs.korea_10y.value",
     label: input?.label ?? "KRX KTS 10Y benchmark government bond yield",
     raw_public: input?.raw_public === true,
-    license_or_terms_note: input?.license_or_terms_note ?? bridgeInfo.license_or_terms_note,
     derived_bridge_input: true,
   };
 }
@@ -1014,7 +1010,6 @@ function loadKrxKorea10y(dataRootForReads) {
     source_field: `OutBlock_1[ISU_NM=${selected.name},BND_EXP_TP_NM=10,GOVBND_ISU_TP_NM=지표].CLSPRC_YD / 100`,
     label: "KRX KTS 10Y benchmark government bond yield",
     raw_public: bridgeInfo.raw_public,
-    license_or_terms_note: bridgeInfo.license_or_terms_note,
   };
 }
 
@@ -1592,7 +1587,6 @@ function krxKospiWeightDiagnostics(stockActionPayload, krxWeights) {
     source_field: krxWeights.source_field,
     as_of: krxWeights.as_of,
     raw_public: krxWeights.raw_public,
-    license_or_terms_note: krxWeights.license_or_terms_note,
     krx_rows: krxWeights.row_count,
     total_market_cap: krxWeights.total_market_cap,
     denominator: krxWeights.denominator,
@@ -3807,7 +3801,6 @@ function buildSecondaryIndex(indexConfig, context) {
         label: krRiskFree.label ?? "Korea 10Y Government Bond Yield",
       });
       if (typeof krRiskFree.raw_public === "boolean") observed.risk_free_rate.raw_public = krRiskFree.raw_public;
-      if (krRiskFree.license_or_terms_note) observed.risk_free_rate.license_or_terms_note = krRiskFree.license_or_terms_note;
     } else {
       observed.risk_free_rate = blockedValue({
         reason: "KR10Y source is not present in local 100x macro data and no KRX KTS 10Y bridge source was found.",
@@ -4058,7 +4051,7 @@ function buildSecondaryIndex(indexConfig, context) {
               indexDiagnostics: soxWeightDiagnostics(context.stockActionPayload, context.soxWeights),
               notes: [
                 "SOX forecast grid uses Nasdaq GIW official constituents plus methodology-derived stock_action market-cap weights.",
-                "Official GIW weight columns are not available in the public free view; generated weights are not licensed official weights.",
+                "Official GIW weight columns are not available in the public free view; generated weights are methodology-derived.",
                 "SOXX/SOXQ ETF holdings remain diagnostics-only and are not used as top-level SOX RIM weights.",
               ],
             },
