@@ -239,7 +239,8 @@ jobs:
         run: node scripts/check-live-deploy-provenance.mjs --pre
 
       - name: Provision optional Telegram notification secrets to Worker
-        if: ${{ env.DEPLOY_DEFERRED != 'true' && secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != '' }}
+        # The secrets context is not available in step-level if; the shell guard below skips when absent.
+        if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         working-directory: 100xfenok-next
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
