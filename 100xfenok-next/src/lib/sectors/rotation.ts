@@ -11,10 +11,10 @@ export const ROTATION_WINDOWS: ReadonlyArray<{ key: RotationWindow; label: strin
 export type QuadrantId = "run-expensive" | "cheap-recover" | "cheap-weak" | "rich-fade";
 
 export const QUADRANT_LABEL: Record<QuadrantId, string> = {
-  "run-expensive": "달리는·비싼",
-  "cheap-recover": "싸고 회복",
-  "cheap-weak": "싸고 약한",
-  "rich-fade": "비싸고 꺾인",
+  "run-expensive": "강세·고평가",
+  "cheap-recover": "회복·저평가",
+  "cheap-weak": "약세·저평가",
+  "rich-fade": "둔화·고평가",
 };
 
 function finiteNumber(value: unknown): value is number {
