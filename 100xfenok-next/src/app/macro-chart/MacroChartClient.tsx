@@ -33,6 +33,7 @@ import { buildMarketSeries, loadMacroSeries, transformedUnitGroupLabel, unitLabe
 import { stooqSeriesIdFromInput } from "@/lib/macro-chart/stooq";
 import { transformUnitLabel } from "@/lib/macro-chart/transforms";
 import { ROUTES, withQuery } from "@/lib/routes";
+import * as personalStore from "@/lib/personal/personalStore";
 import type { LoadedMacroSeries } from "@/lib/macro-chart/loader";
 import type {
   MacroAggregation,
@@ -591,8 +592,9 @@ function selectedViewOptions(selected: readonly SelectedMacroSeries[]) {
 function safeReadUserPresets(): UserPresetReadResult {
   if (typeof window === "undefined") return { presets: [], persistent: false };
   try {
-    const raw = window.localStorage.getItem(USER_PRESET_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
+    const rawFromStore = personalStore.read<unknown>("macro-presets");
+    const rawLocal = window.localStorage.getItem(USER_PRESET_STORAGE_KEY);
+    const parsed = rawFromStore ?? (rawLocal ? JSON.parse(rawLocal) : []);
     if (!Array.isArray(parsed)) return { presets: [], persistent: false };
     const presets = parsed
       .map((item): UserMacroPreset | null => {
@@ -661,7 +663,8 @@ function safeReadUserPresets(): UserPresetReadResult {
 function writeUserPresets(presets: readonly UserMacroPreset[]) {
   if (typeof window === "undefined") return false;
   try {
-    window.localStorage.setItem(USER_PRESET_STORAGE_KEY, JSON.stringify(presets.slice(0, 8)));
+    const sliced = presets.slice(0, 8);
+    personalStore.write("macro-presets", sliced);
     return true;
   } catch {
     return false;
@@ -1577,6 +1580,15 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
     }, 0);
     return () => window.clearTimeout(timer);
   }, [initialMode]);
+
+  useEffect(() => {
+    const unsub = personalStore.subscribe("macro-presets", () => {
+      const stored = safeReadUserPresets();
+      setUserPresets(stored.presets);
+      setCollectionStorageMode(stored.persistent ? "local" : "session");
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setQuery(queryInput), 180);

@@ -22,13 +22,26 @@ export default function AdoptStorePrompt() {
 
   if (!conflict) return null;
 
-  const isPortfolio = conflict.key === "portfolio";
-  const title = isPortfolio
-    ? "이 기기의 포트폴리오를 계정으로 가져올까요?"
-    : "이 기기의 관심종목을 계정으로 가져올까요?";
-  const description = isPortfolio
-    ? "현재 기기에 보관된 포트폴리오와 계정에 저장된 포트폴리오 내용이 다릅니다. 이 기기의 데이터를 계정에 동기화하시겠습니까?"
-    : "현재 기기에 보관된 관심종목과 계정에 저장된 관심종목 내용이 다릅니다. 이 기기의 데이터를 계정에 동기화하시겠습니까?";
+  const itemsList =
+    conflict.items && conflict.items.length > 0
+      ? conflict.items.join(" · ")
+      : conflict.key === "portfolio"
+        ? "포트폴리오"
+        : conflict.key === "watchlist"
+          ? "관심종목"
+          : conflict.key === "ib"
+            ? "무한매수 기록"
+            : "매크로 프리셋";
+
+  const isSingle = !conflict.items || conflict.items.length <= 1;
+  const title =
+    isSingle && conflict.key === "portfolio"
+      ? "이 기기의 포트폴리오를 계정으로 가져올까요?"
+      : isSingle && conflict.key === "watchlist"
+        ? "이 기기의 관심종목을 계정으로 가져올까요?"
+        : `이 기기의 ${itemsList} 데이터를 계정으로 가져올까요?`;
+
+  const description = `현재 기기에 보관된 ${itemsList} 데이터와 계정에 저장된 내용이 다릅니다. 이 기기의 데이터를 계정에 동기화하시겠습니까?`;
 
   const handleChoice = async (choice: "adopt_local" | "keep_account") => {
     if (busy) return;

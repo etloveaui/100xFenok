@@ -7,11 +7,14 @@ export const revalidate = false;
 
 const NO_STORE_HEADERS = { "Cache-Control": "no-store" };
 
-export const ALLOWED_STORE_KEYS = ["portfolio", "watchlist"] as const;
-export type AllowedStoreKey = (typeof ALLOWED_STORE_KEYS)[number];
+export const ALLOWED_STORE_KEYS = ["portfolio", "watchlist", "ib", "macro-presets"] as const;
+export type AllowedStoreKey = (typeof ALLOWED_STORE_KEYS)[number] | `ib:${string}`;
 
 export function isAllowedStoreKey(key: string): key is AllowedStoreKey {
-  return (ALLOWED_STORE_KEYS as readonly string[]).includes(key);
+  if ((ALLOWED_STORE_KEYS as readonly string[]).includes(key)) {
+    return true;
+  }
+  return key.startsWith("ib:") && /^ib:[A-Za-z0-9._-]+$/.test(key);
 }
 
 export const MAX_STORE_SIZE_BYTES = 256 * 1024; // 256 KB
@@ -29,7 +32,7 @@ export async function GET(request: Request, context: RouteContext) {
   const key = await resolveKey(context);
   if (!isAllowedStoreKey(key)) {
     return NextResponse.json(
-      { ok: false, error: `Invalid store key: ${key}. Allowed keys: ${ALLOWED_STORE_KEYS.join(", ")}` },
+      { ok: false, error: `Invalid store key: ${key}. Allowed keys: ${ALLOWED_STORE_KEYS.join(", ")}, ib:<profileId>` },
       { status: 400, headers: NO_STORE_HEADERS },
     );
   }
@@ -66,7 +69,7 @@ export async function PUT(request: Request, context: RouteContext) {
   const key = await resolveKey(context);
   if (!isAllowedStoreKey(key)) {
     return NextResponse.json(
-      { ok: false, error: `Invalid store key: ${key}. Allowed keys: ${ALLOWED_STORE_KEYS.join(", ")}` },
+      { ok: false, error: `Invalid store key: ${key}. Allowed keys: ${ALLOWED_STORE_KEYS.join(", ")}, ib:<profileId>` },
       { status: 400, headers: NO_STORE_HEADERS },
     );
   }
