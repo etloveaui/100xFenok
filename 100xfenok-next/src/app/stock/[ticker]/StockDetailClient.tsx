@@ -842,14 +842,6 @@ function FinancialSnapshotRail({
           <Stat key={metric.label} label={metric.label} value={metric.value} sub={metric.note} />
         ))}
       </div>
-      <EvidenceRail
-        freshness={data ? "fresh" : "stale"}
-        source="재무제표"
-        asOf={fetchedAsOf}
-        coverage="TTM"
-        next={data ? undefined : "다음 갱신 시"}
-        skeletonDelayMs={120}
-      />
     </Panel>
   );
 }
@@ -2675,6 +2667,7 @@ function FenokEdgeSectionCp({ record }: { record: FenokSignalsSummaryRecord | nu
         source="FENOK 신호"
         asOf={asOfLabel ?? "—"}
         coverage={isFiniteNumber(coverage) ? formatCoverageRatio(coverage) : "커버리지 미확인"}
+        hideRail
       />
     </section>
   );
@@ -3296,6 +3289,7 @@ export default function StockDetailClient({
             <aside className="cp-stock-right-rail" aria-label={`${symbol} 우측 요약`}>
               <SharedValuationBandPanel
                 band={valuationBandSummary}
+                hideRail
                 weak={[fenokSignalLens?.profitabilityScore, fenokSignalLens?.growthScore, fenokSignalLens?.longTermScore].some((score) => isFiniteNumber(score) && score < 45)}
                 pending={detailLoading}
                 source={valuationBandSummary?.source ?? "PER 밴드"}
@@ -3306,6 +3300,14 @@ export default function StockDetailClient({
             </aside>
           </div>
           <FenokEdgeSectionCp record={fenokSignalLens} symbol={symbol} />
+          <div data-stock-sources>
+            <EvidenceRail
+              freshness={headerFreshness}
+              source={`가격 데이터 · FENOK 신호 · ${valuationBandSummary?.source ?? "PER 밴드"} · 재무제표`}
+              asOf={typeof marketFactsSourceAsOf === "string" ? marketFactsSourceAsOf : "—"}
+              coverage={`${stockChartRange} 차트 · 신호 ${formatCoverageRatio(fenokSignalLens?.lensCoverageRatio ?? fenokSignalLens?.coverageRatio)} · TTM 재무`}
+            />
+          </div>
           </>
         ) : (
           <div

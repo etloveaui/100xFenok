@@ -85,6 +85,7 @@ export function SharedEdgePanel({
   asOf = "—",
   coverage = "—",
   hero,
+  hideRail = false,
 }: {
   title: string;
   eyebrow?: string;
@@ -103,6 +104,8 @@ export function SharedEdgePanel({
   coverage?: string;
   /** 88px EdgeMark hero per Signature (Stock); its ring is the only score, so surfaces without a hero keep the 22px compact row instead */
   hero?: Array<{ label: string; score: number | null }>;
+  /** ⑩b strip-flood: true면 하단 EvidenceRail을 생략(집계 출처행이 있는 화면에서 사용) */
+  hideRail?: boolean;
 }) {
   const hasRows = [...shortRows, ...longRows].some((row) => row.score !== null);
   const renderRows = (rows: SharedEdgeAxisRow[]) =>
@@ -160,14 +163,16 @@ export function SharedEdgePanel({
           {renderRows(longRows)}
         </div>
       ) : null}
-      <EvidenceRail
-        freshness={pending ? "pending" : hasRows ? "fresh" : "stale"}
-        source={source}
-        asOf={asOf}
-        coverage={coverage}
-        next={hasRows || pending ? undefined : "다음 갱신 시"}
-        skeletonDelayMs={120}
-      />
+      {hideRail ? null : (
+        <EvidenceRail
+          freshness={pending ? "pending" : hasRows ? "fresh" : "stale"}
+          source={source}
+          asOf={asOf}
+          coverage={coverage}
+          next={hasRows || pending ? undefined : "다음 갱신 시"}
+          skeletonDelayMs={120}
+        />
+      )}
     </Panel>
   );
 }
@@ -215,6 +220,7 @@ export function SharedValuationBandPanel({
   source = "8Y PER band",
   asOf = "—",
   coverage = "—",
+  hideRail = false,
 }: {
   band: SharedValuationBand | null;
   weak?: boolean;
@@ -222,20 +228,24 @@ export function SharedValuationBandPanel({
   source?: string;
   asOf?: string;
   coverage?: string;
+  /** ⑩b strip-flood: true면 하단 EvidenceRail을 생략(집계 출처행이 있는 화면에서 사용) */
+  hideRail?: boolean;
 }) {
   if (pending || !band) {
     return (
       <Panel loading={pending}>
         <PanelHeader eyebrow="Valuation Band" title="밸류에이션 밴드" />
         {!pending ? <p className="px-4 py-3 text-[12px] text-[var(--c-ink-3)]">밴드 데이터를 아직 확인하지 못했습니다.</p> : null}
-        <EvidenceRail
-          freshness={pending ? "pending" : "stale"}
-          source={source}
-          asOf={asOf}
-          coverage={coverage}
-          next={pending ? undefined : "다음 갱신 시"}
-          skeletonDelayMs={120}
-        />
+        {hideRail ? null : (
+          <EvidenceRail
+            freshness={pending ? "pending" : "stale"}
+            source={source}
+            asOf={asOf}
+            coverage={coverage}
+            next={pending ? undefined : "다음 갱신 시"}
+            skeletonDelayMs={120}
+          />
+        )}
       </Panel>
     );
   }
@@ -277,7 +287,9 @@ export function SharedValuationBandPanel({
           {tone.label} · 현재 PER {band.current.toFixed(1)}x · {tone.detail}
         </p>
       </div>
-      <EvidenceRail freshness="fresh" source={source} asOf={asOf} coverage={coverage} skeletonDelayMs={120} />
+      {hideRail ? null : (
+        <EvidenceRail freshness="fresh" source={source} asOf={asOf} coverage={coverage} skeletonDelayMs={120} />
+      )}
     </Panel>
   );
 }

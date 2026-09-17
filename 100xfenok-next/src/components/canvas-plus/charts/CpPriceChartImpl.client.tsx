@@ -23,7 +23,7 @@ import {
   lwLineSeriesOptions,
   lwVolumeSeriesOptions,
 } from "@/lib/chart-theme";
-import { EmptyState, EvidenceRail, Panel, PanelHeader, Row, Stat, StatStrip, useDelayedLoading } from "@/components/ui";
+import { EmptyState, Panel, PanelHeader, Row, Stat, StatStrip, useDelayedLoading } from "@/components/ui";
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -276,7 +276,6 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
           <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label="최근 거래일 저가" value={formatCurrency(isFiniteNumber(latest?.low) ? latest.low : null, currency)} /></div>
           <div className="min-w-[46%] flex-1 sm:min-w-[30%]"><Stat label="최근 거래일 거래량" value={formatVolume(isFiniteNumber(latest?.volume) ? latest.volume : null)} sub={`10일 평균 ${formatVolume(stats.averageVolume)}`} /></div>
         </StatStrip>
-        <EvidenceRail freshness={loadError && stats.sortedCount < 2 ? "error" : pending && stats.sortedCount < 2 ? "pending" : stats.sortedCount >= 2 ? "fresh" : "stale"} source="가격 데이터" asOf={formatDateLabel(latest?.time)} coverage={`${range} 위치 요약`} next={stats.sortedCount >= 2 ? undefined : "차트 데이터 확보 시"} onRetry={onRetry} skeletonDelayMs={120} />
       </Panel>
 
       <Panel>
@@ -292,15 +291,6 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
             volumeTone="muted"
           />
         </div>
-        <EvidenceRail
-          freshness={loadError && stats.sortedCount < 2 ? "error" : pending && stats.sortedCount < 2 ? "pending" : stats.sortedCount >= 2 ? "fresh" : "stale"}
-          source="가격 데이터"
-          asOf={formatDateLabel(latest?.time)}
-          coverage={`${range} 가격·거래량`}
-          next={stats.sortedCount >= 2 ? undefined : "차트 데이터 확보 시"}
-          onRetry={onRetry}
-          skeletonDelayMs={120}
-        />
       </Panel>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -330,7 +320,6 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
               </tbody>
             </table>
           </div>
-          <EvidenceRail freshness={loadError && stats.sortedCount < 2 ? "error" : pending && stats.sortedCount < 2 ? "pending" : stats.sortedCount >= 2 ? "fresh" : "stale"} source="가격 데이터" asOf={formatDateLabel(latest?.time)} coverage="최근 거래일" next={stats.sortedCount >= 2 ? undefined : "차트 데이터 확보 시"} onRetry={onRetry} skeletonDelayMs={120} />
         </Panel>
 
         <Panel>
@@ -363,7 +352,6 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
               </tbody>
             </table>
           </div>
-          <EvidenceRail freshness={loadError && stats.monthlyRows.length === 0 ? "error" : pending && stats.monthlyRows.length === 0 ? "pending" : stats.monthlyRows.length > 0 ? "fresh" : "stale"} source="가격 데이터" asOf={formatDateLabel(latest?.time)} coverage={`월봉 ${stats.monthlyRows.length}개월`} next={stats.monthlyRows.length > 0 ? undefined : "월봉 데이터 확보 시"} onRetry={onRetry} skeletonDelayMs={120} />
         </Panel>
       </div>
 
@@ -379,7 +367,6 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
                   <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{row.returnPct < 0 ? "▼ " : "▲ "}{formatSignedPercent(row.returnPct, 1, "percent")}</span>
                 </Row>
               ))}
-              <EvidenceRail freshness={loadError ? "error" : pending ? "pending" : "fresh"} source="가격 데이터" asOf={formatDateLabel(latest?.time)} coverage={`연도별 ${annualRows.length}년`} onRetry={onRetry} skeletonDelayMs={120} />
             </Panel>
           ) : null}
 
@@ -393,7 +380,6 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
                   <span className="text-right text-[12px] font-semibold tabular-nums text-slate-900">{row.returnPct < 0 ? "▼ " : "▲ "}{formatSignedPercent(row.returnPct, 1, "percent")}</span>
                 </Row>
               ))}
-              <EvidenceRail freshness={loadError ? "error" : pending ? "pending" : "fresh"} source="가격 데이터" asOf={formatDateLabel(latest?.time)} coverage={`지수 대비 ${indexRows.length}건`} onRetry={onRetry} skeletonDelayMs={120} />
             </Panel>
           ) : null}
 
