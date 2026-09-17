@@ -18,6 +18,15 @@ import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
 } from "@/lib/server/admin-session";
+import { ROUTES } from "@/lib/routes";
+import {
+  gateMode,
+  isAlwaysOpenPath,
+  isGated,
+  verifyRequestToken,
+} from "@/lib/server/closed-site";
+import { resolveCurrentSession } from "@/lib/server/authSession";
+
 
 const BLOCKED_AI_BOT_PATTERNS = [
   /\bClaudeBot\b/i,
@@ -420,6 +429,15 @@ function getAdminGateRedirect(request: NextRequest): NextResponse {
   return withNoindexHeader(NextResponse.redirect(targetUrl));
 }
 
+function getClosedSiteRedirect(request: NextRequest): NextResponse {
+  const { pathname, search } = request.nextUrl;
+  const targetUrl = request.nextUrl.clone();
+  targetUrl.pathname = ROUTES.intro;
+  targetUrl.search = "";
+  targetUrl.searchParams.set("next", `${pathname}${search}`);
+  return withNoindexHeader(NextResponse.redirect(targetUrl, 302));
+}
+
 function normalizeAdminLegacyPath(pathname: string): string | null {
   if (!pathname.startsWith("/admin/") || !pathname.endsWith(".html")) {
     return null;
@@ -467,6 +485,45 @@ export async function middleware(request: NextRequest) {
 
   if (!(await passesRateLimit(request))) {
     return rateLimitResponse();
+  }
+
+  if (!isAlwaysOpenPath(pathname)) {
+    let env: unknown;
+    try {
+      const ctx = await getCloudflareContext({ async: true });
+      env = ctx.env;
+    } catch {
+      // Not in Cloudflare runtime (Node / unit test)
+    }
+
+    const mode = gateMode(env);
+    if (isGated(request, mode)) {
+      const verifyToken = (env as Record<string, unknown> | undefined)?.FENOK_VERIFY_TOKEN as
+        | string
+        | undefined;
+      const isVerifyValid = await verifyRequestToken(request, verifyToken);
+      if (!isVerifyValid) {
+        let session = null;
+        try {
+          session = await resolveCurrentSession(request, env);
+        } catch {
+          session = null;
+        }
+        if (!session) {
+          if (pathname.startsWith("/api/")) {
+            return new NextResponse(JSON.stringify({ ok: false, error: "login required" }), {
+              status: 401,
+              headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "no-store",
+                "X-Robots-Tag": NOINDEX_HEADER_VALUE,
+              },
+            });
+          }
+          return getClosedSiteRedirect(request);
+        }
+      }
+    }
   }
 
   // Ahead of any bridge response: a safe, known-missing post must leave with

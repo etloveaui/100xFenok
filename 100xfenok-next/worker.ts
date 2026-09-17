@@ -24,6 +24,12 @@ import {
   type UserRegistryEntry,
   type UserRegistryStats,
 } from "./src/lib/server/userRegistry";
+import {
+  gateMode,
+  isGated,
+  verifyRequestToken,
+} from "./src/lib/server/closed-site";
+import { resolveCurrentSession } from "./src/lib/server/authSession";
 
 const worker = {
   async fetch(request: Request, env: unknown, ctx: unknown) {
@@ -42,6 +48,33 @@ const worker = {
     // Next middleware and rate limits never see it and it cannot be cached.
     const routed = await handleCloudDataPlaneRequest(request, env);
     if (routed) return routed;
+
+    const mode = gateMode(env);
+    if (isGated(request, mode)) {
+      if (url.pathname.startsWith("/data/") || url.pathname.startsWith("/api/data/")) {
+        const verifyToken = (env as Record<string, unknown> | undefined)?.FENOK_VERIFY_TOKEN as
+          | string
+          | undefined;
+        const hasVerify = await verifyRequestToken(request, verifyToken);
+        if (!hasVerify) {
+          let session = null;
+          try {
+            session = await resolveCurrentSession(request, env);
+          } catch {
+            session = null;
+          }
+          if (!session) {
+            return new Response(JSON.stringify({ ok: false, error: "login required" }), {
+              status: 401,
+              headers: {
+                "Content-Type": "application/json",
+                "Cache-Control": "no-store",
+              },
+            });
+          }
+        }
+      }
+    }
 
     const assets = (env as { ASSETS?: { fetch: (request: Request) => Promise<Response> } })?.ASSETS;
 
