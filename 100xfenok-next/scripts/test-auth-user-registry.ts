@@ -266,48 +266,66 @@ test("API routes enforce blocked status and handle admin actions", async () => {
     assert.equal(loginBlockedRes.status, 403);
 
     // 7. Admin API /api/admin/users
-    // Unauthenticated -> 401
-    const unauthReq = new Request("http://localhost/api/admin/users");
-    const unauthRes = await adminUsersGetHandler(unauthReq);
-    assert.equal(unauthRes.status, 401);
+    const prevNodeEnv = process.env.NODE_ENV;
+    const prevSecret = process.env.NEXT_ADMIN_SESSION_SECRET;
+    process.env.NODE_ENV = "production";
+    process.env.NEXT_ADMIN_SESSION_SECRET = "test-admin-secret-for-user-registry-verification";
 
-    // Admin authenticated GET
-    const adminToken = await createAdminSessionToken("admin-sub");
-    const adminGetReq = new Request("http://localhost/api/admin/users", {
-      headers: {
-        Cookie: `${ADMIN_SESSION_COOKIE}=${adminToken}`,
-      },
-    });
-    const adminGetRes = await adminUsersGetHandler(adminGetReq);
-    assert.equal(adminGetRes.status, 200);
-    const adminGetData = (await adminGetRes.json()) as { ok: boolean; stats: { total: number }; users: unknown[] };
-    assert.equal(adminGetData.ok, true);
-    assert.equal(adminGetData.stats.total, 1);
+    try {
+      // Unauthenticated -> 401
+      const unauthReq = new Request("http://localhost/api/admin/users");
+      const unauthRes = await adminUsersGetHandler(unauthReq);
+      assert.equal(unauthRes.status, 401);
 
-    // Test unblock via admin POST
-    const unblockReq = new Request("http://localhost/api/admin/users", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `${ADMIN_SESSION_COOKIE}=${adminToken}`,
-      },
-      body: JSON.stringify({ action: "unblock", sub: "sub-allowed" }),
-    });
-    const unblockRes = await adminUsersPostHandler(unblockReq);
-    assert.equal(unblockRes.status, 200);
-    assert.equal(await registry.isBlocked("sub-allowed"), false);
+      // Admin authenticated GET
+      const adminToken = await createAdminSessionToken();
+      const adminGetReq = new Request("http://localhost/api/admin/users", {
+        headers: {
+          Cookie: `${ADMIN_SESSION_COOKIE}=${adminToken}`,
+        },
+      });
+      const adminGetRes = await adminUsersGetHandler(adminGetReq);
+      assert.equal(adminGetRes.status, 200);
+      const adminGetData = (await adminGetRes.json()) as { ok: boolean; stats: { total: number }; users: unknown[] };
+      assert.equal(adminGetData.ok, true);
+      assert.equal(adminGetData.stats.total, 1);
 
-    // Test revokeAll via admin POST
-    const revokeReq = new Request("http://localhost/api/admin/users", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `${ADMIN_SESSION_COOKIE}=${adminToken}`,
-      },
-      body: JSON.stringify({ action: "revokeAll", sub: "sub-allowed" }),
-    });
-    const revokeRes = await adminUsersPostHandler(revokeReq);
-    assert.equal(revokeRes.status, 200);
+      // Test unblock via admin POST
+      const unblockReq = new Request("http://localhost/api/admin/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `${ADMIN_SESSION_COOKIE}=${adminToken}`,
+        },
+        body: JSON.stringify({ action: "unblock", sub: "sub-allowed" }),
+      });
+      const unblockRes = await adminUsersPostHandler(unblockReq);
+      assert.equal(unblockRes.status, 200);
+      assert.equal(await registry.isBlocked("sub-allowed"), false);
+
+      // Test revokeAll via admin POST
+      const revokeReq = new Request("http://localhost/api/admin/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `${ADMIN_SESSION_COOKIE}=${adminToken}`,
+        },
+        body: JSON.stringify({ action: "revokeAll", sub: "sub-allowed" }),
+      });
+      const revokeRes = await adminUsersPostHandler(revokeReq);
+      assert.equal(revokeRes.status, 200);
+    } finally {
+      if (prevNodeEnv !== undefined) {
+        process.env.NODE_ENV = prevNodeEnv;
+      } else {
+        delete process.env.NODE_ENV;
+      }
+      if (prevSecret !== undefined) {
+        process.env.NEXT_ADMIN_SESSION_SECRET = prevSecret;
+      } else {
+        delete process.env.NEXT_ADMIN_SESSION_SECRET;
+      }
+    }
 
     // Session is now dead -> 401 on /api/user/me
     const meAfterRevoke = await meHandler(meReq);
