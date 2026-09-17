@@ -22,6 +22,11 @@ export interface UserSettings {
   [key: string]: unknown;
 }
 
+export interface StoredPersonalData {
+  value: unknown;
+  updatedAt: number;
+}
+
 export interface UserStoreApi {
   getProfile(): Promise<UserProfile | null>;
   saveProfile(profile: Omit<UserProfile, "createdAt" | "updatedAt">): Promise<UserProfile>;
@@ -32,6 +37,8 @@ export interface UserStoreApi {
   listTokens(): Promise<StoredToken[]>;
   getSettings(): Promise<UserSettings>;
   updateSettings(settings: Partial<UserSettings>): Promise<UserSettings>;
+  getStoreData(key: string): Promise<StoredPersonalData | null>;
+  setStoreData(key: string, value: unknown, updatedAt?: number): Promise<StoredPersonalData>;
 }
 
 export const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -149,6 +156,19 @@ export class UserStoreCore implements UserStoreApi {
     const merged = { ...existing, ...settings };
     await this.storage.put(SETTINGS_KEY, merged);
     return merged;
+  }
+
+  async getStoreData(key: string): Promise<StoredPersonalData | null> {
+    return (await this.storage.get<StoredPersonalData>(`store:${key}`)) ?? null;
+  }
+
+  async setStoreData(key: string, value: unknown, updatedAt?: number): Promise<StoredPersonalData> {
+    const data: StoredPersonalData = {
+      value,
+      updatedAt: updatedAt ?? Date.now(),
+    };
+    await this.storage.put(`store:${key}`, data);
+    return data;
   }
 }
 

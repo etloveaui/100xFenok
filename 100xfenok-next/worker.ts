@@ -15,6 +15,7 @@ import {
   UserStoreCore,
   type UserProfile,
   type UserSettings,
+  type StoredPersonalData,
 } from "./src/lib/server/userStore";
 import {
   UserRegistryCore,
@@ -162,6 +163,14 @@ export class UserStore extends DurableObject {
     return this.core.updateSettings(settings);
   }
 
+  async getStoreData(key: string): Promise<StoredPersonalData | null> {
+    return this.core.getStoreData(key);
+  }
+
+  async setStoreData(key: string, value: unknown, updatedAt?: number): Promise<StoredPersonalData> {
+    return this.core.setStoreData(key, value, updatedAt);
+  }
+
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const action = url.pathname.replace(/^\//, "");
@@ -201,6 +210,17 @@ export class UserStore extends DurableObject {
       const body = (await request.json()) as Partial<UserSettings>;
       const settings = await this.updateSettings(body);
       return Response.json({ ok: true, settings });
+    }
+    if (request.method === "GET" && action.startsWith("store/")) {
+      const key = action.slice("store/".length);
+      const data = await this.getStoreData(key);
+      return Response.json({ ok: true, data });
+    }
+    if (request.method === "POST" && action.startsWith("store/")) {
+      const key = action.slice("store/".length);
+      const body = (await request.json()) as { value: unknown; updatedAt?: number };
+      const data = await this.setStoreData(key, body.value, body.updatedAt);
+      return Response.json({ ok: true, data });
     }
     return new Response("Not found", { status: 404 });
   }
