@@ -118,7 +118,11 @@ export default function IntroClient() {
       .then((data: ScreensIndex | TourScreen[] | null) => {
         if (!active) return;
         const list = Array.isArray(data) ? data : data?.screens;
-        const ok = (list ?? []).filter(isScreen).filter((s) => s.file);
+        // index.json carries bare file names; textures and images need the served path.
+        const ok = (list ?? [])
+          .filter(isScreen)
+          .filter((s) => s.file)
+          .map((s) => ({ ...s, file: s.file.includes("/") ? s.file : `${ROUTES.intro}/screens/${s.file}` }));
         if (ok.length) setScreens(ok);
         else setScreensFailed(true);
       })
