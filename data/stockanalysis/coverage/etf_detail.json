@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-09-16T23:41:46Z",
+  "generated_at": "2026-09-17T01:58:25Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,7 +17,7 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5600,
+    "candidate_total": 5608,
     "source_breakdown": {
       "etf_universe": 5597,
       "etf_screener": 20,
@@ -25,13 +25,13 @@
     },
     "detail_files": 5605,
     "covered_detail_files": 5444,
-    "missing_detail_files": 156,
+    "missing_detail_files": 164,
     "extra_detail_files": 161,
     "stockanalysis_detail_files": 5605,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 97.21,
-    "primary_stockanalysis_pct": 97.21,
+    "coverage_pct": 97.08,
+    "primary_stockanalysis_pct": 97.08,
     "missing_by_source": {
       "etf_universe": 153,
       "etf_screener": 0,
@@ -39,15 +39,15 @@
     },
     "missing_status_breakdown": {
       "provider_gap_reprobe_due": 1,
-      "untracked": 155
+      "untracked": 163
     },
     "missing_failure_breakdown": {
       "provider_coverage_gap": 1,
-      "untracked": 155
+      "untracked": 163
     },
     "missing_availability_breakdown": {
       "provider_absent": 1,
-      "unprobed": 155
+      "unprobed": 163
     },
     "pending_tracked": 484,
     "pending_cooldown": 0,
@@ -56,15 +56,15 @@
   },
   "missing_reason_summary": {
     "provider_coverage_gap": 1,
-    "untracked": 155
+    "untracked": 163
   },
   "missing_status_summary": {
     "provider_gap_reprobe_due": 1,
-    "untracked": 155
+    "untracked": 163
   },
   "missing_availability_summary": {
     "provider_absent": 1,
-    "unprobed": 155
+    "unprobed": 163
   },
   "missing_reason_samples": {
     "provider_coverage_gap": [
@@ -156,10 +156,12 @@
     "COOL",
     "CRAM",
     "CROB",
+    "CTSE",
     "DACL",
     "DEPW",
     "DIVH",
     "DSPC",
+    "EMSE",
     "FIXX",
     "FLEL",
     "FRUT",
@@ -181,6 +183,7 @@
     "HXE",
     "HXF",
     "IACL",
+    "IDSE",
     "JLVP",
     "JULV",
     "KAIT",
@@ -192,6 +195,7 @@
     "LBOX",
     "LITG",
     "LOFD",
+    "LPSV",
     "LSCP",
     "LWLX",
     "LYTE",
@@ -234,12 +238,16 @@
     "PSOX",
     "QAU",
     "QQAU",
+    "QQSE",
+    "QSE",
     "RAMZ",
     "REIX",
     "RJCA",
     "ROBX",
+    "SALI",
     "SCAU",
     "SDUR",
+    "SEPC",
     "SEPQ",
     "SITX",
     "SKHA",
@@ -483,10 +491,12 @@
       "COOL",
       "CRAM",
       "CROB",
+      "CTSE",
       "DACL",
       "DEPW",
       "DIVH",
       "DSPC",
+      "EMSE",
       "FIXX",
       "FLEL",
       "FRUT",
@@ -498,9 +508,7 @@
       "GEMQ",
       "GOIB",
       "HAWG",
-      "HBIL",
-      "HBIT",
-      "HIAI"
+      "HBIL"
     ],
     "missing_provider_gap_reprobe_due": [
       "DACL"
