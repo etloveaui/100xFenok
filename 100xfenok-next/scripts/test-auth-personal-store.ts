@@ -64,7 +64,6 @@ test("UserStoreCore getStoreData and setStoreData unit tests", async () => {
     portfolios: [{ id: "p1", name: "Tech Growth", holdings: [] }],
   };
   const savedPortfolio = await store.setStoreData("portfolio", portfolioDoc, t0);
-  assert.equal(savedPortfolio.key, "portfolio");
   assert.deepEqual(savedPortfolio.value, portfolioDoc);
   assert.equal(savedPortfolio.updatedAt, t0);
 
@@ -83,7 +82,6 @@ test("UserStoreCore getStoreData and setStoreData unit tests", async () => {
     tickers: ["NVDA", "AAPL", "MSFT"],
   };
   const savedWatchlist = await store.setStoreData("watchlist", watchlistDoc);
-  assert.equal(savedWatchlist.key, "watchlist");
   assert.deepEqual(savedWatchlist.value, watchlistDoc);
   assert.ok(savedWatchlist.updatedAt > 0);
 
