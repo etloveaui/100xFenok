@@ -46,14 +46,19 @@ interface SparklineStats {
   asOf: string;
 }
 
-function extractSparklineAndStats(yfJson: any, symbol: string, ticker: string): SparklineStats | null {
+function extractSparklineAndStats(
+  yfJson: any,
+  symbol: string,
+  ticker: string,
+  sliceCount = 21,
+): SparklineStats | null {
   if (!yfJson || !yfJson.data) return null;
   const history = yfJson.data.history_1y;
   if (!Array.isArray(history) || history.length === 0) return null;
 
   const points = history
     .filter((row: any) => typeof row.date === "string" && typeof row.Close === "number" && Number.isFinite(row.Close))
-    .slice(-21);
+    .slice(-sliceCount);
 
   if (points.length === 0) return null;
   const sparkline = points.map((p: any) => Math.round(p.Close * 100) / 100);
@@ -119,23 +124,23 @@ function buildPeBand(points: any[] | undefined, latest: number | null) {
 export function buildIntroFeed() {
   const sourceDates: string[] = [];
 
-  // 1. S&P 500 (SPY)
+  // 1. S&P 500 (SPY): last 63 closes (~3 months sparkline per feed shape addendum)
   const spyJson = findJsonFile([
     "public/data/yf/finance/SPY.json",
     "../data/admin/yahoo-batch-quote-history/lkg/SPY.json",
   ]);
-  const spyStats = extractSparklineAndStats(spyJson, "S&P 500", "SPY");
+  const spyStats = extractSparklineAndStats(spyJson, "S&P 500", "SPY", 63);
   if (spyStats?.asOf) sourceDates.push(spyStats.asOf);
 
-  // 2. NASDAQ (QQQ)
+  // 2. NASDAQ (QQQ): last 63 closes (~3 months sparkline per feed shape addendum)
   const qqqJson = findJsonFile([
     "public/data/yf/finance/QQQ.json",
     "../data/admin/yahoo-batch-quote-history/lkg/QQQ.json",
   ]);
-  const qqqStats = extractSparklineAndStats(qqqJson, "NASDAQ", "QQQ");
+  const qqqStats = extractSparklineAndStats(qqqJson, "NASDAQ", "QQQ", 63);
   if (qqqStats?.asOf) sourceDates.push(qqqStats.asOf);
 
-  // 3. KOSPI from KRX index dataset
+  // 3. KOSPI from KRX index dataset (per-index asOf included)
   let kospiStats: SparklineStats | null = null;
   const krxJson = findJsonFile([
     "public/data/computed/fenok-edge-korea-krx-index-daily.json",
@@ -161,7 +166,7 @@ export function buildIntroFeed() {
     }
   }
 
-  // 4. 11 Sector Breadth Bars
+  // 4. 11 Sector Breadth Bars (last 21 trading days)
   const breadthSectors: Array<{ symbol: string; name: string; changePercent: number; isUp: boolean }> = [];
   let breadthMissing = 0;
 
@@ -170,7 +175,7 @@ export function buildIntroFeed() {
       `public/data/yf/finance/${sec.etf}.json`,
       `../data/admin/yahoo-batch-quote-history/lkg/${sec.etf}.json`,
     ]);
-    const secStats = extractSparklineAndStats(secJson, sec.name, sec.etf);
+    const secStats = extractSparklineAndStats(secJson, sec.name, sec.etf, 21);
     if (!secStats) {
       breadthMissing += 1;
       continue;
@@ -188,7 +193,8 @@ export function buildIntroFeed() {
   const downCount = breadthSectors.length - upCount;
   const ratio = breadthSectors.length > 0 ? Math.round((upCount / breadthSectors.length) * 100) / 100 : 0;
 
-  // 5. Rotation computed using canonical benchmarks, us_sectors & etfs index
+  // 5. Rotation computed from benchmarks & us_sectors & etfs index
+  // If us_sectors.json or summaries.json is absent at build, emit rotation: null and log it
   const usSectors = findJsonFile([
     "public/data/benchmarks/us_sectors.json",
     "../data/benchmarks/us_sectors.json",
@@ -202,63 +208,77 @@ export function buildIntroFeed() {
     "../data/global-scouter/etfs/index.json",
   ]);
 
-  if (usSectors?.metadata?.version) sourceDates.push(usSectors.metadata.version);
-  if (summaries?.metadata?.version) sourceDates.push(summaries.metadata.version);
+  let rotationPayload: any = null;
 
-  const rows: SectorRow[] = SECTOR_DEFINITIONS.map((sector) => {
-    const valData = usSectors?.sections?.[sector.key]?.data;
-    const valLatest = Array.isArray(valData) && valData.length > 0 ? valData[valData.length - 1] : null;
-    const pe = typeof valLatest?.best_pe_ratio === "number" ? valLatest.best_pe_ratio : null;
-    const peBand = buildPeBand(valData, pe);
+  if (!usSectors || !summaries) {
+    console.warn("[intro-feed] us_sectors or summaries absent at build time -> emitting rotation: null");
+  } else {
+    if (usSectors?.metadata?.version) sourceDates.push(usSectors.metadata.version);
+    if (summaries?.metadata?.version) sourceDates.push(summaries.metadata.version);
 
-    const rawMomentum = summaries?.momentum?.[sector.key];
-    const momentum = {
-      "1w": typeof rawMomentum?.["1w"] === "number" ? rawMomentum["1w"] : null,
-      "1m": typeof rawMomentum?.["1m"] === "number" ? rawMomentum["1m"] : null,
-      "3m": typeof rawMomentum?.["3m"] === "number" ? rawMomentum["3m"] : null,
+    const rows: SectorRow[] = SECTOR_DEFINITIONS.map((sector) => {
+      const valData = usSectors?.sections?.[sector.key]?.data;
+      const valLatest = Array.isArray(valData) && valData.length > 0 ? valData[valData.length - 1] : null;
+      const pe = typeof valLatest?.best_pe_ratio === "number" ? valLatest.best_pe_ratio : null;
+      const peBand = buildPeBand(valData, pe);
+
+      const rawMomentum = summaries?.momentum?.[sector.key];
+      const momentum = {
+        "1w": typeof rawMomentum?.["1w"] === "number" ? rawMomentum["1w"] : null,
+        "1m": typeof rawMomentum?.["1m"] === "number" ? rawMomentum["1m"] : null,
+        "3m": typeof rawMomentum?.["3m"] === "number" ? rawMomentum["3m"] : null,
+      };
+
+      const etf = etfs?.etfs?.[sector.etf];
+      const etfInfo = etf
+        ? {
+            ticker: sector.etf,
+            category: etf.category ?? null,
+            marketCap: typeof etf.market_cap === "number" ? etf.market_cap : null,
+            returns: etf.returns ?? {},
+            cagr: etf.cagr ?? {},
+            beta: typeof etf.beta === "number" ? etf.beta : null,
+            expenseRatio: typeof etf.expense_ratio === "number" ? etf.expense_ratio : null,
+          }
+        : null;
+
+      return {
+        key: sector.key,
+        etf: sector.etf,
+        name: sector.name,
+        momentum,
+        dayChange: null,
+        price: null,
+        marketState: null,
+        etfInfo,
+        valuation: valLatest ? { pe, pb: valLatest.px_to_book_ratio ?? null, roe: valLatest.roe ?? null, peBand } : null,
+        smartMoney: null,
+      };
+    });
+
+    const benchmarkMomentum = summaries?.momentum?.sp500?.["1m"] ?? null;
+    const pts = rotationPoints(rows, "1m", benchmarkMomentum);
+    const rotationMissing = SECTOR_DEFINITIONS.length - pts.length;
+
+    // rotation entries = rotation.ts RotationPoint fields verbatim
+    // (symbol, name, relative, bandPct, quadrant id) plus the window key used
+    const rotationSectors = pts.map((p) => ({
+      symbol: p.row.etf,
+      name: p.row.name,
+      relative: Math.round(p.relative * 100) / 100,
+      bandPct: p.band !== null ? Math.round(p.band * 10) / 10 : null,
+      quadrant: p.quadrant,
+      quadrantLabel: p.quadrant ? QUADRANT_LABEL[p.quadrant] : null,
+      window: "1m",
+    }));
+
+    rotationPayload = {
+      window: "1m",
+      windowLabel: "1개월",
+      missing: rotationMissing,
+      sectors: rotationSectors,
     };
-
-    const etf = etfs?.etfs?.[sector.etf];
-    const etfInfo = etf
-      ? {
-          ticker: sector.etf,
-          category: etf.category ?? null,
-          marketCap: typeof etf.market_cap === "number" ? etf.market_cap : null,
-          returns: etf.returns ?? {},
-          cagr: etf.cagr ?? {},
-          beta: typeof etf.beta === "number" ? etf.beta : null,
-          expenseRatio: typeof etf.expense_ratio === "number" ? etf.expense_ratio : null,
-        }
-      : null;
-
-    return {
-      key: sector.key,
-      etf: sector.etf,
-      name: sector.name,
-      momentum,
-      dayChange: null,
-      price: null,
-      marketState: null,
-      etfInfo,
-      valuation: valLatest ? { pe, pb: valLatest.px_to_book_ratio ?? null, roe: valLatest.roe ?? null, peBand } : null,
-      smartMoney: null,
-    };
-  });
-
-  const benchmarkMomentum = summaries?.momentum?.sp500?.["1m"] ?? null;
-  const pts = rotationPoints(rows, "1m", benchmarkMomentum);
-  const rotationMissing = SECTOR_DEFINITIONS.length - pts.length;
-
-  const rotationSectors = pts.map((p) => ({
-    key: p.row.key,
-    symbol: p.row.etf,
-    name: p.row.name,
-    relative: Math.round(p.relative * 100) / 100,
-    band: p.band !== null ? Math.round(p.band * 10) / 10 : null,
-    quadrant: p.quadrant,
-    quadrantLabel: p.quadrant ? QUADRANT_LABEL[p.quadrant] : null,
-    marketCap: p.row.etfInfo?.marketCap ? Math.round(p.row.etfInfo.marketCap * 10) / 10 : null,
-  }));
+  }
 
   const latestAsOf = sourceDates.length > 0 ? [...sourceDates].sort().reverse()[0] : null;
 
@@ -278,12 +298,7 @@ export function buildIntroFeed() {
       ratio,
       sectors: breadthSectors,
     },
-    rotation: {
-      window: "1m",
-      windowLabel: "1개월",
-      missing: rotationMissing,
-      sectors: rotationSectors,
-    },
+    rotation: rotationPayload,
   };
 
   const outDir = path.join(ROOT_DIR, "public/data/computed");
@@ -291,7 +306,10 @@ export function buildIntroFeed() {
   const outPath = path.join(outDir, "intro-feed.json");
   fs.writeFileSync(outPath, JSON.stringify(payload));
   const bytes = fs.statSync(outPath).size;
-  console.log(`Generated ${outPath} (${bytes} bytes, asOf=${latestAsOf})`);
+
+  // Builder's printed summary: (sectors count, rotation present/absent, asOf)
+  console.log(`[intro-feed] sectors=${breadthSectors.length} rotation=${rotationPayload ? "present" : "absent"} asOf=${latestAsOf}`);
+
   return { payload, bytes };
 }
 
