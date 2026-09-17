@@ -554,9 +554,6 @@ function AxisTablePanel({
   loading,
   failed,
   ready,
-  partial,
-  stale,
-  floor,
   undatedStructure,
   onRefetch,
 }: {
@@ -564,13 +561,9 @@ function AxisTablePanel({
   loading: boolean;
   failed: boolean;
   ready: boolean;
-  partial: boolean;
-  stale: boolean;
-  floor: string | null;
   undatedStructure: boolean;
   onRefetch: () => void;
 }) {
-  const readyAxes = axes.filter((axis) => axis.ready).length;
   return (
     <Panel
       loading={loading}
@@ -634,14 +627,6 @@ function AxisTablePanel({
           )}
         </>
       )}
-      <EvidenceRail
-        freshness={loading ? "pending" : failed || !ready ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
-        source="시황 엔진"
-        asOf={floor ? (formatAsOf(floor) ?? floor) : "—"}
-        coverage={`${readyAxes}/4 축`}
-        onRetry={failed || stale || partial ? onRefetch : undefined}
-        onEvidence={ready && !failed ? () => openEvidence("/data/computed/signals.json") : undefined}
-      />
     </Panel>
   );
 }
@@ -718,19 +703,7 @@ function HistoryPanel({
   );
 }
 
-function ActionsPanel({
-  loading,
-  failed,
-  partial,
-  floor,
-  onRefetch,
-}: {
-  loading: boolean;
-  failed: boolean;
-  partial: boolean;
-  floor: string | null;
-  onRefetch: () => void;
-}) {
+function ActionsPanel() {
   return (
     <Panel>
       <PanelHeader eyebrow="Next Actions" title="다음 확인" right={<Pill>4개</Pill>} />
@@ -750,14 +723,6 @@ function ActionsPanel({
           </TransitionLink>
         ))}
       </div>
-      <EvidenceRail
-        freshness={loading ? "pending" : failed ? "error" : !floor || partial ? "partial" : "fresh"}
-        source="시황 엔진"
-        asOf={floor ? (formatAsOf(floor) ?? floor) : "—"}
-        coverage="4/4"
-        onRetry={failed || partial ? onRefetch : undefined}
-        onEvidence={failed ? undefined : () => openEvidence("/data/computed/signals.json")}
-      />
     </Panel>
   );
 }
@@ -857,6 +822,9 @@ export default function RegimeClient() {
   // 주간 시황 기록 소스가 아직 없다(생산자·산출물·스키마 없음). 소스가 생겨 이
   // 배열이 채워지면 기록 패널이 자동으로 펼쳐진다.
   const historyArchive: RegimeHistoryWeek[] = [];
+  // 하단 집계행이 물려받는 축별 요약 수. 히어로 rail은 종합 신호 수를 싣고,
+  // 이 행은 축별·다음확인 두 rail 분량을 한 줄로 합친다.
+  const readyAxes = axes.filter((axis) => axis.ready).length;
   // The head verdict truncates to one line (§6): the full sentence stays on title.
   const verdict = headerSentence(axes, gauge, isLoading, failed);
 
@@ -873,9 +841,18 @@ export default function RegimeClient() {
       </div>
 
       <CompositePanel axes={axes} gauge={gauge} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} asOf={compositeAsOf} oldestInputAsOf={oldestInputAsOf} onRefetch={refetch} />
-      <AxisTablePanel axes={axes} loading={isLoading} failed={failed} ready={ready} partial={partial} stale={stale} floor={compositeAsOf} undatedStructure={undatedStructure} onRefetch={refetch} />
+      <AxisTablePanel axes={axes} loading={isLoading} failed={failed} ready={ready} undatedStructure={undatedStructure} onRefetch={refetch} />
       <HistoryPanel archive={historyArchive} onRefetch={refetch} />
-      <ActionsPanel loading={isLoading} failed={failed} partial={partial} floor={compositeAsOf} onRefetch={refetch} />
+      <ActionsPanel />
+      <div data-regime-sources>
+        <EvidenceRail
+          freshness={isLoading ? "pending" : failed || !ready ? "error" : partial ? "partial" : stale ? "stale" : "fresh"}
+          source="시황 엔진"
+          asOf={compositeAsOf ? (formatAsOf(compositeAsOf) ?? compositeAsOf) : "—"}
+          coverage={`축별 요약 ${readyAxes}/4 · 다음 확인 4곳`}
+          next="다음 마감 후 갱신"
+        />
+      </div>
     </div>
   );
 }
