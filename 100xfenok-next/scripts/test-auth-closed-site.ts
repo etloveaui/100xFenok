@@ -9,13 +9,19 @@ import {
   generateVerifySignature,
   verifyRequestToken,
   handleWorkerClosedSiteGate,
+  hasBrowseCookie,
+  createBrowseCookieHeader,
+  createClearBrowseCookieHeader,
+  isValidNextPath,
   CLOSED_SITE_ENV_VAR,
   FENOK_VERIFY_TOKEN_ENV_VAR,
   FX_PREVIEW_COOKIE_NAME,
+  FX_BROWSE_COOKIE_NAME,
   VERIFY_HEADER_NAME,
 } from "../src/lib/server/closed-site";
 import {
   UserStoreCore,
+  getInMemoryUserStore,
   type DurableObjectStorageLike,
 } from "../src/lib/server/userStore";
 import {
@@ -24,6 +30,8 @@ import {
   FX_SESSION_COOKIE_NAME,
 } from "../src/lib/server/authSession";
 import { middleware } from "../middleware";
+import { GET as browseHandler } from "../src/app/api/intro/browse/route";
+import { POST as logoutHandler } from "../src/app/api/auth/logout/route";
 
 
 function createMemoryStorage(): DurableObjectStorageLike {
@@ -84,6 +92,10 @@ test("closed-site: gateMode parses off, preview, on, and truthy aliases correctl
   assert.equal(gateMode({ CLOSED_SITE: "preview" }), "preview");
   assert.equal(gateMode({ CLOSED_SITE: "PREVIEW " }), "preview");
 
+  // Intro
+  assert.equal(gateMode({ CLOSED_SITE: "intro" }), "intro");
+  assert.equal(gateMode({ CLOSED_SITE: "INTRO " }), "intro");
+
   // On and truthy aliases
   assert.equal(gateMode({ CLOSED_SITE: "on" }), "on");
   assert.equal(gateMode({ CLOSED_SITE: "ON" }), "on");
@@ -104,6 +116,9 @@ test("closed-site: isGated enforces off, on, and preview cookie correctly", () =
   const reqWithPreview = standardRequestFor("/", { cookie: "fx_preview=1" });
   const reqWithOtherCookie = standardRequestFor("/", { cookie: "fx_preview=0; other=xyz" });
   const reqWithMultiCookie = standardRequestFor("/", { cookie: "theme=dark; fx_preview=1; session=abc" });
+  const reqWithBrowse = standardRequestFor("/", { cookie: "fx_browse=1" });
+  const reqWithBrowseZero = standardRequestFor("/", { cookie: "fx_browse=0" });
+  const reqWithMultiBrowse = standardRequestFor("/", { cookie: "theme=dark; fx_browse=1; session=abc" });
 
   // "off" mode never gates
   assert.equal(isGated(reqNoCookie, "off"), false);
@@ -119,6 +134,13 @@ test("closed-site: isGated enforces off, on, and preview cookie correctly", () =
   assert.equal(isGated(reqWithOtherCookie, "preview"), false);
   assert.equal(isGated(reqWithPreview, "preview"), true);
   assert.equal(isGated(reqWithMultiCookie, "preview"), true);
+
+  // "intro" mode gates ONLY when fx_browse=1 is NOT present
+  assert.equal(isGated(reqNoCookie, "intro"), true);
+  assert.equal(isGated(reqWithOtherCookie, "intro"), true);
+  assert.equal(isGated(reqWithBrowseZero, "intro"), true);
+  assert.equal(isGated(reqWithBrowse, "intro"), false);
+  assert.equal(isGated(reqWithMultiBrowse, "intro"), false);
 });
 
 // ---------------------------------------------------------------------------
@@ -392,4 +414,188 @@ test("worker gate: /data/* and /api/data/* are gated when CLOSED_SITE=on", async
   });
   const resVerified = await handleWorkerClosedSiteGate(reqVerified, envOn);
   assert.equal(resVerified, null);
+});
+
+// ---------------------------------------------------------------------------
+// 10. Helper contract tests: fx_browse and isValidNextPath
+// ---------------------------------------------------------------------------
+
+test("closed-site: fx_browse cookie helpers and isValidNextPath validation", () => {
+  assert.equal(isValidNextPath("/"), true);
+  assert.equal(isValidNextPath("/screener"), true);
+  assert.equal(isValidNextPath("/screener?tab=valuation"), true);
+  assert.equal(isValidNextPath("/admin/users"), true);
+
+  // Invalid: double slash, backslash, external, empty, non-string
+  assert.equal(isValidNextPath("//evil.com"), false);
+  assert.equal(isValidNextPath("/\\evil.com"), false);
+  assert.equal(isValidNextPath("/path\\with\\backslash"), false);
+  assert.equal(isValidNextPath("https://evil.com"), false);
+  assert.equal(isValidNextPath("screener"), false);
+  assert.equal(isValidNextPath(""), false);
+  assert.equal(isValidNextPath(null), false);
+  assert.equal(isValidNextPath(undefined), false);
+
+  const header = createBrowseCookieHeader();
+  assert.ok(header.includes("fx_browse=1"));
+  assert.ok(header.includes("Path=/"));
+  assert.ok(header.includes("Max-Age=43200"));
+  assert.ok(header.includes("HttpOnly"));
+  assert.ok(header.includes("Secure"));
+  assert.ok(header.includes("SameSite=Lax"));
+
+  const clearHeader = createClearBrowseCookieHeader();
+  assert.ok(clearHeader.includes("fx_browse="));
+  assert.ok(clearHeader.includes("Max-Age=0"));
+
+  assert.equal(hasBrowseCookie(standardRequestFor("/")), false);
+  assert.equal(hasBrowseCookie(standardRequestFor("/", { cookie: "fx_browse=1" })), true);
+  assert.equal(hasBrowseCookie(standardRequestFor("/", { cookie: "fx_browse=0" })), false);
+});
+
+// ---------------------------------------------------------------------------
+// 11. Middleware tests: CLOSED_SITE=intro soft mode
+// ---------------------------------------------------------------------------
+
+test("middleware: CLOSED_SITE=intro redirects unauthenticated visitor without cookie to /intro?next=...", async () => {
+  const originalEnv = process.env[CLOSED_SITE_ENV_VAR];
+  try {
+    process.env[CLOSED_SITE_ENV_VAR] = "intro";
+
+    // 1. Unauthenticated page request without cookie redirects to /intro?next=...
+    const reqHome = nextRequestFor("/");
+    const resHome = await middleware(reqHome);
+    assert.equal(resHome.status, 302);
+    const locHome = resHome.headers.get("location");
+    assert.ok(locHome);
+    const urlHome = new URL(locHome, ORIGIN);
+    assert.equal(urlHome.pathname, "/intro");
+    assert.equal(urlHome.searchParams.get("next"), "/");
+
+    const reqScreener = nextRequestFor("/screener?tab=valuation");
+    const resScreener = await middleware(reqScreener);
+    assert.equal(resScreener.status, 302);
+    const locScreener = resScreener.headers.get("location");
+    assert.ok(locScreener);
+    const urlScreener = new URL(locScreener, ORIGIN);
+    assert.equal(urlScreener.pathname, "/intro");
+    assert.equal(urlScreener.searchParams.get("next"), "/screener?tab=valuation");
+
+    // 2. Pass with fx_browse=1 cookie
+    const reqWithBrowse = nextRequestFor("/screener?tab=valuation", {
+      cookie: "fx_browse=1",
+    });
+    const resWithBrowse = await middleware(reqWithBrowse);
+    assert.notEqual(resWithBrowse.status, 302);
+
+    // 3. Pass with valid user session (even without fx_browse=1)
+    const testSub = "google-intro-session-user";
+    const userStore = getInMemoryUserStore(testSub);
+    await userStore.saveProfile({
+      sub: testSub,
+      email: "intro-user@example.com",
+      name: "Intro User",
+    });
+    const { token } = await userStore.mintToken("test-device");
+    const reqWithSession = nextRequestFor("/screener", {
+      cookie: `${FX_SESSION_COOKIE_NAME}=${token}`,
+    });
+    const resWithSession = await middleware(reqWithSession);
+    assert.notEqual(resWithSession.status, 302);
+
+    // 4. API and data requests are untouched in intro mode (not 401, not 302)
+    const reqApi = nextRequestFor("/api/ticker/AAPL");
+    const resApi = await middleware(reqApi);
+    assert.notEqual(resApi.status, 401);
+    assert.notEqual(resApi.status, 302);
+
+    const reqData = nextRequestFor("/data/test.json");
+    const resData = await middleware(reqData);
+    assert.notEqual(resData.status, 401);
+    assert.notEqual(resData.status, 302);
+  } finally {
+    process.env[CLOSED_SITE_ENV_VAR] = originalEnv;
+  }
+});
+
+test("worker gate: CLOSED_SITE=intro leaves data and API untouched", async () => {
+  const envIntro = {
+    CLOSED_SITE: "intro",
+  };
+
+  // /data/test.json without auth passes gate (handleWorkerClosedSiteGate returns null)
+  const reqData = standardRequestFor("/data/test.json");
+  const resData = await handleWorkerClosedSiteGate(reqData, envIntro);
+  assert.equal(resData, null);
+
+  // /api/data/intro-feed without auth passes gate (handleWorkerClosedSiteGate returns null)
+  const reqApiData = standardRequestFor("/api/data/intro-feed");
+  const resApiData = await handleWorkerClosedSiteGate(reqApiData, envIntro);
+  assert.equal(resApiData, null);
+});
+
+// ---------------------------------------------------------------------------
+// 12. GET /api/intro/browse and POST /api/auth/logout tests
+// ---------------------------------------------------------------------------
+
+test("GET /api/intro/browse: sets fx_browse=1 cookie and redirects to validated next path", async () => {
+  // 1. Valid next path with query params
+  const reqValid = new Request("https://100xfenok.example/api/intro/browse?next=/screener?tab=valuation");
+  const resValid = await browseHandler(reqValid);
+  assert.equal(resValid.status, 302);
+  assert.equal(
+    resValid.headers.get("location"),
+    "https://100xfenok.example/screener?tab=valuation",
+  );
+  const cookieHeader = resValid.headers.get("Set-Cookie") || "";
+  assert.ok(cookieHeader.includes("fx_browse=1"));
+  assert.ok(cookieHeader.includes("Max-Age=43200"));
+  assert.ok(cookieHeader.includes("HttpOnly"));
+  assert.ok(cookieHeader.includes("Secure"));
+  assert.ok(cookieHeader.includes("SameSite=Lax"));
+
+  // 2. Open redirect attempt: double leading slash //evil.com -> fallback to /
+  const reqDoubleSlash = new Request("https://100xfenok.example/api/intro/browse?next=//evil.com");
+  const resDoubleSlash = await browseHandler(reqDoubleSlash);
+  assert.equal(resDoubleSlash.status, 302);
+  assert.equal(resDoubleSlash.headers.get("location"), "https://100xfenok.example/");
+
+  // 3. Open redirect attempt: backslash /\\evil.com -> fallback to /
+  const reqBackslash = new Request("https://100xfenok.example/api/intro/browse?next=/\\evil.com");
+  const resBackslash = await browseHandler(reqBackslash);
+  assert.equal(resBackslash.status, 302);
+  assert.equal(resBackslash.headers.get("location"), "https://100xfenok.example/");
+
+  // 4. External URL: https://evil.com -> fallback to /
+  const reqExternal = new Request("https://100xfenok.example/api/intro/browse?next=https://evil.com");
+  const resExternal = await browseHandler(reqExternal);
+  assert.equal(resExternal.status, 302);
+  assert.equal(resExternal.headers.get("location"), "https://100xfenok.example/");
+
+  // 5. No next parameter -> fallback to /
+  const reqNoNext = new Request("https://100xfenok.example/api/intro/browse");
+  const resNoNext = await browseHandler(reqNoNext);
+  assert.equal(resNoNext.status, 302);
+  assert.equal(resNoNext.headers.get("location"), "https://100xfenok.example/");
+});
+
+test("POST /api/auth/logout: clears both fx_session and fx_browse cookies", async () => {
+  const reqLogout = new Request("https://100xfenok.example/api/auth/logout", {
+    method: "POST",
+  });
+  const resLogout = await logoutHandler(reqLogout);
+  assert.equal(resLogout.status, 200);
+
+  // Check Set-Cookie headers
+  const setCookie = resLogout.headers.get("Set-Cookie") || "";
+  assert.ok(setCookie.includes("fx_session=;"));
+  assert.ok(setCookie.includes("fx_browse=;"));
+  assert.ok(setCookie.includes("Max-Age=0"));
+
+  // Check getSetCookie if available
+  if (typeof resLogout.headers.getSetCookie === "function") {
+    const cookies = resLogout.headers.getSetCookie();
+    assert.ok(cookies.some((c) => c.includes("fx_session=;") && c.includes("Max-Age=0")));
+    assert.ok(cookies.some((c) => c.includes("fx_browse=;") && c.includes("Max-Age=0")));
+  }
 });

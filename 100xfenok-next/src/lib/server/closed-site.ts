@@ -3,17 +3,20 @@
 
 import { resolveCurrentSession } from "./authSession";
 
-export type GateMode = "off" | "preview" | "on";
+export type GateMode = "off" | "preview" | "on" | "intro";
 
 export const CLOSED_SITE_ENV_VAR = "CLOSED_SITE";
 export const FENOK_VERIFY_TOKEN_ENV_VAR = "FENOK_VERIFY_TOKEN";
 export const FX_PREVIEW_COOKIE_NAME = "fx_preview";
+export const FX_BROWSE_COOKIE_NAME = "fx_browse";
 export const VERIFY_HEADER_NAME = "x-fenok-verify";
+export const BROWSE_COOKIE_MAX_AGE_SECONDS = 12 * 3600; // 12 hours
 
 /**
- * Returns the configured gate mode: "off" | "preview" | "on".
+ * Returns the configured gate mode: "off" | "preview" | "on" | "intro".
  * Values "on", "1", "true" resolve to "on".
  * Value "preview" resolves to "preview".
+ * Value "intro" resolves to "intro".
  * Default / absent / unrecognized resolves to "off".
  */
 export function gateMode(env?: unknown): GateMode {
@@ -32,7 +35,25 @@ export function gateMode(env?: unknown): GateMode {
   if (raw === "preview") {
     return "preview";
   }
+  if (raw === "intro") {
+    return "intro";
+  }
   return "off";
+}
+
+/**
+ * Returns whether the request carries cookie `fx_browse=1`.
+ */
+export function hasBrowseCookie(request: Request): boolean {
+  const cookieHeader =
+    request.headers.get("cookie") || request.headers.get("Cookie") || "";
+  if (!cookieHeader) return false;
+  const cookies = cookieHeader.split(";").map((c) => c.trim());
+  return cookies.some(
+    (c) =>
+      c === `${FX_BROWSE_COOKIE_NAME}=1` ||
+      c.startsWith(`${FX_BROWSE_COOKIE_NAME}=1;`),
+  );
 }
 
 /**
@@ -40,6 +61,7 @@ export function gateMode(env?: unknown): GateMode {
  * - "off": never gated (returns false)
  * - "on": always gated (returns true)
  * - "preview": gated only if the request carries cookie `fx_preview=1`
+ * - "intro": gated only if the request does NOT carry cookie `fx_browse=1`
  */
 export function isGated(request: Request, mode: GateMode): boolean {
   if (mode === "off") {
@@ -58,6 +80,9 @@ export function isGated(request: Request, mode: GateMode): boolean {
         c === `${FX_PREVIEW_COOKIE_NAME}=1` ||
         c.startsWith(`${FX_PREVIEW_COOKIE_NAME}=1;`),
     );
+  }
+  if (mode === "intro") {
+    return !hasBrowseCookie(request);
   }
   return false;
 }
@@ -185,6 +210,9 @@ export async function handleWorkerClosedSiteGate(
   env?: unknown,
 ): Promise<Response | null> {
   const mode = gateMode(env);
+  if (mode === "off" || mode === "intro") {
+    return null;
+  }
   if (!isGated(request, mode)) {
     return null;
   }
@@ -219,4 +247,29 @@ export async function handleWorkerClosedSiteGate(
   }
 
   return null;
+}
+
+/**
+ * Creates the Set-Cookie header value for fx_browse=1 (12 hours max-age).
+ */
+export function createBrowseCookieHeader(
+  maxAgeSeconds = BROWSE_COOKIE_MAX_AGE_SECONDS,
+): string {
+  return `${FX_BROWSE_COOKIE_NAME}=1; Path=/; Max-Age=${maxAgeSeconds}; HttpOnly; Secure; SameSite=Lax`;
+}
+
+/**
+ * Creates the Set-Cookie header value to clear fx_browse.
+ */
+export function createClearBrowseCookieHeader(): string {
+  return `${FX_BROWSE_COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
+}
+
+/**
+ * Validates that a path is a safe same-origin path:
+ * Single leading slash, never "//host" or backslash tricks.
+ */
+export function isValidNextPath(path: unknown): path is string {
+  if (typeof path !== "string" || !path) return false;
+  return /^\/(?![\/\\])[^\\]*$/.test(path);
 }

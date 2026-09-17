@@ -239,7 +239,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-live-deploy-provenance.mjs --pre
 
-      - name: Provision optional Telegram notification secrets to Worker
+      - name: Provision optional Telegram notification and verify token secrets to Worker
         # The secrets context is not available in step-level if; the shell guard below skips when absent.
         if: ${{ env.DEPLOY_DEFERRED != 'true' }}
         working-directory: 100xfenok-next
@@ -247,13 +247,16 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
         run: |
           set -euo pipefail
-          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
-            exit 0
+          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+            printf '%s' "$TELEGRAM_BOT_TOKEN" | npx wrangler secret put TELEGRAM_BOT_TOKEN
+            printf '%s' "$TELEGRAM_CHAT_ID" | npx wrangler secret put TELEGRAM_CHAT_ID
           fi
-          printf '%s' "$TELEGRAM_BOT_TOKEN" | npx wrangler secret put TELEGRAM_BOT_TOKEN
-          printf '%s' "$TELEGRAM_CHAT_ID" | npx wrangler secret put TELEGRAM_CHAT_ID
+          if [ -n "${FENOK_VERIFY_TOKEN:-}" ]; then
+            printf '%s' "$FENOK_VERIFY_TOKEN" | npx wrangler secret put FENOK_VERIFY_TOKEN
+          fi
 
       - name: Deploy to Cloudflare Workers
         if: ${{ env.DEPLOY_DEFERRED != 'true' }}

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ROUTES } from "@/lib/routes";
 import {
   fetchMe,
   onAuthInvalid,
@@ -9,6 +11,7 @@ import {
 } from "@/lib/auth/clientAuth";
 
 export default function UserAuthPill() {
+  const router = useRouter();
   const [user, setUser] = useState<UserProfileClient | null>(null);
   const [open, setOpen] = useState(false);
   const [loadingLogout, setLoadingLogout] = useState(false);
@@ -64,6 +67,7 @@ export default function UserAuthPill() {
       await postAuthLogout();
       setUser(null);
       setOpen(false);
+      router.push(ROUTES.intro);
     } finally {
       setLoadingLogout(false);
     }

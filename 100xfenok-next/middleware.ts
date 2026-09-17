@@ -497,7 +497,8 @@ export async function middleware(request: NextRequest) {
     }
 
     const mode = gateMode(env);
-    if (isGated(request, mode)) {
+    const isDataOrApi = pathname.startsWith("/api/") || pathname.startsWith("/data/");
+    if (isGated(request, mode) && !(mode === "intro" && isDataOrApi)) {
       const verifyToken = (env as Record<string, unknown> | undefined)?.FENOK_VERIFY_TOKEN as
         | string
         | undefined;

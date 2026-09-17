@@ -4,6 +4,7 @@ import {
   parseSessionToken,
   resolveUserStore,
 } from "@/lib/server/authSession";
+import { createClearBrowseCookieHeader } from "@/lib/server/closed-site";
 
 export const dynamic = "force-dynamic";
 export const revalidate = false;
@@ -21,16 +22,18 @@ export async function POST(request: Request) {
     }
   }
 
-  const clearCookie = createClearSessionCookieHeader();
-
-  return NextResponse.json(
+  const response = NextResponse.json(
     { ok: true },
     {
       status: 200,
       headers: {
         ...NO_STORE_HEADERS,
-        "Set-Cookie": clearCookie,
       },
     },
   );
+
+  response.headers.append("Set-Cookie", createClearSessionCookieHeader());
+  response.headers.append("Set-Cookie", createClearBrowseCookieHeader());
+
+  return response;
 }
