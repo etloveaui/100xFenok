@@ -44,10 +44,10 @@ const ROUTE_SCOPE_CLASSIFICATION_ACK = {
   source: {
     path: "../../../docs/research/20260702_route_scope_classification.md",
     lines: "1-105",
-    note: "Lane C corrected route-scope classification source; the 2026-08-30 owner decision moves three retired public roots and the new archive hub into admin-internal scope; 2026-09-06 adds the authenticated WIND DOWN records and conversations pages to the existing Mona out-of-scope family; 2026-09-17 adds the authenticated /intro face route to core_covered; 2026-09-17 adds the authenticated /admin/users page to admin_internal",
+    note: "Lane C corrected route-scope classification source; the 2026-08-30 owner decision moves three retired public roots and the new archive hub into admin-internal scope; 2026-09-06 adds the authenticated WIND DOWN records and conversations pages to the existing Mona out-of-scope family; 2026-09-17 adds the authenticated /intro face route to core_covered; 2026-09-17 adds the authenticated /admin/users page to admin_internal; 2026-09-17 adds /privacy and /terms legal pages to core_covered",
   },
-  page_route_count: 65,
-  core_covered_count: 19,
+  page_route_count: 67,
+  core_covered_count: 21,
   needs_route_owner_probe_count: 0,
   legacy_bridge_closed_count: 9,
   admin_internal_count: 16,
@@ -74,6 +74,8 @@ const ROUTE_SCOPE_CLASSIFICATION_ACK = {
     "/superinvestors?guru=blackrock",
     "/research",
     "/intro",
+    "/privacy",
+    "/terms",
   ],
 };
 

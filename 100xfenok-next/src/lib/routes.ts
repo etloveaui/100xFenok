@@ -33,6 +33,8 @@ export const ROUTES = {
   radar: "/radar",
   research: "/research",
   intro: "/intro",
+  privacy: "/privacy",
+  terms: "/terms",
   dailyWrap: "/100x/daily-wrap",
   macroChart: "/macro-chart",
   multichart: "/multichart",
@@ -84,6 +86,8 @@ export const APP_ROUTE_PATTERNS = [
   "/radar",
   "/research",
   "/intro",
+  "/privacy",
+  "/terms",
   "/100x/daily-wrap",
   "/macro-chart",
   "/multichart",
@@ -116,6 +120,8 @@ export const STATIC_PRODUCT_ROUTE_PATHS = [
   ROUTES.radar,
   ROUTES.research,
   ROUTES.intro,
+  ROUTES.privacy,
+  ROUTES.terms,
   ROUTES.dailyWrap,
   ROUTES.macroChart,
   ROUTES.multichart,
@@ -173,6 +179,8 @@ export const SITEMAP_PRODUCT_ROUTES = [
   { path: ROUTES.research, changeFrequency: "weekly", priority: 0.6 },
   { path: ROUTES.macroChart, changeFrequency: "daily", priority: 0.75 },
   { path: ROUTES.multichart, changeFrequency: "weekly", priority: 0.6 },
+  { path: ROUTES.privacy, changeFrequency: "yearly", priority: 0.3 },
+  { path: ROUTES.terms, changeFrequency: "yearly", priority: 0.3 },
 ] as const;
 
 export function normalizePathname(pathname: string): string {
