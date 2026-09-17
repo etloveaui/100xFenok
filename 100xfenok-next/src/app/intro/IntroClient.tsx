@@ -122,7 +122,8 @@ export default function IntroClient() {
   const searchParams = useSearchParams();
   const nextParam = searchParams?.get("next");
   const targetHref = useMemo(
-    () => (nextParam && nextParam.startsWith(ROUTES.home) ? nextParam : ROUTES.home),
+    // Same-origin paths only: one leading slash, never "//host" or backslash tricks.
+    () => (nextParam && /^\/(?![\/\\])[^\\]*$/.test(nextParam) ? nextParam : ROUTES.home),
     [nextParam],
   );
 
