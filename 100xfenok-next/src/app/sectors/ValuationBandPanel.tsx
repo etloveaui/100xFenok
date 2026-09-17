@@ -1,7 +1,7 @@
 "use client";
 
-import { Bar, Button, EvidenceRail, Panel, PanelHeader } from "@/components/ui";
-import { formatAsOf, isStaleAsOf } from "@/lib/data-state";
+import { Bar, Button, Panel, PanelHeader } from "@/components/ui";
+import { isStaleAsOf } from "@/lib/data-state";
 import type { SectorRow } from "@/lib/sectors/types";
 
 function finiteNumber(value: unknown): value is number {
@@ -15,9 +15,6 @@ export default function ValuationBandPanel({
   failed,
   stale,
   clock,
-  source,
-  coverage,
-  lkgClock,
   onRetry,
   onCollapse,
 }: {
@@ -27,18 +24,10 @@ export default function ValuationBandPanel({
   failed: boolean;
   stale: boolean;
   clock: string | null;
-  source: string | null;
-  coverage: string;
-  lkgClock: string | null;
   onRetry: () => void;
   onCollapse: () => void;
 }) {
-  const bandCount = ready ? rows.filter((row) => finiteNumber(row.valuation?.peBand?.percentile)).length : 0;
   const empty = !loading && (!ready || rows.length === 0);
-  const asOfLabel = formatAsOf(clock) ?? "—";
-  // A valuation band is a quarterly fixture, not a fresh quote — a complete
-  // band set renders the dc-specified fixed rail, never fresh.
-  const incomplete = ready && bandCount < rows.length;
   const clockStale = isStaleAsOf(clock);
 
   return (
@@ -96,15 +85,6 @@ export default function ValuationBandPanel({
           })}
         </div>
       )}
-      <EvidenceRail
-        freshness={loading ? "pending" : failed || !ready ? "error" : stale || clockStale ? "stale" : incomplete ? "partial" : "fixed"}
-        source={source ?? "밸류에이션 자료"}
-        asOf={asOfLabel}
-        coverage={coverage}
-        lkgAsOf={(stale || clockStale) && lkgClock ? (formatAsOf(lkgClock) ?? lkgClock) : undefined}
-        onRetry={failed || !ready || stale || clockStale || incomplete ? onRetry : undefined}
-        onEvidence={ready && !failed ? () => window.open("/data/benchmarks/us_sectors.json", "_blank", "noopener") : undefined}
-      />
     </Panel>
   );
 }

@@ -7,6 +7,7 @@ import RotationMapPanel from "./RotationMapPanel";
 import RotationStripPanel from "./RotationStripPanel";
 import ValuationBandPanel from "./ValuationBandPanel";
 import { Bar, Button, EvidenceRail, Panel, PanelHeader, Pill, Stat, StatStrip } from "@/components/ui";
+import type { EvidenceRailFreshness } from "@/components/ui/EvidenceRail";
 import MarketSectionNav from "@/components/market/MarketSectionNav";
 import TransitionLink from "@/components/TransitionLink";
 import { ROUTES, withQuery } from "@/lib/routes";
@@ -199,8 +200,6 @@ function SectorFlowPanel({
   failed,
   stale,
   clock,
-  lkgClock,
-  coverage,
   onRetry,
   onCollapse,
 }: {
@@ -213,19 +212,12 @@ function SectorFlowPanel({
   failed: boolean;
   stale: boolean;
   clock: string | null;
-  lkgClock: string | null;
-  coverage: string;
   onRetry: () => void;
   onCollapse: () => void;
 }) {
   const items = ready ? flowItems(rows, windowKey, benchmarkValue) : [];
   const empty = !loading && (!ready || items.length === 0);
   const maxAbs = Math.max(0.01, ...items.map((item) => Math.abs(item.relative)));
-  const asOfLabel = formatAsOf(clock) ?? "—";
-  // Reduced counts (fewer sectors with a value for this window than rows on
-  // screen) are partial coverage — never fresh, even when the clock is new.
-  const valuedCount = rows.filter((row) => typeof row.momentum[windowKey] === "number").length;
-  const incomplete = ready && valuedCount < rows.length;
 
   return (
     <Panel
@@ -300,15 +292,6 @@ function SectorFlowPanel({
           })}
         </div>
       )}
-      <EvidenceRail
-        freshness={loading ? "pending" : failed || !ready ? "error" : incomplete ? "partial" : stale ? "stale" : clock ? "fresh" : "fixed"}
-        source="SlickCharts · Yahoo"
-        asOf={asOfLabel}
-        coverage={coverage}
-        lkgAsOf={stale && lkgClock ? (formatAsOf(lkgClock) ?? lkgClock) : undefined}
-        onRetry={failed || !ready || stale || incomplete ? onRetry : undefined}
-        onEvidence={ready && !failed ? () => openEvidence("/data/benchmarks/summaries.json") : undefined}
-      />
     </Panel>
   );
 }
@@ -320,8 +303,6 @@ function EtfComparePanel({
   failed,
   stale,
   clock,
-  lkgClock,
-  coverage,
   missingNote,
   onRetry,
   onCollapse,
@@ -332,18 +313,12 @@ function EtfComparePanel({
   failed: boolean;
   stale: boolean;
   clock: string | null;
-  lkgClock: string | null;
-  coverage: string;
   missingNote: string | null;
   onRetry: () => void;
   onCollapse: () => void;
 }) {
   const etfRows = rows.filter((row) => row.etfInfo);
   const empty = !loading && (!ready || etfRows.length === 0);
-  const asOfLabel = formatAsOf(clock) ?? "—";
-  // Missing ETFs (fewer comparable rows than sectors on screen) are partial
-  // coverage — never fresh, even when the index clock is new.
-  const incomplete = ready && etfRows.length < rows.length;
 
   return (
     <Panel
@@ -364,7 +339,7 @@ function EtfComparePanel({
             title="섹터 ETF 비교"
             right={(
               <>
-                <span className="sec-head-note">{coverage} 섹터 ETF 상세{missingNote ? ` · ${missingNote} 없음` : ""}</span>
+                {missingNote ? <span className="sec-head-note">{missingNote} 없음</span> : null}
                 <Button type="button" data-sectors-collapse="etf" onClick={onCollapse}>접기</Button>
               </>
             )}
@@ -452,15 +427,6 @@ function EtfComparePanel({
           </div>
         </div>
       )}
-      <EvidenceRail
-        freshness={loading ? "pending" : failed || !ready ? "error" : incomplete ? "partial" : stale ? "stale" : clock ? "fresh" : "fixed"}
-        source="ETF 운용사 공시"
-        asOf={asOfLabel}
-        coverage={coverage}
-        lkgAsOf={stale && lkgClock ? (formatAsOf(lkgClock) ?? lkgClock) : undefined}
-        onRetry={failed || !ready || stale || incomplete ? onRetry : undefined}
-        onEvidence={ready && !failed ? () => openEvidence("/data/global-scouter/etfs/index.json") : undefined}
-      />
     </Panel>
   );
 }
@@ -716,6 +682,55 @@ export default function SectorsClient() {
   const missingLabels = Array.from(new Set(failedSources.map(failedSourceLabel).filter((label): label is string => Boolean(label))));
   const quoteLabel = formatAsOf(sourceMeta.tickerSourceDate) ?? "확인 중";
 
+  // ⑩b [B]: the five open-state panel rails (flow · ETF · rank strip ·
+  // valuation · smart money) fold into one page-bottom source row; the hero
+  // rail above stays the representative. Per-source freshness mirrors each
+  // removed rail's formula; the row dot shows the worst. 13F resolves to a
+  // quarter-end clock that always exceeds the fresh window, so a healthy
+  // page still reads 대기 (dc-specified, as the old smart rail did).
+  const stripValued = (windowKey: MomentumWindow) =>
+    rows.filter((row) => typeof row.momentum[windowKey] === "number").length;
+  const stripPresentCells = MOMENTUM_WINDOWS.reduce((sum, window) => sum + stripValued(window.key), 0);
+  const stripTotalCells = rows.length * MOMENTUM_WINDOWS.length;
+  const stripCells = stripTotalCells > 0 ? `${stripPresentCells}/${stripTotalCells}` : "—";
+  const stripIncomplete = benchmarksReady && rows.length > 0
+    && MOMENTUM_WINDOWS.some((window) => stripValued(window.key) < rows.length);
+  const benchFresh: EvidenceRailFreshness = loading ? "pending"
+    : flowFailed ? "error"
+      : flowStale ? "stale"
+        : flowIncomplete || rotationIncomplete || stripIncomplete || rotationBandless.length > 0 ? "partial"
+          : sourceMeta.benchmarksSourceDate ? "fresh" : "fixed";
+  const etfIncomplete = etfsReady && etfRows.length < rows.length;
+  const etfFresh: EvidenceRailFreshness = loading ? "pending"
+    : etfFailed ? "error"
+      : etfStale ? "stale"
+        : etfIncomplete ? "partial"
+          : sourceMeta.etfSourceDate ? "fresh" : "fixed";
+  const valIncomplete = valuationReady && bandCount < rows.length;
+  const valFresh: EvidenceRailFreshness = loading ? "pending"
+    : valuationFailed ? "error"
+      : valuationStale ? "stale"
+        : valIncomplete ? "partial" : "fixed";
+  const smartFresh: EvidenceRailFreshness = loading ? "pending"
+    : smartFailed ? "error" : "stale";
+  const SOURCES_WORST_RANK: Record<EvidenceRailFreshness, number> = {
+    error: 0, stale: 1, partial: 2, pending: 3, fresh: 4, fixed: 5,
+  };
+  const sourcesFresh = [benchFresh, etfFresh, valFresh, smartFresh].reduce((worst, cur) =>
+    SOURCES_WORST_RANK[cur] < SOURCES_WORST_RANK[worst] ? cur : worst,
+  );
+  const valuationSourceLabel = sourceMeta.valuationSource ?? "밸류에이션 자료";
+  const sourcesLabel = `SlickCharts · Yahoo · ETF 운용사 공시 · ${valuationSourceLabel} · SEC EDGAR 13F`;
+  const sourcesOldest = [
+    sourceMeta.benchmarksSourceDate,
+    sourceMeta.etfSourceDate,
+    sourceMeta.valuationLatestDate,
+    sourceMeta.smartMoneySourceDate,
+    sourceMeta.smartMoneyGeneratedAt,
+  ].filter((v): v is string => typeof v === "string" && v.length > 0).sort()[0] ?? null;
+  const sourcesAsOf = formatAsOf(sourcesOldest) ?? "—";
+  const sourcesCoverage = `모멘텀 ${flowCoverage} · 순위 ${stripCells} · ETF ${etfCoverage} · 밸류 ${valuationCoverage} · 13F ${smartCoverage}`;
+
   let headline: ReactNode;
   if (loading) {
     headline = "섹터 데이터를 불러오는 중입니다.";
@@ -811,7 +826,6 @@ export default function SectorsClient() {
         failed={flowFailed}
         stale={flowStale}
         clock={sourceMeta.benchmarksSourceDate}
-        lkgClock={sourceMeta.benchmarksSourceDate}
         onRetry={refresh}
       />
 
@@ -827,8 +841,6 @@ export default function SectorsClient() {
             failed={flowFailed}
             stale={flowStale}
             clock={sourceMeta.benchmarksSourceDate}
-            lkgClock={sourceMeta.benchmarksSourceDate}
-            coverage={flowCoverage}
             onRetry={refresh}
             onCollapse={() => toggleSection("bars")}
           />
@@ -857,8 +869,6 @@ export default function SectorsClient() {
             failed={etfFailed}
             stale={etfStale}
             clock={sourceMeta.etfSourceDate}
-            lkgClock={sourceMeta.etfSourceDate}
-            coverage={etfCoverage}
             missingNote={etfMissingNote}
             onRetry={refresh}
             onCollapse={() => toggleSection("etf")}
@@ -888,9 +898,6 @@ export default function SectorsClient() {
             failed={valuationFailed}
             stale={valuationStale}
             clock={sourceMeta.valuationLatestDate}
-            source={sourceMeta.valuationSource}
-            coverage={valuationCoverage}
-            lkgClock={sourceMeta.valuationLatestDate}
             onRetry={refresh}
             onCollapse={() => toggleSection("valuation")}
           />
@@ -920,8 +927,6 @@ export default function SectorsClient() {
             failed={smartFailed}
             stale={smartStale}
             asOf={smartAsOf}
-            lkgClock={sourceMeta.smartMoneySourceDate}
-            coverage={smartCoverage}
             onRetry={refresh}
             onCollapse={() => toggleSection("smart")}
           />
@@ -945,6 +950,18 @@ export default function SectorsClient() {
           />
         )}
       </div>
+
+      <Panel>
+        <div data-sectors-sources="true">
+          <EvidenceRail
+            freshness={sourcesFresh}
+            source={sourcesLabel}
+            asOf={sourcesAsOf}
+            coverage={sourcesCoverage}
+            next="분기 종료 후 최대 45일"
+          />
+        </div>
+      </Panel>
 
       <Panel>
         <div data-sectors-actions="true">

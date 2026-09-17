@@ -1,9 +1,8 @@
 "use client";
 
 import TransitionLink from "@/components/TransitionLink";
-import { Button, EmptyState, EvidenceRail, Panel, PanelHeader, Pill } from "@/components/ui";
+import { Button, EmptyState, Panel, PanelHeader, Pill } from "@/components/ui";
 import { ROUTES } from "@/lib/routes";
-import { formatAsOf } from "@/lib/data-state";
 import type { SectorRow, SectorSourceMeta } from "@/lib/sectors/types";
 
 function fmtPct(value: number | null | undefined, digits = 1): string {
@@ -16,10 +15,6 @@ function fmtPp(value: number | null | undefined): string {
   return `${sign}${(Math.abs(value) * 100).toFixed(1)}%p`;
 }
 
-function openEvidence(path: string) {
-  window.open(path, "_blank", "noopener");
-}
-
 export default function SmartMoneyPanel({
   rows,
   sourceMeta,
@@ -28,8 +23,6 @@ export default function SmartMoneyPanel({
   failed,
   stale,
   asOf,
-  lkgClock,
-  coverage,
   onRetry,
   onCollapse,
   className,
@@ -41,8 +34,6 @@ export default function SmartMoneyPanel({
   failed: boolean;
   stale: boolean;
   asOf: string | null;
-  lkgClock: string | null;
-  coverage: string;
   onRetry: () => void;
   onCollapse: () => void;
   className?: string;
@@ -55,7 +46,6 @@ export default function SmartMoneyPanel({
   const empty = !loading && (!ready || smartRows.length === 0);
   const quarter = sourceMeta.smartMoneyQuarter ?? "확인 중";
   const cohort = sourceMeta.smartMoneyCohortCount ? ` · ${sourceMeta.smartMoneyCohortCount}인` : "";
-  const asOfLabel = formatAsOf(asOf) ?? "—";
 
   return (
     <Panel
@@ -125,19 +115,6 @@ export default function SmartMoneyPanel({
       {ready && smartRows.length === 0 && (
         <EmptyState reason="표시할 섹터 보유 집계가 없습니다" nextRefresh="분기 종료 후 최대 45일" />
       )}
-      <EvidenceRail
-        // 13F resolves to a quarter-end clock, which always exceeds the fresh
-        // window — a present cohort therefore renders the dc-specified 대기
-        // (amber) rail with the 45-day filing note, never fresh.
-        freshness={loading ? "pending" : failed || !ready ? "error" : "stale"}
-        source="SEC EDGAR 13F"
-        asOf={asOfLabel}
-        coverage={coverage}
-        lkgAsOf={stale && lkgClock ? (formatAsOf(lkgClock) ?? lkgClock) : undefined}
-        next="분기 종료 후 최대 45일"
-        onRetry={failed || !ready || stale ? onRetry : undefined}
-        onEvidence={ready && !failed ? () => openEvidence("/data/sec-13f/analytics/portfolio_views.json") : undefined}
-      />
     </Panel>
   );
 }

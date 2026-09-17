@@ -1,8 +1,7 @@
 "use client";
 
-import { EvidenceRail, Panel, PanelHeader } from "@/components/ui";
-import { formatAsOf, isStaleAsOf } from "@/lib/data-state";
-import { ROUTES } from "@/lib/routes";
+import { Panel, PanelHeader } from "@/components/ui";
+import { isStaleAsOf } from "@/lib/data-state";
 import {
   MOMENTUM_WINDOWS,
   type MomentumWindow,
@@ -46,7 +45,6 @@ export default function RotationStripPanel({
   failed,
   stale,
   clock,
-  lkgClock,
   onRetry,
 }: {
   rows: SectorRow[];
@@ -56,7 +54,6 @@ export default function RotationStripPanel({
   failed: boolean;
   stale: boolean;
   clock: string | null;
-  lkgClock: string | null;
   onRetry: () => void;
 }) {
   const ranks = new Map(
@@ -69,22 +66,13 @@ export default function RotationStripPanel({
   // counts sector×window cells present (e.g. 52/55), never valued windows.
   const valueCount = (windowKey: MomentumWindow) =>
     rows.filter((row) => finiteNumber(row.momentum[windowKey])).length;
-  const completeWindows = MOMENTUM_WINDOWS.filter(
-    (window) => rows.length > 0 && valueCount(window.key) >= rows.length,
-  );
   const presentCells = MOMENTUM_WINDOWS.reduce((sum, window) => sum + valueCount(window.key), 0);
-  const totalCells = rows.length * MOMENTUM_WINDOWS.length;
-  const coverageLabel = totalCells > 0
-    ? `${presentCells}/${totalCells} · ${MOMENTUM_WINDOWS.map((window) => `${window.key.toUpperCase()} ${valueCount(window.key)}/${rows.length}`).join(" · ")}`
-    : "—";
   // Row order follows the 1M rank so the strip reads top-to-bottom strongest-first.
   const orderRank = ranks.get("1m") ?? new Map<string, { rank: number; relative: number }>();
   const ordered = [...rows].sort(
     (a, b) => (orderRank.get(a.key)?.rank ?? 999) - (orderRank.get(b.key)?.rank ?? 999),
   );
   const empty = !loading && (!ready || presentCells === 0);
-  const asOfLabel = formatAsOf(clock) ?? "—";
-  const partial = ready && completeWindows.length < MOMENTUM_WINDOWS.length;
   const clockStale = isStaleAsOf(clock);
 
   return (
@@ -151,15 +139,6 @@ export default function RotationStripPanel({
           </div>
         </div>
       )}
-      <EvidenceRail
-        freshness={loading ? "pending" : failed || !ready ? "error" : stale || clockStale ? "stale" : partial ? "partial" : clock ? "fresh" : "fixed"}
-        source="SlickCharts · Yahoo"
-        asOf={asOfLabel}
-        coverage={ready ? coverageLabel : "—"}
-        lkgAsOf={(stale || clockStale) && lkgClock ? (formatAsOf(lkgClock) ?? lkgClock) : undefined}
-        onRetry={failed || !ready || stale || clockStale || partial ? onRetry : undefined}
-        onEvidence={ready && !failed ? () => window.open(ROUTES.sectorMomentumJson, "_blank", "noopener") : undefined}
-      />
     </Panel>
   );
 }

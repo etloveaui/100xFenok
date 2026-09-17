@@ -1987,7 +1987,7 @@ export function PerBandChart({
 
         {/* X-axis labels */}
         {periodLabels.map((label, index) => (
-          <text key={label} x={toX(index)} y={h - 8} textAnchor="middle" className="text-[9px] font-black fill-[var(--c-ink-3)]">
+          <text key={label} x={toX(index)} y={h - 8} textAnchor="middle" className="text-[12px] font-black fill-[var(--c-ink-3)]">
             {label}
           </text>
         ))}

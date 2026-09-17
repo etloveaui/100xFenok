@@ -82,7 +82,7 @@ export default function PerBandBar({ current, min, avg, max }: PerBandBarProps) 
           {label} {Math.round(pct * 100)}%
         </span>
       </div>
-      <span className="max-w-full truncate text-[9px] font-bold tabular-nums text-[var(--c-ink-3)]">
+      <span className="max-w-full truncate text-[12px] font-bold tabular-nums text-[var(--c-ink-3)]">
         평균 {safeAvg !== null ? safeAvg.toFixed(1) : "—"} · 8Y {safeMin.toFixed(1)}~{safeMax.toFixed(1)}
       </span>
     </div>
