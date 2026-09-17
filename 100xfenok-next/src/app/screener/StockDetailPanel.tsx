@@ -196,19 +196,19 @@ export function sharedValuationBandTone(
   const neutralStart = Math.max(0.18, avgPct - 0.1);
   const neutralEnd = Math.min(0.82, avgPct + 0.1);
   if (pct < neutralStart && weak) {
-    return { label: "밸류트랩 점검", detail: "PER는 낮지만 성장·수익성 점수 약세가 함께 보입니다.", zone: "trap" };
+    return { label: "밸류트랩 점검", detail: "PER은 낮지만 성장·수익성 점수 약세가 함께 보입니다.", zone: "trap" };
   }
   if (pct < neutralStart * 0.55) {
     return { label: "강한 할인 구간", detail: "PER 밴드 하단 깊숙한 구간입니다. 다음은 성장·마진 방어를 확인합니다.", zone: "deep-discount" };
   }
   if (pct < neutralStart) {
-    return { label: "할인 구간", detail: "현재 PER가 공정가치권 아래에 있습니다.", zone: "discount" };
+    return { label: "할인 구간", detail: "현재 PER이 공정가치권 아래에 있습니다.", zone: "discount" };
   }
   if (pct <= neutralEnd) {
-    return { label: "공정가치권", detail: "현재 PER는 평균 밴드의 ±10% 중립권입니다.", zone: "neutral" };
+    return { label: "공정가치권", detail: "현재 PER은 평균 밴드의 ±10% 중립권입니다.", zone: "neutral" };
   }
   if (pct < neutralEnd + (1 - neutralEnd) * 0.55) {
-    return { label: "프리미엄 구간", detail: "현재 PER가 공정가치권 위에 있습니다. 성장 기대와 추정치 상향을 확인합니다.", zone: "premium" };
+    return { label: "프리미엄 구간", detail: "현재 PER이 공정가치권 위에 있습니다. 성장 기대와 추정치 상향을 확인합니다.", zone: "premium" };
   }
   return { label: "과열 프리미엄", detail: "PER 밴드 상단권입니다. 기대 성장과 추정치 상향이 필요합니다.", zone: "overheated" };
 }
