@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-16T23:34:04.599Z",
+  "generated_at": "2026-09-17T00:26:47.023Z",
   "status": "open",
-  "open_incident_count": 14,
+  "open_incident_count": 15,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -131,6 +131,20 @@
       "cadence_status": "not_due"
     },
     {
+      "workflow": "global-writer-queue-observer.yml",
+      "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
       "workflow": "slickcharts-daily.yml",
       "label": "SlickCharts Daily",
       "streak": 0,
@@ -228,21 +242,21 @@
   "lane_outcome_notified": {
     "finra_short_volume": "2026-09-16",
     "occ_options_volume": "2026-09-16",
-    "krx": "2026-09-16",
-    "edgar_filings": "2026-09-16",
-    "gdelt_news_tone": "2026-09-16",
-    "finra_ats_weekly": "2026-09-16",
-    "oecd_cli": "2026-09-16",
+    "krx": "2026-09-17",
+    "edgar_filings": "2026-09-17",
+    "gdelt_news_tone": "2026-09-17",
+    "finra_ats_weekly": "2026-09-17",
+    "oecd_cli": "2026-09-17",
     "treasury_tga": "2026-09-16",
-    "slickcharts": "2026-09-16",
+    "slickcharts": "2026-09-17",
     "apewisdom_attention": "2026-09-16",
     "sentiment": "2026-09-05",
     "us_indices_daily": "2026-09-05",
     "nasdaq_giw_sox": "2026-09-05",
-    "stockanalysis_etf_universe": "2026-09-16",
+    "stockanalysis_etf_universe": "2026-09-17",
     "stockanalysis_etf_detail": "2026-09-14",
     "fred_macro": "2026-09-14",
-    "fred_yardeni": "2026-09-16",
+    "fred_yardeni": "2026-09-17",
     "yahoo_private_options": "2026-09-15"
   },
   "watched_workflows": [
@@ -644,9 +658,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "35162711088",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/35162711088",
-    "observed_at": "2026-09-16T23:34:04.599Z",
+    "run_id": "35166448002",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/35166448002",
+    "observed_at": "2026-09-17T00:26:47.023Z",
     "event": "workflow_run",
     "workflows": [
       "fenok-edge-krx-daily.yml",
@@ -657,6 +671,7 @@
       "fetch-fred-yardeni.yml",
       "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
+      "global-writer-queue-observer.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
