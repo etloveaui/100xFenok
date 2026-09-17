@@ -318,11 +318,13 @@ export default function IntroClient() {
             }}
           >
             <span className="text-[14px] font-medium text-white">Google 계정으로 시작</span>
+            {/* GIS owns the first div's children; React never renders inside it, so the
+                placeholder lives in a sibling and toggling it cannot collide with GIS. */}
             <div
-              ref={googleBtnRef}
-              className={`flex min-h-[44px] w-fit items-center rounded-full ${focused ? "intro-focus-ring" : ""}`}
+              className={`relative flex min-h-[44px] w-fit items-center rounded-full ${focused ? "intro-focus-ring" : ""}`}
               style={{ transition: reducedMotion ? "none" : `box-shadow 700ms ${EASE}` }}
             >
+              <div ref={googleBtnRef} className="min-h-[44px]" />
               {!gisReady ? (
                 <button
                   type="button"
