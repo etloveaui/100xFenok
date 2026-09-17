@@ -55,6 +55,33 @@ const UPDATE_MANIFEST_WORKFLOW_PATH = path.join(REPO_ROOT, ".github/workflows/up
 const TRIGGER_START_MARKER = "# BEGIN GENERATED lane-commit-manifest trigger_paths";
 const TRIGGER_END_MARKER = "# END GENERATED lane-commit-manifest trigger_paths";
 
+// runtime/evaluated_at is runtime-observed data: the publish bots patch it on
+// their own cadence (e.g. the stockanalysis publish outcome), so a rebuild in a
+// clean checkout cannot byte-reproduce the value the bot committed. The stale
+// comparison therefore normalizes exactly this field for the KPI projections
+// (committed copy + public mirror); every other byte stays under strict
+// equality so real staleness still fails.
+const VOLATILE_PIN_FIELDS = new Map([
+  [COMMITTED_KPI_PATH, [["runtime", "evaluated_at"]]],
+  [PUBLIC_KPI_PATH, [["runtime", "evaluated_at"]]],
+]);
+
+function normalizeVolatilePinFields(canonicalPath, text) {
+  const fields = VOLATILE_PIN_FIELDS.get(canonicalPath);
+  if (!fields) return text;
+  let doc;
+  try {
+    doc = JSON.parse(text);
+  } catch {
+    return text;
+  }
+  for (const [section, field] of fields) {
+    const target = doc?.[section];
+    if (target && typeof target === "object" && field in target) target[field] = "<volatile>";
+  }
+  return JSON.stringify(doc);
+}
+
 function parseMode(args) {
   if (args.length === 0) return "write";
   if (args.length === 1 && args[0] === "--check") return "check";
@@ -202,14 +229,18 @@ async function main() {
     await emitAll((canonicalPath) => tempPath(tempRoot, canonicalPath));
     const stale = generatedPaths().filter((canonicalPath) => {
       const generatedPath = tempPath(tempRoot, canonicalPath);
-      return !fs.existsSync(canonicalPath) || !fs.readFileSync(canonicalPath).equals(fs.readFileSync(generatedPath));
+      if (!fs.existsSync(canonicalPath)) return true;
+      const committedText = fs.readFileSync(canonicalPath, "utf8");
+      const generatedText = fs.readFileSync(generatedPath, "utf8");
+      return normalizeVolatilePinFields(canonicalPath, committedText)
+        !== normalizeVolatilePinFields(canonicalPath, generatedText);
     });
     if (stale.length > 0) {
       throw new Error(`generated pins are stale: ${stale.map((filePath) => path.relative(REPO_ROOT, filePath)).join(", ")}`);
     }
     const projectedManifest = JSON.parse(fs.readFileSync(tempPath(tempRoot, LANE_COMMIT_MANIFEST_PATH), "utf8"));
     assertUpdateManifestTriggerParity(projectedManifest.update_manifest.trigger_paths);
-    console.log(`qa:pins ok (${generatedPaths().length} byte-identical projections)`);
+    console.log(`qa:pins ok (${generatedPaths().length} projections matched — volatile runtime fields normalized)`);
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
