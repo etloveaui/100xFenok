@@ -2561,12 +2561,6 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                 <p className="cpw5-tile__value">{card.value}</p>
                 <p className="cpw5-tile__sub">{card.detail}</p>
               </div>
-              <EvidenceRail
-                freshness={evidenceFreshness}
-                source="현재 차트"
-                asOf={latestVisibleDate ?? "—"}
-                coverage={card.label}
-              />
             </article>
           ))}
         </div>
@@ -2613,12 +2607,6 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                   ) : null}
                   <span>{lens.detail}</span>
                 </button>
-                <EvidenceRail
-                  freshness={preview?.state === "loading" ? "pending" : preview?.state === "error" ? "error" : preview?.state === "stale" ? "partial" : "fixed"}
-                  source={`${preview?.series ? "현재 로드 시리즈" : "카탈로그 조합"}${showRecessionShading ? ` · ${NBER_US_RECESSION_TABLE.source}` : ""}`}
-                  asOf={showRecessionShading ? NBER_US_RECESSION_TABLE.asOf : preview?.series ? latestVisibleDate ?? "—" : MACRO_CATALOG_CURATED_AT}
-                  coverage={`${preview?.series ? `${preview.series.label} 미리보기` : `${lens.state.selected.length}개 시리즈`}${showRecessionShading ? ` · 침체 ${NBER_US_RECESSION_TABLE.periods.length}구간` : ""}`}
-                />
               </article>
             );
           })}
@@ -2764,12 +2752,6 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
                     <strong>{lens.label}</strong>
                     <span>{lens.detail}</span>
                   </button>
-                  <EvidenceRail
-                    freshness="fixed"
-                    source="시장 비교 조합"
-                    asOf={MACRO_CATALOG_CURATED_AT}
-                    coverage={`${lens.state.selected.length}개 시리즈`}
-                  />
                 </article>
               ))}
             </div>
@@ -3166,6 +3148,14 @@ export default function MacroChartClient({ initialMode = "macro" }: { initialMod
         <TransitionLink href={activeMacroContext.etfHref}>ETF로 보기</TransitionLink>
         <TransitionLink href={activeMacroContext.stockHref}>{activeMacroContext.stockSymbol} 상세</TransitionLink>
         <span>투자 조언 아님 · 데이터 기준 {formatAsOf(latestVisibleDate) ?? MACRO_CATALOG_CURATED_AT}</span>
+      </div>
+      <div data-macro-chart-sources>
+        <EvidenceRail
+          freshness={evidenceFreshness}
+          source="현재 차트"
+          asOf={latestVisibleDate ?? "—"}
+          coverage={`분석 ${analysisCards.length}종 · 렌즈 ${MACRO_ANALYSIS_LENSES.length}종 · 시장 비교 ${MARKET_COMPARE_LENSES.length}종 · 표 ${tableRows.length}개 관측일`}
+        />
       </div>
     </div>
   );
