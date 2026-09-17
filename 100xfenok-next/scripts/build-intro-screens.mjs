@@ -73,15 +73,27 @@ async function main() {
         height: info.height,
       });
     } else {
-      console.log(`[build-intro-screens] Slot ${item.route} has no baseline; registered with file: null`);
-      indexEntries.push({
-        route: item.route,
-        label: item.label,
-        href: item.href,
-        file: null,
-        width: null,
-        height: null,
-      });
+      // No QA baseline for this route: keep a committed capture if one exists
+      // (public/intro/screens/<route>.webp, produced by the lead from a live
+      // capture), otherwise register an empty slot.
+      const keptName = `${item.route}.webp`;
+      const keptPath = path.resolve(OUTPUT_DIR, keptName);
+      if (fs.existsSync(keptPath)) {
+        const meta = await sharp(keptPath).metadata();
+        totalBytes += fs.statSync(keptPath).size;
+        indexEntries.push({
+          route: item.route,
+          label: item.label,
+          href: item.href,
+          file: keptName,
+          width: meta.width ?? null,
+          height: meta.height ?? null,
+        });
+        console.log(`[build-intro-screens] Slot ${item.route} kept committed capture ${keptName}`);
+      } else {
+        console.log(`[build-intro-screens] Slot ${item.route} has no baseline; registered with file: null`);
+        indexEntries.push({ route: item.route, label: item.label, href: item.href, file: null, width: null, height: null });
+      }
     }
   }
 

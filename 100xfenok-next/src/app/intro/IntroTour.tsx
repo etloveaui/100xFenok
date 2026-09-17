@@ -88,7 +88,7 @@ export default function IntroTour({ screens, narrow, onReady, onHover, onSelect 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, narrow ? 1.25 : 1.35));
     renderer.setSize(host.clientWidth, host.clientHeight, false);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
+    renderer.toneMappingExposure = 0.9;
     renderer.domElement.style.width = "100%";
     renderer.domElement.style.height = "100%";
     renderer.domElement.style.display = "block";
@@ -101,7 +101,8 @@ export default function IntroTour({ screens, narrow, onReady, onHover, onSelect 
     const camera = new THREE.PerspectiveCamera(narrow ? 62 : 50, host.clientWidth / host.clientHeight, 0.1, 200);
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(Math.ceil(host.clientWidth / 2), Math.ceil(host.clientHeight / 2)), 0.55, 0.7, 0.55);
+    // Light-theme screenshots must not bloom: high threshold, low strength — only the sweep and frames glow.
+    const bloom = new UnrealBloomPass(new THREE.Vector2(Math.ceil(host.clientWidth / 2), Math.ceil(host.clientHeight / 2)), 0.28, 0.5, 0.92);
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
 
@@ -169,7 +170,8 @@ export default function IntroTour({ screens, narrow, onReady, onHover, onSelect 
       const w = panelW;
       const h = panelW / aspect;
       const group = new THREE.Group();
-      const shotMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 });
+      // Dimmed so a ring of white product screens reads as glass in a dark room, not a lightbox.
+      const shotMat = new THREE.MeshBasicMaterial({ color: 0xaeb3bb, transparent: true, opacity: 0 });
       const shot = new THREE.Mesh(new THREE.PlaneGeometry(w, h), shotMat);
       shot.userData.i = i;
       const glass = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.12, h + 0.12), glassMat);
@@ -337,7 +339,7 @@ export default function IntroTour({ screens, narrow, onReady, onHover, onSelect 
         const k = easeOutBack((t - T.flyIn[0] - i * 0.12) / 1.6);
         p.group.position.lerpVectors(p.from, p.slot, k);
         const fade = easeOut((t - T.flyIn[0] - i * 0.12) / 1.0);
-        p.shotMat.opacity = p.loaded ? fade : 0;
+        p.shotMat.opacity = p.loaded ? fade * 0.94 : 0;
       });
 
       // camera descends to the eye point, then sweeps the ring once, then hands over
