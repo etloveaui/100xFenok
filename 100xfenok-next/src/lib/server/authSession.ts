@@ -33,10 +33,12 @@ export const defaultGoogleVerifier: GoogleIdTokenVerifier = {
       if (!res.ok) return null;
       const data = (await res.json()) as Record<string, unknown>;
       if (typeof data.sub !== "string" || typeof data.email !== "string") return null;
+      // Fail closed: audience must match our client, the issuer must be Google,
+      // and the Google account's email must be verified.
       const targetClientId = clientId || DEFAULT_GOOGLE_CLIENT_ID;
-      if (targetClientId && data.aud !== targetClientId) {
-        return null;
-      }
+      if (!targetClientId || data.aud !== targetClientId) return null;
+      if (data.iss !== "https://accounts.google.com" && data.iss !== "accounts.google.com") return null;
+      if (data.email_verified !== true && data.email_verified !== "true") return null;
       return {
         sub: data.sub,
         email: data.email,
