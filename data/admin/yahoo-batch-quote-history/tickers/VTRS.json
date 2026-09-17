@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 3065,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "34664080685",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 557,
+      "natural": true,
+      "observed_at": "2026-09-17T01:36:28Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35170770312",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-12T01:18:12Z",
-    "history_as_of": "2026-09-11",
+    "fetched_at": "2026-09-17T01:40:00Z",
+    "history_as_of": "2026-09-16",
     "path": "data/yf/finance/VTRS.json",
-    "payload_sha256": "03d1e46c38809938e3261642f6184301ae9002669b5feaaf75a2ded7f4985b4d",
-    "quote_as_of": "2026-09-11T20:00:00Z",
-    "source_as_of": "2026-09-11"
+    "payload_sha256": "8beb9ccfa6efbb99a5364505ef15ad741da9168bca1f6df353e85c1d6c162354",
+    "quote_as_of": "2026-09-16T20:00:01Z",
+    "source_as_of": "2026-09-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 557,
     "natural": true,
-    "observed_at": "2026-09-12T01:22:05Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-17T01:36:28Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34664080685",
+    "run_id": "35170770312",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "1/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-11",
-    "observed_at": "2026-09-12T01:13:27Z",
-    "payload_sha256": "ac7909a23f4b00371b8996f56a0209c6a57e0410b88015675ab4054ea0efad1b",
-    "quote_as_of": "2026-09-11T20:00:00Z",
+    "history_as_of": "2026-09-16",
+    "observed_at": "2026-09-17T01:36:28Z",
+    "payload_sha256": "d050805cf908ad8d23f6fd5e0e0af7293a476c3273b5572c2fd61142e4bc7f24",
+    "quote_as_of": "2026-09-16T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "34664080685",
+    "run_id": "35170770312",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-11"
+    "source_as_of": "2026-09-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "VTRS",
-  "updated_at": "2026-09-12T01:22:05Z"
+  "updated_at": "2026-09-17T01:36:28Z"
 }

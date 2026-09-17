@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2959,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -182,15 +169,28 @@
       "run_id": "34664080685",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 815,
+      "natural": true,
+      "observed_at": "2026-09-17T01:48:01Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35170770312",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-12T01:25:12Z",
-    "history_as_of": "2026-09-11",
+    "fetched_at": "2026-09-17T01:51:05Z",
+    "history_as_of": "2026-09-16",
     "path": "data/yf/finance/NBIX.json",
-    "payload_sha256": "d7b65312bdb06b3c13c3909ae3f0ca98a8cd4852d97e55b3938822902c2ecef9",
-    "quote_as_of": "2026-09-11T20:00:00Z",
-    "source_as_of": "2026-09-11"
+    "payload_sha256": "c61cf2661dd9dbb55e1278b1c199515e88dc8e89ca2a312880db7e8a0d189241",
+    "quote_as_of": "2026-09-16T20:00:00Z",
+    "source_as_of": "2026-09-16"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -200,14 +200,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 498,
+    "latency_ms": 815,
     "natural": true,
-    "observed_at": "2026-09-12T01:22:05Z",
+    "observed_at": "2026-09-17T01:48:01Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34664080685",
+    "run_id": "35170770312",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-11",
-    "observed_at": "2026-09-12T01:22:05Z",
-    "payload_sha256": "f3394864da82de317639ecf857d267749fbc0c5f607618aecef4385df5e5fbd5",
-    "quote_as_of": "2026-09-11T20:00:00Z",
+    "history_as_of": "2026-09-16",
+    "observed_at": "2026-09-17T01:48:01Z",
+    "payload_sha256": "be212464f8f383e0664a7fa1e7bbe635e10213b7d9d072392e1ea57b8d5d4166",
+    "quote_as_of": "2026-09-16T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "34664080685",
+    "run_id": "35170770312",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-11"
+    "source_as_of": "2026-09-16"
   },
   "recovered_at": "2026-09-11T01:11:50Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "NBIX",
-  "updated_at": "2026-09-12T01:22:05Z"
+  "updated_at": "2026-09-17T01:48:01Z"
 }

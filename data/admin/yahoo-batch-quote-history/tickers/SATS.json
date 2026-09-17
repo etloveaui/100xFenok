@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for SATS despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 513,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:05Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for SATS despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 879,
       "natural": true,
       "observed_at": "2026-08-21T23:43:33Z",
@@ -385,6 +371,39 @@
       "run_id": "34917681226",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-17T01:31:25Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35170770312",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -424,10 +443,10 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-15T01:34:15Z",
+    "observed_at": "2026-09-17T01:31:25Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34917681226",
+    "run_id": "35170770312",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -458,9 +477,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-15T01:34:15Z",
+    "observed_at": "2026-09-17T01:31:25Z",
     "run_attempt": 1,
-    "run_id": "34917681226"
+    "run_id": "35170770312"
   },
   "lkg": {
     "fetched_at": "2026-06-29T14:45:38Z",
@@ -484,5 +503,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "SATS",
-  "updated_at": "2026-09-15T01:34:15Z"
+  "updated_at": "2026-09-17T01:31:25Z"
 }

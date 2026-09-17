@@ -6,32 +6,6 @@
       "failures": [],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-08-20T23:46:53Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 590,
-      "natural": true,
-      "observed_at": "2026-08-24T23:41:40Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32790347813",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-08-24T23:46:25Z",
       "outcome": "skipped_fresh",
       "run_attempt": 1,
@@ -185,35 +159,60 @@
       "run_id": "34917681226",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 506,
+      "natural": true,
+      "observed_at": "2026-09-17T01:31:25Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35170770312",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-17T01:48:01Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "35170770312",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:21:06Z",
-    "history_as_of": "2026-09-01",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/MSFT.json",
-    "payload_sha256": "6270ddfebb868a7ee02ae2be6dde6f41eeef56423d9ca16d3ac1e43933bef74b",
-    "quote_as_of": "2026-09-01T20:00:01Z",
-    "source_as_of": "2026-09-01"
+    "fetched_at": "2026-09-17T01:31:54Z",
+    "history_as_of": "2026-09-16",
+    "path": "data/yf/finance/MSFT.json",
+    "payload_sha256": "580337b9697cb643e92a209b96dd340c0eb4bd5077b611b9c36e1021b9bdc3fd",
+    "quote_as_of": "2026-09-16T20:00:01Z",
+    "source_as_of": "2026-09-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 575,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-15T01:34:15Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-17T01:48:01Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "34917681226",
+    "run_id": "35170770312",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -236,18 +235,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:17:07Z",
-    "payload_sha256": "f58aac3215c3659c5b837c594678b40e3816314fcb2714588622a5adba454d76",
-    "quote_as_of": "2026-09-01T20:00:01Z",
+    "history_as_of": "2026-09-16",
+    "observed_at": "2026-09-17T01:31:25Z",
+    "payload_sha256": "4e4ce543e5e13bbac0db6aacb9daad0966692d13f0f4f0e08f81ad00e427582d",
+    "quote_as_of": "2026-09-16T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "35170770312",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-16"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-17T01:31:25Z",
+  "recovered_from_run_id": "34917681226",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "35170770312",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MSFT",
-  "updated_at": "2026-09-15T01:34:15Z"
+  "updated_at": "2026-09-17T01:48:01Z"
 }

@@ -2,32 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 515,
-      "natural": true,
-      "observed_at": "2026-08-15T00:05:28Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31851174388",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 689,
-      "natural": true,
-      "observed_at": "2026-08-19T23:57:48Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 2805,
@@ -183,15 +157,41 @@
       "run_id": "35044200539",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 548,
+      "natural": true,
+      "observed_at": "2026-09-17T01:31:25Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35170770312",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-17T01:40:08Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "35170770312",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-08T01:26:08Z",
-    "history_as_of": "2026-09-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AAPL.json",
-    "payload_sha256": "3c7636e6b508c6350a91976244985ee7c75b04c1e316e80fc59d62928426c851",
-    "quote_as_of": "2026-09-04T20:00:01Z",
-    "source_as_of": "2026-09-04"
+    "fetched_at": "2026-09-17T01:32:31Z",
+    "history_as_of": "2026-09-16",
+    "path": "data/yf/finance/AAPL.json",
+    "payload_sha256": "fc4b6d36b7ea4bbdba9df586e83618fcba3be1d2d65d15a35eb02a508155dad5",
+    "quote_as_of": "2026-09-16T20:00:01Z",
+    "source_as_of": "2026-09-16"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -199,32 +199,19 @@
     "portfolio_configuration"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 580,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-16T01:29:38Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-17T01:40:08Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "35044200539",
+    "run_id": "35170770312",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "2/5"
   },
   "last_recovered_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-    "failure_kind": "unexpected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-08-12T11:11:11Z",
-    "run_attempt": 1,
-    "run_id": "31590557839"
-  },
-  "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -247,23 +234,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-04",
-    "observed_at": "2026-09-08T01:24:17Z",
-    "payload_sha256": "d67b523be1c5732820a5c89b0f566351feb2e46ecd75555e708a60ff6bcd80a8",
-    "quote_as_of": "2026-09-04T20:00:01Z",
+    "history_as_of": "2026-09-16",
+    "observed_at": "2026-09-17T01:31:25Z",
+    "payload_sha256": "68d12a3cecdd899c1c18f271a92a9eb24aa40e6338055dc885e028609b5e7e92",
+    "quote_as_of": "2026-09-16T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "35170770312",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-04"
+    "source_as_of": "2026-09-16"
   },
-  "recovered_at": "2026-08-12T13:41:31Z",
-  "recovered_from_run_id": "31590557839",
+  "recovered_at": "2026-09-17T01:31:25Z",
+  "recovered_from_run_id": "35044200539",
   "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
-  "recovery_run_id": "31602424796",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovery_run_id": "35170770312",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AAPL",
-  "updated_at": "2026-09-16T01:29:38Z"
+  "updated_at": "2026-09-17T01:40:08Z"
 }

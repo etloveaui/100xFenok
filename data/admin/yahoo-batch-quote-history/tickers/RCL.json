@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:05Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -182,15 +169,28 @@
       "run_id": "35044200539",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 545,
+      "natural": true,
+      "observed_at": "2026-09-17T01:40:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35170770312",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-16T01:34:10Z",
-    "history_as_of": "2026-09-15",
+    "fetched_at": "2026-09-17T01:43:28Z",
+    "history_as_of": "2026-09-16",
     "path": "data/yf/finance/RCL.json",
-    "payload_sha256": "6b981ad0ea7b5421a60b1b9d80c21ecc2d17bb80c9cadd0626f5c0ee9488120e",
-    "quote_as_of": "2026-09-15T20:00:02Z",
-    "source_as_of": "2026-09-15"
+    "payload_sha256": "781dfc7535057eebff9daae15441b0946aa669f8174d924ff8e4041bb312fed0",
+    "quote_as_of": "2026-09-16T20:00:02Z",
+    "source_as_of": "2026-09-16"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -200,14 +200,14 @@
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 598,
+    "latency_ms": 545,
     "natural": true,
-    "observed_at": "2026-09-16T01:29:38Z",
+    "observed_at": "2026-09-17T01:40:08Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35044200539",
+    "run_id": "35170770312",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -232,14 +232,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-15",
-    "observed_at": "2026-09-16T01:29:38Z",
-    "payload_sha256": "077b834ccf3b747ddb6dee129e3d706fb4e0e4cea89d47abf91ea16006a0bb73",
-    "quote_as_of": "2026-09-15T20:00:02Z",
+    "history_as_of": "2026-09-16",
+    "observed_at": "2026-09-17T01:40:08Z",
+    "payload_sha256": "8985c04b565d4bdfaa30b9289f947dd1e8f4393074e8bf79ddca5cd67445a7ab",
+    "quote_as_of": "2026-09-16T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "35044200539",
+    "run_id": "35170770312",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-15"
+    "source_as_of": "2026-09-16"
   },
   "recovered_at": "2026-09-12T01:13:27Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "RCL",
-  "updated_at": "2026-09-16T01:29:38Z"
+  "updated_at": "2026-09-17T01:40:08Z"
 }

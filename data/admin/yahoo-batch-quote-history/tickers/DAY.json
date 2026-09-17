@@ -1,39 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-19T23:42:29Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 1,
       "error": "ValueError: provider source timestamp is unavailable for DAY",
       "event_name": "workflow_dispatch",
@@ -453,6 +420,39 @@
       "run_id": "34664080685",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-17T01:44:01Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35170770312",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "discovered_from": [
@@ -484,10 +484,10 @@
     ],
     "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-12T01:25:40Z",
+    "observed_at": "2026-09-17T01:44:01Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "34664080685",
+    "run_id": "35170770312",
     "schedule": "20 23 * * 1-5",
     "shard": "3/5"
   },
@@ -518,18 +518,18 @@
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-09-12T01:25:40Z",
+    "observed_at": "2026-09-17T01:44:01Z",
     "run_attempt": 1,
-    "run_id": "34664080685"
+    "run_id": "35170770312"
   },
   "resolution_state": "terminal_provider_unsupported",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "terminal": {
-    "artifact_generated_at": "2026-09-16T01:26:23.258Z",
+    "artifact_generated_at": "2026-09-17T00:35:47.921Z",
     "artifact_path": "admin/fenok-s1-stock-public-promotion-dry-run.json",
-    "classified_at": "2026-09-16T01:29:38Z",
-    "classified_run_id": "35044200539",
+    "classified_at": "2026-09-17T01:48:01Z",
+    "classified_run_id": "35170770312",
     "evidence": [
       {
         "alias_source": null,
@@ -552,8 +552,8 @@
         "type": "Delisted"
       }
     ],
-    "evidence_sha256": "c8b95fe13a4d69b181151dad3332aeeefd2d4a8951e88268f5e7b4c2c0063e6f"
+    "evidence_sha256": "e532d5cc1d1fafcdc1e8d47661995070b7d7c46063b2121151b82a766f0ab501"
   },
   "ticker": "DAY",
-  "updated_at": "2026-09-16T01:29:38Z"
+  "updated_at": "2026-09-17T01:48:01Z"
 }

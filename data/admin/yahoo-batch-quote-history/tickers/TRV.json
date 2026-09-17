@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 3296,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,48 +168,61 @@
       "run_id": "34664080685",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 592,
+      "natural": true,
+      "observed_at": "2026-09-17T01:44:01Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35170770312",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-12T01:18:05Z",
-    "history_as_of": "2026-09-11",
+    "fetched_at": "2026-09-17T01:47:46Z",
+    "history_as_of": "2026-09-16",
     "path": "data/yf/finance/TRV.json",
-    "payload_sha256": "44db6222926e84741291bcdf6af46193877a078fe791153f168be58d909f5a8f",
-    "quote_as_of": "2026-09-11T20:00:02Z",
-    "source_as_of": "2026-09-11"
+    "payload_sha256": "da798e0f2ac0491bc520564b774bb67a53b617a4549cae09bc35d1c58535abea",
+    "quote_as_of": "2026-09-16T20:00:02Z",
+    "source_as_of": "2026-09-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 592,
     "natural": true,
-    "observed_at": "2026-09-12T01:22:05Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-17T01:44:01Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34664080685",
+    "run_id": "35170770312",
     "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-11",
-    "observed_at": "2026-09-12T01:13:27Z",
-    "payload_sha256": "942b49621c7e90ab69611d4b4cc652e6610473880fc8710141ed55ba5c0d1173",
-    "quote_as_of": "2026-09-11T20:00:02Z",
+    "history_as_of": "2026-09-16",
+    "observed_at": "2026-09-17T01:44:01Z",
+    "payload_sha256": "a7e240ed4b6005ba8f2e2ce1c5d943e909154946bf517abc027b215bb5923cae",
+    "quote_as_of": "2026-09-16T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "34664080685",
+    "run_id": "35170770312",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-11"
+    "source_as_of": "2026-09-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "TRV",
-  "updated_at": "2026-09-12T01:22:05Z"
+  "updated_at": "2026-09-17T01:44:01Z"
 }

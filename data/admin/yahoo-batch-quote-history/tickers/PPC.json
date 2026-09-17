@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 3110,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,30 +168,43 @@
       "run_id": "34664080685",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 548,
+      "natural": true,
+      "observed_at": "2026-09-17T01:40:08Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35170770312",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-12T01:17:45Z",
-    "history_as_of": "2026-09-11",
+    "fetched_at": "2026-09-17T01:43:24Z",
+    "history_as_of": "2026-09-16",
     "path": "data/yf/finance/PPC.json",
-    "payload_sha256": "cfe85706e0ea6338584daa0bf21a6b253826b8ba221101d93e4dedc75ff2873d",
-    "quote_as_of": "2026-09-11T20:00:00Z",
-    "source_as_of": "2026-09-11"
+    "payload_sha256": "369f426bd46f1eb68bbf3923533b94860d316526d25de351e57714320c4f6658",
+    "quote_as_of": "2026-09-16T20:00:00Z",
+    "source_as_of": "2026-09-16"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 548,
     "natural": true,
-    "observed_at": "2026-09-12T01:22:05Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-17T01:40:08Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34664080685",
+    "run_id": "35170770312",
     "schedule": "20 23 * * 1-5",
     "shard": "2/5"
   },
@@ -219,14 +219,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-11",
-    "observed_at": "2026-09-12T01:13:27Z",
-    "payload_sha256": "fd7a90208f4d1aad96e0f43cda739b77630f338cbd4c19cf8aeebe2af67781f7",
-    "quote_as_of": "2026-09-11T20:00:00Z",
+    "history_as_of": "2026-09-16",
+    "observed_at": "2026-09-17T01:40:08Z",
+    "payload_sha256": "f219f5945238e762fe015b3e80cafcc0afb73aca2fff79814de7186988c2611e",
+    "quote_as_of": "2026-09-16T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "34664080685",
+    "run_id": "35170770312",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-11"
+    "source_as_of": "2026-09-16"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -242,5 +242,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "PPC",
-  "updated_at": "2026-09-12T01:22:05Z"
+  "updated_at": "2026-09-17T01:40:08Z"
 }
