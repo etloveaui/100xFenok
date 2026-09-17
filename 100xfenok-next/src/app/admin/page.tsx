@@ -89,26 +89,26 @@ export default function AdminRootPage() {
         <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-white/75">100xFenok Control Tower</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">Admin Hub</h1>
         <p className="mt-3 max-w-2xl text-sm text-white/85">
-          마이그레이션 검증, 레거시 브리지 점검, 디자인 고도화를 하나의 진입점에서 관리합니다.
+          마이그레이션 검증, 레거시 브리지 점검, 디자인 점검을 하나의 진입점에서 관리합니다.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
             href="/admin/design-lab?mode=home-preview"
             className="min-h-11 rounded-xl border border-white/25 bg-white/10 px-4 text-sm font-bold text-white transition hover:bg-white/20"
           >
-            Home Candidate 열기
+            홈 후보 열기
           </Link>
           <Link
             href="/admin/design-lab?mode=native"
             className="min-h-11 rounded-xl border border-white/25 bg-transparent px-4 text-sm font-bold text-white transition hover:bg-white/15"
           >
-            Native Preview 열기
+            네이티브 미리보기 열기
           </Link>
           <Link
             href="/admin/design-lab"
             className="min-h-11 rounded-xl border border-white/25 bg-transparent px-4 text-sm font-bold text-white transition hover:bg-white/15"
           >
-            Legacy Bridge 열기
+            레거시 브리지 열기
           </Link>
         </div>
       </section>

@@ -319,7 +319,7 @@ export default function DataConsoleClient() {
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <h1 className="text-[20px] font-semibold text-[var(--fnk-neutral-900)]">데이터 건강 콘솔</h1>
-          <span className="text-[13px] text-[var(--fnk-neutral-500)]">관리자 · 증거 레일의 전체 화면판</span>
+          <span className="text-[13px] text-[var(--fnk-neutral-500)]">관리자 · 증거 레일 전체 화면</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {refreshStale ? (

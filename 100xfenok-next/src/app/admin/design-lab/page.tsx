@@ -119,7 +119,7 @@ export default async function AdminDesignLabPage({ searchParams }: PageProps) {
               Design Lab Legacy Bridge
             </p>
             <p className="text-sm text-slate-600">
-              기존 Design Lab HTML을 경로 가드와 함께 브릿지합니다.
+              기존 Design Lab HTML을 경로 가드와 함께 연결합니다.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
