@@ -220,7 +220,7 @@ export default function AdminUsersClient() {
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">오늘 접속</span>
-            <i className="fas fa-calendar-day text-slate-400 text-xs" aria-hidden="true" />
+            <i className="fas fa-calendar-day text-slate-500 text-xs" aria-hidden="true" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-black text-slate-900">
@@ -235,7 +235,7 @@ export default function AdminUsersClient() {
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">최근 7일</span>
-            <i className="fas fa-calendar-week text-slate-400 text-xs" aria-hidden="true" />
+            <i className="fas fa-calendar-week text-slate-500 text-xs" aria-hidden="true" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-black text-slate-900">
@@ -250,7 +250,7 @@ export default function AdminUsersClient() {
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">전체 등록</span>
-            <i className="fas fa-users text-slate-400 text-xs" aria-hidden="true" />
+            <i className="fas fa-users text-slate-500 text-xs" aria-hidden="true" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-3xl font-black text-slate-900">
@@ -302,13 +302,13 @@ export default function AdminUsersClient() {
           </div>
 
           <div className="relative min-w-[240px] max-w-md">
-            <i className="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400" aria-hidden="true" />
+            <i className="fas fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500" aria-hidden="true" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="이름, 이메일 검색..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-1.5 text-xs text-slate-900 focus:border-slate-400 focus:bg-white focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-1.5 text-xs text-slate-900 focus:border-slate-500 focus:bg-white focus:outline-none"
             />
           </div>
         </div>
@@ -400,7 +400,7 @@ export default function AdminUsersClient() {
                             {rel.text}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-slate-500 mt-0.5">
                           {formatDateDisplay(user.lastSeen)}
                         </p>
                       </td>
@@ -426,7 +426,7 @@ export default function AdminUsersClient() {
                               </span>
                             ))
                           ) : (
-                            <span className="text-xs text-slate-400">-</span>
+                            <span className="text-xs text-slate-500">-</span>
                           )}
                         </div>
                       </td>
