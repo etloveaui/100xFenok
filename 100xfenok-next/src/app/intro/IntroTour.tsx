@@ -96,9 +96,10 @@ export default function IntroTour({ screens, narrow, onReady, onHover, onSelect 
 
     const scene = new THREE.Scene();
     scene.background = cBg;
-    scene.fog = new THREE.FogExp2(cBg.getHex(), narrow ? 0.028 : 0.02);
+    scene.fog = new THREE.FogExp2(cBg.getHex(), 0.02);
 
-    const camera = new THREE.PerspectiveCamera(narrow ? 62 : 50, host.clientWidth / host.clientHeight, 0.1, 200);
+    // Portrait phones have a narrow horizontal FOV: widen the lens and push the ring out so 2–3 screens are in view.
+    const camera = new THREE.PerspectiveCamera(narrow ? 78 : 50, host.clientWidth / host.clientHeight, 0.1, 200);
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
     // Light-theme screenshots must not bloom: high threshold, low strength — only the sweep and frames glow.
@@ -143,9 +144,9 @@ export default function IntroTour({ screens, narrow, onReady, onHover, onSelect 
 
     // --- the ring of screens ---
     const n = screens.length;
-    const R = narrow ? 9 : 14;
-    const H = narrow ? 3.2 : 3.4; // panel centre height
-    const panelW = narrow ? 5.2 : 6.4;
+    const R = narrow ? 15 : 14;
+    const H = narrow ? 3.0 : 3.4; // panel centre height
+    const panelW = narrow ? 4.6 : 6.4;
     const loader = new THREE.TextureLoader();
     const glassMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.55, depthWrite: false });
     disposables.push(glassMat);
@@ -171,7 +172,7 @@ export default function IntroTour({ screens, narrow, onReady, onHover, onSelect 
       const h = panelW / aspect;
       const group = new THREE.Group();
       // Dimmed so a ring of white product screens reads as glass in a dark room, not a lightbox.
-      const shotMat = new THREE.MeshBasicMaterial({ color: 0xaeb3bb, transparent: true, opacity: 0 });
+      const shotMat = new THREE.MeshBasicMaterial({ color: 0xc9cdd3, transparent: true, opacity: 0 });
       const shot = new THREE.Mesh(new THREE.PlaneGeometry(w, h), shotMat);
       shot.userData.i = i;
       const glass = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.12, h + 0.12), glassMat);
