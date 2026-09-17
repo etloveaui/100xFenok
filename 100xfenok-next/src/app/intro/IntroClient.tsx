@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
@@ -50,6 +51,8 @@ interface IntroFeed {
   breadth?: { total?: number; upCount?: number; downCount?: number; sectors?: BreadthSector[] };
   rotation?: RotationDot[] | { window?: string; windowLabel?: string; missing?: number; sectors?: RotationDot[] } | null;
 }
+
+const IntroScene = dynamic(() => import("./IntroScene"), { ssr: false });
 
 type Phase = "hold" | "draw" | "bars" | "dots" | "card" | "focus";
 const PHASE_ORDER: Phase[] = ["hold", "draw", "bars", "dots", "card", "focus"];
@@ -137,6 +140,9 @@ export default function IntroClient() {
   const [loggingIn, setLoggingIn] = useState(false);
   const [gisReady, setGisReady] = useState(false);
   const [gisFailed, setGisFailed] = useState(false);
+  const [use3d, setUse3d] = useState(false);
+  const [sceneReady, setSceneReady] = useState(false);
+  const [hoverLabel, setHoverLabel] = useState<string | null>(null);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -167,6 +173,13 @@ export default function IntroClient() {
     measure();
     const ro = new ResizeObserver(measure);
     if (rootRef.current) ro.observe(rootRef.current);
+    let webgl = false;
+    try {
+      const c = document.createElement("canvas");
+      webgl = !!(c.getContext("webgl2") || c.getContext("webgl"));
+    } catch {
+      webgl = false;
+    }
     if (media.matches) {
       setReducedMotion(true);
       setPhase("focus");
@@ -175,6 +188,7 @@ export default function IntroClient() {
         ro.disconnect();
       };
     }
+    setUse3d(webgl);
     const phone = width.matches;
     const timers = [
       setTimeout(() => setPhase("draw"), 500),
@@ -303,12 +317,30 @@ export default function IntroClient() {
     return placed;
   }, [dots, maxAbsRel]);
 
+  const sceneSectors = useMemo(() => sectors.map((s) => ({ symbol: s.symbol, name: s.name, changePercent: s.changePercent })), [sectors]);
+  const sceneDots = useMemo(() => dots.map((d) => ({ symbol: d.symbol, name: d.name, relative: d.relative, band: d.band })), [dots]);
+  const sceneSp = useMemo(() => (sp ? { values: sp.sparkline, price: sp.price, changePercent: sp.changePercent } : null), [sp]);
+  const sceneNq = useMemo(() => (nq ? { values: nq.sparkline, price: nq.price, changePercent: nq.changePercent } : null), [nq]);
+  const sceneOn = use3d && !!feed && !feedFailed;
+
   const drawing = at("draw");
   const barsUp = at("bars");
   const dotsIn = at("dots");
 
   return (
     <div ref={rootRef} className="intro-root relative min-h-[100svh] w-full overflow-hidden text-slate-100">
+      {sceneOn ? (
+        <>
+          <IntroScene sp={sceneSp} nq={sceneNq} sectors={sceneSectors} dots={sceneDots} narrow={narrow} onReady={() => setSceneReady(true)} onHover={setHoverLabel} />
+          <div className="intro-vignette pointer-events-none absolute inset-0 z-[1]" aria-hidden="true" />
+          <div
+            className="pointer-events-none absolute inset-0 z-[2]"
+            aria-hidden="true"
+            style={{ background: "var(--intro-bg)", opacity: sceneReady ? 0 : 1, transition: `opacity 900ms ${EASE}` }}
+          />
+        </>
+      ) : (
+        <>
       {/* Layer A — set: dot grid, drifting streaks, vignette */}
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
         <div className="intro-grid absolute inset-0" />
@@ -372,6 +404,8 @@ export default function IntroClient() {
         </svg>
       ) : null}
 
+        </>
+      )}
       {/* Index readouts riding the line's head (count up while it draws) */}
       {!narrow && (sp || nq) ? (
         <div
@@ -383,6 +417,8 @@ export default function IntroClient() {
         </div>
       ) : null}
 
+      {!sceneOn ? (
+        <>
       {/* Layer C — 11 sectors rise along the bottom edge */}
       {sectors.length ? (
         <div className={`pointer-events-none absolute inset-x-0 bottom-0 z-[1] ${narrow ? "h-[15svh]" : "h-[22svh]"}`} aria-hidden="true">
@@ -466,6 +502,9 @@ export default function IntroClient() {
         </div>
       ) : null}
 
+        </>
+      ) : null}
+
       {/* Top bar */}
       <header className="relative z-[3] flex items-center justify-between px-5 pt-5 sm:px-8">
         <div className="flex items-baseline gap-2">
@@ -506,6 +545,11 @@ export default function IntroClient() {
           <p className="intro-num text-[12px] tracking-wide" style={{ color: "var(--intro-ink-3)" }}>
             {asOf ? `${asOf} · 미국 장 마감` : "100x Market Radar"}
           </p>
+          {sceneOn ? (
+            <p className="min-h-[18px] text-[13px]" style={{ color: "var(--intro-ink-2)", opacity: hoverLabel ? 1 : 0, transition: `opacity 160ms ${EASE}` }} aria-live="polite">
+              {hoverLabel ?? " "}
+            </p>
+          ) : null}
           {reading ? (
             <>
               <h1 className="text-[40px] font-extrabold leading-[1.08] tracking-[-0.03em] text-white sm:text-[56px] lg:text-[64px]">

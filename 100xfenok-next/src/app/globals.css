@@ -1061,6 +1061,10 @@ body:has(.intro-root) { background: #08090a; }
 @keyframes intro-pulse { from { r: 4; opacity: .9; } to { r: 22; opacity: 0; } }
 .intro-pulse { animation: intro-pulse 1.8s cubic-bezier(0.2, 0, 0, 1) infinite; }
 @media (prefers-reduced-motion: reduce) { .intro-pulse { animation: none; opacity: 0; } }
+.intro-label { position: absolute; left: 0; top: 0; font-size: 12px; line-height: 1; color: var(--intro-ink-2); white-space: nowrap; will-change: transform; transition: opacity 200ms; text-shadow: 0 1px 2px rgb(0 0 0 / 0.8); }
+.intro-label-sphere { font-size: 12px; }
+.intro-label-ridge { font-size: 13px; color: #fff; font-weight: 600; }
+.intro-label-muted { color: var(--intro-ink-3); font-weight: 500; }
 .intro-focus-ring { box-shadow: 0 0 0 1px rgb(var(--intro-brand-rgb) / .45), 0 0 32px rgb(var(--intro-brand-rgb) / .25); }
 .intro-dot-up { box-shadow: 0 0 10px rgb(var(--intro-up-rgb) / .6); }
 .intro-dot-down { box-shadow: 0 0 10px rgb(var(--intro-down-rgb) / .6); }
