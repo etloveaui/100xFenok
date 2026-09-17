@@ -135,6 +135,7 @@ export default function IntroClient() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [loggingIn, setLoggingIn] = useState(false);
   const [gisReady, setGisReady] = useState(false);
+  const [gisFailed, setGisFailed] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
   // Existing session → straight in.
@@ -198,7 +199,11 @@ export default function IntroClient() {
     let active = true;
     const clientId = getGoogleClientId();
     loadGoogleScript().then((loaded) => {
-      if (!active || !loaded || !googleBtnRef.current) return;
+      if (!active) return;
+      if (!loaded || !googleBtnRef.current) {
+        setGisFailed(true);
+        return;
+      }
       const ok = renderGoogleButton(googleBtnRef.current, clientId, async (idToken) => {
         setLoggingIn(true);
         setLoginError(null);
@@ -213,6 +218,7 @@ export default function IntroClient() {
         }
       });
       if (ok) setGisReady(true);
+      else setGisFailed(true);
     });
     return () => {
       active = false;
@@ -320,9 +326,9 @@ export default function IntroClient() {
               {!gisReady ? (
                 <button
                   type="button"
-                  disabled={loggingIn}
-                  onClick={() => window.google?.accounts?.id?.prompt?.()}
-                  className="inline-flex h-[44px] items-center gap-2.5 rounded-full border px-5 text-[14px] font-medium text-white disabled:opacity-50"
+                  disabled
+                  aria-busy={!gisFailed}
+                  className="inline-flex h-[44px] items-center gap-2.5 rounded-full border px-5 text-[14px] font-medium text-white opacity-70"
                   style={{ borderColor: "var(--intro-line-strong)", background: "var(--intro-fill-faint)" }}
                 >
                   <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
@@ -331,7 +337,7 @@ export default function IntroClient() {
                     <path fill="var(--intro-google-yellow)" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.16 0 9.94 0 12s.45 3.84 1.24 5.42l4.04-3.15z" />
                     <path fill="var(--intro-google-red)" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z" />
                   </svg>
-                  {loggingIn ? "로그인 중" : "Google 계정으로 계속"}
+                  {loggingIn ? "로그인 중" : gisFailed ? "Google 로그인을 불러오지 못했습니다" : "Google 계정으로 계속"}
                 </button>
               ) : null}
             </div>
