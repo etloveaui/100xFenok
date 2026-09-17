@@ -29,6 +29,7 @@
 
 import { ENROLLED_PATHS, ENROLLED_PREFIXES } from "../lib/cloud-data-plane-worker-read.mjs";
 import { performance } from "node:perf_hooks";
+import { liveRequestHeaders } from "../lib/live-request-headers.mjs";
 
 export const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 // Milliseconds a single enrolled URL may take to answer before it is cut off
@@ -278,9 +279,13 @@ export function evaluateProbeResponse({ path, family, status, generationHeader, 
 // an injected fetchFn that ignores init.signal cannot hang report completion.
 async function fetchWithTimeout(fetchFn, url, timeoutMs, remainingTotalMsFn) {
   const controller = new AbortController();
+  const headers = liveRequestHeaders();
+  const init = Object.keys(headers).length > 0
+    ? { redirect: "manual", signal: controller.signal, headers }
+    : { redirect: "manual", signal: controller.signal };
   let requestPromise;
   try {
-    requestPromise = Promise.resolve(fetchFn(url, { redirect: "manual", signal: controller.signal }));
+    requestPromise = Promise.resolve(fetchFn(url, init));
   } catch (error) {
     throw error;
   }

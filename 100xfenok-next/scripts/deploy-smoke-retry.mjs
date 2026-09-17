@@ -1,3 +1,5 @@
+import { liveRequestHeaders } from "../../scripts/lib/live-request-headers.mjs";
+
 export const DEPLOY_SMOKE_ATTEMPTS = 3;
 const DEFAULT_DELAY_MS = 1500;
 const DEFAULT_TIMEOUT_MS = 15000;
@@ -42,7 +44,15 @@ export async function fetchTextWithBoundedRetry(url, init = {}, options = {}) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetchImpl(url, { ...init, signal: controller.signal });
+      const verifyHeaders = liveRequestHeaders();
+      const requestInit = { ...init, signal: controller.signal };
+      if (Object.keys(verifyHeaders).length > 0) {
+        requestInit.headers = {
+          ...verifyHeaders,
+          ...(init.headers ?? {}),
+        };
+      }
+      const response = await fetchImpl(url, requestInit);
       const text = await response.text();
       const declaredBytes = Number(response.headers.get("content-length"));
       const receivedBytes = Buffer.byteLength(text);

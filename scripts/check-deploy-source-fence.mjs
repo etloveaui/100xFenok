@@ -19,6 +19,7 @@ import {
   evaluateDeploySourceFence,
   isDeployProvenance,
 } from "./lib/deploy-provenance.mjs";
+import { liveRequestHeaders } from "./lib/live-request-headers.mjs";
 
 export const DEPLOY_SOURCE_FENCE_CANONICAL_LIVE_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 
@@ -69,7 +70,10 @@ async function fetchProbeResponse(fetchImpl, url, timeoutMs) {
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetchImpl(url, {
-      headers: LIVE_PROBE_HEADERS,
+      headers: {
+        ...LIVE_PROBE_HEADERS,
+        ...liveRequestHeaders(),
+      },
       redirect: "manual",
       signal: controller.signal,
     });

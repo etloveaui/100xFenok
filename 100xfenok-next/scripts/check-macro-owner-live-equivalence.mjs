@@ -10,6 +10,7 @@
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { liveRequestHeaders } from "../../scripts/lib/live-request-headers.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const inventoryScript = path.join(__dirname, "check-canonical-root-inventory.mjs");
@@ -87,7 +88,11 @@ function loadMatrix() {
 async function fetchSmoke(baseUrl, row) {
   const url = new URL(row.path, baseUrl);
   const response = await withTimeout(
-    (signal) => fetch(url, { redirect: "follow", signal }),
+    (signal) => fetch(url, {
+      headers: liveRequestHeaders(),
+      redirect: "follow",
+      signal,
+    }),
     `GET ${row.path}`,
   );
   await response.arrayBuffer();

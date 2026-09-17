@@ -5,6 +5,7 @@ import { FATAL_MARKERS, SMOKE_PAGE_ROUTES } from "./qa-route-catalog.mjs";
 import { DEPLOY_SMOKE_ATTEMPTS, fetchTextWithBoundedRetry } from "./deploy-smoke-retry.mjs";
 import { PRODUCT_SURFACE_COLLECTION_MAX_AGE_HOURS } from "../../scripts/lib/kpi-contract-constants.mjs";
 import { validateProductSurfaceCoverageV2Artifact } from "../../scripts/lib/product-surface-stamp-v2.mjs";
+import { liveRequestHeaders } from "../../scripts/lib/live-request-headers.mjs";
 import { STOCKANALYSIS_ETF_SHARD_COUNT } from "../src/lib/stockanalysis-etf-shard.mjs";
 
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
@@ -252,7 +253,10 @@ async function fetchText(url) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
-      const response = await fetch(url, { signal: controller.signal });
+      const response = await fetch(url, {
+        headers: liveRequestHeaders(),
+        signal: controller.signal,
+      });
       const text = await response.text();
       // Detect a truncated body: a large response can arrive HTTP 200 with the
       // stream cut short (no thrown error), which JSON.parse then rejects with

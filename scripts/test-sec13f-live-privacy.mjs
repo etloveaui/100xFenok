@@ -7,6 +7,7 @@
 
 import assert from "node:assert/strict";
 import { derivedPrivateFileOutputs } from "./lib/derived-asset-registry.mjs";
+import { liveRequestHeaders } from "./lib/live-request-headers.mjs";
 
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 
@@ -38,6 +39,7 @@ for (const [label, privatePath] of privatePaths) {
       headers: {
         "cache-control": "no-cache, no-store",
         pragma: "no-cache",
+        ...liveRequestHeaders(),
       },
       signal: controller.signal,
     });

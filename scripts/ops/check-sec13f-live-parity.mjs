@@ -10,6 +10,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { liveRequestHeaders } from "../lib/live-request-headers.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
@@ -132,6 +133,7 @@ async function fetchJson(baseUrl, route, timeoutMs, cacheBust) {
       headers: {
         "cache-control": "no-cache, no-store",
         pragma: "no-cache",
+        ...liveRequestHeaders(),
       },
       signal: controller.signal,
     });

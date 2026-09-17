@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 
 import { ENROLLED_PATHS } from "../lib/cloud-data-plane-worker-read.mjs";
 import { validatePublishOutcomeShard } from "../lib/publish-outcome-shard.mjs";
+import { liveRequestHeaders } from "../lib/live-request-headers.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
@@ -138,7 +139,11 @@ async function fetchWithTimeout(fetchFn, url, timeoutMs) {
     return await fetchFn(url, {
       redirect: "manual",
       cache: "no-store",
-      headers: { "cache-control": "no-cache", pragma: "no-cache" },
+      headers: {
+        "cache-control": "no-cache",
+        pragma: "no-cache",
+        ...liveRequestHeaders(),
+      },
       signal: controller.signal,
     });
   } finally {

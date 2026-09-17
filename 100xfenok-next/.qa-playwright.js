@@ -3,6 +3,7 @@ import { chromium } from "playwright";
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
+import { liveRequestHeaders } from "../scripts/lib/live-request-headers.mjs";
 
 const qaCatalog = await import("./scripts/qa-route-catalog.mjs");
 
@@ -742,7 +743,10 @@ async function runDataStateSurfaceChecks(page, route) {
   const results = [];
 
   for (const vp of viewports) {
-    let context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
+    let context = await browser.newContext({
+      viewport: { width: vp.width, height: vp.height },
+      extraHTTPHeaders: liveRequestHeaders(),
+    });
     let page = await context.newPage();
 
     for (const route of routes) {
@@ -854,7 +858,10 @@ async function runDataStateSurfaceChecks(page, route) {
         // Dev server: recover from page crash by recreating context
         if (isDevServer && /Page crashed|ERR_CONNECTION_REFUSED/i.test(String(err))) {
           try { await context.close(); } catch { /* ignore */ }
-          context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
+          context = await browser.newContext({
+            viewport: { width: vp.width, height: vp.height },
+            extraHTTPHeaders: liveRequestHeaders(),
+          });
           page = await context.newPage();
         }
       }

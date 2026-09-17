@@ -1,5 +1,6 @@
 import { defineConfig } from "@playwright/test";
 import fs from "node:fs";
+import { liveRequestHeaders } from "../scripts/lib/live-request-headers.mjs";
 
 const isCI = Boolean(process.env.CI);
 const visualPort = process.env.QA_VISUAL_PORT ?? process.env.PORT ?? "3107";
@@ -45,6 +46,7 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "off",
+    extraHTTPHeaders: liveRequestHeaders(),
     launchOptions: {
       args: ["--hide-scrollbars", "--disable-features=Translate"],
       ...(chromiumExecutablePath ? { executablePath: chromiumExecutablePath } : {}),

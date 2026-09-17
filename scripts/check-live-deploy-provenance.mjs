@@ -21,6 +21,7 @@ import {
   evaluatePostObservation,
   isDeployProvenance,
 } from "./lib/deploy-provenance.mjs";
+import { liveRequestHeaders } from "./lib/live-request-headers.mjs";
 
 const DEFAULT_BASE_URL = "https://100xfenok.etloveaui.workers.dev";
 
@@ -43,7 +44,11 @@ async function fetchText(url, { timeoutMs = 15000, retries = 3 } = {}) {
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const response = await fetch(url, {
-        headers: { "cache-control": "no-cache, no-store", pragma: "no-cache" },
+        headers: {
+          "cache-control": "no-cache, no-store",
+          pragma: "no-cache",
+          ...liveRequestHeaders(),
+        },
         signal: controller.signal,
       });
       if (!response.ok) {
