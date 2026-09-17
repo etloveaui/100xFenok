@@ -757,7 +757,7 @@ export default function HomeCanvasPlusClient() {
                 {breadthSectors.map((sector) => (
                   <span
                     key={sector.key}
-                    className="flex h-5 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-[4px] font-mono text-[12px] leading-none text-[var(--ls-heatmap-text)] md:w-8 md:flex-none"
+                    className="flex h-5 min-w-0 flex-1 items-center justify-center overflow-hidden rounded-[4px] font-mono text-[12px] leading-none text-[var(--ls-heatmap-text)] md:w-10 md:flex-none"
                     style={{ background: heatStripTint(sector.displayChange * 100) }}
                   >
                     <span className="min-w-0 truncate">{sector.etf}</span>
