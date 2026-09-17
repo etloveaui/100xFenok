@@ -15,10 +15,10 @@ export default function QuickIndices({ quickIndices, tenYearYield, hySpread }: Q
 
   return (
     <div className="bento-card p-4 quick-indices-card">
-      <h3 className="text-xs font-bold text-slate-600 tracking-widest mb-2">Quick Indices</h3>
+      <h3 className="text-[12px] font-bold text-slate-600 tracking-widest mb-2">Quick Indices</h3>
       <div className="quick-indices-scroll">
         <div className="index-item">
-          <span className="text-xs text-slate-600">SPY</span>
+          <span className="text-[12px] text-slate-600">SPY</span>
           <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="var(--c-up)" strokeWidth="1.5" points="0,16 10,14 20,12 30,10 40,11 50,6 60,4" /></svg>
           <span className={`font-bold text-sm ${spyIndex.change >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
             {formatSignedPercentDecimal(spyIndex.change)}
@@ -31,7 +31,7 @@ export default function QuickIndices({ quickIndices, tenYearYield, hySpread }: Q
           ) : null}
         </div>
         <div className="index-item">
-          <span className="text-xs text-slate-600">QQQ</span>
+          <span className="text-[12px] text-slate-600">QQQ</span>
           <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="var(--c-up)" strokeWidth="1.5" points="0,18 10,16 20,12 30,10 40,8 50,6 60,3" /></svg>
           <span className={`font-bold text-sm ${qqqIndex.change >= 0 ? 'text-emerald-800' : 'text-red-700'}`}>
             {formatSignedPercentDecimal(qqqIndex.change)}
@@ -44,12 +44,12 @@ export default function QuickIndices({ quickIndices, tenYearYield, hySpread }: Q
           ) : null}
         </div>
         <div className="index-item">
-          <span className="text-xs text-slate-600">UST10Y</span>
+          <span className="text-[12px] text-slate-600">UST10Y</span>
           <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="var(--c-down)" strokeWidth="1.5" points="0,8 10,9 20,10 30,11 40,12 50,13 60,14" /></svg>
           <span className="font-bold text-slate-700 text-sm">{formatPercent(tenYearYield, 2)}</span>
         </div>
         <div className="index-item">
-          <span className="text-xs text-slate-600">HY OAS</span>
+          <span className="text-[12px] text-slate-600">HY OAS</span>
           <svg className="sparkline" viewBox="0 0 60 20" aria-hidden="true"><polyline fill="none" stroke="var(--c-warn)" strokeWidth="1.5" points="0,12 10,11 20,10 30,9 40,10 50,11 60,12" /></svg>
           <span className="font-bold text-amber-800 text-sm">{formatPercent(hySpread, 2)}</span>
         </div>

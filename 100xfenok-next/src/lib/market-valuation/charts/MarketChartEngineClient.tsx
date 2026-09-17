@@ -540,7 +540,7 @@ export function MarketChartEngineClient({
     return (
       <div
         className={cx(
-          "grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-2)]",
+          "grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[12px] font-bold text-[var(--c-ink-2)]",
           heightClassName,
           className,
         )}

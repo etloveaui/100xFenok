@@ -259,7 +259,7 @@ function FilingCoverageBanner({
             </p>
           ) : null}
         </div>
-        <div className="flex flex-wrap gap-2 text-xs font-black">
+        <div className="flex flex-wrap gap-2 text-[12px] font-black">
           <span className="rounded-full border border-blue-200 bg-white px-3 py-1">{compact ? "요약" : `${symbol} 요약`} {readyCount.toLocaleString("ko-KR")}건</span>
           <span className="rounded-full border border-blue-200 bg-white px-3 py-1">원문 {filings.length.toLocaleString("ko-KR")}건</span>
           {updated ? <span className="rounded-full border border-blue-200 bg-white px-3 py-1">공시 기준 {formatDate(updated)}</span> : null}
@@ -323,7 +323,7 @@ function EvidenceList({
 
   if (evidenceRows.length === 0) {
     return (
-      <p className="mt-3 text-xs font-bold text-red-600">
+      <p className="mt-3 text-[12px] font-bold text-red-600">
         근거 링크가 연결되지 않은 문장입니다. 원문 확인 전까지 해석에 사용하지 마세요.
       </p>
     );
@@ -334,7 +334,7 @@ function EvidenceList({
       {evidenceRows.map((evidence) => (
         <div
           key={evidence.id}
-          className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-relaxed text-slate-600"
+          className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] leading-relaxed text-slate-600"
         >
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-[12px] font-semibold text-slate-500">{evidence.id}</span>
@@ -382,7 +382,7 @@ function SummarySection({
             <article key={`${title}-${index}`} className="rounded-lg border border-slate-200 bg-white p-4">
               <div className="flex flex-wrap items-start gap-3">
                 <span
-                  className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-xs font-bold ${STANCE_CLASS[bullet.stance]}`}
+                  className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-[12px] font-bold ${STANCE_CLASS[bullet.stance]}`}
                 >
                   {STANCE_LABEL[bullet.stance]}
                 </span>
@@ -584,16 +584,16 @@ export default function EdgarSummaryClient({
                       className="min-w-0 flex-1 text-left"
                       disabled={!canShowSummary}
                     >
-                      <span className="block text-xs font-black text-slate-500">{filingTitle(filing)}</span>
+                      <span className="block text-[12px] font-black text-slate-500">{filingTitle(filing)}</span>
                       <span className="mt-1 block text-sm font-bold text-slate-900">{filing.title}</span>
-                      <span className="mt-1 block text-xs leading-relaxed text-slate-500">{filing.summaryOneLine}</span>
+                      <span className="mt-1 block text-[12px] leading-relaxed text-slate-500">{filing.summaryOneLine}</span>
                     </button>
                     <div className="flex flex-wrap gap-2">
                       <a
                         href={filing.sourceUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                        className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
                       >
                         원문 보기
                       </a>
@@ -603,26 +603,26 @@ export default function EdgarSummaryClient({
                           if (filing.summaryPath) setSelectedPath(filing.summaryPath);
                         }}
                         disabled={!canShowSummary}
-                        className={`inline-flex min-h-8 items-center rounded-full border px-3 text-xs font-bold transition ${canShowSummary ? "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700" : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500"}`}
+                        className={`inline-flex min-h-8 items-center rounded-full border px-3 text-[12px] font-bold transition ${canShowSummary ? "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700" : "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500"}`}
                       >
                         {canShowSummary ? "요약 보기" : "요약 준비 중"}
                       </button>
                       {canShowTranslation && filing.translationPath ? (
                         <a
                           href={filing.translationPath}
-                          className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                          className="inline-flex min-h-8 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
                         >
                           번역 보기
                         </a>
                       ) : (
-                        <span className="inline-flex min-h-8 cursor-not-allowed items-center rounded-full border border-slate-200 bg-slate-100 px-3 text-xs font-bold text-slate-500">
+                        <span className="inline-flex min-h-8 cursor-not-allowed items-center rounded-full border border-slate-200 bg-slate-100 px-3 text-[12px] font-bold text-slate-500">
                           번역 준비 중
                         </span>
                       )}
                     </div>
                   </div>
                   {filing.caveats?.length ? (
-                    <ul className="mt-3 grid gap-1 text-xs font-semibold text-amber-700">
+                    <ul className="mt-3 grid gap-1 text-[12px] font-semibold text-amber-700">
                       {filing.caveats.map((caveat) => <li key={caveat}>· {caveat}</li>)}
                     </ul>
                   ) : null}
@@ -657,31 +657,31 @@ export default function EdgarSummaryClient({
         <div className="panel-b">
           <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <dt className="text-xs font-bold text-slate-500">회사</dt>
+              <dt className="text-[12px] font-bold text-slate-500">회사</dt>
               <dd className="mt-1 text-sm font-semibold text-slate-800">{artifact.company.name}</dd>
             </div>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <dt className="text-xs font-bold text-slate-500">공시</dt>
+              <dt className="text-[12px] font-bold text-slate-500">공시</dt>
               <dd className="mt-1 text-sm font-semibold text-slate-800">{selectedFiling ? filingTitle(selectedFiling) : artifact.filing.form}</dd>
             </div>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <dt className="text-xs font-bold text-slate-500">접수일</dt>
+              <dt className="text-[12px] font-bold text-slate-500">접수일</dt>
               <dd className="mt-1 text-sm font-semibold text-slate-800">{formatDate(artifact.filing.filingDate)}</dd>
             </div>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <dt className="text-xs font-bold text-slate-500">접수번호</dt>
-              <dd className="mt-1 break-all font-mono text-xs font-semibold text-slate-800">{artifact.filing.accession}</dd>
+              <dt className="text-[12px] font-bold text-slate-500">접수번호</dt>
+              <dd className="mt-1 break-all font-mono text-[12px] font-semibold text-slate-800">{artifact.filing.accession}</dd>
             </div>
           </dl>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <p className="text-xs font-bold text-slate-500">요약 생성일</p>
+              <p className="text-[12px] font-bold text-slate-500">요약 생성일</p>
               <p className="mt-1 text-sm text-slate-700" data-edgar-generation-source>
                 {formatDateTime(artifact.generation.generatedAtUtc)} · 자동 생성
               </p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <p className="text-xs font-bold text-slate-500">요약 근거</p>
+              <p className="text-[12px] font-bold text-slate-500">요약 근거</p>
               <p className="mt-1 text-sm text-slate-700">
                 {(() => {
                   const basis = sectionListLabel(artifact.filing.form, artifact.sourceStatus.sectionsExtracted);

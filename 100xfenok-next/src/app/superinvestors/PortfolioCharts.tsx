@@ -315,7 +315,7 @@ export function PerformanceChart({ performance, investorName }: PerformanceChart
 
   if (portfolio.length === 0) {
     return (
-      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-[var(--c-ink-3)]">
+      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-[12px] font-bold text-[var(--c-ink-3)]">
         성과 차트 데이터가 없습니다
       </div>
     );
@@ -682,7 +682,7 @@ export function RiskReturnScatter({ data }: RiskReturnScatterProps) {
 
   if (investorPoints.length === 0) {
     return (
-      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-[var(--c-ink-3)]">
+      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-[12px] font-bold text-[var(--c-ink-3)]">
         리스크-수익 데이터가 없습니다
       </div>
     );
@@ -864,7 +864,7 @@ export function CumulativeReturnOverlay({ data }: CumulativeReturnOverlayProps) 
 
   if (fullSeries.length === 0) {
     return (
-      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-[var(--c-ink-3)]">
+      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-[12px] font-bold text-[var(--c-ink-3)]">
         동일기간 누적 데이터가 없습니다
       </div>
     );
@@ -1037,7 +1037,7 @@ export function FactorExposureRadar({ data, investorId }: FactorExposureRadarPro
 
   if (!selected) {
     return (
-      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-xs font-bold text-[var(--c-ink-3)]">
+      <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-[12px] font-bold text-[var(--c-ink-3)]">
         팩터 틸트 데이터가 없습니다
       </div>
     );

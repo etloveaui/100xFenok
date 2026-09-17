@@ -497,11 +497,11 @@ export default function WindDownLearnClient() {
                 WIND DOWN · LEARN
               </p>
               <h1 className="mt-1 text-xl font-black">오늘의 다섯 문장</h1>
-              {selectionBasis ? <p data-learning-selection className="mt-2 max-w-[240px] text-xs leading-5 text-[var(--wd-muted)]">{selectionBasis === "review-patterns" ? "복습에서 어려웠던 문형·주제와 이어지는 새 표현을 골랐어." : selectionBasis === "review-pace" ? "복습 결과와 문장 길이를 참고해 새 표현을 골랐어." : selectionBasis === "saved-session" ? "저장해 둔 문장을 이어서 연습해." : "짧은 표현부터 시작해 보고, 복습 결과에 맞춰 조절할게."}</p> : null}
+              {selectionBasis ? <p data-learning-selection className="mt-2 max-w-[240px] text-[12px] leading-5 text-[var(--wd-muted)]">{selectionBasis === "review-patterns" ? "복습에서 어려웠던 문형·주제와 이어지는 새 표현을 골랐어." : selectionBasis === "review-pace" ? "복습 결과와 문장 길이를 참고해 새 표현을 골랐어." : selectionBasis === "saved-session" ? "저장해 둔 문장을 이어서 연습해." : "짧은 표현부터 시작해 보고, 복습 결과에 맞춰 조절할게."}</p> : null}
             </div>
             <Link
               href="/winddown"
-              className="inline-flex min-h-14 items-center rounded-full border border-[var(--wd-border)] px-4 text-xs font-black text-[var(--wd-text-muted)]"
+              className="inline-flex min-h-14 items-center rounded-full border border-[var(--wd-border)] px-4 text-[12px] font-black text-[var(--wd-text-muted)]"
             >
               나가기
             </Link>
@@ -513,7 +513,7 @@ export default function WindDownLearnClient() {
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <span className="min-w-10 text-right text-xs font-black tabular-nums text-[var(--wd-text-muted)]">
+            <span className="min-w-10 text-right text-[12px] font-black tabular-nums text-[var(--wd-text-muted)]">
               {session?.creditedCardIds.length ?? 0}/
               {WINDDOWN_LEARN_CREDIT_TARGET}
             </span>
@@ -599,7 +599,7 @@ export default function WindDownLearnClient() {
                       key={mistake.card.id}
                       className="rounded-2xl bg-[var(--wd-surface-raised)] px-4 py-3"
                     >
-                      <p className="text-xs font-bold text-[var(--wd-text-muted)]">
+                      <p className="text-[12px] font-bold text-[var(--wd-text-muted)]">
                         {mistake.card.ko}
                       </p>
                       <p className="mt-1 text-sm font-black">
@@ -679,7 +679,7 @@ export default function WindDownLearnClient() {
                         ? "뜻 고르기"
                         : "문장 조립"}
                     </span>
-                    <span className="text-xs font-black tabular-nums text-[var(--wd-text-muted)]">
+                    <span className="text-[12px] font-black tabular-nums text-[var(--wd-text-muted)]">
                       {current.creditPolicy === "practice-only"
                         ? "보상 없는 짧은 연습"
                         : `${(session?.creditedCardIds.length ?? 0) + 1}번째`}
@@ -699,7 +699,7 @@ export default function WindDownLearnClient() {
 
                   {current.kind === "meaning-choice" ? (
                     <>
-                      <p className="mt-7 text-xs font-black tracking-[0.15em] text-[var(--wd-accent)]">
+                      <p className="mt-7 text-[12px] font-black tracking-[0.15em] text-[var(--wd-accent)]">
                         이 영어의 뜻은?
                       </p>
                       <h2 className="mt-3 text-2xl font-black leading-snug">
@@ -728,7 +728,7 @@ export default function WindDownLearnClient() {
                           </button>
                         ))}
                       </div>
-                      <p role="status" className="mt-3 min-h-[20px] text-center text-xs font-bold text-[var(--wd-text-muted)]">
+                      <p role="status" className="mt-3 min-h-[20px] text-center text-[12px] font-bold text-[var(--wd-text-muted)]">
                         {idleAssistVisible && assistiveWrongChoiceId
                           ? "루미 힌트: 하나의 선택지를 살짝 흐리게 했어."
                           : null}
@@ -736,7 +736,7 @@ export default function WindDownLearnClient() {
                     </>
                   ) : (
                     <>
-                      <p className="mt-7 text-xs font-black tracking-[0.15em] text-[var(--wd-accent)]">
+                      <p className="mt-7 text-[12px] font-black tracking-[0.15em] text-[var(--wd-accent)]">
                         영어 문장을 만들어 봐
                       </p>
                       <h2 className="mt-3 text-xl font-black leading-snug">
@@ -792,7 +792,7 @@ export default function WindDownLearnClient() {
                           );
                         })}
                       </div>
-                      <p role="status" className="mt-3 min-h-[20px] text-center text-xs font-bold text-[var(--wd-text-muted)]">
+                      <p role="status" className="mt-3 min-h-[20px] text-center text-[12px] font-bold text-[var(--wd-text-muted)]">
                         {idleAssistVisible
                           ? "루미 힌트: 첫 단어부터 시작해 봐."
                           : null}

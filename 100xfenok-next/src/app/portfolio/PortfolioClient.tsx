@@ -652,7 +652,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
             role="alert"
             data-portfolio-storage-error
             data-portfolio-save-error
-            className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-bold text-rose-700"
+            className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-[12px] font-bold text-rose-700"
           >
             {storageError}
           </div>
@@ -664,7 +664,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
               예시 데이터
             </span>
           </div>
-          <p className="mt-2 text-xs font-semibold text-slate-500">
+          <p className="mt-2 text-[12px] font-semibold text-slate-500">
             아래는 샘플 포트폴리오입니다. 실제 데이터를 입력하려면 포트폴리오를 만드세요.
           </p>
           <p className="mt-1 text-[12px] font-semibold text-slate-500">
@@ -789,7 +789,7 @@ export default function PortfolioClient({ initialTicker = "" }: { initialTicker?
           role="alert"
           data-portfolio-storage-error
           data-portfolio-save-error
-          className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-bold text-rose-700"
+          className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-[12px] font-bold text-rose-700"
         >
           {storageError}
         </div>
@@ -1047,7 +1047,7 @@ function PortfolioLocalBoundaryStrip() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">개인 데이터 경계</p>
-          <p className="mt-1 text-xs font-semibold leading-5 text-slate-700">
+          <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-700">
             입력한 포트폴리오는 이 브라우저에만 남고, 백업은 사용자가 직접 내보낸 파일로만 이동합니다.
           </p>
         </div>
@@ -1300,7 +1300,7 @@ function PortfolioConnectionPanel({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <h2 className="text-sm font-black tracking-tight text-slate-900">데이터 연결 서비스</h2>
-          <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+          <p className="mt-1 text-[12px] font-semibold leading-5 text-slate-500">
             보유 종목에서 공시, 13F, 단일종목 ETF, 스크리너 화면으로 바로 이동합니다.
           </p>
         </div>
@@ -1411,7 +1411,7 @@ function MobileHoldingCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <TickerChip ticker={row.ticker} variant="inline" />
-          <p className="mt-0.5 max-w-[14rem] truncate text-xs font-bold text-slate-500">{subtitle}</p>
+          <p className="mt-0.5 max-w-[14rem] truncate text-[12px] font-bold text-slate-500">{subtitle}</p>
         </div>
         {onEdit || onDelete ? (
           <div className="flex shrink-0 items-center gap-1">
@@ -1473,7 +1473,7 @@ function MobileHoldingCard({
         <span className={` font-black tabular-nums ${row.gainPct != null ? gainColor(row.gainPct) : "text-slate-500"}`}>
           {row.gainPct != null ? formatSignedPercent(row.gainPct, { digits: 2 }) : "—"}
         </span>
-        <span className="tabular-nums text-xs font-bold text-slate-500">
+        <span className="tabular-nums text-[12px] font-bold text-slate-500">
           {row.weight != null ? formatPercent(row.weight, { digits: 1 }) : "—"}
         </span>
         </div>
@@ -1500,7 +1500,7 @@ function HoldingsTable({
   }
 
   return (
-    <table className="w-full min-w-[760px] text-xs">
+    <table className="w-full min-w-[760px] text-[12px]">
       <thead>
         <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">
           <th className="px-2 py-2 text-left">티커</th>

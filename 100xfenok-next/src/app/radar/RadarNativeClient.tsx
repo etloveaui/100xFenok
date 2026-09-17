@@ -104,7 +104,7 @@ function SummaryBar({ leds, activeCombos, totalCombos }: { leds: LedItem[]; acti
         {leds.map((led) => (
           <li
             key={led.id}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 text-[12px] font-bold text-slate-700"
           >
             <span aria-hidden="true" className={`inline-block h-2.5 w-2.5 rounded-full ${LED_DOT[led.tone]}`} />
             {led.label} {led.text}
@@ -221,13 +221,13 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
         totalCombos={totalCombos}
       />
       <div className="mt-3 flex flex-wrap items-center gap-2" aria-label="Radar 요약">
-        <span className="inline-flex min-h-11 items-center rounded-full border border-green-200 bg-green-50 px-3 text-xs font-bold text-green-800">
+        <span className="inline-flex min-h-11 items-center rounded-full border border-green-200 bg-green-50 px-3 text-[12px] font-bold text-green-800">
           표시 중 {readyCount}
         </span>
-        <span className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-600">
+        <span className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[12px] font-bold text-slate-600">
           자료 없음 {missingCount}
         </span>
-        <span className="inline-flex min-h-11 items-center rounded-full border border-blue-200 bg-blue-50 px-3 text-xs font-bold text-blue-900">
+        <span className="inline-flex min-h-11 items-center rounded-full border border-blue-200 bg-blue-50 px-3 text-[12px] font-bold text-blue-900">
           기준 {basis ?? "확인 중"}
         </span>
       </div>
@@ -348,7 +348,7 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
                       key={combo.id}
                       className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-slate-100 bg-slate-50 px-2 py-1"
                     >
-                      <span className="text-xs font-bold text-slate-700">{comboKo(combo.name)}</span>
+                      <span className="text-[12px] font-bold text-slate-700">{comboKo(combo.name)}</span>
                       <span className="inline-flex shrink-0 items-center gap-1 text-[12px] font-bold text-slate-500">
                         <span className="rounded-full border border-slate-200 bg-white px-1.5">{toneKo(combo.category)}</span>
                         <span>{toneKo(combo.status)}</span>

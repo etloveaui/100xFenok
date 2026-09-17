@@ -39,7 +39,7 @@ export default async function AdminDesignLabPage({ searchParams }: PageProps) {
         <section className="mb-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-600">
                 {homeCandidateMode === "overview" ? "Design Lab Home Candidate Lab" : "Design Lab Candidate Preview"}
               </p>
               <p className="text-sm text-slate-600">
@@ -82,7 +82,7 @@ export default async function AdminDesignLabPage({ searchParams }: PageProps) {
         <section className="mb-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-600">
                 Design Lab Native Preview
               </p>
               <p className="text-sm text-slate-600">
@@ -115,7 +115,7 @@ export default async function AdminDesignLabPage({ searchParams }: PageProps) {
       <section className="mb-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-600">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-600">
               Design Lab Legacy Bridge
             </p>
             <p className="text-sm text-slate-600">

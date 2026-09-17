@@ -293,7 +293,7 @@ export function ResponsiveTradeRankingPanel({
                   className="sup-responsive-row"
                 >
                   <td data-label="순위">
-                    <span className="tabular-nums text-xs font-bold text-[var(--c-ink-3)]">{row.rank}</span>
+                    <span className="tabular-nums text-[12px] font-bold text-[var(--c-ink-3)]">{row.rank}</span>
                   </td>
                   <td data-label="종목">
                     <TransitionLink

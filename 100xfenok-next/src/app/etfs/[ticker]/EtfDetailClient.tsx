@@ -764,7 +764,7 @@ function PeerEtfCard({ row, currentSymbol }: { row: DetailEtfUniverseRecord; cur
           <TransitionLink href={`/etfs/${encodeURIComponent(ticker)}`} className="text-sm font-black text-[var(--c-ink)] hover:text-brand-interactive">
             {ticker}
           </TransitionLink>
-          <p className="mt-1 min-w-0 truncate text-xs font-bold leading-snug text-[var(--c-ink-3)]" title={row.name ?? ticker}>{row.name ?? ticker}</p>
+          <p className="mt-1 min-w-0 truncate text-[12px] font-bold leading-snug text-[var(--c-ink-3)]" title={row.name ?? ticker}>{row.name ?? ticker}</p>
         </div>
         <span className="tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
           {formatAum(row)}
@@ -799,7 +799,7 @@ function PeerLane({
   return (
     <div className="min-w-0">
       <div className="mb-2 min-w-0">
-        <p className="text-xs font-black text-[var(--c-ink)]">{title}</p>
+        <p className="text-[12px] font-black text-[var(--c-ink)]">{title}</p>
         <p className="mt-1 text-[12px] font-semibold leading-relaxed text-[var(--c-ink-3)]">{desc}</p>
       </div>
       {rows.length ? (
@@ -809,7 +809,7 @@ function PeerLane({
           ))}
         </div>
       ) : (
-        <p className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
+        <p className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-[12px] font-semibold text-[var(--c-ink-3)]">
           현재 연결 후보 없음
         </p>
       )}
@@ -921,7 +921,7 @@ function DetailAvailabilityCallout({
     <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-black text-amber-900">{meta.title}</p>
+          <p className="text-[12px] font-black text-amber-900">{meta.title}</p>
           <p className="mt-1 text-[12px] font-semibold leading-relaxed text-amber-800">{meta.description}</p>
         </div>
         <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:min-w-[360px]">
@@ -953,7 +953,7 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
   }
   return (
     <div className="-mx-1 max-h-[560px] overflow-auto px-1" role="region" aria-label="보유 구성 표" tabIndex={0} data-etf-detail-holdings-table="true">
-      <table className="w-full min-w-[620px] text-xs">
+      <table className="w-full min-w-[620px] text-[12px]">
         <thead className="sticky top-0 z-10 bg-white">
           <tr className="border-b border-[var(--c-line)] text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
             <th scope="col" className="px-2 py-2 text-right">#</th>
@@ -971,13 +971,13 @@ function HoldingsTable({ holdings, currency }: { holdings: EtfHolding[]; currenc
                 <td className="px-2 py-2 text-right tabular-nums text-[12px] font-bold text-[var(--c-ink-3)]">{item.rank ?? index + 1}</td>
                 <th scope="row" className="px-2 py-2 text-left min-w-0">
                   {item.symbol ? (
-                    <span className="text-xs font-black text-[var(--c-ink)]">{item.symbol}</span>
+                    <span className="text-[12px] font-black text-[var(--c-ink)]">{item.symbol}</span>
                   ) : null}
                   <span className="block truncate max-w-[14rem] text-[11px] font-semibold text-[var(--c-ink-3)]" title={item.name ?? undefined}>
                     {item.name ?? "—"}
                   </span>
                 </th>
-                <td className={`px-2 py-2 text-right  tabular-nums text-xs font-black ${weightClass}`}>{fmtPercentPoints(weight)}</td>
+                <td className={`px-2 py-2 text-right  tabular-nums text-[12px] font-black ${weightClass}`}>{fmtPercentPoints(weight)}</td>
                 <td className="px-2 py-2 text-right tabular-nums text-[12px] font-semibold text-[var(--c-ink-3)]">{fmtShares(item.shares)}</td>
               </tr>
             );
@@ -999,7 +999,7 @@ function WeightedList({ rows, empty }: { rows: WeightedRow[] | null | undefined;
         const width = Math.min(100, Math.abs(value));
         return (
           <div key={`${weightedRowName(row)}-${index}`}>
-            <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+            <div className="mb-1 flex items-center justify-between gap-3 text-[12px]">
               <span className="min-w-0 truncate font-bold text-[var(--c-ink)]">{weightedRowName(row)}</span>
               <span className={` tabular-nums font-black ${value < 0 ? "text-[var(--c-down)]" : "text-[var(--c-ink)]"}`}>{fmtPercentPoints(value)}</span>
             </div>
@@ -1209,7 +1209,7 @@ function HistoryView({
         isAvailable={isAvailable}
       />
       {pendingMultiYearRanges.length > 0 ? (
-        <p className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-xs font-semibold text-[var(--c-ink-3)]">
+        <p className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
           {pendingMultiYearRanges.join("·")} 히스토리 대기: 해당 구간 데이터가 들어오면 차트와 표에 자동 반영됩니다.
         </p>
       ) : null}
@@ -1234,7 +1234,7 @@ function HistoryView({
           })}
         </div>
         <div className="-mx-1 overflow-x-auto px-1" role="region" aria-label="가격 히스토리 표" tabIndex={0}>
-          <table className="w-full min-w-[360px] text-xs">
+          <table className="w-full min-w-[360px] text-[12px]">
             <thead>
               <tr className="border-b border-[var(--c-line)] text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                 <th scope="col" className="px-2 py-2 text-left">일자</th>
@@ -1673,7 +1673,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
 
           <SectionCard title="Fenok Edge ETF 시그널" desc="별도 ETF 레인 · SCORED, not DAILY/GATED" marker="signals">
             {signalsResult === undefined ? (
-              <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
+              <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-[12px] font-semibold text-[var(--c-ink-3)]">
                 ETF 전용 시그널 확인 중
               </div>
             ) : etfSignals?.row ? (
@@ -1697,7 +1697,7 @@ export default function EtfDetailClient({ ticker }: { ticker: string }) {
                 </DataProvenanceNote>
               </>
             ) : (
-              <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
+              <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-3 text-[12px] font-semibold text-[var(--c-ink-3)]">
                 이 ETF의 별도 시그널 행이 아직 없습니다. 주식 점수로 대체하지 않습니다.
               </div>
             )}

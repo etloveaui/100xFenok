@@ -91,19 +91,19 @@ export default async function AlphaScoutPage({ searchParams }: PageProps) {
           <section className="panel" data-alpha-scout-boundary="true">
             <div className="flex flex-wrap items-center gap-2">
               <span
-                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600"
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600"
                 data-alpha-scout-boundary-chip="legacy-html"
               >
                 이전 형식
               </span>
               <span
-                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600"
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600"
                 data-alpha-scout-boundary-chip="report-deeplink"
               >
                 리포트 연결
               </span>
               <span
-                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600"
+                className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3 text-[12px] font-bold text-slate-600"
                 data-alpha-scout-boundary-chip="v2-owner"
               >
                 아카이브

@@ -110,18 +110,18 @@ export default function RotationMapPanel({
         {[dLo, 0, dHi].map((tick) => (
           <g key={tick}>
             <line x1={x(tick)} y1={PLOT.y1} x2={x(tick)} y2={PLOT.y1 + 6} stroke="var(--fnk-neutral-300)" />
-            <text x={x(tick)} y={PLOT.y1 + 20} fontSize="11" fill="var(--fnk-neutral-500)" textAnchor="middle" className="tabular-nums">
+            <text x={x(tick)} y={PLOT.y1 + 20} fontSize="12" fill="var(--fnk-neutral-500)" textAnchor="middle" className="tabular-nums">
               {tick > 0 ? `+${tick.toFixed(0)}` : tick.toFixed(0)}
             </text>
           </g>
         ))}
-        <text x={(PLOT.x0 + PLOT.x1) / 2} y={PLOT.y1 + 45} fontSize="11" fill="var(--fnk-neutral-500)" textAnchor="middle">
+        <text x={(PLOT.x0 + PLOT.x1) / 2} y={PLOT.y1 + 45} fontSize="12" fill="var(--fnk-neutral-500)" textAnchor="middle">
           ← 약세&nbsp;&nbsp;&nbsp;&nbsp;{windowLabel} 상대 모멘텀 (%p, vs S&amp;P 500)&nbsp;&nbsp;&nbsp;&nbsp;강세 →
         </text>
 
-        <text x={PLOT.x0 - 12} y={PLOT.y0 + 4} fontSize="11" fill="var(--fnk-neutral-500)" textAnchor="end">고평가</text>
-        <text x={PLOT.x0 - 12} y={y(50) + 4} fontSize="11" fill="var(--fnk-neutral-500)" textAnchor="end">평균</text>
-        <text x={PLOT.x0 - 12} y={PLOT.y1 + 4} fontSize="11" fill="var(--fnk-neutral-500)" textAnchor="end">저평가</text>
+        <text x={PLOT.x0 - 12} y={PLOT.y0 + 4} fontSize="12" fill="var(--fnk-neutral-500)" textAnchor="end">고평가</text>
+        <text x={PLOT.x0 - 12} y={y(50) + 4} fontSize="12" fill="var(--fnk-neutral-500)" textAnchor="end">평균</text>
+        <text x={PLOT.x0 - 12} y={PLOT.y1 + 4} fontSize="12" fill="var(--fnk-neutral-500)" textAnchor="end">저평가</text>
 
         <text x={PLOT.x1 - CAPTION.inset} y={PLOT.y0 + CAPTION.inset + 12} fontSize="12" fontWeight="600" fill="var(--fnk-neutral-500)" textAnchor="end">{QUADRANT_LABEL["run-expensive"]}</text>
         <text x={PLOT.x1 - CAPTION.inset} y={PLOT.y1 - CAPTION.inset - 6} fontSize="12" fontWeight="600" fill="var(--fnk-neutral-500)" textAnchor="end">{QUADRANT_LABEL["cheap-recover"]}</text>
@@ -134,7 +134,7 @@ export default function RotationMapPanel({
           return (
             <g key={point.row.key}>
               <circle cx={cx} cy={cy} r={r} fill={color} opacity="0.14" stroke={color} strokeWidth="1.5" />
-              <text x={cx} y={raise ? cy - r - 7 : cy + 3.5} fontSize="11" fontWeight="600" fill="var(--fnk-neutral-900)" textAnchor="middle" className="sec-ticker">
+              <text x={cx} y={raise ? cy - r - 7 : cy + 3.5} fontSize="12" fontWeight="600" fill="var(--fnk-neutral-900)" textAnchor="middle" className="sec-ticker">
                 {point.row.etf}
               </text>
               <title>{`${point.row.name} ${pp(point.relative)} · 밴드 ${Math.round(point.band as number)}`}</title>

@@ -48,7 +48,7 @@ import {
 import { useInvestorTabData } from "./useInvestorTabData";
 
 const ChartLoading = () => (
-  <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-3)]">
+  <div className="grid h-[220px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[12px] font-bold text-[var(--c-ink-3)]">
     차트 로딩 중
   </div>
 );
@@ -899,7 +899,7 @@ function SectorRotationPanel({
                       />
                       <span className="truncate">{sectorLabelKo(row.sector)}</span>
                     </span>
-                    <span className={`shrink-0 text-xs font-black tabular-nums ${deltaClass}`}>
+                    <span className={`shrink-0 text-[12px] font-black tabular-nums ${deltaClass}`}>
                       {row.deltaPp >= 0 ? "▲" : "▼"}{Math.abs(row.deltaPp).toFixed(1)}%p
                     </span>
                   </div>

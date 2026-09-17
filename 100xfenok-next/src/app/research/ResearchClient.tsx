@@ -107,7 +107,7 @@ export default function ResearchClient() {
             {tab.label}
           </button>
         ))}
-        <span className="ml-auto font-mono text-xs text-slate-500">
+        <span className="ml-auto font-mono text-[12px] text-slate-500">
           실물 {liveCount} · 준비 중 {soonCount}
         </span>
       </div>
@@ -127,7 +127,7 @@ export default function ResearchClient() {
               href={opened.href}
               target="_blank"
               rel="noreferrer"
-              className="shrink-0 font-mono text-xs text-slate-500 underline decoration-slate-300 underline-offset-2 hover:text-slate-800"
+              className="shrink-0 font-mono text-[12px] text-slate-500 underline decoration-slate-300 underline-offset-2 hover:text-slate-800"
             >
               원본 열기 ↗
             </a>
@@ -179,7 +179,7 @@ export default function ResearchClient() {
                         {kindLabel(item.kind)}
                       </span>
                       <h3 className="mt-1 text-base font-extrabold leading-snug text-slate-900">{item.title}</h3>
-                      {meta ? <span className="mt-1 font-mono text-xs text-slate-500">{meta}</span> : null}
+                      {meta ? <span className="mt-1 font-mono text-[12px] text-slate-500">{meta}</span> : null}
                       <span className="mt-auto pt-3 text-sm font-bold text-blue-700" data-research-open={item.id}>
                         열기 →
                       </span>

@@ -3089,7 +3089,7 @@ export default function AdminLiveBench({ initialMode = "fenok" }: AdminLiveBench
             <button
               type="button"
               disabled
-              className="flex size-14 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-xs font-black text-slate-500"
+              className="flex size-14 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-[12px] font-black text-slate-500"
               title="카메라/이미지 입력 준비 중"
             >
               CAM
@@ -3217,7 +3217,7 @@ export default function AdminLiveBench({ initialMode = "fenok" }: AdminLiveBench
                       type="button"
                       onClick={() => setVadPreset(preset)}
                       disabled={settingsLocked}
-                      className={`min-h-10 rounded-md px-2 text-xs font-black transition ${
+                      className={`min-h-10 rounded-md px-2 text-[12px] font-black transition ${
                         vadPreset === preset ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
                       } disabled:cursor-not-allowed disabled:opacity-50`}
                     >
@@ -3236,7 +3236,7 @@ export default function AdminLiveBench({ initialMode = "fenok" }: AdminLiveBench
                       type="button"
                       onClick={() => setInterruptionMode(im)}
                       disabled={settingsLocked}
-                      className={`min-h-10 rounded-md px-2 text-xs font-black transition ${
+                      className={`min-h-10 rounded-md px-2 text-[12px] font-black transition ${
                         interruptionMode === im ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
                       } disabled:cursor-not-allowed disabled:opacity-50`}
                     >
@@ -3265,7 +3265,7 @@ export default function AdminLiveBench({ initialMode = "fenok" }: AdminLiveBench
                     setPromptEdited(false);
                   }}
                   disabled={settingsLocked}
-                  className="min-h-8 rounded-md border border-slate-300 px-2 text-xs font-black text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-8 rounded-md border border-slate-300 px-2 text-[12px] font-black text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   기본값
                 </button>
@@ -3278,7 +3278,7 @@ export default function AdminLiveBench({ initialMode = "fenok" }: AdminLiveBench
                 }}
                 disabled={settingsLocked}
                 rows={7}
-                className="mt-2 w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-3 font-mono text-xs leading-5 text-slate-900 outline-none transition focus:border-brand-interactive focus:ring-2 focus:ring-brand-interactive/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-2 w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-3 font-mono text-[12px] leading-5 text-slate-900 outline-none transition focus:border-brand-interactive focus:ring-2 focus:ring-brand-interactive/20 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </label>
 
@@ -3316,12 +3316,12 @@ export default function AdminLiveBench({ initialMode = "fenok" }: AdminLiveBench
             ) : logs.map((log) => (
               <div key={log.id} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left">
                 <div className="flex items-center justify-between gap-2">
-                  <span className={`text-xs font-black ${
+                  <span className={`text-[12px] font-black ${
                     log.role === "bench" ? "text-emerald-700" : log.role === "user" ? "text-blue-700" : log.role === "error" ? "text-red-700" : "text-slate-500"
                   }`}>
                     {LOG_ROLE_TEXT[log.role]}
                   </span>
-                  <span className="text-xs font-semibold text-slate-500">{log.at}</span>
+                  <span className="text-[12px] font-semibold text-slate-500">{log.at}</span>
                 </div>
                 <p className="mt-1 text-sm leading-6 text-slate-700">{log.text}</p>
               </div>
@@ -3438,7 +3438,7 @@ function CoachConfigControls({
         ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]"
         : "border-[var(--wd-line)] text-[var(--wd-muted)]"
     } disabled:cursor-not-allowed disabled:opacity-50`
-    : `min-h-10 rounded-md px-2 text-xs font-black transition ${
+    : `min-h-10 rounded-md px-2 text-[12px] font-black transition ${
       active ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"
     } disabled:cursor-not-allowed disabled:opacity-50`;
   const testerButtonClass = (active: boolean) => winddown
@@ -3447,7 +3447,7 @@ function CoachConfigControls({
         ? "border-[var(--wd-apricot)] bg-[var(--wd-apricot-soft)] text-[var(--wd-apricot)]"
         : "border-[var(--wd-line)] text-[var(--wd-muted)]"
     } disabled:cursor-not-allowed disabled:opacity-50`
-    : `min-h-10 rounded-md px-2 text-xs font-black transition ${
+    : `min-h-10 rounded-md px-2 text-[12px] font-black transition ${
       active ? "bg-amber-950 text-white" : "text-amber-900 hover:bg-white"
     } disabled:cursor-not-allowed disabled:opacity-50`;
   const detailClass = winddown
@@ -3607,7 +3607,7 @@ function ToolBoard({
           <p className="mt-1 text-sm font-semibold text-slate-500">{toolTokenHint(activeCount)}</p>
         </div>
         {locked ? (
-          <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-black text-amber-800">
+          <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[12px] font-black text-amber-800">
             다시 시작하면 반영
           </span>
         ) : null}
@@ -3661,7 +3661,7 @@ function ToolBoard({
                         {enabled ? "켜짐" : TOOL_STATUS_TEXT[tool.status]}
                       </span>
                     </span>
-                    <span className="mt-1 block text-xs font-semibold leading-5 text-slate-500">
+                    <span className="mt-1 block text-[12px] font-semibold leading-5 text-slate-500">
                       {tool.reason ?? tool.description}
                     </span>
                   </button>
@@ -3680,7 +3680,7 @@ function ExpressionCardView({ card }: { card: ExpressionCard | null }) {
 
   return (
     <section aria-live="polite" className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center gap-2 text-xs font-black text-slate-500">
+      <div className="flex items-center gap-2 text-[12px] font-black text-slate-500">
         {card.state === "prompt" && <span aria-label="locked">🔒</span>}
         <span>
           {card.state === "prompt" ? "듣기 전" : card.state === "reveal" ? "교정" : "드릴"}

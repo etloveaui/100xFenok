@@ -75,7 +75,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareClientRow }) {
         data-etf-compare-shard-infrastructure-state="unavailable"
       >
         <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="text-sm text-red-900" />
-        <p className="mt-2 text-xs font-black text-red-900">ETF 상세 저장소를 확인할 수 없습니다.</p>
+        <p className="mt-2 text-[12px] font-black text-red-900">ETF 상세 저장소를 확인할 수 없습니다.</p>
         <p className="mt-1 text-[12px] font-semibold text-red-800">이 종목을 누락이나 빈 데이터로 바꾸지 않고 일시 장애로 표시합니다.</p>
       </div>
     );
@@ -97,7 +97,7 @@ function CompareSummaryCard({ row }: { row: EtfCompareClientRow }) {
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0">
           <TickerChip ticker={row.ticker} href={`/etfs/${encodeURIComponent(row.ticker)}`} variant="inline" className="text-sm text-[var(--c-ink)]" />
-          <p className="mt-1 min-w-0 truncate text-xs font-bold leading-snug text-[var(--c-ink-3)]" title={name}>{name}</p>
+          <p className="mt-1 min-w-0 truncate text-[12px] font-bold leading-snug text-[var(--c-ink-3)]" title={name}>{name}</p>
           <p className="mt-1 text-[12px] font-bold text-[var(--c-ink-3)]">{holdingsDate === "—" ? "기준일 미확인" : `기준 ${holdingsDate}`}</p>
         </div>
         <span className="tabular-nums shrink-0 rounded-full bg-[var(--c-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--c-ink-3)]">
@@ -154,11 +154,11 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
       </div>
       <div className="mt-3 overflow-x-auto" role="region" aria-label={`${pair.left.ticker} ${pair.right.ticker} 공통 보유 항목`} tabIndex={0}>
         {unavailable ? (
-          <p className="rounded-lg bg-amber-50 px-3 py-3 text-xs font-semibold text-amber-900">
+          <p className="rounded-lg bg-amber-50 px-3 py-3 text-[12px] font-semibold text-amber-900">
             두 ETF의 유효한 상위 25개 보유 항목을 확인할 수 없어 겹침을 계산하지 않았습니다.
           </p>
         ) : topCommon.length ? (
-          <table className="w-full min-w-[440px] text-xs">
+          <table className="w-full min-w-[440px] text-[12px]">
             <thead>
               <tr className="border-b border-[var(--c-line)] text-[12px] font-black uppercase tracking-[0.06em] text-[var(--c-ink-3)]">
                 <th scope="col" className="px-2 py-2 text-left">공통 항목</th>
@@ -179,7 +179,7 @@ function OverlapCard({ pair }: { pair: PairOverlap }) {
             </tbody>
           </table>
         ) : (
-          <p className="rounded-lg bg-[var(--c-surface-2)] px-3 py-3 text-xs font-semibold text-[var(--c-ink-3)]">
+          <p className="rounded-lg bg-[var(--c-surface-2)] px-3 py-3 text-[12px] font-semibold text-[var(--c-ink-3)]">
             공통 보유 항목을 찾지 못했습니다.
           </p>
         )}
@@ -263,7 +263,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
           <button
             type="submit"
             data-etf-compare-control="submit"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-brand)] bg-[var(--c-brand)] px-4 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-brand-interactive"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-brand)] bg-[var(--c-brand)] px-4 text-[12px] font-black uppercase tracking-[0.08em] text-white transition hover:bg-brand-interactive"
           >
             비교
           </button>
@@ -272,18 +272,18 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
             data-etf-compare-control="csv"
             onClick={() => downloadCompareCsv(rows, overlaps)}
             disabled={loading || rows.length === 0}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-line)] bg-white px-4 text-xs font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-3)]"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--c-line)] bg-white px-4 text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)] transition hover:border-brand-interactive hover:text-brand-interactive disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-3)]"
           >
             CSV 저장
           </button>
         </form>
 
-        <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-xs font-semibold text-[var(--c-ink-3)]">
+        <div className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2 text-[12px] font-semibold text-[var(--c-ink-3)]">
           보유 구성 겹침은 각 ETF 상세 화면에 연결된 상위 25개 표시 항목 기준입니다. 전체 원장 겹침으로 해석하지 않습니다.
         </div>
 
         {hasMixedAsOf ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] font-bold text-amber-900">
             비교 ETF의 보유 기준일이 서로 달라 각 카드의 기준일을 함께 확인하세요.
           </div>
         ) : null}
@@ -301,7 +301,7 @@ export default function EtfCompareClient({ initialTickers }: { initialTickers: s
             {tickers.length === 1 ? (
               <div className="rounded-xl border border-brand-200 bg-brand-50 px-3 py-3" data-etf-compare-single-selection="true" role="status">
                 <p className="text-sm font-black text-[var(--c-ink)]">비교할 ETF를 하나 더 추가하세요.</p>
-                <p className="mt-1 text-xs font-semibold text-[var(--c-ink-3)]">위 입력란에 티커를 하나 더 입력한 뒤 비교를 누르면 겹침을 확인할 수 있습니다.</p>
+                <p className="mt-1 text-[12px] font-semibold text-[var(--c-ink-3)]">위 입력란에 티커를 하나 더 입력한 뒤 비교를 누르면 겹침을 확인할 수 있습니다.</p>
               </div>
             ) : null}
 

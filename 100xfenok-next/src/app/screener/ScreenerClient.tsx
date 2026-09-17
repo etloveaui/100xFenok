@@ -105,7 +105,7 @@ const DENSITY_TABLE_CLASS: Record<ScreenerDensity, {
 }> = {
   compact: {
     scroller: "max-h-[720px]",
-    table: "text-xs",
+    table: "text-[12px]",
     headerCell: "px-2 py-1.5",
     bodyCell: "px-2 py-1.5",
     tickerCell: "min-h-9 px-1",
@@ -587,7 +587,7 @@ function ScoreCell({
   return (
     <span className="inline-flex min-w-0 justify-end">
       <span
-        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-[2px] text-xs font-black tabular-nums leading-[14px] text-slate-700"
+        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-[2px] text-[12px] font-black tabular-nums leading-[14px] text-slate-700"
         title={title}
         aria-label={ariaLabel}
       >
@@ -743,9 +743,9 @@ function renderCell(
       );
     }
     case "sector":
-      return <span className="text-xs font-bold leading-5 text-slate-500">{stock.sector || "—"}</span>;
+      return <span className="text-[12px] font-bold leading-5 text-slate-500">{stock.sector || "—"}</span>;
     case "country":
-      return <span className="text-xs font-bold text-slate-500">{COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}</span>;
+      return <span className="text-[12px] font-bold text-slate-500">{COUNTRY_LABEL[stock.country] ?? stock.country ?? "—"}</span>;
     case "price":
       return <span className="tabular-nums text-slate-900">{stock.price === null ? "—" : `$${stock.price.toFixed(2)}`}</span>;
     case "marketCap":
@@ -927,7 +927,7 @@ function MobileEstimateTrendSections({ stock, compact = false }: { stock: Screen
     if (compact) return null;
     return (
       <div className="px-3 pb-3">
-        <div className="border-t border-[var(--c-line-2)] pt-3 text-xs font-bold text-[var(--c-ink-3)]">추정치 없음</div>
+        <div className="border-t border-[var(--c-line-2)] pt-3 text-[12px] font-bold text-[var(--c-ink-3)]">추정치 없음</div>
       </div>
     );
   }
@@ -1021,7 +1021,7 @@ function ScreenerEmptyState({
     return (
       <div className="col-span-full flex flex-col items-center gap-2 px-2 py-10 text-center">
         <p className="text-sm font-semibold text-[var(--c-ink-3)]">{reason}</p>
-        <p className="text-xs font-semibold text-[var(--c-ink-2)]">{next}</p>
+        <p className="text-[12px] font-semibold text-[var(--c-ink-2)]">{next}</p>
         {hasFilters ? (
           <button
             type="button"
@@ -2644,7 +2644,7 @@ export default function ScreenerClient({
                         setColumnMenuOpen(false);
                       }}
                       data-canvas-plus-active={String(preset === p)}
-                      className="min-h-9 rounded-md px-2.5 text-left text-xs font-black text-[var(--c-ink-2)] transition hover:bg-[var(--c-surface-2)] hover:text-[var(--c-ink)]"
+                      className="min-h-9 rounded-md px-2.5 text-left text-[12px] font-black text-[var(--c-ink-2)] transition hover:bg-[var(--c-surface-2)] hover:text-[var(--c-ink)]"
                     >
                       {PRESET_LABEL[p]}
                     </button>
@@ -2756,7 +2756,7 @@ export default function ScreenerClient({
                       type="button"
                       onClick={handleSavePreset}
                       disabled={!presetName.trim()}
-                      className="rounded-lg border border-brand-interactive bg-brand-interactive px-2 text-xs font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-600"
+                      className="rounded-lg border border-brand-interactive bg-brand-interactive px-2 text-[12px] font-black text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-600"
                     >
                       저장
                     </button>
@@ -2843,7 +2843,7 @@ export default function ScreenerClient({
               type="button"
               onClick={allPageSelected ? deselectPageRows : selectPageRows}
               disabled={pageRows.length === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
               data-variant={canvasPlusPreview ? "ghost" : undefined}
               data-density={canvasPlusPreview ? "compact" : undefined}
             >
@@ -2853,7 +2853,7 @@ export default function ScreenerClient({
               type="button"
               onClick={selectFilteredRows}
               disabled={sorted.length === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
               data-variant={canvasPlusPreview ? "ghost" : undefined}
               data-density={canvasPlusPreview ? "compact" : undefined}
             >
@@ -2863,7 +2863,7 @@ export default function ScreenerClient({
               type="button"
               onClick={clearSelectedRows}
               disabled={selectedTickers.size === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-xs font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md border border-[var(--c-line)] bg-[var(--c-panel)] px-3 text-[12px] font-black text-[var(--c-ink-2)] transition hover:border-[var(--brand-interactive)] hover:text-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
               data-variant={canvasPlusPreview ? "ghost" : undefined}
               data-density={canvasPlusPreview ? "compact" : undefined}
             >
@@ -2873,7 +2873,7 @@ export default function ScreenerClient({
               type="button"
               onClick={() => downloadConnectionCsv(selectedRows)}
               disabled={!connectionIndexReady || selectedRows.length === 0}
-              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
+              className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "min-h-9 rounded-md bg-[var(--c-ink)] px-3 text-[12px] font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)] disabled:cursor-not-allowed disabled:bg-[var(--c-surface-2)] disabled:text-[var(--c-ink-2)]"}
               data-variant={canvasPlusPreview ? "primary" : undefined}
               data-density={canvasPlusPreview ? "compact" : undefined}
             >
@@ -2882,14 +2882,14 @@ export default function ScreenerClient({
             {selectedSingleStockEtfCompareHref ? (
               <TransitionLink
                 href={selectedSingleStockEtfCompareHref}
-                className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "inline-flex min-h-9 items-center rounded-md bg-[var(--c-ink)] px-3 text-xs font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)]"}
+                className={canvasPlusPreview ? "cp-button cp-screener-action-button" : "inline-flex min-h-9 items-center rounded-md bg-[var(--c-ink)] px-3 text-[12px] font-black text-[var(--c-panel)] transition hover:bg-[var(--brand-interactive)]"}
                 data-variant={canvasPlusPreview ? "primary" : undefined}
                 data-density={canvasPlusPreview ? "compact" : undefined}
               >
                 선택 ETF 비교
               </TransitionLink>
             ) : (
-              <span className={canvasPlusPreview ? "cp-screener-disabled-action" : "inline-flex min-h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-xs font-black text-[var(--c-ink-2)]"}>
+              <span className={canvasPlusPreview ? "cp-screener-disabled-action" : "inline-flex min-h-9 items-center rounded-md border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 text-[12px] font-black text-[var(--c-ink-2)]"}>
                 선택 ETF 부족
               </span>
             )}
@@ -3340,7 +3340,7 @@ export default function ScreenerClient({
                       {selectedSectors.map((item) => (
                         <span
                           key={item}
-                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-900"
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[12px] font-semibold text-slate-900"
                         >
                           {item}
                           <button
@@ -3382,7 +3382,7 @@ export default function ScreenerClient({
                       {selectedCountries.map((code) => (
                         <span
                           key={code}
-                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-900"
+                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[12px] font-semibold text-slate-900"
                         >
                           {COUNTRY_LABEL[code] ?? code}
                           <button
@@ -3789,7 +3789,7 @@ export default function ScreenerClient({
             {activeFilterChips.map((chip) => (
               <span
                 key={chip.label}
-                className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-900"
+                className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[12px] font-semibold text-slate-900"
               >
                 {chip.label}
                 <button
@@ -4045,7 +4045,7 @@ export default function ScreenerClient({
             >
               이전
             </button>
-            <span className={canvasPlusPreview ? "cp-screener-page-status" : " text-xs font-bold tabular-nums text-[var(--c-ink-3)]"}>
+            <span className={canvasPlusPreview ? "cp-screener-page-status" : " text-[12px] font-bold tabular-nums text-[var(--c-ink-3)]"}>
               {safePage + 1} / {pageCount}
             </span>
             <button

@@ -1603,7 +1603,7 @@ export function MarketFactsDepth({ ticker, compact = false }: { ticker: string; 
                   <tr key={`${row.rank ?? index}-${row.name ?? "holding"}`} className="border-b border-[var(--c-line-2)] last:border-b-0">
                     <td className="px-2 py-1.5 min-w-0">
                       {row.symbol ? (
-                        <span className="text-xs font-black text-[var(--c-ink)]">{row.symbol}</span>
+                        <span className="text-[12px] font-black text-[var(--c-ink)]">{row.symbol}</span>
                       ) : null}
                       {row.name ? (
                         <span className="block max-w-[14rem] truncate text-[11px] font-semibold text-[var(--c-ink-3)]" title={row.name}>
@@ -1658,7 +1658,7 @@ export function Sparkline({
   const actualPoints = points.filter((point) => !point.estimate);
   const estimatePoints = points.filter((point) => point.estimate);
   const firstEstimatePoint = estimatePoints[0] ?? null;
-  if (points.length < 2 || labels.length < 2) return <span className="text-xs text-[var(--c-ink-3)]">—</span>;
+  if (points.length < 2 || labels.length < 2) return <span className="text-[12px] text-[var(--c-ink-3)]">—</span>;
   const values = points.map((point) => point.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -1778,7 +1778,7 @@ export function PerBandChart({
   const perPoints = allPerPoints.filter((point) => !point.estimate);
   const forwardPoints = allPerPoints.filter((point) => point.estimate);
   const forwardPoint = forwardPoints[0] ?? null;
-  if (perPoints.length < 2) return <span className="text-xs text-[var(--c-ink-3)]">—</span>;
+  if (perPoints.length < 2) return <span className="text-[12px] text-[var(--c-ink-3)]">—</span>;
 
   const allValues = allPerPoints.map((point) => point.value);
 
@@ -2073,7 +2073,7 @@ export function RevisionPulse({ detail, compact = false }: { detail: DetailData;
                   </span>
                 </div>
                 <p className="mt-1 text-sm font-black tabular-nums text-[var(--c-ink)]">{fmtEps(latest?.value)}</p>
-                <p className="mt-1 truncate text-[9px] font-bold tabular-nums text-[var(--c-ink-3)]">
+                <p className="mt-1 truncate text-[12px] font-bold tabular-nums text-[var(--c-ink-3)]">
                   {latest?.date ?? "—"} · 전주 {fmtEps(previous?.value)}
                 </p>
               </div>
@@ -2460,7 +2460,7 @@ export function StockDetailBody({
               {interpretation.badge}
             </span>
           </div>
-          <p className="text-xs font-semibold leading-relaxed text-[var(--c-ink-2)]">
+          <p className="text-[12px] font-semibold leading-relaxed text-[var(--c-ink-2)]">
             {interpretation.text}
           </p>
           {interpretationReads.length > 0 ? (
@@ -2492,7 +2492,7 @@ export function StockDetailBody({
               estimates={detail.valuation_estimates?.per}
             />
           ) : (
-            <span className="text-xs text-[var(--c-ink-3)]">—</span>
+            <span className="text-[12px] text-[var(--c-ink-3)]">—</span>
           )}
         </div>
 
@@ -2516,7 +2516,7 @@ export function StockDetailBody({
               </div>
             </>
           ) : (
-            <span className="text-xs text-[var(--c-ink-3)]">—</span>
+            <span className="text-[12px] text-[var(--c-ink-3)]">—</span>
           )}
         </div>
 
@@ -2539,7 +2539,7 @@ export function StockDetailBody({
               </div>
             </>
           ) : (
-            <span className="text-xs text-[var(--c-ink-3)]">—</span>
+            <span className="text-[12px] text-[var(--c-ink-3)]">—</span>
           )}
         </div>
       </div>

@@ -388,7 +388,7 @@ function MembershipPanel({ model }: MarketStructureSlotProps) {
   const recent = model.membershipChanges.recent;
   if (recent.length === 0) {
     return (
-      <div className="grid min-h-32 place-items-center text-xs font-bold text-[var(--c-ink-2)]">
+      <div className="grid min-h-32 place-items-center text-[12px] font-bold text-[var(--c-ink-2)]">
         편입/편출 데이터 없음
       </div>
     );

@@ -35,7 +35,7 @@ export default function MacroContextCard({ contextId, surface, className = "" }:
             매크로 연결 · {SURFACE_LABEL[surface]}
           </p>
           <h2 className="mt-1 text-sm font-black text-slate-950">{context.label}</h2>
-          <p className="mt-1 max-w-3xl text-xs font-semibold leading-5 text-slate-700">{context.detail}</p>
+          <p className="mt-1 max-w-3xl text-[12px] font-semibold leading-5 text-slate-700">{context.detail}</p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
           {actions.map((action) => (

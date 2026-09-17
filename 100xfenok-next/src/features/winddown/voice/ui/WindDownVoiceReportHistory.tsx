@@ -224,14 +224,14 @@ export default function WindDownVoiceReportHistory() {
         </Link>
         <Link
           href="/winddown/records"
-          className="inline-flex min-h-[48px] items-center gap-2 text-xs font-bold text-[var(--wd-muted)] hover:text-[var(--wd-text)]"
+          className="inline-flex min-h-[48px] items-center gap-2 text-[12px] font-bold text-[var(--wd-muted)] hover:text-[var(--wd-text)]"
         >
           기록 보관
         </Link>
       </div>
 
       <header className="mb-8">
-        <p className="text-xs font-bold tracking-[.2em] text-[var(--wd-accent)]">WIND DOWN</p>
+        <p className="text-[12px] font-bold tracking-[.2em] text-[var(--wd-accent)]">WIND DOWN</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">대화 보관함</h1>
         <p className="mt-3 text-sm leading-7 text-[var(--wd-muted)] sm:text-base">
           저장된 역할 대화와 자유 대화 기록을 살펴보고 다시 연습해요.
@@ -254,7 +254,7 @@ export default function WindDownVoiceReportHistory() {
               <span aria-hidden="true">←</span> 저장된 대화 목록
             </button>
             {detailReceipt ? (
-              <span className="text-xs font-bold text-[var(--wd-muted)]">
+              <span className="text-[12px] font-bold text-[var(--wd-muted)]">
                 {detailReceipt.activity === "roleplay" ? "역할 대화" : "자유 대화"}
               </span>
             ) : null}
@@ -270,7 +270,7 @@ export default function WindDownVoiceReportHistory() {
               <button
                 type="button"
                 onClick={() => fetchConversationDetail(selectedSessionId)}
-                className="mt-4 min-h-[48px] rounded-2xl border border-[var(--wd-border)] px-5 py-3 text-xs font-bold text-[var(--wd-text)]"
+                className="mt-4 min-h-[48px] rounded-2xl border border-[var(--wd-border)] px-5 py-3 text-[12px] font-bold text-[var(--wd-text)]"
               >
                 다시 시도
               </button>
@@ -286,7 +286,7 @@ export default function WindDownVoiceReportHistory() {
                 </h2>
                 <p
                   data-winddown-conversation-date
-                  className="mt-1 text-xs font-semibold text-[var(--wd-muted)]"
+                  className="mt-1 text-[12px] font-semibold text-[var(--wd-muted)]"
                 >
                   저장일시: {detailReceipt.committedAtIso.replace("T", " ").slice(0, 19)} UTC
                 </p>
@@ -305,7 +305,7 @@ export default function WindDownVoiceReportHistory() {
                         data-winddown-correction-item
                         className="rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface)] p-4"
                       >
-                        <div className="text-xs">
+                        <div className="text-[12px]">
                           <p className="font-semibold text-[var(--wd-muted)]">
                             내 발화:
                           </p>
@@ -322,7 +322,7 @@ export default function WindDownVoiceReportHistory() {
                             href={seed.practiceUrl}
                             data-winddown-practice-link
                             data-turn-citation={seed.citation.turn}
-                            className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[var(--wd-accent)] px-4 py-2 text-xs font-black text-[var(--wd-bg)] hover:opacity-90 active:scale-[.98] motion-reduce:transition-none"
+                            className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[var(--wd-accent)] px-4 py-2 text-[12px] font-black text-[var(--wd-bg)] hover:opacity-90 active:scale-[.98] motion-reduce:transition-none"
                           >
                             이 문장 드릴 연습하기 →
                           </Link>
@@ -350,7 +350,7 @@ export default function WindDownVoiceReportHistory() {
                     return (
                       <div
                         key={`${turn.conversationId}:${turn.turnSeq}`}
-                        className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-4 text-xs space-y-2"
+                        className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-4 text-[12px] space-y-2"
                       >
                         <div className="flex items-center justify-between text-[12px] font-bold text-[var(--wd-muted)]">
                           <span>대화 #{turn.turnSeq}</span>
@@ -404,7 +404,7 @@ export default function WindDownVoiceReportHistory() {
               <button
                 type="button"
                 onClick={() => fetchConversationsList()}
-                className="mt-4 min-h-[48px] rounded-2xl border border-[var(--wd-border)] px-5 py-3 text-xs font-bold text-[var(--wd-text)]"
+                className="mt-4 min-h-[48px] rounded-2xl border border-[var(--wd-border)] px-5 py-3 text-[12px] font-bold text-[var(--wd-text)]"
               >
                 다시 시도
               </button>
@@ -454,13 +454,13 @@ export default function WindDownVoiceReportHistory() {
                       </h2>
                       <p
                         data-winddown-conversation-date
-                        className="mt-1 text-xs font-semibold text-[var(--wd-muted)]"
+                        className="mt-1 text-[12px] font-semibold text-[var(--wd-muted)]"
                       >
                         {item.committedAtIso.replace("T", " ").slice(0, 16)} UTC
                       </p>
                     </div>
                     {item.correctionCount > 0 ? (
-                      <span className="inline-flex items-center rounded-xl bg-[var(--wd-bg)] border border-[var(--wd-border)] px-3 py-1 text-xs font-black text-[var(--wd-accent)] shrink-0">
+                      <span className="inline-flex items-center rounded-xl bg-[var(--wd-bg)] border border-[var(--wd-border)] px-3 py-1 text-[12px] font-black text-[var(--wd-accent)] shrink-0">
                         교정 {item.correctionCount}개
                       </span>
                     ) : null}
@@ -470,11 +470,11 @@ export default function WindDownVoiceReportHistory() {
 
               {paginationError ? (
                 <div role="alert" className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface)] p-4 text-center">
-                  <p className="text-xs font-bold text-red-500">{paginationError}</p>
+                  <p className="text-[12px] font-bold text-red-500">{paginationError}</p>
                   <button
                     type="button"
                     onClick={() => fetchConversationsList(nextCursor ?? undefined)}
-                    className="mt-3 min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4 py-2 text-xs font-bold text-[var(--wd-text)]"
+                    className="mt-3 min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4 py-2 text-[12px] font-bold text-[var(--wd-text)]"
                   >
                     이어서 다시 시도
                   </button>

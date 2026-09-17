@@ -130,7 +130,7 @@ export default function WindDownDrillClient() {
               <p className="text-[12px] font-black tracking-[0.18em] text-[var(--wd-accent)]">WIND DOWN · {view === "board" ? "QUICK DRILL" : "PRACTICE"}</p>
               <h1 className="mt-1 text-xl font-black">{view === "board" ? "다섯 번, 한 번에 하나" : "오늘의 문장 연습"}</h1>
             </div>
-            <Link href="/winddown" className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-[var(--wd-border)] px-4 text-xs font-black text-[var(--wd-muted)]">
+            <Link href="/winddown" className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-[var(--wd-border)] px-4 text-[12px] font-black text-[var(--wd-muted)]">
               나가기
             </Link>
           </div>
@@ -142,13 +142,13 @@ export default function WindDownDrillClient() {
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <span className="text-xs font-black tabular-nums text-[var(--wd-muted)]">{roundLabel}/{WINDDOWN_DRILL_ROUND_TARGET}</span>
-              <span className="rounded-full bg-[var(--wd-surface)] px-3 py-2 text-xs font-black tabular-nums">{session?.score ?? 0}점</span>
+              <span className="text-[12px] font-black tabular-nums text-[var(--wd-muted)]">{roundLabel}/{WINDDOWN_DRILL_ROUND_TARGET}</span>
+              <span className="rounded-full bg-[var(--wd-surface)] px-3 py-2 text-[12px] font-black tabular-nums">{session?.score ?? 0}점</span>
             </div>
           ) : null}
           <div role="tablist" aria-label="WIND DOWN 학습" className="mt-4 grid grid-cols-2 gap-2">
-            <button role="tab" aria-selected={view === "board"} type="button" onClick={openBoard} className={`min-h-[48px] rounded-2xl border px-3 text-xs font-black ${view === "board" ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]" : "border-[var(--wd-border)] bg-[var(--wd-surface)] text-[var(--wd-muted)]"}`}>Quick Drill</button>
-            <button role="tab" aria-selected={view === "practice"} data-winddown-practice-tab type="button" onClick={() => void loadPractice(queryString ? `?${queryString}` : "?practice=1")} className={`min-h-[48px] rounded-2xl border px-3 text-xs font-black ${view === "practice" ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]" : "border-[var(--wd-border)] bg-[var(--wd-surface)] text-[var(--wd-muted)]"}`}>문장 연습</button>
+            <button role="tab" aria-selected={view === "board"} type="button" onClick={openBoard} className={`min-h-[48px] rounded-2xl border px-3 text-[12px] font-black ${view === "board" ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]" : "border-[var(--wd-border)] bg-[var(--wd-surface)] text-[var(--wd-muted)]"}`}>Quick Drill</button>
+            <button role="tab" aria-selected={view === "practice"} data-winddown-practice-tab type="button" onClick={() => void loadPractice(queryString ? `?${queryString}` : "?practice=1")} className={`min-h-[48px] rounded-2xl border px-3 text-[12px] font-black ${view === "practice" ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]" : "border-[var(--wd-border)] bg-[var(--wd-surface)] text-[var(--wd-muted)]"}`}>문장 연습</button>
           </div>
         </header>
 
@@ -193,7 +193,7 @@ export default function WindDownDrillClient() {
             <section className="rounded-[28px] border border-[var(--wd-border)] bg-[var(--wd-surface)] p-6 shadow-2xl">
               <div className="flex items-center justify-between gap-3">
                 <span className="rounded-full bg-[var(--wd-accent-soft)] px-3 py-1.5 text-[10px] font-black tracking-[.12em] text-[var(--wd-accent)]">뜻을 한 번에 골라</span>
-                <span className="text-xs font-black text-[var(--wd-muted)]">콤보 {session.combo}</span>
+                <span className="text-[12px] font-black text-[var(--wd-muted)]">콤보 {session.combo}</span>
               </div>
               <h2 className="mt-8 text-[26px] font-black leading-snug tracking-tight">{round.prompt}</h2>
               <div className="mt-8 grid gap-3">

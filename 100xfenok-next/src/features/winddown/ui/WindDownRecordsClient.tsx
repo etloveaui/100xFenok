@@ -74,7 +74,7 @@ export default function WindDownRecordsClient() {
         <span aria-hidden="true">←</span> 오늘의 학습
       </Link>
       <header className="mb-9 mt-7">
-        <p className="text-xs font-bold tracking-[.2em] text-[var(--wd-accent)]">WIND DOWN</p>
+        <p className="text-[12px] font-bold tracking-[.2em] text-[var(--wd-accent)]">WIND DOWN</p>
         <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">학습 기록 보관</h1>
         <p className="mt-4 text-sm leading-7 text-[var(--wd-muted)] sm:text-base">쌓아온 문장과 진도를 파일로 간직해요.</p>
       </header>

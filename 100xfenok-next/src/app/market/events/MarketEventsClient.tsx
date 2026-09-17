@@ -704,7 +704,7 @@ function EventDrilldown({
         </div>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <label
-            className="flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-500"
+            className="flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-500"
             data-market-events-from-date="true"
           >
             <span className="shrink-0">시작일</span>
@@ -721,7 +721,7 @@ function EventDrilldown({
             />
           </label>
           <label
-            className="flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-slate-500"
+            className="flex min-h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-[12px] font-black text-slate-500"
             data-market-events-to-date="true"
           >
             <span className="shrink-0">종료일</span>

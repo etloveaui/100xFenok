@@ -46,7 +46,7 @@ export default function AdminArchivePage() {
         <Link href="/admin" className="text-sm font-semibold text-white/75 transition hover:text-white">
           ← Admin Hub
         </Link>
-        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-white/75">Admin Archive</p>
+        <p className="mt-5 text-[12px] font-semibold uppercase tracking-[0.16em] text-white/75">Admin Archive</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">Public Archive</h1>
         <p className="mt-3 max-w-2xl text-sm text-white/85">
           공개 메뉴에서 보관한 화면을 관리자 전용으로 확인합니다.

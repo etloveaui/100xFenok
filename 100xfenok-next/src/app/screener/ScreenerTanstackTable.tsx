@@ -627,7 +627,7 @@ function ScreenerTanstackTableInner({
                 ) : (
                   <div className="flex flex-col items-center gap-2">
                     <p className="text-sm font-semibold text-[var(--c-ink-3)]">{hasFilters ? "현재 필터 조건에 맞는 종목이 없습니다." : "조건에 맞는 종목이 없습니다."}</p>
-                    <p className="text-xs font-semibold text-[var(--c-ink-2)]">{emptyNextRefresh ?? "필터 변경 시 즉시 재검색"}</p>
+                    <p className="text-[12px] font-semibold text-[var(--c-ink-2)]">{emptyNextRefresh ?? "필터 변경 시 즉시 재검색"}</p>
                     {hasFilters && onResetFilters ? (
                       <button
                         type="button"

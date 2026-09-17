@@ -161,7 +161,7 @@ export default function YardeniCard() {
         </p>
       </div>
 
-      <p className={`mt-3 text-xs font-black ${v.tone}`}>{v.text}</p>
+      <p className={`mt-3 text-[12px] font-black ${v.tone}`}>{v.text}</p>
 
       <div className="mt-2 flex flex-wrap items-baseline gap-3 text-[12px] font-bold text-[var(--c-ink-3)]">
         <span>
@@ -249,7 +249,7 @@ export default function YardeniCard() {
             ].map(([label, value]) => (
               <div key={label} className="rounded-xl border border-[var(--c-line)] bg-[var(--c-surface-2)] px-3 py-2">
                 <p className="text-[9px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-3)]">{label}</p>
-                <p className="mt-1 text-xs font-black tabular-nums text-[var(--c-ink-2)]">{value}</p>
+                <p className="mt-1 text-[12px] font-black tabular-nums text-[var(--c-ink-2)]">{value}</p>
               </div>
             ))}
           </div>

@@ -110,10 +110,10 @@ export default function DesignLabProfilePreview() {
 
         <div className="sticky bottom-0 border-t border-slate-200/80 bg-white/95 px-4 pb-[calc(10px+env(safe-area-inset-bottom))] pt-3 backdrop-blur">
           <div className="grid grid-cols-5 items-center gap-2 text-slate-700">
-            <button type="button" className="inline-flex min-h-10 items-center justify-center text-xs font-medium">
+            <button type="button" className="inline-flex min-h-10 items-center justify-center text-[12px] font-medium">
               Home
             </button>
-            <button type="button" className="inline-flex min-h-10 items-center justify-center text-xs font-medium">
+            <button type="button" className="inline-flex min-h-10 items-center justify-center text-[12px] font-medium">
               Search
             </button>
             <button
@@ -122,10 +122,10 @@ export default function DesignLabProfilePreview() {
             >
               +
             </button>
-            <button type="button" className="inline-flex min-h-10 items-center justify-center text-xs font-medium">
+            <button type="button" className="inline-flex min-h-10 items-center justify-center text-[12px] font-medium">
               Chat
             </button>
-            <button type="button" className="inline-flex min-h-10 items-center justify-center text-xs font-medium">
+            <button type="button" className="inline-flex min-h-10 items-center justify-center text-[12px] font-medium">
               Profile
             </button>
           </div>

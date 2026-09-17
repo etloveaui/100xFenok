@@ -98,7 +98,7 @@ export default function CacheResetClient() {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <section className="mx-auto max-w-xl rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <p className="text-xs font-black uppercase text-brand-interactive">100xFenok</p>
+        <p className="text-[12px] font-black uppercase text-brand-interactive">100xFenok</p>
         <h1 className="mt-3 text-2xl font-black">Cache reset</h1>
         <p className="mt-2 text-sm font-semibold text-slate-600">
           Clearing stale browser cache and any old service worker, then returning to the current home.
@@ -108,10 +108,10 @@ export default function CacheResetClient() {
             <div key={step.label} className="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3">
               <div>
                 <p className="text-sm font-bold">{step.label}</p>
-                {step.detail ? <p className="mt-1 text-xs text-slate-500">{step.detail}</p> : null}
+                {step.detail ? <p className="mt-1 text-[12px] text-slate-500">{step.detail}</p> : null}
               </div>
               <span
-                className={`rounded-full px-2.5 py-1 text-xs font-black ${
+                className={`rounded-full px-2.5 py-1 text-[12px] font-black ${
                   step.state === "done"
                     ? "bg-emerald-50 text-emerald-700"
                     : step.state === "failed"

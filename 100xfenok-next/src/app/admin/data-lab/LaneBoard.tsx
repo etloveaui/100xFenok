@@ -204,20 +204,20 @@ export default function LaneBoard({
         <div className="flex flex-col gap-1">
           <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Lane Registry × Data Health</p>
           <h2 className="text-lg font-black tracking-tight text-slate-950">레인 보드</h2>
-          <p className="text-xs font-semibold text-slate-500">
+          <p className="text-[12px] font-semibold text-slate-500">
             관리 레인의 메타데이터·신선도·복구 상태를 한 화면에서 확인합니다.
           </p>
         </div>
         <span
           data-admin-alarm-badge={alarmOpen ? "open" : alarm?.status ?? "unknown"}
-          className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs font-black ${alarmClass}`}
+          className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-[12px] font-black ${alarmClass}`}
         >
           {alarmLabel}
         </span>
       </div>
 
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left text-xs">
+        <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left text-[12px]">
           <thead>
             <tr className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">
               <th className="border-b border-slate-200 px-3 py-2">레인</th>
@@ -304,7 +304,7 @@ export default function LaneBoard({
       <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-3" data-admin-control-room-state="true">
         <div className="flex flex-col gap-1">
           <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Control Room State</p>
-          <p className="text-xs font-semibold text-slate-500">외부·런타임 운영 증거를 제품 freshness 상태와 분리해 표시합니다.</p>
+          <p className="text-[12px] font-semibold text-slate-500">외부·런타임 운영 증거를 제품 freshness 상태와 분리해 표시합니다.</p>
         </div>
         <div className="mt-3 grid gap-2 lg:grid-cols-2">
           {controlRoomLanes.length > 0 ? controlRoomLanes.map((lane) => {
@@ -353,26 +353,26 @@ export default function LaneBoard({
               </article>
             );
           }) : (
-            <p className="text-xs font-semibold text-slate-500">운영 상태 증거 없음</p>
+            <p className="text-[12px] font-semibold text-slate-500">운영 상태 증거 없음</p>
           )}
         </div>
       </section>
 
       <div className="mt-4" data-admin-platform-gates="true">
         <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Platform Gates</p>
-        <p className="mt-1 text-xs font-semibold text-slate-500">레지스트리 레인에 속하지 않는 KPI 집계 게이트입니다.</p>
+        <p className="mt-1 text-[12px] font-semibold text-slate-500">레지스트리 레인에 속하지 않는 KPI 집계 게이트입니다.</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {platformGates.length > 0 ? platformGates.map((gate) => (
             <span
               key={gate.id}
               data-platform-gate={gate.id}
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-bold ${statusClass(gate.status)}`}
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[12px] font-bold ${statusClass(gate.status)}`}
             >
               {gate.label || gate.id}
               <span className="font-black">{statusText(gate.status, gate.status_label)}</span>
             </span>
           )) : (
-            <span className="text-xs font-semibold text-slate-500">표시할 플랫폼 게이트가 없습니다.</span>
+            <span className="text-[12px] font-semibold text-slate-500">표시할 플랫폼 게이트가 없습니다.</span>
           )}
         </div>
       </div>

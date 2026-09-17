@@ -368,7 +368,7 @@ export function YardeniOverlayChartPanel({
           </p>
         </div>
         <div className="shrink-0 text-right">
-          <p className={cx("text-xs font-black", verdict.tone)}>{verdict.label}</p>
+          <p className={cx("text-[12px] font-black", verdict.tone)}>{verdict.label}</p>
           <AsOfPill value={model?.latest.date} />
         </div>
       </div>
@@ -397,7 +397,7 @@ export function YardeniOverlayChartPanel({
             <p className="truncate text-[12px] font-black uppercase tracking-[0.08em] text-[var(--c-ink-2)]">
               {label}
             </p>
-            <p className="mt-1 truncate text-xs font-black tabular-nums text-[var(--c-ink)]">
+            <p className="mt-1 truncate text-[12px] font-black tabular-nums text-[var(--c-ink)]">
               {value}
             </p>
           </div>

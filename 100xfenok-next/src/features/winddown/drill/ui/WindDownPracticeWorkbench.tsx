@@ -156,13 +156,13 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
           <p className="text-[12px] font-black tracking-[.16em] text-[var(--wd-accent)]">문장 연습 · 연습 전용</p>
           <h2 className="mt-1 text-xl font-black">한 문장을 여러 번 만나기</h2>
         </div>
-        <button type="button" onClick={onBack} className="min-h-[48px] shrink-0 rounded-full border border-[var(--wd-border)] px-4 text-xs font-black text-[var(--wd-muted)]">보드</button>
+        <button type="button" onClick={onBack} className="min-h-[48px] shrink-0 rounded-full border border-[var(--wd-border)] px-4 text-[12px] font-black text-[var(--wd-muted)]">보드</button>
       </div>
 
       {response.target.kind === "generic" && response.materials.length > 0 ? (
         <div className="mt-5 grid gap-3">
           {themes.length > 0 ? (
-            <label className="block text-xs font-black text-[var(--wd-muted)]">
+            <label className="block text-[12px] font-black text-[var(--wd-muted)]">
               주제
               <select data-practice-theme value={themeFilter} onChange={(event) => { const nextTheme = event.target.value; setThemeFilter(nextTheme); const nextMaterial = (nextTheme === "all" ? response.materials : response.materials.filter((candidate) => candidate.practice?.theme?.trim() === nextTheme))[0]; if (nextMaterial) chooseMaterial(nextMaterial.id); }} className={SELECT_CLASS} style={SELECT_STYLE}>
                 <option value="all">전체</option>
@@ -170,7 +170,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
               </select>
             </label>
           ) : null}
-          <label className="block text-xs font-black text-[var(--wd-muted)]">
+          <label className="block text-[12px] font-black text-[var(--wd-muted)]">
             연습할 문장
             <select data-practice-material value={materialId ?? ""} onChange={(event) => chooseMaterial(event.target.value)} className={SELECT_CLASS} style={SELECT_STYLE}>
             {filteredMaterials.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.ko}</option>)}
@@ -179,7 +179,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
         </div>
       ) : null}
 
-      <label className="mt-4 block text-xs font-black text-[var(--wd-muted)]">
+      <label className="mt-4 block text-[12px] font-black text-[var(--wd-muted)]">
         연습 방법
         <select data-practice-method value={method} onChange={(event) => setMethod(event.target.value as WindDownPracticeMethod)} className={SELECT_CLASS} style={SELECT_STYLE}>
           {availableMethods.map((candidate) => <option key={candidate} value={candidate}>{METHOD_LABELS[candidate]}</option>)}
@@ -187,7 +187,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
       </label>
 
       {isVoiceCorrection ? (
-        <p className="mt-4 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 py-3 text-xs font-bold leading-5 text-[var(--wd-muted)]">
+        <p className="mt-4 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 py-3 text-[12px] font-bold leading-5 text-[var(--wd-muted)]">
           대화에서 받은 교정은 참고용으로만 보여 줘. 정답·발음 점수·학습 기록으로 채점하지 않아.
         </p>
       ) : null}
@@ -195,8 +195,8 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
       {isLinked ? (
         <div className="mt-5 rounded-2xl border border-[var(--wd-border)] px-4 py-3" aria-label={`연결 연습 ${Math.min(session.stepIndex + 1, session.steps.length)}/${session.steps.length}`}>
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-black text-[var(--wd-muted)]">연결 연습</p>
-            <p aria-live="polite" className="text-xs font-black tabular-nums text-[var(--wd-accent)]">{Math.min(session.stepIndex + 1, session.steps.length)}/{session.steps.length}</p>
+            <p className="text-[12px] font-black text-[var(--wd-muted)]">연결 연습</p>
+            <p aria-live="polite" className="text-[12px] font-black tabular-nums text-[var(--wd-accent)]">{Math.min(session.stepIndex + 1, session.steps.length)}/{session.steps.length}</p>
           </div>
           <ol className="mt-3 grid gap-2 text-sm font-bold">
             {session.steps.map((step, index) => (
@@ -205,12 +205,12 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
               </li>
             ))}
           </ol>
-          <p className="mt-3 text-xs font-black text-[var(--wd-text)]">현재 단계: {session.phase === "complete" ? "완료" : currentStepLabel}</p>
+          <p className="mt-3 text-[12px] font-black text-[var(--wd-text)]">현재 단계: {session.phase === "complete" ? "완료" : currentStepLabel}</p>
         </div>
       ) : null}
 
       <div className="mt-5 rounded-2xl bg-[var(--wd-bg)] p-4">
-        <p className="text-xs font-black text-[var(--wd-muted)]">{isVoiceCorrection ? "이전에 말한 문장" : material?.ko ?? "문장을 떠올려 봐"}</p>
+        <p className="text-[12px] font-black text-[var(--wd-muted)]">{isVoiceCorrection ? "이전에 말한 문장" : material?.ko ?? "문장을 떠올려 봐"}</p>
         {isVoiceCorrection && session.voiceCorrection?.learnerText ? <p className="mt-2 break-words text-sm font-black">“{session.voiceCorrection.learnerText}”</p> : null}
         {session.phase !== "listening" && !(isVoiceCorrection && session.revealed) ? (
           <p className="mt-3 text-lg font-black">{method === "pattern-transform" ? "이 패턴으로 문장을 바꿔 말하거나 입력해 봐." : "영어 문장을 말하거나 입력해 봐."}</p>
@@ -220,14 +220,14 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
           <div data-practice-pattern className="mt-4 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface)] px-3 py-3">
             <p className="text-[12px] font-black tracking-[.12em] text-[var(--wd-accent)]">문형</p>
             <p className="mt-1 text-sm font-black">{material.practice.pattern}</p>
-            {material.practice.variationsEn.length > 0 ? <p className="mt-2 text-xs font-bold leading-5 text-[var(--wd-muted)]">예시: {material.practice.variationsEn.join(" · ")}</p> : null}
+            {material.practice.variationsEn.length > 0 ? <p className="mt-2 text-[12px] font-bold leading-5 text-[var(--wd-muted)]">예시: {material.practice.variationsEn.join(" · ")}</p> : null}
           </div>
         ) : null}
 
         {canSubmit ? (
           <div className="mt-4 flex gap-2">
             <input aria-label="연습 답변" value={answerText} onChange={(event) => setAnswerText(event.target.value)} className="min-h-[48px] min-w-0 flex-1 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface)] px-3 text-sm font-bold text-[var(--wd-text)]" placeholder="영어로 답해 봐" onKeyDown={(event) => { if (event.key === "Enter" && answerText.trim()) submit(answerText); }} />
-            <button type="button" disabled={!answerText.trim()} onClick={() => submit(answerText)} className="min-h-[48px] rounded-xl bg-[var(--wd-accent)] px-4 text-xs font-black text-[var(--wd-bg)] disabled:cursor-not-allowed disabled:opacity-50">확인</button>
+            <button type="button" disabled={!answerText.trim()} onClick={() => submit(answerText)} className="min-h-[48px] rounded-xl bg-[var(--wd-accent)] px-4 text-[12px] font-black text-[var(--wd-bg)] disabled:cursor-not-allowed disabled:opacity-50">확인</button>
           </div>
         ) : null}
 
@@ -245,7 +245,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
             <p className="text-sm font-black">다른 표현 듣기</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {listeningTexts.map((text, index) => (
-                <button key={`${text}-${index}`} type="button" aria-pressed={variantIndex === index} onClick={() => setVariantIndex(index)} className={`min-h-[48px] shrink-0 rounded-xl border px-3 text-xs font-black ${variantIndex === index ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]" : "border-[var(--wd-border)] bg-[var(--wd-surface)] text-[var(--wd-muted)]"}`}>표현 {index + 1}</button>
+                <button key={`${text}-${index}`} type="button" aria-pressed={variantIndex === index} onClick={() => setVariantIndex(index)} className={`min-h-[48px] shrink-0 rounded-xl border px-3 text-[12px] font-black ${variantIndex === index ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] text-[var(--wd-accent)]" : "border-[var(--wd-border)] bg-[var(--wd-surface)] text-[var(--wd-muted)]"}`}>표현 {index + 1}</button>
               ))}
             </div>
             <WindDownDeviceSpeechPractice targetText={listeningTexts[variantIndex] ?? listeningTexts[0] ?? ""} controls="listen-and-speak" showMatchFeedback={false} />
@@ -254,7 +254,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
         ) : null}
 
         {session.attempt ? (
-          <p className="mt-4 text-xs font-bold text-[var(--wd-muted)]">이번 답변: “{session.attempt.text}” · 점수에 반영하지 않아</p>
+          <p className="mt-4 text-[12px] font-bold text-[var(--wd-muted)]">이번 답변: “{session.attempt.text}” · 점수에 반영하지 않아</p>
         ) : null}
 
         {session.attempt?.feedback ? (
@@ -273,7 +273,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
           <div data-practice-reveal-text aria-live="polite" className="mt-5 rounded-2xl border border-[var(--wd-accent)] bg-[var(--wd-accent-soft)] px-4 py-4">
             <p className="text-[12px] font-black tracking-[.14em] text-[var(--wd-accent)]">참고 문장</p>
             <p className="mt-2 break-words text-lg font-black">{session.revealText}</p>
-            {material && listeningTexts.length > 1 ? <p className="mt-3 break-words text-xs font-bold leading-5 text-[var(--wd-muted)]">다른 표현: {listeningTexts.slice(1).join(" · ")}</p> : null}
+            {material && listeningTexts.length > 1 ? <p className="mt-3 break-words text-[12px] font-bold leading-5 text-[var(--wd-muted)]">다른 표현: {listeningTexts.slice(1).join(" · ")}</p> : null}
           </div>
         ) : null}
 
@@ -282,7 +282,7 @@ export default function WindDownPracticeWorkbench({ response, onBack }: Props) {
         ) : null}
       </div>
 
-      {session.phase === "complete" ? <p className="mt-4 text-center text-xs font-black text-[var(--wd-accent)]">연습을 마쳤어. 자유 연습은 복습 점수에 반영되지 않아.</p> : null}
+      {session.phase === "complete" ? <p className="mt-4 text-center text-[12px] font-black text-[var(--wd-accent)]">연습을 마쳤어. 자유 연습은 복습 점수에 반영되지 않아.</p> : null}
     </section>
   );
 }

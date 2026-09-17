@@ -115,7 +115,7 @@ function SlotShell({
 
 function Placeholder({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 text-center text-xs font-bold leading-5 text-[var(--c-ink-3)]">
+    <div className="grid min-h-48 place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] px-4 text-center text-[12px] font-bold leading-5 text-[var(--c-ink-3)]">
       {children}
     </div>
   );

@@ -32,7 +32,7 @@ const InsightsChartLoading = () => {
   const show = useDelayedLoading(true, 120);
   if (!show) return null;
   return (
-  <div className="grid h-[300px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-xs font-bold text-[var(--c-ink-3)]">
+  <div className="grid h-[300px] place-items-center rounded-xl border border-dashed border-[var(--c-line)] bg-[var(--c-surface-2)] text-[12px] font-bold text-[var(--c-ink-3)]">
     {`차트 ${DATA_STATE_LABELS.pending}`}
   </div>
   );
@@ -420,7 +420,7 @@ function PressurePanel({ title, rows, color, signLabel }: {
     <div>
       <h4 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">{title}</h4>
       <InsightTableScroll label={title}>
-        <table className="w-full min-w-[380px] text-xs">
+        <table className="w-full min-w-[380px] text-[12px]">
           <thead>
             <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-1.5 text-left">티커</th>
@@ -476,7 +476,7 @@ function NewPositionsCard({ data }: { data: NewPositionsData }) {
   return (
     <div>
       <InsightTableScroll label="신규 편입 빅베팅">
-        <table className="w-full min-w-[400px] text-xs">
+        <table className="w-full min-w-[400px] text-[12px]">
           <thead>
             <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-1.5 text-left">종목</th>
@@ -535,7 +535,7 @@ function ConvictionCard({ data }: { data: ConvictionData }) {
   return (
     <div>
       <InsightTableScroll label="확신 베팅">
-        <table className="w-full min-w-[400px] text-xs">
+        <table className="w-full min-w-[400px] text-[12px]">
           <thead>
             <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-1.5 text-left">투자자</th>
@@ -581,7 +581,7 @@ function HighConvictionNewCard({ data }: { data: ConvictionEntriesData }) {
   return (
     <div>
       <InsightTableScroll label="신규 고확신 편입">
-        <table className="w-full min-w-[420px] text-xs">
+        <table className="w-full min-w-[420px] text-[12px]">
           <thead>
             <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-1.5 text-left">투자자</th>
@@ -635,7 +635,7 @@ function HhiCard({ data }: { data: HhiData }) {
   return (
     <div>
       <InsightTableScroll label="집중도">
-        <table className="w-full min-w-[400px] text-xs">
+        <table className="w-full min-w-[400px] text-[12px]">
           <thead>
             <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-1.5 text-left">투자자</th>

@@ -74,7 +74,7 @@ export default async function IBPage({
           <div className="min-w-0">
             <p className="text-[12px] font-black uppercase tracking-[0.12em] text-amber-700">IB Helper</p>
             <h1 className="text-base font-black text-slate-950 sm:text-lg">IB Helper (레거시)</h1>
-            <p className="mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600 sm:text-sm">
+            <p className="mt-1 max-w-2xl text-[12px] font-semibold leading-5 text-slate-600 sm:text-sm">
               무한매수 도우미입니다. 기본은 V1 화면이고, V2는 미리보기로 확인할 수 있습니다.
             </p>
             <div className="mt-2 flex flex-wrap gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
@@ -101,21 +101,21 @@ export default async function IBPage({
           <nav className="grid min-w-[min(100%,24rem)] grid-cols-1 gap-2 sm:grid-cols-3" aria-label="IB Helper 경로">
             <TransitionLink
               href={`${ROUTES.ib}?v2=1`}
-              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100"
+              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-[12px] font-black text-slate-700 transition hover:bg-slate-100"
               data-ib-owner-link="native-v2-preview"
             >
               V2 미리보기
             </TransitionLink>
             <TransitionLink
               href="/admin/ib-helper"
-              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100"
+              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-[12px] font-black text-slate-700 transition hover:bg-slate-100"
               data-ib-owner-link="admin-helper"
             >
               Admin Helper
             </TransitionLink>
             <TransitionLink
               href={ROUTES.infiniteBuying}
-              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100"
+              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-[12px] font-black text-slate-700 transition hover:bg-slate-100"
               data-ib-owner-link="guide-calculator"
             >
               Guide 계산기

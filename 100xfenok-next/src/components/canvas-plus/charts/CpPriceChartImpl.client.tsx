@@ -307,7 +307,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
         <Panel>
           <PanelHeader eyebrow={formatDateLabel(latest?.time)} title="최근 거래일 상세" right={<span className="text-[12px] text-slate-500">정규장</span>} />
           <div className="overflow-x-auto px-4 py-2">
-            <table className="w-full min-w-[560px] text-xs">
+            <table className="w-full min-w-[560px] text-[12px]">
               <thead>
                 <tr className="border-b border-slate-200 text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">
                   <th className="px-2 py-2 text-left">구분</th>
@@ -336,7 +336,7 @@ function CpW4PriceSectionInner(props: CpPriceChartProps) {
         <Panel>
           <PanelHeader eyebrow="최근 3개월 마감 기준" title="월봉 종가 추이" />
           <div className="overflow-x-auto px-4 py-2">
-            <table className="w-full text-xs">
+            <table className="w-full text-[12px]">
               <thead>
                 <tr className="border-b border-slate-200 text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500">
                   <th className="px-2 py-2 text-left">월</th>

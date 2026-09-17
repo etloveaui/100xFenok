@@ -274,8 +274,8 @@ assert.throws(() => validateRenderManifest(manifest, revertedReader), /render ta
 
 const removedReader = (relativePath) => relativePath === "src/components/admin-live/AdminLiveBench.tsx"
   ? read(relativePath).replace(
-      '<span className="text-xs font-semibold text-slate-500">{log.at}</span>',
-      '<span className="text-xs font-semibold text-slate-600">{log.at}</span>',
+      '<span className="text-[12px] font-semibold text-slate-500">{log.at}</span>',
+      '<span className="text-[12px] font-semibold text-slate-600">{log.at}</span>',
     )
   : read(relativePath);
 assert.throws(() => validateRenderManifest(manifest, removedReader), /render target hash drifted/);

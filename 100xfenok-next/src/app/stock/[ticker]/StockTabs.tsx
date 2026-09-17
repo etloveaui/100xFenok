@@ -155,10 +155,10 @@ function FinancialsTab({ data }: { data: YfData }) {
   ) {
     const sourceDates = Object.keys(source ?? {}).sort();
     const revDates = [...sourceDates].reverse();
-    if (!source || revDates.length === 0) return <p className="text-xs text-slate-500">데이터 없음</p>;
+    if (!source || revDates.length === 0) return <p className="text-[12px] text-slate-500">데이터 없음</p>;
     return (
       <div className="-mx-1 overflow-x-auto px-1">
-        <table data-stock-financial-table="yf" className="w-full min-w-[500px] text-xs">
+        <table data-stock-financial-table="yf" className="w-full min-w-[500px] text-[12px]">
           <thead>
             <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="sticky left-0 z-20 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
@@ -176,7 +176,7 @@ function FinancialsTab({ data }: { data: YfData }) {
                 <tr key={eng} className="border-b border-slate-100 last:border-b-0">
                   <td className="sticky left-0 z-10 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{ko}</td>
                   {vals.map((v, i) => (
-                    <td key={i} className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-900">
+                    <td key={i} className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold text-slate-900">
                       {formatFn(v, eng)}
                     </td>
                   ))}
@@ -390,7 +390,7 @@ function OwnershipTab({ data }: { data: YfData }) {
         <div>
           <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">기관 보유 TOP 10</h3>
           <div className="-mx-1 overflow-x-auto px-1">
-            <table className="w-full min-w-[560px] text-xs">
+            <table className="w-full min-w-[560px] text-[12px]">
               <thead>
                 <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
                   <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]">기관명</th>
@@ -412,10 +412,10 @@ function OwnershipTab({ data }: { data: YfData }) {
                   return (
                     <tr key={i} className="border-b border-slate-100 last:border-b-0">
                       <td className="sticky left-0 z-10 max-w-[180px] truncate bg-white px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{h.Holder}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{pctHeld !== null ? `${(pctHeld * 100).toFixed(2)}%` : "—"}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-600">{shares !== null ? shares.toLocaleString() : "—"}</td>
-                      <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-600">{value !== null ? formatCompactMoney(value, currency) : "—"}</td>
-                      <td className={`px-2 py-1.5 text-right  tabular-nums text-xs font-bold ${pctChange != null ? (pctChange >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-500"}`}>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold">{pctHeld !== null ? `${(pctHeld * 100).toFixed(2)}%` : "—"}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold text-slate-600">{shares !== null ? shares.toLocaleString() : "—"}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold text-slate-600">{value !== null ? formatCompactMoney(value, currency) : "—"}</td>
+                      <td className={`px-2 py-1.5 text-right  tabular-nums text-[12px] font-bold ${pctChange != null ? (pctChange >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-500"}`}>
                         {pctChange != null ? `${pctChange > 0 ? "+" : ""}${pctChange.toFixed(1)}%` : "—"}
                       </td>
                       <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold text-slate-500">{h["Date Reported"] ?? "—"}</td>
@@ -488,7 +488,7 @@ function EstimatesTab({ data }: { data: YfData }) {
           <div>
             <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">EPS 추정치</h3>
             <div className="-mx-1 overflow-x-auto px-1">
-              <table className="w-full min-w-[560px] text-xs">
+              <table className="w-full min-w-[560px] text-[12px]">
                 <thead>
                   <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
                     <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
@@ -507,12 +507,12 @@ function EstimatesTab({ data }: { data: YfData }) {
                     return (
                       <tr key={e._index} className="border-b border-slate-100 last:border-b-0">
                         <td className="sticky left-0 z-10 bg-white px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{indexLabels[e._index] ?? e._index}</td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{formatMoney(e.avg, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatMoney(e.low, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatMoney(e.high, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatMoney(e.yearAgoEps, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{finiteNumber(e.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
-                        <td className={`px-2 py-1.5 text-right  tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold">{formatMoney(e.avg, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatMoney(e.low, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatMoney(e.high, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatMoney(e.yearAgoEps, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{finiteNumber(e.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
+                        <td className={`px-2 py-1.5 text-right  tabular-nums text-[12px] font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
                           {fmtSignedPct(growth, true)}
                         </td>
                       </tr>
@@ -528,7 +528,7 @@ function EstimatesTab({ data }: { data: YfData }) {
           <div>
             <h3 className="mb-2 text-[12px] font-black uppercase tracking-[0.08em] text-slate-500">매출 추정치</h3>
             <div className="-mx-1 overflow-x-auto px-1">
-              <table className="w-full min-w-[580px] text-xs">
+              <table className="w-full min-w-[580px] text-[12px]">
                 <thead>
                   <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
                     <th className="sticky left-0 z-20 bg-white px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
@@ -547,12 +547,12 @@ function EstimatesTab({ data }: { data: YfData }) {
                     return (
                       <tr key={r._index} className="border-b border-slate-100 last:border-b-0">
                         <td className="sticky left-0 z-10 bg-white px-2 py-1.5 text-[12px] font-bold text-slate-700 shadow-[2px_0_0_var(--c-line-2)]">{indexLabels[r._index] ?? r._index}</td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold">{formatCompactMoney(r.avg, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatCompactMoney(r.low, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatCompactMoney(r.high, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{formatCompactMoney(r.yearAgoRevenue, rowCurrency)}</td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-xs text-slate-500">{finiteNumber(r.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
-                        <td className={`px-2 py-1.5 text-right  tabular-nums text-xs font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold">{formatCompactMoney(r.avg, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatCompactMoney(r.low, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatCompactMoney(r.high, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{formatCompactMoney(r.yearAgoRevenue, rowCurrency)}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-[12px] text-slate-500">{finiteNumber(r.numberOfAnalysts)?.toLocaleString() ?? "—"}</td>
+                        <td className={`px-2 py-1.5 text-right  tabular-nums text-[12px] font-bold ${growth !== null ? (growth >= 0 ? "text-emerald-700" : "text-rose-700") : ""}`}>
                           {fmtSignedPct(growth, true)}
                         </td>
                       </tr>
@@ -937,7 +937,7 @@ function KV({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-white px-3 py-2">
       <MetricHelp label={label} className="text-[12px] font-medium text-slate-500" />
-      <span className="tabular-nums text-xs font-black text-slate-900">{value}</span>
+      <span className="tabular-nums text-[12px] font-black text-slate-900">{value}</span>
     </div>
   );
 }

@@ -1427,7 +1427,7 @@ export default function DesignGalleryPage() {
       {/* Header */}
       <section className="bg-gradient-to-r from-slate-900 via-indigo-900 to-violet-900 px-4 py-8 text-white">
         <div className="container mx-auto max-w-6xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">100xFenok Admin</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-white/60">100xFenok Admin</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Design Gallery</h1>
           <p className="mt-3 max-w-2xl text-sm text-white/80">
             금융 대시보드에 적용 가능한 {ITEMS.length}개 디자인 패턴. 카테고리별 탐색, 난이도 확인, 우리 시스템 적용 포인트 참조.
@@ -1437,7 +1437,7 @@ export default function DesignGalleryPage() {
               <a
                 key={cat.key}
                 href={`#cat-${cat.key}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-white transition hover:bg-white/20"
               >
                 <span>{cat.icon}</span>
                 <span>{cat.label}</span>
@@ -1463,7 +1463,7 @@ export default function DesignGalleryPage() {
                 </span>
                 <div>
                   <h2 className="text-xl font-black text-slate-900">{cat.label}</h2>
-                  <p className="text-xs text-slate-500">{items.length} patterns</p>
+                  <p className="text-[12px] text-slate-500">{items.length} patterns</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -1474,12 +1474,12 @@ export default function DesignGalleryPage() {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="text-sm font-bold text-slate-900">
-                        <span className="mr-1.5 text-xs text-slate-500">#{item.id}</span>
+                        <span className="mr-1.5 text-[12px] text-slate-500">#{item.id}</span>
                         {item.name}
                       </h3>
                       <DifficultyBadge level={item.difficulty} />
                     </div>
-                    <p className="mt-2 text-xs leading-relaxed text-slate-600">{item.description}</p>
+                    <p className="mt-2 text-[12px] leading-relaxed text-slate-600">{item.description}</p>
                     <div className="mt-3 rounded-lg bg-indigo-50 p-2.5">
                       <p className="text-[12px] font-semibold text-indigo-900">🎯 우리 시스템 적용</p>
                       <p className="mt-0.5 text-[12px] leading-relaxed text-indigo-700">{item.applicability}</p>
@@ -1515,7 +1515,7 @@ export default function DesignGalleryPage() {
           <p className="text-sm font-bold text-slate-700">
             Total: {ITEMS.length} patterns across {CATEGORIES.length} categories
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-[12px] text-slate-500">
             Continuously updated — 2026-03-13 audit
           </p>
         </div>

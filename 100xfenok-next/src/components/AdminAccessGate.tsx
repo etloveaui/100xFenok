@@ -166,13 +166,13 @@ export default function AdminAccessGate({ children }: AdminAccessGateProps) {
       <main className="container mx-auto px-4 py-8">
         <section className="mx-auto w-full max-w-md rounded-2xl border border-[var(--c-line)] bg-[var(--c-panel)] px-5 py-6 shadow-[var(--sh-sm)]">
           <div className="mb-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Admin Access</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500">Admin Access</p>
             <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900">관리자 인증</h1>
             <p className={`mt-2 text-sm ${errorMessage ? "text-red-600" : "text-slate-600"}`} aria-live="polite">
               {helperText}
             </p>
           </div>
-          <label htmlFor="admin-auth-input" className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+          <label htmlFor="admin-auth-input" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.12em] text-slate-500">
             Password
           </label>
           <input

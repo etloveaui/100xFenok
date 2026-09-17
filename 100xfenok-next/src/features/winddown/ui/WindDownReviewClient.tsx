@@ -984,7 +984,7 @@ export default function WindDownReviewClient() {
               </div>
               <Link
                 href="/winddown"
-                className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-white/15 bg-white/5 px-4 text-xs font-black text-white/80"
+                className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-white/15 bg-white/5 px-4 text-[12px] font-black text-white/80"
               >
                 나가기
               </Link>
@@ -996,7 +996,7 @@ export default function WindDownReviewClient() {
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <span className="min-w-10 text-right text-xs font-black tabular-nums text-white/65">
+              <span className="min-w-10 text-right text-[12px] font-black tabular-nums text-white/65">
                 {session?.results.length ?? 0}/{initialCount}
               </span>
             </div>
@@ -1064,7 +1064,7 @@ export default function WindDownReviewClient() {
                 <div className="flex min-h-[408px] flex-col">
                   <div className="flex items-center justify-between gap-3">
                     <span className="rounded-full border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 py-1.5 text-[10px] font-black tracking-[0.12em] text-[var(--wd-accent)]">RECALL</span>
-                    <span className="text-xs font-black tabular-nums text-white/50">남은 문장 {session.queue.length}개</span>
+                    <span className="text-[12px] font-black tabular-nums text-white/50">남은 문장 {session.queue.length}개</span>
                   </div>
                   <p className="mt-9 text-[12px] font-black tracking-[0.15em] text-[var(--wd-listening)]">한국어를 보고 영어를 떠올려 봐</p>
                   <h2 className="mt-3 text-[27px] font-black leading-[1.35] tracking-[-0.035em]">{current.ko}</h2>
@@ -1077,7 +1077,7 @@ export default function WindDownReviewClient() {
                   />
                   <div className="mt-auto pt-5">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-xs font-black text-white/55">
+                      <p className="text-[12px] font-black text-white/55">
                         {session.inputMode === "chips"
                           ? "단어를 순서대로 골라 문장 만들기"
                           : "도움 없이 영어 문장 입력하기"}
@@ -1092,7 +1092,7 @@ export default function WindDownReviewClient() {
                             session.inputMode === "typed" ? "chips" : "typed",
                           )
                         }
-                        className="min-h-[44px] shrink-0 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-xs font-black text-[var(--wd-text)]"
+                        className="min-h-[44px] shrink-0 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-3 text-[12px] font-black text-[var(--wd-text)]"
                       >
                         {session.inputMode === "typed" ? "단어 칩" : "직접 입력"}
                       </button>
@@ -1140,7 +1140,7 @@ export default function WindDownReviewClient() {
                     <p
                       aria-live="polite"
                       className={[
-                        "mt-3 min-h-[40px] rounded-xl border px-3 py-2 text-center text-xs font-bold text-[var(--wd-text-muted)]",
+                        "mt-3 min-h-[40px] rounded-xl border px-3 py-2 text-center text-[12px] font-bold text-[var(--wd-text-muted)]",
                         recallAssistVisible && recallHintLetter
                           ? "border-[var(--wd-border)] bg-[var(--wd-surface-raised)]"
                           : "border-transparent bg-transparent",
@@ -1166,7 +1166,7 @@ export default function WindDownReviewClient() {
                       type="button"
                       disabled={busy}
                       onClick={reveal}
-                      className="mt-2 min-h-[44px] w-full px-5 text-xs font-black text-white/55 disabled:opacity-40"
+                      className="mt-2 min-h-[44px] w-full px-5 text-[12px] font-black text-white/55 disabled:opacity-40"
                     >
                       정답 보기 · Again으로 기록
                     </button>
@@ -1213,7 +1213,7 @@ export default function WindDownReviewClient() {
                         MATCH REPAIR
                       </span>
                     )}
-                    <span className="text-xs font-black text-white/50">{session.match.pairs.length}쌍을 맞추면 재도전</span>
+                    <span className="text-[12px] font-black text-white/50">{session.match.pairs.length}쌍을 맞추면 재도전</span>
                   </div>
                   <h2 className="mt-5 text-xl font-black">문장의 조각을 다시 연결해 봐.</h2>
                   <p className="mt-2 text-sm font-semibold leading-6 text-white/55">잘못 짝지은 카드만 잠깐 표시돼. 이 보드는 어떤 기록도 남기지 않아.</p>
@@ -1247,7 +1247,7 @@ export default function WindDownReviewClient() {
                   {session.match.wrongTileIds.length > 0 ? (
                     <p id="review-match-feedback" role="status" aria-live="polite" className="mt-4 text-center text-sm font-black text-[var(--wd-danger)]">아직 아니야. 다른 짝을 골라 봐.</p>
                   ) : null}
-                  <p className="mt-auto pt-4 text-center text-xs font-bold text-white/45">{session.match.matchedPairIds.length}/{session.match.pairs.length} 연결</p>
+                  <p className="mt-auto pt-4 text-center text-[12px] font-bold text-white/45">{session.match.matchedPairIds.length}/{session.match.pairs.length} 연결</p>
                 </div>
               ) : null}
 
@@ -1264,7 +1264,7 @@ export default function WindDownReviewClient() {
                     disabled={busy}
                   />
                   <div className="mt-auto pt-5">
-                    <p className="text-xs font-black text-white/55">
+                    <p className="text-[12px] font-black text-white/55">
                       {session.inputMode === "chips"
                         ? "같은 단어 칩으로 다시 연결해 봐"
                         : "같은 직접 입력 방식으로 다시 적어봐"}
@@ -1358,7 +1358,7 @@ export default function WindDownReviewClient() {
                         type="button"
                         data-draft-recovery-action="archive"
                         onClick={archiveRejectedDraftAndContinue}
-                        className="min-h-[48px] flex-1 rounded-xl bg-[var(--wd-danger)] px-4 text-xs font-black text-[var(--wd-bg)]"
+                        className="min-h-[48px] flex-1 rounded-xl bg-[var(--wd-danger)] px-4 text-[12px] font-black text-[var(--wd-bg)]"
                       >
                         이전 기록 보관하고 이어가기
                       </button>
@@ -1367,7 +1367,7 @@ export default function WindDownReviewClient() {
                       type="button"
                       data-draft-recovery-action="download"
                       onClick={downloadDraftRecovery}
-                      className="min-h-[48px] flex-1 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-4 text-xs font-black text-[var(--wd-text)]"
+                      className="min-h-[48px] flex-1 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] px-4 text-[12px] font-black text-[var(--wd-text)]"
                     >
                       보관한 기록 내려받기
                     </button>
@@ -1375,14 +1375,14 @@ export default function WindDownReviewClient() {
                 ) : null}
                 {draftExportAcknowledgmentAvailable ? (
                   <div className="mt-3 rounded-xl border border-[var(--wd-border)] bg-[var(--wd-surface-raised)] p-3 text-left">
-                    <p className="text-xs font-semibold leading-5 text-white/65">
+                    <p className="text-[12px] font-semibold leading-5 text-white/65">
                       내려받은 파일을 안전한 곳에 보관했다면, 브라우저의 활성 기록을 비우고 새 이어하기 기록을 만들 수 있어. 저장된 서버 복습 기록에는 영향을 주지 않아.
                     </p>
                     <button
                       type="button"
                       data-draft-recovery-action="acknowledge-export"
                       onClick={clearExportedDraftAndContinue}
-                      className="mt-3 min-h-[48px] w-full rounded-xl bg-[var(--wd-accent)] px-4 text-xs font-black text-[var(--wd-bg)]"
+                      className="mt-3 min-h-[48px] w-full rounded-xl bg-[var(--wd-accent)] px-4 text-[12px] font-black text-[var(--wd-bg)]"
                     >
                       파일을 보관했어 · 새 기록으로 이어가기
                     </button>

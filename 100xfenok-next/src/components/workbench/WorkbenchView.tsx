@@ -87,7 +87,7 @@ export default function WorkbenchView({ surface = "workbench" }: { surface?: Wor
                 data-explore-route-step-index={isExplore ? step.index : undefined}
                 className="min-h-16 rounded-lg border border-[var(--c-line-2)] bg-[var(--c-surface)] px-3 py-2 transition hover:border-brand-interactive hover:bg-[var(--c-surface-2)]"
               >
-                <span className="flex items-center gap-2 text-xs font-black text-[var(--c-ink)]">
+                <span className="flex items-center gap-2 text-[12px] font-black text-[var(--c-ink)]">
                   <span className="font-mono text-[12px] text-brand-primary">{step.index}</span>
                   {step.label}
                 </span>

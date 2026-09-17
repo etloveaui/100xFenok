@@ -209,21 +209,21 @@ export default async function AdminDataLabPage() {
           <nav className="grid min-w-[min(100%,24rem)] grid-cols-1 gap-2 sm:grid-cols-3" aria-label="Data Lab 경로">
             <Link
               href="/admin"
-              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100"
+              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-[12px] font-black text-slate-700 transition hover:bg-slate-100"
               data-admin-data-lab-owner-link="admin-hub"
             >
               Admin Hub
             </Link>
             <Link
               href={ROUTES.market}
-              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100"
+              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-[12px] font-black text-slate-700 transition hover:bg-slate-100"
               data-admin-data-lab-owner-link="market"
             >
               시장 화면
             </Link>
             <Link
               href={ROUTES.explore}
-              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-black text-slate-700 transition hover:bg-slate-100"
+              className="flex min-h-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-[12px] font-black text-slate-700 transition hover:bg-slate-100"
               data-admin-data-lab-owner-link="explore"
             >
               홈 탐색
@@ -237,7 +237,7 @@ export default async function AdminDataLabPage() {
           <div>
             <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Fenok Data Health</p>
             <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">데이터 헬스 KPI</h2>
-            <p className="mt-1 text-xs font-semibold text-slate-500">KPI 생성 {dateLabel(dataHealthKpi?.generated_at)}</p>
+            <p className="mt-1 text-[12px] font-semibold text-slate-500">KPI 생성 {dateLabel(dataHealthKpi?.generated_at)}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 text-center text-[12px] font-black sm:grid-cols-5">
             {[
@@ -256,7 +256,7 @@ export default async function AdminDataLabPage() {
         </div>
 
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-xs">
+          <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left text-[12px]">
             <thead>
               <tr className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">
                 <th className="border-b border-slate-200 px-3 py-2">KPI</th>
@@ -318,7 +318,7 @@ export default async function AdminDataLabPage() {
           <div>
             <p className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">Product Freshness Gate</p>
             <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">제품 화면 데이터 상태</h2>
-            <p className="mt-1 text-xs font-semibold text-slate-500">스냅샷 생성 {dateLabel(coverage?.generated_at)}</p>
+            <p className="mt-1 text-[12px] font-semibold text-slate-500">스냅샷 생성 {dateLabel(coverage?.generated_at)}</p>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center text-[12px] font-black sm:grid-cols-6">
             {[
@@ -338,7 +338,7 @@ export default async function AdminDataLabPage() {
         </div>
 
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-xs">
+          <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-[12px]">
             <thead>
               <tr className="text-[12px] font-black uppercase tracking-[0.12em] text-slate-500">
                 <th className="border-b border-slate-200 px-3 py-2">화면</th>

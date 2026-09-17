@@ -79,7 +79,7 @@ export default function AdminRootPage() {
   return (
     <main className="container mx-auto px-4 py-5">
       <section className="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-900 via-brand-navy to-brand-interactive p-5 text-white shadow-[0_26px_55px_-38px_rgba(2,6,23,0.92)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/75">100xFenok Control Tower</p>
+        <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-white/75">100xFenok Control Tower</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight">Admin Hub</h1>
         <p className="mt-3 max-w-2xl text-sm text-white/85">
           마이그레이션 검증, 레거시 브리지 점검, 디자인 고도화를 하나의 진입점에서 관리합니다.
@@ -129,7 +129,7 @@ export default function AdminRootPage() {
         ))}
       </section>
 
-      <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Personal</p>
+      <p className="mt-6 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">Personal</p>
       <section className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2">
         <Link
           href="/admin/personal"

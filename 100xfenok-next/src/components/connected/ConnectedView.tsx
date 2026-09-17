@@ -154,7 +154,7 @@ export function ConnectedView({
       <section className="panel stock-section" data-connected-variant={variant}>
         <div className="panel-h"><h2>데이터 연결</h2></div>
         <div className="panel-b">
-          <p className="text-xs font-semibold text-slate-500">연결 인덱스를 확인하고 있습니다.</p>
+          <p className="text-[12px] font-semibold text-slate-500">연결 인덱스를 확인하고 있습니다.</p>
         </div>
       </section>
     );
@@ -219,7 +219,7 @@ export function ConnectedView({
           ))}
         </div>
         {asOfRows.length > 0 ? (
-          <div className={compact ? "grid gap-1.5 text-[12px]" : "grid gap-1.5 text-xs"}>
+          <div className={compact ? "grid gap-1.5 text-[12px]" : "grid gap-1.5 text-[12px]"}>
             {asOfRows.map((row) => (
               <div key={row.label} className="flex flex-wrap items-center justify-between gap-2 font-semibold text-slate-500">
                 <span>{row.label}</span>

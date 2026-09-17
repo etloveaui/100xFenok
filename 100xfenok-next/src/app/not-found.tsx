@@ -64,7 +64,7 @@ export default function NotFound() {
         {/* Brand */}
         <div className="mt-8">
           <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-navy to-brand-interactive flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-navy to-brand-interactive flex items-center justify-center text-white text-[12px] font-bold">
               100x
             </div>
             <span className="font-bold text-slate-700 group-hover:text-brand-navy transition-colors">

@@ -100,7 +100,7 @@ export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
             data-posts-detail-boundary
             className="mb-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
           >
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Route owner</p>
+            <p className="text-[12px] font-bold uppercase tracking-wide text-slate-500">Route owner</p>
             <h1 className="mt-2 text-xl font-black text-slate-900">레거시 리포트</h1>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
               기존 HTML 리포트를 분석 아카이브 안에서 읽는 상세 화면입니다. 네이티브 화면 전환 전까지
@@ -111,7 +111,7 @@ export default async function PostLegacyPage({ params }: PostLegacyPageProps) {
                 <span
                   key={chip.key}
                   data-posts-detail-boundary-chip={chip.key}
-                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700"
+                  className="inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[12px] font-bold text-slate-700"
                 >
                   {chip.label}
                 </span>

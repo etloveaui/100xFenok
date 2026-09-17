@@ -260,7 +260,7 @@ export function StockAnalyzerDashboard() {
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-600">
+            <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-slate-600">
               STOCK ANALYZER
             </p>
             <h1 className="mt-1 text-xl font-black text-slate-800 sm:text-2xl">
@@ -315,7 +315,7 @@ export function StockAnalyzerDashboard() {
       >
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
           <label className="xl:col-span-2" data-stock-analyzer-native-filter="search">
-            <span className="mb-1 block text-xs font-semibold text-slate-500">검색</span>
+            <span className="mb-1 block text-[12px] font-semibold text-slate-500">검색</span>
             <input
               type="search"
               value={dashboard.filters.query}
@@ -326,7 +326,7 @@ export function StockAnalyzerDashboard() {
           </label>
 
           <label data-stock-analyzer-native-filter="sector">
-            <span className="mb-1 block text-xs font-semibold text-slate-500">섹터</span>
+            <span className="mb-1 block text-[12px] font-semibold text-slate-500">섹터</span>
             <select
               value={dashboard.filters.sectors[0] ?? ""}
               onChange={(event) => {
@@ -345,7 +345,7 @@ export function StockAnalyzerDashboard() {
           </label>
 
           <label data-stock-analyzer-native-filter="sort">
-            <span className="mb-1 block text-xs font-semibold text-slate-500">정렬 기준</span>
+            <span className="mb-1 block text-[12px] font-semibold text-slate-500">정렬 기준</span>
             <select
               value={dashboard.filters.sortKey}
               onChange={(event) => updateFilters({ sortKey: event.target.value })}
@@ -360,7 +360,7 @@ export function StockAnalyzerDashboard() {
           </label>
 
           <label data-stock-analyzer-native-filter="order">
-            <span className="mb-1 block text-xs font-semibold text-slate-500">정렬 순서</span>
+            <span className="mb-1 block text-[12px] font-semibold text-slate-500">정렬 순서</span>
             <select
               value={dashboard.filters.sortOrder}
               onChange={(event) =>
@@ -378,17 +378,17 @@ export function StockAnalyzerDashboard() {
           <button
             type="button"
             onClick={resetFilters}
-            className="min-h-11 rounded-lg bg-slate-100 px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-200"
+            className="min-h-11 rounded-lg bg-slate-100 px-3 text-[12px] font-bold text-slate-700 transition hover:bg-slate-200"
             data-stock-analyzer-native-filter="reset"
           >
             필터 초기화
           </button>
-          <span className="text-xs text-slate-500">
+          <span className="text-[12px] text-slate-500">
             Loaded at: {dashboard.lastUpdatedAt ? new Date(dashboard.lastUpdatedAt).toLocaleString() : "-"}
           </span>
         </div>
 
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-[12px] text-slate-500">
           현재 탭: {activeTabDescription}
           {" · "}
           현재 정렬: <span data-stock-sort-label="true">{activeSortLabel}</span>
@@ -428,7 +428,7 @@ export function StockAnalyzerDashboard() {
           data-stock-analyzer-native-quick-snapshot="true"
         >
           <h2 className="text-sm font-black text-slate-700">Quick Snapshot</h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-[12px] text-slate-500">
             초기 렌더 성능을 위해 차트는 유휴 시간에 순차 로드됩니다.
           </p>
           <div className="mt-3 grid min-h-[170px] grid-cols-1 gap-2 md:grid-cols-2">
@@ -436,7 +436,7 @@ export function StockAnalyzerDashboard() {
               ? quickSnapshotRows.map((record) => (
                   <div key={record.symbol} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                     <p className="text-sm font-bold text-slate-800">{record.symbol}</p>
-                    <p className="text-xs text-slate-600">{record.companyName}</p>
+                    <p className="text-[12px] text-slate-600">{record.companyName}</p>
                   </div>
                 ))
               : Array.from({ length: 6 }, (_, index) => (
@@ -459,7 +459,7 @@ export function StockAnalyzerDashboard() {
         >
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-black text-slate-700">Filtered Universe</h2>
-            <span className="text-xs text-slate-500">
+            <span className="text-[12px] text-slate-500">
               {shouldRenderHeavyPanels ? `Top 50 rows · ${activeTabDescription}` : "Top 12 rows (quick mode)"}
             </span>
           </div>
@@ -488,10 +488,10 @@ export function StockAnalyzerDashboard() {
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0">
                         <p className="text-sm font-black text-slate-800">{record.symbol}</p>
-                        <p className="truncate text-xs text-slate-600">{record.companyName}</p>
+                        <p className="truncate text-[12px] text-slate-600">{record.companyName}</p>
                       </div>
                       <span
-                        className={`rounded-full px-2 py-1 text-xs font-bold ${
+                        className={`rounded-full px-2 py-1 text-[12px] font-bold ${
                           typeof record.growthRate !== "number"
                             ? "bg-slate-100 text-slate-600"
                             : record.growthRate < 0
@@ -538,7 +538,7 @@ export function StockAnalyzerDashboard() {
           <div className="hidden overflow-x-auto md:block" data-stock-analyzer-native-table-wrap="true">
             <table className="w-full min-w-[720px] border-collapse text-sm" data-stock-analyzer-native-table="true">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-slate-200 text-left text-[12px] uppercase tracking-wider text-slate-500">
                   <th className="py-2 pr-2">Ticker</th>
                   <th className="py-2 pr-2">Company</th>
                   <th className="py-2 pr-2">Sector</th>
@@ -624,7 +624,7 @@ export function StockAnalyzerDashboard() {
             <div className="mt-3 space-y-2 text-sm">
               <p className="text-xl font-black text-slate-800">{selectedRecord.symbol}</p>
               <p className="text-slate-600">{selectedRecord.companyName}</p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-2 gap-2 text-[12px]">
                 <div className="rounded-lg bg-slate-50 p-2">
                   <p className="text-slate-600">Sector</p>
                   <p className="font-bold text-slate-700">{selectedRecord.sector ?? "-"}</p>
@@ -647,7 +647,7 @@ export function StockAnalyzerDashboard() {
                   <span className={`inline-flex rounded-full border px-2 py-1 text-[11px] font-black ${selectedInterpretation.badgeClass}`}>
                     {selectedInterpretation.badge}
                   </span>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                  <p className="mt-2 text-[12px] leading-relaxed text-slate-600">
                     {selectedInterpretation.text}
                   </p>
                 </div>

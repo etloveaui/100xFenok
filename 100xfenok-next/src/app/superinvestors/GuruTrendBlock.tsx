@@ -161,7 +161,7 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
         <div
           role="status"
           aria-live="polite"
-          className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500"
+          className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-[12px] font-bold text-slate-500"
         >
           운용 추이 데이터를 불러오는 중입니다…
         </div>
@@ -182,7 +182,7 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
         <div
           role="status"
           aria-live="polite"
-          className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700"
+          className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-[12px] font-bold text-rose-700"
         >
           운용 추이 데이터를 불러오지 못했습니다.
         </div>
@@ -204,7 +204,7 @@ export default function GuruTrendBlock({ investorId }: { investorId: string }) {
         <div
           role="status"
           aria-live="polite"
-          className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-500"
+          className="rounded-xl border border-dashed border-slate-200 bg-white px-3 py-2 text-[12px] font-bold text-slate-500"
         >
           이 투자자의 자료 없음 · 다음 분기 공시 반영 후 갱신
         </div>

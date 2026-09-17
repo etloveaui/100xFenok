@@ -99,7 +99,7 @@ export default async function VRPage({ searchParams }: PageProps) {
             <Stat className="flex-1" label="경계 기준" value={VR_BOUNDARY_CHIPS.length} />
             <Stat className="flex-1" label="리밸런싱 주기" value="2주" />
           </StatStrip>
-          <p className="mt-2 text-xs leading-relaxed text-[var(--c-ink-3)] sm:text-sm">
+          <p className="mt-2 text-[12px] leading-relaxed text-[var(--c-ink-3)] sm:text-sm">
             밸류 리밸런싱(Value Rebalancing) 관련 문서와 계산기 모음 — 수학적 원칙에 기반한 체계적 투자 시스템
           </p>
         </section>
@@ -133,9 +133,9 @@ export default async function VRPage({ searchParams }: PageProps) {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-700">VR 5.0</span>
-              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-700">시뮬레이터</span>
-              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-700">백테스트</span>
+              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-[12px] font-semibold text-slate-700">VR 5.0</span>
+              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-[12px] font-semibold text-slate-700">시뮬레이터</span>
+              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-[12px] font-semibold text-slate-700">백테스트</span>
             </div>
           </Link>
 
@@ -167,9 +167,9 @@ export default async function VRPage({ searchParams }: PageProps) {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-700">TQQQ</span>
-              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-700">실시간</span>
-              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-xs font-semibold text-slate-700">주문표</span>
+              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-[12px] font-semibold text-slate-700">TQQQ</span>
+              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-[12px] font-semibold text-slate-700">실시간</span>
+              <span className="inline-block bg-slate-100 rounded-full px-3 py-1 text-[12px] font-semibold text-slate-700">주문표</span>
             </div>
           </Link>
         </div>
@@ -177,7 +177,7 @@ export default async function VRPage({ searchParams }: PageProps) {
         <section className="vr-card mb-10 max-w-4xl mx-auto border-2 border-indigo-200 p-4 sm:p-6" data-vr-boundary>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-indigo-600" data-vr-route-owner="legacy-guides">
+              <p className="text-[12px] font-black uppercase tracking-[0.14em] text-indigo-600" data-vr-route-owner="legacy-guides">
                 VR 전략 가이드
               </p>
               <h2 className="mt-2 text-xl font-black text-slate-800 sm:text-2xl">가이드와 계산기 경계</h2>
@@ -187,7 +187,7 @@ export default async function VRPage({ searchParams }: PageProps) {
                 <span
                   key={chip.key}
                   data-vr-boundary-chip={chip.key}
-                  className="inline-flex min-h-11 items-center rounded-full border border-indigo-100 bg-white/75 px-3 text-xs font-black text-slate-700"
+                  className="inline-flex min-h-11 items-center rounded-full border border-indigo-100 bg-white/75 px-3 text-[12px] font-black text-slate-700"
                 >
                   {chip.label}
                 </span>
@@ -210,7 +210,7 @@ export default async function VRPage({ searchParams }: PageProps) {
 
         <div className="vr-card p-4 sm:p-6 mb-10 md:mb-12 text-center max-w-4xl mx-auto border-2 border-indigo-200" data-vr-formula>
           <p className="mb-4 font-semibold text-slate-800">Core Formula</p>
-          <div className="max-w-full overflow-x-auto rounded-lg bg-indigo-50 p-3 font-mono text-xs text-indigo-700 sm:p-4 sm:text-base md:text-lg">
+          <div className="max-w-full overflow-x-auto rounded-lg bg-indigo-50 p-3 font-mono text-[12px] text-indigo-700 sm:p-4 sm:text-base md:text-lg">
             V₂ = V₁ + (Pool ÷ G) + (E - V₁) ÷ (2√G)
           </div>
           <p className="text-slate-600 text-sm mt-2">
@@ -248,7 +248,7 @@ export default async function VRPage({ searchParams }: PageProps) {
               <div className="text-sm text-slate-600">리밸런싱 주기</div>
             </div>
           </div>
-          <p className="text-slate-500 text-xs mt-4">
+          <p className="text-slate-500 text-[12px] mt-4">
             * 수익률·하락폭 수치는 시장 상황에 따라 달라지므로 확정 지표를 표기하지 않습니다.
           </p>
         </div>

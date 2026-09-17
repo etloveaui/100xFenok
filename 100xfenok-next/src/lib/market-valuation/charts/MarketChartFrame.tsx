@@ -311,7 +311,7 @@ export function MarketChartFrame({
               </figcaption>
             )}
             {subtitle && (
-              <p className="truncate text-xs font-semibold text-[var(--c-ink-2)]">{subtitle}</p>
+              <p className="truncate text-[12px] font-semibold text-[var(--c-ink-2)]">{subtitle}</p>
             )}
           </div>
           {showRanges && (

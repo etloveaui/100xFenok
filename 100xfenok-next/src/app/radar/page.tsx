@@ -117,7 +117,7 @@ export default async function RadarPage({ searchParams }: PageProps) {
                   <span
                     key={chip.key}
                     data-radar-boundary-chip={chip.key}
-                    className="inline-flex min-h-[44px] items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700"
+                    className="inline-flex min-h-[44px] items-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[12px] font-bold text-slate-700"
                   >
                     {chip.label}
                   </span>
@@ -144,7 +144,7 @@ export default async function RadarPage({ searchParams }: PageProps) {
                   key={link.key}
                   href={link.href}
                   data-radar-category-link={link.key}
-                  className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-3 text-[12px] font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
                 >
                   {link.label}
                 </Link>

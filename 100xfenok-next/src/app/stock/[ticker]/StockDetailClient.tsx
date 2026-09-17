@@ -886,7 +886,7 @@ function MiniBarChart({
     })),
   ];
   const allVals = finiteValues(bars.map((b) => b.value));
-  if (allVals.length === 0) return <span className="text-xs text-slate-300">—</span>;
+  if (allVals.length === 0) return <span className="text-[12px] text-slate-300">—</span>;
   const minVal = Math.min(...allVals, 0);
   const maxVal = Math.max(...allVals, 0);
   const range = maxVal - minVal || 1;
@@ -998,7 +998,7 @@ function CompactFinancialTable({ detail, years }: { detail: any; years: string[]
 
   return (
     <div className="-mx-1 mt-3 overflow-x-auto px-1">
-      <table data-stock-financial-table="compact" className="w-full min-w-[500px] text-xs">
+      <table data-stock-financial-table="compact" className="w-full min-w-[500px] text-[12px]">
         <thead>
           <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
             <th className="sticky left-0 z-20 min-w-[5.5rem] bg-[var(--c-panel)] px-2 py-1.5 text-left shadow-[2px_0_0_var(--c-line-2)]" />
@@ -1152,7 +1152,7 @@ function DividendPanel({
           <MiniBarChart actuals={dpsSeries} estimates={estimateDps} years={years} color="var(--c-info)" formatValue={(value) => formatMoney(value, currency)} />
         </div>
       ) : (
-        <p data-stock-dividend-empty className="mx-4 my-2 rounded-md border border-dashed border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500">
+        <p data-stock-dividend-empty className="mx-4 my-2 rounded-md border border-dashed border-slate-200 bg-white px-3 py-2 text-[12px] font-semibold text-slate-500">
           이 티커에서는 DPS 시계열을 찾지 못했습니다. 수익률/성향 값이 없으면 배당 분석은 빈 상태로 유지됩니다.
         </p>
       )}
@@ -1392,7 +1392,7 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
       </div>
       {holders.length > 0 ? (
         <div data-smart-money-section="holdings" className="-mx-1 overflow-x-auto px-1">
-          <table className="w-full min-w-[410px] text-xs">
+          <table className="w-full min-w-[410px] text-[12px]">
             <thead>
               <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
                 <th className="px-2 py-1.5 text-left">투자자</th>
@@ -1415,10 +1415,10 @@ function GuruSection({ f13Entries, ticker, f13Quality }: { f13Entries: F13Entry[
                       <span className="text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">포트폴리오</span>
                     </TransitionLink>
                   </td>
-                  <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-900">
+                  <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold text-slate-900">
                     {h.shares > 0 ? h.shares.toLocaleString() : "—"}
                   </td>
-                  <td className="px-2 py-1.5 text-right tabular-nums text-xs font-semibold text-slate-700">
+                  <td className="px-2 py-1.5 text-right tabular-nums text-[12px] font-semibold text-slate-700">
                     {h.weight > 0 ? `${(h.weight * 100).toFixed(2)}%` : "—"}
                   </td>
                   <td data-smart-money-report-date-cell className="px-2 py-1.5 text-right text-[12px] font-black text-slate-500">
@@ -3400,7 +3400,7 @@ export default function StockDetailClient({
                       <h4 className="mb-2 text-[12px] font-black tracking-[0.08em] text-slate-500">PER 밴드 (8Y)</h4>
                       {finiteValues(detail.valuation?.per).length >= 2 ? (
                         <PerBandChart years={detail.years} per={numberSeries(detail.valuation?.per)} perBands={detail.per_bands} estimates={detail.valuation_estimates?.per} />
-                      ) : <span className="text-xs text-slate-300">—</span>}
+                      ) : <span className="text-[12px] text-slate-300">—</span>}
                     </div>
                     {detailPerBands ? (
                       <div>
@@ -3417,7 +3417,7 @@ export default function StockDetailClient({
                                 <div className="relative h-3 flex-1 rounded-full bg-slate-100">
                                   <div className={`absolute top-0 h-3 rounded-full ${barColor}`} style={{ left: `${pct}%`, width: "3px", transform: "translateX(-1.5px)" }} />
                                 </div>
-                                <span className={`w-14 text-xs  tabular-nums font-bold ${textColor}`}>{v.toFixed(1)}</span>
+                                <span className={`w-14 text-[12px]  tabular-nums font-bold ${textColor}`}>{v.toFixed(1)}</span>
                               </div>
                             );
                           })}
@@ -3883,7 +3883,7 @@ function FinancialCandidatePanel({
               {Object.entries(group.data).map(([key, info]) => (
                 <div key={`${group.label}-${key}`} className="rounded-md bg-slate-50 px-2 py-2">
                   <p className="text-[12px] font-semibold text-slate-500">{financialStatementLabel(key)}</p>
-                  <p className="mt-0.5 text-xs font-semibold tabular-nums text-slate-900">
+                  <p className="mt-0.5 text-[12px] font-semibold tabular-nums text-slate-900">
                     {fmtCandidateCount(info?.field_count)}개 항목
                   </p>
                   <p className="mt-0.5 text-[12px] font-semibold text-slate-500">
@@ -4082,7 +4082,7 @@ function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHo
   }
   return (
     <div className="-mx-1 max-h-[560px] overflow-auto px-1">
-      <table className="w-full min-w-[560px] text-xs">
+      <table className="w-full min-w-[560px] text-[12px]">
         <thead className="sticky top-0 z-10 bg-white">
           <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
             <th className="sticky left-0 z-20 bg-white px-2 py-2 text-right shadow-[2px_0_0_var(--c-line-2)]">#</th>
@@ -4101,7 +4101,7 @@ function EtfHoldingsTable({ holdings, currency }: { holdings: StockanalysisEtfHo
                 <td className="sticky left-0 bg-white px-2 py-2 text-right tabular-nums text-[12px] font-bold text-slate-500 shadow-[2px_0_0_var(--c-line-2)]">{item.rank ?? index + 1}</td>
                 <td className="px-2 py-2 font-bold text-slate-800">{item.name ?? "—"}</td>
                 <td className="px-2 py-2 tabular-nums text-[12px] font-black text-slate-500">{item.symbol ?? "—"}</td>
-                <td className={`px-2 py-2 text-right  tabular-nums text-xs font-black ${weightClass}`}>{fmtEtfPct(weight)}</td>
+                <td className={`px-2 py-2 text-right  tabular-nums text-[12px] font-black ${weightClass}`}>{fmtEtfPct(weight)}</td>
                 <td className="px-2 py-2 text-right tabular-nums text-[12px] font-semibold text-slate-600">{fmtShares(item.shares)}</td>
               </tr>
             );
@@ -4144,7 +4144,7 @@ function EtfWeightedList({ rows, empty }: { rows: StockanalysisWeightedRow[] | n
         const width = Math.min(100, Math.abs(value));
         return (
           <div key={`${weightedRowName(row)}-${index}`}>
-            <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+            <div className="mb-1 flex items-center justify-between gap-3 text-[12px]">
               <span className="min-w-0 truncate font-bold text-slate-700">{weightedRowName(row)}</span>
               <span className={` tabular-nums font-black ${value < 0 ? "text-rose-600" : "text-slate-900"}`}>{fmtEtfPct(value)}</span>
             </div>
@@ -4192,7 +4192,7 @@ function EtfHistoryView({ history, currency }: { history: StockanalysisHistoryPo
         })}
       </div>
       <div className="-mx-1 overflow-x-auto px-1">
-        <table className="w-full min-w-[360px] text-xs">
+        <table className="w-full min-w-[360px] text-[12px]">
           <thead>
             <tr className="border-b border-slate-200 text-[12px] font-black uppercase tracking-[0.06em] text-slate-500">
               <th className="px-2 py-2 text-left">월</th>

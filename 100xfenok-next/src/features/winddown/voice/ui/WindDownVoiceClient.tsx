@@ -828,7 +828,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
           </div>
           <Link
             href={storyHref ?? "/winddown"}
-            className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-[var(--wd-border)] bg-[var(--wd-surface)] px-4 text-xs font-black text-[var(--wd-muted)] transition active:scale-[.98] motion-reduce:transition-none"
+            className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-[var(--wd-border)] bg-[var(--wd-surface)] px-4 text-[12px] font-black text-[var(--wd-muted)] transition active:scale-[.98] motion-reduce:transition-none"
           >
             {storyHref ? "무대로 돌아가기" : "나가기"}
           </Link>
@@ -837,9 +837,9 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
         <main className="flex flex-1 flex-col py-6">
           {storyReturn ? (
             <aside aria-label="무대 연습 안내" className="mb-5 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface)] p-4">
-              <p className="text-xs font-bold tracking-wide text-[var(--wd-accent)]">{recoveringPriorReport || !isStoryScenario ? "돌아갈 무대" : storyAccess === "preview" ? "아직 열리지 않은 무대" : "무대에서 이어온 연습"}</p>
+              <p className="text-[12px] font-bold tracking-wide text-[var(--wd-accent)]">{recoveringPriorReport || !isStoryScenario ? "돌아갈 무대" : storyAccess === "preview" ? "아직 열리지 않은 무대" : "무대에서 이어온 연습"}</p>
               <p className="mt-1 text-lg font-semibold">{storyReturn.title}</p>
-              <p className="mt-1 text-xs leading-5 text-[var(--wd-muted)]">{storyReturn.location}</p>
+              <p className="mt-1 text-[12px] leading-5 text-[var(--wd-muted)]">{storyReturn.location}</p>
               <p className="mt-2 text-sm leading-6 text-[var(--wd-muted)]">
                 {recoveringPriorReport ? "먼저 이전 대화를 보관하고 있어. 이 무대의 새 연습과는 별개인 기록이야."
                   : !isStoryScenario ? "다른 상황을 골랐어. 연습을 마치면 원래 무대로 돌아갈 수 있어."
@@ -849,7 +849,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                   : "이 장면의 표현을 연습해 봐. 시작을 눌러야 마이크가 켜져."}
               </p>
               {isStoryScenario && storyAccess === "error" ? <button type="button" onClick={() => void checkStoryAccess()} className="mt-2 min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4 text-sm font-bold">무대 기록 다시 확인</button> : null}
-              <p className="mt-1 text-xs leading-5 text-[var(--wd-muted)]">연습한 대화는 보관함에서 다시 볼 수 있어. 성장 경험치는 기존 학습·복습 기준으로 쌓여.</p>
+              <p className="mt-1 text-[12px] leading-5 text-[var(--wd-muted)]">연습한 대화는 보관함에서 다시 볼 수 있어. 성장 경험치는 기존 학습·복습 기준으로 쌓여.</p>
             </aside>
           ) : null}
           {recoveringPriorReport ? <aside aria-label="이전 대화 복구" className="mb-4 rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-surface)] p-4">
@@ -860,27 +860,27 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
           {hasRetained ? <button type="button" onClick={downloadRecoveryDraft} className="mb-4 min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4 text-sm font-semibold">보관한 원본 기록 내려받기</button> : null}
           {coachNotice && <p role="status" className="text-sm text-[var(--wd-muted)]">{coachNotice}</p>}
           {storageWarning ? (
-            <div role="alert" className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs font-semibold text-amber-200">
+            <div role="alert" className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-[12px] font-semibold text-amber-200">
               <p>{storageWarning}</p>
               <button type="button" onClick={downloadRecoveryDraft} className="mt-2 min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4">원본 기록 내려받기</button>
             </div>
           ) : null}
           {startGuardNotice ? (
-            <div role="alert" className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs font-semibold text-amber-200">
+            <div role="alert" className="mb-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-[12px] font-semibold text-amber-200">
               <p>{startGuardNotice}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={downloadRecoveryDraft}
-                  className="min-h-[44px] rounded-xl bg-amber-500 px-4 text-xs font-black text-black active:scale-[.98] motion-reduce:transition-none"
+                  className="min-h-[44px] rounded-xl bg-amber-500 px-4 text-[12px] font-black text-black active:scale-[.98] motion-reduce:transition-none"
                 >
                   원본 기록 내려받기
                 </button>
-                <button type="button" onClick={retainPrevious} className="min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4 text-xs font-bold">이전 기록 따로 보관하기</button>
+                <button type="button" onClick={retainPrevious} className="min-h-[48px] rounded-xl border border-[var(--wd-border)] px-4 text-[12px] font-bold">이전 기록 따로 보관하기</button>
                 <button
                   type="button"
                   onClick={() => setStartGuardNotice(null)}
-                  className="min-h-[44px] rounded-xl border border-[var(--wd-border)] px-4 text-xs font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none"
+                  className="min-h-[44px] rounded-xl border border-[var(--wd-border)] px-4 text-[12px] font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none"
                 >
                   취소
                 </button>
@@ -888,21 +888,21 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
             </div>
           ) : null}
           {corruptNotice ? (
-            <section role="alert" className="mb-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-xs font-semibold text-rose-200">
+            <section role="alert" className="mb-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-[12px] font-semibold text-rose-200">
               <p className="font-bold">이전 대화 기록 확인이 필요해</p>
               <p className="mt-1">{corruptNotice.error}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={downloadRecoveryDraft}
-                  className="min-h-[44px] rounded-xl border border-rose-400 bg-rose-500/20 px-4 text-xs font-bold text-rose-100 active:scale-[.98] motion-reduce:transition-none"
+                  className="min-h-[44px] rounded-xl border border-rose-400 bg-rose-500/20 px-4 text-[12px] font-bold text-rose-100 active:scale-[.98] motion-reduce:transition-none"
                 >
                   원본 기록 내려받기
                 </button>
                 <button
                   type="button"
                   onClick={() => setCorruptNotice(null)}
-                  className="min-h-[44px] rounded-xl border border-[var(--wd-border)] px-4 text-xs font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none"
+                  className="min-h-[44px] rounded-xl border border-[var(--wd-border)] px-4 text-[12px] font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none"
                 >
                   닫기
                 </button>
@@ -931,7 +931,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                       className={`min-h-[64px] rounded-2xl border px-4 text-left transition active:scale-[.98] motion-reduce:transition-none ${descriptor.activity === "roleplay" && descriptor.scenarioId === scenario.id ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)]" : "border-[var(--wd-border)] bg-[var(--wd-bg)]"}`}
                     >
                       <span className="block text-sm font-black">{scenario.title}</span>
-                      <span className="mt-0.5 block text-xs font-semibold text-[var(--wd-muted)]">{scenario.scene}</span>
+                      <span className="mt-0.5 block text-[12px] font-semibold text-[var(--wd-muted)]">{scenario.scene}</span>
                     </button>
                   ))}
                   </div> : null}
@@ -940,10 +940,10 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
               {storyReturn || (descriptor.activity === "roleplay" && !["cafe-order", "after-work-check-in"].includes(descriptor.scenarioId)) ? (
                 <details className="mt-4 rounded-2xl border border-[var(--wd-border)] px-4">
                   <summary className="flex min-h-[48px] cursor-pointer items-center text-sm font-bold">막힐 때 볼 표현 힌트</summary>
-                  <p className="pb-3 text-xs leading-5 text-[var(--wd-muted)]">아래 표시는 연습 표현을 말한 기록이야. 힌트를 바탕으로 네 이야기를 덧붙여 봐.</p>
+                  <p className="pb-3 text-[12px] leading-5 text-[var(--wd-muted)]">아래 표시는 연습 표현을 말한 기록이야. 힌트를 바탕으로 네 이야기를 덧붙여 봐.</p>
                   {roleplay?.scenario.goals.map((goal) => (
                     <div key={goal.id} className="border-t border-[var(--wd-border)] py-3">
-                      <p className="text-xs text-[var(--wd-muted)]">{goal.label}</p>
+                      <p className="text-[12px] text-[var(--wd-muted)]">{goal.label}</p>
                       <p lang="en" className="mt-1 text-sm leading-6">{goal.matchAny[0]}</p>
                     </div>
                   ))}
@@ -1000,7 +1000,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                       className={`min-h-[64px] min-w-[190px] rounded-2xl border px-4 text-left transition active:scale-[.98] motion-reduce:transition-none ${descriptor.activity === "live-talk" && descriptor.topicId === topic.id ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)]" : "border-[var(--wd-border)] bg-[var(--wd-bg)]"}`}
                     >
                       <span className="block text-sm font-black">{topic.title}</span>
-                      <span className="mt-1 block text-xs font-semibold text-[var(--wd-muted)]">{topic.openingLine}</span>
+                      <span className="mt-1 block text-[12px] font-semibold text-[var(--wd-muted)]">{topic.openingLine}</span>
                     </button>
                   ))}
                 </div>
@@ -1041,7 +1041,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
           </section>
 
           {liveTalkSummary.highlightTurnSeqs.length > 0 && activity === "live-talk" ? (
-            <p className="mt-3 text-center text-xs font-semibold text-[var(--wd-accent)]">
+            <p className="mt-3 text-center text-[12px] font-semibold text-[var(--wd-accent)]">
               다시 볼 대화 {liveTalkSummary.highlightTurns.map((turn) => `#${turn.turnSeq}`).join(" · ")}
             </p>
           ) : null}
@@ -1071,7 +1071,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                     목표 {reportState.frozen.outcome.goalResults.filter((goal) => goal.completed).length}/{reportState.frozen.outcome.goalResults.length}개를 채웠어.
                   </p>
                   {reportState.frozen.outcome.goalResults.map((goal) => (
-                    <div key={goal.goalId} className="rounded-xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 py-2 text-xs font-semibold text-[var(--wd-muted)]">
+                    <div key={goal.goalId} className="rounded-xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-3 py-2 text-[12px] font-semibold text-[var(--wd-muted)]">
                       <p>{goal.completed ? "✓" : "○"} {goal.label}</p>
                       {goal.evidence ? (
                         <p className="mt-1 text-[12px] text-[var(--wd-accent)]">
@@ -1085,15 +1085,15 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                       )}
                     </div>
                   ))}
-                  <p className="rounded-xl bg-[var(--wd-accent-soft)] px-3 py-2 text-xs font-bold text-[var(--wd-text)]">
+                  <p className="rounded-xl bg-[var(--wd-accent-soft)] px-3 py-2 text-[12px] font-bold text-[var(--wd-text)]">
                     다음 한 번: {reportState.frozen.outcome.nextPracticeSuggestion.text}
                   </p>
                 </div>
               ) : (
                 <div className="mt-3 space-y-2 text-sm font-semibold text-[var(--wd-muted)]">
                   <p>깨끗하게 남은 내 말 {reportState.frozen.outcome.cleanLearnerTurns}개 · 끊김 {reportState.frozen.outcome.interruptedTurnCount}회</p>
-                  <p>응답 {formatLatency(reportState.frozen.metrics.lastResponseLatencyMs ?? null)} <span className="text-xs text-[var(--wd-muted)]">전사→첫 오디오 기준 · {reportState.frozen.metrics.responseLatencySamplesMs?.length ?? 0}회</span></p>
-                  {reportState.frozen.outcome.highlightTurns.length > 0 ? <p className="text-xs text-[var(--wd-muted)]">다시 볼 turn {reportState.frozen.outcome.highlightTurns.map((turn) => turn.turnSeq).join(" · ")}</p> : null}
+                  <p>응답 {formatLatency(reportState.frozen.metrics.lastResponseLatencyMs ?? null)} <span className="text-[12px] text-[var(--wd-muted)]">전사→첫 오디오 기준 · {reportState.frozen.metrics.responseLatencySamplesMs?.length ?? 0}회</span></p>
+                  {reportState.frozen.outcome.highlightTurns.length > 0 ? <p className="text-[12px] text-[var(--wd-muted)]">다시 볼 turn {reportState.frozen.outcome.highlightTurns.map((turn) => turn.turnSeq).join(" · ")}</p> : null}
                 </div>
               )}
               <div className="mt-5 border-t border-[var(--wd-border)] pt-4">
@@ -1135,7 +1135,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                     {practiceSeeds.map(seed => (
                       <Link key={`${seed.citation.source}:${seed.citation.turn}`} href={seed.practiceUrl}
                         data-winddown-practice-link data-turn-citation={seed.citation.turn}
-                        className="inline-flex min-h-[48px] items-center rounded-xl bg-[var(--wd-accent-soft)] px-3 py-2 text-xs font-bold break-words [overflow-wrap:anywhere]">
+                        className="inline-flex min-h-[48px] items-center rounded-xl bg-[var(--wd-accent-soft)] px-3 py-2 text-[12px] font-bold break-words [overflow-wrap:anywhere]">
                         {seed.learnerText} · 이어서 연습하기
                       </Link>
                     ))}
@@ -1148,7 +1148,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                         return (
                           <article
                             key={`${correction.conversationId}:${correction.turnSeq}:${correction.correctionText}`}
-                            className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-3 text-xs"
+                            className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-3 text-[12px]"
                           >
                             <p className="font-semibold leading-5">{correction.correctionText}</p>
                             <p className="mt-3 font-black text-[var(--wd-accent)]">
@@ -1163,7 +1163,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                       return (
                         <article
                           key={`${correction.conversationId}:${correction.turnSeq}:${correction.correctionText}`}
-                          className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-3 text-xs"
+                          className="rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] p-3 text-[12px]"
                         >
                           <dl className="space-y-2">
                             <div><dt className="font-black text-[var(--wd-muted)]">내가 말한 표현</dt><dd className="mt-0.5 font-semibold">{presentation.was}</dd></div>
@@ -1182,7 +1182,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
                   </div>
                 </div>
               ) : null}
-              <p className="mt-3 text-xs font-semibold text-[var(--wd-muted)]">
+              <p className="mt-3 text-[12px] font-semibold text-[var(--wd-muted)]">
                 {reportState.receipt.committedAtIso.slice(0, 16).replace("T", " ")}
               </p>
               {storyHref ? (
@@ -1221,14 +1221,14 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
               <p className="mt-2 text-sm font-semibold text-[var(--wd-muted)]">{reportState.error}</p>
               {reportState.phase === "error" ? (
                 <div className="mt-5 flex flex-col gap-2">
-                  <button type="button" onClick={retainPrevious} className="min-h-[48px] w-full rounded-2xl border border-[var(--wd-border)] px-4 text-xs font-bold">이전 기록 따로 보관하기</button>
+                  <button type="button" onClick={retainPrevious} className="min-h-[48px] w-full rounded-2xl border border-[var(--wd-border)] px-4 text-[12px] font-bold">이전 기록 따로 보관하기</button>
                   <button type="button" onClick={reportRetry} className="min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)] active:scale-[.98] motion-reduce:transition-none">같은 보고서 다시 저장</button>
-                  <button type="button" onClick={downloadRecoveryDraft} className="min-h-[44px] w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 text-xs font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none">원본 기록 내려받기</button>
+                  <button type="button" onClick={downloadRecoveryDraft} className="min-h-[44px] w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 text-[12px] font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none">원본 기록 내려받기</button>
                 </div>
               ) : (
                 <div className="mt-5 flex flex-col gap-2">
                   <button type="button" onClick={start} className="min-h-[48px] w-full rounded-2xl bg-[var(--wd-accent)] px-4 text-sm font-black text-[var(--wd-bg)] active:scale-[.98] motion-reduce:transition-none">대화 다시 시작</button>
-                  <button type="button" onClick={downloadRecoveryDraft} className="min-h-[44px] w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 text-xs font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none">원본 기록 내려받기</button>
+                  <button type="button" onClick={downloadRecoveryDraft} className="min-h-[44px] w-full rounded-2xl border border-[var(--wd-border)] bg-[var(--wd-bg)] px-4 text-[12px] font-bold text-[var(--wd-text)] active:scale-[.98] motion-reduce:transition-none">원본 기록 내려받기</button>
                 </div>
               )}
             </section>
@@ -1236,7 +1236,7 @@ export default function WindDownVoiceClient({ activity, initialScenarioId, story
         </main>
 
         <footer className="pt-3">
-          <div className="mb-3 flex items-center justify-between gap-3 text-xs font-bold text-[var(--wd-muted)]">
+          <div className="mb-3 flex items-center justify-between gap-3 text-[12px] font-bold text-[var(--wd-muted)]">
             <span>{getWindDownVoiceStatusCopy(live.status, error)}</span>
             <button
               type="button"

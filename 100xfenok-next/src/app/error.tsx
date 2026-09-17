@@ -18,7 +18,7 @@ export default function GlobalError({
     <html lang="ko">
       <body className="min-h-screen bg-slate-50 text-slate-800">
         <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center px-4 text-center">
-          <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-slate-500">
+          <p className="mb-2 text-[12px] font-semibold tracking-[0.2em] text-slate-500">
             FENOK SYSTEM
           </p>
           <h1 className="mb-3 text-3xl font-black text-slate-900">예상치 못한 오류</h1>
@@ -40,7 +40,7 @@ export default function GlobalError({
               홈으로
             </Link>
           </div>
-          <p className="max-w-xl break-words rounded-md bg-white px-3 py-2 text-xs text-slate-500">
+          <p className="max-w-xl break-words rounded-md bg-white px-3 py-2 text-[12px] text-slate-500">
             {safeErrorMessage}
           </p>
         </div>

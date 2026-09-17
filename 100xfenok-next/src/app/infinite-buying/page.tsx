@@ -52,7 +52,7 @@ export default async function InfiniteBuyingPage({ searchParams }: PageProps) {
                   Infinite Buying
                 </p>
                 <h1 className="text-base font-black text-slate-950 sm:text-lg">Guide 계산기</h1>
-                <p className="mt-1 max-w-2xl text-xs font-semibold leading-5 text-slate-600 sm:text-sm">
+                <p className="mt-1 max-w-2xl text-[12px] font-semibold leading-5 text-slate-600 sm:text-sm">
                   TQQQ·SOXL 무한매수법의 분할매수 규칙과 시세를 확인하고, 오늘 실행할 주문을 계산하는 화면입니다.
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2 text-[12px] font-black uppercase tracking-[0.08em]">

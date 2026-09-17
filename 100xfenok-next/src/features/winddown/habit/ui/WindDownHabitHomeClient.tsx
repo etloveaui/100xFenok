@@ -284,7 +284,7 @@ export default function WindDownHabitHomeClient() {
               오늘 밤의 영어
             </h1>
           </div>
-          <span className="mt-1 shrink-0 rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] px-3 py-2 text-xs font-bold text-[var(--wd-accent)]">
+          <span className="mt-1 shrink-0 rounded-full border border-[var(--wd-line)] bg-[var(--wd-card)] px-3 py-2 text-[12px] font-bold text-[var(--wd-accent)]">
             {status === "ready" && projection ? monthDay(projection.currentKstDay) : "불러오는 중"}
           </span>
         </header>
@@ -316,7 +316,7 @@ export default function WindDownHabitHomeClient() {
             <section className="mt-7 rounded-[30px] border border-[var(--wd-line)] bg-[var(--wd-card)] p-6 shadow-[var(--wd-shadow)]">
               <div className="flex items-start justify-between gap-4">
                 <p className="text-[12px] font-black tracking-[0.16em] text-[var(--wd-accent)]">TONIGHT JOURNEY</p>
-                <span className="shrink-0 text-xs font-semibold text-[var(--wd-muted)]">약 {tonight.estimatedMinutes}분</span>
+                <span className="shrink-0 text-[12px] font-semibold text-[var(--wd-muted)]">약 {tonight.estimatedMinutes}분</span>
               </div>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight [font-family:var(--font-wd-serif),ui-serif,Georgia,serif]">
                 {tonight.completed ? "오늘 밤, 잘 마무리했어" : "지금 할 한 가지"}
@@ -363,7 +363,7 @@ export default function WindDownHabitHomeClient() {
               <p className="mt-2 text-sm font-medium leading-6 text-[var(--wd-muted)]">
                 {currentStory?.setup}
               </p>
-              <p className="mt-2 text-xs leading-5 text-[var(--wd-muted)]">저장된 문장 {game.creditedAnswerCount}개와 복습 별 {game.collectedReviewStarCount}개가 {game.xp} XP로 이어졌어.</p>
+              <p className="mt-2 text-[12px] leading-5 text-[var(--wd-muted)]">저장된 문장 {game.creditedAnswerCount}개와 복습 별 {game.collectedReviewStarCount}개가 {game.xp} XP로 이어졌어.</p>
               </div>
             </section>
 
@@ -383,7 +383,7 @@ export default function WindDownHabitHomeClient() {
             <section className="mt-5">
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="text-lg font-bold">다른 방식으로 열기</h2>
-                <span className="text-xs font-semibold text-[var(--wd-muted)]">언제든 선택 가능</span>
+                <span className="text-[12px] font-semibold text-[var(--wd-muted)]">언제든 선택 가능</span>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 {ACTIVITIES.filter((activity) => activity.id !== "live-talk").map((activity) => {
@@ -395,7 +395,7 @@ export default function WindDownHabitHomeClient() {
                       className={`min-h-[96px] rounded-3xl border p-4 transition active:scale-[.98] motion-reduce:transition-none ${active ? "border-[var(--wd-accent)] bg-[var(--wd-accent-soft)]" : "border-[var(--wd-line)] bg-[var(--wd-card)]"}`}
                     >
                       <span className="block text-base font-black">{activity.label}</span>
-                      <span className="mt-2 block text-xs font-semibold leading-5 text-[var(--wd-muted)]">{activity.description}</span>
+                      <span className="mt-2 block text-[12px] font-semibold leading-5 text-[var(--wd-muted)]">{activity.description}</span>
                     </Link>
                   );
                 })}
@@ -408,7 +408,7 @@ export default function WindDownHabitHomeClient() {
                   <p className="text-[12px] font-black tracking-[0.16em] text-[var(--wd-accent)]">7 NIGHTS</p>
                   <h2 className="mt-1 text-lg font-bold">{projection.streak.nights}일 연속</h2>
                 </div>
-                <p className="text-xs font-semibold text-[var(--wd-muted)]">완료한 밤만 채워져</p>
+                <p className="text-[12px] font-semibold text-[var(--wd-muted)]">완료한 밤만 채워져</p>
               </div>
               <ol className="mt-5 grid grid-cols-7 gap-1.5" aria-label="최근 7일 완료 기록">
                 {projection.constellation.map((day) => {
@@ -419,7 +419,7 @@ export default function WindDownHabitHomeClient() {
                       <span className="block text-[12px] font-bold text-[var(--wd-muted)]">{weekday(day.kstDay)}</span>
                       <span
                         aria-label={label}
-                        className={`mx-auto mt-2 flex h-9 w-9 items-center justify-center rounded-full border text-xs font-black ${day.completed ? "border-[var(--wd-accent)] bg-[var(--wd-accent)] text-[var(--wd-bg)]" : "border-[var(--wd-line)] bg-[var(--wd-card)] text-[var(--wd-muted)]"} ${isToday ? "ring-2 ring-[var(--wd-accent-2)] ring-offset-2 ring-offset-[var(--wd-card-solid)]" : ""}`}
+                        className={`mx-auto mt-2 flex h-9 w-9 items-center justify-center rounded-full border text-[12px] font-black ${day.completed ? "border-[var(--wd-accent)] bg-[var(--wd-accent)] text-[var(--wd-bg)]" : "border-[var(--wd-line)] bg-[var(--wd-card)] text-[var(--wd-muted)]"} ${isToday ? "ring-2 ring-[var(--wd-accent-2)] ring-offset-2 ring-offset-[var(--wd-card-solid)]" : ""}`}
                       >
                         {day.completed ? "완료" : monthDay(day.kstDay).replace(/\D/g, "").slice(-2)}
                       </span>
@@ -436,7 +436,7 @@ export default function WindDownHabitHomeClient() {
                   {latestHistory.map((item, index) => (
                     <li key={`${item.kstDay}:${item.activity}:${index}`} className="flex min-h-11 items-center justify-between gap-3 rounded-2xl bg-[var(--wd-card)] px-4 text-sm">
                       <span className="font-bold">{activityLabel[item.activity]}</span>
-                      <span className="shrink-0 text-xs font-semibold text-[var(--wd-muted)]">{monthDay(item.kstDay)} 완료</span>
+                      <span className="shrink-0 text-[12px] font-semibold text-[var(--wd-muted)]">{monthDay(item.kstDay)} 완료</span>
                     </li>
                   ))}
                 </ul>

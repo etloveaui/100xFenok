@@ -65,7 +65,7 @@ export default function DataStateNotice({
     <div
       data-testid="data-state-notice"
       data-data-state={state.status}
-      className={cx("rounded-[1.25rem] border px-4 py-3 text-xs font-semibold leading-5", noticeToneClass(state.status), className)}
+      className={cx("rounded-[1.25rem] border px-4 py-3 text-[12px] font-semibold leading-5", noticeToneClass(state.status), className)}
     >
       <span className="font-black">{state.label}</span>
       <span className="ml-2">{state.detail}</span>

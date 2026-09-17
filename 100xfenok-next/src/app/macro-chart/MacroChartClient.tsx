@@ -1449,7 +1449,7 @@ function PickerButton({
       )}
     >
       <span className="min-w-0">
-        <span className="block truncate text-xs font-black">{item.shortLabel}</span>
+        <span className="block truncate text-[12px] font-black">{item.shortLabel}</span>
         <span className={cx("block truncate text-[12px] font-semibold", active ? "text-white" : "text-slate-600")}>
           {definitionMetaLabel(item)}
         </span>
