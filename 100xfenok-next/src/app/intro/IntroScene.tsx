@@ -170,6 +170,7 @@ export default function IntroScene({ sp, nq, sectors, dots, narrow, onReady, onH
     const host = hostRef.current;
     const labelsHost = labelsRef.current;
     if (!host || !labelsHost) return;
+    if (!sp && !nq && !sectors.length && !dots.length) return;
 
     // --- palette from tokens (one source of truth with the CSS) ---
     const root = host.closest(".intro-root") ?? document.documentElement;
@@ -181,7 +182,7 @@ export default function IntroScene({ sp, nq, sectors, dots, narrow, onReady, onH
 
     // --- renderer / scene / camera ---
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, narrow ? 1.25 : 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, narrow ? 1.25 : 1.35));
     renderer.setSize(host.clientWidth, host.clientHeight, false);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
@@ -203,7 +204,7 @@ export default function IntroScene({ sp, nq, sectors, dots, narrow, onReady, onH
 
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(host.clientWidth, host.clientHeight), 0.85, 0.65, 0.32);
+    const bloom = new UnrealBloomPass(new THREE.Vector2(Math.ceil(host.clientWidth / 2), Math.ceil(host.clientHeight / 2)), 0.85, 0.65, 0.32);
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
 
@@ -431,7 +432,7 @@ export default function IntroScene({ sp, nq, sectors, dots, narrow, onReady, onH
       camera.updateProjectionMatrix();
       renderer.setSize(w, h, false);
       composer.setSize(w, h);
-      bloom.setSize(w, h);
+      bloom.setSize(Math.ceil(w / 2), Math.ceil(h / 2));
     };
     const ro = new ResizeObserver(onResize);
     ro.observe(host);

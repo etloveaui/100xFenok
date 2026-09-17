@@ -258,18 +258,26 @@ export default function IntroClient() {
   const cardVisible = reducedMotion || phase === "card" || phase === "focus" || (narrow && at("bars"));
   const focused = reducedMotion || phase === "focus";
 
-  const sp = feed?.indices?.sp500 && isSeries(feed.indices.sp500) ? feed.indices.sp500 : null;
-  const nq = feed?.indices?.nasdaq && isSeries(feed.indices.nasdaq) ? feed.indices.nasdaq : null;
-  const sectors = (feed?.breadth?.sectors ?? []).filter((s) => s && isNum(s.changePercent) && typeof s.symbol === "string");
+  // Everything derived from the feed is memoized on the feed object itself: the
+  // count-up re-renders this component ~60×/s and the 3D scene must never see a
+  // new array identity from that (it would rebuild the whole stage each frame).
+  const sp = useMemo(() => (feed?.indices?.sp500 && isSeries(feed.indices.sp500) ? feed.indices.sp500 : null), [feed]);
+  const nq = useMemo(() => (feed?.indices?.nasdaq && isSeries(feed.indices.nasdaq) ? feed.indices.nasdaq : null), [feed]);
+  const sectors = useMemo(
+    () => (feed?.breadth?.sectors ?? []).filter((s) => s && isNum(s.changePercent) && typeof s.symbol === "string"),
+    [feed],
+  );
   const rotationRaw = feed?.rotation;
-  const rotationList: RotationDot[] = Array.isArray(rotationRaw) ? rotationRaw : rotationRaw && Array.isArray(rotationRaw.sectors) ? rotationRaw.sectors : [];
   const rotationWindowLabel = rotationRaw && !Array.isArray(rotationRaw) && typeof rotationRaw.windowLabel === "string" ? rotationRaw.windowLabel : null;
-  const dots = rotationList
-    .map((d) => {
-      const band = isNum(d.band) ? d.band : isNum(d.bandPct) ? d.bandPct : null;
-      return isNum(d.relative) && band !== null ? { ...d, band } : null;
-    })
-    .filter((d): d is RotationDot & { band: number } => d !== null);
+  const dots = useMemo(() => {
+    const list: RotationDot[] = Array.isArray(rotationRaw) ? rotationRaw : rotationRaw && Array.isArray(rotationRaw.sectors) ? rotationRaw.sectors : [];
+    return list
+      .map((d) => {
+        const band = isNum(d.band) ? d.band : isNum(d.bandPct) ? d.bandPct : null;
+        return isNum(d.relative) && band !== null ? { ...d, band } : null;
+      })
+      .filter((d): d is RotationDot & { band: number } => d !== null);
+  }, [rotationRaw]);
   const asOf = sp?.asOf ?? feed?.asOf ?? null;
 
   // The reading of the day — this is the title.
