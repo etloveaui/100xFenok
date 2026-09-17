@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-17T14:11:21.902Z",
+  "generated_at": "2026-09-17T14:41:14.942Z",
   "status": "open",
-  "open_incident_count": 15,
+  "open_incident_count": 16,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -47,6 +47,22 @@
         "plane_freshness_unavailable"
       ],
       "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
+    {
+      "workflow": "fetch-fenok-apewisdom.yml",
+      "label": "Fetch Fenok ApeWisdom Attention Proxy",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lane_outcome_overdue"
+      ],
+      "lane_outcome_lanes": [
+        "apewisdom_attention"
+      ],
       "lost_schedule_slot_count": 0,
       "cadence_status": "not_due"
     },
@@ -253,7 +269,7 @@
     "oecd_cli": "2026-09-17",
     "treasury_tga": "2026-09-17",
     "slickcharts": "2026-09-17",
-    "apewisdom_attention": "2026-09-16",
+    "apewisdom_attention": "2026-09-17",
     "sentiment": "2026-09-05",
     "us_indices_daily": "2026-09-05",
     "nasdaq_giw_sox": "2026-09-05",
@@ -497,7 +513,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "delayed",
-      "data_freshness_age_hours_at_generation": 36
+      "data_freshness_age_hours_at_generation": 37
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -673,14 +689,15 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "35231647865",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/35231647865",
-    "observed_at": "2026-09-17T14:11:21.902Z",
+    "run_id": "35234999986",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/35234999986",
+    "observed_at": "2026-09-17T14:41:14.942Z",
     "event": "workflow_run",
     "workflows": [
       "fenok-edge-krx-daily.yml",
       "fetch-edgar-filings.yml",
       "fetch-fdic.yml",
+      "fetch-fenok-apewisdom.yml",
       "fetch-fenok-news-tone.yml",
       "fetch-finra-ats-weekly.yml",
       "fetch-fred-yardeni.yml",
