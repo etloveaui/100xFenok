@@ -1449,6 +1449,11 @@ const workflow_classes = {
     reason: "one-asset computed-signals coordinator: workflow_run-driven rebuild + plane publish; commits only the computed-signals publish-outcome shard, never signal files, and never dispatches Update Manifest or Deploy Worker",
     owner: "platform",
   },
+  ".github/workflows/pins-autosync.yml": {
+    class: "platform_central_reconciler",
+    reason: "platform-owned generated-projection autosync; commits only regen-pins control-plane fixtures and projections, never lane stores",
+    owner: "platform",
+  },
 };
 
 // Structured workflow-scoped staging policy. This is the registry SSOT for the
@@ -1865,6 +1870,25 @@ workflow_policies[".github/workflows/build-stocks-analyzer.yml"] = policy([], {
 workflow_policies[".github/workflows/pipeline-failure-alarm.yml"] = policy([], {
   always_if_exists: [
     commitSpec("data/admin/alarm-state.json", "file"),
+  ],
+});
+workflow_policies[".github/workflows/pins-autosync.yml"] = policy([], {
+  success_if_exists: [
+    commitSpec("scripts/fixtures/lane-registry/registry.expected.json", "file"),
+    commitSpec("scripts/fixtures/derived-asset-registry/registry.expected.json", "file"),
+    commitSpec("scripts/fixtures/data_supply/policy_registry/registry.expected.json", "file"),
+    commitSpec("data/admin/lane-commit-manifest.json", "file"),
+    commitSpec("scripts/fixtures/update-manifest/materializations.expected.json", "file"),
+    commitSpec("data/admin/lane-registry-projection.json", "file"),
+    commitSpec("100xfenok-next/public/data/admin/lane-registry-projection.json", "file"),
+    commitSpec("100xfenok-next/scripts/cloud-data-plane/cloud-data-plane-enrollment.generated.mjs", "file"),
+    commitSpec("scripts/fixtures/cloud-data-plane/etf-migration-demand.json", "file"),
+    commitSpec("scripts/fixtures/cloud-data-plane/global-scouter-migration-demand.json", "file"),
+    commitSpec("scripts/fixtures/data_supply/detection_floor/cases.expected.json", "file"),
+    commitSpec("data/admin/data-supply-detection-floor.json", "file"),
+    commitSpec("data/admin/fenok-data-health-kpi.json", "file"),
+    commitSpec("100xfenok-next/public/data/admin/fenok-data-health-kpi.json", "file"),
+    commitSpec("100xfenok-next/scripts/fixtures/ink4-contrast-sites.json", "file"),
   ],
 });
 workflow_policies[".github/workflows/update-manifest.yml"] = policy([], {
