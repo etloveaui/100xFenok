@@ -65,10 +65,12 @@ jobs:
       - name: Prove the previous generation is serving
         env:
           EXPECTED_GENERATION: ${{ steps.rollback.outputs.active_generation_after }}
+          FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
         run: |
           set -euo pipefail
           HEADERS="$RUNNER_TEMP/global-scouter-previous.headers"
           curl --silent --show-error --fail --max-time 30 \
+            -H "x-fenok-verify: $(node scripts/lib/live-request-headers.mjs --print)" \
             --dump-header "$HEADERS" --output "$RUNNER_TEMP/global-scouter-previous.json" \
             "https://100xfenok.etloveaui.workers.dev/data/global-scouter/etfs/index.json?rollback-proof=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-previous"
           OBSERVED="$(tr -d '\r' < "$HEADERS" | awk -F': ' 'tolower($1) == "x-data-plane-generation" { print $2 }')"
@@ -101,10 +103,12 @@ jobs:
         if: ${{ always() && steps.restore.outcome == 'success' }}
         env:
           EXPECTED_GENERATION: ${{ steps.rollback.outputs.active_generation_before }}
+          FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
         run: |
           set -euo pipefail
           HEADERS="$RUNNER_TEMP/global-scouter-restored.headers"
           curl --silent --show-error --fail --max-time 30 \
+            -H "x-fenok-verify: $(node scripts/lib/live-request-headers.mjs --print)" \
             --dump-header "$HEADERS" --output "$RUNNER_TEMP/global-scouter-restored.json" \
             "https://100xfenok.etloveaui.workers.dev/data/global-scouter/etfs/index.json?rollback-proof=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-restored"
           OBSERVED="$(tr -d '\r' < "$HEADERS" | awk -F': ' 'tolower($1) == "x-data-plane-generation" { print $2 }')"

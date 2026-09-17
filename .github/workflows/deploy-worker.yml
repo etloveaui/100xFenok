@@ -112,6 +112,7 @@ jobs:
       cancel-in-progress: false
     env:
       QA_ADMIN_SMOKE_AVAILABLE: ${{ (secrets.QA_ADMIN_PASSWORD != '' || secrets.QA_ADMIN_SESSION_COOKIE != '') && 'true' || 'false' }}
+      FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -278,11 +279,14 @@ jobs:
           predeploy_kpi_sha256="unavailable"
           predeploy_kpi_path="$RUNNER_TEMP/predeploy-fenok-data-health-kpi.json"
           cache_bust="predeploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_SHA}"
+          verify_header="$(node ../scripts/lib/live-request-headers.mjs --print)"
           if predeploy_build_id="$(curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
             -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+            -H "x-fenok-verify: $verify_header" \
             "$base_url/BUILD_ID?cb=$cache_bust" | tr -d '\r\n')" \
             && curl -fsS --retry 3 --retry-all-errors --retry-delay 2 \
               -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              -H "x-fenok-verify: $verify_header" \
               "$base_url/data/admin/fenok-data-health-kpi.json?cb=$cache_bust" \
               -o "$predeploy_kpi_path"; then
             predeploy_kpi_sha256="$(sha256sum "$predeploy_kpi_path" | awk '{print $1}')"
@@ -307,6 +311,7 @@ jobs:
             rm -f "$output_path"
             if ! status="$(curl -sS --retry 3 --retry-all-errors --retry-delay 2 \
               -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              -H "x-fenok-verify: $verify_header" \
               --output "$output_path" --write-out '%{http_code}' "$url")"; then
               printf '%s' "transport"
               return 0
@@ -465,15 +470,18 @@ jobs:
           matched=false
           observed_build_id="unavailable"
           observed_kpi_sha256="unavailable"
+          verify_header="$(node ../scripts/lib/live-request-headers.mjs --print)"
           while [ "$SECONDS" -le "$deadline" ]; do
             attempt=$((attempt + 1))
             cache_bust="postdeploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}-${GITHUB_SHA}"
             rm -f "$live_build_id_path" "$live_kpi_path"
             if curl -fsS --connect-timeout 5 --max-time 15 \
               -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+              -H "x-fenok-verify: $verify_header" \
               "$base_url/BUILD_ID?cb=$cache_bust" -o "$live_build_id_path" \
               && curl -fsS --connect-timeout 5 --max-time 15 \
                 -H 'Cache-Control: no-cache, no-store' -H 'Pragma: no-cache' \
+                -H "x-fenok-verify: $verify_header" \
                 "$base_url/data/admin/fenok-data-health-kpi.json?cb=$cache_bust" \
                 -o "$live_kpi_path"; then
               observed_build_id="$(tr -d '\r\n' < "$live_build_id_path")"

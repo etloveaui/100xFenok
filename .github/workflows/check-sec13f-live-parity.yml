@@ -21,6 +21,8 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
 
     steps:
       - name: Checkout probe scripts and Git object database

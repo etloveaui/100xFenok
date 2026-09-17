@@ -271,6 +271,7 @@ jobs:
         continue-on-error: true
         env:
           CLOUD_ACCEPTANCE_BASE_URL: https://100xfenok.etloveaui.workers.dev
+          FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
         run: node scripts/ops/check-cloud-family-acceptance.mjs --family=slickcharts-symbols
 
       - name: Persist slickcharts-symbols publish outcome
