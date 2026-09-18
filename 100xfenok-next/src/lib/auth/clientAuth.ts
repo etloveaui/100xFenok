@@ -7,7 +7,7 @@ import { ROUTES } from "@/lib/routes";
 const TOKEN_KEY = "100xfenok.authToken";
 const GIS_SRC = "https://accounts.google.com/gsi/client";
 export const DEFAULT_CLIENT_ID =
-  "435404551214-fv2t9dtg0h1rbcndc225329no5ibrrcu.apps.googleusercontent.com";
+  "1047143661358-ppe3u3k58dcbi59usbkmd0fggbi5dkpd.apps.googleusercontent.com";
 
 let inMemoryToken: string | undefined;
 

@@ -10,7 +10,7 @@ import {
 export const FX_SESSION_COOKIE_NAME = "fx_session";
 export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days
 export const DEFAULT_GOOGLE_CLIENT_ID =
-  "435404551214-fv2t9dtg0h1rbcndc225329no5ibrrcu.apps.googleusercontent.com";
+  "1047143661358-ppe3u3k58dcbi59usbkmd0fggbi5dkpd.apps.googleusercontent.com";
 
 export interface GooglePayload {
   sub: string;
