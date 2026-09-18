@@ -114,15 +114,34 @@ jobs:
       QA_ADMIN_SMOKE_AVAILABLE: ${{ (secrets.QA_ADMIN_PASSWORD != '' || secrets.QA_ADMIN_SESSION_COOKIE != '') && 'true' || 'false' }}
       FENOK_VERIFY_TOKEN: ${{ secrets.FENOK_VERIFY_TOKEN }}
     steps:
+      # filter: blob:none — the post-deploy source fence runs
+      # `merge-base --is-ancestor`, so the commit graph must stay complete and a
+      # shallow clone would break it. A partial clone keeps every commit and skips
+      # the blob history, which is what makes the pack 5.18 GiB and the checkout
+      # ~5 minutes. Blobs for the checked-out tree are still fetched on demand.
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          filter: blob:none
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: 100xfenok-next/package-lock.json
+
+      - name: Restore Next build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            100xfenok-next/.next/cache
+            100xfenok-next/.open-next/cache
+          key: next-build-${{ hashFiles('100xfenok-next/package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            next-build-${{ hashFiles('100xfenok-next/package-lock.json') }}-
+            next-build-
 
       - name: Install dependencies
         working-directory: 100xfenok-next
