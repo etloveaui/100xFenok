@@ -228,7 +228,7 @@ export default function IntroClient() {
               Market Radar
             </span>
           </a>
-          <span className="hidden md:inline text-[12px] text-slate-400 font-medium border-l border-slate-200 pl-3">
+          <span className="hidden md:inline text-[12px] text-slate-500 font-medium border-l border-slate-200 pl-3">
             미국 시장 실시간 정량 인텔리전스
           </span>
         </div>
@@ -359,7 +359,7 @@ export default function IntroClient() {
         <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 max-w-[96vw]">
           <nav
             aria-label="화면 전환 독"
-            className="flex items-center gap-1 overflow-x-auto rounded-2xl border border-slate-200/90 bg-white/95 p-1.5 shadow-[0_12px_40px_-10px_rgba(15,23,42,0.18)] backdrop-blur-xl no-scrollbar max-w-[96vw]"
+            className="flex items-center gap-1 overflow-x-auto rounded-2xl border border-slate-200/90 bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl no-scrollbar max-w-[96vw]"
           >
             {screens.slice(0, 9).map((screen, idx) => {
               const isActive = activeIndex === idx;
@@ -451,7 +451,7 @@ export default function IntroClient() {
                           role="menuitem"
                         >
                           <span>{screen.label}</span>
-                          <span className="text-[10px] text-slate-400 font-mono">
+                          <span className="text-[10px] text-slate-500 font-mono">
                             /{screen.route}
                           </span>
                         </button>
