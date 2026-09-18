@@ -1,9 +1,26 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-18T04:41:27.466Z",
+  "generated_at": "2026-09-18T05:12:01.375Z",
   "status": "open",
-  "open_incident_count": 14,
+  "open_incident_count": 15,
   "open_incidents": [
+    {
+      "workflow": "fenok-edge-daily.yml",
+      "label": "Fenok Edge Daily Data",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "lane_outcome_overdue"
+      ],
+      "lane_outcome_lanes": [
+        "finra_short_volume",
+        "occ_options_volume"
+      ],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "not_due"
+    },
     {
       "workflow": "fenok-edge-krx-daily.yml",
       "label": "Fenok Edge KRX Daily Data",
@@ -135,18 +152,20 @@
       "cadence_status": "not_due"
     },
     {
-      "workflow": "global-writer-queue-observer.yml",
-      "label": "Global Writer Queue Observability",
+      "workflow": "fetch-treasury-tga.yml",
+      "label": "Fetch Treasury TGA Data",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
       "first_failing_run_url": null,
       "alarm_reasons": [
-        "missed_schedule_window"
+        "lane_outcome_overdue"
       ],
-      "lane_outcome_lanes": [],
+      "lane_outcome_lanes": [
+        "treasury_tga"
+      ],
       "lost_schedule_slot_count": 0,
-      "cadence_status": "no_declaration"
+      "cadence_status": "not_due"
     },
     {
       "workflow": "slickcharts-daily.yml",
@@ -230,14 +249,14 @@
     }
   ],
   "lane_outcome_notified": {
-    "finra_short_volume": "2026-09-17",
-    "occ_options_volume": "2026-09-17",
+    "finra_short_volume": "2026-09-18",
+    "occ_options_volume": "2026-09-18",
     "krx": "2026-09-18",
     "edgar_filings": "2026-09-18",
     "gdelt_news_tone": "2026-09-18",
     "finra_ats_weekly": "2026-09-18",
     "oecd_cli": "2026-09-18",
-    "treasury_tga": "2026-09-17",
+    "treasury_tga": "2026-09-18",
     "slickcharts": "2026-09-18",
     "apewisdom_attention": "2026-09-17",
     "sentiment": "2026-09-05",
@@ -659,11 +678,12 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "35307790035",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/35307790035",
-    "observed_at": "2026-09-18T04:41:27.466Z",
+    "run_id": "35309734746",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/35309734746",
+    "observed_at": "2026-09-18T05:12:01.375Z",
     "event": "workflow_run",
     "workflows": [
+      "fenok-edge-daily.yml",
       "fenok-edge-krx-daily.yml",
       "fetch-edgar-filings.yml",
       "fetch-fdic.yml",
@@ -672,7 +692,7 @@
       "fetch-fred-yardeni.yml",
       "fetch-oecd-cli.yml",
       "fetch-stockanalysis.yml",
-      "global-writer-queue-observer.yml",
+      "fetch-treasury-tga.yml",
       "slickcharts-daily.yml",
       "slickcharts-history.yml",
       "slickcharts-monthly.yml",
