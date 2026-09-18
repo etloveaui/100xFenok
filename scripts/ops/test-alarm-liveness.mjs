@@ -168,6 +168,21 @@ const measuredIncident = evaluateAlarmLiveness({
 assert.equal(measuredIncident.status, "stale");
 assert.equal(measuredIncident.missed_slots, 2);
 
+// A run starting before minute 23 in hour H (e.g. 18:18:14Z with cron 23 * * * *)
+// fulfills hour H. When GitHub drops hour H+1 (19:23:00Z), at 20:13:44Z (1.95h later)
+// only 1 slot has been missed. It must NOT alarm as 2 missed slots.
+const earlyHourlyDispatch = evaluateAlarmLiveness({
+  latestRunStartedAt: "2026-09-17T18:18:14Z",
+  cron: "23 * * * *",
+  nowMs: Date.parse("2026-09-17T20:13:44Z"),
+});
+assert.equal(
+  earlyHourlyDispatch.status,
+  "live",
+  "a run before the scheduled minute satisfies its hour; 1 dropped slot must not alarm at 1.95h",
+);
+assert.equal(earlyHourlyDispatch.missed_slots, 1);
+
 // ---------------------------------------------------------------------------
 // Fail closed. Absence of evidence is never an all-clear.
 // ---------------------------------------------------------------------------

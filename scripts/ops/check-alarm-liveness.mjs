@@ -98,7 +98,7 @@ export function countMissedSlots(cron, sinceMs, nowMs) {
     start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(),
     start.getUTCHours(), minute, 0, 0,
   );
-  let slot = anchor <= sinceMs ? anchor + stepMs : anchor;
+  let slot = (intervalHours === 1 || anchor <= sinceMs) ? anchor + stepMs : anchor;
   let missed = 0;
   while (slot <= nowMs && missed <= 1000) { missed += 1; slot += stepMs; }
   return missed;
