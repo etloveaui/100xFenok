@@ -10,7 +10,7 @@ import {
   postAuthGoogle,
   renderGoogleButton,
 } from "@/lib/auth/clientAuth";
-import IntroTour, { type TourScreen } from "./IntroTour";
+import IntroTour, { SCREEN_SIGNATURES, type TourScreen } from "./IntroTour";
 
 interface ScreensIndex {
   generated_at?: string;
@@ -209,6 +209,17 @@ export default function IntroClient() {
   }, [router, targetHref]);
 
   const activeScreen = screens ? screens[activeIndex] ?? screens[0] : null;
+  // The heading is the instrument, not a slogan: it names the screen on the stage
+  // and the question that screen answers, and changes with the dock.
+  const activeSignature = (() => {
+    const fallback = { label: "100x Fenok", insight: "화면을 골라 바로 들어가세요." };
+    if (!activeScreen) return fallback;
+    const sig = SCREEN_SIGNATURES[activeScreen.route];
+    return {
+      label: activeScreen.label || fallback.label,
+      insight: sig?.insight || `${activeScreen.label} 화면`,
+    };
+  })();
   const isExtraActive = activeIndex >= 9;
 
   return (
@@ -229,12 +240,9 @@ export default function IntroClient() {
               <span className="h-1.5 w-1.5 rounded-full bg-blue-600 inline-block group-hover:scale-125 transition-transform" />
             </span>
             <span className="rounded-md border border-blue-200/80 bg-blue-50/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 font-mono">
-              Market Radar
+              Fenok
             </span>
           </a>
-          <span className="hidden md:inline text-[12px] text-slate-500 font-medium border-l border-slate-200 pl-3">
-            미국 시장 실시간 정량 인텔리전스
-          </span>
         </div>
 
         {/* Right CTA & Auth */}
@@ -295,28 +303,11 @@ export default function IntroClient() {
       {/* Hero Headline & Quantitative Summary */}
       <section className="relative z-10 mx-auto mt-6 mb-5 max-w-[1240px] px-5 text-center sm:px-8 sm:mt-10 sm:mb-8">
         <h1 className="text-[28px] font-extrabold tracking-tight text-slate-950 sm:text-[40px] lg:text-[46px] leading-[1.15]">
-          숫자로 먼저 보는 <span className="text-blue-600">미국 시장의 실시간 국면</span>
+          {activeSignature.label}
         </h1>
         <p className="mx-auto mt-3 max-w-[760px] text-[14px] text-slate-600 sm:text-[16px] leading-relaxed">
-          감정이나 뉴스가 아닌 13개 정량 지표 엔진으로 시장 밸류에이션, 자금 회전, 거인들의 13F 지분을 실시간 추적합니다.
+          {activeSignature.insight}
         </p>
-
-        {/* Feature Tags Row */}
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[12px] font-medium text-slate-600">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-emerald-800 border border-emerald-200/70">
-            <span className="intro-pulse-dot h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            매일 실시간 자동 갱신
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-slate-700 border border-slate-200/70">
-            13개 정량 분석 엔진
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-slate-700 border border-slate-200/70">
-            S&P 500 · NASDAQ · ETF
-          </span>
-          <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-blue-700 border border-blue-200/70 font-mono">
-            단축키 [1]~[9] 지원
-          </span>
-        </div>
 
         {/* Hover Readout */}
         <p
