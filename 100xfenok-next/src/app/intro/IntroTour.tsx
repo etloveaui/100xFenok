@@ -31,7 +31,7 @@ export const SCREEN_SIGNATURES: Record<string, SignatureWidgetInfo> = {
   },
   "market-valuation": {
     tag: "버핏 지수 & 통계 밴드",
-    metric: "192.4% · 통계 밴드 과열 경계",
+    metric: "GDP 대비 시총 · 통계 밴드",
     insight: "GDP 대비 미 증시 시총 비율로 역사적 과열·저평가 정량 계측",
     signatureWidget: "버핏 지수 게이지 & 밸류에이션 밴드",
     shortcut: 2,

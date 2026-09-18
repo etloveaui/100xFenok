@@ -103,6 +103,10 @@ export default function IntroClient() {
         const ok = (list ?? [])
           .filter(isScreen)
           .filter((s) => s.file)
+          // multi-chart's committed capture is a screenshot of /multi-chart, a route that
+          // 404s (the live route is /multichart). Keep it out of the tour until the capture
+          // is retaken, so the front door never shows an error page.
+          .filter((s) => s.route !== "multi-chart")
           .map((s) => ({
             ...s,
             file: s.file.startsWith(ROUTES.intro) ? s.file : `${ROUTES.intro}/screens/${s.file}`,
