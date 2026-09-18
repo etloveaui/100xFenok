@@ -105,7 +105,7 @@ export default function IntroClient() {
           .filter((s) => s.file)
           .map((s) => ({
             ...s,
-            file: s.file.includes("/") ? s.file : `${ROUTES.intro}/screens/${s.file}`,
+            file: s.file.startsWith(ROUTES.intro) ? s.file : `${ROUTES.intro}/screens/${s.file}`,
           }));
         if (ok.length) {
           setScreens(ok);
