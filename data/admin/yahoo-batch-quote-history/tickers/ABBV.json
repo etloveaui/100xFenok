@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 484,
-      "natural": true,
-      "observed_at": "2026-08-14T23:48:33Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31851174388",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 3147,
@@ -184,6 +171,20 @@
       "run_id": "35170770312",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 590,
+      "natural": true,
+      "observed_at": "2026-09-18T01:20:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35294798817",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -203,12 +204,12 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 468,
+    "latency_ms": 590,
     "natural": true,
-    "observed_at": "2026-09-17T01:31:25Z",
+    "observed_at": "2026-09-18T01:20:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35170770312",
+    "run_id": "35294798817",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -232,9 +233,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-17T01:31:25Z",
+    "observed_at": "2026-09-18T01:20:15Z",
     "run_attempt": 1,
-    "run_id": "35170770312"
+    "run_id": "35294798817"
   },
   "lkg": {
     "fetched_at": "2026-09-02T01:24:34Z",
@@ -275,5 +276,5 @@
     "source_as_of": "2026-09-01"
   },
   "ticker": "ABBV",
-  "updated_at": "2026-09-17T01:31:25Z"
+  "updated_at": "2026-09-18T01:20:15Z"
 }

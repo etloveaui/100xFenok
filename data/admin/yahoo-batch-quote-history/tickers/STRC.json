@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-21T01:54:26Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32437842189",
-      "schedule": "7 0 * * 0-5",
-      "shard": "5/6"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -184,6 +171,20 @@
       "run_id": "35044200539",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 569,
+      "natural": true,
+      "observed_at": "2026-09-18T01:20:15Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35294798817",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -203,12 +204,12 @@
     "error": "StockDetailValidationError: Yahoo history close must be a finite number",
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 557,
+    "latency_ms": 569,
     "natural": true,
-    "observed_at": "2026-09-16T01:29:38Z",
+    "observed_at": "2026-09-18T01:20:15Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35044200539",
+    "run_id": "35294798817",
     "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
@@ -232,9 +233,9 @@
     "failure_kind": "unexpected",
     "failures": [],
     "lkg_status": "retained",
-    "observed_at": "2026-09-16T01:29:38Z",
+    "observed_at": "2026-09-18T01:20:15Z",
     "run_attempt": 1,
-    "run_id": "35044200539"
+    "run_id": "35294798817"
   },
   "lkg": {
     "fetched_at": "2026-09-08T01:23:57Z",
@@ -275,5 +276,5 @@
     "source_as_of": "2026-06-29"
   },
   "ticker": "STRC",
-  "updated_at": "2026-09-16T01:29:38Z"
+  "updated_at": "2026-09-18T01:20:15Z"
 }
