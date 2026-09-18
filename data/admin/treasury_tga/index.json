@@ -1,24 +1,26 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "treasury_tga",
-  "updated_at": "2026-09-17T20:46:27.533Z",
-  "retry_set": [],
+  "updated_at": "2026-09-18T15:29:21.746Z",
+  "retry_set": [
+    "tga"
+  ],
   "items": {
     "tga": {
       "key": "tga",
-      "resolution_state": "fresh_primary",
-      "retry": false,
+      "resolution_state": "lkg_primary",
+      "retry": true,
       "current": {
-        "path": "data/macro/tga.json",
+        "path": "data/admin/treasury_tga/lkg/tga.json",
         "payload_sha256": "d9dfe3314c3f8ff32a4d8e5fa6a2d87e2b8bda69a7f599edac0ee08dfecf7d86",
         "source_as_of": "2026-09-16"
       },
       "lkg": {
         "path": "data/admin/treasury_tga/lkg/tga.json",
-        "payload_sha256": "b5963886b97bdc12a7164a7174c5b9cb1d95cdf0e351075370232b165ab0a734",
-        "source_as_of": "2026-08-13"
+        "payload_sha256": "d9dfe3314c3f8ff32a4d8e5fa6a2d87e2b8bda69a7f599edac0ee08dfecf7d86",
+        "source_as_of": "2026-09-16"
       },
-      "updated_at": "2026-09-17T20:46:27.533Z",
+      "updated_at": "2026-09-18T15:29:21.746Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
@@ -34,11 +36,12 @@
         "observed_at": "2026-08-17T06:34:59.287Z",
         "reason": "transport_error"
       },
-      "recovered_from_run_id": "32002233264",
-      "recovered_at": "2026-08-18T00:42:06.053Z",
-      "recovery_run_id": "32085490592",
-      "recovery_run_attempt": 1,
-      "recovery_event_name": "schedule"
+      "latest_failure": {
+        "run_id": "35362699156",
+        "run_attempt": 1,
+        "observed_at": "2026-09-18T15:29:21.746Z",
+        "reason": "transport_error"
+      }
     }
   }
 }
