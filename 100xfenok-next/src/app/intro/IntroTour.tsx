@@ -175,7 +175,7 @@ export default function IntroTour({
         }}
         onMouseEnter={() => onHover?.(activeScreen)}
         onMouseLeave={() => onHover?.(null)}
-        className="group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03),0_16px_40px_-8px_rgba(15,23,42,0.08)] cursor-pointer transition-all duration-300 hover:shadow-[0_8px_32px_rgba(37,99,235,0.14)] hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="group relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-xl hover:shadow-2xl hover:border-blue-300 cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         aria-label={`${activeScreen.label} 화면 열기`}
       >
         {/* Stage Terminal Header Bar */}
@@ -188,14 +188,14 @@ export default function IntroTour({
             <span className="font-bold text-slate-800 tracking-tight">100x MARKET RADAR</span>
             <span className="hidden sm:inline text-slate-300 font-sans">·</span>
             <span className="hidden sm:inline-flex items-center gap-1.5 text-slate-600">
-              <span className="text-slate-400">ENGINE:</span>
+              <span className="text-slate-500">ENGINE:</span>
               <span className="font-semibold text-slate-800">{activeScreen.label}</span>
-              <span className="text-slate-400 text-[11px]">({activeScreen.href})</span>
+              <span className="text-slate-500 text-[11px]">({activeScreen.href})</span>
             </span>
           </div>
           <div className="flex items-center gap-3">
             {utcTime ? (
-              <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-slate-400 font-mono">
+              <span className="hidden md:inline-flex items-center gap-1 text-[11px] text-slate-500 font-mono">
                 <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
                 {utcTime} UTC
               </span>
@@ -227,7 +227,7 @@ export default function IntroTour({
           {signature ? (
             <div
               style={{ top: signature.badgePos.top, left: signature.badgePos.left }}
-              className="intro-badge-float absolute z-20 pointer-events-none hidden sm:flex items-center gap-3 rounded-full bg-white/95 backdrop-blur-md border border-blue-400/40 px-4 py-2 shadow-[0_8px_24px_rgba(37,99,235,0.18)]"
+              className="intro-badge-float absolute z-20 pointer-events-none hidden sm:flex items-center gap-3 rounded-full bg-white/95 backdrop-blur-md border border-blue-400/40 px-4 py-2 shadow-lg"
               aria-hidden="true"
             >
               <div className="flex h-2.5 w-2.5 items-center justify-center relative">
