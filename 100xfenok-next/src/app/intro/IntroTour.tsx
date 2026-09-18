@@ -185,7 +185,7 @@ export default function IntroTour({
               <span className="intro-pulse-dot absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
             </span>
-            <span className="font-bold text-slate-800 tracking-tight">100x MARKET RADAR</span>
+            <span className="font-bold text-slate-800 tracking-tight">100xFenok</span>
             <span className="hidden sm:inline text-slate-300 font-sans">·</span>
             <span className="hidden sm:inline-flex items-center gap-1.5 text-slate-600">
               <span className="text-slate-500">ENGINE:</span>
@@ -223,42 +223,30 @@ export default function IntroTour({
             className="block w-full h-auto object-cover object-top transition-all duration-300 ease-out group-hover:scale-[1.006]"
           />
 
-          {/* Signature Widget Floating Pinpoint Badge */}
+          {/* Signature widget marker — a dot that points at the widget. It carries no
+              text, because a text box here sat on top of the numbers it was pointing at. */}
           {signature ? (
-            <div
+            <span
               style={{ top: signature.badgePos.top, left: signature.badgePos.left }}
-              className="intro-badge-float absolute z-20 pointer-events-none hidden sm:flex items-center gap-3 rounded-full bg-white/95 backdrop-blur-md border border-blue-400/40 px-4 py-2 shadow-lg"
+              className="absolute z-20 pointer-events-none hidden sm:flex h-3 w-3 -translate-x-1/2 -translate-y-1/2 items-center justify-center"
               aria-hidden="true"
             >
-              <div className="flex h-2.5 w-2.5 items-center justify-center relative">
-                <span className="intro-pulse-dot absolute h-full w-full rounded-full bg-blue-500 opacity-75" />
-                <span className="h-2 w-2 rounded-full bg-blue-600" />
-              </div>
-              <div className="flex flex-col text-left pr-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-blue-600 font-mono">
-                    {signature.tag}
-                  </span>
-                  <span className="text-[12px] font-bold text-slate-900 font-mono">
-                    {signature.metric}
-                  </span>
-                </div>
-                <span className="text-[11px] text-slate-500 leading-tight">
-                  {signature.insight}
-                </span>
-              </div>
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <path d="M6 3l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-            </div>
+              <span className="intro-pulse-dot absolute h-full w-full rounded-full bg-blue-500 opacity-70" />
+              <span className="h-2 w-2 rounded-full bg-blue-600 ring-4 ring-blue-500/20" />
+            </span>
           ) : null}
 
           {/* Bottom Gradient Overlay Hint */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-white via-white/40 to-transparent flex items-end justify-center pb-4">
             <span className="inline-flex items-center gap-2 rounded-full bg-slate-900/85 backdrop-blur-md text-white px-4 py-1.5 text-[12px] font-medium shadow-md opacity-90 group-hover:opacity-100 transition-opacity">
-              <span>화면 아무 곳이나 클릭하면 해당 페이지로 이동합니다</span>
+              {signature ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-400" aria-hidden="true" />
+                  <span className="font-semibold">{signature.signatureWidget}</span>
+                  <span className="text-white/45" aria-hidden="true">·</span>
+                </>
+              ) : null}
+              <span className="text-white/80">클릭하면 이 화면으로</span>
               <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-blue-300 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M6 3l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
