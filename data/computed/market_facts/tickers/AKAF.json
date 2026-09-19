@@ -2,10 +2,10 @@
   "schema_version": "market-facts/v1",
   "ticker": "AKAF",
   "asset_type": "etf",
-  "generated_at": "2026-09-14T01:41:01Z",
-  "source_as_of": null,
+  "generated_at": "2026-09-19T05:08:01Z",
+  "source_as_of": "2026-09-18",
   "source_as_of_scope": "selected_price_fact",
-  "source_as_of_reason": "selected price fact has no provider source date",
+  "source_as_of_reason": null,
   "identity": {
     "name": "AKAF",
     "exchange": null,
@@ -16,11 +16,174 @@
     "category": null
   },
   "facts": {
+    "price": {
+      "value": 31.7485,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-18",
+      "fetched_at": "2026-09-19T01:43:28Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "yf.fast_info",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 31.7485,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-18",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "previous_close": {
+      "value": 31.75,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-18",
+      "fetched_at": "2026-09-19T01:43:28Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.quote",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": 31.75,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-18",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change": {
+      "value": -0.3,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-18",
+      "fetched_at": "2026-09-19T01:43:28Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -0.3,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-18",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "change_pct": {
+      "value": -0.94,
+      "source": "stockanalysis.quote",
+      "as_of": "2026-09-18",
+      "fetched_at": "2026-09-19T01:43:28Z",
+      "confidence": "observed",
+      "policy": [
+        "stockanalysis.quote",
+        "yf",
+        "yf.derived",
+        "yf.stockanalysis_fallback.quote"
+      ],
+      "candidates": [
+        {
+          "value": -0.94,
+          "source": "stockanalysis.quote",
+          "as_of": "2026-09-18",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "total_assets": {
+      "value": 2920000.0,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-18",
+      "fetched_at": "2026-09-19T01:43:28Z",
+      "confidence": "observed",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 2920000.0,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-18",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "observed"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "dividend_yield": {
+      "value": 3.35,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-18",
+      "fetched_at": "2026-09-19T01:43:28Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview",
+        "slickcharts"
+      ],
+      "candidates": [
+        {
+          "value": 3.35,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-18",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
+    "expense_ratio": {
+      "value": 0.2,
+      "source": "stockanalysis.overview",
+      "as_of": "2026-09-18",
+      "fetched_at": "2026-09-19T01:43:28Z",
+      "confidence": "observed",
+      "unit": "percent_points",
+      "policy": [
+        "yf",
+        "stockanalysis.overview",
+        "yf.stockanalysis_fallback.overview"
+      ],
+      "candidates": [
+        {
+          "value": 0.2,
+          "source": "stockanalysis.overview",
+          "as_of": "2026-09-18",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 1
+    },
     "return_1m": {
-      "value": -2.787774217402026,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-14T01:14:27Z",
+      "value": -4.9029,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-18",
+      "fetched_at": "2026-09-19T01:43:28Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -31,21 +194,52 @@
       ],
       "candidates": [
         {
-          "value": -2.787774217402026,
+          "value": -4.9029,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-18",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": -4.9029,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
           "fetched_at": "2026-09-14T01:14:27Z",
           "confidence": "observed",
+          "unit": "percent_points"
+        }
+      ],
+      "candidate_count": 2
+    },
+    "return_3m": {
+      "value": 1.1760448911973898,
+      "source": "stockanalysis.detail.history",
+      "as_of": "2026-09-17",
+      "fetched_at": "2026-09-19T01:43:28Z",
+      "confidence": "derived",
+      "unit": "percent_points",
+      "policy": [
+        "yf.history_1y",
+        "stockanalysis.detail.history"
+      ],
+      "candidates": [
+        {
+          "value": 1.1760448911973898,
+          "source": "stockanalysis.detail.history",
+          "as_of": "2026-09-17",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "derived",
           "unit": "percent_points"
         }
       ],
       "candidate_count": 1
     },
     "return_ytd": {
-      "value": 9.4,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-14T01:14:27Z",
+      "value": 10.472,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-18",
+      "fetched_at": "2026-09-19T01:43:28Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -57,7 +251,15 @@
       ],
       "candidates": [
         {
-          "value": 9.4,
+          "value": 10.472,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-18",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 10.472,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
           "fetched_at": "2026-09-14T01:14:27Z",
@@ -65,13 +267,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_1y": {
-      "value": 22.813,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-14T01:14:27Z",
+      "value": 17.371,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-18",
+      "fetched_at": "2026-09-19T01:43:28Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -83,7 +285,15 @@
       ],
       "candidates": [
         {
-          "value": 22.813,
+          "value": 17.371,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-18",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 17.371,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
           "fetched_at": "2026-09-14T01:14:27Z",
@@ -91,13 +301,13 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     },
     "return_max_avg": {
-      "value": 26.711,
-      "source": "stockanalysis.etf_universe.performance",
-      "as_of": null,
-      "fetched_at": "2026-09-14T01:14:27Z",
+      "value": 23.352,
+      "source": "stockanalysis.detail.performance",
+      "as_of": "2026-09-18",
+      "fetched_at": "2026-09-19T01:43:28Z",
       "confidence": "observed",
       "unit": "percent_points",
       "policy": [
@@ -107,7 +317,15 @@
       ],
       "candidates": [
         {
-          "value": 26.711,
+          "value": 23.352,
+          "source": "stockanalysis.detail.performance",
+          "as_of": "2026-09-18",
+          "fetched_at": "2026-09-19T01:43:28Z",
+          "confidence": "observed",
+          "unit": "percent_points"
+        },
+        {
+          "value": 23.352,
           "source": "stockanalysis.etf_universe.performance",
           "as_of": null,
           "fetched_at": "2026-09-14T01:14:27Z",
@@ -115,37 +333,454 @@
           "unit": "percent_points"
         }
       ],
-      "candidate_count": 1
+      "candidate_count": 2
     }
   },
   "etf": {
-    "holdings_count": null,
-    "holdings_updated": null,
-    "top_holdings": [],
+    "holdings_count": 147,
+    "holdings_updated": "May 31, 2026",
+    "top_holdings": [
+      {
+        "rank": 1,
+        "symbol": "FDX",
+        "name": "FedEx Corporation",
+        "weight_pct": 2.18,
+        "shares": 156,
+        "raw": {
+          "no": 1,
+          "n": "FedEx Corporation",
+          "s": "$FDX",
+          "as": "2.18%",
+          "sh": "156"
+        }
+      },
+      {
+        "rank": 2,
+        "symbol": "SLB",
+        "name": "SLB N.V.",
+        "weight_pct": 2.15,
+        "shares": 1160,
+        "raw": {
+          "no": 2,
+          "n": "SLB N.V.",
+          "s": "$SLB",
+          "as": "2.15%",
+          "sh": "1,160"
+        }
+      },
+      {
+        "rank": 3,
+        "symbol": "COP",
+        "name": "ConocoPhillips",
+        "weight_pct": 2.11,
+        "shares": 544,
+        "raw": {
+          "no": 3,
+          "n": "ConocoPhillips",
+          "s": "$COP",
+          "as": "2.11%",
+          "sh": "544"
+        }
+      },
+      {
+        "rank": 4,
+        "symbol": "UBER",
+        "name": "Uber Technologies, Inc.",
+        "weight_pct": 2.01,
+        "shares": 842,
+        "raw": {
+          "no": 4,
+          "n": "Uber Technologies, Inc.",
+          "s": "$UBER",
+          "as": "2.01%",
+          "sh": "842"
+        }
+      },
+      {
+        "rank": 5,
+        "symbol": "XOM",
+        "name": "ExxonMobil Holdings Corporation",
+        "weight_pct": 1.99,
+        "shares": 404,
+        "raw": {
+          "no": 5,
+          "n": "ExxonMobil Holdings Corporation",
+          "s": "$XOM",
+          "as": "1.99%",
+          "sh": "404"
+        }
+      },
+      {
+        "rank": 6,
+        "symbol": "DASH",
+        "name": "DoorDash, Inc.",
+        "weight_pct": 1.98,
+        "shares": 365,
+        "raw": {
+          "no": 6,
+          "n": "DoorDash, Inc.",
+          "s": "$DASH",
+          "as": "1.98%",
+          "sh": "365"
+        }
+      },
+      {
+        "rank": 7,
+        "symbol": "UPS",
+        "name": "United Parcel Service, Inc.",
+        "weight_pct": 1.89,
+        "shares": 522,
+        "raw": {
+          "no": 7,
+          "n": "United Parcel Service, Inc.",
+          "s": "$UPS",
+          "as": "1.89%",
+          "sh": "522"
+        }
+      },
+      {
+        "rank": 8,
+        "symbol": "RCL",
+        "name": "Royal Caribbean Cruises Ltd.",
+        "weight_pct": 1.84,
+        "shares": 190,
+        "raw": {
+          "no": 8,
+          "n": "Royal Caribbean Cruises Ltd.",
+          "s": "$RCL",
+          "as": "1.84%",
+          "sh": "190"
+        }
+      },
+      {
+        "rank": 9,
+        "symbol": "DAL",
+        "name": "Delta Air Lines, Inc.",
+        "weight_pct": 1.63,
+        "shares": 580,
+        "raw": {
+          "no": 9,
+          "n": "Delta Air Lines, Inc.",
+          "s": "$DAL",
+          "as": "1.63%",
+          "sh": "580"
+        }
+      },
+      {
+        "rank": 10,
+        "symbol": "REP",
+        "name": "Repsol SA",
+        "weight_pct": 1.6,
+        "shares": 1825,
+        "raw": {
+          "no": 10,
+          "n": "Repsol SA",
+          "s": "REP",
+          "as": "1.60%",
+          "sh": "1,825"
+        }
+      },
+      {
+        "rank": 11,
+        "symbol": "STO",
+        "name": "Santos Ltd",
+        "weight_pct": 1.59,
+        "shares": 8348,
+        "raw": {
+          "no": 11,
+          "n": "Santos Ltd",
+          "s": "STO",
+          "as": "1.59%",
+          "sh": "8,348"
+        }
+      },
+      {
+        "rank": 12,
+        "symbol": "TECK",
+        "name": "Teck Resources Limited",
+        "weight_pct": 1.51,
+        "shares": 671,
+        "raw": {
+          "no": 12,
+          "n": "Teck Resources Limited",
+          "s": "$TECK",
+          "as": "1.51%",
+          "sh": "671"
+        }
+      },
+      {
+        "rank": 13,
+        "symbol": "S32",
+        "name": "South32 Ltd",
+        "weight_pct": 1.48,
+        "shares": 12605,
+        "raw": {
+          "no": 13,
+          "n": "South32 Ltd",
+          "s": "S32",
+          "as": "1.48%",
+          "sh": "12,605"
+        }
+      },
+      {
+        "rank": 14,
+        "symbol": "HAL",
+        "name": "Halliburton Company",
+        "weight_pct": 1.48,
+        "shares": 1121,
+        "raw": {
+          "no": 14,
+          "n": "Halliburton Company",
+          "s": "$HAL",
+          "as": "1.48%",
+          "sh": "1,121"
+        }
+      },
+      {
+        "rank": 15,
+        "symbol": "XPO",
+        "name": "XPO, Inc.",
+        "weight_pct": 1.43,
+        "shares": 197,
+        "raw": {
+          "no": 15,
+          "n": "XPO, Inc.",
+          "s": "$XPO",
+          "as": "1.43%",
+          "sh": "197"
+        }
+      },
+      {
+        "rank": 16,
+        "symbol": "UAL",
+        "name": "United Airlines Holdings, Inc.",
+        "weight_pct": 1.39,
+        "shares": 357,
+        "raw": {
+          "no": 16,
+          "n": "United Airlines Holdings, Inc.",
+          "s": "$UAL",
+          "as": "1.39%",
+          "sh": "357"
+        }
+      },
+      {
+        "rank": 17,
+        "symbol": "9101",
+        "name": "Nippon Yusen KK",
+        "weight_pct": 1.36,
+        "shares": 1200,
+        "raw": {
+          "no": 17,
+          "n": "Nippon Yusen KK",
+          "s": "9101",
+          "as": "1.36%",
+          "sh": "1,200"
+        }
+      },
+      {
+        "rank": 18,
+        "symbol": "DSV",
+        "name": "DSV A/S",
+        "weight_pct": 1.36,
+        "shares": 159,
+        "raw": {
+          "no": 18,
+          "n": "DSV A/S",
+          "s": "DSV",
+          "as": "1.36%",
+          "sh": "159"
+        }
+      },
+      {
+        "rank": 19,
+        "symbol": "BKR",
+        "name": "Baker Hughes Company",
+        "weight_pct": 1.35,
+        "shares": 620,
+        "raw": {
+          "no": 19,
+          "n": "Baker Hughes Company",
+          "s": "$BKR",
+          "as": "1.35%",
+          "sh": "620"
+        }
+      },
+      {
+        "rank": 20,
+        "symbol": "CCL",
+        "name": "Carnival Corporation Ltd.",
+        "weight_pct": 1.21,
+        "shares": 1269,
+        "raw": {
+          "no": 20,
+          "n": "Carnival Corporation Ltd.",
+          "s": "$CCL",
+          "as": "1.21%",
+          "sh": "1,269"
+        }
+      },
+      {
+        "rank": 21,
+        "symbol": "K",
+        "name": "Kellogg Company",
+        "weight_pct": 1.15,
+        "shares": 1112,
+        "raw": {
+          "no": 21,
+          "n": "Kellogg Company",
+          "s": "$K",
+          "as": "1.15%",
+          "sh": "1,112"
+        }
+      },
+      {
+        "rank": 22,
+        "symbol": "PANR",
+        "name": "Pantheon Resources PLC",
+        "weight_pct": 1.13,
+        "shares": 178401,
+        "raw": {
+          "no": 22,
+          "n": "Pantheon Resources PLC",
+          "s": "PANR",
+          "as": "1.13%",
+          "sh": "178,401"
+        }
+      },
+      {
+        "rank": 23,
+        "symbol": "CDE",
+        "name": "Coeur Mining, Inc.",
+        "weight_pct": 1.06,
+        "shares": 1619,
+        "raw": {
+          "no": 23,
+          "n": "Coeur Mining, Inc.",
+          "s": "$CDE",
+          "as": "1.06%",
+          "sh": "1,619"
+        }
+      },
+      {
+        "rank": 24,
+        "symbol": "NAK",
+        "name": "Northern Dynasty Minerals Ltd.",
+        "weight_pct": 1.05,
+        "shares": 13190,
+        "raw": {
+          "no": 24,
+          "n": "Northern Dynasty Minerals Ltd.",
+          "s": "$NAK",
+          "as": "1.05%",
+          "sh": "13,190"
+        }
+      },
+      {
+        "rank": 25,
+        "symbol": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "weight_pct": 1.05,
+        "shares": 257,
+        "raw": {
+          "no": 25,
+          "n": "Cisco Systems, Inc.",
+          "s": "$CSCO",
+          "as": "1.05%",
+          "sh": "257"
+        }
+      }
+    ],
     "asset_allocation": null,
-    "sectors": null,
-    "countries": null,
-    "classification": null,
+    "sectors": [
+      {
+        "n": "Industrials",
+        "w": 31.43
+      },
+      {
+        "n": "Consumer Discretionary",
+        "w": 20.18
+      },
+      {
+        "n": "Energy",
+        "w": 14.65
+      },
+      {
+        "n": "Materials",
+        "w": 9.06
+      },
+      {
+        "n": "Technology",
+        "w": 8.97
+      },
+      {
+        "n": "Consumer Staples",
+        "w": 6.53
+      },
+      {
+        "n": "Communication Services",
+        "w": 3.59
+      },
+      {
+        "n": "Healthcare",
+        "w": 2.85
+      },
+      {
+        "n": "Financials",
+        "w": 2.75
+      }
+    ],
+    "countries": [
+      {
+        "code": "US",
+        "weight": 90.97,
+        "country": "United States"
+      },
+      {
+        "code": "CA",
+        "weight": 7.3,
+        "country": "Canada"
+      },
+      {
+        "code": "BM",
+        "weight": 0.95,
+        "country": "Bermuda"
+      },
+      {
+        "code": "IE",
+        "weight": 0.78,
+        "country": "Ireland"
+      }
+    ],
+    "classification": {
+      "is_leveraged": false,
+      "leverage_factor": null,
+      "is_inverse": false,
+      "is_single_stock": false,
+      "underlying": null,
+      "source": "stockanalysis.overview.description",
+      "confidence": "high"
+    },
     "yahoo_funds_data_available": false
   },
   "financials": null,
   "sources": {
     "yf": false,
-    "stockanalysis": false,
+    "stockanalysis": true,
     "stockanalysis_yf_fallback": false,
     "stockanalysis_etf_catalog": true,
     "slickcharts": false
   },
   "source_files": {
     "yf": null,
-    "stockanalysis": null,
+    "stockanalysis": "computed/data-supply/etf-detail/payloads/AKAF.json",
     "stockanalysis_yf_fallback": null,
     "stockanalysis_etf_catalog": "stockanalysis/etf_universe.json",
     "slickcharts": null
   },
   "resolver": {
     "version": "market-facts-resolver/v1",
-    "detail_authority": "data_supply:unavailable",
+    "detail_authority": "data_supply:fresh_primary",
     "field_source_policy": {
       "price": [
         "yf",
