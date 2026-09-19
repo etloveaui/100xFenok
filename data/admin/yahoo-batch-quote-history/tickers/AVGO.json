@@ -2,32 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 2803,
-      "natural": false,
-      "observed_at": "2026-08-20T14:20:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32379322022",
-      "schedule": "",
-      "shard": ""
-    },
-    {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:46:17Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 606,
@@ -185,15 +159,41 @@
       "run_id": "35294798817",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 714,
+      "natural": true,
+      "observed_at": "2026-09-19T01:16:57Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35412060320",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-19T01:27:11Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "35412060320",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-08T01:26:19Z",
-    "history_as_of": "2026-09-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/AVGO.json",
-    "payload_sha256": "e6f581a94448984ad63e40ff9e1a47fcfa049e908597b63ac3d8b3bb936d84e6",
-    "quote_as_of": "2026-09-04T20:00:01Z",
-    "source_as_of": "2026-09-04"
+    "fetched_at": "2026-09-19T01:17:45Z",
+    "history_as_of": "2026-09-18",
+    "path": "data/yf/finance/AVGO.json",
+    "payload_sha256": "0bd0ac2721c00936b2b213128ee1b7e7ac9774f0c1d1595116f34cf7ac3829a9",
+    "quote_as_of": "2026-09-18T20:00:02Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -201,20 +201,19 @@
     "nasdaq_giw_sox"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 905,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-18T01:20:15Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-19T01:27:11Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "35294798817",
+    "run_id": "35412060320",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "2/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -237,18 +236,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-04",
-    "observed_at": "2026-09-08T01:24:17Z",
-    "payload_sha256": "73b792e8c886f67560ea5f059f9eac6dc2fab9ed36241f2bc726c31cb021d3d9",
-    "quote_as_of": "2026-09-04T20:00:01Z",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-19T01:16:57Z",
+    "payload_sha256": "c1f90151e42762a4e4f5610478e0e59603c0b5a149015d9dae6f49b737e1804c",
+    "quote_as_of": "2026-09-18T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "34175958781",
+    "run_id": "35412060320",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-04"
+    "source_as_of": "2026-09-18"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-19T01:16:57Z",
+  "recovered_from_run_id": "35294798817",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "35412060320",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AVGO",
-  "updated_at": "2026-09-18T01:20:15Z"
+  "updated_at": "2026-09-19T01:27:11Z"
 }

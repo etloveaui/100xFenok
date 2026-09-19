@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:51Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -184,15 +171,28 @@
       "run_id": "35170770312",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 972,
+      "natural": true,
+      "observed_at": "2026-09-19T01:36:37Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35412060320",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-17T01:32:35Z",
-    "history_as_of": "2026-09-16",
+    "fetched_at": "2026-09-19T01:39:17Z",
+    "history_as_of": "2026-09-18",
     "path": "data/yf/finance/AMD.json",
-    "payload_sha256": "3dc037317a64b72dd7024cd9d167f6b3c7115f04c2293b7b959c3c4c309ec248",
-    "quote_as_of": "2026-09-16T20:00:01Z",
-    "source_as_of": "2026-09-16"
+    "payload_sha256": "e3a2c5b305d24934c44eede3819cb9d42ef20c43bc2b03181bf3a570dc0cae1a",
+    "quote_as_of": "2026-09-18T20:00:01Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -200,17 +200,17 @@
     "nasdaq_giw_sox"
   ],
   "last_attempt": {
-    "attempts_used": 0,
+    "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 0,
+    "latency_ms": 972,
     "natural": true,
-    "observed_at": "2026-09-17T01:44:01Z",
-    "outcome": "skipped_fresh",
+    "observed_at": "2026-09-19T01:36:37Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35170770312",
+    "run_id": "35412060320",
     "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -235,14 +235,14 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-16",
-    "observed_at": "2026-09-17T01:31:25Z",
-    "payload_sha256": "72b0ca7d17b7aea9f38132953a5711bee324f046c60cf38d62f04cbbee0e805c",
-    "quote_as_of": "2026-09-16T20:00:01Z",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-19T01:36:37Z",
+    "payload_sha256": "273bca5e2c3f60a655bc568f551361268b2048707317d25f41c18d09c500962d",
+    "quote_as_of": "2026-09-18T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35170770312",
+    "run_id": "35412060320",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-16"
+    "source_as_of": "2026-09-18"
   },
   "recovered_at": "2026-09-17T01:31:25Z",
   "recovered_from_run_id": "35044200539",
@@ -253,5 +253,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AMD",
-  "updated_at": "2026-09-17T01:44:01Z"
+  "updated_at": "2026-09-19T01:36:37Z"
 }

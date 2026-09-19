@@ -1,32 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:51Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 740,
-      "natural": true,
-      "observed_at": "2026-08-21T23:51:53Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32537807621",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -187,34 +161,59 @@
       "run_id": "35294798817",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 899,
+      "natural": true,
+      "observed_at": "2026-09-19T01:16:57Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35412060320",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-19T01:27:11Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "35412060320",
+      "schedule": "20 23 * * 1-5",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:25:29Z",
-    "history_as_of": "2026-09-01",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/DOC.json",
-    "payload_sha256": "bb50f9878ab82b1a309aa0a2e09feba00edbd694f47e621884a129249f9827ce",
-    "quote_as_of": "2026-09-01T20:00:02Z",
-    "source_as_of": "2026-09-01"
+    "fetched_at": "2026-09-19T01:18:12Z",
+    "history_as_of": "2026-09-18",
+    "path": "data/yf/finance/DOC.json",
+    "payload_sha256": "44d5f15d0e2ca82127da5c3b77d06384a86e0114c882010f58d5e0b58f7faa6f",
+    "quote_as_of": "2026-09-18T20:00:03Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 603,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-18T01:20:15Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-19T01:27:11Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "35294798817",
+    "run_id": "35412060320",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "2/5"
   },
-  "latest_failure": {
+  "last_recovered_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -237,18 +236,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:22:18Z",
-    "payload_sha256": "60b793a89b201f481531a5a96c05ec941fc797eedc501c9bd14c1a3f18de6fd9",
-    "quote_as_of": "2026-09-01T20:00:02Z",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-19T01:16:57Z",
+    "payload_sha256": "70719bc9683b302079af4a74eef3ea12f821d6c71cabf69196653ba5251f5ccd",
+    "quote_as_of": "2026-09-18T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "35412060320",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-18"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovered_at": "2026-09-19T01:16:57Z",
+  "recovered_from_run_id": "35294798817",
+  "recovery_event_name": "schedule",
+  "recovery_run_attempt": 1,
+  "recovery_run_id": "35412060320",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "DOC",
-  "updated_at": "2026-09-18T01:20:15Z"
+  "updated_at": "2026-09-19T01:27:11Z"
 }

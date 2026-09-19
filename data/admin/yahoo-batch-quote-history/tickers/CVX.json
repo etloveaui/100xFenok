@@ -1,32 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:51Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1067,
-      "natural": true,
-      "observed_at": "2026-08-21T23:51:53Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32537807621",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -187,47 +161,60 @@
       "run_id": "35294798817",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 805,
+      "natural": true,
+      "observed_at": "2026-09-19T01:16:57Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35412060320",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
+    },
+    {
+      "attempts_used": 0,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 0,
+      "natural": true,
+      "observed_at": "2026-09-19T01:36:37Z",
+      "outcome": "skipped_fresh",
+      "run_attempt": 1,
+      "run_id": "35412060320",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-02T01:25:17Z",
-    "history_as_of": "2026-09-01",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/CVX.json",
-    "payload_sha256": "bf2d25ccf930c5bef884ecdaa6e03f14b11d9e8a7598242ff216011e53a1b608",
-    "quote_as_of": "2026-09-01T20:04:08Z",
-    "source_as_of": "2026-09-01"
+    "fetched_at": "2026-09-19T01:18:11Z",
+    "history_as_of": "2026-09-18",
+    "path": "data/yf/finance/CVX.json",
+    "payload_sha256": "487e9465245120e09564bbdd481a51407455a8bf53d7325f981a874cb99e78ef",
+    "quote_as_of": "2026-09-18T20:02:18Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
     "global_scouter_stock",
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 1,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
+    "attempts_used": 0,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 644,
+    "latency_ms": 0,
     "natural": true,
-    "observed_at": "2026-09-18T01:20:15Z",
-    "outcome": "failed",
+    "observed_at": "2026-09-19T01:36:37Z",
+    "outcome": "skipped_fresh",
     "run_attempt": 1,
-    "run_id": "35294798817",
+    "run_id": "35412060320",
     "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "shard": "4/5"
   },
   "last_recovered_failure": {
-    "attempts_used": 1,
-    "data_loss": false,
-    "deferred_acquisition": false,
-    "error": "StockDetailValidationError: Yahoo history close must be a finite number",
-    "failure_kind": "unexpected",
-    "failures": [],
-    "lkg_status": "retained",
-    "observed_at": "2026-08-19T23:42:29Z",
-    "run_attempt": 1,
-    "run_id": "32314261503"
-  },
-  "latest_failure": {
     "attempts_used": 1,
     "data_loss": false,
     "deferred_acquisition": false,
@@ -250,23 +237,23 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-01",
-    "observed_at": "2026-09-02T01:22:18Z",
-    "payload_sha256": "14f3cc2e2a3b33dd22b249854ab54c2c44c36db286d9b93616f369efa52b2cd7",
-    "quote_as_of": "2026-09-01T20:04:08Z",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-19T01:16:57Z",
+    "payload_sha256": "488857cf3a14b16cb28d8c85735b1a441393f1672b6e800f580f2373fe11163e",
+    "quote_as_of": "2026-09-18T20:02:18Z",
     "run_attempt": 1,
-    "run_id": "33577879211",
+    "run_id": "35412060320",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-01"
+    "source_as_of": "2026-09-18"
   },
-  "recovered_at": "2026-08-20T14:20:12Z",
-  "recovered_from_run_id": "32314261503",
-  "recovery_event_name": "workflow_dispatch",
+  "recovered_at": "2026-09-19T01:16:57Z",
+  "recovered_from_run_id": "35294798817",
+  "recovery_event_name": "schedule",
   "recovery_run_attempt": 1,
-  "recovery_run_id": "32379322022",
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "recovery_run_id": "35412060320",
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CVX",
-  "updated_at": "2026-09-18T01:20:15Z"
+  "updated_at": "2026-09-19T01:36:37Z"
 }
