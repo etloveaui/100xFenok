@@ -4,17 +4,6 @@
   "entity": "AKAF",
   "attempts": [
     {
-      "run_id": "33041535224",
-      "run_attempt": 1,
-      "event_name": "schedule",
-      "schedule": "50 23 * * 1-5",
-      "natural": true,
-      "observed_at": "2026-08-27T05:10:02Z",
-      "outcome": "failed",
-      "controlled": false,
-      "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
-    },
-    {
       "run_id": "33150264670",
       "run_attempt": 1,
       "event_name": "schedule",
@@ -156,22 +145,49 @@
       "outcome": "failed",
       "controlled": false,
       "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    },
+    {
+      "run_id": "35413415092",
+      "run_attempt": 1,
+      "event_name": "schedule",
+      "schedule": "50 23 * * 1-5",
+      "natural": true,
+      "observed_at": "2026-09-19T01:42:55Z",
+      "outcome": "recovered",
+      "controlled": false
     }
   ],
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "last_attempt": {
-    "run_id": "35295991853",
+    "run_id": "35413415092",
     "run_attempt": 1,
     "event_name": "schedule",
     "schedule": "50 23 * * 1-5",
     "natural": true,
-    "observed_at": "2026-09-18T01:37:55Z",
-    "outcome": "failed",
-    "controlled": false,
-    "error": "ValueError: svelte_contract_drift:holdings:missing_required:holdings"
+    "observed_at": "2026-09-19T01:42:55Z",
+    "outcome": "recovered",
+    "controlled": false
   },
-  "latest_failure": {
+  "updated_at": "2026-09-19T01:42:55Z",
+  "lkg": {
+    "path": "data/admin/stockanalysis-recovery/lkg/etf/AKAF.json",
+    "payload_sha256": "c46c0655df7ba65197b1607f5e8090dc71641f5ace50ad0a6657bf5e1878edce",
+    "source_as_of": "2025-10-31T00:00:00Z",
+    "fetched_at": "2026-07-15T14:33:51Z"
+  },
+  "current": {
+    "path": "data/stockanalysis/etfs/AKAF.json",
+    "payload_sha256": "9b10b1a68b5f18fb3abc050fcc11158c76c4a8a30a803e475534aa0b30844403",
+    "source_as_of": "2026-09-18T20:00:00Z",
+    "fetched_at": "2026-09-19T01:43:28Z"
+  },
+  "recovered_from_run_id": "35295991853",
+  "recovered_at": "2026-09-19T01:42:55Z",
+  "recovery_run_id": "35413415092",
+  "recovery_run_attempt": 1,
+  "recovery_event_name": "schedule",
+  "last_recovered_failure": {
     "run_id": "35295991853",
     "run_attempt": 1,
     "observed_at": "2026-09-18T01:37:55Z",
@@ -180,18 +196,5 @@
     "had_canonical_before_failure": true,
     "expected_payload_sha256": "c46c0655df7ba65197b1607f5e8090dc71641f5ace50ad0a6657bf5e1878edce",
     "data_loss": false
-  },
-  "updated_at": "2026-09-18T01:37:55Z",
-  "lkg": {
-    "path": "data/admin/stockanalysis-recovery/lkg/etf/AKAF.json",
-    "payload_sha256": "c46c0655df7ba65197b1607f5e8090dc71641f5ace50ad0a6657bf5e1878edce",
-    "source_as_of": "2025-10-31T00:00:00Z",
-    "fetched_at": "2026-07-15T14:33:51Z"
-  },
-  "current": {
-    "path": "data/admin/stockanalysis-recovery/lkg/etf/AKAF.json",
-    "payload_sha256": "c46c0655df7ba65197b1607f5e8090dc71641f5ace50ad0a6657bf5e1878edce",
-    "source_as_of": "2025-10-31T00:00:00Z",
-    "fetched_at": "2026-07-15T14:33:51Z"
   }
 }
