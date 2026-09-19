@@ -4,9 +4,9 @@
     "model_version": "feno_yardeni_fred_v1",
     "description": "Feno Yardeni Bond PER to S&P 500 Fair Value",
     "frequency": "weekly",
-    "date_range": "1990-02-02 ~ 2026-09-04",
-    "total_records": 1897,
-    "generated_at": "2026-09-14T03:19:17.688Z",
+    "date_range": "1990-02-02 ~ 2026-09-11",
+    "total_records": 1898,
+    "generated_at": "2026-09-19T13:39:49.243Z",
     "generated_by": "build-feno-yardeni-model.mjs",
     "calculation_source": "FRED series/observations API corporate bond yields plus 100x benchmark S&P 500 price/EPS; benchmark EPS/SPX currently comes from the existing Bloomberg-sourced benchmarks pipeline; pre-benchmark history preserved from verified seed.",
     "source_components": {
@@ -14,12 +14,12 @@
         {
           "series_id": "WAAA",
           "label": "Moody's Seasoned Aaa Corporate Bond Yield",
-          "latest_date": "2026-09-04"
+          "latest_date": "2026-09-11"
         },
         {
           "series_id": "WBAA",
           "label": "Moody's Seasoned Baa Corporate Bond Yield",
-          "latest_date": "2026-09-04"
+          "latest_date": "2026-09-11"
         }
       ],
       "spx_eps_input": {
@@ -47,14 +47,12 @@
     "last_update": {
       "mode": "feno_yardeni_rebuild",
       "seed_preserved_records": 1026,
-      "computed_records": 871,
-      "skipped_benchmark_records": 1,
-      "skipped_benchmark_dates_sample": [
-        "2026-09-11"
-      ],
+      "computed_records": 872,
+      "skipped_benchmark_records": 0,
+      "skipped_benchmark_dates_sample": [],
       "first_computed_date": "2010-01-01",
-      "last_computed_date": "2026-09-04",
-      "last_public_date": "2026-09-04"
+      "last_computed_date": "2026-09-11",
+      "last_public_date": "2026-09-11"
     },
     "columns": {
       "date": "Weekly Friday date",
@@ -15244,6 +15242,14 @@
       "bond_per": 16.3,
       "fair_value": 6474.22,
       "premium_pct": 19.22
+    },
+    {
+      "date": "2026-09-11",
+      "spx": 7656.98,
+      "eps": 398.3031,
+      "bond_per": 16.12,
+      "fair_value": 6420.65,
+      "premium_pct": 19.26
     }
   ]
 }
