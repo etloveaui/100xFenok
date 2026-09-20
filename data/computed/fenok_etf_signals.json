@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-09-20T12:54:25.811Z",
+  "generated_at": "2026-09-20T13:13:32.889Z",
   "source_file": "stockanalysis/etf_universe.json",
   "source_generated_at": "2026-09-14T01:14:27Z",
   "formula_version": "fenok-etf-signals-v0.3-remove-classification-risk",
@@ -24,6 +24,12 @@
     "income",
     "diversification"
   ],
+  "signal_definitions": {
+    "tracking_quality": {
+      "label": "베타·이력 점수",
+      "meaning": "Mean of beta proximity to 1 and available daily-history row count capped at 252 days; it does not measure benchmark tracking error."
+    }
+  },
   "coverage": {
     "candidate_etf_count": 5597,
     "eligible_etf_count": 4540,
