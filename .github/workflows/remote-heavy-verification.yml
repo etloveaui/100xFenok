@@ -105,6 +105,15 @@ jobs:
             *) echo "unsupported suite" >&2; exit 64;;
           esac
 
+      - name: Upload data integrity live evidence
+        if: ${{ always() && inputs.suite == 'npm-script' && inputs.script == 'qa:data-integrity-live' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-integrity-live
+          path: 100xfenok-next/test-results/data-integrity/*
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload synthetic WIND DOWN UI evidence
         if: ${{ always() && inputs.suite == 'npm-script' && (inputs.script == 'qa:winddown-preservation-isolated' || inputs.script == 'qa:winddown-continuity-isolated' || inputs.script == 'qa:winddown-story-isolated' || inputs.script == 'qa:winddown-coach-isolated') }}
         uses: actions/upload-artifact@v4

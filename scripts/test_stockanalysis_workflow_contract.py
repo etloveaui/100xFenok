@@ -603,8 +603,8 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             "needs.persist-stockanalysis-etf-plane.result == 'success'",
             "needs.publish-stockanalysis-etf-plane.result == 'skipped'",
             "needs.persist-stockanalysis-etf-plane.result == 'skipped'",
-            "github.event.schedule == '50 23 * * 1-5'",
-            "github.event.schedule == '20 23 * * 0'",
+            "github.event.schedule != '50 23 * * 1-5'",
+            "github.event.schedule != '20 23 * * 0'",
             "gh workflow run update-manifest.yml",
             # The job carries no checkout, so gh has no local git remote to
             # infer the repository from and must be told explicitly.
