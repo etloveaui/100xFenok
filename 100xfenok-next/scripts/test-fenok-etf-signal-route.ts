@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 
 import { buildEtfSignalRouteResponse } from "../src/lib/server/fenok-etf-signal-route";
 
+async function main() {
 const unavailable = buildEtfSignalRouteResponse(
   { kind: "unavailable", reason: "DATA_ASSET_UNAVAILABLE" },
   "SPY",
@@ -35,3 +36,5 @@ assert.equal(found.status, 200);
 assert.equal((await found.json()).ticker, "SPY");
 
 console.log("fenok ETF signal route: ok");
+}
+void main().catch((error) => { console.error(error); process.exitCode = 1; });

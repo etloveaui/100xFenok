@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 
+async function main() {
 // Public browse mode only. Run after the audited revision has deployed.
 const origin = "https://100xfenok.etloveaui.workers.dev";
 const output = "test-results/data-integrity";
@@ -64,3 +65,5 @@ try {
   console.log(JSON.stringify(receipts));
 }
 if (failed) process.exitCode = 1;
+}
+void main().catch((error) => { console.error(error); process.exitCode = 1; });
