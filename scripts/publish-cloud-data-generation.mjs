@@ -125,6 +125,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   GENERATION_MANIFEST_SCHEMA,
   planActiveGenerationReuse,
+  planGenerationObjectWrites,
   publishGeneration,
   rollbackGeneration,
   runBoundedAsyncPool,
@@ -695,6 +696,7 @@ export const FAMILIES = {
     // or malformed evidence fails before any write.
     source_as_of: { per_asset_resolver: "stockanalysis_detail_source_timestamp" },
     reuse_active_generation: true,
+    incremental_write_budget: true,
     // Measured 2026-08-16 and re-measured at this base: 5,605 assets /
     // 1,028,334,686 bytes. Caps carry roughly 25% headroom over the measurement
     // so ordinary universe growth does not trip the gate, while a runaway set
@@ -2599,6 +2601,7 @@ export async function runPublisherCli({
   stderr = (...parts) => console.error(...parts),
   runCostGateImpl = runCostGate,
   createPublishPlaneImpl = createDefaultPublishPlane,
+  buildFamilyManifestImpl = buildFamilyManifest,
   outcomesRoot = env.PUBLISH_OUTCOMES_ROOT
     ? path.resolve(env.PUBLISH_OUTCOMES_ROOT)
     : DEFAULT_PUBLISH_OUTCOMES_ROOT,
@@ -2776,7 +2779,7 @@ export async function runPublisherCli({
     assertPublicationAuthorization();
 
     // 1. Manifest from disk.
-    const { manifest, payloads, summary, sourceAsOf } = await buildFamilyManifest({
+    const { manifest, payloads, summary, sourceAsOf } = await buildFamilyManifestImpl({
       familyName: args.family,
       absRoot: path.join(REPO_ROOT, family.root),
       relRoot: family.manifest_prefix ?? family.root,
@@ -2849,13 +2852,17 @@ export async function runPublisherCli({
     // class_b defaults to 0 for the families that predate this field, which
     // preserves their gate arithmetic exactly; a family that declares reads
     // declares them here.
-    const gatePlan = family.plan;
+    // The ETF lane first admits only the read-only reuse preflight. Its full
+    // conservative operation budget stays declared; bytes are admitted below
+    // only after active-manifest and object-listing evidence is available.
+    const incrementalWriteBudget = family.incremental_write_budget === true;
+    const gatePlan = { ...family.plan, bytes: incrementalWriteBudget ? 0 : family.plan.bytes };
     // Heartbeat: this gate shell-out is the first place a publish can sit
     // silent for tens of minutes, so its start/finish always reach stderr,
     // even under --json.
     const gateBeforeStartedAt = Date.now();
     evidenceLog(`cost gate start: family=${args.family} plan class-a=${gatePlan.class_a} class-b=${gatePlan.class_b ?? 0}`);
-    const gateBefore = await runCostGateImpl({
+    let gateBefore = await runCostGateImpl({
       planClassA: gatePlan.class_a,
       planClassB: gatePlan.class_b ?? 0,
       planBytes: gatePlan.bytes,
@@ -2948,6 +2955,30 @@ export async function runPublisherCli({
     });
     const effectiveAsOf = effectiveSourceAsOf(resolved.manifest);
     outcomeState.sourceAsOf = effectiveAsOf;
+    let objectWritePlan = null;
+    if (incrementalWriteBudget) {
+      const reusableObjects = await planActiveGenerationReuse({
+        pointer: livePointer,
+        manifest: resolved.manifest,
+        objectStore: plane.objectStore,
+      });
+      objectWritePlan = planGenerationObjectWrites(resolved.manifest, reusableObjects);
+      const plannedBytes = 2 * objectWritePlan.bytes;
+      evidenceLog(`incremental write preflight: bytes=${objectWritePlan.bytes} planned_bytes=${plannedBytes} reused_objects=${objectWritePlan.reused_objects}`);
+      gateBefore = await runCostGateImpl({
+        planClassA: family.plan.class_a,
+        planClassB: family.plan.class_b ?? 0,
+        planBytes: plannedBytes,
+        env,
+      });
+      outcomeState.gateBefore = gateVerdict(gateBefore);
+      if (gateBlocksPublication({ gateCode: gateBefore.code, strictGate })) {
+        if (gateBefore.stderr.trim()) stderr(gateBefore.stderr.trim());
+        if (canRecordOutcome) await recordOutcome("gate_blocked");
+        stderr(`publish-cloud-data-generation: incremental storage plan blocked (exit ${gateBefore.code}); no write attempted`);
+        return 3;
+      }
+    }
     if (args.chaos === "stale-sequence" && resolved.resume) {
       fail("CHAOS_PRECONDITION", "stale-sequence needs a generation the pointer does not already target");
     }
@@ -2979,6 +3010,7 @@ export async function runPublisherCli({
         manifest: resolved.manifest,
         payloads,
         reuseActiveGeneration: family.reuse_active_generation === true,
+        maxObjectWriteBytes: objectWritePlan?.bytes ?? null,
         expectedPointerSequence: expectedForPublish,
         objectStore: plane.objectStore,
         ledger: plane.ledger,
@@ -3107,6 +3139,7 @@ export async function runPublisherCli({
       pointer_sequence_after: published.pointer.sequence,
       ...plan,
       objects_written: publishPlane.objectsWritten(),
+      ...(objectWritePlan ? { object_write_plan: objectWritePlan, planned_bytes: 2 * objectWritePlan.bytes } : {}),
       objects_already_present: plan.unique_object_keys - publishPlane.objectsWritten(),
       parity: "ok",
       parity_body_verified_assets: verificationStats.body_verified_assets,

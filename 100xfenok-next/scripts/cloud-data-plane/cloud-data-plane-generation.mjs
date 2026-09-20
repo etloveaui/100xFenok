@@ -505,6 +505,17 @@ export async function planActiveGenerationReuse({ pointer, manifest, objectStore
   return reusableObjects;
 }
 
+export function planGenerationObjectWrites(manifest, reusableObjects = new Map()) {
+  validateGenerationManifest(manifest);
+  const reusable = validateReusableObjects(reusableObjects, manifest);
+  const pending = new Map(manifest.assets
+    .filter((asset) => !reusable.has(asset.object_key))
+    .map((asset) => [asset.object_key, asset.bytes]));
+  const manifestBytes = new TextEncoder().encode(canonicalJson(manifest)).byteLength;
+  const bytes = [...pending.values()].reduce((sum, value) => sum + value, manifestBytes);
+  return { bytes, objects: pending.size + 1, reused_objects: reusable.size };
+}
+
 function publicationVerification(manifest, reusableObjects, resumed = false) {
   if (resumed) {
     const reusedAssets = manifest.assets
@@ -540,6 +551,7 @@ export async function publishGeneration({
   manifest,
   payloads,
   reuseActiveGeneration = false,
+  maxObjectWriteBytes = null,
   expectedPointerSequence,
   objectStore,
   ledger,
@@ -560,6 +572,7 @@ export async function publishGeneration({
   if (typeof reuseActiveGeneration !== "boolean") {
     fail("PUBLISH_REUSE_INVALID", "reuseActiveGeneration must be boolean");
   }
+  if (maxObjectWriteBytes !== null) nonnegativeInteger(maxObjectWriteBytes, "maxObjectWriteBytes");
   const id = safeId(
     receiptId ?? deterministicReceiptId("publish", summary.manifest_sha256, expectedPointerSequence),
     "publication receipt id",
@@ -608,6 +621,13 @@ export async function publishGeneration({
     ? await planActiveGenerationReuse({ pointer: currentPointer, manifest, objectStore })
     : null;
   const validatedReusableObjects = validateReusableObjects(reusableObjects, manifest);
+
+  // Recompute from the live proof immediately before the first object write.
+  // A disappearing object or changed listing must not exceed the gated budget.
+  const objectWritePlan = planGenerationObjectWrites(manifest, validatedReusableObjects);
+  if (maxObjectWriteBytes !== null && objectWritePlan.bytes > maxObjectWriteBytes) {
+    fail("PUBLISH_WRITE_BUDGET_EXCEEDED", "live object writes exceed the approved preflight byte budget");
+  }
 
   const manifestBytes = new TextEncoder().encode(canonicalJson(manifest));
   const immutableObjectsByKey = new Map([

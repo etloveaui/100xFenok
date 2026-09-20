@@ -62,7 +62,7 @@ on:
         required: false
         default: 'false'
       core_basket_refresh:
-        description: 'Refresh exact ETF Core Daily Basket tickers from data/admin/fenok-etf-core-daily-basket.json'
+        description: 'Refresh exact ETF Core Daily Basket and recover guarded cloud publication (manual lineage)'
         required: false
         default: 'false'
       history_gaps_only:
@@ -760,8 +760,11 @@ jobs:
   publish-stockanalysis-etf-plane:
     needs: acquire-stockanalysis
     if: >-
-      github.event_name == 'schedule' &&
-      (github.event.schedule == '50 23 * * 1-5' || github.event.schedule == '20 23 * * 0')
+      (github.event_name == 'schedule' &&
+       (github.event.schedule == '50 23 * * 1-5' || github.event.schedule == '20 23 * * 0')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.core_basket_refresh == 'true' &&
+       inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true' &&
+       inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == '')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
@@ -822,7 +825,7 @@ jobs:
           fi
           rm -f "$OUTCOME_SHARD"
 
-      - name: Publish natural stockanalysis-etf-detail generation
+      - name: Publish guarded stockanalysis-etf-detail generation
         id: publish_cloud_generation
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -836,11 +839,11 @@ jobs:
           PUBLISH_BINDING_ARTIFACT_DIGEST: ${{ needs.acquire-stockanalysis.outputs.artifact_digest }}
         run: node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --json
 
-      - name: Upload natural stockanalysis-etf-detail outcome shard
+      - name: Upload stockanalysis-etf-detail outcome shard
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: stockanalysis-etf-detail-natural-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          name: stockanalysis-etf-detail-outcome-${{ github.run_id }}-${{ github.run_attempt }}
           path: data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json
           if-no-files-found: error
           retention-days: 1
@@ -881,19 +884,19 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Download natural stockanalysis-etf-detail outcome shard
+      - name: Download stockanalysis-etf-detail outcome shard
         uses: actions/download-artifact@v4
         with:
-          name: stockanalysis-etf-detail-natural-outcome-${{ github.run_id }}-${{ github.run_attempt }}
+          name: stockanalysis-etf-detail-outcome-${{ github.run_id }}-${{ github.run_attempt }}
           path: data/admin/data-supply-state/publish-outcomes
 
-      - name: Assert the natural outcome shard arrived
+      - name: Assert the outcome shard arrived
         run: |
           set -euo pipefail
           shard=data/admin/data-supply-state/publish-outcomes/stockanalysis-etf-detail.json
           test -s "$shard"
 
-      - name: Persist natural stockanalysis-etf-detail publish outcome
+      - name: Persist stockanalysis-etf-detail publish outcome
         env:
           # Git legs of the joined-cycle tuple, carried through the environment
           # rather than interpolated into the command line. Empty means the Git
@@ -910,12 +913,13 @@ jobs:
           --binding-origin-readback="$BINDING_ORIGIN_READBACK"
 
   # Aggregate projection dispatch: shared projection rebuild fires only when
-  # the natural StockAnalysis ETF plane generation was BOTH published and
+  # the scheduled or explicit core-basket recovery generation was BOTH published and
   # persisted, and the Git publisher also committed the same acquisition's
   # canonical source-lane state. The projection remains Git/static-owned while
   # DEC-381 holds storage authority; a successful plane publish is evidence,
   # not permission to materialize R2 into the projection. Non-ETF scheduled
-  # runs and manual runs keep dispatching through the same canonical path.
+  # runs and source-only manual runs keep the same canonical path. Recovery
+  # keeps workflow_dispatch lineage and never claims a natural-cycle attempt.
   # This job stages no git commit and must never carry the shared-writer group.
   dispatch-stockanalysis-projection:
     needs:
@@ -927,8 +931,6 @@ jobs:
       needs.publish-stockanalysis.result == 'success' &&
       (
         (
-          github.event_name == 'schedule' &&
-          (github.event.schedule == '50 23 * * 1-5' || github.event.schedule == '20 23 * * 0') &&
           needs.publish-stockanalysis-etf-plane.result == 'success' &&
           needs.persist-stockanalysis-etf-plane.result == 'success'
         ) ||

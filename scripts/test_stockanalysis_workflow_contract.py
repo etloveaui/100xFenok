@@ -267,7 +267,10 @@ class StockAnalysisWorkflowContractTest(unittest.TestCase):
             'rm -f "$OUTCOME_SHARD"',
             "group: stockanalysis-etf-detail-publish",
             "node scripts/publish-cloud-data-generation.mjs --family=stockanalysis-etf-detail --json",
-            "stockanalysis-etf-detail-natural-outcome-${{ github.run_id }}-${{ github.run_attempt }}",
+            "stockanalysis-etf-detail-outcome-${{ github.run_id }}-${{ github.run_attempt }}",
+            "github.event_name == 'workflow_dispatch' && inputs.core_basket_refresh == 'true'",
+            "inputs.stocks_only != 'true' && inputs.history_gap_plan != 'true'",
+            "inputs.controlled_failure_tickers == '' && inputs.controlled_failure_surfaces == ''",
         ):
             self.assertIn(expected, plane_body)
         self.assertNotIn("fenok-data-writer-refs/heads/main", plane_body)

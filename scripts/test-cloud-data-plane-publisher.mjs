@@ -24,6 +24,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   createMemoryCloudDataPlane,
+  planGenerationObjectWrites,
   publishGeneration,
   resolvePublicAsset,
   sha256Bytes,
@@ -578,6 +579,47 @@ assert.notEqual(FAMILIES["oecd-cli"].reuse_active_generation, true);
     },
   });
   assert.equal(wrongLengthPlan.has(missingKey), false);
+
+  const incrementalPlan = planGenerationObjectWrites(deltaManifest, reusableObjects);
+  const allNewPlan = planGenerationObjectWrites(deltaManifest);
+  assert.ok(allNewPlan.bytes > incrementalPlan.bytes, "unproven objects must consume the byte budget");
+  assert.ok(planGenerationObjectWrites(deltaManifest, missingPlan).bytes > incrementalPlan.bytes);
+  assert.ok(planGenerationObjectWrites(deltaManifest, wrongLengthPlan).bytes > incrementalPlan.bytes);
+  const metadataOnlyPlan = planGenerationObjectWrites(manifest,
+    new Map(manifest.assets.map((asset) => [asset.object_key, asset.bytes])));
+  assert.equal(metadataOnlyPlan.objects, 1, "metadata-only publication still budgets the immutable manifest");
+  assert.ok(metadataOnlyPlan.bytes > 0);
+
+  let unbudgetedWrites = 0;
+  const guardedStore = {
+    ...deltaPlane.objectStore,
+    async putIfAbsent(...args) {
+      unbudgetedWrites += 1;
+      return deltaPlane.objectStore.putIfAbsent(...args);
+    },
+  };
+  await assertRejectsCode(publishGeneration({
+    manifest: deltaManifest, payloads: deltaPayloads, reuseActiveGeneration: true,
+    maxObjectWriteBytes: 0, expectedPointerSequence: 1,
+    objectStore: guardedStore, ledger: deltaPlane.ledger,
+    pointerStore: deltaPlane.pointerStore, policy: POLICY, now: () => NOW_2,
+  }), "PUBLISH_WRITE_BUDGET_EXCEEDED");
+  assert.equal(unbudgetedWrites, 0, "a rejected budget must fail before any PUT");
+  await assertRejectsCode(publishGeneration({
+    manifest: deltaManifest, payloads: deltaPayloads, reuseActiveGeneration: true,
+    maxObjectWriteBytes: incrementalPlan.bytes, expectedPointerSequence: 1,
+    objectStore: { ...guardedStore, async list() { return []; } },
+    ledger: deltaPlane.ledger, pointerStore: deltaPlane.pointerStore,
+    policy: POLICY, now: () => NOW_2,
+  }), "PUBLISH_WRITE_BUDGET_EXCEEDED");
+  assert.equal(unbudgetedWrites, 0, "lost reuse proof after preflight must fail before any PUT");
+  await assertRejectsCode(publishGeneration({
+    manifest: deltaManifest, payloads: deltaPayloads, reuseActiveGeneration: true,
+    maxObjectWriteBytes: incrementalPlan.bytes, expectedPointerSequence: 0,
+    objectStore: guardedStore, ledger: deltaPlane.ledger,
+    pointerStore: deltaPlane.pointerStore, policy: POLICY, now: () => NOW_2,
+  }), "STALE_WRITER");
+  assert.equal(unbudgetedWrites, 0);
 
   const corruptPublishPlane = createMemoryCloudDataPlane();
   await publishGeneration({
@@ -3865,8 +3907,8 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   );
   const rollbackBranchAt = publisherSource.indexOf("if (args.rollback) {");
   const admissionCallAt = publisherSource.indexOf("    assertPublicationAuthorization();");
-  const manifestBuildAt = publisherSource.indexOf("await buildFamilyManifest({");
-  const gateCallAt = publisherSource.indexOf("const gateBefore = await runCostGateImpl({");
+  const manifestBuildAt = publisherSource.indexOf("await buildFamilyManifestImpl({");
+  const gateCallAt = publisherSource.indexOf("let gateBefore = await runCostGateImpl({");
   assert.ok(rollbackBranchAt > 0 && admissionCallAt > 0 && manifestBuildAt > 0 && gateCallAt > 0,
     "all four ordering anchors must exist in the publisher source");
   assert.ok(rollbackBranchAt < admissionCallAt,
@@ -4011,6 +4053,56 @@ function runCli(extraArgs, includeFamily = true, extraEnv = {}) {
   assert.ok(FAMILIES["stockanalysis-etf-detail"].plan.class_b >= 2 * 16_819,
     "declared class B must be at least 2x the measured 16,819 read operations");
   console.log("strict gate ok (exit 1 terminal for the strict family, tolerant families unchanged, blocks before any plane)");
+}
+
+// Tiny real ETF manifest with injected remote adapters: exercise the CLI's
+// second gate, not just the shared publisher's final byte fence.
+{
+  const root = await mkdtemp(path.join(os.tmpdir(), "etf-incremental-gate-"));
+  const inputRoot = path.join(root, "input");
+  const outcomesRoot = path.join(root, "outcomes");
+  await mkdir(inputRoot);
+  await writeFile(path.join(inputRoot, "SPY.json"), JSON.stringify({
+    fetched_at: NOW_1,
+    raw: { quote: { td: "2026-07-31", ts: Date.parse("2026-07-31T20:00:00Z") } },
+  }));
+  const built = await buildFamilyManifest({
+    familyName: "stockanalysis-etf-detail", absRoot: inputRoot,
+    relRoot: "data/stockanalysis/etfs", now: () => NOW_1,
+  });
+  const plane = createMemoryCloudDataPlane();
+  let writes = 0;
+  const countingPlane = { ...plane, objectStore: {
+    ...plane.objectStore,
+    async putIfAbsent(...args) { writes += 1; return plane.objectStore.putIfAbsent(...args); },
+  } };
+  const calls = [];
+  const output = [];
+  const invoke = (rejectSecond) => runPublisherCli({
+    argv: ["--family=stockanalysis-etf-detail", "--json"],
+    env: { CLOUDFLARE_API_TOKEN: "fixture", DATA_PLANE_ENDPOINT: "https://example.invalid", DATA_PLANE_WRITE_KEY: "fixture" },
+    outcomesRoot,
+    buildFamilyManifestImpl: async () => built,
+    createPublishPlaneImpl: () => ({ plane: countingPlane, objectsWritten: () => writes }),
+    runCostGateImpl: async (options) => {
+      calls.push(options);
+      return { code: rejectSecond && calls.length === 2 ? 1 : 0, stdout: "", stderr: "" };
+    },
+    stdout: (line) => output.push(line), stderr: () => {},
+  });
+  assert.equal(await invoke(true), 3);
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].planBytes, 0);
+  assert.equal(calls[1].planBytes, 2 * planGenerationObjectWrites(built.manifest).bytes);
+  assert.equal(writes, 0, "second strict gate rejection must precede every PUT");
+  const blocked = JSON.parse(await readFile(publishOutcomeShardPath(outcomesRoot, "stockanalysis-etf-detail"), "utf8"));
+  assert.equal(blocked.records.at(-1).result, "gate_blocked");
+  calls.length = 0;
+  assert.equal(await invoke(false), 0);
+  assert.equal(calls.length, 2);
+  assert.ok(writes > 0);
+  assert.equal(JSON.parse(output.at(-1)).planned_bytes, calls[1].planBytes);
+  await rm(root, { recursive: true, force: true });
 }
 
 console.log("test-cloud-data-plane-publisher: ok");
