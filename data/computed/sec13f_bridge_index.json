@@ -1,6 +1,6 @@
 {
   "schema_version": "sec13f-bridge-index/v1",
-  "generated_at": "2026-09-20T13:13:29.016Z",
+  "generated_at": "2026-09-20T13:25:16.004Z",
   "purpose": "SEC 13F bridge index of tickers outside the Global Scouter universe, published live with honest 424/1,026 coverage.",
   "contract": {
     "candidate_type": "sec13f_extension_stock",
@@ -30,11 +30,11 @@
     "sec13f": "2026-Q2"
   },
   "input_fingerprints": {
-    "analyzer": "ac0d409b99f039419aa0404e21bc0e3d361ec40f19010fe2361541ce59686de2",
+    "analyzer": "cff51dead917dc257e66cff7b98ccd7bccdae5be2f22b5327b13e5d7883e80d9",
     "action_index": "ab3f1211fe26b9f6097041bb17d034e171c80c2f3a4d66aad390f016ccad2173",
     "market_facts": "4eace66fc618abd702cfa08fdf9241228e38858df931b32335fd72d282a8db33",
-    "sec13f_by_ticker": "9c8e5e5b53d911e7d4863f7279a8d1120fdac7f74375afd18724e3476b9e2a5a",
-    "sec13f_summary": "3e650e8e06465818dad5fe811206e6d2893a9a437051ae0f3c61c817841a5504",
+    "sec13f_by_ticker": "da46f2d0e9a6b5007cf5ca0fffd3c5ff95cff0797cfe74ff5fdb62f5db17371b",
+    "sec13f_summary": "d7644bed3317c2f878eb9f9ba690dfb3c5d45c7e21c78258e20b848ca1947207",
     "market_facts_details": {
       "file_count": 113,
       "sha256": "8393dea6d422afa0b1cda48cbc1e6af69ac0aa8bc4f718ddc3eba34ad6ec79ec"
@@ -46,29 +46,29 @@
   },
   "graph_invariants": {
     "core_stock_count": 1066,
-    "sec13f_ticker_count": 1026,
+    "sec13f_ticker_count": 1028,
     "core_intersection_count": 424,
     "warning_threshold": 450,
     "graph_mutation_applied": false,
     "public_surface_mutation_applied": true
   },
   "counts": {
-    "sec13f_outside_core": 602,
+    "sec13f_outside_core": 604,
     "action_plus_market_facts": 76,
     "market_facts_only": 37,
-    "no_action_index_overlap": 526,
-    "no_market_facts": 489,
+    "no_action_index_overlap": 528,
+    "no_market_facts": 491,
     "action_index_only": 0,
     "sec13f_extension_stock": 76,
     "sec13f_market_facts_only": 37,
-    "sec13f_unresolved": 489,
+    "sec13f_unresolved": 491,
     "estimate": {
       "extension_full": 74,
       "extension_incomplete": 2,
       "market_facts_only_incomplete": 37,
-      "unresolved_absent": 489,
+      "unresolved_absent": 491,
       "as_of": {
-        "bridge_generated_at": "2026-09-20T13:13:29.016Z",
+        "bridge_generated_at": "2026-09-20T13:25:16.004Z",
         "yf_finance": "2026-09-18T00:00:00.000Z",
         "market_facts": "2026-09-18",
         "sec13f": "2026-Q2"
@@ -16566,8 +16566,8 @@
         "yf_finance": true
       },
       "sec13f": {
-        "holders_count": 16,
-        "total_market_value": 26526600199
+        "holders_count": 15,
+        "total_market_value": 25244572482
       },
       "market_facts": {
         "asset_type": "etf",
@@ -18610,6 +18610,116 @@
       "yf_estimates": {
         "file": false,
         "path": "data/yf/finance/LLOY.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "LLYVA",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 332616317
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/LLYVA.json",
+        "state": "absent",
+        "source_as_of": null,
+        "fields_present": [],
+        "missing_fields": [
+          "earnings_estimate",
+          "revenue_estimate",
+          "growth_estimates",
+          "eps_trend",
+          "eps_revisions",
+          "recommendations_summary"
+        ]
+      },
+      "completeness": {
+        "market_facts_price_observed": false,
+        "action_price_present": false,
+        "action_valuation_present": false,
+        "yf_estimate_or_absent_reason": false,
+        "bridge_field_floor": false,
+        "per_present": false,
+        "forward_pe_present": false
+      },
+      "acceptance": {
+        "promotion_status": "promoted",
+        "reason": "promoted_live_honest_coverage",
+        "producer_typed_marker": true,
+        "current_consumer": "public/superinvestors and /data/computed/sec13f_bridge_index.json",
+        "public_route": "/data/computed/sec13f_bridge_index.json",
+        "live_readback": "verified"
+      }
+    },
+    {
+      "ticker": "LLYVK",
+      "classification": {
+        "type": "sec13f_unresolved",
+        "classes": [
+          "no_action_index_overlap",
+          "no_market_facts"
+        ]
+      },
+      "source_links": {
+        "sec13f_by_ticker": true,
+        "global_scouter_core": false,
+        "stock_action_index": false,
+        "market_facts": false,
+        "yf_finance": false
+      },
+      "sec13f": {
+        "holders_count": 1,
+        "total_market_value": 949411400
+      },
+      "market_facts": null,
+      "stock_action_index": null,
+      "yf_estimates": {
+        "file": false,
+        "path": "data/yf/finance/LLYVK.json",
         "state": "absent",
         "source_as_of": null,
         "fields_present": [],
