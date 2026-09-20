@@ -19,6 +19,35 @@ function writeJson(relPath, value) {
 }
 
 try {
+  writeJson("computed/market_facts/index.json", {
+    core_surface_source_as_of: "2026-07-24",
+    source_stamp_diagnostics: {
+      core_member_count: 1,
+      core_price_stamped_count: 1,
+      core_price_missing_count: 0,
+      core_price_missing_tickers: [],
+      core_price_absent_from_index_count: 0,
+      core_price_absent_from_index_tickers: [],
+      core_price_source_complete: true,
+    },
+  });
+  writeJson("yardney/yardney_model.json", {
+    data: [{ date: "2026-07-25", fair_value: 6200 }],
+  });
+  writeJson("computed/rim-index/inputs.json", {
+    indices: {
+      KOSPI: {
+        public_status: "ready_inputs_and_forecast_grid",
+        blockers: [],
+        observed: { price: { as_of: "2020-01-02" } },
+      },
+      SOX: {
+        public_status: "ready_inputs_and_forecast_grid",
+        blockers: [],
+        observed: { price: { as_of: "2020-01-03" } },
+      },
+    },
+  });
   writeJson("computed/data-supply/etf-detail/index.json", {
     schema_version: "data-supply-etf-detail-public-index/v1",
     entries: {
@@ -60,6 +89,7 @@ try {
     "utf8",
   ));
   const etfCenter = output.surfaces.find((surface) => surface.id === "etf_center");
+  const marketValuation = output.surfaces.find((surface) => surface.id === "market_valuation");
   const members = Object.fromEntries(
     etfCenter.stamp_evidence.members
       .filter((member) => member.id.startsWith("etf_detail:"))
@@ -73,6 +103,33 @@ try {
     DATELESS: "2026-04-01",
     RESIDUAL: null,
   }, "ETF center must prefer live payload dates, then fall back to frozen enrollment-index dates");
+  assert.equal(
+    marketValuation.source_as_of,
+    "2026-07-24",
+    "quarantined RIM must not lower the required market-valuation freshness floor",
+  );
+  assert.deepEqual(
+    marketValuation.stamp_evidence.members
+      .filter((member) => member.stamp_class === "date_bearing")
+      .map((member) => member.id),
+    ["yardeni:published", "market_facts:core_surface"],
+    "required market-valuation freshness must use only active Yardeni and market-facts sources",
+  );
+  assert.equal(
+    marketValuation.checks.some((check) => check.label === "RIM 입력 기준일"),
+    false,
+    "quarantined RIM freshness must not remain a required surface check",
+  );
+  assert.equal(
+    marketValuation.checks.some((check) => check.label === "KOSPI RIM 입력"),
+    true,
+    "RIM product readiness disclosure remains visible",
+  );
+  assert.equal(
+    output.source_files.includes("computed/rim-index/inputs.json"),
+    true,
+    "RIM data provenance disclosure remains visible",
+  );
   assert.equal(etfCenter.source_as_of, "2026-04-01", "surface source_as_of must equal the recovered true-date subset floor");
   assert.equal(
     etfCenter.source_as_of,

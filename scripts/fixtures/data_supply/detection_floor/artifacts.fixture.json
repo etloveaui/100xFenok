@@ -318,12 +318,6 @@
               "date": "2026-07-10",
               "value": 1
             }
-          ],
-          "IRLTLT01KRM156N": [
-            {
-              "date": "2026-07-10",
-              "value": 1
-            }
           ]
         }
       }
@@ -344,6 +338,22 @@
           "DPSACBW027SBOG": [
             {
               "date": "2026-07-04",
+              "value": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "banking_monthly",
+      "encoding": "json",
+      "content": {
+        "updated": "2026-07-11T00:00:00Z",
+        "type": "monthly",
+        "series": {
+          "IRLTLT01KRM156N": [
+            {
+              "date": "2026-06-01",
               "value": 1
             }
           ]
@@ -1575,7 +1585,11 @@
         "rows": [
           {
             "ticker": "AAA",
-            "as_of": "2026-07-10"
+            "as_of": "2026-07-10T13:17:00.000Z"
+          },
+          {
+            "ticker": "BBB",
+            "as_of": "2026-07-10T15:02:00.000Z"
           }
         ]
       }
@@ -1768,6 +1782,11 @@
           "path": "data/macro/fred-banking-weekly.json",
           "node_type": "regular",
           "document_id": "banking_weekly"
+        },
+        {
+          "path": "data/macro/fred-banking-monthly.json",
+          "node_type": "regular",
+          "document_id": "banking_monthly"
         },
         {
           "path": "data/macro/fred-banking-quarterly.json",

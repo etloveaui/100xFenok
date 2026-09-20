@@ -367,11 +367,15 @@ const config = {
       members: [registryMember("fred_banking", ["0 7 * * *"], [
         artifact("fred_banking_daily", "data/macro/fred-banking-daily.json", {
           sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
-          assertions: [exactAssertion("type_daily", "/type", "daily"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 3), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_dgs10", "/series/DGS10"), requiredAssertion("series_hy_spread", "/series/BAMLH0A0HYM2"), requiredAssertion("series_korea_rate", "/series/IRLTLT01KRM156N")],
+          assertions: [exactAssertion("type_daily", "/type", "daily"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 2), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_dgs10", "/series/DGS10"), requiredAssertion("series_hy_spread", "/series/BAMLH0A0HYM2")],
         }),
         artifact("fred_banking_weekly", "data/macro/fred-banking-weekly.json", {
           sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
           assertions: [exactAssertion("type_weekly", "/type", "weekly"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 2), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_totll", "/series/TOTLL"), requiredAssertion("series_deposits", "/series/DPSACBW027SBOG")],
+        }),
+        artifact("fred_banking_monthly", "data/macro/fred-banking-monthly.json", {
+          sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
+          assertions: [exactAssertion("type_monthly", "/type", "monthly"), typeAssertion("series_object", "/series", "object"), minKeysAssertion("series_count", "/series", 1), nonEmptySeriesAssertion("series_non_empty", "/series"), requiredAssertion("series_korea_rate", "/series/IRLTLT01KRM156N")],
         }),
         artifact("fred_banking_quarterly", "data/macro/fred-banking-quarterly.json", {
           sourceSelector: maxObjectSeriesFieldSource("/series", "date", "date"),
@@ -1209,7 +1213,7 @@ const config = {
       members: [registryMember("gdelt_news_tone", ["43 14 * * *"], [
         artifact("gdelt_news_tone", "data/computed/fenok_news_tone_proxy.json", {
           schemaVersion: schemaVersion("/schema_version", 1),
-          sourceSelector: maxArrayFieldSource("/rows", "as_of", "date"),
+          sourceSelector: maxArrayFieldSource("/rows", "as_of", "rfc3339"),
           assertions: [typeAssertion("rows_array", "/rows", "array"), minRowsAssertion("rows_non_empty", "/rows")],
         }),
       ])],

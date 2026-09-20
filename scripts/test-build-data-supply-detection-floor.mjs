@@ -1186,8 +1186,28 @@ function runBaselineAndArtifactChecks() {
     calendars: calendarsFixture,
     now: expectedFixture.baseline.now,
   });
+  assert.equal(lane(report, "gdelt_news_tone").artifact.reason, "ok",
+    "GDELT RFC3339 row timestamps must remain valid source evidence");
+  assert.equal(lane(report, "gdelt_news_tone").artifact.source_as_of, "2026-07-10T15:02:00Z",
+    "GDELT source freshness uses the latest provider row timestamp");
+  assert.equal(lane(report, "fred_banking").artifact.reason, "ok",
+    "the daily FRED contract must not require a series emitted by the monthly artifact");
   assert.deepEqual(report, expectedFixture.baseline.expected_report);
   assert.equal(createSha(reportBytes(report)), expectedFixture.baseline.report_file_sha256);
+
+  const wrongMonthlyRoot = materializeArtifacts("all_valid");
+  const monthlyPath = path.join(wrongMonthlyRoot.raw, "data", "macro", "fred-banking-monthly.json");
+  const wrongMonthly = readJson(monthlyPath);
+  wrongMonthly.series = { PLACEHOLDER: [{ date: "2026-06-01", value: 1 }] };
+  fs.writeFileSync(monthlyPath, JSON.stringify(wrongMonthly), { encoding: "utf8", mode: 0o600 });
+  const wrongMonthlyReport = buildDetectionReport({
+    artifactRoot: wrongMonthlyRoot.raw,
+    attempts: attemptsFixture,
+    calendars: calendarsFixture,
+    now: expectedFixture.baseline.now,
+  });
+  assert.equal(lane(wrongMonthlyReport, "fred_banking").artifact.reason, "schema_drift",
+    "the monthly FRED contract must reject an artifact without the Korea rate series");
 
   // B-OUTCOME-CLOCKS: a source-dateless lane (every artifact contract
   // not_applicable) projects its artifact's own generated_at honestly next to

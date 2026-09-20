@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   classTickerPreservationOk,
   corporateActionEvidenceFor,
+  corporateActionPolicyStatusFor,
   evidenceFamilyFlagsForTicker,
   evidenceFamiliesForTicker,
   expectedStockPromotionGapCount,
@@ -43,6 +44,21 @@ assert.deepEqual(
     alias_source: null,
   },
 );
+
+const reverseSplitActions = stockanalysisCorporateActionsByTicker({
+  records: [
+    { symbol: "$DULL", other: "N/A", type: "Reverse Split", date: "2026-08-19" },
+  ],
+});
+const reverseSplitPolicy = corporateActionPolicyStatusFor("DULL", {
+  stockanalysisCorporateActionMap: reverseSplitActions,
+});
+assert.equal(reverseSplitPolicy.status, "policy_required_before_promotion");
+assert.match(
+  reverseSplitPolicy.reason,
+  /any StockAnalysis corporate-action evidence requires an explicit policy before promotion/iu,
+);
+assert.equal(reverseSplitPolicy.evidence[0].type, "Reverse Split");
 
 const commonSets = {
   yfSet: new Set(["DAY", "STRC"]),

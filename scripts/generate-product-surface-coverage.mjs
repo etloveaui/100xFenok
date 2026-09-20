@@ -350,25 +350,16 @@ const yardneyAsOf = latestDate(
 );
 const yardeniMaxAgeDays = DATA_SUPPLY_DETECTION_CONFIG.lanes
   .find((lane) => lane.id === "fred_yardeni")?.freshness?.max_staleness ?? 10;
-// Weekly converter lanes are judged against their DECLARED cadence + grace
-// (detection-config freshness.max_staleness), never a tighter hardcoded
-// constant: a weekly Friday export is legitimately ~7 days old mid-week, and
-// the surface still trips stale once the source outlives its declared rhythm.
-const benchmarksMaxAgeDays = DATA_SUPPLY_DETECTION_CONFIG.lanes
-  .find((lane) => lane.id === "benchmarks")?.freshness?.max_staleness ?? 14;
 const globalScouterMaxAgeDays = DATA_SUPPLY_DETECTION_CONFIG.lanes
   .find((lane) => lane.id === "global_scouter")?.freshness?.max_staleness ?? 14;
 // Per-surface TRUE source stamps (contract §5). Only surfaces whose data inputs
 // carry genuine nested source dates get a real stamp; the rest stay null until
 // their upstream artifacts expose one (the KPI reports them pending, not fresh).
-//  - market_valuation: RIM observed price as_of (KOSPI/SOX) + Yardeni published date.
+//  - market_valuation: active Yardeni publication + market-facts source floor.
+//    Quarantined RIM remains disclosed below but is not a live freshness blocker.
 //  - screener: stocks_analyzer.source_date.
 //  - stock_detail / market_events / sectors / etf_center: dedicated collection-date
 //    stamps cross-checked against their fetch-owned payloads and index mirror.
-const rimSourceAsOf = oldestSourceDate([
-  rimIndexInputs?.indices?.KOSPI?.observed?.price?.as_of,
-  rimIndexInputs?.indices?.SOX?.observed?.price?.as_of,
-]);
 const yardeniSourceAsOf = oldestSourceDate([
   yardneyLatest?.date ?? yardneyModel?.meta?.last_update?.last_public_date,
 ]);
@@ -404,7 +395,6 @@ if (
 }
 const marketFactsCoreComplete = marketFactsSourceDiagnostics.core_price_source_complete === true;
 const stockDetailSourceAsOf = marketFactsCoreSourceAsOf;
-const marketValuationSourceAsOf = oldestSourceDate([rimSourceAsOf, yardeniSourceAsOf, marketFactsCoreSourceAsOf]);
 // StockAnalysis publishes quote-level dates, but no aggregate publication date.
 // Legacy aggregate stamps were collection dates promoted into source_as_of.
 const marketEventsSourceAsOf = null;
@@ -549,7 +539,6 @@ const productStampEvidence = {
     ...datelessMembers(contractedStockSurfaceNames),
   ]),
   market_valuation: stampEvidence([
-    dateMember("rim:KOSPI_SOX", rimSourceAsOf),
     dateMember("yardeni:published", yardeniSourceAsOf),
     dateMember("market_facts:core_surface", marketFactsCoreSourceAsOf),
   ]),
@@ -634,7 +623,6 @@ const surfaces = [
       check("소스 일치성", number(paritySummary.multi_candidate_fields) > 0 ? "partial" : "pending", `${number(paritySummary.multi_candidate_fields).toLocaleString("ko-KR")}개 복수 후보`, { count: number(paritySummary.multi_candidate_fields), reason: "차이·오래됨·부호 차이를 Data Lab에서 계속 노출" }),
       rimIndexReadyCheck("KOSPI", "KOSPI"),
       rimIndexReadyCheck("SOX", "SOX"),
-      freshness("RIM 입력 기준일", rimSourceAsOf, benchmarksMaxAgeDays, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
       freshness("Yardeni 기준일", yardeniSourceAsOf, yardeniMaxAgeDays, { missingReason: SOURCE_FLOOR_UNAVAILABLE }),
       freshness("야후 원천 기준일", null, 8, { warnOnly: true, missingReason: NO_AGGREGATE_SOURCE_DATE }),
       marketFactsCompletenessCheck("시장 데이터 원천 완전성"),

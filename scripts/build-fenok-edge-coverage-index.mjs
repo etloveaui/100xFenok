@@ -477,6 +477,26 @@ function preservePriorPrivateBackedActiveS0Evidence(evidence) {
   recomputeBlockingEvidence(evidence);
 }
 
+export function krxCoverageContract({ evidence, sourceDenominator, receiptValidation }) {
+  const coveredCount = Math.max(0, Number(evidence?.covered_count) || 0);
+  const denominator = Math.max(0, Number(evidence?.denominator) || 0);
+  const validatedFilter = evidence?.source === "bound_bridge_receipt"
+    && receiptValidation?.ok === true
+    && receiptValidation?.receipt?.schema_version === "fenok_krx_issuer_daily_coverage_receipt/v3"
+    ? receiptValidation.receipt.listing_status_filter
+    : null;
+  const excludedCount = Math.max(0, Number(validatedFilter?.excluded_count) || 0);
+  return {
+    covered_count: coveredCount,
+    denominator,
+    source_denominator: Math.max(0, Number(validatedFilter?.source_denominator) || Number(sourceDenominator) || 0),
+    excluded_count: excludedCount,
+    missing_count: Math.max(0, denominator - coveredCount),
+    coverage_ready: coveredCount === denominator,
+  };
+}
+
+function main() {
 const buildNow = new Date();
 const generatedAt = buildNow.toISOString();
 const signals = readJson("data/computed/fenok_signals.json", {});
@@ -586,7 +606,13 @@ const koreaEvidence = selectKrxIssuerDailyCoverageEvidence({
   receiptValidation: koreaReceiptValidation,
 });
 const koreaCountedSourceDate = koreaEvidence.source_date;
-const koreaCoveredCount = koreaEvidence.covered_count;
+const koreaCoverage = krxCoverageContract({
+  evidence: koreaEvidence,
+  sourceDenominator: koreaRows.length,
+  receiptValidation: koreaReceiptValidation,
+});
+const koreaCoveredCount = koreaCoverage.covered_count;
+const s0DailyEligibleCount = s0DailyEligibleRows.length - koreaCoverage.excluded_count;
 
 const usClassYfEvidenceRows = usClassYfRows.map(yfDailySourceEvidence);
 const usClassYfReadyEvidenceRows = usClassYfEvidenceRows.filter((row) => row.ready);
@@ -831,7 +857,7 @@ function activeS0BlockingEvidence() {
   const finraRowBreakdown = countByCategory(finraMissingRows, classifyFinraRowGap);
   const finraStrictBreakdown = countByCategory(finraStrictGapRows, (row) => classifyFinraStrictGap(row, flowRowsByTicker.get(rowTicker(row))));
   const occBreakdown = countByCategory(occMissingRows, classifyOccGap);
-  const krxCoverageReady = koreaCoveredCount === koreaRows.length;
+  const krxCoverageReady = koreaCoverage.coverage_ready;
   const finraCoverageReady = finraEligibleSourceReadyRows.length === finraEligibleRows.length;
   const occDailyReady = occPlainSourceReadyRows.length === occDailyEligibleRows.length;
   const usClassYfDailyReady = usClassYfReadyEvidenceRows.length === usClassYfRows.length;
@@ -841,15 +867,17 @@ function activeS0BlockingEvidence() {
     {
       id: "krx_full_daily_source_ready",
       status: countedDailySourceStatus({ coverageReady: krxCoverageReady, sourceDate: koreaCountedSourceDate }),
-      covered_count: koreaCoveredCount,
-      denominator: koreaRows.length,
-      missing_count: Math.max(0, koreaRows.length - koreaCoveredCount),
+      covered_count: koreaCoverage.covered_count,
+      denominator: koreaCoverage.denominator,
+      source_denominator: koreaCoverage.source_denominator,
+      excluded_count: koreaCoverage.excluded_count,
+      missing_count: koreaCoverage.missing_count,
       source_date: koreaCountedSourceDate,
       age_days: ageDays(koreaCountedSourceDate),
       max_age_days: MAX_COUNTED_DAILY_SOURCE_AGE_DAYS,
       evidence_source: koreaEvidence.source,
       receipt_validation: koreaReceiptValidation.ok ? "valid" : koreaReceiptValidation.reason,
-      eligibility_policy: "active_scoring_universe rows where market=KRX or KOSDAQ; counted date is the latest fully populated issuer daily proof date.",
+      eligibility_policy: "Validated v3 receipt eligibility uses the current KRX issuer master; aggregate source, eligible, and excluded counts are disclosed without publishing per-issuer evidence.",
       caveat: "Empty KRX calendar runs are not counted as issuer daily coverage; when private raw is absent, only a bridge receipt bound to the current bridge and active universe is accepted.",
     },
     {
@@ -963,7 +991,7 @@ function activeS0BlockingEvidence() {
       markets: marketCounts(usClassYfRows),
       claim_scope: "yf_daily_source_available",
       source_file_pattern: "data/yf/finance/{TICKER}.json",
-      daily_gated_scope_denominator: s0DailyEligibleRows.length,
+      daily_gated_scope_denominator: s0DailyEligibleCount,
       daily_gated_scope_policy: "US_CLASS/non-plain active rows are included in S0 daily/gated via YF daily source freshness; FINRA/OCC proxy mapping remains a separate signal-expansion problem.",
       sample_blockers: usClassYfBlockingEvidenceRows.slice(0, 10),
       next_action: "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed US_CLASS/non-plain tickers before claiming all active S0 stocks as daily/gated.",
@@ -981,7 +1009,7 @@ function activeS0BlockingEvidence() {
       markets: marketCounts(asiaExTwRows),
       claim_scope: "yf_daily_source_available",
       source_file_pattern: "data/yf/finance/{TICKER}.json",
-      daily_gated_scope_denominator: s0DailyEligibleRows.length,
+      daily_gated_scope_denominator: s0DailyEligibleCount,
       daily_gated_scope_policy: "Current S0 daily/gated source scope is all active stock rows: KRX/KOSDAQ via KRX, plain US via FINRA/OCC source proof, HKEX/SSE/SZSE via scheduled YF daily stock shards.",
       sample_blockers: asiaYfBlockingEvidenceRows.slice(0, 10),
       next_action: "If this blocks, rerun fetch-yf-finance.yml daily stock shards or targeted YF refresh for the listed Asia tickers before claiming all active S0 stocks as daily/gated.",
@@ -999,7 +1027,7 @@ function activeS0BlockingEvidence() {
       markets: marketCounts(taiwanRows),
       claim_scope: "yf_daily_source_available",
       source_file_pattern: "data/yf/finance/{TICKER}.json",
-      daily_gated_scope_denominator: s0DailyEligibleRows.length,
+      daily_gated_scope_denominator: s0DailyEligibleCount,
       daily_gated_scope_policy: "Explicit Taiwan rows use the scheduled YF daily stock source for S0 daily/gated readiness; Taiwan official flow/options collection remains a separate proxy expansion lane.",
       sample_blockers: taiwanYfBlockingEvidenceRows.slice(0, 10),
       next_action: "If this blocks, rerun the targeted Taiwan YF daily shard before claiming all active S0 stocks as daily/gated.",
@@ -1127,17 +1155,17 @@ const index = {
     },
     s0_daily_gated_scope: {
       policy: "all_active_stock_current_daily_sources",
-      eligible_count: s0DailyEligibleRows.length,
+      eligible_count: s0DailyEligibleCount,
       eligible_buckets: {
         us: usRows.length,
         us_plain_finra_occ: finraEligibleRows.length,
         us_class_or_non_plain_yf: usClassYfRows.length,
-        korea: koreaRows.length,
+        korea: koreaCoverage.denominator,
         asia_ex_taiwan: asiaExTwRows.length,
         taiwan_yf: taiwanRows.length,
       },
-      excluded_count: 0,
-      excluded_markets: [],
+      excluded_count: koreaCoverage.excluded_count,
+      excluded_markets: koreaCoverage.excluded_count > 0 ? ["KRX/KOSDAQ listing-status filter"] : [],
       asia_source_policy: "HKEX/SSE/SZSE rows use scheduled YF daily stock shards; explicit Taiwan rows use the targeted Taiwan YF daily shard as the counted daily source.",
       public_scoring_total_remains: activeScoringTotal,
     },
@@ -1187,17 +1215,20 @@ const index = {
     coverageRow({
       id: "krx_issuer_daily_latest_full_proof",
       label: "Korea KRX issuer daily coverage, latest fully populated proof",
-      count: koreaCoveredCount,
-      denominator: koreaRows.length,
-      denominatorLabel: "active_scoring_universe.korea",
+      count: koreaCoverage.covered_count,
+      denominator: koreaCoverage.denominator,
+      denominatorLabel: "validated_krx_receipt.eligible_denominator",
       sourceDate: koreaCountedSourceDate,
-      status: koreaCoveredCount === koreaRows.length ? "ready" : "partial",
+      status: koreaCoverage.coverage_ready ? "ready" : "partial",
       claimScope: "source_available",
       activeTotal: activeScoringTotal,
       caveat: "Counted from current private KRX raw files when present, otherwise from a bridge receipt bound to the current bridge and active universe. Empty calendar runs are not counted as issuer daily coverage.",
       extra: {
         evidence_source: koreaEvidence.source,
         receipt_validation: koreaReceiptValidation.ok ? "valid" : koreaReceiptValidation.reason,
+        source_denominator: koreaCoverage.source_denominator,
+        eligible_denominator: koreaCoverage.denominator,
+        listing_status_excluded_count: koreaCoverage.excluded_count,
         private_manifest_file: koreaProofManifestPath,
         counted_batch: {
           run_id: koreaLatestRun.run_id ?? null,
@@ -1401,7 +1432,7 @@ const index = {
       not_public_scoring: true,
       excluded_from_s0_daily_gated_scope: false,
       blocks_daily_ready: asiaYfBlockingEvidenceRows.length > 0,
-      daily_gated_scope_denominator: s0DailyEligibleRows.length,
+      daily_gated_scope_denominator: s0DailyEligibleCount,
       daily_gated_scope_label: "active_scoring_universe.us + active_scoring_universe.korea + active_scoring_universe.asia_ex_taiwan",
       excluded_markets: marketCounts(asiaExTwRows),
       caveat: "HKEX/SSE/SZSE active rows are included in the current S0 daily/gated source scope through YF daily stock shards; any nonzero count here blocks the all-active-stock daily claim.",
@@ -1691,3 +1722,8 @@ console.log(JSON.stringify({
   taiwan_explicit_count: explicitTaiwanRows.length,
   taiwan_anomaly_count: taiwanTickerAnomalies.length,
 }, null, 2));
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  main();
+}

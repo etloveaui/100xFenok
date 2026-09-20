@@ -19,6 +19,7 @@ import {
   selectJapanTickerAnomalies,
 } from "./lib/japan-universe.mjs";
 import fs from "node:fs";
+import * as coverageBuilderModule from "./build-fenok-edge-coverage-index.mjs";
 
 let failures = 0;
 function assert(condition, message) {
@@ -135,6 +136,41 @@ assert(fresh.denominator === 1177, "already-current denominator stays 1177");
 
 // Null-safe.
 assert(reconcileTaiwanCurrentUniverseDenominator(null, 1177, pct) === null, "null row is a no-op");
+
+// A validated v3 receipt can intentionally exclude a delisted source-universe
+// member. The gate must use the receipt's eligible denominator while retaining
+// the source denominator and exclusion count as honest aggregate disclosure.
+const krxEligibleContract = coverageBuilderModule.krxCoverageContract?.({
+  evidence: {
+    source: "bound_bridge_receipt",
+    covered_count: 336,
+    denominator: 336,
+    missing_count: 0,
+  },
+  sourceDenominator: 337,
+  receiptValidation: {
+    ok: true,
+    receipt: {
+      schema_version: "fenok_krx_issuer_daily_coverage_receipt/v3",
+      listing_status_filter: {
+        source_denominator: 337,
+        eligible_denominator: 336,
+        excluded_count: 1,
+      },
+    },
+  },
+});
+assert(
+  JSON.stringify(krxEligibleContract) === JSON.stringify({
+    covered_count: 336,
+    denominator: 336,
+    source_denominator: 337,
+    excluded_count: 1,
+    missing_count: 0,
+    coverage_ready: true,
+  }),
+  "validated KRX v3 exclusions use the eligible denominator and stay disclosed",
+);
 
 // ETF exact-plan compatibility remains full-scored: the coverage index must
 // compare its full history-gap denominator to scored_etf_count, never to the
