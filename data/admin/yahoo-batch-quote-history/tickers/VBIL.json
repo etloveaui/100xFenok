@@ -64,29 +64,42 @@
       "run_id": "34011546411",
       "schedule": "7 0 * * 0-5",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 571,
+      "natural": true,
+      "observed_at": "2026-09-20T04:49:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35489996497",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-06T04:29:23Z",
-    "history_as_of": "2026-09-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/VBIL.json",
-    "payload_sha256": "66ec4a435af219fb7aa4741226d4e579eb804131edb8eeb869a4c3d87c73d5bc",
-    "quote_as_of": "2026-09-04T20:00:00Z",
-    "source_as_of": "2026-09-04"
+    "fetched_at": "2026-09-20T04:49:34Z",
+    "history_as_of": "2026-09-18",
+    "path": "data/yf/finance/VBIL.json",
+    "payload_sha256": "a70ae866645a1fa545507235bc4e5c60f21789eb2a860da47225689f3b24bd61",
+    "quote_as_of": "2026-09-18T20:00:01Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 533,
+    "latency_ms": 571,
     "natural": true,
-    "observed_at": "2026-09-06T04:28:56Z",
+    "observed_at": "2026-09-20T04:49:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schedule": "7 0 * * 0-5",
     "shard": "0/6"
   },
@@ -101,17 +114,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-04",
-    "observed_at": "2026-09-06T04:28:56Z",
-    "payload_sha256": "e46016b926b4eaf338595be1342d8dce9321feb2f3a208734e5dceabc4301240",
-    "quote_as_of": "2026-09-04T20:00:00Z",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T04:49:04Z",
+    "payload_sha256": "5efb0a8e02fa1e24e271dfd5a1f2b252b7d9498989835ab3f08d43bf50527006",
+    "quote_as_of": "2026-09-18T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-04"
+    "source_as_of": "2026-09-18"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -124,5 +137,5 @@
     "source_as_of": "2026-09-04"
   },
   "ticker": "VBIL",
-  "updated_at": "2026-09-16T01:29:38Z"
+  "updated_at": "2026-09-20T04:49:04Z"
 }

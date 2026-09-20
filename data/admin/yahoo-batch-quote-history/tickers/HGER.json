@@ -77,29 +77,42 @@
       "run_id": "34011546411",
       "schedule": "7 0 * * 0-5",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 551,
+      "natural": true,
+      "observed_at": "2026-09-20T04:49:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35489996497",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-06T04:29:09Z",
-    "history_as_of": "2026-09-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/HGER.json",
-    "payload_sha256": "09d502875be9f1cbf58a1685f9cd441c099ee5a162e224f7e9a92a0d51f43bce",
-    "quote_as_of": "2026-09-04T20:00:02Z",
-    "source_as_of": "2026-09-04"
+    "fetched_at": "2026-09-20T04:49:20Z",
+    "history_as_of": "2026-09-18",
+    "path": "data/yf/finance/HGER.json",
+    "payload_sha256": "ecaf083a6f94e5dddea7bc1595ff0a974f3e630281a9db714b4608e9977b514e",
+    "quote_as_of": "2026-09-18T20:01:22Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 531,
+    "latency_ms": 551,
     "natural": true,
-    "observed_at": "2026-09-06T04:28:56Z",
+    "observed_at": "2026-09-20T04:49:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schedule": "7 0 * * 0-5",
     "shard": "0/6"
   },
@@ -114,17 +127,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-04",
-    "observed_at": "2026-09-06T04:28:56Z",
-    "payload_sha256": "b9947430df31fe914b2c04f6b65aac502ffc36dd51c7c0bd4b244a0029e4a956",
-    "quote_as_of": "2026-09-04T20:00:02Z",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T04:49:04Z",
+    "payload_sha256": "c6b0fb3fa25bbad2fe77b3407812859b67eba214673cd7940164bf5fb1f3437b",
+    "quote_as_of": "2026-09-18T20:01:22Z",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-04"
+    "source_as_of": "2026-09-18"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -137,5 +150,5 @@
     "source_as_of": "2026-09-04"
   },
   "ticker": "HGER",
-  "updated_at": "2026-09-16T01:29:38Z"
+  "updated_at": "2026-09-20T04:49:04Z"
 }

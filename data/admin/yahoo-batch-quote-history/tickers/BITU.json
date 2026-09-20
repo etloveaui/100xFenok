@@ -116,30 +116,42 @@
       "run_id": "34011546411",
       "schedule": "7 0 * * 0-5",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 585,
+      "natural": true,
+      "observed_at": "2026-09-20T04:49:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35489996497",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-06T04:29:04Z",
-    "history_as_of": "2026-09-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BITU.json",
-    "payload_sha256": "a1b11ffe9ca34d262a66902e011e3c6dfea19279cf5d7a23e719e36b2cf5ac93",
-    "quote_as_of": "2026-09-04T20:00:00Z",
-    "source_as_of": "2026-09-04"
+    "fetched_at": "2026-09-20T04:49:14Z",
+    "history_as_of": "2026-09-18",
+    "path": "data/yf/finance/BITU.json",
+    "payload_sha256": "85c3df50f46177ff828d5c7ebe2086f4cafae78a8f37406d8dece439d99963ef",
+    "quote_as_of": "2026-09-18T20:00:00Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
-    "focus_etf_configuration",
-    "stockanalysis_etf"
+    "focus_etf_configuration"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 517,
+    "latency_ms": 585,
     "natural": true,
-    "observed_at": "2026-09-06T04:28:56Z",
+    "observed_at": "2026-09-20T04:49:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schedule": "7 0 * * 0-5",
     "shard": "0/6"
   },
@@ -154,17 +166,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-04",
-    "observed_at": "2026-09-06T04:28:56Z",
-    "payload_sha256": "b20b1c77d1ff34dc7f3b706d84d530630eb906b04a4f6b3c9c563fca8d7aeebd",
-    "quote_as_of": "2026-09-04T20:00:00Z",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T04:49:04Z",
+    "payload_sha256": "34374e7ad64665b4474d9e230d4b5140deebf42c211e935a711b108e4a30c71a",
+    "quote_as_of": "2026-09-18T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-04"
+    "source_as_of": "2026-09-18"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -177,5 +189,5 @@
     "source_as_of": "2026-09-04"
   },
   "ticker": "BITU",
-  "updated_at": "2026-09-16T01:29:38Z"
+  "updated_at": "2026-09-20T04:49:04Z"
 }

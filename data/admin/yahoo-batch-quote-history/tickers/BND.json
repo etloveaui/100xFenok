@@ -103,29 +103,42 @@
       "run_id": "34011546411",
       "schedule": "7 0 * * 0-5",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 758,
+      "natural": true,
+      "observed_at": "2026-09-20T04:49:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35489996497",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-06T04:29:06Z",
-    "history_as_of": "2026-09-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BND.json",
-    "payload_sha256": "8a4ac778738f9cd5ad2688ef3c6a22b4a67814624e213eac6ff13243ccc009bd",
-    "quote_as_of": "2026-09-04T20:00:01Z",
-    "source_as_of": "2026-09-04"
+    "fetched_at": "2026-09-20T04:49:16Z",
+    "history_as_of": "2026-09-18",
+    "path": "data/yf/finance/BND.json",
+    "payload_sha256": "228a8af4f2c7fd012ac7c030eac7b0e8432dcc37b53cdcd85d7db750f196e18f",
+    "quote_as_of": "2026-09-18T20:00:02Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
-    "stockanalysis_etf"
+    "core_daily_basket"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 687,
+    "latency_ms": 758,
     "natural": true,
-    "observed_at": "2026-09-06T04:28:56Z",
+    "observed_at": "2026-09-20T04:49:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schedule": "7 0 * * 0-5",
     "shard": "0/6"
   },
@@ -140,17 +153,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-04",
-    "observed_at": "2026-09-06T04:28:56Z",
-    "payload_sha256": "3c1867cb08e4cf1311b715a3d3db471d94003fd477de8971d2fa5188c97dbbe1",
-    "quote_as_of": "2026-09-04T20:00:01Z",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T04:49:04Z",
+    "payload_sha256": "0fbf44e1b9f6452e1d23f4abff3ad91c89c65f81735ad91c0e26dbf35598b02d",
+    "quote_as_of": "2026-09-18T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-04"
+    "source_as_of": "2026-09-18"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -163,5 +176,5 @@
     "source_as_of": "2026-09-04"
   },
   "ticker": "BND",
-  "updated_at": "2026-09-16T01:29:38Z"
+  "updated_at": "2026-09-20T04:49:04Z"
 }

@@ -129,30 +129,42 @@
       "run_id": "34011546411",
       "schedule": "7 0 * * 0-5",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 566,
+      "natural": true,
+      "observed_at": "2026-09-20T04:49:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35489996497",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-06T04:29:03Z",
-    "history_as_of": "2026-09-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/BEG.json",
-    "payload_sha256": "bdb8a4d3aa6c07e4cdd63af7e37ceb3d4fc41e388b0813d41a5010c920adb1ca",
-    "quote_as_of": "2026-09-04T20:00:00Z",
-    "source_as_of": "2026-09-04"
+    "fetched_at": "2026-09-20T04:49:13Z",
+    "history_as_of": "2026-09-18",
+    "path": "data/yf/finance/BEG.json",
+    "payload_sha256": "aba5902f1ff27c9a81d8a66b5b9c9cb85023579cacddfbb3f95c5cab7bb66548",
+    "quote_as_of": "2026-09-18T20:00:02Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
-    "focus_etf_configuration",
-    "stockanalysis_etf"
+    "focus_etf_configuration"
   ],
   "last_attempt": {
     "attempts_used": 1,
     "event_name": "schedule",
     "failures": [],
-    "latency_ms": 496,
+    "latency_ms": 566,
     "natural": true,
-    "observed_at": "2026-09-06T04:28:56Z",
+    "observed_at": "2026-09-20T04:49:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schedule": "7 0 * * 0-5",
     "shard": "0/6"
   },
@@ -167,17 +179,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-04",
-    "observed_at": "2026-09-06T04:28:56Z",
-    "payload_sha256": "c3ec94ed62679c72e33e859442390fb3a60c4b8ed67a5321dbed3cd80c32243d",
-    "quote_as_of": "2026-09-04T20:00:00Z",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T04:49:04Z",
+    "payload_sha256": "55ef126ff9c0ae46effb7202bd1f02c2708a3223fa77dd27d4d31550d1b5576f",
+    "quote_as_of": "2026-09-18T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-04"
+    "source_as_of": "2026-09-18"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -190,5 +202,5 @@
     "source_as_of": "2026-09-04"
   },
   "ticker": "BEG",
-  "updated_at": "2026-09-16T01:29:38Z"
+  "updated_at": "2026-09-20T04:49:04Z"
 }

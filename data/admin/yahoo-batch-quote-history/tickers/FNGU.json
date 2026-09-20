@@ -364,19 +364,62 @@
       "run_id": "34011546411",
       "schedule": "7 0 * * 0-5",
       "shard": "0/6"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "YFDataException: FNGU: No Fund data found.",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 629,
+      "natural": true,
+      "observed_at": "2026-09-20T04:49:04Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35489996497",
+      "schedule": "7 0 * * 0-5",
+      "shard": "0/6"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-06T04:29:08Z",
-    "history_as_of": "2026-09-04",
-    "path": "data/admin/yahoo-batch-quote-history/lkg/FNGU.json",
-    "payload_sha256": "9a468a8b8931f91fa2fdf64db01485b13c8df640c7de66365faf52087e1d4faf",
-    "quote_as_of": "2026-09-04T20:00:00Z",
-    "source_as_of": "2026-09-04"
+    "fetched_at": "2026-09-20T04:49:18Z",
+    "history_as_of": "2026-09-18",
+    "path": "data/yf/finance/FNGU.json",
+    "payload_sha256": "ce6ec33ee1e502b52a915d073eaf2e45560449fb01cfc6036d44ed8bb2327a4f",
+    "quote_as_of": "2026-09-18T20:00:00Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
-    "focus_etf_configuration",
-    "stockanalysis_etf"
+    "focus_etf_configuration"
   ],
   "last_attempt": {
     "attempts_used": 1,
@@ -413,12 +456,12 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 512,
+    "latency_ms": 629,
     "natural": true,
-    "observed_at": "2026-09-06T04:28:56Z",
+    "observed_at": "2026-09-20T04:49:04Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schedule": "7 0 * * 0-5",
     "shard": "0/6"
   },
@@ -433,17 +476,17 @@
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
     "event_name": "schedule",
-    "history_as_of": "2026-09-04",
-    "observed_at": "2026-09-06T04:28:56Z",
-    "payload_sha256": "abcca73d8545cd6e2175bdd3e1561c3018a243b57dad4b12595443e0c1261018",
-    "quote_as_of": "2026-09-04T20:00:00Z",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T04:49:04Z",
+    "payload_sha256": "3760a753ca35fa79688b49e0f4db4c24067a1683f9cc7ea40af2504891c7ce86",
+    "quote_as_of": "2026-09-18T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "34011546411",
+    "run_id": "35489996497",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-04"
+    "source_as_of": "2026-09-18"
   },
-  "resolution_state": "lkg_primary",
-  "retry": true,
+  "resolution_state": "fresh_primary",
+  "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "stale": {
     "age_business_days": 7,
@@ -456,5 +499,5 @@
     "source_as_of": "2026-09-04"
   },
   "ticker": "FNGU",
-  "updated_at": "2026-09-16T01:29:38Z"
+  "updated_at": "2026-09-20T04:49:04Z"
 }
