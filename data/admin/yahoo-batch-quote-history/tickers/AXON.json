@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-21T23:49:38Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32537807621",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,47 +168,60 @@
       "run_id": "35170770312",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 449,
+      "natural": false,
+      "observed_at": "2026-09-20T11:37:02Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-17T01:42:05Z",
-    "history_as_of": "2026-09-16",
+    "fetched_at": "2026-09-20T11:39:00Z",
+    "history_as_of": "2026-09-18",
     "path": "data/yf/finance/AXON.json",
-    "payload_sha256": "d718de91989b93b03b4aba734405d332cbb6a912b66f167a0a7f315f22855990",
-    "quote_as_of": "2026-09-16T20:00:01Z",
-    "source_as_of": "2026-09-16"
+    "payload_sha256": "3465072ea4625e6326f0ba5347f38cebe237af70ad495b81be078395e2868e4e",
+    "quote_as_of": "2026-09-18T20:00:01Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 507,
-    "natural": true,
-    "observed_at": "2026-09-17T01:40:08Z",
+    "latency_ms": 449,
+    "natural": false,
+    "observed_at": "2026-09-20T11:37:02Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35170770312",
-    "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-09-16",
-    "observed_at": "2026-09-17T01:40:08Z",
-    "payload_sha256": "505c5b7c792235c89dd5323afbbc663291ea84a96d24db20aa43748eac2d5018",
-    "quote_as_of": "2026-09-16T20:00:01Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T11:37:02Z",
+    "payload_sha256": "ad83fad7bcbdcc9fca928564c8a6179a1e5ae889227be8beb320366ef17f61cc",
+    "quote_as_of": "2026-09-18T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35170770312",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-16"
+    "source_as_of": "2026-09-18"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "AXON",
-  "updated_at": "2026-09-17T01:40:08Z"
+  "updated_at": "2026-09-20T11:37:02Z"
 }

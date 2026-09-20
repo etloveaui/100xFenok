@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-25T23:49:10Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32911905308",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 572,
+      "natural": false,
+      "observed_at": "2026-09-20T11:41:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:30:43Z",
+    "fetched_at": "2026-09-20T11:44:18Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/FE.json",
-    "payload_sha256": "7d1174582c55aaeb99f1b5283afec52298aa4ab19fd7bc69401e2c0f1eca04ff",
+    "payload_sha256": "5fc7d631317c3f73facc8418bb0a574dd211cb19b549912f0c5661cafd99043f",
     "quote_as_of": "2026-09-18T20:02:32Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1152,
-    "natural": true,
-    "observed_at": "2026-09-19T01:27:11Z",
+    "latency_ms": 572,
+    "natural": false,
+    "observed_at": "2026-09-20T11:41:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:27:11Z",
-    "payload_sha256": "d8d31d792f674dbeaab0cc242e2e20c06c61ccc578faa74c54093258a1271378",
+    "observed_at": "2026-09-20T11:41:23Z",
+    "payload_sha256": "0a9ed5f5e1574ac44d0696c638dfab8ad4a0aa4a25d13f7afcadad6b524119fa",
     "quote_as_of": "2026-09-18T20:02:32Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "FE",
-  "updated_at": "2026-09-19T01:27:11Z"
+  "updated_at": "2026-09-20T11:41:23Z"
 }

@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 537,
-      "natural": true,
-      "observed_at": "2026-08-28T06:58:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33149671509",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 538,
+      "natural": false,
+      "observed_at": "2026-09-20T11:24:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:41:39Z",
+    "fetched_at": "2026-09-20T11:27:56Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/SNOW.json",
-    "payload_sha256": "9153fac20df898f68bc60f941c01ea7ccfeccdf4a9a7df206937472ecf0e6b84",
+    "payload_sha256": "a5aeaac45b08a5f72b9f0097738c55d5a586448451e9fcec1aa75c142c45042f",
     "quote_as_of": "2026-09-18T20:00:03Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 985,
-    "natural": true,
-    "observed_at": "2026-09-19T01:36:37Z",
+    "latency_ms": 538,
+    "natural": false,
+    "observed_at": "2026-09-20T11:24:11Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "0/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:36:37Z",
-    "payload_sha256": "2ed2bc045b30e9d872e257b588bb7a23ccb3d5a18c6b8b72d87266f443aadcbc",
+    "observed_at": "2026-09-20T11:24:11Z",
+    "payload_sha256": "09b143872be17ef2e4195b9b6dea22ab73c5372656b3eb553ff2a163b45033a4",
     "quote_as_of": "2026-09-18T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "SNOW",
-  "updated_at": "2026-09-19T01:36:37Z"
+  "updated_at": "2026-09-20T11:24:11Z"
 }

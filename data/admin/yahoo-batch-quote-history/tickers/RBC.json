@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:46:17Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 476,
+      "natural": false,
+      "observed_at": "2026-09-20T11:37:02Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:41:24Z",
+    "fetched_at": "2026-09-20T11:40:39Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/RBC.json",
-    "payload_sha256": "93eaa15889cece777297e9bd79453476824a5e79f0614c67f2d58f53e4818621",
+    "payload_sha256": "a6f537f2f0106bb862cbf0054e20ee6ad52adbb982efde75cbbda1cb07b33295",
     "quote_as_of": "2026-09-18T20:00:03Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,16 +197,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1116,
-    "natural": true,
-    "observed_at": "2026-09-19T01:36:37Z",
+    "latency_ms": 476,
+    "natural": false,
+    "observed_at": "2026-09-20T11:37:02Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "3/5"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:50:10Z",
@@ -218,13 +218,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:36:37Z",
-    "payload_sha256": "14932572bb03105c881bc73eaf6dddbaa47d5c6a524309aff728adb635656b60",
+    "observed_at": "2026-09-20T11:37:02Z",
+    "payload_sha256": "07e87611a98f179ffa9291a1203483f1c068805b698728deddbe7100a3fc4485",
     "quote_as_of": "2026-09-18T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -242,5 +242,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "RBC",
-  "updated_at": "2026-09-19T01:36:37Z"
+  "updated_at": "2026-09-20T11:37:02Z"
 }

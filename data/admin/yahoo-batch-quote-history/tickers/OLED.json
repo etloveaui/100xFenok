@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 547,
-      "natural": true,
-      "observed_at": "2026-08-24T23:41:40Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32790347813",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 555,
+      "natural": false,
+      "observed_at": "2026-09-20T11:41:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:31:36Z",
+    "fetched_at": "2026-09-20T11:45:02Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/OLED.json",
-    "payload_sha256": "13acdb7f3871b8d285e2a81f3b4a609eab4ee2af95cb5a02afb57b69fbe85cfe",
+    "payload_sha256": "ef2a45c2fe0b114e2fc40230811dd9d8cce50cc00ab57a3d37021ce8a7e23159",
     "quote_as_of": "2026-09-18T20:00:00Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1130,
-    "natural": true,
-    "observed_at": "2026-09-19T01:27:11Z",
+    "latency_ms": 555,
+    "natural": false,
+    "observed_at": "2026-09-20T11:41:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:27:11Z",
-    "payload_sha256": "7fdcb1936cd2625308aab6b8bbf0ed3a534751e92fa9af1d6cce70428a74be00",
+    "observed_at": "2026-09-20T11:41:23Z",
+    "payload_sha256": "5e5be3ff2644d53d9de6c90efe3c4473e616c40637165b2780c4cb6a62df6e5a",
     "quote_as_of": "2026-09-18T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "OLED",
-  "updated_at": "2026-09-19T01:27:11Z"
+  "updated_at": "2026-09-20T11:41:23Z"
 }

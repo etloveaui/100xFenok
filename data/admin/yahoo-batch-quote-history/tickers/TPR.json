@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-26T00:00:08Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32911905308",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 501,
+      "natural": false,
+      "observed_at": "2026-09-20T11:41:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:22:52Z",
+    "fetched_at": "2026-09-20T11:45:33Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/TPR.json",
-    "payload_sha256": "89023299d58cc7de40b0152536478e5fce19288e2e50362d5406bf74d0db85c8",
+    "payload_sha256": "a1ba760f5e17895b453b7bc2189524ea76d3fd0e3da60b10d7ffa2cd0fbbd980",
     "quote_as_of": "2026-09-18T20:00:03Z",
     "source_as_of": "2026-09-18"
   },
@@ -196,27 +196,27 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-09-19T01:27:11Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 501,
+    "natural": false,
+    "observed_at": "2026-09-20T11:41:23Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "2/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:16:57Z",
-    "payload_sha256": "e7463834bfe3537b5a7c4e0280a321dd6250c0516ae4781d7105a883aacb1f20",
+    "observed_at": "2026-09-20T11:41:23Z",
+    "payload_sha256": "02b3042d6c15dd61f81d68af94995c4992123e5fd80899678e6e1bba094131a1",
     "quote_as_of": "2026-09-18T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "TPR",
-  "updated_at": "2026-09-19T01:27:11Z"
+  "updated_at": "2026-09-20T11:41:23Z"
 }

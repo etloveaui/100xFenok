@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:46:34Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 540,
+      "natural": false,
+      "observed_at": "2026-09-20T11:24:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:25:32Z",
+    "fetched_at": "2026-09-20T11:26:26Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/CME.json",
-    "payload_sha256": "eccbb862ddf656141d58f85b74f7d38be5feaa43f1fe412174588ea476def425",
+    "payload_sha256": "5877ca8a39530e119bf14868c9008ec094bd984a4e4826fbe4b0c10383b2f26b",
     "quote_as_of": "2026-09-18T20:00:02Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 806,
-    "natural": true,
-    "observed_at": "2026-09-19T01:23:13Z",
+    "latency_ms": 540,
+    "natural": false,
+    "observed_at": "2026-09-20T11:24:11Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "0/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:23:13Z",
-    "payload_sha256": "581ad39665789f835ab1bc50864c715fe71188be261b02258ea2bf22bfae5957",
+    "observed_at": "2026-09-20T11:24:11Z",
+    "payload_sha256": "cbe4e3946f0084330beaa6f60bed1d42e515da48cd837c76c02726ecb8c12f6d",
     "quote_as_of": "2026-09-18T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "CME",
-  "updated_at": "2026-09-19T01:23:13Z"
+  "updated_at": "2026-09-20T11:24:11Z"
 }

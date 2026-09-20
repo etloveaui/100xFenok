@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 1028,
-      "natural": true,
-      "observed_at": "2026-08-21T23:43:33Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32537807621",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "35294798817",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 608,
+      "natural": false,
+      "observed_at": "2026-09-20T11:41:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-18T01:24:39Z",
-    "history_as_of": "2026-09-17",
+    "fetched_at": "2026-09-20T11:44:54Z",
+    "history_as_of": "2026-09-18",
     "path": "data/yf/finance/MSI.json",
-    "payload_sha256": "60527ecafb9ea14b449860676d146dd93256c5888e53588f0476d9a5c124c747",
-    "quote_as_of": "2026-09-17T20:00:02Z",
-    "source_as_of": "2026-09-17"
+    "payload_sha256": "8847c82a3250f02d3d5e19ae9e6a40ecf7536152792a9bf513dcc4a6d276517a",
+    "quote_as_of": "2026-09-18T20:00:03Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,16 +197,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 703,
-    "natural": true,
-    "observed_at": "2026-09-18T01:20:15Z",
+    "latency_ms": 608,
+    "natural": false,
+    "observed_at": "2026-09-20T11:41:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35294798817",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -236,15 +236,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-09-17",
-    "observed_at": "2026-09-18T01:20:15Z",
-    "payload_sha256": "20939764e63a60ab8ff52fda7cc12ce9f512aaa29837c1dc773e5d1d93b6c262",
-    "quote_as_of": "2026-09-17T20:00:02Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T11:41:23Z",
+    "payload_sha256": "47e31bd533c4a44b886e0728082435e7a15142fdb4c75d3a4355e5f6ae52effe",
+    "quote_as_of": "2026-09-18T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "35294798817",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-17"
+    "source_as_of": "2026-09-18"
   },
   "recovered_at": "2026-08-13T00:06:17Z",
   "recovered_from_run_id": "31648785047",
@@ -265,5 +265,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "MSI",
-  "updated_at": "2026-09-18T01:20:15Z"
+  "updated_at": "2026-09-20T11:41:23Z"
 }

@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 878,
-      "natural": true,
-      "observed_at": "2026-08-21T23:43:33Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32537807621",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -184,13 +171,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 602,
+      "natural": false,
+      "observed_at": "2026-09-20T11:37:02Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:17:46Z",
+    "fetched_at": "2026-09-20T11:39:01Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/BAC.json",
-    "payload_sha256": "a63e78b6167c742a778df0f86531b77a30c825e831d88cd4b096f920e79a3ef0",
+    "payload_sha256": "75f549af852ff660ba2113dc987caf2e8b51f222051282ab4f69d5fbee7f2553",
     "quote_as_of": "2026-09-18T20:00:03Z",
     "source_as_of": "2026-09-18"
   },
@@ -200,16 +200,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 696,
-    "natural": true,
-    "observed_at": "2026-09-19T01:16:57Z",
+    "latency_ms": 602,
+    "natural": false,
+    "observed_at": "2026-09-20T11:37:02Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "3/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -233,13 +233,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:16:57Z",
-    "payload_sha256": "ebe6869c5196b27b97ace8f98d82983417aa8c84b0d370b634347b15713fb625",
+    "observed_at": "2026-09-20T11:37:02Z",
+    "payload_sha256": "66d6a5da3b71af49df407e88871b0c8cb96823c19b880e76bf25fe39b60f8229",
     "quote_as_of": "2026-09-18T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -252,5 +252,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "BAC",
-  "updated_at": "2026-09-19T01:16:57Z"
+  "updated_at": "2026-09-20T11:37:02Z"
 }

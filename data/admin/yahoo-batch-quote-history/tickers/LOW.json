@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:46:53Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 603,
+      "natural": false,
+      "observed_at": "2026-09-20T11:41:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:40:42Z",
+    "fetched_at": "2026-09-20T11:44:44Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/LOW.json",
-    "payload_sha256": "46bab478885043e56a3f59a420db7cf9310125823a603c7c9e17c5ce56fc707e",
+    "payload_sha256": "56c56a182828f494f8b563685a5052475e01990f668eb4c598e72dd43047def2",
     "quote_as_of": "2026-09-18T20:03:27Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,15 +197,15 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1542,
-    "natural": true,
-    "observed_at": "2026-09-19T01:36:37Z",
+    "latency_ms": 603,
+    "natural": false,
+    "observed_at": "2026-09-20T11:41:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
+    "run_id": "35507652316",
+    "schedule": "",
     "shard": "4/5"
   },
   "lkg": {
@@ -218,13 +218,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:36:37Z",
-    "payload_sha256": "465eb16a4153282fbcb0489d1c9c7c4f293e2fc4de96a0073397b57ce52c34e3",
+    "observed_at": "2026-09-20T11:41:23Z",
+    "payload_sha256": "49956a5c2be64a07423211404f6e42f2a8809370a296aab04c7ea64181e5c089",
     "quote_as_of": "2026-09-18T20:03:27Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -242,5 +242,5 @@
     "source_as_of": "2026-07-08"
   },
   "ticker": "LOW",
-  "updated_at": "2026-09-19T01:36:37Z"
+  "updated_at": "2026-09-20T11:41:23Z"
 }

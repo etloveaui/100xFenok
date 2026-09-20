@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:05Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 450,
+      "natural": false,
+      "observed_at": "2026-09-20T11:24:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:34:24Z",
+    "fetched_at": "2026-09-20T11:26:03Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/AFRM.json",
-    "payload_sha256": "a63b4b6e881378e3d3909c12105225c158608f4f8e6bb84b23b88f4bbf9e49d6",
+    "payload_sha256": "0d3df5c1cdba571f92fb4cd40c640bb6362e3e99166dababe1213251d0522eec",
     "quote_as_of": "2026-09-18T20:00:01Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,16 +197,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 735,
-    "natural": true,
-    "observed_at": "2026-09-19T01:32:10Z",
+    "latency_ms": 450,
+    "natural": false,
+    "observed_at": "2026-09-20T11:24:11Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "0/5"
   },
   "lkg": {
     "fetched_at": "2026-09-02T01:24:37Z",
@@ -218,13 +218,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:32:10Z",
-    "payload_sha256": "60c29fb80a6f1b354dd313cebf8f852dedfea593f56427b9a74603191f118169",
+    "observed_at": "2026-09-20T11:24:11Z",
+    "payload_sha256": "4ed8f91638cbc495d09bebb87e879d082593ffc5cda624cf62b6a45cae8ab85a",
     "quote_as_of": "2026-09-18T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -242,5 +242,5 @@
     "source_as_of": "2026-09-01"
   },
   "ticker": "AFRM",
-  "updated_at": "2026-09-19T01:32:10Z"
+  "updated_at": "2026-09-20T11:24:11Z"
 }

@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 785,
-      "natural": true,
-      "observed_at": "2026-08-25T23:43:27Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32911905308",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 462,
+      "natural": false,
+      "observed_at": "2026-09-20T11:28:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:21:10Z",
+    "fetched_at": "2026-09-20T11:30:56Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/DLTR.json",
-    "payload_sha256": "77d7c1f41d05fc159fcb980b6575bc98d1ad48dad01f9b7b08e4895f031e11b9",
+    "payload_sha256": "b7ed011d55eb78005b1c3ebc9cf401028b0de5262453bb3eeaca9832a115d34a",
     "quote_as_of": "2026-09-18T20:00:01Z",
     "source_as_of": "2026-09-18"
   },
@@ -196,16 +196,16 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-09-19T01:23:13Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 462,
+    "natural": false,
+    "observed_at": "2026-09-20T11:28:24Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
+    "run_id": "35507652316",
+    "schedule": "",
     "shard": "1/5"
   },
   "lkg": {
@@ -218,13 +218,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:16:57Z",
-    "payload_sha256": "de96d4661e5b66565a753979cd81e9c23f8f9a1b9ab8f73ed059b87b7ef70c3e",
+    "observed_at": "2026-09-20T11:28:24Z",
+    "payload_sha256": "cdaa6bf79a6d03523a9a806a6972e585e6c4d45386d0d68c2e15b1f70f05f497",
     "quote_as_of": "2026-09-18T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -242,5 +242,5 @@
     "source_as_of": "2026-09-01"
   },
   "ticker": "DLTR",
-  "updated_at": "2026-09-19T01:23:13Z"
+  "updated_at": "2026-09-20T11:28:24Z"
 }

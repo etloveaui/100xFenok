@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-27T04:56:50Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "33039718885",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 458,
+      "natural": false,
+      "observed_at": "2026-09-20T11:37:02Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:42:03Z",
+    "fetched_at": "2026-09-20T11:41:11Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/UTHR.json",
-    "payload_sha256": "c44cb6948fb1e0d6da9e413642b39e62e973156a07ecfc985584a527e6298608",
+    "payload_sha256": "7f0a35e015b962d62b9da9679e615d12322e400d982a02f4936011885050e7ac",
     "quote_as_of": "2026-09-18T20:00:00Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1030,
-    "natural": true,
-    "observed_at": "2026-09-19T01:36:37Z",
+    "latency_ms": 458,
+    "natural": false,
+    "observed_at": "2026-09-20T11:37:02Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:36:37Z",
-    "payload_sha256": "45f9ec6b838040302ac6d92cce35716f2d7df3a92483498b59762419074938da",
+    "observed_at": "2026-09-20T11:37:02Z",
+    "payload_sha256": "1ea21ba5bd98033837e18ad3c5d3a88ed9973b4c1d11fe24dc9e650b8b82cb02",
     "quote_as_of": "2026-09-18T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "UTHR",
-  "updated_at": "2026-09-19T01:36:37Z"
+  "updated_at": "2026-09-20T11:37:02Z"
 }

@@ -11,26 +11,6 @@
           "source": "provider_safe_call"
         }
       ],
-      "latency_ms": 961,
-      "natural": true,
-      "observed_at": "2026-08-21T23:51:53Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "32537807621",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: provider source timestamp is unavailable for HOLX",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        }
-      ],
       "latency_ms": 794,
       "natural": true,
       "observed_at": "2026-08-24T23:49:48Z",
@@ -279,6 +259,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: provider source timestamp is unavailable for HOLX",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 529,
+      "natural": false,
+      "observed_at": "2026-09-20T11:24:11Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "discovered_from": [
@@ -287,7 +287,7 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "ValueError: provider source timestamp is unavailable for HOLX",
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [
       {
         "attempt": 1,
@@ -295,14 +295,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 1122,
-    "natural": true,
-    "observed_at": "2026-09-19T01:32:10Z",
+    "latency_ms": 529,
+    "natural": false,
+    "observed_at": "2026-09-20T11:24:11Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "0/5"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -318,18 +318,18 @@
       }
     ],
     "lkg_status": "absent",
-    "observed_at": "2026-09-19T01:32:10Z",
+    "observed_at": "2026-09-20T11:24:11Z",
     "run_attempt": 1,
-    "run_id": "35412060320"
+    "run_id": "35507652316"
   },
   "resolution_state": "terminal_provider_unsupported",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "terminal": {
-    "artifact_generated_at": "2026-09-19T00:20:31.981Z",
+    "artifact_generated_at": "2026-09-20T11:05:43.820Z",
     "artifact_path": "admin/fenok-s1-stock-public-promotion-dry-run.json",
-    "classified_at": "2026-09-19T01:36:37Z",
-    "classified_run_id": "35412060320",
+    "classified_at": "2026-09-20T11:41:23Z",
+    "classified_run_id": "35507652316",
     "evidence": [
       {
         "alias_source": null,
@@ -362,8 +362,8 @@
         "type": "Acquisition"
       }
     ],
-    "evidence_sha256": "95e0113c4a397f3f6e5b359101916ff6ba7fbb37694495dde15605722d9c5927"
+    "evidence_sha256": "a60f80687579675f5d6353a77a5a812856f5d92c1b0855eee717c82f91735789"
   },
   "ticker": "HOLX",
-  "updated_at": "2026-09-19T01:36:37Z"
+  "updated_at": "2026-09-20T11:41:23Z"
 }

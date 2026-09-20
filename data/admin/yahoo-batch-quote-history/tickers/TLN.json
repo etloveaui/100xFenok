@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:46:17Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 447,
+      "natural": false,
+      "observed_at": "2026-09-20T11:37:02Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:26:50Z",
+    "fetched_at": "2026-09-20T11:41:03Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/TLN.json",
-    "payload_sha256": "c544c1ce887c88fb08a77a9e62627c69cbbfa262cd59a22eed44e51edf8e97e2",
+    "payload_sha256": "43cb81b3fcbd6bdb647bb0bc7bdf4afbb83fd14dc814a538bafbd3a3d904ec0c",
     "quote_as_of": "2026-09-18T20:00:01Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 665,
-    "natural": true,
-    "observed_at": "2026-09-19T01:23:13Z",
+    "latency_ms": 447,
+    "natural": false,
+    "observed_at": "2026-09-20T11:37:02Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:23:13Z",
-    "payload_sha256": "db2e20b1eb2c460d52d98f05c358fba5dc58f7eca2e6dc7307e0b9fcaa12692b",
+    "observed_at": "2026-09-20T11:37:02Z",
+    "payload_sha256": "c2c0586a04b2f9c9dfb27c0582620f9ba6b947635fa0b4756a9fbd9d7e0770fb",
     "quote_as_of": "2026-09-18T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "TLN",
-  "updated_at": "2026-09-19T01:23:13Z"
+  "updated_at": "2026-09-20T11:37:02Z"
 }

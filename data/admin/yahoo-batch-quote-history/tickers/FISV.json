@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 641,
-      "natural": true,
-      "observed_at": "2026-08-21T23:51:53Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32537807621",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 518,
       "natural": true,
       "observed_at": "2026-08-24T23:49:48Z",
@@ -186,13 +173,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 462,
+      "natural": false,
+      "observed_at": "2026-09-20T11:24:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:18:17Z",
+    "fetched_at": "2026-09-20T11:26:51Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/FISV.json",
-    "payload_sha256": "33cc636cd3d13cd935bfe1c0abe7a20d46ad36a03802de9dabe6c4c8aa885e99",
+    "payload_sha256": "d0178c315b71e1b594060e887d1da2f95467d3af024e85f8f95fb1b00bdcb35e",
     "quote_as_of": "2026-09-18T20:00:01Z",
     "source_as_of": "2026-09-18"
   },
@@ -200,17 +200,17 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-09-19T01:32:10Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 462,
+    "natural": false,
+    "observed_at": "2026-09-20T11:24:11Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -234,13 +234,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:16:57Z",
-    "payload_sha256": "af4ac5ef0fff2e78c7bcc2f5747c7bb250a07b76527bfb70bf829ae8e24d8b6c",
+    "observed_at": "2026-09-20T11:24:11Z",
+    "payload_sha256": "ccc0f9b5f14786b1eed9c80ad41eca8163262512cfa7021c4033fff790a21a69",
     "quote_as_of": "2026-09-18T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -253,5 +253,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "FISV",
-  "updated_at": "2026-09-19T01:32:10Z"
+  "updated_at": "2026-09-20T11:24:11Z"
 }

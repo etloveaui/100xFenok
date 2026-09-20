@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 747,
-      "natural": true,
-      "observed_at": "2026-08-25T23:43:27Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32911905308",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 449,
+      "natural": false,
+      "observed_at": "2026-09-20T11:41:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:26:56Z",
+    "fetched_at": "2026-09-20T11:45:37Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/UAL.json",
-    "payload_sha256": "5406101bf968b846e0b29362f4e7315bfe112c06883bae6af92b4641a7b985f3",
+    "payload_sha256": "b3d3cac94e899ba2a2b9c03fe1c28a48f9bd51086469a69dc2fdf54b97d09374",
     "quote_as_of": "2026-09-18T20:00:00Z",
     "source_as_of": "2026-09-18"
   },
@@ -196,26 +196,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 756,
-    "natural": true,
-    "observed_at": "2026-09-19T01:23:13Z",
+    "latency_ms": 449,
+    "natural": false,
+    "observed_at": "2026-09-20T11:41:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:23:13Z",
-    "payload_sha256": "9a0e349add3ea7ab520a56bc434a54d86f1e01cb8f590679ec6316a073427946",
+    "observed_at": "2026-09-20T11:41:23Z",
+    "payload_sha256": "d112276106fccb2ab3e5eaf30b1f204169f573f7f2e586033e779193e65daae8",
     "quote_as_of": "2026-09-18T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -223,5 +223,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "UAL",
-  "updated_at": "2026-09-19T01:23:13Z"
+  "updated_at": "2026-09-20T11:41:23Z"
 }

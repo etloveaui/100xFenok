@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:46:17Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 560,
+      "natural": false,
+      "observed_at": "2026-09-20T11:32:41Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:31:15Z",
+    "fetched_at": "2026-09-20T11:35:57Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/MCK.json",
-    "payload_sha256": "f74249b95db21a01cd10b108baaedb8ca4a82ec67c61d70d4b6664bc43ec7160",
+    "payload_sha256": "c5814ed8d050049a1eb89a9b00895082c6d487339d72ce717d5728d254b76326",
     "quote_as_of": "2026-09-18T20:00:02Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1122,
-    "natural": true,
-    "observed_at": "2026-09-19T01:27:11Z",
+    "latency_ms": 560,
+    "natural": false,
+    "observed_at": "2026-09-20T11:32:41Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
+    "run_id": "35507652316",
+    "schedule": "",
     "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:27:11Z",
-    "payload_sha256": "6f906aed5c71a7f37bd47201915937083a4085c5123d8e3d6001253dfa08a28b",
+    "observed_at": "2026-09-20T11:32:41Z",
+    "payload_sha256": "cfac33da7515499c5990358a1df9864d4c8cf13c1b8860824f154b88d7cc531b",
     "quote_as_of": "2026-09-18T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "MCK",
-  "updated_at": "2026-09-19T01:27:11Z"
+  "updated_at": "2026-09-20T11:32:41Z"
 }

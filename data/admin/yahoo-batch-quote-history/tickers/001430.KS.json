@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:51Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 512,
+      "natural": false,
+      "observed_at": "2026-09-20T11:32:41Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:27:29Z",
+    "fetched_at": "2026-09-20T11:33:03Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/001430.KS.json",
-    "payload_sha256": "1774254d075eecf5ab1ec9daed5fc56cd07ee9321d7c114a30c39460858d565c",
+    "payload_sha256": "f48ad5b24288fa15e67f4e829de4d33686b635c4c04c75f6de41852a04a1974c",
     "quote_as_of": "2026-09-18T06:30:30Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1160,
-    "natural": true,
-    "observed_at": "2026-09-19T01:27:11Z",
+    "latency_ms": 512,
+    "natural": false,
+    "observed_at": "2026-09-20T11:32:41Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
+    "run_id": "35507652316",
+    "schedule": "",
     "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:27:11Z",
-    "payload_sha256": "c2fb187a932c75580f498624a4718fbae623960ebf7208f96532615609580b57",
+    "observed_at": "2026-09-20T11:32:41Z",
+    "payload_sha256": "c6d7165880209a0e6163ad3cd0d096e541a8c163e8352e7a03def07c0d8cac5c",
     "quote_as_of": "2026-09-18T06:30:30Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "001430.KS",
-  "updated_at": "2026-09-19T01:27:11Z"
+  "updated_at": "2026-09-20T11:32:41Z"
 }

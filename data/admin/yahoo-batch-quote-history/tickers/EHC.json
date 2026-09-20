@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:46:17Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "35170770312",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 505,
+      "natural": false,
+      "observed_at": "2026-09-20T11:28:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-17T01:46:36Z",
-    "history_as_of": "2026-09-16",
+    "fetched_at": "2026-09-20T11:31:01Z",
+    "history_as_of": "2026-09-18",
     "path": "data/yf/finance/EHC.json",
-    "payload_sha256": "091819efd647f1e341c4a4f735888cdbc0c3f4650857022d138bcc67d86b9d69",
-    "quote_as_of": "2026-09-16T20:00:03Z",
-    "source_as_of": "2026-09-16"
+    "payload_sha256": "fa8cf2e889beb1979b1fbd381b451526e139c8f1df191cbe42d6988ebc5804f8",
+    "quote_as_of": "2026-09-18T20:00:03Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,32 +197,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 526,
-    "natural": true,
-    "observed_at": "2026-09-17T01:44:01Z",
+    "latency_ms": 505,
+    "natural": false,
+    "observed_at": "2026-09-20T11:28:24Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35170770312",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "1/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-09-16",
-    "observed_at": "2026-09-17T01:44:01Z",
-    "payload_sha256": "fb826539dd45eb90aaa3e091d44f82c3a4702250473e036d98876f71af005937",
-    "quote_as_of": "2026-09-16T20:00:03Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T11:28:24Z",
+    "payload_sha256": "e0462373ea8a7d6fcb71ba73f96b793a0d2aa1b5ec04bec01fa1a3ea64f188c9",
+    "quote_as_of": "2026-09-18T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "35170770312",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-16"
+    "source_as_of": "2026-09-18"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "EHC",
-  "updated_at": "2026-09-17T01:44:01Z"
+  "updated_at": "2026-09-20T11:28:24Z"
 }

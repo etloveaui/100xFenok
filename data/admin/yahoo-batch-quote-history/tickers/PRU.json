@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-25T23:49:10Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32911905308",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -182,13 +169,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 544,
+      "natural": false,
+      "observed_at": "2026-09-20T11:41:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:26:26Z",
+    "fetched_at": "2026-09-20T11:45:11Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/PRU.json",
-    "payload_sha256": "7dfadd5adb1ee989ecf185359735a191d893512c9939107554656c6fc34e3f86",
+    "payload_sha256": "ffa3a4772ac3eb9eb75aebb51b311c12dfb7bf376831aa09d41ac6b35a569351",
     "quote_as_of": "2026-09-18T20:00:02Z",
     "source_as_of": "2026-09-18"
   },
@@ -198,16 +198,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 691,
-    "natural": true,
-    "observed_at": "2026-09-19T01:23:13Z",
+    "latency_ms": 544,
+    "natural": false,
+    "observed_at": "2026-09-20T11:41:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -231,13 +231,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:23:13Z",
-    "payload_sha256": "b9f2777f4561b3ce3739f5be563f0dfc1b5868518550b6ba8c476a39837b9f5d",
+    "observed_at": "2026-09-20T11:41:23Z",
+    "payload_sha256": "2214c3f51d7eba804bcb8433ed9bb6f59562ce2ca74a35db6f55aa1ccac59ca5",
     "quote_as_of": "2026-09-18T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "PRU",
-  "updated_at": "2026-09-19T01:23:13Z"
+  "updated_at": "2026-09-20T11:41:23Z"
 }

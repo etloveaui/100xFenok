@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-26T00:00:08Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32911905308",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 508,
+      "natural": false,
+      "observed_at": "2026-09-20T11:41:23Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:42:17Z",
+    "fetched_at": "2026-09-20T11:45:51Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/YUM.json",
-    "payload_sha256": "15195a6c00cea78b36cc98cd20d3a650eaaf4a92c57572c75c98de45ec6497e6",
+    "payload_sha256": "c3ae6e0f20b4fa4c79cae01dc9720f5b848411a113a3595df8db16a029b42dd1",
     "quote_as_of": "2026-09-18T20:02:02Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,26 +197,26 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1006,
-    "natural": true,
-    "observed_at": "2026-09-19T01:36:37Z",
+    "latency_ms": 508,
+    "natural": false,
+    "observed_at": "2026-09-20T11:41:23Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
+    "run_id": "35507652316",
+    "schedule": "",
     "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:36:37Z",
-    "payload_sha256": "1f5af7b8ba5e030d79f911d06c2be71dac2c7dfa302710efe07e8cc63ed528e8",
+    "observed_at": "2026-09-20T11:41:23Z",
+    "payload_sha256": "e231768f4fbce80dfc14bd877bebbf4bf5b166586ce2257a8d8d8a5841e3dd59",
     "quote_as_of": "2026-09-18T20:02:02Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -224,5 +224,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "YUM",
-  "updated_at": "2026-09-19T01:36:37Z"
+  "updated_at": "2026-09-20T11:41:23Z"
 }

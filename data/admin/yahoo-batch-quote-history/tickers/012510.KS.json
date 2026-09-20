@@ -26,39 +26,6 @@
       ],
       "latency_ms": 0,
       "natural": true,
-      "observed_at": "2026-08-28T06:58:20Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "33149671509",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 2,
-      "error": "empty payload",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 1,
-          "error": "empty payload"
-        },
-        {
-          "attempt": 2,
-          "error": "KeyError=[redacted]",
-          "source": "provider_safe_call"
-        },
-        {
-          "attempt": 2,
-          "error": "empty payload"
-        }
-      ],
-      "latency_ms": 0,
-      "natural": true,
       "observed_at": "2026-08-29T04:12:42Z",
       "outcome": "failed",
       "run_attempt": 1,
@@ -461,6 +428,39 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-09-20T11:32:41Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "2/5"
     }
   ],
   "current": {
@@ -477,7 +477,7 @@
   "last_attempt": {
     "attempts_used": 2,
     "error": "empty payload",
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [
       {
         "attempt": 1,
@@ -499,13 +499,13 @@
       }
     ],
     "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-09-19T01:16:57Z",
+    "natural": false,
+    "observed_at": "2026-09-20T11:32:41Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "2/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -547,9 +547,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-19T01:16:57Z",
+    "observed_at": "2026-09-20T11:32:41Z",
     "run_attempt": 1,
-    "run_id": "35412060320"
+    "run_id": "35507652316"
   },
   "lkg": {
     "fetched_at": "2026-07-15T00:10:47Z",
@@ -575,5 +575,5 @@
     "source_as_of": "2026-06-25T06:30:30Z"
   },
   "ticker": "012510.KS",
-  "updated_at": "2026-09-19T01:16:57Z"
+  "updated_at": "2026-09-20T11:32:41Z"
 }

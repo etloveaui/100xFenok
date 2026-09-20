@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 830,
-      "natural": true,
-      "observed_at": "2026-08-27T04:34:06Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33039718885",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,13 +168,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 597,
+      "natural": false,
+      "observed_at": "2026-09-20T11:28:24Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:42:12Z",
+    "fetched_at": "2026-09-20T11:32:35Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/WFC.json",
-    "payload_sha256": "79978638b92d8c8885df5034773b58d23cd8c4c1f3451b3e97a9c43bc2c84632",
+    "payload_sha256": "02e3fe1ed1f318f9c302241bdd36cfedab0b1b3d822bb2070ea5395a8afa8907",
     "quote_as_of": "2026-09-18T20:02:37Z",
     "source_as_of": "2026-09-18"
   },
@@ -197,16 +197,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 1081,
-    "natural": true,
-    "observed_at": "2026-09-19T01:36:37Z",
+    "latency_ms": 597,
+    "natural": false,
+    "observed_at": "2026-09-20T11:28:24Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "1/5"
   },
   "last_recovered_failure": {
     "attempts_used": 2,
@@ -260,13 +260,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:36:37Z",
-    "payload_sha256": "d2634de22d1a0b17b842db4a97fd1e38ad8818acbed296ed53f3f1321b83ea37",
+    "observed_at": "2026-09-20T11:28:24Z",
+    "payload_sha256": "1de9ff1dd5a67bd84c3191433e2cf8656e0d6e7b4612342e0634650ef53201b6",
     "quote_as_of": "2026-09-18T20:02:37Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -279,5 +279,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "WFC",
-  "updated_at": "2026-09-19T01:36:37Z"
+  "updated_at": "2026-09-20T11:28:24Z"
 }

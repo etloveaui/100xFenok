@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 578,
-      "natural": true,
-      "observed_at": "2026-08-24T23:58:12Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32790347813",
-      "schedule": "20 23 * * 1-5",
-      "shard": "4/5"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 962,
       "natural": true,
       "observed_at": "2026-08-27T04:50:56Z",
@@ -185,13 +172,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 522,
+      "natural": false,
+      "observed_at": "2026-09-20T11:24:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:18:20Z",
+    "fetched_at": "2026-09-20T11:26:57Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/GOOG.json",
-    "payload_sha256": "3b37a43ced7b58544c71ec85551c1293dc888042c1d79379d5000c3db14a0e5f",
+    "payload_sha256": "833429052cc183d5108e184ff99c00801a77a2d65130a0ee82cb84d7218c7ece",
     "quote_as_of": "2026-09-18T20:00:00Z",
     "source_as_of": "2026-09-18"
   },
@@ -200,17 +200,17 @@
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-09-19T01:32:10Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 522,
+    "natural": false,
+    "observed_at": "2026-09-20T11:24:11Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -234,13 +234,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:16:57Z",
-    "payload_sha256": "f1a7f4fafb95f9883e07366177fce07df17fac501f49a59c3254238049d725be",
+    "observed_at": "2026-09-20T11:24:11Z",
+    "payload_sha256": "974ee9b8795e1b0e489f82b0eb5c0b48fe6f42bf82b731819ff785e6bceb0a70",
     "quote_as_of": "2026-09-18T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -253,5 +253,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "GOOG",
-  "updated_at": "2026-09-19T01:32:10Z"
+  "updated_at": "2026-09-20T11:24:11Z"
 }

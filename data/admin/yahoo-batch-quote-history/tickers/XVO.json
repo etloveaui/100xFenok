@@ -2,26 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for XVO despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "YFRateLimitError: Too Many Requests. Rate limited. Try after a while.",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 441,
-      "natural": true,
-      "observed_at": "2026-08-12T22:55:30Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "31648785047",
-      "schedule": "7 22 * * 0-5",
-      "shard": "47/72"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
       "latency_ms": 578,
@@ -196,6 +176,20 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 418,
+      "natural": false,
+      "observed_at": "2026-09-20T11:24:11Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -212,15 +206,15 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "recovery_not_advanced_by_provider",
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 606,
-    "natural": true,
-    "observed_at": "2026-09-19T01:16:57Z",
+    "latency_ms": 418,
+    "natural": false,
+    "observed_at": "2026-09-20T11:24:11Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
+    "run_id": "35507652316",
+    "schedule": "",
     "shard": "0/5"
   },
   "last_recovered_failure": {
@@ -242,13 +236,13 @@
     "run_id": "31648785047"
   },
   "latest_promotion_deferral": {
-    "event_name": "schedule",
-    "observed_at": "2026-09-19T01:16:57Z",
+    "event_name": "workflow_dispatch",
+    "observed_at": "2026-09-20T11:24:11Z",
     "provider_history_as_of": "2026-08-27",
     "provider_quote_as_of": "2026-08-20T17:02:13Z",
     "reason": "recovery_not_advanced_by_provider",
     "run_attempt": 1,
-    "run_id": "35412060320"
+    "run_id": "35507652316"
   },
   "lkg": {
     "fetched_at": "2026-09-01T01:53:12Z",
@@ -289,5 +283,5 @@
     "source_as_of": "2026-08-20T17:02:13Z"
   },
   "ticker": "XVO",
-  "updated_at": "2026-09-19T01:16:57Z"
+  "updated_at": "2026-09-20T11:24:11Z"
 }

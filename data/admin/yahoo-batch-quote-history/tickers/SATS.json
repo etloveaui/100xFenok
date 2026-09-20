@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for SATS despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 500,
-      "natural": true,
-      "observed_at": "2026-08-24T23:41:40Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "32790347813",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for SATS despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 725,
       "natural": true,
       "observed_at": "2026-08-25T23:43:27Z",
@@ -423,6 +409,39 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-09-20T11:37:02Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "3/5"
     }
   ],
   "current": {
@@ -439,7 +458,7 @@
   "last_attempt": {
     "attempts_used": 2,
     "error": "empty payload",
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [
       {
         "attempt": 1,
@@ -461,13 +480,13 @@
       }
     ],
     "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-09-19T01:16:57Z",
+    "natural": false,
+    "observed_at": "2026-09-20T11:37:02Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "0/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "3/5"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -496,9 +515,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-19T01:16:57Z",
+    "observed_at": "2026-09-20T11:37:02Z",
     "run_attempt": 1,
-    "run_id": "35412060320"
+    "run_id": "35507652316"
   },
   "lkg": {
     "fetched_at": "2026-06-29T14:45:38Z",
@@ -522,5 +541,5 @@
     "source_as_of": "2026-06-26"
   },
   "ticker": "SATS",
-  "updated_at": "2026-09-19T01:16:57Z"
+  "updated_at": "2026-09-20T11:37:02Z"
 }

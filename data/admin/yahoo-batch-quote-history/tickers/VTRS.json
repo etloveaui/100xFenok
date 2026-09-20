@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:05Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "35170770312",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 578,
+      "natural": false,
+      "observed_at": "2026-09-20T11:32:41Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-17T01:40:00Z",
-    "history_as_of": "2026-09-16",
+    "fetched_at": "2026-09-20T11:36:52Z",
+    "history_as_of": "2026-09-18",
     "path": "data/yf/finance/VTRS.json",
-    "payload_sha256": "8beb9ccfa6efbb99a5364505ef15ad741da9168bca1f6df353e85c1d6c162354",
-    "quote_as_of": "2026-09-16T20:00:01Z",
-    "source_as_of": "2026-09-16"
+    "payload_sha256": "5c3b31c6913aae0de73be4587d8ec493f0e4eeca5420a091b1774571be0edc5b",
+    "quote_as_of": "2026-09-18T20:00:01Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,32 +197,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 557,
-    "natural": true,
-    "observed_at": "2026-09-17T01:36:28Z",
+    "latency_ms": 578,
+    "natural": false,
+    "observed_at": "2026-09-20T11:32:41Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35170770312",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "2/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-09-16",
-    "observed_at": "2026-09-17T01:36:28Z",
-    "payload_sha256": "d050805cf908ad8d23f6fd5e0e0af7293a476c3273b5572c2fd61142e4bc7f24",
-    "quote_as_of": "2026-09-16T20:00:01Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T11:32:41Z",
+    "payload_sha256": "eef35f67c5ff8fd58505b4592461ec839f298264e74a8627f7bee47cb7d3b4d1",
+    "quote_as_of": "2026-09-18T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35170770312",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-16"
+    "source_as_of": "2026-09-18"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "VTRS",
-  "updated_at": "2026-09-17T01:36:28Z"
+  "updated_at": "2026-09-20T11:32:41Z"
 }

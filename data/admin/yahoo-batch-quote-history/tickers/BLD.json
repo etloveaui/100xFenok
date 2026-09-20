@@ -3,26 +3,6 @@
     {
       "attempts_used": 1,
       "error": "ValueError: quote_as_of is unavailable for BLD despite available history",
-      "event_name": "schedule",
-      "failures": [
-        {
-          "attempt": 1,
-          "error": "AttributeError: 'Index' object has no attribute 'date'",
-          "source": "provider_safe_call"
-        }
-      ],
-      "latency_ms": 477,
-      "natural": true,
-      "observed_at": "2026-08-19T23:53:46Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for BLD despite available history",
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 2784,
@@ -332,6 +312,39 @@
       "run_id": "35170770312",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 2,
+      "error": "empty payload",
+      "event_name": "workflow_dispatch",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 1,
+          "error": "empty payload"
+        },
+        {
+          "attempt": 2,
+          "error": "KeyError=[redacted]",
+          "source": "provider_safe_call"
+        },
+        {
+          "attempt": 2,
+          "error": "empty payload"
+        }
+      ],
+      "latency_ms": 0,
+      "natural": false,
+      "observed_at": "2026-09-20T11:41:23Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "4/5"
     }
   ],
   "current": {
@@ -348,7 +361,7 @@
   "last_attempt": {
     "attempts_used": 2,
     "error": "empty payload",
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [
       {
         "attempt": 1,
@@ -370,13 +383,13 @@
       }
     ],
     "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-09-17T01:36:28Z",
+    "natural": false,
+    "observed_at": "2026-09-20T11:41:23Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35170770312",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "4/5"
   },
   "latest_failure": {
     "attempts_used": 2,
@@ -405,9 +418,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-17T01:36:28Z",
+    "observed_at": "2026-09-20T11:41:23Z",
     "run_attempt": 1,
-    "run_id": "35170770312"
+    "run_id": "35507652316"
   },
   "lkg": {
     "fetched_at": "2026-07-09T02:40:31Z",
@@ -417,14 +430,14 @@
     "quote_as_of": "2026-06-30T20:05:29Z",
     "source_as_of": "2026-06-30T20:05:29Z"
   },
-  "resolution_state": "terminal_provider_unsupported",
-  "retry": false,
+  "resolution_state": "lkg_primary",
+  "retry": true,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "terminal": {
-    "artifact_generated_at": "2026-09-19T00:20:31.981Z",
+    "artifact_generated_at": "2026-09-20T11:05:43.820Z",
     "artifact_path": "admin/fenok-s1-stock-public-promotion-dry-run.json",
-    "classified_at": "2026-09-19T01:36:37Z",
-    "classified_run_id": "35412060320",
+    "classified_at": "2026-09-20T11:41:23Z",
+    "classified_run_id": "35507652316",
     "evidence": [
       {
         "alias_source": null,
@@ -447,8 +460,8 @@
         "type": "Delisted"
       }
     ],
-    "evidence_sha256": "95e0113c4a397f3f6e5b359101916ff6ba7fbb37694495dde15605722d9c5927"
+    "evidence_sha256": "a60f80687579675f5d6353a77a5a812856f5d92c1b0855eee717c82f91735789"
   },
   "ticker": "BLD",
-  "updated_at": "2026-09-19T01:36:37Z"
+  "updated_at": "2026-09-20T11:41:23Z"
 }

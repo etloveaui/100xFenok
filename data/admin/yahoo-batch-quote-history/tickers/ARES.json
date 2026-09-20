@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 885,
-      "natural": true,
-      "observed_at": "2026-08-21T23:43:33Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32537807621",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -181,31 +168,44 @@
       "run_id": "35170770312",
       "schedule": "20 23 * * 1-5",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 511,
+      "natural": false,
+      "observed_at": "2026-09-20T11:32:41Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "2/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-17T01:34:22Z",
-    "history_as_of": "2026-09-16",
+    "fetched_at": "2026-09-20T11:34:46Z",
+    "history_as_of": "2026-09-18",
     "path": "data/yf/finance/ARES.json",
-    "payload_sha256": "9db0668b0e8c217c688272a667e80bd2bf7398121ef65473119f211c0d49e1f9",
-    "quote_as_of": "2026-09-16T20:00:03Z",
-    "source_as_of": "2026-09-16"
+    "payload_sha256": "cb2d665add7e2141ab8edd8a7268ebf40436bfcf8a540972b589263e2de6fb11",
+    "quote_as_of": "2026-09-18T20:00:03Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-09-17T01:48:01Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 511,
+    "natural": false,
+    "observed_at": "2026-09-20T11:32:41Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35170770312",
-    "schedule": "20 23 * * 1-5",
-    "shard": "4/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "2/5"
   },
   "lkg": {
     "fetched_at": "2026-09-02T01:24:47Z",
@@ -217,15 +217,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-09-16",
-    "observed_at": "2026-09-17T01:31:25Z",
-    "payload_sha256": "79fbdfc165aada58fcdb26c4c5f234896598c880a85a1d6d7fe4b642a96ff242",
-    "quote_as_of": "2026-09-16T20:00:03Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T11:32:41Z",
+    "payload_sha256": "012361e78431316c81ce53325ef4927b08de9c7a357be4b5ee80bf174ad6882b",
+    "quote_as_of": "2026-09-18T20:00:03Z",
     "run_attempt": 1,
-    "run_id": "35170770312",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-16"
+    "source_as_of": "2026-09-18"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -241,5 +241,5 @@
     "source_as_of": "2026-09-01"
   },
   "ticker": "ARES",
-  "updated_at": "2026-09-17T01:48:01Z"
+  "updated_at": "2026-09-20T11:32:41Z"
 }

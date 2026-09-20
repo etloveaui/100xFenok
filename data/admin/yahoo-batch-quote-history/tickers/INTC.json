@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 596,
-      "natural": true,
-      "observed_at": "2026-08-28T06:58:20Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "33149671509",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
       "error": "StockDetailValidationError: Yahoo history close must be a finite number",
       "event_name": "schedule",
       "failures": [],
@@ -189,13 +176,26 @@
       "run_id": "35412060320",
       "schedule": "20 23 * * 1-5",
       "shard": "3/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 540,
+      "natural": false,
+      "observed_at": "2026-09-20T11:24:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-19T01:18:23Z",
+    "fetched_at": "2026-09-20T11:27:07Z",
     "history_as_of": "2026-09-18",
     "path": "data/yf/finance/INTC.json",
-    "payload_sha256": "8af500018e733d1fb6b29b4d3a8a0576eb1cb2f6c037e1f7bc8c62f9691f2753",
+    "payload_sha256": "ed7ed85e06e54ff31645b2c0b14db35a40129d3b9333b5e0040d2a744b19ad63",
     "quote_as_of": "2026-09-18T20:00:02Z",
     "source_as_of": "2026-09-18"
   },
@@ -205,17 +205,17 @@
     "nasdaq_giw_sox"
   ],
   "last_attempt": {
-    "attempts_used": 0,
-    "event_name": "schedule",
+    "attempts_used": 1,
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 0,
-    "natural": true,
-    "observed_at": "2026-09-19T01:32:10Z",
-    "outcome": "skipped_fresh",
+    "latency_ms": 540,
+    "natural": false,
+    "observed_at": "2026-09-20T11:24:11Z",
+    "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35412060320",
-    "schedule": "20 23 * * 1-5",
-    "shard": "3/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "0/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -239,13 +239,13 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-19T01:16:57Z",
-    "payload_sha256": "5b62cadbee859efe6bb0134404d4c2e6c3c391b9d2e9509bbe51f1decb8abe7a",
+    "observed_at": "2026-09-20T11:24:11Z",
+    "payload_sha256": "e3ef60826e17fd2413ede87909cdc76d569d7f864f2c98ea79b89d07f9103e5d",
     "quote_as_of": "2026-09-18T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "35412060320",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
     "source_as_of": "2026-09-18"
   },
@@ -258,5 +258,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "INTC",
-  "updated_at": "2026-09-19T01:32:10Z"
+  "updated_at": "2026-09-20T11:24:11Z"
 }

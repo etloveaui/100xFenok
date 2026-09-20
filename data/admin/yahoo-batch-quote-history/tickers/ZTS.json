@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:46:34Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "3/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "35170770312",
       "schedule": "20 23 * * 1-5",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "workflow_dispatch",
+      "failures": [],
+      "latency_ms": 508,
+      "natural": false,
+      "observed_at": "2026-09-20T11:24:11Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35507652316",
+      "schedule": "",
+      "shard": "0/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-17T01:40:07Z",
-    "history_as_of": "2026-09-16",
+    "fetched_at": "2026-09-20T11:28:23Z",
+    "history_as_of": "2026-09-18",
     "path": "data/yf/finance/ZTS.json",
-    "payload_sha256": "0abbe8b4bb17f7bef1f3cb35fcc34e315635c85bebd516215b92e95af16d9b82",
-    "quote_as_of": "2026-09-16T20:04:43Z",
-    "source_as_of": "2026-09-16"
+    "payload_sha256": "98eb1e1428774a42ef420fccd95ea072f72254790420a9df73fff215f3cbb4b8",
+    "quote_as_of": "2026-09-18T20:03:21Z",
+    "source_as_of": "2026-09-18"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,32 +197,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "schedule",
+    "event_name": "workflow_dispatch",
     "failures": [],
-    "latency_ms": 496,
-    "natural": true,
-    "observed_at": "2026-09-17T01:36:28Z",
+    "latency_ms": 508,
+    "natural": false,
+    "observed_at": "2026-09-20T11:24:11Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35170770312",
-    "schedule": "20 23 * * 1-5",
-    "shard": "1/5"
+    "run_id": "35507652316",
+    "schedule": "",
+    "shard": "0/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "schedule",
-    "history_as_of": "2026-09-16",
-    "observed_at": "2026-09-17T01:36:28Z",
-    "payload_sha256": "b4ff2d35150e39732e68524b1a468a0a4884e6d276f8eee4787f4d65c07ab978",
-    "quote_as_of": "2026-09-16T20:04:43Z",
+    "event_name": "workflow_dispatch",
+    "history_as_of": "2026-09-18",
+    "observed_at": "2026-09-20T11:24:11Z",
+    "payload_sha256": "bf8c9e197ba18d147d2f8c3539d8e7b7462a2e6b5d88426e20d8c8238cce2eaf",
+    "quote_as_of": "2026-09-18T20:03:21Z",
     "run_attempt": 1,
-    "run_id": "35170770312",
+    "run_id": "35507652316",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-16"
+    "source_as_of": "2026-09-18"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "ZTS",
-  "updated_at": "2026-09-17T01:36:28Z"
+  "updated_at": "2026-09-20T11:24:11Z"
 }
