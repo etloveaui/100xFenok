@@ -12,6 +12,7 @@ import {
 import { loadTickerResolver } from "./lib/sec13f-symbols.mjs";
 import {
   aggregateFilingHoldings,
+  mergePortfolioAggregates,
   portfolioCoverage,
   sectorWeights,
   treemapRows,
@@ -89,6 +90,7 @@ assert.deepEqual(portfolioCoverage(aggregate), {
   unmapped_value: 30,
   mapped_ratio: 0.7,
   unmapped_rows: 1,
+  unrepresented_value: 0,
 });
 const treemap = treemapRows(aggregate, 50, null, { resolveSector: () => "Industrials", returnForTicker: () => null });
 assert.equal(treemap.find((row) => row.ticker === "_UNMAPPED")?.weight, 0.3);
@@ -96,6 +98,28 @@ assert.equal(treemap.reduce((sum, row) => sum + row.weight, 0), 1);
 const sectors = sectorWeights(aggregate, { resolveSector: () => "Industrials", canonical: ["Industrials", "Other"] });
 assert.equal(sectors.Industrials, 0.7);
 assert.equal(sectors.Other, 0.3);
+const filtered = aggregateFilingHoldings({ ...filing, aum_total: 125 });
+assert.equal(filtered.reportedValue, 125);
+assert.equal(filtered.unrepresentedValue, 25);
+const filteredRows = treemapRows(filtered, 50, null, { resolveSector: () => "Industrials", returnForTicker: () => null });
+assert.equal(filteredRows.find((row) => row.ticker === "AAA").weight, 0.56);
+assert.equal(filteredRows.find((row) => row.ticker === "_UNREPRESENTED").weight, 0.2);
+assert.equal(filteredRows.reduce((sum, row) => sum + row.value, 0), 125);
+assert.equal(aggregateFilingHoldings({ ...filing, aum_total: "N/A", normalized_table_value_total: 125 }).reportedValue, 125);
+assert.equal(aggregateFilingHoldings({ ...filing, aum_total: 90 }).reportedValue, 100);
+const merged = mergePortfolioAggregates(aggregateFilingHoldings(filing), filtered);
+assert.equal(merged.reportedValue, 225);
+assert.equal(merged.unrepresentedValue, 25);
+assert.equal(merged.mappedValue + merged.unmappedValue + merged.unrepresentedValue, merged.reportedValue);
+const filteredSectors = sectorWeights(filtered, { resolveSector: () => "Industrials", canonical: ["Industrials", "Other"] });
+assert.deepEqual(filteredSectors, { Industrials: 0.56, Other: 0.44 });
+
+const currentBuffett = aggregateFilingHoldings(buffett.investor.filings.find((row) => row.quarter === "2026-Q2"));
+assert.equal(currentBuffett.reportedValue, 299253556246);
+assert.equal(currentBuffett.unrepresentedValue, 3015598169);
+assert.equal(portfolioCoverage(currentBuffett).mapped_ratio, 0.8991);
+assert.equal(treemapRows(currentBuffett, 50, null, { resolveSector: () => "Other", returnForTicker: () => null }).find((row) => row.ticker === "AAPL").weight, 0.2197);
+
 
 assert.equal(CALENDAR_RETURN_PERIODS.ret1y.label, "2025년");
 assert.equal(CALENDAR_RETURN_PERIODS.ret3y.label, "2023–2025 누적");

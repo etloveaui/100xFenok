@@ -78,6 +78,7 @@ export interface PortfolioCoverage {
   unmapped_value: number;
   mapped_ratio: number;
   unmapped_rows: number;
+  unrepresented_value?: number;
 }
 
 export interface InvestorPortfolioView {

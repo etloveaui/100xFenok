@@ -286,7 +286,7 @@ for (const file of investorFiles) {
     for (const [ticker, h] of agg.positions) {
       bucket[resolveCanonical(h.gics, ticker, h.name)] += h.value;
     }
-    bucket.Other += agg.unmappedValue;
+    bucket.Other += agg.unmappedValue + agg.unrepresentedValue;
     cohortTotals.set(filing.quarter, cohortTotals.get(filing.quarter) + agg.reportedValue);
   }
 }
@@ -311,7 +311,7 @@ const output = {
     sector_chain: "filing GICS enrichment -> scouter join -> Other (ETF name guard)",
     generated_at: new Date().toISOString(),
     disclaimer:
-      "Estimated from 13F quarter-end snapshots (45-day lag). Sector weights are value-based on reported long positions only.",
+      "Estimated from 13F quarter-end snapshots (45-day lag). Weights use the full reported filing value; unmapped holdings and reported amounts absent from retained holdings remain explicit Other amounts.",
   },
   total: {
     treemap: treemapRows(totalAgg, TOTAL_TREEMAP_TOP_N, globalReportDate),

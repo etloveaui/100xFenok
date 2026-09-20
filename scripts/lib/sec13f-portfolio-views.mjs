@@ -7,6 +7,7 @@ export function aggregateFilingHoldings(filing) {
     mappedValue: 0,
     unmappedValue: 0,
     unmappedRows: 0,
+    unrepresentedValue: 0,
   };
   for (const holding of filing?.holdings ?? []) {
     const value = Number(holding?.market_value);
@@ -24,6 +25,12 @@ export function aggregateFilingHoldings(filing) {
     if (!current.gics && holding.sector) current.gics = holding.sector;
     aggregate.positions.set(ticker, current);
   }
+  const reported = [filing?.aum_total, filing?.normalized_table_value_total]
+    .map(Number).find((value) => Number.isFinite(value) && value > 0);
+  if (Number.isFinite(reported) && reported > aggregate.reportedValue) {
+    aggregate.unrepresentedValue = reported - aggregate.reportedValue;
+    aggregate.reportedValue = reported;
+  }
   return aggregate;
 }
 
@@ -32,6 +39,7 @@ export function mergePortfolioAggregates(target, source) {
   target.mappedValue += source.mappedValue;
   target.unmappedValue += source.unmappedValue;
   target.unmappedRows += source.unmappedRows;
+  target.unrepresentedValue += source.unrepresentedValue;
   for (const [ticker, holding] of source.positions) {
     const current = target.positions.get(ticker) ?? { value: 0, name: holding.name, gics: null };
     current.value += holding.value;
@@ -48,6 +56,7 @@ export function portfolioCoverage(aggregate) {
     unmapped_value: Math.round(aggregate.unmappedValue),
     mapped_ratio: aggregate.reportedValue > 0 ? round4(aggregate.mappedValue / aggregate.reportedValue) : 0,
     unmapped_rows: aggregate.unmappedRows,
+    unrepresented_value: Math.round(aggregate.unrepresentedValue),
   };
 }
 
@@ -58,8 +67,8 @@ export function sectorWeights(aggregate, { resolveSector, canonical }) {
     const sector = resolveSector(holding.gics, ticker, holding.name);
     bySector[sector] = (bySector[sector] ?? 0) + holding.value / aggregate.reportedValue;
   }
-  if (aggregate.unmappedValue > 0) {
-    bySector.Other = (bySector.Other ?? 0) + aggregate.unmappedValue / aggregate.reportedValue;
+  if (aggregate.unmappedValue + aggregate.unrepresentedValue > 0) {
+    bySector.Other = (bySector.Other ?? 0) + (aggregate.unmappedValue + aggregate.unrepresentedValue) / aggregate.reportedValue;
   }
   for (const sector of Object.keys(bySector)) bySector[sector] = round4(bySector[sector]);
   return bySector;
@@ -96,6 +105,16 @@ export function treemapRows(aggregate, topN, reportDate, { resolveSector, return
       sector: "Other",
       weight: round4(aggregate.unmappedValue / aggregate.reportedValue),
       value: Math.round(aggregate.unmappedValue),
+      ret: null,
+    });
+  }
+  if (aggregate.unrepresentedValue > 0) {
+    top.push({
+      ticker: "_UNREPRESENTED",
+      name: "보관 종목 외 보고금액",
+      sector: "Other",
+      weight: round4(aggregate.unrepresentedValue / aggregate.reportedValue),
+      value: Math.round(aggregate.unrepresentedValue),
       ret: null,
     });
   }
