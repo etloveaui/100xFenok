@@ -189,6 +189,7 @@
     "qa:fenok-data-health-kpi:artifact": "node scripts/check-fenok-data-health-kpi.mjs --strict && npm run qa:kpi-last-attempt && npm run qa:lane-runid",
     "qa:data-state": "tsx scripts/check-data-state-render-contract.tsx",
     "qa:computed-signals-contracts": "node ../scripts/test-export-computed-signals.mjs && node ../scripts/test-coordinate-computed-signals-workflow.mjs",
+    "qa:sec13f-bridge": "bash scripts/load-guard.sh --assert-nested && node ../scripts/build-sec13f-bridge-index.mjs && node ../scripts/test-sec13f-bridge-index.mjs",
     "qa:data-integrity": "bash scripts/check-data-integrity.sh",
     "qa:data-integrity-live": "bash scripts/load-guard.sh --assert-nested && npx playwright install --with-deps chromium && tsx scripts/check-data-integrity-live.ts",
     "test:fetch-damodaran-shadow": "node ../scripts/test-fetch-damodaran-shadow.mjs",

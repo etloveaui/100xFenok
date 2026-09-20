@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Independent regression gate for the SEC 13F bridge index (live, honest 424/1,026 coverage). */
+/** Independent regression gate for the SEC 13F bridge index (live, honest 424/1,028 coverage). */
 
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
@@ -71,7 +71,7 @@ const sec13fSummary = readJson("data/sec-13f/summary.json");
 assert.equal(index.schema_version, "sec13f-bridge-index/v1");
 assert.equal(index.contract.graph_expansion, "held");
 assert.equal(index.contract.freshness_credit, false);
-assert.equal(index.contract.consumer, "public/superinvestors and /data/computed/sec13f_bridge_index.json (honest 424/1,026 coverage)");
+assert.equal(index.contract.consumer, "public/superinvestors and /data/computed/sec13f_bridge_index.json (honest 424/1,028 coverage)");
 assert.equal(index.contract.public_route, "/data/computed/sec13f_bridge_index.json");
 assert.equal(index.contract.live_readback, "verified");
 assert.equal(index.contract.producer_typed_marker, true);
@@ -109,10 +109,14 @@ const intersection = secTickers.filter((ticker) => core.has(ticker));
 // core.size and intersection are deliberately NOT re-pinned - VGK is outside
 // the Global Scouter core, so 1066 and 424 holding still is the evidence that
 // this is one resolver mapping and not the graph expanding.
+// Re-pinned 2026-09-20: exact CUSIPs resolve Liberty Live classes to LLYVA
+// and LLYVK instead of IVE. Independent before/after ticker-set comparison
+// adds exactly these two unresolved outside-core rows; no ticker is removed.
+// Core, intersection, and enriched extension counts remain unchanged.
 assert.equal(core.size, 1066, "Global Scouter analyzer core count drifted");
-assert.equal(secTickers.length, 1026, "SEC 13F ticker count drifted");
+assert.equal(secTickers.length, 1028, "SEC 13F ticker count drifted");
 assert.equal(intersection.length, 424, "SEC 13F/core intersection drifted");
-assert.equal(outside.length, 602, "SEC 13F outside-core boundary drifted");
+assert.equal(outside.length, 604, "SEC 13F outside-core boundary drifted");
 
 const expected = new Map();
 for (const ticker of outside) {
@@ -154,12 +158,12 @@ for (const row of index.rows) {
 const countClass = (name) => index.rows.filter((row) => row.classification.classes.includes(name)).length;
 assert.equal(countClass("action_plus_market_facts"), 76);
 assert.equal(countClass("market_facts_only"), 37);
-assert.equal(countClass("no_action_index_overlap"), 526);
-assert.equal(countClass("no_market_facts"), 489);
+assert.equal(countClass("no_action_index_overlap"), 528);
+assert.equal(countClass("no_market_facts"), 491);
 assert.equal(countClass("action_index_only"), 0);
 assert.equal(index.counts.sec13f_extension_stock, 76);
 assert.equal(index.counts.sec13f_market_facts_only, 37);
-assert.equal(index.counts.sec13f_unresolved, 489);
+assert.equal(index.counts.sec13f_unresolved, 491);
 
 const extensionRows = index.rows.filter((row) => row.classification.type === "sec13f_extension_stock");
 assert.equal(extensionRows.length, 76);
@@ -189,7 +193,7 @@ assert.deepEqual(index.counts.estimate, {
   extension_full: 74,
   extension_incomplete: 2,
   market_facts_only_incomplete: 37,
-  unresolved_absent: 489,
+  unresolved_absent: 491,
   as_of: {
     bridge_generated_at: index.generated_at,
     yf_finance: deterministicGeneratedAt(index.rows.map((row) => row.yf_estimates.source_as_of)),

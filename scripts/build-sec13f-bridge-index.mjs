@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build the SEC 13F bridge index (live, honest 424/1,026 coverage).
+ * Build the SEC 13F bridge index (live, honest 424/1,028 coverage).
  *
  * This artifact records the SEC tickers outside the Global Scouter analyzer
  * universe without widening the entity graph. It is published live with honest
@@ -264,10 +264,10 @@ function buildBridgeIndex() {
   return {
     schema_version: "sec13f-bridge-index/v1",
     generated_at: sourceGeneratedAt,
-    purpose: "SEC 13F bridge index of tickers outside the Global Scouter universe, published live with honest 424/1,026 coverage.",
+    purpose: "SEC 13F bridge index of tickers outside the Global Scouter universe, published live with honest 424/1,028 coverage.",
     contract: {
       candidate_type: "sec13f_extension_stock",
-      consumer: "public/superinvestors and /data/computed/sec13f_bridge_index.json (honest 424/1,026 coverage)",
+      consumer: "public/superinvestors and /data/computed/sec13f_bridge_index.json (honest 424/1,028 coverage)",
       public_route: "/data/computed/sec13f_bridge_index.json",
       live_readback: "verified",
       producer_typed_marker: true,
