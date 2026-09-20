@@ -447,7 +447,7 @@ function recomputeSourceComposites(index) {
   }
 }
 
-function preservePriorPrivateBackedEvidence(index, priorIndex, conditions) {
+export function preservePriorPrivateBackedEvidence(index, priorIndex, conditions, activeScoringTotal) {
   const priorSources = priorIndex.source_availability?.sources ?? [];
   const currentSources = index.source_availability?.sources ?? [];
 
@@ -1700,7 +1700,7 @@ const index = {
 preservePriorPrivateBackedEvidence(index, priorIndex, {
   latestUsRunMissing,
   taiwanHistoricalMissing,
-});
+}, activeScoringTotal);
 
 // Compute the root SLA stamp only after the remaining private-backed carry-over
 // rows are reconciled. KRX itself is selected from current raw proof or its

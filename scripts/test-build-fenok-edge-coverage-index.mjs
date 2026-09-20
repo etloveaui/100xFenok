@@ -172,6 +172,29 @@ assert(
   "validated KRX v3 exclusions use the eligible denominator and stay disclosed",
 );
 
+const preservedTaiwanIndex = {
+  active_scoring_universe: { total: 100 },
+  source_availability: {
+    sources: [{ id: "taiwan_current_universe", denominator: 5 }],
+  },
+  source_availability_composites: {},
+};
+const priorTaiwanIndex = {
+  source_availability: {
+    sources: [{ id: "taiwan_current_universe", denominator: 3 }],
+  },
+};
+coverageBuilderModule.preservePriorPrivateBackedEvidence(
+  preservedTaiwanIndex,
+  priorTaiwanIndex,
+  { latestUsRunMissing: false, taiwanHistoricalMissing: true },
+  100,
+);
+assert(
+  preservedTaiwanIndex.source_availability.sources[0]?.denominator === 100,
+  "private-backed Taiwan evidence must reconcile with the explicit active scoring total",
+);
+
 // ETF exact-plan compatibility remains full-scored: the coverage index must
 // compare its full history-gap denominator to scored_etf_count, never to the
 // managed-core dispatch denominator.
