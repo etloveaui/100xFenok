@@ -230,7 +230,9 @@ export interface ScreenerFilterState {
   /** Workbench minimum for the durability profitability score (Q5 saved screen). */
   durabilityMin: string;
   roeFy1Min: string;
+  /** 2023–2025 cumulative calendar return; legacy key retained for saved URLs. */
   ret3yMin: string;
+  /** 2021–2025 cumulative calendar return; legacy key retained for saved URLs. */
   ret5yMin: string;
   marketCapMin: string;
   marketCapMax: string;

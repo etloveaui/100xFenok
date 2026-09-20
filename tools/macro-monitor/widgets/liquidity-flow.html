@@ -617,7 +617,9 @@
     // 데이터 파싱
     const netFlow = toFiniteNumber(data.netFlow, toFiniteNumber(data.weeklyNetFlow, toFiniteNumber(data.netLiquidityDelta, 0)));
     const netLiquidityDelta = toFiniteNumber(data.netLiquidityDelta, netFlow);
-    const m2YoY = toFiniteNumber(data.m2YoY, 0);
+    const m2YoY = typeof data.m2YoY === 'number' && Number.isFinite(data.m2YoY)
+      ? data.m2YoY
+      : null;
 
     let m2Raw = toFiniteNumber(data.m2Total, 22298);
     const m2TotalT = m2Raw > 100 ? m2Raw / 1000 : m2Raw;
@@ -643,10 +645,12 @@
     document.getElementById('heroTrendText').textContent = trendTexts[heroStatus];
 
     // 2. M2 Tributary
-    const m2Status = getM2Status(m2YoY);
+    const m2Status = m2YoY == null ? 'neutral' : getM2Status(m2YoY);
     document.getElementById('m2Arrow').textContent = getArrow(m2Status);
     document.getElementById('m2Arrow').className = 'tributary-trend ' + getArrowClass(m2Status);
-    document.getElementById('m2Value').textContent = (m2YoY >= 0 ? '+' : '') + m2YoY.toFixed(1);
+    document.getElementById('m2Value').textContent = m2YoY == null
+      ? '—'
+      : (m2YoY >= 0 ? '+' : '') + m2YoY.toFixed(1);
     document.getElementById('m2Sub').textContent = '$' + m2TotalT.toFixed(1) + 'T';
 
     // 3. Net Liq Tributary
@@ -670,10 +674,10 @@
     let overallStatus = 'neutral';
     let overallText = 'STABLE';
 
-    if (netFlow > expandingCfg.netLiq && m2YoY >= expandingCfg.m2YoY) {
+    if (netFlow > expandingCfg.netLiq && m2YoY != null && m2YoY >= expandingCfg.m2YoY) {
       overallStatus = 'rising';
       overallText = 'RISING';
-    } else if (netFlow < contractingCfg.netLiq || m2YoY < contractingCfg.m2YoY) {
+    } else if (netFlow < contractingCfg.netLiq || (m2YoY != null && m2YoY < contractingCfg.m2YoY)) {
       overallStatus = 'falling';
       overallText = 'FALLING';
     }
@@ -703,7 +707,7 @@
     let changed = false;
     fields.forEach((field) => {
       const value = source[field];
-      if (typeof value === 'number' && Number.isFinite(value)) {
+      if ((field === 'm2YoY' && value === null) || (typeof value === 'number' && Number.isFinite(value))) {
         if (merged[field] !== value) {
           merged[field] = value;
           changed = true;
@@ -851,7 +855,7 @@
         netFlow: weeklyFlow, // Hero Value
         netLiquidityDelta: data.metrics.netLiquidityDelta ?? weeklyFlow, // 일간 변화량 (또는 근사치)
         weeklyNetFlow: weeklyFlow, // 명시적 필드
-        m2YoY: data.metrics.m2YoY ?? 0,
+        m2YoY: data.metrics.m2YoY ?? null,
         m2Total: data.metrics.m2 ?? 22298,
         netLiquidity: nlBillions,
         stablecoinMcap: scBillions

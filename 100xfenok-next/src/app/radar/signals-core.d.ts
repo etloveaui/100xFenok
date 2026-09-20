@@ -3,7 +3,7 @@ export type SeriesPoint = { date: string; val: number };
 export type FlowSnapshot = {
   status: "rising" | "stable" | "falling";
   overallLabel: string;
-  m2YoY: number;
+  m2YoY: number | null;
   m2Total: number;
   netLiquidity: number;
   weeklyNetFlow: number;

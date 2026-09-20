@@ -831,7 +831,7 @@ def build_one(
 
     facts = {
         "price": price,
-        "previous_close": resolve_fact("previous_close", yf_fact(yf_payload, "previousClose"), stockanalysis_quote_fact(sa_payload, "pd")),
+        "previous_close": resolve_fact("previous_close", yf_fact(yf_payload, "previousClose"), stockanalysis_quote_fact(sa_payload, "cl")),
         "change": resolve_fact("change", stockanalysis_quote_fact(sa_payload, "c"), yf_fact(yf_payload, "regularMarketChange"), yf_derived_change_fact(yf_payload)),
         "change_pct": resolve_fact("change_pct", stockanalysis_quote_fact(sa_payload, "cp"), yf_fact(yf_payload, "regularMarketChangePercent"), yf_derived_change_pct_fact(yf_payload)),
         "market_cap": market_cap,

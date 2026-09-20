@@ -198,9 +198,9 @@ const COLUMNS: ReadonlyArray<{ key: ScreenerSortKey; label: string; align: "left
   { key: "operatingMarginFy3", label: "3년차(FY+3) OPM", align: "right" },
   { key: "grossMarginFy3", label: "3년차(FY+3) GPM", align: "right" },
   { key: "dividendTtm", label: "Div TTM", align: "right" },
-  { key: "ret1y", label: "1Y", align: "right" },
-  { key: "ret3y", label: "3Y", align: "right" },
-  { key: "ret5y", label: "5Y", align: "right" },
+  { key: "ret1y", label: "2025년", align: "right" },
+  { key: "ret3y", label: "2023–2025 누적", align: "right" },
+  { key: "ret5y", label: "2021–2025 누적", align: "right" },
 ];
 
 const FISCAL_PERIOD_LABELS = ["내년(FY+1)", "2년차(FY+2)", "3년차(FY+3)"] as const;
@@ -2349,8 +2349,8 @@ export default function ScreenerClient({
         ]
       : []),
     { active: Boolean(roeFy1Min), label: `${FISCAL_PERIOD_LABELS[0]} ROE ≥ ${roeFy1Min}%`, clear: () => setRoeFy1Min("") },
-    { active: Boolean(ret3yMin), label: `3Y 수익률 ≥ ${ret3yMin}%`, clear: () => setRet3yMin("") },
-    { active: Boolean(ret5yMin), label: `5Y 수익률 ≥ ${ret5yMin}%`, clear: () => setRet5yMin("") },
+    { active: Boolean(ret3yMin), label: `2023–2025 누적 ≥ ${ret3yMin}%`, clear: () => setRet3yMin("") },
+    { active: Boolean(ret5yMin), label: `2021–2025 누적 ≥ ${ret5yMin}%`, clear: () => setRet5yMin("") },
     { active: Boolean(revenueGrowthMin), label: `매출+1 ≥ ${revenueGrowthMin}%`, clear: () => setRevenueGrowthMin("") },
     { active: Boolean(epsGrowthMin), label: `EPS+1 ≥ ${epsGrowthMin}%`, clear: () => setEpsGrowthMin("") },
     { active: profitableOnly, label: "흑자만", clear: () => setProfitableOnly(false) },
@@ -3139,11 +3139,11 @@ export default function ScreenerClient({
                     <input type="number" inputMode="decimal" value={return12mMin} onChange={(event) => setReturn12mMin(event.target.value)} placeholder="예: 0" className="cp-screener-control" />
                   </label>
                   <label className="cp-screener-field">
-                    <span className="cp-screener-field__label">3Y 수익률 최소 (%)</span>
+                    <span className="cp-screener-field__label">2023–2025 누적 최소 (%)</span>
                     <input type="number" inputMode="decimal" value={ret3yMin} onChange={(event) => setRet3yMin(event.target.value)} placeholder="예: 20" className="cp-screener-control" />
                   </label>
                   <label className="cp-screener-field">
-                    <span className="cp-screener-field__label">5Y 수익률 최소 (%)</span>
+                    <span className="cp-screener-field__label">2021–2025 누적 최소 (%)</span>
                     <input type="number" inputMode="decimal" value={ret5yMin} onChange={(event) => setRet5yMin(event.target.value)} placeholder="예: 50" className="cp-screener-control" />
                   </label>
                 </div>
@@ -3610,7 +3610,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">3Y 수익률 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">2023–2025 누적 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -3621,7 +3621,7 @@ export default function ScreenerClient({
                   />
                 </label>
                 <label className="flex flex-col gap-1">
-                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">5Y 수익률 최소 (%)</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.1em] text-[var(--c-ink-3)]">2021–2025 누적 최소 (%)</span>
                   <input
                     type="number"
                     inputMode="decimal"

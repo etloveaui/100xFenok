@@ -110,6 +110,8 @@ export type BankingTone = 'stable' | 'watch' | 'stress';
 export type StressTone = 'low' | 'medium' | 'high';
 
 export type DashboardSnapshot = {
+  judgmentInputsReady: boolean;
+  sectorInputsReady: boolean;
   fearGreedScore: number;
   fearGreedLabel: string;
   freshness: DashboardFreshnessMap;

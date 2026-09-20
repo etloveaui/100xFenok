@@ -139,8 +139,8 @@ export function PortfolioTreemap({ rows, quarterLabel, onSelectTicker }: Treemap
             formatter: (ctx: TreemapLeaf) => {
               const d = leafRow(ctx);
               if (!d) return "";
-              const name = d.ticker === "_OTHERS" ? "기타" : d.ticker;
-              if (d.ticker === "_OTHERS") return name;
+              const name = d.ticker === "_OTHERS" ? "기타" : d.ticker === "_UNMAPPED" ? "미매핑" : d.ticker;
+              if (d.ticker === "_OTHERS" || d.ticker === "_UNMAPPED") return name;
               if (d.weight >= 0.04) return [name, retStr(d.ret)];
               if (d.weight >= 0.015) return name;
               return "";
@@ -162,7 +162,7 @@ export function PortfolioTreemap({ rows, quarterLabel, onSelectTicker }: Treemap
       const index = elements?.[0]?.index;
       const row = fromRaw ?? (typeof index === "number" ? displayRows[index] : undefined);
       const ticker = row?.ticker;
-      if (!ticker || ticker === "_OTHERS") return;
+      if (!ticker || ticker === "_OTHERS" || ticker === "_UNMAPPED") return;
       onSelectTicker(ticker);
     },
     [onSelectTicker, displayRows],
@@ -185,7 +185,7 @@ export function PortfolioTreemap({ rows, quarterLabel, onSelectTicker }: Treemap
               const d = leafRow(item);
               if (!d) return "";
               return [
-                `비중: ${isFiniteNumber(d.weight) ? formatPlainPercent(d.weight, { fraction: true, digits: 2 }) : "—%"}`,
+                `13F 보고금액 대비 비중: ${isFiniteNumber(d.weight) ? formatPlainPercent(d.weight, { fraction: true, digits: 2 }) : "—%"}`,
                 `분기말 이후 수익률: ${retStr(d.ret)}`,
                 `섹터: ${sectorLabelKo(normalizeSuperSector(d.sector, d.sector))}`,
               ];

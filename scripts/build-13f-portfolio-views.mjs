@@ -19,6 +19,13 @@ import {
   requireKeys,
   requireObject,
 } from "./lib/guarded-json.mjs";
+import {
+  aggregateFilingHoldings,
+  mergePortfolioAggregates,
+  portfolioCoverage,
+  sectorWeights as buildSectorWeights,
+  treemapRows as buildTreemapRows,
+} from "./lib/sec13f-portfolio-views.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -137,7 +144,7 @@ function returnSinceQuarterEnd(ticker, reportDate) {
 function performanceSeries(filings) {
   const points = filings
     .filter((f) => f.report_date)
-    .map((f) => ({ date: f.report_date, agg: aggByTicker(f) }));
+    .map((f) => ({ date: f.report_date, agg: aggregateFilingHoldings(f) }));
   if (points.length < 2 && !(points.length === 1 && latestClose("SPY"))) {
     return null;
   }
@@ -152,7 +159,7 @@ function performanceSeries(filings) {
     const isLast = i === points.length - 1;
     const fromDate = points[i].date;
     const agg = points[i].agg;
-    const total = [...agg.values()].reduce((s, h) => s + h.value, 0);
+    const total = agg.reportedValue;
     if (total <= 0) {
       portfolio.push(portfolio.at(-1));
       coverage.push(0);
@@ -161,7 +168,7 @@ function performanceSeries(filings) {
     }
     let covered = 0;
     let weightedReturn = 0;
-    for (const [ticker, h] of agg) {
+    for (const [ticker, h] of agg.positions) {
       const base = closeAt(ticker, fromDate);
       const end = isLast
         ? latestClose(ticker)
@@ -195,60 +202,14 @@ function performanceSeries(filings) {
   };
 }
 
-/* ── aggregate one filing by ticker ── */
-function aggByTicker(filing) {
-  const map = new Map();
-  for (const h of filing.holdings ?? []) {
-    const ticker = h.ticker?.trim();
-    if (!ticker || !(h.market_value > 0)) continue;
-    const cur = map.get(ticker) ?? { value: 0, name: h.name, gics: null };
-    cur.value += h.market_value;
-    if (!cur.gics && h.sector) cur.gics = h.sector;
-    map.set(ticker, cur);
-  }
-  return map;
-}
-
-function sectorWeights(agg) {
-  const total = [...agg.values()].reduce((s, h) => s + h.value, 0);
-  const bySector = Object.fromEntries(CANONICAL.map((c) => [c, 0]));
-  if (total <= 0) return bySector;
-  for (const [ticker, h] of agg) {
-    bySector[resolveCanonical(h.gics, ticker, h.name)] += h.value / total;
-  }
-  for (const c of CANONICAL) bySector[c] = round4(bySector[c]);
-  return bySector;
-}
-
-function treemapRows(agg, topN, reportDate) {
-  const total = [...agg.values()].reduce((s, h) => s + h.value, 0);
-  if (total <= 0) return [];
-  const rows = [...agg.entries()]
-    .map(([ticker, h]) => ({
-      ticker,
-      name: h.name,
-      sector: resolveCanonical(h.gics, ticker, h.name),
-      weight: round4(h.value / total),
-      value: Math.round(h.value),
-      ret: reportDate
-        ? returnSinceQuarterEnd(ticker, reportDate)
-        : returnProxy(ticker),
-    }))
-    .sort((a, b) => b.weight - a.weight);
-  const top = rows.slice(0, topN);
-  const rest = rows.slice(topN);
-  if (rest.length > 0) {
-    top.push({
-      ticker: "_OTHERS",
-      name: `기타 ${rest.length}종목`,
-      sector: "Other",
-      weight: round4(rest.reduce((s, r) => s + r.weight, 0)),
-      value: rest.reduce((s, r) => s + r.value, 0),
-      ret: null,
-    });
-  }
-  return top;
-}
+const sectorWeights = (aggregate) => buildSectorWeights(aggregate, {
+  resolveSector: resolveCanonical,
+  canonical: CANONICAL,
+});
+const treemapRows = (aggregate, topN, reportDate) => buildTreemapRows(aggregate, topN, reportDate, {
+  resolveSector: resolveCanonical,
+  returnForTicker: (ticker, date) => date ? returnSinceQuarterEnd(ticker, date) : returnProxy(ticker),
+});
 
 /* ── per investor ── */
 const investorFiles = fs
@@ -268,18 +229,19 @@ for (const file of investorFiles) {
   const quarters = filings.map((f) => f.quarter);
   const history = Object.fromEntries(CANONICAL.map((c) => [c, []]));
   for (const filing of filings) {
-    const weights = sectorWeights(aggByTicker(filing));
+    const weights = sectorWeights(aggregateFilingHoldings(filing));
     for (const c of CANONICAL) history[c].push(weights[c]);
   }
 
   const latest = filings.at(-1);
-  const latestAgg = aggByTicker(latest);
+  const latestAgg = aggregateFilingHoldings(latest);
   investors[id] = {
     name: investor.name,
     quarter: latest.quarter,
     quarters,
     sector_history: history,
     treemap: treemapRows(latestAgg, TREEMAP_TOP_N, latest.report_date),
+    coverage: portfolioCoverage(latestAgg),
     performance: performanceSeries(filings),
   };
 
@@ -294,19 +256,14 @@ for (const file of investorFiles) {
 }
 
 /* ── cohort total (latest global quarter only) ── */
-const totalAgg = new Map();
+const totalAgg = aggregateFilingHoldings({ holdings: [] });
 let cohortCount = 0;
 let globalReportDate = null;
 for (const { quarter, report_date, agg } of latestAggs) {
   if (quarter !== globalQuarter) continue;
   cohortCount += 1;
   if (report_date) globalReportDate = report_date;
-  for (const [ticker, h] of agg) {
-    const cur = totalAgg.get(ticker) ?? { value: 0, name: h.name, gics: null };
-    cur.value += h.value;
-    if (!cur.gics && h.gics) cur.gics = h.gics;
-    totalAgg.set(ticker, cur);
-  }
+  mergePortfolioAggregates(totalAgg, agg);
 }
 
 /* ── cohort sector history (smart-money trend, last 12 global quarters) ── */
@@ -324,12 +281,13 @@ for (const file of investorFiles) {
   const { investor } = loadJsonGuarded(path.join(INVESTORS_DIR, file), guardInvestorDoc);
   for (const filing of investor.filings ?? []) {
     if (!cohortByQuarter.has(filing.quarter)) continue;
-    const agg = aggByTicker(filing);
+    const agg = aggregateFilingHoldings(filing);
     const bucket = cohortByQuarter.get(filing.quarter);
-    for (const [ticker, h] of agg) {
+    for (const [ticker, h] of agg.positions) {
       bucket[resolveCanonical(h.gics, ticker, h.name)] += h.value;
-      cohortTotals.set(filing.quarter, cohortTotals.get(filing.quarter) + h.value);
     }
+    bucket.Other += agg.unmappedValue;
+    cohortTotals.set(filing.quarter, cohortTotals.get(filing.quarter) + agg.reportedValue);
   }
 }
 const totalSectorHistory = Object.fromEntries(
@@ -358,6 +316,7 @@ const output = {
   total: {
     treemap: treemapRows(totalAgg, TOTAL_TREEMAP_TOP_N, globalReportDate),
     sectors: sectorWeights(totalAgg),
+    coverage: portfolioCoverage(totalAgg),
     sector_history: { quarters: historyQuarters, series: totalSectorHistory },
   },
   investors,

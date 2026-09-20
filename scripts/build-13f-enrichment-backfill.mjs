@@ -291,12 +291,17 @@ function profileForSymbol(symbol) {
 }
 
 function resolveProfile(holding) {
+  const resolved = resolver.resolveHoldingSymbol(holding);
+  if (resolved.source === "sec-liberty-live-2025-annual-report") {
+    // Exact CUSIP identity is authoritative. If its own profile is unavailable,
+    // leave enrichment empty instead of falling back to the stale IVE alias.
+    return resolved.symbol ? profileForSymbol(resolved.symbol) : null;
+  }
   const raw = String(holding?.ticker ?? "").trim().toUpperCase();
   const candidates = [];
   if (raw) {
     candidates.push(raw, raw.replace(".", "-"), raw.replace("-", "."));
   }
-  const resolved = resolver.resolveHoldingSymbol(holding);
   if (resolved.symbol) candidates.push(resolved.symbol);
   const nameHit = resolver.nameMap.get(normalizeCompanyName(holding?.name));
   if (nameHit?.symbol) candidates.push(nameHit.symbol);

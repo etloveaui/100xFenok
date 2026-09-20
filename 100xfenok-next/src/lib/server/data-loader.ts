@@ -77,6 +77,9 @@ type DataJsonManifestEntry = Omit<JsonFileEntry, "path">;
 type DataJsonFilesByPath = Record<string, readonly DataJsonManifestEntry[]>;
 type JsonRecord = Record<string, unknown>;
 export type PublicJsonDocument = { raw: string; value: JsonRecord };
+export type FenokEtfSignalsSummaryReadResult =
+  | { kind: "ok"; payload: JsonRecord }
+  | { kind: "unavailable"; reason: string };
 export type StockanalysisAssetKind = "etfs" | "stocks" | "financials";
 export type StockanalysisEtfShardDocumentResult =
   | {
@@ -1070,6 +1073,20 @@ export async function getStockanalysisEtfUniverse() {
     return asJsonRecord(JSON.parse(result.raw) as unknown);
   } catch {
     return null;
+  }
+}
+
+export async function getFenokEtfSignalsSummary(): Promise<FenokEtfSignalsSummaryReadResult> {
+  const result = await readDataAsset("/data/computed/fenok_etf_signals_summary.json");
+  if (result.kind !== "ok") return result;
+  try {
+    const payload = asJsonRecord(JSON.parse(result.raw) as unknown);
+    if (!payload || !Array.isArray(payload.rows)) {
+      return { kind: "unavailable", reason: "FENOK_ETF_SIGNAL_INVALID_PAYLOAD" };
+    }
+    return { kind: "ok", payload };
+  } catch {
+    return { kind: "unavailable", reason: "FENOK_ETF_SIGNAL_INVALID_JSON" };
   }
 }
 

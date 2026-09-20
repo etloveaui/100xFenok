@@ -204,7 +204,7 @@ let etfUniversePending: Promise<LoadResult<EtfUniversePayload>> | null = null;
 const ETF_SIGNAL_SCORE_FIELDS = [
   { key: "cost_efficiency", label: "비용 효율" },
   { key: "liquidity", label: "유동성" },
-  { key: "tracking_quality", label: "추종 품질" },
+  { key: "tracking_quality", label: "베타·이력 점수" },
   { key: "momentum_trend", label: "추세" },
   { key: "risk_adjusted_momentum", label: "위험조정 추세" },
   { key: "income", label: "인컴" },

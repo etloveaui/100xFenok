@@ -14,6 +14,10 @@ import {
   applyYfForwardFallback,
   extractYfForwardEnrichment,
 } from "./lib/yf-screener-enrichment.mjs";
+import {
+  CALENDAR_RETURN_PERIODS,
+  compoundCalendarReturns,
+} from "./lib/screener-return-periods.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -191,26 +195,14 @@ for (const [symbol] of Object.entries(index.stocks)) {
   const epsForward = toFiniteNumber(slick.current.eps_forward);
   const dividendTtm = toFiniteNumber(slick.current.dividend_ttm);
 
-  // Returns: 1Y = 2025, 3Y = cumulative 2023-2025, 5Y = cumulative 2021-2025
+  // Compatibility field names are retained for saved screens. Values are
+  // fixed calendar-year windows, not rolling 1/3/5-year returns.
   let ret1y, ret3y, ret5y;
   const returns = slick.returns;
   if (Array.isArray(returns)) {
-    const byYear = new Map(returns.map((r) => [r.year, r.return]));
-
-    const r25 = byYear.get(2025);
-    if (r25 !== undefined) ret1y = r25 / 100;
-
-    const r23 = byYear.get(2023);
-    const r24 = byYear.get(2024);
-    if (r23 !== undefined && r24 !== undefined && r25 !== undefined) {
-      ret3y = (1 + r23 / 100) * (1 + r24 / 100) * (1 + r25 / 100) - 1;
-    }
-
-    const years5 = [2021, 2022, 2023, 2024, 2025];
-    const vals5 = years5.map((y) => byYear.get(y)).filter((v) => v !== undefined);
-    if (vals5.length === 5) {
-      ret5y = vals5.reduce((acc, v) => acc * (1 + v / 100), 1) - 1;
-    }
+    ret1y = compoundCalendarReturns(returns, CALENDAR_RETURN_PERIODS.ret1y.years);
+    ret3y = compoundCalendarReturns(returns, CALENDAR_RETURN_PERIODS.ret3y.years);
+    ret5y = compoundCalendarReturns(returns, CALENDAR_RETURN_PERIODS.ret5y.years);
   }
 
   slickMap.set(symbol, {
@@ -365,6 +357,7 @@ const output = {
   source_date: globalScouterSourceDate,
   source_date_reason: globalScouterSourceDateReason,
   source_dates: globalScouterSourceDates,
+  calendar_return_periods: CALENDAR_RETURN_PERIODS,
   enrichment: {
     yf_finance: {
       mode: "fallback_only",
@@ -422,6 +415,7 @@ const slickOutput = {
   generated_at: new Date().toISOString(),
   source_date: slickSourceDate,
   source_date_reason: slickSourceDateReason,
+  calendar_return_periods: CALENDAR_RETURN_PERIODS,
   source_date_coverage: {
     dated_rows: slickSourceDates.length - slickMissingSourceDates,
     total_rows: slickSourceDates.length,

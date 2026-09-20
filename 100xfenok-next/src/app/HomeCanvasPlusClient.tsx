@@ -540,6 +540,8 @@ export default function HomeCanvasPlusClient() {
   const edgeDelayed = failedSources.includes("sentiment")
     || failedSources.includes("dailyBanking")
     || heatDelayed;
+  const regimeReady = dashboard.judgmentInputsReady;
+  const sectorDataReady = dashboard.sectorInputsReady;
 
   const regime = useMemo(() => {
     const breadthTotal = Math.max(dashboard.sectorRows.length, 1);
@@ -608,7 +610,7 @@ export default function HomeCanvasPlusClient() {
     .slice(0, 11), [dashboard.sectorRows]);
 
   const breadthSectors = dashboard.sectorRows.slice(0, 11);
-  const breadthReady = dashboardSettled && breadthSectors.length > 0;
+  const breadthReady = dashboardSettled && sectorDataReady && breadthSectors.length > 0;
   const breadthPeriod = dashboard.sectorMode === "LIVE_1D" ? "1일" : "1개월 기준";
   const breadthRead = regime.breadth >= 60
     ? "시장 폭이 넓은 편입니다."
@@ -704,7 +706,7 @@ export default function HomeCanvasPlusClient() {
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
               <h1 className="m-0 text-[18px] font-semibold text-[var(--c-ink)] md:text-[20px]">오늘 시장</h1>
               <span className="text-[13px] text-[var(--c-ink-3)]">
-                시황 <b className="font-semibold text-[var(--c-ink-2)]">{regime.label}</b>
+                시황 <b className="font-semibold text-[var(--c-ink-2)]">{regimeReady ? regime.label : "판단 대기"}</b>
                 {" · "}확인 필요 <b className="font-semibold text-[var(--c-warn-ink)]">{headerAttentionLabel}</b>
                 {failedSources.length > 0 && !anySourceLoading
                   ? " · 일부 소스 미수신"
@@ -819,11 +821,18 @@ export default function HomeCanvasPlusClient() {
         </section>
 
         <div className="grid gap-3 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-4">
-          <Panel loading={!dashboardSettled} stale={edgeDelayed} asOf={formatDatePart(dashboard.tickerFetchedAt)} onRetry={retrySources}>
+          <Panel
+            loading={!dashboardSettled}
+            empty={!regimeReady}
+            emptyReason="필수 시장 입력을 확인한 뒤 시장 판단을 표시합니다."
+            stale={edgeDelayed}
+            asOf={formatDatePart(dashboard.tickerFetchedAt)}
+            onRetry={retrySources}
+          >
             <PanelHeader
               eyebrow="Fenok Edge"
               title="시장 체력 점수"
-              right={<Pill tone={regime.confidence >= 62 ? "up" : regime.confidence >= 45 ? "neutral" : "down"}>{edgeStrengthLabel(regime.confidence)}</Pill>}
+              right={<Pill tone={regimeReady && regime.confidence >= 62 ? "up" : regimeReady && regime.confidence < 45 ? "down" : "neutral"}>{regimeReady ? edgeStrengthLabel(regime.confidence) : "판단 대기"}</Pill>}
             />
             <div className="flex gap-4 p-[14px] md:gap-6 md:p-4">
               <div className="flex min-w-[72px] flex-col justify-center md:min-w-24">
@@ -848,7 +857,14 @@ export default function HomeCanvasPlusClient() {
             </div>
           </Panel>
 
-          <Panel loading={!dashboardSettled} stale={heatDelayed} asOf={formatDatePart(dashboard.tickerFetchedAt)} onRetry={retrySources}>
+          <Panel
+            loading={!dashboardSettled}
+            empty={!sectorDataReady}
+            emptyReason="섹터별 실제 등락 입력을 확인한 뒤 히트맵을 표시합니다."
+            stale={heatDelayed}
+            asOf={formatDatePart(dashboard.tickerFetchedAt)}
+            onRetry={retrySources}
+          >
             <PanelHeader
               eyebrow="Sector Flow"
               title="섹터 히트맵"

@@ -40,15 +40,17 @@ async function getJson<T>(url: string): Promise<T | null> {
   }
 }
 
-function fredSeries(file: FredFile | null, id: string, days: number): SeriesPoint[] {
+function fredSeries(file: FredFile | null, id: string, days?: number): SeriesPoint[] {
   const rows = Array.isArray(file?.series?.[id]) ? file.series[id] : [];
-  const cutoff = new Date();
-  cutoff.setHours(12, 0, 0, 0);
-  cutoff.setDate(cutoff.getDate() - days);
-  const start = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, "0")}-${String(cutoff.getDate()).padStart(2, "0")}`;
+  const start = typeof days === "number" ? (() => {
+    const cutoff = new Date();
+    cutoff.setHours(12, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - days);
+    return `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, "0")}-${String(cutoff.getDate()).padStart(2, "0")}`;
+  })() : null;
   return rows
     .map((row) => ({ date: row?.date ?? "", val: Number(row?.value) }))
-    .filter((row) => row.date >= start && row.date.length === 10 && Number.isFinite(row.val));
+    .filter((row) => (start === null || row.date >= start) && row.date.length === 10 && Number.isFinite(row.val));
 }
 
 function latestValue(rows: Array<Record<string, unknown>>, key: string): number | null {
@@ -86,7 +88,9 @@ export function useRadarData(): RadarData {
       if (cancelled) return;
       const reached = [fredMacro, fredDaily, fredWeekly, fredQuarterly, tga, fdic, stable].some(Boolean);
 
-      const m2 = fredSeries(fredMacro, "M2SL", 730);
+      // Keep the full monthly series so calendar-year matching never depends
+      // on an arbitrary rolling-day cutoff.
+      const m2 = fredSeries(fredMacro, "M2SL");
       const fedBs = fredSeries(fredMacro, "WALCL", 730);
       const rrp = fredSeries(fredMacro, "RRPONTSYD", 730);
       const tgaSeries: SeriesPoint[] = (Array.isArray(tga?.series) ? tga.series : [])

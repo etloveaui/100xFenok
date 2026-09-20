@@ -507,7 +507,7 @@ function GuruDetailPanel({
                 freshness={pvLoading ? "pending" : pvFailed ? "error" : treemapRows.length > 0 ? "stale" : "partial"}
                 source="SEC EDGAR 13F"
                 asOf={investorView?.quarter ?? asOf}
-                coverage={treemapRows.length > 0 ? `상위 ${formatInteger(treemapRows.length)}종목 · ${investorView?.quarter ?? asOf}` : "이 투자자 트리맵 행 없음"}
+                coverage={treemapRows.length > 0 ? `13F 보고금액 대비 비중 · 매핑 ${formatPercent(investorView?.coverage?.mapped_ratio ?? 1, { fraction: true, digits: 1 })}` : "이 투자자 트리맵 행 없음"}
                 next="분기 종료 후 최대 45일"
                 onRetry={pvFailed ? onRetryPv : undefined}
                 onEvidence={() => openEvidence("/data/sec-13f/analytics/portfolio_views.json")}
@@ -721,7 +721,7 @@ function CohortTreemapPanel({
   const partial = !pvLoading && !failed && !empty && cohort == null;
   const headNote =
     treemap.length > 0
-      ? `${formatInteger(treemap.length)}종목 · ${cohort != null ? `${formatInteger(cohort)}인 합산` : "코호트 확인 중"}`
+      ? `13F 보고금액 대비 비중 · 매핑 ${formatPercent(pvData?.total?.coverage?.mapped_ratio ?? 1, { fraction: true, digits: 1 })}`
       : "—";
   return (
     <Panel

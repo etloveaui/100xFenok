@@ -67,6 +67,25 @@ class BuildMarketFactsTest(unittest.TestCase):
         self.assertEqual(result["unit"], "percent_points")
         self.assertAlmostEqual(result["value"], ((179.0 - 158.0) / 158.0) * 100)
 
+    def test_previous_close_uses_regular_session_close(self) -> None:
+        cases = {
+            "AAPL": {"p": 336.13, "cl": 337.0, "pd": 334.8, "c": -0.87, "cp": -0.2582},
+            "SPY": {"p": 761.69, "cl": 760.71, "pd": 758.2, "c": 0.98, "cp": 0.1288},
+        }
+        for ticker, quote in cases.items():
+            with self.subTest(ticker=ticker):
+                stockanalysis = {
+                    "asset_type": "stock",
+                    "source_as_of": "2026-09-19",
+                    "normalized": {"quote": quote},
+                }
+
+                result = self.mod.build_one(ticker, None, stockanalysis, None)
+                previous = result["facts"]["previous_close"]["value"]
+                change = result["facts"]["change"]["value"]
+                self.assertEqual(previous, quote["cl"])
+                self.assertAlmostEqual(change, quote["p"] - quote["cl"])
+
     def test_build_one_derives_history_returns_and_normalizes_average_returns(self) -> None:
         yf_payload = {
             "fetched_at": "2026-06-19T00:00:00Z",

@@ -248,7 +248,7 @@ export default function RadarNativeClient({ initialCategory }: { initialCategory
                 <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
                     <dt className="text-[12px] font-bold text-slate-500">M2 증가율</dt>
-                    <dd className="mt-1 text-sm font-black text-slate-900">{flowSnap.m2YoY.toFixed(2)}%</dd>
+                    <dd className="mt-1 text-sm font-black text-slate-900">{flowSnap.m2YoY == null ? "—" : `${flowSnap.m2YoY.toFixed(2)}%`}</dd>
                     <dd className="text-[12px] text-slate-500">${(flowSnap.m2Total / 1000).toFixed(2)}T</dd>
                   </div>
                   <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">

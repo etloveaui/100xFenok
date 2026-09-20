@@ -72,12 +72,21 @@ export interface PerformanceSeries {
   coverage: number[];
 }
 
+export interface PortfolioCoverage {
+  reported_value: number;
+  mapped_value: number;
+  unmapped_value: number;
+  mapped_ratio: number;
+  unmapped_rows: number;
+}
+
 export interface InvestorPortfolioView {
   name: string;
   quarter: string;
   quarters: string[];
   sector_history: Record<string, number[]>;
   treemap: PortfolioRow[];
+  coverage?: PortfolioCoverage;
   performance?: PerformanceSeries | null;
 }
 
@@ -100,6 +109,7 @@ export interface PortfolioViewsData {
   total: {
     treemap: PortfolioRow[];
     sectors: Record<string, number>;
+    coverage?: PortfolioCoverage;
     sector_history?: AggregateSectorHistory;
   };
   investors: Record<string, InvestorPortfolioView>;

@@ -3,6 +3,14 @@ import path from "node:path";
 
 export const SYMBOL_RE = /^[A-Z0-9][A-Z0-9.-]{0,11}$/;
 
+// SEC-hosted Liberty Live annual-report security table (2025): exact class
+// identities. Name-only aliases are deliberately insufficient for this issuer.
+const AUTHORITATIVE_CUSIP_SYMBOLS = new Map([
+  ["530909100", { symbol: "LLYVA", source: "sec-liberty-live-2025-annual-report" }],
+  ["530909308", { symbol: "LLYVK", source: "sec-liberty-live-2025-annual-report" }],
+]);
+const LIBERTY_LIVE_NAME = "LIBERTY LIVE";
+
 const LEGAL_WORDS = new Set([
   "ADR",
   "ADS",
@@ -173,11 +181,17 @@ function loadInvestorHistory(root, symbols, nameMap, cusipMap) {
     const payload = readJson(path.join(investorsDir, file), {});
     for (const filing of payload.investor?.filings ?? []) {
       for (const holding of filing.holdings ?? []) {
+        const cusip = normalizeCusip(holding?.cusip);
+        const authoritative = AUTHORITATIVE_CUSIP_SYMBOLS.get(cusip);
+        if (authoritative) {
+          addSymbol(symbols, authoritative.symbol);
+          cusipMap.set(cusip, authoritative);
+          continue;
+        }
         const symbol = addSymbol(symbols, holding?.ticker);
         if (!symbol) continue;
 
         addName(nameMap, holding?.name, symbol, "13f-history");
-        const cusip = normalizeCusip(holding?.cusip);
         if (cusip && !cusipMap.has(cusip)) {
           cusipMap.set(cusip, { symbol, source: "13f-history" });
         }
@@ -214,6 +228,14 @@ export function loadTickerResolver(rootPath) {
     const normalizedName = normalizeCompanyName(rawName);
     const rawKey = rawTicker || rawName || rawCusip;
     const normalizedKey = rawTicker || normalizedName || rawCusip;
+
+    const authoritative = AUTHORITATIVE_CUSIP_SYMBOLS.get(rawCusip);
+    if (authoritative) {
+      return result(authoritative.symbol, rawKey, normalizedKey, authoritative.source);
+    }
+    if (normalizedName === LIBERTY_LIVE_NAME) {
+      return result(null, rawKey, normalizedKey, "unmapped-liberty-live-without-exact-cusip");
+    }
 
     if (rawTicker) {
       const direct = normalizeSymbol(rawTicker);

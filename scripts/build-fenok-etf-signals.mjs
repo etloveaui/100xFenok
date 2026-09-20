@@ -37,6 +37,13 @@ const SIGNAL_KEYS = [
   "diversification",
 ];
 
+const SIGNAL_DEFINITIONS = Object.freeze({
+  tracking_quality: Object.freeze({
+    label: "베타·이력 점수",
+    meaning: "Mean of beta proximity to 1 and available daily-history row count capped at 252 days; it does not measure benchmark tracking error.",
+  }),
+});
+
 const NON_VANILLA_ETF_PATTERNS = [
   /ultrashort/i,
   /ultrapro/i,
@@ -360,7 +367,7 @@ function main() {
       coverage.liquidity = false;
     }
 
-    // Tracking quality: beta close to 1 and sufficient history continuity.
+    // Beta/history score: beta proximity to 1 and available history row count.
     const betaScore = c.inputs.beta != null
       ? Math.max(0, Math.min(100, 100 - Math.abs(c.inputs.beta - 1) * 100))
       : null;
@@ -464,6 +471,7 @@ function main() {
       public_payload: SUMMARY_OUTPUT_FILE,
     },
     signal_keys: SIGNAL_KEYS,
+    signal_definitions: SIGNAL_DEFINITIONS,
     coverage: {
       candidate_etf_count: candidateCount,
       eligible_etf_count: vanillaCount,
@@ -480,6 +488,7 @@ function main() {
     source_file: SOURCE_FILE,
     formula_version: FORMULA_VERSION,
     asset_type: "etf",
+    signal_definitions: SIGNAL_DEFINITIONS,
     coverage: {
       candidate_etf_count: candidateCount,
       eligible_etf_count: vanillaCount,
