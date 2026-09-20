@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-s1-stock-public-promotion-dry-run/v0.1",
-  "generated_at": "2026-09-20T11:05:43.820Z",
+  "generated_at": "2026-09-20T11:33:55.158Z",
   "purpose": "Persist an admin-only dry-run and fail-closed explicit-enable plan for future S1 public stock promotion.",
   "contract_doc": "docs/planning/CONTRACT_fenok_s1_stock_promotion_scoring_v0_1_20260630.md",
   "source_gate": "s1_stock_promotion_candidates.joined_gate",
@@ -514,7 +514,7 @@
       ],
       "corporate_action_policy": {
         "status": "policy_required_before_promotion",
-        "reason": "StockAnalysis corporate-action surface indicates an acquired/delisted or old-symbol row; do not synthesize identity or promote without an explicit terminal/alias policy.",
+        "reason": "Any StockAnalysis corporate-action evidence requires an explicit policy before promotion; do not synthesize identity or promote from the action row alone.",
         "evidence": [
           {
             "type": "Acquisition",
@@ -631,7 +631,7 @@
       ],
       "corporate_action_policy": {
         "status": "policy_required_before_promotion",
-        "reason": "StockAnalysis corporate-action surface indicates an acquired/delisted or old-symbol row; do not synthesize identity or promote without an explicit terminal/alias policy.",
+        "reason": "Any StockAnalysis corporate-action evidence requires an explicit policy before promotion; do not synthesize identity or promote from the action row alone.",
         "evidence": [
           {
             "type": "Acquisition",
@@ -795,7 +795,7 @@
       "ticker": "DULL",
       "source_stage": "NORMALIZED_NOT_JOINED",
       "target_stage": "S1_PROMOTION_BLOCKED",
-      "promotion_action": "repair_blockers_before_shadow_candidate",
+      "promotion_action": "corporate_action_policy_required_before_shadow_candidate",
       "claim_scope": "Blocked S1 stock candidate plan only; do not score, publish, or include in S0.",
       "blockers": [
         "evidence_families_min3",
@@ -831,8 +831,8 @@
         }
       ],
       "corporate_action_policy": {
-        "status": "none",
-        "reason": null,
+        "status": "policy_required_before_promotion",
+        "reason": "Any StockAnalysis corporate-action evidence requires an explicit policy before promotion; do not synthesize identity or promote from the action row alone.",
         "evidence": [
           {
             "type": "Stock Split",
@@ -1138,7 +1138,7 @@
       ],
       "corporate_action_policy": {
         "status": "policy_required_before_promotion",
-        "reason": "StockAnalysis corporate-action surface indicates an acquired/delisted or old-symbol row; do not synthesize identity or promote without an explicit terminal/alias policy.",
+        "reason": "Any StockAnalysis corporate-action evidence requires an explicit policy before promotion; do not synthesize identity or promote from the action row alone.",
         "evidence": [
           {
             "type": "Acquisition",
@@ -1509,7 +1509,7 @@
       ],
       "corporate_action_policy": {
         "status": "policy_required_before_promotion",
-        "reason": "StockAnalysis corporate-action surface indicates an acquired/delisted or old-symbol row; do not synthesize identity or promote without an explicit terminal/alias policy.",
+        "reason": "Any StockAnalysis corporate-action evidence requires an explicit policy before promotion; do not synthesize identity or promote from the action row alone.",
         "evidence": [
           {
             "type": "Symbol Change",
