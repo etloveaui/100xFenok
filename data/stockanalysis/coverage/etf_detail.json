@@ -2,7 +2,7 @@
   "schema_version": "stockanalysis/v1",
   "source": "stockanalysis",
   "asset_type": "etf_detail_coverage",
-  "generated_at": "2026-09-20T23:18:07Z",
+  "generated_at": "2026-09-21T01:24:27Z",
   "status": "warn",
   "policy": {
     "candidate_universe": "union(etf_universe, etf_screener, new_etfs)",
@@ -17,37 +17,37 @@
     "pending_ledger": "backfill/pending_ledger.json"
   },
   "counts": {
-    "candidate_total": 5624,
+    "candidate_total": 5642,
     "source_breakdown": {
-      "etf_universe": 5597,
+      "etf_universe": 5642,
       "etf_screener": 20,
       "new_etfs": 100
     },
     "detail_files": 5605,
-    "covered_detail_files": 5444,
-    "missing_detail_files": 180,
-    "extra_detail_files": 161,
+    "covered_detail_files": 5440,
+    "missing_detail_files": 202,
+    "extra_detail_files": 165,
     "stockanalysis_detail_files": 5605,
     "yahoo_fallback_files": 0,
     "invalid_detail_files": 0,
-    "coverage_pct": 96.8,
-    "primary_stockanalysis_pct": 96.8,
+    "coverage_pct": 96.42,
+    "primary_stockanalysis_pct": 96.42,
     "missing_by_source": {
-      "etf_universe": 153,
+      "etf_universe": 202,
       "etf_screener": 0,
       "new_etfs": 100
     },
     "missing_status_breakdown": {
       "provider_gap_reprobe_due": 1,
-      "untracked": 179
+      "untracked": 201
     },
     "missing_failure_breakdown": {
       "provider_coverage_gap": 1,
-      "untracked": 179
+      "untracked": 201
     },
     "missing_availability_breakdown": {
       "provider_absent": 1,
-      "unprobed": 179
+      "unprobed": 201
     },
     "pending_tracked": 484,
     "pending_cooldown": 0,
@@ -56,21 +56,22 @@
   },
   "missing_reason_summary": {
     "provider_coverage_gap": 1,
-    "untracked": 179
+    "untracked": 201
   },
   "missing_status_summary": {
     "provider_gap_reprobe_due": 1,
-    "untracked": 179
+    "untracked": 201
   },
   "missing_availability_summary": {
     "provider_absent": 1,
-    "unprobed": 179
+    "unprobed": 201
   },
   "missing_reason_samples": {
     "provider_coverage_gap": [
       "DACL"
     ],
     "untracked": [
+      "ABND",
       "ACBE",
       "ACBH",
       "ACOM",
@@ -81,8 +82,7 @@
       "AEMC",
       "AEMG",
       "AEMV",
-      "AESB",
-      "AESG"
+      "AESB"
     ]
   },
   "missing_status_samples": {
@@ -90,6 +90,7 @@
       "DACL"
     ],
     "untracked": [
+      "ABND",
       "ACBE",
       "ACBH",
       "ACOM",
@@ -100,8 +101,7 @@
       "AEMC",
       "AEMG",
       "AEMV",
-      "AESB",
-      "AESG"
+      "AESB"
     ]
   },
   "missing_availability_samples": {
@@ -109,6 +109,7 @@
       "DACL"
     ],
     "unprobed": [
+      "ABND",
       "ACBE",
       "ACBH",
       "ACOM",
@@ -119,11 +120,11 @@
       "AEMC",
       "AEMG",
       "AEMV",
-      "AESB",
-      "AESG"
+      "AESB"
     ]
   },
   "missing_tickers": [
+    "ABND",
     "ACBE",
     "ACBH",
     "ACOM",
@@ -137,6 +138,8 @@
     "AESB",
     "AESG",
     "AESL",
+    "AFDM",
+    "AFEM",
     "AGGM",
     "AHBM",
     "AICH",
@@ -145,17 +148,23 @@
     "AIMG",
     "AINF",
     "ANTW",
+    "APMI",
     "ARKY",
+    "ASSX",
     "AT",
+    "ATC",
     "AXTQ",
     "BBLS",
     "BEMD",
     "BNAV",
     "BSMA",
     "BUIL",
+    "CAPA",
+    "CBRG",
     "CCML",
     "CGFS",
     "CGPT",
+    "CLIM",
     "COHQ",
     "COOL",
     "CRAM",
@@ -164,10 +173,16 @@
     "CTSE",
     "DACL",
     "DEPW",
+    "DFMC",
+    "DICE",
     "DIVH",
+    "DMXU",
     "DSPC",
     "EMSE",
+    "ESSC",
+    "EXPN",
     "FIXX",
+    "FLAG",
     "FLEL",
     "FRUT",
     "FTG",
@@ -176,11 +191,15 @@
     "GCLO",
     "GEEQ",
     "GEMQ",
+    "GLDB",
+    "GOGL",
     "GOIB",
+    "GXRP",
     "HAWG",
     "HBIL",
     "HBIT",
     "HIAI",
+    "HLTH",
     "HQDG",
     "HSEP",
     "HUMM",
@@ -192,6 +211,7 @@
     "IACL",
     "IDSE",
     "IQGR",
+    "ISRL",
     "JINT",
     "JLVP",
     "JULV",
@@ -209,6 +229,7 @@
     "LWLX",
     "LYTE",
     "MATR",
+    "MCVT",
     "MEGX",
     "MEIB",
     "METQ",
@@ -239,6 +260,7 @@
     "OPPG",
     "OTAX",
     "PCOV",
+    "PCPC",
     "PENU",
     "PHOX",
     "PJIN",
@@ -364,6 +386,7 @@
     "EAOK",
     "EAOM",
     "EAOR",
+    "EASG",
     "EMTL",
     "ETRL",
     "FEAT",
@@ -416,6 +439,7 @@
     "MSDD",
     "MSOO",
     "MTUL",
+    "MUSI",
     "MVRL",
     "NRGD",
     "NRGU",
@@ -436,6 +460,8 @@
     "QRFT",
     "QULL",
     "RAYJ",
+    "RFDI",
+    "RFEM",
     "RKTL",
     "RMIF",
     "RNWZ",
@@ -475,6 +501,7 @@
   ],
   "samples": {
     "missing": [
+      "ABND",
       "ACBE",
       "ACBH",
       "ACOM",
@@ -488,6 +515,8 @@
       "AESB",
       "AESG",
       "AESL",
+      "AFDM",
+      "AFEM",
       "AGGM",
       "AHBM",
       "AICH",
@@ -496,17 +525,23 @@
       "AIMG",
       "AINF",
       "ANTW",
+      "APMI",
       "ARKY",
+      "ASSX",
       "AT",
+      "ATC",
       "AXTQ",
       "BBLS",
       "BEMD",
       "BNAV",
       "BSMA",
       "BUIL",
+      "CAPA",
+      "CBRG",
       "CCML",
       "CGFS",
       "CGPT",
+      "CLIM",
       "COHQ",
       "COOL",
       "CRAM",
@@ -515,21 +550,13 @@
       "CTSE",
       "DACL",
       "DEPW",
-      "DIVH",
-      "DSPC",
-      "EMSE",
-      "FIXX",
-      "FLEL",
-      "FRUT",
-      "FTG",
-      "FTPA",
-      "GAIQ",
-      "GCLO"
+      "DFMC"
     ],
     "missing_provider_gap_reprobe_due": [
       "DACL"
     ],
     "missing_untracked": [
+      "ABND",
       "ACBE",
       "ACBH",
       "ACOM",
@@ -540,8 +567,7 @@
       "AEMC",
       "AEMG",
       "AEMV",
-      "AESB",
-      "AESG"
+      "AESB"
     ],
     "missing_provider_coverage_gap": [
       "DACL"
