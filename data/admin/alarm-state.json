@@ -1,8 +1,8 @@
 {
   "schema_version": "alarm-state/v1",
-  "generated_at": "2026-09-21T08:17:49.151Z",
+  "generated_at": "2026-09-21T09:22:21.654Z",
   "status": "open",
-  "open_incident_count": 8,
+  "open_incident_count": 9,
   "open_incidents": [
     {
       "workflow": "fenok-edge-krx-daily.yml",
@@ -117,6 +117,20 @@
     {
       "workflow": "global-writer-queue-observer.yml",
       "label": "Global Writer Queue Observability",
+      "streak": 0,
+      "failure_streak_threshold": 2,
+      "first_failing_run_id": null,
+      "first_failing_run_url": null,
+      "alarm_reasons": [
+        "missed_schedule_window"
+      ],
+      "lane_outcome_lanes": [],
+      "lost_schedule_slot_count": 0,
+      "cadence_status": "no_declaration"
+    },
+    {
+      "workflow": "worker-request-budget-alarm.yml",
+      "label": "Worker Request Budget Alarm",
       "streak": 0,
       "failure_streak_threshold": 2,
       "first_failing_run_id": null,
@@ -383,7 +397,7 @@
       "cadence_status": "not_due",
       "cadence_evidence": [],
       "data_freshness_state": "healthy",
-      "data_freshness_age_hours_at_generation": 7
+      "data_freshness_age_hours_at_generation": 8
     },
     {
       "file": "fetch-treasury-tga.yml",
@@ -559,9 +573,9 @@
   "queue_evicted_run_count": 0,
   "queue_evicted_workflows": [],
   "last_firing": {
-    "run_id": "35576962910",
-    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/35576962910",
-    "observed_at": "2026-09-21T08:17:49.151Z",
+    "run_id": "35582657498",
+    "run_url": "https://github.com/etloveaui/100xFenok/actions/runs/35582657498",
+    "observed_at": "2026-09-21T09:22:21.654Z",
     "event": "workflow_run",
     "workflows": [
       "fenok-edge-krx-daily.yml",
@@ -571,7 +585,8 @@
       "fetch-finra-ats-weekly.yml",
       "fetch-oecd-cli.yml",
       "fetch-treasury-tga.yml",
-      "global-writer-queue-observer.yml"
+      "global-writer-queue-observer.yml",
+      "worker-request-budget-alarm.yml"
     ],
     "title": "100xFenok pipeline job failure alarm"
   },
