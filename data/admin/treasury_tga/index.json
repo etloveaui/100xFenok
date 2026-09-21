@@ -1,47 +1,44 @@
 {
   "schema_version": "data-supply-lkg-state/v1",
   "lane_id": "treasury_tga",
-  "updated_at": "2026-09-21T17:28:58.723Z",
-  "retry_set": [
-    "tga"
-  ],
+  "updated_at": "2026-09-21T21:26:46.337Z",
+  "retry_set": [],
   "items": {
     "tga": {
       "key": "tga",
-      "resolution_state": "lkg_primary",
-      "retry": true,
+      "resolution_state": "fresh_primary",
+      "retry": false,
       "current": {
-        "path": "data/admin/treasury_tga/lkg/tga.json",
-        "payload_sha256": "5b01385aef3589704aad0430413b562fbbef97aead875fd364ec7eef70361c77",
-        "source_as_of": "2026-09-17"
+        "path": "data/macro/tga.json",
+        "payload_sha256": "2da52a1f3868bdb535f148d5ac02207647a8a7da6a678eee38543b741cfd4768",
+        "source_as_of": "2026-09-18"
       },
       "lkg": {
         "path": "data/admin/treasury_tga/lkg/tga.json",
         "payload_sha256": "5b01385aef3589704aad0430413b562fbbef97aead875fd364ec7eef70361c77",
         "source_as_of": "2026-09-17"
       },
-      "updated_at": "2026-09-21T17:28:58.723Z",
+      "updated_at": "2026-09-21T21:26:46.337Z",
       "promotion_contract": "provider_observation/v2",
       "provider_observation": {
         "schema_version": "provider_observation/v2",
-        "payload_sha256": "5b01385aef3589704aad0430413b562fbbef97aead875fd364ec7eef70361c77",
-        "source_as_of": "2026-09-17",
-        "run_id": "35389988355",
+        "payload_sha256": "2da52a1f3868bdb535f148d5ac02207647a8a7da6a678eee38543b741cfd4768",
+        "source_as_of": "2026-09-18",
+        "run_id": "35657176071",
         "run_attempt": 1,
-        "observed_at": "2026-09-18T20:10:43.352Z"
+        "observed_at": "2026-09-21T21:26:46.337Z"
       },
       "last_recovered_failure": {
-        "run_id": "35362699156",
-        "run_attempt": 1,
-        "observed_at": "2026-09-18T15:29:21.746Z",
-        "reason": "transport_error"
-      },
-      "latest_failure": {
         "run_id": "35632249022",
         "run_attempt": 1,
         "observed_at": "2026-09-21T17:28:58.723Z",
         "reason": "transport_error"
-      }
+      },
+      "recovered_from_run_id": "35632249022",
+      "recovered_at": "2026-09-21T21:26:46.337Z",
+      "recovery_run_id": "35657176071",
+      "recovery_run_attempt": 1,
+      "recovery_event_name": "schedule"
     }
   }
 }
