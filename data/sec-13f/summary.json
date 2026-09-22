@@ -64,16 +64,18 @@
     "enrichment_denominator": "public_filtered_holdings",
     "enrichment_backfill": {
       "source": "local_yf_finance",
-      "status": "ready",
-      "warnings": [],
-      "generated_at": "2026-09-21T12:40:20.158Z",
-      "yf_finance_generated_at": "2026-09-21T12:30:52Z",
-      "yf_finance_files": 1303,
-      "yf_quarter_closes_generated_at": "2026-09-20T11:46:58Z",
+      "status": "degraded",
+      "warnings": [
+        "YF finance is partial: 2/1305 tickers failed (SITM, TSEM); those 13F fields remain LKG"
+      ],
+      "generated_at": "2026-09-22T11:28:01.340Z",
+      "yf_finance_generated_at": "2026-09-22T11:21:18Z",
+      "yf_finance_files": 1305,
+      "yf_quarter_closes_generated_at": "2026-09-22T02:04:25Z",
       "total_holdings": 121090,
       "profile_hit_rows": 88513,
       "profile_miss_rows": 32577,
-      "touched_rows": 79472,
+      "touched_rows": 83033,
       "unique_profile_symbols": 708,
       "sector_method": "Yahoo sector normalized to GICS where local profile is available; existing converter sector preserved",
       "price_method": "report_date quarter close to latest close from local data/yf/quarter_closes.json"
