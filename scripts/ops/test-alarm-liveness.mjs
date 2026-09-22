@@ -135,10 +135,12 @@ assert.equal(
 );
 
 // ---------------------------------------------------------------------------
-// Slot semantics: one dropped slot is routine, two is not.
+// Slot semantics: up to five dropped slots is measured scheduler weather
+// (2026-09-13..22: 41 gaps over 2h, longest 5.3h, alarm healthy throughout);
+// six is the incident shape.
 // ---------------------------------------------------------------------------
 const now = Date.parse("2026-08-21T03:30:00Z");
-assert.equal(ALARM_MISSED_SLOT_THRESHOLD, 2, "two missed slots is the alarm's own tolerance");
+assert.equal(ALARM_MISSED_SLOT_THRESHOLD, 6, "six missed hourly slots is the measured tolerance");
 
 const ranLastSlot = evaluateAlarmLiveness({
   latestRunStartedAt: "2026-08-21T03:23:00Z", cron: "23 * * * *", nowMs: now,
@@ -155,17 +157,33 @@ assert.equal(oneDropped.missed_slots, 1);
 const twoDropped = evaluateAlarmLiveness({
   latestRunStartedAt: "2026-08-21T01:23:00Z", cron: "23 * * * *", nowMs: now,
 });
-assert.equal(twoDropped.status, "stale", "two consecutive missed slots is the incident shape");
+assert.equal(twoDropped.status, "live", "two dropped slots is measured ordinary weather (2026-09-13..22)");
 assert.equal(twoDropped.missed_slots, 2);
-assert.match(twoDropped.reason, /2 .*slot/i);
 
-// The 2026-08-21T01:30Z incident the feature was written for, on the alarm's
-// own clock. An elapsed-multiple rule missed this by 0.09h; slot counting must not.
+// The longest measured healthy gap: 2026-09-21T10:48Z to 16:08Z (5.3h) while the
+// alarm kept running. Five dropped slots must stay live.
+const fiveDropped = evaluateAlarmLiveness({
+  latestRunStartedAt: "2026-09-21T10:48:10Z", cron: "23 * * * *",
+  nowMs: Date.parse("2026-09-21T16:08:00Z"),
+});
+assert.equal(fiveDropped.status, "live", "the longest measured healthy gap must not alarm");
+assert.equal(fiveDropped.missed_slots, 5);
+
+const sixDropped = evaluateAlarmLiveness({
+  latestRunStartedAt: "2026-08-20T21:23:00Z", cron: "23 * * * *", nowMs: now,
+});
+assert.equal(sixDropped.status, "stale", "six consecutive missed slots is the incident shape");
+assert.equal(sixDropped.missed_slots, 6);
+assert.match(sixDropped.reason, /6 .*slot/i);
+
+// The 2026-08-21T01:30Z shape the feature was first written for, on the alarm's
+// own clock: slot counting still sees exactly 2 missed slots (an elapsed-multiple
+// rule missed it by 0.09h), but at 2 slots it is now weather, not an incident.
 const measuredIncident = evaluateAlarmLiveness({
   latestRunStartedAt: "2026-08-20T23:35:00Z", cron: "23 * * * *",
   nowMs: Date.parse("2026-08-21T01:30:00Z"),
 });
-assert.equal(measuredIncident.status, "stale");
+assert.equal(measuredIncident.status, "live");
 assert.equal(measuredIncident.missed_slots, 2);
 
 // A run starting before minute 23 in hour H (e.g. 18:18:14Z with cron 23 * * * *)

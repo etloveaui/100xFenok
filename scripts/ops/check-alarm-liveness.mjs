@@ -52,9 +52,15 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const ALARM_WORKFLOW = "pipeline-failure-alarm.yml";
 const GITHUB_API = "https://api.github.com";
 
-// GitHub drops scheduled runs routinely, so one skipped slot is normal and two
-// consecutive ones are not. This mirrors the alarm's MISSED_WINDOW_MULTIPLIER.
-export const ALARM_MISSED_SLOT_THRESHOLD = 2;
+// GitHub drops scheduled runs routinely. The original tolerance of two slots
+// mirrored the alarm's MISSED_WINDOW_MULTIPLIER, but measured against the
+// alarm's own run history it was ordinary weather, not an incident: over the
+// 200 runs from 2026-09-13 to 2026-09-22, 41 gaps exceeded 2h (36 in 2-4h,
+// 5 in 4-6h, longest 5.3h) while the alarm kept running 6-9 times a day, and
+// the budget alarm went red 18 times in 9 days on this rule alone. Six slots
+// clears every measured gap and still bounds a real silence (the 2026-08-17
+// disarm shape) to six hours.
+export const ALARM_MISSED_SLOT_THRESHOLD = 6;
 
 // Read the alarm's declared cadence from the workflow itself. A hand-kept copy
 // would keep asserting the old clock after a reschedule.
