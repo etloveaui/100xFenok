@@ -1,6 +1,6 @@
 # Data Catalog
 
-> **Last Updated**: 2026-09-20
+> **Last Updated**: 2026-09-22
 > **Scope**: Canonical source tree (`data/`) — **42,090 tracked JSON payload files**
 > **Public projection**: `100xfenok-next/public/data/` — **11,007 tracked JSON payload files**, an intentionally curated subset
 > **Catalog contract**: This file owns the source catalog. Update the relevant folder README with payload changes and record material changes in `docs/CHANGELOG.md`.
@@ -38,7 +38,7 @@
 
 ### Valuation Data (benchmarks/, damodaran/)
 - Bloomberg Terminal P/E, P/B, ROE (15yr history)
-- Benchmarks latest: 32,323 records, 2010-01-01 ~ 2026-09-13, 38 sections (micro_sectors +과창판 STAR50), 872 S&P 500 data points (DEC-275 history-preservation merge)
+- Benchmarks latest: 32,361 records, 2010-01-01 ~ 2026-09-20, 38 sections (micro_sectors +과창판 STAR50), 873 S&P 500 data points (DEC-275 history-preservation merge)
 - Benchmarks v3.8: `summaries.json` includes 1W/1M/3M/6M/YTD and yearly source summaries for price, EPS, PER, PBR, and ROE (2,404 non-null values + 66 null placeholders)
 - Damodaran: industries (96 w/ beta, margins, EVA), extended US industry metrics (11 datasets), non-US regional metrics (7 regions x 17 datasets), ERP (178 countries, Apr 2026), historical ERP (66 years), credit ratings
 - Yardney: Feno Yardeni S&P 500 fair value model, 1,894 weekly public valuation records through 2026-08-14, latest fair value 6,341.71 and premium +22.77%; raw bond-yield components are excluded from public payloads
