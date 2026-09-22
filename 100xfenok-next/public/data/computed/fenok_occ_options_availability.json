@@ -1,6 +1,6 @@
 {
   "schema_version": "fenok-occ-options-availability/v0.1",
-  "generated_at": "2026-09-19T05:01:03.739Z",
+  "generated_at": "2026-09-22T05:26:13.655Z",
   "formula_version": "fenok-occ-options-volume-v0.2-volume-skew-calibration",
   "purpose": "Derived OCC availability evidence. No raw CSV rows or private cache paths.",
   "raw_policy": {
@@ -8,12 +8,12 @@
     "raw_rows_included": false,
     "private_artifact_paths_included": false
   },
-  "source_date": "20260918",
+  "source_date": "20260921",
   "collection_mode": "all_eligible_batched",
   "selected_tickers": 193,
   "eligible_count": 693,
   "request_budget": {
-    "estimated_max_live_requests": 1158,
+    "estimated_max_live_requests": 386,
     "max_requests": 2000
   },
   "persistence_policy": {
@@ -27,13 +27,13 @@
     "retained_tickers": 695,
     "collections": {
       "rows": {
-        "before": 37140,
-        "retained": 37140,
+        "before": 37833,
+        "retained": 37833,
         "pruned": 0
       },
       "side_attempts": {
-        "before": 74280,
-        "retained": 74280,
+        "before": 75666,
+        "retained": 75666,
         "pruned": 0
       }
     },
@@ -41,15 +41,15 @@
     "total_pruned_rows": 0
   },
   "current_attempt": {
-    "attempt_ref": "35422384697",
+    "attempt_ref": "35689884002",
     "attempt_number": 1,
-    "observed_at": "2026-09-19T05:01:04.360Z",
-    "target_source_date": "2026-09-18",
-    "served_source_date": "2026-09-18",
+    "observed_at": "2026-09-22T05:26:14.303Z",
+    "target_source_date": "2026-09-21",
+    "served_source_date": "2026-09-21",
     "status": "ready_current",
     "fallback_active": false,
     "selected_tickers": 693,
-    "message": "OCC target 2026-09-18 is current across 3 non-empty batch(es); no fallback is active.",
+    "message": "OCC target 2026-09-21 is current across 3 non-empty batch(es); no fallback is active.",
     "missing_day_backfill": {
       "status": "holes_found_none_backfilled",
       "calendar_id": "us_trading",
@@ -76,20 +76,20 @@
       {
         "batch_index": 0,
         "selected_tickers": 250,
-        "target_source_date": "2026-09-18",
-        "served_source_date": "2026-09-18",
+        "target_source_date": "2026-09-21",
+        "served_source_date": "2026-09-21",
         "status": "ready_current",
         "fallback_active": false,
-        "message": "OCC target 2026-09-18 is current and served without fallback.",
+        "message": "OCC target 2026-09-21 is current and served without fallback.",
         "date_attempts": [
           {
-            "source_date": "2026-09-18",
+            "source_date": "2026-09-21",
             "accepted_rows": 245,
             "usable_rows": 245,
             "status_counts": {
-              "options_activity_available": 244,
-              "no_record": 5,
-              "partial_no_record_or_form_gap": 1
+              "options_activity_available": 243,
+              "partial_no_record_or_form_gap": 2,
+              "no_record": 5
             },
             "hard_failure_count": 0,
             "stopped_fail_threshold": false
@@ -120,20 +120,20 @@
       {
         "batch_index": 1,
         "selected_tickers": 250,
-        "target_source_date": "2026-09-18",
-        "served_source_date": "2026-09-18",
+        "target_source_date": "2026-09-21",
+        "served_source_date": "2026-09-21",
         "status": "ready_current",
         "fallback_active": false,
-        "message": "OCC target 2026-09-18 is current and served without fallback.",
+        "message": "OCC target 2026-09-21 is current and served without fallback.",
         "date_attempts": [
           {
-            "source_date": "2026-09-18",
+            "source_date": "2026-09-21",
             "accepted_rows": 248,
             "usable_rows": 248,
             "status_counts": {
-              "options_activity_available": 245,
-              "no_record": 2,
-              "partial_no_record_or_form_gap": 3
+              "options_activity_available": 242,
+              "partial_no_record_or_form_gap": 6,
+              "no_record": 2
             },
             "hard_failure_count": 0,
             "stopped_fail_threshold": false
@@ -164,20 +164,20 @@
       {
         "batch_index": 2,
         "selected_tickers": 193,
-        "target_source_date": "2026-09-18",
-        "served_source_date": "2026-09-18",
+        "target_source_date": "2026-09-21",
+        "served_source_date": "2026-09-21",
         "status": "ready_current",
         "fallback_active": false,
-        "message": "OCC target 2026-09-18 is current and served without fallback.",
+        "message": "OCC target 2026-09-21 is current and served without fallback.",
         "date_attempts": [
           {
-            "source_date": "2026-09-18",
+            "source_date": "2026-09-21",
             "accepted_rows": 191,
             "usable_rows": 191,
             "status_counts": {
               "options_activity_available": 189,
-              "partial_no_record_or_form_gap": 2,
-              "no_record": 2
+              "no_record": 2,
+              "partial_no_record_or_form_gap": 2
             },
             "hard_failure_count": 0,
             "stopped_fail_threshold": false
@@ -207,7 +207,7 @@
       }
     ]
   },
-  "previous_generated_at": "2026-09-19T04:58:43.574Z",
+  "previous_generated_at": "2026-09-22T05:23:51.609Z",
   "upsert_policy": {
     "key": [
       "ticker",
@@ -216,6 +216,6 @@
     ],
     "replaced_rows": 0,
     "added_rows": 193,
-    "cumulative_rows": 37140
+    "cumulative_rows": 37833
   }
 }
