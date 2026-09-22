@@ -151,7 +151,11 @@ try {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, JSON.stringify(value));
   };
-  for (const relative of ["scripts/build-stocks-analyzer.mjs", "scripts/lib/yf-screener-enrichment.mjs"]) {
+  for (const relative of [
+    "scripts/build-stocks-analyzer.mjs",
+    "scripts/lib/yf-screener-enrichment.mjs",
+    "scripts/lib/screener-return-periods.mjs",
+  ]) {
     const target = path.join(fixtureRoot, relative);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.copyFileSync(path.join(root, relative), target);
