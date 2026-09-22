@@ -2,19 +2,6 @@
   "attempts": [
     {
       "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 526,
-      "natural": true,
-      "observed_at": "2026-08-19T23:49:43Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32314261503",
-      "schedule": "20 23 * * 1-5",
-      "shard": "2/5"
-    },
-    {
-      "attempts_used": 1,
       "event_name": "workflow_dispatch",
       "failures": [],
       "latency_ms": 2840,
@@ -182,15 +169,28 @@
       "run_id": "35507652316",
       "schedule": "",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 757,
+      "natural": true,
+      "observed_at": "2026-09-22T01:58:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35676451924",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-20T11:36:10Z",
-    "history_as_of": "2026-09-18",
+    "fetched_at": "2026-09-22T02:02:04Z",
+    "history_as_of": "2026-09-21",
     "path": "data/yf/finance/NWSA.json",
-    "payload_sha256": "6ebdb08ea5c8a9228e83fcf6fe5af5ac0c64b6af428f3568384074253ae8c6e8",
-    "quote_as_of": "2026-09-18T20:00:01Z",
-    "source_as_of": "2026-09-18"
+    "payload_sha256": "0097382b30ff6b7e030a0345f3b5b5df1776c1bdfd8e878502fea41e9c42bd1e",
+    "quote_as_of": "2026-09-21T20:00:00Z",
+    "source_as_of": "2026-09-21"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -198,16 +198,16 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 489,
-    "natural": false,
-    "observed_at": "2026-09-20T11:32:41Z",
+    "latency_ms": 757,
+    "natural": true,
+    "observed_at": "2026-09-22T01:58:09Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35507652316",
-    "schedule": "",
-    "shard": "2/5"
+    "run_id": "35676451924",
+    "schedule": "20 23 * * 1-5",
+    "shard": "4/5"
   },
   "last_recovered_failure": {
     "attempts_used": 1,
@@ -231,15 +231,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-20T11:32:41Z",
-    "payload_sha256": "8d448908a15d08aceb14edde2cd57474fac9fb645b4b5acf31a8dc49106c6e5a",
-    "quote_as_of": "2026-09-18T20:00:01Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-09-21",
+    "observed_at": "2026-09-22T01:58:09Z",
+    "payload_sha256": "bc0e15384a90c0382a10e4e098dcbb4fec364795a9852a5269866bb97889d725",
+    "quote_as_of": "2026-09-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "35507652316",
+    "run_id": "35676451924",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-18"
+    "source_as_of": "2026-09-21"
   },
   "recovered_at": "2026-09-11T01:11:50Z",
   "recovered_from_run_id": "34175958781",
@@ -250,5 +250,5 @@
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "NWSA",
-  "updated_at": "2026-09-20T11:32:41Z"
+  "updated_at": "2026-09-22T01:58:09Z"
 }

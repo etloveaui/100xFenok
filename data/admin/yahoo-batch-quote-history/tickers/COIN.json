@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-25T23:49:10Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32911905308",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "35507652316",
       "schedule": "",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 723,
+      "natural": true,
+      "observed_at": "2026-09-22T01:53:19Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35676451924",
+      "schedule": "20 23 * * 1-5",
+      "shard": "3/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-20T11:35:05Z",
-    "history_as_of": "2026-09-18",
+    "fetched_at": "2026-09-22T01:55:56Z",
+    "history_as_of": "2026-09-21",
     "path": "data/yf/finance/COIN.json",
-    "payload_sha256": "f9ad3fbc9436dd816b48584278fcc7a45fc346f75135ba947f0001724ed0e1c9",
-    "quote_as_of": "2026-09-18T20:00:02Z",
-    "source_as_of": "2026-09-18"
+    "payload_sha256": "e31ceb038c198f4785d97adae45fe0192024accc9b68dff6d1e5bfa017e1c7fc",
+    "quote_as_of": "2026-09-21T20:00:01Z",
+    "source_as_of": "2026-09-21"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,32 +197,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 458,
-    "natural": false,
-    "observed_at": "2026-09-20T11:32:41Z",
+    "latency_ms": 723,
+    "natural": true,
+    "observed_at": "2026-09-22T01:53:19Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35507652316",
-    "schedule": "",
-    "shard": "2/5"
+    "run_id": "35676451924",
+    "schedule": "20 23 * * 1-5",
+    "shard": "3/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-20T11:32:41Z",
-    "payload_sha256": "8f780aa78a119b1fceec0525c87bd5a8cded871907ff042701cd721015322d7e",
-    "quote_as_of": "2026-09-18T20:00:02Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-09-21",
+    "observed_at": "2026-09-22T01:53:19Z",
+    "payload_sha256": "70954d3c5ae849548a0978ef121b727d037235a6a2d791dcb3666734350870e0",
+    "quote_as_of": "2026-09-21T20:00:01Z",
     "run_attempt": 1,
-    "run_id": "35507652316",
+    "run_id": "35676451924",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-18"
+    "source_as_of": "2026-09-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "COIN",
-  "updated_at": "2026-09-20T11:32:41Z"
+  "updated_at": "2026-09-22T01:53:19Z"
 }

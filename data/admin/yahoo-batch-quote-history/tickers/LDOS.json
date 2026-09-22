@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:51Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,15 +168,28 @@
       "run_id": "35507652316",
       "schedule": "",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 990,
+      "natural": true,
+      "observed_at": "2026-09-22T01:45:22Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35676451924",
+      "schedule": "20 23 * * 1-5",
+      "shard": "1/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-20T11:31:31Z",
-    "history_as_of": "2026-09-18",
+    "fetched_at": "2026-09-22T01:49:42Z",
+    "history_as_of": "2026-09-21",
     "path": "data/yf/finance/LDOS.json",
-    "payload_sha256": "2d814953b75b4d76cef15293a78dff8566d4648b5e71e6da784d8719f0a6998e",
-    "quote_as_of": "2026-09-18T20:00:02Z",
-    "source_as_of": "2026-09-18"
+    "payload_sha256": "a42d86544f5def98b3022ee580a2f79a4a137e124022120927f82383448080fb",
+    "quote_as_of": "2026-09-21T20:00:02Z",
+    "source_as_of": "2026-09-21"
   },
   "discovered_from": [
     "global_scouter_stock",
@@ -197,32 +197,32 @@
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 502,
-    "natural": false,
-    "observed_at": "2026-09-20T11:28:24Z",
+    "latency_ms": 990,
+    "natural": true,
+    "observed_at": "2026-09-22T01:45:22Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35507652316",
-    "schedule": "",
+    "run_id": "35676451924",
+    "schedule": "20 23 * * 1-5",
     "shard": "1/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-20T11:28:24Z",
-    "payload_sha256": "67688755bae3b78ab31010ae53e09a516d265e9fcdeedcd2effefca4449c0733",
-    "quote_as_of": "2026-09-18T20:00:02Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-09-21",
+    "observed_at": "2026-09-22T01:45:22Z",
+    "payload_sha256": "479e21e2408fd33222ccd8b5f8ffe9a73e479c14b510e99bf6683376cc83a2b5",
+    "quote_as_of": "2026-09-21T20:00:02Z",
     "run_attempt": 1,
-    "run_id": "35507652316",
+    "run_id": "35676451924",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-18"
+    "source_as_of": "2026-09-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "LDOS",
-  "updated_at": "2026-09-20T11:28:24Z"
+  "updated_at": "2026-09-22T01:45:22Z"
 }

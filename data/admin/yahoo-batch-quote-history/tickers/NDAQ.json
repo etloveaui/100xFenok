@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": true,
-      "observed_at": "2026-08-20T23:45:51Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "32429826829",
-      "schedule": "20 23 * * 1-5",
-      "shard": "1/5"
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,47 +168,60 @@
       "run_id": "35507652316",
       "schedule": "",
       "shard": "2/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 764,
+      "natural": true,
+      "observed_at": "2026-09-22T01:58:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35676451924",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-20T11:36:06Z",
-    "history_as_of": "2026-09-18",
+    "fetched_at": "2026-09-22T02:01:58Z",
+    "history_as_of": "2026-09-21",
     "path": "data/yf/finance/NDAQ.json",
-    "payload_sha256": "c6b593cc75363bb3da4f1669326e17b18405c5f986f7fc8de8e6aa4798bdf140",
-    "quote_as_of": "2026-09-18T20:00:01Z",
-    "source_as_of": "2026-09-18"
+    "payload_sha256": "ce7a7c89678d34712ea7f4c47175bf2de0a76791a19877ac32db109a7c17be8f",
+    "quote_as_of": "2026-09-21T20:00:00Z",
+    "source_as_of": "2026-09-21"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 501,
-    "natural": false,
-    "observed_at": "2026-09-20T11:32:41Z",
+    "latency_ms": 764,
+    "natural": true,
+    "observed_at": "2026-09-22T01:58:09Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35507652316",
-    "schedule": "",
-    "shard": "2/5"
+    "run_id": "35676451924",
+    "schedule": "20 23 * * 1-5",
+    "shard": "4/5"
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-20T11:32:41Z",
-    "payload_sha256": "87320b64afcffd141fba3ba5755f420ffae4afba6d6fe815bece992a43fc0351",
-    "quote_as_of": "2026-09-18T20:00:01Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-09-21",
+    "observed_at": "2026-09-22T01:58:09Z",
+    "payload_sha256": "7575f11bc5cc353d637f758c186e1659ee4aaf199db2423036a069f9ed4657e7",
+    "quote_as_of": "2026-09-21T20:00:00Z",
     "run_attempt": 1,
-    "run_id": "35507652316",
+    "run_id": "35676451924",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-18"
+    "source_as_of": "2026-09-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
   "schema_version": "yahoo-batch-quote-history-state/v1",
   "ticker": "NDAQ",
-  "updated_at": "2026-09-20T11:32:41Z"
+  "updated_at": "2026-09-22T01:58:09Z"
 }

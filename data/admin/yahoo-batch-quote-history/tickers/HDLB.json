@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 0,
-      "event_name": "workflow_dispatch",
-      "failures": [],
-      "latency_ms": 0,
-      "natural": false,
-      "observed_at": "2026-07-13T04:33:56Z",
-      "outcome": "skipped_fresh",
-      "run_attempt": 1,
-      "run_id": "29224221077",
-      "schedule": "",
-      "shard": ""
-    },
-    {
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
@@ -181,31 +168,44 @@
       "run_id": "35507652316",
       "schedule": "",
       "shard": "1/5"
+    },
+    {
+      "attempts_used": 1,
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 704,
+      "natural": true,
+      "observed_at": "2026-09-22T01:58:09Z",
+      "outcome": "fresh",
+      "run_attempt": 1,
+      "run_id": "35676451924",
+      "schedule": "20 23 * * 1-5",
+      "shard": "4/5"
     }
   ],
   "current": {
-    "fetched_at": "2026-09-20T11:31:18Z",
-    "history_as_of": "2026-09-18",
+    "fetched_at": "2026-09-22T02:01:27Z",
+    "history_as_of": "2026-09-21",
     "path": "data/yf/finance/HDLB.json",
-    "payload_sha256": "8021b92896507b8169bf61ca8d71c28ce19cc07e0fd6dc28f664e0903b79c114",
-    "quote_as_of": "2026-09-18T19:53:14Z",
-    "source_as_of": "2026-09-18"
+    "payload_sha256": "873d71e95f2bc9ea99bc276e125c29a0b9fb6b0d4a91b2c92d1ed45712c544ef",
+    "quote_as_of": "2026-09-21T18:21:59Z",
+    "source_as_of": "2026-09-21"
   },
   "discovered_from": [
     "market_facts"
   ],
   "last_attempt": {
     "attempts_used": 1,
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 537,
-    "natural": false,
-    "observed_at": "2026-09-20T11:28:24Z",
+    "latency_ms": 704,
+    "natural": true,
+    "observed_at": "2026-09-22T01:58:09Z",
     "outcome": "fresh",
     "run_attempt": 1,
-    "run_id": "35507652316",
-    "schedule": "",
-    "shard": "1/5"
+    "run_id": "35676451924",
+    "schedule": "20 23 * * 1-5",
+    "shard": "4/5"
   },
   "lkg": {
     "fetched_at": "2026-08-12T05:47:42Z",
@@ -217,15 +217,15 @@
   },
   "promotion_contract": "provider_observation/v2",
   "provider_observation": {
-    "event_name": "workflow_dispatch",
-    "history_as_of": "2026-09-18",
-    "observed_at": "2026-09-20T11:28:24Z",
-    "payload_sha256": "1aa2b8be75fa59108f9e35408a42d85d453b56796b5d763cfe32e12722e3d3e2",
-    "quote_as_of": "2026-09-18T19:53:14Z",
+    "event_name": "schedule",
+    "history_as_of": "2026-09-21",
+    "observed_at": "2026-09-22T01:58:09Z",
+    "payload_sha256": "d8dc5c5d88eecac2fcdc6fac800e77cf3bbed2982ac5a17cbb770b89fedd204b",
+    "quote_as_of": "2026-09-21T18:21:59Z",
     "run_attempt": 1,
-    "run_id": "35507652316",
+    "run_id": "35676451924",
     "schema_version": "provider_observation/v2",
-    "source_as_of": "2026-09-18"
+    "source_as_of": "2026-09-21"
   },
   "resolution_state": "fresh_primary",
   "retry": false,
@@ -241,5 +241,5 @@
     "source_as_of": "2026-08-11"
   },
   "ticker": "HDLB",
-  "updated_at": "2026-09-20T11:28:24Z"
+  "updated_at": "2026-09-22T01:58:09Z"
 }

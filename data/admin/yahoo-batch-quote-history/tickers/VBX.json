@@ -4,19 +4,6 @@
       "attempts_used": 1,
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 784,
-      "natural": true,
-      "observed_at": "2026-08-10T19:09:16Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "31422533403",
-      "schedule": "7 18 * * 0-5",
-      "shard": "21/72"
-    },
-    {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 694,
       "natural": true,
       "observed_at": "2026-08-24T23:41:40Z",
@@ -190,6 +177,20 @@
       "run_id": "35507652316",
       "schedule": "",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 753,
+      "natural": true,
+      "observed_at": "2026-09-22T01:39:10Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35676451924",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -206,25 +207,25 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "recovery_not_advanced_by_provider",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 415,
-    "natural": false,
-    "observed_at": "2026-09-20T11:24:11Z",
+    "latency_ms": 753,
+    "natural": true,
+    "observed_at": "2026-09-22T01:39:10Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35507652316",
-    "schedule": "",
+    "run_id": "35676451924",
+    "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-09-20T11:24:11Z",
+    "event_name": "schedule",
+    "observed_at": "2026-09-22T01:39:10Z",
     "provider_history_as_of": "2026-08-27",
     "provider_quote_as_of": "2026-08-20T19:41:32Z",
     "reason": "recovery_not_advanced_by_provider",
     "run_attempt": 1,
-    "run_id": "35507652316"
+    "run_id": "35676451924"
   },
   "lkg": {
     "fetched_at": "2026-09-01T01:53:09Z",
@@ -260,5 +261,5 @@
     "source_as_of": "2026-08-20T19:41:32Z"
   },
   "ticker": "VBX",
-  "updated_at": "2026-09-20T11:24:11Z"
+  "updated_at": "2026-09-22T01:39:10Z"
 }

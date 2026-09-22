@@ -5,20 +5,6 @@
       "error": "ValueError: quote_as_of is unavailable for EA despite available history",
       "event_name": "schedule",
       "failures": [],
-      "latency_ms": 927,
-      "natural": true,
-      "observed_at": "2026-08-27T04:34:06Z",
-      "outcome": "failed",
-      "run_attempt": 1,
-      "run_id": "33039718885",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
-      "attempts_used": 1,
-      "error": "ValueError: quote_as_of is unavailable for EA despite available history",
-      "event_name": "schedule",
-      "failures": [],
       "latency_ms": 469,
       "natural": true,
       "observed_at": "2026-08-28T06:58:20Z",
@@ -219,6 +205,26 @@
       "run_id": "35507652316",
       "schedule": "",
       "shard": "4/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "ValueError: quote_as_of is unavailable for EA despite available history",
+      "event_name": "schedule",
+      "failures": [
+        {
+          "attempt": 1,
+          "error": "AttributeError: 'Index' object has no attribute 'date'",
+          "source": "provider_safe_call"
+        }
+      ],
+      "latency_ms": 1795,
+      "natural": true,
+      "observed_at": "2026-09-22T01:39:10Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35676451924",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -235,7 +241,7 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "ValueError: quote_as_of is unavailable for EA despite available history",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [
       {
         "attempt": 1,
@@ -243,14 +249,14 @@
         "source": "provider_safe_call"
       }
     ],
-    "latency_ms": 441,
-    "natural": false,
-    "observed_at": "2026-09-20T11:41:23Z",
+    "latency_ms": 1795,
+    "natural": true,
+    "observed_at": "2026-09-22T01:39:10Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35507652316",
-    "schedule": "",
-    "shard": "4/5"
+    "run_id": "35676451924",
+    "schedule": "20 23 * * 1-5",
+    "shard": "0/5"
   },
   "latest_failure": {
     "attempts_used": 1,
@@ -266,9 +272,9 @@
       }
     ],
     "lkg_status": "retained",
-    "observed_at": "2026-09-20T11:41:23Z",
+    "observed_at": "2026-09-22T01:39:10Z",
     "run_attempt": 1,
-    "run_id": "35507652316"
+    "run_id": "35676451924"
   },
   "lkg": {
     "fetched_at": "2026-08-12T00:31:05Z",
@@ -304,5 +310,5 @@
     "source_as_of": "2026-08-04T20:00:00Z"
   },
   "ticker": "EA",
-  "updated_at": "2026-09-20T11:41:23Z"
+  "updated_at": "2026-09-22T01:39:10Z"
 }

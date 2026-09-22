@@ -1,19 +1,6 @@
 {
   "attempts": [
     {
-      "attempts_used": 1,
-      "event_name": "schedule",
-      "failures": [],
-      "latency_ms": 578,
-      "natural": true,
-      "observed_at": "2026-08-24T23:41:40Z",
-      "outcome": "fresh",
-      "run_attempt": 1,
-      "run_id": "32790347813",
-      "schedule": "20 23 * * 1-5",
-      "shard": "0/5"
-    },
-    {
       "attempts_used": 0,
       "event_name": "schedule",
       "failures": [],
@@ -190,6 +177,20 @@
       "run_id": "35507652316",
       "schedule": "",
       "shard": "0/5"
+    },
+    {
+      "attempts_used": 1,
+      "error": "recovery_not_advanced_by_provider",
+      "event_name": "schedule",
+      "failures": [],
+      "latency_ms": 576,
+      "natural": true,
+      "observed_at": "2026-09-22T01:39:10Z",
+      "outcome": "failed",
+      "run_attempt": 1,
+      "run_id": "35676451924",
+      "schedule": "20 23 * * 1-5",
+      "shard": "0/5"
     }
   ],
   "current": {
@@ -206,15 +207,15 @@
   "last_attempt": {
     "attempts_used": 1,
     "error": "recovery_not_advanced_by_provider",
-    "event_name": "workflow_dispatch",
+    "event_name": "schedule",
     "failures": [],
-    "latency_ms": 418,
-    "natural": false,
-    "observed_at": "2026-09-20T11:24:11Z",
+    "latency_ms": 576,
+    "natural": true,
+    "observed_at": "2026-09-22T01:39:10Z",
     "outcome": "failed",
     "run_attempt": 1,
-    "run_id": "35507652316",
-    "schedule": "",
+    "run_id": "35676451924",
+    "schedule": "20 23 * * 1-5",
     "shard": "0/5"
   },
   "last_recovered_failure": {
@@ -236,13 +237,13 @@
     "run_id": "31648785047"
   },
   "latest_promotion_deferral": {
-    "event_name": "workflow_dispatch",
-    "observed_at": "2026-09-20T11:24:11Z",
+    "event_name": "schedule",
+    "observed_at": "2026-09-22T01:39:10Z",
     "provider_history_as_of": "2026-08-27",
     "provider_quote_as_of": "2026-08-20T17:02:13Z",
     "reason": "recovery_not_advanced_by_provider",
     "run_attempt": 1,
-    "run_id": "35507652316"
+    "run_id": "35676451924"
   },
   "lkg": {
     "fetched_at": "2026-09-01T01:53:12Z",
@@ -283,5 +284,5 @@
     "source_as_of": "2026-08-20T17:02:13Z"
   },
   "ticker": "XVO",
-  "updated_at": "2026-09-20T11:24:11Z"
+  "updated_at": "2026-09-22T01:39:10Z"
 }
