@@ -301,6 +301,16 @@ assert.doesNotMatch(workflow, /secrets\.|cache:|npm run cf:deploy|wrangler deplo
 // paths, conditions or retention changes remain rejected.
 const expectedUploads = [
   [
+    "      - name: Upload data integrity live evidence",
+    "        if: ${{ always() && inputs.suite == 'npm-script' && inputs.script == 'qa:data-integrity-live' }}",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          name: data-integrity-live",
+    "          path: 100xfenok-next/test-results/data-integrity/*",
+    "          if-no-files-found: ignore",
+    "          retention-days: 7",
+  ].join("\n"),
+  [
     "      - name: Upload synthetic product flow evidence",
     "        if: ${{ always() && inputs.suite == 'npm-script' && inputs.script == 'qa:product-flow-isolated' }}",
     "        uses: actions/upload-artifact@v4",
