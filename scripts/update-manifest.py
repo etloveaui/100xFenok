@@ -460,6 +460,56 @@ def _yardney_clock(folder: Path) -> SourceClock:
     return _complete_floor([("yardney_model.json", source_date)], "Yardeni model")
 
 
+def _yardney_description(folder: Path) -> str | None:
+    """Derive the yardney folder description from the model payload itself.
+
+    The text used to be hand-synced after each rebuild and drifted from the served
+    data (2026-09-23: label said 1,896 records / 6,496.44 while the model carried
+    1,899 records / 6,437.65). Returns None when the payload cannot support it, so
+    the existing text is left untouched rather than replaced with a guess.
+    """
+    payload = _read_json(folder / "yardney_model.json")
+    if not isinstance(payload, dict):
+        return None
+    meta = payload.get("meta")
+    rows = payload.get("data")
+    if not isinstance(meta, dict) or not isinstance(rows, list) or not rows:
+        return None
+    last = rows[-1]
+    total = meta.get("total_records")
+    date_range = meta.get("date_range")
+    fair_value = last.get("fair_value") if isinstance(last, dict) else None
+    premium = last.get("premium_pct") if isinstance(last, dict) else None
+    if (
+        not isinstance(total, int)
+        or not isinstance(date_range, str)
+        or not isinstance(fair_value, (int, float))
+        or not isinstance(premium, (int, float))
+    ):
+        return None
+    return (
+        f"Feno Yardeni model — {total:,} records ({date_range}), "
+        f"fair value {fair_value:,.2f} ({premium:+.2f}%)"
+    )
+
+
+DERIVED_DESCRIPTIONS = {
+    "yardney": _yardney_description,
+}
+
+
+def refresh_derived_description(folder_name: str, folder_path: Path, entry: dict[str, object]) -> list[str]:
+    """Rewrite a folder description that is a projection of its own payload."""
+    derive = DERIVED_DESCRIPTIONS.get(folder_name)
+    if derive is None:
+        return []
+    derived = derive(folder_path)
+    if derived is None or entry.get("description") == derived:
+        return []
+    entry["description"] = derived
+    return ["description derived from payload"]
+
+
 def _yf_clock(folder: Path) -> SourceClock:
     named_dates: list[tuple[str, str | None]] = []
     for file_path in sorted((folder / "finance").glob("*.json")):
@@ -706,6 +756,7 @@ def update_manifest(dry_run: bool = False) -> int:
         if folder_name in folders_meta:
             entry = folders_meta[folder_name]
             metadata_reasons = refresh_default_folder_metadata(folder_name, folder_path, entry)
+            metadata_reasons += refresh_derived_description(folder_name, folder_path, entry)
             if metadata_reasons:
                 manifest_changed = True
                 updated_entries.append(f"{folder_name}: {', '.join(metadata_reasons)}")

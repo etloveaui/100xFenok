@@ -346,6 +346,7 @@ jobs:
           node scripts/test-update-manifest-rebuild-policy.mjs
           node scripts/test-update-manifest-dispatch-decoupling.mjs
           node scripts/test-sync-update-manifest-trigger-paths.mjs
+          python3 -m unittest scripts/test_update_manifest_derived_description.py
 
       - name: Validate computed-signals coordinator and exporter contracts
         run: |
